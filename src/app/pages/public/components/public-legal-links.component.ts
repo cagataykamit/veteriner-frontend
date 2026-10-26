@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PUBLIC_LEGAL_LINKS } from '@/app/features/public/utils/legal-documents.utils';
 
@@ -7,6 +7,7 @@ import { PUBLIC_LEGAL_LINKS } from '@/app/features/public/utils/legal-documents.
     selector: 'app-public-legal-links',
     standalone: true,
     imports: [RouterLink],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <nav class="public-legal-links mt-6 flex flex-wrap items-center justify-center gap-x-2 text-xs text-muted-color" aria-label="Hukuki metinler">
             @for (link of links; track link.path; let last = $last) {

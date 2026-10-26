@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PrescriptionFormComponent } from '@/app/features/prescriptions/components/prescription-form.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -8,6 +8,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     selector: 'app-prescription-new-page',
     standalone: true,
     imports: [AppPageHeaderComponent, PrescriptionFormComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header categoryLink="/panel/prescriptions" categoryLinkLabel="Reçete listesine dön" title="Yeni Reçete" description="Reçete kaydı oluşturun." />
         <app-prescription-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />

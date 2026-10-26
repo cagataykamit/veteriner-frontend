@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { TodayOpenItemsVm } from '@/app/features/visits/models/visit-vm.model';
 import { formatMoney } from '@/app/shared/utils/money.utils';
@@ -27,6 +27,7 @@ const TONE_MUTED = 'text-muted-color border-surface-300 dark:border-surface-700'
     selector: 'app-today-open-items',
     standalone: true,
     imports: [RouterLink],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <section class="flex flex-wrap items-center gap-2 mb-4" aria-label="Açık işler" data-testid="open-items-strip">
             <span class="text-sm font-medium">Açık işler</span>
@@ -36,9 +37,7 @@ const TONE_MUTED = 'text-muted-color border-surface-300 dark:border-surface-700'
                         <i [class]="e.icon" aria-hidden="true"></i>{{ e.text }}
                     </a>
                 } @else {
-                    <span [attr.title]="e.title" class="inline-flex items-center gap-1 rounded-border border px-2 py-0.5 text-sm" [class]="e.tone">
-                        <i [class]="e.icon" aria-hidden="true"></i>{{ e.text }}
-                    </span>
+                    <span [attr.title]="e.title" class="inline-flex items-center gap-1 rounded-border border px-2 py-0.5 text-sm" [class]="e.tone"> <i [class]="e.icon" aria-hidden="true"></i>{{ e.text }} </span>
                 }
             } @empty {
                 <span class="inline-flex items-center gap-1 text-sm text-muted-color"><i class="pi pi-check" aria-hidden="true"></i>Açık iş yok</span>

@@ -3,7 +3,7 @@ import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
@@ -67,6 +67,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
         AppRowActionButtonComponent,
         MoneyPipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (contextPetId() || contextClientId()) {
             <app-context-filter-chip [label]="contextFilterLabel()" (clear)="clearContextFilter()" />
@@ -81,9 +82,9 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                         </app-filter-field>
                         <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                         @if (canCreatePayment && !ro.mutationBlocked()) {
-                            <a actions routerLink="/panel/payments/new" pButton type="button" label="Yeni Ödeme" icon="pi pi-plus" class="p-button-primary"></a>
+                            <a actions routerLink="/panel/payments/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Ödeme</a>
                         } @else if (canCreatePayment && ro.mutationBlocked()) {
-                            <button actions pButton type="button" label="Yeni Ödeme (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                            <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Ödeme (salt okunur)</button>
                         }
                     </app-list-header>
                     <div class="flex flex-wrap items-end gap-3">
@@ -96,7 +97,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                 optionLabel="label"
                                 optionValue="value"
                                 [placeholder]="copy.filterPlaceholderAll"
-                                styleClass="w-full"
+                                class="w-full"
                                 [showClear]="true"
                                 (ngModelChange)="scheduleApply()"
                             />

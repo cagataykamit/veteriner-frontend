@@ -2,7 +2,7 @@ import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -17,11 +17,7 @@ import type { ProductListItemVm } from '@/app/features/inventory/models/product-
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import {
-    PRODUCTS_CREATE_CLAIM,
-    PRODUCTS_DEACTIVATE_CLAIM,
-    PRODUCTS_UPDATE_CLAIM
-} from '@/app/core/auth/operation-claims.constants';
+import { PRODUCTS_CREATE_CLAIM, PRODUCTS_DEACTIVATE_CLAIM, PRODUCTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -63,44 +59,47 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
         AppRowActionButtonComponent
     ],
     providers: [ConfirmationService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="card">
-                <div class="flex flex-col gap-4">
-                    @if (listActionError()) {
-                        <p class="text-red-500 text-sm m-0" role="alert">{{ listActionError() }}</p>
-                    }
-                    <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                        <app-list-header class="mb-3" title="Ürünler" [count]="totalItems()">
-                            <app-filter-field label="Arama" labelFor="productSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="productSearch" placeholder="Ad, SKU veya barkod…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
-                            </app-filter-field>
-                            <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
-                            @if (canCreateProduct && !ro.mutationBlocked()) {
-                                <a actions routerLink="/panel/products/new" pButton type="button" label="Yeni ürün" icon="pi pi-plus" class="p-button-primary"></a>
-                            } @else if (canCreateProduct && ro.mutationBlocked()) {
-                                <button actions pButton type="button" label="Yeni ürün (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
-                            }
-                        </app-list-header>
-                        <div class="flex flex-wrap items-end gap-3">
-                            <app-filter-field label="Durum filtresi" labelId="lblProductActive" [active]="isActiveFilterApplied()" width="select">
-                                <p-select
-                                    ariaLabelledBy="lblProductActive"
-                                    inputId="productActiveFilter"
-                                    [options]="activeFilterOptions"
-                                    [(ngModel)]="isActiveFilter"
-                                    optionLabel="label"
-                                    optionValue="value"
-                                    placeholder="Tüm durumlar"
-                                    styleClass="w-full"
-                                    [showClear]="true" (ngModelChange)="scheduleApply()" />
-                            </app-filter-field>
-                        </div>
+            <div class="flex flex-col gap-4">
+                @if (listActionError()) {
+                    <p class="text-red-500 text-sm m-0" role="alert">{{ listActionError() }}</p>
+                }
+                <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                    <app-list-header class="mb-3" title="Ürünler" [count]="totalItems()">
+                        <app-filter-field label="Arama" labelFor="productSearch" [active]="isSearchActive()" width="grow">
+                            <app-search-input inputId="productSearch" placeholder="Ad, SKU veya barkod…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                        </app-filter-field>
+                        <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                        @if (canCreateProduct && !ro.mutationBlocked()) {
+                            <a actions routerLink="/panel/products/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni ürün</a>
+                        } @else if (canCreateProduct && ro.mutationBlocked()) {
+                            <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni ürün (salt okunur)</button>
+                        }
+                    </app-list-header>
+                    <div class="flex flex-wrap items-end gap-3">
+                        <app-filter-field label="Durum filtresi" labelId="lblProductActive" [active]="isActiveFilterApplied()" width="select">
+                            <p-select
+                                ariaLabelledBy="lblProductActive"
+                                inputId="productActiveFilter"
+                                [options]="activeFilterOptions"
+                                [(ngModel)]="isActiveFilter"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Tüm durumlar"
+                                class="w-full"
+                                [showClear]="true"
+                                (ngModelChange)="scheduleApply()"
+                            />
+                        </app-filter-field>
                     </div>
-            @if (loading()) {
-                <app-loading-state message="Ürün listesi yükleniyor…" />
-            } @else if (error()) {
-                <app-error-state [detail]="error()!" (retry)="reload()" />
-            } @else {
+                </div>
+                @if (loading()) {
+                    <app-loading-state message="Ürün listesi yükleniyor…" />
+                } @else if (error()) {
+                    <app-error-state [detail]="error()!" (retry)="reload()" />
+                } @else {
                     @if (displayedRows().length === 0) {
                         <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                     } @else {
@@ -157,12 +156,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                                     </button>
                                                 }
                                                 @if (canUpdateProduct && !ro.mutationBlocked() && !row.isActive) {
-                                                    <button
-                                                        type="button"
-                                                        class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50"
-                                                        [disabled]="rowMutatingId() !== null"
-                                                        (click)="onActivate(row)"
-                                                    >
+                                                    <button type="button" class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50" [disabled]="rowMutatingId() !== null" (click)="onActivate(row)">
                                                         Aktifleştir
                                                     </button>
                                                 }
@@ -175,9 +169,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
 
                         <div class="lg:hidden space-y-3">
                             @for (row of displayedRows(); track row.id) {
-                                <div
-                                    class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
-                                >
+                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                                     <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
                                         <a [routerLink]="['/panel/products', row.id]" class="text-primary no-underline break-words">{{ row.name }}</a>
                                     </div>
@@ -215,12 +207,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                             </button>
                                         }
                                         @if (canUpdateProduct && !ro.mutationBlocked() && !row.isActive) {
-                                            <button
-                                                type="button"
-                                                class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50"
-                                                [disabled]="rowMutatingId() !== null"
-                                                (click)="onActivate(row)"
-                                            >
+                                            <button type="button" class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50" [disabled]="rowMutatingId() !== null" (click)="onActivate(row)">
                                                 Aktifleştir
                                             </button>
                                         }
@@ -241,8 +228,8 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                             />
                         </div>
                     }
-            }
-                </div>
+                }
+            </div>
         </div>
 
         <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />

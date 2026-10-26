@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { LEGAL_DRAFT_NOTICE } from '@/app/features/public/utils/legal-documents.utils';
 
 /** Hukuki metin taslak bandı; `LEGAL_DRAFT_NOTICE` null olunca hiçbir şey göstermez. */
 @Component({
     selector: 'app-legal-draft-notice',
     standalone: true,
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (notice) {
             <div

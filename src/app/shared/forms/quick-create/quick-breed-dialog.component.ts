@@ -1,14 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, input, output, signal, model } from '@angular/core';
+import { Component, inject, input, output, signal, model, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { BreedUpsertRequest } from '@/app/features/breeds/models/breed-upsert.model';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
-import {
-    type BreedUpsertFieldErrors,
-    parseBreedUpsertHttpError
-} from '@/app/features/breeds/utils/breed-upsert-validation-parse.utils';
+import { type BreedUpsertFieldErrors, parseBreedUpsertHttpError } from '@/app/features/breeds/utils/breed-upsert-validation-parse.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { ButtonModule } from 'primeng/button';
@@ -22,20 +19,11 @@ import { InputTextModule } from 'primeng/inputtext';
     selector: 'app-quick-breed-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            header="Yeni ırk"
-            [modal]="true"
-            [dismissableMask]="true"
-            [style]="{ width: 'min(440px, 95vw)' }"
-            [contentStyle]="{ overflow: 'visible' }"
-            [(visible)]="visible"
-            (onShow)="onShow()"
-        >
+        <p-dialog header="Yeni ırk" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(440px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onShow()">
             @if (ro.mutationBlocked()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">
-                    İşletme salt okunur moddadır; ırk oluşturulamaz.
-                </p>
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">İşletme salt okunur moddadır; ırk oluşturulamaz.</p>
             }
             @if (speciesLabel().trim()) {
                 <p class="text-sm text-muted-color mt-0 mb-3">{{ speciesLabel() }}</p>
@@ -60,16 +48,9 @@ import { InputTextModule } from 'primeng/inputtext';
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 <p-button type="button" label="İptal" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button
-                    type="button"
-                    label="Kaydet"
-                    icon="pi pi-check"
-                    [loading]="submitting()"
-                    [disabled]="form.invalid || submitting() || !speciesIdContext() || ro.mutationBlocked()"
-                    (onClick)="onSubmit()"
-                />
+                <p-button type="button" label="Kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || !speciesIdContext() || ro.mutationBlocked()" (onClick)="onSubmit()" />
             </ng-template>
         </p-dialog>
     `

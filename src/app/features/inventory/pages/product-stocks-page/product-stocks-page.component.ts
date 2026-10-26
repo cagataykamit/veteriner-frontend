@@ -2,7 +2,7 @@ import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -29,10 +29,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { buildCsvFromStringRows, csvTextToUtf8BlobWithBom } from '@/app/shared/utils/csv-text.utils';
 import { localDateTimeYyyyMmDd_HHmmForFileName } from '@/app/shared/utils/date.utils';
 import { triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
-import {
-    fetchAllInventoryCsvExportPages$,
-    InventoryCsvExportRowLimitError
-} from '@/app/features/inventory/utils/inventory-csv-export-pagination.utils';
+import { fetchAllInventoryCsvExportPages$, InventoryCsvExportRowLimitError } from '@/app/features/inventory/utils/inventory-csv-export-pagination.utils';
 import type { Observable } from 'rxjs';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
@@ -46,17 +43,7 @@ type StocksListState = {
 
 const PRODUCT_STOCKS_LIST_STATE_KEY = 'panel:inventory:product-stocks:listState';
 
-const PRODUCT_STOCK_CSV_HEADERS = [
-    'Ürün',
-    'SKU',
-    'Kategori',
-    'Klinik',
-    'Kullanılabilir Stok',
-    'Süresi Geçmiş Stok',
-    'Minimum Stok',
-    'Durum',
-    'Son Güncelleme'
-] as const;
+const PRODUCT_STOCK_CSV_HEADERS = ['Ürün', 'SKU', 'Kategori', 'Klinik', 'Kullanılabilir Stok', 'Süresi Geçmiş Stok', 'Minimum Stok', 'Durum', 'Son Güncelleme'] as const;
 
 @Component({
     selector: 'app-product-stocks-page',
@@ -74,10 +61,12 @@ const PRODUCT_STOCK_CSV_HEADERS = [
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent, FilterFieldComponent,
+        AppStatusTagComponent,
+        FilterFieldComponent,
         SearchInputComponent,
         AppRowActionButtonComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="card">
             @if (exportError()) {
@@ -86,68 +75,58 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                 </div>
             }
 
-                <div class="flex flex-col gap-4">
-                    <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                        <app-list-header class="mb-3" title="Stok durumu" [count]="totalItems()">
-                            <p hint class="text-muted-color text-sm m-0 mt-1">{{ activeClinicContextHint() }}</p>
-                            <app-filter-field label="Arama" labelFor="stockSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="stockSearch" placeholder="Ürün adı, SKU…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
-                            </app-filter-field>
-                            <p-button actions
-                                [label]="copy.buttonClear"
-                                icon="pi pi-times"
-                                severity="secondary"
-                                (onClick)="resetFilters()"
-                                [disabled]="loading()"
-                            />
-                            @if (canExportStocks()) {
-                                <p-button actions
-                                    label="Dışa aktar"
-                                    icon="pi pi-download"
-                                    severity="help"
-                                    (onClick)="exportCsv()"
-                                    [loading]="exporting()"
-                                    [disabled]="loading() || exporting()"
-                                />
-                            }
-                        </app-list-header>
-                        <div class="flex flex-wrap items-end gap-3">
-                            @if (canReadCategories && categoryOptions().length > 0) {
-                                <app-filter-field label="Kategori" labelId="lblStockCat" [active]="isCategoryFilterApplied()" width="select">
-                                    <p-select
-                                        ariaLabelledBy="lblStockCat"
-                                        inputId="stockCategoryFilter"
-                                        [options]="categoryOptions()"
-                                        [(ngModel)]="categoryFilterInput"
-                                        optionLabel="label"
-                                        optionValue="value"
-                                        placeholder="Tüm kategoriler"
-                                        styleClass="w-full"
-                                        [filter]="true"
-                                        filterPlaceholder="Ara…"
-                                        filterBy="label"
-                                        [showClear]="true" (ngModelChange)="scheduleApply()" />
-                                </app-filter-field>
-                            }
-                            <app-filter-field label="Düşük stok" labelId="lblStockLow" [active]="isLowStockFilterApplied()" width="select">
+            <div class="flex flex-col gap-4">
+                <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                    <app-list-header class="mb-3" title="Stok durumu" [count]="totalItems()">
+                        <p hint class="text-muted-color text-sm m-0 mt-1">{{ activeClinicContextHint() }}</p>
+                        <app-filter-field label="Arama" labelFor="stockSearch" [active]="isSearchActive()" width="grow">
+                            <app-search-input inputId="stockSearch" placeholder="Ürün adı, SKU…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                        </app-filter-field>
+                        <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                        @if (canExportStocks()) {
+                            <p-button actions label="Dışa aktar" icon="pi pi-download" severity="help" (onClick)="exportCsv()" [loading]="exporting()" [disabled]="loading() || exporting()" />
+                        }
+                    </app-list-header>
+                    <div class="flex flex-wrap items-end gap-3">
+                        @if (canReadCategories && categoryOptions().length > 0) {
+                            <app-filter-field label="Kategori" labelId="lblStockCat" [active]="isCategoryFilterApplied()" width="select">
                                 <p-select
-                                    ariaLabelledBy="lblStockLow"
-                                    inputId="stockLowFilter"
-                                    [options]="lowStockFilterOptions"
-                                    [(ngModel)]="lowStockFilterInput"
+                                    ariaLabelledBy="lblStockCat"
+                                    inputId="stockCategoryFilter"
+                                    [options]="categoryOptions()"
+                                    [(ngModel)]="categoryFilterInput"
                                     optionLabel="label"
                                     optionValue="value"
-                                    placeholder="Tümü"
-                                    styleClass="w-full" (ngModelChange)="scheduleApply()" />
+                                    placeholder="Tüm kategoriler"
+                                    class="w-full"
+                                    [filter]="true"
+                                    filterPlaceholder="Ara…"
+                                    filterBy="label"
+                                    [showClear]="true"
+                                    (ngModelChange)="scheduleApply()"
+                                />
                             </app-filter-field>
-                        </div>
+                        }
+                        <app-filter-field label="Düşük stok" labelId="lblStockLow" [active]="isLowStockFilterApplied()" width="select">
+                            <p-select
+                                ariaLabelledBy="lblStockLow"
+                                inputId="stockLowFilter"
+                                [options]="lowStockFilterOptions"
+                                [(ngModel)]="lowStockFilterInput"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Tümü"
+                                class="w-full"
+                                (ngModelChange)="scheduleApply()"
+                            />
+                        </app-filter-field>
                     </div>
-            @if (loading()) {
-                <app-loading-state message="Stok listesi yükleniyor…" />
-            } @else if (error()) {
-                <app-error-state [detail]="error()!" (retry)="reload()" />
-            } @else {
-
+                </div>
+                @if (loading()) {
+                    <app-loading-state message="Stok listesi yükleniyor…" />
+                } @else if (error()) {
+                    <app-error-state [detail]="error()!" (retry)="reload()" />
+                } @else {
                     @if (displayedRows().length === 0) {
                         <app-empty-state [message]="emptyListMessage()" [hint]="emptyListHint()" />
                     } @else {
@@ -187,7 +166,13 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                         <td>{{ row.productCategoryName }}</td>
                                         <td>{{ row.clinicName }}</td>
                                         <td class="text-right whitespace-nowrap">{{ row.availableText }}</td>
-                                        <td class="text-right whitespace-nowrap">@if (row.hasExpired) {<span class="font-medium text-red-600 dark:text-red-400" data-testid="expired-qty">{{ row.expiredText }}</span>} @else {<span class="text-muted-color">—</span>}</td>
+                                        <td class="text-right whitespace-nowrap">
+                                            @if (row.hasExpired) {
+                                                <span class="font-medium text-red-600 dark:text-red-400" data-testid="expired-qty">{{ row.expiredText }}</span>
+                                            } @else {
+                                                <span class="text-muted-color">—</span>
+                                            }
+                                        </td>
                                         <td class="text-right whitespace-nowrap">{{ row.minimumStockLevelText }}</td>
                                         <td>
                                             <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
@@ -198,13 +183,7 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                                 <app-row-action-button action="detail" [link]="['/panel/products', row.productId]" />
                                             }
                                             @if (canReceiveGoods && row.isBelowMinimum && row.productId) {
-                                                <a
-                                                    routerLink="/panel/goods-receipts"
-                                                    [queryParams]="receiptQueryParams(row)"
-                                                    class="text-primary font-medium no-underline text-sm ml-3"
-                                                    data-testid="stock-receive"
-                                                    >Giriş</a
-                                                >
+                                                <a routerLink="/panel/goods-receipts" [queryParams]="receiptQueryParams(row)" class="text-primary font-medium no-underline text-sm ml-3" data-testid="stock-receive">Giriş</a>
                                             }
                                         </td>
                                     </tr>
@@ -214,9 +193,7 @@ const PRODUCT_STOCK_CSV_HEADERS = [
 
                         <div class="lg:hidden space-y-3">
                             @for (row of displayedRows(); track row.id) {
-                                <div
-                                    class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
-                                >
+                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                                     <div class="text-base font-semibold text-surface-900 dark:text-surface-0 mb-1 break-words">{{ row.productName }}</div>
                                     <div class="text-sm text-muted-color mb-2">SKU: {{ row.productSkuText }}</div>
                                     <div class="text-sm text-muted-color mb-2 break-words">Kategori: {{ row.productCategoryName }}</div>
@@ -234,19 +211,9 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                                     <div class="text-xs text-muted-color mb-3">Güncelleme: {{ row.updatedAtText }}</div>
                                     @if (row.productId) {
                                         <div class="pt-2 border-t border-surface-200 dark:border-surface-700">
-                                            <a
-                                                [routerLink]="['/panel/products', row.productId]"
-                                                class="text-primary font-medium no-underline text-sm"
-                                                >Ürün detayı →</a
-                                            >
+                                            <a [routerLink]="['/panel/products', row.productId]" class="text-primary font-medium no-underline text-sm">Ürün detayı →</a>
                                             @if (canReceiveGoods && row.isBelowMinimum) {
-                                                <a
-                                                    routerLink="/panel/goods-receipts"
-                                                    [queryParams]="receiptQueryParams(row)"
-                                                    class="text-primary font-medium no-underline text-sm ml-4"
-                                                    data-testid="stock-receive"
-                                                    >Giriş →</a
-                                                >
+                                                <a routerLink="/panel/goods-receipts" [queryParams]="receiptQueryParams(row)" class="text-primary font-medium no-underline text-sm ml-4" data-testid="stock-receive">Giriş →</a>
                                             }
                                         </div>
                                     }
@@ -266,8 +233,8 @@ const PRODUCT_STOCK_CSV_HEADERS = [
                             />
                         </div>
                     }
-            }
-                </div>
+                }
+            </div>
         </div>
     `
 })
@@ -473,14 +440,7 @@ export class ProductStocksPageComponent implements OnInit {
         return !!this.activeCategoryId().trim();
     }
 
-    private loadFromServer(
-        page: number,
-        pageSize: number,
-        search: string,
-        lowStockMode: string,
-        categoryId: string,
-        force = false
-    ): void {
+    private loadFromServer(page: number, pageSize: number, search: string, lowStockMode: string, categoryId: string, force = false): void {
         const key = `${page}|${pageSize}|${search.trim()}|${lowStockMode}|${categoryId.trim()}`;
 
         if (!force && key === this.lastLoadKey) {
@@ -509,10 +469,7 @@ export class ProductStocksPageComponent implements OnInit {
                     this.loading.set(false);
                 },
                 error: (e: unknown) => {
-                    const msg =
-                        e instanceof Error && e.message.trim()
-                            ? e.message.trim()
-                            : 'Stok bilgileri yüklenemedi.';
+                    const msg = e instanceof Error && e.message.trim() ? e.message.trim() : 'Stok bilgileri yüklenemedi.';
 
                     this.error.set(msg);
                     this.loading.set(false);

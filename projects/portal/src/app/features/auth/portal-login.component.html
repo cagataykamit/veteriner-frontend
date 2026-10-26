@@ -5,7 +5,7 @@
         <h1 id="login-title" class="portal-title">Giriş yap</h1>
 
         @if (expiredMessage(); as message) {
-            <p-message severity="warn" [text]="message" />
+            <p-message severity="warn">{{ message }}</p-message>
         }
 
         <div class="portal-segmented" role="group" aria-label="Giriş yöntemi">
@@ -43,7 +43,7 @@
 
             @if (method() === 'code' && codeSent()) {
                 @if (info(); as message) {
-                    <p-message severity="info" [text]="message" role="status" />
+                    <p-message severity="info" role="status">{{ message }}</p-message>
                 }
                 <div class="portal-field">
                     <label for="login-code">Giriş kodu</label>
@@ -84,7 +84,7 @@
             }
 
             @if (error(); as message) {
-                <p-message severity="error" [text]="message" role="alert" />
+                <p-message severity="error" role="alert">{{ message }}</p-message>
             }
 
             <div class="portal-actions">

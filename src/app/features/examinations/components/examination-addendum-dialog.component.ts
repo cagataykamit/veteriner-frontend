@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -25,15 +25,9 @@ function addendumText(c: { value: unknown }): { addendumText: true } | null {
     selector: 'app-examination-addendum-dialog',
     standalone: true,
     imports: [ReactiveFormsModule, DialogModule, ButtonModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            header="Ek not ekle"
-            [modal]="true"
-            [dismissableMask]="!submitting()"
-            [closable]="!submitting()"
-            [style]="{ width: 'min(620px, 95vw)' }"
-            [(visible)]="visible"
-        >
+        <p-dialog header="Ek not ekle" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(620px, 95vw)' }" [(visible)]="visible">
             <p class="mt-0 text-muted-color">Ek not kalıcıdır; eklendikten sonra düzenlenemez veya silinemez. İlk muayene metni değişmez.</p>
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
@@ -57,17 +51,9 @@ function addendumText(c: { value: unknown }): { addendumText: true } | null {
                     <p class="text-red-500 mt-3 mb-0" role="alert" data-testid="addendum-error">{{ submitError() }}</p>
                 }
             </form>
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button
-                    type="button"
-                    label="Ek notu kaydet"
-                    icon="pi pi-check"
-                    [loading]="submitting()"
-                    [disabled]="form.invalid || submitting()"
-                    data-testid="addendum-submit"
-                    (onClick)="onSubmit()"
-                />
+                <p-button type="button" label="Ek notu kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting()" data-testid="addendum-submit" (onClick)="onSubmit()" />
             </ng-template>
         </p-dialog>
     `

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { SETTINGS_SECTIONS, visibleGroups } from '@/app/core/routing/panel-navigation';
 import { NavigationCardsComponent } from '@/app/shared/ui/navigation-cards/navigation-cards.component';
@@ -8,6 +8,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     selector: 'app-settings-home-page',
     standalone: true,
     imports: [AppPageHeaderComponent, NavigationCardsComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header title="Ayarlar" description="Hesap, klinik, iletişim ve tanım ayarları." />
 

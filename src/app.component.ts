@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { LayoutService } from '@/app/layout/service/layout.service';
 
@@ -6,6 +6,7 @@ import { LayoutService } from '@/app/layout/service/layout.service';
     selector: 'app-root',
     standalone: true,
     imports: [RouterModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `<router-outlet></router-outlet>`
 })
 export class AppComponent {

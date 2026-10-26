@@ -1,4 +1,4 @@
-import { Component, forwardRef, input } from '@angular/core';
+import { Component, forwardRef, input, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { provideRouter } from '@angular/router';
@@ -16,6 +16,7 @@ import { ChargeSuggestionsPageComponent } from './charge-suggestions-page.compon
     selector: 'app-client-search',
     standalone: true,
     template: '',
+    changeDetection: ChangeDetectionStrategy.Eager,
     providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ClientSearchStubComponent), multi: true }]
 })
 class ClientSearchStubComponent implements ControlValueAccessor {
@@ -96,8 +97,7 @@ describe('ChargeSuggestionsPageComponent', () => {
 
     const text = (h: RouterTestingHarness) => (h.routeNativeElement as HTMLElement).textContent ?? '';
     /** Düğme ve bağlantıların erişilebilir adı: görünür metin, yalnız simgeli düğmede aria-label. */
-    const labels = (h: RouterTestingHarness) =>
-        Array.from((h.routeNativeElement as HTMLElement).querySelectorAll('button, a')).map((b) => b.textContent?.trim() || b.getAttribute('aria-label') || '');
+    const labels = (h: RouterTestingHarness) => Array.from((h.routeNativeElement as HTMLElement).querySelectorAll('button, a')).map((b) => b.textContent?.trim() || b.getAttribute('aria-label') || '');
 
     it('hekim (yalnız Charges.Read) kalemleri görür; Çevir ve Ücretsiz say düğmesi çıkmaz', async () => {
         const { harness } = await open(['Charges.Read'], [suggestion()]);
@@ -172,7 +172,10 @@ describe('ChargeSuggestionsPageComponent', () => {
     it('hata sonrası yeniden denemede aynı requestId gider (çift ücret olmaz); başarıdan sonra yenisi üretilir', async () => {
         const { cmp } = await open(['Charges.Read', 'Charges.Create'], [suggestion()]);
 
-        service.convert.and.returnValues(throwError(() => new Error('Bağlantı hatası')), of(convertedResult()));
+        service.convert.and.returnValues(
+            throwError(() => new Error('Bağlantı hatası')),
+            of(convertedResult())
+        );
         cmp.convertQuick(suggestion());
         expect(cmp.actionError()).toBe('Bağlantı hatası');
         cmp.convertQuick(suggestion());

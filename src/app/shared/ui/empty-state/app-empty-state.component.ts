@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
     selector: 'app-empty-state',
     standalone: true,
     imports: [CommonModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="flex flex-col items-center justify-center py-8 px-4 text-center">
             <i [class]="iconClass() + ' text-muted-color text-4xl mb-4'"></i>

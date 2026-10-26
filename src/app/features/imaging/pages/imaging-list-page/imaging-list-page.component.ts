@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -52,6 +52,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         ImagingCancelDialogComponent,
         TrDateTimePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (contextPetId()) {
             <app-context-filter-chip label="Seçili hastanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
@@ -79,7 +80,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 (ngModelChange)="applyFilters()"
                                 [showClear]="true"
                                 placeholder="Tüm türler"
-                                styleClass="w-full"
+                                class="w-full"
                             />
                         </div>
                         <div class="col-span-12 md:col-span-3">
@@ -92,7 +93,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                         </div>
                         <div class="col-span-12 md:col-span-3">
                             <label for="imgStatus" class="block text-xs font-medium text-muted-color mb-1">Durum</label>
-                            <p-select inputId="imgStatus" [options]="statusOptions" optionLabel="label" optionValue="value" [(ngModel)]="statusInput" (ngModelChange)="applyFilters()" styleClass="w-full" />
+                            <p-select inputId="imgStatus" [options]="statusOptions" optionLabel="label" optionValue="value" [(ngModel)]="statusInput" (ngModelChange)="applyFilters()" class="w-full" />
                         </div>
                     </div>
                 </div>

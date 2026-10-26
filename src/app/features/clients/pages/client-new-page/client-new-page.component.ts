@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -9,24 +9,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ClientContactPreferenceFieldsComponent } from '@/app/features/clients/components/client-contact-preference-fields.component';
 import { ClientInvoicingFieldsComponent } from '@/app/features/clients/components/client-invoicing-fields.component';
 import { mapClientUpsertFormValueToCreateRequest } from '@/app/features/clients/data/client.mapper';
-import {
-    type ClientInvoicingFieldKey,
-    createClientInvoicingFormGroup,
-    isClientInvoicingDtoEmpty,
-    mapClientInvoicingFormToDto
-} from '@/app/features/clients/forms/client-invoicing-form.factory';
+import { type ClientInvoicingFieldKey, createClientInvoicingFormGroup, isClientInvoicingDtoEmpty, mapClientInvoicingFormToDto } from '@/app/features/clients/forms/client-invoicing-form.factory';
 import { parseClientInvoicingFieldErrors } from '@/app/features/clients/utils/client-invoicing.utils';
-import {
-    createClientUpsertFormGroup,
-    getClientUpsertFormValue
-} from '@/app/features/clients/forms/client-upsert-form.factory';
+import { createClientUpsertFormGroup, getClientUpsertFormValue } from '@/app/features/clients/forms/client-upsert-form.factory';
 import { CLIENT_UPSERT_FORM_FIELDS } from '@/app/features/clients/forms/client-upsert-form.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import {
-    type ClientCreateFieldErrors,
-    type ClientCreateFormFieldKey,
-    parseClientCreateHttpError
-} from '@/app/features/clients/utils/client-create-validation-parse.utils';
+import { type ClientCreateFieldErrors, type ClientCreateFormFieldKey, parseClientCreateHttpError } from '@/app/features/clients/utils/client-create-validation-parse.utils';
 import { clientUpsertFieldErrorMessage } from '@/app/features/clients/utils/client-upsert.validation.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -34,15 +22,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 @Component({
     selector: 'app-client-new-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        ButtonModule,
-        InputTextModule,
-        ClientContactPreferenceFieldsComponent,
-        ClientInvoicingFieldsComponent,
-        AppPageHeaderComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" title="Yeni Müşteri" description="Müşteri kaydı oluşturun." />
 
@@ -90,21 +71,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <p-button
-                        type="submit"
-                        [label]="copy.buttonSave"
-                        icon="pi pi-check"
-                        [loading]="submitting()"
-                        [disabled]="form.invalid || invoicingForm.invalid || submitting()"
-                    />
-                    <p-button
-                        type="button"
-                        [label]="copy.buttonCancel"
-                        icon="pi pi-times"
-                        severity="secondary"
-                        (onClick)="goList()"
-                        [disabled]="submitting()"
-                    />
+                    <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || invoicingForm.invalid || submitting()" />
+                    <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
             </form>
         </div>

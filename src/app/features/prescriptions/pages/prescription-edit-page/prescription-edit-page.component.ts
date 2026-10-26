@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-s
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -15,26 +15,13 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
-import {
-    followUpBeforePrescribedMessage,
-    mapPrescriptionUpsertFormToCreateRequest
-} from '@/app/features/prescriptions/data/prescription.mapper';
+import { followUpBeforePrescribedMessage, mapPrescriptionUpsertFormToCreateRequest } from '@/app/features/prescriptions/data/prescription.mapper';
 import type { PrescriptionEditVm } from '@/app/features/prescriptions/models/prescription-vm.model';
 import { PrescriptionItemsEditorComponent } from '@/app/features/prescriptions/components/prescription-items-editor.component';
 import { PrescriptionsService } from '@/app/features/prescriptions/services/prescriptions.service';
 import { createPrescriptionItemGroup, createPrescriptionItemsArray, prescriptionItemsFormToInputs } from '@/app/features/prescriptions/utils/prescription-items-form.utils';
-import {
-    type PrescriptionUpsertFieldErrors,
-    type PrescriptionUpsertFormFieldKey,
-    parsePrescriptionUpsertHttpError
-} from '@/app/features/prescriptions/utils/prescription-upsert-validation-parse.utils';
-import {
-    examinationListItemFromDetail,
-    filterTreatmentsByExamination,
-    prescriptionExaminationSelectOption,
-    prescriptionTreatmentSelectOption,
-    treatmentListItemFromDetail
-} from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
+import { type PrescriptionUpsertFieldErrors, type PrescriptionUpsertFormFieldKey, parsePrescriptionUpsertHttpError } from '@/app/features/prescriptions/utils/prescription-upsert-validation-parse.utils';
+import { examinationListItemFromDetail, filterTreatmentsByExamination, prescriptionExaminationSelectOption, prescriptionTreatmentSelectOption, treatmentListItemFromDetail } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
@@ -45,22 +32,9 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import {
-    dateOnlyInputToIstanbulStartUtcIso,
-    fromIstanbulDateTimeLocalInputToUtcIso,
-    toIstanbulDateTimeLocalInputValue
-} from '@/app/shared/utils/date.utils';
-import {
-    DATE_INPUT_MIN,
-    dateTimeYearRangeValidator,
-    dateYearRangeValidator,
-    effectiveDateTimeLocalInputMin
-} from '@/app/shared/utils/date-input-validation.utils';
-import {
-    PRESCRIPTION_DATE_TOO_FAR_PAST_MESSAGE,
-    prescriptionDateNotTooFarPastValidator,
-    prescriptionDateTimeLocalMinAllowed
-} from '@/app/features/prescriptions/utils/prescription-date-validation.utils';
+import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
+import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
+import { PRESCRIPTION_DATE_TOO_FAR_PAST_MESSAGE, prescriptionDateNotTooFarPastValidator, prescriptionDateTimeLocalMinAllowed } from '@/app/features/prescriptions/utils/prescription-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 @Component({
@@ -75,8 +49,13 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         AppPageHeaderComponent,
         PetAlertBannerComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, PrescriptionItemsEditorComponent
+        AppErrorStateComponent,
+        ClientSearchComponent,
+        PetSearchComponent,
+        DateInputComponent,
+        PrescriptionItemsEditorComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (loading()) {
             <app-loading-state message="Reçete düzenleme bilgileri yükleniyor…" />
@@ -90,9 +69,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 
             <div class="card">
                 @if (ro.mutationBlocked()) {
-                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                        İşletme salt okunur moddadır; değişiklik kaydedilemez.
-                    </p>
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; değişiklik kaydedilemez.</p>
                 }
                 @if (selectionError()) {
                     <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
@@ -153,7 +130,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                 filterPlaceholder="Ara…"
                                 filterBy="label"
                                 [showClear]="true"
-                                styleClass="w-full"
+                                class="w-full"
                                 [loading]="loadingExaminations()"
                                 [disabled]="relationSelectsDisabled()"
                             />
@@ -174,7 +151,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                 filterPlaceholder="Ara…"
                                 filterBy="label"
                                 [showClear]="true"
-                                styleClass="w-full"
+                                class="w-full"
                                 [loading]="loadingTreatments()"
                                 [disabled]="relationSelectsDisabled()"
                             />
@@ -217,25 +194,11 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <p-button
-                            type="submit"
-                            [label]="copy.buttonSave"
-                            icon="pi pi-check"
-                            [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || ro.mutationBlocked()"
-                        />
-                        <p-button
-                            type="button"
-                            [label]="copy.buttonCancel"
-                            icon="pi pi-times"
-                            severity="secondary"
-                            (onClick)="goDetail()"
-                            [disabled]="submitting()"
-                        />
+                        <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || ro.mutationBlocked()" />
+                        <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goDetail()" [disabled]="submitting()" />
                     </div>
                 </form>
             </div>
-
         }
     `
 })
@@ -268,7 +231,6 @@ export class PrescriptionEditPageComponent implements OnInit {
     readonly apiFieldErrors = signal<PrescriptionUpsertFieldErrors>({});
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
-
     private prescriptionId = '';
     private editVmCache: PrescriptionEditVm | null = null;
     private initialRelationHydratePending = false;
@@ -290,17 +252,7 @@ export class PrescriptionEditPageComponent implements OnInit {
     });
 
     constructor() {
-        const fields: PrescriptionUpsertFormFieldKey[] = [
-            'clientId',
-            'petId',
-            'prescribedAtLocal',
-            'followUpDate',
-            'examinationId',
-            'treatmentId',
-            'title',
-            'content',
-            'notes'
-        ];
+        const fields: PrescriptionUpsertFormFieldKey[] = ['clientId', 'petId', 'prescribedAtLocal', 'followUpDate', 'examinationId', 'treatmentId', 'title', 'content', 'notes'];
 
         for (const f of fields) {
             this.form.controls[f].valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -535,10 +487,6 @@ export class PrescriptionEditPageComponent implements OnInit {
         void this.router.navigate(['/panel/prescriptions', this.prescriptionId]);
     }
 
-
-
-
-
     private loadRelationsForPetFresh(petId: string): void {
         const seq = ++this.relationLoadSeq;
         const pid = petId.trim();
@@ -688,8 +636,6 @@ export class PrescriptionEditPageComponent implements OnInit {
             this.form.controls.treatmentId.setValue('', { emitEvent: false });
         }
     }
-
-
 
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {

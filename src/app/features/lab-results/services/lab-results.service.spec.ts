@@ -1,4 +1,4 @@
-import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
@@ -22,12 +22,7 @@ describe('LabResultsService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [
-                provideHttpClient(),
-                provideHttpClientTesting(),
-                { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: AuthService, useValue: { getClinicId: () => 'clinic-1' } }
-            ]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }, { provide: AuthService, useValue: { getClinicId: () => 'clinic-1' } }]
         });
         service = TestBed.inject(LabResultsService);
         http = TestBed.inject(HttpTestingController);
@@ -52,10 +47,7 @@ describe('LabResultsService', () => {
                 done();
             }
         });
-        http.expectOne('http://api.test/api/v1/lab-results/l1').flush(
-            { extensions: { code: 'LabResults.ConcurrencyConflict' } },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/lab-results/l1').flush({ extensions: { code: 'LabResults.ConcurrencyConflict' } }, { status: 409, statusText: 'Conflict' });
     });
 
     it('düzenleme verisi rowVersion taşır; sunucu rowVersion döndürmezse düzenleme reddedilir', (done) => {
@@ -113,10 +105,7 @@ describe('LabResultsService', () => {
                 done();
             }
         });
-        http.expectOne('http://api.test/api/v1/lab-results/l1/cancel').flush(
-            { extensions: { code: 'Examinations.Finalized' } },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/lab-results/l1/cancel').flush({ extensions: { code: 'Examinations.Finalized' } }, { status: 409, statusText: 'Conflict' });
     });
 
     it('liste süzgeci status parametresi olarak gider; boşsa gönderilmez', (done) => {

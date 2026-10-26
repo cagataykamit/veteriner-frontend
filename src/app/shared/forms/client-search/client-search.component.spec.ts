@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { of, throwError } from 'rxjs';
@@ -14,6 +14,7 @@ const ali: ClientSearchResultVm = { id: 'c1', fullName: 'Ali Veli', phone: '+90 
 @Component({
     standalone: true,
     imports: [ReactiveFormsModule, ClientSearchComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `<app-client-search [formControl]="control" />`
 })
 class HostComponent {

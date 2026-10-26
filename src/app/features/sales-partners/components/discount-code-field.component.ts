@@ -1,16 +1,12 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, OnInit, inject, input, model, output, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, input, model, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { catchError, distinctUntilChanged, map, of, Subject, switchMap, timer } from 'rxjs';
 import type { DiscountCodeValidationDto } from '@/app/features/sales-partners/models/sales-partner.model';
 import { DiscountCodesService } from '@/app/features/sales-partners/services/discount-codes.service';
-import {
-    DISCOUNT_CODE_INVALID_MESSAGE,
-    discountNoteText,
-    normalizeDiscountCodeInput
-} from '@/app/features/sales-partners/utils/discount-code.utils';
+import { DISCOUNT_CODE_INVALID_MESSAGE, discountNoteText, normalizeDiscountCodeInput } from '@/app/features/sales-partners/utils/discount-code.utils';
 
 export type DiscountCodeFieldStatus = 'idle' | 'checking' | 'valid' | 'invalid' | 'error';
 
@@ -25,6 +21,7 @@ const DEBOUNCE_MS = 600;
     selector: 'app-discount-code-field',
     standalone: true,
     imports: [FormsModule, InputTextModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="flex flex-col gap-1">
             <label [for]="inputId()" class="block text-surface-900 dark:text-surface-0 font-medium mb-1">Ortak kodu <span class="text-muted-color font-normal">(isteğe bağlı)</span></label>
@@ -148,11 +145,7 @@ export class DiscountCodeFieldComponent implements OnInit {
             }),
             catchError((err: unknown) => {
                 this.lastChecked = null;
-                this.errorMessage.set(
-                    err instanceof HttpErrorResponse && err.status === 429
-                        ? 'Çok fazla deneme yapıldı; biraz sonra tekrar deneyin.'
-                        : 'Kod şu an doğrulanamadı; kayıt sırasında yeniden denetlenecek.'
-                );
+                this.errorMessage.set(err instanceof HttpErrorResponse && err.status === 429 ? 'Çok fazla deneme yapıldı; biraz sonra tekrar deneyin.' : 'Kod şu an doğrulanamadı; kayıt sırasında yeniden denetlenecek.');
                 this.status.set('error');
                 this.validated.emit(null);
 

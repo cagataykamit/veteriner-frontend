@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
@@ -7,26 +7,10 @@ import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
 import { map, Observable } from 'rxjs';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
-import type {
-    ImportBatchDto,
-    ImportFileFormat,
-    ImportPreviewDto,
-    ImportRowDto,
-    ImportRowsQuery,
-    ImportTable,
-    ImportUnmappedValueDto,
-    ImportValueKind
-} from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchDto, ImportFileFormat, ImportPreviewDto, ImportRowDto, ImportRowsQuery, ImportTable, ImportUnmappedValueDto, ImportValueKind } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
-import {
-    IMPORT_SEVERITY_LABELS,
-    IMPORT_VALUE_KIND_LABELS,
-    importErrorCode,
-    importErrorMessage,
-    importIssueLabel,
-    importSeverityTag
-} from '@/app/features/imports/utils/import-labels.utils';
+import { IMPORT_SEVERITY_LABELS, IMPORT_VALUE_KIND_LABELS, importErrorCode, importErrorMessage, importIssueLabel, importSeverityTag } from '@/app/features/imports/utils/import-labels.utils';
 import { fieldLabel, IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
 import { IMPORT_VALUE_SKIP, type ImportValueChoices, valueChoiceKey } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { PetColorsService } from '@/app/features/pets/services/pet-colors.service';
@@ -43,16 +27,17 @@ const ROW_PAGE_SIZE = 25;
     selector: 'app-import-review-step',
     standalone: true,
     imports: [FormsModule, ButtonModule, MessageModule, Paginator, SelectModule, AppEmptyStateComponent, AppStatusTagComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (preview(); as p) {
             @if (p.status === 'ValidationFailed' && p.blockers.length === 0) {
-                <p-message severity="error" styleClass="w-full mb-4" role="alert">Doğrulama beklenmeyen bir sorun nedeniyle tamamlanamadı; hiçbir kayıt oluşturulmadı. Yeniden doğrulayın; sorun sürerse destek ekibiyle iletişime geçin.</p-message>
+                <p-message severity="error" class="w-full mb-4" role="alert">Doğrulama beklenmeyen bir sorun nedeniyle tamamlanamadı; hiçbir kayıt oluşturulmadı. Yeniden doğrulayın; sorun sürerse destek ekibiyle iletişime geçin.</p-message>
             } @else if (p.status === 'ValidationFailed') {
-                <p-message severity="error" styleClass="w-full mb-4" role="alert">Doğrulama tamamlanamadı. Aşağıdaki nedenleri giderip yeniden doğrulayın.</p-message>
+                <p-message severity="error" class="w-full mb-4" role="alert">Doğrulama tamamlanamadı. Aşağıdaki nedenleri giderip yeniden doğrulayın.</p-message>
             } @else if (p.canCommit) {
-                <p-message severity="success" styleClass="w-full mb-4">Doğrulama tamamlandı. Henüz hiçbir kayıt oluşturulmadı; aşağıdaki sonucu inceleyip onay adımına geçebilirsiniz.</p-message>
+                <p-message severity="success" class="w-full mb-4">Doğrulama tamamlandı. Henüz hiçbir kayıt oluşturulmadı; aşağıdaki sonucu inceleyip onay adımına geçebilirsiniz.</p-message>
             } @else {
-                <p-message severity="warn" styleClass="w-full mb-4">Doğrulama tamamlandı ancak aktarmaya geçmeden önce çözülmesi gereken konular var.</p-message>
+                <p-message severity="warn" class="w-full mb-4">Doğrulama tamamlandı ancak aktarmaya geçmeden önce çözülmesi gereken konular var.</p-message>
             }
 
             @if (p.blockers.length) {
@@ -69,13 +54,20 @@ const ROW_PAGE_SIZE = 25;
             <section class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                 @for (t of summaryTables(p); track t.key) {
                     <div class="rounded-border border border-surface-200 dark:border-surface-700 p-4">
-                        <div class="font-medium mb-2">{{ t.label }} <span class="text-muted-color font-normal">({{ t.s.total }} satır)</span></div>
+                        <div class="font-medium mb-2">
+                            {{ t.label }} <span class="text-muted-color font-normal">({{ t.s.total }} satır)</span>
+                        </div>
                         <dl class="grid grid-cols-2 gap-x-3 gap-y-1 m-0 text-sm">
-                            <dt class="text-muted-color">Oluşturulacak</dt><dd class="m-0 text-right">{{ t.s.willCreate }}</dd>
-                            <dt class="text-muted-color">Mevcutla eşleşecek</dt><dd class="m-0 text-right">{{ t.s.willMatch }}</dd>
-                            <dt class="text-muted-color">Atlanacak</dt><dd class="m-0 text-right">{{ t.s.willSkip }}</dd>
-                            <dt class="text-muted-color">Uyarılı</dt><dd class="m-0 text-right">{{ t.s.warning }}</dd>
-                            <dt class="text-muted-color">Hatalı</dt><dd class="m-0 text-right" [class.text-red-500]="t.s.error > 0">{{ t.s.error }}</dd>
+                            <dt class="text-muted-color">Oluşturulacak</dt>
+                            <dd class="m-0 text-right">{{ t.s.willCreate }}</dd>
+                            <dt class="text-muted-color">Mevcutla eşleşecek</dt>
+                            <dd class="m-0 text-right">{{ t.s.willMatch }}</dd>
+                            <dt class="text-muted-color">Atlanacak</dt>
+                            <dd class="m-0 text-right">{{ t.s.willSkip }}</dd>
+                            <dt class="text-muted-color">Uyarılı</dt>
+                            <dd class="m-0 text-right">{{ t.s.warning }}</dd>
+                            <dt class="text-muted-color">Hatalı</dt>
+                            <dd class="m-0 text-right" [class.text-red-500]="t.s.error > 0">{{ t.s.error }}</dd>
                         </dl>
                     </div>
                 }
@@ -84,9 +76,7 @@ const ROW_PAGE_SIZE = 25;
             @if (p.unmappedValues.length) {
                 <section class="rounded-border border border-surface-200 dark:border-surface-700 p-4 mb-4">
                     <h6 class="mt-0 mb-1">Eşlenemeyen değerler</h6>
-                    <p class="text-sm text-muted-color mt-0">
-                        Bu değerler sistemde bulunamadı. Mevcut bir tanıma eşleyin veya bu değerli satırları atlayın. Yeni tür ya da aşı tanımı oluşturmak için önce Ayarlar > Tanımlar bölümünü kullanın.
-                    </p>
+                    <p class="text-sm text-muted-color mt-0">Bu değerler sistemde bulunamadı. Mevcut bir tanıma eşleyin veya bu değerli satırları atlayın. Yeni tür ya da aşı tanımı oluşturmak için önce Ayarlar > Tanımlar bölümünü kullanın.</p>
                     <div class="flex flex-col gap-3">
                         @for (u of p.unmappedValues; track u.kind + '|' + u.source) {
                             <div class="grid grid-cols-12 gap-2 items-center">
@@ -108,7 +98,7 @@ const ROW_PAGE_SIZE = 25;
                                         [loading]="catalogLoading()[u.kind]"
                                         [ngModel]="choices()[choiceKey(u)] || null"
                                         (ngModelChange)="setChoice(u, $event)"
-                                        styleClass="w-full"
+                                        class="w-full"
                                         [ariaLabel]="u.source + ' için karşılık'"
                                     />
                                 </div>
@@ -128,13 +118,12 @@ const ROW_PAGE_SIZE = 25;
                 <section class="rounded-border border border-surface-200 dark:border-surface-700 p-4 mb-4">
                     <h6 class="mt-0 mb-2"><i class="pi pi-bell mr-2"></i>Aşı hatırlatmaları</h6>
                     <p class="m-0">
-                        Bu aktarmadan <strong>{{ p.reminderImpact.vaccinationsWithFutureDueDate }}</strong> ileri tarihli sonraki aşı için hatırlatma e-postası üretilecekti
-                        (toplam {{ p.reminderImpact.vaccinationsWithDueDate }} aşıda sonraki tarih var, {{ p.reminderImpact.vaccinationsWithPastDueDate }} tanesi geçmişte kaldığı için hatırlatma üretmez).
-                        <strong>İçe aktarılan aşılar için hatırlatma varsayılan olarak KAPALIDIR;</strong> hiçbir e-posta kendiliğinden gitmez.
+                        Bu aktarmadan <strong>{{ p.reminderImpact.vaccinationsWithFutureDueDate }}</strong> ileri tarihli sonraki aşı için hatırlatma e-postası üretilecekti (toplam {{ p.reminderImpact.vaccinationsWithDueDate }} aşıda sonraki tarih
+                        var, {{ p.reminderImpact.vaccinationsWithPastDueDate }} tanesi geçmişte kaldığı için hatırlatma üretmez). <strong>İçe aktarılan aşılar için hatırlatma varsayılan olarak KAPALIDIR;</strong> hiçbir e-posta kendiliğinden gitmez.
                     </p>
                     <p class="text-sm text-muted-color mb-0 mt-2">
-                        Hatırlatmayı, aktarım bittikten sonra sayıyı görerek siz açabilirsiniz. Şu an {{ p.reminderImpact.reminderWindowDays }} gün içinde vadesi gelen ve e-postalı müşteriye ait
-                        {{ p.reminderImpact.emailsWithinReminderWindow }} aşı var.
+                        Hatırlatmayı, aktarım bittikten sonra sayıyı görerek siz açabilirsiniz. Şu an {{ p.reminderImpact.reminderWindowDays }} gün içinde vadesi gelen ve e-postalı müşteriye ait {{ p.reminderImpact.emailsWithinReminderWindow }} aşı
+                        var.
                         @if (!p.reminderImpact.tenantRemindersEnabled) {
                             Kurumunuzda aşı hatırlatması kapalı olduğundan açılsa bile e-posta gitmez.
                         }
@@ -167,8 +156,28 @@ const ROW_PAGE_SIZE = 25;
                     <div class="flex flex-wrap items-end justify-between gap-3 mb-3">
                         <h6 class="m-0">Satırlar</h6>
                         <div class="flex flex-wrap gap-2 items-end">
-                            <p-select [options]="tableOptions" [ngModel]="tableFilter()" (ngModelChange)="setTable($event)" optionLabel="label" optionValue="value" placeholder="Tüm tablolar" [showClear]="true" styleClass="w-44" ariaLabel="Tablo süzgeci" />
-                            <p-select [options]="statusOptions" [ngModel]="statusFilter()" (ngModelChange)="setStatus($event)" optionLabel="label" optionValue="value" placeholder="Tüm durumlar" [showClear]="true" styleClass="w-40" ariaLabel="Durum süzgeci" />
+                            <p-select
+                                [options]="tableOptions"
+                                [ngModel]="tableFilter()"
+                                (ngModelChange)="setTable($event)"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Tüm tablolar"
+                                [showClear]="true"
+                                class="w-44"
+                                ariaLabel="Tablo süzgeci"
+                            />
+                            <p-select
+                                [options]="statusOptions"
+                                [ngModel]="statusFilter()"
+                                (ngModelChange)="setStatus($event)"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Tüm durumlar"
+                                [showClear]="true"
+                                class="w-40"
+                                ariaLabel="Durum süzgeci"
+                            />
                             @if (codeFilter()) {
                                 <p-button size="small" severity="secondary" icon="pi pi-times" [label]="issueLabel(codeFilter()!)" (onClick)="filterByCode(null)" />
                             }
@@ -180,7 +189,7 @@ const ROW_PAGE_SIZE = 25;
                     </div>
 
                     @if (rowsError()) {
-                        <p-message severity="error" styleClass="w-full" role="alert">{{ rowsError() }}</p-message>
+                        <p-message severity="error" class="w-full" role="alert">{{ rowsError() }}</p-message>
                     } @else if (rowsLoading() && rows().length === 0) {
                         <p class="text-muted-color">Satırlar yükleniyor…</p>
                     } @else if (rows().length === 0) {
@@ -199,7 +208,12 @@ const ROW_PAGE_SIZE = 25;
                                     @if (r.issues.length) {
                                         <ul class="m-0 mt-2 pl-5 text-sm">
                                             @for (i of r.issues; track i.code + i.field) {
-                                                <li><span class="font-medium">{{ issueLabel(i.code, i.message) }}</span>@if (i.field) {<span class="text-muted-color"> ({{ fieldLabel(r.table, i.field) }})</span>}</li>
+                                                <li>
+                                                    <span class="font-medium">{{ issueLabel(i.code, i.message) }}</span>
+                                                    @if (i.field) {
+                                                        <span class="text-muted-color"> ({{ fieldLabel(r.table, i.field) }})</span>
+                                                    }
+                                                </li>
                                             }
                                         </ul>
                                     }
@@ -207,7 +221,10 @@ const ROW_PAGE_SIZE = 25;
                                         <summary class="cursor-pointer text-muted-color">Dosyadaki satır</summary>
                                         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 mt-2 mb-0">
                                             @for (kv of sourceEntries(r); track kv[0]) {
-                                                <div class="min-w-0"><dt class="inline text-muted-color">{{ kv[0] }}: </dt><dd class="inline m-0 break-words">{{ kv[1] }}</dd></div>
+                                                <div class="min-w-0">
+                                                    <dt class="inline text-muted-color">{{ kv[0] }}:</dt>
+                                                    <dd class="inline m-0 break-words">{{ kv[1] }}</dd>
+                                                </div>
                                             }
                                         </dl>
                                     </details>
@@ -218,7 +235,7 @@ const ROW_PAGE_SIZE = 25;
                     }
                 </section>
             } @else {
-                <p-message severity="info" styleClass="w-full mb-4">Satır verisi saklama süresi sonunda silindi; yalnızca sayılar görüntülenebilir.</p-message>
+                <p-message severity="info" class="w-full mb-4">Satır verisi saklama süresi sonunda silindi; yalnızca sayılar görüntülenebilir.</p-message>
             }
         }
     `
@@ -396,9 +413,7 @@ export class ImportReviewStepComponent {
             error: (e: unknown) => {
                 this.rows.set([]);
                 this.rowsLoading.set(false);
-                this.rowsError.set(
-                    importErrorCode(e) === 'Imports.PayloadPurged' ? 'Satır verisi saklama süresi sonunda silindi.' : importErrorMessage(e, 'Satırlar yüklenemedi.')
-                );
+                this.rowsError.set(importErrorCode(e) === 'Imports.PayloadPurged' ? 'Satır verisi saklama süresi sonunda silindi.' : importErrorMessage(e, 'Satırlar yüklenemedi.'));
             }
         });
     }

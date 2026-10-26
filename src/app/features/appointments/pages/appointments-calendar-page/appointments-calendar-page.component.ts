@@ -1,11 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
-import type {
-    AppointmentCalendarItemVm
-} from '@/app/features/appointments/models/appointment-calendar-vm.model';
+import type { AppointmentCalendarItemVm } from '@/app/features/appointments/models/appointment-calendar-vm.model';
 import { groupCalendarItemsByDay } from '@/app/features/appointments/data/appointment-calendar.mapper';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -15,10 +13,7 @@ import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay, localDateYyyyMmDd, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
-import {
-    APPOINTMENTS_CREATE_CLAIM,
-    APPOINTMENTS_RESCHEDULE_CLAIM
-} from '@/app/core/auth/operation-claims.constants';
+import { APPOINTMENTS_CREATE_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 type CalendarViewMode = 'day' | 'week';
@@ -27,41 +22,23 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
 @Component({
     selector: 'app-appointments-calendar-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        ButtonModule,
-        AppListHeaderComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent,
-        AppEmptyStateComponent,
-        AppStatusTagComponent,
-        AppRowActionButtonComponent
-    ],
+    imports: [CommonModule, ButtonModule, AppListHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, AppStatusTagComponent, AppRowActionButtonComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="card">
             <app-list-header class="mb-4" [title]="pageTitle()">
                 @if (canCreateAppointment && !ro.mutationBlocked()) {
-                    <button actions pButton type="button" label="Yeni Randevu" icon="pi pi-plus" class="p-button-primary" (click)="createAppointment()"></button>
+                    <button actions pButton type="button" class="p-button-primary" (click)="createAppointment()"><i class="pi pi-plus"></i>Yeni Randevu</button>
                 } @else if (canCreateAppointment && ro.mutationBlocked()) {
-                    <button actions pButton type="button" label="Yeni Randevu (salt okunur)" icon="pi pi-lock" class="p-button-secondary" [disabled]="true"></button>
+                    <button actions pButton type="button" class="p-button-secondary" [disabled]="true"><i class="pi pi-lock"></i>Yeni Randevu (salt okunur)</button>
                 }
             </app-list-header>
 
             @if (!isPresetDateGroupedMode()) {
                 <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3 mb-4">
                     <div class="flex items-center gap-2">
-                        <p-button
-                            [severity]="viewMode() === 'day' ? undefined : 'secondary'"
-                            label="Gün"
-                            size="small"
-                            (onClick)="changeViewMode('day')"
-                        />
-                        <p-button
-                            [severity]="viewMode() === 'week' ? undefined : 'secondary'"
-                            label="Hafta"
-                            size="small"
-                            (onClick)="changeViewMode('week')"
-                        />
+                        <p-button [severity]="viewMode() === 'day' ? undefined : 'secondary'" label="Gün" size="small" (onClick)="changeViewMode('day')" />
+                        <p-button [severity]="viewMode() === 'week' ? undefined : 'secondary'" label="Hafta" size="small" (onClick)="changeViewMode('week')" />
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <p-button severity="secondary" size="small" icon="pi pi-angle-left" label="Önceki" (onClick)="previous()" />
@@ -77,7 +54,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
             @if (activePreset(); as preset) {
                 <div class="flex flex-wrap items-center gap-2 mb-4">
                     <span class="text-sm text-muted-color">{{ presetHelperText(preset) }}</span>
-                    <button pButton type="button" size="small" text="true" label="Filtreyi temizle" icon="pi pi-times" (click)="clearPreset()"></button>
+                    <button pButton type="button" size="small" text="true" (click)="clearPreset()"><i class="pi pi-times"></i>Filtreyi temizle</button>
                 </div>
             }
 
@@ -88,7 +65,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
             } @else if (items().length === 0) {
                 <app-empty-state message="Bu tarih aralığında randevu bulunmuyor." hint="Yeni randevu oluşturarak takvime kayıt ekleyin.">
                     @if (canCreateAppointment && !ro.mutationBlocked()) {
-                        <button pButton type="button" label="Yeni randevu oluştur" icon="pi pi-plus" (click)="createAppointment()"></button>
+                        <button pButton type="button" (click)="createAppointment()"><i class="pi pi-plus"></i>Yeni randevu oluştur</button>
                     }
                 </app-empty-state>
             } @else if (isPresetDateGroupedMode()) {
@@ -99,15 +76,10 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                             <div class="flex flex-col gap-2">
                                 @for (item of day.items; track item.id) {
                                     <article class="rounded-md border border-surface-200 dark:border-surface-700 px-2 py-2">
-                                        <div
-                                            class="grid items-center gap-2 w-full min-h-9"
-                                            style="grid-template-columns: 52px minmax(120px, 1.4fr) minmax(140px, 1.6fr) 88px 112px 30px 30px;"
-                                        >
-                                            <span
-                                                class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap"
-                                                [title]="calendarRowHint(item)"
-                                                >{{ item.timeRangeLabel }}</span
-                                            >
+                                        <div class="grid items-center gap-2 w-full min-h-9" style="grid-template-columns: 52px minmax(120px, 1.4fr) minmax(140px, 1.6fr) 88px 112px 30px 30px;">
+                                            <span class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap" [title]="calendarRowHint(item)">{{
+                                                item.timeRangeLabel
+                                            }}</span>
                                             <div class="flex items-center min-w-0">
                                                 <p class="m-0 text-sm font-semibold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap" [title]="item.petName">
                                                     {{ item.petName }}
@@ -148,15 +120,10 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                 <div class="flex flex-col gap-2 max-h-[28rem] overflow-y-auto pr-1">
                                     @for (item of dayMorningItems(); track item.id) {
                                         <article class="rounded-md border border-surface-200 dark:border-surface-700 px-2 py-2">
-                                            <div
-                                                class="grid items-center gap-2 w-full min-h-9"
-                                                style="grid-template-columns: 52px minmax(120px, 1.4fr) minmax(140px, 1.6fr) 88px 112px 30px 30px;"
-                                            >
-                                                <span
-                                                    class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap"
-                                                    [title]="calendarRowHint(item)"
-                                                    >{{ item.timeRangeLabel }}</span
-                                                >
+                                            <div class="grid items-center gap-2 w-full min-h-9" style="grid-template-columns: 52px minmax(120px, 1.4fr) minmax(140px, 1.6fr) 88px 112px 30px 30px;">
+                                                <span class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap" [title]="calendarRowHint(item)">{{
+                                                    item.timeRangeLabel
+                                                }}</span>
                                                 <div class="flex items-center min-w-0">
                                                     <p class="m-0 text-sm font-semibold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap" [title]="item.petName">
                                                         {{ item.petName }}
@@ -193,15 +160,10 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                 <div class="flex flex-col gap-2 max-h-[28rem] overflow-y-auto pr-1">
                                     @for (item of dayAfternoonItems(); track item.id) {
                                         <article class="rounded-md border border-surface-200 dark:border-surface-700 px-2 py-2">
-                                            <div
-                                                class="grid items-center gap-2 w-full min-h-9"
-                                                style="grid-template-columns: 52px minmax(120px, 1.4fr) minmax(140px, 1.6fr) 88px 112px 30px 30px;"
-                                            >
-                                                <span
-                                                    class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap"
-                                                    [title]="calendarRowHint(item)"
-                                                    >{{ item.timeRangeLabel }}</span
-                                                >
+                                            <div class="grid items-center gap-2 w-full min-h-9" style="grid-template-columns: 52px minmax(120px, 1.4fr) minmax(140px, 1.6fr) 88px 112px 30px 30px;">
+                                                <span class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap" [title]="calendarRowHint(item)">{{
+                                                    item.timeRangeLabel
+                                                }}</span>
                                                 <div class="flex items-center min-w-0">
                                                     <p class="m-0 text-sm font-semibold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap" [title]="item.petName">
                                                         {{ item.petName }}
@@ -277,10 +239,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                     @for (item of dayMorningItems(); track item.id) {
                                         <article class="rounded-md border border-surface-200 dark:border-surface-700 px-2 py-2">
                                             <div class="flex flex-wrap items-center gap-2">
-                                                <div
-                                                    class="shrink-0 rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold"
-                                                    [title]="calendarRowHint(item)"
-                                                >
+                                                <div class="shrink-0 rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold" [title]="calendarRowHint(item)">
                                                     {{ item.timeRangeLabel }}
                                                 </div>
                                                 <div class="min-w-0 flex-1 text-sm">
@@ -292,9 +251,9 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                     <app-status-tag class="shrink-0" [label]="item.statusLabel" [severity]="item.statusSeverity" />
                                                     <app-status-tag class="shrink-0" [label]="item.appointmentTypeLabel" severity="secondary" />
                                                 </div>
-                                                    <div class="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
-                                                        <app-row-action-button action="detail" (pressed)="openDetail(item.id)" />
-                                                        <app-row-action-button action="edit" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (pressed)="openEdit(item.id)" />
+                                                <div class="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
+                                                    <app-row-action-button action="detail" (pressed)="openDetail(item.id)" />
+                                                    <app-row-action-button action="edit" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (pressed)="openEdit(item.id)" />
                                                 </div>
                                             </div>
                                         </article>
@@ -311,10 +270,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                     @for (item of dayAfternoonItems(); track item.id) {
                                         <article class="rounded-md border border-surface-200 dark:border-surface-700 px-2 py-2">
                                             <div class="flex flex-wrap items-center gap-2">
-                                                <div
-                                                    class="shrink-0 rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold"
-                                                    [title]="calendarRowHint(item)"
-                                                >
+                                                <div class="shrink-0 rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold" [title]="calendarRowHint(item)">
                                                     {{ item.timeRangeLabel }}
                                                 </div>
                                                 <div class="min-w-0 flex-1 text-sm">
@@ -326,9 +282,9 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                     <app-status-tag class="shrink-0" [label]="item.statusLabel" [severity]="item.statusSeverity" />
                                                     <app-status-tag class="shrink-0" [label]="item.appointmentTypeLabel" severity="secondary" />
                                                 </div>
-                                                    <div class="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
-                                                        <app-row-action-button action="detail" (pressed)="openDetail(item.id)" />
-                                                        <app-row-action-button action="edit" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (pressed)="openEdit(item.id)" />
+                                                <div class="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
+                                                    <app-row-action-button action="detail" (pressed)="openDetail(item.id)" />
+                                                    <app-row-action-button action="edit" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (pressed)="openEdit(item.id)" />
                                                 </div>
                                             </div>
                                         </article>

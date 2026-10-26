@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -9,22 +9,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { finalize } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TENANT_MANAGEMENT_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import {
-    mapOrganizationBillingProfileFormValueToUpdateRequest,
-    mapOrganizationBillingProfileToFormValue
-} from '@/app/features/organization/data/organization-billing-profile.mapper';
-import {
-    createOrganizationBillingProfileUpsertFormGroup,
-    getOrganizationBillingProfileUpsertFormValue,
-    type OrganizationBillingProfileUpsertFormGroup
-} from '@/app/features/organization/forms/organization-billing-profile-upsert-form.factory';
+import { mapOrganizationBillingProfileFormValueToUpdateRequest, mapOrganizationBillingProfileToFormValue } from '@/app/features/organization/data/organization-billing-profile.mapper';
+import { createOrganizationBillingProfileUpsertFormGroup, getOrganizationBillingProfileUpsertFormValue, type OrganizationBillingProfileUpsertFormGroup } from '@/app/features/organization/forms/organization-billing-profile-upsert-form.factory';
 import type { OrganizationBillingProfileFormFieldKey } from '@/app/features/organization/forms/organization-billing-profile-upsert-form.model';
 import { OrganizationBillingProfileService } from '@/app/features/organization/services/organization-billing-profile.service';
-import {
-    billingProfileFieldErrorMessage,
-    ORG_BILLING_PROFILE_FIELD_MAP,
-    sanitizeTaxNumberValue
-} from '@/app/features/organization/utils/organization-billing-profile.validation.utils';
+import { billingProfileFieldErrorMessage, ORG_BILLING_PROFILE_FIELD_MAP, sanitizeTaxNumberValue } from '@/app/features/organization/utils/organization-billing-profile.validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -40,20 +29,12 @@ const BILLING_PROFILE_HIDDEN_UI_FIELDS = new Set<OrganizationBillingProfileFormF
 @Component({
     selector: 'app-organization-billing-profile-section',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        ButtonModule,
-        InputTextModule,
-        AppLoadingStateComponent,
-        AppErrorStateComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, AppLoadingStateComponent, AppErrorStateComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="card mb-0">
             <h5 class="mt-0 mb-2">Firma / Fatura Bilgileri</h5>
-            <p class="text-sm text-muted-color mt-0 mb-4">
-                Kurum adı Vetinity içinde görünen addır. Aşağıdaki bilgiler fatura ve e-belge süreçleri için kullanılacaktır.
-            </p>
+            <p class="text-sm text-muted-color mt-0 mb-4">Kurum adı Vetinity içinde görünen addır. Aşağıdaki bilgiler fatura ve e-belge süreçleri için kullanılacaktır.</p>
 
             @if (loading()) {
                 <app-loading-state message="Firma / fatura bilgileri yükleniyor…" />
@@ -63,14 +44,10 @@ const BILLING_PROFILE_HIDDEN_UI_FIELDS = new Set<OrganizationBillingProfileFormF
                 <app-error-state title="Firma / fatura bilgileri alınamadı" [detail]="err" (retry)="reload()" />
             } @else {
                 @if (ro.mutationBlocked()) {
-                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">
-                        Bu kurum salt okunur moddadır; firma / fatura bilgileri güncellenemez.
-                    </p>
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">Bu kurum salt okunur moddadır; firma / fatura bilgileri güncellenemez.</p>
                 }
                 @if (!canManageTenantAccess()) {
-                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">
-                        Bu bilgileri düzenleme yetkiniz yok.
-                    </p>
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">Bu bilgileri düzenleme yetkiniz yok.</p>
                 }
 
                 <form [formGroup]="form" (ngSubmit)="onSave()">
@@ -92,29 +69,14 @@ const BILLING_PROFILE_HIDDEN_UI_FIELDS = new Set<OrganizationBillingProfileFormF
                         </div>
                         <div>
                             <label for="billingTaxNumber" class="block text-sm font-medium text-muted-color mb-2">Vergi numarası</label>
-                            <input
-                                id="billingTaxNumber"
-                                pInputText
-                                class="w-full"
-                                formControlName="taxNumber"
-                                inputmode="numeric"
-                                autocomplete="off"
-                                (input)="onTaxNumberInput()"
-                            />
+                            <input id="billingTaxNumber" pInputText class="w-full" formControlName="taxNumber" inputmode="numeric" autocomplete="off" (input)="onTaxNumberInput()" />
                             @if (fieldMessage('taxNumber'); as msg) {
                                 <small class="text-red-500">{{ msg }}</small>
                             }
                         </div>
                         <div>
                             <label for="billingCompanyPhone" class="block text-sm font-medium text-muted-color mb-2">Firma telefon numarası</label>
-                            <input
-                                id="billingCompanyPhone"
-                                pInputText
-                                class="w-full"
-                                formControlName="companyPhone"
-                                inputmode="tel"
-                                autocomplete="tel"
-                            />
+                            <input id="billingCompanyPhone" pInputText class="w-full" formControlName="companyPhone" inputmode="tel" autocomplete="tel" />
                             @if (fieldMessage('companyPhone'); as msg) {
                                 <small class="text-red-500">{{ msg }}</small>
                             }
@@ -175,13 +137,7 @@ const BILLING_PROFILE_HIDDEN_UI_FIELDS = new Set<OrganizationBillingProfileFormF
                     </div>
 
                     <div class="flex justify-end mt-5 pt-4 mb-0 border-t border-surface-200 dark:border-surface-700">
-                        <p-button
-                            type="submit"
-                            label="Kaydet"
-                            icon="pi pi-save"
-                            [loading]="saving()"
-                            [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty"
-                        />
+                        <p-button type="submit" label="Kaydet" icon="pi pi-save" [loading]="saving()" [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty" />
                     </div>
                 </form>
             }
@@ -196,9 +152,7 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
-    readonly canManageTenantAccess = computed(
-        () => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked()
-    );
+    readonly canManageTenantAccess = computed(() => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked());
 
     readonly loading = signal(true);
     readonly forbidden = signal(false);
@@ -259,9 +213,7 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
         }
 
         this.clearServerErrors();
-        const payload = mapOrganizationBillingProfileFormValueToUpdateRequest(
-            getOrganizationBillingProfileUpsertFormValue(this.form)
-        );
+        const payload = mapOrganizationBillingProfileFormValueToUpdateRequest(getOrganizationBillingProfileUpsertFormValue(this.form));
 
         this.saving.set(true);
         this.billingProfile
@@ -310,13 +262,7 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
                     return;
                 }
 
-                this.loadError.set(
-                    err instanceof HttpErrorResponse
-                        ? messageFromHttpError(err, BILLING_PROFILE_LOAD_FALLBACK)
-                        : err instanceof Error
-                          ? err.message
-                          : BILLING_PROFILE_LOAD_FALLBACK
-                );
+                this.loadError.set(err instanceof HttpErrorResponse ? messageFromHttpError(err, BILLING_PROFILE_LOAD_FALLBACK) : err instanceof Error ? err.message : BILLING_PROFILE_LOAD_FALLBACK);
                 this.loading.set(false);
             }
         });
@@ -324,9 +270,7 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
 
     private applySaveError(err: unknown): string {
         if (!(err instanceof HttpErrorResponse)) {
-            return err instanceof Error && err.message.trim()
-                ? err.message.trim()
-                : BILLING_PROFILE_SAVE_FALLBACK;
+            return err instanceof Error && err.message.trim() ? err.message.trim() : BILLING_PROFILE_SAVE_FALLBACK;
         }
 
         const { fieldErrors, summaryMessage } = parseValidationHttpError(err, {
@@ -334,9 +278,7 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
             nonFieldMessage: (e) => messageFromHttpError(e, BILLING_PROFILE_SAVE_FALLBACK)
         });
 
-        for (const [key, message] of Object.entries(fieldErrors) as Array<
-            [OrganizationBillingProfileFormFieldKey, string]
-        >) {
+        for (const [key, message] of Object.entries(fieldErrors) as Array<[OrganizationBillingProfileFormFieldKey, string]>) {
             if (BILLING_PROFILE_HIDDEN_UI_FIELDS.has(key)) {
                 continue;
             }

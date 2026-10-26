@@ -1,4 +1,4 @@
-import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
@@ -31,12 +31,7 @@ describe('ChargesService', () => {
     beforeEach(() => {
         clinicId = 'c1';
         TestBed.configureTestingModule({
-            providers: [
-                provideHttpClient(),
-                provideHttpClientTesting(),
-                { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: AuthService, useValue: { getClinicId: () => clinicId } }
-            ]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }, { provide: AuthService, useValue: { getClinicId: () => clinicId } }]
         });
         service = TestBed.inject(ChargesService);
         http = TestBed.inject(HttpTestingController);
@@ -66,10 +61,7 @@ describe('ChargesService', () => {
                 done();
             }
         });
-        http.expectOne((r) => r.url === 'http://api.test/api/v1/charges').flush(
-            { title: 'Bad Request', extensions: { code: 'Charges.ClinicScopeRequired' } },
-            { status: 400, statusText: 'Bad Request' }
-        );
+        http.expectOne((r) => r.url === 'http://api.test/api/v1/charges').flush({ title: 'Bad Request', extensions: { code: 'Charges.ClinicScopeRequired' } }, { status: 400, statusText: 'Bad Request' });
     });
 
     it('ekleme 201: gövdede clinicId ve requestId var, tutar/para birimi yok; created:true', (done) => {
@@ -114,10 +106,7 @@ describe('ChargesService', () => {
                 done();
             }
         });
-        http.expectOne('http://api.test/api/v1/charges').flush(
-            { title: 'Bad Request', extensions: { code: 'Charges.VisitClientMismatch' } },
-            { status: 400, statusText: 'Bad Request' }
-        );
+        http.expectOne('http://api.test/api/v1/charges').flush({ title: 'Bad Request', extensions: { code: 'Charges.VisitClientMismatch' } }, { status: 400, statusText: 'Bad Request' });
     });
 
     it('aktif klinik yoksa istek atmadan hata verir', (done) => {
@@ -150,10 +139,7 @@ describe('ChargesService', () => {
                 done();
             }
         });
-        http.expectOne('http://api.test/api/v1/charges/ch1').flush(
-            { title: 'Conflict', extensions: { code: 'Charges.CorrectionBelowAllocated' } },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/charges/ch1').flush({ title: 'Conflict', extensions: { code: 'Charges.CorrectionBelowAllocated' } }, { status: 409, statusText: 'Conflict' });
     });
 
     it('iptal: POST void ucuna yalnız kırpılmış gerekçe gider; 204 boş döner', (done) => {
@@ -175,10 +161,7 @@ describe('ChargesService', () => {
                 done();
             }
         });
-        http.expectOne('http://api.test/api/v1/charges/ch1/void').flush(
-            { title: 'Conflict', extensions: { code: 'Charges.VoidBlockedByAllocation' } },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/charges/ch1/void').flush({ title: 'Conflict', extensions: { code: 'Charges.VoidBlockedByAllocation' } }, { status: 409, statusText: 'Conflict' });
     });
 });
 

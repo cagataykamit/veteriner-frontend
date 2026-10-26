@@ -3,7 +3,7 @@ import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
@@ -63,6 +63,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
         TrDatePipe,
         TrDateTimePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (contextPetId() || contextClientId()) {
             <app-context-filter-chip [label]="contextFilterLabel()" (clear)="clearContextFilter()" />

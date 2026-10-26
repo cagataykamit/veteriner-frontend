@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -8,10 +8,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import type { SpeciesUpsertRequest } from '@/app/features/species/models/species-upsert.model';
 import { SpeciesService } from '@/app/features/species/services/species.service';
-import {
-    type SpeciesUpsertFieldErrors,
-    parseSpeciesUpsertHttpError
-} from '@/app/features/species/utils/species-upsert-validation-parse.utils';
+import { type SpeciesUpsertFieldErrors, parseSpeciesUpsertHttpError } from '@/app/features/species/utils/species-upsert-validation-parse.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { SPECIES_ROUTE } from '@/app/core/routing/panel-navigation';
 import { SPECIES_CREATE_CLAIM, SPECIES_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -25,16 +22,8 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 @Component({
     selector: 'app-species-form-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        ButtonModule,
-        InputTextModule,
-        SelectModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium" role="status">Tür kaydı oluşturuldu.</p>
@@ -47,99 +36,72 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                 <app-error-state [detail]="loadError()!" [showRetry]="!!currentId()" (retry)="reloadSpeciesRecord()" />
             </div>
         } @else {
-            <app-page-header
-                [categoryLink]="speciesRoute"
-                categoryLinkLabel="Tür listesine dön"
-                [title]="editing() ? 'Tür Düzenle' : 'Yeni Tür'"
-                [description]="editing() ? 'Tür kaydını güncelleyin.' : 'Yeni tür kaydı oluşturun.'"
-            />
+            <app-page-header [categoryLink]="speciesRoute" categoryLinkLabel="Tür listesine dön" [title]="editing() ? 'Tür Düzenle' : 'Yeni Tür'" [description]="editing() ? 'Tür kaydını güncelleyin.' : 'Yeni tür kaydı oluşturun.'" />
 
             <div class="card">
-            @if (ro.mutationBlocked()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                    İşletme salt okunur moddadır; tür kaydı güncellenemez veya oluşturulamaz.
-                </p>
-            }
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
-                <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="code" class="block text-sm font-medium text-muted-color mb-2">Kod *</label>
-                        <input id="code" pInputText class="w-full" formControlName="code" />
-                        @if (apiFieldErrors().code) {
-                            <small class="text-red-500">{{ apiFieldErrors().code }}</small>
-                        } @else if (form.controls.code.invalid && form.controls.code.touched) {
-                            @if (form.controls.code.hasError('required')) {
-                                <small class="text-red-500">Kod zorunludur.</small>
-                            } @else if (form.controls.code.hasError('maxlength')) {
-                                <small class="text-red-500">Kod en fazla 32 karakter olabilir.</small>
-                            }
-                        }
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="name" class="block text-sm font-medium text-muted-color mb-2">Ad *</label>
-                        <input id="name" pInputText class="w-full" formControlName="name" />
-                        @if (apiFieldErrors().name) {
-                            <small class="text-red-500">{{ apiFieldErrors().name }}</small>
-                        } @else if (form.controls.name.invalid && form.controls.name.touched) {
-                            @if (form.controls.name.hasError('required')) {
-                                <small class="text-red-500">Ad zorunludur.</small>
-                            } @else if (form.controls.name.hasError('maxlength')) {
-                                <small class="text-red-500">Ad en fazla 128 karakter olabilir.</small>
-                            }
-                        }
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="isActive" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
-                        <p-select
-                            inputId="isActive"
-                            formControlName="isActive"
-                            [options]="activeOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            styleClass="w-full"
-                        />
-                        @if (apiFieldErrors().isActive) {
-                            <small class="text-red-500">{{ apiFieldErrors().isActive }}</small>
-                        }
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="displayOrder" class="block text-sm font-medium text-muted-color mb-2">Sıra *</label>
-                        <input id="displayOrder" type="number" min="0" class="w-full p-inputtext p-component" formControlName="displayOrder" />
-                        @if (apiFieldErrors().displayOrder) {
-                            <small class="text-red-500">{{ apiFieldErrors().displayOrder }}</small>
-                        } @else if (form.controls.displayOrder.invalid && form.controls.displayOrder.touched) {
-                            @if (form.controls.displayOrder.hasError('required')) {
-                                <small class="text-red-500">Sıra zorunludur.</small>
-                            } @else if (form.controls.displayOrder.hasError('min')) {
-                                <small class="text-red-500">Sıra 0 veya daha büyük olmalıdır.</small>
-                            }
-                        }
-                    </div>
-                </div>
-
-                @if (submitError()) {
-                    <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                @if (ro.mutationBlocked()) {
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; tür kaydı güncellenemez veya oluşturulamaz.</p>
                 }
+                <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                    <div class="grid grid-cols-12 gap-4">
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="code" class="block text-sm font-medium text-muted-color mb-2">Kod *</label>
+                            <input id="code" pInputText class="w-full" formControlName="code" />
+                            @if (apiFieldErrors().code) {
+                                <small class="text-red-500">{{ apiFieldErrors().code }}</small>
+                            } @else if (form.controls.code.invalid && form.controls.code.touched) {
+                                @if (form.controls.code.hasError('required')) {
+                                    <small class="text-red-500">Kod zorunludur.</small>
+                                } @else if (form.controls.code.hasError('maxlength')) {
+                                    <small class="text-red-500">Kod en fazla 32 karakter olabilir.</small>
+                                }
+                            }
+                        </div>
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="name" class="block text-sm font-medium text-muted-color mb-2">Ad *</label>
+                            <input id="name" pInputText class="w-full" formControlName="name" />
+                            @if (apiFieldErrors().name) {
+                                <small class="text-red-500">{{ apiFieldErrors().name }}</small>
+                            } @else if (form.controls.name.invalid && form.controls.name.touched) {
+                                @if (form.controls.name.hasError('required')) {
+                                    <small class="text-red-500">Ad zorunludur.</small>
+                                } @else if (form.controls.name.hasError('maxlength')) {
+                                    <small class="text-red-500">Ad en fazla 128 karakter olabilir.</small>
+                                }
+                            }
+                        </div>
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="isActive" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
+                            <p-select inputId="isActive" formControlName="isActive" [options]="activeOptions" optionLabel="label" optionValue="value" class="w-full" />
+                            @if (apiFieldErrors().isActive) {
+                                <small class="text-red-500">{{ apiFieldErrors().isActive }}</small>
+                            }
+                        </div>
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="displayOrder" class="block text-sm font-medium text-muted-color mb-2">Sıra *</label>
+                            <input id="displayOrder" type="number" min="0" class="w-full p-inputtext p-component" formControlName="displayOrder" />
+                            @if (apiFieldErrors().displayOrder) {
+                                <small class="text-red-500">{{ apiFieldErrors().displayOrder }}</small>
+                            } @else if (form.controls.displayOrder.invalid && form.controls.displayOrder.touched) {
+                                @if (form.controls.displayOrder.hasError('required')) {
+                                    <small class="text-red-500">Sıra zorunludur.</small>
+                                } @else if (form.controls.displayOrder.hasError('min')) {
+                                    <small class="text-red-500">Sıra 0 veya daha büyük olmalıdır.</small>
+                                }
+                            }
+                        </div>
+                    </div>
 
-                <div class="flex flex-wrap gap-2 mt-4">
-                    <p-button
-                        type="submit"
-                        [label]="editing() ? 'Güncelle' : copy.buttonSave"
-                        icon="pi pi-check"
-                        [loading]="submitting() || loading()"
-                        [disabled]="form.invalid || submitting() || loading() || ro.mutationBlocked()"
-                    />
-                    <p-button
-                        type="button"
-                        [label]="copy.buttonCancel"
-                        icon="pi pi-times"
-                        severity="secondary"
-                        (onClick)="goList()"
-                        [disabled]="submitting()"
-                    />
-                </div>
-            </form>
-        </div>
+                    @if (submitError()) {
+                        <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                    }
+
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <p-button type="submit" [label]="editing() ? 'Güncelle' : copy.buttonSave" icon="pi pi-check" [loading]="submitting() || loading()" [disabled]="form.invalid || submitting() || loading() || ro.mutationBlocked()" />
+                        <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
+                    </div>
+                </form>
+            </div>
         }
     `
 })

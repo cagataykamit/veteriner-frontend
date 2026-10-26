@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import { CardAccountStatusComponent } from '@/app/features/pets/components/card-account-status.component';
@@ -22,6 +22,7 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
     selector: 'app-pet-card-header',
     standalone: true,
     imports: [RouterLink, PetAlertBadgesComponent, CardAccountStatusComponent, TrDatePipe, TrDateTimePipe],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <section class="card mb-4" aria-label="Sahip, uyarılar ve hesap durumu" data-testid="pet-card-header">
             @if (pet().status === 'Deceased') {

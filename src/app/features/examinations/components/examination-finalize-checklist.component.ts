@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
@@ -14,6 +14,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     selector: 'app-examination-finalize-checklist',
     standalone: true,
     imports: [RouterLink, ButtonModule, TrDateTimePipe],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <section class="card mb-0 p-4" aria-label="Kesinleştirme kontrolü" data-testid="finalize-checklist">
             @if (exam().status === 'Finalized') {
@@ -50,7 +51,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                 </ul>
             }
             @if (canFinalize()) {
-                <button pButton type="button" label="Kesinleştir" icon="pi pi-lock" class="w-full mt-3" data-testid="finalize-open" (click)="finalizeRequested.emit()"></button>
+                <button pButton type="button" class="w-full mt-3" data-testid="finalize-open" (click)="finalizeRequested.emit()"><i class="pi pi-lock"></i>Kesinleştir</button>
             }
         </section>
     `

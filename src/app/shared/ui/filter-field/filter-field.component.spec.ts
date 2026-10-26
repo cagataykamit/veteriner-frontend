@@ -1,10 +1,11 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FilterFieldComponent, type FilterFieldWidth } from './filter-field.component';
 
 @Component({
     standalone: true,
     imports: [FilterFieldComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `<app-filter-field label="Başlangıç" labelFor="x" [active]="active()" [width]="width()"><input id="x" /></app-filter-field>`
 })
 class HostComponent {

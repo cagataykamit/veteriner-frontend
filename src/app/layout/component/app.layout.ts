@@ -1,4 +1,4 @@
-import { afterNextRender, Component, computed, DestroyRef, effect, ElementRef, inject, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, effect, ElementRef, inject, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -15,6 +15,7 @@ import { LegalAcceptanceGateComponent } from '@/app/features/legal-acceptance/co
     selector: 'app-layout',
     standalone: true,
     imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter, AppReadOnlyBannerComponent, AppSectionTabsComponent, LegalAcceptanceGateComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `<div class="layout-wrapper" [ngClass]="containerClass()">
         <div #primePanelOverlayHost class="layout-prime-panel-overlay-host"></div>
         <app-topbar></app-topbar>
@@ -77,5 +78,5 @@ export class AppLayout {
             'layout-overlay-active': state.overlayMenuActive,
             'layout-mobile-active': state.mobileMenuActive
         };
-    })
+    });
 }

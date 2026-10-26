@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TENANT_MANAGEMENT_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -24,10 +24,11 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     standalone: true,
     imports: [CommonModule, RouterLink, ButtonModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppStatusTagComponent, TrDateTimePipe],
     providers: [MessageService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-toast position="bottom-right" />
         <app-page-header title="Davet detayı" description="Davet bilgileri (salt okunur).">
-            <a actions routerLink="/panel/settings/invites/list" pButton type="button" label="Listeye dön" icon="pi pi-arrow-left" class="p-button-secondary"></a>
+            <a actions routerLink="/panel/settings/invites/list" pButton type="button" class="p-button-secondary"><i class="pi pi-arrow-left"></i>Listeye dön</a>
         </app-page-header>
 
         @if (loading()) {

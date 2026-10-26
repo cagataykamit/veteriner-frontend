@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -24,16 +24,8 @@ export interface ReportExtraFilter {
 @Component({
     selector: 'app-report-filter-bar',
     standalone: true,
-    imports: [
-        FormsModule,
-        ButtonModule,
-        SelectModule,
-        InputNumberModule,
-        FilterFieldComponent,
-        DateInputComponent,
-        SearchInputComponent,
-        AppTrialLimitNoticeComponent
-    ],
+    imports: [FormsModule, ButtonModule, SelectModule, InputNumberModule, FilterFieldComponent, DateInputComponent, SearchInputComponent, AppTrialLimitNoticeComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @let s = state();
         @if (s.exportError(); as exportError) {
@@ -70,8 +62,9 @@ export interface ReportExtraFilter {
                         optionLabel="label"
                         optionValue="value"
                         [placeholder]="copy.reportsClinicPanelDefault"
-                        styleClass="w-full"
-                        [showClear]="true" />
+                        class="w-full"
+                        [showClear]="true"
+                    />
                 </app-filter-field>
                 @if (extraFilter(); as extra) {
                     @if (extra.options) {
@@ -85,12 +78,13 @@ export interface ReportExtraFilter {
                                 optionLabel="label"
                                 optionValue="value"
                                 [placeholder]="copy.filterPlaceholderAll"
-                                styleClass="w-full"
-                                [showClear]="true" />
+                                class="w-full"
+                                [showClear]="true"
+                            />
                         </app-filter-field>
                     } @else {
                         <app-filter-field [label]="extra.label" [labelFor]="idPrefix() + 'Extra'" [active]="activeBadges() && s.isExtraActive()" width="select">
-                            <p-inputNumber
+                            <p-inputnumber
                                 [inputId]="idPrefix() + 'Extra'"
                                 [ngModel]="s.extraFilter === '' ? null : +s.extraFilter"
                                 (ngModelChange)="s.extraFilter = $event == null ? '' : '' + $event; s.scheduleApply()"
@@ -98,8 +92,9 @@ export interface ReportExtraFilter {
                                 locale="tr-TR"
                                 [min]="0"
                                 [maxFractionDigits]="2"
-                                styleClass="w-full"
-                                inputStyleClass="w-full" />
+                                class="w-full"
+                                inputStyleClass="w-full"
+                            />
                         </app-filter-field>
                     }
                 }
@@ -115,24 +110,8 @@ export interface ReportExtraFilter {
                         <p-button [label]="copy.reportsApplyFilter" icon="pi pi-filter" (onClick)="s.applyFilters()" [disabled]="s.loading()" />
                     }
                     @if (s.canExport()) {
-                        <p-button
-                            [label]="copy.reportsExportXlsx"
-                            icon="pi pi-file-excel"
-                            severity="secondary"
-                            [outlined]="true"
-                            (onClick)="s.exportXlsx()"
-                            [loading]="s.isExporting('xlsx')"
-                            [disabled]="s.exporting() || !s.hasExportableRows()"
-                        />
-                        <p-button
-                            [label]="copy.reportsExportCsv"
-                            icon="pi pi-download"
-                            severity="secondary"
-                            [outlined]="true"
-                            (onClick)="s.exportCsv()"
-                            [loading]="s.isExporting('csv')"
-                            [disabled]="s.exporting() || !s.hasExportableRows()"
-                        />
+                        <p-button [label]="copy.reportsExportXlsx" icon="pi pi-file-excel" severity="secondary" [outlined]="true" (onClick)="s.exportXlsx()" [loading]="s.isExporting('xlsx')" [disabled]="s.exporting() || !s.hasExportableRows()" />
+                        <p-button [label]="copy.reportsExportCsv" icon="pi pi-download" severity="secondary" [outlined]="true" (onClick)="s.exportCsv()" [loading]="s.isExporting('csv')" [disabled]="s.exporting() || !s.hasExportableRows()" />
                     }
                     <ng-content select="[barActions]" />
                 </div>

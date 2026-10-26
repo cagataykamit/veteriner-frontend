@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -9,15 +9,7 @@ import { TableModule } from 'primeng/table';
 import { forkJoin, type Observable } from 'rxjs';
 import { DiscountCodeFormDialogComponent } from '@/app/features/sales-partners/components/discount-code-form-dialog.component';
 import { SalesPartnerFormDialogComponent } from '@/app/features/sales-partners/components/sales-partner-form-dialog.component';
-import {
-    COMMISSION_STATUS_LABELS,
-    minorToAmount,
-    type CommissionStatus,
-    type DiscountCodeDto,
-    type DiscountCollectionDto,
-    type DiscountRedemptionRowDto,
-    type SalesPartnerDto
-} from '@/app/features/sales-partners/models/sales-partner.model';
+import { COMMISSION_STATUS_LABELS, minorToAmount, type CommissionStatus, type DiscountCodeDto, type DiscountCollectionDto, type DiscountRedemptionRowDto, type SalesPartnerDto } from '@/app/features/sales-partners/models/sales-partner.model';
 import { SalesPartnersService } from '@/app/features/sales-partners/services/sales-partners.service';
 import { formatPercent } from '@/app/features/sales-partners/utils/discount-code.utils';
 import { downloadSalesPartnerCsv } from '@/app/features/sales-partners/utils/sales-partner-csv.utils';
@@ -55,6 +47,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
         SalesPartnerFormDialogComponent,
         DiscountCodeFormDialogComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (loading() && !partner()) {
             <app-loading-state message="Satış ortağı yükleniyor…" />
@@ -62,8 +55,8 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
             <div class="card"><app-error-state [detail]="error()!" (retry)="load()" /></div>
         } @else if (partner(); as p) {
             <app-page-header categoryLink="/panel/sales-partners" categoryLinkLabel="Satış ortakları" [title]="p.name" [description]="contactLine(p)">
-                <button actions pButton type="button" label="CSV indir" icon="pi pi-download" severity="secondary" [loading]="exporting()" (click)="exportCsv()"></button>
-                <button actions pButton type="button" label="Düzenle" icon="fa-solid fa-pen-to-square" severity="secondary" (click)="partnerDialogVisible.set(true)"></button>
+                <button actions pButton type="button" severity="secondary" [loading]="exporting()" (click)="exportCsv()"><i class="pi pi-download"></i>CSV indir</button>
+                <button actions pButton type="button" severity="secondary" (click)="partnerDialogVisible.set(true)"><i class="fa-solid fa-pen-to-square"></i>Düzenle</button>
             </app-page-header>
 
             @if (actionError()) {
@@ -73,7 +66,9 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" data-testid="sp-summary">
                 <div class="card mb-0">
                     <div class="text-muted-color text-sm mb-1">Kullanım (deneme / ücretli)</div>
-                    <div class="text-xl font-semibold">{{ p.summary.redemptionCount }} <span class="text-base font-normal text-muted-color">({{ p.summary.trialCustomerCount }} / {{ p.summary.paidCustomerCount }})</span></div>
+                    <div class="text-xl font-semibold">
+                        {{ p.summary.redemptionCount }} <span class="text-base font-normal text-muted-color">({{ p.summary.trialCustomerCount }} / {{ p.summary.paidCustomerCount }})</span>
+                    </div>
                 </div>
                 <div class="card mb-0">
                     <div class="text-muted-color text-sm mb-1">Ciro (net, KDV hariç)</div>
@@ -81,7 +76,9 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
                 </div>
                 <div class="card mb-0">
                     <div class="text-muted-color text-sm mb-1">Komisyon hak edilen / ödenen</div>
-                    <div class="text-xl font-semibold">{{ money(p.summary.commissionEarnedMinor) }} <span class="text-base font-normal text-muted-color">/ {{ money(p.summary.commissionPaidMinor) }}</span></div>
+                    <div class="text-xl font-semibold">
+                        {{ money(p.summary.commissionEarnedMinor) }} <span class="text-base font-normal text-muted-color">/ {{ money(p.summary.commissionPaidMinor) }}</span>
+                    </div>
                 </div>
                 <div class="card mb-0">
                     <div class="text-muted-color text-sm mb-1">Bekleyen komisyon</div>
@@ -141,14 +138,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
             <div class="card">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <h5 class="m-0">Kullanımlar ve tahsilatlar</h5>
-                    <p-button
-                        label="Seçilenleri ödendi işaretle"
-                        icon="pi pi-check"
-                        size="small"
-                        [disabled]="selectedIds().length === 0"
-                        (onClick)="openMarkPaid()"
-                        data-testid="sp-mark-paid"
-                    />
+                    <p-button label="Seçilenleri ödendi işaretle" icon="pi pi-check" size="small" [disabled]="selectedIds().length === 0" (onClick)="openMarkPaid()" data-testid="sp-mark-paid" />
                 </div>
                 @if (redemptions().length === 0) {
                     <app-empty-state message="Bu ortağın kodunu kullanan kurum yok." />
@@ -168,7 +158,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
                                 <p class="text-sm text-muted-color m-0">Henüz tahsilat yok.</p>
                             } @else {
                                 <div class="overflow-x-auto">
-                                    <p-table [value]="r.collections" [tableStyle]="{ 'min-width': '56rem' }" styleClass="p-datatable-sm">
+                                    <p-table [value]="r.collections" [tableStyle]="{ 'min-width': '56rem' }" size="small">
                                         <ng-template #header>
                                             <tr>
                                                 <th style="width: 3rem"><span class="sr-only">Seç</span></th>
@@ -186,12 +176,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
                                             <tr data-testid="sp-collection-row">
                                                 <td>
                                                     @if (c.status === 'Accrued') {
-                                                        <p-checkbox
-                                                            [binary]="true"
-                                                            [ngModel]="isSelected(c.id)"
-                                                            (ngModelChange)="toggle(c.id, $event)"
-                                                            [ariaLabel]="'Seç: ' + date(c.collectedAtUtc)"
-                                                        />
+                                                        <p-checkbox [binary]="true" [ngModel]="isSelected(c.id)" (ngModelChange)="toggle(c.id, $event)" [ariaLabel]="'Seç: ' + date(c.collectedAtUtc)" />
                                                     }
                                                 </td>
                                                 <td>{{ date(c.collectedAtUtc) }}</td>
@@ -302,8 +287,7 @@ export class SalesPartnerDetailPageComponent implements OnInit {
 
         return c ? `${this.date(c.collectedAtUtc)} tahsilatı, komisyon ${this.money(c.commissionAmountMinor)}` : null;
     });
-    readonly cancelExecute = (reason: string): Observable<unknown> =>
-        this.partners.cancelCollection(this.partnerId, this.cancelling()?.id ?? '', reason);
+    readonly cancelExecute = (reason: string): Observable<unknown> => this.partners.cancelCollection(this.partnerId, this.cancelling()?.id ?? '', reason);
 
     ngOnInit(): void {
         this.load();

@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { PublicFooterComponent } from './components/public-footer.component';
 import { PublicTopbarComponent } from './components/public-topbar.component';
@@ -14,6 +14,7 @@ export const PUBLIC_SITE_ROOT_CLASS = 'public-site-root';
     selector: 'app-public-layout',
     standalone: true,
     imports: [RouterOutlet, PublicTopbarComponent, PublicFooterComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="public-page flex min-h-screen flex-col overflow-x-hidden bg-surface-0 dark:bg-surface-950">
             <app-public-topbar />

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { EMPTY, type Observable, Subscription, switchMap } from 'rxjs';
@@ -18,14 +18,7 @@ import type { PetDetailVm, PetHistoryBlockKey, PetHistorySummaryVm, PetStatusUpd
 import { PetCardDataService } from '@/app/features/pets/services/pet-card-data.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { buildPetGeneralFields } from '@/app/features/pets/utils/pet-general-fields.utils';
-import {
-    buildPetTodo,
-    openItemsSection,
-    ownerOutstandingSection,
-    type PetCardSection,
-    petCardEmphasis,
-    petIdentityParts
-} from '@/app/features/pets/utils/pet-card.utils';
+import { buildPetTodo, openItemsSection, ownerOutstandingSection, type PetCardSection, petCardEmphasis, petIdentityParts } from '@/app/features/pets/utils/pet-card.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { PatientActionBarComponent } from '@/app/shared/panel/patient-action-bar/patient-action-bar.component';
@@ -56,6 +49,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         AppLoadingStateComponent,
         AppErrorStateComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Hasta kaydedildi.</p>
@@ -75,28 +69,21 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                         <button
                             pButton
                             type="button"
-                            [label]="p.status === 'Deceased' ? 'Aktife al' : 'Vefat olarak işaretle'"
-                            [icon]="p.status === 'Deceased' ? 'pi pi-undo' : 'pi pi-minus-circle'"
+                           
+                           
                             class="p-button-text p-button-secondary"
                             data-testid="pet-status-action"
                             (click)="statusDialogOpen.set(true)"
-                        ></button>
-                        <a [routerLink]="['/panel/pets', p.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
+                        ><i [class]="p.status === 'Deceased' ? 'pi pi-undo' : 'pi pi-minus-circle'"></i>{{ p.status === 'Deceased' ? 'Aktife al' : 'Vefat olarak işaretle' }}</button>
+                        <a [routerLink]="['/panel/pets', p.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                     </ng-container>
                 } @else if (canUpdatePet && ro.mutationBlocked()) {
-                    <button actions pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                    <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                 }
             </app-page-header>
 
             @if (p.ownerId) {
-                <app-patient-action-bar
-                    [sticky]="true"
-                    [clientId]="p.ownerId"
-                    [petId]="p.id"
-                    [petLabel]="p.name + ' — ' + p.speciesName"
-                    [clientName]="p.clientName"
-                    [petDeceased]="p.status === 'Deceased'"
-                />
+                <app-patient-action-bar [sticky]="true" [clientId]="p.ownerId" [petId]="p.id" [petLabel]="p.name + ' — ' + p.speciesName" [clientName]="p.clientName" [petDeceased]="p.status === 'Deceased'" />
             }
             @if (canUpdatePet && !ro.mutationBlocked()) {
                 <app-pet-status-dialog [(visible)]="statusDialogOpen" [pet]="p" (changed)="onStatusChanged($event)" (stale)="refreshPet()" (appointmentsCancelled)="reloadOpenItems()" />
@@ -109,14 +96,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                     <app-pet-todo-panel [view]="todo()" [retryable]="true" (retry)="reloadOpenItems()" />
                 </div>
                 <div class="col-span-12 lg:col-span-7" [class.order-first]="emphasis === 'clinical'" data-testid="clinical-column">
-                    <app-pet-summary-card
-                        [summary]="summary()"
-                        [loading]="summaryLoading()"
-                        [error]="summaryError()"
-                        [lastExamination]="lastExamination()"
-                        [followUps]="followUps()"
-                        (retry)="retrySummary()"
-                    />
+                    <app-pet-summary-card [summary]="summary()" [loading]="summaryLoading()" [error]="summaryError()" [lastExamination]="lastExamination()" [followUps]="followUps()" (retry)="retrySummary()" />
                 </div>
             </div>
 
@@ -149,12 +129,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                             }
                         </dl>
                         @if (generalFields().empty.length > 0) {
-                            <button
-                                type="button"
-                                class="mt-3 p-0 border-0 bg-transparent text-primary text-sm font-medium cursor-pointer"
-                                data-testid="toggle-empty-fields"
-                                (click)="showEmptyFields.set(!showEmptyFields())"
-                            >
+                            <button type="button" class="mt-3 p-0 border-0 bg-transparent text-primary text-sm font-medium cursor-pointer" data-testid="toggle-empty-fields" (click)="showEmptyFields.set(!showEmptyFields())">
                                 {{ showEmptyFields() ? 'Boş alanları gizle' : 'Boş alanları göster (' + generalFields().empty.length + ')' }}
                             </button>
                         }

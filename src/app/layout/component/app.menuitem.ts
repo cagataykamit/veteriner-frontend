@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, input, signal, viewChild, OnInit, AfterViewInit } from '@angular/core';
+import { Component, computed, DestroyRef, inject, input, signal, viewChild, OnInit, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -58,7 +58,9 @@ import { filter } from 'rxjs/operators';
                 <i [ngClass]="item().icon" class="layout-menuitem-icon"></i>
                 <span class="layout-menuitem-text">{{ item().label }}</span>
                 @if (item().badge) {
-                    <span class="layout-menuitem-badge">{{ item().badge }}<span class="sr-only"> {{ item().badgeText || 'bekleyen' }}</span></span>
+                    <span class="layout-menuitem-badge"
+                        >{{ item().badge }}<span class="sr-only"> {{ item().badgeText || 'bekleyen' }}</span></span
+                    >
                 }
                 @if (hasFlyout()) {
                     <i class="fa-solid fa-angle-right layout-menuitem-flyout-toggler" aria-hidden="true"></i>
@@ -68,15 +70,7 @@ import { filter } from 'rxjs/operators';
                 }
             </a>
             @if (flyoutOpen()) {
-                <app-menu-flyout
-                    [anchor]="link"
-                    [tabs]="item().flyoutTabs"
-                    [label]="item().label"
-                    [heading]="layoutService.isMenuRail()"
-                    [panelId]="flyoutId()"
-                    [focusFirst]="flyoutFocusFirst()"
-                    (selected)="onFlyoutSelected()"
-                />
+                <app-menu-flyout [anchor]="link" [tabs]="item().flyoutTabs" [label]="item().label" [heading]="layoutService.isMenuRail()" [panelId]="flyoutId()" [focusFirst]="flyoutFocusFirst()" (selected)="onFlyoutSelected()" />
             }
         }
         @if (hasChildren() && isVisible() && (root() || isActive())) {
@@ -93,6 +87,7 @@ import { filter } from 'rxjs/operators';
         '(pointerenter)': 'onPointer($event, true)',
         '(pointerleave)': 'onPointer($event, false)'
     },
+    changeDetection: ChangeDetectionStrategy.Eager,
     styles: [
         `
             .p-submenu-enter {
@@ -160,7 +155,12 @@ export class AppMenuitem implements OnInit, AfterViewInit {
 
     flyoutOpen = computed(() => this.hasFlyout() && this.flyout.openKey() === this.item().label);
 
-    flyoutId = computed(() => `layout-menu-flyout-${String(this.item()?.label ?? '').toLocaleLowerCase('tr').replace(/\s+/g, '-')}`);
+    flyoutId = computed(
+        () =>
+            `layout-menu-flyout-${String(this.item()?.label ?? '')
+                .toLocaleLowerCase('tr')
+                .replace(/\s+/g, '-')}`
+    );
 
     /** Klavyeyle açılan panelde odak ilk sekmeye geçer; fareyle ya da odakla açılanda satırda kalır. */
     flyoutFocusFirst = signal(false);

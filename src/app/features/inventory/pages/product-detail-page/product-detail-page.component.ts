@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -19,12 +19,7 @@ import { ProductService } from '@/app/features/inventory/services/product.servic
 import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import {
-    PRODUCTS_DEACTIVATE_CLAIM,
-    PRODUCTS_UPDATE_CLAIM,
-    STOCK_MOVEMENTS_CREATE_CLAIM,
-    STOCK_MOVEMENTS_READ_CLAIM
-} from '@/app/core/auth/operation-claims.constants';
+import { PRODUCTS_DEACTIVATE_CLAIM, PRODUCTS_UPDATE_CLAIM, STOCK_MOVEMENTS_CREATE_CLAIM, STOCK_MOVEMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -110,6 +105,7 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
             }
         `
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (loading()) {
             <app-loading-state message="Ürün yükleniyor…" />
@@ -121,61 +117,28 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
             <app-page-header categoryLink="/panel/products" categoryLinkLabel="Ürün listesine dön" title="Ürün detayı" [description]="p.name + ' · ' + p.sku">
                 <div actions class="flex flex-wrap items-center gap-2 justify-end">
                     @if (canUpdateProduct && !ro.mutationBlocked()) {
-                        <a
-                            [routerLink]="['/panel/products', p.id, 'edit']"
-                            pButton
-                            type="button"
-                            label="Düzenle"
-                            icon="pi pi-pencil"
-                            class="p-button-secondary"
-                        ></a>
+                        <a [routerLink]="['/panel/products', p.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                     } @else if (canUpdateProduct && ro.mutationBlocked()) {
-                        <button
-                            pButton
-                            type="button"
-                            label="Düzenle (salt okunur)"
-                            icon="pi pi-lock"
-                            [disabled]="true"
-                            class="p-button-secondary"
-                        ></button>
+                        <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                     }
                     @if (canOpenStockOperation() && isStockTracked(p)) {
                         <button
                             pButton
                             type="button"
-                            label="Stok işlemi"
-                            icon="pi pi-sync"
+                           
+                           
                             severity="primary"
                             styleClass="whitespace-nowrap"
                             [disabled]="isHeaderStockOperationDisabled()"
                             [title]="headerStockOperationTitle()"
                             (click)="openStockOperationFromHeader()"
-                        ></button>
+                        ><i class="pi pi-sync"></i>Stok işlemi</button>
                     }
                     @if (canDeactivateProduct && !ro.mutationBlocked() && p.isActive) {
-                        <button
-                            pButton
-                            type="button"
-                            label="Pasifleştir"
-                            icon="pi pi-ban"
-                            severity="danger"
-                            class="p-button-secondary"
-                            [loading]="mutationBusy()"
-                            [disabled]="mutationBusy()"
-                            (click)="onDeactivateClick()"
-                        ></button>
+                        <button pButton type="button" severity="danger" class="p-button-secondary" [loading]="mutationBusy()" [disabled]="mutationBusy()" (click)="onDeactivateClick()"><i class="pi pi-ban"></i>Pasifleştir</button>
                     }
                     @if (canUpdateProduct && !ro.mutationBlocked() && !p.isActive) {
-                        <button
-                            pButton
-                            type="button"
-                            label="Aktifleştir"
-                            icon="pi pi-check"
-                            class="p-button-secondary"
-                            [loading]="mutationBusy()"
-                            [disabled]="mutationBusy()"
-                            (click)="onActivateClick()"
-                        ></button>
+                        <button pButton type="button" class="p-button-secondary" [loading]="mutationBusy()" [disabled]="mutationBusy()" (click)="onActivateClick()"><i class="pi pi-check"></i>Aktifleştir</button>
                     }
                 </div>
             </app-page-header>
@@ -232,166 +195,144 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                 </div>
 
                 @if (isStockTracked(p)) {
-                <div class="col-span-12">
-                    <div class="card">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                            <h5 class="mt-0 mb-0 text-base font-semibold text-surface-900 dark:text-surface-0">Klinik stokları</h5>
-                            <div class="flex flex-wrap gap-3 items-center text-sm">
-                                @if (canReadStockMovements) {
-                                    <a
-                                        [routerLink]="['/panel/products', p.id, 'stock-movements']"
-                                        class="text-primary font-medium no-underline whitespace-nowrap"
-                                        >Stok hareketleri →</a>
-                                }
-                                @if (canCreateStockMovement && !ro.mutationBlocked()) {
-                                    <a
-                                        [routerLink]="['/panel/products', p.id, 'stock-movements']"
-                                        class="text-primary font-medium no-underline whitespace-nowrap"
-                                        >Stok hareketi ekle →</a>
-                                }
+                    <div class="col-span-12">
+                        <div class="card">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                                <h5 class="mt-0 mb-0 text-base font-semibold text-surface-900 dark:text-surface-0">Klinik stokları</h5>
+                                <div class="flex flex-wrap gap-3 items-center text-sm">
+                                    @if (canReadStockMovements) {
+                                        <a [routerLink]="['/panel/products', p.id, 'stock-movements']" class="text-primary font-medium no-underline whitespace-nowrap">Stok hareketleri →</a>
+                                    }
+                                    @if (canCreateStockMovement && !ro.mutationBlocked()) {
+                                        <a [routerLink]="['/panel/products', p.id, 'stock-movements']" class="text-primary font-medium no-underline whitespace-nowrap">Stok hareketi ekle →</a>
+                                    }
+                                </div>
                             </div>
-                        </div>
-                        @if (ro.mutationBlocked()) {
-                            <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3 m-0" role="status">
-                                Salt okunur modda stok girişi, stok çıkışı ve minimum stok güncellenemez; stok bilgileri görüntülenebilir.
-                            </p>
-                        }
-                        @if (stocksLoading() && stocksRows().length === 0) {
-                            <app-loading-state message="Stok bilgileri yükleniyor…" />
-                        } @else if (stocksError()) {
-                            <app-error-state [detail]="stocksError()!" (retry)="reloadStocks()" />
-                        } @else if (stocksRowsView().total === 0) {
-                            <app-empty-state message="Bu ürün için henüz stok kaydı yok." />
-                        } @else {
-                            <!-- Masaüstü: çizgisiz kolon hizası; yalnızca satır ayırıcıları -->
-                            <div class="hidden md:block overflow-x-auto w-full" [class.opacity-60]="stocksLoading()" [attr.aria-busy]="stocksLoading()">
-                                <div class="w-full min-w-0">
-                                    <div
-                                        role="row"
-                                        class="product-stock-desktop-grid px-2 py-2.5 border-b border-surface-200 dark:border-surface-700"
-                                    >
-                                        <span class="text-sm font-semibold text-muted-color text-center block">Klinik</span>
-                                        <span class="text-sm font-semibold text-muted-color text-center block">Kullanılabilir</span>
-                                        <span class="text-sm font-semibold text-muted-color text-center block">Süresi geçmiş</span>
-                                        <span class="text-sm font-semibold text-muted-color text-center block">Minimum stok</span>
-                                        <span class="text-sm font-semibold text-muted-color text-center block">Durum</span>
-                                        <span class="text-sm font-semibold text-muted-color text-center block px-1">Son güncelleme</span>
-                                        <span class="text-sm font-semibold text-muted-color text-center block">İşlem</span>
+                            @if (ro.mutationBlocked()) {
+                                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3 m-0" role="status">Salt okunur modda stok girişi, stok çıkışı ve minimum stok güncellenemez; stok bilgileri görüntülenebilir.</p>
+                            }
+                            @if (stocksLoading() && stocksRows().length === 0) {
+                                <app-loading-state message="Stok bilgileri yükleniyor…" />
+                            } @else if (stocksError()) {
+                                <app-error-state [detail]="stocksError()!" (retry)="reloadStocks()" />
+                            } @else if (stocksRowsView().total === 0) {
+                                <app-empty-state message="Bu ürün için henüz stok kaydı yok." />
+                            } @else {
+                                <!-- Masaüstü: çizgisiz kolon hizası; yalnızca satır ayırıcıları -->
+                                <div class="hidden md:block overflow-x-auto w-full" [class.opacity-60]="stocksLoading()" [attr.aria-busy]="stocksLoading()">
+                                    <div class="w-full min-w-0">
+                                        <div role="row" class="product-stock-desktop-grid px-2 py-2.5 border-b border-surface-200 dark:border-surface-700">
+                                            <span class="text-sm font-semibold text-muted-color text-center block">Klinik</span>
+                                            <span class="text-sm font-semibold text-muted-color text-center block">Kullanılabilir</span>
+                                            <span class="text-sm font-semibold text-muted-color text-center block">Süresi geçmiş</span>
+                                            <span class="text-sm font-semibold text-muted-color text-center block">Minimum stok</span>
+                                            <span class="text-sm font-semibold text-muted-color text-center block">Durum</span>
+                                            <span class="text-sm font-semibold text-muted-color text-center block px-1">Son güncelleme</span>
+                                            <span class="text-sm font-semibold text-muted-color text-center block">İşlem</span>
+                                        </div>
+                                        @for (row of stocksRowsView().displayed; track row.id) {
+                                            <div
+                                                role="row"
+                                                class="product-stock-desktop-grid px-2 py-2.5 border-b border-surface-200 dark:border-surface-700 last:border-b-0 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors duration-150"
+                                            >
+                                                <span class="font-semibold text-base text-surface-900 dark:text-surface-0 min-w-0 break-words leading-snug text-center block">{{ row.clinicName }}</span>
+                                                <span class="tabular-nums text-base font-medium text-surface-900 dark:text-surface-0 text-center block">{{ row.availableText }}</span>
+                                                <span class="tabular-nums text-base text-center block">
+                                                    @if (row.hasExpired) {
+                                                        <span class="font-medium text-red-600 dark:text-red-400" data-testid="expired-qty">{{ row.expiredText }}</span>
+                                                    } @else {
+                                                        <span class="text-muted-color">—</span>
+                                                    }
+                                                </span>
+                                                <span class="tabular-nums text-base text-surface-900 dark:text-surface-0 text-center block">{{ row.minimumStockLevelText }}</span>
+                                                <span class="flex justify-center items-center min-w-0 px-1">
+                                                    <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
+                                                </span>
+                                                <span class="text-muted-color text-base min-w-0 text-center block px-1 break-words leading-snug" [title]="row.updatedAtText">{{ row.updatedAtText }}</span>
+                                                <span class="flex justify-center items-center min-h-[2.5rem] max-w-full">
+                                                    @if (canOpenStockOperation()) {
+                                                        <p-button
+                                                            type="button"
+                                                            label="Stok işlemi"
+                                                            icon="pi pi-sync"
+                                                            size="small"
+                                                            severity="primary"
+                                                            styleClass="!py-2 !px-3 !text-sm !font-semibold whitespace-nowrap shadow-sm"
+                                                            title="Stok girişi, çıkışı veya minimum stok"
+                                                            (onClick)="openStockOperationDialog(row)"
+                                                        />
+                                                    }
+                                                </span>
+                                            </div>
+                                        }
                                     </div>
+                                </div>
+                                <div class="md:hidden space-y-2.5" [class.opacity-60]="stocksLoading()" [attr.aria-busy]="stocksLoading()">
                                     @for (row of stocksRowsView().displayed; track row.id) {
-                                        <div
-                                            role="row"
-                                            class="product-stock-desktop-grid px-2 py-2.5 border-b border-surface-200 dark:border-surface-700 last:border-b-0 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors duration-150"
-                                        >
-                                            <span
-                                                class="font-semibold text-base text-surface-900 dark:text-surface-0 min-w-0 break-words leading-snug text-center block"
-                                                >{{ row.clinicName }}</span>
-                                            <span class="tabular-nums text-base font-medium text-surface-900 dark:text-surface-0 text-center block">{{
-                                                row.availableText
-                                            }}</span>
-                                            <span class="tabular-nums text-base text-center block">@if (row.hasExpired) {<span class="font-medium text-red-600 dark:text-red-400" data-testid="expired-qty">{{ row.expiredText }}</span>} @else {<span class="text-muted-color">—</span>}</span>
-                                            <span class="tabular-nums text-base text-surface-900 dark:text-surface-0 text-center block">{{
-                                                row.minimumStockLevelText
-                                            }}</span>
-                                            <span class="flex justify-center items-center min-w-0 px-1">
-                                                <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
-                                            </span>
-                                            <span
-                                                class="text-muted-color text-base min-w-0 text-center block px-1 break-words leading-snug"
-                                                [title]="row.updatedAtText"
-                                                >{{ row.updatedAtText }}</span>
-                                            <span class="flex justify-center items-center min-h-[2.5rem] max-w-full">
-                                                @if (canOpenStockOperation()) {
+                                        <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 px-3 py-2.5 shadow-sm">
+                                            <div class="text-base font-semibold text-surface-900 dark:text-surface-0 mb-2 leading-snug">
+                                                {{ row.clinicName }}
+                                            </div>
+                                            <dl class="m-0 grid grid-cols-12 gap-x-2 gap-y-2">
+                                                <dt class="col-span-5 text-muted-color text-sm">Kullanılabilir</dt>
+                                                <dd class="col-span-7 m-0 text-right tabular-nums text-base font-medium text-surface-900 dark:text-surface-0">
+                                                    {{ row.availableText }}
+                                                </dd>
+                                                <dt class="col-span-5 text-muted-color text-sm">Süresi geçmiş</dt>
+                                                <dd class="col-span-7 m-0 text-right tabular-nums text-base">
+                                                    @if (row.hasExpired) {
+                                                        <span class="font-medium text-red-600 dark:text-red-400" data-testid="expired-qty">{{ row.expiredText }}</span>
+                                                    } @else {
+                                                        <span class="text-muted-color">—</span>
+                                                    }
+                                                </dd>
+                                                <dt class="col-span-5 text-muted-color text-sm">Minimum stok</dt>
+                                                <dd class="col-span-7 m-0 text-right tabular-nums text-base text-surface-900 dark:text-surface-0">
+                                                    {{ row.minimumStockLevelText }}
+                                                </dd>
+                                                <dt class="col-span-5 text-muted-color text-sm self-center">Durum</dt>
+                                                <dd class="col-span-7 m-0 flex justify-end items-center">
+                                                    <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
+                                                </dd>
+                                                <dt class="col-span-12 text-muted-color text-sm pt-0.5">Son güncelleme</dt>
+                                                <dd class="col-span-12 m-0 text-muted-color text-base">{{ row.updatedAtText }}</dd>
+                                            </dl>
+                                            @if (canOpenStockOperation()) {
+                                                <div class="flex flex-wrap justify-end gap-2 mt-2.5 pt-2 border-t border-surface-200 dark:border-surface-700">
                                                     <p-button
                                                         type="button"
                                                         label="Stok işlemi"
                                                         icon="pi pi-sync"
                                                         size="small"
                                                         severity="primary"
-                                                        styleClass="!py-2 !px-3 !text-sm !font-semibold whitespace-nowrap shadow-sm"
+                                                        styleClass="!py-2 !px-3 !text-sm !font-semibold shadow-sm"
                                                         title="Stok girişi, çıkışı veya minimum stok"
                                                         (onClick)="openStockOperationDialog(row)"
                                                     />
-                                                }
-                                            </span>
+                                                </div>
+                                            }
                                         </div>
                                     }
                                 </div>
-                            </div>
-                            <div class="md:hidden space-y-2.5" [class.opacity-60]="stocksLoading()" [attr.aria-busy]="stocksLoading()">
-                                @for (row of stocksRowsView().displayed; track row.id) {
-                                    <div
-                                        class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 px-3 py-2.5 shadow-sm"
-                                    >
-                                        <div class="text-base font-semibold text-surface-900 dark:text-surface-0 mb-2 leading-snug">
-                                            {{ row.clinicName }}
-                                        </div>
-                                        <dl class="m-0 grid grid-cols-12 gap-x-2 gap-y-2">
-                                            <dt class="col-span-5 text-muted-color text-sm">Kullanılabilir</dt>
-                                            <dd class="col-span-7 m-0 text-right tabular-nums text-base font-medium text-surface-900 dark:text-surface-0">
-                                                {{ row.availableText }}
-                                            </dd>
-                                            <dt class="col-span-5 text-muted-color text-sm">Süresi geçmiş</dt>
-                                            <dd class="col-span-7 m-0 text-right tabular-nums text-base">@if (row.hasExpired) {<span class="font-medium text-red-600 dark:text-red-400" data-testid="expired-qty">{{ row.expiredText }}</span>} @else {<span class="text-muted-color">—</span>}</dd>
-                                            <dt class="col-span-5 text-muted-color text-sm">Minimum stok</dt>
-                                            <dd class="col-span-7 m-0 text-right tabular-nums text-base text-surface-900 dark:text-surface-0">
-                                                {{ row.minimumStockLevelText }}
-                                            </dd>
-                                            <dt class="col-span-5 text-muted-color text-sm self-center">Durum</dt>
-                                            <dd class="col-span-7 m-0 flex justify-end items-center">
-                                                <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
-                                            </dd>
-                                            <dt class="col-span-12 text-muted-color text-sm pt-0.5">Son güncelleme</dt>
-                                            <dd class="col-span-12 m-0 text-muted-color text-base">{{ row.updatedAtText }}</dd>
-                                        </dl>
-                                        @if (canOpenStockOperation()) {
-                                            <div class="flex flex-wrap justify-end gap-2 mt-2.5 pt-2 border-t border-surface-200 dark:border-surface-700">
-                                                <p-button
-                                                    type="button"
-                                                    label="Stok işlemi"
-                                                    icon="pi pi-sync"
-                                                    size="small"
-                                                    severity="primary"
-                                                    styleClass="!py-2 !px-3 !text-sm !font-semibold shadow-sm"
-                                                    title="Stok girişi, çıkışı veya minimum stok"
-                                                    (onClick)="openStockOperationDialog(row)"
-                                                />
-                                            </div>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
-                </div>
-
-                @if (canReadStockMovements && stocksRows().length > 0) {
-                    <div class="col-span-12">
-                        <div class="card" data-testid="product-batches-card">
-                            <h5 class="mt-0 mb-4 text-base font-semibold text-surface-900 dark:text-surface-0">Partiler</h5>
-                            @for (row of stocksRows(); track row.id) {
-                                <app-product-stock-batches
-                                    [productId]="p.id"
-                                    [clinicId]="row.clinicId"
-                                    [clinicName]="row.clinicName"
-                                    [reloadKey]="batchesReloadKey()"
-                                />
                             }
                         </div>
                     </div>
-                }
+
+                    @if (canReadStockMovements && stocksRows().length > 0) {
+                        <div class="col-span-12">
+                            <div class="card" data-testid="product-batches-card">
+                                <h5 class="mt-0 mb-4 text-base font-semibold text-surface-900 dark:text-surface-0">Partiler</h5>
+                                @for (row of stocksRows(); track row.id) {
+                                    <app-product-stock-batches [productId]="p.id" [clinicId]="row.clinicId" [clinicName]="row.clinicName" [reloadKey]="batchesReloadKey()" />
+                                }
+                            </div>
+                        </div>
+                    }
                 }
             </div>
         }
 
-        <p-dialog
-            header="Stok işlemi"
-            [modal]="true"
-            [visible]="stockOperationDialogOpen()"
-            (visibleChange)="onStockOperationDialogVisibleChange($event)"
-            [style]="{ width: 'min(36rem, 95vw)' }"
-            [draggable]="false"
-        >
+        <p-dialog header="Stok işlemi" [modal]="true" [visible]="stockOperationDialogOpen()" (visibleChange)="onStockOperationDialogVisibleChange($event)" [style]="{ width: 'min(36rem, 95vw)' }" [draggable]="false">
             <form [formGroup]="stockOperationForm" (ngSubmit)="onStockOperationSubmit()" class="flex flex-col gap-4">
                 @if (showStockClinicPicker()) {
                     <div class="flex flex-col gap-1">
@@ -407,7 +348,7 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                             filterPlaceholder="Ara…"
                             filterBy="label"
                             [showClear]="true"
-                            styleClass="w-full"
+                            class="w-full"
                         />
                         @if (stockOperationForm.controls.clinicStockRowId.invalid && stockOperationForm.controls.clinicStockRowId.touched) {
                             <small class="text-red-500">Stok işlemi için klinik seçimi gereklidir.</small>
@@ -417,11 +358,7 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
 
                 @if (shouldShowStockOperationBody()) {
                     @if (editingStockRow(); as stock) {
-                        <div
-                            class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900/40 p-4 space-y-3"
-                            role="region"
-                            aria-label="Klinik stok özeti"
-                        >
+                        <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900/40 p-4 space-y-3" role="region" aria-label="Klinik stok özeti">
                             <div class="flex flex-col gap-1">
                                 <span class="block text-sm font-medium text-muted-color">Klinik</span>
                                 <span class="text-base font-medium text-surface-900 dark:text-surface-0 leading-snug">{{ stock.clinicName }}</span>
@@ -441,11 +378,7 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                             </div>
                         </div>
                     } @else if (stockOperationActiveClinicFallback()) {
-                        <div
-                            class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900/40 p-4 space-y-3"
-                            role="region"
-                            aria-label="Aktif klinik stok özeti"
-                        >
+                        <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900/40 p-4 space-y-3" role="region" aria-label="Aktif klinik stok özeti">
                             <div class="flex flex-col gap-1">
                                 <span class="block text-sm font-medium text-muted-color">Klinik</span>
                                 <span class="text-base font-medium text-surface-900 dark:text-surface-0 leading-snug">{{ headerActiveClinicDisplayName() }}</span>
@@ -460,73 +393,35 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                                     <span class="text-base tabular-nums text-muted-color">—</span>
                                 </div>
                             </div>
-                            <p class="text-sm text-muted-color m-0 leading-relaxed">
-                                Bu ürün için seçili klinikte henüz stok kaydı yok; stok girişi veya çıkışı ile hareket oluşturabilirsiniz.
-                            </p>
+                            <p class="text-sm text-muted-color m-0 leading-relaxed">Bu ürün için seçili klinikte henüz stok kaydı yok; stok girişi veya çıkışı ile hareket oluşturabilirsiniz.</p>
                         </div>
                     }
 
                     <div class="flex flex-col gap-2">
                         <label class="block text-sm font-medium text-muted-color">İşlem tipi</label>
-                        <p-selectbutton
-                            formControlName="operationType"
-                            [options]="stockOperationTypeSelectOptions()"
-                            optionLabel="label"
-                            optionValue="value"
-                            [allowEmpty]="false"
-                            styleClass="flex-wrap w-full"
-                            aria-label="İşlem tipi"
-                        />
+                        <p-selectbutton formControlName="operationType" [options]="stockOperationTypeSelectOptions()" optionLabel="label" optionValue="value" [allowEmpty]="false" styleClass="flex-wrap w-full" aria-label="İşlem tipi" />
                     </div>
 
                     @if (stockOperationForm.controls.operationType.value === 'in') {
                         <div class="flex flex-col gap-4">
                             <div class="flex flex-col gap-1">
                                 <label for="soAmountIn" class="block text-sm font-medium text-muted-color">Giriş miktarı *</label>
-                                <input
-                                    id="soAmountIn"
-                                    type="number"
-                                    step="any"
-                                    min="0"
-                                    class="w-full p-inputtext p-component"
-                                    formControlName="amount"
-                                    inputmode="decimal"
-                                />
+                                <input id="soAmountIn" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="amount" inputmode="decimal" />
                                 @if (stockOperationForm.controls.amount.invalid && stockOperationForm.controls.amount.touched) {
                                     <small class="text-red-500">Miktar 0’dan büyük olmalıdır.</small>
                                 }
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label for="soUnitCost" class="block text-sm font-medium text-muted-color">Birim maliyet</label>
-                                <input
-                                    id="soUnitCost"
-                                    type="number"
-                                    step="any"
-                                    min="0"
-                                    class="w-full p-inputtext p-component"
-                                    formControlName="unitCost"
-                                    placeholder="İsteğe bağlı"
-                                    inputmode="decimal"
-                                />
+                                <input id="soUnitCost" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="unitCost" placeholder="İsteğe bağlı" inputmode="decimal" />
                                 @if (stockOperationForm.controls.unitCost.invalid && stockOperationForm.controls.unitCost.touched) {
                                     <small class="text-red-500">Birim maliyet 0’dan küçük olamaz.</small>
                                 }
                             </div>
-                            <app-stock-batch-fields
-                                [group]="stockOperationForm.controls.batch"
-                                [required]="product()?.requiresLotAndExpiry === true"
-                                idPrefix="soBatch"
-                            />
+                            <app-stock-batch-fields [group]="stockOperationForm.controls.batch" [required]="product()?.requiresLotAndExpiry === true" idPrefix="soBatch" />
                             <div class="flex flex-col gap-1">
                                 <label for="soNotesIn" class="block text-sm font-medium text-muted-color">Açıklama</label>
-                                <textarea
-                                    id="soNotesIn"
-                                    pTextarea
-                                    rows="3"
-                                    class="w-full min-h-[4.5rem]"
-                                    formControlName="notes"
-                                    placeholder="İsteğe bağlı"
-                                ></textarea>
+                                <textarea id="soNotesIn" pTextarea rows="3" class="w-full min-h-[4.5rem]" formControlName="notes" placeholder="İsteğe bağlı"></textarea>
                                 @if (stockOperationForm.controls.notes.invalid && stockOperationForm.controls.notes.touched) {
                                     <small class="text-red-500">En fazla 2000 karakter.</small>
                                 }
@@ -537,29 +432,14 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                         <div class="flex flex-col gap-4">
                             <div class="flex flex-col gap-1">
                                 <label for="soAmountOut" class="block text-sm font-medium text-muted-color">Çıkış miktarı *</label>
-                                <input
-                                    id="soAmountOut"
-                                    type="number"
-                                    step="any"
-                                    min="0"
-                                    class="w-full p-inputtext p-component"
-                                    formControlName="amount"
-                                    inputmode="decimal"
-                                />
+                                <input id="soAmountOut" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="amount" inputmode="decimal" />
                                 @if (stockOperationForm.controls.amount.invalid && stockOperationForm.controls.amount.touched) {
                                     <small class="text-red-500">Miktar 0’dan büyük olmalıdır.</small>
                                 }
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label for="soNotesOut" class="block text-sm font-medium text-muted-color">Açıklama</label>
-                                <textarea
-                                    id="soNotesOut"
-                                    pTextarea
-                                    rows="3"
-                                    class="w-full min-h-[4.5rem]"
-                                    formControlName="notes"
-                                    placeholder="İsteğe bağlı"
-                                ></textarea>
+                                <textarea id="soNotesOut" pTextarea rows="3" class="w-full min-h-[4.5rem]" formControlName="notes" placeholder="İsteğe bağlı"></textarea>
                                 @if (stockOperationForm.controls.notes.invalid && stockOperationForm.controls.notes.touched) {
                                     <small class="text-red-500">En fazla 2000 karakter.</small>
                                 }
@@ -569,19 +449,8 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                     @if (stockOperationForm.controls.operationType.value === 'minimum') {
                         <div class="flex flex-col gap-1">
                             <label for="soMinLevel" class="block text-sm font-medium text-muted-color">Yeni minimum stok *</label>
-                            <input
-                                id="soMinLevel"
-                                type="number"
-                                step="any"
-                                min="0"
-                                class="w-full p-inputtext p-component"
-                                formControlName="minimumStockLevel"
-                                inputmode="decimal"
-                            />
-                            @if (
-                                stockOperationForm.controls.minimumStockLevel.invalid &&
-                                stockOperationForm.controls.minimumStockLevel.touched
-                            ) {
+                            <input id="soMinLevel" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="minimumStockLevel" inputmode="decimal" />
+                            @if (stockOperationForm.controls.minimumStockLevel.invalid && stockOperationForm.controls.minimumStockLevel.touched) {
                                 <small class="text-red-500">Minimum stok 0’dan küçük olamaz.</small>
                             }
                         </div>
@@ -591,27 +460,14 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                 @if (stockOperationSubmitError()) {
                     <p class="text-red-500 m-0 text-sm leading-relaxed" role="alert">{{ stockOperationSubmitError() }}</p>
                 }
-                <div
-                    class="flex flex-wrap justify-end gap-2 pt-3 mt-1 border-t border-surface-200 dark:border-surface-700"
-                >
-                    <p-button
-                        type="button"
-                        [label]="copy.buttonCancel"
-                        severity="secondary"
-                        (onClick)="closeStockOperationDialog()"
-                        [disabled]="stockOperationSubmitting()"
-                    />
+                <div class="flex flex-wrap justify-end gap-2 pt-3 mt-1 border-t border-surface-200 dark:border-surface-700">
+                    <p-button type="button" [label]="copy.buttonCancel" severity="secondary" (onClick)="closeStockOperationDialog()" [disabled]="stockOperationSubmitting()" />
                     <p-button
                         type="submit"
                         [label]="copy.buttonSave"
                         icon="pi pi-check"
                         [loading]="stockOperationSubmitting()"
-                        [disabled]="
-                            stockOperationForm.invalid ||
-                            stockOperationSubmitting() ||
-                            ro.mutationBlocked() ||
-                            stockOperationPickIncomplete()
-                        "
+                        [disabled]="stockOperationForm.invalid || stockOperationSubmitting() || ro.mutationBlocked() || stockOperationPickIncomplete()"
                     />
                 </div>
             </form>
@@ -1153,8 +1009,7 @@ export class ProductDetailPageComponent implements OnInit {
 
             const notesTrimmed = raw.notes?.trim() ?? '';
             const defaultReason = op === 'in' ? 'Stok girişi' : 'Stok çıkışı';
-            const unitCost =
-                op === 'in' ? this.parseOptionalNonNegativeUnitCost(raw.unitCost as number | string | null | undefined) : null;
+            const unitCost = op === 'in' ? this.parseOptionalNonNegativeUnitCost(raw.unitCost as number | string | null | undefined) : null;
 
             let clinicId: string | null = null;
 

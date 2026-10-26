@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, DestroyRef, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, ElementRef, OnInit, computed, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { forkJoin, fromEvent, map, take } from 'rxjs';
@@ -51,13 +51,14 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
         TrDateTimePipe,
         TrTimePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header title="Özet" [description]="pageDescription()" />
 
         @if (!clinicContextOk()) {
             <div class="card">
                 <app-empty-state [message]="copy.dashboardNeedClinicMessage" [hint]="copy.dashboardNeedClinicHint" iconClass="pi pi-building">
-                    <a routerLink="/auth/select-clinic" [queryParams]="selectClinicQueryParams" pButton type="button" label="Klinik seç" icon="pi pi-check" class="p-button-primary"></a>
+                    <a routerLink="/auth/select-clinic" [queryParams]="selectClinicQueryParams" pButton type="button" class="p-button-primary"><i class="pi pi-check"></i>Klinik seç</a>
                 </app-empty-state>
             </div>
         } @else {
@@ -72,19 +73,19 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
                         <h5 class="mt-0 mb-3 text-base font-medium text-surface-900 dark:text-surface-0">{{ copy.dashboardQuickActionsTitle }}</h5>
                         <div class="flex flex-wrap gap-2">
                             @if (canOpenAppointments()) {
-                                <a routerLink="/panel/appointments/new" pButton type="button" label="Yeni Randevu" icon="pi pi-plus" class="p-button-sm"></a>
+                                <a routerLink="/panel/appointments/new" pButton type="button" class="p-button-sm"><i class="pi pi-plus"></i>Yeni Randevu</a>
                             }
                             @if (canCreateVisit) {
-                                <button pButton type="button" label="Randevusuz geliş" icon="pi pi-user-plus" class="p-button-sm" [disabled]="ro.mutationBlocked()" (click)="walkInOpen.set(true)"></button>
+                                <button pButton type="button" class="p-button-sm" [disabled]="ro.mutationBlocked()" (click)="walkInOpen.set(true)"><i class="pi pi-user-plus"></i>Randevusuz geliş</button>
                             }
                             @if (canOpenClients()) {
-                                <a routerLink="/panel/clients" pButton type="button" label="Müşteriler" icon="pi pi-users" severity="secondary" class="p-button-sm"></a>
+                                <a routerLink="/panel/clients" pButton type="button" severity="secondary" class="p-button-sm"><i class="pi pi-users"></i>Müşteriler</a>
                             }
                             @if (canOpenPets()) {
-                                <a routerLink="/panel/pets" pButton type="button" label="Hastalar" icon="pi pi-heart" severity="secondary" class="p-button-sm"></a>
+                                <a routerLink="/panel/pets" pButton type="button" severity="secondary" class="p-button-sm"><i class="pi pi-heart"></i>Hastalar</a>
                             }
                             @if (canShowPaymentsQuickAction()) {
-                                <a routerLink="/panel/payments" pButton type="button" label="Ödemeler" icon="pi pi-credit-card" severity="secondary" class="p-button-sm"></a>
+                                <a routerLink="/panel/payments" pButton type="button" severity="secondary" class="p-button-sm"><i class="pi pi-credit-card"></i>Ödemeler</a>
                             }
                         </div>
                         @if (canCreateVisit) {
@@ -115,11 +116,11 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
                                                             [queryParams]="alert.queryParams ?? undefined"
                                                             pButton
                                                             type="button"
-                                                            label="Git"
+                                                           
                                                             severity="secondary"
                                                             class="p-button-sm whitespace-nowrap"
                                                             [attr.aria-label]="alert.title + ' detayina git'"
-                                                        ></a>
+                                                        >Git</a>
                                                     }
                                                 </div>
                                             </div>
@@ -148,10 +149,10 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
                                                             [queryParams]="item.queryParams ?? undefined"
                                                             pButton
                                                             type="button"
-                                                            label="İncele"
+                                                           
                                                             class="p-button-sm whitespace-nowrap"
                                                             [attr.aria-label]="item.title + ' listesini ac'"
-                                                        ></a>
+                                                        >İncele</a>
                                                     }
                                                 </div>
                                             </div>
@@ -191,7 +192,7 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
                         <div class="card mb-0">
                             <span class="block text-muted-color font-medium mb-4">Yaklaşan randevular</span>
                             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-                                {{ metricCount(d.summary.data?.upcomingAppointmentsCount) }}
+                                {{ metricCount($safeNavigationMigration(d.summary.data?.upcomingAppointmentsCount)) }}
                             </div>
                         </div>
                     </div>
@@ -199,7 +200,7 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
                         <div class="card mb-0">
                             <span class="block text-muted-color font-medium mb-4">Bugün tamamlanan</span>
                             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-                                {{ metricCount(d.summary.data?.completedTodayCount) }}
+                                {{ metricCount($safeNavigationMigration(d.summary.data?.completedTodayCount)) }}
                             </div>
                         </div>
                     </div>
@@ -207,7 +208,7 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
                         <div class="card mb-0">
                             <span class="block text-muted-color font-medium mb-4">Bugün iptal</span>
                             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-                                {{ metricCount(d.summary.data?.cancelledTodayCount) }}
+                                {{ metricCount($safeNavigationMigration(d.summary.data?.cancelledTodayCount)) }}
                             </div>
                         </div>
                     </div>

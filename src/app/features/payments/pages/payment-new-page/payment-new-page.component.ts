@@ -2,7 +2,7 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -38,6 +38,7 @@ const DUPLICATE_MISMATCH_MESSAGE = 'Bu form için ödeme daha önce kaydedilmiş
     selector: 'app-payment-new-page',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, TableModule, AppPageHeaderComponent, ClientSearchComponent, DateInputComponent, TrDateTimePipe],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Yeni Ödeme" description="Müşterinin açık ücretlerinden hangilerine ne kadar ödeme alındığını girin." />
 
@@ -73,7 +74,7 @@ const DUPLICATE_MISMATCH_MESSAGE = 'Bu form için ödeme daha önce kaydedilmiş
                             </p>
                         } @else {
                             <div class="overflow-x-auto">
-                                <p-table [value]="openCharges()" dataKey="chargeId" styleClass="p-datatable-sm" [tableStyle]="{ 'min-width': '44rem' }">
+                                <p-table [value]="openCharges()" dataKey="chargeId" size="small" [tableStyle]="{ 'min-width': '44rem' }">
                                     <ng-template #header>
                                         <tr>
                                             <th>Ücret</th>
@@ -127,7 +128,7 @@ const DUPLICATE_MISMATCH_MESSAGE = 'Bu form için ödeme daha önce kaydedilmiş
                     </div>
                     <div class="col-span-12 md:col-span-4">
                         <label for="method" class="block text-sm font-medium text-muted-color mb-2">Yöntem *</label>
-                        <p-select inputId="method" [options]="methodOptions" formControlName="method" optionLabel="label" optionValue="value" styleClass="w-full" />
+                        <p-select inputId="method" [options]="methodOptions" formControlName="method" optionLabel="label" optionValue="value" class="w-full" />
                         @if (apiFieldErrors().method) {
                             <small class="text-red-500">{{ apiFieldErrors().method }}</small>
                         }

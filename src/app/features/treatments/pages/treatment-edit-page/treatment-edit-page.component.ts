@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-s
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -14,21 +14,11 @@ import { firstValueFrom } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
-import {
-    examinationListItemFromDetail,
-    prescriptionExaminationSelectOption
-} from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
-import {
-    followUpBeforeTreatmentMessage,
-    mapTreatmentUpsertFormToCreateRequest
-} from '@/app/features/treatments/data/treatment.mapper';
+import { examinationListItemFromDetail, prescriptionExaminationSelectOption } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
+import { followUpBeforeTreatmentMessage, mapTreatmentUpsertFormToCreateRequest } from '@/app/features/treatments/data/treatment.mapper';
 import type { TreatmentEditVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
-import {
-    type TreatmentUpsertFieldErrors,
-    type TreatmentUpsertFormFieldKey,
-    parseTreatmentUpsertHttpError
-} from '@/app/features/treatments/utils/treatment-upsert-validation-parse.utils';
+import { type TreatmentUpsertFieldErrors, type TreatmentUpsertFormFieldKey, parseTreatmentUpsertHttpError } from '@/app/features/treatments/utils/treatment-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -37,22 +27,9 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import {
-    dateOnlyInputToIstanbulStartUtcIso,
-    fromIstanbulDateTimeLocalInputToUtcIso,
-    toIstanbulDateTimeLocalInputValue
-} from '@/app/shared/utils/date.utils';
-import {
-    DATE_INPUT_MIN,
-    dateTimeYearRangeValidator,
-    dateYearRangeValidator,
-    effectiveDateTimeLocalInputMin
-} from '@/app/shared/utils/date-input-validation.utils';
-import {
-    TREATMENT_DATE_TOO_FAR_PAST_MESSAGE,
-    treatmentDateNotTooFarPastValidator,
-    treatmentDateTimeLocalMinAllowed
-} from '@/app/features/treatments/utils/treatment-date-validation.utils';
+import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
+import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
+import { TREATMENT_DATE_TOO_FAR_PAST_MESSAGE, treatmentDateNotTooFarPastValidator, treatmentDateTimeLocalMinAllowed } from '@/app/features/treatments/utils/treatment-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 @Component({
@@ -67,8 +44,12 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         AppPageHeaderComponent,
         PetAlertBannerComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
+        AppErrorStateComponent,
+        ClientSearchComponent,
+        PetSearchComponent,
+        DateInputComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (loading()) {
             <app-loading-state message="Tedavi düzenleme bilgileri yükleniyor…" />
@@ -82,9 +63,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 
             <div class="card">
                 @if (ro.mutationBlocked()) {
-                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                        İşletme salt okunur moddadır; değişiklik kaydedilemez.
-                    </p>
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; değişiklik kaydedilemez.</p>
                 }
                 @if (selectionError()) {
                     <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
@@ -136,7 +115,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                 filterPlaceholder="Ara…"
                                 filterBy="label"
                                 [showClear]="true"
-                                styleClass="w-full"
+                                class="w-full"
                                 [loading]="loadingExaminations()"
                                 [disabled]="examinationSelectDisabled()"
                             />
@@ -185,25 +164,11 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <p-button
-                            type="submit"
-                            [label]="copy.buttonSave"
-                            icon="pi pi-check"
-                            [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || ro.mutationBlocked()"
-                        />
-                        <p-button
-                            type="button"
-                            [label]="copy.buttonCancel"
-                            icon="pi pi-times"
-                            severity="secondary"
-                            (onClick)="goDetail()"
-                            [disabled]="submitting()"
-                        />
+                        <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || ro.mutationBlocked()" />
+                        <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goDetail()" [disabled]="submitting()" />
                     </div>
                 </form>
             </div>
-
         }
     `
 })
@@ -235,7 +200,6 @@ export class TreatmentEditPageComponent implements OnInit {
     readonly apiFieldErrors = signal<TreatmentUpsertFieldErrors>({});
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
-
     private treatmentId = '';
     private editVmCache: TreatmentEditVm | null = null;
 
@@ -251,16 +215,7 @@ export class TreatmentEditPageComponent implements OnInit {
     });
 
     constructor() {
-        const fields: TreatmentUpsertFormFieldKey[] = [
-            'clientId',
-            'petId',
-            'treatmentDateLocal',
-            'examinationId',
-            'followUpDate',
-            'title',
-            'description',
-            'notes'
-        ];
+        const fields: TreatmentUpsertFormFieldKey[] = ['clientId', 'petId', 'treatmentDateLocal', 'examinationId', 'followUpDate', 'title', 'description', 'notes'];
 
         for (const f of fields) {
             this.form.controls[f].valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -465,10 +420,6 @@ export class TreatmentEditPageComponent implements OnInit {
         void this.router.navigate(['/panel/treatments', this.treatmentId]);
     }
 
-
-
-
-
     private loadExaminationsForPetFresh(petId: string): void {
         const seq = ++this.relationLoadSeq;
         const pid = petId.trim();
@@ -504,9 +455,7 @@ export class TreatmentEditPageComponent implements OnInit {
         this.selectionError.set(null);
 
         try {
-            const ex = await firstValueFrom(
-                this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid })
-            );
+            const ex = await firstValueFrom(this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid }));
 
             if (seq !== this.relationLoadSeq || trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
                 return;
@@ -544,9 +493,6 @@ export class TreatmentEditPageComponent implements OnInit {
             }
         }
     }
-
-
-
 
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {

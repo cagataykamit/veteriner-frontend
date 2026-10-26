@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
 import { ADMINISTRATION_LATE_ENTRY_LABEL, administrationBatchText, administrationStockOutcomeLabel } from '@/app/features/administrations/utils/administration-labels';
@@ -9,6 +9,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
     selector: 'app-administration-row-marks',
     standalone: true,
     imports: [AppStatusTagComponent, RouterLink],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (batchText(); as text) {
             <div class="text-xs text-muted-color" data-testid="batch-info">{{ text }}</div>

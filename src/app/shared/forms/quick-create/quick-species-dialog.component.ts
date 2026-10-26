@@ -1,13 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, output, signal, model } from '@angular/core';
+import { Component, inject, output, signal, model, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { SpeciesUpsertRequest } from '@/app/features/species/models/species-upsert.model';
 import { SpeciesService } from '@/app/features/species/services/species.service';
-import {
-    type SpeciesUpsertFieldErrors,
-    parseSpeciesUpsertHttpError
-} from '@/app/features/species/utils/species-upsert-validation-parse.utils';
+import { type SpeciesUpsertFieldErrors, parseSpeciesUpsertHttpError } from '@/app/features/species/utils/species-upsert-validation-parse.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -21,20 +18,11 @@ import { SelectModule } from 'primeng/select';
     selector: 'app-quick-species-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, SelectModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            header="Yeni tür"
-            [modal]="true"
-            [dismissableMask]="true"
-            [style]="{ width: 'min(480px, 95vw)' }"
-            [contentStyle]="{ overflow: 'visible' }"
-            [(visible)]="visible"
-            (onShow)="onShow()"
-        >
+        <p-dialog header="Yeni tür" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(480px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onShow()">
             @if (ro.mutationBlocked()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">
-                    İşletme salt okunur moddadır; tür oluşturulamaz.
-                </p>
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">İşletme salt okunur moddadır; tür oluşturulamaz.</p>
             }
             <form [formGroup]="form" (ngSubmit)="onSubmit()" id="quick-species-form">
                 <div class="grid grid-cols-12 gap-4">
@@ -66,15 +54,7 @@ import { SelectModule } from 'primeng/select';
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="qs-isActive" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
-                        <p-select
-                            inputId="qs-isActive"
-                            formControlName="isActive"
-                            [options]="activeOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            styleClass="w-full"
-                            appendTo="body"
-                        />
+                        <p-select inputId="qs-isActive" formControlName="isActive" [options]="activeOptions" optionLabel="label" optionValue="value" class="w-full" appendTo="body" />
                         @if (apiFieldErrors().isActive) {
                             <small class="text-red-500">{{ apiFieldErrors().isActive }}</small>
                         }
@@ -97,16 +77,9 @@ import { SelectModule } from 'primeng/select';
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 <p-button type="button" label="İptal" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button
-                    type="button"
-                    label="Kaydet"
-                    icon="pi pi-check"
-                    [loading]="submitting()"
-                    [disabled]="form.invalid || submitting() || ro.mutationBlocked()"
-                    (onClick)="onSubmit()"
-                />
+                <p-button type="button" label="Kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || ro.mutationBlocked()" (onClick)="onSubmit()" />
             </ng-template>
         </p-dialog>
     `

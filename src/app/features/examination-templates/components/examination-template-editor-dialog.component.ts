@@ -1,15 +1,6 @@
-import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import {
-    AbstractControl,
-    FormArray,
-    FormBuilder,
-    FormControl,
-    FormGroup,
-    ReactiveFormsModule,
-    ValidationErrors,
-    Validators
-} from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -27,11 +18,7 @@ import {
     type ExaminationTemplateDto,
     type ExaminationTemplateUpsertRequest
 } from '@/app/features/examination-templates/models/examination-template.model';
-import {
-    ExaminationTemplateError,
-    ExaminationTemplatesService,
-    TEMPLATE_CONCURRENCY_CONFLICT_CODE
-} from '@/app/features/examination-templates/services/examination-templates.service';
+import { ExaminationTemplateError, ExaminationTemplatesService, TEMPLATE_CONCURRENCY_CONFLICT_CODE } from '@/app/features/examination-templates/services/examination-templates.service';
 import { templateHasText } from '@/app/features/examination-templates/utils/examination-template.utils';
 import type { ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
 import { ProductService } from '@/app/features/inventory/services/product.service';
@@ -74,19 +61,12 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
     selector: 'app-examination-template-editor-dialog',
     standalone: true,
     imports: [ReactiveFormsModule, ButtonModule, DialogModule, InputTextModule, MessageModule, SelectModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            [header]="header()"
-            [modal]="true"
-            [visible]="visible()"
-            (visibleChange)="visible.set($event)"
-            [closable]="!submitting()"
-            [style]="{ width: 'min(48rem, 95vw)' }"
-            [draggable]="false"
-        >
+        <p-dialog [header]="header()" [modal]="true" [visible]="visible()" (visibleChange)="visible.set($event)" [closable]="!submitting()" [style]="{ width: 'min(48rem, 95vw)' }" [draggable]="false">
             <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
                 @if (submitError()) {
-                    <p-message severity="error" styleClass="w-full" role="alert">{{ submitError() }}</p-message>
+                    <p-message severity="error" class="w-full" role="alert">{{ submitError() }}</p-message>
                 }
                 <div class="flex flex-col gap-1">
                     <label for="tplName" class="block text-sm font-medium text-muted-color">Ad *</label>
@@ -113,21 +93,10 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
                     <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                         <span class="block text-sm font-medium text-muted-color">İşlem / ürün satırları</span>
                         @if (canPickProduct) {
-                            <p-button
-                                type="button"
-                                label="Satır ekle"
-                                icon="pi pi-plus"
-                                size="small"
-                                severity="secondary"
-                                data-testid="template-line-add"
-                                [disabled]="lines.length >= linesMax"
-                                (onClick)="addLine()"
-                            />
+                            <p-button type="button" label="Satır ekle" icon="pi pi-plus" size="small" severity="secondary" data-testid="template-line-add" [disabled]="lines.length >= linesMax" (onClick)="addLine()" />
                         }
                     </div>
-                    <p class="text-sm text-muted-color mt-0 mb-3">
-                        Uygulanınca stoklu ürün stoktan düşer, hizmet ücret bekleyen kalem olur; fiyat o günkü ürün kartından gelir. Aşı, aşı kaydı ekranından girilir.
-                    </p>
+                    <p class="text-sm text-muted-color mt-0 mb-3">Uygulanınca stoklu ürün stoktan düşer, hizmet ücret bekleyen kalem olur; fiyat o günkü ürün kartından gelir. Aşı, aşı kaydı ekranından girilir.</p>
                     @if (!canPickProduct) {
                         <p class="text-sm text-muted-color m-0">Ürün listesini görme yetkiniz olmadığı için satır eklenemez.</p>
                     } @else if (productsError()) {
@@ -153,7 +122,7 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
                                     filterBy="label"
                                     [loading]="loadingProducts()"
                                     appendTo="body"
-                                    styleClass="w-full"
+                                    class="w-full"
                                 />
                                 @if (inactiveNote(g); as note) {
                                     <small class="text-amber-700 dark:text-amber-300 block">{{ note }}</small>
@@ -161,7 +130,10 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
                             </div>
                             <div class="col-span-8 md:col-span-3">
                                 <label [attr.for]="'tpl-qty-' + i" class="block text-xs font-medium text-muted-color mb-1">
-                                    Miktar *@if (unitFor(g)) { <span> ({{ unitFor(g) }})</span> }
+                                    Miktar *
+                                    @if (unitFor(g)) {
+                                        <span> ({{ unitFor(g) }})</span>
+                                    }
                                 </label>
                                 <input [id]="'tpl-qty-' + i" type="number" step="any" min="0" class="w-full p-inputtext p-component" [formControl]="g.controls.quantity" />
                                 @if (g.controls.quantity.invalid && g.controls.quantity.touched) {

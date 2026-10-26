@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink, UrlTree } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
 import { categoryForUrl, listLabelForUrl, MENU_GROUPS } from '@/app/core/routing/panel-navigation';
@@ -8,6 +8,7 @@ import { categoryForUrl, listLabelForUrl, MENU_GROUPS } from '@/app/core/routing
     selector: 'app-page-header',
     standalone: true,
     imports: [CommonModule, RouterLink, TooltipModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="mb-6">
             @if (categoryLink() && categoryText()) {
@@ -18,7 +19,8 @@ import { categoryForUrl, listLabelForUrl, MENU_GROUPS } from '@/app/core/routing
                     tooltipPosition="bottom"
                     [attr.aria-label]="categoryLinkAriaLabel()"
                     data-testid="page-header-category-link"
-                >{{ categoryText() }}</a>
+                    >{{ categoryText() }}</a
+                >
             }
             <div class="flex flex-wrap gap-4 items-center justify-between">
                 <div>

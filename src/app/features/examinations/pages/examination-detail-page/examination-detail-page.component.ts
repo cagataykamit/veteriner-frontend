@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal, viewChild } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -82,6 +82,7 @@ const RECORD_TEXT_SECTIONS: readonly {
         TrDateTimePipe
     ],
     providers: [MessageService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-toast position="bottom-right" />
         @if (exam(); as e) {
@@ -100,29 +101,29 @@ const RECORD_TEXT_SECTIONS: readonly {
             <app-page-header categoryLink="/panel/examinations" categoryLinkLabel="Muayene listesine dön" title="Muayene" [description]="exam()!.examinedAtUtc | trDateTime">
                 <div actions class="flex flex-wrap gap-2">
                     @if (canApplyTemplateNow()) {
-                        <button pButton type="button" label="Şablon uygula" icon="pi pi-clone" class="p-button-secondary" data-testid="template-apply-open" (click)="templateDialogVisible.set(true)"></button>
+                        <button pButton type="button" class="p-button-secondary" data-testid="template-apply-open" (click)="templateDialogVisible.set(true)"><i class="pi pi-clone"></i>Şablon uygula</button>
                     }
                     @if (canUpdateExamination && isEditable(exam()!.status)) {
                         @if (!ro.mutationBlocked()) {
-                            <a [routerLink]="['/panel/examinations', exam()!.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
+                            <a [routerLink]="['/panel/examinations', exam()!.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                         } @else {
-                            <button pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                            <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                         }
                     }
                     @if (exam()!.clientId?.trim() && exam()!.petId?.trim()) {
                         @let moneyContext = { clientId: exam()!.clientId, petId: exam()!.petId, examinationId: exam()!.id };
                         @if (canCreateCharge) {
                             @if (!ro.mutationBlocked()) {
-                                <a [routerLink]="['/panel/charges/new']" [queryParams]="moneyContext" pButton type="button" label="Ücret ekle" icon="pi pi-plus" class="p-button-secondary" data-testid="charge-new-link"></a>
+                                <a [routerLink]="['/panel/charges/new']" [queryParams]="moneyContext" pButton type="button" class="p-button-secondary" data-testid="charge-new-link"><i class="pi pi-plus"></i>Ücret ekle</a>
                             } @else {
-                                <button pButton type="button" label="Ücret ekle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                                <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Ücret ekle (salt okunur)</button>
                             }
                         }
                         @if (canCreatePayment) {
                             @if (!ro.mutationBlocked()) {
-                                <a [routerLink]="['/panel/payments/new']" [queryParams]="moneyContext" pButton type="button" label="Ödeme Oluştur" icon="pi pi-wallet" class="p-button-secondary"></a>
+                                <a [routerLink]="['/panel/payments/new']" [queryParams]="moneyContext" pButton type="button" class="p-button-secondary"><i class="pi pi-wallet"></i>Ödeme Oluştur</a>
                             } @else {
-                                <button pButton type="button" label="Ödeme (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                                <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Ödeme (salt okunur)</button>
                             }
                         }
                     }

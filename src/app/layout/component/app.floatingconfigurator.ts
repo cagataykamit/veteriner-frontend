@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { LayoutService } from '@/app/layout/service/layout.service';
@@ -6,17 +6,10 @@ import { LayoutService } from '@/app/layout/service/layout.service';
 @Component({
     selector: 'app-floating-configurator',
     imports: [CommonModule, ButtonModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div [ngClass]="float() ? 'fixed top-8 right-8' : ''">
-            <p-button
-                type="button"
-                (onClick)="toggleDarkMode()"
-                [rounded]="true"
-                [icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"
-                severity="secondary"
-                [class]="toggleClass()"
-                [ariaLabel]="themeToggleLabel()"
-            />
+            <p-button type="button" (onClick)="toggleDarkMode()" [rounded]="true" [icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" [class]="toggleClass()" [ariaLabel]="themeToggleLabel()" />
         </div>
     `
 })

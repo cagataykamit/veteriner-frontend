@@ -1,4 +1,4 @@
-import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -33,7 +33,7 @@ describe('VaccinationsReportPageComponent — sade filtre alanı', () => {
         TestBed.configureTestingModule({
             providers: [
                 provideRouter([]),
-                provideHttpClient(),
+                provideHttpClient(withXhr()),
                 provideHttpClientTesting(),
                 { provide: API_BASE_URL, useValue: 'http://api.test' },
                 { provide: VaccinationsReportService, useValue: source },

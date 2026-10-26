@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { APPOINTMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -22,13 +22,9 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
     selector: 'app-appointments-report-page',
     standalone: true,
     imports: [CommonModule, RouterLink, TableModule, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, AppStatusTagComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <app-page-header
-            [categoryLink]="reportsRoute"
-            categoryLinkLabel="Raporlar"
-            [title]="copy.appointmentsReportTitle"
-            [description]="copy.appointmentsReportDescription"
-        />
+        <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" [title]="copy.appointmentsReportTitle" [description]="copy.appointmentsReportDescription" />
 
         <app-report-filter-bar
             [state]="state"
@@ -49,105 +45,99 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
                 }
             </ng-template>
             <ng-template #rows>
-                    <div class="hidden lg:block overflow-x-auto">
-                        <p-table
-                            [value]="displayedRows()"
-                            [paginator]="true"
-                            [rows]="state.pageSize()"
-                            [rowsPerPageOptions]="state.rowsPerPageOptions"
-                            [paginatorDropdownAppendTo]="'body'"
-                            [totalRecords]="totalCount()"
-                            [lazy]="true"
-                            [first]="state.first()"
-                            (onLazyLoad)="state.onTableLazyLoad($event)"
-                            [tableStyle]="{ 'min-width': '76rem' }"
-                            [showCurrentPageReport]="true"
-                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                        >
-                            <ng-template #header>
-                                <tr>
-                                    <th>{{ copy.reportsColPrimaryLocalTime }}</th>
-                                    <th>{{ copy.reportsColClinic }}</th>
-                                    <th>{{ copy.labelClient }}</th>
-                                    <th>{{ copy.labelPet }}</th>
-                                    <th>{{ copy.appointmentsReportColStatus }}</th>
-                                    <th>{{ copy.reportsColNotes }}</th>
-                                    <th style="width: 6rem"></th>
-                                </tr>
-                            </ng-template>
-                            <ng-template #body let-row>
-                                <tr>
-                                    <td>{{ formatScheduledAt(row.scheduledAtUtc) }}</td>
-                                    <td>{{ displayClinicLabel(row.clinicLabel) }}</td>
-                                    <td>
-                                        @if (row.clientId) {
-                                            <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{
-                                                row.clientName
-                                            }}</a>
-                                        } @else {
-                                            {{ row.clientName }}
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (row.petId) {
-                                            <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
-                                        } @else {
-                                            {{ row.petName }}
-                                        }
-                                    </td>
-                                    <td>
-                                        <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
-                                    </td>
-                                    <td class="max-w-[14rem] truncate" [title]="row.notes">{{ row.notes }}</td>
-                                    <td>
-                                        <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm">{{ copy.buttonDetail }}</a>
-                                    </td>
-                                </tr>
-                            </ng-template>
-                        </p-table>
-                    </div>
-
-                    <div class="lg:hidden space-y-3">
-                        @for (row of displayedRows(); track reportTableRowTrackKey(row, $index)) {
-                            <div
-                                class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
-                            >
-                                <div class="flex flex-wrap items-start justify-between gap-2 gap-y-1 mb-2">
-                                    <div class="text-sm text-muted-color">{{ formatScheduledAt(row.scheduledAtUtc) }}</div>
-                                    <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
-                                </div>
-                                <div class="text-sm mb-1">
-                                    <span class="text-muted-color font-medium">{{ copy.reportsColClinic }}: </span>{{ displayClinicLabel(row.clinicLabel) }}
-                                </div>
-                                <div class="text-sm mb-1">
-                                    <span class="text-muted-color font-medium">{{ copy.labelClient }}: </span>
+                <div class="hidden lg:block overflow-x-auto">
+                    <p-table
+                        [value]="displayedRows()"
+                        [paginator]="true"
+                        [rows]="state.pageSize()"
+                        [rowsPerPageOptions]="state.rowsPerPageOptions"
+                        [paginatorDropdownAppendTo]="'body'"
+                        [totalRecords]="totalCount()"
+                        [lazy]="true"
+                        [first]="state.first()"
+                        (onLazyLoad)="state.onTableLazyLoad($event)"
+                        [tableStyle]="{ 'min-width': '76rem' }"
+                        [showCurrentPageReport]="true"
+                        currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                    >
+                        <ng-template #header>
+                            <tr>
+                                <th>{{ copy.reportsColPrimaryLocalTime }}</th>
+                                <th>{{ copy.reportsColClinic }}</th>
+                                <th>{{ copy.labelClient }}</th>
+                                <th>{{ copy.labelPet }}</th>
+                                <th>{{ copy.appointmentsReportColStatus }}</th>
+                                <th>{{ copy.reportsColNotes }}</th>
+                                <th style="width: 6rem"></th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr>
+                                <td>{{ formatScheduledAt(row.scheduledAtUtc) }}</td>
+                                <td>{{ displayClinicLabel(row.clinicLabel) }}</td>
+                                <td>
                                     @if (row.clientId) {
-                                        <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{
-                                            row.clientName
-                                        }}</a>
+                                        <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
                                     } @else {
-                                        <span class="break-words">{{ row.clientName }}</span>
+                                        {{ row.clientName }}
                                     }
-                                </div>
-                                <div class="text-sm mb-2">
-                                    <span class="text-muted-color font-medium">{{ copy.labelPet }}: </span>
+                                </td>
+                                <td>
                                     @if (row.petId) {
-                                        <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{ row.petName }}</a>
+                                        <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
                                     } @else {
-                                        <span class="break-words">{{ row.petName }}</span>
+                                        {{ row.petName }}
                                     }
-                                </div>
-                                @if (row.notes && row.notes !== '—') {
-                                    <div class="text-sm text-muted-color break-words mb-2">
-                                        <span class="font-medium">{{ copy.reportsColNotes }}: </span>{{ row.notes }}
-                                    </div>
-                                }
-                                <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
-                                    <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm">{{ copy.buttonDetail }} →</a>
-                                </div>
+                                </td>
+                                <td>
+                                    <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
+                                </td>
+                                <td class="max-w-[14rem] truncate" [title]="row.notes">{{ row.notes }}</td>
+                                <td>
+                                    <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm">{{ copy.buttonDetail }}</a>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+
+                <div class="lg:hidden space-y-3">
+                    @for (row of displayedRows(); track reportTableRowTrackKey(row, $index)) {
+                        <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
+                            <div class="flex flex-wrap items-start justify-between gap-2 gap-y-1 mb-2">
+                                <div class="text-sm text-muted-color">{{ formatScheduledAt(row.scheduledAtUtc) }}</div>
+                                <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                             </div>
-                        }
-                    </div>
+                            <div class="text-sm mb-1">
+                                <span class="text-muted-color font-medium">{{ copy.reportsColClinic }}: </span>{{ displayClinicLabel(row.clinicLabel) }}
+                            </div>
+                            <div class="text-sm mb-1">
+                                <span class="text-muted-color font-medium">{{ copy.labelClient }}: </span>
+                                @if (row.clientId) {
+                                    <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{ row.clientName }}</a>
+                                } @else {
+                                    <span class="break-words">{{ row.clientName }}</span>
+                                }
+                            </div>
+                            <div class="text-sm mb-2">
+                                <span class="text-muted-color font-medium">{{ copy.labelPet }}: </span>
+                                @if (row.petId) {
+                                    <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{ row.petName }}</a>
+                                } @else {
+                                    <span class="break-words">{{ row.petName }}</span>
+                                }
+                            </div>
+                            @if (row.notes && row.notes !== '—') {
+                                <div class="text-sm text-muted-color break-words mb-2">
+                                    <span class="font-medium">{{ copy.reportsColNotes }}: </span>{{ row.notes }}
+                                </div>
+                            }
+                            <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
+                                <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm">{{ copy.buttonDetail }} →</a>
+                            </div>
+                        </div>
+                    }
+                </div>
             </ng-template>
         </app-report-results>
     `

@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
@@ -10,19 +10,13 @@ import { CLIENT_CONTACT_CHANNEL_OPTIONS } from '@/app/features/clients/utils/cli
     selector: 'app-client-contact-preference-fields',
     standalone: true,
     imports: [ReactiveFormsModule, SelectModule, CheckboxModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <fieldset class="border-0 p-0 m-0 grid grid-cols-12 gap-4">
             <legend class="sr-only">İletişim tercihi</legend>
             <div class="col-span-12 md:col-span-6">
                 <label for="preferredContactChannel" class="block text-sm font-medium text-muted-color mb-2">Tercih edilen iletişim kanalı</label>
-                <p-select
-                    inputId="preferredContactChannel"
-                    [formControl]="form().controls.preferredContactChannel"
-                    [options]="channelOptions"
-                    optionLabel="label"
-                    optionValue="value"
-                    styleClass="w-full"
-                />
+                <p-select inputId="preferredContactChannel" [formControl]="form().controls.preferredContactChannel" [options]="channelOptions" optionLabel="label" optionValue="value" class="w-full" />
                 <small class="text-muted-color">Bilgi amaçlıdır; otomatik hatırlatmaların gönderim kanalını değiştirmez.</small>
             </div>
             <div class="col-span-12 md:col-span-6 flex flex-col justify-center">

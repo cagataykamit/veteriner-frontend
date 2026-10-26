@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ADMINISTRATION_LATE_ENTRY_LABEL } from '@/app/features/administrations/utils/administration-labels';
 import type { PetTimelineItemVm } from '@/app/features/pets/models/pet-timeline-vm.model';
@@ -14,6 +14,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         class: 'flex gap-3 py-3 border-b border-surface-200 dark:border-surface-700 last:border-b-0',
         '[class.opacity-60]': 'item().isVoided'
     },
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <i class="pi {{ icon(item().type) }} text-xl text-primary mt-1" [attr.title]="typeLabel(item().type)" [attr.aria-label]="typeLabel(item().type)" data-testid="type-icon"></i>
         <div class="min-w-0 flex-1">

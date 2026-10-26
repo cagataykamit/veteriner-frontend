@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
@@ -22,6 +22,7 @@ const EM = '—';
     standalone: true,
     host: { class: 'card block' },
     imports: [RouterLink, PetAlertBadgesComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <section aria-label="Hasta bilgileri">
             <dl class="m-0 grid grid-cols-12 gap-x-4 gap-y-3">
@@ -33,7 +34,7 @@ const EM = '—';
                         } @else {
                             {{ petName() }}
                         }
-                    <app-pet-alert-badges class="block mt-1" [alerts]="petAlerts()" />
+                        <app-pet-alert-badges class="block mt-1" [alerts]="petAlerts()" />
                     </dd>
                 </div>
                 <div class="col-span-12 sm:col-span-6 lg:col-span-3">

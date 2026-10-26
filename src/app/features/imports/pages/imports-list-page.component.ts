@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -12,14 +12,7 @@ import { IMPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
 import type { ImportBatchDto, ImportBatchStatus } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
-import {
-    IMPORT_STATUS_LABELS,
-    importErrorMessage,
-    importStatusLabel,
-    importStatusSeverity,
-    isDiscardable,
-    isRollbackScreenAvailable
-} from '@/app/features/imports/utils/import-labels.utils';
+import { IMPORT_STATUS_LABELS, importErrorMessage, importStatusLabel, importStatusSeverity, isDiscardable, isRollbackScreenAvailable } from '@/app/features/imports/utils/import-labels.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -32,20 +25,8 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 @Component({
     selector: 'app-imports-list-page',
     standalone: true,
-    imports: [
-        FormsModule,
-        RouterLink,
-        ButtonModule,
-        MessageModule,
-        Paginator,
-        SelectModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent,
-        AppEmptyStateComponent,
-        AppStatusTagComponent,
-        AppRowActionButtonComponent
-    ],
+    imports: [FormsModule, RouterLink, ButtonModule, MessageModule, Paginator, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, AppStatusTagComponent, AppRowActionButtonComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header title="Veri içe aktarma" description="Eski sistemdeki müşteri, hasta ve aşı geçmişini Excel veya CSV dosyasıyla aktarın. Her adım onayınızla ilerler; aktarmadan önce sonucu görürsünüz.">
             <div actions class="flex flex-wrap gap-2">
@@ -57,10 +38,10 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
         </app-page-header>
 
         @if (!canManage) {
-            <p-message severity="info" styleClass="mb-4 w-full">Bu sayfayı yalnızca görüntüleyebilirsiniz. Yükleme, eşleme ve aktarma için yönetici yetkisi gerekir.</p-message>
+            <p-message severity="info" class="mb-4 w-full">Bu sayfayı yalnızca görüntüleyebilirsiniz. Yükleme, eşleme ve aktarma için yönetici yetkisi gerekir.</p-message>
         }
         @if (notice()) {
-            <p-message severity="warn" styleClass="mb-4 w-full" role="alert">{{ notice() }}</p-message>
+            <p-message severity="warn" class="mb-4 w-full" role="alert">{{ notice() }}</p-message>
         }
 
         <div class="card">
@@ -72,17 +53,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                 <div class="flex flex-wrap items-end gap-3 mb-4">
                     <div class="flex flex-col gap-1">
                         <label for="importStatusFilter" class="text-sm text-muted-color">Durum</label>
-                        <p-select
-                            inputId="importStatusFilter"
-                            [options]="statusOptions"
-                            [(ngModel)]="statusFilter"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Tümü"
-                            [showClear]="true"
-                            styleClass="w-56"
-                            (ngModelChange)="applyFilter()"
-                        />
+                        <p-select inputId="importStatusFilter" [options]="statusOptions" [(ngModel)]="statusFilter" optionLabel="label" optionValue="value" placeholder="Tümü" [showClear]="true" class="w-56" (ngModelChange)="applyFilter()" />
                     </div>
                 </div>
 
@@ -227,11 +198,7 @@ export class ImportsListPageComponent implements OnInit {
 
     protected countsText(b: ImportBatchDto): string {
         const s = b.summary;
-        const parts = [
-            s.customers.total ? `${s.customers.total} müşteri` : '',
-            s.pets.total ? `${s.pets.total} hasta` : '',
-            s.vaccinations.total ? `${s.vaccinations.total} aşı` : ''
-        ].filter(Boolean);
+        const parts = [s.customers.total ? `${s.customers.total} müşteri` : '', s.pets.total ? `${s.pets.total} hasta` : '', s.vaccinations.total ? `${s.vaccinations.total} aşı` : ''].filter(Boolean);
 
         return parts.length ? parts.join(' · ') : 'Satır bilgisi yok';
     }

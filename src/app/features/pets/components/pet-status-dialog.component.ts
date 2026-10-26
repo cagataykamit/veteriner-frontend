@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, DestroyRef, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -38,20 +38,12 @@ interface AppointmentCancelFailure {
     selector: 'app-pet-status-dialog',
     standalone: true,
     imports: [ReactiveFormsModule, RouterLink, DialogModule, ButtonModule, CheckboxModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            [header]="cancelOutcome() || markingDeceased() ? 'Vefat olarak işaretle' : 'Aktife al'"
-            [modal]="true"
-            [dismissableMask]="!submitting()"
-            [closable]="!submitting()"
-            [style]="{ width: 'min(520px, 95vw)' }"
-            [(visible)]="visible"
-        >
+        <p-dialog [header]="cancelOutcome() || markingDeceased() ? 'Vefat olarak işaretle' : 'Aktife al'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">
             @if (cancelOutcome(); as o) {
                 <p class="mt-0 mb-2">Hasta vefat olarak işaretlendi.</p>
-                <p class="mt-0 mb-2 text-red-500" role="alert" data-testid="cancel-failures">
-                    {{ o.total }} randevudan {{ o.failures.length }} tanesi iptal edilemedi:
-                </p>
+                <p class="mt-0 mb-2 text-red-500" role="alert" data-testid="cancel-failures">{{ o.total }} randevudan {{ o.failures.length }} tanesi iptal edilemedi:</p>
                 <ul class="mt-0 mb-0 pl-5 text-sm space-y-1">
                     @for (f of o.failures; track f.appointment.id) {
                         <li>
@@ -62,7 +54,9 @@ interface AppointmentCancelFailure {
                 </ul>
             } @else if (pet(); as p) {
                 @if (markingDeceased()) {
-                    <p class="mt-0 mb-3"><span class="font-semibold">{{ p.name }}</span> vefat etti olarak işaretlenecek.</p>
+                    <p class="mt-0 mb-3">
+                        <span class="font-semibold">{{ p.name }}</span> vefat etti olarak işaretlenecek.
+                    </p>
                     <ul class="mt-0 mb-4 pl-5 text-sm text-muted-color space-y-1" data-testid="deceased-effects">
                         <li>Yeni randevu, geliş ve muayene açılamaz.</li>
                         <li>Otomatik aşı ve randevu hatırlatmaları gönderilmez.</li>
@@ -71,9 +65,7 @@ interface AppointmentCancelFailure {
                     </ul>
                     @if (openAppointments().length > 0) {
                         <div class="mb-4 text-sm" role="note" data-testid="open-appointments">
-                            <p class="mt-0 mb-2 text-amber-700 dark:text-amber-300">
-                                <i class="pi pi-calendar mr-1" aria-hidden="true"></i>Bu hastanın {{ openAppointments().length }} açık randevusu var.
-                            </p>
+                            <p class="mt-0 mb-2 text-amber-700 dark:text-amber-300"><i class="pi pi-calendar mr-1" aria-hidden="true"></i>Bu hastanın {{ openAppointments().length }} açık randevusu var.</p>
                             <ul class="mt-0 mb-2 pl-5 space-y-1">
                                 @for (a of openAppointments(); track a.id) {
                                     <li>
@@ -96,14 +88,7 @@ interface AppointmentCancelFailure {
                         <p class="mt-0 mb-4 text-sm text-muted-color" role="note" data-testid="open-appointments-error">Açık randevular yüklenemedi: {{ msg }}</p>
                     }
                     <label for="pet-deceased-on" class="block text-sm font-medium text-muted-color mb-2">Vefat tarihi (biliniyorsa)</label>
-                    <input
-                        id="pet-deceased-on"
-                        type="date"
-                        class="w-full p-inputtext p-component"
-                        [formControl]="deceasedOn"
-                        [attr.max]="today()"
-                        [attr.min]="minDate()"
-                    />
+                    <input id="pet-deceased-on" type="date" class="w-full p-inputtext p-component" [formControl]="deceasedOn" [attr.max]="today()" [attr.min]="minDate()" />
                     @if (dateError(); as msg) {
                         <small class="text-red-500" role="alert">{{ msg }}</small>
                     }
@@ -119,7 +104,7 @@ interface AppointmentCancelFailure {
             @if (submitError()) {
                 <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
             }
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 @if (cancelOutcome()) {
                     <p-button type="button" label="Kapat" icon="pi pi-times" severity="secondary" (onClick)="visible.set(false)" />
                 } @else {
@@ -187,8 +172,7 @@ export class PetStatusDialogComponent {
         return min && v < min ? 'Vefat tarihi doğum tarihinden önce olamaz.' : null;
     });
 
-    readonly appointmentLine = (a: AppointmentListItemVm) =>
-        `${formatUtcIsoAsLocalDateTimeDisplay(a.scheduledAtUtc)} · ${appointmentTypeDisplayLabel(a.appointmentType, a.appointmentTypeName)}`;
+    readonly appointmentLine = (a: AppointmentListItemVm) => `${formatUtcIsoAsLocalDateTimeDisplay(a.scheduledAtUtc)} · ${appointmentTypeDisplayLabel(a.appointmentType, a.appointmentTypeName)}`;
 
     constructor() {
         this.deceasedOn.valueChanges.pipe(takeUntilDestroyed()).subscribe((v) => {

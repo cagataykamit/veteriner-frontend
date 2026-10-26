@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { VaccinationFormComponent, type VaccinationSavedEvent } from '@/app/features/vaccinations/components/vaccination-form.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -8,6 +8,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     selector: 'app-vaccination-new-page',
     standalone: true,
     imports: [AppPageHeaderComponent, VaccinationFormComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header categoryLink="/panel/vaccinations" categoryLinkLabel="Aşı listesine dön" title="Yeni Aşı" description="Aşı kaydı oluşturun." />
         <app-vaccination-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />

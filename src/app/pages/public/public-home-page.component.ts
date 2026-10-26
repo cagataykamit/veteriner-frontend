@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { PUBLIC_HOME_FAQS } from '@/app/features/public/utils/public-faq-content.utils';
@@ -34,6 +34,7 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
     selector: 'app-public-home-page',
     standalone: true,
     imports: [RouterLink, PublicScreenshotComponent, PublicPlanCardsComponent, PublicFaqListComponent, PublicCtaComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <!-- 1 Kahraman: gradient kenardan kenara, sol metin, sağ ekran -->
         <section class="public-hero-gradient" aria-labelledby="public-home-hero-title">

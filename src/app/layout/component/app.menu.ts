@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
@@ -28,6 +28,7 @@ interface MenuSection {
     standalone: true,
     imports: [CommonModule, AppMenuitem, RouterModule],
     providers: [MenuFlyoutService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <ul class="layout-menu">
             @for (section of scrollingSections(); track $index) {
@@ -38,13 +39,7 @@ interface MenuSection {
                     }
                 } @else if (section.label) {
                     <li class="layout-menu-group">
-                        <button
-                            type="button"
-                            class="layout-menu-group-toggle"
-                            [attr.aria-expanded]="section.open"
-                            [attr.aria-controls]="groupId(section.label)"
-                            (click)="toggle(section.label)"
-                        >
+                        <button type="button" class="layout-menu-group-toggle" [attr.aria-expanded]="section.open" [attr.aria-controls]="groupId(section.label)" (click)="toggle(section.label)">
                             <span>{{ section.label }}</span>
                             <i class="pi pi-angle-down layout-menu-group-chevron" [class.is-open]="section.open" aria-hidden="true"></i>
                         </button>

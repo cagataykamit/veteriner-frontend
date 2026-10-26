@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -60,8 +60,22 @@ interface ReturnBannerVm {
 @Component({
     selector: 'app-subscription-page',
     standalone: true,
-    imports: [CommonModule, ButtonModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, AppStatusTagComponent, SubscriptionDiscountCardComponent, ExampleClinicLoadCardComponent, TrDatePipe, TrDateTimePipe],
+    imports: [
+        CommonModule,
+        ButtonModule,
+        ToastModule,
+        AppPageHeaderComponent,
+        AppLoadingStateComponent,
+        AppErrorStateComponent,
+        AppEmptyStateComponent,
+        AppStatusTagComponent,
+        SubscriptionDiscountCardComponent,
+        ExampleClinicLoadCardComponent,
+        TrDatePipe,
+        TrDateTimePipe
+    ],
     providers: [MessageService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-toast position="bottom-right" />
         <app-page-header title="Abonelik" [description]="subscriptionHeaderDescription()" />

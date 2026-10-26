@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { PetTodoItem, PetTodoView } from '@/app/features/pets/utils/pet-card.utils';
@@ -14,6 +14,7 @@ const TONE_CLASS: Record<PetTodoItem['tone'], string> = {
     selector: 'app-pet-todo-panel',
     standalone: true,
     imports: [RouterLink, ButtonModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <section class="card mb-0 h-full" aria-labelledby="pet-todo-title" data-testid="pet-todo">
             <div class="flex items-center gap-2 mb-3">
@@ -35,16 +36,7 @@ const TONE_CLASS: Record<PetTodoItem['tone'], string> = {
                                     <div class="text-muted-color text-sm break-words">{{ item.detail }}</div>
                                 </div>
                             </div>
-                            <a
-                                pButton
-                                severity="secondary"
-                                [outlined]="true"
-                                class="shrink-0 ml-auto"
-                                [label]="item.action.label"
-                                [routerLink]="item.action.route"
-                                [queryParams]="item.action.queryParams"
-                                data-testid="todo-action"
-                            ></a>
+                            <a pButton severity="secondary" [outlined]="true" class="shrink-0 ml-auto" [routerLink]="item.action.route" [queryParams]="item.action.queryParams" data-testid="todo-action">{{ item.action.label }}</a>
                         </li>
                     }
                 </ul>
@@ -62,7 +54,7 @@ const TONE_CLASS: Record<PetTodoItem['tone'], string> = {
                         <i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Alınamadı: {{ view().failed.join(', ') }}. Liste eksik olabilir.
                     </p>
                     @if (retryable()) {
-                        <button pButton type="button" severity="secondary" [text]="true" size="small" icon="pi pi-refresh" label="Yeniden dene" class="shrink-0 ml-auto" data-testid="todo-retry" (click)="retry.emit()"></button>
+                        <button pButton type="button" severity="secondary" [text]="true" size="small" class="shrink-0 ml-auto" data-testid="todo-retry" (click)="retry.emit()"><i class="pi pi-refresh"></i>Yeniden dene</button>
                     }
                 </div>
             }

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { merge, startWith } from 'rxjs';
@@ -10,11 +10,7 @@ import { AdministrationBatchFieldComponent } from '@/app/features/administration
 import { createAdministrationBatchPicker } from '@/app/features/administrations/utils/administration-batch-picker';
 import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
 import type { AdministrationCreateResultVm } from '@/app/features/administrations/models/administration-vm.model';
-import {
-    CHARGE_QUANTITY_MAX,
-    CHARGE_QUANTITY_MAX_DECIMALS,
-    chargeNumberValidator
-} from '@/app/features/charges/utils/charge-amount.utils';
+import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/features/charges/utils/charge-amount.utils';
 import type { ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
@@ -34,21 +30,13 @@ const NOTES_MAX_LENGTH = 2000;
     selector: 'app-administration-create-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent, AdministrationBatchFieldComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            [header]="lateEntry() ? 'Uygulama kaydet (sonradan ekleme)' : 'Uygulama kaydet'"
-            [modal]="true"
-            [dismissableMask]="!submitting()"
-            [closable]="!submitting()"
-            [style]="{ width: 'min(560px, 95vw)' }"
-            [(visible)]="visible"
-        >
+        <p-dialog [header]="lateEntry() ? 'Uygulama kaydet (sonradan ekleme)' : 'Uygulama kaydet'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
             @if (petName()) {
                 <p class="mt-0 mb-1 font-medium">{{ petName() }}</p>
             }
-            <p class="mt-0 mb-4 text-sm text-muted-color">
-                Klinikte hastaya uygulanan ürün kaydedilir ve stoktan düşülür. Dışarıdan alınacak ilaç için reçete yazın; reçete stok düşmez.
-            </p>
+            <p class="mt-0 mb-4 text-sm text-muted-color">Klinikte hastaya uygulanan ürün kaydedilir ve stoktan düşülür. Dışarıdan alınacak ilaç için reçete yazın; reçete stok düşmez.</p>
             @if (lateEntry()) {
                 <p class="mt-0 mb-4 text-sm" role="note" data-testid="late-entry-note">
                     Bu muayene kesinleşmiş. Uygulama, <strong>"Kesinleştirmeden sonra eklendi"</strong> işaretiyle ve gerekçenizle ayrı kayıt olarak eklenir; muayenenin kendisi değişmez.
@@ -70,7 +58,7 @@ const NOTES_MAX_LENGTH = 2000;
                             filterBy="label"
                             [loading]="loadingProducts()"
                             appendTo="body"
-                            styleClass="w-full"
+                            class="w-full"
                         />
                         @if (form.controls.productId.invalid && form.controls.productId.touched) {
                             <small class="text-red-500">Ürün seçimi zorunludur.</small>
@@ -81,7 +69,10 @@ const NOTES_MAX_LENGTH = 2000;
                     </div>
                     <div class="col-span-12 sm:col-span-6">
                         <label for="ad-quantity" class="block text-sm font-medium text-muted-color mb-2">
-                            Miktar *@if (unit()) { <span> ({{ unit() }})</span> }
+                            Miktar *
+                            @if (unit()) {
+                                <span> ({{ unit() }})</span>
+                            }
                         </label>
                         <input id="ad-quantity" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="quantity" />
                         @if (form.controls.quantity.invalid && form.controls.quantity.dirty) {
@@ -122,7 +113,7 @@ const NOTES_MAX_LENGTH = 2000;
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
                 <p-button type="button" label="Kaydet ve stoktan düş" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting()" (onClick)="onSubmit()" />
             </ng-template>
@@ -171,9 +162,7 @@ export class AdministrationCreateDialogComponent {
 
     private readonly formValue = toSignal(this.form.valueChanges.pipe(startWith(null)), { initialValue: null });
 
-    readonly productOptions = computed(() =>
-        this.products().map((p) => ({ value: p.id, label: p.sku && p.sku !== '—' ? `${p.name} (${p.sku})` : p.name }))
-    );
+    readonly productOptions = computed(() => this.products().map((p) => ({ value: p.id, label: p.sku && p.sku !== '—' ? `${p.name} (${p.sku})` : p.name })));
     readonly unit = computed(() => {
         this.formValue();
         const id = this.form.controls.productId.value;

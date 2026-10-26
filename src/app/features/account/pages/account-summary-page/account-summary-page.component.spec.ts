@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -17,7 +17,7 @@ describe('AccountSummaryPageComponent (görünen ad)', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [AccountSummaryPageComponent],
-            providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
+            providers: [provideRouter([]), provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
         }).compileComponents();
         http = TestBed.inject(HttpTestingController);
         fixture = TestBed.createComponent(AccountSummaryPageComponent);

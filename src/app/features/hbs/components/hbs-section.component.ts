@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { HbsDataDialogComponent } from '@/app/features/hbs/components/hbs-data-dialog.component';
 import { HbsStatusBadgeComponent } from '@/app/features/hbs/components/hbs-status-badge.component';
@@ -13,6 +13,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
     selector: 'app-hbs-section',
     standalone: true,
     imports: [ButtonModule, HbsStatusBadgeComponent, HbsDataDialogComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (entry(); as e) {
             @if (e.isTracked) {
@@ -24,7 +25,9 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                     <div class="flex flex-wrap items-center gap-2">
                         <app-hbs-status-badge [status]="e.status" />
                         @if (e.referenceNumber) {
-                            <span class="text-sm">{{ referenceLabel() }}: <span class="font-medium">{{ e.referenceNumber }}</span></span>
+                            <span class="text-sm"
+                                >{{ referenceLabel() }}: <span class="font-medium">{{ e.referenceNumber }}</span></span
+                            >
                         }
                         @if (e.notRequiredReason) {
                             <span class="text-sm text-muted-color">Gerekçe: {{ e.notRequiredReason }}</span>

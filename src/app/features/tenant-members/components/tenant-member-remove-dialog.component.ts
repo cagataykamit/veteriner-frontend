@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TenantMembersService } from '@/app/features/tenant-members/services/tenant-members.service';
@@ -15,16 +15,9 @@ const REMOVE_FAILED = 'Üye çıkarılamadı. Lütfen tekrar deneyin.';
     selector: 'app-tenant-member-remove-dialog',
     standalone: true,
     imports: [ButtonModule, DialogModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            header="Üyeyi kurumdan çıkar"
-            [modal]="true"
-            [draggable]="false"
-            [dismissableMask]="!busy()"
-            [closable]="!busy()"
-            [style]="{ width: 'min(32rem, 95vw)' }"
-            [(visible)]="visible"
-        >
+        <p-dialog header="Üyeyi kurumdan çıkar" [modal]="true" [draggable]="false" [dismissableMask]="!busy()" [closable]="!busy()" [style]="{ width: 'min(32rem, 95vw)' }" [(visible)]="visible">
             @if (member(); as m) {
                 <p class="mt-0 mb-2 font-medium break-all">{{ m.email }}</p>
             }
@@ -34,15 +27,7 @@ const REMOVE_FAILED = 'Üye çıkarılamadı. Lütfen tekrar deneyin.';
             }
             <div class="flex flex-wrap justify-end gap-2">
                 <p-button type="button" label="Vazgeç" severity="secondary" [disabled]="busy()" (onClick)="visible.set(false)" />
-                <p-button
-                    type="button"
-                    label="Üyeyi çıkar"
-                    icon="pi pi-user-minus"
-                    severity="danger"
-                    [loading]="busy()"
-                    [disabled]="busy()"
-                    (onClick)="confirm()"
-                />
+                <p-button type="button" label="Üyeyi çıkar" icon="pi pi-user-minus" severity="danger" [loading]="busy()" [disabled]="busy()" (onClick)="confirm()" />
             </div>
         </p-dialog>
     `

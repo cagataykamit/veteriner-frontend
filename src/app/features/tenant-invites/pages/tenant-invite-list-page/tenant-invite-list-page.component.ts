@@ -1,6 +1,6 @@
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TENANT_MANAGEMENT_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { FormsModule } from '@angular/forms';
@@ -44,10 +44,11 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         AppRowActionButtonComponent,
         TrDateTimePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header title="Davetler" description="Kurum davetlerinin listesi. Yeni davet için oluşturma ekranını kullanın.">
             @if (canManageTenantAccess()) {
-                <a actions routerLink="/panel/settings/invites" pButton type="button" label="Davet oluştur" icon="pi pi-plus" class="p-button-primary"></a>
+                <a actions routerLink="/panel/settings/invites" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Davet oluştur</a>
             }
         </app-page-header>
 

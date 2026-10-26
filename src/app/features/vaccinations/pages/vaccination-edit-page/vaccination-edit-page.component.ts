@@ -4,7 +4,7 @@ import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-s
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -16,11 +16,7 @@ import type { VaccinationEditVm } from '@/app/features/vaccinations/models/vacci
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/services/vaccine-definitions.service';
 import type { VaccineDefinitionListItemVm } from '@/app/features/vaccine-definitions/models/vaccine-definition-vm.model';
-import {
-    type VaccinationUpsertFieldErrors,
-    type VaccinationUpsertFormFieldKey,
-    parseVaccinationUpsertHttpError
-} from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
+import { type VaccinationUpsertFieldErrors, type VaccinationUpsertFormFieldKey, parseVaccinationUpsertHttpError } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
 import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/features/vaccinations/utils/vaccination-status.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -41,11 +37,7 @@ import {
     vaccinationPlannedNotPastValidator,
     vaccinationStatusDateFieldsAfterTransition
 } from '@/app/features/vaccinations/utils/vaccination-upsert-date-submit.utils';
-import {
-    DATETIME_LOCAL_INPUT_MIN,
-    dateTimeYearRangeValidator,
-    effectiveDateTimeLocalInputMin
-} from '@/app/shared/utils/date-input-validation.utils';
+import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 
 @Component({
     selector: 'app-vaccination-edit-page',
@@ -59,8 +51,12 @@ import {
         AppPageHeaderComponent,
         PetAlertBannerComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
+        AppErrorStateComponent,
+        ClientSearchComponent,
+        PetSearchComponent,
+        DateInputComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (loading()) {
             <app-loading-state message="Aşı düzenleme bilgileri yükleniyor…" />
@@ -74,14 +70,16 @@ import {
 
             <div class="card">
                 @if (ro.mutationBlocked()) {
-                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                        İşletme salt okunur moddadır; değişiklik kaydedilemez.
-                    </p>
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; değişiklik kaydedilemez.</p>
                 }
                 @if (linkedAdministrationId()) {
                     <p class="text-sm mt-0 mb-4" role="note" data-testid="linked-lock-note">
-                        Bu aşı stoktan düşen bir uygulamaya bağlı: yalnız <strong>not</strong> ve <strong>sonraki doz tarihi</strong> değiştirilebilir. Aşıyı iptal etmek için bağlı uygulamayı iptal edin
-                        (<a routerLink="/panel/administrations" [queryParams]="{ petId: form.controls.petId.value }" class="text-primary font-medium no-underline">Uygulamalar</a>).
+                        Bu aşı stoktan düşen bir uygulamaya bağlı: yalnız <strong>not</strong> ve <strong>sonraki doz tarihi</strong> değiştirilebilir. Aşıyı iptal etmek için bağlı uygulamayı iptal edin (<a
+                            routerLink="/panel/administrations"
+                            [queryParams]="{ petId: form.controls.petId.value }"
+                            class="text-primary font-medium no-underline"
+                            >Uygulamalar</a
+                        >).
                     </p>
                 }
                 @if (selectionError()) {
@@ -112,9 +110,7 @@ import {
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label for="vaccineDefinitionId" class="block text-sm font-medium text-muted-color mb-2"
-                                >{{ copy.vaccinationFieldVaccine }} *</label
-                            >
+                            <label for="vaccineDefinitionId" class="block text-sm font-medium text-muted-color mb-2">{{ copy.vaccinationFieldVaccine }} *</label>
                             <p-select
                                 inputId="vaccineDefinitionId"
                                 formControlName="vaccineDefinitionId"
@@ -126,7 +122,7 @@ import {
                                 filterPlaceholder="Ara…"
                                 filterBy="label"
                                 [showClear]="true"
-                                styleClass="w-full"
+                                class="w-full"
                                 [loading]="vaccineDefinitionsLoading()"
                             />
                             @if (legacyMissingVaccineDefinition()) {
@@ -142,15 +138,7 @@ import {
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="status" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
-                            <p-select
-                                inputId="status"
-                                formControlName="status"
-                                [options]="statusOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Durum seçin"
-                                styleClass="w-full"
-                            />
+                            <p-select inputId="status" formControlName="status" [options]="statusOptions" optionLabel="label" optionValue="value" placeholder="Durum seçin" class="w-full" />
                             @if (apiFieldErrors().status) {
                                 <small class="text-red-500">{{ apiFieldErrors().status }}</small>
                             } @else if (form.controls.status.invalid && form.controls.status.touched) {
@@ -227,21 +215,8 @@ import {
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <p-button
-                            type="submit"
-                            [label]="copy.buttonSave"
-                            icon="pi pi-check"
-                            [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || vaccineDefinitionsLoading() || ro.mutationBlocked()"
-                        />
-                        <p-button
-                            type="button"
-                            [label]="copy.buttonCancel"
-                            icon="pi pi-times"
-                            severity="secondary"
-                            (onClick)="goDetail()"
-                            [disabled]="submitting()"
-                        />
+                        <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || vaccineDefinitionsLoading() || ro.mutationBlocked()" />
+                        <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goDetail()" [disabled]="submitting()" />
                     </div>
                 </form>
             </div>
@@ -276,9 +251,7 @@ export class VaccinationEditPageComponent implements OnInit {
     readonly vaccineDefinitionRows = signal<VaccineDefinitionListItemVm[]>([]);
     readonly legacyMissingVaccineDefinition = signal(false);
 
-    readonly vaccineDefinitionOptions = computed(() =>
-        this.vaccineDefinitionRows().map((d) => ({ label: d.name, value: d.id }))
-    );
+    readonly vaccineDefinitionOptions = computed(() => this.vaccineDefinitionRows().map((d) => ({ label: d.name, value: d.id })));
 
     private vaccinationId = '';
     /** GET /vaccinations/:id — dropdown’larda eksik etiketleri tamamlamak için önbellek. */
@@ -303,15 +276,7 @@ export class VaccinationEditPageComponent implements OnInit {
     );
 
     constructor() {
-        const fields: VaccinationUpsertFormFieldKey[] = [
-            'clientId',
-            'petId',
-            'vaccineDefinitionId',
-            'status',
-            'appliedAtLocal',
-            'nextDueDate',
-            'notes'
-        ];
+        const fields: VaccinationUpsertFormFieldKey[] = ['clientId', 'petId', 'vaccineDefinitionId', 'status', 'appliedAtLocal', 'nextDueDate', 'notes'];
 
         for (const f of fields) {
             const control = this.form.controls[f] as AbstractControl;
@@ -352,17 +317,9 @@ export class VaccinationEditPageComponent implements OnInit {
 
             if (prev !== null && prev !== next) {
                 const raw = this.form.getRawValue();
-                const patch = vaccinationStatusDateFieldsAfterTransition(
-                    prev as 0 | 1 | 2,
-                    next as 0 | 1 | 2,
-                    (raw.appliedAtLocal ?? '').trim(),
-                    (raw.nextDueDate ?? '').trim()
-                );
+                const patch = vaccinationStatusDateFieldsAfterTransition(prev as 0 | 1 | 2, next as 0 | 1 | 2, (raw.appliedAtLocal ?? '').trim(), (raw.nextDueDate ?? '').trim());
 
-                this.form.patchValue(
-                    { appliedAtLocal: patch.appliedAtLocal, nextDueDate: patch.nextDueDate },
-                    { emitEvent: false }
-                );
+                this.form.patchValue({ appliedAtLocal: patch.appliedAtLocal, nextDueDate: patch.nextDueDate }, { emitEvent: false });
             }
 
             this.lastStatusForDateTransition = next;
@@ -529,8 +486,6 @@ export class VaccinationEditPageComponent implements OnInit {
         void this.router.navigate(['/panel/vaccinations', this.vaccinationId]);
     }
 
-
-
     private loadVaccineDefinitionsForSpecies(speciesId: string | null): void {
         this.vaccineDefinitionsLoading.set(true);
         this.vaccineDefinitionsError.set(null);
@@ -550,9 +505,7 @@ export class VaccinationEditPageComponent implements OnInit {
                 error: (e: unknown) => {
                     this.vaccineDefinitionRows.set([]);
                     this.vaccineDefinitionsLoading.set(false);
-                    this.vaccineDefinitionsError.set(
-                        e instanceof Error ? e.message : this.copy.vaccinationVaccineDefinitionsLoadError
-                    );
+                    this.vaccineDefinitionsError.set(e instanceof Error ? e.message : this.copy.vaccinationVaccineDefinitionsLoadError);
                     this.form.controls.vaccineDefinitionId.setValue('');
                 }
             });
@@ -579,8 +532,6 @@ export class VaccinationEditPageComponent implements OnInit {
         });
     }
 
-
-
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {
             return messageFromHttpError(e, fallback);
@@ -594,16 +545,8 @@ export class VaccinationEditPageComponent implements OnInit {
         const needsAppliedAt = s === 1;
         const needsPlannedDue = s === 0;
 
-        this.form.controls.appliedAtLocal.setValidators(
-            needsAppliedAt
-                ? [Validators.required, vaccinationAppliedNotFutureValidator(), dateTimeYearRangeValidator()]
-                : [dateTimeYearRangeValidator()]
-        );
-        this.form.controls.nextDueDate.setValidators(
-            needsPlannedDue
-                ? [Validators.required, vaccinationPlannedNotPastValidator(), dateTimeYearRangeValidator()]
-                : [dateTimeYearRangeValidator()]
-        );
+        this.form.controls.appliedAtLocal.setValidators(needsAppliedAt ? [Validators.required, vaccinationAppliedNotFutureValidator(), dateTimeYearRangeValidator()] : [dateTimeYearRangeValidator()]);
+        this.form.controls.nextDueDate.setValidators(needsPlannedDue ? [Validators.required, vaccinationPlannedNotPastValidator(), dateTimeYearRangeValidator()] : [dateTimeYearRangeValidator()]);
 
         this.form.controls.appliedAtLocal.updateValueAndValidity({ emitEvent: false });
         this.form.controls.nextDueDate.updateValueAndValidity({ emitEvent: false });
@@ -625,7 +568,6 @@ export class VaccinationEditPageComponent implements OnInit {
     protected plannedDateTimeMin(): string {
         return effectiveDateTimeLocalInputMin(minDateTimeLocalMinuteAfterNow());
     }
-
 
     protected minNextDueAfterApplied(): string {
         return effectiveDateTimeLocalInputMin(minDateTimeLocalMinuteAfter(this.form.controls.appliedAtLocal.value ?? ''));

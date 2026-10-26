@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 import { DATA_PROCESSING_AGREEMENT_DOCUMENT, PUBLIC_LEGAL_LINKS } from '@/app/features/public/utils/legal-documents.utils';
@@ -10,6 +10,7 @@ import { PUBLIC_FOOTER_PRODUCT_LINKS, PUBLIC_FOOTER_SUPPORT_LINKS } from '@/app/
     selector: 'app-public-footer',
     standalone: true,
     imports: [RouterLink],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <footer class="public-footer mt-16 md:mt-24">
             <div class="mx-auto max-w-6xl px-4 pb-8 pt-12 md:px-6 md:pt-14">

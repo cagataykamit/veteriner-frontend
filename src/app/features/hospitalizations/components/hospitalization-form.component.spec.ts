@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, Directive, forwardRef, input } from '@angular/core';
+import { Component, Directive, forwardRef, input, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { type ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { provideRouter } from '@angular/router';
@@ -31,6 +31,7 @@ abstract class StubValueAccessor implements ControlValueAccessor {
     selector: 'app-client-search',
     standalone: true,
     template: '',
+    changeDetection: ChangeDetectionStrategy.Eager,
     providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => StubClientSearchComponent), multi: true }]
 })
 class StubClientSearchComponent extends StubValueAccessor {}
@@ -39,13 +40,14 @@ class StubClientSearchComponent extends StubValueAccessor {}
     selector: 'app-pet-search',
     standalone: true,
     template: '',
+    changeDetection: ChangeDetectionStrategy.Eager,
     providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => StubPetSearchComponent), multi: true }]
 })
 class StubPetSearchComponent extends StubValueAccessor {
     readonly clientId = input<string | null>(null);
 }
 
-@Component({ selector: 'app-pet-alert-banner', standalone: true, template: '' })
+@Component({ selector: 'app-pet-alert-banner', standalone: true, changeDetection: ChangeDetectionStrategy.Eager, template: '' })
 class StubPetAlertBannerComponent {
     readonly petId = input<string | null>(null);
 }

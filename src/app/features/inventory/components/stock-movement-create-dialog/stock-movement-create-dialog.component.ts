@@ -1,16 +1,6 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
-import {
-    Component,
-    computed,
-    DestroyRef,
-    effect,
-    inject,
-    input,
-    output,
-    signal,
-    untracked
-} from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, input, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { catchError, of, startWith, switchMap } from 'rxjs';
@@ -20,20 +10,14 @@ import { SelectModule } from 'primeng/select';
 import { StockBatchFieldsComponent } from '@/app/features/inventory/components/stock-batch-fields/stock-batch-fields.component';
 import { syncStockBatchGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
 import { mapStockMovementUpsertFormValueToCreateRequest } from '@/app/features/inventory/data/stock-movement.mapper';
-import {
-    createStockMovementFormGroup,
-    getStockMovementFormValue,
-    STOCK_MOVEMENT_CREATE_MOVEMENT_OPTIONS
-} from '@/app/features/inventory/forms/stock-movement-form.factory';
+import { createStockMovementFormGroup, getStockMovementFormValue, STOCK_MOVEMENT_CREATE_MOVEMENT_OPTIONS } from '@/app/features/inventory/forms/stock-movement-form.factory';
 import type { StockMovementFormMovementType } from '@/app/features/inventory/models/stock-movement-form.model';
 import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import {
-    DATETIME_LOCAL_INPUT_MIN
-} from '@/app/shared/utils/date-input-validation.utils';
+import { DATETIME_LOCAL_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';
 
 type SelectOption = { label: string; value: string };
 
@@ -41,20 +25,11 @@ type SelectOption = { label: string; value: string };
     selector: 'app-stock-movement-create-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent, StockBatchFieldsComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            header="Stok hareketi ekle"
-            [modal]="true"
-            [visible]="visible()"
-            (visibleChange)="onVisibleChange($event)"
-            [style]="{ width: 'min(32rem, 95vw)' }"
-            [draggable]="false"
-            [closable]="!submitting()"
-        >
+        <p-dialog header="Stok hareketi ekle" [modal]="true" [visible]="visible()" (visibleChange)="onVisibleChange($event)" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
             @if (ro.mutationBlocked()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                    İşletme salt okunur moddadır; stok hareketi oluşturulamaz.
-                </p>
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; stok hareketi oluşturulamaz.</p>
             }
 
             @if (fixedProductId()?.trim()) {
@@ -84,7 +59,7 @@ type SelectOption = { label: string; value: string };
                         [filter]="clinicOptions().length > 8"
                         filterBy="label"
                         [showClear]="true"
-                        styleClass="w-full"
+                        class="w-full"
                         [loading]="clinicsLoading()"
                     />
                     @if (form.controls.clinicId.invalid && form.controls.clinicId.touched) {
@@ -106,7 +81,7 @@ type SelectOption = { label: string; value: string };
                             filterPlaceholder="Ara…"
                             filterBy="label"
                             [showClear]="true"
-                            styleClass="w-full"
+                            class="w-full"
                             [loading]="productsLoading()"
                         />
                         @if (form.controls.productId.invalid && form.controls.productId.touched) {
@@ -117,14 +92,7 @@ type SelectOption = { label: string; value: string };
 
                 <div>
                     <label for="smcMovementType" class="block text-sm font-medium text-muted-color mb-2">Hareket tipi *</label>
-                    <p-select
-                        inputId="smcMovementType"
-                        formControlName="movementType"
-                        [options]="movementTypeOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        styleClass="w-full"
-                    />
+                    <p-select inputId="smcMovementType" formControlName="movementType" [options]="movementTypeOptions" optionLabel="label" optionValue="value" class="w-full" />
                     @if (movementHint()) {
                         <p class="text-xs text-muted-color mt-2 mb-0">{{ movementHint() }}</p>
                     }
@@ -132,13 +100,7 @@ type SelectOption = { label: string; value: string };
 
                 <div>
                     <label for="smcQty" class="block text-sm font-medium text-muted-color mb-2">Miktar *</label>
-                    <input
-                        id="smcQty"
-                        type="number"
-                        step="any"
-                        class="w-full p-inputtext p-component"
-                        formControlName="quantity"
-                    />
+                    <input id="smcQty" type="number" step="any" class="w-full p-inputtext p-component" formControlName="quantity" />
                     @if (form.controls.quantity.invalid && form.controls.quantity.touched) {
                         @if (form.controls.quantity.errors?.['required']) {
                             <small class="text-red-500">Miktar zorunludur.</small>
@@ -152,14 +114,7 @@ type SelectOption = { label: string; value: string };
 
                 <div>
                     <label for="smcUnitCost" class="block text-sm font-medium text-muted-color mb-2">Birim maliyet</label>
-                    <input
-                        id="smcUnitCost"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        class="w-full p-inputtext p-component"
-                        formControlName="unitCost"
-                    />
+                    <input id="smcUnitCost" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="unitCost" />
                     @if (form.controls.unitCost.invalid && form.controls.unitCost.touched) {
                         <small class="text-red-500">0 veya üzeri geçerli bir değer girin.</small>
                     }
@@ -193,20 +148,8 @@ type SelectOption = { label: string; value: string };
                 }
 
                 <div class="flex flex-wrap justify-end gap-2 mt-2">
-                    <p-button
-                        type="button"
-                        label="İptal"
-                        severity="secondary"
-                        [disabled]="submitting()"
-                        (onClick)="onCancel()"
-                    />
-                    <p-button
-                        type="submit"
-                        label="Kaydet"
-                        icon="pi pi-check"
-                        [loading]="submitting()"
-                        [disabled]="submitDisabled()"
-                    />
+                    <p-button type="button" label="İptal" severity="secondary" [disabled]="submitting()" (onClick)="onCancel()" />
+                    <p-button type="submit" label="Kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="submitDisabled()" />
                 </div>
             </form>
         </p-dialog>
@@ -234,10 +177,7 @@ export class StockMovementCreateDialogComponent {
     /** Form başına bir kez üretilir; hata sonrası yeniden denemede aynı kalır, her açılışta yenilenir. */
     private requestId = crypto.randomUUID();
 
-    private readonly movementType = toSignal(
-        this.form.controls.movementType.valueChanges.pipe(startWith(this.form.controls.movementType.value)),
-        { initialValue: this.form.controls.movementType.value }
-    );
+    private readonly movementType = toSignal(this.form.controls.movementType.valueChanges.pipe(startWith(this.form.controls.movementType.value)), { initialValue: this.form.controls.movementType.value });
     /** Seçili ürün aşı / kontrollü ise parti zorunludur (ürün kartından gelir). */
     private readonly productRequiresLot = signal(false);
     /** Parti bilgisi yalnız stok girişinde (`In`/`Initial`) alınır. */
@@ -270,11 +210,7 @@ export class StockMovementCreateDialogComponent {
         this.form.controls.productId.valueChanges
             .pipe(
                 startWith(this.form.controls.productId.value),
-                switchMap((id) =>
-                    id?.trim()
-                        ? this.productService.getById(id.trim()).pipe(catchError(() => of(null)))
-                        : of(null)
-                ),
+                switchMap((id) => (id?.trim() ? this.productService.getById(id.trim()).pipe(catchError(() => of(null))) : of(null))),
                 takeUntilDestroyed(this.destroyRef)
             )
             .subscribe((p) => this.productRequiresLot.set(p?.requiresLotAndExpiry ?? false));
@@ -391,8 +327,7 @@ export class StockMovementCreateDialogComponent {
             this.loadProducts();
         }
 
-        const preferredClinic =
-            this.defaultClinicId()?.trim() ?? this.auth.getClinicId()?.trim() ?? '';
+        const preferredClinic = this.defaultClinicId()?.trim() ?? this.auth.getClinicId()?.trim() ?? '';
 
         this.loadClinics(preferredClinic);
     }

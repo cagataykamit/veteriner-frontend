@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { of, throwError } from 'rxjs';
@@ -15,6 +15,7 @@ const paged = (items: unknown[]) => of({ items, page: 1, pageSize: 20, totalItem
 @Component({
     standalone: true,
     imports: [ReactiveFormsModule, PetSearchComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `<app-pet-search [formControl]="control" [clientId]="clientId()" [activeOnly]="activeOnly()" />`
 })
 class HostComponent {

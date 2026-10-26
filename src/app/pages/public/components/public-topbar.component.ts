@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationStart, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { filter } from 'rxjs';
@@ -19,6 +19,7 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
     selector: 'app-public-topbar',
     standalone: true,
     imports: [RouterLink, RouterLinkActive, ButtonModule, RippleModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <a [href]="'#' + mainContentId" class="public-skip-link" (click)="skipToContent($event)">İçeriğe atla</a>
 
@@ -60,13 +61,13 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
                         pButton
                         pRipple
                         type="button"
-                        [icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"
+                       
                         [rounded]="true"
                         severity="secondary"
                         class="public-topbar-theme-toggle ml-1"
                         [attr.aria-label]="themeToggleLabel()"
                         (click)="toggleDarkMode()"
-                    ></button>
+                    ><i [class]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"></i></button>
                 </div>
 
                 <div class="flex items-center gap-1 lg:hidden">
@@ -74,13 +75,13 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
                         pButton
                         pRipple
                         type="button"
-                        [icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"
+                       
                         [rounded]="true"
                         severity="secondary"
                         class="public-topbar-theme-toggle"
                         [attr.aria-label]="themeToggleLabel()"
                         (click)="toggleDarkMode()"
-                    ></button>
+                    ><i [class]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"></i></button>
                     <button
                         #menuButton
                         type="button"

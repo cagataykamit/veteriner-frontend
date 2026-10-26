@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormArray, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
@@ -29,24 +29,14 @@ import {
     selector: 'app-prescription-items-editor',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div data-testid="prescription-items-editor">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <span class="block text-sm font-medium text-muted-color">İlaç / ürün satırları</span>
-                <p-button
-                    type="button"
-                    label="Satır ekle"
-                    icon="pi pi-plus"
-                    size="small"
-                    severity="secondary"
-                    data-testid="prescription-item-add"
-                    [disabled]="items().length >= max"
-                    (onClick)="addRow()"
-                />
+                <p-button type="button" label="Satır ekle" icon="pi pi-plus" size="small" severity="secondary" data-testid="prescription-item-add" [disabled]="items().length >= max" (onClick)="addRow()" />
             </div>
-            <p class="text-sm text-muted-color mt-0 mb-3">
-                Katalogda olmayan veya dışarıdan alınacak ilaç yalnız adla yazılabilir. Reçete stoktan düşmez; klinikte uygulanan ürün için muayene/tedavi kaydından "Uygulama ekle" kullanın.
-            </p>
+            <p class="text-sm text-muted-color mt-0 mb-3">Katalogda olmayan veya dışarıdan alınacak ilaç yalnız adla yazılabilir. Reçete stoktan düşmez; klinikte uygulanan ürün için muayene/tedavi kaydından "Uygulama ekle" kullanın.</p>
             @if (items().length === 0) {
                 <p class="text-sm text-muted-color m-0" data-testid="prescription-items-empty">Satır yok; reçete yalnız serbest metin olarak kaydedilir.</p>
             }
@@ -67,7 +57,7 @@ import {
                                     filterBy="label"
                                     [showClear]="true"
                                     appendTo="body"
-                                    styleClass="w-full"
+                                    class="w-full"
                                     (onChange)="onProductChange(g, $event.value)"
                                 />
                             </div>
@@ -88,15 +78,7 @@ import {
                         </div>
                         <div class="col-span-6 sm:col-span-3">
                             <label [attr.for]="'rx-unit-' + i" class="block text-xs font-medium text-muted-color mb-1">Birim</label>
-                            <input
-                                [id]="'rx-unit-' + i"
-                                type="text"
-                                class="w-full p-inputtext p-component"
-                                [formControl]="g.controls.unit"
-                                [attr.maxlength]="unitMax"
-                                [placeholder]="unitFor(g) || 'Örn. kutu'"
-                                data-testid="prescription-item-unit"
-                            />
+                            <input [id]="'rx-unit-' + i" type="text" class="w-full p-inputtext p-component" [formControl]="g.controls.unit" [attr.maxlength]="unitMax" [placeholder]="unitFor(g) || 'Örn. kutu'" data-testid="prescription-item-unit" />
                         </div>
                         <div class="col-span-12 sm:col-span-6">
                             <label [attr.for]="'rx-dose-' + i" class="block text-xs font-medium text-muted-color mb-1">Doz</label>
@@ -139,9 +121,7 @@ export class PrescriptionItemsEditorComponent implements OnInit {
 
     readonly canPickProduct = this.auth.hasOperationClaim(PRODUCTS_READ_CLAIM);
     private readonly products = signal<ProductListItemVm[]>([]);
-    private readonly catalogOptions = computed(() =>
-        this.products().map((p) => ({ value: p.id, label: p.sku && p.sku !== '—' ? `${p.name} (${p.sku})` : p.name }))
-    );
+    private readonly catalogOptions = computed(() => this.products().map((p) => ({ value: p.id, label: p.sku && p.sku !== '—' ? `${p.name} (${p.sku})` : p.name })));
 
     ngOnInit(): void {
         if (!this.canPickProduct) {

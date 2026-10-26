@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -36,6 +36,7 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
     selector: 'app-owner-signup-page',
     standalone: true,
     imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RadioButtonModule, RippleModule, RouterLink, PublicLegalLinksComponent, LegalConsentCheckboxComponent, DiscountCodeFieldComponent, ExampleClinicSummaryComponent, TrDatePipe],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden py-8">
             <div class="flex flex-col items-center justify-center w-full max-w-3xl px-4">
@@ -127,7 +128,7 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 <div>
                                     <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Şifre *</label>
                                     <p class="text-sm text-muted-color m-0 mb-2">{{ passwordPolicyHint }}</p>
-                                    <p-password id="password" [(ngModel)]="password" placeholder="Şifre" [toggleMask]="true" styleClass="w-full" [fluid]="true" [feedback]="false" />
+                                    <p-password id="password" [(ngModel)]="password" placeholder="Şifre" [toggleMask]="true" class="w-full" [fluid]="true" [feedback]="false" />
                                     @if (passwordFieldError()) {
                                         <small class="text-red-500 block mt-2">{{ passwordFieldError() }}</small>
                                     }
@@ -138,22 +139,17 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 <fieldset class="border-0 p-0 m-0 min-w-0" data-testid="signup-start-mode">
                                     <legend class="block text-surface-900 dark:text-surface-0 font-medium mb-2 p-0">Nasıl başlayalım?</legend>
                                     <div class="flex flex-col gap-3">
-                                        <label
-                                            for="startModeExample"
-                                            class="flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors"
-                                            [class]="startModeCardClass('example')"
-                                        >
+                                        <label for="startModeExample" class="flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors" [class]="startModeCardClass('example')">
                                             <p-radiobutton inputId="startModeExample" name="startMode" value="example" [disabled]="submitting()" [ngModel]="startMode()" (ngModelChange)="startMode.set($event)" />
                                             <span class="min-w-0">
                                                 <span class="block font-medium text-surface-900 dark:text-surface-0">Örnek Veteriner Kliniğini yükle <span class="text-primary text-sm font-semibold">(önerilen)</span></span>
-                                                <span class="block text-sm text-muted-color mt-1">Müşteri, hasta, randevu, muayene, aşı, ödeme ve stok örnekleriyle dolu bir klinikte ilk dakikadan deneyin. Veriler tamamen sentetiktir, gerçek müşteri verisi içermez ve "ÖRNEK" olarak işaretlidir.</span>
+                                                <span class="block text-sm text-muted-color mt-1"
+                                                    >Müşteri, hasta, randevu, muayene, aşı, ödeme ve stok örnekleriyle dolu bir klinikte ilk dakikadan deneyin. Veriler tamamen sentetiktir, gerçek müşteri verisi içermez ve "ÖRNEK" olarak
+                                                    işaretlidir.</span
+                                                >
                                             </span>
                                         </label>
-                                        <label
-                                            for="startModeEmpty"
-                                            class="flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors"
-                                            [class]="startModeCardClass('empty')"
-                                        >
+                                        <label for="startModeEmpty" class="flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors" [class]="startModeCardClass('empty')">
                                             <p-radiobutton inputId="startModeEmpty" name="startMode" value="empty" [disabled]="submitting()" [ngModel]="startMode()" (ngModelChange)="startMode.set($event)" />
                                             <span class="min-w-0">
                                                 <span class="block font-medium text-surface-900 dark:text-surface-0">Boş klinikle başla</span>

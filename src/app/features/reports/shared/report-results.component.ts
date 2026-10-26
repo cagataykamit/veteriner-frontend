@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, ContentChild, TemplateRef, input } from '@angular/core';
+import { Component, ContentChild, TemplateRef, input, ChangeDetectionStrategy } from '@angular/core';
 import { Paginator } from 'primeng/paginator';
 import type { AnyReportListState } from '@/app/features/reports/shared/report-list-state';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -16,6 +16,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
     selector: 'app-report-results',
     standalone: true,
     imports: [NgTemplateOutlet, Paginator, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @let s = state();
         @if (s.loading() && !s.report()) {

@@ -1,7 +1,7 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -41,6 +41,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         CareInstructionsSectionComponent,
         TrDateTimePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (savedMessage(); as message) {
             <p class="mb-4 m-0 text-sm font-medium">{{ message }}</p>
@@ -61,12 +62,12 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                     <div actions class="flex flex-wrap gap-2">
                         @if (row()!.isActive) {
                             @if (canUpdateHospitalization && !ro.mutationBlocked()) {
-                                <a [routerLink]="['/panel/hospitalizations', row()!.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
+                                <a [routerLink]="['/panel/hospitalizations', row()!.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                                 @if (canDischargeHospitalization) {
                                     <p-button type="button" label="Taburcu et" icon="pi pi-sign-out" severity="warn" (onClick)="openDischargeDialog()" />
                                 }
                             } @else if (canUpdateHospitalization && ro.mutationBlocked()) {
-                                <button pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                                <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                                 @if (canDischargeHospitalization) {
                                     <p-button type="button" label="Taburcu et (salt okunur)" icon="pi pi-lock" severity="secondary" [disabled]="true" />
                                 }
@@ -83,12 +84,12 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                                     }"
                                     pButton
                                     type="button"
-                                    label="Ödeme Oluştur"
-                                    icon="pi pi-wallet"
+                                   
+                                   
                                     class="p-button-secondary"
-                                ></a>
+                                ><i class="pi pi-wallet"></i>Ödeme Oluştur</a>
                             } @else if (canCreatePayment && ro.mutationBlocked()) {
-                                <button pButton type="button" label="Ödeme Oluştur (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                                <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Ödeme Oluştur (salt okunur)</button>
                             }
                         }
                     </div>

@@ -1,28 +1,18 @@
-import { Component, DestroyRef, OnInit, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import {
-    CLINIC_TAXPAYER_MAX,
-    CLINIC_TAXPAYER_TYPE_OPTIONS,
-    mapClinicTaxpayerFormToPutBody,
-    mapClinicTaxpayerSettingsToFormValue
-} from '@/app/features/clinics/data/clinic-taxpayer-settings.mapper';
+import { CLINIC_TAXPAYER_MAX, CLINIC_TAXPAYER_TYPE_OPTIONS, mapClinicTaxpayerFormToPutBody, mapClinicTaxpayerSettingsToFormValue } from '@/app/features/clinics/data/clinic-taxpayer-settings.mapper';
 import type { ClinicTaxpayerType } from '@/app/features/clinics/models/clinic-taxpayer-settings.model';
 import { ClinicTaxpayerSettingsService } from '@/app/features/clinics/services/clinic-taxpayer-settings.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import {
-    TAX_IDENTITY_MSG_TAXPAYER,
-    TAX_RATE_MSG_INVALID,
-    taxpayerIdentityValidator,
-    taxRateValidator
-} from '@/app/shared/utils/turkish-tax-identity.utils';
+import { TAX_IDENTITY_MSG_TAXPAYER, TAX_RATE_MSG_INVALID, taxpayerIdentityValidator, taxRateValidator } from '@/app/shared/utils/turkish-tax-identity.utils';
 
 /**
  * Klinik ayarlarındaki "Mükellef bilgileri" kartı (ADR-036 Dilim 1): fatura/e-belgeyi düzenleyen kimlik, adres ve varsayılan
@@ -32,12 +22,11 @@ import {
     selector: 'app-clinic-taxpayer-settings-section',
     standalone: true,
     imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppLoadingStateComponent, AppErrorStateComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="card mb-4" [formGroup]="form" data-testid="clinic-taxpayer-settings">
             <h5 class="mt-0 mb-2">Mükellef bilgileri</h5>
-            <p class="text-sm text-muted-color mt-0 mb-4">
-                Fatura ve e-belge düzenlenirken kliniğin vergi kimliği, adresi ve varsayılan oranlar olarak kullanılır. Tüm alanlar isteğe bağlıdır; KDV oranı boş bırakılan ücret satırlarına uygulanır.
-            </p>
+            <p class="text-sm text-muted-color mt-0 mb-4">Fatura ve e-belge düzenlenirken kliniğin vergi kimliği, adresi ve varsayılan oranlar olarak kullanılır. Tüm alanlar isteğe bağlıdır; KDV oranı boş bırakılan ücret satırlarına uygulanır.</p>
 
             @if (loading()) {
                 <app-loading-state message="Mükellef bilgileri yükleniyor…" />
@@ -50,7 +39,7 @@ import {
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
                         <label for="taxpayerType" class="block text-sm font-medium text-muted-color mb-2">Mükellef türü</label>
-                        <p-select inputId="taxpayerType" formControlName="taxpayerType" [options]="typeOptions" optionLabel="label" optionValue="value" styleClass="w-full" />
+                        <p-select inputId="taxpayerType" formControlName="taxpayerType" [options]="typeOptions" optionLabel="label" optionValue="value" class="w-full" />
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="taxIdentityNumber" class="block text-sm font-medium text-muted-color mb-2">VKN / TCKN</label>
@@ -100,15 +89,7 @@ import {
                 </div>
 
                 <div class="mt-4 flex justify-end">
-                    <p-button
-                        type="button"
-                        label="Mükellef bilgilerini kaydet"
-                        icon="pi pi-save"
-                        severity="secondary"
-                        [loading]="saving()"
-                        [disabled]="form.invalid || saving() || ro.mutationBlocked()"
-                        (onClick)="save()"
-                    />
+                    <p-button type="button" label="Mükellef bilgilerini kaydet" icon="pi pi-save" severity="secondary" [loading]="saving()" [disabled]="form.invalid || saving() || ro.mutationBlocked()" (onClick)="save()" />
                 </div>
             }
         </div>

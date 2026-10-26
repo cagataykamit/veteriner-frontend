@@ -2,7 +2,7 @@ import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -59,6 +59,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
         DateInputComponent,
         TrDateTimePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header title="Hatırlatma Geçmişi" description="Gönderilen veya kuyruğa alınan hatırlatmaları takip edin." />
 
@@ -71,10 +72,10 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                 <div class="flex flex-col gap-4">
                     <div class="grid grid-cols-12 gap-3 items-end pb-3 border-b border-surface-200 dark:border-surface-700">
                         <app-filter-field label="Tür" [active]="isReminderTypeActive()" width="select">
-                            <p-select [options]="reminderTypeOptions" [(ngModel)]="reminderTypeFilter" optionLabel="label" optionValue="value" placeholder="Tümü" styleClass="w-full" [showClear]="true" (ngModelChange)="scheduleApply()" />
+                            <p-select [options]="reminderTypeOptions" [(ngModel)]="reminderTypeFilter" optionLabel="label" optionValue="value" placeholder="Tümü" class="w-full" [showClear]="true" (ngModelChange)="scheduleApply()" />
                         </app-filter-field>
                         <app-filter-field label="Durum" [active]="isStatusActive()" width="select">
-                            <p-select [options]="statusOptions" [(ngModel)]="statusFilter" optionLabel="label" optionValue="value" placeholder="Tümü" styleClass="w-full" [showClear]="true" (ngModelChange)="scheduleApply()" />
+                            <p-select [options]="statusOptions" [(ngModel)]="statusFilter" optionLabel="label" optionValue="value" placeholder="Tümü" class="w-full" [showClear]="true" (ngModelChange)="scheduleApply()" />
                         </app-filter-field>
                         <app-filter-field label="Klinik" [active]="isClinicActive()" width="select">
                             <p-select
@@ -83,7 +84,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                 optionLabel="label"
                                 optionValue="value"
                                 placeholder="Tüm klinikler"
-                                styleClass="w-full"
+                                class="w-full"
                                 [showClear]="true"
                                 [loading]="clinicsLoading()"
                                 [filter]="true"

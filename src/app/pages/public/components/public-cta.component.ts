@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 
@@ -7,6 +7,7 @@ import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.util
     selector: 'app-public-cta',
     standalone: true,
     imports: [RouterLink],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <section class="mx-auto max-w-6xl px-4 md:px-6" [attr.aria-labelledby]="headingId()">
             <div class="public-cta-card px-6 py-10 text-center md:px-12 md:py-14">

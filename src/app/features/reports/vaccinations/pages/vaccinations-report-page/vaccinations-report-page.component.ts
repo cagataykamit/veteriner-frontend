@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { VACCINATIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -22,13 +22,9 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
     selector: 'app-vaccinations-report-page',
     standalone: true,
     imports: [CommonModule, RouterLink, TableModule, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, AppStatusTagComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <app-page-header
-            [categoryLink]="reportsRoute"
-            categoryLinkLabel="Raporlar"
-            [title]="copy.vaccinationsReportTitle"
-            [description]="copy.vaccinationsReportDescription"
-        />
+        <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" [title]="copy.vaccinationsReportTitle" [description]="copy.vaccinationsReportDescription" />
 
         <app-report-filter-bar
             [state]="state"
@@ -42,99 +38,99 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
 
         <app-report-results [state]="state" [summaryLine]="true" [emptyMessage]="copy.vaccinationsReportEmptyMessage" [emptyHint]="copy.vaccinationsReportEmptyHint">
             <ng-template #rows>
-                    <div class="hidden lg:block overflow-x-auto">
-                        <p-table
-                            [value]="displayedRows()"
-                            [paginator]="true"
-                            [rows]="state.pageSize()"
-                            [rowsPerPageOptions]="state.rowsPerPageOptions"
-                            [paginatorDropdownAppendTo]="'body'"
-                            [totalRecords]="totalCount()"
-                            [lazy]="true"
-                            [first]="state.first()"
-                            (onLazyLoad)="state.onTableLazyLoad($event)"
-                            [tableStyle]="{ 'min-width': '68rem' }"
-                            [showCurrentPageReport]="true"
-                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                        >
-                            <ng-template #header>
-                                <tr>
-                                    <th>{{ copy.labelClient }}</th>
-                                    <th>{{ copy.labelPet }}</th>
-                                    <th>{{ copy.vaccinationsReportColVaccineName }}</th>
-                                    <th>{{ copy.vaccinationsReportColStatus }}</th>
-                                    <th>{{ copy.vaccinationsReportColAppliedAt }}</th>
-                                    <th>{{ copy.vaccinationsReportColNextDue }}</th>
-                                    <th style="width: 6rem"></th>
-                                </tr>
-                            </ng-template>
-                            <ng-template #body let-row>
-                                <tr>
-                                    <td>
-                                        @if (row.clientId) {
-                                            <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
-                                        } @else {
-                                            {{ row.clientName }}
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (row.petId) {
-                                            <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
-                                        } @else {
-                                            {{ row.petName }}
-                                        }
-                                    </td>
-                                    <td class="max-w-[12rem] truncate" [title]="row.vaccineName">{{ row.vaccineName }}</td>
-                                    <td>
-                                        <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
-                                    </td>
-                                    <td>{{ formatUtcInstant(row.appliedAtUtc) }}</td>
-                                    <td>{{ formatUtcInstant(row.dueAtUtc) }}</td>
-                                    <td>
-                                        <a [routerLink]="['/panel/vaccinations', row.id]" class="text-primary font-medium no-underline text-sm">{{ copy.buttonDetail }}</a>
-                                    </td>
-                                </tr>
-                            </ng-template>
-                        </p-table>
-                    </div>
-
-                    <div class="lg:hidden space-y-3">
-                        @for (row of displayedRows(); track reportTableRowTrackKey(row, $index)) {
-                            <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
-                                <div class="text-sm mb-1">
-                                    <span class="text-muted-color font-medium">{{ copy.labelClient }}: </span>
+                <div class="hidden lg:block overflow-x-auto">
+                    <p-table
+                        [value]="displayedRows()"
+                        [paginator]="true"
+                        [rows]="state.pageSize()"
+                        [rowsPerPageOptions]="state.rowsPerPageOptions"
+                        [paginatorDropdownAppendTo]="'body'"
+                        [totalRecords]="totalCount()"
+                        [lazy]="true"
+                        [first]="state.first()"
+                        (onLazyLoad)="state.onTableLazyLoad($event)"
+                        [tableStyle]="{ 'min-width': '68rem' }"
+                        [showCurrentPageReport]="true"
+                        currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                    >
+                        <ng-template #header>
+                            <tr>
+                                <th>{{ copy.labelClient }}</th>
+                                <th>{{ copy.labelPet }}</th>
+                                <th>{{ copy.vaccinationsReportColVaccineName }}</th>
+                                <th>{{ copy.vaccinationsReportColStatus }}</th>
+                                <th>{{ copy.vaccinationsReportColAppliedAt }}</th>
+                                <th>{{ copy.vaccinationsReportColNextDue }}</th>
+                                <th style="width: 6rem"></th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr>
+                                <td>
                                     @if (row.clientId) {
-                                        <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{ row.clientName }}</a>
+                                        <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
                                     } @else {
-                                        <span class="break-words">{{ row.clientName }}</span>
+                                        {{ row.clientName }}
                                     }
-                                </div>
-                                <div class="text-sm mb-1">
-                                    <span class="text-muted-color font-medium">{{ copy.labelPet }}: </span>
+                                </td>
+                                <td>
                                     @if (row.petId) {
-                                        <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{ row.petName }}</a>
+                                        <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
                                     } @else {
-                                        <span class="break-words">{{ row.petName }}</span>
+                                        {{ row.petName }}
                                     }
-                                </div>
-                                <div class="text-sm mb-1 min-w-0 break-words">
-                                    <span class="text-muted-color font-medium">{{ copy.vaccinationsReportColVaccineName }}: </span>{{ row.vaccineName }}
-                                </div>
-                                <div class="mb-2">
+                                </td>
+                                <td class="max-w-[12rem] truncate" [title]="row.vaccineName">{{ row.vaccineName }}</td>
+                                <td>
                                     <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
-                                </div>
-                                <div class="text-sm text-muted-color mb-1">
-                                    <span class="font-medium">{{ copy.vaccinationsReportColAppliedAt }}: </span>{{ formatUtcInstant(row.appliedAtUtc) }}
-                                </div>
-                                <div class="text-sm text-muted-color mb-1">
-                                    <span class="font-medium">{{ copy.vaccinationsReportColNextDue }}: </span>{{ formatUtcInstant(row.dueAtUtc) }}
-                                </div>
-                                <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
-                                    <a [routerLink]="['/panel/vaccinations', row.id]" class="text-primary font-medium no-underline text-sm">{{ copy.buttonDetail }} →</a>
-                                </div>
+                                </td>
+                                <td>{{ formatUtcInstant(row.appliedAtUtc) }}</td>
+                                <td>{{ formatUtcInstant(row.dueAtUtc) }}</td>
+                                <td>
+                                    <a [routerLink]="['/panel/vaccinations', row.id]" class="text-primary font-medium no-underline text-sm">{{ copy.buttonDetail }}</a>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+
+                <div class="lg:hidden space-y-3">
+                    @for (row of displayedRows(); track reportTableRowTrackKey(row, $index)) {
+                        <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
+                            <div class="text-sm mb-1">
+                                <span class="text-muted-color font-medium">{{ copy.labelClient }}: </span>
+                                @if (row.clientId) {
+                                    <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{ row.clientName }}</a>
+                                } @else {
+                                    <span class="break-words">{{ row.clientName }}</span>
+                                }
                             </div>
-                        }
-                    </div>
+                            <div class="text-sm mb-1">
+                                <span class="text-muted-color font-medium">{{ copy.labelPet }}: </span>
+                                @if (row.petId) {
+                                    <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{ row.petName }}</a>
+                                } @else {
+                                    <span class="break-words">{{ row.petName }}</span>
+                                }
+                            </div>
+                            <div class="text-sm mb-1 min-w-0 break-words">
+                                <span class="text-muted-color font-medium">{{ copy.vaccinationsReportColVaccineName }}: </span>{{ row.vaccineName }}
+                            </div>
+                            <div class="mb-2">
+                                <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
+                            </div>
+                            <div class="text-sm text-muted-color mb-1">
+                                <span class="font-medium">{{ copy.vaccinationsReportColAppliedAt }}: </span>{{ formatUtcInstant(row.appliedAtUtc) }}
+                            </div>
+                            <div class="text-sm text-muted-color mb-1">
+                                <span class="font-medium">{{ copy.vaccinationsReportColNextDue }}: </span>{{ formatUtcInstant(row.dueAtUtc) }}
+                            </div>
+                            <div class="flex justify-end pt-2 border-t border-surface-200 dark:border-surface-700">
+                                <a [routerLink]="['/panel/vaccinations', row.id]" class="text-primary font-medium no-underline text-sm">{{ copy.buttonDetail }} →</a>
+                            </div>
+                        </div>
+                    }
+                </div>
             </ng-template>
         </app-report-results>
     `

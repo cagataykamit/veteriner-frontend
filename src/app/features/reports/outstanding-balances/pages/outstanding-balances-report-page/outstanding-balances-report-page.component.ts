@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { CHARGES_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -20,6 +20,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
     selector: 'app-outstanding-balances-report-page',
     standalone: true,
     imports: [CommonModule, RouterLink, TableModule, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, MoneyPipe],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" [title]="copy.outstandingBalancesReportTitle" [description]="copy.outstandingBalancesReportDescription" />
 

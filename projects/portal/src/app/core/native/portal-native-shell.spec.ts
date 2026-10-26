@@ -1,12 +1,12 @@
 import { Location } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { SystemBarsStyle } from '@capacitor/core';
 import { waitFor } from '@portal/app/testing/portal-testing';
 import { PORTAL_BASE_URL, PORTAL_NATIVE_PLUGINS, PortalNativeShell } from './portal-native-shell';
 
-@Component({ standalone: true, template: '' })
+@Component({ standalone: true, changeDetection: ChangeDetectionStrategy.Eager, template: '' })
 class BlankPage {}
 
 type Listener = (event: never) => void;

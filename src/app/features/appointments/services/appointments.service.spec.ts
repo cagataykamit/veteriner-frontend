@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
@@ -11,12 +11,7 @@ describe('AppointmentsService — durum geçişleri', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [
-                provideHttpClient(),
-                provideHttpClientTesting(),
-                { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1' } }
-            ]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }, { provide: AuthService, useValue: { getClinicId: () => 'c1' } }]
         });
         service = TestBed.inject(AppointmentsService);
         http = TestBed.inject(HttpTestingController);

@@ -1,10 +1,6 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import type { LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
-import {
-    LAB_RESULT_AWAITING_INTERPRETATION_LABEL,
-    labResultStatusLabel,
-    labResultStatusSeverity
-} from '@/app/features/lab-results/utils/lab-result-status.utils';
+import { LAB_RESULT_AWAITING_INTERPRETATION_LABEL, labResultStatusLabel, labResultStatusSeverity } from '@/app/features/lab-results/utils/lab-result-status.utils';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
 /** Lab durum rozeti; "değerlendirme bekliyor" yalnız sonuçlanmış kayıtta `awaitingInterpretation` bayrağından gelir. */
@@ -12,6 +8,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
     selector: 'app-lab-result-status-badges',
     standalone: true,
     imports: [AppStatusTagComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (status(); as s) {
             <span class="inline-flex flex-wrap gap-1 items-center">

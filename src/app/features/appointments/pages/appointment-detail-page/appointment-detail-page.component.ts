@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AppointmentNoShowDialogComponent } from '@/app/features/appointments/components/appointment-no-show-dialog.component';
@@ -29,6 +29,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     selector: 'app-appointment-detail-page',
     standalone: true,
     imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppointmentNoShowDialogComponent, TrDateTimePipe],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Randevu kaydedildi.</p>
@@ -49,24 +50,24 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
             >
                 <div actions class="flex flex-wrap gap-2">
                     @if (canRescheduleAppointment && !ro.mutationBlocked()) {
-                        <a [routerLink]="['/panel/appointments', appt()!.id, 'edit']" [queryParams]="returnContextQueryParams() ?? undefined" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
+                        <a [routerLink]="['/panel/appointments', appt()!.id, 'edit']" [queryParams]="returnContextQueryParams() ?? undefined" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                     } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
-                        <button pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                        <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                     }
                     @if (canNoShow && !ro.mutationBlocked()) {
                         @if (canMarkNoShow(appt()!.status, appt()!.scheduledAtUtc, now())) {
-                            <button pButton type="button" label="Gelmedi işaretle" icon="pi pi-user-minus" class="p-button-secondary" (click)="openNoShow('mark')"></button>
+                            <button pButton type="button" class="p-button-secondary" (click)="openNoShow('mark')"><i class="pi pi-user-minus"></i>Gelmedi işaretle</button>
                         } @else if (canRevertNoShow(appt()!.status)) {
-                            <button pButton type="button" label="Gelmedi işaretini geri al" icon="pi pi-undo" class="p-button-secondary" (click)="openNoShow('revert')"></button>
+                            <button pButton type="button" class="p-button-secondary" (click)="openNoShow('revert')"><i class="pi pi-undo"></i>Gelmedi işaretini geri al</button>
                         }
                     }
                     @if (canCreateExamination && appt()!.clientId?.trim() && appt()!.petId?.trim()) {
                         @if (isCancelledForExam(appt()!.status) || isNoShow(appt()!.status)) {
-                            <button pButton type="button" label="Muayene Oluştur" icon="pi pi-ban" [disabled]="true" class="p-button-secondary"></button>
+                            <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-ban"></i>Muayene Oluştur</button>
                         } @else if (ro.mutationBlocked()) {
-                            <button pButton type="button" label="Muayene Oluştur (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                            <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Muayene Oluştur (salt okunur)</button>
                         } @else if (canOpenVisit) {
-                            <button pButton type="button" label="Muayene Oluştur" icon="pi pi-plus" class="p-button-secondary" [loading]="startingExam()" [disabled]="startingExam()" (click)="startExamination()"></button>
+                            <button pButton type="button" class="p-button-secondary" [loading]="startingExam()" [disabled]="startingExam()" (click)="startExamination()"><i class="pi pi-plus"></i>Muayene Oluştur</button>
                         } @else {
                             <a
                                 [routerLink]="['/panel/examinations/new']"
@@ -77,10 +78,10 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 }"
                                 pButton
                                 type="button"
-                                label="Muayene Oluştur"
-                                icon="pi pi-plus"
+                               
+                               
                                 class="p-button-secondary"
-                            ></a>
+                            ><i class="pi pi-plus"></i>Muayene Oluştur</a>
                         }
                     }
                 </div>

@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -9,15 +9,7 @@ import { ImportJobProgressComponent } from '@/app/features/imports/components/im
 import type { ImportBatchDto, ImportCommitProgressDto, ImportFileFormat, ImportOnErrors, ImportPreviewDto } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
-import {
-    importCommitBlockers,
-    importErrorCode,
-    importErrorMessage,
-    importIssueLabel,
-    importStatusLabel,
-    isEndpointUnavailable,
-    reminderImpactCurrentCount
-} from '@/app/features/imports/utils/import-labels.utils';
+import { importCommitBlockers, importErrorCode, importErrorMessage, importIssueLabel, importStatusLabel, isEndpointUnavailable, reminderImpactCurrentCount } from '@/app/features/imports/utils/import-labels.utils';
 import { IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
@@ -29,40 +21,46 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
     selector: 'app-import-commit-step',
     standalone: true,
     imports: [NgTemplateOutlet, FormsModule, ButtonModule, CheckboxModule, MessageModule, SelectModule, ImportJobProgressComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @switch (batch().status) {
             @case ('Validated') {
-                <p class="mt-0">
-                    Onayladığınızda yukarıdaki doğrulama sonucuna göre kayıtlar oluşturulur. İşlem arka planda sürer; sekmeyi kapatsanız da devam eder.
-                   
-                </p>
+                <p class="mt-0">Onayladığınızda yukarıdaki doğrulama sonucuna göre kayıtlar oluşturulur. İşlem arka planda sürer; sekmeyi kapatsanız da devam eder.</p>
 
                 <dl class="grid grid-cols-2 sm:grid-cols-4 gap-3 m-0 mb-4 text-sm">
-                    <div><dt class="text-muted-color">Oluşturulacak</dt><dd class="m-0 text-xl font-medium">{{ totals().willCreate }}</dd></div>
-                    <div><dt class="text-muted-color">Mevcutla eşleşecek</dt><dd class="m-0 text-xl font-medium">{{ totals().willMatch }}</dd></div>
-                    <div><dt class="text-muted-color">Atlanacak</dt><dd class="m-0 text-xl font-medium">{{ totals().willSkip }}</dd></div>
-                    <div><dt class="text-muted-color">Hatalı satır</dt><dd class="m-0 text-xl font-medium" [class.text-red-500]="totals().error > 0">{{ totals().error }}</dd></div>
+                    <div>
+                        <dt class="text-muted-color">Oluşturulacak</dt>
+                        <dd class="m-0 text-xl font-medium">{{ totals().willCreate }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-muted-color">Mevcutla eşleşecek</dt>
+                        <dd class="m-0 text-xl font-medium">{{ totals().willMatch }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-muted-color">Atlanacak</dt>
+                        <dd class="m-0 text-xl font-medium">{{ totals().willSkip }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-muted-color">Hatalı satır</dt>
+                        <dd class="m-0 text-xl font-medium" [class.text-red-500]="totals().error > 0">{{ totals().error }}</dd>
+                    </div>
                 </dl>
 
                 @if (totals().error > 0) {
                     <div class="flex flex-col gap-1 mb-4">
                         <label for="importOnErrors" class="text-sm font-medium">Hatalı satırlar</label>
-                        <p-select inputId="importOnErrors" [options]="onErrorsOptions" optionLabel="label" optionValue="value" [(ngModel)]="onErrors" styleClass="w-full md:w-[28rem]" />
+                        <p-select inputId="importOnErrors" [options]="onErrorsOptions" optionLabel="label" optionValue="value" [(ngModel)]="onErrors" class="w-full md:w-[28rem]" />
                         <small class="text-muted-color">Hatalı satırlar hata raporunda kalır; düzeltilmiş dosyayı sonradan yeni içe aktarma olarak yükleyebilirsiniz.</small>
                     </div>
                 }
 
-                <p-message severity="info" styleClass="w-full mb-4">
-                    İçe aktarılan aşılar için hatırlatma e-postası gönderilmez. Hatırlatmaları aktarım bittikten sonra, sayıyı görerek siz açarsınız.
-                </p-message>
+                <p-message severity="info" class="w-full mb-4"> İçe aktarılan aşılar için hatırlatma e-postası gönderilmez. Hatırlatmaları aktarım bittikten sonra, sayıyı görerek siz açarsınız. </p-message>
 
                 @if (unavailable()) {
-                    <p-message severity="warn" styleClass="w-full mb-4" role="status">
-                        Uygulama henüz etkin değil. Doğrulama sonucunuz korunuyor ve hiçbir kayıt oluşturulmadı. Özellik açıldığında bu sayfadan devam edebilirsiniz.
-                    </p-message>
+                    <p-message severity="warn" class="w-full mb-4" role="status"> Uygulama henüz etkin değil. Doğrulama sonucunuz korunuyor ve hiçbir kayıt oluşturulmadı. Özellik açıldığında bu sayfadan devam edebilirsiniz. </p-message>
                 }
                 @if (error()) {
-                    <p-message severity="error" styleClass="w-full mb-4" role="alert">
+                    <p-message severity="error" class="w-full mb-4" role="alert">
                         {{ error() }}
                         @if (blockers().length) {
                             <ul class="mt-2 mb-0 pl-4">
@@ -75,7 +73,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                 }
 
                 @if (!canCommitClaim()) {
-                    <p-message severity="info" styleClass="w-full">Aktarmayı başlatmak için aktarma yetkisi gerekir.</p-message>
+                    <p-message severity="info" class="w-full">Aktarmayı başlatmak için aktarma yetkisi gerekir.</p-message>
                 } @else {
                     <div class="flex items-start gap-2 mb-4">
                         <p-checkbox inputId="importConfirm" [binary]="true" [(ngModel)]="confirmed" />
@@ -89,11 +87,13 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                 <app-import-job-progress [progress]="progress() ?? batch().progress ?? null" [stalled]="stalled()" />
             }
             @case ('CommitFailed') {
-                <p-message severity="error" styleClass="w-full mb-4" role="alert">Aktarma sırasında beklenmeyen bir sorun oluştu ve işlem durdu. Şimdiye dek oluşan kayıtlar korunur; aşağıdaki sayılar nelerin aktarıldığını gösterir. Lütfen destek ekibiyle iletişime geçin.</p-message>
+                <p-message severity="error" class="w-full mb-4" role="alert"
+                    >Aktarma sırasında beklenmeyen bir sorun oluştu ve işlem durdu. Şimdiye dek oluşan kayıtlar korunur; aşağıdaki sayılar nelerin aktarıldığını gösterir. Lütfen destek ekibiyle iletişime geçin.</p-message
+                >
                 <ng-container *ngTemplateOutlet="result" />
             }
             @case ('Committed') {
-                <p-message severity="success" styleClass="w-full mb-4">Aktarma tamamlandı{{ batch().committedAtUtc ? ' · ' + date(batch().committedAtUtc!) : '' }}.</p-message>
+                <p-message severity="success" class="w-full mb-4">Aktarma tamamlandı{{ batch().committedAtUtc ? ' · ' + date(batch().committedAtUtc!) : '' }}.</p-message>
                 <ng-container *ngTemplateOutlet="result" />
 
                 @if (preview(); as p) {
@@ -103,19 +103,18 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                             @if (batch().remindersReleasedAtUtc) {
                                 <p class="m-0">Hatırlatmalar {{ date(batch().remindersReleasedAtUtc!) }} tarihinde açıldı. Bu işlem geri alınamaz.</p>
                                 @if (releaseNote()) {
-                                    <p-message severity="info" styleClass="w-full mt-2" role="status">{{ releaseNote() }}</p-message>
+                                    <p-message severity="info" class="w-full mt-2" role="status">{{ releaseNote() }}</p-message>
                                 }
                             } @else {
                                 <p class="mt-0">
-                                    Şu an hatırlatmalar <strong>kapalıdır</strong>; hiçbir e-posta gitmedi. Açarsanız, {{ p.reminderImpact.reminderWindowDays }} gün içinde vadesi gelen
-                                    <strong>{{ releaseCount(p) }}</strong> aşı için müşterilere e-posta gidebilir; sonraki aşı tarihi yaklaştıkça yenileri de oluşur.
-                                    Gönderilen e-postalar geri alınamaz; hatırlatmaları açmak da geri alınamaz.
+                                    Şu an hatırlatmalar <strong>kapalıdır</strong>; hiçbir e-posta gitmedi. Açarsanız, {{ p.reminderImpact.reminderWindowDays }} gün içinde vadesi gelen <strong>{{ releaseCount(p) }}</strong> aşı için müşterilere
+                                    e-posta gidebilir; sonraki aşı tarihi yaklaştıkça yenileri de oluşur. Gönderilen e-postalar geri alınamaz; hatırlatmaları açmak da geri alınamaz.
                                 </p>
                                 @if (!p.reminderImpact.tenantRemindersEnabled) {
-                                    <p-message severity="info" styleClass="w-full mb-2" role="status">Kliniğinizin aşı hatırlatma ayarı kapalı; açsanız da ayar açılana kadar e-posta gitmez.</p-message>
+                                    <p-message severity="info" class="w-full mb-2" role="status">Kliniğinizin aşı hatırlatma ayarı kapalı; açsanız da ayar açılana kadar e-posta gitmez.</p-message>
                                 }
                                 @if (releaseUnavailable()) {
-                                    <p-message severity="warn" styleClass="w-full" role="status">Hatırlatmaları açma özelliği henüz etkin değil.</p-message>
+                                    <p-message severity="warn" class="w-full" role="status">Hatırlatmaları açma özelliği henüz etkin değil.</p-message>
                                 } @else if (!canCommitClaim()) {
                                     <small class="text-muted-color">Hatırlatmaları açmak için aktarma yetkisi gerekir.</small>
                                 } @else if (!confirmingRelease()) {
@@ -128,7 +127,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                                     </div>
                                 }
                                 @if (releaseError()) {
-                                    <p-message severity="error" styleClass="w-full mt-2" role="alert">{{ releaseError() }}</p-message>
+                                    <p-message severity="error" class="w-full mt-2" role="alert">{{ releaseError() }}</p-message>
                                 }
                             }
                         </section>
@@ -136,7 +135,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                 }
             }
             @default {
-                <p-message severity="info" styleClass="w-full mb-4">Bu içe aktarmanın durumu: {{ statusLabel(batch().status) }}.</p-message>
+                <p-message severity="info" class="w-full mb-4">Bu içe aktarmanın durumu: {{ statusLabel(batch().status) }}.</p-message>
                 <ng-container *ngTemplateOutlet="result" />
             }
         }
@@ -147,10 +146,14 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                     <div class="rounded-border border border-surface-200 dark:border-surface-700 p-4">
                         <div class="font-medium mb-2">{{ t.label }}</div>
                         <dl class="grid grid-cols-2 gap-x-3 gap-y-1 m-0 text-sm">
-                            <dt class="text-muted-color">Oluşturuldu</dt><dd class="m-0 text-right">{{ t.s.created }}</dd>
-                            <dt class="text-muted-color">Mevcutla eşleşti</dt><dd class="m-0 text-right">{{ t.s.matched }}</dd>
-                            <dt class="text-muted-color">Atlandı</dt><dd class="m-0 text-right">{{ t.s.skipped }}</dd>
-                            <dt class="text-muted-color">Başarısız</dt><dd class="m-0 text-right" [class.text-red-500]="t.s.failed > 0">{{ t.s.failed }}</dd>
+                            <dt class="text-muted-color">Oluşturuldu</dt>
+                            <dd class="m-0 text-right">{{ t.s.created }}</dd>
+                            <dt class="text-muted-color">Mevcutla eşleşti</dt>
+                            <dd class="m-0 text-right">{{ t.s.matched }}</dd>
+                            <dt class="text-muted-color">Atlandı</dt>
+                            <dd class="m-0 text-right">{{ t.s.skipped }}</dd>
+                            <dt class="text-muted-color">Başarısız</dt>
+                            <dd class="m-0 text-right" [class.text-red-500]="t.s.failed > 0">{{ t.s.failed }}</dd>
                         </dl>
                     </div>
                 }
@@ -171,7 +174,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                     <p-button size="small" severity="secondary" icon="pi pi-download" label="CSV" [loading]="reportBusy() === 'csv'" (onClick)="downloadReport('csv')" />
                 </div>
                 @if (reportError()) {
-                    <p-message severity="error" styleClass="w-full mt-2" role="alert">{{ reportError() }}</p-message>
+                    <p-message severity="error" class="w-full mt-2" role="alert">{{ reportError() }}</p-message>
                 }
             }
         </ng-template>
@@ -226,14 +229,10 @@ export class ImportCommitStepComponent {
         );
     });
 
-    protected readonly resultTables = computed(() =>
-        IMPORT_TABLES.filter((t) => this.batch().summary[t].total > 0).map((t) => ({ key: t, label: IMPORT_TABLE_LABELS[t], s: this.batch().summary[t] }))
-    );
+    protected readonly resultTables = computed(() => IMPORT_TABLES.filter((t) => this.batch().summary[t].total > 0).map((t) => ({ key: t, label: IMPORT_TABLE_LABELS[t], s: this.batch().summary[t] })));
 
     /** Uygulama anında doğan satır sorunları (önizleme sayımlarından). */
-    protected readonly applyIssues = computed(() =>
-        (this.preview()?.issueCounts ?? []).filter((i) => ['Imports.OwnerUnitFailed', 'Imports.MatchedAtCommit', 'Imports.ApplyFailed'].includes(i.code))
-    );
+    protected readonly applyIssues = computed(() => (this.preview()?.issueCounts ?? []).filter((i) => ['Imports.OwnerUnitFailed', 'Imports.MatchedAtCommit', 'Imports.ApplyFailed'].includes(i.code)));
 
     /** Hata raporu: doğrulamada hatalı veya uygulamada başarısız satır varsa anlamlıdır. */
     protected readonly hasProblemRows = computed(() => IMPORT_TABLES.some((t) => this.batch().summary[t].failed > 0 || this.batch().summary[t].error > 0));

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -29,18 +29,13 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
     selector: 'app-patients-home-page',
     standalone: true,
     imports: [CommonModule, RouterLink, ButtonModule, AppListHeaderComponent, SearchInputComponent, VisitArrivalDialogComponent, VisitQuickRegistrationComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="card">
             <app-list-header class="mb-4" title="Hastalar" />
             <label for="patientSearch" class="block text-sm font-medium text-muted-color mb-2">Hasta veya sahip ara</label>
             <div class="[&_input]:text-xl [&_input]:py-4">
-                <app-search-input
-                    inputId="patientSearch"
-                    ariaLabel="Hasta veya sahip ara"
-                    placeholder="Hasta adı, sahip adı soyadı, telefon veya mikroçip"
-                    [(value)]="term"
-                    (searchRequested)="onSearch()"
-                />
+                <app-search-input inputId="patientSearch" ariaLabel="Hasta veya sahip ara" placeholder="Hasta adı, sahip adı soyadı, telefon veya mikroçip" [(value)]="term" (searchRequested)="onSearch()" />
             </div>
 
             <div class="mt-4" aria-live="polite">
@@ -68,11 +63,7 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
                                         <div class="min-w-0 grow basis-64">
                                             <a [routerLink]="['/panel/pets', p.petId]" class="font-semibold text-lg text-primary no-underline">{{ p.petName }}</a>
                                             @if (p.deceased) {
-                                                <span
-                                                    class="ml-2 text-xs font-medium text-muted-color border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5 align-middle"
-                                                    data-testid="patient-deceased"
-                                                    >Vefat</span
-                                                >
+                                                <span class="ml-2 text-xs font-medium text-muted-color border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5 align-middle" data-testid="patient-deceased">Vefat</span>
                                             }
                                             @if (p.summary) {
                                                 <span class="text-muted-color"> · {{ p.summary }}</span>
@@ -93,9 +84,18 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
                                             <div class="flex flex-wrap gap-2" role="group" [attr.aria-label]="p.petName + ' için eylemler'">
                                                 @for (a of rowActions(p); track a.key; let first = $first) {
                                                     @if (a.route) {
-                                                        <a [routerLink]="a.route" [queryParams]="a.queryParams" pButton type="button" size="small" [label]="a.label" [icon]="a.icon" [class]="first ? 'p-button-primary' : 'p-button-outlined p-button-secondary'"></a>
+                                                        <a
+                                                            [routerLink]="a.route"
+                                                            [queryParams]="a.queryParams"
+                                                            pButton
+                                                            type="button"
+                                                            size="small"
+                                                           
+                                                           
+                                                            [class]="first ? 'p-button-primary' : 'p-button-outlined p-button-secondary'"
+                                                        ><i [class]="a.icon"></i>{{ a.label }}</a>
                                                     } @else {
-                                                        <button pButton type="button" size="small" [label]="a.label" [icon]="a.icon" [class]="first ? 'p-button-primary' : 'p-button-outlined p-button-secondary'" (click)="openArrival(p)"></button>
+                                                        <button pButton type="button" size="small" [class]="first ? 'p-button-primary' : 'p-button-outlined p-button-secondary'" (click)="openArrival(p)"><i [class]="a.icon"></i>{{ a.label }}</button>
                                                     }
                                                 }
                                             </div>
@@ -111,7 +111,7 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
                                         </div>
                                         @if (!ro.mutationBlocked()) {
                                             @for (a of ownerActions(o); track a.key) {
-                                                <a [routerLink]="a.route" [queryParams]="a.queryParams" pButton type="button" size="small" [label]="a.label" [icon]="a.icon" class="p-button-outlined p-button-secondary"></a>
+                                                <a [routerLink]="a.route" [queryParams]="a.queryParams" pButton type="button" size="small" class="p-button-outlined p-button-secondary"><i [class]="a.icon"></i>{{ a.label }}</a>
                                             }
                                         }
                                     </li>
@@ -128,14 +128,7 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
                         <app-visit-quick-registration [searchTerm]="searchedTerm()" (registered)="onRegistered($event)" (cancelled)="registering.set(false)" />
                     } @else {
                         <div class="flex flex-wrap items-center gap-3">
-                            <p-button
-                                type="button"
-                                label="Yeni kayıt: müşteri ve hasta"
-                                icon="pi pi-user-plus"
-                                [severity]="noResults() ? 'primary' : 'secondary'"
-                                [outlined]="!noResults()"
-                                (onClick)="registering.set(true)"
-                            />
+                            <p-button type="button" label="Yeni kayıt: müşteri ve hasta" icon="pi pi-user-plus" [severity]="noResults() ? 'primary' : 'secondary'" [outlined]="!noResults()" (onClick)="registering.set(true)" />
                             @if (noResults()) {
                                 <span class="text-sm text-muted-color">Kayıt bulunamadı; yeni hasta olarak ekleyebilirsiniz.</span>
                             }

@@ -2,7 +2,7 @@ import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -16,25 +16,13 @@ import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import { TextareaModule } from 'primeng/textarea';
-import {
-    mapProductCategoryDtoToFormValue,
-    mapProductCategoryFormToCreateRequest,
-    mapProductCategoryFormToUpdateRequest
-} from '@/app/features/inventory/data/product-category.mapper';
-import {
-    createProductCategoryFormGroup,
-    getProductCategoryFormValue,
-    type ProductCategoryFormControls
-} from '@/app/features/inventory/forms/product-category-form.factory';
+import { mapProductCategoryDtoToFormValue, mapProductCategoryFormToCreateRequest, mapProductCategoryFormToUpdateRequest } from '@/app/features/inventory/data/product-category.mapper';
+import { createProductCategoryFormGroup, getProductCategoryFormValue, type ProductCategoryFormControls } from '@/app/features/inventory/forms/product-category-form.factory';
 import type { ProductCategoryListItemVm } from '@/app/features/inventory/models/product-vm.model';
 import { ProductCategoryService } from '@/app/features/inventory/services/product-category.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import {
-    PRODUCT_CATEGORIES_CREATE_CLAIM,
-    PRODUCT_CATEGORIES_DEACTIVATE_CLAIM,
-    PRODUCT_CATEGORIES_UPDATE_CLAIM
-} from '@/app/core/auth/operation-claims.constants';
+import { PRODUCT_CATEGORIES_CREATE_CLAIM, PRODUCT_CATEGORIES_DEACTIVATE_CLAIM, PRODUCT_CATEGORIES_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -78,35 +66,18 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
         AppRowActionButtonComponent
     ],
     providers: [ConfirmationService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header title="Ürün kategorileri" description="Kategori oluşturun veya düzenleyin.">
             @if (canCreateCategories && !ro.mutationBlocked()) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Yeni kategori"
-                    icon="pi pi-plus"
-                    class="p-button-primary"
-                    (click)="openCreateDialog()"
-                ></button>
+                <button actions pButton type="button" class="p-button-primary" (click)="openCreateDialog()"><i class="pi pi-plus"></i>Yeni kategori</button>
             } @else if (canCreateCategories && ro.mutationBlocked()) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Yeni kategori (salt okunur)"
-                    icon="pi pi-lock"
-                    [disabled]="true"
-                    class="p-button-secondary"
-                ></button>
+                <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni kategori (salt okunur)</button>
             }
         </app-page-header>
 
         @if (ro.mutationBlocked()) {
-            <p class="text-amber-700 dark:text-amber-300 text-sm mb-4 m-0" role="status">
-                Abonelik durumu nedeniyle kategori yönetimi salt okunur.
-            </p>
+            <p class="text-amber-700 dark:text-amber-300 text-sm mb-4 m-0" role="status">Abonelik durumu nedeniyle kategori yönetimi salt okunur.</p>
         }
 
         <div class="card">
@@ -132,23 +103,13 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                                     <app-search-input inputId="catSearch" placeholder="Kategori adı…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                                 </app-filter-field>
                                 <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button
-                                        [label]="copy.buttonClear"
-                                        icon="pi pi-times"
-                                        severity="secondary"
-                                        (onClick)="resetFilters()"
-                                        [disabled]="loading()"
-                                    />
+                                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                                 </div>
                             </div>
                         </div>
                         <div class="flex flex-wrap items-end gap-3">
                             <app-filter-field label="Durum filtresi" labelId="lblCatActive" [active]="isActiveFilterApplied()" width="select">
-                           <span
-                                    id="lblCatActive"
-                                    class="flex items-center gap-2 text-xs font-medium mb-1 text-muted-color"
-                                    >Durum filtresi</span
-                                >
+                                <span id="lblCatActive" class="flex items-center gap-2 text-xs font-medium mb-1 text-muted-color">Durum filtresi</span>
                                 <p-select
                                     ariaLabelledBy="lblCatActive"
                                     inputId="catActiveFilter"
@@ -157,8 +118,10 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                                     optionLabel="label"
                                     optionValue="value"
                                     placeholder="Tüm durumlar"
-                                    styleClass="w-full"
-                                    [showClear]="true" (ngModelChange)="scheduleApply()" />
+                                    class="w-full"
+                                    [showClear]="true"
+                                    (ngModelChange)="scheduleApply()"
+                                />
                             </app-filter-field>
                         </div>
                     </div>
@@ -214,12 +177,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                                                     </button>
                                                 }
                                                 @if (canUpdateCategories && !ro.mutationBlocked() && !row.isActive) {
-                                                    <button
-                                                        type="button"
-                                                        class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50"
-                                                        [disabled]="rowMutatingId() !== null"
-                                                        (click)="onActivate(row)"
-                                                    >
+                                                    <button type="button" class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50" [disabled]="rowMutatingId() !== null" (click)="onActivate(row)">
                                                         Aktifleştir
                                                     </button>
                                                 }
@@ -232,9 +190,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
 
                         <div class="lg:hidden space-y-3">
                             @for (row of displayedRows(); track row.id) {
-                                <div
-                                    class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
-                                >
+                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                                     <div class="text-base font-semibold text-surface-900 dark:text-surface-0 mb-2">{{ row.name }}</div>
                                     <div class="text-sm text-muted-color mb-2 break-words">{{ row.descriptionText }}</div>
                                     <div class="mb-3">
@@ -255,12 +211,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                                             </button>
                                         }
                                         @if (canUpdateCategories && !ro.mutationBlocked() && !row.isActive) {
-                                            <button
-                                                type="button"
-                                                class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50"
-                                                [disabled]="rowMutatingId() !== null"
-                                                (click)="onActivate(row)"
-                                            >
+                                            <button type="button" class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50" [disabled]="rowMutatingId() !== null" (click)="onActivate(row)">
                                                 Aktifleştir
                                             </button>
                                         }
@@ -285,17 +236,10 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
             }
         </div>
 
-        <p-dialog
-            [header]="dialogHeader()"
-            [modal]="true"
-            [visible]="dialogVisible()"
-            (visibleChange)="onDialogVisibleChange($event)"
-            [style]="{ width: 'min(32rem, 95vw)' }"
-            [draggable]="false"
-        >
+        <p-dialog [header]="dialogHeader()" [modal]="true" [visible]="dialogVisible()" (visibleChange)="onDialogVisibleChange($event)" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false">
             <form [formGroup]="dialogForm" (ngSubmit)="submitDialog()" class="flex flex-col gap-4">
                 @if (dialogError()) {
-                    <p-message severity="error" styleClass="w-full" role="alert">{{ dialogError() }}</p-message>
+                    <p-message severity="error" class="w-full" role="alert">{{ dialogError() }}</p-message>
                 }
                 <div class="flex flex-col gap-1">
                     <label for="catName" class="block text-sm font-medium text-muted-color">Kategori adı *</label>
@@ -317,13 +261,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                 </div>
                 <div class="flex flex-wrap justify-end gap-2 pt-2">
                     <p-button type="button" [label]="copy.buttonCancel" severity="secondary" (onClick)="closeDialog()" [disabled]="dialogSubmitting()" />
-                    <p-button
-                        type="submit"
-                        [label]="dialogSubmitLabel()"
-                        icon="pi pi-check"
-                        [loading]="dialogSubmitting()"
-                        [disabled]="dialogForm.invalid || dialogSubmitting() || ro.mutationBlocked()"
-                    />
+                    <p-button type="submit" [label]="dialogSubmitLabel()" icon="pi pi-check" [loading]="dialogSubmitting()" [disabled]="dialogForm.invalid || dialogSubmitting() || ro.mutationBlocked()" />
                 </div>
             </form>
         </p-dialog>
@@ -693,13 +631,7 @@ export class ProductCategoriesPageComponent implements OnInit {
         return undefined;
     }
 
-    private loadFromServer(
-        page: number,
-        pageSize: number,
-        search: string,
-        isActiveFilterStr: string,
-        force = false
-    ): void {
+    private loadFromServer(page: number, pageSize: number, search: string, isActiveFilterStr: string, force = false): void {
         const key = `${page}|${pageSize}|${search.trim()}|${isActiveFilterStr}`;
 
         if (!force && key === this.lastLoadKey) {

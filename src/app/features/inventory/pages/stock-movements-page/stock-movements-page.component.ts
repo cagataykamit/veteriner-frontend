@@ -3,7 +3,7 @@ import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -30,14 +30,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { buildCsvFromStringRows, csvTextToUtf8BlobWithBom } from '@/app/shared/utils/csv-text.utils';
 import { localDateTimeYyyyMmDd_HHmmForFileName } from '@/app/shared/utils/date.utils';
 import { triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
-import {
-    STOCK_MOVEMENT_CSV_HEADERS,
-    stockMovementVmToCsvRow
-} from '@/app/features/inventory/utils/stock-movement-export.utils';
-import {
-    fetchAllInventoryCsvExportPages$,
-    InventoryCsvExportRowLimitError
-} from '@/app/features/inventory/utils/inventory-csv-export-pagination.utils';
+import { STOCK_MOVEMENT_CSV_HEADERS, stockMovementVmToCsvRow } from '@/app/features/inventory/utils/stock-movement-export.utils';
+import { fetchAllInventoryCsvExportPages$, InventoryCsvExportRowLimitError } from '@/app/features/inventory/utils/inventory-csv-export-pagination.utils';
 import type { Observable } from 'rxjs';
 
 type StockMovementsListState = {
@@ -70,12 +64,14 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent, DateInputComponent, FilterFieldComponent,
+        AppStatusTagComponent,
+        DateInputComponent,
+        FilterFieldComponent,
         SearchInputComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-toast position="bottom-right" />
-
 
         <div class="card">
             @if (exportError()) {
@@ -84,56 +80,50 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                 </div>
             }
 
-                <div class="flex flex-col gap-4">
-                    <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                        <app-list-header class="mb-3" title="Stok hareketleri" [count]="totalItems()">
-                            <app-filter-field label="Arama" labelFor="smSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="smSearch" placeholder="Ürün, SKU, kategori, klinik…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
-                            </app-filter-field>
-                            <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
-                            @if (canExportStockMovements()) {
-                                <p-button actions
-                                    label="Dışa aktar"
-                                    icon="pi pi-download"
-                                    severity="help"
-                                    (onClick)="exportCsv()"
-                                    [loading]="exporting()"
-                                    [disabled]="loading() || exporting()"
-                                />
-                            }
-                            @if (canCreateStockMovement && !ro.mutationBlocked()) {
-                                <button actions pButton type="button" label="Yeni stok hareketi" icon="pi pi-plus" class="p-button-primary" (click)="createDialogOpen.set(true)"></button>
-                            } @else if (canCreateStockMovement && ro.mutationBlocked()) {
-                                <button actions pButton type="button" label="Yeni stok hareketi (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
-                            }
-                        </app-list-header>
-                        <div class="flex flex-wrap items-end gap-3">
-                            <app-filter-field label="Hareket tipi" labelId="lblSmType" [active]="movementTypeActive()" width="select">
-                                <p-select
-                                    ariaLabelledBy="lblSmType"
-                                    inputId="smMovementType"
-                                    [options]="movementTypeOptions"
-                                    [(ngModel)]="movementTypeFilter"
-                                    optionLabel="label"
-                                    optionValue="value"
-                                    placeholder="Tümü"
-                                    styleClass="w-full"
-                                    [showClear]="true" (ngModelChange)="scheduleApply()" />
-                            </app-filter-field>
-                            <app-filter-field label="Başlangıç (UTC tarih)" labelFor="smFrom" [active]="isFromActive()" width="date">
-                                <app-date-input inputId="smFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" (ngModelChange)="scheduleApply()" />
-                            </app-filter-field>
-                            <app-filter-field label="Bitiş (UTC tarih)" labelFor="smTo" [active]="isToActive()" width="date">
-                                <app-date-input inputId="smTo" type="date" min="1900-01-01" [(ngModel)]="dateToInput" limit="past" (ngModelChange)="scheduleApply()" />
-                            </app-filter-field>
-                        </div>
+            <div class="flex flex-col gap-4">
+                <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                    <app-list-header class="mb-3" title="Stok hareketleri" [count]="totalItems()">
+                        <app-filter-field label="Arama" labelFor="smSearch" [active]="isSearchActive()" width="grow">
+                            <app-search-input inputId="smSearch" placeholder="Ürün, SKU, kategori, klinik…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                        </app-filter-field>
+                        <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                        @if (canExportStockMovements()) {
+                            <p-button actions label="Dışa aktar" icon="pi pi-download" severity="help" (onClick)="exportCsv()" [loading]="exporting()" [disabled]="loading() || exporting()" />
+                        }
+                        @if (canCreateStockMovement && !ro.mutationBlocked()) {
+                            <button actions pButton type="button" class="p-button-primary" (click)="createDialogOpen.set(true)"><i class="pi pi-plus"></i>Yeni stok hareketi</button>
+                        } @else if (canCreateStockMovement && ro.mutationBlocked()) {
+                            <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni stok hareketi (salt okunur)</button>
+                        }
+                    </app-list-header>
+                    <div class="flex flex-wrap items-end gap-3">
+                        <app-filter-field label="Hareket tipi" labelId="lblSmType" [active]="movementTypeActive()" width="select">
+                            <p-select
+                                ariaLabelledBy="lblSmType"
+                                inputId="smMovementType"
+                                [options]="movementTypeOptions"
+                                [(ngModel)]="movementTypeFilter"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Tümü"
+                                class="w-full"
+                                [showClear]="true"
+                                (ngModelChange)="scheduleApply()"
+                            />
+                        </app-filter-field>
+                        <app-filter-field label="Başlangıç (UTC tarih)" labelFor="smFrom" [active]="isFromActive()" width="date">
+                            <app-date-input inputId="smFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" (ngModelChange)="scheduleApply()" />
+                        </app-filter-field>
+                        <app-filter-field label="Bitiş (UTC tarih)" labelFor="smTo" [active]="isToActive()" width="date">
+                            <app-date-input inputId="smTo" type="date" min="1900-01-01" [(ngModel)]="dateToInput" limit="past" (ngModelChange)="scheduleApply()" />
+                        </app-filter-field>
                     </div>
-            @if (loading()) {
-                <app-loading-state message="Stok hareketleri yükleniyor…" />
-            } @else if (error()) {
-                <app-error-state [detail]="error()!" (retry)="reload()" />
-            } @else {
-
+                </div>
+                @if (loading()) {
+                    <app-loading-state message="Stok hareketleri yükleniyor…" />
+                } @else if (error()) {
+                    <app-error-state [detail]="error()!" (retry)="reload()" />
+                } @else {
                     @if (displayedRows().length === 0) {
                         <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                     } @else {
@@ -169,9 +159,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                         <td class="whitespace-nowrap">{{ row.occurredAtText }}</td>
                                         <td>
                                             @if (row.productId) {
-                                                <a [routerLink]="['/panel/products', row.productId]" class="text-primary font-medium no-underline">{{
-                                                    row.productDisplayName
-                                                }}</a>
+                                                <a [routerLink]="['/panel/products', row.productId]" class="text-primary font-medium no-underline">{{ row.productDisplayName }}</a>
                                             } @else {
                                                 {{ row.productDisplayName }}
                                             }
@@ -191,17 +179,13 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
 
                         <div class="xl:hidden space-y-3">
                             @for (row of displayedRows(); track row.id) {
-                                <div
-                                    class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
-                                >
+                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                                     <div class="text-sm font-medium text-surface-900 dark:text-surface-0 mb-2 whitespace-nowrap">{{ row.occurredAtText }}</div>
                                     <div class="space-y-2 mb-3 text-sm">
                                         <div>
                                             <span class="text-muted-color font-medium">Ürün: </span>
                                             @if (row.productId) {
-                                                <a [routerLink]="['/panel/products', row.productId]" class="text-primary font-medium no-underline break-words">{{
-                                                    row.productDisplayName
-                                                }}</a>
+                                                <a [routerLink]="['/panel/products', row.productId]" class="text-primary font-medium no-underline break-words">{{ row.productDisplayName }}</a>
                                             } @else {
                                                 <span class="break-words">{{ row.productDisplayName }}</span>
                                             }
@@ -232,15 +216,11 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                             />
                         </div>
                     }
-            }
-                </div>
+                }
+            </div>
         </div>
 
-        <app-stock-movement-create-dialog
-            [visible]="createDialogOpen()"
-            (visibleChange)="createDialogOpen.set($event)"
-            (created)="onStockMovementCreated()"
-        />
+        <app-stock-movement-create-dialog [visible]="createDialogOpen()" (visibleChange)="createDialogOpen.set($event)" (created)="onStockMovementCreated()" />
     `
 })
 export class StockMovementsPageComponent implements OnInit {
@@ -300,14 +280,7 @@ export class StockMovementsPageComponent implements OnInit {
         }
 
         this.suppressNextLazy = true;
-        this.loadFromServer(
-            this.currentPage(),
-            this.pageSize(),
-            this.activeSearch(),
-            this.activeMovementType(),
-            this.activeDateFrom(),
-            this.activeDateTo()
-        );
+        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeMovementType(), this.activeDateFrom(), this.activeDateTo());
     }
 
     applyFilters(): void {
@@ -352,15 +325,7 @@ export class StockMovementsPageComponent implements OnInit {
 
     reload(): void {
         this.exportError.set(null);
-        this.loadFromServer(
-            this.currentPage(),
-            this.pageSize(),
-            this.activeSearch(),
-            this.activeMovementType(),
-            this.activeDateFrom(),
-            this.activeDateTo(),
-            true
-        );
+        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeMovementType(), this.activeDateFrom(), this.activeDateTo(), true);
     }
 
     onTableLazyLoad(event: TableLazyLoadEvent): void {
@@ -427,15 +392,7 @@ export class StockMovementsPageComponent implements OnInit {
         return !!this.activeDateTo().trim();
     }
 
-    private loadFromServer(
-        page: number,
-        pageSize: number,
-        search: string,
-        movementType: string,
-        dateFrom: string,
-        dateTo: string,
-        force = false
-    ): void {
+    private loadFromServer(page: number, pageSize: number, search: string, movementType: string, dateFrom: string, dateTo: string, force = false): void {
         const key = `${page}|${pageSize}|${search.trim()}|${movementType}|${dateFrom}|${dateTo}`;
 
         if (!force && key === this.lastLoadKey) {
@@ -491,11 +448,7 @@ export class StockMovementsPageComponent implements OnInit {
 
             this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
             this.activeSearch.set(this.searchInput.trim());
-            this.movementTypeFilter =
-                typeof parsed.movementType === 'string' &&
-                ['', 'Initial', 'In', 'Out', 'Adjustment', 'Reversal'].includes(parsed.movementType)
-                    ? parsed.movementType
-                    : '';
+            this.movementTypeFilter = typeof parsed.movementType === 'string' && ['', 'Initial', 'In', 'Out', 'Adjustment', 'Reversal'].includes(parsed.movementType) ? parsed.movementType : '';
             this.activeMovementType.set(this.movementTypeFilter);
             this.dateFromInput = typeof parsed.dateFrom === 'string' ? parsed.dateFrom : '';
             this.dateToInput = typeof parsed.dateTo === 'string' ? parsed.dateTo : '';
@@ -582,8 +535,6 @@ export class StockMovementsPageComponent implements OnInit {
             dateToUtc: dateTo || undefined
         };
 
-        return fetchAllInventoryCsvExportPages$((page, pageSize) =>
-            this.stockMovementService.list({ page, pageSize, ...q })
-        );
+        return fetchAllInventoryCsvExportPages$((page, pageSize) => this.stockMovementService.list({ page, pageSize, ...q }));
     }
 }

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { providePrimeNG } from 'primeng/config';
@@ -8,19 +8,9 @@ import { PRIMENG_TR } from './primeng-tr';
 @Component({
     standalone: true,
     imports: [ReactiveFormsModule, SelectModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-select
-            inputId="sel"
-            [formControl]="control"
-            [options]="options"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Aşı seçin"
-            [filter]="true"
-            filterBy="label"
-            filterPlaceholder="Ara…"
-            [showClear]="true"
-        />
+        <p-select inputId="sel" [formControl]="control" [options]="options" optionLabel="label" optionValue="value" placeholder="Aşı seçin" [filter]="true" filterBy="label" filterPlaceholder="Ara…" [showClear]="true" />
         <button id="outside" type="button">dışarısı</button>
     `
 })

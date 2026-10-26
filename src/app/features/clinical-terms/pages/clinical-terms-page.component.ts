@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -10,18 +10,9 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
-import {
-    CLINICAL_TERMS_CREATE_CLAIM,
-    CLINICAL_TERMS_DEACTIVATE_CLAIM,
-    CLINICAL_TERMS_UPDATE_CLAIM
-} from '@/app/core/auth/operation-claims.constants';
+import { CLINICAL_TERMS_CREATE_CLAIM, CLINICAL_TERMS_DEACTIVATE_CLAIM, CLINICAL_TERMS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { DEFINITIONS_ROUTE } from '@/app/core/routing/panel-navigation';
-import {
-    CLINICAL_TERM_KIND_LABELS,
-    CLINICAL_TERM_NAME_MAX,
-    type ClinicalTermDto,
-    type ClinicalTermKind
-} from '@/app/features/clinical-terms/models/clinical-term.model';
+import { CLINICAL_TERM_KIND_LABELS, CLINICAL_TERM_NAME_MAX, type ClinicalTermDto, type ClinicalTermKind } from '@/app/features/clinical-terms/models/clinical-term.model';
 import { ClinicalTermError, ClinicalTermsService } from '@/app/features/clinical-terms/services/clinical-terms.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -59,6 +50,7 @@ const PAGE_SIZE = 50;
         SearchInputComponent
     ],
     providers: [ConfirmationService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header
             [categoryLink]="definitionsRoute"
@@ -67,7 +59,7 @@ const PAGE_SIZE = 50;
             description="Muayenede şikâyet ve tanı alanlarında aranan liste. Sistem terimleri ortaktır; kliniğinize özel terim ekleyebilirsiniz."
         >
             @if (canCreate && !ro.mutationBlocked()) {
-                <button actions pButton type="button" label="Yeni terim" icon="pi pi-plus" data-testid="term-new" (click)="openCreate()"></button>
+                <button actions pButton type="button" data-testid="term-new" (click)="openCreate()"><i class="pi pi-plus"></i>Yeni terim</button>
             }
         </app-page-header>
 
@@ -77,15 +69,7 @@ const PAGE_SIZE = 50;
 
         <div class="card">
             <div class="flex flex-col md:flex-row md:items-end gap-3 mb-4">
-                <p-selectbutton
-                    [options]="kindOptions"
-                    [ngModel]="kind()"
-                    (ngModelChange)="onKindChange($event)"
-                    optionLabel="label"
-                    optionValue="value"
-                    [allowEmpty]="false"
-                    ariaLabel="Sözlük türü"
-                />
+                <p-selectbutton [options]="kindOptions" [ngModel]="kind()" (ngModelChange)="onKindChange($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Sözlük türü" />
                 <div class="w-full md:max-w-sm">
                     <app-search-input inputId="termSearch" placeholder="Terim adı…" ariaLabel="Terim ara" [(value)]="searchInput" (searchRequested)="applySearch()" />
                 </div>
@@ -142,7 +126,12 @@ const PAGE_SIZE = 50;
                                                 </button>
                                             }
                                             @if (canDeactivate && row.isActive) {
-                                                <button type="button" class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-red-600 dark:text-red-400 disabled:opacity-50" [disabled]="mutatingId() !== null" (click)="confirmDeactivate(row)">
+                                                <button
+                                                    type="button"
+                                                    class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-red-600 dark:text-red-400 disabled:opacity-50"
+                                                    [disabled]="mutatingId() !== null"
+                                                    (click)="confirmDeactivate(row)"
+                                                >
                                                     Pasifleştir
                                                 </button>
                                             }
@@ -171,7 +160,7 @@ const PAGE_SIZE = 50;
         >
             <form [formGroup]="dialogForm" (ngSubmit)="submitDialog()" class="flex flex-col gap-4">
                 @if (dialogError()) {
-                    <p-message severity="error" styleClass="w-full" role="alert">{{ dialogError() }}</p-message>
+                    <p-message severity="error" class="w-full" role="alert">{{ dialogError() }}</p-message>
                 }
                 <div class="flex flex-col gap-1">
                     <label for="termName" class="block text-sm font-medium text-muted-color">Ad *</label>
@@ -355,19 +344,17 @@ export class ClinicalTermsPageComponent implements OnInit {
     private load(page: number): void {
         this.loading.set(true);
         this.error.set(null);
-        this.terms
-            .list({ kind: this.kind(), search: this.activeSearch(), includeInactive: true, page, pageSize: PAGE_SIZE })
-            .subscribe({
-                next: (r) => {
-                    this.rows.set(r.items);
-                    this.totalItems.set(r.totalItems);
-                    this.first.set((r.page - 1) * PAGE_SIZE);
-                    this.loading.set(false);
-                },
-                error: (e: unknown) => {
-                    this.error.set(e instanceof Error ? e.message : 'Sözlük yüklenemedi.');
-                    this.loading.set(false);
-                }
-            });
+        this.terms.list({ kind: this.kind(), search: this.activeSearch(), includeInactive: true, page, pageSize: PAGE_SIZE }).subscribe({
+            next: (r) => {
+                this.rows.set(r.items);
+                this.totalItems.set(r.totalItems);
+                this.first.set((r.page - 1) * PAGE_SIZE);
+                this.loading.set(false);
+            },
+            error: (e: unknown) => {
+                this.error.set(e instanceof Error ? e.message : 'Sözlük yüklenemedi.');
+                this.loading.set(false);
+            }
+        });
     }
 }

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -46,6 +46,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         MoneyPipe,
         TrDateTimePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="card">
             <app-list-header class="mb-4" title="Ücretler" [count]="totalItems()">
@@ -53,9 +54,9 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                     <app-client-search inputId="chargeClientFilter" placeholder="Müşteri ara…" [ngModel]="clientId" (ngModelChange)="onClientFilterChange($event)" />
                 </app-filter-field>
                 @if (canCreate && !ro.mutationBlocked()) {
-                    <a actions routerLink="/panel/charges/new" [queryParams]="clientId ? { clientId } : null" pButton type="button" label="Yeni Ücret" icon="pi pi-plus" class="p-button-primary"></a>
+                    <a actions routerLink="/panel/charges/new" [queryParams]="clientId ? { clientId } : null" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Ücret</a>
                 } @else if (canCreate) {
-                    <button actions pButton type="button" label="Yeni Ücret (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                    <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Ücret (salt okunur)</button>
                 }
             </app-list-header>
 
@@ -68,7 +69,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
             } @else {
                 <div class="overflow-x-auto">
                     <p-table
-                        styleClass="p-datatable-sm"
+                        size="small"
                         [value]="rows()"
                         [lazy]="true"
                         [paginator]="true"
@@ -133,7 +134,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                                 <span class="text-muted-color text-sm">Salt okunur</span>
                                             } @else {
                                                 @if (canCollectPayment && row.outstandingAmount !== 0) {
-                                                    <a [routerLink]="['/panel/payments/new']" [queryParams]="paymentQueryParams(row)" pButton label="Ödeme al" icon="pi pi-wallet" size="small" class="p-button-sm mr-1"></a>
+                                                    <a [routerLink]="['/panel/payments/new']" [queryParams]="paymentQueryParams(row)" pButton size="small" class="p-button-sm mr-1"><i class="pi pi-wallet"></i>Ödeme al</a>
                                                 }
                                                 @if (canCorrect) {
                                                     <app-row-action-button action="edit" label="Düzelt" (pressed)="openCorrection(row)" />

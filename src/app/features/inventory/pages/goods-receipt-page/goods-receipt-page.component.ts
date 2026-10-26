@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -34,6 +34,7 @@ const MONEY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximum
     selector: 'app-goods-receipt-page',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, AutoCompleteModule, DateInputComponent, AppListHeaderComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="card">
             <app-list-header class="mb-4" title="Mal kabul" />
@@ -67,7 +68,7 @@ const MONEY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximum
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
                             <label for="grClinic" class="block text-sm font-medium text-muted-color">Klinik *</label>
-                            <p-select inputId="grClinic" formControlName="clinicId" [options]="clinicOptions()" optionLabel="label" optionValue="value" placeholder="Klinik seçin" styleClass="w-full" [loading]="clinicsLoading()" />
+                            <p-select inputId="grClinic" formControlName="clinicId" [options]="clinicOptions()" optionLabel="label" optionValue="value" placeholder="Klinik seçin" class="w-full" [loading]="clinicsLoading()" />
                             @if (form.controls.clinicId.invalid && form.controls.clinicId.touched) {
                                 <small class="text-red-500">Klinik seçimi zorunludur.</small>
                             }
@@ -168,10 +169,30 @@ const MONEY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximum
                                                 }
                                             </td>
                                             <td class="p-2">
-                                                <input pInputText class="w-full" type="number" step="any" min="0" formControlName="quantity" [attr.aria-label]="'Miktar, satır ' + (i + 1)" [class.p-invalid]="line.controls.quantity.invalid && line.controls.quantity.touched" />
+                                                <input
+                                                    pInputText
+                                                    class="w-full"
+                                                    type="number"
+                                                    step="any"
+                                                    min="0"
+                                                    formControlName="quantity"
+                                                    [attr.aria-label]="'Miktar, satır ' + (i + 1)"
+                                                    [class.p-invalid]="line.controls.quantity.invalid && line.controls.quantity.touched"
+                                                />
                                             </td>
                                             <td class="p-2">
-                                                <input pInputText class="w-full" type="text" formControlName="lotNumber" autocomplete="off" [attr.maxlength]="lotMax" [attr.aria-required]="requiresLot(line)" [attr.aria-label]="'Seri / lot no, satır ' + (i + 1)" [placeholder]="requiresLot(line) ? 'Zorunlu' : ''" [class.p-invalid]="line.controls.lotNumber.touched && line.hasError('lotRequired')" />
+                                                <input
+                                                    pInputText
+                                                    class="w-full"
+                                                    type="text"
+                                                    formControlName="lotNumber"
+                                                    autocomplete="off"
+                                                    [attr.maxlength]="lotMax"
+                                                    [attr.aria-required]="requiresLot(line)"
+                                                    [attr.aria-label]="'Seri / lot no, satır ' + (i + 1)"
+                                                    [placeholder]="requiresLot(line) ? 'Zorunlu' : ''"
+                                                    [class.p-invalid]="line.controls.lotNumber.touched && line.hasError('lotRequired')"
+                                                />
                                             </td>
                                             <td class="p-2">
                                                 <app-date-input [inputId]="'gr-expiry-' + i" type="date" formControlName="expiryDate" limit="planned" />
@@ -212,7 +233,9 @@ const MONEY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximum
                                 <p-button type="button" label="Satır ekle" icon="pi pi-plus" severity="secondary" [disabled]="lines.length >= maxLines" (onClick)="addLine()" />
                                 <span class="text-xs text-muted-color">{{ lines.length }} / {{ maxLines }} satır</span>
                             </div>
-                            <div class="text-sm">Toplam maliyet: <span class="font-semibold" data-testid="gr-total">{{ totalText() }}</span></div>
+                            <div class="text-sm">
+                                Toplam maliyet: <span class="font-semibold" data-testid="gr-total">{{ totalText() }}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -275,16 +298,10 @@ export class GoodsReceiptPageComponent implements OnInit {
     constructor() {
         this.productSearch$
             .pipe(
-                switchMap((term) =>
-                    this.productService.getProducts({ search: term, page: 1, pageSize: 20, isActive: true, stockTrackedOnly: true }).pipe(catchError(() => of(null)))
-                ),
+                switchMap((term) => this.productService.getProducts({ search: term, page: 1, pageSize: 20, isActive: true, stockTrackedOnly: true }).pipe(catchError(() => of(null)))),
                 takeUntilDestroyed(this.destroyRef)
             )
-            .subscribe((r) =>
-                this.suggestions.set(
-                    (r?.items ?? []).map((p) => ({ id: p.id, label: `${p.name} (${p.sku})`, barcode: p.barcode, requiresLotAndExpiry: p.requiresLotAndExpiry }))
-                )
-            );
+            .subscribe((r) => this.suggestions.set((r?.items ?? []).map((p) => ({ id: p.id, label: `${p.name} (${p.sku})`, barcode: p.barcode, requiresLotAndExpiry: p.requiresLotAndExpiry }))));
     }
 
     ngOnInit(): void {

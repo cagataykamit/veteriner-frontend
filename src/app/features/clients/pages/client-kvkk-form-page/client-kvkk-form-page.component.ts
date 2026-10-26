@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { forkJoin } from 'rxjs';
@@ -22,6 +22,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     selector: 'app-client-kvkk-form-page',
     standalone: true,
     imports: [RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, KvkkFormDocumentComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (loading()) {
             <app-loading-state [message]="info.documentTitle + ' hazırlanıyor…'" />
@@ -31,20 +32,11 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
             </div>
         } @else if (template(); as t) {
             <div class="kvkk-screen-only">
-                <app-page-header
-                    [categoryLink]="['/panel/clients', clientId]"
-                    categoryLinkLabel="Müşteri kartına dön"
-                    [title]="info.documentTitle"
-                    [description]="clientName() + ' · ' + date"
-                >
+                <app-page-header [categoryLink]="['/panel/clients', clientId]" categoryLinkLabel="Müşteri kartına dön" [title]="info.documentTitle" [description]="clientName() + ' · ' + date">
                     <p-button actions type="button" label="Yazdır" icon="pi pi-print" (onClick)="print()" data-testid="kvkk-print" />
                 </app-page-header>
                 @if (t.isDefault) {
-                    <p
-                        class="m-0 mb-4 flex flex-wrap items-center gap-2 rounded-border border border-amber-300 dark:border-amber-700 px-3 py-2 text-sm font-medium text-amber-800 dark:text-amber-300"
-                        role="alert"
-                        data-testid="kvkk-default-warning"
-                    >
+                    <p class="m-0 mb-4 flex flex-wrap items-center gap-2 rounded-border border border-amber-300 dark:border-amber-700 px-3 py-2 text-sm font-medium text-amber-800 dark:text-amber-300" role="alert" data-testid="kvkk-default-warning">
                         <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>{{ defaultWarning }}
                         @if (canEditTemplate) {
                             <a routerLink="/panel/settings/kvkk-form" [queryParams]="editQueryParams" class="text-primary no-underline">Ayarlar'da metni düzenle</a>

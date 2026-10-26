@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { DOCUMENT } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -12,11 +12,7 @@ import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
 import { RouterLink } from '@angular/router';
 import { AuthService, type ClinicResolutionDecision } from '@/app/core/auth/auth.service';
-import {
-    AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE,
-    authFailureMessage,
-    loginFailureMessage
-} from '@/app/core/auth/auth-error.utils';
+import { AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE, authFailureMessage, loginFailureMessage } from '@/app/core/auth/auth-error.utils';
 import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AUTH_LOGIN_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
@@ -41,16 +37,8 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
 @Component({
     selector: 'app-login',
     standalone: true,
-    imports: [
-        ButtonModule,
-        CheckboxModule,
-        InputTextModule,
-        PasswordModule,
-        FormsModule,
-        RippleModule,
-        RouterLink,
-        PublicLegalLinksComponent
-    ],
+    imports: [ButtonModule, CheckboxModule, InputTextModule, PasswordModule, FormsModule, RippleModule, RouterLink, PublicLegalLinksComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="public-page public-auth-page">
             <div class="public-auth-shell">
@@ -58,20 +46,8 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
                     <div class="public-auth-card-inner">
                         <div class="public-auth-header">
                             <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex">
-                                <img
-                                    [src]="brand.logoFull"
-                                    alt="Vetinity"
-                                    class="public-auth-logo block dark:hidden"
-                                    width="120"
-                                    height="30"
-                                />
-                                <img
-                                    [src]="brand.logoFullDark"
-                                    alt="Vetinity"
-                                    class="public-auth-logo hidden dark:block"
-                                    width="120"
-                                    height="30"
-                                />
+                                <img [src]="brand.logoFull" alt="Vetinity" class="public-auth-logo block dark:hidden" width="120" height="30" />
+                                <img [src]="brand.logoFullDark" alt="Vetinity" class="public-auth-logo hidden dark:block" width="120" height="30" />
                             </a>
                             <div class="public-auth-title">Vetinity paneline giriş</div>
                             <span class="public-auth-subtitle">Hesabınızla giriş yapın</span>
@@ -100,18 +76,7 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
                         <form (ngSubmit)="onSubmit(loginForm)" autocomplete="on" #loginForm="ngForm" class="public-auth-form">
                             <div class="public-auth-field-primary">
                                 <label for="email1" class="public-auth-label">E-posta</label>
-                                <input
-                                    pInputText
-                                    id="email1"
-                                    type="email"
-                                    name="email"
-                                    #emailCtrl="ngModel"
-                                    placeholder="E-posta adresiniz"
-                                    class="public-auth-control"
-                                    [(ngModel)]="email"
-                                    required
-                                    email
-                                />
+                                <input pInputText id="email1" type="email" name="email" #emailCtrl="ngModel" placeholder="E-posta adresiniz" class="public-auth-control" [(ngModel)]="email" required email />
                                 @if (apiFieldErrors().email) {
                                     <small class="text-red-500 block mt-2">{{ apiFieldErrors().email }}</small>
                                 } @else if (emailCtrl.invalid && (emailCtrl.touched || formSubmitAttempted())) {
@@ -125,17 +90,7 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
 
                             <div class="public-auth-field-secondary">
                                 <label for="password1" class="public-auth-label-password">Şifre</label>
-                                <p-password
-                                    inputId="password1"
-                                    name="password"
-                                    #passwordCtrl="ngModel"
-                                    [(ngModel)]="password"
-                                    placeholder="Şifreniz"
-                                    [toggleMask]="true"
-                                    [fluid]="true"
-                                    [feedback]="false"
-                                    [required]="true"
-                                ></p-password>
+                                <p-password inputId="password1" name="password" #passwordCtrl="ngModel" [(ngModel)]="password" placeholder="Şifreniz" [toggleMask]="true" [fluid]="true" [feedback]="false" [required]="true"></p-password>
                                 @if (apiFieldErrors().password) {
                                     <small class="text-red-500 block mt-2">{{ apiFieldErrors().password }}</small>
                                 } @else if (passwordCtrl.invalid && (passwordCtrl.touched || formSubmitAttempted())) {
@@ -152,13 +107,7 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
                                 </div>
                                 <a routerLink="/auth/forgot-password" class="font-medium no-underline ml-2 text-right cursor-pointer public-brand-link">Şifremi unuttum</a>
                             </div>
-                            <p-button
-                                type="submit"
-                                label="Giriş yap"
-                                styleClass="w-full public-auth-submit"
-                                [loading]="signInLoading()"
-                                [disabled]="signInLoading()"
-                            ></p-button>
+                            <p-button type="submit" label="Giriş yap" styleClass="w-full public-auth-submit" [loading]="signInLoading()" [disabled]="signInLoading()"></p-button>
                             @if (loginError()) {
                                 <div class="public-auth-alert" role="alert" aria-live="assertive">
                                     <div class="public-auth-alert-box">

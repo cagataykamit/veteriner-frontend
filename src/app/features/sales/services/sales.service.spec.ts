@@ -1,4 +1,4 @@
-import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
@@ -29,12 +29,7 @@ describe('SalesService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [
-                provideHttpClient(),
-                provideHttpClientTesting(),
-                { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1' } }
-            ]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }, { provide: AuthService, useValue: { getClinicId: () => 'c1' } }]
         });
         service = TestBed.inject(SalesService);
         http = TestBed.inject(HttpTestingController);
@@ -87,10 +82,7 @@ describe('SalesService', () => {
                 done();
             }
         });
-        http.expectOne('http://api.test/api/v1/sales').flush(
-            { detail: 'Kullanılabilir 3 adet, süresi geçmiş 2 adet.', extensions: { code: 'Sales.InsufficientStock' } },
-            { status: 400, statusText: 'Bad Request' }
-        );
+        http.expectOne('http://api.test/api/v1/sales').flush({ detail: 'Kullanılabilir 3 adet, süresi geçmiş 2 adet.', extensions: { code: 'Sales.InsufficientStock' } }, { status: 400, statusText: 'Bad Request' });
     });
 
     it('iptal: gerekçe kırpılır, stok sonucu gönderilir, güncel satış döner', (done) => {
@@ -112,10 +104,7 @@ describe('SalesService', () => {
                 done();
             }
         });
-        http.expectOne('http://api.test/api/v1/sales/s1/void').flush(
-            { extensions: { code: 'Charges.VoidBlockedByAllocation' } },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/sales/s1/void').flush({ extensions: { code: 'Charges.VoidBlockedByAllocation' } }, { status: 409, statusText: 'Conflict' });
     });
 
     it('iptal: zaten iptalse Sales.AlreadyVoided Türkçe mesaj verir', (done) => {
@@ -126,10 +115,7 @@ describe('SalesService', () => {
                 done();
             }
         });
-        http.expectOne('http://api.test/api/v1/sales/s1/void').flush(
-            { extensions: { code: 'Sales.AlreadyVoided' } },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/sales/s1/void').flush({ extensions: { code: 'Sales.AlreadyVoided' } }, { status: 409, statusText: 'Conflict' });
     });
 });
 
@@ -139,7 +125,7 @@ describe('SaleProductSearchService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
         });
         service = TestBed.inject(SaleProductSearchService);
         http = TestBed.inject(HttpTestingController);

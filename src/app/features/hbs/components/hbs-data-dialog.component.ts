@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -27,6 +27,7 @@ const KIND_TITLE: Readonly<Record<HbsRecordKind, string>> = {
     selector: 'app-hbs-data-dialog',
     standalone: true,
     imports: [ReactiveFormsModule, DialogModule, ButtonModule, TooltipModule, HbsStatusBadgeComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-dialog [header]="title()" [modal]="true" [dismissableMask]="!saving()" [closable]="!saving()" [style]="{ width: 'min(720px, 95vw)' }" [(visible)]="visible">
             @if (loading()) {
@@ -35,7 +36,7 @@ const KIND_TITLE: Readonly<Record<HbsRecordKind, string>> = {
                 <p class="m-0 text-red-500" role="alert">{{ loadError() }}</p>
             } @else if (data(); as d) {
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                    <app-hbs-status-badge [status]="entry()?.status" />
+                    <app-hbs-status-badge [status]="$safeNavigationMigration(entry()?.status)" />
                     <p-button type="button" label="Tümünü kopyala" icon="pi pi-copy" size="small" severity="secondary" data-testid="hbs-copy-all" (onClick)="copyAll()" />
                 </div>
                 <p class="mt-0 mb-3 text-sm text-muted-color">HBS ekranında ilgili alana yapıştırmak için satırdaki kopyala simgesini kullanın. Boş alanlar Vetinity'de kayıtlı değildir.</p>

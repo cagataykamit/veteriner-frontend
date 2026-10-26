@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
@@ -11,12 +11,7 @@ describe('PaymentsService.voidPayment', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [
-                provideHttpClient(),
-                provideHttpClientTesting(),
-                { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1' } }
-            ]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }, { provide: AuthService, useValue: { getClinicId: () => 'c1' } }]
         });
         service = TestBed.inject(PaymentsService);
         http = TestBed.inject(HttpTestingController);
@@ -43,9 +38,6 @@ describe('PaymentsService.voidPayment', () => {
                 done();
             }
         });
-        http.expectOne('http://api.test/api/v1/payments/p1/void').flush(
-            { title: 'Conflict', extensions: { code: 'Payments.AlreadyVoided' } },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/payments/p1/void').flush({ title: 'Conflict', extensions: { code: 'Payments.AlreadyVoided' } }, { status: 409, statusText: 'Conflict' });
     });
 });

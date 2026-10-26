@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { precheckImportFile } from '@/app/features/imports/utils/import-labels.utils';
 
@@ -7,6 +7,7 @@ import { precheckImportFile } from '@/app/features/imports/utils/import-labels.u
     selector: 'app-import-drop-zone',
     standalone: true,
     imports: [ButtonModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div
             class="rounded-border border-2 border-dashed p-4 text-center transition-colors"

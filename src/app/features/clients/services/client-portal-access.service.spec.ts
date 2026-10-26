@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
@@ -13,12 +13,7 @@ describe('ClientsService — portal erişimi (PORTAL_API_CONTRACT §4)', () => {
     beforeEach(() => {
         clinicId = 'k1';
         TestBed.configureTestingModule({
-            providers: [
-                provideHttpClient(),
-                provideHttpClientTesting(),
-                { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: AuthService, useValue: { getClinicId: () => clinicId } }
-            ]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }, { provide: AuthService, useValue: { getClinicId: () => clinicId } }]
         });
         service = TestBed.inject(ClientsService);
         http = TestBed.inject(HttpTestingController);
@@ -57,10 +52,7 @@ describe('ClientsService — portal erişimi (PORTAL_API_CONTRACT §4)', () => {
         let message = '';
 
         service.sendPortalInvite('c1').subscribe({ error: (e: Error) => (message = e.message) });
-        http.expectOne('http://api.test/api/v1/clients/c1/portal-invites').flush(
-            { title: 'Conflict', status: 409, extensions: { code: 'OwnerPortal.ClientOptedOut' } },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/clients/c1/portal-invites').flush({ title: 'Conflict', status: 409, extensions: { code: 'OwnerPortal.ClientOptedOut' } }, { status: 409, statusText: 'Conflict' });
 
         expect(message).toContain('Portal daveti bu müşteriye gönderilemez');
         expect(message).toContain('KVKK açık rızayı reddetmiş ya da hatırlatma istemiyor');
@@ -90,10 +82,7 @@ describe('ClientsService — portal erişimi (PORTAL_API_CONTRACT §4)', () => {
         let message = '';
 
         service.closePortalLink('c1', 'l1').subscribe({ error: (e: Error) => (message = e.message) });
-        http.expectOne('http://api.test/api/v1/clients/c1/portal-links/l1/close').flush(
-            { status: 409, extensions: { code: 'OwnerPortal.LinkAlreadyClosed' } },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/clients/c1/portal-links/l1/close').flush({ status: 409, extensions: { code: 'OwnerPortal.LinkAlreadyClosed' } }, { status: 409, statusText: 'Conflict' });
 
         expect(message).toBe('Bu portal erişimi zaten kapatılmış. Sayfayı yenileyin.');
     });

@@ -1,7 +1,7 @@
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -52,6 +52,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
         AppRowActionButtonComponent,
         TrDatePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="card">
             <div class="flex flex-col gap-4">
@@ -61,9 +62,9 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                     </app-filter-field>
                     <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                     @if (canCreateClient && !ro.mutationBlocked()) {
-                        <a actions routerLink="/panel/clients/new" pButton type="button" label="Yeni Müşteri" icon="pi pi-plus" class="p-button-primary"></a>
+                        <a actions routerLink="/panel/clients/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Müşteri</a>
                     } @else if (canCreateClient && ro.mutationBlocked()) {
-                        <button actions pButton type="button" label="Yeni Müşteri (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                        <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Müşteri (salt okunur)</button>
                     }
                 </app-list-header>
                 @if (error()) {

@@ -1,17 +1,10 @@
-import { Component, computed, input, model, output } from '@angular/core';
+import { Component, computed, input, model, output, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import type { ImportBatchDto, ImportDuplicateClientMode, ImportTableInfoDto } from '@/app/features/imports/models/import-api.model';
-import {
-    IMPORT_FIELDS,
-    IMPORT_TABLE_LABELS,
-    isRequiredField,
-    mappingConfidence,
-    missingRequired,
-    type ImportColumnMaps
-} from '@/app/features/imports/utils/import-schema.utils';
+import { IMPORT_FIELDS, IMPORT_TABLE_LABELS, isRequiredField, mappingConfidence, missingRequired, type ImportColumnMaps } from '@/app/features/imports/utils/import-schema.utils';
 import { AppStatusTagComponent, type StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
 interface SourceOption {
@@ -25,10 +18,9 @@ interface SourceOption {
     selector: 'app-import-mapping-step',
     standalone: true,
     imports: [FormsModule, ButtonModule, MessageModule, SelectModule, AppStatusTagComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p class="text-muted-color mt-0">
-            Dosyanızdaki sütunları sistem alanlarıyla eşleyin. Önerileri kontrol edin; * işaretli alanlar zorunludur. Yeni tür veya aşı tanımı oluşturulmaz.
-        </p>
+        <p class="text-muted-color mt-0">Dosyanızdaki sütunları sistem alanlarıyla eşleyin. Önerileri kontrol edin; * işaretli alanlar zorunludur. Yeni tür veya aşı tanımı oluşturulmaz.</p>
 
         @for (info of tables(); track info.table) {
             <section class="rounded-border border border-surface-200 dark:border-surface-700 p-4 mb-4">
@@ -41,7 +33,10 @@ interface SourceOption {
                     @for (f of fields[info.table]; track f.key) {
                         <div class="grid grid-cols-12 gap-2 items-center">
                             <label class="col-span-12 md:col-span-4 text-sm font-medium" [for]="'map-' + info.table + '-' + f.key">
-                                {{ f.label }}@if (required(info.table, f.key)) {<span class="text-red-500"> *</span>}
+                                {{ f.label }}
+                                @if (required(info.table, f.key)) {
+                                    <span class="text-red-500"> *</span>
+                                }
                                 @if (f.hint) {
                                     <span class="block font-normal text-xs text-muted-color">{{ f.hint }}</span>
                                 }
@@ -58,7 +53,7 @@ interface SourceOption {
                                     [disabled]="readOnly()"
                                     [ngModel]="maps()[info.table]?.[f.key] ?? null"
                                     (ngModelChange)="setField(info.table, f.key, $event)"
-                                    styleClass="w-full"
+                                    class="w-full"
                                 />
                             </div>
                             <div class="col-span-3 md:col-span-2">
@@ -71,12 +66,10 @@ interface SourceOption {
                 </div>
 
                 @if (unusedColumns(info).length) {
-                    <p class="text-sm text-muted-color mb-0 mt-4">
-                        Eşlenmeyen sütunlar (aktarılmaz): {{ unusedColumns(info).join(', ') }}
-                    </p>
+                    <p class="text-sm text-muted-color mb-0 mt-4">Eşlenmeyen sütunlar (aktarılmaz): {{ unusedColumns(info).join(', ') }}</p>
                 }
                 @if (missing()[info.table]?.length) {
-                    <p-message severity="warn" styleClass="w-full mt-3">Eksik zorunlu alan: {{ missing()[info.table]!.join('; ') }}</p-message>
+                    <p-message severity="warn" class="w-full mt-3">Eksik zorunlu alan: {{ missing()[info.table]!.join('; ') }}</p-message>
                 }
             </section>
         }
@@ -91,7 +84,7 @@ interface SourceOption {
                 [disabled]="readOnly()"
                 [ngModel]="duplicateMode()"
                 (ngModelChange)="duplicateMode.set($event)"
-                styleClass="w-full md:w-96"
+                class="w-full md:w-96"
                 ariaLabel="Aynı müşteri davranışı"
             />
             <small class="block text-muted-color mt-2">Mevcut müşteri bilgileri hiçbir durumda güncellenmez; yalnızca hastalar bağlanır.</small>
@@ -145,7 +138,11 @@ export class ImportMappingStepComponent {
             const map = this.maps()[info.table] ?? {};
 
             for (const f of IMPORT_FIELDS[info.table]) {
-                const usedElsewhere = new Set(Object.entries(map).filter(([k, v]) => k !== f.key && v).map(([, v]) => v as string));
+                const usedElsewhere = new Set(
+                    Object.entries(map)
+                        .filter(([k, v]) => k !== f.key && v)
+                        .map(([, v]) => v as string)
+                );
 
                 result[`${info.table}|${f.key}`] = info.columns.map((c) => ({ label: c.source, value: c.source, disabled: usedElsewhere.has(c.source) }));
             }

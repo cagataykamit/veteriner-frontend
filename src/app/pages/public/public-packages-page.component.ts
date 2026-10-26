@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { publicFaqsOf } from '@/app/features/public/utils/public-faq-content.utils';
 import { PRICING_NOT_AVAILABLE, PRICING_PLAN_DEFS, pricingTermsText } from '@/app/features/public/utils/pricing-plan.utils';
@@ -28,6 +28,7 @@ const PRICING_FAQ_JSON_LD_ID = 'packages-faq';
     selector: 'app-public-packages-page',
     standalone: true,
     imports: [PublicPageHeaderComponent, PublicPlanCardsComponent, PublicPlanComparisonComponent, PublicFaqListComponent, PublicCtaComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-public-page-header
             eyebrow="Paketler"

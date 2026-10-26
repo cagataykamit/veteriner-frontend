@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
@@ -8,25 +8,14 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
     selector: 'app-notfound',
     standalone: true,
     imports: [RouterModule, AppFloatingConfigurator, ButtonModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: ` <app-floating-configurator />
         <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen overflow-hidden">
             <div class="flex flex-col items-center justify-center">
                 <div class="public-auth-card-frame">
                     <div class="public-auth-card-inner w-full bg-surface-0 dark:bg-surface-900 py-20 px-8 sm:px-20 flex flex-col items-center">
-                        <img
-                            [src]="brand.icon"
-                            alt="Vetinity"
-                            class="mb-4 h-[52px] w-[52px] md:h-[58px] md:w-[58px] shrink-0 object-contain dark:hidden"
-                            width="58"
-                            height="58"
-                        />
-                        <img
-                            [src]="brand.iconDark"
-                            alt="Vetinity"
-                            class="mb-4 hidden h-[52px] w-[52px] md:h-[58px] md:w-[58px] shrink-0 object-contain dark:block"
-                            width="58"
-                            height="58"
-                        />
+                        <img [src]="brand.icon" alt="Vetinity" class="mb-4 h-[52px] w-[52px] md:h-[58px] md:w-[58px] shrink-0 object-contain dark:hidden" width="58" height="58" />
+                        <img [src]="brand.iconDark" alt="Vetinity" class="mb-4 hidden h-[52px] w-[52px] md:h-[58px] md:w-[58px] shrink-0 object-contain dark:block" width="58" height="58" />
                         <span class="public-notfound-code font-bold text-3xl">404</span>
                         <h1 class="text-surface-900 dark:text-surface-0 font-bold text-3xl lg:text-5xl mb-2">Sayfa bulunamadı</h1>
                         <div class="text-surface-600 dark:text-surface-200 mb-8">Aradığınız sayfa mevcut değil veya taşınmış olabilir.</div>

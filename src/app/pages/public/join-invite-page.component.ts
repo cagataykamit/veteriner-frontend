@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -37,6 +37,7 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
         PublicLegalLinksComponent,
         LegalConsentCheckboxComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-floating-configurator />
         <div class="public-page bg-surface-50 dark:bg-surface-950 min-h-screen min-w-screen py-10 px-4">
@@ -134,7 +135,7 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
                                 [fluid]="true"
                                 [toggleMask]="true"
                                 [feedback]="false"
-                                styleClass="w-full mb-3"
+                                class="w-full mb-3"
                                 placeholder="Şifre"
                             />
                             @if (passwordFieldError()) {

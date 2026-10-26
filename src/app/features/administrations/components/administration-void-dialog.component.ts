@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import type { AdministrationStockOutcome, AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
@@ -13,6 +13,7 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
     selector: 'app-administration-void-dialog',
     standalone: true,
     imports: [FormsModule, RadioButtonModule, ReasonConfirmDialogComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-reason-confirm-dialog
             [(visible)]="visible"

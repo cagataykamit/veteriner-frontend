@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -9,10 +9,7 @@ import { SelectModule } from 'primeng/select';
 import type { BreedUpsertRequest } from '@/app/features/breeds/models/breed-upsert.model';
 import type { BreedDetailVm } from '@/app/features/breeds/models/breed-vm.model';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
-import {
-    type BreedUpsertFieldErrors,
-    parseBreedUpsertHttpError
-} from '@/app/features/breeds/utils/breed-upsert-validation-parse.utils';
+import { type BreedUpsertFieldErrors, parseBreedUpsertHttpError } from '@/app/features/breeds/utils/breed-upsert-validation-parse.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { BREEDS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { BREEDS_CREATE_CLAIM, BREEDS_UPDATE_CLAIM, SPECIES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -28,17 +25,8 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 @Component({
     selector: 'app-breed-form-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        ButtonModule,
-        InputTextModule,
-        SelectModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent,
-        QuickSpeciesDialogComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, QuickSpeciesDialogComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (editing() && loading()) {
             <app-loading-state message="Irk bilgileri yükleniyor…" />
@@ -47,112 +35,73 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                 <app-error-state [detail]="loadError()!" [showRetry]="!!currentId()" (retry)="reloadBreedRecord()" />
             </div>
         } @else {
-            <app-page-header
-                [categoryLink]="breedsRoute"
-                categoryLinkLabel="Irk listesine dön"
-                [title]="editing() ? 'Irk Düzenle' : 'Yeni Irk'"
-                [description]="editing() ? 'Irk kaydını güncelleyin.' : 'Yeni ırk kaydı oluşturun.'"
-            />
+            <app-page-header [categoryLink]="breedsRoute" categoryLinkLabel="Irk listesine dön" [title]="editing() ? 'Irk Düzenle' : 'Yeni Irk'" [description]="editing() ? 'Irk kaydını güncelleyin.' : 'Yeni ırk kaydı oluşturun.'" />
 
             <div class="card">
-            @if (ro.mutationBlocked()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                    İşletme salt okunur moddadır; ırk kaydı güncellenemez veya oluşturulamaz.
-                </p>
-            }
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
-                <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="speciesId" class="block text-sm font-medium text-muted-color mb-2">Tür *</label>
+                @if (ro.mutationBlocked()) {
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; ırk kaydı güncellenemez veya oluşturulamaz.</p>
+                }
+                <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                    <div class="grid grid-cols-12 gap-4">
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="speciesId" class="block text-sm font-medium text-muted-color mb-2">Tür *</label>
+                            @if (editing()) {
+                                <p class="text-xs text-muted-color mt-0 mb-2">Tür bu kayıt için sabittir; güncelleme API’si tür değişikliğini desteklemez.</p>
+                            }
+                            <p-select inputId="speciesId" formControlName="speciesId" [options]="speciesOptions()" optionLabel="label" optionValue="value" placeholder="Tür seçin" [loading]="loadingSpecies()" class="w-full" />
+                            @if (apiFieldErrors().speciesId) {
+                                <small class="text-red-500">{{ apiFieldErrors().speciesId }}</small>
+                            } @else if (form.controls.speciesId.invalid && form.controls.speciesId.touched) {
+                                <small class="text-red-500">Tür seçimi zorunludur.</small>
+                            }
+                            @if (canShowQuickSpeciesButton()) {
+                                <div class="mt-2">
+                                    <p-button type="button" label="Yeni tür ekle" icon="pi pi-plus" [text]="true" styleClass="p-0" (onClick)="quickSpeciesOpen.set(true)" />
+                                </div>
+                            }
+                        </div>
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="name" class="block text-sm font-medium text-muted-color mb-2">Ad *</label>
+                            <input id="name" pInputText class="w-full" formControlName="name" />
+                            @if (apiFieldErrors().name) {
+                                <small class="text-red-500">{{ apiFieldErrors().name }}</small>
+                            } @else if (form.controls.name.invalid && form.controls.name.touched) {
+                                @if (form.controls.name.hasError('required')) {
+                                    <small class="text-red-500">Ad zorunludur.</small>
+                                } @else if (form.controls.name.hasError('maxlength')) {
+                                    <small class="text-red-500">Ad en fazla 128 karakter olabilir.</small>
+                                }
+                            }
+                        </div>
                         @if (editing()) {
-                            <p class="text-xs text-muted-color mt-0 mb-2">
-                                Tür bu kayıt için sabittir; güncelleme API’si tür değişikliğini desteklemez.
-                            </p>
-                        }
-                        <p-select
-                            inputId="speciesId"
-                            formControlName="speciesId"
-                            [options]="speciesOptions()"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Tür seçin"
-                            [loading]="loadingSpecies()"
-                            styleClass="w-full"
-                        />
-                        @if (apiFieldErrors().speciesId) {
-                            <small class="text-red-500">{{ apiFieldErrors().speciesId }}</small>
-                        } @else if (form.controls.speciesId.invalid && form.controls.speciesId.touched) {
-                            <small class="text-red-500">Tür seçimi zorunludur.</small>
-                        }
-                        @if (canShowQuickSpeciesButton()) {
-                            <div class="mt-2">
-                                <p-button
-                                    type="button"
-                                    label="Yeni tür ekle"
-                                    icon="pi pi-plus"
-                                    [text]="true"
-                                    styleClass="p-0"
-                                    (onClick)="quickSpeciesOpen.set(true)"
-                                />
+                            <div class="col-span-12 md:col-span-6">
+                                <label for="isActive" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
+                                <p-select inputId="isActive" formControlName="isActive" [options]="activeOptions" optionLabel="label" optionValue="value" class="w-full" />
+                                @if (apiFieldErrors().isActive) {
+                                    <small class="text-red-500">{{ apiFieldErrors().isActive }}</small>
+                                }
                             </div>
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="name" class="block text-sm font-medium text-muted-color mb-2">Ad *</label>
-                        <input id="name" pInputText class="w-full" formControlName="name" />
-                        @if (apiFieldErrors().name) {
-                            <small class="text-red-500">{{ apiFieldErrors().name }}</small>
-                        } @else if (form.controls.name.invalid && form.controls.name.touched) {
-                            @if (form.controls.name.hasError('required')) {
-                                <small class="text-red-500">Ad zorunludur.</small>
-                            } @else if (form.controls.name.hasError('maxlength')) {
-                                <small class="text-red-500">Ad en fazla 128 karakter olabilir.</small>
-                            }
-                        }
-                    </div>
-                    @if (editing()) {
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="isActive" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
-                            <p-select
-                                inputId="isActive"
-                                formControlName="isActive"
-                                [options]="activeOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                styleClass="w-full"
-                            />
-                            @if (apiFieldErrors().isActive) {
-                                <small class="text-red-500">{{ apiFieldErrors().isActive }}</small>
-                            }
-                        </div>
+
+                    @if (submitError()) {
+                        <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
                     }
-                </div>
 
-                @if (submitError()) {
-                    <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
-                }
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <p-button
+                            type="submit"
+                            [label]="editing() ? 'Güncelle' : copy.buttonSave"
+                            icon="pi pi-check"
+                            [loading]="submitting() || loading()"
+                            [disabled]="form.invalid || submitting() || loading() || loadingSpecies() || ro.mutationBlocked()"
+                        />
+                        <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
+                    </div>
+                </form>
+            </div>
 
-                <div class="flex flex-wrap gap-2 mt-4">
-                    <p-button
-                        type="submit"
-                        [label]="editing() ? 'Güncelle' : copy.buttonSave"
-                        icon="pi pi-check"
-                        [loading]="submitting() || loading()"
-                        [disabled]="form.invalid || submitting() || loading() || loadingSpecies() || ro.mutationBlocked()"
-                    />
-                    <p-button
-                        type="button"
-                        [label]="copy.buttonCancel"
-                        icon="pi pi-times"
-                        severity="secondary"
-                        (onClick)="goList()"
-                        [disabled]="submitting()"
-                    />
-                </div>
-            </form>
-        </div>
-
-        <app-quick-species-dialog [(visible)]="quickSpeciesOpen" (speciesCreated)="onQuickSpeciesCreated($event)" />
+            <app-quick-species-dialog [(visible)]="quickSpeciesOpen" (speciesCreated)="onQuickSpeciesCreated($event)" />
         }
     `
 })
@@ -167,8 +116,7 @@ export class BreedFormPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
-    readonly canShowQuickSpeciesButton = (): boolean =>
-        !this.editing() && this.auth.hasOperationClaim(SPECIES_CREATE_CLAIM) && !this.ro.mutationBlocked();
+    readonly canShowQuickSpeciesButton = (): boolean => !this.editing() && this.auth.hasOperationClaim(SPECIES_CREATE_CLAIM) && !this.ro.mutationBlocked();
 
     readonly editing = signal(false);
     readonly loading = signal(false);

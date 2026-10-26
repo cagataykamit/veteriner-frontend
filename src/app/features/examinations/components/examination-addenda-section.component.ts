@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit, signal } from '@angular/core';
+import { Component, inject, input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { ExaminationAddendumDialogComponent } from '@/app/features/examinations/components/examination-addendum-dialog.component';
 import type { ExaminationAddendumVm } from '@/app/features/examinations/models/examination-vm.model';
@@ -15,12 +15,13 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     selector: 'app-examination-addenda-section',
     standalone: true,
     imports: [ButtonModule, AppEmptyStateComponent, AppErrorStateComponent, ExaminationAddendumDialogComponent, TrDateTimePipe],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="card" data-testid="addenda-section">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                 <h4 class="mt-0 mb-0 text-xl font-semibold">Kesinleşme sonrası ek notlar</h4>
                 @if (canAdd()) {
-                    <button pButton type="button" label="Ek not ekle" icon="pi pi-plus" class="p-button-secondary" data-testid="addendum-open" (click)="dialogVisible.set(true)"></button>
+                    <button pButton type="button" class="p-button-secondary" data-testid="addendum-open" (click)="dialogVisible.set(true)"><i class="pi pi-plus"></i>Ek not ekle</button>
                 }
             </div>
             @if (loading() && addenda().length === 0) {

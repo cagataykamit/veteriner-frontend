@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -15,15 +15,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     selector: 'app-appointment-no-show-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            [header]="reverting() ? 'Gelmedi işaretini geri al' : 'Gelmedi olarak işaretle'"
-            [modal]="true"
-            [dismissableMask]="!submitting()"
-            [closable]="!submitting()"
-            [style]="{ width: 'min(520px, 95vw)' }"
-            [(visible)]="visible"
-        >
+        <p-dialog [header]="reverting() ? 'Gelmedi işaretini geri al' : 'Gelmedi olarak işaretle'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">
             @if (subject()) {
                 <p class="mt-0 mb-4 font-medium">{{ subject() }}</p>
             }
@@ -44,16 +38,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button
-                    type="button"
-                    [label]="reverting() ? 'Geri al' : 'Gelmedi işaretle'"
-                    icon="pi pi-check"
-                    [loading]="submitting()"
-                    [disabled]="form.invalid || submitting()"
-                    (onClick)="onSubmit()"
-                />
+                <p-button type="button" [label]="reverting() ? 'Geri al' : 'Gelmedi işaretle'" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting()" (onClick)="onSubmit()" />
             </ng-template>
         </p-dialog>
     `

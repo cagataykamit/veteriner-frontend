@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -100,34 +100,23 @@ type TodayScope = 'mine' | 'all';
         PetAlertBadgesComponent
     ],
     providers: [MessageService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-toast position="bottom-right" />
         <app-page-header title="Bugün">
             <div actions class="flex flex-wrap gap-2">
-                <p-button
-                    type="button"
-                    [label]="copy.buttonRefresh"
-                    icon="pi pi-refresh"
-                    severity="secondary"
-                    (onClick)="refresh('silent')"
-                />
+                <p-button type="button" [label]="copy.buttonRefresh" icon="pi pi-refresh" severity="secondary" (onClick)="refresh('silent')" />
                 @if (canCreateVisit) {
-                    <p-button
-                        type="button"
-                        label="Randevusuz geliş"
-                        icon="pi pi-plus"
-                        [disabled]="ro.mutationBlocked()"
-                        (onClick)="openWalkInArrival()"
-                    />
+                    <p-button type="button" label="Randevusuz geliş" icon="pi pi-plus" [disabled]="ro.mutationBlocked()" (onClick)="openWalkInArrival()" />
                 }
                 @if (canCreateAppointment) {
-                    <a routerLink="/panel/appointments/new" pButton type="button" label="Yeni randevu" icon="pi pi-calendar-plus" class="p-button-secondary" data-testid="today-new-appointment"></a>
+                    <a routerLink="/panel/appointments/new" pButton type="button" class="p-button-secondary" data-testid="today-new-appointment"><i class="pi pi-calendar-plus"></i>Yeni randevu</a>
                 }
                 @if (canCreateExamination) {
-                    <a routerLink="/panel/examinations/new" pButton type="button" label="Yeni muayene" icon="pi pi-file-edit" class="p-button-secondary" data-testid="today-new-examination"></a>
+                    <a routerLink="/panel/examinations/new" pButton type="button" class="p-button-secondary" data-testid="today-new-examination"><i class="pi pi-file-edit"></i>Yeni muayene</a>
                 }
                 @if (canQuickSell) {
-                    <a routerLink="/panel/sales/new" pButton type="button" label="Hızlı satış" icon="pi pi-shopping-cart" class="p-button-secondary"></a>
+                    <a routerLink="/panel/sales/new" pButton type="button" class="p-button-secondary"><i class="pi pi-shopping-cart"></i>Hızlı satış</a>
                 }
             </div>
         </app-page-header>
@@ -151,9 +140,7 @@ type TodayScope = 'mine' | 'all';
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">{{ refreshError() }}</p>
             }
             @if (ro.mutationBlocked()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                    İşletme salt okunur moddadır; değişiklik kaydedilemez.
-                </p>
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; değişiklik kaydedilemez.</p>
             }
             @if (today()?.openItems; as openItems) {
                 <app-today-open-items [summary]="openItems" />
@@ -231,113 +218,109 @@ type TodayScope = 'mine' | 'all';
                         </div>
                     } @else {
                         <div class="@container overflow-x-auto">
-                        <p-table [value]="group.items" dataKey="key" styleClass="p-datatable-sm" [tableStyle]="{ 'table-layout': 'fixed' }">
-                            <ng-template #colgroup>
-                                <colgroup>
-                                    @for (cls of columnClasses; track $index) {
-                                        <col [class]="cls" />
-                                    }
-                                </colgroup>
-                            </ng-template>
-                            <ng-template #header>
-                                <tr>
-                                    <th class="whitespace-nowrap">Saat</th>
-                                    <th class="whitespace-nowrap">Hasta</th>
-                                    <th class="whitespace-nowrap">Sahip</th>
-                                    <th class="whitespace-nowrap @max-[76rem]:hidden">Hekim</th>
-                                    <th class="whitespace-nowrap">Durum</th>
-                                    <th class="whitespace-nowrap @max-[76rem]:hidden">Ödeme / yatış</th>
-                                    <th class="whitespace-nowrap">{{ group.elapsedLabel }}</th>
-                                    <th></th>
-                                </tr>
-                            </ng-template>
-                            <ng-template #body let-item>
-                                <tr>
-                                    <td>
-                                        @if (item.arrivedAtUtc) {
-                                            <div>Geliş {{ time(item.arrivedAtUtc) }}</div>
-                                            @if (item.scheduledAtUtc) {
-                                                <div class="text-sm text-muted-color">Randevu {{ time(item.scheduledAtUtc) }}</div>
-                                            }
-                                        } @else {
-                                            <div>Randevu {{ time(item.scheduledAtUtc) }}</div>
+                            <p-table [value]="group.items" dataKey="key" size="small" [tableStyle]="{ 'table-layout': 'fixed' }">
+                                <ng-template #colgroup>
+                                    <colgroup>
+                                        @for (cls of columnClasses; track $index) {
+                                            <col [class]="cls" />
                                         }
-                                    </td>
-                                    <td>
-                                        <div class="font-medium flex items-center gap-2 min-w-0">
-                                            <a [routerLink]="['/panel/pets', item.petId]" class="line-clamp-2 break-words min-w-0 text-primary no-underline" data-testid="today-pet-link" [attr.title]="item.petName">{{ item.petName }}</a>
-                                            <app-pet-alert-badges class="shrink-0" [alerts]="item.petAlerts" />
-                                            @if (item.isUrgent) {
-                                                <app-status-tag class="shrink-0" label="Acil" severity="danger" />
+                                    </colgroup>
+                                </ng-template>
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="whitespace-nowrap">Saat</th>
+                                        <th class="whitespace-nowrap">Hasta</th>
+                                        <th class="whitespace-nowrap">Sahip</th>
+                                        <th class="whitespace-nowrap @max-[76rem]:hidden">Hekim</th>
+                                        <th class="whitespace-nowrap">Durum</th>
+                                        <th class="whitespace-nowrap @max-[76rem]:hidden">Ödeme / yatış</th>
+                                        <th class="whitespace-nowrap">{{ group.elapsedLabel }}</th>
+                                        <th></th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-item>
+                                    <tr>
+                                        <td>
+                                            @if (item.arrivedAtUtc) {
+                                                <div>Geliş {{ time(item.arrivedAtUtc) }}</div>
+                                                @if (item.scheduledAtUtc) {
+                                                    <div class="text-sm text-muted-color">Randevu {{ time(item.scheduledAtUtc) }}</div>
+                                                }
+                                            } @else {
+                                                <div>Randevu {{ time(item.scheduledAtUtc) }}</div>
                                             }
-                                        </div>
-                                        <div class="text-sm text-muted-color truncate" [attr.title]="item.speciesName">{{ item.speciesName }}</div>
-                                        <!-- Dar kipte Hekim sütunu yok: ad burada görünür -->
-                                        <div class="text-sm text-muted-color truncate @min-[76rem]:hidden" [attr.title]="item.responsibleVeterinarianName ?? 'Atanmadı'">
-                                            {{ item.responsibleVeterinarianName ?? 'Atanmadı' }}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="line-clamp-2 break-words" [attr.title]="item.clientName">
-                                            <a [routerLink]="['/panel/clients', item.clientId]" class="text-primary no-underline" data-testid="today-client-link">{{ item.clientName }}</a>
-                                        </div>
-                                        @if (item.clientPhone) {
-                                            <div class="text-sm text-muted-color whitespace-nowrap">{{ phone(item.clientPhone) }}</div>
-                                        }
-                                    </td>
-                                    <td class="truncate @max-[76rem]:hidden" [attr.title]="item.responsibleVeterinarianName">
-                                        @if (item.responsibleVeterinarianName; as vet) {
-                                            {{ vet }}
-                                        } @else {
-                                            <span class="text-muted-color">Atanmadı</span>
-                                        }
-                                    </td>
-                                    <!-- Sabit genişlikli sütun: uzun rozet ("Önceki günden açık") yandaki sütuna taşmasın diye satır kırar. -->
-                                    <td>
-                                        <ng-container *ngTemplateOutlet="statusTags; context: { $implicit: item, group: group }" />
-                                        <!-- Dar kipte Ödeme / yatış sütunu yok: rozetler burada -->
-                                        <div class="flex flex-wrap gap-1 mt-1 @min-[76rem]:hidden">
-                                            <ng-container *ngTemplateOutlet="moneyTags; context: { $implicit: item, group: group }" />
-                                        </div>
-                                    </td>
-                                    <td class="whitespace-nowrap @max-[76rem]:hidden">
-                                        <div class="flex flex-wrap gap-1">
-                                            <ng-container *ngTemplateOutlet="moneyTags; context: { $implicit: item, group: group }" />
-                                        </div>
-                                    </td>
-                                    @let wait = waitAlertOf(item);
-                                    <td [class]="waitAlertClass[wait]" [attr.title]="waitTitle(wait)">
-                                        @if (group.elapsedLabel) {
-                                            @if (wait !== 'none') {
-                                                <i class="pi pi-fw" [class]="waitAlertIcon[wait]" aria-hidden="true"></i>
-                                                <span class="sr-only">{{ waitTitle(wait) }}:</span>
+                                        </td>
+                                        <td>
+                                            <div class="font-medium flex items-center gap-2 min-w-0">
+                                                <a [routerLink]="['/panel/pets', item.petId]" class="line-clamp-2 break-words min-w-0 text-primary no-underline" data-testid="today-pet-link" [attr.title]="item.petName">{{ item.petName }}</a>
+                                                <app-pet-alert-badges class="shrink-0" [alerts]="item.petAlerts" />
+                                                @if (item.isUrgent) {
+                                                    <app-status-tag class="shrink-0" label="Acil" severity="danger" />
+                                                }
+                                            </div>
+                                            <div class="text-sm text-muted-color truncate" [attr.title]="item.speciesName">{{ item.speciesName }}</div>
+                                            <!-- Dar kipte Hekim sütunu yok: ad burada görünür -->
+                                            <div class="text-sm text-muted-color truncate @min-[76rem]:hidden" [attr.title]="item.responsibleVeterinarianName ?? 'Atanmadı'">
+                                                {{ item.responsibleVeterinarianName ?? 'Atanmadı' }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="line-clamp-2 break-words" [attr.title]="item.clientName">
+                                                <a [routerLink]="['/panel/clients', item.clientId]" class="text-primary no-underline" data-testid="today-client-link">{{ item.clientName }}</a>
+                                            </div>
+                                            @if (item.clientPhone) {
+                                                <div class="text-sm text-muted-color whitespace-nowrap">{{ phone(item.clientPhone) }}</div>
                                             }
-                                            {{ elapsed(item) ?? '—' }}
-                                            @if (possiblyForgotten(item)) {
-                                                <div class="text-xs font-normal text-muted-color">Unutulmuş olabilir</div>
+                                        </td>
+                                        <td class="truncate @max-[76rem]:hidden" [attr.title]="item.responsibleVeterinarianName">
+                                            @if (item.responsibleVeterinarianName; as vet) {
+                                                {{ vet }}
+                                            } @else {
+                                                <span class="text-muted-color">Atanmadı</span>
                                             }
-                                        }
-                                    </td>
-                                    <td class="whitespace-nowrap">
-                                        <!-- Sabit yuvalar: birincil | ikincil | acil | ⋯ → düğmeler satırlar arasında aynı hizada -->
-                                        <div class="grid grid-cols-[7.5rem_6rem_1.85rem_1.85rem] @max-[50rem]:grid-cols-[2.5rem_2.5rem_1.85rem_1.85rem] items-center gap-2 justify-start">
-                                            <ng-container *ngTemplateOutlet="actionButtons; context: { $implicit: item }" />
-                                        </div>
-                                    </td>
-                                </tr>
-                            </ng-template>
-                        </p-table>
+                                        </td>
+                                        <!-- Sabit genişlikli sütun: uzun rozet ("Önceki günden açık") yandaki sütuna taşmasın diye satır kırar. -->
+                                        <td>
+                                            <ng-container *ngTemplateOutlet="statusTags; context: { $implicit: item, group: group }" />
+                                            <!-- Dar kipte Ödeme / yatış sütunu yok: rozetler burada -->
+                                            <div class="flex flex-wrap gap-1 mt-1 @min-[76rem]:hidden">
+                                                <ng-container *ngTemplateOutlet="moneyTags; context: { $implicit: item, group: group }" />
+                                            </div>
+                                        </td>
+                                        <td class="whitespace-nowrap @max-[76rem]:hidden">
+                                            <div class="flex flex-wrap gap-1">
+                                                <ng-container *ngTemplateOutlet="moneyTags; context: { $implicit: item, group: group }" />
+                                            </div>
+                                        </td>
+                                        @let wait = waitAlertOf(item);
+                                        <td [class]="waitAlertClass[wait]" [attr.title]="waitTitle(wait)">
+                                            @if (group.elapsedLabel) {
+                                                @if (wait !== 'none') {
+                                                    <i class="pi pi-fw" [class]="waitAlertIcon[wait]" aria-hidden="true"></i>
+                                                    <span class="sr-only">{{ waitTitle(wait) }}:</span>
+                                                }
+                                                {{ elapsed(item) ?? '—' }}
+                                                @if (possiblyForgotten(item)) {
+                                                    <div class="text-xs font-normal text-muted-color">Unutulmuş olabilir</div>
+                                                }
+                                            }
+                                        </td>
+                                        <td class="whitespace-nowrap">
+                                            <!-- Sabit yuvalar: birincil | ikincil | acil | ⋯ → düğmeler satırlar arasında aynı hizada -->
+                                            <div class="grid grid-cols-[7.5rem_6rem_1.85rem_1.85rem] @max-[50rem]:grid-cols-[2.5rem_2.5rem_1.85rem_1.85rem] items-center gap-2 justify-start">
+                                                <ng-container *ngTemplateOutlet="actionButtons; context: { $implicit: item }" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
                         </div>
                     }
                 </section>
             } @empty {
                 <div class="card">
                     @if (scope() === 'mine') {
-                        <app-empty-state
-                            [message]="view() === 'voided' ? 'Size atanmış yanlış işaretlenen geliş yok.' : 'Size atanmış hasta yok.'"
-                            hint="Tüm sırayı görmek için Tümü’ne geçin."
-                            iconClass="pi pi-user"
-                        />
+                        <app-empty-state [message]="view() === 'voided' ? 'Size atanmış yanlış işaretlenen geliş yok.' : 'Size atanmış hasta yok.'" hint="Tüm sırayı görmek için Tümü’ne geçin." iconClass="pi pi-user" />
                         <div class="flex justify-center mt-3">
                             <p-button type="button" label="Tümü’ne geç" icon="pi pi-list" severity="secondary" (onClick)="setScope('all')" />
                         </div>
@@ -382,34 +365,34 @@ type TodayScope = 'mine' | 'all';
                         }
                     </div>
                 } @else {
-                <p-table [value]="hospitalizations()" dataKey="hospitalizationId" styleClass="p-datatable-sm">
-                    <ng-template #header>
-                        <tr>
-                            <th>Hasta</th>
-                            <th>Sahip</th>
-                            <th class="whitespace-nowrap">Giriş</th>
-                            <th class="whitespace-nowrap">Yatış süresi</th>
-                            <th class="whitespace-nowrap">Planlı taburcu</th>
-                            @if (canReadHospitalization) {
-                                <th></th>
-                            }
-                        </tr>
-                    </ng-template>
-                    <ng-template #body let-h>
-                        <tr>
-                            <td class="font-medium">{{ h.petName }}</td>
-                            <td>{{ h.clientName }}</td>
-                            <td class="whitespace-nowrap">{{ admittedAt(h.admittedAtUtc) }}</td>
-                            <td class="whitespace-nowrap">{{ stay(h.admittedAtUtc) ?? '—' }}</td>
-                            <td class="whitespace-nowrap">{{ h.plannedDischargeAtUtc ? date(h.plannedDischargeAtUtc) : '—' }}</td>
-                            @if (canReadHospitalization) {
-                                <td class="text-right">
-                                    <a [routerLink]="['/panel/hospitalizations', h.hospitalizationId]" class="p-button p-button-text p-button-sm">Yatış detayı</a>
-                                </td>
-                            }
-                        </tr>
-                    </ng-template>
-                </p-table>
+                    <p-table [value]="hospitalizations()" dataKey="hospitalizationId" size="small">
+                        <ng-template #header>
+                            <tr>
+                                <th>Hasta</th>
+                                <th>Sahip</th>
+                                <th class="whitespace-nowrap">Giriş</th>
+                                <th class="whitespace-nowrap">Yatış süresi</th>
+                                <th class="whitespace-nowrap">Planlı taburcu</th>
+                                @if (canReadHospitalization) {
+                                    <th></th>
+                                }
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-h>
+                            <tr>
+                                <td class="font-medium">{{ h.petName }}</td>
+                                <td>{{ h.clientName }}</td>
+                                <td class="whitespace-nowrap">{{ admittedAt(h.admittedAtUtc) }}</td>
+                                <td class="whitespace-nowrap">{{ stay(h.admittedAtUtc) ?? '—' }}</td>
+                                <td class="whitespace-nowrap">{{ h.plannedDischargeAtUtc ? date(h.plannedDischargeAtUtc) : '—' }}</td>
+                                @if (canReadHospitalization) {
+                                    <td class="text-right">
+                                        <a [routerLink]="['/panel/hospitalizations', h.hospitalizationId]" class="p-button p-button-text p-button-sm">Yatış detayı</a>
+                                    </td>
+                                }
+                            </tr>
+                        </ng-template>
+                    </p-table>
                 }
             </section>
         }
@@ -645,16 +628,7 @@ export class TodayPageComponent implements OnInit {
      * hücrelerine taşınır), düğmeler yine yazılı; dar (<50 rem): düğmeler yalnız ikon (aria-label + ipucu). Hasta/Sahip adı en çok 2 satıra
      * sarar (tam ad ipucunda); Sahip kalan genişliği alır, telefon tek satır; tablo yatay taşmaz. Sınıflar tam yazılmalı (Tailwind kaynaktan tarar).
      */
-    protected readonly columnClasses = [
-        'w-[6rem]',
-        'w-[9rem]',
-        'w-auto',
-        'w-[7rem] @max-[76rem]:hidden',
-        'w-[8.5rem] @max-[76rem]:w-[9rem]',
-        'w-[11rem] @max-[76rem]:hidden',
-        'w-[7.5rem]',
-        'w-[20rem] @max-[50rem]:w-[12rem]'
-    ];
+    protected readonly columnClasses = ['w-[6rem]', 'w-[9rem]', 'w-auto', 'w-[7rem] @max-[76rem]:hidden', 'w-[8.5rem] @max-[76rem]:w-[9rem]', 'w-[11rem] @max-[76rem]:hidden', 'w-[7.5rem]', 'w-[20rem] @max-[50rem]:w-[12rem]'];
     protected readonly carriedOverTitle = 'Önceki günden kalan açık geliş; tamamlayın veya hatalı işaretleyin';
     readonly waitAlertClass: Record<WaitAlertLevel, string> = {
         none: '',
@@ -721,9 +695,7 @@ export class TodayPageComponent implements OnInit {
 
     /** Yalnızca açık (bekleyen / devam eden) satırlarda gelişten bu yana geçen süre. */
     elapsed(item: TodayItemVm): string | null {
-        return item.careStatus === 'Waiting' || item.careStatus === 'InProgress'
-            ? formatElapsedSince(item.arrivedAtUtc, this.now())
-            : null;
+        return item.careStatus === 'Waiting' || item.careStatus === 'InProgress' ? formatElapsedSince(item.arrivedAtUtc, this.now()) : null;
     }
 
     possiblyForgotten(item: TodayItemVm): boolean {
@@ -996,4 +968,3 @@ export class TodayPageComponent implements OnInit {
 }
 
 type RefreshResult = { mode: RefreshMode; today: TodayVm } | { mode: RefreshMode; error: string };
-

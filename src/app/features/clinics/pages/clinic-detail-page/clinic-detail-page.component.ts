@@ -1,20 +1,14 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, OnInit, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, effect, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import type { ClinicUpsertFormValue } from '@/app/features/clinics/models/clinic-upsert.model';
 import type { ClinicDetailVm } from '@/app/features/clinics/models/clinic-vm.model';
-import {
-    CLINIC_ADDRESS_MAX,
-    CLINIC_DESCRIPTION_MAX,
-    CLINIC_EMAIL_MAX,
-    CLINIC_PHONE_MAX,
-    clinicOptionalEmailValidator
-} from '@/app/features/clinics/utils/clinic-profile-form.validators';
+import { CLINIC_ADDRESS_MAX, CLINIC_DESCRIPTION_MAX, CLINIC_EMAIL_MAX, CLINIC_PHONE_MAX, clinicOptionalEmailValidator } from '@/app/features/clinics/utils/clinic-profile-form.validators';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLINICS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { clinicAppointmentSettingsFormToPutBody } from '@/app/features/clinics/data/clinic-appointment-settings.mapper';
@@ -22,10 +16,7 @@ import { clinicWorkingHoursFormToPutBody, normalizeTimeForInput } from '@/app/fe
 import type { ClinicAppointmentSettingsFormValue, ClinicAppointmentSettingsVm } from '@/app/features/clinics/models/clinic-appointment-settings-vm.model';
 import type { ClinicWorkingHourFormValue, ClinicWorkingHourVm } from '@/app/features/clinics/models/clinic-working-hours-vm.model';
 import { clinicAppointmentSettingsMutationMessage } from '@/app/features/clinics/utils/clinic-appointment-settings-mutation.utils';
-import {
-    clinicWorkingDayErrorMessage,
-    clinicWorkingDayGroupValidator
-} from '@/app/features/clinics/utils/clinic-working-hours-day.validator';
+import { clinicWorkingDayErrorMessage, clinicWorkingDayGroupValidator } from '@/app/features/clinics/utils/clinic-working-hours-day.validator';
 import { clinicWorkingHoursMutationMessage } from '@/app/features/clinics/utils/clinic-working-hours-mutation.utils';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -34,23 +25,13 @@ import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { ClinicTaxpayerSettingsSectionComponent } from '@/app/features/clinics/components/clinic-taxpayer-settings-section.component';
 import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
-import {
-    clinicSettingsMutationMessage,
-    isClinicActivateAlreadyActive,
-    isClinicDeactivateAlreadyInactive
-} from '@/app/features/clinics/utils/clinic-settings-mutation.utils';
-import {
-    parseClinicUpsertHttpError,
-    type ClinicUpsertFieldErrors
-} from '@/app/features/clinics/utils/clinic-upsert-validation-parse.utils';
+import { clinicSettingsMutationMessage, isClinicActivateAlreadyActive, isClinicDeactivateAlreadyInactive } from '@/app/features/clinics/utils/clinic-settings-mutation.utils';
+import { parseClinicUpsertHttpError, type ClinicUpsertFieldErrors } from '@/app/features/clinics/utils/clinic-upsert-validation-parse.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import {
-    formatClinicPhoneForDisplay,
-    formatClinicPhoneForInput
-} from '@/app/features/clinics/utils/clinic-phone-format.utils';
+import { formatClinicPhoneForDisplay, formatClinicPhoneForInput } from '@/app/features/clinics/utils/clinic-phone-format.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
 @Component({
@@ -71,6 +52,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
         ClinicTaxpayerSettingsSectionComponent
     ],
     providers: [MessageService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-toast position="bottom-right" />
         @if (loading()) {
@@ -88,47 +70,45 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
             />
 
             @if (canUpdateClinic) {
-            <div class="card mb-4">
-                <h5 class="mt-0 mb-3">Özet</h5>
-                <dl class="grid grid-cols-1 md:grid-cols-2 gap-3 m-0 text-sm">
-                    <div>
-                        <dt class="text-muted-color font-medium m-0 mb-1">Durum</dt>
-                        <dd class="m-0">
-                            @if (d.isActive === true) {
-                                <span class="text-green-700 dark:text-green-400">Aktif</span>
-                            } @else if (d.isActive === false) {
-                                <span class="text-muted-color">Pasif</span>
-                            } @else {
-                                <span class="text-muted-color">—</span>
-                            }
-                        </dd>
-                    </div>
-                    <div>
-                        <dt class="text-muted-color font-medium m-0 mb-1">Telefon</dt>
-                        <dd class="m-0 break-all">{{ formatClinicPhoneForDisplay(d.phone) }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-muted-color font-medium m-0 mb-1">E-posta</dt>
-                        <dd class="m-0 break-all">{{ d.email || '—' }}</dd>
-                    </div>
-                    <div class="md:col-span-2">
-                        <dt class="text-muted-color font-medium m-0 mb-1">Adres</dt>
-                        <dd class="m-0 whitespace-pre-wrap break-words">{{ d.address || '—' }}</dd>
-                    </div>
-                    <div class="md:col-span-2">
-                        <dt class="text-muted-color font-medium m-0 mb-1">Açıklama</dt>
-                        <dd class="m-0 whitespace-pre-wrap break-words">{{ d.description || '—' }}</dd>
-                    </div>
-                </dl>
-            </div>
+                <div class="card mb-4">
+                    <h5 class="mt-0 mb-3">Özet</h5>
+                    <dl class="grid grid-cols-1 md:grid-cols-2 gap-3 m-0 text-sm">
+                        <div>
+                            <dt class="text-muted-color font-medium m-0 mb-1">Durum</dt>
+                            <dd class="m-0">
+                                @if (d.isActive === true) {
+                                    <span class="text-green-700 dark:text-green-400">Aktif</span>
+                                } @else if (d.isActive === false) {
+                                    <span class="text-muted-color">Pasif</span>
+                                } @else {
+                                    <span class="text-muted-color">—</span>
+                                }
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-muted-color font-medium m-0 mb-1">Telefon</dt>
+                            <dd class="m-0 break-all">{{ formatClinicPhoneForDisplay(d.phone) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-muted-color font-medium m-0 mb-1">E-posta</dt>
+                            <dd class="m-0 break-all">{{ d.email || '—' }}</dd>
+                        </div>
+                        <div class="md:col-span-2">
+                            <dt class="text-muted-color font-medium m-0 mb-1">Adres</dt>
+                            <dd class="m-0 whitespace-pre-wrap break-words">{{ d.address || '—' }}</dd>
+                        </div>
+                        <div class="md:col-span-2">
+                            <dt class="text-muted-color font-medium m-0 mb-1">Açıklama</dt>
+                            <dd class="m-0 whitespace-pre-wrap break-words">{{ d.description || '—' }}</dd>
+                        </div>
+                    </dl>
+                </div>
             }
 
             <div class="card mb-4">
                 <h5 class="mt-0 mb-4">Düzenle</h5>
                 @if (ro.mutationBlocked()) {
-                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                        Bu işletme salt okunur moddadır; klinik bilgileri güncellenemez.
-                    </p>
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">Bu işletme salt okunur moddadır; klinik bilgileri güncellenemez.</p>
                 }
                 @if (formError()) {
                     <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ formError() }}</p>
@@ -137,13 +117,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
                             <label for="clinicName" class="block text-sm font-medium text-muted-color mb-2">Klinik adı *</label>
-                            <input
-                                id="clinicName"
-                                pInputText
-                                class="w-full"
-                                formControlName="name"
-                                autocomplete="organization"
-                            />
+                            <input id="clinicName" pInputText class="w-full" formControlName="name" autocomplete="organization" />
                             @if (apiFieldErrors().name) {
                                 <small class="text-red-500">{{ apiFieldErrors().name }}</small>
                             } @else if (form.controls.name.invalid && form.controls.name.touched) {
@@ -152,13 +126,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="clinicCity" class="block text-sm font-medium text-muted-color mb-2">Şehir *</label>
-                            <input
-                                id="clinicCity"
-                                pInputText
-                                class="w-full"
-                                formControlName="city"
-                                autocomplete="address-level2"
-                            />
+                            <input id="clinicCity" pInputText class="w-full" formControlName="city" autocomplete="address-level2" />
                             @if (apiFieldErrors().city) {
                                 <small class="text-red-500">{{ apiFieldErrors().city }}</small>
                             } @else if (form.controls.city.invalid && form.controls.city.touched) {
@@ -167,14 +135,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="clinicPhone" class="block text-sm font-medium text-muted-color mb-2">Telefon</label>
-                            <input
-                                id="clinicPhone"
-                                pInputText
-                                class="w-full"
-                                formControlName="phone"
-                                autocomplete="tel"
-                                (blur)="onClinicPhoneBlur()"
-                            />
+                            <input id="clinicPhone" pInputText class="w-full" formControlName="phone" autocomplete="tel" (blur)="onClinicPhoneBlur()" />
                             @if (apiFieldErrors().phone) {
                                 <small class="text-red-500">{{ apiFieldErrors().phone }}</small>
                             } @else if (form.controls.phone.invalid && form.controls.phone.touched) {
@@ -183,14 +144,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="clinicEmail" class="block text-sm font-medium text-muted-color mb-2">E-posta</label>
-                            <input
-                                id="clinicEmail"
-                                pInputText
-                                class="w-full"
-                                formControlName="email"
-                                type="email"
-                                autocomplete="email"
-                            />
+                            <input id="clinicEmail" pInputText class="w-full" formControlName="email" type="email" autocomplete="email" />
                             @if (apiFieldErrors().email) {
                                 <small class="text-red-500">{{ apiFieldErrors().email }}</small>
                             } @else if (form.controls.email.hasError('email') && form.controls.email.touched) {
@@ -201,13 +155,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         </div>
                         <div class="col-span-12">
                             <label for="clinicAddress" class="block text-sm font-medium text-muted-color mb-2">Adres</label>
-                            <textarea
-                                id="clinicAddress"
-                                pTextarea
-                                class="w-full"
-                                formControlName="address"
-                                rows="3"
-                            ></textarea>
+                            <textarea id="clinicAddress" pTextarea class="w-full" formControlName="address" rows="3"></textarea>
                             @if (apiFieldErrors().address) {
                                 <small class="text-red-500">{{ apiFieldErrors().address }}</small>
                             } @else if (form.controls.address.invalid && form.controls.address.touched) {
@@ -216,13 +164,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         </div>
                         <div class="col-span-12">
                             <label for="clinicDescription" class="block text-sm font-medium text-muted-color mb-2">Açıklama</label>
-                            <textarea
-                                id="clinicDescription"
-                                pTextarea
-                                class="w-full"
-                                formControlName="description"
-                                rows="4"
-                            ></textarea>
+                            <textarea id="clinicDescription" pTextarea class="w-full" formControlName="description" rows="4"></textarea>
                             @if (apiFieldErrors().description) {
                                 <small class="text-red-500">{{ apiFieldErrors().description }}</small>
                             } @else if (form.controls.description.invalid && form.controls.description.touched) {
@@ -231,159 +173,105 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         </div>
                     </div>
                     <div class="mt-4 mb-0">
-                        <p-button
-                            type="submit"
-                            label="Kaydet"
-                            icon="pi pi-save"
-                            [loading]="saving()"
-                            [disabled]="form.invalid || saving() || ro.mutationBlocked() || busyDeactivate() || busyActivate()"
-                        />
+                        <p-button type="submit" label="Kaydet" icon="pi pi-save" [loading]="saving()" [disabled]="form.invalid || saving() || ro.mutationBlocked() || busyDeactivate() || busyActivate()" />
                     </div>
                 </form>
             </div>
 
             @if (canUpdateClinic) {
-            <div class="card mb-4" [formGroup]="whForm">
-                <h5 class="mt-0 mb-2">Çalışma Saatleri</h5>
-                <p class="text-sm text-muted-color mt-0 mb-4">Kliniğin haftalık çalışma günleri ve saatlerini yönetin.</p>
-                @if (whLoading()) {
-                    <app-loading-state message="Çalışma saatleri yükleniyor…" />
-                } @else if (whError(); as whErr) {
-                    <app-error-state [detail]="whErr" (retry)="retryWorkingHoursLoad()" />
-                } @else {
-                    @if (whFormError()) {
-                        <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ whFormError() }}</p>
-                    }
-                    <div formArrayName="days" class="flex flex-col gap-4">
-                        @for (row of whDays.controls; track trackWhRow($index, row); let idx = $index) {
-                            <div
-                                [formGroupName]="idx"
-                                class="rounded-lg border border-surface-200 dark:border-surface-700 p-3 md:p-4 grid grid-cols-12 gap-3 gap-y-2"
-                            >
-                                <div class="col-span-12 md:col-span-2 flex flex-col justify-center">
-                                    <span class="font-medium text-surface-900 dark:text-surface-0">{{ row.get('dayLabel')?.value }}</span>
-                                </div>
-                                <div class="col-span-12 md:col-span-2 flex items-center gap-2">
-                                    <p-checkbox formControlName="isClosed" [binary]="true" [inputId]="'whClosed' + idx" />
-                                    <label class="text-sm m-0 cursor-pointer" [for]="'whClosed' + idx">Kapalı</label>
-                                </div>
-                                <div class="col-span-6 md:col-span-2">
-                                    <label class="block text-xs text-muted-color mb-1">Açılış</label>
-                                    <app-date-input type="time" formControlName="opensAt" />
-                                </div>
-                                <div class="col-span-6 md:col-span-2">
-                                    <label class="block text-xs text-muted-color mb-1">Kapanış</label>
-                                    <app-date-input type="time" formControlName="closesAt" />
-                                </div>
-                                <div class="col-span-6 md:col-span-2">
-                                    <label class="block text-xs text-muted-color mb-1">Mola başlangıç</label>
-                                    <app-date-input type="time" formControlName="breakStartsAt" />
-                                </div>
-                                <div class="col-span-6 md:col-span-2">
-                                    <label class="block text-xs text-muted-color mb-1">Mola bitiş</label>
-                                    <app-date-input type="time" formControlName="breakEndsAt" />
-                                </div>
-                            </div>
+                <div class="card mb-4" [formGroup]="whForm">
+                    <h5 class="mt-0 mb-2">Çalışma Saatleri</h5>
+                    <p class="text-sm text-muted-color mt-0 mb-4">Kliniğin haftalık çalışma günleri ve saatlerini yönetin.</p>
+                    @if (whLoading()) {
+                        <app-loading-state message="Çalışma saatleri yükleniyor…" />
+                    } @else if (whError(); as whErr) {
+                        <app-error-state [detail]="whErr" (retry)="retryWorkingHoursLoad()" />
+                    } @else {
+                        @if (whFormError()) {
+                            <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ whFormError() }}</p>
                         }
-                    </div>
-                    <div class="mt-4 flex justify-end">
-                        <p-button
-                            type="button"
-                            label="Çalışma saatlerini kaydet"
-                            icon="pi pi-save"
-                            severity="secondary"
-                            [loading]="whSaving()"
-                            [disabled]="!canSaveWorkingHours()"
-                            (onClick)="onSaveWorkingHours()"
-                        />
-                    </div>
-                }
-            </div>
+                        <div formArrayName="days" class="flex flex-col gap-4">
+                            @for (row of whDays.controls; track trackWhRow($index, row); let idx = $index) {
+                                <div [formGroupName]="idx" class="rounded-lg border border-surface-200 dark:border-surface-700 p-3 md:p-4 grid grid-cols-12 gap-3 gap-y-2">
+                                    <div class="col-span-12 md:col-span-2 flex flex-col justify-center">
+                                        <span class="font-medium text-surface-900 dark:text-surface-0">{{ row.get('dayLabel')?.value }}</span>
+                                    </div>
+                                    <div class="col-span-12 md:col-span-2 flex items-center gap-2">
+                                        <p-checkbox formControlName="isClosed" [binary]="true" [inputId]="'whClosed' + idx" />
+                                        <label class="text-sm m-0 cursor-pointer" [for]="'whClosed' + idx">Kapalı</label>
+                                    </div>
+                                    <div class="col-span-6 md:col-span-2">
+                                        <label class="block text-xs text-muted-color mb-1">Açılış</label>
+                                        <app-date-input type="time" formControlName="opensAt" />
+                                    </div>
+                                    <div class="col-span-6 md:col-span-2">
+                                        <label class="block text-xs text-muted-color mb-1">Kapanış</label>
+                                        <app-date-input type="time" formControlName="closesAt" />
+                                    </div>
+                                    <div class="col-span-6 md:col-span-2">
+                                        <label class="block text-xs text-muted-color mb-1">Mola başlangıç</label>
+                                        <app-date-input type="time" formControlName="breakStartsAt" />
+                                    </div>
+                                    <div class="col-span-6 md:col-span-2">
+                                        <label class="block text-xs text-muted-color mb-1">Mola bitiş</label>
+                                        <app-date-input type="time" formControlName="breakEndsAt" />
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="mt-4 flex justify-end">
+                            <p-button type="button" label="Çalışma saatlerini kaydet" icon="pi pi-save" severity="secondary" [loading]="whSaving()" [disabled]="!canSaveWorkingHours()" (onClick)="onSaveWorkingHours()" />
+                        </div>
+                    }
+                </div>
             }
 
             @if (canUpdateClinic) {
-            <div class="card mb-4" [formGroup]="apSettingsForm">
-                <h5 class="mt-0 mb-2">Randevu Varsayılanları</h5>
-                <p class="text-sm text-muted-color mt-0 mb-4">
-                    Randevu oluşturma ekranlarında kullanılacak varsayılan süre ve randevu başlangıç aralığını yönetin.
-                </p>
+                <div class="card mb-4" [formGroup]="apSettingsForm">
+                    <h5 class="mt-0 mb-2">Randevu Varsayılanları</h5>
+                    <p class="text-sm text-muted-color mt-0 mb-4">Randevu oluşturma ekranlarında kullanılacak varsayılan süre ve randevu başlangıç aralığını yönetin.</p>
 
-                @if (apSettingsLoading()) {
-                    <app-loading-state message="Randevu varsayılanları yükleniyor…" />
-                } @else if (apSettingsError(); as apErr) {
-                    <app-error-state [detail]="apErr" (retry)="retryAppointmentSettingsLoad()" />
-                } @else {
-                    @if (apSettingsFormError()) {
-                        <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ apSettingsFormError() }}</p>
-                    }
-                    <div class="grid grid-cols-12 gap-4">
-                        <div class="col-span-12 md:col-span-4">
-                            <label class="block text-sm font-medium text-muted-color mb-2" for="defaultAppointmentDurationMinutes">
-                                Varsayılan randevu süresi (dakika)
-                            </label>
-                            <input
-                                id="defaultAppointmentDurationMinutes"
-                                type="number"
-                                class="w-full p-inputtext p-component"
-                                formControlName="defaultAppointmentDurationMinutes"
-                                min="5"
-                                max="240"
-                                step="1"
-                            />
-                            @if (
-                                apSettingsForm.controls.defaultAppointmentDurationMinutes.invalid &&
-                                apSettingsForm.controls.defaultAppointmentDurationMinutes.touched
-                            ) {
-                                <small class="text-red-500">Varsayılan randevu süresi 5 ile 240 dakika arasında olmalıdır.</small>
-                            }
-                        </div>
+                    @if (apSettingsLoading()) {
+                        <app-loading-state message="Randevu varsayılanları yükleniyor…" />
+                    } @else if (apSettingsError(); as apErr) {
+                        <app-error-state [detail]="apErr" (retry)="retryAppointmentSettingsLoad()" />
+                    } @else {
+                        @if (apSettingsFormError()) {
+                            <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ apSettingsFormError() }}</p>
+                        }
+                        <div class="grid grid-cols-12 gap-4">
+                            <div class="col-span-12 md:col-span-4">
+                                <label class="block text-sm font-medium text-muted-color mb-2" for="defaultAppointmentDurationMinutes"> Varsayılan randevu süresi (dakika) </label>
+                                <input id="defaultAppointmentDurationMinutes" type="number" class="w-full p-inputtext p-component" formControlName="defaultAppointmentDurationMinutes" min="5" max="240" step="1" />
+                                @if (apSettingsForm.controls.defaultAppointmentDurationMinutes.invalid && apSettingsForm.controls.defaultAppointmentDurationMinutes.touched) {
+                                    <small class="text-red-500">Varsayılan randevu süresi 5 ile 240 dakika arasında olmalıdır.</small>
+                                }
+                            </div>
 
-                        <div class="col-span-12 md:col-span-4">
-                            <label class="block text-sm font-medium text-muted-color mb-2" for="slotIntervalMinutes">Randevu başlangıç aralığı (dakika)</label>
-                            <input
-                                id="slotIntervalMinutes"
-                                type="number"
-                                class="w-full p-inputtext p-component"
-                                formControlName="slotIntervalMinutes"
-                                min="5"
-                                max="120"
-                                step="1"
-                            />
-                            @if (apSettingsForm.controls.slotIntervalMinutes.invalid && apSettingsForm.controls.slotIntervalMinutes.touched) {
-                                <small class="text-red-500">Randevu başlangıç aralığı 5 ile 120 dakika arasında olmalıdır.</small>
-                            } @else {
-                                <small class="text-muted-color">Randevuların kaç dakikada bir başlatılabileceğini belirler.</small>
-                                <small class="block text-muted-color mt-1">Örneğin 15 dakika seçilirse randevular 09:00, 09:15, 09:30 gibi saatlerde başlatılır.</small>
-                            }
-                        </div>
+                            <div class="col-span-12 md:col-span-4">
+                                <label class="block text-sm font-medium text-muted-color mb-2" for="slotIntervalMinutes">Randevu başlangıç aralığı (dakika)</label>
+                                <input id="slotIntervalMinutes" type="number" class="w-full p-inputtext p-component" formControlName="slotIntervalMinutes" min="5" max="120" step="1" />
+                                @if (apSettingsForm.controls.slotIntervalMinutes.invalid && apSettingsForm.controls.slotIntervalMinutes.touched) {
+                                    <small class="text-red-500">Randevu başlangıç aralığı 5 ile 120 dakika arasında olmalıdır.</small>
+                                } @else {
+                                    <small class="text-muted-color">Randevuların kaç dakikada bir başlatılabileceğini belirler.</small>
+                                    <small class="block text-muted-color mt-1">Örneğin 15 dakika seçilirse randevular 09:00, 09:15, 09:30 gibi saatlerde başlatılır.</small>
+                                }
+                            </div>
 
-                        <div class="col-span-12 md:col-span-4 flex items-center">
-                            <div class="flex items-center gap-2 mt-5">
-                                <p-checkbox
-                                    formControlName="allowOverlappingAppointments"
-                                    [binary]="true"
-                                    inputId="allowOverlappingAppointments"
-                                />
-                                <label class="text-sm cursor-pointer" for="allowOverlappingAppointments">
-                                    Aynı saate birden fazla randevuya izin ver
-                                </label>
+                            <div class="col-span-12 md:col-span-4 flex items-center">
+                                <div class="flex items-center gap-2 mt-5">
+                                    <p-checkbox formControlName="allowOverlappingAppointments" [binary]="true" inputId="allowOverlappingAppointments" />
+                                    <label class="text-sm cursor-pointer" for="allowOverlappingAppointments"> Aynı saate birden fazla randevuya izin ver </label>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="mt-4 flex justify-end">
-                        <p-button
-                            type="button"
-                            label="Randevu varsayılanlarını kaydet"
-                            icon="pi pi-save"
-                            severity="secondary"
-                            [loading]="apSettingsSaving()"
-                            [disabled]="!canSaveAppointmentSettings()"
-                            (onClick)="onSaveAppointmentSettings()"
-                        />
-                    </div>
-                }
-            </div>
+                        <div class="mt-4 flex justify-end">
+                            <p-button type="button" label="Randevu varsayılanlarını kaydet" icon="pi pi-save" severity="secondary" [loading]="apSettingsSaving()" [disabled]="!canSaveAppointmentSettings()" (onClick)="onSaveAppointmentSettings()" />
+                        </div>
+                    }
+                </div>
             }
 
             @if (canUpdateClinic) {
@@ -391,35 +279,20 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
             }
 
             @if (canUpdateClinic) {
-            <div class="card">
-                <h5 class="mt-0 mb-3">Durum</h5>
-                @if (ro.mutationBlocked()) {
-                    <p class="text-sm text-muted-color m-0">Salt okunur modda pasif/aktif işlemi yapılamaz.</p>
-                } @else {
-                    <div class="flex flex-wrap gap-2">
-                        @if (d.isActive === true) {
-                            <p-button
-                                type="button"
-                                label="Pasife al"
-                                icon="pi pi-ban"
-                                severity="danger"
-                                [loading]="busyDeactivate()"
-                                [disabled]="busyActivate() || saving()"
-                                (onClick)="onDeactivate()"
-                            />
-                        } @else {
-                            <p-button
-                                type="button"
-                                label="Aktifleştir"
-                                icon="pi pi-check-circle"
-                                [loading]="busyActivate()"
-                                [disabled]="busyDeactivate() || saving()"
-                                (onClick)="onActivate()"
-                            />
-                        }
-                    </div>
-                }
-            </div>
+                <div class="card">
+                    <h5 class="mt-0 mb-3">Durum</h5>
+                    @if (ro.mutationBlocked()) {
+                        <p class="text-sm text-muted-color m-0">Salt okunur modda pasif/aktif işlemi yapılamaz.</p>
+                    } @else {
+                        <div class="flex flex-wrap gap-2">
+                            @if (d.isActive === true) {
+                                <p-button type="button" label="Pasife al" icon="pi pi-ban" severity="danger" [loading]="busyDeactivate()" [disabled]="busyActivate() || saving()" (onClick)="onDeactivate()" />
+                            } @else {
+                                <p-button type="button" label="Aktifleştir" icon="pi pi-check-circle" [loading]="busyActivate()" [disabled]="busyDeactivate() || saving()" (onClick)="onActivate()" />
+                            }
+                        </div>
+                    }
+                </div>
             }
         }
     `
@@ -468,8 +341,7 @@ export class ClinicDetailPageComponent implements OnInit {
 
     /** Reactive form uyarısı: disabled yalnızca `FormGroup` üzerinden. */
     private readonly formEditLockEffect = effect(() => {
-        const lock =
-            !this.canUpdateClinic || this.ro.mutationBlocked() || this.saving() || this.busyDeactivate() || this.busyActivate();
+        const lock = !this.canUpdateClinic || this.ro.mutationBlocked() || this.saving() || this.busyDeactivate() || this.busyActivate();
 
         if (lock) {
             if (this.form.enabled) {
@@ -524,8 +396,7 @@ export class ClinicDetailPageComponent implements OnInit {
     }
 
     private applyWhFormGlobalLock(): void {
-        const lock =
-            this.ro.mutationBlocked() || !this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) || this.whSaving();
+        const lock = this.ro.mutationBlocked() || !this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) || this.whSaving();
         const arr = this.whDays;
 
         for (const ctrl of arr.controls) {
@@ -557,8 +428,7 @@ export class ClinicDetailPageComponent implements OnInit {
     });
 
     private readonly apSettingsFormLockEffect = effect(() => {
-        const lock =
-            this.ro.mutationBlocked() || !this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) || this.apSettingsSaving();
+        const lock = this.ro.mutationBlocked() || !this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) || this.apSettingsSaving();
 
         if (lock) {
             if (this.apSettingsForm.enabled) {
@@ -574,15 +444,7 @@ export class ClinicDetailPageComponent implements OnInit {
     }
 
     canSaveWorkingHours(): boolean {
-        return (
-            this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) &&
-            !this.ro.mutationBlocked() &&
-            !this.whSaving() &&
-            this.whForm.valid &&
-            this.whDays.length > 0 &&
-            !this.whLoading() &&
-            this.whError() === null
-        );
+        return this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) && !this.ro.mutationBlocked() && !this.whSaving() && this.whForm.valid && this.whDays.length > 0 && !this.whLoading() && this.whError() === null;
     }
 
     retryWorkingHoursLoad(): void {
@@ -594,14 +456,7 @@ export class ClinicDetailPageComponent implements OnInit {
     }
 
     canSaveAppointmentSettings(): boolean {
-        return (
-            this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) &&
-            !this.ro.mutationBlocked() &&
-            !this.apSettingsSaving() &&
-            this.apSettingsForm.valid &&
-            !this.apSettingsLoading() &&
-            this.apSettingsError() === null
-        );
+        return this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) && !this.ro.mutationBlocked() && !this.apSettingsSaving() && this.apSettingsForm.valid && !this.apSettingsLoading() && this.apSettingsError() === null;
     }
 
     retryAppointmentSettingsLoad(): void {
@@ -678,11 +533,7 @@ export class ClinicDetailPageComponent implements OnInit {
             g.get('isClosed')!
                 .valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
                 .subscribe(() => {
-                    if (
-                        !this.ro.mutationBlocked() &&
-                        this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) &&
-                        !this.whSaving()
-                    ) {
+                    if (!this.ro.mutationBlocked() && this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) && !this.whSaving()) {
                         this.applyWhRowTimeLocks(g);
                     }
                 });
@@ -741,9 +592,7 @@ export class ClinicDetailPageComponent implements OnInit {
                 this.whSaving.set(false);
 
                 if (e instanceof HttpErrorResponse) {
-                    this.whFormError.set(
-                        clinicWorkingHoursMutationMessage(e, 'Çalışma saatleri güncellenemedi.')
-                    );
+                    this.whFormError.set(clinicWorkingHoursMutationMessage(e, 'Çalışma saatleri güncellenemedi.'));
                 } else {
                     this.whFormError.set('Çalışma saatleri güncellenemedi.');
                 }
@@ -803,9 +652,7 @@ export class ClinicDetailPageComponent implements OnInit {
                 this.apSettingsSaving.set(false);
 
                 if (e instanceof HttpErrorResponse) {
-                    this.apSettingsFormError.set(
-                        clinicAppointmentSettingsMutationMessage(e, 'Randevu varsayılanları güncellenemedi.')
-                    );
+                    this.apSettingsFormError.set(clinicAppointmentSettingsMutationMessage(e, 'Randevu varsayılanları güncellenemedi.'));
 
                     return;
                 }
@@ -972,11 +819,7 @@ export class ClinicDetailPageComponent implements OnInit {
             return;
         }
 
-        this.formError.set(
-            e instanceof HttpErrorResponse
-                ? clinicSettingsMutationMessage(e, 'Klinik pasife alınamadı.')
-                : 'Klinik pasife alınamadı.'
-        );
+        this.formError.set(e instanceof HttpErrorResponse ? clinicSettingsMutationMessage(e, 'Klinik pasife alınamadı.') : 'Klinik pasife alınamadı.');
     }
 
     onActivate(): void {
@@ -1021,11 +864,7 @@ export class ClinicDetailPageComponent implements OnInit {
             return;
         }
 
-        this.formError.set(
-            e instanceof HttpErrorResponse
-                ? clinicSettingsMutationMessage(e, 'Klinik aktifleştirilemedi.')
-                : 'Klinik aktifleştirilemedi.'
-        );
+        this.formError.set(e instanceof HttpErrorResponse ? clinicSettingsMutationMessage(e, 'Klinik aktifleştirilemedi.') : 'Klinik aktifleştirilemedi.');
     }
 
     private patchFormFromVm(vm: ClinicDetailVm): void {

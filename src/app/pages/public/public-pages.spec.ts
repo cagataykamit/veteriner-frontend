@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
@@ -33,7 +33,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
 
     beforeEach(async () => {
         TestBed.configureTestingModule({
-            providers: [provideRouter(appRoutes), provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
+            providers: [provideRouter(appRoutes), provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
         });
         harness = await RouterTestingHarness.create();
     });
@@ -211,7 +211,7 @@ describe('Ana sayfa (PublicHomePage)', () => {
 
     beforeEach(async () => {
         TestBed.configureTestingModule({
-            providers: [provideRouter(appRoutes), provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
+            providers: [provideRouter(appRoutes), provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
         });
         harness = await RouterTestingHarness.create();
         await harness.navigateByUrl(PUBLIC_PATHS.home);
@@ -295,7 +295,7 @@ describe('Tanıtım SEO (WEB-003)', () => {
 
     beforeEach(async () => {
         TestBed.configureTestingModule({
-            providers: [provideRouter(appRoutes), provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
+            providers: [provideRouter(appRoutes), provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
         });
         harness = await RouterTestingHarness.create();
     });

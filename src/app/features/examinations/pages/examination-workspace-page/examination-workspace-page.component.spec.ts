@@ -1,4 +1,4 @@
-import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
@@ -40,8 +40,7 @@ const editVm = (over: Partial<ExaminationEditVm> = {}): ExaminationEditVm => ({
     ...over
 });
 
-const httpError = (status: number, code?: string) =>
-    new HttpErrorResponse({ status, error: code ? { status, extensions: { code } } : null });
+const httpError = (status: number, code?: string) => new HttpErrorResponse({ status, error: code ? { status, extensions: { code } } : null });
 
 describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
     let fixture: ComponentFixture<ExaminationWorkspacePageComponent>;
@@ -50,18 +49,14 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
     let navigate: jasmine.Spy;
 
     beforeEach(async () => {
-        service = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', [
-            'getExaminationForEditById',
-            'updateExamination',
-            'createExamination'
-        ]);
+        service = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', ['getExaminationForEditById', 'updateExamination', 'createExamination']);
         service.getExaminationForEditById.and.returnValue(of(editVm()));
 
         await TestBed.configureTestingModule({
             imports: [ExaminationWorkspacePageComponent],
             providers: [
                 provideRouter([]),
-                provideHttpClient(),
+                provideHttpClient(withXhr()),
                 provideHttpClientTesting(),
                 { provide: API_BASE_URL, useValue: 'http://api.test' },
                 { provide: ExaminationsService, useValue: service },

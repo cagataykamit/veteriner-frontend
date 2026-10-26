@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
@@ -13,7 +13,7 @@ describe('ExaminationTemplatesService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
         });
         service = TestBed.inject(ExaminationTemplatesService);
         http = TestBed.inject(HttpTestingController);
@@ -74,20 +74,14 @@ describe('ExaminationTemplatesService', () => {
         let finalized: ExaminationTemplateError | undefined;
 
         service.apply('e1', 't1', 'V1').subscribe({ error: (e: ExaminationTemplateError) => (finalized = e) });
-        http.expectOne('http://api.test/api/v1/examinations/e1/apply-template').flush(
-            { status: 409, code: 'Examinations.Finalized' },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/examinations/e1/apply-template').flush({ status: 409, code: 'Examinations.Finalized' }, { status: 409, statusText: 'Conflict' });
         expect(finalized?.code).toBe('Examinations.Finalized');
         expect(finalized?.message).toContain('kesinleştirilmiş');
 
         let stock: ExaminationTemplateError | undefined;
 
         service.apply('e1', 't1', 'V1').subscribe({ error: (e: ExaminationTemplateError) => (stock = e) });
-        http.expectOne('http://api.test/api/v1/examinations/e1/apply-template').flush(
-            { status: 400, code: 'Administrations.InsufficientStock', detail: 'Yetersiz stok.', productId: 'p1' },
-            { status: 400, statusText: 'Bad Request' }
-        );
+        http.expectOne('http://api.test/api/v1/examinations/e1/apply-template').flush({ status: 400, code: 'Administrations.InsufficientStock', detail: 'Yetersiz stok.', productId: 'p1' }, { status: 400, statusText: 'Bad Request' });
         expect(stock?.productId).toBe('p1');
         expect(stock?.withProductName((id) => (id === 'p1' ? 'Kulak damlası' : null))).toBe('"Kulak damlası" satırı: Yetersiz stok.');
         expect(stock?.withProductName(() => null)).toBe('Yetersiz stok.');
@@ -97,10 +91,7 @@ describe('ExaminationTemplatesService', () => {
         service.create({ name: 'X', visitReason: null, findings: null, plan: null, lines: [] }).subscribe({
             error: (e: ExaminationTemplateError) => (vaccine = e)
         });
-        http.expectOne(BASE).flush(
-            { status: 400, extensions: { code: 'ExaminationTemplates.VaccineNotAllowed', productId: 'v1' } },
-            { status: 400, statusText: 'Bad Request' }
-        );
+        http.expectOne(BASE).flush({ status: 400, extensions: { code: 'ExaminationTemplates.VaccineNotAllowed', productId: 'v1' } }, { status: 400, statusText: 'Bad Request' });
         expect(vaccine?.productId).toBe('v1');
         expect(vaccine?.message).toContain('Aşı ürünü');
     });

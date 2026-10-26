@@ -1,7 +1,7 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -17,30 +17,17 @@ import { tenantInvitePanelFailureMessage } from '@/app/features/tenant-invites/u
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { dateTimeLocalInputToIsoUtc, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
-import {
-    DATETIME_LOCAL_INPUT_MIN,
-    dateTimeYearRangeValidator
-} from '@/app/shared/utils/date-input-validation.utils';
+import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-tenant-invite-panel-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        RouterLink,
-        ButtonModule,
-        InputTextModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent, DateInputComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, AppPageHeaderComponent, AppLoadingStateComponent, DateInputComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <app-page-header
-            title="Kullanıcı daveti"
-            description="Kuruma katılım için e-posta daveti oluşturun; davet edilen kullanıcı paket seçmez."
-        >
-            <a actions routerLink="/panel/settings/invites/list" pButton type="button" label="Davet listesi" icon="pi pi-list" class="p-button-secondary"></a>
+        <app-page-header title="Kullanıcı daveti" description="Kuruma katılım için e-posta daveti oluşturun; davet edilen kullanıcı paket seçmez.">
+            <a actions routerLink="/panel/settings/invites/list" pButton type="button" class="p-button-secondary"><i class="pi pi-list"></i>Davet listesi</a>
         </app-page-header>
 
         @if (pageLoading()) {
@@ -75,12 +62,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="inviteClinic" class="block text-sm font-medium text-muted-color mb-2">Klinik *</label>
-                            <select
-                                id="inviteClinic"
-                                class="w-full p-inputtext p-component"
-                                style="min-height: 2.5rem"
-                                formControlName="clinicId"
-                            >
+                            <select id="inviteClinic" class="w-full p-inputtext p-component" style="min-height: 2.5rem" formControlName="clinicId">
                                 <option value="">Klinik seçin</option>
                                 @for (c of clinics(); track c.id) {
                                     <option [value]="c.id">{{ c.name }}</option>
@@ -94,12 +76,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="inviteRole" class="block text-sm font-medium text-muted-color mb-2">Rol *</label>
-                            <select
-                                id="inviteRole"
-                                class="w-full p-inputtext p-component"
-                                style="min-height: 2.5rem"
-                                formControlName="operationClaimId"
-                            >
+                            <select id="inviteRole" class="w-full p-inputtext p-component" style="min-height: 2.5rem" formControlName="operationClaimId">
                                 <option value="">Rol seçin</option>
                                 @for (r of operationClaims(); track r.id) {
                                     <option [value]="r.id">{{ r.name }}</option>
@@ -126,19 +103,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <p-button
-                            type="submit"
-                            label="Davet oluştur"
-                            icon="pi pi-send"
-                            [loading]="submitting()"
-                            [disabled]="
-                                form.invalid ||
-                                submitting() ||
-                                clinics().length === 0 ||
-                                operationClaims().length === 0 ||
-                                !canManageTenantAccess()
-                            "
-                        />
+                        <p-button type="submit" label="Davet oluştur" icon="pi pi-send" [loading]="submitting()" [disabled]="form.invalid || submitting() || clinics().length === 0 || operationClaims().length === 0 || !canManageTenantAccess()" />
                     </div>
                 </form>
             </div>
@@ -150,9 +115,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         Bu bağlantıyı davet ettiğiniz kişiyle paylaşın. Süre:
                         {{ formatExpires(created.expiresAtUtc) }}
                     </p>
-                    <div
-                        class="p-3 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 break-all text-sm font-mono mb-3"
-                    >
+                    <div class="p-3 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 break-all text-sm font-mono mb-3">
                         {{ joinUrl() }}
                     </div>
                     <div class="flex flex-wrap gap-2">
@@ -192,10 +155,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 
             <div class="card">
                 <h5 class="mt-0 mb-2">İptal / yeniden gönderim</h5>
-                <p class="text-sm text-muted-color m-0">
-                    Daveti geri çekme veya e-postayı yeniden gönderme bu sürümde yok; ileri fazda backend uçları eklendiğinde buraya
-                    bağlanabilir.
-                </p>
+                <p class="text-sm text-muted-color m-0">Daveti geri çekme veya e-postayı yeniden gönderme bu sürümde yok; ileri fazda backend uçları eklendiğinde buraya bağlanabilir.</p>
             </div>
         }
     `
@@ -211,9 +171,7 @@ export class TenantInvitePanelPageComponent implements OnInit {
     readonly ro = inject(TenantReadOnlyContextService);
 
     /** `Tenants.InviteCreate` ve salt okunur değil. */
-    readonly canManageTenantAccess = computed(
-        () => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked()
-    );
+    readonly canManageTenantAccess = computed(() => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked());
 
     readonly pageLoading = signal(true);
     readonly pageError = signal<string | null>(null);
@@ -267,12 +225,7 @@ export class TenantInvitePanelPageComponent implements OnInit {
                 });
             },
             error: (e: unknown) => {
-                const msg =
-                    e instanceof HttpErrorResponse
-                        ? tenantInvitePanelFailureMessage(e, 'Klinik listesi yüklenemedi.')
-                        : e instanceof Error && e.message
-                          ? e.message
-                          : 'Klinik listesi yüklenemedi.';
+                const msg = e instanceof HttpErrorResponse ? tenantInvitePanelFailureMessage(e, 'Klinik listesi yüklenemedi.') : e instanceof Error && e.message ? e.message : 'Klinik listesi yüklenemedi.';
 
                 this.pageError.set(msg);
                 this.pageLoading.set(false);

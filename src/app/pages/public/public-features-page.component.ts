@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { PUBLIC_FEATURE_SECTIONS } from '@/app/features/public/utils/public-features-content.utils';
 import { PUBLIC_FEATURES_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
@@ -12,6 +12,7 @@ import { PublicScreenshotComponent } from './components/public-screenshot.compon
     selector: 'app-public-features-page',
     standalone: true,
     imports: [PublicPageHeaderComponent, PublicScreenshotComponent, PublicCtaComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-public-page-header
             eyebrow="Özellikler"

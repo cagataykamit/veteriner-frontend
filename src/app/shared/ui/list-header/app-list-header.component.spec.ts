@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { AppListHeaderComponent } from './app-list-header.component';
 
 @Component({
     imports: [AppListHeaderComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-list-header title="Müşteriler" [count]="count">
             <input data-testid="search" />

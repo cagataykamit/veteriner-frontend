@@ -29,7 +29,7 @@ import { portalErrorMessage } from '@portal/app/core/errors/portal-errors';
             <section class="portal-card portal-stack" aria-labelledby="account-session-title">
                 <h2 id="account-session-title" class="portal-subtitle">Oturum</h2>
                 @if (error(); as message) {
-                    <p-message severity="error" [text]="message" role="alert" />
+                    <p-message severity="error" role="alert">{{ message }}</p-message>
                 }
                 @if (confirmAll()) {
                     <p role="alert">Bu hesabın açık olduğu tüm cihazlardan çıkış yapılacak. Emin misiniz?</p>

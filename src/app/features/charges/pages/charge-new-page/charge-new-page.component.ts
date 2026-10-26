@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,15 +10,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { EXAMINATIONS_READ_CLAIM, PAYMENTS_CREATE_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ChargeTaxFieldsComponent } from '@/app/features/charges/components/charge-tax-fields.component';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
-import {
-    CHARGE_DESCRIPTION_MAX_LENGTH,
-    CHARGE_QUANTITY_MAX,
-    CHARGE_QUANTITY_MAX_DECIMALS,
-    CHARGE_UNIT_PRICE_MAX,
-    CHARGE_UNIT_PRICE_MAX_DECIMALS,
-    chargeNumberValidator,
-    computeChargeAmount
-} from '@/app/features/charges/utils/charge-amount.utils';
+import { CHARGE_DESCRIPTION_MAX_LENGTH, CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, CHARGE_UNIT_PRICE_MAX, CHARGE_UNIT_PRICE_MAX_DECIMALS, chargeNumberValidator, computeChargeAmount } from '@/app/features/charges/utils/charge-amount.utils';
 import type { ChargeLineKind } from '@/app/features/charges/utils/charge-tax.utils';
 import { prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
@@ -37,6 +29,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
     selector: 'app-charge-new-page',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent, ChargeTaxFieldsComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header categoryLink="/panel/charges" categoryLinkLabel="Ücret listesine dön" title="Yeni Ücret" description="Müşteriye ücret satırı ekleyin. Ücret ödeme sayılmaz." />
 
@@ -71,7 +64,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                 optionValue="value"
                                 [placeholder]="visitOptions().length ? 'Bağlanacak geliş (isteğe bağlı)' : 'Bu müşteri için bugün geliş yok'"
                                 [showClear]="true"
-                                styleClass="w-full"
+                                class="w-full"
                             />
                         </div>
                     }
@@ -89,21 +82,14 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                 filterPlaceholder="Ara…"
                                 filterBy="label"
                                 [showClear]="true"
-                                styleClass="w-full"
+                                class="w-full"
                                 [loading]="loadingExaminations()"
                             />
                         </div>
                     }
                     <div class="col-span-12">
                         <label for="chargeDescription" class="block text-sm font-medium text-muted-color mb-2">Açıklama *</label>
-                        <input
-                            id="chargeDescription"
-                            type="text"
-                            class="w-full p-inputtext p-component"
-                            formControlName="description"
-                            [attr.maxlength]="descriptionMaxLength"
-                            placeholder="Örn. Genel muayene, mama satışı"
-                        />
+                        <input id="chargeDescription" type="text" class="w-full p-inputtext p-component" formControlName="description" [attr.maxlength]="descriptionMaxLength" placeholder="Örn. Genel muayene, mama satışı" />
                         @if (form.controls.description.invalid && form.controls.description.touched) {
                             <small class="text-red-500">Açıklama zorunludur (en fazla {{ descriptionMaxLength }} karakter).</small>
                         }
@@ -145,14 +131,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                         [disabled]="form.invalid || amountPreview() === null || submitting() || ro.mutationBlocked()"
                     />
                     @if (canCollectPayment) {
-                        <p-button
-                            type="button"
-                            [label]="copy.buttonSave"
-                            icon="pi pi-check"
-                            severity="secondary"
-                            (onClick)="onSubmit(false)"
-                            [disabled]="form.invalid || amountPreview() === null || submitting() || ro.mutationBlocked()"
-                        />
+                        <p-button type="button" [label]="copy.buttonSave" icon="pi pi-check" severity="secondary" (onClick)="onSubmit(false)" [disabled]="form.invalid || amountPreview() === null || submitting() || ro.mutationBlocked()" />
                     }
                     <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
@@ -180,7 +159,7 @@ export class ChargeNewPageComponent implements OnInit {
 
     /** Ücret kaydından sonra ödeme formuna geçilebilir (B-03); yoksa kayıt liste ekranına döner. */
     readonly canCollectPayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
-    readonly canLinkVisit =this.auth.hasOperationClaim(VISITS_READ_CLAIM);
+    readonly canLinkVisit = this.auth.hasOperationClaim(VISITS_READ_CLAIM);
     readonly canLinkExamination = this.auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM);
 
     /** Form başına bir kez üretilir; hata sonrası yeniden denemede de aynı kalır (ikinci ücret oluşmaz). */
@@ -207,10 +186,7 @@ export class ChargeNewPageComponent implements OnInit {
         examinationId: [''],
         description: ['', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(CHARGE_DESCRIPTION_MAX_LENGTH)]],
         quantity: [1 as number | null, [Validators.required, chargeNumberValidator(CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS)]],
-        unitPrice: [
-            null as number | null,
-            [Validators.required, chargeNumberValidator(CHARGE_UNIT_PRICE_MAX, CHARGE_UNIT_PRICE_MAX_DECIMALS)]
-        ],
+        unitPrice: [null as number | null, [Validators.required, chargeNumberValidator(CHARGE_UNIT_PRICE_MAX, CHARGE_UNIT_PRICE_MAX_DECIMALS)]],
         lineKind: ['Service' as ChargeLineKind],
         vatRate: [null as number | null]
     });

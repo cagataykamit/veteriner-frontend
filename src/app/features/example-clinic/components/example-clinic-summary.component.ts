@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { mapExampleClinicSummaryToRows } from '@/app/features/example-clinic/data/example-clinic.mapper';
 import type { ExampleClinicCounts } from '@/app/features/example-clinic/models/example-clinic-api.model';
 
@@ -9,6 +9,7 @@ import type { ExampleClinicCounts } from '@/app/features/example-clinic/models/e
 @Component({
     selector: 'app-example-clinic-summary',
     standalone: true,
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2" data-testid="example-clinic-summary">
             @for (row of rows(); track row.key) {

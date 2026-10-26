@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -38,7 +38,7 @@ describe('ExaminationProceduresSectionComponent', () => {
             imports: [ExaminationProceduresSectionComponent],
             providers: [
                 provideRouter([]),
-                provideHttpClient(),
+                provideHttpClient(withXhr()),
                 provideHttpClientTesting(),
                 { provide: API_BASE_URL, useValue: 'http://api.test' },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicName: () => 'K', getClinicId: () => 'c' } },

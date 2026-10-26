@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { EMPTY, Subject, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -23,6 +23,7 @@ const source: ReportListSource<ReportListQueryBase, Result> = {
 @Component({
     standalone: true,
     imports: [ReportResultsComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-report-results [state]="state" emptyMessage="Kayıt yok" emptyHint="Süzgeci değiştirin">
             <ng-template #rows>

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { startWith } from 'rxjs';
@@ -20,6 +20,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     selector: 'app-visit-correction-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-dialog
             [header]="restoring() ? 'Yanlış gelişi geri al' : 'Geliş düzeltmesi'"
@@ -43,16 +44,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     @if (!restoring()) {
                         <div class="col-span-12">
                             <label for="vc-action" class="block text-sm font-medium text-muted-color mb-2">Yapılacak düzeltme *</label>
-                            <p-select
-                                inputId="vc-action"
-                                formControlName="action"
-                                [options]="actionOptions()"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Düzeltme seçin"
-                                styleClass="w-full"
-                                appendTo="body"
-                            >
+                            <p-select inputId="vc-action" formControlName="action" [options]="actionOptions()" optionLabel="label" optionValue="value" placeholder="Düzeltme seçin" class="w-full" appendTo="body">
                                 <ng-template #item let-option>
                                     <div>
                                         <div>{{ option.label }}</div>
@@ -85,16 +77,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button
-                    type="button"
-                    [label]="restoring() ? 'Geri al' : 'Düzeltmeyi kaydet'"
-                    icon="pi pi-check"
-                    [loading]="submitting()"
-                    [disabled]="form.invalid || submitting()"
-                    (onClick)="onSubmit()"
-                />
+                <p-button type="button" [label]="restoring() ? 'Geri al' : 'Düzeltmeyi kaydet'" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting()" (onClick)="onSubmit()" />
             </ng-template>
         </p-dialog>
     `

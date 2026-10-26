@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink, convertToParamMap } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
@@ -59,6 +59,7 @@ const ADD_ICON: Record<ProcedureKind, string> = {
         HospitalizationFormComponent,
         TrDateTimePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="card" data-testid="procedures-section">
             <h4 class="mt-0 mb-4 text-xl font-semibold">İşlemler</h4>

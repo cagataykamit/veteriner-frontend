@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { DOCUMENT } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -14,12 +14,7 @@ import { setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils'
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { parseValidationFieldErrors, type FieldErrors } from '@/app/shared/utils/validation-error-parse.utils';
-import {
-    getPasswordPolicyErrorMessage,
-    getStrongPasswordValidationErrors,
-    PASSWORD_ERROR_MESSAGES,
-    PASSWORD_POLICY_HINT
-} from '@/app/core/validation/password-policy.util';
+import { getPasswordPolicyErrorMessage, getStrongPasswordValidationErrors, PASSWORD_ERROR_MESSAGES, PASSWORD_POLICY_HINT } from '@/app/core/validation/password-policy.util';
 import { PasswordResetService } from '@/app/pages/auth/password-reset.service';
 
 const CONFIRM_RESET_FALLBACK = 'İşlem tamamlanamadı. Lütfen daha sonra tekrar deneyin.';
@@ -38,26 +33,15 @@ const RESET_PASSWORD_FIELD_MAP: Record<string, ResetPasswordFieldKey> = {
     selector: 'app-reset-password-page',
     standalone: true,
     imports: [FormsModule, ButtonModule, PasswordModule, RippleModule, RouterLink, PublicLegalLinksComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="public-page public-auth-page">
             <div class="public-auth-shell">
                 <div class="public-auth-card-frame">
                     <div class="public-auth-card-inner">
                         <div class="public-auth-header">
-                            <img
-                                [src]="brand.logoFull"
-                                alt="Vetinity"
-                                class="public-auth-logo block dark:hidden"
-                                width="120"
-                                height="30"
-                            />
-                            <img
-                                [src]="brand.logoFullDark"
-                                alt="Vetinity"
-                                class="public-auth-logo hidden dark:block"
-                                width="120"
-                                height="30"
-                            />
+                            <img [src]="brand.logoFull" alt="Vetinity" class="public-auth-logo block dark:hidden" width="120" height="30" />
+                            <img [src]="brand.logoFullDark" alt="Vetinity" class="public-auth-logo hidden dark:block" width="120" height="30" />
                             @if (submitted()) {
                                 <div class="public-auth-title">Şifre güncellendi</div>
                                 <span class="public-auth-subtitle">{{ resetSuccessMessage }}</span>
@@ -76,11 +60,7 @@ const RESET_PASSWORD_FIELD_MAP: Record<string, ResetPasswordFieldKey> = {
                             </div>
                         } @else if (!token()) {
                             <div class="public-auth-form">
-                                <p-button
-                                    label="Giriş sayfasına dön"
-                                    styleClass="w-full public-auth-submit"
-                                    (onClick)="goToLogin()"
-                                ></p-button>
+                                <p-button label="Giriş sayfasına dön" styleClass="w-full public-auth-submit" (onClick)="goToLogin()"></p-button>
                             </div>
                         } @else {
                             <form class="public-auth-form" (ngSubmit)="onSubmit(resetForm)" autocomplete="on" #resetForm="ngForm">
@@ -129,13 +109,7 @@ const RESET_PASSWORD_FIELD_MAP: Record<string, ResetPasswordFieldKey> = {
                                     }
                                 </div>
 
-                                <p-button
-                                    type="submit"
-                                    label="Şifreyi güncelle"
-                                    styleClass="w-full public-auth-submit"
-                                    [loading]="loading()"
-                                    [disabled]="loading()"
-                                ></p-button>
+                                <p-button type="submit" label="Şifreyi güncelle" styleClass="w-full public-auth-submit" [loading]="loading()" [disabled]="loading()"></p-button>
 
                                 @if (formError()) {
                                     <div class="public-auth-alert" role="alert" aria-live="assertive">

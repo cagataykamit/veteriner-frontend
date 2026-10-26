@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLINICS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { RouterLink } from '@angular/router';
@@ -19,42 +19,14 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 @Component({
     selector: 'app-clinics-list-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        RouterLink,
-        TableModule,
-        ButtonModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppEmptyStateComponent,
-        AppErrorStateComponent,
-        AppRowActionButtonComponent
-    ],
+    imports: [CommonModule, RouterLink, TableModule, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <app-page-header
-            title="Klinikler"
-            description="Kurumunuza kayıtlı kliniklerin listesi ve ayarları."
-        >
+        <app-page-header title="Klinikler" description="Kurumunuza kayıtlı kliniklerin listesi ve ayarları.">
             @if (canCreateClinic() && !ro.mutationBlocked()) {
-                <a
-                    actions
-                    routerLink="/panel/settings/clinics/new"
-                    pButton
-                    type="button"
-                    label="Yeni Klinik"
-                    icon="pi pi-plus"
-                    class="p-button-primary"
-                ></a>
+                <a actions routerLink="/panel/settings/clinics/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Klinik</a>
             } @else if (canCreateClinic() && ro.mutationBlocked()) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Yeni Klinik (salt okunur)"
-                    icon="pi pi-lock"
-                    [disabled]="true"
-                    class="p-button-secondary"
-                ></button>
+                <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Klinik (salt okunur)</button>
             }
         </app-page-header>
 
@@ -103,9 +75,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 
                 <div class="lg:hidden space-y-3">
                     @for (row of rows(); track row.id) {
-                        <div
-                            class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
-                        >
+                        <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                             <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words mb-2">{{ row.name }}</div>
                             <div class="text-sm text-muted-color mb-1">Şehir: {{ row.city || '—' }}</div>
                             <div class="text-sm text-muted-color mb-1 break-all">Tel: {{ formatClinicPhoneForDisplay(row.phone) }}</div>

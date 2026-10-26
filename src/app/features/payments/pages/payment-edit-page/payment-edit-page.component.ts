@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-s
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -14,10 +14,7 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import { mapPaymentUpsertFormToWriteRequest } from '@/app/features/payments/data/payment.mapper';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
 import { PAYMENT_WRITE_METHOD_OPTIONS } from '@/app/features/payments/utils/payment-method.utils';
-import {
-    type PaymentUpsertFieldErrors,
-    parsePaymentUpsertHttpError
-} from '@/app/features/payments/utils/payment-upsert-validation-parse.utils';
+import { type PaymentUpsertFieldErrors, parsePaymentUpsertHttpError } from '@/app/features/payments/utils/payment-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -25,19 +22,9 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { amountToFormString, parseAmountFormValue } from '@/app/shared/utils/decimal-form.utils';
-import {
-    fromIstanbulDateTimeLocalInputToUtcIso,
-    toIstanbulDateTimeLocalInputValue
-} from '@/app/shared/utils/date.utils';
-import {
-    dateTimeYearRangeValidator,
-    effectiveDateTimeLocalInputMin
-} from '@/app/shared/utils/date-input-validation.utils';
-import {
-    PAYMENT_DATE_TOO_FAR_PAST_MESSAGE,
-    paymentDateNotTooFarPastValidator,
-    paymentDateTimeLocalMinAllowed
-} from '@/app/features/payments/utils/payment-date-validation.utils';
+import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
+import { dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
+import { PAYMENT_DATE_TOO_FAR_PAST_MESSAGE, paymentDateNotTooFarPastValidator, paymentDateTimeLocalMinAllowed } from '@/app/features/payments/utils/payment-date-validation.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -45,16 +32,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 @Component({
     selector: 'app-payment-edit-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        ButtonModule,
-        InputTextModule,
-        SelectModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (loading()) {
             <app-loading-state message="Ödeme düzenleme bilgileri yükleniyor…" />
@@ -67,9 +46,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 
             <div class="card">
                 @if (ro.mutationBlocked()) {
-                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                        İşletme salt okunur moddadır; değişiklik kaydedilemez.
-                    </p>
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; değişiklik kaydedilemez.</p>
                 }
                 @if (selectionError()) {
                     <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
@@ -104,28 +81,14 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         </div>
                         <div class="col-span-12 md:col-span-4">
                             <label for="currency" class="block text-sm font-medium text-muted-color mb-2">Para birimi *</label>
-                            <p-select
-                                inputId="currency"
-                                [options]="currencyOptions"
-                                formControlName="currency"
-                                optionLabel="label"
-                                optionValue="value"
-                                styleClass="w-full"
-                            />
+                            <p-select inputId="currency" [options]="currencyOptions" formControlName="currency" optionLabel="label" optionValue="value" class="w-full" />
                             @if (apiFieldErrors().currency) {
                                 <small class="text-red-500">{{ apiFieldErrors().currency }}</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-4">
                             <label for="method" class="block text-sm font-medium text-muted-color mb-2">Yöntem *</label>
-                            <p-select
-                                inputId="method"
-                                [options]="methodOptions"
-                                formControlName="method"
-                                optionLabel="label"
-                                optionValue="value"
-                                styleClass="w-full"
-                            />
+                            <p-select inputId="method" [options]="methodOptions" formControlName="method" optionLabel="label" optionValue="value" class="w-full" />
                             @if (apiFieldErrors().method) {
                                 <small class="text-red-500">{{ apiFieldErrors().method }}</small>
                             }
@@ -157,25 +120,11 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <p-button
-                            type="submit"
-                            [label]="copy.buttonSave"
-                            icon="pi pi-check"
-                            [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || ro.mutationBlocked()"
-                        />
-                        <p-button
-                            type="button"
-                            [label]="copy.buttonCancel"
-                            icon="pi pi-times"
-                            severity="secondary"
-                            (onClick)="goDetail()"
-                            [disabled]="submitting()"
-                        />
+                        <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || ro.mutationBlocked()" />
+                        <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goDetail()" [disabled]="submitting()" />
                     </div>
                 </form>
             </div>
-
         }
     `
 })
@@ -376,10 +325,6 @@ export class PaymentEditPageComponent implements OnInit {
     goDetail(): void {
         void this.router.navigate(['/panel/payments', this.paymentId]);
     }
-
-
-
-
 
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {

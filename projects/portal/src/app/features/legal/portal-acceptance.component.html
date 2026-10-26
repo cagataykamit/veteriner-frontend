@@ -14,7 +14,7 @@
                 <p class="portal-muted">Portalı kullanmak için güncel kullanım şartlarını ve gizlilik politikasını onaylamanız gerekiyor.</p>
                 <portal-legal-consent [documents]="pendingDocuments()" [control]="consent" [showError]="submitted() && consent.invalid" />
                 @if (actionError(); as message) {
-                    <p-message severity="error" [text]="message" role="alert" />
+                    <p-message severity="error" role="alert">{{ message }}</p-message>
                 }
                 <div class="portal-actions">
                     <p-button label="Onayla ve devam et" [loading]="busy()" (onClick)="acceptDocuments()" />
@@ -34,7 +34,7 @@
                     </p>
                     <div class="portal-scroll-box portal-prewrap" tabindex="0" aria-label="Aydınlatma metni" data-testid="disclosure-text">{{ d.text }}</div>
                     @if (actionError(); as message) {
-                        <p-message severity="error" [text]="message" role="alert" />
+                        <p-message severity="error" role="alert">{{ message }}</p-message>
                     }
                     <div class="portal-actions">
                         <p-button label="Okudum, bilgilendirildim" [loading]="busy()" (onClick)="acknowledgeDisclosure()" />

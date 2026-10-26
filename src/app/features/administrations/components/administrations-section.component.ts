@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -41,6 +41,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         AppRowActionButtonComponent,
         TrDateTimePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (canRead) {
             <div class="card" data-testid="administrations-section">

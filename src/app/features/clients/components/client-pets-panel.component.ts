@@ -1,4 +1,4 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, computed, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { ClientPetRow } from '@/app/features/clients/utils/client-card.utils';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
@@ -14,6 +14,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     selector: 'app-client-pets-panel',
     standalone: true,
     imports: [RouterLink, TrDateTimePipe],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <section class="card mb-0 h-full" aria-labelledby="client-pets-title" data-testid="client-pets">
             <div class="flex flex-wrap items-center gap-2 mb-3">

@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -14,9 +14,7 @@ describe('ReportFilterBarComponent — müşteri/hasta seçicisi yok, yalnız ar
     let source: jasmine.SpyObj<ReportListSource<ReportListQueryBase, ReportListResultBase>>;
 
     function create(config: { snapshot?: boolean; dateRangeOnly?: boolean } = {}): HTMLElement {
-        const state = TestBed.runInInjectionContext(
-            () => new ReportListState<ReportListQueryBase, ReportListResultBase>({ source, stateKey: KEY, readClaim: 'Test.Read', exportFilePrefix: 'test', ...config })
-        );
+        const state = TestBed.runInInjectionContext(() => new ReportListState<ReportListQueryBase, ReportListResultBase>({ source, stateKey: KEY, readClaim: 'Test.Read', exportFilePrefix: 'test', ...config }));
 
         state.init();
         const fixture = TestBed.createComponent(ReportFilterBarComponent);
@@ -38,7 +36,7 @@ describe('ReportFilterBarComponent — müşteri/hasta seçicisi yok, yalnız ar
         TestBed.configureTestingModule({
             providers: [
                 provideRouter([]),
-                provideHttpClient(),
+                provideHttpClient(withXhr()),
                 provideHttpClientTesting(),
                 { provide: API_BASE_URL, useValue: 'http://api.test' },
                 {

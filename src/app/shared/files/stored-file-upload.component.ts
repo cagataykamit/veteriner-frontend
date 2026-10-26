@@ -84,7 +84,7 @@ let nextKey = 1;
                             }
                         </div>
                         @if (item.status === 'uploading') {
-                            <p-progressbar [value]="item.progress" [showValue]="true" styleClass="mt-2" [attr.aria-label]="item.name + ' yükleniyor'" />
+                            <p-progressbar [value]="item.progress" [showValue]="true" class="mt-2" [attr.aria-label]="item.name + ' yükleniyor'" />
                         }
                         @if (item.error) {
                             <small class="text-red-500 block mt-1" role="alert">{{ item.error }}</small>

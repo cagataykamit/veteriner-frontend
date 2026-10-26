@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { firstActionLabel, formatMinutes, formatRate, ONBOARDING_LABELS, type TrialActivationMetricsDto, type TrialOnboarding } from '@/app/features/trial-metrics/models/trial-metrics.model';
@@ -25,6 +25,7 @@ interface MetricCard {
     selector: 'app-trial-metrics-page',
     standalone: true,
     imports: [ButtonModule, TableModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header title="Deneme ölçümleri" description="Dönemde deneme başlatan kliniklerin aktivasyonu ve dönüşümü. Yalnız Vetinity platform yöneticisi görür.">
             <div actions class="flex gap-1" role="group" aria-label="Dönem">
@@ -33,13 +34,13 @@ interface MetricCard {
                         pButton
                         type="button"
                         size="small"
-                        [label]="'Son ' + days + ' gün'"
+                       
                         [severity]="periodDays() === days ? 'primary' : 'secondary'"
                         [outlined]="periodDays() !== days"
                         [attr.aria-pressed]="periodDays() === days"
                         (click)="selectPeriod(days)"
                         [attr.data-testid]="'tm-period-' + days"
-                    ></button>
+                    >{{ 'Son ' + days + ' gün' }}</button>
                 }
             </div>
         </app-page-header>

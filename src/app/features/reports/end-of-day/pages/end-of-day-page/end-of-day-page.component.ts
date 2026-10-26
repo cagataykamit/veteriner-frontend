@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, OnDestroy, OnInit, ViewEncapsulation, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewEncapsulation, computed, effect, inject, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -47,6 +47,7 @@ interface OpenItemRow {
     imports: [RouterLink, FormsModule, ButtonModule, SelectModule, TableModule, FilterFieldComponent, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, MoneyPipe],
     styleUrl: './end-of-day-page.component.scss',
     encapsulation: ViewEncapsulation.None,
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="end-of-day-page">
             <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" class="eod-screen-only" title="Gün sonu" description="Günün ücret, tahsilat ve açık işlerini tek yerde görün. Kasa sayımı ve günü kilitleme yoktur." />
@@ -72,7 +73,7 @@ interface OpenItemRow {
                                 optionLabel="label"
                                 optionValue="value"
                                 [placeholder]="copy.filterPlaceholderAll"
-                                styleClass="w-full"
+                                class="w-full"
                                 [showClear]="true"
                             />
                         </app-filter-field>
@@ -86,7 +87,7 @@ interface OpenItemRow {
                                 optionLabel="label"
                                 optionValue="value"
                                 [placeholder]="copy.filterPlaceholderAll"
-                                styleClass="w-full"
+                                class="w-full"
                                 [showClear]="true"
                             />
                         </app-filter-field>
@@ -100,7 +101,7 @@ interface OpenItemRow {
                                 optionLabel="label"
                                 optionValue="value"
                                 [placeholder]="copy.filterPlaceholderAll"
-                                styleClass="w-full"
+                                class="w-full"
                                 [showClear]="true"
                             />
                         </app-filter-field>

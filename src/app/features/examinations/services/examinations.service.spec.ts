@@ -1,4 +1,4 @@
-import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
@@ -33,12 +33,7 @@ describe('ExaminationsService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [
-                provideHttpClient(),
-                provideHttpClientTesting(),
-                { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: AuthService, useValue: { getClinicId: () => 'clinic-1' } }
-            ]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }, { provide: AuthService, useValue: { getClinicId: () => 'clinic-1' } }]
         });
         service = TestBed.inject(ExaminationsService);
         http = TestBed.inject(HttpTestingController);
@@ -68,10 +63,7 @@ describe('ExaminationsService', () => {
                 done();
             }
         });
-        http.expectOne('http://api.test/api/v1/examinations/e1').flush(
-            { status: 409, extensions: { code: 'Examinations.ConcurrencyConflict' } },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/examinations/e1').flush({ status: 409, extensions: { code: 'Examinations.ConcurrencyConflict' } }, { status: 409, statusText: 'Conflict' });
     });
 
     it('POST yanıtından id ve rowVersion okunur; istekte rowVersion yoktur', (done) => {

@@ -1,22 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, input, output, signal, model } from '@angular/core';
+import { Component, DestroyRef, inject, input, output, signal, model, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.mapper';
-import {
-    createPetUpsertFormGroup,
-    getPetUpsertFormValue,
-    type PetUpsertFormGroup
-} from '@/app/features/pets/forms/pet-upsert-form.factory';
+import { createPetUpsertFormGroup, getPetUpsertFormValue, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
-import {
-    type PetCreateFieldErrors,
-    type PetCreateFormFieldKey,
-    parsePetCreateHttpError
-} from '@/app/features/pets/utils/pet-create-validation-parse.utils';
+import { type PetCreateFieldErrors, type PetCreateFormFieldKey, parsePetCreateHttpError } from '@/app/features/pets/utils/pet-create-validation-parse.utils';
 import { PET_GENDER_FORM_OPTIONS } from '@/app/features/pets/utils/pet-status.utils';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
@@ -32,25 +24,10 @@ import { QuickBreedDialogComponent } from '@/app/shared/forms/quick-create/quick
 @Component({
     selector: 'app-quick-pet-dialog',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        DialogModule,
-        ButtonModule,
-        InputTextModule,
-        SelectModule,
-        QuickBreedDialogComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, SelectModule, QuickBreedDialogComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            header="Yeni hasta"
-            [modal]="true"
-            [dismissableMask]="true"
-            [style]="{ width: 'min(560px, 95vw)' }"
-            [contentStyle]="{ overflow: 'visible' }"
-            [(visible)]="visible"
-            (onShow)="onDialogShow()"
-        >
+        <p-dialog header="Yeni hasta" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(560px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onDialogShow()">
             @if (selectionError()) {
                 <p class="text-red-500 mt-0 mb-3" role="alert">{{ selectionError() }}</p>
             }
@@ -74,7 +51,7 @@ import { QuickBreedDialogComponent } from '@/app/shared/forms/quick-create/quick
                             optionLabel="label"
                             optionValue="value"
                             placeholder="Tür seçin"
-                            styleClass="w-full"
+                            class="w-full"
                             [loading]="loadingSpecies()"
                             [showClear]="true"
                             appendTo="body"
@@ -94,7 +71,7 @@ import { QuickBreedDialogComponent } from '@/app/shared/forms/quick-create/quick
                             optionLabel="label"
                             optionValue="value"
                             placeholder="Irk seçin"
-                            styleClass="w-full"
+                            class="w-full"
                             [loading]="loadingBreeds()"
                             [showClear]="true"
                             appendTo="body"
@@ -104,30 +81,13 @@ import { QuickBreedDialogComponent } from '@/app/shared/forms/quick-create/quick
                         }
                         @if (hasSpeciesForQuickBreed()) {
                             <div class="mt-2">
-                                <p-button
-                                    type="button"
-                                    label="Bu tür için yeni ırk"
-                                    icon="pi pi-plus"
-                                    [text]="true"
-                                    styleClass="p-0"
-                                    (onClick)="quickBreedOpen.set(true)"
-                                />
+                                <p-button type="button" label="Bu tür için yeni ırk" icon="pi pi-plus" [text]="true" styleClass="p-0" (onClick)="quickBreedOpen.set(true)" />
                             </div>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="qp-gender" class="block text-sm font-medium text-muted-color mb-2">Cinsiyet</label>
-                        <p-select
-                            inputId="qp-gender"
-                            formControlName="gender"
-                            [options]="genderOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Seçin"
-                            styleClass="w-full"
-                            [showClear]="true"
-                            appendTo="body"
-                        />
+                        <p-select inputId="qp-gender" formControlName="gender" [options]="genderOptions" optionLabel="label" optionValue="value" placeholder="Seçin" class="w-full" [showClear]="true" appendTo="body" />
                         @if (apiFieldErrors().gender) {
                             <small class="text-red-500">{{ apiFieldErrors().gender }}</small>
                         }
@@ -137,25 +97,13 @@ import { QuickBreedDialogComponent } from '@/app/shared/forms/quick-create/quick
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 <p-button type="button" label="İptal" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button
-                    type="button"
-                    label="Kaydet"
-                    icon="pi pi-check"
-                    [loading]="submitting()"
-                    [disabled]="form.invalid || submitting() || !ownerClientIdTrimmed()"
-                    (onClick)="onSubmit()"
-                />
+                <p-button type="button" label="Kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || !ownerClientIdTrimmed()" (onClick)="onSubmit()" />
             </ng-template>
         </p-dialog>
 
-        <app-quick-breed-dialog
-            [(visible)]="quickBreedOpen"
-            [speciesId]="quickBreedSpeciesId()"
-            [speciesLabel]="quickBreedSpeciesLabelForDialog()"
-            (breedCreated)="onQuickBreedCreated($event)"
-        />
+        <app-quick-breed-dialog [(visible)]="quickBreedOpen" [speciesId]="quickBreedSpeciesId()" [speciesLabel]="quickBreedSpeciesLabelForDialog()" (breedCreated)="onQuickBreedCreated($event)" />
     `
 })
 export class QuickPetDialogComponent {
@@ -187,17 +135,7 @@ export class QuickPetDialogComponent {
     readonly form: PetUpsertFormGroup = createPetUpsertFormGroup(this.fb);
 
     constructor() {
-        const fields: PetCreateFormFieldKey[] = [
-            'clientId',
-            'name',
-            'speciesId',
-            'breedId',
-            'gender',
-            'birthDate',
-            'colorId',
-            'weightStr',
-            'notes'
-        ];
+        const fields: PetCreateFormFieldKey[] = ['clientId', 'name', 'speciesId', 'breedId', 'gender', 'birthDate', 'colorId', 'weightStr', 'notes'];
 
         for (const f of fields) {
             const control = this.form.controls[f] as AbstractControl;

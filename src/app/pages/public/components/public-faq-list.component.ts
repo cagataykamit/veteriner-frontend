@@ -1,10 +1,11 @@
-import { Component, input, signal } from '@angular/core';
+import { Component, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import type { PublicFaqDef } from '@/app/features/public/utils/public-faq-content.utils';
 
 /** SSS akordeonu: 1 px çerçeve, gölge yok; birden fazla soru aynı anda açık olabilir (tasarım belgesi bölüm 6). */
 @Component({
     selector: 'app-public-faq-list',
     standalone: true,
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="flex w-full flex-col gap-3">
             @for (faq of items(); track faq.question; let i = $index) {

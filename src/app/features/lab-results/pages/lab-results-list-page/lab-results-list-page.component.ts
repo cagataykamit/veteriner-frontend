@@ -2,7 +2,7 @@ import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
@@ -54,6 +54,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         LabResultCancelDialogComponent,
         TrDateTimePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (contextPetId()) {
             <app-context-filter-chip label="Seçili hastanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
@@ -80,7 +81,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                         </div>
                         <div class="col-span-12 md:col-span-4">
                             <label for="lrStatus" class="block text-xs font-medium text-muted-color mb-1">Durum</label>
-                            <p-select inputId="lrStatus" [options]="statusOptions" optionLabel="label" optionValue="value" [(ngModel)]="statusInput" (ngModelChange)="applyFilters()" styleClass="w-full" />
+                            <p-select inputId="lrStatus" [options]="statusOptions" optionLabel="label" optionValue="value" [(ngModel)]="statusInput" (ngModelChange)="applyFilters()" class="w-full" />
                         </div>
                     </div>
                 </div>

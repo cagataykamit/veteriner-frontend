@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { startWith } from 'rxjs';
@@ -23,6 +23,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
     selector: 'app-charge-correction-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, ChargeTaxFieldsComponent, MoneyPipe],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-dialog header="Ücreti düzelt" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
             @if (charge(); as c) {
@@ -74,7 +75,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
                 <p-button type="button" label="Düzeltmeyi kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || unchanged() || submitting()" (onClick)="onSubmit()" />
             </ng-template>

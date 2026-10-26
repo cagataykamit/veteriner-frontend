@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,25 +9,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ClientContactPreferenceFieldsComponent } from '@/app/features/clients/components/client-contact-preference-fields.component';
 import { ClientInvoicingFieldsComponent } from '@/app/features/clients/components/client-invoicing-fields.component';
 import { mapClientUpsertFormValueToCreateRequest } from '@/app/features/clients/data/client.mapper';
-import {
-    type ClientInvoicingFieldKey,
-    createClientInvoicingFormGroup,
-    isClientInvoicingDtoEmpty,
-    mapClientInvoicingDtoToFormValue,
-    mapClientInvoicingFormToDto
-} from '@/app/features/clients/forms/client-invoicing-form.factory';
+import { type ClientInvoicingFieldKey, createClientInvoicingFormGroup, isClientInvoicingDtoEmpty, mapClientInvoicingDtoToFormValue, mapClientInvoicingFormToDto } from '@/app/features/clients/forms/client-invoicing-form.factory';
 import { parseClientInvoicingFieldErrors } from '@/app/features/clients/utils/client-invoicing.utils';
-import {
-    createClientUpsertFormGroup,
-    getClientUpsertFormValue
-} from '@/app/features/clients/forms/client-upsert-form.factory';
+import { createClientUpsertFormGroup, getClientUpsertFormValue } from '@/app/features/clients/forms/client-upsert-form.factory';
 import { CLIENT_UPSERT_FORM_FIELDS } from '@/app/features/clients/forms/client-upsert-form.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import {
-    type ClientCreateFieldErrors,
-    type ClientCreateFormFieldKey,
-    parseClientCreateHttpError
-} from '@/app/features/clients/utils/client-create-validation-parse.utils';
+import { type ClientCreateFieldErrors, type ClientCreateFormFieldKey, parseClientCreateHttpError } from '@/app/features/clients/utils/client-create-validation-parse.utils';
 import { clientUpsertFieldErrorMessage } from '@/app/features/clients/utils/client-upsert.validation.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -39,17 +26,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 @Component({
     selector: 'app-client-edit-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        ButtonModule,
-        InputTextModule,
-        ClientContactPreferenceFieldsComponent,
-        ClientInvoicingFieldsComponent,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (loading()) {
             <app-loading-state message="Müşteri bilgileri yükleniyor…" />
@@ -62,9 +40,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 
             <div class="card">
                 @if (ro.mutationBlocked()) {
-                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                        İşletme salt okunur moddadır; müşteri kaydı güncellenemez.
-                    </p>
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; müşteri kaydı güncellenemez.</p>
                 }
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
                     <div class="grid grid-cols-12 gap-4">
@@ -111,21 +87,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <p-button
-                            type="submit"
-                            label="Güncelle"
-                            icon="pi pi-check"
-                            [loading]="submitting()"
-                            [disabled]="form.invalid || invoicingForm.invalid || submitting() || ro.mutationBlocked()"
-                        />
-                        <p-button
-                            type="button"
-                            [label]="copy.buttonCancel"
-                            icon="pi pi-times"
-                            severity="secondary"
-                            (onClick)="goDetail()"
-                            [disabled]="submitting()"
-                        />
+                        <p-button type="submit" label="Güncelle" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || invoicingForm.invalid || submitting() || ro.mutationBlocked()" />
+                        <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goDetail()" [disabled]="submitting()" />
                     </div>
                 </form>
             </div>

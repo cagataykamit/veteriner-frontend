@@ -3,7 +3,7 @@ import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -71,6 +71,7 @@ const RECEIVING_CARE_ONLY = 'true';
         HbsStatusBadgeComponent,
         TrDateTimePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="card">
             @if (activeOverdueOnly()) {
@@ -99,7 +100,7 @@ const RECEIVING_CARE_ONLY = 'true';
                                 optionLabel="label"
                                 optionValue="value"
                                 [placeholder]="copy.filterPlaceholderAll"
-                                styleClass="w-full"
+                                class="w-full"
                                 [showClear]="true"
                                 (ngModelChange)="scheduleApply()"
                             />
@@ -113,7 +114,7 @@ const RECEIVING_CARE_ONLY = 'true';
                                 optionLabel="label"
                                 optionValue="value"
                                 [placeholder]="copy.filterPlaceholderAll"
-                                styleClass="w-full"
+                                class="w-full"
                                 [showClear]="true"
                                 (ngModelChange)="scheduleApply()"
                             />
@@ -127,7 +128,7 @@ const RECEIVING_CARE_ONLY = 'true';
                                 optionLabel="label"
                                 optionValue="value"
                                 [placeholder]="copy.filterPlaceholderAll"
-                                styleClass="w-full"
+                                class="w-full"
                                 data-testid="vac-hbs-filter"
                                 [showClear]="true"
                                 (ngModelChange)="scheduleApply()"

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { PrescriptionDetailVm } from '@/app/features/prescriptions/models/prescription-vm.model';
@@ -19,6 +19,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     selector: 'app-prescription-detail-page',
     standalone: true,
     imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppErrorStateComponent, HbsSectionComponent, TrDatePipe, TrDateTimePipe],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Reçete kaydedildi.</p>
@@ -34,7 +35,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
             <app-page-header categoryLink="/panel/prescriptions" categoryLinkLabel="Reçete listesine dön" title="Reçete" [description]="row()!.title">
                 <div actions class="flex flex-wrap gap-2">
                     @if (canUpdatePrescription && !ro.mutationBlocked()) {
-                        <a [routerLink]="['/panel/prescriptions', row()!.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
+                        <a [routerLink]="['/panel/prescriptions', row()!.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                         @if (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim()) {
                             <a
                                 [routerLink]="['/panel/payments/new']"
@@ -45,15 +46,15 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 }"
                                 pButton
                                 type="button"
-                                label="Ödeme Oluştur"
-                                icon="pi pi-wallet"
+                               
+                               
                                 class="p-button-secondary"
-                            ></a>
+                            ><i class="pi pi-wallet"></i>Ödeme Oluştur</a>
                         }
                     } @else if (canUpdatePrescription && ro.mutationBlocked()) {
-                        <button pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                        <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                         @if (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim()) {
-                            <button pButton type="button" label="Ödeme Oluştur (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                            <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Ödeme Oluştur (salt okunur)</button>
                         }
                     }
                 </div>

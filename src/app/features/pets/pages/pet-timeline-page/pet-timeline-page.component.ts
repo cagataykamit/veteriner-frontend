@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -25,18 +25,8 @@ const PAGE_SIZE = 20;
 @Component({
     selector: 'app-pet-timeline-page',
     standalone: true,
-    imports: [
-        FormsModule,
-        ButtonModule,
-        CheckboxModule,
-        DateInputComponent,
-        FilterFieldComponent,
-        PetTimelineItemComponent,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppEmptyStateComponent,
-        AppErrorStateComponent
-    ],
+    imports: [FormsModule, ButtonModule, CheckboxModule, DateInputComponent, FilterFieldComponent, PetTimelineItemComponent, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header [categoryLink]="['/panel/pets', petId()]" categoryLinkLabel="Hasta kartına dön" title="Zaman çizelgesi" [description]="petName() ?? ''" />
 
@@ -44,22 +34,12 @@ const PAGE_SIZE = 20;
             <div class="flex flex-wrap items-center gap-x-6 gap-y-3" role="group" aria-label="Süzgeçler">
                 @for (t of typeOptions; track t.value) {
                     <div class="flex items-center gap-2">
-                        <p-checkbox
-                            [ngModel]="isTypeSelected(t.value)"
-                            (ngModelChange)="toggleType(t.value, $event)"
-                            [binary]="true"
-                            [inputId]="'tl-type-' + t.value"
-                        />
+                        <p-checkbox [ngModel]="isTypeSelected(t.value)" (ngModelChange)="toggleType(t.value, $event)" [binary]="true" [inputId]="'tl-type-' + t.value" />
                         <label [attr.for]="'tl-type-' + t.value" class="cursor-pointer"><i class="pi {{ t.icon }} mr-1" aria-hidden="true"></i>{{ t.label }}</label>
                     </div>
                 }
                 <div class="flex items-center gap-2">
-                    <p-checkbox
-                        [ngModel]="includeVoided()"
-                        (ngModelChange)="setIncludeVoided($event)"
-                        [binary]="true"
-                        inputId="tl-include-voided"
-                    />
+                    <p-checkbox [ngModel]="includeVoided()" (ngModelChange)="setIncludeVoided($event)" [binary]="true" inputId="tl-include-voided" />
                     <label for="tl-include-voided" class="cursor-pointer">İptal / yanlış işaretli kayıtları göster</label>
                 </div>
             </div>
@@ -105,16 +85,7 @@ const PAGE_SIZE = 20;
                     @if (loadMoreError()) {
                         <p class="m-0 text-orange-600 dark:text-orange-400" data-testid="load-more-error">{{ loadMoreError() }}</p>
                     }
-                    <button
-                        pButton
-                        type="button"
-                        class="p-button-secondary"
-                        icon="pi pi-angle-down"
-                        [label]="loadingMore() ? 'Yükleniyor…' : 'Daha fazla yükle'"
-                        [disabled]="loadingMore()"
-                        data-testid="load-more"
-                        (click)="loadMore()"
-                    ></button>
+                    <button pButton type="button" class="p-button-secondary" [disabled]="loadingMore()" data-testid="load-more" (click)="loadMore()"><i class="pi pi-angle-down"></i>{{ loadingMore() ? 'Yükleniyor…' : 'Daha fazla yükle' }}</button>
                 </div>
             } @else {
                 <p class="text-center text-muted-color text-sm mt-4 mb-0">Başka kayıt yok.</p>
@@ -146,9 +117,7 @@ export class PetTimelinePageComponent implements OnInit {
 
     readonly omittedLabel = computed(() => petTimelineOmittedTypesLabel(this.omittedTypes()));
     readonly emptyMessage = computed(() =>
-        this.includeVoided() || this.selectedTypes().length > 0 || this.fromDate() || this.toDate()
-            ? 'Seçili süzgeçlere uyan kayıt yok.'
-            : 'Henüz kayıt yok. İptal / yanlış işaretli kayıtlar varsayılan olarak gizlidir.'
+        this.includeVoided() || this.selectedTypes().length > 0 || this.fromDate() || this.toDate() ? 'Seçili süzgeçlere uyan kayıt yok.' : 'Henüz kayıt yok. İptal / yanlış işaretli kayıtlar varsayılan olarak gizlidir.'
     );
 
     private request: Subscription | null = null;

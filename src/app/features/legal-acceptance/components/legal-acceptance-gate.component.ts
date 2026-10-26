@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -9,11 +9,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { LegalConsentCheckboxComponent } from '@/app/features/legal-acceptance/components/legal-consent-checkbox.component';
 import type { LegalDocumentVersionDto } from '@/app/features/legal-acceptance/models/legal-acceptance.model';
 import { LegalAcceptanceService } from '@/app/features/legal-acceptance/services/legal-acceptance.service';
-import {
-    isLegalVersionOutdatedError,
-    LEGAL_ACCEPTANCE_CODE_MESSAGES,
-    LEGAL_VERSION_OUTDATED_CODE
-} from '@/app/features/legal-acceptance/utils/legal-acceptance-error.utils';
+import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES, LEGAL_VERSION_OUTDATED_CODE } from '@/app/features/legal-acceptance/utils/legal-acceptance-error.utils';
 import { LEGAL_DOCUMENTS_BY_TYPE, isDraftLegalVersion } from '@/app/features/public/utils/legal-documents.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
@@ -25,6 +21,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
     selector: 'app-legal-acceptance-gate',
     standalone: true,
     imports: [DialogModule, ButtonModule, LegalConsentCheckboxComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-dialog
             header="Hukuki metinler güncellendi"
@@ -38,9 +35,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
             [style]="{ width: 'min(560px, 95vw)' }"
             styleClass="legal-acceptance-gate"
         >
-            <p class="mt-0 mb-3 text-sm text-surface-700 dark:text-surface-200">
-                Vetinity'yi kullanmaya devam etmek için aşağıdaki metinlerin güncel sürümünü onaylamanız gerekiyor.
-            </p>
+            <p class="mt-0 mb-3 text-sm text-surface-700 dark:text-surface-200">Vetinity'yi kullanmaya devam etmek için aşağıdaki metinlerin güncel sürümünü onaylamanız gerekiyor.</p>
             <ul class="legal-acceptance-gate-documents m-0 mb-4 pl-5 text-sm leading-6">
                 @for (item of documents(); track item.documentType) {
                     <li>
@@ -53,16 +48,9 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
             @if (error(); as e) {
                 <p class="legal-acceptance-gate-error text-red-500 text-sm mt-3 mb-0" role="alert">{{ e }}</p>
             }
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 <p-button type="button" label="Çıkış yap" icon="pi pi-sign-out" severity="secondary" [text]="true" [disabled]="submitting()" (onClick)="logout()" />
-                <p-button
-                    type="button"
-                    label="Kabul et ve devam et"
-                    icon="pi pi-check"
-                    [loading]="submitting()"
-                    [disabled]="!consent() || submitting()"
-                    (onClick)="accept()"
-                />
+                <p-button type="button" label="Kabul et ve devam et" icon="pi pi-check" [loading]="submitting()" [disabled]="!consent() || submitting()" (onClick)="accept()" />
             </ng-template>
         </p-dialog>
     `
@@ -145,7 +133,11 @@ export class LegalAcceptanceGateComponent implements OnInit {
     }
 
     private applyPending(documents: LegalDocumentVersionDto[]): void {
-        const changed = documents.map((d) => `${d.documentType}:${d.version}`).join('|') !== this.pending().map((d) => `${d.documentType}:${d.version}`).join('|');
+        const changed =
+            documents.map((d) => `${d.documentType}:${d.version}`).join('|') !==
+            this.pending()
+                .map((d) => `${d.documentType}:${d.version}`)
+                .join('|');
 
         if (changed) {
             this.consent.set(false);

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -7,10 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ToastModule } from 'primeng/toast';
-import {
-    createReminderSettingsFormGroup,
-    getReminderSettingsFormValue
-} from '@/app/features/reminders/forms/reminder-settings-form.factory';
+import { createReminderSettingsFormGroup, getReminderSettingsFormValue } from '@/app/features/reminders/forms/reminder-settings-form.factory';
 import { mapReminderSettingsFormToUpdateRequest } from '@/app/features/reminders/data/reminders.mapper';
 import { RemindersService } from '@/app/features/reminders/services/reminders.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -25,18 +22,9 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 @Component({
     selector: 'app-reminder-settings-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        ButtonModule,
-        InputNumberModule,
-        ToggleSwitchModule,
-        ToastModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputNumberModule, ToggleSwitchModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent],
     providers: [MessageService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-toast position="bottom-right" />
         <app-page-header title="Hatırlatmalar" description="Randevu ve aşı hatırlatma ayarlarını yönetin." />
@@ -55,9 +43,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">Hesap salt okunur durumda.</p>
                 }
 
-                <p class="text-sm text-muted-color mt-0 mb-4">
-                    Hatırlatmalar etkinse sistem, yaklaşan randevu ve aşılar için e-posta gönderimlerini otomatik olarak kuyruğa alır.
-                </p>
+                <p class="text-sm text-muted-color mt-0 mb-4">Hatırlatmalar etkinse sistem, yaklaşan randevu ve aşılar için e-posta gönderimlerini otomatik olarak kuyruğa alır.</p>
 
                 @if (updatedAtLabel()) {
                     <p class="text-sm text-muted-color mt-0 mb-4">Son güncelleme: {{ updatedAtLabel() }}</p>
@@ -75,13 +61,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label class="block text-sm font-medium text-muted-color mb-2">Randevudan kaç saat önce</label>
-                            <p-inputNumber
-                                formControlName="appointmentReminderHoursBefore"
-                                [min]="1"
-                                [max]="168"
-                                [useGrouping]="false"
-                                styleClass="w-full"
-                            />
+                            <p-inputnumber formControlName="appointmentReminderHoursBefore" [min]="1" [max]="168" [useGrouping]="false" class="w-full" />
                             @if (form.controls.appointmentReminderHoursBefore.invalid && form.controls.appointmentReminderHoursBefore.touched) {
                                 <small class="text-red-500">Saat değeri 1 ile 168 arasında olmalıdır.</small>
                             }
@@ -92,13 +72,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label class="block text-sm font-medium text-muted-color mb-2">Aşıdan kaç gün önce</label>
-                            <p-inputNumber
-                                formControlName="vaccinationReminderDaysBefore"
-                                [min]="1"
-                                [max]="30"
-                                [useGrouping]="false"
-                                styleClass="w-full"
-                            />
+                            <p-inputnumber formControlName="vaccinationReminderDaysBefore" [min]="1" [max]="30" [useGrouping]="false" class="w-full" />
                             @if (form.controls.vaccinationReminderDaysBefore.invalid && form.controls.vaccinationReminderDaysBefore.touched) {
                                 <small class="text-red-500">Gün değeri 1 ile 30 arasında olmalıdır.</small>
                             }
@@ -110,13 +84,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     </div>
 
                     <div class="mt-4">
-                        <p-button
-                            type="submit"
-                            label="Kaydet"
-                            icon="pi pi-save"
-                            [loading]="saving()"
-                            [disabled]="form.invalid || saving() || formDisabled() || !form.dirty"
-                        />
+                        <p-button type="submit" label="Kaydet" icon="pi pi-save" [loading]="saving()" [disabled]="form.invalid || saving() || formDisabled() || !form.dirty" />
                     </div>
                 </form>
             </div>

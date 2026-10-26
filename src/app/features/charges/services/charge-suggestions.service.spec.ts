@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
@@ -48,12 +48,7 @@ describe('ChargeSuggestionsService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [
-                provideHttpClient(),
-                provideHttpClientTesting(),
-                { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1' } }
-            ]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }, { provide: AuthService, useValue: { getClinicId: () => 'c1' } }]
         });
         service = TestBed.inject(ChargeSuggestionsService);
         http = TestBed.inject(HttpTestingController);
@@ -64,9 +59,7 @@ describe('ChargeSuggestionsService', () => {
     it('liste: aktif klinik ve bağlam süzgeçleri gider, kalem VM e eşlenir', (done) => {
         service.getPending({ page: 1, pageSize: 200, visitId: 'v1' }).subscribe((r) => {
             expect(r.totalItems).toBe(1);
-            expect(r.items[0]).toEqual(
-                jasmine.objectContaining({ id: 's1', clientName: 'Ali Veli', suggestedUnitPrice: 125, examinationId: 'e1', visitId: 'v1' })
-            );
+            expect(r.items[0]).toEqual(jasmine.objectContaining({ id: 's1', clientName: 'Ali Veli', suggestedUnitPrice: 125, examinationId: 'e1', visitId: 'v1' }));
             done();
         });
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/charge-suggestions');
@@ -132,10 +125,7 @@ describe('ChargeSuggestionsService', () => {
                 done();
             }
         });
-        http.expectOne('http://api.test/api/v1/charge-suggestions/s1/convert').flush(
-            { title: 'Conflict', extensions: { code: 'ChargeSuggestions.AlreadyConverted' } },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/charge-suggestions/s1/convert').flush({ title: 'Conflict', extensions: { code: 'ChargeSuggestions.AlreadyConverted' } }, { status: 409, statusText: 'Conflict' });
     });
 
     it('ücretsiz sayma: gerekçe kırpılarak gider', (done) => {

@@ -3,7 +3,7 @@ import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
@@ -59,194 +59,190 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
         AppListHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
-        AppContextFilterChipComponent, AppErrorStateComponent,
-        AppStatusTagComponent, DateInputComponent, FilterFieldComponent,
+        AppContextFilterChipComponent,
+        AppErrorStateComponent,
+        AppStatusTagComponent,
+        DateInputComponent,
+        FilterFieldComponent,
         SearchInputComponent,
         AppRowActionButtonComponent,
         AppointmentCancelDialogComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (contextPetId() || contextClientId()) {
             <app-context-filter-chip [label]="contextFilterLabel()" (clear)="clearContextFilter()" />
         }
 
         <div class="card">
-                <div class="flex flex-col gap-4">
-                    <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                        <app-list-header class="mb-3" title="Randevular" [count]="totalItems()">
-                            <app-filter-field label="Arama" labelFor="apptSearch" [active]="isSearchActive()" width="grow">
-                                <app-search-input inputId="apptSearch" placeholder="Not; müşteri, hasta, tür veya ırk metni…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
-                            </app-filter-field>
-                            <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
-                            @if (canCreateAppointment && !ro.mutationBlocked()) {
-                                <a actions routerLink="/panel/appointments/new" pButton type="button" label="Yeni Randevu" icon="pi pi-plus" class="p-button-primary"></a>
-                            } @else if (canCreateAppointment && ro.mutationBlocked()) {
-                                <button actions pButton type="button" label="Yeni Randevu (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
-                            }
-                        </app-list-header>
-                        <div class="flex flex-wrap items-end gap-3">
-                            <app-filter-field label="Durum" labelId="lblApptStatus" [active]="isStatusActive()" width="select">
-                                <p-select
-                                    ariaLabelledBy="lblApptStatus"
-                                    inputId="apptStatus"
-                                    [options]="statusOptions"
-                                    [(ngModel)]="statusFilter"
-                                    optionLabel="label"
-                                    optionValue="value"
-                                    [placeholder]="copy.filterPlaceholderAll"
-                                    styleClass="w-full"
-                                    [showClear]="true" (ngModelChange)="scheduleApply()" />
-                            </app-filter-field>
-                            <app-filter-field label="Başlangıç" labelFor="apptFrom" [active]="isFromDateActive()" width="date">
-                                <app-date-input inputId="apptFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
-                            </app-filter-field>
-                            <app-filter-field label="Bitiş" labelFor="apptTo" [active]="isToDateActive()" width="date">
-                                <app-date-input inputId="apptTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
-                            </app-filter-field>
-                        </div>
+            <div class="flex flex-col gap-4">
+                <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                    <app-list-header class="mb-3" title="Randevular" [count]="totalItems()">
+                        <app-filter-field label="Arama" labelFor="apptSearch" [active]="isSearchActive()" width="grow">
+                            <app-search-input inputId="apptSearch" placeholder="Not; müşteri, hasta, tür veya ırk metni…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                        </app-filter-field>
+                        <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                        @if (canCreateAppointment && !ro.mutationBlocked()) {
+                            <a actions routerLink="/panel/appointments/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Randevu</a>
+                        } @else if (canCreateAppointment && ro.mutationBlocked()) {
+                            <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Randevu (salt okunur)</button>
+                        }
+                    </app-list-header>
+                    <div class="flex flex-wrap items-end gap-3">
+                        <app-filter-field label="Durum" labelId="lblApptStatus" [active]="isStatusActive()" width="select">
+                            <p-select
+                                ariaLabelledBy="lblApptStatus"
+                                inputId="apptStatus"
+                                [options]="statusOptions"
+                                [(ngModel)]="statusFilter"
+                                optionLabel="label"
+                                optionValue="value"
+                                [placeholder]="copy.filterPlaceholderAll"
+                                class="w-full"
+                                [showClear]="true"
+                                (ngModelChange)="scheduleApply()"
+                            />
+                        </app-filter-field>
+                        <app-filter-field label="Başlangıç" labelFor="apptFrom" [active]="isFromDateActive()" width="date">
+                            <app-date-input inputId="apptFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
+                        </app-filter-field>
+                        <app-filter-field label="Bitiş" labelFor="apptTo" [active]="isToDateActive()" width="date">
+                            <app-date-input inputId="apptTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
+                        </app-filter-field>
                     </div>
-            @if (loading()) {
-                <app-loading-state message="Randevu listesi yükleniyor…" />
-            } @else if (error()) {
-                <app-error-state [detail]="error()!" (retry)="reload()" />
-            } @else {
-                @if (displayedRows().length === 0) {
-                    <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                </div>
+                @if (loading()) {
+                    <app-loading-state message="Randevu listesi yükleniyor…" />
+                } @else if (error()) {
+                    <app-error-state [detail]="error()!" (retry)="reload()" />
                 } @else {
-                    <div class="hidden lg:block overflow-x-auto">
-                        <p-table
-                            [value]="displayedRows()"
-                            [paginator]="true"
-                            [rows]="pageSize()"
-                            [rowsPerPageOptions]="rowsPerPageOptions"
-                            [paginatorDropdownAppendTo]="'body'"
-                            [totalRecords]="totalItems()"
-                            [lazy]="true"
-                            [first]="first()"
-                            (onLazyLoad)="onTableLazyLoad($event)"
-                            [tableStyle]="{ 'min-width': '78rem' }"
-                            [showCurrentPageReport]="true"
-                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                        >
-                            <ng-template #header>
-                                <tr>
-                                    <th>Tarih · saat</th>
-                                    <th>Süre</th>
-                                    <th>Müşteri</th>
-                                    <th>Hasta</th>
-                                    <th>Randevu Türü</th>
-                                    <th>Durum</th>
-                                    <th style="width: 8rem">İşlemler</th>
-                                </tr>
-                            </ng-template>
-                            <ng-template #body let-row>
-                                <tr>
-                                    <td>{{ formatListAppointmentSchedule(row) }}</td>
-                                    <td class="text-sm whitespace-nowrap">{{ row.durationLabel }}</td>
-                                    <td>
-                                        @if (row.clientId) {
-                                            <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{
-                                                row.clientName
-                                            }}</a>
-                                        } @else {
-                                            {{ row.clientName }}
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (row.petId) {
-                                            <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
-                                        } @else {
-                                            {{ row.petName }}
-                                        }
-                                    </td>
-                                    <td>{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</td>
-                                    <td>
-                                        <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
-                                    </td>
-                                    <td>
-                                        <div class="flex items-center gap-1">
-                                            <app-row-action-button action="detail" [link]="['/panel/appointments', row.id]" />
-                                            @if (canRescheduleAppointment && !ro.mutationBlocked()) {
-                                                <app-row-action-button action="edit" [link]="['/panel/appointments', row.id, 'edit']" />
-                                            } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
-                                                <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                    @if (displayedRows().length === 0) {
+                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                    } @else {
+                        <div class="hidden lg:block overflow-x-auto">
+                            <p-table
+                                [value]="displayedRows()"
+                                [paginator]="true"
+                                [rows]="pageSize()"
+                                [rowsPerPageOptions]="rowsPerPageOptions"
+                                [paginatorDropdownAppendTo]="'body'"
+                                [totalRecords]="totalItems()"
+                                [lazy]="true"
+                                [first]="first()"
+                                (onLazyLoad)="onTableLazyLoad($event)"
+                                [tableStyle]="{ 'min-width': '78rem' }"
+                                [showCurrentPageReport]="true"
+                                currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                            >
+                                <ng-template #header>
+                                    <tr>
+                                        <th>Tarih · saat</th>
+                                        <th>Süre</th>
+                                        <th>Müşteri</th>
+                                        <th>Hasta</th>
+                                        <th>Randevu Türü</th>
+                                        <th>Durum</th>
+                                        <th style="width: 8rem">İşlemler</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-row>
+                                    <tr>
+                                        <td>{{ formatListAppointmentSchedule(row) }}</td>
+                                        <td class="text-sm whitespace-nowrap">{{ row.durationLabel }}</td>
+                                        <td>
+                                            @if (row.clientId) {
+                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
+                                            } @else {
+                                                {{ row.clientName }}
                                             }
-                                            @if (canCancelAppointment && isCancellable(row.status) && !ro.mutationBlocked()) {
-                                                <app-row-action-button action="void" (pressed)="openCancel(row)" />
+                                        </td>
+                                        <td>
+                                            @if (row.petId) {
+                                                <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                            } @else {
+                                                {{ row.petName }}
+                                            }
+                                        </td>
+                                        <td>{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</td>
+                                        <td>
+                                            <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
+                                        </td>
+                                        <td>
+                                            <div class="flex items-center gap-1">
+                                                <app-row-action-button action="detail" [link]="['/panel/appointments', row.id]" />
+                                                @if (canRescheduleAppointment && !ro.mutationBlocked()) {
+                                                    <app-row-action-button action="edit" [link]="['/panel/appointments', row.id, 'edit']" />
+                                                } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
+                                                    <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
+                                                }
+                                                @if (canCancelAppointment && isCancellable(row.status) && !ro.mutationBlocked()) {
+                                                    <app-row-action-button action="void" (pressed)="openCancel(row)" />
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+
+                        <div class="lg:hidden space-y-3">
+                            @for (row of displayedRows(); track row.id) {
+                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
+                                    <div class="flex flex-wrap items-start justify-between gap-2 gap-y-1 mb-3">
+                                        <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0">
+                                            {{ formatListAppointmentSchedule(row) }}
+                                            <span class="text-muted-color font-normal"> · {{ row.durationLabel }}</span>
+                                        </div>
+                                        <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
+                                    </div>
+                                    <div class="space-y-2 mb-3 min-w-0">
+                                        <div class="text-sm">
+                                            <span class="text-muted-color font-medium">Müşteri: </span>
+                                            @if (row.clientId) {
+                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{ row.clientName }}</a>
+                                            } @else {
+                                                <span class="break-words">{{ row.clientName }}</span>
                                             }
                                         </div>
-                                    </td>
-                                </tr>
-                            </ng-template>
-                        </p-table>
-                    </div>
-
-                    <div class="lg:hidden space-y-3">
-                        @for (row of displayedRows(); track row.id) {
-                            <div
-                                class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
-                            >
-                                <div class="flex flex-wrap items-start justify-between gap-2 gap-y-1 mb-3">
-                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0">
-                                        {{ formatListAppointmentSchedule(row) }}
-                                        <span class="text-muted-color font-normal"> · {{ row.durationLabel }}</span>
+                                        <div class="text-sm">
+                                            <span class="text-muted-color font-medium">Hasta: </span>
+                                            @if (row.petId) {
+                                                <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{ row.petName }}</a>
+                                            } @else {
+                                                <span class="break-words">{{ row.petName }}</span>
+                                            }
+                                        </div>
                                     </div>
-                                    <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
-                                </div>
-                                <div class="space-y-2 mb-3 min-w-0">
-                                    <div class="text-sm">
-                                        <span class="text-muted-color font-medium">Müşteri: </span>
-                                        @if (row.clientId) {
-                                            <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{
-                                                row.clientName
-                                            }}</a>
-                                        } @else {
-                                            <span class="break-words">{{ row.clientName }}</span>
+                                    <div class="text-sm text-muted-color mb-3 min-w-0 break-words"><span class="font-medium">Tür: </span>{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
+                                    <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
+                                        <app-row-action-button action="detail" [link]="['/panel/appointments', row.id]" />
+                                        @if (canRescheduleAppointment && !ro.mutationBlocked()) {
+                                            <app-row-action-button action="edit" [link]="['/panel/appointments', row.id, 'edit']" />
+                                        } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
+                                            <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
                                         }
-                                    </div>
-                                    <div class="text-sm">
-                                        <span class="text-muted-color font-medium">Hasta: </span>
-                                        @if (row.petId) {
-                                            <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{
-                                                row.petName
-                                            }}</a>
-                                        } @else {
-                                            <span class="break-words">{{ row.petName }}</span>
+                                        @if (canCancelAppointment && isCancellable(row.status) && !ro.mutationBlocked()) {
+                                            <app-row-action-button action="void" (pressed)="openCancel(row)" />
                                         }
                                     </div>
                                 </div>
-                                <div class="text-sm text-muted-color mb-3 min-w-0 break-words">
-                                    <span class="font-medium">Tür: </span>{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}
-                                </div>
-                                <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
-                                    <app-row-action-button action="detail" [link]="['/panel/appointments', row.id]" />
-                                    @if (canRescheduleAppointment && !ro.mutationBlocked()) {
-                                        <app-row-action-button action="edit" [link]="['/panel/appointments', row.id, 'edit']" />
-                                    } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
-                                        <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
-                                    }
-                                    @if (canCancelAppointment && isCancellable(row.status) && !ro.mutationBlocked()) {
-                                        <app-row-action-button action="void" (pressed)="openCancel(row)" />
-                                    }
-                                </div>
-                            </div>
-                        }
-                    </div>
+                            }
+                        </div>
 
-                    <div class="lg:hidden mt-4">
-                        <p-paginator
-                            [rows]="pageSize()"
-                            [totalRecords]="totalItems()"
-                            [first]="first()"
-                            [showCurrentPageReport]="true"
-                            currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                            [rowsPerPageOptions]="rowsPerPageOptions"
-                            (onPageChange)="onMobilePageChange($event)"
-                        />
-                    </div>
+                        <div class="lg:hidden mt-4">
+                            <p-paginator
+                                [rows]="pageSize()"
+                                [totalRecords]="totalItems()"
+                                [first]="first()"
+                                [showCurrentPageReport]="true"
+                                currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                                [rowsPerPageOptions]="rowsPerPageOptions"
+                                (onPageChange)="onMobilePageChange($event)"
+                            />
+                        </div>
+                    }
                 }
-            }
-                </div>
+            </div>
         </div>
 
         @if (cancelTarget(); as target) {
@@ -323,9 +319,7 @@ export class AppointmentsListPageComponent implements OnInit {
     /** İptal diyaloğunun açık olduğu satır. */
     readonly cancelTarget = signal<AppointmentListItemVm | null>(null);
     readonly cancelVisible = signal(false);
-    readonly hasActiveFilters = computed(
-        () => !!this.activeSearch().trim() || !!this.statusFilter.trim() || !!this.activeFromDate().trim() || !!this.activeToDate().trim()
-    );
+    readonly hasActiveFilters = computed(() => !!this.activeSearch().trim() || !!this.statusFilter.trim() || !!this.activeFromDate().trim() || !!this.activeToDate().trim());
     private suppressNextLazy = false;
     private lastLoadKey = '';
 
@@ -388,15 +382,7 @@ export class AppointmentsListPageComponent implements OnInit {
     }
 
     reload(): void {
-        this.loadFromServer(
-            this.currentPage(),
-            this.pageSize(),
-            this.activeSearch(),
-            this.activeFromDate(),
-            this.activeToDate(),
-            this.statusFilter,
-            true
-        );
+        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter, true);
     }
 
     openCancel(row: AppointmentListItemVm): void {
@@ -452,15 +438,7 @@ export class AppointmentsListPageComponent implements OnInit {
         this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.statusFilter);
     }
 
-    private loadFromServer(
-        page: number,
-        pageSize: number,
-        search: string,
-        fromDate: string,
-        toDate: string,
-        status: string,
-        force = false
-    ): void {
+    private loadFromServer(page: number, pageSize: number, search: string, fromDate: string, toDate: string, status: string, force = false): void {
         const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status.trim()}|${this.contextPetId()}|${this.contextClientId()}`;
 
         if (!force && key === this.lastLoadKey) {

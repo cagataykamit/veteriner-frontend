@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -21,6 +21,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     imports: [ButtonModule, DialogModule, RouterLink, ExampleClinicSummaryComponent],
     // Gösterilecek bir şey yoksa ızgarada boş satır (aralık) bırakmasın.
     host: { '[class.hidden]': '!visible()' },
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (visible()) {
             <div class="card mb-0" data-testid="example-clinic-load-card">
@@ -82,7 +83,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         <p class="text-red-500 mt-3 mb-0" role="alert" data-testid="example-clinic-clear-error">{{ clearError() }}</p>
                     }
                 }
-                <ng-template pTemplate="footer">
+                <ng-template #footer>
                     <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="clearConfirmVisible.set(false)" [disabled]="clearing()" />
                     <p-button type="button" label="Kalıcı olarak sil" icon="pi pi-trash" severity="danger" [loading]="clearing()" [disabled]="clearing()" (onClick)="clear()" data-testid="example-clinic-clear-confirm" />
                 </ng-template>

@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { Params, RouterLink } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
 
@@ -23,16 +23,7 @@ export const ROW_ACTIONS: Readonly<Record<RowActionKind, { readonly icon: string
     imports: [RouterLink, TooltipModule],
     template: `
         @if (link() && !inactive()) {
-            <a
-                [routerLink]="link()"
-                [queryParams]="queryParams()"
-                class="row-action-button"
-                [class.row-action-button--danger]="danger()"
-                [attr.aria-label]="text()"
-                [pTooltip]="text()"
-                tooltipPosition="top"
-                [attr.data-testid]="testId()"
-            >
+            <a [routerLink]="link()" [queryParams]="queryParams()" class="row-action-button" [class.row-action-button--danger]="danger()" [attr.aria-label]="text()" [pTooltip]="text()" tooltipPosition="top" [attr.data-testid]="testId()">
                 <i [class]="iconClass()" aria-hidden="true"></i>
             </a>
         } @else {
@@ -52,6 +43,7 @@ export const ROW_ACTIONS: Readonly<Record<RowActionKind, { readonly icon: string
             </button>
         }
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     styles: `
         :host {
             display: inline-flex;

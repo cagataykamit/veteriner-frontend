@@ -1,20 +1,13 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
-import {
-    EXAMINATION_TEMPLATES_CREATE_CLAIM,
-    EXAMINATION_TEMPLATES_DEACTIVATE_CLAIM,
-    EXAMINATION_TEMPLATES_UPDATE_CLAIM
-} from '@/app/core/auth/operation-claims.constants';
+import { EXAMINATION_TEMPLATES_CREATE_CLAIM, EXAMINATION_TEMPLATES_DEACTIVATE_CLAIM, EXAMINATION_TEMPLATES_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { DEFINITIONS_ROUTE } from '@/app/core/routing/panel-navigation';
-import {
-    ExaminationTemplateEditorDialogComponent,
-    type ExaminationTemplateEditorMode
-} from '@/app/features/examination-templates/components/examination-template-editor-dialog.component';
+import { ExaminationTemplateEditorDialogComponent, type ExaminationTemplateEditorMode } from '@/app/features/examination-templates/components/examination-template-editor-dialog.component';
 import type { ExaminationTemplateDto } from '@/app/features/examination-templates/models/examination-template.model';
 import { ExaminationTemplatesService } from '@/app/features/examination-templates/services/examination-templates.service';
 import { templateContentSummary, templateInactiveLineNames } from '@/app/features/examination-templates/utils/examination-template.utils';
@@ -52,6 +45,7 @@ const PAGE_SIZE = 50;
         AppRowActionButtonComponent
     ],
     providers: [ConfirmationService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header
             [categoryLink]="definitionsRoute"
@@ -60,7 +54,7 @@ const PAGE_SIZE = 50;
             description="Muayenede tek seçimle şikâyet, bulgu, plan ve işlem satırlarını ön dolduran paketler. Sistem şablonları ortaktır; kopyalayıp kliniğinize uyarlayabilirsiniz."
         >
             @if (canCreate && !ro.mutationBlocked()) {
-                <button actions pButton type="button" label="Yeni şablon" icon="pi pi-plus" data-testid="template-new" (click)="openEditor('create', null)"></button>
+                <button actions pButton type="button" data-testid="template-new" (click)="openEditor('create', null)"><i class="pi pi-plus"></i>Yeni şablon</button>
             }
         </app-page-header>
 
@@ -135,7 +129,12 @@ const PAGE_SIZE = 50;
                                                 </button>
                                             }
                                             @if (canDeactivate && !row.isSystem && row.isActive) {
-                                                <button type="button" class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-red-600 dark:text-red-400 disabled:opacity-50" [disabled]="mutatingId() !== null" (click)="confirmDeactivate(row)">
+                                                <button
+                                                    type="button"
+                                                    class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-red-600 dark:text-red-400 disabled:opacity-50"
+                                                    [disabled]="mutatingId() !== null"
+                                                    (click)="confirmDeactivate(row)"
+                                                >
                                                     Pasifleştir
                                                 </button>
                                             }
@@ -154,13 +153,7 @@ const PAGE_SIZE = 50;
             }
         </div>
 
-        <app-examination-template-editor-dialog
-            [(visible)]="editorVisible"
-            [mode]="editorMode()"
-            [source]="editorSource()"
-            (saved)="reload()"
-            (conflict)="onEditorConflict($event)"
-        />
+        <app-examination-template-editor-dialog [(visible)]="editorVisible" [mode]="editorMode()" [source]="editorSource()" (saved)="reload()" (conflict)="onEditorConflict($event)" />
 
         <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
     `

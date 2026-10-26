@@ -1,6 +1,6 @@
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -48,11 +48,12 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         TrDateTimePipe
     ],
     providers: [MessageService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-toast position="bottom-right" />
         <app-page-header title="Kurum üyeleri" description="Bu kuruma bağlı kullanıcıların salt okunur listesi.">
             @if (canManageTenantAccess()) {
-                <a actions routerLink="/panel/settings/members/role-permission-matrix" pButton type="button" [label]="copy.tenantRoleMatrixTitle" icon="pi pi-table" class="p-button-secondary p-button-outlined"></a>
+                <a actions routerLink="/panel/settings/members/role-permission-matrix" pButton type="button" class="p-button-secondary p-button-outlined"><i class="pi pi-table"></i>{{ copy.tenantRoleMatrixTitle }}</a>
             }
         </app-page-header>
 

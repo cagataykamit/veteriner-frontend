@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { REPORT_SECTIONS, visibleGroups } from '@/app/core/routing/panel-navigation';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -9,6 +9,7 @@ import { NavigationCardsComponent } from '@/app/shared/ui/navigation-cards/navig
     selector: 'app-reports-hub-page',
     standalone: true,
     imports: [AppPageHeaderComponent, NavigationCardsComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header title="Raporlar" description="Randevu, klinik ve para raporlarına buradan ulaşın." />
 

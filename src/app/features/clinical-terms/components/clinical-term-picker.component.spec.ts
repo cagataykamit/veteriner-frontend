@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl } from '@angular/forms';
 import { of, throwError } from 'rxjs';
@@ -22,6 +22,7 @@ const paged = (items: ClinicalTermDto[]) => of({ items, page: 1, pageSize: 20, t
 @Component({
     standalone: true,
     imports: [ClinicalTermPickerComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `<app-clinical-term-picker kind="Complaint" inputId="t" [control]="control" />`
 })
 class HostComponent {
@@ -80,7 +81,11 @@ describe('ClinicalTermPickerComponent', () => {
         await wait(0);
         expect(terms.list).toHaveBeenCalledWith(jasmine.objectContaining({ kind: 'Complaint', search: 'ishal', page: 1 }));
         expect(terms.list.calls.mostRecent().args[0].includeInactive).toBeUndefined();
-        expect(picker().suggestions().map((t) => t.name)).toEqual(['İshal', 'Kanlı ishal']);
+        expect(
+            picker()
+                .suggestions()
+                .map((t) => t.name)
+        ).toEqual(['İshal', 'Kanlı ishal']);
     });
 
     it('gerçek input: yazınca debounce sonrası tek arama yapılır', async () => {
@@ -151,9 +156,7 @@ describe('ClinicalTermPickerComponent', () => {
         it('mükerrer hatası yerine pasif kayıt mesajı gösterilir; bakış yalnız bu ada özel ve pasifler dahildir', async () => {
             await addConflicting();
             expect(terms.list).toHaveBeenCalledTimes(2);
-            expect(terms.list.calls.mostRecent().args[0]).toEqual(
-                jasmine.objectContaining({ kind: 'Complaint', search: 'KULAK  akintisi', includeInactive: true })
-            );
+            expect(terms.list.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ kind: 'Complaint', search: 'KULAK  akintisi', includeInactive: true }));
             expect(picker().inactiveNamesake()).toBe(passive);
             expect(picker().actionError()).toBeNull();
             expect(picker().adding()).toBeFalse();

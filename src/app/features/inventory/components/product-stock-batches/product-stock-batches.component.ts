@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, effect, inject, input, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import type { ProductStockBatchesVm } from '@/app/features/inventory/models/stock-batch-vm.model';
 import { StockBatchService } from '@/app/features/inventory/services/stock-batch.service';
@@ -15,6 +15,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
     selector: 'app-product-stock-batches',
     standalone: true,
     imports: [TableModule, AppStatusTagComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <section class="mb-6 last:mb-0" [attr.aria-label]="'Partiler: ' + clinicName()" data-testid="product-stock-batches">
             <h6 class="mt-0 mb-2 text-base font-semibold">{{ clinicName() }}</h6>
@@ -24,22 +25,29 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                 <app-error-state [detail]="error()!" (retry)="load()" />
             } @else if (data(); as d) {
                 <dl class="m-0 mb-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-                    <div class="flex gap-1"><dt class="text-muted-color">Kullanılabilir:</dt><dd class="m-0 tabular-nums font-medium" data-testid="available-quantity">{{ d.availableText }} {{ d.unit }}</dd></div>
+                    <div class="flex gap-1">
+                        <dt class="text-muted-color">Kullanılabilir:</dt>
+                        <dd class="m-0 tabular-nums font-medium" data-testid="available-quantity">{{ d.availableText }} {{ d.unit }}</dd>
+                    </div>
                     <div class="flex gap-1">
                         <dt class="text-muted-color">Süresi geçmiş:</dt>
                         <dd class="m-0 tabular-nums" [class.text-red-600]="d.expiredQuantity > 0" data-testid="expired-quantity">{{ d.expiredText }} {{ d.unit }}</dd>
                     </div>
-                    <div class="flex gap-1"><dt class="text-muted-color">Toplam:</dt><dd class="m-0 tabular-nums">{{ d.quantityOnHandText }} {{ d.unit }}</dd></div>
-                    <div class="flex gap-1"><dt class="text-muted-color">Partili:</dt><dd class="m-0 tabular-nums">{{ d.batchedQuantityText }} {{ d.unit }}</dd></div>
+                    <div class="flex gap-1">
+                        <dt class="text-muted-color">Toplam:</dt>
+                        <dd class="m-0 tabular-nums">{{ d.quantityOnHandText }} {{ d.unit }}</dd>
+                    </div>
+                    <div class="flex gap-1">
+                        <dt class="text-muted-color">Partili:</dt>
+                        <dd class="m-0 tabular-nums">{{ d.batchedQuantityText }} {{ d.unit }}</dd>
+                    </div>
                     <div class="flex gap-1">
                         <dt class="text-muted-color">Partisiz / devir bakiye:</dt>
                         <dd class="m-0 tabular-nums" data-testid="unbatched-quantity">{{ d.unbatchedQuantityText }} {{ d.unit }}</dd>
                     </div>
                 </dl>
                 @if (d.unbatchedQuantity > 0) {
-                    <p class="text-sm text-muted-color mt-0 mb-3" role="note">
-                        Partisiz bakiye, parti bilgisi girilmeden önce veya parti bilgisi olmadan eklenmiş stoktur; seri no ve SKT'si yoktur.
-                    </p>
+                    <p class="text-sm text-muted-color mt-0 mb-3" role="note">Partisiz bakiye, parti bilgisi girilmeden önce veya parti bilgisi olmadan eklenmiş stoktur; seri no ve SKT'si yoktur.</p>
                 }
                 @if (d.batches.length === 0) {
                     <app-empty-state message="Kalanı olan parti yok." />

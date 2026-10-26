@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -14,10 +14,7 @@ import { ProductService } from '@/app/features/inventory/services/product.servic
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PRODUCT_CATEGORIES_ROUTE } from '@/app/core/routing/panel-navigation';
-import {
-    PRODUCT_CATEGORIES_CREATE_CLAIM,
-    PRODUCT_CATEGORIES_READ_CLAIM
-} from '@/app/core/auth/operation-claims.constants';
+import { PRODUCT_CATEGORIES_CREATE_CLAIM, PRODUCT_CATEGORIES_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { ProductClassificationFieldsComponent } from '@/app/features/inventory/components/product-classification-fields/product-classification-fields.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -27,25 +24,14 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 @Component({
     selector: 'app-product-create-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        RouterLink,
-        ButtonModule,
-        InputTextModule,
-        SelectModule,
-        TextareaModule,
-        AppPageHeaderComponent,
-        ProductClassificationFieldsComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, ProductClassificationFieldsComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header categoryLink="/panel/products" categoryLinkLabel="Ürün listesine dön" title="Yeni ürün" description="Ürün kartı oluşturun." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                    İşletme salt okunur moddadır; kayıt oluşturulamaz.
-                </p>
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; kayıt oluşturulamaz.</p>
             }
             @if (canReadCategories && categoryLoadHint()) {
                 <p class="text-muted-color text-sm mt-0 mb-4" role="status">{{ categoryLoadHint() }}</p>
@@ -66,7 +52,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                                 filterPlaceholder="Ara…"
                                 filterBy="label"
                                 [showClear]="true"
-                                styleClass="w-full"
+                                class="w-full"
                             />
                             @if (categoriesLoaded() && categoryOptions().length === 0 && !categoryLoadHint()) {
                                 <p class="text-muted-color text-sm mt-1 mb-0" role="status">
@@ -113,14 +99,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                     </div>
                     <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
                         <label for="currency" class="block text-sm font-medium text-muted-color">Para birimi *</label>
-                        <p-select
-                            inputId="currency"
-                            formControlName="currency"
-                            [options]="currencyOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            styleClass="w-full"
-                        />
+                        <p-select inputId="currency" formControlName="currency" [options]="currencyOptions" optionLabel="label" optionValue="value" class="w-full" />
                         @if (form.controls.currency.invalid && form.controls.currency.touched) {
                             <small class="text-red-500">Para birimi zorunludur.</small>
                         }
@@ -137,21 +116,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <p-button
-                        type="submit"
-                        [label]="copy.buttonSave"
-                        icon="pi pi-check"
-                        [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || ro.mutationBlocked()"
-                    />
-                    <p-button
-                        type="button"
-                        [label]="copy.buttonCancel"
-                        icon="pi pi-times"
-                        severity="secondary"
-                        (onClick)="goList()"
-                        [disabled]="submitting()"
-                    />
+                    <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || ro.mutationBlocked()" />
+                    <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
             </form>
         </div>

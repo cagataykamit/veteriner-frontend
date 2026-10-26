@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { LabResultDetailVm } from '@/app/features/lab-results/models/lab-result-vm.model';
@@ -41,6 +41,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         StoredFileUploadComponent,
         TrDateTimePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (savedMessage(); as message) {
             <p class="mb-4 m-0 text-sm font-medium">{{ message }}</p>
@@ -57,17 +58,17 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                 <div actions class="flex flex-wrap gap-2">
                     @if (canUpdateLabResult && isEditable(row()!.status)) {
                         @if (ro.mutationBlocked()) {
-                            <button pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                            <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                         } @else {
                             <a
                                 [routerLink]="['/panel/lab-results', row()!.id, 'edit']"
                                 pButton
                                 type="button"
-                                [label]="editLabel(row()!.status)"
-                                [icon]="row()!.status === 'Requested' ? 'pi pi-check-square' : 'pi pi-pencil'"
+                               
+                               
                                 [class]="row()!.status === 'Requested' ? 'p-button-primary' : 'p-button-secondary'"
-                            ></a>
-                            <button pButton type="button" label="İptal et" icon="pi pi-ban" class="p-button-danger p-button-outlined" (click)="cancelVisible = true"></button>
+                            ><i [class]="row()!.status === 'Requested' ? 'pi pi-check-square' : 'pi pi-pencil'"></i>{{ editLabel(row()!.status) }}</a>
+                            <button pButton type="button" class="p-button-danger p-button-outlined" (click)="cancelVisible = true"><i class="pi pi-ban"></i>İptal et</button>
                         }
                     }
                 </div>

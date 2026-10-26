@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import {
     PUBLIC_KVKK_NOTE,
@@ -18,6 +18,7 @@ import { PublicScreenshotComponent } from './components/public-screenshot.compon
     selector: 'app-public-registers-page',
     standalone: true,
     imports: [PublicPageHeaderComponent, PublicScreenshotComponent, PublicCtaComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-public-page-header
             eyebrow="Defterler ve KVKK"

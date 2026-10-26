@@ -4,7 +4,7 @@ import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-s
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, DestroyRef, inject, OnInit, signal, input, output } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { convertToParamMap, type ParamMap } from '@angular/router';
@@ -13,11 +13,7 @@ import { SelectModule } from 'primeng/select';
 import { AdministrationBatchFieldComponent } from '@/app/features/administrations/components/administration-batch-field.component';
 import { administrationSavedNotice } from '@/app/features/administrations/utils/administration-labels';
 import { createAdministrationBatchPicker } from '@/app/features/administrations/utils/administration-batch-picker';
-import {
-    CHARGE_QUANTITY_MAX,
-    CHARGE_QUANTITY_MAX_DECIMALS,
-    chargeNumberValidator
-} from '@/app/features/charges/utils/charge-amount.utils';
+import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/features/charges/utils/charge-amount.utils';
 import type { ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { ADMINISTRATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -28,10 +24,7 @@ import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/se
 import type { VaccineDefinitionListItemVm } from '@/app/features/vaccine-definitions/models/vaccine-definition-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
-import {
-    parseVaccinationCreateRouteContext,
-    type VaccinationCreateRouteContext
-} from '@/app/shared/panel/examination-create-route-context.utils';
+import { parseVaccinationCreateRouteContext, type VaccinationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -48,11 +41,7 @@ import {
     vaccinationPlannedNotPastValidator,
     vaccinationStatusDateFieldsAfterTransition
 } from '@/app/features/vaccinations/utils/vaccination-upsert-date-submit.utils';
-import {
-    DATETIME_LOCAL_INPUT_MIN,
-    dateTimeYearRangeValidator,
-    effectiveDateTimeLocalInputMin
-} from '@/app/shared/utils/date-input-validation.utils';
+import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 
 const LAST_VACCINE_PRODUCT_KEY = 'vetinity.vaccine.lastProductId';
 
@@ -81,21 +70,14 @@ export interface VaccinationSavedEvent {
 @Component({
     selector: 'app-vaccination-form',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        ButtonModule,
-        SelectModule,
-        PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AdministrationBatchFieldComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AdministrationBatchFieldComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-pet-alert-banner [petId]="form.controls.petId.value" />
 
         <div [class.card]="!embedded()">
             @if (ro.mutationBlocked()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                    İşletme salt okunur moddadır; kayıt oluşturulamaz.
-                </p>
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; kayıt oluşturulamaz.</p>
             }
             @if (selectionError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
@@ -105,9 +87,7 @@ export interface VaccinationSavedEvent {
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
             @if (contextFromRoute()) {
-                <p class="text-sm text-muted-color mt-0 mb-4">
-                    Muayene bağlamı taşındı; müşteri ve hasta seçimi kilitlidir. Aşı bilgilerini doldurun.
-                </p>
+                <p class="text-sm text-muted-color mt-0 mb-4">Muayene bağlamı taşındı; müşteri ve hasta seçimi kilitlidir. Aşı bilgilerini doldurun.</p>
             }
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
@@ -130,9 +110,7 @@ export interface VaccinationSavedEvent {
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="vaccineDefinitionId" class="block text-sm font-medium text-muted-color mb-2"
-                            >{{ copy.vaccinationFieldVaccine }} *</label
-                        >
+                        <label for="vaccineDefinitionId" class="block text-sm font-medium text-muted-color mb-2">{{ copy.vaccinationFieldVaccine }} *</label>
                         <p-select
                             inputId="vaccineDefinitionId"
                             formControlName="vaccineDefinitionId"
@@ -144,7 +122,7 @@ export interface VaccinationSavedEvent {
                             filterPlaceholder="Ara…"
                             filterBy="label"
                             [showClear]="true"
-                            styleClass="w-full"
+                            class="w-full"
                             [loading]="vaccineDefinitionsLoading()"
                         />
                         @if (apiFieldErrors().vaccineDefinitionId) {
@@ -155,15 +133,7 @@ export interface VaccinationSavedEvent {
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="status" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
-                        <p-select
-                            inputId="status"
-                            formControlName="status"
-                            [options]="statusOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Durum seçin"
-                            styleClass="w-full"
-                        />
+                        <p-select inputId="status" formControlName="status" [options]="statusOptions" optionLabel="label" optionValue="value" placeholder="Durum seçin" class="w-full" />
                         @if (apiFieldErrors().status) {
                             <small class="text-red-500">{{ apiFieldErrors().status }}</small>
                         } @else if (form.controls.status.invalid && form.controls.status.touched) {
@@ -241,13 +211,11 @@ export interface VaccinationSavedEvent {
                                 filterBy="label"
                                 [showClear]="true"
                                 [loading]="productsLoading()"
-                                styleClass="w-full"
+                                class="w-full"
                             />
                             @if (lastProduct(); as last) {
                                 @if (!form.controls.productId.value) {
-                                    <button type="button" class="p-button p-button-text p-button-sm p-0 mt-1" data-testid="last-product" (click)="useLastProduct(last.value)">
-                                        Son kullanılan: {{ last.label }}
-                                    </button>
+                                    <button type="button" class="p-button p-button-text p-button-sm p-0 mt-1" data-testid="last-product" (click)="useLastProduct(last.value)">Son kullanılan: {{ last.label }}</button>
                                 }
                             }
                             @if (productsError()) {
@@ -259,7 +227,10 @@ export interface VaccinationSavedEvent {
                         @if (form.controls.productId.value) {
                             <div class="col-span-12 md:col-span-6">
                                 <label for="vaccineQuantity" class="block text-sm font-medium text-muted-color mb-2">
-                                    Doz / miktar *@if (productUnit()) { <span> ({{ productUnit() }})</span> }
+                                    Doz / miktar *
+                                    @if (productUnit()) {
+                                        <span> ({{ productUnit() }})</span>
+                                    }
                                 </label>
                                 <input id="vaccineQuantity" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="quantity" />
                                 @if (form.controls.quantity.invalid && form.controls.quantity.dirty) {
@@ -271,13 +242,9 @@ export interface VaccinationSavedEvent {
                             <div class="col-span-12">
                                 <app-administration-batch-field [picker]="batchPicker" [batchControl]="form.controls.batchId" inputId="vaccineBatch" />
                             </div>
-                            <p class="col-span-12 text-sm text-muted-color m-0" data-testid="stock-deduct-note">
-                                Kayıt, seçilen üründen stoktan düşen bir uygulama olarak da yazılır; tek işlemde ikisi birlikte kaydedilir veya hiçbiri kaydedilmez.
-                            </p>
+                            <p class="col-span-12 text-sm text-muted-color m-0" data-testid="stock-deduct-note">Kayıt, seçilen üründen stoktan düşen bir uygulama olarak da yazılır; tek işlemde ikisi birlikte kaydedilir veya hiçbiri kaydedilmez.</p>
                         } @else {
-                            <p class="col-span-12 text-sm text-muted-color m-0" data-testid="no-stock-note">
-                                Ürün seçilmezse yalnız aşı kaydı yazılır; stoktan düşmez.
-                            </p>
+                            <p class="col-span-12 text-sm text-muted-color m-0" data-testid="no-stock-note">Ürün seçilmezse yalnız aşı kaydı yazılır; stoktan düşmez.</p>
                         }
                     }
                     <div class="col-span-12">
@@ -294,31 +261,11 @@ export interface VaccinationSavedEvent {
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <p-button
-                        type="submit"
-                        [label]="copy.buttonSave"
-                        icon="pi pi-check"
-                        [loading]="submitting()"
-                        [disabled]="
-                            form.invalid ||
-                            submitting() ||
-                            applyingRouteContext() ||
-                            vaccineDefinitionsLoading() ||
-                            ro.mutationBlocked()
-                        "
-                    />
-                    <p-button
-                        type="button"
-                        [label]="copy.buttonCancel"
-                        icon="pi pi-times"
-                        severity="secondary"
-                        (onClick)="cancel()"
-                        [disabled]="submitting()"
-                    />
+                    <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || applyingRouteContext() || vaccineDefinitionsLoading() || ro.mutationBlocked()" />
+                    <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="cancel()" [disabled]="submitting()" />
                 </div>
             </form>
         </div>
-
     `
 })
 export class VaccinationFormComponent implements OnInit {
@@ -362,9 +309,7 @@ export class VaccinationFormComponent implements OnInit {
     readonly vaccineDefinitionsError = signal<string | null>(null);
     readonly vaccineDefinitionRows = signal<VaccineDefinitionListItemVm[]>([]);
 
-    readonly vaccineDefinitionOptions = computed(() =>
-        this.vaccineDefinitionRows().map((d) => ({ label: d.name, value: d.id }))
-    );
+    readonly vaccineDefinitionOptions = computed(() => this.vaccineDefinitionRows().map((d) => ({ label: d.name, value: d.id })));
 
     readonly statusOptions = [...VACCINATION_WRITE_STATUS_OPTIONS];
 
@@ -376,9 +321,7 @@ export class VaccinationFormComponent implements OnInit {
     readonly productsLoading = signal(false);
     readonly productsError = signal<string | null>(null);
     private readonly products = signal<ProductListItemVm[]>([]);
-    readonly productOptions = computed(() =>
-        this.products().map((p) => ({ value: p.id, label: p.sku && p.sku !== '—' ? `${p.name} (${p.sku})` : p.name }))
-    );
+    readonly productOptions = computed(() => this.products().map((p) => ({ value: p.id, label: p.sku && p.sku !== '—' ? `${p.name} (${p.sku})` : p.name })));
     private readonly lastProductId = signal<string | null>(readLastVaccineProductId());
     /** Hekim için hızlı yol: son kullanılan aşı ürünü (yalnız bir tıkla seçilir, kendiliğinden stok düşmez). */
     readonly lastProduct = computed(() => this.productOptions().find((o) => o.value === this.lastProductId()) ?? null);
@@ -386,9 +329,6 @@ export class VaccinationFormComponent implements OnInit {
 
     /** Form başına bir kez üretilir; hata sonrası yeniden denemede aynı kalır (ikinci düşüm oluşmaz). */
     private readonly requestId = crypto.randomUUID();
-
-
-
 
     readonly form = this.fb.nonNullable.group(
         {
@@ -422,17 +362,9 @@ export class VaccinationFormComponent implements OnInit {
 
             if (prev !== null && prev !== next) {
                 const raw = this.form.getRawValue();
-                const patch = vaccinationStatusDateFieldsAfterTransition(
-                    prev as 0 | 1 | 2,
-                    next as 0 | 1 | 2,
-                    (raw.appliedAtLocal ?? '').trim(),
-                    (raw.nextDueDate ?? '').trim()
-                );
+                const patch = vaccinationStatusDateFieldsAfterTransition(prev as 0 | 1 | 2, next as 0 | 1 | 2, (raw.appliedAtLocal ?? '').trim(), (raw.nextDueDate ?? '').trim());
 
-                this.form.patchValue(
-                    { appliedAtLocal: patch.appliedAtLocal, nextDueDate: patch.nextDueDate },
-                    { emitEvent: false }
-                );
+                this.form.patchValue({ appliedAtLocal: patch.appliedAtLocal, nextDueDate: patch.nextDueDate }, { emitEvent: false });
             }
 
             this.lastStatusForDateTransition = next;
@@ -552,9 +484,7 @@ export class VaccinationFormComponent implements OnInit {
                 error: (e: unknown) => {
                     this.vaccineDefinitionRows.set([]);
                     this.vaccineDefinitionsLoading.set(false);
-                    this.vaccineDefinitionsError.set(
-                        e instanceof Error ? e.message : this.copy.vaccinationVaccineDefinitionsLoadError
-                    );
+                    this.vaccineDefinitionsError.set(e instanceof Error ? e.message : this.copy.vaccinationVaccineDefinitionsLoadError);
                     this.form.controls.vaccineDefinitionId.setValue('');
                 }
             });
@@ -584,10 +514,6 @@ export class VaccinationFormComponent implements OnInit {
     cancel(): void {
         this.cancelled.emit();
     }
-
-
-
-
 
     onSubmit(): void {
         this.submitError.set(null);
@@ -634,9 +560,7 @@ export class VaccinationFormComponent implements OnInit {
             dueAtUtc: dates.dueAtUtc,
             status,
             notes: v.notes.trim() || null,
-            ...(productId && status === 1
-                ? { productId, quantity: v.quantity, batchId: v.batchId || null, requestId: this.requestId }
-                : {})
+            ...(productId && status === 1 ? { productId, quantity: v.quantity, batchId: v.batchId || null, requestId: this.requestId } : {})
         };
 
         this.submitting.set(true);
@@ -666,8 +590,6 @@ export class VaccinationFormComponent implements OnInit {
             }
         });
     }
-
-
 
     /** Rota bağlamı (muayeneden aşı): müşteri ve hayvan doğrulanır, sonra kilitlenir. */
     private tryApplyVaccinationRouteContext(): void {
@@ -734,16 +656,8 @@ export class VaccinationFormComponent implements OnInit {
         const needsAppliedAt = s === 1;
         const needsPlannedDue = s === 0;
 
-        this.form.controls.appliedAtLocal.setValidators(
-            needsAppliedAt
-                ? [Validators.required, vaccinationAppliedNotFutureValidator(), dateTimeYearRangeValidator()]
-                : [dateTimeYearRangeValidator()]
-        );
-        this.form.controls.nextDueDate.setValidators(
-            needsPlannedDue
-                ? [Validators.required, vaccinationPlannedNotPastValidator(), dateTimeYearRangeValidator()]
-                : [dateTimeYearRangeValidator()]
-        );
+        this.form.controls.appliedAtLocal.setValidators(needsAppliedAt ? [Validators.required, vaccinationAppliedNotFutureValidator(), dateTimeYearRangeValidator()] : [dateTimeYearRangeValidator()]);
+        this.form.controls.nextDueDate.setValidators(needsPlannedDue ? [Validators.required, vaccinationPlannedNotPastValidator(), dateTimeYearRangeValidator()] : [dateTimeYearRangeValidator()]);
 
         this.form.controls.appliedAtLocal.updateValueAndValidity({ emitEvent: false });
         this.form.controls.nextDueDate.updateValueAndValidity({ emitEvent: false });
@@ -766,7 +680,6 @@ export class VaccinationFormComponent implements OnInit {
     protected plannedDateTimeMin(): string {
         return effectiveDateTimeLocalInputMin(minDateTimeLocalMinuteAfterNow());
     }
-
 
     protected minNextDueAfterApplied(): string {
         return effectiveDateTimeLocalInputMin(minDateTimeLocalMinuteAfter(this.form.controls.appliedAtLocal.value ?? ''));

@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
@@ -43,7 +43,7 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
             imports: [ExaminationWorkspacePageComponent],
             providers: [
                 provideRouter([]),
-                provideHttpClient(),
+                provideHttpClient(withXhr()),
                 provideHttpClientTesting(),
                 { provide: API_BASE_URL, useValue: 'http://api.test' },
                 { provide: ExaminationsService, useValue: examinations },
@@ -117,7 +117,10 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
     });
 
     it('Visit yüklenemezse sunucu mesajı gösterilir', () => {
-        const cmp = create(ctxQuery, throwError(() => new Error('Geliş kaydı bulunamadı veya artık kuyrukta değil. Listeyi yenileyin.')));
+        const cmp = create(
+            ctxQuery,
+            throwError(() => new Error('Geliş kaydı bulunamadı veya artık kuyrukta değil. Listeyi yenileyin.'))
+        );
 
         expect(cmp.visitContextId()).toBeNull();
         expect(cmp.selectionError()).toContain('Geliş kaydı bulunamadı');

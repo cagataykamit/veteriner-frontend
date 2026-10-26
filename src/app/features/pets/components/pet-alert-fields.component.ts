@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CheckboxModule } from 'primeng/checkbox';
 import type { PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
@@ -9,6 +9,7 @@ import { PET_ALERT_NOTE_MAX, PET_ALERT_OPTIONS } from '@/app/shared/pet-alerts/p
     selector: 'app-pet-alert-fields',
     standalone: true,
     imports: [ReactiveFormsModule, CheckboxModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <fieldset class="border-0 p-0 m-0">
             <legend class="block text-sm font-medium text-muted-color mb-2 p-0">Uyarılar</legend>

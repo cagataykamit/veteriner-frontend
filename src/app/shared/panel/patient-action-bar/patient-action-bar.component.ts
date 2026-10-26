@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -16,38 +16,18 @@ import { buildPatientActions } from './patient-actions.utils';
     selector: 'app-patient-action-bar',
     standalone: true,
     imports: [CommonModule, RouterLink, ButtonModule, VisitArrivalDialogComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (actions().length > 0) {
-            <div
-                class="card mb-4 flex flex-wrap gap-2 items-center"
-                [class]="sticky() ? 'sticky top-16 z-10 !py-3 shadow-sm' : ''"
-                role="toolbar"
-                aria-label="Hızlı eylemler"
-                data-testid="patient-action-bar"
-            >
+            <div class="card mb-4 flex flex-wrap gap-2 items-center" [class]="sticky() ? 'sticky top-16 z-10 !py-3 shadow-sm' : ''" role="toolbar" aria-label="Hızlı eylemler" data-testid="patient-action-bar">
                 @if (ro.mutationBlocked()) {
                     <span class="text-amber-700 dark:text-amber-300 text-sm" role="status">İşletme salt okunur moddadır; eylemler kapalı.</span>
                 } @else {
                     @for (action of actions(); track action.key; let first = $first) {
                         @if (action.route) {
-                            <a
-                                [routerLink]="action.route"
-                                [queryParams]="action.queryParams"
-                                pButton
-                                type="button"
-                                [label]="action.label"
-                                [icon]="action.icon"
-                                [class]="first ? 'p-button-primary' : 'p-button-outlined p-button-secondary'"
-                            ></a>
+                            <a [routerLink]="action.route" [queryParams]="action.queryParams" pButton type="button" [class]="first ? 'p-button-primary' : 'p-button-outlined p-button-secondary'"><i [class]="action.icon"></i>{{ action.label }}</a>
                         } @else {
-                            <button
-                                pButton
-                                type="button"
-                                [label]="action.label"
-                                [icon]="action.icon"
-                                [class]="first ? 'p-button-primary' : 'p-button-outlined p-button-secondary'"
-                                (click)="arrivalOpen.set(true)"
-                            ></button>
+                            <button pButton type="button" [class]="first ? 'p-button-primary' : 'p-button-outlined p-button-secondary'" (click)="arrivalOpen.set(true)"><i [class]="action.icon"></i>{{ action.label }}</button>
                         }
                     }
                 }
@@ -78,18 +58,14 @@ export class PatientActionBarComponent {
 
     readonly arrivalOpen = signal(false);
 
-    readonly actions = computed(() =>
-        buildPatientActions({ clientId: this.clientId(), petId: this.petId(), petDeceased: this.petDeceased() }, (claim) => this.auth.hasOperationClaim(claim))
-    );
+    readonly actions = computed(() => buildPatientActions({ clientId: this.clientId(), petId: this.petId(), petDeceased: this.petDeceased() }, (claim) => this.auth.hasOperationClaim(claim)));
 
     readonly canArrive = computed(() => this.actions().some((a) => a.key === 'arrive'));
 
     readonly petSuggestion = computed<PetSuggestion | null>(() => {
         const id = this.petId();
 
-        return id
-            ? { id, label: `${this.petLabel()} · Sahip: ${this.clientName() || '—'}`, clientId: this.clientId(), clientName: this.clientName() }
-            : this.arrivalPet();
+        return id ? { id, label: `${this.petLabel()} · Sahip: ${this.clientName() || '—'}`, clientId: this.clientId(), clientName: this.clientName() } : this.arrivalPet();
     });
 
     onArrived(): void {

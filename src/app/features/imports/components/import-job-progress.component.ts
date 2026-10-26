@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { MessageModule } from 'primeng/message';
 import { ProgressBarModule } from 'primeng/progressbar';
 
@@ -7,12 +7,13 @@ import { ProgressBarModule } from 'primeng/progressbar';
     selector: 'app-import-job-progress',
     standalone: true,
     imports: [MessageModule, ProgressBarModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-progressbar [mode]="percent() === null ? 'indeterminate' : 'determinate'" [value]="percent() ?? 0" />
         @if (progress(); as pr) {
             <small class="text-muted-color">{{ pr.processed }} / {{ pr.total }} satır işlendi</small>
             @if (stalled()) {
-                <p-message severity="info" styleClass="w-full mt-2" role="status">
+                <p-message severity="info" class="w-full mt-2" role="status">
                     İşlem beklenenden uzun sürüyor; arka plan işi henüz başlamadı. Sayfayı kapatabilirsiniz, iş başladığında kendiliğinden sürer. Uzun süre böyle kalırsa destek ekibiyle iletişime geçin.
                 </p-message>
             } @else if (pr.leaseActive === false) {

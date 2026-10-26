@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { Observable } from 'rxjs';
@@ -7,15 +7,7 @@ import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
-import {
-    CHARGE_DESCRIPTION_MAX_LENGTH,
-    CHARGE_QUANTITY_MAX,
-    CHARGE_QUANTITY_MAX_DECIMALS,
-    CHARGE_UNIT_PRICE_MAX,
-    CHARGE_UNIT_PRICE_MAX_DECIMALS,
-    chargeNumberValidator,
-    computeChargeAmount
-} from '@/app/features/charges/utils/charge-amount.utils';
+import { CHARGE_DESCRIPTION_MAX_LENGTH, CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, CHARGE_UNIT_PRICE_MAX, CHARGE_UNIT_PRICE_MAX_DECIMALS, chargeNumberValidator, computeChargeAmount } from '@/app/features/charges/utils/charge-amount.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
@@ -34,15 +26,9 @@ export interface ChargeSuggestionOverrides {
     selector: 'app-charge-suggestion-convert-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            header="Ücrete çevir"
-            [modal]="true"
-            [dismissableMask]="!submitting()"
-            [closable]="!submitting()"
-            [style]="{ width: 'min(560px, 95vw)' }"
-            [(visible)]="visible"
-        >
+        <p-dialog header="Ücrete çevir" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
             @if (suggestion(); as s) {
                 <p class="mt-0 mb-1 font-medium">{{ s.clientName }} · {{ s.petName }}</p>
                 @if (s.suggestedUnitPrice === null) {
@@ -81,7 +67,7 @@ export interface ChargeSuggestionOverrides {
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
                 <p-button type="button" label="Ücrete çevir" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting()" (onClick)="onSubmit()" />
             </ng-template>

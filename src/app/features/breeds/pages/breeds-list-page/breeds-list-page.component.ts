@@ -1,6 +1,6 @@
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -34,23 +34,17 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent, SearchInputComponent,
+        AppStatusTagComponent,
+        SearchInputComponent,
         AppRowActionButtonComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header title="Irklar" description="Irk kayıtlarını yönetin.">
             @if (canCreateBreed() && !ro.mutationBlocked()) {
-                <a actions [routerLink]="[breedsRoute, 'new']" pButton type="button" label="Yeni Irk" icon="pi pi-plus" class="p-button-primary"></a>
+                <a actions [routerLink]="[breedsRoute, 'new']" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Irk</a>
             } @else if (canCreateBreed() && ro.mutationBlocked()) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Yeni Irk (salt okunur)"
-                    icon="pi pi-lock"
-                    [disabled]="true"
-                    class="p-button-secondary"
-                ></button>
+                <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Irk (salt okunur)</button>
             }
         </app-page-header>
 
@@ -75,13 +69,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                     <app-search-input inputId="breedListSearch" placeholder="Irk veya tür adı…" [(value)]="searchDraft" (searchRequested)="applySearch()" />
                                 </div>
                                 <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button
-                                        [label]="copy.buttonClear"
-                                        icon="pi pi-times"
-                                        severity="secondary"
-                                        (onClick)="clearSearch()"
-                                        [disabled]="loading()"
-                                    />
+                                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="clearSearch()" [disabled]="loading()" />
                                 </div>
                             </div>
                         </div>
@@ -90,13 +78,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                         <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
-                            <p-table
-                                [value]="breedRows()"
-                                [paginator]="true"
-                                [rows]="10"
-                                [rowsPerPageOptions]="[5, 10, 20, 50]"
-                                [tableStyle]="{ 'min-width': '56rem' }"
-                            >
+                            <p-table [value]="breedRows()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20, 50]" [tableStyle]="{ 'min-width': '56rem' }">
                                 <ng-template #header>
                                     <tr>
                                         <th>Ad</th>
@@ -128,16 +110,12 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 
                         <div class="lg:hidden space-y-3">
                             @for (row of breedRows(); track row.id) {
-                                <div
-                                    class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
-                                >
+                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                                     <div class="flex flex-wrap items-start justify-between gap-2 gap-y-1 mb-2 min-w-0">
                                         <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words">{{ row.name }}</div>
                                         <app-status-tag [label]="activeLabel(row.isActive)" [severity]="activeSeverity(row.isActive)" />
                                     </div>
-                                    <div class="text-sm text-muted-color mb-3 min-w-0 break-words">
-                                        <span class="font-medium">Tür: </span>{{ row.speciesName }}
-                                    </div>
+                                    <div class="text-sm text-muted-color mb-3 min-w-0 break-words"><span class="font-medium">Tür: </span>{{ row.speciesName }}</div>
                                     <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
                                         @if (canUpdateBreed() && !ro.mutationBlocked()) {
                                             <app-row-action-button action="edit" [link]="[breedsRoute, row.id, 'edit']" />

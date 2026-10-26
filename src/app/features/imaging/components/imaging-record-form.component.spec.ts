@@ -1,4 +1,4 @@
-import { Component, Directive, forwardRef, input } from '@angular/core';
+import { Component, Directive, forwardRef, input, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { type ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { By } from '@angular/platform-browser';
@@ -28,6 +28,7 @@ abstract class StubValueAccessor implements ControlValueAccessor {
     selector: 'app-client-search',
     standalone: true,
     template: '',
+    changeDetection: ChangeDetectionStrategy.Eager,
     providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => StubClientSearchComponent), multi: true }]
 })
 class StubClientSearchComponent extends StubValueAccessor {}
@@ -36,13 +37,14 @@ class StubClientSearchComponent extends StubValueAccessor {}
     selector: 'app-pet-search',
     standalone: true,
     template: '',
+    changeDetection: ChangeDetectionStrategy.Eager,
     providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => StubPetSearchComponent), multi: true }]
 })
 class StubPetSearchComponent extends StubValueAccessor {
     readonly clientId = input<string | null>(null);
 }
 
-@Component({ selector: 'app-pet-alert-banner', standalone: true, template: '' })
+@Component({ selector: 'app-pet-alert-banner', standalone: true, changeDetection: ChangeDetectionStrategy.Eager, template: '' })
 class StubPetAlertBannerComponent {
     readonly petId = input<string | null>(null);
 }
@@ -106,9 +108,7 @@ describe('ImagingRecordFormComponent — hata korumalı kayıt ve yükleme (L6)'
         fixture.detectChanges();
 
         expect(create).toHaveBeenCalledTimes(1);
-        expect(create.calls.mostRecent().args[0]).toEqual(
-            jasmine.objectContaining({ clinicId: 'clinic-1', petId: 'pet-1', modality: 'XRay', description: 'Toraks LL', clinicalNote: 'Kardiyomegali yok' })
-        );
+        expect(create.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ clinicId: 'clinic-1', petId: 'pet-1', modality: 'XRay', description: 'Toraks LL', clinicalNote: 'Kardiyomegali yok' }));
         expect(c.recordId()).toBe('r1');
         expect(c.submitError()).toContain('1 dosya yüklenemedi');
         expect(c.form.getRawValue().description).toBe('Toraks LL');

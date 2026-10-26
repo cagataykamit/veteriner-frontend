@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { PUBLIC_SCREENSHOTS, publicScreenshotSrc, type PublicScreenshotKey } from '@/app/features/public/utils/public-screenshots.utils';
 
 /**
@@ -8,6 +8,7 @@ import { PUBLIC_SCREENSHOTS, publicScreenshotSrc, type PublicScreenshotKey } fro
 @Component({
     selector: 'app-public-screenshot',
     standalone: true,
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <figure class="public-shot m-0">
             <img

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { providePrimeNG } from 'primeng/config';
@@ -9,6 +9,7 @@ import { applyDateMask, type DateInputType } from './date-input-value.utils';
 @Component({
     standalone: true,
     imports: [ReactiveFormsModule, DateInputComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `<app-date-input inputId="d" [type]="type()" [min]="min()" [max]="max()" [formControl]="control" />`
 })
 class HostComponent {

@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import {
@@ -28,6 +28,7 @@ interface PlanCardVm {
     selector: 'app-public-plan-cards',
     standalone: true,
     imports: [RouterLink],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <ul class="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-3 md:gap-6">
             @for (card of cards(); track card.def.slug) {

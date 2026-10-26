@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-s
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -17,34 +17,18 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import { ClinicalTermPickerComponent } from '@/app/features/clinical-terms/components/clinical-term-picker.component';
 import { ExaminationPatientContextComponent } from '@/app/features/examinations/components/examination-patient-context.component';
 import { ExaminationPatientHeaderComponent } from '@/app/features/examinations/components/examination-patient-header.component';
-import {
-    mapExaminationFormToCreateRequest,
-    isPartialVitalClear,
-    mapExaminationFormToUpdateRequest
-} from '@/app/features/examinations/data/examination.mapper';
+import { mapExaminationFormToCreateRequest, isPartialVitalClear, mapExaminationFormToUpdateRequest } from '@/app/features/examinations/data/examination.mapper';
 import type { ExaminationWorkspaceFormValue } from '@/app/features/examinations/models/examination-form.model';
 import type { ExaminationEditVm } from '@/app/features/examinations/models/examination-vm.model';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
-import {
-    EXAMINATION_TIME_SELECT_OPTIONS,
-    examinationTimeSelectOptionsWithLegacy
-} from '@/app/features/examinations/utils/examination-time-options.utils';
-import {
-    type ExaminationUpsertFieldErrors,
-    type ExaminationUpsertFormFieldKey,
-    parseExaminationUpsertHttpError
-} from '@/app/features/examinations/utils/examination-upsert-validation-parse.utils';
+import { EXAMINATION_TIME_SELECT_OPTIONS, examinationTimeSelectOptionsWithLegacy } from '@/app/features/examinations/utils/examination-time-options.utils';
+import { type ExaminationUpsertFieldErrors, type ExaminationUpsertFormFieldKey, parseExaminationUpsertHttpError } from '@/app/features/examinations/utils/examination-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
-import {
-    parseAppointmentExaminationRouteContext,
-    parseVisitExaminationRouteContext,
-    prefillPetFromRoute,
-    type VisitExaminationRouteContext
-} from '@/app/shared/panel/examination-create-route-context.utils';
+import { parseAppointmentExaminationRouteContext, parseVisitExaminationRouteContext, prefillPetFromRoute, type VisitExaminationRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -97,9 +81,13 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
         AppLoadingStateComponent,
         AppErrorStateComponent,
         ExaminationPatientContextComponent,
-        ExaminationPatientHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent,
+        ExaminationPatientHeaderComponent,
+        ClientSearchComponent,
+        PetSearchComponent,
+        DateInputComponent,
         ClinicalTermPickerComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (loading()) {
             <app-loading-state message="Muayene yükleniyor…" />
@@ -122,14 +110,10 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
             </app-page-header>
 
             @if (finalized()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status" data-testid="finalized-notice">
-                    Bu muayene kesinleştirilmiş; içeriği düzenlenemez. Düzeltme için muayene özetinden ek not ekleyebilirsiniz.
-                </p>
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status" data-testid="finalized-notice">Bu muayene kesinleştirilmiş; içeriği düzenlenemez. Düzeltme için muayene özetinden ek not ekleyebilirsiniz.</p>
             }
             @if (ro.mutationBlocked()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                    İşletme salt okunur moddadır; değişiklik kaydedilemez.
-                </p>
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; değişiklik kaydedilemez.</p>
             }
             @if (selectionError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
@@ -150,12 +134,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                 </div>
             } @else {
                 @if (isEdit) {
-                    <app-examination-patient-header
-                        [petId]="current?.petId ?? null"
-                        [clientId]="current?.clientId ?? null"
-                        [fallbackPetName]="current?.petName ?? null"
-                        [fallbackClientName]="current?.clientName ?? null"
-                    />
+                    <app-examination-patient-header [petId]="current?.petId ?? null" [clientId]="current?.clientId ?? null" [fallbackPetName]="current?.petName ?? null" [fallbackClientName]="current?.clientName ?? null" />
                 } @else if (visitContextId()) {
                     <app-examination-patient-header [petId]="selectedPetId()" [clientId]="selectedClientId()" />
                     <p class="text-sm text-muted-color mt-0 mb-4">Bu muayene Bugün listesindeki geliş kaydına bağlanır; hasta tekrar seçilmez.</p>
@@ -163,9 +142,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                     <div class="card mb-4">
                         <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
                         @if (contextFromAppointment()) {
-                            <p class="text-sm text-muted-color mt-0 mb-4">
-                                Bu randevu kaydından bağlam taşındı; müşteri ve hasta kilitlidir; kayıt ilgili randevuya bağlanır.
-                            </p>
+                            <p class="text-sm text-muted-color mt-0 mb-4">Bu randevu kaydından bağlam taşındı; müşteri ve hasta kilitlidir; kayıt ilgili randevuya bağlanır.</p>
                         }
                         <form [formGroup]="selectionForm">
                             <div class="grid grid-cols-12 gap-4">
@@ -225,7 +202,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                                         optionValue="value"
                                         placeholder="Muayene saati seçin"
                                         [showClear]="true"
-                                        styleClass="w-full vet-time-select"
+                                        class="w-full vet-time-select"
                                         panelStyleClass="vet-time-select-panel"
                                     />
                                     @if (form.controls.examinationTime.invalid && form.controls.examinationTime.touched) {
@@ -344,21 +321,8 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                                 <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mt-4" role="alert">
                                     <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ submitError() }}</p>
                                     <div class="flex flex-wrap gap-4 items-center mt-3">
-                                        <a
-                                            [routerLink]="['/panel/examinations', examinationId]"
-                                            target="_blank"
-                                            rel="noopener"
-                                            class="text-primary font-medium no-underline"
-                                            >Güncel kaydı yeni sekmede aç →</a
-                                        >
-                                        <p-button
-                                            type="button"
-                                            label="Yazdıklarımı atıp güncel kaydı yükle"
-                                            icon="pi pi-refresh"
-                                            severity="secondary"
-                                            size="small"
-                                            (onClick)="discardAndReload()"
-                                        />
+                                        <a [routerLink]="['/panel/examinations', examinationId]" target="_blank" rel="noopener" class="text-primary font-medium no-underline">Güncel kaydı yeni sekmede aç →</a>
+                                        <p-button type="button" label="Yazdıklarımı atıp güncel kaydı yükle" icon="pi pi-refresh" severity="secondary" size="small" (onClick)="discardAndReload()" />
                                     </div>
                                 </div>
                             } @else if (submitError()) {
@@ -366,22 +330,14 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                             }
                             <div class="flex flex-wrap gap-2 mt-4">
                                 <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="saveDisabled()" />
-                                <p-button
-                                    type="button"
-                                    [label]="copy.buttonCancel"
-                                    icon="pi pi-times"
-                                    severity="secondary"
-                                    (onClick)="onCancel()"
-                                    [disabled]="submitting()"
-                                />
+                                <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="onCancel()" [disabled]="submitting()" />
                             </div>
                         </div>
                     </form>
                 </div>
             }
 
-            @if (!isEdit) {
-            }
+            @if (!isEdit) {}
         }
     `
 })
@@ -437,8 +393,7 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     });
 
     /** Kayıttaki tek bir vital silinemez (sözleşme: yalnızca tümü `clearVitals` ile). */
-    private readonly partialVitalClearValidator: ValidatorFn = (g) =>
-        this.current && isPartialVitalClear(g.value, this.current) ? { partialVitalClear: true } : null;
+    private readonly partialVitalClearValidator: ValidatorFn = (g) => (this.current && isPartialVitalClear(g.value, this.current) ? { partialVitalClear: true } : null);
 
     readonly form = this.fb.group(
         {
@@ -458,8 +413,6 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         },
         { validators: this.partialVitalClearValidator }
     );
-
-
 
     constructor() {
         const fieldMap: Array<[ExaminationUpsertFormFieldKey, keyof typeof this.form.controls]> = [
@@ -515,13 +468,7 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     }
 
     saveDisabled(): boolean {
-        return (
-            this.form.invalid ||
-            (!this.isEdit && (this.selectionForm.invalid || this.applyingRouteContext())) ||
-            this.finalized() ||
-            this.submitting() ||
-            this.ro.mutationBlocked()
-        );
+        return this.form.invalid || (!this.isEdit && (this.selectionForm.invalid || this.applyingRouteContext())) || this.finalized() || this.submitting() || this.ro.mutationBlocked();
     }
 
     /** Yan paneldeki hasta bağlamı için hayvan: düzenlemede kayıttan, oluşturmada seçimden (seçilmeden panel yok). */
@@ -759,10 +706,6 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         prefillPetFromRoute(this.route.snapshot.queryParamMap, this.selectionForm.controls.clientId, this.selectionForm.controls.petId);
     }
 
-
-
-
-
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {
             return messageFromHttpError(e, fallback);
@@ -858,5 +801,4 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         this.selectionError.set(`${message} Serbest oluşturma ile devam edebilirsiniz.`);
         this.applyingRouteContext.set(false);
     }
-
 }

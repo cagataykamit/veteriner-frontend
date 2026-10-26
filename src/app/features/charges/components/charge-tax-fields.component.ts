@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { CHARGE_LINE_KIND_OPTIONS, type ChargeLineKind, chargeVatRateOptionsIncluding } from '@/app/features/charges/utils/charge-tax.utils';
@@ -9,28 +9,15 @@ import { CHARGE_LINE_KIND_OPTIONS, type ChargeLineKind, chargeVatRateOptionsIncl
     standalone: true,
     imports: [ReactiveFormsModule, SelectModule],
     host: { class: 'contents' },
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div [class]="cellClass()">
             <label [for]="idPrefix() + '-line-kind'" class="block text-sm font-medium text-muted-color mb-2">Satır türü</label>
-            <p-select
-                [inputId]="idPrefix() + '-line-kind'"
-                [formControl]="lineKind()"
-                [options]="lineKindOptions"
-                optionLabel="label"
-                optionValue="value"
-                styleClass="w-full"
-            />
+            <p-select [inputId]="idPrefix() + '-line-kind'" [formControl]="lineKind()" [options]="lineKindOptions" optionLabel="label" optionValue="value" class="w-full" />
         </div>
         <div [class]="cellClass()">
             <label [for]="idPrefix() + '-vat-rate'" class="block text-sm font-medium text-muted-color mb-2">KDV oranı</label>
-            <p-select
-                [inputId]="idPrefix() + '-vat-rate'"
-                [formControl]="vatRate()"
-                [options]="vatOptions()"
-                optionLabel="label"
-                optionValue="value"
-                styleClass="w-full"
-            />
+            <p-select [inputId]="idPrefix() + '-vat-rate'" [formControl]="vatRate()" [options]="vatOptions()" optionLabel="label" optionValue="value" class="w-full" />
             <small class="text-muted-color">Boşsa kliniğin mükellef bilgilerindeki varsayılan oran kullanılır.</small>
         </div>
     `

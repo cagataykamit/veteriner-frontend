@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ImagingRecordFormComponent } from '@/app/features/imaging/components/imaging-record-form.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -8,13 +8,9 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     selector: 'app-imaging-new-page',
     standalone: true,
     imports: [AppPageHeaderComponent, ImagingRecordFormComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <app-page-header
-            categoryLink="/panel/imaging"
-            categoryLinkLabel="Listeye dön"
-            title="Yeni görüntüleme"
-            description="Röntgen, ultrason, klinik fotoğraf veya PDF raporu hastaya bağlayın."
-        />
+        <app-page-header categoryLink="/panel/imaging" categoryLinkLabel="Listeye dön" title="Yeni görüntüleme" description="Röntgen, ultrason, klinik fotoğraf veya PDF raporu hastaya bağlayın." />
         <app-imaging-record-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />
     `
 })

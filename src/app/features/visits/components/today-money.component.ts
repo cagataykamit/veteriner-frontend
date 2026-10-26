@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { TagModule } from 'primeng/tag';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
 import { todayOpenChips } from '@/app/features/visits/utils/visit-status.utils';
@@ -13,6 +13,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
     standalone: true,
     imports: [TagModule, MoneyPipe],
     host: { class: 'flex flex-wrap gap-1 min-w-0' },
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @for (chip of chips(); track chip.key) {
             @if (chip.reviewable) {

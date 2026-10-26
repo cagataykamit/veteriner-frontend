@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -16,7 +16,7 @@ describe('PublicDemoRequestFormComponent (TRIAL-005)', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             imports: [PublicDemoRequestFormComponent],
-            providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
+            providers: [provideRouter([]), provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
         });
         fixture = TestBed.createComponent(PublicDemoRequestFormComponent);
         component = fixture.componentInstance;

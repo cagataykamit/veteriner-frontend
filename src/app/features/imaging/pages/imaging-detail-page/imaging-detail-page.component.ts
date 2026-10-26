@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -40,6 +40,7 @@ const SAVED_MESSAGES: Record<string, string> = { created: 'Görüntüleme kayded
         ImagingCancelDialogComponent,
         TrDateTimePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (savedMessage(); as message) {
             <p class="mb-4 m-0 text-sm font-medium" role="status">{{ message }}</p>
@@ -56,9 +57,9 @@ const SAVED_MESSAGES: Record<string, string> = { created: 'Görüntüleme kayded
                 <div actions class="flex flex-wrap gap-2">
                     @if (r.status === 'Active' && canCancel) {
                         @if (ro.mutationBlocked()) {
-                            <button pButton type="button" label="İptal et (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                            <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>İptal et (salt okunur)</button>
                         } @else {
-                            <button pButton type="button" label="İptal et" icon="pi pi-ban" class="p-button-danger p-button-outlined" (click)="cancelVisible = true" data-testid="imaging-cancel"></button>
+                            <button pButton type="button" class="p-button-danger p-button-outlined" (click)="cancelVisible = true" data-testid="imaging-cancel"><i class="pi pi-ban"></i>İptal et</button>
                         }
                     }
                 </div>

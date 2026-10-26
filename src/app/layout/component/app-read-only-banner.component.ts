@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -8,13 +8,11 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
     selector: 'app-read-only-banner',
     standalone: true,
     imports: [CommonModule, RouterLink, ButtonModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (ctx.accessState(); as a) {
             @if (a.isReadOnly) {
-                <div
-                    class="mx-4 mt-4 mb-0 p-4 rounded-border border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-950/25 border border-amber-200/80 dark:border-amber-800/60"
-                    role="status"
-                >
+                <div class="mx-4 mt-4 mb-0 p-4 rounded-border border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-950/25 border border-amber-200/80 dark:border-amber-800/60" role="status">
                     <div class="flex flex-col lg:flex-row lg:flex-wrap lg:items-center lg:justify-between gap-3">
                         <div class="min-w-0 flex-1">
                             <div class="font-semibold text-amber-950 dark:text-amber-100">Salt okunur mod</div>
@@ -26,23 +24,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         </div>
                         @if (showBannerSubscriptionLinks()) {
                             <div class="flex flex-wrap gap-2 shrink-0">
-                                <a
-                                    routerLink="/panel/settings/subscription"
-                                    pButton
-                                    type="button"
-                                    label="Aboneliği görüntüle"
-                                    icon="pi pi-wallet"
-                                    class="p-button-sm"
-                                ></a>
-                                <a
-                                    routerLink="/panel/settings/subscription"
-                                    pButton
-                                    type="button"
-                                    label="Paketinizi yönetin"
-                                    icon="pi pi-cog"
-                                    severity="secondary"
-                                    class="p-button-sm"
-                                ></a>
+                                <a routerLink="/panel/settings/subscription" pButton type="button" class="p-button-sm"><i class="pi pi-wallet"></i>Aboneliği görüntüle</a>
+                                <a routerLink="/panel/settings/subscription" pButton type="button" severity="secondary" class="p-button-sm"><i class="pi pi-cog"></i>Paketinizi yönetin</a>
                             </div>
                         }
                     </div>
@@ -55,9 +38,7 @@ export class AppReadOnlyBannerComponent {
     readonly ctx = inject(TenantReadOnlyContextService);
     private readonly router = inject(Router);
 
-    readonly showBannerSubscriptionLinks = computed(
-        () => this.ctx.showReadOnlyBannerSubscriptionActions() && !this.isOnSubscriptionPage()
-    );
+    readonly showBannerSubscriptionLinks = computed(() => this.ctx.showReadOnlyBannerSubscriptionActions() && !this.isOnSubscriptionPage());
 
     private isOnSubscriptionPage(): boolean {
         return this.router.url.includes('/panel/settings/subscription');

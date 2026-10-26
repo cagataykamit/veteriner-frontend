@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-s
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -72,6 +72,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         PetSearchComponent,
         DateInputComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (loading()) {
             <app-loading-state message="Düzenleme bilgileri yükleniyor…" />
@@ -159,7 +160,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                 filterBy="label"
                                 optionDisabled="disabled"
                                 [showClear]="true"
-                                styleClass="w-full"
+                                class="w-full"
                                 [loading]="loadingExaminations()"
                                 [disabled]="examinationSelectDisabled()"
                             />
@@ -177,7 +178,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                     optionLabel="label"
                                     optionValue="value"
                                     [placeholder]="visitOptions().length ? 'Bağlanacak geliş (isteğe bağlı)' : 'Bu hasta için bugün geliş yok'"
-                                    styleClass="w-full"
+                                    class="w-full"
                                 />
                                 @if (apiFieldErrors().visitId) {
                                     <small class="text-red-500">{{ apiFieldErrors().visitId }}</small>
@@ -188,7 +189,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         }
                         <div class="col-span-12 md:col-span-6">
                             <label for="wardId" class="block text-sm font-medium text-muted-color mb-2">Bölüm</label>
-                            <p-select inputId="wardId" formControlName="wardId" [options]="wardOptions()" optionLabel="label" optionValue="value" styleClass="w-full" [loading]="loadingWards()" />
+                            <p-select inputId="wardId" formControlName="wardId" [options]="wardOptions()" optionLabel="label" optionValue="value" class="w-full" [loading]="loadingWards()" />
                             @if (wardsError()) {
                                 <small class="text-red-500 block">{{ wardsError() }}</small>
                             } @else if (legacyLocation()) {
@@ -197,7 +198,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="roomId" class="block text-sm font-medium text-muted-color mb-2">Oda / kafes</label>
-                            <p-select inputId="roomId" formControlName="roomId" [options]="roomOptions()" optionLabel="label" optionValue="value" [placeholder]="form.controls.wardId.value ? 'Oda seçin' : 'Önce bölüm seçin'" styleClass="w-full" />
+                            <p-select inputId="roomId" formControlName="roomId" [options]="roomOptions()" optionLabel="label" optionValue="value" [placeholder]="form.controls.wardId.value ? 'Oda seçin' : 'Önce bölüm seçin'" class="w-full" />
                             @if (apiFieldErrors().roomId) {
                                 <small class="text-red-500">{{ apiFieldErrors().roomId }}</small>
                             } @else if (form.hasError(roomRequiredKey) && form.controls.roomId.touched) {

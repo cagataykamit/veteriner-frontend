@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
@@ -10,7 +10,7 @@ describe('ClinicalTermsService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
         });
         service = TestBed.inject(ClinicalTermsService);
         http = TestBed.inject(HttpTestingController);
@@ -63,20 +63,14 @@ describe('ClinicalTermsService', () => {
         let conflict: ClinicalTermError | undefined;
 
         service.rename('t1', 'X', 'V1').subscribe({ error: (e: ClinicalTermError) => (conflict = e) });
-        http.expectOne('http://api.test/api/v1/clinical-terms/t1').flush(
-            { status: 409, code: 'ClinicalTerms.ConcurrencyConflict' },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/clinical-terms/t1').flush({ status: 409, code: 'ClinicalTerms.ConcurrencyConflict' }, { status: 409, statusText: 'Conflict' });
         expect(conflict?.isConflict).toBeTrue();
         expect(conflict?.isDuplicateName).toBeFalse();
 
         let duplicate: ClinicalTermError | undefined;
 
         service.create('Diagnosis', 'GASTROENTERİT').subscribe({ error: (e: ClinicalTermError) => (duplicate = e) });
-        http.expectOne('http://api.test/api/v1/clinical-terms').flush(
-            { status: 409, extensions: { code: 'ClinicalTerms.DuplicateName' } },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/clinical-terms').flush({ status: 409, extensions: { code: 'ClinicalTerms.DuplicateName' } }, { status: 409, statusText: 'Conflict' });
         expect(duplicate?.isConflict).toBeFalse();
         expect(duplicate?.isDuplicateName).toBeTrue();
         expect(duplicate?.message).toContain('zaten var');

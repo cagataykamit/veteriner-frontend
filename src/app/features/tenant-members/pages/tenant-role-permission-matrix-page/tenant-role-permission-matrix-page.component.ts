@@ -1,15 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { TenantRolePermissionMatrixRowVm } from '@/app/features/tenant-members/models/tenant-members-vm.model';
 import { TenantMembersService } from '@/app/features/tenant-members/services/tenant-members.service';
-import {
-    buildPermissionGroupPanels,
-    permissionDisplayLabel,
-    permissionTooltipText,
-    type PermissionGroupPanelVm
-} from '@/app/features/tenant-members/utils/tenant-role-permission-display.utils';
+import { buildPermissionGroupPanels, permissionDisplayLabel, permissionTooltipText, type PermissionGroupPanelVm } from '@/app/features/tenant-members/utils/tenant-role-permission-display.utils';
 import { buildFixedRoleMatrixRows } from '@/app/features/tenant-members/utils/tenant-role-fixed-role.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -21,20 +16,11 @@ type MatrixRowView = TenantRolePermissionMatrixRowVm & { groups: PermissionGroup
 @Component({
     selector: 'app-tenant-role-permission-matrix-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        RouterLink,
-        ButtonModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent
-    ],
+    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <app-page-header
-            [title]="copy.tenantRoleMatrixTitle"
-            [description]="copy.tenantRoleMatrixDescription"
-        >
-            <a actions routerLink="/panel/settings/members" pButton type="button" [label]="copy.tenantRoleMatrixBackMembers" icon="pi pi-arrow-left" class="p-button-secondary"></a>
+        <app-page-header [title]="copy.tenantRoleMatrixTitle" [description]="copy.tenantRoleMatrixDescription">
+            <a actions routerLink="/panel/settings/members" pButton type="button" class="p-button-secondary"><i class="pi pi-arrow-left"></i>{{ copy.tenantRoleMatrixBackMembers }}</a>
         </app-page-header>
 
         <div class="card">
@@ -55,9 +41,7 @@ type MatrixRowView = TenantRolePermissionMatrixRowVm & { groups: PermissionGroup
                             <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
                                 <h5 class="mt-0 mb-0 text-base font-semibold text-surface-900 dark:text-surface-0">{{ row.roleName }}</h5>
                                 @if (row.permissions.length > 0) {
-                                    <span class="text-xs text-muted-color whitespace-nowrap shrink-0">
-                                        {{ copy.tenantRoleMatrixTotalPrefix }} {{ row.permissions.length }} {{ copy.tenantRoleMatrixTotalSuffix }}
-                                    </span>
+                                    <span class="text-xs text-muted-color whitespace-nowrap shrink-0"> {{ copy.tenantRoleMatrixTotalPrefix }} {{ row.permissions.length }} {{ copy.tenantRoleMatrixTotalSuffix }} </span>
                                 }
                             </div>
                             @if (row.permissions.length === 0) {
@@ -68,10 +52,7 @@ type MatrixRowView = TenantRolePermissionMatrixRowVm & { groups: PermissionGroup
                                         <p class="text-xs font-semibold text-muted-color m-0 mb-2">{{ g.title }}</p>
                                         <ul class="list-none p-0 m-0 flex flex-wrap gap-2">
                                             @for (p of g.items; track p.id + permissionDisplayLabel(p)) {
-                                                <li
-                                                    class="text-xs sm:text-sm max-w-[18rem] truncate px-2 py-1 rounded-md bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-600"
-                                                    [attr.title]="permissionTooltipText(p)"
-                                                >
+                                                <li class="text-xs sm:text-sm max-w-[18rem] truncate px-2 py-1 rounded-md bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-600" [attr.title]="permissionTooltipText(p)">
                                                     {{ permissionDisplayLabel(p) }}
                                                 </li>
                                             }

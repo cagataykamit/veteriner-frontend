@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
@@ -65,7 +65,7 @@ describe('ExaminationDetailPageComponent — kayıt sonrası toast', () => {
             imports: [ExaminationDetailPageComponent],
             providers: [
                 provideRouter([]),
-                provideHttpClient(),
+                provideHttpClient(withXhr()),
                 provideHttpClientTesting(),
                 { provide: API_BASE_URL, useValue: 'http://api.test' },
                 {
@@ -100,9 +100,7 @@ describe('ExaminationDetailPageComponent — kayıt sonrası toast', () => {
     it('?saved=1 ile açılınca "Muayene kaydedildi." toast ı gösterilir ve işaret URL den kaldırılır', () => {
         const { navigate, toastAdd } = create({ saved: '1' });
 
-        expect(toastAdd).toHaveBeenCalledOnceWith(
-            jasmine.objectContaining({ severity: 'success', detail: 'Muayene kaydedildi.' })
-        );
+        expect(toastAdd).toHaveBeenCalledOnceWith(jasmine.objectContaining({ severity: 'success', detail: 'Muayene kaydedildi.' }));
         expect(navigate).toHaveBeenCalledWith([], jasmine.objectContaining({ queryParams: { saved: null }, replaceUrl: true }));
     });
 
@@ -124,12 +122,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
     };
 
     const setup = async (vm: ExaminationDetailVm, claims: string[], relatedSummary: object = { examinationId: 'e1' }, readOnly = false) => {
-        const service = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', [
-            'getExaminationById',
-            'getExaminationRelatedSummary',
-            'getAddenda',
-            'finalizeExamination'
-        ]);
+        const service = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', ['getExaminationById', 'getExaminationRelatedSummary', 'getAddenda', 'finalizeExamination']);
 
         service.getExaminationById.and.returnValue(of(vm));
         service.getExaminationRelatedSummary.and.returnValue(of(relatedSummary) as never);
@@ -138,7 +131,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
             imports: [ExaminationDetailPageComponent],
             providers: [
                 provideRouter([]),
-                provideHttpClient(),
+                provideHttpClient(withXhr()),
                 provideHttpClientTesting(),
                 { provide: API_BASE_URL, useValue: 'http://api.test' },
                 {
@@ -363,9 +356,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const { el } = await setup(detailVm, ['Examinations.Read', 'Examinations.Finalize']);
 
         const workspace = el.querySelector('[data-testid="exam-workspace"]')!;
-        const order = Array.from(workspace.querySelectorAll('[data-testid="patient-context"], [data-testid="exam-record"], [data-testid="finalize-checklist"]')).map((x) =>
-            x.getAttribute('data-testid')
-        );
+        const order = Array.from(workspace.querySelectorAll('[data-testid="patient-context"], [data-testid="exam-record"], [data-testid="finalize-checklist"]')).map((x) => x.getAttribute('data-testid'));
 
         expect(order).toEqual(['patient-context', 'exam-record', 'finalize-checklist']);
         expect(workspace.querySelector('[data-testid="procedures-section"]')).not.toBeNull();
@@ -376,9 +367,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
 
         const record = el.querySelector('[data-testid="exam-record"]')!;
 
-        expect(record.querySelector('[data-testid="record-empty-sections"]')?.textContent).toContain(
-            'Anamnez, Klinik bulgular, Değerlendirme / tanı, Plan / tedavi planı, Ek notlar'
-        );
+        expect(record.querySelector('[data-testid="record-empty-sections"]')?.textContent).toContain('Anamnez, Klinik bulgular, Değerlendirme / tanı, Plan / tedavi planı, Ek notlar');
         expect(Array.from(record.querySelectorAll('h5')).map((h) => h.textContent?.trim())).toEqual(['Şikâyet / ziyaret sebebi', 'Vital']);
         expect(record.querySelector('[data-testid="vital-row"]')?.textContent).toContain('Ölçülmemiş');
         expect(record.querySelector('app-empty-state')).toBeNull();
@@ -428,7 +417,17 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
     it('Şablon uygula taslakta dört izin birlikteyken görünür; biri eksikse veya muayene kesinleşmişse görünmez', async () => {
         expect(has((await setup(detailVm, TEMPLATE_CLAIMS)).el, 'template-apply-open')).toBeTrue();
         TestBed.resetTestingModule();
-        expect(has((await setup(detailVm, TEMPLATE_CLAIMS.filter((c) => c !== 'Administrations.Create'))).el, 'template-apply-open')).toBeFalse();
+        expect(
+            has(
+                (
+                    await setup(
+                        detailVm,
+                        TEMPLATE_CLAIMS.filter((c) => c !== 'Administrations.Create')
+                    )
+                ).el,
+                'template-apply-open'
+            )
+        ).toBeFalse();
         TestBed.resetTestingModule();
         expect(has((await setup(finalizedVm, TEMPLATE_CLAIMS)).el, 'template-apply-open')).toBeFalse();
     });

@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { convertToParamMap, provideRouter } from '@angular/router';
@@ -32,7 +32,7 @@ describe('TreatmentFormComponent — muayene bağlamı', () => {
             imports: [TreatmentFormComponent],
             providers: [
                 provideRouter([]),
-                provideHttpClient(),
+                provideHttpClient(withXhr()),
                 provideHttpClientTesting(),
                 { provide: API_BASE_URL, useValue: 'http://api.test' },
                 { provide: ExaminationsService, useValue: examinations },

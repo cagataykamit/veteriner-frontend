@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -46,6 +46,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         AppRowActionButtonComponent,
         TrDateTimePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="card">
             <app-list-header class="mb-4" title="Uygulamalar" [count]="totalItems()" />
@@ -62,7 +63,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                         [filter]="true"
                         filterBy="label"
                         [showClear]="true"
-                        styleClass="w-full"
+                        class="w-full"
                         (ngModelChange)="applyFilters()"
                     />
                 </app-filter-field>

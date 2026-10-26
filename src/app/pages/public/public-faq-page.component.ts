@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { PUBLIC_FAQ_CATEGORIES } from '@/app/features/public/utils/public-faq-content.utils';
 import { PUBLIC_FAQ_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
@@ -12,6 +12,7 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
     selector: 'app-public-faq-page',
     standalone: true,
     imports: [PublicPageHeaderComponent, PublicFaqListComponent, PublicCtaComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-public-page-header eyebrow="SSS" title="Sık sorulan sorular" lead="Fiyat, deneme, güvenlik, geçiş ve destek hakkında kısa yanıtlar." />
 

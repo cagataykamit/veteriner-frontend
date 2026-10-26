@@ -1,4 +1,4 @@
-import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
@@ -12,7 +12,7 @@ describe('SalesPartnersService ve DiscountCodesService (ADR-037)', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
         });
         partners = TestBed.inject(SalesPartnersService);
         http = TestBed.inject(HttpTestingController);
@@ -58,10 +58,7 @@ describe('SalesPartnersService ve DiscountCodesService (ADR-037)', () => {
         partners.createCode('p1', { code: 'ISIK10', discountPercent: 10, commissionPercent: 20, validFromUtc: null, validUntilUtc: null, maxRedemptions: null }).subscribe({
             error: (e: Error) => (message = e.message)
         });
-        http.expectOne('http://api.test/api/v1/admin/sales-partners/p1/codes').flush(
-            { status: 409, extensions: { code: 'DiscountCodes.DuplicateCode' } },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/admin/sales-partners/p1/codes').flush({ status: 409, extensions: { code: 'DiscountCodes.DuplicateCode' } }, { status: 409, statusText: 'Conflict' });
 
         expect(message).toContain('zaten kullanılıyor');
     });
@@ -78,10 +75,7 @@ describe('SalesPartnersService ve DiscountCodesService (ADR-037)', () => {
         validate.flush({ valid: false, code: null, discountPercent: null, discountMonths: null });
 
         codes.applySubscriptionDiscount('ISIK10').subscribe({ error: () => undefined });
-        http.expectOne('http://api.test/api/v1/tenants/t-1/subscription-discount').flush(
-            { status: 409, extensions: { code: 'DiscountCodes.ApplyNotOpen' } },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne('http://api.test/api/v1/tenants/t-1/subscription-discount').flush({ status: 409, extensions: { code: 'DiscountCodes.ApplyNotOpen' } }, { status: 409, statusText: 'Conflict' });
     });
 
     it('kod hataları tek tip metne çevrilir', () => {

@@ -84,7 +84,7 @@ function numberFromInput(event: Event): number | null {
                     <div class="flex flex-wrap gap-2">
                         <p-button type="button" label="Fişi yazdır" icon="pi pi-print" severity="secondary" (onClick)="print()" />
                         @if (canReadSales) {
-                            <a [routerLink]="['/panel/sales', result.sale.id]" pButton type="button" label="Satış detayı" icon="pi pi-external-link" class="p-button-secondary"></a>
+                            <a [routerLink]="['/panel/sales', result.sale.id]" pButton type="button" class="p-button-secondary"><i class="pi pi-external-link"></i>Satış detayı</a>
                         }
                         <p-button type="button" label="Yeni satış" icon="pi pi-plus" (onClick)="startNew()" data-testid="sale-new" />
                     </div>
@@ -186,7 +186,7 @@ function numberFromInput(event: Event): number | null {
                                                     optionValue="value"
                                                     optionDisabled="disabled"
                                                     appendTo="body"
-                                                    styleClass="w-full"
+                                                    class="w-full"
                                                 />
                                             }
                                             <small class="block mt-1 text-muted-color">{{ b.stockText }}</small>

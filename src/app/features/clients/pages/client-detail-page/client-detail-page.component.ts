@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -64,6 +64,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         TrDateTimePipe
     ],
     providers: [MessageService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-toast position="bottom-right" />
         @if (showSavedBanner()) {
@@ -79,13 +80,13 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         } @else if (client(); as c) {
             <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" [title]="c.fullName" [description]="registrationLine()">
                 <ng-container actions>
-                    <a [routerLink]="['/panel/clients', c.id, 'kvkk-form']" pButton type="button" label="KVKK formu yazdır" icon="pi pi-print" class="p-button-text p-button-secondary" data-testid="kvkk-print-action"></a>
-                    <a [routerLink]="['/panel/clients', c.id, 'kvkk-disclosure']" pButton type="button" label="Aydınlatma metni yazdır" icon="pi pi-print" class="p-button-text p-button-secondary" data-testid="kvkk-disclosure-print-action"></a>
-                    <a [routerLink]="['/panel/clients', c.id, 'data-export']" pButton type="button" label="Veri kopyası" icon="pi pi-file-export" class="p-button-text p-button-secondary" data-testid="client-data-export-action"></a>
+                    <a [routerLink]="['/panel/clients', c.id, 'kvkk-form']" pButton type="button" class="p-button-text p-button-secondary" data-testid="kvkk-print-action"><i class="pi pi-print"></i>KVKK formu yazdır</a>
+                    <a [routerLink]="['/panel/clients', c.id, 'kvkk-disclosure']" pButton type="button" class="p-button-text p-button-secondary" data-testid="kvkk-disclosure-print-action"><i class="pi pi-print"></i>Aydınlatma metni yazdır</a>
+                    <a [routerLink]="['/panel/clients', c.id, 'data-export']" pButton type="button" class="p-button-text p-button-secondary" data-testid="client-data-export-action"><i class="pi pi-file-export"></i>Veri kopyası</a>
                     @if (canUpdateClient && !ro.mutationBlocked()) {
-                        <a [routerLink]="['/panel/clients', c.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
+                        <a [routerLink]="['/panel/clients', c.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                     } @else if (canUpdateClient && ro.mutationBlocked()) {
-                        <button pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                        <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                     }
                 </ng-container>
             </app-page-header>
@@ -98,13 +99,13 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                         kvkkAction
                         pButton
                         type="button"
-                        [label]="ro.mutationBlocked() ? 'Rıza durumunu işaretle (salt okunur)' : 'Rıza durumunu işaretle'"
-                        [icon]="ro.mutationBlocked() ? 'pi pi-lock' : 'pi pi-pencil'"
+                       
+                       
                         class="p-button-text p-button-sm"
                         [disabled]="ro.mutationBlocked()"
                         data-testid="kvkk-mark-action"
                         (click)="kvkkDialogOpen.set(true)"
-                    ></button>
+                    ><i [class]="ro.mutationBlocked() ? 'pi pi-lock' : 'pi pi-pencil'"></i>{{ ro.mutationBlocked() ? 'Rıza durumunu işaretle (salt okunur)' : 'Rıza durumunu işaretle' }}</button>
                 }
             </app-client-card-header>
             @if (canUpdateClient && !ro.mutationBlocked()) {

@@ -1,4 +1,4 @@
-import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
@@ -24,12 +24,7 @@ describe('HospitalizationsService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [
-                provideHttpClient(),
-                provideHttpClientTesting(),
-                { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1' } }
-            ]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }, { provide: AuthService, useValue: { getClinicId: () => 'c1' } }]
         });
         service = TestBed.inject(HospitalizationsService);
         http = TestBed.inject(HttpTestingController);
@@ -88,19 +83,14 @@ describe('HospitalizationsService', () => {
                 done();
             }
         });
-        http.expectOne(URL).flush(
-            { extensions: { code: 'Hospitalizations.ConcurrencyConflict' } },
-            { status: 409, statusText: 'Conflict' }
-        );
+        http.expectOne(URL).flush({ extensions: { code: 'Hospitalizations.ConcurrencyConflict' } }, { status: 409, statusText: 'Conflict' });
     });
 
     it('taburcu: dischargeNote ve rowVersion gider, eski notes alanı gitmez; 200 yanıtı okunur', (done) => {
-        service
-            .dischargeHospitalization('h1', { dischargedAtUtc: '2026-10-14T08:00:00Z', dischargeNote: ' Eve gitti ', rowVersion: 'AAAAAAAAB9E=' })
-            .subscribe((r) => {
-                expect(r.rowVersion).toBe('AAAAAAAAB9M=');
-                done();
-            });
+        service.dischargeHospitalization('h1', { dischargedAtUtc: '2026-10-14T08:00:00Z', dischargeNote: ' Eve gitti ', rowVersion: 'AAAAAAAAB9E=' }).subscribe((r) => {
+            expect(r.rowVersion).toBe('AAAAAAAAB9M=');
+            done();
+        });
         const req = http.expectOne(`${URL}/discharge`);
 
         expect(req.request.body).toEqual({ dischargedAtUtc: '2026-10-14T08:00:00Z', dischargeNote: 'Eve gitti', rowVersion: 'AAAAAAAAB9E=' });

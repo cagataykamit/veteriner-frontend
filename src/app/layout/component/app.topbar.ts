@@ -1,5 +1,5 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { Component, computed, inject, OnDestroy, OnInit, viewChild } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { ConfirmationService, MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -13,83 +13,51 @@ import { AppGlobalSearch } from './app-global-search.component';
 import { LayoutService } from '@/app/layout/service/layout.service';
 
 /** Topbar user `p-menu` body overlay — clinic switcher menüsünden ayrı hedeflenir. */
-const TOPBAR_USER_MENU_OVERLAY_SELECTORS = [
-    '.layout-topbar-user-menu',
-    '.p-menu.p-menu-overlay.layout-topbar-user-menu',
-    '[data-pc-name="menu"].layout-topbar-user-menu'
-] as const;
+const TOPBAR_USER_MENU_OVERLAY_SELECTORS = ['.layout-topbar-user-menu', '.p-menu.p-menu-overlay.layout-topbar-user-menu', '[data-pc-name="menu"].layout-topbar-user-menu'] as const;
 
-const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS =
-    '.p-menu-overlay, .p-connected-overlay, p-menu, p-motion';
+const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS = '.p-menu-overlay, .p-connected-overlay, p-menu, p-motion';
 
 @Component({
     selector: 'app-topbar',
     standalone: true,
     imports: [RouterModule, CommonModule, AppClinicSwitcher, AppGlobalSearch, MenuModule, ButtonModule, ConfirmDialogModule],
     providers: [ConfirmationService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: ` <div class="layout-topbar">
-        <div class="layout-topbar-logo-container">
-            <button
-                type="button"
-                class="layout-menu-button layout-topbar-action"
-                [attr.aria-label]="layoutService.isMenuRail() ? 'Menüyü genişlet' : 'Menü'"
-                (click)="layoutService.onMenuToggle()"
-            >
-                <i class="pi pi-bars"></i>
-            </button>
-            <a class="layout-topbar-logo" routerLink="/panel">
-                <img
-                    [src]="logoSrc()"
-                    [alt]="logoAlt"
-                    class="layout-topbar-logo-img"
-                    width="168"
-                    height="40"
-                />
-            </a>
-        </div>
-
-        <div class="layout-topbar-actions">
-            <app-global-search />
-            <app-clinic-switcher />
-
-            <div class="layout-config-menu">
-                <button type="button" class="layout-topbar-action" (click)="toggleDarkMode()" [attr.aria-label]="layoutService.themeToggleLabel()">
-                    <i [ngClass]="{ 'pi ': true, 'pi-moon': layoutService.isDarkTheme(), 'pi-sun': !layoutService.isDarkTheme() }"></i>
+            <div class="layout-topbar-logo-container">
+                <button type="button" class="layout-menu-button layout-topbar-action" [attr.aria-label]="layoutService.isMenuRail() ? 'Menüyü genişlet' : 'Menü'" (click)="layoutService.onMenuToggle()">
+                    <i class="pi pi-bars"></i>
                 </button>
+                <a class="layout-topbar-logo" routerLink="/panel">
+                    <img [src]="logoSrc()" [alt]="logoAlt" class="layout-topbar-logo-img" width="168" height="40" />
+                </a>
             </div>
 
-            <div class="relative">
-                <button
-                    type="button"
-                    class="layout-topbar-action"
-                    (click)="userMenu.toggle($event)"
-                    aria-haspopup="true"
-                    aria-label="Kullanıcı menüsü"
-                >
-                    <i class="pi pi-user"></i>
-                </button>
-                <p-menu
-                    #userMenu
-                    [popup]="true"
-                    [model]="userMenuItems"
-                    styleClass="layout-topbar-user-menu"
-                    appendTo="body"
-                    (onHide)="onUserMenuHide()"
-                />
+            <div class="layout-topbar-actions">
+                <app-global-search />
+                <app-clinic-switcher />
+
+                <div class="layout-config-menu">
+                    <button type="button" class="layout-topbar-action" (click)="toggleDarkMode()" [attr.aria-label]="layoutService.themeToggleLabel()">
+                        <i [ngClass]="{ 'pi ': true, 'pi-moon': layoutService.isDarkTheme(), 'pi-sun': !layoutService.isDarkTheme() }"></i>
+                    </button>
+                </div>
+
+                <div class="relative">
+                    <button type="button" class="layout-topbar-action" (click)="userMenu.toggle($event)" aria-haspopup="true" aria-label="Kullanıcı menüsü">
+                        <i class="pi pi-user"></i>
+                    </button>
+                    <p-menu #userMenu [popup]="true" [model]="userMenuItems" styleClass="layout-topbar-user-menu" appendTo="body" (onHide)="onUserMenuHide()" />
+                </div>
             </div>
         </div>
-    </div>
-    <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />`
+        <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />`
 })
 export class AppTopbar implements OnInit, OnDestroy {
     readonly logoAlt = 'Vetinity';
     readonly layoutService = inject(LayoutService);
 
-    readonly logoSrc = computed(() =>
-        this.layoutService.layoutConfig().darkTheme
-            ? VETINITY_BRAND_LOGOS.compactLockupDark
-            : VETINITY_BRAND_LOGOS.compactLockup
-    );
+    readonly logoSrc = computed(() => (this.layoutService.layoutConfig().darkTheme ? VETINITY_BRAND_LOGOS.compactLockupDark : VETINITY_BRAND_LOGOS.compactLockup));
 
     readonly auth = inject(AuthService);
     private readonly router = inject(Router);
@@ -134,8 +102,7 @@ export class AppTopbar implements OnInit, OnDestroy {
 
         for (const selector of TOPBAR_USER_MENU_OVERLAY_SELECTORS) {
             doc.querySelectorAll(selector).forEach((el) => {
-                const overlay =
-                    el.closest(TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS) ?? el;
+                const overlay = el.closest(TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS) ?? el;
 
                 if (!removed.has(overlay)) {
                     removed.add(overlay);
@@ -145,10 +112,7 @@ export class AppTopbar implements OnInit, OnDestroy {
         }
 
         for (const child of Array.from(doc.body.children)) {
-            if (
-                child.matches('.layout-topbar-user-menu') ||
-                child.querySelector('.layout-topbar-user-menu')
-            ) {
+            if (child.matches('.layout-topbar-user-menu') || child.querySelector('.layout-topbar-user-menu')) {
                 if (!removed.has(child)) {
                     removed.add(child);
                     child.remove();

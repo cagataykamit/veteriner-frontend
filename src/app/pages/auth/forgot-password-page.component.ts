@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { DOCUMENT } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { FormsModule, NgForm } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
@@ -17,8 +17,7 @@ import { parseValidationFieldErrors, type FieldErrors } from '@/app/shared/utils
 import { PasswordResetService } from '@/app/pages/auth/password-reset.service';
 
 const REQUEST_RESET_FALLBACK = 'İşlem tamamlanamadı. Lütfen daha sonra tekrar deneyin.';
-const REQUEST_RESET_SUCCESS_MESSAGE =
-    'Eğer bu e-posta adresi sistemde kayıtlıysa şifre sıfırlama bağlantısı gönderildi.';
+const REQUEST_RESET_SUCCESS_MESSAGE = 'Eğer bu e-posta adresi sistemde kayıtlıysa şifre sıfırlama bağlantısı gönderildi.';
 const RATE_LIMIT_MESSAGE = 'Çok fazla deneme yapıldı. Lütfen biraz sonra tekrar deneyin.';
 
 type ForgotPasswordFieldKey = 'email';
@@ -31,6 +30,7 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
     selector: 'app-forgot-password-page',
     standalone: true,
     imports: [FormsModule, ButtonModule, InputTextModule, RippleModule, RouterLink, PublicLegalLinksComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="public-page public-auth-page">
             <div class="public-auth-shell">
@@ -39,48 +39,20 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
                         @if (submitted()) {
                             <div class="public-auth-header">
                                 <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex">
-                                    <img
-                                        [src]="brand.logoFull"
-                                        alt="Vetinity"
-                                        class="public-auth-logo block dark:hidden"
-                                        width="120"
-                                        height="30"
-                                    />
-                                    <img
-                                        [src]="brand.logoFullDark"
-                                        alt="Vetinity"
-                                        class="public-auth-logo hidden dark:block"
-                                        width="120"
-                                        height="30"
-                                    />
+                                    <img [src]="brand.logoFull" alt="Vetinity" class="public-auth-logo block dark:hidden" width="120" height="30" />
+                                    <img [src]="brand.logoFullDark" alt="Vetinity" class="public-auth-logo hidden dark:block" width="120" height="30" />
                                 </a>
                                 <div class="public-auth-title">E-posta gönderildi</div>
                                 <span class="public-auth-subtitle">{{ successMessage }}</span>
                             </div>
                             <div class="public-auth-form">
-                                <p-button
-                                    label="Giriş sayfasına dön"
-                                    styleClass="w-full public-auth-submit"
-                                    (onClick)="goToLogin()"
-                                ></p-button>
+                                <p-button label="Giriş sayfasına dön" styleClass="w-full public-auth-submit" (onClick)="goToLogin()"></p-button>
                             </div>
                         } @else {
                             <div class="public-auth-header">
                                 <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex">
-                                    <img
-                                        [src]="brand.logoFull"
-                                        alt="Vetinity"
-                                        class="public-auth-logo block dark:hidden"
-                                        width="120"
-                                        height="30"
-                                    />
-                                    <img
-                                        [src]="brand.logoFullDark"
-                                        alt="Vetinity"
-                                        class="public-auth-logo hidden dark:block"
-                                        width="120"
-                                        height="30"
-                                    />
+                                    <img [src]="brand.logoFull" alt="Vetinity" class="public-auth-logo block dark:hidden" width="120" height="30" />
+                                    <img [src]="brand.logoFullDark" alt="Vetinity" class="public-auth-logo hidden dark:block" width="120" height="30" />
                                 </a>
                                 <div class="public-auth-title">Şifremi Unuttum</div>
                                 <span class="public-auth-subtitle">E-posta adresini gir, şifre sıfırlama bağlantısı gönderelim.</span>
@@ -89,18 +61,7 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
                             <form class="public-auth-form" (ngSubmit)="onSubmit(forgotForm)" autocomplete="on" #forgotForm="ngForm">
                                 <div class="public-auth-field-primary">
                                     <label for="forgotEmail" class="public-auth-label">E-posta</label>
-                                    <input
-                                        pInputText
-                                        id="forgotEmail"
-                                        type="email"
-                                        name="email"
-                                        #emailCtrl="ngModel"
-                                        placeholder="E-posta adresiniz"
-                                        class="public-auth-control"
-                                        [(ngModel)]="email"
-                                        required
-                                        email
-                                    />
+                                    <input pInputText id="forgotEmail" type="email" name="email" #emailCtrl="ngModel" placeholder="E-posta adresiniz" class="public-auth-control" [(ngModel)]="email" required email />
                                     @if (apiFieldErrors().email) {
                                         <small class="text-red-500 block mt-2">{{ apiFieldErrors().email }}</small>
                                     } @else if (emailCtrl.invalid && (emailCtrl.touched || formSubmitAttempted())) {
@@ -112,13 +73,7 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
                                     }
                                 </div>
 
-                                <p-button
-                                    type="submit"
-                                    label="Sıfırlama Bağlantısı Gönder"
-                                    styleClass="w-full public-auth-submit"
-                                    [loading]="loading()"
-                                    [disabled]="loading()"
-                                ></p-button>
+                                <p-button type="submit" label="Sıfırlama Bağlantısı Gönder" styleClass="w-full public-auth-submit" [loading]="loading()" [disabled]="loading()"></p-button>
 
                                 @if (formError()) {
                                     <div class="public-auth-alert" role="alert" aria-live="assertive">

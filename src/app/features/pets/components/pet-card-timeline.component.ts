@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, OnDestroy, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, OnDestroy, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -10,14 +10,7 @@ import type { PetTimelineItemVm } from '@/app/features/pets/models/pet-timeline-
 import type { PetHistoryPaymentItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
-import {
-    mergePetTimelineItems,
-    PET_CARD_TIMELINE_FILTERS,
-    PET_TIMELINE_PAYMENT_TYPE,
-    type PetCardTimelineFilter,
-    paymentToPetTimelineItem,
-    petTimelineOmittedTypesLabel
-} from '@/app/features/pets/utils/pet-timeline.utils';
+import { mergePetTimelineItems, PET_CARD_TIMELINE_FILTERS, PET_TIMELINE_PAYMENT_TYPE, type PetCardTimelineFilter, paymentToPetTimelineItem, petTimelineOmittedTypesLabel } from '@/app/features/pets/utils/pet-timeline.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
 /** Kartta gösterilen olay sayısı; geçmiş özetinin ödeme bloğu da en yeni 10 kaydı döndürür (birleştirme kesin kalır). */
@@ -31,6 +24,7 @@ export const PET_CARD_TIMELINE_LIMIT = 10;
     selector: 'app-pet-card-timeline',
     standalone: true,
     imports: [FormsModule, RouterLink, ButtonModule, SelectButtonModule, PetTimelineItemComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <section class="card mb-0" aria-labelledby="pet-card-timeline-title">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
@@ -38,22 +32,11 @@ export const PET_CARD_TIMELINE_LIMIT = 10;
                 @if (filter() === 'payment') {
                     <a routerLink="/panel/payments" [queryParams]="{ petId: petId() }" class="text-primary font-medium no-underline text-sm">Tüm ödemeler →</a>
                 } @else {
-                    <a [routerLink]="['/panel/pets', petId(), 'timeline']" class="text-primary font-medium no-underline text-sm" data-testid="full-timeline-link">
-                        Tarih süzgeçli tam liste →
-                    </a>
+                    <a [routerLink]="['/panel/pets', petId(), 'timeline']" class="text-primary font-medium no-underline text-sm" data-testid="full-timeline-link"> Tarih süzgeçli tam liste → </a>
                 }
             </div>
 
-            <p-selectbutton
-                styleClass="mb-3 flex-wrap"
-                [options]="filters"
-                optionLabel="label"
-                optionValue="value"
-                [allowEmpty]="false"
-                ariaLabel="Olay türü süzgeci"
-                [ngModel]="filter()"
-                (ngModelChange)="filter.set($event)"
-            />
+            <p-selectbutton styleClass="mb-3 flex-wrap" [options]="filters" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Olay türü süzgeci" [ngModel]="filter()" (ngModelChange)="filter.set($event)" />
 
             @if (filter() === 'payment' && payments() === null) {
                 <p class="m-0 text-muted-color" data-testid="payments-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Ödemeleri görme yetkiniz yok</p>
@@ -62,18 +45,14 @@ export const PET_CARD_TIMELINE_LIMIT = 10;
             } @else if (error()) {
                 <div class="flex flex-wrap items-center gap-3" data-testid="timeline-error">
                     <p class="m-0 text-orange-600 dark:text-orange-400"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>{{ error() }}</p>
-                    <button pButton type="button" size="small" label="Tekrar dene" icon="pi pi-refresh" severity="secondary" (click)="reload()"></button>
+                    <button pButton type="button" size="small" severity="secondary" (click)="reload()"><i class="pi pi-refresh"></i>Tekrar dene</button>
                 </div>
             } @else {
                 @if (omittedLabel(); as omitted) {
-                    <p class="mt-0 mb-2 text-muted-color text-sm" data-testid="omitted-note" role="note">
-                        <i class="pi pi-lock mr-1" aria-hidden="true"></i>Yetkiniz olmadığı için gösterilmiyor: {{ omitted }}
-                    </p>
+                    <p class="mt-0 mb-2 text-muted-color text-sm" data-testid="omitted-note" role="note"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Yetkiniz olmadığı için gösterilmiyor: {{ omitted }}</p>
                 }
                 @if (filter() === 'all' && payments()?.state === 'error') {
-                    <p class="mt-0 mb-2 text-orange-600 dark:text-orange-400 text-sm" data-testid="payments-unavailable">
-                        <i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Ödemeler alınamadı; liste ödemesiz gösteriliyor.
-                    </p>
+                    <p class="mt-0 mb-2 text-orange-600 dark:text-orange-400 text-sm" data-testid="payments-unavailable"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Ödemeler alınamadı; liste ödemesiz gösteriliyor.</p>
                 }
                 @if (items().length === 0) {
                     <p class="m-0 text-muted-color" data-testid="timeline-empty">Bu süzgece uyan kayıt yok.</p>
@@ -118,9 +97,7 @@ export class PetCardTimelineComponent implements OnDestroy {
     private readonly paymentItems = computed(() => {
         const p = this.payments();
 
-        return p?.state === 'ok'
-            ? p.data.map((row) => paymentToPetTimelineItem(row, formatMoney(row.amount, row.currency ?? 'TRY'), paymentMethodLabel(row.method)))
-            : [];
+        return p?.state === 'ok' ? p.data.map((row) => paymentToPetTimelineItem(row, formatMoney(row.amount, row.currency ?? 'TRY'), paymentMethodLabel(row.method))) : [];
     });
 
     readonly items = computed(() => {

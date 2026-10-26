@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -35,10 +35,11 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     standalone: true,
     imports: [CommonModule, FormsModule, RouterLink, ButtonModule, DialogModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, TenantMemberRemoveDialogComponent, TrDateTimePipe],
     providers: [MessageService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-toast position="bottom-right" />
         <app-page-header title="Üye detayı" description="Kurum üyeliği bilgileri. Salt okunur kurumda rol değişikliği yapılamaz.">
-            <a actions routerLink="/panel/settings/members" pButton type="button" label="Listeye dön" icon="pi pi-arrow-left" class="p-button-secondary"></a>
+            <a actions routerLink="/panel/settings/members" pButton type="button" class="p-button-secondary"><i class="pi pi-arrow-left"></i>Listeye dön</a>
         </app-page-header>
 
         @if (loading()) {

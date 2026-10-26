@@ -69,7 +69,7 @@ type DialogTarget =
             description="Yatış formunda seçilen bölümler (ör. Yoğun bakım, Kedi servisi) ve altındaki oda/kafesler. Tanımlar kliniğe özeldir; silinmez, pasife alınır."
         >
             @if (canWrite() && clinicId()) {
-                <button actions pButton type="button" label="Yeni bölüm" icon="pi pi-plus" data-testid="ward-new" (click)="openWardCreate()"></button>
+                <button actions pButton type="button" data-testid="ward-new" (click)="openWardCreate()"><i class="pi pi-plus"></i>Yeni bölüm</button>
             }
         </app-page-header>
 
@@ -93,7 +93,7 @@ type DialogTarget =
                             (ngModelChange)="onClinicChange($event)"
                             optionLabel="label"
                             optionValue="value"
-                            styleClass="w-full"
+                            class="w-full"
                             data-testid="wards-clinic"
                         />
                     </div>
@@ -180,7 +180,7 @@ type DialogTarget =
         <p-dialog [header]="dialogTitle()" [modal]="true" [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [style]="{ width: 'min(28rem, 95vw)' }" [draggable]="false">
             <form [formGroup]="dialogForm" (ngSubmit)="submitDialog()" class="flex flex-col gap-4">
                 @if (dialogError()) {
-                    <p-message severity="error" styleClass="w-full" role="alert">{{ dialogError() }}</p-message>
+                    <p-message severity="error" class="w-full" role="alert">{{ dialogError() }}</p-message>
                 }
                 <div class="flex flex-col gap-1">
                     <label for="locationName" class="block text-sm font-medium text-muted-color">Ad *</label>

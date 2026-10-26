@@ -112,7 +112,7 @@
                     }
 
                     @if (submitError(); as message) {
-                        <p-message severity="error" [text]="message" role="alert" />
+                        <p-message severity="error" role="alert">{{ message }}</p-message>
                     }
 
                     <div class="portal-actions">

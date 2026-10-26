@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -20,32 +20,14 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 @Component({
     selector: 'app-species-list-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        RouterLink,
-        TableModule,
-        ButtonModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppEmptyStateComponent,
-        AppErrorStateComponent,
-        AppStatusTagComponent,
-        AppRowActionButtonComponent
-    ],
+    imports: [CommonModule, RouterLink, TableModule, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppRowActionButtonComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header title="Türler" description="Tür kayıtlarını yönetin.">
             @if (canCreateSpecies() && !ro.mutationBlocked()) {
-                <a actions [routerLink]="[speciesRoute, 'new']" pButton type="button" label="Yeni Tür" icon="pi pi-plus" class="p-button-primary"></a>
+                <a actions [routerLink]="[speciesRoute, 'new']" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Tür</a>
             } @else if (canCreateSpecies() && ro.mutationBlocked()) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Yeni Tür (salt okunur)"
-                    icon="pi pi-lock"
-                    [disabled]="true"
-                    class="p-button-secondary"
-                ></button>
+                <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Tür (salt okunur)</button>
             }
         </app-page-header>
 
@@ -70,13 +52,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                         <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
-                            <p-table
-                                [value]="speciesRows()"
-                                [paginator]="true"
-                                [rows]="10"
-                                [rowsPerPageOptions]="[5, 10, 20, 50]"
-                                [tableStyle]="{ 'min-width': '60rem' }"
-                            >
+                            <p-table [value]="speciesRows()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20, 50]" [tableStyle]="{ 'min-width': '60rem' }">
                                 <ng-template #header>
                                     <tr>
                                         <th>Ad</th>
@@ -110,9 +86,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 
                         <div class="lg:hidden space-y-3">
                             @for (row of speciesRows(); track row.id) {
-                                <div
-                                    class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
-                                >
+                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                                     <div class="flex flex-wrap items-start justify-between gap-2 gap-y-1 mb-2 min-w-0">
                                         <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words">{{ row.name }}</div>
                                         <app-status-tag [label]="activeLabel(row.isActive)" [severity]="activeSeverity(row.isActive)" />

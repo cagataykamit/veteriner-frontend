@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-s
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -16,11 +16,7 @@ import { ClinicsService } from '@/app/features/clinics/services/clinics.service'
 import { mapAppointmentUpsertFormToCreateRequest } from '@/app/features/appointments/data/appointment.mapper';
 import type { ClinicWorkingHourVm } from '@/app/features/clinics/models/clinic-working-hours-vm.model';
 import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
-import {
-    type AppointmentUpsertFieldErrors,
-    type AppointmentUpsertFormFieldKey,
-    parseAppointmentUpsertHttpError
-} from '@/app/features/appointments/utils/appointment-upsert-validation-parse.utils';
+import { type AppointmentUpsertFieldErrors, type AppointmentUpsertFormFieldKey, parseAppointmentUpsertHttpError } from '@/app/features/appointments/utils/appointment-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
@@ -46,22 +42,14 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 @Component({
     selector: 'app-appointment-new-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        ButtonModule,
-        InputTextModule,
-        SelectModule,
-        AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header categoryLink="/panel/appointments" categoryLinkLabel="Randevu listesine dön" title="Yeni Randevu" description="Randevu kaydı oluşturun." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                    İşletme salt okunur moddadır; randevu oluşturulamaz.
-                </p>
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; randevu oluşturulamaz.</p>
             }
             @if (selectionError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
@@ -112,7 +100,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             optionValue="value"
                             placeholder="Randevu saati seçin"
                             [showClear]="true"
-                            styleClass="w-full vet-time-select"
+                            class="w-full vet-time-select"
                             panelStyleClass="vet-time-select-panel"
                         />
                         @if (form.controls.scheduledTime.invalid && form.controls.scheduledTime.touched) {
@@ -128,15 +116,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="durationMinutes" class="block text-sm font-medium text-muted-color mb-2">Randevu süresi (dakika) *</label>
-                        <input
-                            id="durationMinutes"
-                            type="number"
-                            class="w-full p-inputtext p-component"
-                            formControlName="durationMinutes"
-                            min="5"
-                            max="240"
-                            step="1"
-                        />
+                        <input id="durationMinutes" type="number" class="w-full p-inputtext p-component" formControlName="durationMinutes" min="5" max="240" step="1" />
                         @if (apiFieldErrors().durationMinutes) {
                             <small class="text-red-500">{{ apiFieldErrors().durationMinutes }}</small>
                         } @else if (form.controls.durationMinutes.invalid && form.controls.durationMinutes.touched) {
@@ -145,16 +125,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="appointmentType" class="block text-sm font-medium text-muted-color mb-2">Randevu Türü *</label>
-                        <p-select
-                            inputId="appointmentType"
-                            formControlName="appointmentType"
-                            [options]="typeOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Randevu Türü seçin"
-                            [showClear]="true"
-                            styleClass="w-full"
-                        />
+                        <p-select inputId="appointmentType" formControlName="appointmentType" [options]="typeOptions" optionLabel="label" optionValue="value" placeholder="Randevu Türü seçin" [showClear]="true" class="w-full" />
                         @if (apiFieldErrors().appointmentType) {
                             <small class="text-red-500">{{ apiFieldErrors().appointmentType }}</small>
                         } @else if (form.controls.appointmentType.invalid && form.controls.appointmentType.touched) {
@@ -177,18 +148,11 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <p-button
-                        type="submit"
-                        label="Kaydet"
-                        icon="pi pi-check"
-                        [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || ro.mutationBlocked() || timeOptions().length === 0 || !!workingHoursLoadError()"
-                    />
+                    <p-button type="submit" label="Kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || ro.mutationBlocked() || timeOptions().length === 0 || !!workingHoursLoadError()" />
                     <p-button type="button" label="İptal" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
             </form>
         </div>
-
     `
 })
 export class AppointmentNewPageComponent implements OnInit {
@@ -216,27 +180,15 @@ export class AppointmentNewPageComponent implements OnInit {
     readonly workingHoursLoadError = signal<string | null>(null);
     private workingHours: ClinicWorkingHourVm[] = [];
 
-
-
-
     readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
     readonly notesMaxLength = APPOINTMENT_NOTES_MAX_LENGTH;
 
     readonly form = this.fb.group({
         clientId: this.fb.nonNullable.control('', Validators.required),
         petId: this.fb.nonNullable.control({ value: '', disabled: true }, Validators.required),
-        scheduledDate: this.fb.nonNullable.control('', [
-            Validators.required,
-            appointmentCreateScheduleDateValidator(),
-            dateYearRangeValidator()
-        ]),
+        scheduledDate: this.fb.nonNullable.control('', [Validators.required, appointmentCreateScheduleDateValidator(), dateYearRangeValidator()]),
         scheduledTime: this.fb.nonNullable.control('', Validators.required),
-        durationMinutes: this.fb.nonNullable.control<number | string>(30, [
-            Validators.required,
-            Validators.min(5),
-            Validators.max(240),
-            Validators.pattern(/^[0-9]+$/)
-        ]),
+        durationMinutes: this.fb.nonNullable.control<number | string>(30, [Validators.required, Validators.min(5), Validators.max(240), Validators.pattern(/^[0-9]+$/)]),
         appointmentType: this.fb.control<number | null>(null, Validators.required),
         notes: this.fb.nonNullable.control('', Validators.maxLength(APPOINTMENT_NOTES_MAX_LENGTH))
     });
@@ -319,10 +271,6 @@ export class AppointmentNewPageComponent implements OnInit {
     minScheduledDate(): string {
         return appointmentEarliestDateYmd();
     }
-
-
-
-
 
     onSubmit(): void {
         this.submitError.set(null);
@@ -422,9 +370,6 @@ export class AppointmentNewPageComponent implements OnInit {
             }
         });
     }
-
-
-
 
     private loadDefaultDurationFromClinic(): void {
         const clinicId = this.auth.getClinicId()?.trim();

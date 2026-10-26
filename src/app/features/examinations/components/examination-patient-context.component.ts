@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { Observable } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -35,6 +35,7 @@ interface OverdueVaccinations {
     selector: 'app-examination-patient-context',
     standalone: true,
     imports: [RouterLink, TrDatePipe],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <section class="card mb-0 p-4" aria-label="Hasta bağlamı" data-testid="patient-context">
             <button

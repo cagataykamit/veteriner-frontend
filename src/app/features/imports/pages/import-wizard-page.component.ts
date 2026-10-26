@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
@@ -10,24 +10,9 @@ import { ImportCommitStepComponent } from '@/app/features/imports/components/imp
 import { ImportJobProgressComponent } from '@/app/features/imports/components/import-job-progress.component';
 import { ImportMappingStepComponent } from '@/app/features/imports/components/import-mapping-step.component';
 import { ImportReviewStepComponent } from '@/app/features/imports/components/import-review-step.component';
-import type {
-    ImportBatchDto,
-    ImportCommitProgressDto,
-    ImportDuplicateClientMode,
-    ImportJobStatus,
-    ImportPreviewDto,
-    ImportWarningDto
-} from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchDto, ImportCommitProgressDto, ImportDuplicateClientMode, ImportJobStatus, ImportPreviewDto, ImportWarningDto } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
-import {
-    importErrorCode,
-    importErrorMessage,
-    importStatusLabel,
-    importStatusSeverity,
-    isDiscardable,
-    isImportJobRunning,
-    isPreviewable
-} from '@/app/features/imports/utils/import-labels.utils';
+import { importErrorCode, importErrorMessage, importStatusLabel, importStatusSeverity, isDiscardable, isImportJobRunning, isPreviewable } from '@/app/features/imports/utils/import-labels.utils';
 import { IMPORT_POLL_CONNECTION_MESSAGE, pollImportProgress } from '@/app/features/imports/utils/import-progress-poll.utils';
 import { columnMapsToRequest, initialColumnMaps, type ImportColumnMaps } from '@/app/features/imports/utils/import-schema.utils';
 import { type ImportValueChoices, valueChoicesToRequest } from '@/app/features/imports/utils/import-value-mapping.utils';
@@ -62,6 +47,7 @@ const STEPS: readonly { n: number; label: string }[] = [
         ImportCommitStepComponent,
         ImportJobProgressComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header [title]="batch()?.name || 'Veri içe aktarma'" description="Her adımda geri dönebilir, sonucu görmeden hiçbir kayıt oluşturmazsınız.">
             <div actions class="flex flex-wrap gap-2 items-center">
@@ -78,9 +64,7 @@ const STEPS: readonly { n: number; label: string }[] = [
             <app-error-state title="İçe aktarma yüklenemedi." [detail]="loadError()!" (retry)="load()" />
         } @else if (batch(); as b) {
             @if (b.status === 'Discarded' || b.status === 'Expired') {
-                <p-message severity="info" styleClass="w-full">
-                    {{ b.status === 'Discarded' ? 'Bu içe aktarma silindi.' : 'Bu içe aktarmanın süresi doldu.' }} Yeni bir içe aktarma başlatabilirsiniz.
-                </p-message>
+                <p-message severity="info" class="w-full"> {{ b.status === 'Discarded' ? 'Bu içe aktarma silindi.' : 'Bu içe aktarmanın süresi doldu.' }} Yeni bir içe aktarma başlatabilirsiniz. </p-message>
             } @else {
                 <nav aria-label="Adımlar" class="mb-4">
                     <ol class="list-none p-0 m-0 flex flex-wrap gap-2">
@@ -97,7 +81,13 @@ const STEPS: readonly { n: number; label: string }[] = [
                                     [attr.aria-current]="s.n === currentNumber() ? 'step' : null"
                                     (click)="goTo(s.n)"
                                 >
-                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-sm" [class.bg-primary]="s.n <= currentNumber()" [class.text-primary-contrast]="s.n <= currentNumber()" [class.bg-surface-200]="s.n > currentNumber()" [class.dark:bg-surface-700]="s.n > currentNumber()">
+                                    <span
+                                        class="inline-flex items-center justify-center w-6 h-6 rounded-full text-sm"
+                                        [class.bg-primary]="s.n <= currentNumber()"
+                                        [class.text-primary-contrast]="s.n <= currentNumber()"
+                                        [class.bg-surface-200]="s.n > currentNumber()"
+                                        [class.dark:bg-surface-700]="s.n > currentNumber()"
+                                    >
                                         @if (s.n < currentNumber()) {
                                             <i class="pi pi-check text-xs"></i>
                                         } @else {
@@ -112,34 +102,27 @@ const STEPS: readonly { n: number; label: string }[] = [
                 </nav>
 
                 @if (!canManage) {
-                    <p-message severity="info" styleClass="w-full mb-4">Bu içe aktarmayı yalnızca görüntüleyebilirsiniz.</p-message>
+                    <p-message severity="info" class="w-full mb-4">Bu içe aktarmayı yalnızca görüntüleyebilirsiniz.</p-message>
                 }
                 @for (w of warnings(); track w.code + w.message) {
-                    <p-message severity="warn" styleClass="w-full mb-2">{{ w.message }}</p-message>
+                    <p-message severity="warn" class="w-full mb-2">{{ w.message }}</p-message>
                 }
                 @if (error()) {
-                    <p-message severity="error" styleClass="w-full mb-4" role="alert">{{ error() }}</p-message>
+                    <p-message severity="error" class="w-full mb-4" role="alert">{{ error() }}</p-message>
                 }
 
                 <div class="card">
                     @switch (step()) {
                         @case (2) {
                             <h5 class="mt-0">Adım 2 · Sütun eşleme</h5>
-                            <app-import-mapping-step
-                                [batch]="b"
-                                [readOnly]="!canManage || !draft()"
-                                [busy]="busy()"
-                                [(maps)]="maps"
-                                [(duplicateMode)]="duplicateMode"
-                                (saveRequested)="saveAndValidate()"
-                            />
+                            <app-import-mapping-step [batch]="b" [readOnly]="!canManage || !draft()" [busy]="busy()" [(maps)]="maps" [(duplicateMode)]="duplicateMode" (saveRequested)="saveAndValidate()" />
                         }
                         @case (3) {
                             <h5 class="mt-0">Adım 3 · Doğrulama sonucu</h5>
                             @if (b.status === 'Validating') {
                                 <p class="mt-0">Satırlar doğrulanıyor. Sayfadan ayrılabilir veya sekmeyi kapatabilirsiniz; doğrulama arka planda sürer ve bu içe aktarmayı yeniden açtığınızda buradan izlenir.</p>
                                 <app-import-job-progress [progress]="progress()" [stalled]="stalled()" />
-                                <p-message severity="info" styleClass="w-full mt-4">
+                                <p-message severity="info" class="w-full mt-4">
                                     Doğrulama sürerken eşleme değiştirilemez, içe aktarma silinemez ve aktarma başlatılamaz. Başlamış doğrulama durdurulamaz; sonuç hazır olunca bu adım kendiliğinden güncellenir.
                                 </p-message>
                             } @else if (preview()) {
@@ -170,7 +153,7 @@ const STEPS: readonly { n: number; label: string }[] = [
                         }
                     }
                     @if (jobRunning() && pollError()) {
-                        <p-message severity="warn" styleClass="w-full mt-4" role="alert">
+                        <p-message severity="warn" class="w-full mt-4" role="alert">
                             {{ pollError() }}
                             <p-button size="small" severity="secondary" icon="pi pi-refresh" label="Yeniden dene" styleClass="ml-2" (onClick)="retryPolling()" />
                         </p-message>

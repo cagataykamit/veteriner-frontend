@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, effect, forwardRef, inject, input, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, effect, forwardRef, inject, input, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { catchError, map, of, Subject, switchMap } from 'rxjs';
@@ -31,6 +31,7 @@ const PAGE_SIZE = 20;
     standalone: true,
     imports: [CommonModule, FormsModule, AutoCompleteModule, ButtonModule, QuickPetDialogComponent],
     providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => PetSearchComponent), multi: true }],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-autocomplete
             [inputId]="inputId()"
@@ -59,15 +60,7 @@ const PAGE_SIZE = 20;
                         <span>Hasta bulunamadı</span>
                         @if (canCreate()) {
                             <div>
-                                <p-button
-                                    type="button"
-                                    label="Bu müşteri için yeni hasta ekle"
-                                    icon="pi pi-plus"
-                                    [text]="true"
-                                    size="small"
-                                    styleClass="p-0"
-                                    (onClick)="quickPetOpen.set(true)"
-                                />
+                                <p-button type="button" label="Bu müşteri için yeni hasta ekle" icon="pi pi-plus" [text]="true" size="small" styleClass="p-0" (onClick)="quickPetOpen.set(true)" />
                             </div>
                         }
                     }
@@ -75,15 +68,7 @@ const PAGE_SIZE = 20;
             </ng-template>
         </p-autocomplete>
         @if (canCreate() && clientId()) {
-            <p-button
-                type="button"
-                [label]="'Bu müşteri için yeni hasta'"
-                icon="pi pi-plus"
-                [text]="true"
-                size="small"
-                styleClass="p-0 mt-2"
-                (onClick)="quickPetOpen.set(true)"
-            />
+            <p-button type="button" [label]="'Bu müşteri için yeni hasta'" icon="pi pi-plus" [text]="true" size="small" styleClass="p-0 mt-2" (onClick)="quickPetOpen.set(true)" />
             <app-quick-pet-dialog [(visible)]="quickPetOpen" [ownerClientId]="clientId()" (petCreated)="onPetCreated($event)" />
         }
     `

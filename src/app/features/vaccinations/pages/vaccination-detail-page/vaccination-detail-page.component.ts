@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { VaccinationDetailVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
@@ -26,6 +26,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     selector: 'app-vaccination-detail-page',
     standalone: true,
     imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, HbsSectionComponent, TrDateTimePipe],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Aşı kaydı kaydedildi.</p>
@@ -43,9 +44,9 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         } @else if (vac()) {
             <app-page-header categoryLink="/panel/vaccinations" categoryLinkLabel="Aşı listesine dön" title="Aşı kaydı" [description]="headerDescription(vac()!)">
                 @if (canUpdateVaccination && !ro.mutationBlocked()) {
-                    <a actions [routerLink]="['/panel/vaccinations', vac()!.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
+                    <a actions [routerLink]="['/panel/vaccinations', vac()!.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                 } @else if (canUpdateVaccination && ro.mutationBlocked()) {
-                    <button actions pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                    <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                 }
             </app-page-header>
             <app-pet-alert-banner [petId]="vac()!.petId" />

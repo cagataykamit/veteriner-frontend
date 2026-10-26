@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -24,18 +24,12 @@ function istanbulDayStartUtc(date: string): string | null {
     selector: 'app-discount-code-form-dialog',
     standalone: true,
     imports: [ReactiveFormsModule, ButtonModule, DialogModule, InputNumberModule, InputTextModule, MessageModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            [header]="code() ? 'Kodu düzenle' : 'Yeni kod'"
-            [modal]="true"
-            [(visible)]="visible"
-            [style]="{ width: 'min(32rem, 95vw)' }"
-            [draggable]="false"
-            [closable]="!submitting()"
-        >
+        <p-dialog [header]="code() ? 'Kodu düzenle' : 'Yeni kod'" [modal]="true" [(visible)]="visible" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
             <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
                 @if (error()) {
-                    <p-message severity="error" styleClass="w-full" role="alert">{{ error() }}</p-message>
+                    <p-message severity="error" class="w-full" role="alert">{{ error() }}</p-message>
                 }
                 <div class="flex flex-col gap-1">
                     <label for="dcCode" class="text-sm font-medium text-muted-color">Kod *</label>
@@ -154,10 +148,7 @@ export class DiscountCodeFormDialogComponent {
 
         this.submitting.set(true);
         this.error.set(null);
-        (existing
-            ? this.partners.updateCode(this.partnerId(), existing.id, terms)
-            : this.partners.createCode(this.partnerId(), { ...terms, code: v.code })
-        ).subscribe({
+        (existing ? this.partners.updateCode(this.partnerId(), existing.id, terms) : this.partners.createCode(this.partnerId(), { ...terms, code: v.code })).subscribe({
             next: (saved) => {
                 this.submitting.set(false);
                 this.visible.set(false);

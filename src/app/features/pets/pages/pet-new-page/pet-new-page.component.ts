@@ -2,7 +2,7 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -19,11 +19,7 @@ import { mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.ma
 import { PetColorsService } from '@/app/features/pets/services/pet-colors.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
-import {
-    type PetCreateFieldErrors,
-    type PetCreateFormFieldKey,
-    parsePetCreateHttpError
-} from '@/app/features/pets/utils/pet-create-validation-parse.utils';
+import { type PetCreateFieldErrors, type PetCreateFormFieldKey, parsePetCreateHttpError } from '@/app/features/pets/utils/pet-create-validation-parse.utils';
 import { petMicrochipFormatWarning } from '@/app/features/pets/utils/pet-microchip.utils';
 import { PET_GENDER_FORM_OPTIONS } from '@/app/features/pets/utils/pet-status.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -48,16 +44,17 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         SelectModule,
         AppPageHeaderComponent,
         QuickSpeciesDialogComponent,
-        QuickBreedDialogComponent, ClientSearchComponent, DateInputComponent
+        QuickBreedDialogComponent,
+        ClientSearchComponent,
+        DateInputComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hasta listesine dön" title="Yeni Hasta" description="Hasta kaydı oluşturun." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                    İşletme salt okunur moddadır; hasta kaydı oluşturulamaz.
-                </p>
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; hasta kaydı oluşturulamaz.</p>
             }
             @if (selectionError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
@@ -84,17 +81,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="speciesId" class="block text-sm font-medium text-muted-color mb-2">Tür *</label>
-                        <p-select
-                            inputId="speciesId"
-                            formControlName="speciesId"
-                            [options]="speciesOptions()"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Tür seçin"
-                            styleClass="w-full"
-                            [loading]="loadingSpecies()"
-                            [showClear]="true"
-                        />
+                        <p-select inputId="speciesId" formControlName="speciesId" [options]="speciesOptions()" optionLabel="label" optionValue="value" placeholder="Tür seçin" class="w-full" [loading]="loadingSpecies()" [showClear]="true" />
                         @if (apiFieldErrors().speciesId) {
                             <small class="text-red-500">{{ apiFieldErrors().speciesId }}</small>
                         } @else if (form.controls.speciesId.invalid && form.controls.speciesId.touched) {
@@ -102,14 +89,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         }
                         @if (canShowQuickSpeciesButton()) {
                             <div class="mt-2">
-                                <p-button
-                                    type="button"
-                                    label="Yeni tür ekle"
-                                    icon="pi pi-plus"
-                                    [text]="true"
-                                    styleClass="p-0"
-                                    (onClick)="quickSpeciesOpen.set(true)"
-                                />
+                                <p-button type="button" label="Yeni tür ekle" icon="pi pi-plus" [text]="true" styleClass="p-0" (onClick)="quickSpeciesOpen.set(true)" />
                             </div>
                         }
                     </div>
@@ -122,7 +102,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             optionLabel="label"
                             optionValue="value"
                             placeholder="Irk seçin"
-                            styleClass="w-full"
+                            class="w-full"
                             [loading]="loadingBreeds()"
                             [disabled]="!form.controls.speciesId.value || loadingBreeds()"
                             [showClear]="true"
@@ -132,29 +112,13 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         }
                         @if (hasSpeciesForQuickBreed() && canShowQuickBreedButton()) {
                             <div class="mt-2">
-                                <p-button
-                                    type="button"
-                                    label="Bu tür için yeni ırk"
-                                    icon="pi pi-plus"
-                                    [text]="true"
-                                    styleClass="p-0"
-                                    (onClick)="quickBreedOpen.set(true)"
-                                />
+                                <p-button type="button" label="Bu tür için yeni ırk" icon="pi pi-plus" [text]="true" styleClass="p-0" (onClick)="quickBreedOpen.set(true)" />
                             </div>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="gender" class="block text-sm font-medium text-muted-color mb-2">Cinsiyet</label>
-                        <p-select
-                            inputId="gender"
-                            formControlName="gender"
-                            [options]="genderOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Seçin"
-                            [showClear]="true"
-                            styleClass="w-full"
-                        />
+                        <p-select inputId="gender" formControlName="gender" [options]="genderOptions" optionLabel="label" optionValue="value" placeholder="Seçin" [showClear]="true" class="w-full" />
                         @if (apiFieldErrors().gender) {
                             <small class="text-red-500">{{ apiFieldErrors().gender }}</small>
                         }
@@ -172,17 +136,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="colorId" class="block text-sm font-medium text-muted-color mb-2">Renk</label>
-                        <p-select
-                            inputId="colorId"
-                            formControlName="colorId"
-                            [options]="colorOptions()"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Renk seçin"
-                            styleClass="w-full"
-                            [loading]="loadingColors()"
-                            [showClear]="true"
-                        />
+                        <p-select inputId="colorId" formControlName="colorId" [options]="colorOptions()" optionLabel="label" optionValue="value" placeholder="Renk seçin" class="w-full" [loading]="loadingColors()" [showClear]="true" />
                         @if (apiFieldErrors().colorId) {
                             <small class="text-red-500">{{ apiFieldErrors().colorId }}</small>
                         }
@@ -264,32 +218,14 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <p-button
-                        type="submit"
-                        [label]="copy.buttonSave"
-                        icon="pi pi-check"
-                        [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || loadingSpecies() || loadingBreeds() || loadingColors() || ro.mutationBlocked()"
-                    />
-                    <p-button
-                        type="button"
-                        [label]="copy.buttonCancel"
-                        icon="pi pi-times"
-                        severity="secondary"
-                        (onClick)="goList()"
-                        [disabled]="submitting()"
-                    />
+                    <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || loadingSpecies() || loadingBreeds() || loadingColors() || ro.mutationBlocked()" />
+                    <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
                 </div>
             </form>
         </div>
 
         <app-quick-species-dialog [(visible)]="quickSpeciesOpen" (speciesCreated)="onQuickSpeciesCreated($event)" />
-        <app-quick-breed-dialog
-            [(visible)]="quickBreedOpen"
-            [speciesId]="quickBreedSpeciesId()"
-            [speciesLabel]="quickBreedSpeciesLabelForDialog()"
-            (breedCreated)="onQuickBreedCreated($event)"
-        />
+        <app-quick-breed-dialog [(visible)]="quickBreedOpen" [speciesId]="quickBreedSpeciesId()" [speciesLabel]="quickBreedSpeciesLabelForDialog()" (breedCreated)="onQuickBreedCreated($event)" />
     `
 })
 export class PetNewPageComponent implements OnInit {
@@ -307,12 +243,9 @@ export class PetNewPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
-    readonly canShowQuickSpeciesButton = (): boolean =>
-        this.auth.hasOperationClaim(SPECIES_CREATE_CLAIM) && !this.ro.mutationBlocked();
+    readonly canShowQuickSpeciesButton = (): boolean => this.auth.hasOperationClaim(SPECIES_CREATE_CLAIM) && !this.ro.mutationBlocked();
 
-    readonly canShowQuickBreedButton = (): boolean =>
-        this.auth.hasOperationClaim(BREEDS_CREATE_CLAIM) && !this.ro.mutationBlocked();
-
+    readonly canShowQuickBreedButton = (): boolean => this.auth.hasOperationClaim(BREEDS_CREATE_CLAIM) && !this.ro.mutationBlocked();
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -338,22 +271,7 @@ export class PetNewPageComponent implements OnInit {
     }
 
     constructor() {
-        const fields: PetCreateFormFieldKey[] = [
-            'clientId',
-            'name',
-            'speciesId',
-            'breedId',
-            'gender',
-            'birthDate',
-            'colorId',
-            'weightStr',
-            'microchipNumber',
-            'passportOrTagNumber',
-            'specialProtocolNumber',
-            'hbsAnimalId',
-            'isNeutered',
-            'notes'
-        ];
+        const fields: PetCreateFormFieldKey[] = ['clientId', 'name', 'speciesId', 'breedId', 'gender', 'birthDate', 'colorId', 'weightStr', 'microchipNumber', 'passportOrTagNumber', 'specialProtocolNumber', 'hbsAnimalId', 'isNeutered', 'notes'];
 
         for (const f of fields) {
             const control = this.form.controls[f] as AbstractControl;
@@ -400,7 +318,6 @@ export class PetNewPageComponent implements OnInit {
     goList(): void {
         void this.router.navigate(['/panel/pets']);
     }
-
 
     onQuickSpeciesCreated(speciesId: string): void {
         const id = speciesId.trim();
@@ -481,8 +398,6 @@ export class PetNewPageComponent implements OnInit {
             }
         });
     }
-
-
 
     private loadSpecies(): void {
         this.loadingSpecies.set(true);

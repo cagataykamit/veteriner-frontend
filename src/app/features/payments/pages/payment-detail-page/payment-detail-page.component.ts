@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
@@ -28,6 +28,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     selector: 'app-payment-detail-page',
     standalone: true,
     imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, ReasonConfirmDialogComponent, TrDateTimePipe],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Ödeme kaydedildi.</p>
@@ -42,12 +43,12 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         } @else if (payment()) {
             <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Ödeme" [description]="headerDescription(payment()!)">
                 @if (canUpdatePayment && !ro.mutationBlocked()) {
-                    <a actions [routerLink]="['/panel/payments', payment()!.id, 'edit']" pButton type="button" label="Düzenle" icon="pi pi-pencil" class="p-button-secondary"></a>
+                    <a actions [routerLink]="['/panel/payments', payment()!.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                 } @else if (canUpdatePayment && ro.mutationBlocked()) {
-                    <button actions pButton type="button" label="Düzenle (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                    <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                 }
                 @if (canVoidPayment && !ro.mutationBlocked()) {
-                    <button actions pButton type="button" label="İptal et" icon="pi pi-ban" class="p-button-danger p-button-outlined" (click)="voidVisible = true"></button>
+                    <button actions pButton type="button" class="p-button-danger p-button-outlined" (click)="voidVisible = true"><i class="pi pi-ban"></i>İptal et</button>
                 }
             </app-page-header>
 

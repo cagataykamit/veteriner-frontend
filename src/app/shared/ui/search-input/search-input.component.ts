@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, inject, input, model, output, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, inject, input, model, output, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -16,6 +16,7 @@ export const SEARCH_DEBOUNCE_MS = 350;
     selector: 'app-search-input',
     standalone: true,
     imports: [FormsModule, InputTextModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="relative w-full">
             <input
@@ -57,9 +58,7 @@ export class SearchInputComponent {
     private readonly typed$ = new Subject<void>();
 
     constructor() {
-        this.typed$
-            .pipe(debounceTime(SEARCH_DEBOUNCE_MS), takeUntilDestroyed(inject(DestroyRef)))
-            .subscribe(() => this.searchRequested.emit());
+        this.typed$.pipe(debounceTime(SEARCH_DEBOUNCE_MS), takeUntilDestroyed(inject(DestroyRef))).subscribe(() => this.searchRequested.emit());
     }
 
     onType(text: string): void {

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Navigation, Router } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -16,26 +16,15 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
     selector: 'app-select-clinic-page',
     standalone: true,
     imports: [CommonModule, FormsModule, ButtonModule, SelectModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden">
             <div class="flex flex-col items-center justify-center w-full max-w-3xl px-4">
                 <div class="public-auth-card-frame">
                     <div class="public-auth-card-inner w-full bg-surface-0 dark:bg-surface-900 py-20 px-8 sm:px-20">
                         <div class="text-center mb-8">
-                            <img
-                                [src]="brand.logoFull"
-                                alt="Vetinity"
-                                class="mx-auto mb-6 h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden"
-                                width="120"
-                                height="30"
-                            />
-                            <img
-                                [src]="brand.logoFullDark"
-                                alt="Vetinity"
-                                class="mx-auto mb-6 hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block"
-                                width="120"
-                                height="30"
-                            />
+                            <img [src]="brand.logoFull" alt="Vetinity" class="mx-auto mb-6 h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden" width="120" height="30" />
+                            <img [src]="brand.logoFullDark" alt="Vetinity" class="mx-auto mb-6 hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block" width="120" height="30" />
                             <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Klinik Seçimi</div>
                             <span class="text-muted-color font-medium">Devam etmek için çalışacağınız kliniği seçin.</span>
                         </div>
@@ -47,9 +36,7 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
                         } @else {
                             <div class="mx-auto w-full max-w-[25rem]">
                                 <div class="mb-8">
-                                    <label for="clinicSelect" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">
-                                        Aktif klinik
-                                    </label>
+                                    <label for="clinicSelect" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2"> Aktif klinik </label>
                                     <p-select
                                         inputId="clinicSelect"
                                         [options]="clinics()"
@@ -58,20 +45,12 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
                                         optionValue="id"
                                         placeholder="Klinik seçin"
                                         [showClear]="false"
-                                        styleClass="w-full"
+                                        class="w-full"
                                         [fluid]="true"
                                         [disabled]="submitting()"
                                     />
                                 </div>
-                                <p-button
-                                    type="button"
-                                    label="Devam et"
-                                    icon="pi pi-check"
-                                    styleClass="w-full public-auth-submit"
-                                    [disabled]="!selectedClinicId || submitting()"
-                                    [loading]="submitting()"
-                                    (onClick)="onContinue()"
-                                />
+                                <p-button type="button" label="Devam et" icon="pi pi-check" styleClass="w-full public-auth-submit" [disabled]="!selectedClinicId || submitting()" [loading]="submitting()" (onClick)="onContinue()" />
                             </div>
                         }
 
@@ -119,9 +98,7 @@ export class SelectClinicPage implements OnInit {
         const selected = this.clinics().find((x) => x.id === clinicId) ?? null;
 
         if (!selected) {
-            this.error.set(
-                'Seçilen klinik artık listede yok veya pasif. Lütfen sayfayı yenileyin veya listeden tekrar seçin.'
-            );
+            this.error.set('Seçilen klinik artık listede yok veya pasif. Lütfen sayfayı yenileyin veya listeden tekrar seçin.');
 
             return;
         }
@@ -278,4 +255,3 @@ function readClinicIsActiveFromState(o: Record<string, unknown>): boolean | null
 function filterClinicsForSelection(list: ClinicSummary[]): ClinicSummary[] {
     return list.filter((c) => c.isActive !== false);
 }
-

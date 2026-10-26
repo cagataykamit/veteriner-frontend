@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { Observable } from 'rxjs';
@@ -16,15 +16,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     selector: 'app-reason-confirm-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            [header]="header()"
-            [modal]="true"
-            [dismissableMask]="!submitting()"
-            [closable]="!submitting()"
-            [style]="{ width: 'min(520px, 95vw)' }"
-            [(visible)]="visible"
-        >
+        <p-dialog [header]="header()" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">
             @if (summary()) {
                 <p class="mt-0 mb-2 font-medium">{{ summary() }}</p>
             }
@@ -44,17 +38,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button
-                    type="button"
-                    [label]="confirmLabel()"
-                    icon="pi pi-check"
-                    severity="danger"
-                    [loading]="submitting()"
-                    [disabled]="form.invalid || submitting()"
-                    (onClick)="onSubmit()"
-                />
+                <p-button type="button" [label]="confirmLabel()" icon="pi pi-check" severity="danger" [loading]="submitting()" [disabled]="form.invalid || submitting()" (onClick)="onSubmit()" />
             </ng-template>
         </p-dialog>
     `

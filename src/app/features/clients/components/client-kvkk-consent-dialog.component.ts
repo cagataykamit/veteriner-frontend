@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -20,29 +20,15 @@ import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
     selector: 'app-client-kvkk-consent-dialog',
     standalone: true,
     imports: [ReactiveFormsModule, DialogModule, ButtonModule, SelectButtonModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            header="KVKK rıza durumunu işaretle"
-            [modal]="true"
-            [dismissableMask]="!submitting()"
-            [closable]="!submitting()"
-            [style]="{ width: 'min(520px, 95vw)' }"
-            [(visible)]="visible"
-        >
+        <p-dialog header="KVKK rıza durumunu işaretle" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">
             @if (client(); as c) {
                 <p class="mt-0 mb-4 text-sm text-muted-color">
                     <span class="font-semibold text-color">{{ c.fullName }}</span> imzalı formu teslim etti. Form kâğıtta kalır; burada yalnız sonucu ve tarihi kaydedilir.
                 </p>
                 <span id="kvkk-status-label" class="block text-sm font-medium text-muted-color mb-2">Formdaki seçim</span>
-                <p-selectbutton
-                    [options]="statusOptions"
-                    [formControl]="status"
-                    optionLabel="label"
-                    optionValue="value"
-                    [allowEmpty]="false"
-                    ariaLabelledBy="kvkk-status-label"
-                    data-testid="kvkk-status"
-                />
+                <p-selectbutton [options]="statusOptions" [formControl]="status" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabelledBy="kvkk-status-label" data-testid="kvkk-status" />
                 <label for="kvkk-recorded-on" class="block text-sm font-medium text-muted-color mt-4 mb-2">Form tarihi</label>
                 <input id="kvkk-recorded-on" type="date" class="w-full p-inputtext p-component" [formControl]="recordedOn" [attr.max]="today()" />
                 @if (dateError(); as msg) {
@@ -58,28 +44,12 @@ import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
             @if (submitError()) {
                 <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
             }
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 @if (canRevert()) {
-                    <p-button
-                        type="button"
-                        label="Yok'a geri al"
-                        icon="pi pi-undo"
-                        severity="secondary"
-                        [text]="true"
-                        [disabled]="submitting() || !client()?.rowVersion"
-                        (onClick)="submit('None')"
-                        data-testid="kvkk-revert"
-                    />
+                    <p-button type="button" label="Yok'a geri al" icon="pi pi-undo" severity="secondary" [text]="true" [disabled]="submitting() || !client()?.rowVersion" (onClick)="submit('None')" data-testid="kvkk-revert" />
                 }
                 <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="visible.set(false)" [disabled]="submitting()" />
-                <p-button
-                    type="button"
-                    label="Kaydet"
-                    icon="pi pi-check"
-                    [loading]="submitting()"
-                    [disabled]="submitting() || !client()?.rowVersion || !!dateError()"
-                    (onClick)="submit(status.value)"
-                />
+                <p-button type="button" label="Kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="submitting() || !client()?.rowVersion || !!dateError()" (onClick)="submit(status.value)" />
             </ng-template>
         </p-dialog>
     `

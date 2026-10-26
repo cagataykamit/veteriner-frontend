@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { debouncedAction } from './debounced-action';
 import { SearchInputComponent } from './search-input.component';
@@ -6,6 +6,7 @@ import { SearchInputComponent } from './search-input.component';
 @Component({
     standalone: true,
     imports: [SearchInputComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `<app-search-input inputId="q" [(value)]="text" (searchRequested)="searches.push(text())" />`
 })
 class HostComponent {
@@ -15,6 +16,7 @@ class HostComponent {
 
 @Component({
     standalone: true,
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: ``
 })
 class DebounceHostComponent {

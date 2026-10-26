@@ -47,9 +47,9 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
         <div class="card">
             <app-list-header class="mb-4" title="Satışlar" [count]="totalItems()">
                 @if (canCreate && !ro.mutationBlocked()) {
-                    <a actions routerLink="/panel/sales/new" pButton type="button" label="Hızlı satış" icon="pi pi-shopping-cart"></a>
+                    <a actions routerLink="/panel/sales/new" pButton type="button"><i class="pi pi-shopping-cart"></i>Hızlı satış</a>
                 } @else if (canCreate) {
-                    <button actions pButton type="button" label="Hızlı satış (salt okunur)" icon="pi pi-lock" [disabled]="true" class="p-button-secondary"></button>
+                    <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Hızlı satış (salt okunur)</button>
                 }
             </app-list-header>
             <div class="flex flex-wrap items-end gap-3 mb-4">

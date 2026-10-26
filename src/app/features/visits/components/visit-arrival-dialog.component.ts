@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
@@ -38,15 +38,9 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
     selector: 'app-visit-arrival-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, AutoCompleteModule, CheckboxModule, VisitQuickRegistrationComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            [header]="appointment() ? 'Hasta geldi' : 'Randevusuz geliş'"
-            [modal]="true"
-            [dismissableMask]="!submitting()"
-            [closable]="!submitting()"
-            [style]="{ width: 'min(560px, 95vw)' }"
-            [(visible)]="visible"
-        >
+        <p-dialog [header]="appointment() ? 'Hasta geldi' : 'Randevusuz geliş'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
             @if (loadError()) {
                 <p class="text-red-500 mt-0 mb-3" role="alert">{{ loadError() }}</p>
             }
@@ -80,12 +74,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                         </div>
                         @if (registration(); as reg) {
                             <div class="col-span-12">
-                                <app-visit-quick-registration
-                                    [searchTerm]="lastSearchTerm()"
-                                    [existingOwner]="reg.owner"
-                                    (registered)="onRegistered($event)"
-                                    (cancelled)="registration.set(null)"
-                                />
+                                <app-visit-quick-registration [searchTerm]="lastSearchTerm()" [existingOwner]="reg.owner" (registered)="onRegistered($event)" (cancelled)="registration.set(null)" />
                             </div>
                         } @else {
                             <div class="col-span-12 flex flex-wrap items-center gap-x-3 -mt-2">
@@ -111,7 +100,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                             optionValue="value"
                             placeholder="Hekim seçilmedi"
                             [showClear]="true"
-                            styleClass="w-full"
+                            class="w-full"
                             [loading]="loadingVeterinarians()"
                             appendTo="body"
                         />
@@ -125,21 +114,13 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 <p-button type="button" label="İptal" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button
-                    type="button"
-                    [label]="appointment() ? 'Geldi olarak kaydet' : 'Kaydet'"
-                    icon="pi pi-check"
-                    [loading]="submitting()"
-                    [disabled]="form.invalid || submitting()"
-                    (onClick)="onSubmit()"
-                />
+                <p-button type="button" [label]="appointment() ? 'Geldi olarak kaydet' : 'Kaydet'" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting()" (onClick)="onSubmit()" />
             </ng-template>
         </p-dialog>
     `
 })
-
 export class VisitArrivalDialogComponent {
     readonly visible = model(false);
     /** Doluysa randevudan geliş (hasta kilitli); `null` ise randevusuz geliş. */

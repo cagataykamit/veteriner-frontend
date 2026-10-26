@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-s
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -17,16 +17,9 @@ import { ExaminationsService } from '@/app/features/examinations/services/examin
 import { mapLabResultUpsertFormToCreateRequest } from '@/app/features/lab-results/data/lab-result.mapper';
 import type { LabResultEditVm, LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
 import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
-import {
-    type LabResultUpsertFieldErrors,
-    type LabResultUpsertFormFieldKey,
-    parseLabResultUpsertHttpError
-} from '@/app/features/lab-results/utils/lab-result-upsert-validation-parse.utils';
+import { type LabResultUpsertFieldErrors, type LabResultUpsertFormFieldKey, parseLabResultUpsertHttpError } from '@/app/features/lab-results/utils/lab-result-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import {
-    examinationListItemFromDetail,
-    prescriptionExaminationSelectOption
-} from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
+import { examinationListItemFromDetail, prescriptionExaminationSelectOption } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -34,24 +27,10 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import {
-    fromIstanbulDateTimeLocalInputToUtcIso,
-    toIstanbulDateTimeLocalInputValue
-} from '@/app/shared/utils/date.utils';
-import {
-    dateTimeYearRangeValidator,
-    effectiveDateTimeLocalInputMin
-} from '@/app/shared/utils/date-input-validation.utils';
-import {
-    LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE,
-    labResultDateNotTooFarPastValidator,
-    labResultDateTimeLocalMinAllowed
-} from '@/app/features/lab-results/utils/lab-result-date-validation.utils';
-import {
-    LAB_RESULT_INCOMPLETE_MESSAGE,
-    LAB_RESULT_INTERPRETATION_WITHOUT_RESULT_MESSAGE,
-    labResultResultFieldsValidator
-} from '@/app/features/lab-results/utils/lab-result-form.utils';
+import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
+import { dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
+import { LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE, labResultDateNotTooFarPastValidator, labResultDateTimeLocalMinAllowed } from '@/app/features/lab-results/utils/lab-result-date-validation.utils';
+import { LAB_RESULT_INCOMPLETE_MESSAGE, LAB_RESULT_INTERPRETATION_WITHOUT_RESULT_MESSAGE, labResultResultFieldsValidator } from '@/app/features/lab-results/utils/lab-result-form.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 @Component({
@@ -66,8 +45,12 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         AppPageHeaderComponent,
         PetAlertBannerComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent
+        AppErrorStateComponent,
+        ClientSearchComponent,
+        PetSearchComponent,
+        DateInputComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (loading()) {
             <app-loading-state message="Düzenleme bilgileri yükleniyor…" />
@@ -86,18 +69,14 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 
             <div class="card">
                 @if (ro.mutationBlocked()) {
-                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                        İşletme salt okunur moddadır; değişiklik kaydedilemez.
-                    </p>
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; değişiklik kaydedilemez.</p>
                 }
                 @if (selectionError()) {
                     <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
                 <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
                 @if (examinationFinalized()) {
-                    <p class="text-sm text-muted-color mt-0 mb-4" role="status" data-testid="finalized-identity-locked">
-                        Bağlı muayene kesinleşmiş; müşteri, hasta, bağlı muayene ve test adı değiştirilemez. Sonuç, yorum ve notlar düzenlenebilir.
-                    </p>
+                    <p class="text-sm text-muted-color mt-0 mb-4" role="status" data-testid="finalized-identity-locked">Bağlı muayene kesinleşmiş; müşteri, hasta, bağlı muayene ve test adı değiştirilemez. Sonuç, yorum ve notlar düzenlenebilir.</p>
                 }
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
                     <div class="grid grid-cols-12 gap-4">
@@ -143,7 +122,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                 filterPlaceholder="Ara…"
                                 filterBy="label"
                                 [showClear]="true"
-                                styleClass="w-full"
+                                class="w-full"
                                 [loading]="loadingExaminations()"
                                 [disabled]="examinationSelectDisabled()"
                             />
@@ -191,14 +170,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mt-4" role="alert">
                             <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ submitError() }}</p>
                             <div class="mt-3">
-                                <p-button
-                                    type="button"
-                                    label="Yazdıklarımı atıp güncel kaydı yükle"
-                                    icon="pi pi-refresh"
-                                    severity="secondary"
-                                    size="small"
-                                    (onClick)="reload()"
-                                />
+                                <p-button type="button" label="Yazdıklarımı atıp güncel kaydı yükle" icon="pi pi-refresh" severity="secondary" size="small" (onClick)="reload()" />
                             </div>
                         </div>
                     } @else if (submitError()) {
@@ -206,25 +178,11 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <p-button
-                            type="submit"
-                            [label]="copy.buttonSave"
-                            icon="pi pi-check"
-                            [loading]="submitting()"
-                            [disabled]="form.invalid || submitting() || ro.mutationBlocked()"
-                        />
-                        <p-button
-                            type="button"
-                            [label]="copy.buttonCancel"
-                            icon="pi pi-times"
-                            severity="secondary"
-                            (onClick)="goDetail()"
-                            [disabled]="submitting()"
-                        />
+                        <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || ro.mutationBlocked()" />
+                        <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goDetail()" [disabled]="submitting()" />
                     </div>
                 </form>
             </div>
-
         }
     `
 })
@@ -258,7 +216,6 @@ export class LabResultEditPageComponent implements OnInit {
     readonly apiFieldErrors = signal<LabResultUpsertFieldErrors>({});
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
-
     private labResultId = '';
     private editVmCache: LabResultEditVm | null = null;
     private rowVersion = '';
@@ -267,28 +224,22 @@ export class LabResultEditPageComponent implements OnInit {
     /** Bağlı muayene kesinleşmişse kimlik alanları (test, hayvan, muayene) backend'de kilitlidir. */
     readonly examinationFinalized = signal(false);
 
-    readonly form = this.fb.nonNullable.group({
-        clientId: ['', Validators.required],
-        petId: [{ value: '', disabled: true }, Validators.required],
-        resultDateLocal: ['', [dateTimeYearRangeValidator(), labResultDateNotTooFarPastValidator()]],
-        examinationId: [''],
-        testName: ['', Validators.required],
-        resultText: [''],
-        interpretation: [''],
-        notes: ['']
-    }, { validators: labResultResultFieldsValidator(() => this.status() === 'Resulted') });
+    readonly form = this.fb.nonNullable.group(
+        {
+            clientId: ['', Validators.required],
+            petId: [{ value: '', disabled: true }, Validators.required],
+            resultDateLocal: ['', [dateTimeYearRangeValidator(), labResultDateNotTooFarPastValidator()]],
+            examinationId: [''],
+            testName: ['', Validators.required],
+            resultText: [''],
+            interpretation: [''],
+            notes: ['']
+        },
+        { validators: labResultResultFieldsValidator(() => this.status() === 'Resulted') }
+    );
 
     constructor() {
-        const fields: LabResultUpsertFormFieldKey[] = [
-            'clientId',
-            'petId',
-            'resultDateLocal',
-            'examinationId',
-            'testName',
-            'resultText',
-            'interpretation',
-            'notes'
-        ];
+        const fields: LabResultUpsertFormFieldKey[] = ['clientId', 'petId', 'resultDateLocal', 'examinationId', 'testName', 'resultText', 'interpretation', 'notes'];
 
         for (const f of fields) {
             this.form.controls[f].valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -520,10 +471,6 @@ export class LabResultEditPageComponent implements OnInit {
         void this.router.navigate(['/panel/lab-results', this.labResultId]);
     }
 
-
-
-
-
     private loadExaminationsForPetFresh(petId: string): void {
         const seq = ++this.relationLoadSeq;
         const pid = petId.trim();
@@ -559,9 +506,7 @@ export class LabResultEditPageComponent implements OnInit {
         this.selectionError.set(null);
 
         try {
-            const ex = await firstValueFrom(
-                this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid })
-            );
+            const ex = await firstValueFrom(this.examinationsService.getExaminations({ page: 1, pageSize: 200, petId: pid }));
 
             if (seq !== this.relationLoadSeq || trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
                 return;
@@ -599,9 +544,6 @@ export class LabResultEditPageComponent implements OnInit {
             }
         }
     }
-
-
-
 
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {

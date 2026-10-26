@@ -1,14 +1,7 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
-import {
-    STOCK_BATCH_INVOICE_MAX,
-    STOCK_BATCH_LOT_MAX,
-    STOCK_BATCH_SUPPLIER_MAX,
-    STOCK_BATCH_TRANSPORT_MAX,
-    isStockBatchExpiryPast,
-    type StockBatchFormGroup
-} from '@/app/features/inventory/forms/stock-batch-form.factory';
+import { STOCK_BATCH_INVOICE_MAX, STOCK_BATCH_LOT_MAX, STOCK_BATCH_SUPPLIER_MAX, STOCK_BATCH_TRANSPORT_MAX, isStockBatchExpiryPast, type StockBatchFormGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 
 /**
@@ -19,13 +12,12 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
     selector: 'app-stock-batch-fields',
     standalone: true,
     imports: [ReactiveFormsModule, InputTextModule, DateInputComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <fieldset [formGroup]="group()" class="m-0 p-0 border-0 min-w-0 flex flex-col gap-4">
             <legend class="p-0 mb-2 text-sm font-semibold">Parti bilgileri</legend>
             @if (required()) {
-                <p class="text-sm m-0" role="note" data-testid="batch-required-note">
-                    Aşı ve kontrollü ürünlerde seri/lot no ile son kullanma tarihi (SKT) zorunludur.
-                </p>
+                <p class="text-sm m-0" role="note" data-testid="batch-required-note">Aşı ve kontrollü ürünlerde seri/lot no ile son kullanma tarihi (SKT) zorunludur.</p>
             } @else {
                 <p class="text-sm text-muted-color m-0">Parti bilgisi girilmezse miktar partisiz bakiyeye eklenir.</p>
             }

@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -28,6 +28,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     providers: [ConfirmationService],
     /** `.card:last-child` alt boşluğu sıfırladığından boşluk ana öğede (bölüm bileşenin son çocuğu). */
     host: { class: 'block mb-4' },
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-confirmdialog key="client-portal" [style]="{ width: 'min(450px, 95vw)' }" />
         <section class="card mb-0" aria-labelledby="client-portal-title" data-testid="client-portal">
@@ -80,40 +81,40 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                         <button
                             pButton
                             type="button"
-                            [label]="inviteLabel()"
-                            [icon]="ro.mutationBlocked() ? 'pi pi-lock' : 'pi pi-send'"
+                           
+                           
                             class="p-button-text p-button-sm"
                             [disabled]="!a.canInvite || ro.mutationBlocked() || busy()"
                             [loading]="busy() === 'invite'"
                             data-testid="client-portal-invite"
                             (click)="sendInvite()"
-                        ></button>
+                        ><i [class]="ro.mutationBlocked() ? 'pi pi-lock' : 'pi pi-send'"></i>{{ inviteLabel() }}</button>
                     }
                     @if (pending(); as inv) {
                         <button
                             pButton
                             type="button"
-                            label="Daveti iptal et"
-                            icon="pi pi-times"
+                           
+                           
                             class="p-button-text p-button-sm p-button-danger"
                             [disabled]="!!busy()"
                             [loading]="busy() === 'revoke'"
                             data-testid="client-portal-revoke"
                             (click)="confirmRevoke()"
-                        ></button>
+                        ><i class="pi pi-times"></i>Daveti iptal et</button>
                     }
                     @if (linked()) {
                         <button
                             pButton
                             type="button"
-                            label="Erişimi kapat"
-                            icon="pi pi-ban"
+                           
+                           
                             class="p-button-text p-button-sm p-button-danger"
                             [disabled]="!!busy()"
                             [loading]="busy() === 'close'"
                             data-testid="client-portal-close"
                             (click)="confirmClose()"
-                        ></button>
+                        ><i class="pi pi-ban"></i>Erişimi kapat</button>
                     }
                 </div>
                 @if (inviteBlockedReason(); as reason) {

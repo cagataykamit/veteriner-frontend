@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, DestroyRef, ElementRef, afterNextRender, inject, Injector, signal, viewChild } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, afterNextRender, inject, Injector, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterModule } from '@angular/router';
 import { catchError, debounceTime, of, Subject, switchMap } from 'rxjs';
@@ -27,32 +27,15 @@ const EDITABLE_TARGET = 'input, textarea, select, [contenteditable=""], [content
     standalone: true,
     imports: [CommonModule, RouterModule, DialogModule, InputTextModule],
     host: { '(document:keydown)': 'onDocumentKeydown($event)' },
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (enabled) {
-            <button
-                type="button"
-                class="layout-topbar-action layout-topbar-search-trigger"
-                aria-label="Ara"
-                aria-keyshortcuts="Control+K /"
-                title="Ara (Ctrl+K veya /)"
-                (click)="open()"
-            >
+            <button type="button" class="layout-topbar-action layout-topbar-search-trigger" aria-label="Ara" aria-keyshortcuts="Control+K /" title="Ara (Ctrl+K veya /)" (click)="open()">
                 <i class="pi pi-search" aria-hidden="true"></i>
                 <span class="layout-topbar-search-label">Ara…</span>
                 <kbd class="layout-topbar-search-key" aria-hidden="true">Ctrl K</kbd>
             </button>
-            <p-dialog
-                header="Müşteri ve hasta ara"
-                position="top"
-                appendTo="body"
-                [modal]="true"
-                [dismissableMask]="true"
-                [draggable]="false"
-                [(visible)]="visible"
-                [style]="{ width: 'min(40rem, 95vw)' }"
-                (onShow)="focusInput()"
-                (onHide)="reset()"
-            >
+            <p-dialog header="Müşteri ve hasta ara" position="top" appendTo="body" [modal]="true" [dismissableMask]="true" [draggable]="false" [(visible)]="visible" [style]="{ width: 'min(40rem, 95vw)' }" (onShow)="focusInput()" (onHide)="reset()">
                 <input
                     #searchInput
                     pInputText
@@ -186,12 +169,7 @@ export class AppGlobalSearch {
     protected readonly options = computed<SearchOption[]>(() => {
         const r = this.result();
 
-        return r
-            ? [
-                  ...r.clients.map((c, i) => ({ id: this.optionId(i), route: ['/panel/clients', c.id] })),
-                  ...r.pets.map((p, i) => ({ id: this.optionId(r.clients.length + i), route: ['/panel/pets', p.id] }))
-              ]
-            : [];
+        return r ? [...r.clients.map((c, i) => ({ id: this.optionId(i), route: ['/panel/clients', c.id] })), ...r.pets.map((p, i) => ({ id: this.optionId(r.clients.length + i), route: ['/panel/pets', p.id] }))] : [];
     });
     protected readonly activeOptionId = computed(() => this.options()[this.activeIndex()]?.id ?? null);
 
@@ -293,12 +271,7 @@ export class AppGlobalSearch {
         }
 
         const ctrlK = (event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'k';
-        const slash =
-            event.key === '/' &&
-            !event.ctrlKey &&
-            !event.metaKey &&
-            !event.altKey &&
-            !(event.target as Element | null)?.closest?.(EDITABLE_TARGET);
+        const slash = event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey && !(event.target as Element | null)?.closest?.(EDITABLE_TARGET);
 
         if (ctrlK || slash) {
             event.preventDefault();

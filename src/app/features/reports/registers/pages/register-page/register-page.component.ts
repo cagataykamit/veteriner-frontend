@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, OnDestroy, OnInit, ViewEncapsulation, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewEncapsulation, computed, effect, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -39,6 +39,7 @@ type RegisterRow = { readonly rowNumber: number };
     imports: [FormsModule, ButtonModule, CheckboxModule, SelectModule, FilterFieldComponent, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, RegisterTableComponent],
     styleUrl: './register-page.component.scss',
     encapsulation: ViewEncapsulation.None,
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="register-page">
             <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" class="register-screen-only" [title]="definition.title" [description]="definition.description" />
@@ -49,15 +50,7 @@ type RegisterRow = { readonly rowNumber: number };
                 <p class="register-screen-only text-sm text-muted-color mt-0 mb-4" role="note">{{ definition.screenHint }}</p>
             }
 
-            <app-report-filter-bar
-                class="register-screen-only block"
-                [state]="state"
-                idPrefix="registerRep"
-                dateLimit="past"
-                [periodHint]="copy.registerPeriodHint"
-                searchPlaceholder=""
-                [activeBadges]="false"
-            >
+            <app-report-filter-bar class="register-screen-only block" [state]="state" idPrefix="registerRep" dateLimit="past" [periodHint]="copy.registerPeriodHint" searchPlaceholder="" [activeBadges]="false">
                 @if (definition.extraFilters; as extra) {
                     <ng-container ngProjectAs="[extraFilters]">
                         @if (extra.product) {
@@ -71,7 +64,7 @@ type RegisterRow = { readonly rowNumber: number };
                                     optionLabel="label"
                                     optionValue="value"
                                     [placeholder]="copy.filterPlaceholderAll"
-                                    styleClass="w-full"
+                                    class="w-full"
                                     [filter]="true"
                                     [showClear]="true"
                                 />
@@ -88,7 +81,7 @@ type RegisterRow = { readonly rowNumber: number };
                                     optionLabel="label"
                                     optionValue="value"
                                     [placeholder]="copy.filterPlaceholderAll"
-                                    styleClass="w-full"
+                                    class="w-full"
                                     [showClear]="true"
                                 />
                             </app-filter-field>
@@ -104,7 +97,7 @@ type RegisterRow = { readonly rowNumber: number };
                                     optionLabel="label"
                                     optionValue="value"
                                     [placeholder]="hbsDefaultLabel"
-                                    styleClass="w-full"
+                                    class="w-full"
                                     [showClear]="true"
                                 />
                             </app-filter-field>

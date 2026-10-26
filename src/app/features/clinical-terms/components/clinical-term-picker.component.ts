@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule } from '@angular/forms';
 import { catchError, map, of, Subject, switchMap } from 'rxjs';
@@ -6,11 +6,7 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
 import type { AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '@/app/core/auth/auth.service';
-import {
-    CLINICAL_TERMS_CREATE_CLAIM,
-    CLINICAL_TERMS_DEACTIVATE_CLAIM,
-    CLINICAL_TERMS_READ_CLAIM
-} from '@/app/core/auth/operation-claims.constants';
+import { CLINICAL_TERMS_CREATE_CLAIM, CLINICAL_TERMS_DEACTIVATE_CLAIM, CLINICAL_TERMS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { CLINICAL_TERM_NAME_MAX, type ClinicalTermDto, type ClinicalTermKind } from '@/app/features/clinical-terms/models/clinical-term.model';
 import { ClinicalTermError, ClinicalTermsService } from '@/app/features/clinical-terms/services/clinical-terms.service';
 import { appendClinicalTermToText, clinicalTermNameKey } from '@/app/features/clinical-terms/utils/clinical-term-text.utils';
@@ -35,6 +31,7 @@ const PLACEHOLDERS: Record<ClinicalTermKind, string> = {
     selector: 'app-clinical-term-picker',
     standalone: true,
     imports: [FormsModule, AutoCompleteModule, ButtonModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (canRead && !control().disabled) {
             <div class="mt-2" data-testid="clinical-term-picker">
@@ -86,16 +83,7 @@ const PLACEHOLDERS: Record<ClinicalTermKind, string> = {
                     <div class="flex flex-wrap items-center gap-x-2" role="status" data-testid="clinical-term-inactive">
                         <small>‘{{ t.name }}’ sözlükte pasif olarak kayıtlı.</small>
                         @if (canActivate()) {
-                            <p-button
-                                type="button"
-                                label="Etkinleştir"
-                                [text]="true"
-                                size="small"
-                                styleClass="p-0"
-                                [loading]="activating()"
-                                data-testid="clinical-term-activate"
-                                (onClick)="activate()"
-                            />
+                            <p-button type="button" label="Etkinleştir" [text]="true" size="small" styleClass="p-0" [loading]="activating()" data-testid="clinical-term-activate" (onClick)="activate()" />
                         } @else {
                             <small class="text-muted-color">Etkinleştirmek için yöneticiye başvurun.</small>
                         }

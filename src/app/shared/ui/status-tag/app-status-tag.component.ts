@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { TagModule } from 'primeng/tag';
 
 export type StatusTagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast';
@@ -8,6 +8,7 @@ export type StatusTagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'dan
     selector: 'app-status-tag',
     standalone: true,
     imports: [CommonModule, TagModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: ` <p-tag [value]="label()" [severity]="severity()" /> `
 })
 export class AppStatusTagComponent {

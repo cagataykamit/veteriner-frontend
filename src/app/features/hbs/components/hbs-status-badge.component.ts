@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import type { HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
 import { HBS_STATUS_LABEL, HBS_STATUS_SEVERITY } from '@/app/features/hbs/utils/hbs-status.utils';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
@@ -8,6 +8,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
     selector: 'app-hbs-status-badge',
     standalone: true,
     imports: [AppStatusTagComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (status(); as s) {
             <app-status-tag data-testid="hbs-status-badge" [label]="label()" [severity]="severity()" />

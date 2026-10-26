@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, UrlTree } from '@angular/router';
 import { AppPageHeaderComponent } from './app-page-header.component';
 
 @Component({
     imports: [AppPageHeaderComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `<app-page-header title="Başlık" [categoryLink]="categoryLink" [categoryLinkLabel]="categoryLinkLabel" />`
 })
 class HostComponent {
@@ -53,8 +54,7 @@ describe('AppPageHeaderComponent', () => {
     });
 
     it('bağlantı yazısı menü grubu değil hedef listenin adıdır (sekme, menü öğesi, Ayarlar kartı)', async () => {
-        const text = async (url: string, link: string | readonly unknown[]) =>
-            categoryLink(await create(url, (host) => (host.categoryLink = link)))!.textContent?.trim();
+        const text = async (url: string, link: string | readonly unknown[]) => categoryLink(await create(url, (host) => (host.categoryLink = link)))!.textContent?.trim();
 
         expect(await text('/panel/pets/p1', '/panel/pets')).toBe('Hastalar');
         expect(await text('/panel/clients/c1', '/panel/clients')).toBe('Müşteriler');

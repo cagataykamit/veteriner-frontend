@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DiscountCodeFieldComponent } from '@/app/features/sales-partners/components/discount-code-field.component';
 import type { SubscriptionDiscountDto } from '@/app/features/sales-partners/models/sales-partner.model';
@@ -16,6 +16,7 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
     imports: [ButtonModule, DiscountCodeFieldComponent, TrDatePipe],
     // Gösterilecek bir şey yoksa ızgarada boş satır (aralık) bırakmasın.
     host: { '[class.hidden]': '!visible()' },
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (state(); as s) {
             @if (s.applied) {

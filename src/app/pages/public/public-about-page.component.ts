@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { DATA_PROCESSING_AGREEMENT_DOCUMENT, PUBLIC_LEGAL_LINKS } from '@/app/features/public/utils/legal-documents.utils';
@@ -13,6 +13,7 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
     selector: 'app-public-about-page',
     standalone: true,
     imports: [RouterLink, PublicPageHeaderComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-public-page-header eyebrow="Hakkımızda" title="Küçük veteriner klinikleri için, klinikle birlikte" />
 

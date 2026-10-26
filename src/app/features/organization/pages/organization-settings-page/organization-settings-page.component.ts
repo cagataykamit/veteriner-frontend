@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -24,26 +24,13 @@ import { OrganizationBillingProfileSectionComponent } from '@/app/features/organ
 @Component({
     selector: 'app-organization-settings-page',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        RouterLink,
-        ButtonModule,
-        InputTextModule,
-        ToastModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent,
-        OrganizationBillingProfileSectionComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, OrganizationBillingProfileSectionComponent],
     providers: [MessageService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-toast position="bottom-right" />
 
-        <app-page-header
-            title="Kurum Bilgileri"
-            description="Kurum adınızı görüntüleyip güncelleyebilirsiniz. Paket ve ödeme işlemleri için Abonelik sayfasını kullanın."
-        />
+        <app-page-header title="Kurum Bilgileri" description="Kurum adınızı görüntüleyip güncelleyebilirsiniz. Paket ve ödeme işlemleri için Abonelik sayfasını kullanın." />
 
         @if (loading()) {
             <app-loading-state message="Kurum bilgileri yükleniyor…" />
@@ -56,9 +43,7 @@ import { OrganizationBillingProfileSectionComponent } from '@/app/features/organ
                 <div class="card mb-0">
                     <h5 class="mt-0 mb-4">Kurum Bilgileri</h5>
                     @if (ro.mutationBlocked()) {
-                        <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">
-                            Bu kurum salt okunur moddadır; kurum adı güncellenemez.
-                        </p>
+                        <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">Bu kurum salt okunur moddadır; kurum adı güncellenemez.</p>
                     }
                     @if (formError()) {
                         <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ formError() }}</p>
@@ -68,36 +53,23 @@ import { OrganizationBillingProfileSectionComponent } from '@/app/features/organ
                             <div class="flex flex-col sm:flex-row sm:items-end gap-3">
                                 <div class="flex-1 min-w-0">
                                     <label for="orgTenantName" class="block text-sm font-medium text-muted-color mb-2">Kurum adı *</label>
-                                    <input
-                                        id="orgTenantName"
-                                        pInputText
-                                        class="w-full"
-                                        formControlName="tenantName"
-                                        autocomplete="organization"
-                                    />
+                                    <input id="orgTenantName" pInputText class="w-full" formControlName="tenantName" autocomplete="organization" />
                                     @if (form.controls.tenantName.invalid && form.controls.tenantName.touched) {
                                         <small class="text-red-500">Kurum adı en az bir karakter içermelidir.</small>
                                     }
                                 </div>
-                                <p-button
-                                    type="submit"
-                                    label="Kaydet"
-                                    icon="pi pi-save"
-                                    styleClass="shrink-0 w-full sm:w-auto"
-                                    [loading]="saving()"
-                                    [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty"
-                                />
+                                <p-button type="submit" label="Kaydet" icon="pi pi-save" styleClass="shrink-0 w-full sm:w-auto" [loading]="saving()" [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty" />
                             </div>
                         </form>
 
                         <div class="mt-4">
-                        <div class="text-sm text-muted-color mb-1">Abonelik durumu</div>
-                        <div class="text-sm font-medium">{{ statusLabel(s.status) }} · {{ planSummary(s) }}</div>
-                        <p class="text-sm text-muted-color mt-3 mb-0">
-                            Faturalama ve paket işlemleri
-                            <a routerLink="/panel/settings/subscription" class="text-primary font-medium no-underline">Abonelik</a>
-                            ekranındadır.
-                        </p>
+                            <div class="text-sm text-muted-color mb-1">Abonelik durumu</div>
+                            <div class="text-sm font-medium">{{ statusLabel(s.status) }} · {{ planSummary(s) }}</div>
+                            <p class="text-sm text-muted-color mt-3 mb-0">
+                                Faturalama ve paket işlemleri
+                                <a routerLink="/panel/settings/subscription" class="text-primary font-medium no-underline">Abonelik</a>
+                                ekranındadır.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -115,9 +87,7 @@ export class OrganizationSettingsPageComponent implements OnInit {
     private readonly messages = inject(MessageService);
     private readonly fb = inject(FormBuilder);
     readonly ro = inject(TenantReadOnlyContextService);
-    readonly canManageTenantAccess = computed(
-        () => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked()
-    );
+    readonly canManageTenantAccess = computed(() => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked());
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);

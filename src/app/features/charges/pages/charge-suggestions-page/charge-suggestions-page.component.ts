@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -66,6 +66,7 @@ interface ConvertedRow {
         MoneyPipe,
         TrDateTimePipe
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (hasCreateClaim && ro.mutationBlocked()) {
             <p class="text-sm text-muted-color mt-0 mb-4" role="note">Abonelik salt okunur olduğu için kalemler yalnız görüntülenir.</p>
@@ -80,9 +81,9 @@ interface ConvertedRow {
                     <span class="text-muted-color"> · {{ row.charge.clientName }} · {{ row.charge.description }} · {{ row.charge.amount | money: row.charge.currency || 'TRY' }} </span>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <a [routerLink]="['/panel/charges']" [queryParams]="{ clientId: row.charge.clientId }" pButton size="small" severity="secondary" [outlined]="true" label="Ücret kaydı" icon="pi pi-receipt"></a>
+                    <a [routerLink]="['/panel/charges']" [queryParams]="{ clientId: row.charge.clientId }" pButton size="small" severity="secondary" [outlined]="true"><i class="pi pi-receipt"></i>Ücret kaydı</a>
                     @if (canCollectPayment()) {
-                        <a [routerLink]="['/panel/payments/new']" [queryParams]="paymentQueryParams(row.charge)" pButton size="small" label="Ödeme al" icon="pi pi-wallet"></a>
+                        <a [routerLink]="['/panel/payments/new']" [queryParams]="paymentQueryParams(row.charge)" pButton size="small"><i class="pi pi-wallet"></i>Ödeme al</a>
                     }
                     <p-button size="small" [text]="true" severity="secondary" icon="pi pi-times" ariaLabel="Kapat" (onClick)="dismissConverted(row.charge.id)" />
                 </div>

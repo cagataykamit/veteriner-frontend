@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import {
     decidedFeatureRows,
     formatPlanLimit,
@@ -30,6 +30,7 @@ interface ComparisonGroupVm {
 @Component({
     selector: 'app-public-plan-comparison',
     standalone: true,
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (hasRows()) {
             <div class="public-card overflow-x-auto">

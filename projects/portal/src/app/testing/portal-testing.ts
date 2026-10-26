@@ -1,4 +1,4 @@
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting, TestRequest } from '@angular/common/http/testing';
@@ -63,12 +63,7 @@ export async function expectOneSoon(backend: HttpTestingController, url: string)
 
 export function configurePortalHttp(): void {
     TestBed.configureTestingModule({
-        providers: [
-            provideRouter([]),
-            provideHttpClient(withInterceptors([portalAuthInterceptor])),
-            provideHttpClientTesting(),
-            { provide: PORTAL_API_BASE_URL, useValue: TEST_PORTAL_BASE }
-        ]
+        providers: [provideRouter([]), provideHttpClient(withXhr(), withInterceptors([portalAuthInterceptor])), provideHttpClientTesting(), { provide: PORTAL_API_BASE_URL, useValue: TEST_PORTAL_BASE }]
     });
 }
 

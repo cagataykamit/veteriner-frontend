@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, input, OnInit, output, signal } from '@angular/core';
+import { Component, inject, input, OnInit, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -37,6 +37,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
     selector: 'app-visit-quick-registration',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4" aria-label="Hızlı kayıt">
             <h3 class="text-base font-semibold mt-0 mb-3">{{ owner() ? 'Bu sahibe yeni hasta ekle' : 'Yeni müşteri ve hasta ekle' }}</h3>
@@ -80,7 +81,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
                         [filter]="true"
                         filterPlaceholder="Ara…"
                         filterBy="label"
-                        styleClass="w-full"
+                        class="w-full"
                         [loading]="loadingSpecies()"
                         appendTo="body"
                     />
@@ -100,22 +101,8 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
                 <p class="text-red-500 mt-3 mb-0" role="alert">{{ stepError() }}</p>
             }
             <div class="flex flex-wrap gap-2 mt-4">
-                <p-button
-                    type="button"
-                    [label]="owner() ? 'Hastayı kaydet ve geliş için seç' : 'Müşteri ve hastayı kaydet'"
-                    icon="pi pi-check"
-                    [loading]="submitting()"
-                    [disabled]="submitting() || !canSubmit()"
-                    (onClick)="submit()"
-                />
-                <p-button
-                    type="button"
-                    [label]="duplicateClient() ? 'Aramaya dön' : 'Vazgeç'"
-                    [icon]="duplicateClient() ? 'pi pi-search' : 'pi pi-times'"
-                    severity="secondary"
-                    [disabled]="submitting()"
-                    (onClick)="cancelled.emit()"
-                />
+                <p-button type="button" [label]="owner() ? 'Hastayı kaydet ve geliş için seç' : 'Müşteri ve hastayı kaydet'" icon="pi pi-check" [loading]="submitting()" [disabled]="submitting() || !canSubmit()" (onClick)="submit()" />
+                <p-button type="button" [label]="duplicateClient() ? 'Aramaya dön' : 'Vazgeç'" [icon]="duplicateClient() ? 'pi pi-search' : 'pi pi-times'" severity="secondary" [disabled]="submitting()" (onClick)="cancelled.emit()" />
             </div>
         </section>
     `
@@ -259,11 +246,7 @@ export class VisitQuickRegistrationComponent implements OnInit {
 
     private failPet(e: unknown): void {
         this.submitting.set(false);
-        this.stepError.set(
-            e instanceof HttpErrorResponse
-                ? (parsePetCreateHttpError(e).summaryMessage ?? 'Hasta kaydedilemedi. Bilgileri kontrol edin.')
-                : panelHttpFailureMessage(e, 'Hasta kaydedilemedi.')
-        );
+        this.stepError.set(e instanceof HttpErrorResponse ? (parsePetCreateHttpError(e).summaryMessage ?? 'Hasta kaydedilemedi. Bilgileri kontrol edin.') : panelHttpFailureMessage(e, 'Hasta kaydedilemedi.'));
     }
 
     private loadSpecies(): void {

@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -12,14 +12,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { IMPORTS_COMMIT_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { IMPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { ImportJobProgressComponent } from '@/app/features/imports/components/import-job-progress.component';
-import type {
-    ImportBatchDto,
-    ImportBlockedPolicy,
-    ImportCommitProgressDto,
-    ImportRollbackBlockedItemDto,
-    ImportRollbackCountsDto,
-    ImportRollbackPreviewDto
-} from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchDto, ImportBlockedPolicy, ImportCommitProgressDto, ImportRollbackBlockedItemDto, ImportRollbackCountsDto, ImportRollbackPreviewDto } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import {
     IMPORT_TABLE_LABELS,
@@ -65,6 +58,7 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
         AppStatusTagComponent,
         ImportJobProgressComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header [title]="'Geri al · ' + (batch()?.name || 'Veri içe aktarma')" description="Bu içe aktarmanın oluşturduğu kayıtları siler. Sistemde önceden var olan ve eşleşen kayıtlara hiçbir zaman dokunulmaz.">
             <div actions class="flex flex-wrap gap-2 items-center">
@@ -102,7 +96,7 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
         </ng-template>
 
         @if (!canCommit) {
-            <p-message severity="info" styleClass="w-full">Geri alma için aktarma yetkisi gerekir.</p-message>
+            <p-message severity="info" class="w-full">Geri alma için aktarma yetkisi gerekir.</p-message>
         } @else if (loading()) {
             <app-loading-state message="Geri alma bilgisi yükleniyor…" />
         } @else if (loadError()) {
@@ -113,27 +107,27 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                     <p class="mt-0">Kayıtlar geri alınıyor. Bu sayfayı kapatabilirsiniz; işlem arka planda sürer.</p>
                     <app-import-job-progress [progress]="progress()" [stalled]="stalled()" />
                     @if (pollError()) {
-                        <p-message severity="warn" styleClass="w-full mt-2" role="alert">
+                        <p-message severity="warn" class="w-full mt-2" role="alert">
                             {{ pollError() }}
                             <p-button size="small" severity="secondary" icon="pi pi-refresh" label="Yeniden dene" styleClass="ml-2" (onClick)="startPolling(b.id)" />
                         </p-message>
                     }
                 } @else if (!screenAvailable()) {
-                    <p-message severity="info" styleClass="w-full">Bu içe aktarma bu durumda geri alınamaz.</p-message>
+                    <p-message severity="info" class="w-full">Bu içe aktarma bu durumda geri alınamaz.</p-message>
                 }
 
                 @if (error()) {
-                    <p-message severity="error" styleClass="w-full mb-4" role="alert">{{ error() }}</p-message>
+                    <p-message severity="error" class="w-full mb-4" role="alert">{{ error() }}</p-message>
                 }
 
                 @if (b.status === 'RolledBack') {
-                    <p-message severity="success" styleClass="w-full mb-4" role="status">Geri alma tamamlandı. Bu içe aktarmanın oluşturduğu tüm kayıtlar silindi; aynı dosyayı yeniden yükleyebilirsiniz.</p-message>
+                    <p-message severity="success" class="w-full mb-4" role="status">Geri alma tamamlandı. Bu içe aktarmanın oluşturduğu tüm kayıtlar silindi; aynı dosyayı yeniden yükleyebilirsiniz.</p-message>
                 } @else if (b.status === 'PartiallyRolledBack') {
-                    <p-message severity="warn" styleClass="w-full mb-4" role="status">Geri alma kısmen tamamlandı. Bağlı kaydı olan kayıtlar silinmedi; nedenleri aşağıda.</p-message>
+                    <p-message severity="warn" class="w-full mb-4" role="status">Geri alma kısmen tamamlandı. Bağlı kaydı olan kayıtlar silinmedi; nedenleri aşağıda.</p-message>
                 } @else if (b.status === 'RollbackFailed') {
-                    <p-message severity="error" styleClass="w-full mb-4" role="alert">Geri alma beklenmeyen bir sorunla durdu. Silinen kayıtlar silinmiş kalır; aşağıdan yeniden deneyebilirsiniz.</p-message>
+                    <p-message severity="error" class="w-full mb-4" role="alert">Geri alma beklenmeyen bir sorunla durdu. Silinen kayıtlar silinmiş kalır; aşağıdan yeniden deneyebilirsiniz.</p-message>
                 } @else if (b.status === 'CommitFailed') {
-                    <p-message severity="info" styleClass="w-full mb-4" role="status">Aktarma yarıda kalmıştı. Şimdiye dek oluşan kayıtlar geri alınabilir.</p-message>
+                    <p-message severity="info" class="w-full mb-4" role="status">Aktarma yarıda kalmıştı. Şimdiye dek oluşan kayıtlar geri alınabilir.</p-message>
                 }
 
                 @if (preview(); as p) {
@@ -146,15 +140,13 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                         }
                     </div>
                     @if (p.kept.matchedClients || p.kept.matchedPets) {
-                        <p class="text-sm text-muted-color mt-0">
-                            Sistemde önceden var olup eşleşen {{ p.kept.matchedClients }} müşteri ve {{ p.kept.matchedPets }} hastaya dokunulmaz.
-                        </p>
+                        <p class="text-sm text-muted-color mt-0">Sistemde önceden var olup eşleşen {{ p.kept.matchedClients }} müşteri ve {{ p.kept.matchedPets }} hastaya dokunulmaz.</p>
                     }
                     @for (w of p.warnings; track w) {
-                        <p-message severity="warn" styleClass="w-full mb-2">{{ warningLabel(w) }}</p-message>
+                        <p-message severity="warn" class="w-full mb-2">{{ warningLabel(w) }}</p-message>
                     }
                     @if (p.remindersAlreadyReleased && !p.warnings.includes('Imports.RemindersAlreadyReleased')) {
-                        <p-message severity="warn" styleClass="w-full mb-2">{{ warningLabel('Imports.RemindersAlreadyReleased') }}</p-message>
+                        <p-message severity="warn" class="w-full mb-2">{{ warningLabel('Imports.RemindersAlreadyReleased') }}</p-message>
                     }
 
                     @if (p.blockedItems.length > 0) {
@@ -177,16 +169,7 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
 
                         <div class="flex flex-col gap-1 mb-4">
                             <label for="rollbackReason" class="font-medium">Gerekçe (zorunlu)</label>
-                            <textarea
-                                id="rollbackReason"
-                                pTextarea
-                                rows="3"
-                                class="w-full"
-                                [maxlength]="reasonMax"
-                                [ngModel]="reason()"
-                                (ngModelChange)="reason.set($event)"
-                                aria-describedby="rollbackReasonHint"
-                            ></textarea>
+                            <textarea id="rollbackReason" pTextarea rows="3" class="w-full" [maxlength]="reasonMax" [ngModel]="reason()" (ngModelChange)="reason.set($event)" aria-describedby="rollbackReasonHint"></textarea>
                             <small id="rollbackReasonHint" class="text-muted-color">{{ reason().length }} / {{ reasonMax }} · Neden geri aldığınızı yazın (örn. yanlış dosya). Kişisel bilgi yazmayın.</small>
                         </div>
 
@@ -203,7 +186,8 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                                 <p-radiobutton inputId="policyDelete" name="rollbackPolicy" value="DeleteUnblockedOnly" [disabled]="!deleteUnblockedAvailable()" [ngModel]="policy()" (ngModelChange)="policy.set($event)" />
                                 <label for="policyDelete" [class.cursor-pointer]="deleteUnblockedAvailable()" [class.opacity-60]="!deleteUnblockedAvailable()">
                                     <strong>Bağı olmayanları sil, olanlar kalsın</strong>
-                                    <span class="block text-sm text-muted-color">Silinebilen kayıtlar silinir; bağlı kaydı olanlar sistemde kalır ve listelenir.
+                                    <span class="block text-sm text-muted-color"
+                                        >Silinebilen kayıtlar silinir; bağlı kaydı olanlar sistemde kalır ve listelenir.
                                         @if (!deleteUnblockedAvailable()) {
                                             Bu seçenek şu an kullanılamıyor: engelli kayıt yok ya da silinebilir kayıt kalmadı.
                                         }
@@ -212,7 +196,7 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                             </div>
                         </fieldset>
 
-                        <p-message severity="warn" styleClass="w-full mb-3">Silinen kayıtlar geri getirilemez. Bu işlem geri alınamaz.</p-message>
+                        <p-message severity="warn" class="w-full mb-3">Silinen kayıtlar geri getirilemez. Bu işlem geri alınamaz.</p-message>
                         <div class="flex items-start gap-2 mb-4">
                             <p-checkbox inputId="rollbackAck" [binary]="true" [ngModel]="ack()" (ngModelChange)="ack.set($event)" />
                             <label for="rollbackAck" class="cursor-pointer">Silinen kayıtların geri getirilemeyeceğini anlıyorum.</label>

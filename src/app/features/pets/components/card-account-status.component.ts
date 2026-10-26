@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
@@ -13,6 +13,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     selector: 'app-card-account-status',
     standalone: true,
     imports: [RouterLink, TrDateTimePipe],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <dl class="m-0 mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex flex-wrap gap-x-8 gap-y-2" aria-label="Hesap durumu">
             @if (balance(); as b) {

@@ -1,20 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, output, signal, model } from '@angular/core';
+import { Component, DestroyRef, inject, output, signal, model, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { mapClientUpsertFormValueToCreateRequest } from '@/app/features/clients/data/client.mapper';
-import {
-    createClientUpsertFormGroup,
-    getClientUpsertFormValue
-} from '@/app/features/clients/forms/client-upsert-form.factory';
+import { createClientUpsertFormGroup, getClientUpsertFormValue } from '@/app/features/clients/forms/client-upsert-form.factory';
 import { CLIENT_UPSERT_FORM_FIELDS } from '@/app/features/clients/forms/client-upsert-form.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import {
-    type ClientCreateFieldErrors,
-    type ClientCreateFormFieldKey,
-    parseClientCreateHttpError
-} from '@/app/features/clients/utils/client-create-validation-parse.utils';
+import { type ClientCreateFieldErrors, type ClientCreateFormFieldKey, parseClientCreateHttpError } from '@/app/features/clients/utils/client-create-validation-parse.utils';
 import { clientUpsertFieldErrorMessage } from '@/app/features/clients/utils/client-upsert.validation.utils';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -27,15 +20,9 @@ import { InputTextModule } from 'primeng/inputtext';
     selector: 'app-quick-client-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            header="Yeni müşteri ekle"
-            [modal]="true"
-            [dismissableMask]="true"
-            [style]="{ width: 'min(520px, 95vw)' }"
-            [(visible)]="visible"
-            (onShow)="onShow()"
-        >
+        <p-dialog header="Yeni müşteri ekle" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible" (onShow)="onShow()">
             <form [formGroup]="form" (ngSubmit)="onSubmit()" id="quick-client-form">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -71,16 +58,9 @@ import { InputTextModule } from 'primeng/inputtext';
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 <p-button type="button" label="İptal" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button
-                    type="button"
-                    label="Müşteriyi kaydet"
-                    icon="pi pi-check"
-                    [loading]="submitting()"
-                    [disabled]="form.invalid || submitting()"
-                    (onClick)="onSubmit()"
-                />
+                <p-button type="button" label="Müşteriyi kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting()" (onClick)="onSubmit()" />
             </ng-template>
         </p-dialog>
     `

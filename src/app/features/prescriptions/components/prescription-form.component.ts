@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-s
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal, input, output } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { convertToParamMap, type ParamMap } from '@angular/router';
@@ -14,82 +14,45 @@ import { forkJoin } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
-import {
-    followUpBeforePrescribedMessage,
-    mapPrescriptionUpsertFormToCreateRequest
-} from '@/app/features/prescriptions/data/prescription.mapper';
+import { followUpBeforePrescribedMessage, mapPrescriptionUpsertFormToCreateRequest } from '@/app/features/prescriptions/data/prescription.mapper';
 import { PrescriptionItemsEditorComponent } from '@/app/features/prescriptions/components/prescription-items-editor.component';
 import { PrescriptionsService } from '@/app/features/prescriptions/services/prescriptions.service';
 import { createPrescriptionItemsArray, prescriptionItemsFormToInputs } from '@/app/features/prescriptions/utils/prescription-items-form.utils';
-import {
-    type PrescriptionUpsertFieldErrors,
-    parsePrescriptionUpsertHttpError
-} from '@/app/features/prescriptions/utils/prescription-upsert-validation-parse.utils';
+import { type PrescriptionUpsertFieldErrors, parsePrescriptionUpsertHttpError } from '@/app/features/prescriptions/utils/prescription-upsert-validation-parse.utils';
 import type { ExaminationDetailVm, ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
-import {
-    examinationListItemFromDetail,
-    filterTreatmentsByExamination,
-    prescriptionExaminationSelectOption,
-    prescriptionTreatmentSelectOption,
-    treatmentListItemFromDetail
-} from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
+import { examinationListItemFromDetail, filterTreatmentsByExamination, prescriptionExaminationSelectOption, prescriptionTreatmentSelectOption, treatmentListItemFromDetail } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import type { TreatmentDetailVm, TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
-import {
-    parseExaminationCreateRouteContext,
-    parseTreatmentPrescriptionRouteContext,
-    type TreatmentPrescriptionRouteContext
-} from '@/app/shared/panel/examination-create-route-context.utils';
+import { parseExaminationCreateRouteContext, parseTreatmentPrescriptionRouteContext, type TreatmentPrescriptionRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
 import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
-import {
-    DATE_INPUT_MIN,
-    dateTimeYearRangeValidator,
-    dateYearRangeValidator,
-    effectiveDateTimeLocalInputMin
-} from '@/app/shared/utils/date-input-validation.utils';
-import {
-    PRESCRIPTION_DATE_TOO_FAR_PAST_MESSAGE,
-    prescriptionDateNotTooFarPastValidator,
-    prescriptionDateTimeLocalMinAllowed
-} from '@/app/features/prescriptions/utils/prescription-date-validation.utils';
+import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
+import { PRESCRIPTION_DATE_TOO_FAR_PAST_MESSAGE, prescriptionDateNotTooFarPastValidator, prescriptionDateTimeLocalMinAllowed } from '@/app/features/prescriptions/utils/prescription-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 @Component({
     selector: 'app-prescription-form',
     standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        ButtonModule,
-        InputTextModule,
-        SelectModule,
-        PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, PrescriptionItemsEditorComponent
-    ],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, PrescriptionItemsEditorComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-pet-alert-banner [petId]="form.controls.petId.value" />
 
         <div [class.card]="!embedded()">
             @if (ro.mutationBlocked()) {
-                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
-                    İşletme salt okunur moddadır; kayıt oluşturulamaz.
-                </p>
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; kayıt oluşturulamaz.</p>
             }
             @if (selectionError()) {
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
             @if (contextFromTreatment()) {
-                <p class="text-sm text-muted-color mt-0 mb-4">
-                    Bu tedavi kaydından bağlam taşındı; müşteri, hasta, bağlı muayene ve bağlı tedavi alanları kilitlidir.
-                </p>
+                <p class="text-sm text-muted-color mt-0 mb-4">Bu tedavi kaydından bağlam taşındı; müşteri, hasta, bağlı muayene ve bağlı tedavi alanları kilitlidir.</p>
             } @else if (contextFromExamination()) {
-                <p class="text-sm text-muted-color mt-0 mb-4">
-                    Bu muayene kaydından bağlam taşındı; müşteri, hasta ve bağlı muayene alanları kilitlidir.
-                </p>
+                <p class="text-sm text-muted-color mt-0 mb-4">Bu muayene kaydından bağlam taşındı; müşteri, hasta ve bağlı muayene alanları kilitlidir.</p>
             }
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
@@ -146,7 +109,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             filterPlaceholder="Ara…"
                             filterBy="label"
                             [showClear]="true"
-                            styleClass="w-full"
+                            class="w-full"
                             [loading]="loadingExaminations()"
                         />
                         @if (apiFieldErrors().examinationId) {
@@ -166,7 +129,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             filterPlaceholder="Ara…"
                             filterBy="label"
                             [showClear]="true"
-                            styleClass="w-full"
+                            class="w-full"
                             [loading]="loadingTreatments()"
                         />
                         @if (apiFieldErrors().treatmentId) {
@@ -208,18 +171,11 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <p-button
-                        type="submit"
-                        [label]="copy.buttonSave"
-                        icon="pi pi-check"
-                        [loading]="submitting()"
-                        [disabled]="form.invalid || submitting() || applyingRouteContext() || ro.mutationBlocked()"
-                    />
+                    <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || applyingRouteContext() || ro.mutationBlocked()" />
                     <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="cancel()" [disabled]="submitting()" />
                 </div>
             </form>
         </div>
-
     `
 })
 export class PrescriptionFormComponent implements OnInit {
@@ -275,9 +231,6 @@ export class PrescriptionFormComponent implements OnInit {
     });
 
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
-
-
-
 
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
@@ -373,8 +326,7 @@ export class PrescriptionFormComponent implements OnInit {
             return;
         }
 
-        const hasPet =
-            !this.form.controls.petId.disabled && !!trimClientIdControlValue(this.form.controls.petId.value);
+        const hasPet = !this.form.controls.petId.disabled && !!trimClientIdControlValue(this.form.controls.petId.value);
 
         if (!hasPet) {
             this.form.controls.examinationId.disable({ emitEvent: false });
@@ -397,10 +349,6 @@ export class PrescriptionFormComponent implements OnInit {
     prescriptionContextLocked(): boolean {
         return this.contextFromExamination() || this.contextFromTreatment();
     }
-
-
-
-
 
     onSubmit(): void {
         this.submitError.set(null);
@@ -691,13 +639,7 @@ export class PrescriptionFormComponent implements OnInit {
         });
     }
 
-    private finalizeTreatmentContextPrescription(
-        seq: number,
-        examItems: ExaminationListItemVm[],
-        trItems: TreatmentListItemVm[],
-        t: TreatmentDetailVm,
-        examinationIdValue: string
-    ): void {
+    private finalizeTreatmentContextPrescription(seq: number, examItems: ExaminationListItemVm[], trItems: TreatmentListItemVm[], t: TreatmentDetailVm, examinationIdValue: string): void {
         const pid = (t.petId ?? '').trim();
 
         if (seq !== this.relationLoadSeq || trimClientIdControlValue(this.form.controls.petId.value) !== pid) {
@@ -758,8 +700,6 @@ export class PrescriptionFormComponent implements OnInit {
         });
     }
 
-
-
     private applyTreatmentFilter(): void {
         const examId = this.form.controls.examinationId.value?.trim() ?? '';
         const filtered = filterTreatmentsByExamination(this.allTreatmentsForPet, examId || null);
@@ -771,9 +711,6 @@ export class PrescriptionFormComponent implements OnInit {
             this.form.controls.treatmentId.setValue('', { emitEvent: false });
         }
     }
-
-
-
 
     private mapLoadError(e: unknown, fallback: string): string {
         if (e instanceof HttpErrorResponse) {

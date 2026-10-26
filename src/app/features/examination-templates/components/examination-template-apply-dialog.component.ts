@@ -1,17 +1,8 @@
-import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import type {
-    ExaminationTemplateApplyResultDto,
-    ExaminationTemplateDto,
-    ExaminationTemplateLineDto
-} from '@/app/features/examination-templates/models/examination-template.model';
-import {
-    EXAMINATION_CONCURRENCY_CONFLICT_CODE,
-    EXAMINATION_FINALIZED_CODE,
-    ExaminationTemplateError,
-    ExaminationTemplatesService
-} from '@/app/features/examination-templates/services/examination-templates.service';
+import type { ExaminationTemplateApplyResultDto, ExaminationTemplateDto, ExaminationTemplateLineDto } from '@/app/features/examination-templates/models/examination-template.model';
+import { EXAMINATION_CONCURRENCY_CONFLICT_CODE, EXAMINATION_FINALIZED_CODE, ExaminationTemplateError, ExaminationTemplatesService } from '@/app/features/examination-templates/services/examination-templates.service';
 import { templateContentSummary, templateInactiveLineNames } from '@/app/features/examination-templates/utils/examination-template.utils';
 import { isStockTrackedKind } from '@/app/features/inventory/utils/product-classification.utils';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
@@ -37,25 +28,13 @@ const TEXT_PREVIEW: readonly { field: 'visitReason' | 'findings' | 'plan'; label
     selector: 'app-examination-template-apply-dialog',
     standalone: true,
     imports: [DialogModule, ButtonModule, SearchInputComponent, AppStatusTagComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <p-dialog
-            header="Şablon uygula"
-            [modal]="true"
-            [dismissableMask]="!submitting()"
-            [closable]="!submitting()"
-            [style]="{ width: 'min(44rem, 95vw)' }"
-            [(visible)]="visible"
-        >
+        <p-dialog header="Şablon uygula" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(44rem, 95vw)' }" [(visible)]="visible">
             @if (selected(); as t) {
                 <div data-testid="template-preview">
                     <div class="flex flex-wrap items-center gap-2 mb-3">
-                        <button
-                            type="button"
-                            class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50"
-                            [disabled]="submitting()"
-                            data-testid="template-back"
-                            (click)="clearSelection()"
-                        >
+                        <button type="button" class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50" [disabled]="submitting()" data-testid="template-back" (click)="clearSelection()">
                             ← Başka şablon
                         </button>
                         <span class="font-semibold text-lg mr-auto">{{ t.name }}</span>
@@ -93,16 +72,11 @@ const TEXT_PREVIEW: readonly { field: 'visitReason' | 'findings' | 'plan'; label
                     }
 
                     @if (inactiveLineNames().length > 0) {
-                        <p class="text-red-500 text-sm mt-0 mb-3" role="alert" data-testid="template-inactive-lines">
-                            Pasif ürün içerdiği için uygulanamaz: {{ inactiveLineNames().join(', ') }}. Satırı şablondan çıkarın veya ürünü etkinleştirin.
-                        </p>
+                        <p class="text-red-500 text-sm mt-0 mb-3" role="alert" data-testid="template-inactive-lines">Pasif ürün içerdiği için uygulanamaz: {{ inactiveLineNames().join(', ') }}. Satırı şablondan çıkarın veya ürünü etkinleştirin.</p>
                     }
                     @if (reapplyWarning()) {
                         <div class="rounded-border border border-amber-400 p-3 mb-3" role="status" data-testid="template-reapply-warning">
-                            <p class="m-0 text-sm">
-                                <strong>Bu şablon bu muayeneye az önce uygulandı.</strong> Tekrar uygularsanız metin çoğalmaz ama satırlar yeniden
-                                yazılır: ürünler stoktan yeniden düşer, yeni ücret bekleyen kalemler doğar.
-                            </p>
+                            <p class="m-0 text-sm"><strong>Bu şablon bu muayeneye az önce uygulandı.</strong> Tekrar uygularsanız metin çoğalmaz ama satırlar yeniden yazılır: ürünler stoktan yeniden düşer, yeni ücret bekleyen kalemler doğar.</p>
                         </div>
                     }
                 </div>
@@ -122,12 +96,7 @@ const TEXT_PREVIEW: readonly { field: 'visitReason' | 'findings' | 'plan'; label
                     <ul class="list-none m-0 p-0" data-testid="template-list">
                         @for (t of templates(); track t.id) {
                             <li>
-                                <button
-                                    type="button"
-                                    class="w-full text-left flex flex-wrap items-center gap-2 p-2 rounded-border border-none bg-transparent cursor-pointer hover:bg-emphasis"
-                                    data-testid="template-option"
-                                    (click)="select(t)"
-                                >
+                                <button type="button" class="w-full text-left flex flex-wrap items-center gap-2 p-2 rounded-border border-none bg-transparent cursor-pointer hover:bg-emphasis" data-testid="template-option" (click)="select(t)">
                                     <span class="font-medium mr-auto">{{ t.name }}</span>
                                     <span class="text-sm text-muted-color">{{ contentSummary(t) }}</span>
                                     @if (t.isSystem) {
@@ -147,17 +116,9 @@ const TEXT_PREVIEW: readonly { field: 'visitReason' | 'findings' | 'plan'; label
                 <p class="text-red-500 mt-3 mb-0" role="alert" data-testid="template-apply-error">{{ submitError() }}</p>
             }
 
-            <ng-template pTemplate="footer">
+            <ng-template #footer>
                 <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button
-                    type="button"
-                    label="Uygula"
-                    icon="pi pi-check"
-                    [loading]="submitting()"
-                    [disabled]="!canSubmit()"
-                    data-testid="template-apply-confirm"
-                    (onClick)="onSubmit()"
-                />
+                <p-button type="button" label="Uygula" icon="pi pi-check" [loading]="submitting()" [disabled]="!canSubmit()" data-testid="template-apply-confirm" (onClick)="onSubmit()" />
             </ng-template>
         </p-dialog>
     `

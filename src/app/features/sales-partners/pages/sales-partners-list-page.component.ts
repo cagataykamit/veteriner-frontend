@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import type { SalesPartnerDto } from '@/app/features/sales-partners/models/sales-partner.model';
@@ -18,21 +18,12 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 @Component({
     selector: 'app-sales-partners-list-page',
     standalone: true,
-    imports: [
-        ButtonModule,
-        TableModule,
-        AppPageHeaderComponent,
-        AppLoadingStateComponent,
-        AppErrorStateComponent,
-        AppEmptyStateComponent,
-        AppStatusTagComponent,
-        AppRowActionButtonComponent,
-        SalesPartnerFormDialogComponent
-    ],
+    imports: [ButtonModule, TableModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, AppStatusTagComponent, AppRowActionButtonComponent, SalesPartnerFormDialogComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header title="Satış ortakları" description="Ortak kodlarıyla gelen kurumlar, ciro ve komisyon. Yalnız Vetinity platform yöneticisi görür.">
-            <button actions pButton type="button" label="CSV indir" icon="pi pi-download" severity="secondary" [loading]="exporting()" (click)="exportCsv()" data-testid="sp-export"></button>
-            <button actions pButton type="button" label="Yeni ortak" icon="pi pi-plus" (click)="openCreate()" data-testid="sp-new"></button>
+            <button actions pButton type="button" severity="secondary" [loading]="exporting()" (click)="exportCsv()" data-testid="sp-export"><i class="pi pi-download"></i>CSV indir</button>
+            <button actions pButton type="button" (click)="openCreate()" data-testid="sp-new"><i class="pi pi-plus"></i>Yeni ortak</button>
         </app-page-header>
 
         @if (actionError()) {

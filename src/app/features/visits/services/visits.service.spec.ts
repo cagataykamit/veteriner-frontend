@@ -1,4 +1,4 @@
-import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
@@ -13,12 +13,7 @@ describe('VisitsService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [
-                provideHttpClient(),
-                provideHttpClientTesting(),
-                { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1' } }
-            ]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }, { provide: AuthService, useValue: { getClinicId: () => 'c1' } }]
         });
         service = TestBed.inject(VisitsService);
         http = TestBed.inject(HttpTestingController);
@@ -71,10 +66,7 @@ describe('VisitsService', () => {
                 done();
             }
         });
-        http.expectOne('http://api.test/api/v1/visits').flush(
-            { status: 400, extensions: { code: 'Visits.AppointmentCancelled' } },
-            { status: 400, statusText: 'Bad Request' }
-        );
+        http.expectOne('http://api.test/api/v1/visits').flush({ status: 400, extensions: { code: 'Visits.AppointmentCancelled' } }, { status: 400, statusText: 'Bad Request' });
     });
 
     it('başlat / tamamla gövdesiz POST', () => {
@@ -111,12 +103,7 @@ describe('VisitsService — geri alma ve yanlış işaretlenenler', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [
-                provideHttpClient(),
-                provideHttpClientTesting(),
-                { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1' } }
-            ]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }, { provide: AuthService, useValue: { getClinicId: () => 'c1' } }]
         });
         service = TestBed.inject(VisitsService);
         http = TestBed.inject(HttpTestingController);
@@ -179,12 +166,7 @@ describe('VisitsService — acil işareti', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [
-                provideHttpClient(),
-                provideHttpClientTesting(),
-                { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1' } }
-            ]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }, { provide: AuthService, useValue: { getClinicId: () => 'c1' } }]
         });
         service = TestBed.inject(VisitsService);
         http = TestBed.inject(HttpTestingController);
@@ -231,12 +213,7 @@ describe('VisitsService — hekim tespiti ve Benim hastalarım', () => {
 
     const setup = (userId: string | null): VisitsService => {
         TestBed.configureTestingModule({
-            providers: [
-                provideHttpClient(),
-                provideHttpClientTesting(),
-                { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1', getUserId: () => userId } }
-            ]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }, { provide: AuthService, useValue: { getClinicId: () => 'c1', getUserId: () => userId } }]
         });
         http = TestBed.inject(HttpTestingController);
 
@@ -246,34 +223,42 @@ describe('VisitsService — hekim tespiti ve Benim hastalarım', () => {
     afterEach(() => http.verify());
 
     it('kullanıcı klinik hekim listesindeyse kimliği döner (büyük/küçük harf duyarsız)', (done) => {
-        setup('U1').getCurrentVeterinarianUserId().subscribe((id) => {
-            expect(id).toBe('u1');
-            done();
-        });
+        setup('U1')
+            .getCurrentVeterinarianUserId()
+            .subscribe((id) => {
+                expect(id).toBe('u1');
+                done();
+            });
         http.expectOne('http://api.test/api/v1/clinics/c1/veterinarians').flush([{ userId: 'u1', name: 'Dr. Ayşe' }]);
     });
 
     it('listede değilse null', (done) => {
-        setup('u9').getCurrentVeterinarianUserId().subscribe((id) => {
-            expect(id).toBeNull();
-            done();
-        });
+        setup('u9')
+            .getCurrentVeterinarianUserId()
+            .subscribe((id) => {
+                expect(id).toBeNull();
+                done();
+            });
         http.expectOne('http://api.test/api/v1/clinics/c1/veterinarians').flush([{ userId: 'u1', name: 'Dr. Ayşe' }]);
     });
 
     it('liste hatasında null (süzgeç gizlenir)', (done) => {
-        setup('u1').getCurrentVeterinarianUserId().subscribe((id) => {
-            expect(id).toBeNull();
-            done();
-        });
+        setup('u1')
+            .getCurrentVeterinarianUserId()
+            .subscribe((id) => {
+                expect(id).toBeNull();
+                done();
+            });
         http.expectOne('http://api.test/api/v1/clinics/c1/veterinarians').flush({}, { status: 403, statusText: 'Forbidden' });
     });
 
     it('kimlik yoksa istek atılmadan null', (done) => {
-        setup(null).getCurrentVeterinarianUserId().subscribe((id) => {
-            expect(id).toBeNull();
-            done();
-        });
+        setup(null)
+            .getCurrentVeterinarianUserId()
+            .subscribe((id) => {
+                expect(id).toBeNull();
+                done();
+            });
     });
 
     it('responsibleVeterinarianUserId sorgu parametresi gider (voided ile birlikte olabilir)', () => {
@@ -286,12 +271,14 @@ describe('VisitsService — hekim tespiti ve Benim hastalarım', () => {
     });
 
     it('400 Visits.Validation (hekim değil) mesajı iletilir', (done) => {
-        setup('u1').getToday({ responsibleVeterinarianUserId: 'x' }).subscribe({
-            error: (e: Error) => {
-                expect(e.message).toContain('Hekim değil');
-                done();
-            }
-        });
+        setup('u1')
+            .getToday({ responsibleVeterinarianUserId: 'x' })
+            .subscribe({
+                error: (e: Error) => {
+                    expect(e.message).toContain('Hekim değil');
+                    done();
+                }
+            });
         http.expectOne((r) => r.url === 'http://api.test/api/v1/visits/today').flush({ status: 400, detail: 'Hekim değil', extensions: { code: 'Visits.Validation' } }, { status: 400, statusText: 'Bad Request' });
     });
 });

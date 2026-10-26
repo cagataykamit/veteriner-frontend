@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
@@ -21,6 +21,7 @@ const FOLLOW_UP_LIMIT = 3;
     selector: 'app-pet-summary-card',
     standalone: true,
     imports: [NgTemplateOutlet, RouterLink, ButtonModule, AppLoadingStateComponent, TrDatePipe, TrDateTimePipe],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <ng-template #notOk let-state let-label="label">
             @switch (state) {
@@ -44,7 +45,7 @@ const FOLLOW_UP_LIMIT = 3;
             } @else if (error()) {
                 <div class="flex flex-wrap items-center gap-3" data-testid="summary-error">
                     <p class="m-0 text-orange-600 dark:text-orange-400"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>{{ error() }}</p>
-                    <button pButton type="button" size="small" label="Tekrar dene" icon="pi pi-refresh" class="p-button-secondary" (click)="retry.emit()"></button>
+                    <button pButton type="button" size="small" class="p-button-secondary" (click)="retry.emit()"><i class="pi pi-refresh"></i>Tekrar dene</button>
                 </div>
             } @else if (summary(); as s) {
                 <dl class="m-0 grid grid-cols-12 gap-x-4 gap-y-4">

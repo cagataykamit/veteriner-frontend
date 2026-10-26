@@ -1,16 +1,9 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { ClientDataExportDto } from '@/app/features/clients/models/client-data-export-api.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import {
-    clientDataExportBalanceFacts,
-    clientDataExportClientFacts,
-    clientDataExportFileName,
-    clientDataExportJson,
-    clientDataExportKvkkFacts,
-    clientDataExportTables
-} from '@/app/features/clients/utils/client-data-export.utils';
+import { clientDataExportBalanceFacts, clientDataExportClientFacts, clientDataExportFileName, clientDataExportJson, clientDataExportKvkkFacts, clientDataExportTables } from '@/app/features/clients/utils/client-data-export.utils';
 import { printKvkkForm } from '@/app/features/kvkk/utils/kvkk-form.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -27,6 +20,7 @@ import { triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
     selector: 'app-client-data-export-page',
     standalone: true,
     imports: [ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (loading()) {
             <app-loading-state message="Veri kopyası hazırlanıyor…" />

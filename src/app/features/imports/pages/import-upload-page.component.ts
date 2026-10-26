@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -25,18 +25,8 @@ type UploadMode = 'xlsx' | 'csv';
 @Component({
     selector: 'app-import-upload-page',
     standalone: true,
-    imports: [
-        FormsModule,
-        RouterLink,
-        ButtonModule,
-        InputTextModule,
-        MessageModule,
-        SelectModule,
-        SelectButtonModule,
-        ImportDropZoneComponent,
-        AppPageHeaderComponent,
-        AppTrialLimitNoticeComponent
-    ],
+    imports: [FormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, SelectModule, SelectButtonModule, ImportDropZoneComponent, AppPageHeaderComponent, AppTrialLimitNoticeComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header title="Yeni içe aktarma" description="Adım 1 / 4 · Şablonu indirin, kayıtlarınızı doldurun ve dosyayı yükleyin. Bu adımda hiçbir kayıt oluşmaz.">
             <div actions>
@@ -47,9 +37,7 @@ type UploadMode = 'xlsx' | 'csv';
         <div class="card flex flex-col gap-5">
             <section class="flex flex-col gap-2">
                 <h6 class="m-0">1. Şablonu indirin</h6>
-                <p class="text-muted-color m-0">
-                    Şablon müşteri, hasta ve aşı sayfalarını içerir. Kendi dosyanızı da yükleyebilirsiniz; sütunları sonraki adımda eşlersiniz.
-                </p>
+                <p class="text-muted-color m-0">Şablon müşteri, hasta ve aşı sayfalarını içerir. Kendi dosyanızı da yükleyebilirsiniz; sütunları sonraki adımda eşlersiniz.</p>
                 <div class="flex flex-wrap gap-2">
                     <p-button size="small" severity="secondary" icon="pi pi-file-excel" label="Excel şablonu" [loading]="templateBusy() === 'xlsx'" (onClick)="template('xlsx')" />
                     @for (t of tables; track t) {
@@ -86,7 +74,7 @@ type UploadMode = 'xlsx' | 'csv';
                         placeholder="Klinik seçin"
                         [showClear]="mode === 'xlsx'"
                         [loading]="clinicsLoading()"
-                        styleClass="w-full"
+                        class="w-full"
                     />
                     <small class="text-muted-color">Aşı kayıtları bu kliniğe yazılır. Aşı sayfası/dosyası varsa klinik gereklidir.</small>
                 </div>
@@ -98,12 +86,12 @@ type UploadMode = 'xlsx' | 'csv';
                 @if (mode === 'csv') {
                     <div class="flex flex-col gap-1">
                         <label for="importEncoding" class="text-sm font-medium">Karakter kodlaması</label>
-                        <p-select inputId="importEncoding" [options]="encodingOptions" [(ngModel)]="encoding" optionLabel="label" optionValue="value" styleClass="w-full" />
+                        <p-select inputId="importEncoding" [options]="encodingOptions" [(ngModel)]="encoding" optionLabel="label" optionValue="value" class="w-full" />
                         <small class="text-muted-color">Türkçe harfler bozuk görünürse Windows-1254 deneyin.</small>
                     </div>
                     <div class="flex flex-col gap-1">
                         <label for="importDelimiter" class="text-sm font-medium">Ayırıcı</label>
-                        <p-select inputId="importDelimiter" [options]="delimiterOptions" [(ngModel)]="delimiter" optionLabel="label" optionValue="value" styleClass="w-full" />
+                        <p-select inputId="importDelimiter" [options]="delimiterOptions" [(ngModel)]="delimiter" optionLabel="label" optionValue="value" class="w-full" />
                     </div>
                 }
             </section>
@@ -112,13 +100,11 @@ type UploadMode = 'xlsx' | 'csv';
                 @if (trialLimited()) {
                     <app-trial-limit-notice [message]="error" />
                 } @else {
-                    <p-message severity="error" styleClass="w-full" role="alert">{{ error }}</p-message>
+                    <p-message severity="error" class="w-full" role="alert">{{ error }}</p-message>
                 }
             }
             @if (duplicateId()) {
-                <p-message severity="info" styleClass="w-full">
-                    Bu dosya zaten yüklenmiş. <a [routerLink]="[listRoute, duplicateId()]" class="text-primary font-medium">Mevcut içe aktarmaya git</a>
-                </p-message>
+                <p-message severity="info" class="w-full"> Bu dosya zaten yüklenmiş. <a [routerLink]="[listRoute, duplicateId()]" class="text-primary font-medium">Mevcut içe aktarmaya git</a> </p-message>
             }
 
             <div class="flex flex-wrap gap-2">

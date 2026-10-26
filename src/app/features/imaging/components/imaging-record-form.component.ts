@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, DestroyRef, inject, input, OnInit, output, signal, viewChild } from '@angular/core';
+import { Component, computed, DestroyRef, inject, input, OnInit, output, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { convertToParamMap, type ParamMap, RouterLink } from '@angular/router';
@@ -10,10 +10,7 @@ import { ExaminationsService } from '@/app/features/examinations/services/examin
 import type { ImagingModality } from '@/app/features/imaging/models/imaging.model';
 import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-records.service';
 import { IMAGING_MODALITY_OPTIONS } from '@/app/features/imaging/utils/imaging.utils';
-import {
-    examinationListItemFromDetail,
-    prescriptionExaminationSelectOption
-} from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
+import { examinationListItemFromDetail, prescriptionExaminationSelectOption } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import { type SelectOption, trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
@@ -35,17 +32,8 @@ import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-valida
 @Component({
     selector: 'app-imaging-record-form',
     standalone: true,
-    imports: [
-        ReactiveFormsModule,
-        RouterLink,
-        ButtonModule,
-        SelectModule,
-        PetAlertBannerComponent,
-        ClientSearchComponent,
-        PetSearchComponent,
-        DateInputComponent,
-        StoredFileUploadComponent
-    ],
+    imports: [ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, StoredFileUploadComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-pet-alert-banner [petId]="form.controls.petId.value" />
 
@@ -77,15 +65,7 @@ import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-valida
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="imgModality" class="block text-sm font-medium text-muted-color mb-2">Tür *</label>
-                        <p-select
-                            inputId="imgModality"
-                            formControlName="modality"
-                            [options]="modalityOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Görüntüleme türü"
-                            styleClass="w-full"
-                        />
+                        <p-select inputId="imgModality" formControlName="modality" [options]="modalityOptions" optionLabel="label" optionValue="value" placeholder="Görüntüleme türü" class="w-full" />
                         @if (form.controls.modality.invalid && form.controls.modality.touched) {
                             <small class="text-red-500">Zorunlu alan.</small>
                         }
@@ -109,7 +89,7 @@ import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-valida
                             [showClear]="true"
                             [filter]="true"
                             filterBy="label"
-                            styleClass="w-full"
+                            class="w-full"
                             [loading]="loadingExaminations()"
                         />
                     </div>
@@ -141,13 +121,7 @@ import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-valida
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <p-button
-                        type="submit"
-                        [label]="recordId() ? 'Dosyaları yükle' : copy.buttonSave"
-                        icon="pi pi-check"
-                        [loading]="submitting()"
-                        [disabled]="submitting() || applyingContext() || ro.mutationBlocked()"
-                    />
+                    <p-button type="submit" [label]="recordId() ? 'Dosyaları yükle' : copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="submitting() || applyingContext() || ro.mutationBlocked()" />
                     <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="cancelled.emit()" [disabled]="submitting()" />
                 </div>
             </form>

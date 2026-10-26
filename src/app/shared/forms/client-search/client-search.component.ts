@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, forwardRef, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, forwardRef, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { catchError, of, Subject, switchMap } from 'rxjs';
@@ -26,6 +26,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     standalone: true,
     imports: [CommonModule, FormsModule, AutoCompleteModule, ButtonModule, QuickClientDialogComponent],
     providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ClientSearchComponent), multi: true }],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-autocomplete
             [inputId]="inputId()"
@@ -62,15 +63,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <span>Müşteri bulunamadı</span>
                         @if (canCreate()) {
                             <div>
-                                <p-button
-                                    type="button"
-                                    label="Yeni müşteri ekle"
-                                    icon="pi pi-user-plus"
-                                    [text]="true"
-                                    size="small"
-                                    styleClass="p-0"
-                                    (onClick)="quickClientOpen.set(true)"
-                                />
+                                <p-button type="button" label="Yeni müşteri ekle" icon="pi pi-user-plus" [text]="true" size="small" styleClass="p-0" (onClick)="quickClientOpen.set(true)" />
                             </div>
                         }
                     }

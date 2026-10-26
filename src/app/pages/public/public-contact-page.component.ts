@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { PUBLIC_CONTACT_CARD_ROWS } from '@/app/features/public/utils/public-contact-content.utils';
@@ -16,6 +16,7 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
     selector: 'app-public-contact-page',
     standalone: true,
     imports: [RouterLink, PublicPageHeaderComponent, PublicDemoRequestFormComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-public-page-header
             eyebrow="İletişim"

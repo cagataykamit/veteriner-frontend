@@ -2,7 +2,7 @@ import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -29,14 +29,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { buildCsvFromStringRows, csvTextToUtf8BlobWithBom } from '@/app/shared/utils/csv-text.utils';
 import { localDateTimeYyyyMmDd_HHmmForFileName } from '@/app/shared/utils/date.utils';
 import { triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
-import {
-    STOCK_MOVEMENT_CSV_HEADERS,
-    stockMovementVmToCsvRow
-} from '@/app/features/inventory/utils/stock-movement-export.utils';
-import {
-    fetchAllInventoryCsvExportPages$,
-    InventoryCsvExportRowLimitError
-} from '@/app/features/inventory/utils/inventory-csv-export-pagination.utils';
+import { STOCK_MOVEMENT_CSV_HEADERS, stockMovementVmToCsvRow } from '@/app/features/inventory/utils/stock-movement-export.utils';
+import { fetchAllInventoryCsvExportPages$, InventoryCsvExportRowLimitError } from '@/app/features/inventory/utils/inventory-csv-export-pagination.utils';
 import { EMPTY, catchError, of, switchMap, tap, type Observable } from 'rxjs';
 
 type ProductStockMovementsListState = {
@@ -65,37 +59,18 @@ type ProductStockMovementsListState = {
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent, DateInputComponent
+        AppStatusTagComponent,
+        DateInputComponent
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-toast position="bottom-right" />
 
-        <app-page-header
-            [categoryLink]="productDetailLink()"
-            categoryLinkLabel="Ürün detayına dön"
-            title="Ürün stok hareketleri"
-            description="Bu ürüne ait stok hareketleri; liste salt okunur. Yetkiniz varsa yeni kayıt ekleyebilirsiniz."
-        >
+        <app-page-header [categoryLink]="productDetailLink()" categoryLinkLabel="Ürün detayına dön" title="Ürün stok hareketleri" description="Bu ürüne ait stok hareketleri; liste salt okunur. Yetkiniz varsa yeni kayıt ekleyebilirsiniz.">
             @if (canCreateStockMovement && !ro.mutationBlocked()) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Bu ürün için stok hareketi ekle"
-                    icon="pi pi-plus"
-                    class="p-button-primary"
-                    (click)="createDialogOpen.set(true)"
-                ></button>
+                <button actions pButton type="button" class="p-button-primary" (click)="createDialogOpen.set(true)"><i class="pi pi-plus"></i>Bu ürün için stok hareketi ekle</button>
             } @else if (canCreateStockMovement && ro.mutationBlocked()) {
-                <button
-                    actions
-                    pButton
-                    type="button"
-                    label="Stok hareketi (salt okunur)"
-                    icon="pi pi-lock"
-                    [disabled]="true"
-                    class="p-button-secondary"
-                ></button>
+                <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Stok hareketi (salt okunur)</button>
             }
         </app-page-header>
 
@@ -125,14 +100,7 @@ type ProductStockMovementsListState = {
                             <div class="flex flex-wrap gap-2 shrink-0">
                                 <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
                                 @if (canExportStockMovements()) {
-                                    <p-button
-                                        label="Dışa aktar"
-                                        icon="pi pi-download"
-                                        severity="help"
-                                        (onClick)="exportCsv()"
-                                        [loading]="exporting()"
-                                        [disabled]="loading() || exporting()"
-                                    />
+                                    <p-button label="Dışa aktar" icon="pi pi-download" severity="help" (onClick)="exportCsv()" [loading]="exporting()" [disabled]="loading() || exporting()" />
                                 }
                             </div>
                         </div>
@@ -146,8 +114,10 @@ type ProductStockMovementsListState = {
                                     optionLabel="label"
                                     optionValue="value"
                                     placeholder="Tümü"
-                                    styleClass="w-full"
-                                    [showClear]="true" (ngModelChange)="scheduleApply()" />
+                                    class="w-full"
+                                    [showClear]="true"
+                                    (ngModelChange)="scheduleApply()"
+                                />
                             </app-filter-field>
                             <app-filter-field label="Başlangıç (UTC tarih)" labelFor="psmFrom" [active]="isFromActive()" width="date">
                                 <app-date-input inputId="psmFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" (ngModelChange)="scheduleApply()" />
@@ -207,9 +177,7 @@ type ProductStockMovementsListState = {
 
                         <div class="xl:hidden space-y-3">
                             @for (row of displayedRows(); track row.id) {
-                                <div
-                                    class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm"
-                                >
+                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                                     <div class="text-sm font-medium mb-2 whitespace-nowrap">{{ row.occurredAtText }}</div>
                                     <div class="space-y-2 text-sm">
                                         <div><span class="text-muted-color font-medium">Ürün: </span>{{ row.productDisplayName }}</div>
@@ -243,13 +211,7 @@ type ProductStockMovementsListState = {
             }
         </div>
 
-        <app-stock-movement-create-dialog
-            [visible]="createDialogOpen()"
-            (visibleChange)="createDialogOpen.set($event)"
-            [fixedProductId]="productId()"
-            [fixedProductLabel]="productLabel()"
-            (created)="onStockMovementCreated()"
-        />
+        <app-stock-movement-create-dialog [visible]="createDialogOpen()" (visibleChange)="createDialogOpen.set($event)" [fixedProductId]="productId()" [fixedProductLabel]="productLabel()" (created)="onStockMovementCreated()" />
     `
 })
 export class ProductStockMovementsPageComponent implements OnInit {
@@ -568,11 +530,7 @@ export class ProductStockMovementsPageComponent implements OnInit {
                 return false;
             }
 
-            this.movementTypeFilter =
-                typeof parsed.movementType === 'string' &&
-                ['', 'Initial', 'In', 'Out', 'Adjustment', 'Reversal'].includes(parsed.movementType)
-                    ? parsed.movementType
-                    : '';
+            this.movementTypeFilter = typeof parsed.movementType === 'string' && ['', 'Initial', 'In', 'Out', 'Adjustment', 'Reversal'].includes(parsed.movementType) ? parsed.movementType : '';
             this.activeMovementType.set(this.movementTypeFilter);
             this.dateFromInput = typeof parsed.dateFrom === 'string' ? parsed.dateFrom : '';
             this.dateToInput = typeof parsed.dateTo === 'string' ? parsed.dateTo : '';
@@ -672,8 +630,6 @@ export class ProductStockMovementsPageComponent implements OnInit {
             dateToUtc: dateTo || undefined
         };
 
-        return fetchAllInventoryCsvExportPages$((page, pageSize) =>
-            this.stockMovementService.listByProductId(productId, { page, pageSize, ...q })
-        );
+        return fetchAllInventoryCsvExportPages$((page, pageSize) => this.stockMovementService.listByProductId(productId, { page, pageSize, ...q }));
     }
 }

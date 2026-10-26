@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -34,6 +34,7 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
     standalone: true,
     imports: [ReactiveFormsModule, ButtonModule, ConfirmDialogModule, TextareaModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, KvkkFormDocumentComponent, TrDateTimePipe],
     providers: [MessageService, ConfirmationService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-toast position="bottom-right" />
         <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
@@ -44,14 +45,14 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
                 <button
                     pButton
                     type="button"
-                    [label]="k.label"
+                   
                     [class.p-button-outlined]="kind() !== k.value"
                     [class.p-button-secondary]="kind() !== k.value"
                     [disabled]="saving()"
                     [attr.aria-pressed]="kind() === k.value"
                     [attr.data-kind]="k.value"
                     (click)="selectKind(k.value)"
-                ></button>
+                >{{ k.label }}</button>
             }
         </div>
 
