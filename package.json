@@ -39,10 +39,8 @@
     "@primeuix/themes": "^2.0.3",
     "@tailwindcss/postcss": "^4.3.3",
     "chart.js": "^4.6.1",
-    "primeclt": "^0.1.5",
     "primeicons": "^8.0.2",
     "primeng": "^22.1.4",
-    "quill": "^2.0.3",
     "rxjs": "~7.8.0",
     "tailwindcss-primeui": "^0.6.1",
     "tslib": "^2.8.1"
@@ -65,5 +63,8 @@
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.0",
     "vitest": "^5.0.5"
+  },
+  "overrides": {
+    "vite": "^8.3.5"
   }
 }
