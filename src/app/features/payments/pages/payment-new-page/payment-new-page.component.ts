@@ -135,7 +135,7 @@ const DUPLICATE_MISMATCH_MESSAGE = 'Bu form için ödeme daha önce kaydedilmiş
                     </div>
                     <div class="col-span-12 md:col-span-4">
                         <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati *</label>
-                        <app-date-input inputId="paidAtLocal" type="datetime-local" formControlName="paidAtLocal" [min]="paymentDateMinAllowed()" limit="past" />
+                        <app-date-input inputId="paidAtLocal" type="datetime-local" formControlName="paidAtLocal" [min]="paymentDateMinAllowed" limit="past" />
                         @if (form.controls.paidAtLocal.hasError('dateYearInvalid') && form.controls.paidAtLocal.touched) {
                             <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                         } @else if (form.controls.paidAtLocal.hasError('paymentDateTooFarPast') && form.controls.paidAtLocal.touched) {
@@ -186,6 +186,8 @@ export class PaymentNewPageComponent implements OnInit {
     /** Muayene/geliş bağlamı yalnız bağlamın müşterisi seçiliyken geçerlidir. */
     private context: { clientId: string; examinationId: string | null; visitId: string | null; chargeId: string | null } | null = null;
 
+    /** Ödeme zamanı alt sınırı sayfa açılışında bir kez hesaplanır: şablonda her değişiklik algılama turunda yeniden hesaplanınca dakika sınırında NG0100 veriyordu. 7 gün kuralını doğrulayıcı (paymentDateNotTooFarPastValidator) her an uygular. */
+    readonly paymentDateMinAllowed = effectiveDateTimeLocalInputMin(paymentDateTimeLocalMinAllowed());
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
 
@@ -247,10 +249,6 @@ export class PaymentNewPageComponent implements OnInit {
             this.loadBalance(id);
         });
         this.applyRouteContext();
-    }
-
-    paymentDateMinAllowed(): string {
-        return effectiveDateTimeLocalInputMin(paymentDateTimeLocalMinAllowed());
     }
 
     goList(): void {

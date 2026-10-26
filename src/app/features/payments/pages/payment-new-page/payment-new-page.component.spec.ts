@@ -1,6 +1,7 @@
 import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -8,6 +9,7 @@ import type { ClientBalanceVm, ClientOpenChargeVm } from '@/app/features/clients
 import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { PaymentNewPageComponent } from './payment-new-page.component';
@@ -280,5 +282,23 @@ describe('PaymentNewPageComponent', () => {
         cmp.onSubmit();
         expect(payments.createPayment).not.toHaveBeenCalled();
         expect(fixture.nativeElement.textContent).toContain('salt okunur');
+    });
+
+    describe('ödeme zamanı alt sınırı (en çok 7 gün geri)', () => {
+        afterEach(() => vi.useRealTimers());
+
+        it('alt sınır sayfa açılışında sabitlenir: dakika değişince [min] değişmez (her CD turunda yeniden hesaplanınca NG0100)', async () => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(new Date('2026-10-19T10:28:59.900Z')); // İstanbul 13:28, dakika sınırının hemen öncesi
+            await setup();
+            const minOf = () => fixture.debugElement.query(By.css('app-date-input[inputId="paidAtLocal"]')).injector.get(DateInputComponent).min();
+
+            expect(minOf()).toBe('2026-10-12T13:28');
+
+            vi.setSystemTime(new Date('2026-10-19T10:30:00.000Z'));
+            fixture.detectChanges();
+
+            expect(minOf()).toBe('2026-10-12T13:28');
+        });
     });
 });
