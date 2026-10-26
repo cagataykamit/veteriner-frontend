@@ -5,6 +5,7 @@ import { provideServiceWorker } from '@angular/service-worker';
 import Aura from '@primeuix/themes/aura';
 import { providePrimeNG } from 'primeng/config';
 import { environment } from '@portal/environments/environment';
+import { PRIMEUI_LICENSE } from '@portal/environments/primeui-license.local';
 import { PORTAL_API_BASE_URL } from './core/api/portal-api.client';
 import { portalAuthInterceptor } from './core/api/portal-auth.interceptor';
 import { isPortalNativePlatform, portalServiceWorkerEnabled } from './core/native/portal-native';
@@ -18,7 +19,7 @@ export const portalAppConfig: ApplicationConfig = {
         { provide: PORTAL_API_BASE_URL, useValue: environment.portalApiBaseUrl },
         provideHttpClient(withFetch(), withInterceptors([portalAuthInterceptor])),
         // Panelle aynı tema (Aura). Koyu tema Dilim 1'de yok: seçici hiç eklenmez, işletim sistemi teması uygulanmaz.
-        providePrimeNG({ theme: { preset: Aura, options: { darkModeSelector: '.portal-dark' } } }),
+        providePrimeNG({ theme: { preset: Aura, options: { darkModeSelector: '.portal-dark' } }, license: PRIMEUI_LICENSE || undefined }),
         // Yalnız statik varlıklar önbelleğe alınır (`ngsw-config.json`); API yanıtları önbelleklenmez. Mobil pakette kayıtlanmaz.
         provideServiceWorker('ngsw-worker.js', {
             enabled: portalServiceWorkerEnabled(isDevMode(), isPortalNativePlatform()),

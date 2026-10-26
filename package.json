@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "ng": "ng",
+    "postinstall": "node scripts/primeui-license.mjs",
     "start": "ng serve",
     "start:portal": "ng serve portal",
     "build": "ng build",

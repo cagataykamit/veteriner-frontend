@@ -52,6 +52,21 @@ jobs:
       - name: Install
         run: npm ci
 
+      # PrimeNG 22 lisans anahtarı depo GİZLİ değişkeninden: Settings → Secrets and variables → Actions → Secrets → PRIMEUI_LICENSE.
+      # Tanımsızsa derleme sürer ama uygulama "Invalid PrimeUI License" uyarısı gösterir; sürüm (etiket) derlemesinde hatadır.
+      - name: PrimeUI license
+        env:
+          PRIMEUI_LICENSE: ${{ secrets.PRIMEUI_LICENSE }}
+        run: |
+          if [ -n "$PRIMEUI_LICENSE" ]; then
+            node scripts/primeui-license.mjs
+          elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "::error::Sürüm derlemesi için PRIMEUI_LICENSE gizli değişkeni tanımlı olmalı."
+            exit 1
+          else
+            echo "::warning::PRIMEUI_LICENSE tanımlı değil; derlenen uygulama lisans uyarısı gösterir."
+          fi
+
       - name: Lint
         run: npm run lint
 
