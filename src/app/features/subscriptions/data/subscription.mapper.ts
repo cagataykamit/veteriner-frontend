@@ -3,6 +3,7 @@ import type {
     PendingPlanChangeStatusKey,
     PendingPlanChangeTypeKey,
     PendingPlanChangeVm,
+    SubscriptionBillingPeriod,
     SubscriptionCheckoutSessionVm,
     SubscriptionPlanVm,
     SubscriptionSummaryVm
@@ -171,6 +172,11 @@ function mapPlan(dto: { code?: string | null; name?: string | null; description?
     };
 }
 
+/** Bilinmeyen/boş değer aylık sayılır (backend varsayılanı). */
+function parseBillingPeriod(value: string | null | undefined): SubscriptionBillingPeriod {
+    return value?.trim().toLowerCase() === 'yearly' ? 'Yearly' : 'Monthly';
+}
+
 export function mapSubscriptionSummaryDtoToVm(dto: SubscriptionSummaryDto): SubscriptionSummaryVm {
     const plans = (dto.availablePlans ?? [])
         .map((x) => mapPlan(x))
@@ -193,7 +199,8 @@ export function mapSubscriptionSummaryDtoToVm(dto: SubscriptionSummaryDto): Subs
         pendingPlanChange: mapPendingPlanChangeDtoToVm(dto.pendingPlanChange),
         isReadOnly: toBoolean(dto.isReadOnly),
         canManageSubscription: toBoolean(dto.canManageSubscription),
-        availablePlans: plans
+        availablePlans: plans,
+        billingPeriod: parseBillingPeriod(dto.billingPeriod)
     };
 }
 
@@ -226,6 +233,7 @@ export function mapSubscriptionCheckoutSessionDtoToVm(dto: SubscriptionCheckoutS
         externalReference: trimOrNull(dto.externalReference),
         proratedChargeMinor: toNullableNumber(dto.proratedChargeMinor),
         chargeCurrencyCode: trimOrNull(dto.chargeCurrencyCode),
-        prorationRatio: toNullableDecimal(dto.prorationRatio)
+        prorationRatio: toNullableDecimal(dto.prorationRatio),
+        billingPeriod: parseBillingPeriod(dto.billingPeriod)
     };
 }

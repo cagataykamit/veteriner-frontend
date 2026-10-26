@@ -1,3 +1,5 @@
+import type { SubscriptionBillingPeriod } from '@/app/features/subscriptions/models/subscription-vm.model';
+
 export interface SubscriptionPlanDto {
     code?: string | null;
     name?: string | null;
@@ -22,6 +24,8 @@ export interface SubscriptionSummaryDto {
     isReadOnly?: boolean | null;
     canManageSubscription?: boolean | null;
     availablePlans?: SubscriptionPlanDto[] | null;
+    /** BILL-001: `Monthly` | `Yearly`; hiç ödeme yoksa `Monthly`. */
+    billingPeriod?: string | null;
 }
 
 export interface PendingPlanChangeDto {
@@ -49,10 +53,14 @@ export interface SubscriptionCheckoutSessionDto {
     proratedChargeMinor?: number | null;
     chargeCurrencyCode?: string | null;
     prorationRatio?: number | null;
+    /** BILL-001: oturumun ödeme dönemi. */
+    billingPeriod?: string | null;
 }
 
 export interface StartSubscriptionCheckoutRequestDto {
     targetPlanCode: string;
+    /** BILL-001: boşsa backend mevcut dönemi (ilk ödemede aylık) kullanır. */
+    billingPeriod?: SubscriptionBillingPeriod;
 }
 
 export interface FinalizeSubscriptionCheckoutRequestDto {

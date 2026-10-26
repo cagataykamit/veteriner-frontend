@@ -17,7 +17,7 @@ import type {
     SubscriptionCheckoutSessionDto,
     SubscriptionSummaryDto
 } from '@/app/features/subscriptions/models/subscription-api.model';
-import type { PendingPlanChangeVm, SubscriptionCheckoutSessionVm, SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
+import type { PendingPlanChangeVm, SubscriptionBillingPeriod, SubscriptionCheckoutSessionVm, SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { resolveTenantIdFromJwt } from '@/app/core/auth/jwt-tenant.utils';
 
@@ -50,14 +50,14 @@ export class SubscriptionsService {
         );
     }
 
-    startCheckout(targetPlanCode: string): Observable<SubscriptionCheckoutSessionVm> {
+    startCheckout(targetPlanCode: string, billingPeriod?: SubscriptionBillingPeriod): Observable<SubscriptionCheckoutSessionVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
 
         if (!tenantId) {
             return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
         }
 
-        const body: StartSubscriptionCheckoutRequestDto = { targetPlanCode };
+        const body: StartSubscriptionCheckoutRequestDto = billingPeriod ? { targetPlanCode, billingPeriod } : { targetPlanCode };
 
         return this.api.post<SubscriptionCheckoutSessionDto>(ApiEndpoints.tenants.subscriptionCheckout(tenantId), body).pipe(
             map(mapSubscriptionCheckoutSessionDtoToVm),
