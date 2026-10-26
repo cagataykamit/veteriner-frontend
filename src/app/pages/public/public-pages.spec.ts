@@ -190,15 +190,16 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(PUBLIC_HOME_FAQS.length).toBeLessThanOrEqual(8);
     });
 
-    it('iletişim: e-posta girilmemişken mailto ve boş iletişim kartı yok; deneme kartı gösterilir', async () => {
+    it('iletişim: demo formu ve deneme kartı gösterilir; e-posta girilmemişken mailto ve boş iletişim kartı yok', async () => {
         await harness.navigateByUrl(PUBLIC_PATHS.contact);
         harness.detectChanges();
 
         expect(root().querySelector('a[href^="mailto:"]')).toBeNull();
         expect(root().querySelector('#contact-card-title')).toBeNull();
+        expect(text('#demo-request-title')).toBe('Canlı demo isteyin');
+        expect(root().querySelector('section[aria-labelledby="demo-request-title"] form')).not.toBeNull();
         expect(text('#contact-try-title')).toBe('Kendi verinizle deneyin');
         expect(root().querySelector('section[aria-labelledby="contact-try-title"] a[href="/auth/signup"]')).not.toBeNull();
-        expect(root().querySelector('form')).toBeNull();
     });
 });
 
