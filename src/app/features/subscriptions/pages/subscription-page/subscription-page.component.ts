@@ -2,7 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { ToastModule } from 'primeng/toast';
 import { forkJoin, Observable, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -15,7 +17,17 @@ import { SubscriptionDiscountCardComponent } from '@/app/features/sales-partners
 import { ExampleClinicLoadCardComponent } from '@/app/features/example-clinic/components/example-clinic-load-card.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
-import type { PendingPlanChangeStatusKey, PendingPlanChangeTypeKey, PendingPlanChangeVm, SubscriptionCheckoutSessionVm, SubscriptionPlanVm, SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
+import type {
+    PendingPlanChangeStatusKey,
+    PendingPlanChangeTypeKey,
+    PendingPlanChangeVm,
+    SubscriptionBillingPeriod,
+    SubscriptionCheckoutSessionVm,
+    SubscriptionPlanVm,
+    SubscriptionSummaryVm
+} from '@/app/features/subscriptions/models/subscription-vm.model';
+import { canChooseBillingPeriod, isSwitchToYearly, SUBSCRIPTION_BILLING_PERIOD_LABELS } from '@/app/features/subscriptions/utils/subscription-billing-period.utils';
+import { defByPlanKey, planPriceView } from '@/app/features/public/utils/pricing-plan.utils';
 import type { SubscriptionSummaryRequestOptions } from '@/app/features/subscriptions/services/subscriptions.service';
 import { SubscriptionsService } from '@/app/features/subscriptions/services/subscriptions.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -62,7 +74,9 @@ interface ReturnBannerVm {
     standalone: true,
     imports: [
         CommonModule,
+        FormsModule,
         ButtonModule,
+        SelectButtonModule,
         ToastModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
@@ -158,6 +172,12 @@ interface ReturnBannerVm {
                     <div class="card mb-0 h-full">
                         <h5 class="mt-0 mb-4">Dönem bilgisi</h5>
                         <div class="flex flex-col gap-3">
+                            @if (!isTrialingSubscription(s)) {
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-muted-color">Ödeme dönemi</span>
+                                    <span class="font-medium text-right">{{ billingPeriodLabels[s.billingPeriod] }}</span>
+                                </div>
+                            }
                             <div class="flex items-center justify-between gap-2">
                                 <span class="text-muted-color">{{ periodStartLabel(s) }}</span>
                                 <span class="font-medium text-right">{{ periodStartDate(s) | trDate }}</span>
@@ -217,6 +237,24 @@ interface ReturnBannerVm {
                 <div class="col-span-12">
                     <div class="card mb-0">
                         <h5 class="mt-0 mb-4">{{ canManageSubscriptionOperations(s) ? 'Kullanılabilir planlar' : 'Plan bilgileri' }}</h5>
+                        @if (canManageSubscriptionOperations(s)) {
+                            @if (canChooseBillingPeriod(s)) {
+                                <div class="flex flex-wrap items-center gap-3 mb-4">
+                                    <p-selectbutton
+                                        [options]="billingPeriodOptions"
+                                        [ngModel]="selectedBillingPeriod()"
+                                        (ngModelChange)="selectedBillingPeriod.set($event)"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        [allowEmpty]="false"
+                                        ariaLabel="Ödeme dönemi"
+                                    />
+                                    <span class="text-sm text-muted-color">Yıllık ödemede 12 ay için 10 ay ücreti alınır (2 ay hediye). Aylıktan geçişte kalan günleriniz ücretten düşülür.</span>
+                                </div>
+                            } @else if (s.billingPeriod === 'Yearly' && !isTrialingSubscription(s)) {
+                                <p class="mt-0 mb-4 text-sm text-muted-color">Yıllık ödeme dönemindesiniz. Aylık ödemeye dönem bitince, yenilemede geçebilirsiniz.</p>
+                            }
+                        }
                         @if (s.availablePlans.length === 0) {
                             <app-empty-state message="Plan listesi bulunamadı." />
                         } @else {
@@ -231,6 +269,9 @@ interface ReturnBannerVm {
                                         </div>
                                         @if (plan.description) {
                                             <p class="mt-2 mb-0 text-sm text-color break-words">{{ plan.description }}</p>
+                                        }
+                                        @if (planPriceText(plan, s); as price) {
+                                            <p class="mt-2 mb-0 text-sm font-medium text-color">{{ price }}</p>
                                         }
                                         @if (planLimitLabels(plan.code); as limits) {
                                             <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -358,6 +399,10 @@ interface ReturnBannerVm {
                                         <app-status-tag [label]="checkoutStatusLabel(session, s)" [severity]="checkoutStatusSeverity(session)" />
                                     </div>
                                     <div>
+                                        <div class="text-muted-color mb-1">Ödeme dönemi</div>
+                                        <div>{{ billingPeriodLabels[session.billingPeriod] }}</div>
+                                    </div>
+                                    <div>
                                         <div class="text-muted-color mb-1">Ödeme oturumu sonu</div>
                                         <div>{{ session.expiresAtUtc | trDateTime }}</div>
                                     </div>
@@ -376,6 +421,12 @@ interface ReturnBannerVm {
                                                     Ödenecek tutar:
                                                     <span class="font-medium">{{ formatMinorMoney(session.proratedChargeMinor, session.chargeCurrencyCode) }}</span>
                                                 </p>
+                                            } @else if (session.billingPeriod === 'Yearly' && s.billingPeriod === 'Monthly') {
+                                                <p class="m-0 text-sm text-color">
+                                                    Yıllık ödeme tutarı (bu ayın kalan günleri düşüldü):
+                                                    <span class="font-medium">{{ formatMinorMoney(session.proratedChargeMinor, session.chargeCurrencyCode) }}</span>
+                                                </p>
+                                                <p class="m-0 mt-1 text-xs text-muted-color">Yıllık dönem ödeme tarihinde başlar.</p>
                                             } @else {
                                                 <p class="m-0 text-sm text-color">
                                                     Kalan dönem için hesaplanan fark:
@@ -500,6 +551,14 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
     readonly postCheckoutSyncing = signal(false);
     /** Uyarı banner’ındaki “Durumu yenile” — tam sayfa loading olmadan özet + checkout yeniler. */
     readonly subscriptionRefreshLoading = signal(false);
+    /** Plan kartları ve yenileme ödemesi için seçilen dönem (BILL-001); özet yüklenince mevcut döneme döner. */
+    readonly selectedBillingPeriod = signal<SubscriptionBillingPeriod>('Monthly');
+    readonly billingPeriodOptions: { readonly label: string; readonly value: SubscriptionBillingPeriod }[] = [
+        { label: SUBSCRIPTION_BILLING_PERIOD_LABELS.Monthly, value: 'Monthly' },
+        { label: `${SUBSCRIPTION_BILLING_PERIOD_LABELS.Yearly} · 2 ay hediye`, value: 'Yearly' }
+    ];
+    readonly billingPeriodLabels = SUBSCRIPTION_BILLING_PERIOD_LABELS;
+    readonly canChooseBillingPeriod = canChooseBillingPeriod;
 
     readonly subscriptionHeaderDescription = computed(() => 'Kurum abonelik özetinizi, mevcut paketinizi ve plan değişikliği işlemlerinizi görüntüleyin.');
 
@@ -618,6 +677,7 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
                 const merged = { ...data, pendingPlanChange: pending };
 
                 this.summary.set(merged);
+                this.selectedBillingPeriod.set(merged.billingPeriod);
                 this.tenantReadOnlyContext.applySummary(merged);
                 this.finalizeError.set(null);
                 this.planActionError.set(null);
@@ -704,13 +764,17 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
             return false;
         }
 
-        return session.targetPlanCode.trim().toLowerCase() === plan.code.trim().toLowerCase();
+        return session.targetPlanCode.trim().toLowerCase() === plan.code.trim().toLowerCase() && session.billingPeriod === this.selectedBillingPeriod();
     }
 
     planActionLabel(plan: SubscriptionPlanVm, summary: SubscriptionSummaryVm): string {
         if (!this.hasOpenSessionForPlan(plan)) {
             if (isExpiredReadOnlySubscription(summary)) {
                 return this.isCurrentPlan(plan, summary) ? 'Aboneliği yenile' : 'Bu paketle devam et';
+            }
+
+            if (this.isCurrentPlan(plan, summary) && isSwitchToYearly(summary, this.selectedBillingPeriod())) {
+                return 'Yıllığa geç';
             }
 
             if (this.isDowngradePlan(plan, summary)) {
@@ -734,7 +798,16 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
             return true;
         }
 
-        return !this.isCurrentPlan(plan, summary);
+        return !this.isCurrentPlan(plan, summary) || isSwitchToYearly(summary, this.selectedBillingPeriod());
+    }
+
+    /** Kartta seçilen dönemin liste fiyatı ("₺999 / ay", "₺9.990 / yıl"); fiyat verisi yoksa `null`. */
+    planPriceText(plan: SubscriptionPlanVm, summary: SubscriptionSummaryVm): string | null {
+        const def = defByPlanKey(plan.code);
+        const period = canChooseBillingPeriod(summary) ? this.selectedBillingPeriod() : summary.billingPeriod;
+        const view = def ? planPriceView(def, period === 'Yearly' ? 'yearly' : 'monthly') : null;
+
+        return view?.unit ? `${view.amount} ${view.unit}` : null;
     }
 
     onPlanAction(plan: SubscriptionPlanVm): void {
@@ -886,7 +959,10 @@ export class SubscriptionPageComponent implements OnInit, OnDestroy {
         this.finalizeError.set(null);
         this.planActionError.set(null);
         this.planActionInfo.set(null);
-        this.subscriptions.startCheckout(targetPlanCode).subscribe({
+        // Dönem seçilemiyorsa (deneme, etkin yıllık dönem) backend mevcut dönemi kullanır.
+        const billingPeriod = canChooseBillingPeriod(sum) ? this.selectedBillingPeriod() : undefined;
+
+        this.subscriptions.startCheckout(targetPlanCode, billingPeriod).subscribe({
             next: (session) => {
                 this.checkoutSession.set(session);
 
