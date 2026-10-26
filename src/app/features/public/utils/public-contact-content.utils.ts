@@ -4,7 +4,7 @@
  */
 
 /** Teklif ve destek e-postası (iletişim kartında); `null` ise gösterilmez. Demo talebi formla gelir (TRIAL-005). */
-export const PUBLIC_CONTACT_EMAIL: string | null = null;
+export const PUBLIC_CONTACT_EMAIL: string | null = 'vetinity.app@gmail.com';
 
 /** Telefon (görünen biçim); `null` ise gösterilmez. */
 export const PUBLIC_CONTACT_PHONE: string | null = null;
@@ -20,15 +20,17 @@ export interface PublicContactCardRowDef {
     readonly label: string;
     readonly value: string;
     readonly icon: string;
+    /** Varsa değer bağlantı olarak gösterilir (`mailto:`). */
+    readonly href?: string;
 }
 
 /** İletişim kartı satırları; yalnız değeri girilmiş olanlar. */
 export const PUBLIC_CONTACT_CARD_ROWS: readonly PublicContactCardRowDef[] = ([
-    { label: 'E-posta', value: PUBLIC_CONTACT_EMAIL, icon: 'pi pi-envelope' },
+    { label: 'E-posta', value: PUBLIC_CONTACT_EMAIL, icon: 'pi pi-envelope', href: PUBLIC_CONTACT_EMAIL ? `mailto:${PUBLIC_CONTACT_EMAIL}` : undefined },
     { label: 'Telefon', value: PUBLIC_CONTACT_PHONE, icon: 'pi pi-phone' },
     { label: 'Çalışma saatleri', value: PUBLIC_SUPPORT_HOURS, icon: 'pi pi-clock' },
     { label: 'Yanıt süresi', value: PUBLIC_SUPPORT_RESPONSE_TIME, icon: 'pi pi-reply' }
-] as { label: string; value: string | null; icon: string }[]).filter((row): row is PublicContactCardRowDef => !!row.value);
+] as { label: string; value: string | null; icon: string; href?: string }[]).filter((row): row is PublicContactCardRowDef => !!row.value);
 
 /** Hakkımızda — kısa, doğrulanabilir metin; sayı ve referans uydurulmaz. */
 export const PUBLIC_ABOUT_PARAGRAPHS: readonly string[] = [

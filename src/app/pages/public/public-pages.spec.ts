@@ -6,6 +6,7 @@ import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { appRoutes } from '@/app.routes';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
+import { PUBLIC_CONTACT_CARD_ROWS, PUBLIC_CONTACT_EMAIL } from '@/app/features/public/utils/public-contact-content.utils';
 import { PUBLIC_FAQ_CATEGORIES, PUBLIC_HOME_FAQS } from '@/app/features/public/utils/public-faq-content.utils';
 import { PUBLIC_FEATURE_SECTIONS } from '@/app/features/public/utils/public-features-content.utils';
 import { PUBLIC_HOME_AUDIENCE, PUBLIC_HOME_DAY_FLOW } from '@/app/features/public/utils/public-home-content.utils';
@@ -190,12 +191,13 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(PUBLIC_HOME_FAQS.length).toBeLessThanOrEqual(8);
     });
 
-    it('iletişim: demo formu ve deneme kartı gösterilir; e-posta girilmemişken mailto ve boş iletişim kartı yok', async () => {
+    it('iletişim: demo formu, deneme kartı ve yalnız girilmiş satırlarla iletişim kartı (e-posta mailto bağlantısı)', async () => {
         await harness.navigateByUrl(PUBLIC_PATHS.contact);
         harness.detectChanges();
 
-        expect(root().querySelector('a[href^="mailto:"]')).toBeNull();
-        expect(root().querySelector('#contact-card-title')).toBeNull();
+        expect(text('#contact-card-title')).toBe('İletişim bilgileri');
+        expect(texts('section[aria-labelledby="contact-card-title"] dt')).toEqual(PUBLIC_CONTACT_CARD_ROWS.map((r) => r.label));
+        expect(root().querySelector(`section[aria-labelledby="contact-card-title"] a[href="mailto:${PUBLIC_CONTACT_EMAIL}"]`)?.textContent?.trim()).toBe(PUBLIC_CONTACT_EMAIL!);
         expect(text('#demo-request-title')).toBe('Canlı demo isteyin');
         expect(root().querySelector('section[aria-labelledby="demo-request-title"] form')).not.toBeNull();
         expect(text('#contact-try-title')).toBe('Kendi verinizle deneyin');

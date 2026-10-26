@@ -51,7 +51,13 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
                                         <span class="public-step-badge shrink-0" aria-hidden="true"><i [class]="row.icon"></i></span>
                                         <div>
                                             <dt class="text-xs font-semibold uppercase tracking-wide text-muted-color">{{ row.label }}</dt>
-                                            <dd class="m-0 mt-0.5 text-base text-surface-900 dark:text-surface-0">{{ row.value }}</dd>
+                                            <dd class="m-0 mt-0.5 text-base text-surface-900 dark:text-surface-0">
+                                                @if (row.href) {
+                                                    <a [href]="row.href" class="public-brand-link break-all">{{ row.value }}</a>
+                                                } @else {
+                                                    {{ row.value }}
+                                                }
+                                            </dd>
                                         </div>
                                     </div>
                                 }
