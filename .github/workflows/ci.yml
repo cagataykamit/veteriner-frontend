@@ -27,6 +27,11 @@ jobs:
           node-version: 22
           cache: npm
 
+      # Lock dosyası npm 11 ile yazılır; Node 22 ile gelen npm 10 isteğe bağlı eş bağımlılıkları farklı çözer ve
+      # `npm ci` "Missing: chokidar@5.0.0 from lock file" ile reddeder. Yerel geliştirme sürümüyle aynı npm kullanılır.
+      - name: Use npm 11
+        run: npm install -g npm@11.6.4
+
       # Sürüm kuralı: v<MAJOR>.<MINOR>.<PATCH>[-önsürüm] etiketi → sürüm. Etiketsiz koşu: 0.0.0-ci.<koşu no>.
       - name: Resolve version
         id: version
