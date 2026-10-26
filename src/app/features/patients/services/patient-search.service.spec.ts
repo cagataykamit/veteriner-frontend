@@ -3,7 +3,7 @@ import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { GlobalSearchService, type GlobalSearchResultVm } from '@/app/shared/global-search/global-search.service';
+import { GlobalSearchService, type GlobalSearchResultVm } from '@/app/features/patients/services/global-search.service';
 import { PatientSearchService } from './patient-search.service';
 
 const petItem = (id: string, name: string, clientId: string | null = 'c1'): PetListItemVm => ({ id, clientId, speciesId: null, name, speciesName: 'Kedi', breed: 'Tekir', colorName: '—', weight: '—', status: 'Active' });
