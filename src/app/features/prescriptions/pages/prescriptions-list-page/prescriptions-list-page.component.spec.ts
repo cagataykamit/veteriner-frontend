@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -26,11 +27,14 @@ describe('PrescriptionsListPageComponent — satırda Düzenle', () => {
         hbsStatus: 'NotEntered'
     };
 
-    let getPrescriptions: jasmine.Spy;
+    let getPrescriptions: Mock;
 
     const create = (claims: string[], mutationBlocked = false, query: Record<string, string> = {}): HTMLElement => {
         sessionStorage.clear();
-        getPrescriptions = jasmine.createSpy('getPrescriptions').and.returnValue(of({ items: [prescription], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
+        getPrescriptions = vi
+            .fn()
+            .mockName('getPrescriptions')
+            .mockReturnValue(of({ items: [prescription], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
         TestBed.configureTestingModule({
             imports: [PrescriptionsListPageComponent],
             providers: [
@@ -53,11 +57,11 @@ describe('PrescriptionsListPageComponent — satırda Düzenle', () => {
     it("Prescriptions.Update varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", () => {
         const edits = rowEditActions(create([PRESCRIPTIONS_UPDATE_CLAIM]));
 
-        expect(edits.length).withContext('tablo + mobil kart').toBe(2);
+        expect(edits.length, 'tablo + mobil kart').toBe(2);
 
         for (const edit of edits) {
             expect(edit.getAttribute('href')).toBe('/panel/prescriptions/r1/edit');
-            expect(isRightAfterDetail(edit)).toBeTrue();
+            expect(isRightAfterDetail(edit)).toBe(true);
         }
     });
 
@@ -68,7 +72,7 @@ describe('PrescriptionsListPageComponent — satırda Düzenle', () => {
         const readOnly = rowEditActions(create([PRESCRIPTIONS_UPDATE_CLAIM], true));
 
         expect(readOnly.length).toBe(2);
-        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBeTrue();
+        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBe(true);
     });
 });
 
@@ -91,7 +95,10 @@ describe('PrescriptionsListPageComponent — HBS durumu', () => {
 
     const create = (query: Record<string, string> = {}) => {
         sessionStorage.clear();
-        const getPrescriptions = jasmine.createSpy('getPrescriptions').and.returnValue(of({ items: [row], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
+        const getPrescriptions = vi
+            .fn()
+            .mockName('getPrescriptions')
+            .mockReturnValue(of({ items: [row], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
 
         TestBed.configureTestingModule({
             imports: [PrescriptionsListPageComponent],
@@ -122,12 +129,12 @@ describe('PrescriptionsListPageComponent — HBS durumu', () => {
     it('?hbsStatus=NotEntered bağlantısı listeyi süzerek yükler', () => {
         const { getPrescriptions } = create({ hbsStatus: 'NotEntered' });
 
-        expect(getPrescriptions.calls.mostRecent().args[0].hbsStatus).toBe('NotEntered');
+        expect(vi.mocked(getPrescriptions).mock.lastCall![0].hbsStatus).toBe('NotEntered');
     });
 
     it('bilinmeyen hbsStatus yok sayılır', () => {
         const { getPrescriptions } = create({ hbsStatus: 'Zorunlu' });
 
-        expect(getPrescriptions.calls.mostRecent().args[0].hbsStatus).toBeUndefined();
+        expect(vi.mocked(getPrescriptions).mock.lastCall![0].hbsStatus).toBeUndefined();
     });
 });

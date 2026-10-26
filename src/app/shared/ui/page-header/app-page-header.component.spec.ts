@@ -34,9 +34,9 @@ describe('AppPageHeaderComponent', () => {
         for (const url of ['/panel/today', '/panel/dashboard', '/panel/settings/clinics', '/panel/appointments', '/panel/yok']) {
             const el = await create(url);
 
-            expect(categoryLink(el)).withContext(url).toBeNull();
-            expect(el.querySelector('span')).withContext(url).toBeNull();
-            expect(firstLine(el)).withContext(url).toBe('Başlık');
+            expect(categoryLink(el), url).toBeNull();
+            expect(el.querySelector('span'), url).toBeNull();
+            expect(firstLine(el), url).toBe('Başlık');
         }
     });
 

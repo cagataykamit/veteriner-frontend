@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl } from '@angular/forms';
@@ -32,7 +33,7 @@ class HostComponent {
 describe('ClinicalTermPickerComponent', () => {
     let fixture: ComponentFixture<HostComponent>;
     let host: HostComponent;
-    let terms: jasmine.SpyObj<ClinicalTermsService>;
+    let terms: MockedObject<ClinicalTermsService>;
     let claims: Set<string>;
     let blocked: boolean;
 
@@ -57,8 +58,12 @@ describe('ClinicalTermPickerComponent', () => {
     beforeEach(() => {
         claims = new Set(['ClinicalTerms.Read', 'ClinicalTerms.Create']);
         blocked = false;
-        terms = jasmine.createSpyObj<ClinicalTermsService>('ClinicalTermsService', ['list', 'create', 'setActive']);
-        terms.list.and.returnValue(paged([term('İshal'), term('Kanlı ishal')]));
+        terms = {
+            list: vi.fn().mockName('ClinicalTermsService.list'),
+            create: vi.fn().mockName('ClinicalTermsService.create'),
+            setActive: vi.fn().mockName('ClinicalTermsService.setActive')
+        } as unknown as MockedObject<ClinicalTermsService>;
+        terms.list.mockReturnValue(paged([term('İshal'), term('Kanlı ishal')]));
     });
 
     it('okuma izni yoksa hiçbir şey çizilmez (alan eskisi gibi düz metin)', async () => {
@@ -79,8 +84,8 @@ describe('ClinicalTermPickerComponent', () => {
         await create();
         picker().onComplete({ query: 'ishal', originalEvent: new Event('x') });
         await wait(0);
-        expect(terms.list).toHaveBeenCalledWith(jasmine.objectContaining({ kind: 'Complaint', search: 'ishal', page: 1 }));
-        expect(terms.list.calls.mostRecent().args[0].includeInactive).toBeUndefined();
+        expect(terms.list).toHaveBeenCalledWith(expect.objectContaining({ kind: 'Complaint', search: 'ishal', page: 1 }));
+        expect(vi.mocked(terms.list).mock.lastCall![0].includeInactive).toBeUndefined();
         expect(
             picker()
                 .suggestions()
@@ -101,29 +106,29 @@ describe('ClinicalTermPickerComponent', () => {
 
         await wait(500);
         expect(terms.list).toHaveBeenCalledTimes(1);
-        expect(terms.list.calls.mostRecent().args[0].search).toBe('ish');
+        expect(vi.mocked(terms.list).mock.lastCall![0].search).toBe('ish');
     });
 
     it('seçilen terimin adı serbest metne eklenir, arama kutusu boşalır', async () => {
         await create();
         picker().onSelect({ value: term('İshal'), originalEvent: new Event('x') });
         expect(host.control.value).toBe('Kusma, İshal');
-        expect(host.control.dirty).toBeTrue();
+        expect(host.control.dirty).toBe(true);
         expect(picker().query()).toBeNull();
     });
 
     it('bulunamayan terim "Sözlüğe ekle" ile eklenir ve alana yazılır', async () => {
-        terms.create.and.returnValue(of(term('Kulak akıntısı', { isSystem: false })));
+        terms.create.mockReturnValue(of(term('Kulak akıntısı', { isSystem: false })));
         await create();
         picker().onComplete({ query: ' kulak akıntısı ', originalEvent: new Event('x') });
-        expect(picker().canAdd()).toBeTrue();
+        expect(picker().canAdd()).toBe(true);
         picker().addLastQuery();
         expect(terms.create).toHaveBeenCalledWith('Complaint', ' kulak akıntısı ');
         expect(host.control.value).toBe('Kusma, Kulak akıntısı');
     });
 
     it('ekleme hatası gösterilir, alan değişmez', async () => {
-        terms.create.and.returnValue(throwError(() => new ClinicalTermError('Bu ad sözlükte zaten var.', false)));
+        terms.create.mockReturnValue(throwError(() => new ClinicalTermError('Bu ad sözlükte zaten var.', false)));
         await create();
         picker().onComplete({ query: 'İshal', originalEvent: new Event('x') });
         picker().addLastQuery();
@@ -137,13 +142,13 @@ describe('ClinicalTermPickerComponent', () => {
         const duplicate = () => throwError(() => new ClinicalTermError('Bu ad sözlükte zaten var.', false, true));
 
         beforeEach(() => {
-            terms.create.and.callFake(duplicate);
-            terms.setActive.and.returnValue(of(undefined));
+            terms.create.mockImplementation(duplicate);
+            terms.setActive.mockReturnValue(of(undefined));
         });
 
         /** Arama aktif sonuç döndürmez; "Sözlüğe ekle" 409 alır, ada özel pasif dahil arama çakışan kaydı getirir. */
         async function addConflicting(query = 'KULAK  akintisi'): Promise<void> {
-            terms.list.and.returnValues(paged([]), paged([term('Kulak akıntısı tedavisi', { isActive: false }), passive]));
+            terms.list.mockReturnValueOnce(paged([])).mockReturnValueOnce(paged([term('Kulak akıntısı tedavisi', { isActive: false }), passive]));
             await create();
             picker().onComplete({ query, originalEvent: new Event('x') });
             await wait(0);
@@ -156,10 +161,10 @@ describe('ClinicalTermPickerComponent', () => {
         it('mükerrer hatası yerine pasif kayıt mesajı gösterilir; bakış yalnız bu ada özel ve pasifler dahildir', async () => {
             await addConflicting();
             expect(terms.list).toHaveBeenCalledTimes(2);
-            expect(terms.list.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ kind: 'Complaint', search: 'KULAK  akintisi', includeInactive: true }));
+            expect(vi.mocked(terms.list).mock.lastCall![0]).toEqual(expect.objectContaining({ kind: 'Complaint', search: 'KULAK  akintisi', includeInactive: true }));
             expect(picker().inactiveNamesake()).toBe(passive);
             expect(picker().actionError()).toBeNull();
-            expect(picker().adding()).toBeFalse();
+            expect(picker().adding()).toBe(false);
             expect(notice()?.textContent).toContain('‘Kulak akıntısı’ sözlükte pasif olarak kayıtlı.');
             expect(host.control.value).toBe('Kusma');
         });
@@ -172,9 +177,10 @@ describe('ClinicalTermPickerComponent', () => {
             expect(button).not.toBeNull();
             button.click();
             fixture.detectChanges();
-            expect(terms.setActive).toHaveBeenCalledOnceWith('p1', true);
+            expect(terms.setActive).toHaveBeenCalledTimes(1);
+            expect(terms.setActive).toHaveBeenCalledWith('p1', true);
             expect(host.control.value).toBe('Kusma, Kulak akıntısı');
-            expect(host.control.dirty).toBeTrue();
+            expect(host.control.dirty).toBe(true);
             expect(picker().inactiveNamesake()).toBeNull();
             expect(notice()).toBeNull();
         });
@@ -193,7 +199,7 @@ describe('ClinicalTermPickerComponent', () => {
             await create();
             picker().inactiveNamesake.set(passive);
             fixture.detectChanges();
-            expect(picker().canActivate()).toBeFalse();
+            expect(picker().canActivate()).toBe(false);
             expect(notice()?.querySelector('[data-testid="clinical-term-activate"]')).toBeNull();
             picker().activate();
             expect(terms.setActive).not.toHaveBeenCalled();
@@ -201,12 +207,12 @@ describe('ClinicalTermPickerComponent', () => {
 
         it('etkinleştirme hatası gösterilir, alan değişmez', async () => {
             claims.add('ClinicalTerms.Deactivate');
-            terms.setActive.and.returnValue(throwError(() => new ClinicalTermError('Terim etkinleştirilemedi.', false)));
+            terms.setActive.mockReturnValue(throwError(() => new ClinicalTermError('Terim etkinleştirilemedi.', false)));
             await addConflicting();
             picker().activate();
             expect(host.control.value).toBe('Kusma');
             expect(picker().actionError()).toBe('Terim etkinleştirilemedi.');
-            expect(picker().activating()).toBeFalse();
+            expect(picker().activating()).toBe(false);
         });
 
         it('aynı adlı pasif kayıt bulunamazsa sunucunun mükerrer mesajı gösterilir', async () => {
@@ -217,7 +223,7 @@ describe('ClinicalTermPickerComponent', () => {
 
         it('yeni arama pasif kayıt mesajını kaldırır', async () => {
             await addConflicting();
-            terms.list.and.returnValue(paged([]));
+            terms.list.mockReturnValue(paged([]));
             picker().onComplete({ query: 'kus', originalEvent: new Event('x') });
             expect(picker().inactiveNamesake()).toBeNull();
         });
@@ -227,14 +233,14 @@ describe('ClinicalTermPickerComponent', () => {
         claims = new Set(['ClinicalTerms.Read']);
         await create();
         picker().onComplete({ query: 'yeni', originalEvent: new Event('x') });
-        expect(picker().canAdd()).toBeFalse();
+        expect(picker().canAdd()).toBe(false);
     });
 
     it('salt okunur kiracıda ekleme kapalıdır', async () => {
         blocked = true;
         await create();
         picker().onComplete({ query: 'yeni', originalEvent: new Event('x') });
-        expect(picker().canAdd()).toBeFalse();
+        expect(picker().canAdd()).toBe(false);
         picker().addLastQuery();
         expect(terms.create).not.toHaveBeenCalled();
     });

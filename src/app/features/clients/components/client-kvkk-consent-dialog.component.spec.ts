@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
@@ -10,7 +11,7 @@ const result = { kvkkConsent: { status: 'Accepted' as const, recordedOn: '2026-0
 
 describe('ClientKvkkConsentDialogComponent', () => {
     let fixture: ComponentFixture<ClientKvkkConsentDialogComponent>;
-    let updateKvkkConsent: jasmine.Spy;
+    let updateKvkkConsent: Mock;
 
     const create = (c: ClientDetailVm) => {
         TestBed.configureTestingModule({
@@ -26,7 +27,7 @@ describe('ClientKvkkConsentDialogComponent', () => {
     };
 
     beforeEach(() => {
-        updateKvkkConsent = jasmine.createSpy('updateKvkkConsent').and.returnValue(of(result));
+        updateKvkkConsent = vi.fn().mockName('updateKvkkConsent').mockReturnValue(of(result));
     });
 
     it('Yok iken Kabul ve bugün varsayılır; seçim, tarih ve rowVersion ile kaydeder, sonucu yayar ve kapanır', () => {
@@ -34,8 +35,8 @@ describe('ClientKvkkConsentDialogComponent', () => {
 
         expect(c.status.value).toBe('Accepted');
         expect(c.recordedOn.value).toBe(c.today());
-        expect(c.canRevert()).toBeFalse();
-        const changed = jasmine.createSpy('changed');
+        expect(c.canRevert()).toBe(false);
+        const changed = vi.fn().mockName('changed');
 
         c.changed.subscribe(changed);
 
@@ -45,22 +46,22 @@ describe('ClientKvkkConsentDialogComponent', () => {
 
         expect(updateKvkkConsent).toHaveBeenCalledWith('c1', { status: 'Declined', recordedOn: '2026-01-02', rowVersion: 'rv1' });
         expect(changed).toHaveBeenCalledWith(result);
-        expect(c.visible()).toBeFalse();
+        expect(c.visible()).toBe(false);
     });
 
-    it('Ret notu hatırlatmaların kapanacağını ve Kabul\'ün açmayacağını söyler (ADR-025)', () => {
+    it("Ret notu hatırlatmaların kapanacağını ve Kabul'ün açmayacağını söyler (ADR-025)", () => {
         create(client);
         const note = (document.querySelector('[data-testid="kvkk-reminder-note"]')?.textContent ?? '').replace(/\s+/g, ' ');
 
         expect(note).toContain('Ret işaretlenince otomatik hatırlatmalar kapanır');
-        expect(note).toContain('Kabul\'e geçmek hatırlatmaları açmaz');
+        expect(note).toContain("Kabul'e geçmek hatırlatmaları açmaz");
     });
 
-    it('ileri tarih engellenir; işaretli kayıtta mevcut değerler gelir ve Yok\'a geri al tarihsiz gönderilir', () => {
+    it("ileri tarih engellenir; işaretli kayıtta mevcut değerler gelir ve Yok'a geri al tarihsiz gönderilir", () => {
         const c = create({ ...client, kvkkConsent: { status: 'Declined', recordedOn: '2025-05-05', recordedByName: 'Ayşe', templateVersion: null, templateHash: null } });
 
         expect([c.status.value, c.recordedOn.value]).toEqual(['Declined', '2025-05-05']);
-        expect(c.canRevert()).toBeTrue();
+        expect(c.canRevert()).toBe(true);
 
         c.recordedOn.setValue('2999-01-01');
         expect(c.dateError()).toContain('ileri');
@@ -79,11 +80,9 @@ describe('ClientKvkkConsentDialogComponent', () => {
     });
 
     it('409 Clients.ConcurrencyConflict mesajı gösterir ve detay yenilemesi ister', () => {
-        updateKvkkConsent.and.returnValue(
-            throwError(() => new HttpErrorResponse({ status: 409, error: { title: 'Conflict', extensions: { code: 'Clients.ConcurrencyConflict' } } }))
-        );
+        updateKvkkConsent.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { title: 'Conflict', extensions: { code: 'Clients.ConcurrencyConflict' } } })));
         const c = create(client);
-        const stale = jasmine.createSpy('stale');
+        const stale = vi.fn().mockName('stale');
 
         c.stale.subscribe(stale);
 
@@ -91,6 +90,6 @@ describe('ClientKvkkConsentDialogComponent', () => {
 
         expect(stale).toHaveBeenCalled();
         expect(c.submitError()).toContain('başka biri');
-        expect(c.visible()).toBeTrue();
+        expect(c.visible()).toBe(true);
     });
 });

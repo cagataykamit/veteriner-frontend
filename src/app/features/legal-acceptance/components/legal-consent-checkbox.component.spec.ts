@@ -18,19 +18,15 @@ describe('LegalConsentCheckboxComponent', () => {
         const links = Array.from(host().querySelectorAll('a'));
 
         expect(links.map((a) => a.getAttribute('href'))).toEqual(['/kullanim-sartlari', '/gizlilik', '/veri-isleme-sozlesmesi']);
-        expect(links.every((a) => a.getAttribute('target') === '_blank' && a.getAttribute('rel') === 'noopener')).toBeTrue();
-        expect(host().querySelector('label')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
-            'Kullanım Şartları, Gizlilik Politikası ve Veri İşleme Sözleşmesi metinlerini okudum ve kabul ediyorum.'
-        );
+        expect(links.every((a) => a.getAttribute('target') === '_blank' && a.getAttribute('rel') === 'noopener')).toBe(true);
+        expect(host().querySelector('label')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Kullanım Şartları, Gizlilik Politikası ve Veri İşleme Sözleşmesi metinlerini okudum ve kabul ediyorum.');
     });
 
     it('iki belgede "ve" ile birleştirir', () => {
         fixture.componentRef.setInput('documents', ['Terms', 'Privacy']);
         fixture.detectChanges();
 
-        expect(host().querySelector('label')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
-            'Kullanım Şartları ve Gizlilik Politikası metinlerini okudum ve kabul ediyorum.'
-        );
+        expect(host().querySelector('label')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Kullanım Şartları ve Gizlilik Politikası metinlerini okudum ve kabul ediyorum.');
     });
 
     it('kutu tıklanınca checked modeli değişir', () => {
@@ -39,10 +35,10 @@ describe('LegalConsentCheckboxComponent', () => {
 
         const input = host().querySelector<HTMLInputElement>('input[type="checkbox"]');
 
-        expect(fixture.componentInstance.checked()).toBeFalse();
+        expect(fixture.componentInstance.checked()).toBe(false);
         input?.click();
         fixture.detectChanges();
 
-        expect(fixture.componentInstance.checked()).toBeTrue();
+        expect(fixture.componentInstance.checked()).toBe(true);
     });
 });

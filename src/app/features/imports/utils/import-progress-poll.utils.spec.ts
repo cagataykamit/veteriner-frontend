@@ -76,8 +76,8 @@ describe('pollImportProgress', () => {
         });
         expect(ticks.length).toBe(waits + 3);
         expect(ticks.slice(0, waits)).toEqual(Array<boolean>(waits).fill(false));
-        expect(ticks[waits]).toBeTrue();
-        expect(ticks[waits + 1]).toBeFalse();
-        expect(ticks[waits + 2]).toBeFalse();
+        expect(ticks[waits]).toBe(true);
+        expect(ticks[waits + 1]).toBe(false);
+        expect(ticks[waits + 2]).toBe(false);
     });
 });

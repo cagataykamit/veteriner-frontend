@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
@@ -23,10 +24,13 @@ const vm = (over: Partial<KvkkFormTemplateVm> = {}): KvkkFormTemplateVm => ({
 
 describe('KvkkFormTemplatePageComponent', () => {
     let fixture: ComponentFixture<KvkkFormTemplatePageComponent>;
-    let service: { getTemplate: jasmine.Spy; updateTemplate: jasmine.Spy };
+    let service: {
+        getTemplate: Mock;
+        updateTemplate: Mock;
+    };
     let blocked: boolean;
     let query: Record<string, string>;
-    let navigate: jasmine.Spy;
+    let navigate: Mock;
 
     const el = () => fixture.nativeElement as HTMLElement;
     const kindButton = (kind: string) => el().querySelector(`[data-testid="kvkk-kind"] [data-kind="${kind}"]`) as HTMLButtonElement;
@@ -42,7 +46,7 @@ describe('KvkkFormTemplatePageComponent', () => {
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => blocked } }
             ]
         });
-        navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
         fixture = TestBed.createComponent(KvkkFormTemplatePageComponent);
         fixture.detectChanges();
 
@@ -53,15 +57,20 @@ describe('KvkkFormTemplatePageComponent', () => {
         blocked = false;
         query = {};
         service = {
-            getTemplate: jasmine.createSpy('getTemplate').and.returnValue(of(vm())),
-            updateTemplate: jasmine.createSpy('updateTemplate').and.returnValue(of(vm({ text: 'Onaylı metin', isDefault: false, rowVersion: 'rv1' })))
+            getTemplate: vi.fn().mockName('getTemplate').mockReturnValue(of(vm())),
+            updateTemplate: vi
+                .fn()
+                .mockName('updateTemplate')
+                .mockReturnValue(of(vm({ text: 'Onaylı metin', isDefault: false, rowVersion: 'rv1' })))
         };
     });
 
     it('varsayılan (açık rıza): taslak uyarısı, yer tutucu açıklamaları, sayaç ve kutu/imzalı canlı önizleme', () => {
         const c = create();
 
-        expect(service.getTemplate).toHaveBeenCalledOnceWith('k1', 'consent');
+        expect(service.getTemplate).toHaveBeenCalledTimes(1);
+
+        expect(service.getTemplate).toHaveBeenCalledWith('k1', 'consent');
         expect(kindButton('consent').getAttribute('aria-pressed')).toBe('true');
         expect(el().querySelector('[data-testid="kvkk-default-warning"]')?.textContent).toContain('hukuk danışmanınızca onaylanmadan');
         expect(el().querySelector('[data-testid="kvkk-placeholders"]')?.textContent).toContain('Müşterinin adı soyadı');
@@ -82,17 +91,19 @@ describe('KvkkFormTemplatePageComponent', () => {
         c.save();
         fixture.detectChanges();
 
-        expect(service.updateTemplate).toHaveBeenCalledWith('k1', 'consent', 'Onaylı metin', jasmine.objectContaining({ isDefault: true, rowVersion: null }));
+        expect(service.updateTemplate).toHaveBeenCalledWith('k1', 'consent', 'Onaylı metin', expect.objectContaining({ isDefault: true, rowVersion: null }));
         expect(c.template()?.rowVersion).toBe('rv1');
         expect(el().querySelector('[data-testid="kvkk-default-warning"]')).toBeNull();
     });
 
     it('?kind=disclosure: aydınlatma şablonu yüklenir, önizlemede kutu/imza yok, kayıt aydınlatma ucuna gider', () => {
         query = { kind: 'disclosure' };
-        service.getTemplate.and.returnValue(of(vm({ text: 'Aydınlatma {{clientName}}' })));
+        service.getTemplate.mockReturnValue(of(vm({ text: 'Aydınlatma {{clientName}}' })));
         const c = create();
 
-        expect(service.getTemplate).toHaveBeenCalledOnceWith('k1', 'disclosure');
+        expect(service.getTemplate).toHaveBeenCalledTimes(1);
+
+        expect(service.getTemplate).toHaveBeenCalledWith('k1', 'disclosure');
         expect(kindButton('disclosure').getAttribute('aria-pressed')).toBe('true');
         expect(el().querySelector('[data-testid="kvkk-default-warning"]')?.textContent).toContain('köşeli parantezli alanları doldurun');
         expect(el().querySelector('[data-testid="kvkk-placeholders"]')?.textContent).toContain('onay kutusu ve imza bloğu basılmaz');
@@ -102,7 +113,7 @@ describe('KvkkFormTemplatePageComponent', () => {
 
         c.text.setValue('Onaylı aydınlatma');
         c.save();
-        expect(service.updateTemplate).toHaveBeenCalledWith('k1', 'disclosure', 'Onaylı aydınlatma', jasmine.objectContaining({ isDefault: true }));
+        expect(service.updateTemplate).toHaveBeenCalledWith('k1', 'disclosure', 'Onaylı aydınlatma', expect.objectContaining({ isDefault: true }));
     });
 
     it('tür değişimi: değişiklik yoksa doğrudan yükler ve adrese yazar; kaydedilmemiş değişiklikte onay ister', () => {
@@ -112,18 +123,18 @@ describe('KvkkFormTemplatePageComponent', () => {
         fixture.detectChanges();
         expect(c.kind()).toBe('disclosure');
         expect(service.getTemplate).toHaveBeenCalledWith('k1', 'disclosure');
-        expect(navigate).toHaveBeenCalledWith([], jasmine.objectContaining({ queryParams: { kind: 'disclosure' }, replaceUrl: true }));
+        expect(navigate).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { kind: 'disclosure' }, replaceUrl: true }));
 
-        const confirm = spyOn(fixture.debugElement.injector.get(ConfirmationService), 'confirm');
+        const confirm = vi.spyOn(fixture.debugElement.injector.get(ConfirmationService), 'confirm').mockReturnValue(undefined as never);
 
         c.text.setValue('Yarım kalan düzenleme');
         kindButton('consent').click();
         expect(confirm).toHaveBeenCalledTimes(1);
         expect(c.kind()).toBe('disclosure');
 
-        confirm.calls.mostRecent().args[0].accept!();
+        vi.mocked(confirm).mock.lastCall![0].accept!();
         expect(c.kind()).toBe('consent');
-        expect(navigate).toHaveBeenCalledWith([], jasmine.objectContaining({ queryParams: { kind: null } }));
+        expect(navigate).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { kind: null } }));
         expect(service.getTemplate).toHaveBeenCalledTimes(3);
     });
 
@@ -131,9 +142,9 @@ describe('KvkkFormTemplatePageComponent', () => {
         const c = create();
 
         c.text.setValue('   ');
-        expect(c.canSave()).toBeFalse();
+        expect(c.canSave()).toBe(false);
         c.text.setValue('x'.repeat(51));
-        expect(c.canSave()).toBeFalse();
+        expect(c.canSave()).toBe(false);
         c.save();
         expect(service.updateTemplate).not.toHaveBeenCalled();
 
@@ -142,13 +153,11 @@ describe('KvkkFormTemplatePageComponent', () => {
         const ro = create();
 
         ro.text.setValue('Metin');
-        expect(ro.canSave()).toBeFalse();
+        expect(ro.canSave()).toBe(false);
     });
 
     it('409 çakışmada mesaj ve "Güncel metni yükle"; yükleme sonrası tekrar kaydedilebilir', () => {
-        service.updateTemplate.and.returnValue(
-            throwError(() => new HttpErrorResponse({ status: 409, error: { extensions: { code: 'Clinics.KvkkFormTemplate.ConcurrencyConflict' } } }))
-        );
+        service.updateTemplate.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { extensions: { code: 'Clinics.KvkkFormTemplate.ConcurrencyConflict' } } })));
         const c = create();
 
         c.text.setValue('Benim metnim');
@@ -156,10 +165,10 @@ describe('KvkkFormTemplatePageComponent', () => {
         fixture.detectChanges();
 
         expect(c.saveError()).toContain('başka biri');
-        expect(c.canSave()).toBeFalse();
+        expect(c.canSave()).toBe(false);
         (el().querySelector('[data-testid="kvkk-template-reload"] button') as HTMLButtonElement).click();
         fixture.detectChanges();
         expect(service.getTemplate).toHaveBeenCalledTimes(2);
-        expect(c.stale()).toBeFalse();
+        expect(c.stale()).toBe(false);
     });
 });

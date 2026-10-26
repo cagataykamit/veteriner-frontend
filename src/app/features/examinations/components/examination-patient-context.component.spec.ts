@@ -29,37 +29,54 @@ const summaryVm: PetSummaryVm = {
 const future = new Date(Date.now() + 3 * 24 * 3600 * 1000).toISOString();
 
 describe('ExaminationPatientContextComponent', () => {
-    const setup = async (opts: { claims?: string[]; summaryFails?: boolean } = {}) => {
-        const pets = { getPetSummary: jasmine.createSpy('getPetSummary').and.returnValue(opts.summaryFails ? throwError(() => new Error('x')) : of(summaryVm)) };
+    const setup = async (
+        opts: {
+            claims?: string[];
+            summaryFails?: boolean;
+        } = {}
+    ) => {
+        const pets = {
+            getPetSummary: vi
+                .fn()
+                .mockName('getPetSummary')
+                .mockReturnValue(opts.summaryFails ? throwError(() => new Error('x')) : of(summaryVm))
+        };
         const vaccinations = {
-            getVaccinations: jasmine.createSpy('getVaccinations').and.returnValue(
-                of({
-                    items: [{ id: 'v1', vaccineName: 'Kuduz', dueAtUtc: '2026-09-01T00:00:00Z' }],
-                    page: 1,
-                    pageSize: 3,
-                    totalItems: 4,
-                    totalPages: 2
-                })
-            )
+            getVaccinations: vi
+                .fn()
+                .mockName('getVaccinations')
+                .mockReturnValue(
+                    of({
+                        items: [{ id: 'v1', vaccineName: 'Kuduz', dueAtUtc: '2026-09-01T00:00:00Z' }],
+                        page: 1,
+                        pageSize: 3,
+                        totalItems: 4,
+                        totalPages: 2
+                    })
+                )
         };
         const treatments = {
-            getTreatments: jasmine.createSpy('getTreatments').and.returnValue(
-                of({
-                    items: [
-                        { id: 't1', title: 'Antibiyotik', followUpDateUtc: future },
-                        { id: 't3', title: 'Kontrol', followUpDateUtc: future }
-                    ],
-                    page: 1,
-                    pageSize: 20,
-                    totalItems: 2,
-                    totalPages: 1
-                })
-            )
+            getTreatments: vi
+                .fn()
+                .mockName('getTreatments')
+                .mockReturnValue(
+                    of({
+                        items: [
+                            { id: 't1', title: 'Antibiyotik', followUpDateUtc: future },
+                            { id: 't3', title: 'Kontrol', followUpDateUtc: future }
+                        ],
+                        page: 1,
+                        pageSize: 20,
+                        totalItems: 2,
+                        totalPages: 1
+                    })
+                )
         };
         const related = {
-            loadSiblingExaminationsForPet: jasmine
-                .createSpy('loadSiblingExaminationsForPet')
-                .and.returnValue(of([{ id: 'e0', examinedAtUtc: '2026-10-10T08:00:00Z', visitReason: 'Kusma' }]))
+            loadSiblingExaminationsForPet: vi
+                .fn()
+                .mockName('loadSiblingExaminationsForPet')
+                .mockReturnValue(of([{ id: 'e0', examinedAtUtc: '2026-10-10T08:00:00Z', visitReason: 'Kusma' }]))
         };
         const claims = opts.claims ?? ALL_CLAIMS;
 
@@ -89,14 +106,14 @@ describe('ExaminationPatientContextComponent', () => {
         const { el, text, vaccinations, treatments: treatmentsService, related } = await setup();
 
         expect(text('ctx-weight')).toContain('4.4 kg');
-        expect(vaccinations.getVaccinations).toHaveBeenCalledWith(jasmine.objectContaining({ petId: 'pet-1', onlyOverdue: true }));
+        expect(vaccinations.getVaccinations).toHaveBeenCalledWith(expect.objectContaining({ petId: 'pet-1', onlyOverdue: true }));
         expect(el.querySelectorAll('[data-testid="ctx-overdue-item"]').length).toBe(1);
         expect(text('ctx-overdue')).toContain('+3 daha');
         expect(text('ctx-hospitalization')).toContain('Sıvı tedavisi');
         const treatments = Array.from(el.querySelectorAll('[data-testid="ctx-treatment"]')).map((a) => a.textContent ?? '');
 
         // Aktif tedavi kuralı (ADR-025) sunucudadır: istemci `active=true` ister ve dönen satırları süzmeden gösterir.
-        expect(treatmentsService.getTreatments).toHaveBeenCalledWith(jasmine.objectContaining({ petId: 'pet-1', active: true }));
+        expect(treatmentsService.getTreatments).toHaveBeenCalledWith(expect.objectContaining({ petId: 'pet-1', active: true }));
         expect(treatments.length).toBe(2);
         expect(treatments[0]).toContain('Antibiyotik');
         expect(related.loadSiblingExaminationsForPet).toHaveBeenCalledWith('pet-1', 'e1');

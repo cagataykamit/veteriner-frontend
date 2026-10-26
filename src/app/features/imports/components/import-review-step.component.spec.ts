@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject } from 'rxjs';
 import { BreedsService } from '@/app/features/breeds/services/breeds.service';
@@ -24,21 +25,25 @@ const preview = {
     payloadPurged: false
 } as unknown as ImportPreviewDto;
 
-const row = (table: ImportRowDto['table'], field: string): ImportRowDto => ({
-    table,
-    rowNumber: 2,
-    validation: { status: 'Error', action: null },
-    apply: { status: 'Pending', targetId: null },
-    issues: [{ severity: 'Error', code: 'Imports.RequiredMissing', field, message: 'Zorunlu alan boş.' }],
-    source: {}
-}) as unknown as ImportRowDto;
+const row = (table: ImportRowDto['table'], field: string): ImportRowDto =>
+    ({
+        table,
+        rowNumber: 2,
+        validation: { status: 'Error', action: null },
+        apply: { status: 'Pending', targetId: null },
+        issues: [{ severity: 'Error', code: 'Imports.RequiredMissing', field, message: 'Zorunlu alan boş.' }],
+        source: {}
+    }) as unknown as ImportRowDto;
 
 describe('ImportReviewStepComponent', () => {
     let fixture: ComponentFixture<ImportReviewStepComponent>;
-    let imports: jasmine.SpyObj<ImportsService>;
+    let imports: MockedObject<ImportsService>;
 
     beforeEach(() => {
-        imports = jasmine.createSpyObj<ImportsService>('ImportsService', ['getRows', 'downloadErrorReport']);
+        imports = {
+            getRows: vi.fn().mockName('ImportsService.getRows'),
+            downloadErrorReport: vi.fn().mockName('ImportsService.downloadErrorReport')
+        } as unknown as MockedObject<ImportsService>;
         TestBed.configureTestingModule({
             imports: [ImportReviewStepComponent],
             providers: [
@@ -52,7 +57,7 @@ describe('ImportReviewStepComponent', () => {
     });
 
     it('satır sorununun alanını API anahtarı yerine etiketle gösterir (ADR-022: hasta)', () => {
-        imports.getRows.and.returnValue(of({ items: [row('pets', 'HayvanAdi'), row('vaccinations', 'HayvanNo')], totalItems: 2 } as unknown as ImportRowPageDto));
+        imports.getRows.mockReturnValue(of({ items: [row('pets', 'HayvanAdi'), row('vaccinations', 'HayvanNo')], totalItems: 2 } as unknown as ImportRowPageDto));
         fixture = TestBed.createComponent(ImportReviewStepComponent);
         fixture.componentRef.setInput('batch', batch);
         fixture.componentRef.setInput('preview', preview);
@@ -69,7 +74,7 @@ describe('ImportReviewStepComponent', () => {
     });
 
     it('süzgeç değişince satırlar yerinde kalır; "yükleniyor" yalnız ilk yüklemede görünür (alttaki düğmeler zıplamaz)', () => {
-        imports.getRows.and.returnValue(of({ items: [row('pets', 'HayvanAdi')], totalItems: 1 } as unknown as ImportRowPageDto));
+        imports.getRows.mockReturnValue(of({ items: [row('pets', 'HayvanAdi')], totalItems: 1 } as unknown as ImportRowPageDto));
         fixture = TestBed.createComponent(ImportReviewStepComponent);
         fixture.componentRef.setInput('batch', batch);
         fixture.componentRef.setInput('preview', preview);
@@ -79,7 +84,7 @@ describe('ImportReviewStepComponent', () => {
 
         const pending = new Subject<ImportRowPageDto>();
 
-        imports.getRows.and.returnValue(pending);
+        imports.getRows.mockReturnValue(pending);
         fixture.componentInstance['setStatus']('Error');
         fixture.detectChanges();
 

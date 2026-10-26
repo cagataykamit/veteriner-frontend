@@ -37,86 +37,93 @@ describe('SalesService', () => {
 
     afterEach(() => http.verify());
 
-    it('liste: aktif klinik clinicId olarak gider, iptaller varsayılan olarak istenmez', (done) => {
-        service.getSales({ page: 1, pageSize: 20 }).subscribe((r) => {
-            expect(r.items[0].clientName).toBe('Peşin müşteri');
-            done();
-        });
-        const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/sales');
+    it('liste: aktif klinik clinicId olarak gider, iptaller varsayılan olarak istenmez', () =>
+        new Promise<void>((done) => {
+            service.getSales({ page: 1, pageSize: 20 }).subscribe((r) => {
+                expect(r.items[0].clientName).toBe('Peşin müşteri');
+                done();
+            });
+            const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/sales');
 
-        expect(req.request.method).toBe('GET');
-        expect(req.request.params.get('clinicId')).toBe('c1');
-        expect(req.request.params.has('includeVoided')).toBeFalse();
-        req.flush({ items: [saleDto], page: 1, pageSize: 20, totalItems: 1, totalPages: 1 });
-    });
+            expect(req.request.method).toBe('GET');
+            expect(req.request.params.get('clinicId')).toBe('c1');
+            expect(req.request.params.has('includeVoided')).toBe(false);
+            req.flush({ items: [saleDto], page: 1, pageSize: 20, totalItems: 1, totalPages: 1 });
+        }));
 
-    it('oluşturma: requestId ile gönderir, 201 created:true döner', (done) => {
-        service.createSale(request).subscribe((r) => {
-            expect(r.created).toBeTrue();
-            expect(r.sale.id).toBe('s1');
-            done();
-        });
-        const req = http.expectOne('http://api.test/api/v1/sales');
-
-        expect(req.request.method).toBe('POST');
-        expect(req.request.body.requestId).toBe('rid-1');
-        req.flush({ created: true, sale: saleDto, stocks: [] }, { status: 201, statusText: 'Created' });
-    });
-
-    it('aynı requestId ile tekrar: 200 created:false başarı sayılır', (done) => {
-        service.createSale(request).subscribe({
-            next: (r) => {
-                expect(r.created).toBeFalse();
+    it('oluşturma: requestId ile gönderir, 201 created:true döner', () =>
+        new Promise<void>((done) => {
+            service.createSale(request).subscribe((r) => {
+                expect(r.created).toBe(true);
                 expect(r.sale.id).toBe('s1');
                 done();
-            },
-            error: () => fail('başarı beklenirdi')
-        });
-        http.expectOne('http://api.test/api/v1/sales').flush({ created: false, sale: saleDto, stocks: [] }, { status: 200, statusText: 'OK' });
-    });
+            });
+            const req = http.expectOne('http://api.test/api/v1/sales');
 
-    it('oluşturma hatası: Sales.InsufficientStock backend ayrıntısını gösterir', (done) => {
-        service.createSale(request).subscribe({
-            error: (e: Error) => {
-                expect(e.message).toBe('Kullanılabilir 3 adet, süresi geçmiş 2 adet.');
+            expect(req.request.method).toBe('POST');
+            expect(req.request.body.requestId).toBe('rid-1');
+            req.flush({ created: true, sale: saleDto, stocks: [] }, { status: 201, statusText: 'Created' });
+        }));
+
+    it('aynı requestId ile tekrar: 200 created:false başarı sayılır', () =>
+        new Promise<void>((done) => {
+            service.createSale(request).subscribe({
+                next: (r) => {
+                    expect(r.created).toBe(false);
+                    expect(r.sale.id).toBe('s1');
+                    done();
+                },
+                error: () => expect.fail('başarı beklenirdi')
+            });
+            http.expectOne('http://api.test/api/v1/sales').flush({ created: false, sale: saleDto, stocks: [] }, { status: 200, statusText: 'OK' });
+        }));
+
+    it('oluşturma hatası: Sales.InsufficientStock backend ayrıntısını gösterir', () =>
+        new Promise<void>((done) => {
+            service.createSale(request).subscribe({
+                error: (e: Error) => {
+                    expect(e.message).toBe('Kullanılabilir 3 adet, süresi geçmiş 2 adet.');
+                    done();
+                }
+            });
+            http.expectOne('http://api.test/api/v1/sales').flush({ detail: 'Kullanılabilir 3 adet, süresi geçmiş 2 adet.', extensions: { code: 'Sales.InsufficientStock' } }, { status: 400, statusText: 'Bad Request' });
+        }));
+
+    it('iptal: gerekçe kırpılır, stok sonucu gönderilir, güncel satış döner', () =>
+        new Promise<void>((done) => {
+            service.voidSale('s1', { reason: '  Yanlış ürün  ', stockOutcome: 'WrittenOff' }).subscribe((s) => {
+                expect(s.isVoided).toBe(true);
                 done();
-            }
-        });
-        http.expectOne('http://api.test/api/v1/sales').flush({ detail: 'Kullanılabilir 3 adet, süresi geçmiş 2 adet.', extensions: { code: 'Sales.InsufficientStock' } }, { status: 400, statusText: 'Bad Request' });
-    });
+            });
+            const req = http.expectOne('http://api.test/api/v1/sales/s1/void');
 
-    it('iptal: gerekçe kırpılır, stok sonucu gönderilir, güncel satış döner', (done) => {
-        service.voidSale('s1', { reason: '  Yanlış ürün  ', stockOutcome: 'WrittenOff' }).subscribe((s) => {
-            expect(s.isVoided).toBeTrue();
-            done();
-        });
-        const req = http.expectOne('http://api.test/api/v1/sales/s1/void');
+            expect(req.request.method).toBe('POST');
+            expect(req.request.body).toEqual({ reason: 'Yanlış ürün', stockOutcome: 'WrittenOff' });
+            req.flush({ ...saleDto, status: 'Voided' });
+        }));
 
-        expect(req.request.method).toBe('POST');
-        expect(req.request.body).toEqual({ reason: 'Yanlış ürün', stockOutcome: 'WrittenOff' });
-        req.flush({ ...saleDto, status: 'Voided' });
-    });
+    it('iptal: veresiye ödemesi tahsisli ise Charges.VoidBlockedByAllocation mesajı gösterilir', () =>
+        new Promise<void>((done) => {
+            service.voidSale('s1', { reason: 'Yanlış ürün', stockOutcome: 'StockReturned' }).subscribe({
+                error: (e: Error) => {
+                    expect(e.message).toContain('ödeme bağlı olduğu için iptal edilemez');
+                    done();
+                }
+            });
+            http.expectOne('http://api.test/api/v1/sales/s1/void').flush({ extensions: { code: 'Charges.VoidBlockedByAllocation' } }, { status: 409, statusText: 'Conflict' });
+        }));
 
-    it('iptal: veresiye ödemesi tahsisli ise Charges.VoidBlockedByAllocation mesajı gösterilir', (done) => {
-        service.voidSale('s1', { reason: 'Yanlış ürün', stockOutcome: 'StockReturned' }).subscribe({
-            error: (e: Error) => {
-                expect(e.message).toContain('ödeme bağlı olduğu için iptal edilemez');
-                done();
-            }
-        });
-        http.expectOne('http://api.test/api/v1/sales/s1/void').flush({ extensions: { code: 'Charges.VoidBlockedByAllocation' } }, { status: 409, statusText: 'Conflict' });
-    });
-
-    it('iptal: zaten iptalse Sales.AlreadyVoided Türkçe mesaj verir', (done) => {
-        service.voidSale('s1', { reason: 'Yanlış ürün', stockOutcome: 'StockReturned' }).subscribe({
-            error: (e: Error) => {
-                expect(e.message).toBe('Bu satış zaten iptal edilmiş. Sayfayı yenileyin.');
-                expect(e).not.toBeInstanceOf(HttpErrorResponse);
-                done();
-            }
-        });
-        http.expectOne('http://api.test/api/v1/sales/s1/void').flush({ extensions: { code: 'Sales.AlreadyVoided' } }, { status: 409, statusText: 'Conflict' });
-    });
+    it('iptal: zaten iptalse Sales.AlreadyVoided Türkçe mesaj verir', () =>
+        new Promise<void>((done) => {
+            service.voidSale('s1', { reason: 'Yanlış ürün', stockOutcome: 'StockReturned' }).subscribe({
+                error: (e: Error) => {
+                    expect(e.message).toBe('Bu satış zaten iptal edilmiş. Sayfayı yenileyin.');
+                    expect(e).not.toBeInstanceOf(HttpErrorResponse);
+                    done();
+                }
+            });
+            http.expectOne('http://api.test/api/v1/sales/s1/void').flush({ extensions: { code: 'Sales.AlreadyVoided' } }, { status: 409, statusText: 'Conflict' });
+        }));
 });
 
 describe('SaleProductSearchService', () => {
@@ -133,26 +140,27 @@ describe('SaleProductSearchService', () => {
 
     afterEach(() => http.verify());
 
-    it('aktif ürünlerde arar; aşı ve kontrollü ürünleri sonuçtan süzer', (done) => {
-        service.search(' 8690 ').subscribe((r) => {
-            expect(r.map((p) => p.id)).toEqual(['p1', 'p2']);
-            done();
-        });
-        const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/products');
+    it('aktif ürünlerde arar; aşı ve kontrollü ürünleri sonuçtan süzer', () =>
+        new Promise<void>((done) => {
+            service.search(' 8690 ').subscribe((r) => {
+                expect(r.map((p) => p.id)).toEqual(['p1', 'p2']);
+                done();
+            });
+            const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/products');
 
-        expect(req.request.params.get('Search')).toBe('8690');
-        expect(req.request.params.get('IsActive')).toBe('true');
-        req.flush({
-            items: [
-                { id: 'p1', name: 'Mama', unitPrice: 10, kind: 'Other', controlledClass: 'None' },
-                { id: 'v1', name: 'Kuduz aşısı', unitPrice: 10, kind: 'Vaccine', controlledClass: 'None' },
-                { id: 'n1', name: 'Ketamin', unitPrice: 10, kind: 'Medicine', controlledClass: 'Narcotic' },
-                { id: 'p2', name: 'Şampuan', unitPrice: 10, kind: 'Medicine', controlledClass: 'None' }
-            ],
-            page: 1,
-            pageSize: 12,
-            totalItems: 4,
-            totalPages: 1
-        });
-    });
+            expect(req.request.params.get('Search')).toBe('8690');
+            expect(req.request.params.get('IsActive')).toBe('true');
+            req.flush({
+                items: [
+                    { id: 'p1', name: 'Mama', unitPrice: 10, kind: 'Other', controlledClass: 'None' },
+                    { id: 'v1', name: 'Kuduz aşısı', unitPrice: 10, kind: 'Vaccine', controlledClass: 'None' },
+                    { id: 'n1', name: 'Ketamin', unitPrice: 10, kind: 'Medicine', controlledClass: 'Narcotic' },
+                    { id: 'p2', name: 'Şampuan', unitPrice: 10, kind: 'Medicine', controlledClass: 'None' }
+                ],
+                page: 1,
+                pageSize: 12,
+                totalItems: 4,
+                totalPages: 1
+            });
+        }));
 });

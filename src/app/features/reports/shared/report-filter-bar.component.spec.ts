@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -11,9 +12,14 @@ import { ReportListQueryBase, ReportListResultBase, ReportListSource, ReportList
 const KEY = 'panel:reports:filter-bar-test:listState';
 
 describe('ReportFilterBarComponent — müşteri/hasta seçicisi yok, yalnız arama', () => {
-    let source: jasmine.SpyObj<ReportListSource<ReportListQueryBase, ReportListResultBase>>;
+    let source: MockedObject<ReportListSource<ReportListQueryBase, ReportListResultBase>>;
 
-    function create(config: { snapshot?: boolean; dateRangeOnly?: boolean } = {}): HTMLElement {
+    function create(
+        config: {
+            snapshot?: boolean;
+            dateRangeOnly?: boolean;
+        } = {}
+    ): HTMLElement {
         const state = TestBed.runInInjectionContext(() => new ReportListState<ReportListQueryBase, ReportListResultBase>({ source, stateKey: KEY, readClaim: 'Test.Read', exportFilePrefix: 'test', ...config }));
 
         state.init();
@@ -31,8 +37,12 @@ describe('ReportFilterBarComponent — müşteri/hasta seçicisi yok, yalnız ar
 
     beforeEach(() => {
         sessionStorage.removeItem(KEY);
-        source = jasmine.createSpyObj('source', ['loadReport', 'exportCsvBlob', 'exportXlsxBlob']);
-        source.loadReport.and.callFake((q) => of({ page: q.page ?? 1, pageSize: q.pageSize ?? 25, totalCount: 0, items: [] }));
+        source = {
+            loadReport: vi.fn().mockName('source.loadReport'),
+            exportCsvBlob: vi.fn().mockName('source.exportCsvBlob'),
+            exportXlsxBlob: vi.fn().mockName('source.exportXlsxBlob')
+        };
+        source.loadReport.mockImplementation((q) => of({ page: q.page ?? 1, pageSize: q.pageSize ?? 25, totalCount: 0, items: [] }));
         TestBed.configureTestingModule({
             providers: [
                 provideRouter([]),

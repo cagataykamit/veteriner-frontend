@@ -29,7 +29,7 @@ describe('mapPetSummaryDtoToVm', () => {
         expect(vm.petAlerts).toEqual({ flags: ['Allergy'], note: 'Penisiline alerji' });
         expect(vm.profileWeightKg).toBe(4.2);
         expect(vm.activeHospitalization.data?.reason).toBe('Gözlem');
-        expect(vm.vaccinations.data?.nextDue?.isOverdue).toBeTrue();
+        expect(vm.vaccinations.data?.nextDue?.isOverdue).toBe(true);
         expect(vm.latestWeight.data).toEqual({ weightKg: 4.4, measuredAtUtc: '2026-10-01T00:00:00Z', examinationId: 'e1' });
         expect(vm.lastVisit.data?.careStatus).toBe('Completed');
         expect(vm.lastExamination.data?.id).toBe('e1');
@@ -74,7 +74,7 @@ describe('mapPetSummaryDtoToVm', () => {
 
         expect(vm.vaccinations.state).toBe('Ok');
         expect(vm.vaccinations.data?.lastApplied).toBeNull();
-        expect(vm.vaccinations.data?.nextDue?.isOverdue).toBeFalse();
+        expect(vm.vaccinations.data?.nextDue?.isOverdue).toBe(false);
     });
 });
 

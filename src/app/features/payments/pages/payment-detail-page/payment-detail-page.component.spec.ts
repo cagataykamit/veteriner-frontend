@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
@@ -26,7 +27,7 @@ const payment: PaymentDetailVm = {
 
 describe('PaymentDetailPageComponent — iptal', () => {
     let fixture: ComponentFixture<PaymentDetailPageComponent>;
-    let payments: jasmine.SpyObj<PaymentsService>;
+    let payments: MockedObject<PaymentsService>;
     let claims: Set<string>;
 
     const setup = async () => {
@@ -51,8 +52,11 @@ describe('PaymentDetailPageComponent — iptal', () => {
     };
 
     beforeEach(() => {
-        payments = jasmine.createSpyObj<PaymentsService>('PaymentsService', ['getPaymentById', 'voidPayment']);
-        payments.getPaymentById.and.returnValue(of(payment));
+        payments = {
+            getPaymentById: vi.fn().mockName('PaymentsService.getPaymentById'),
+            voidPayment: vi.fn().mockName('PaymentsService.voidPayment')
+        } as unknown as MockedObject<PaymentsService>;
+        payments.getPaymentById.mockReturnValue(of(payment));
         claims = new Set(['Payments.Read']);
     });
 
@@ -70,7 +74,7 @@ describe('PaymentDetailPageComponent — iptal', () => {
     it('iptal sonrası ödeme listesine döner (kayıt artık 404)', async () => {
         claims.add('Payments.Correct');
         await setup();
-        const nav = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        const nav = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
         fixture.componentInstance.afterVoid();
         expect(nav).toHaveBeenCalledWith(['/panel/payments']);

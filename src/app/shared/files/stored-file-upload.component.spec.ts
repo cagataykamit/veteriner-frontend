@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import type { StoredFileUploadEvent, StoredFileVm } from './stored-file.model';
@@ -7,12 +8,12 @@ import { StoredFilesService } from './stored-files.service';
 const stored = (id: string): StoredFileVm => ({ id, fileName: `${id}.jpg`, contentType: 'image/jpeg', kind: 'Image', sizeBytes: 3, uploadedAtUtc: '2026-10-22T10:00:00Z' });
 
 describe('StoredFileUploadComponent — yükleme kuyruğu', () => {
-    let upload: jasmine.Spy;
+    let upload: Mock;
 
     const create = (ownerPath: string | null = null) => {
         TestBed.configureTestingModule({
             imports: [StoredFileUploadComponent],
-            providers: [{ provide: StoredFilesService, useValue: { upload: (upload = jasmine.createSpy('upload')) } }]
+            providers: [{ provide: StoredFilesService, useValue: { upload: (upload = vi.fn().mockName('upload')) } }]
         });
         const fixture = TestBed.createComponent(StoredFileUploadComponent);
 
@@ -44,7 +45,7 @@ describe('StoredFileUploadComponent — yükleme kuyruğu', () => {
         const uploaded: StoredFileVm[] = [];
 
         c.uploaded.subscribe((f) => uploaded.push(f));
-        upload.and.returnValue(events);
+        upload.mockReturnValue(events);
         c.addFiles([jpg()]);
         const done = c.uploadPending('/api/v1/imaging-records/r1');
 
@@ -55,7 +56,7 @@ describe('StoredFileUploadComponent — yükleme kuyruğu', () => {
         events.complete();
 
         expect(await done).toBe(0);
-        expect(upload).toHaveBeenCalledWith('/api/v1/imaging-records/r1', jasmine.any(File));
+        expect(upload).toHaveBeenCalledWith('/api/v1/imaging-records/r1', expect.any(File));
         expect(c.items()[0].status).toBe('done');
         expect(c.items()[0].file).toBeNull();
         expect(uploaded.map((f) => f.id)).toEqual(['f1']);
@@ -65,7 +66,7 @@ describe('StoredFileUploadComponent — yükleme kuyruğu', () => {
         const fixture = create('/api/v1/lab-results/l1');
         const c = fixture.componentInstance;
 
-        upload.and.returnValue(throwError(() => new Error('Dosya deposu şu anda kullanılamıyor.')));
+        upload.mockReturnValue(throwError(() => new Error('Dosya deposu şu anda kullanılamıyor.')));
         c.addFiles([jpg()]);
 
         expect(await c.uploadPending('/api/v1/lab-results/l1')).toBe(1);
@@ -76,7 +77,7 @@ describe('StoredFileUploadComponent — yükleme kuyruğu', () => {
 
         const ok = new Subject<StoredFileUploadEvent>();
 
-        upload.and.returnValue(ok);
+        upload.mockReturnValue(ok);
         c.retry(c.items()[0]);
         ok.next({ type: 'done', file: stored('f2') });
         ok.complete();
@@ -90,7 +91,7 @@ describe('StoredFileUploadComponent — yükleme kuyruğu', () => {
         const fixture = create('/api/v1/imaging-records/r1');
 
         fixture.componentRef.setInput('autoUpload', true);
-        upload.and.returnValue(new Subject<StoredFileUploadEvent>());
+        upload.mockReturnValue(new Subject<StoredFileUploadEvent>());
         fixture.componentInstance.addFiles([jpg()]);
 
         expect(upload).toHaveBeenCalledTimes(1);
@@ -100,7 +101,7 @@ describe('StoredFileUploadComponent — yükleme kuyruğu', () => {
         const fixture = create('/api/v1/imaging-records/r1');
 
         fixture.componentRef.setInput('autoUpload', true);
-        upload.and.returnValue(of({ type: 'done', file: { id: 'f1', fileName: 'a.jpg', contentType: 'image/jpeg', kind: 'Image', sizeBytes: 3, uploadedAtUtc: '' } }));
+        upload.mockReturnValue(of({ type: 'done', file: { id: 'f1', fileName: 'a.jpg', contentType: 'image/jpeg', kind: 'Image', sizeBytes: 3, uploadedAtUtc: '' } }));
         fixture.componentInstance.addFiles([jpg()]);
         await fixture.whenStable();
         fixture.detectChanges();

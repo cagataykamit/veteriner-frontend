@@ -95,14 +95,14 @@ describe('DateInputComponent — limit', () => {
         await typeText('24111991');
         expect(host.control.errors).toBeNull();
         await typeText('21055555');
-        expect(host.control.hasError('dateOutOfRange')).toBeTrue();
+        expect(host.control.hasError('dateOutOfRange')).toBe(true);
         expect(fixture.nativeElement.textContent).toMatch(/Tarih \d{2}\.\d{2}\.\d{4} veya öncesi olmalıdır\./);
     });
 
     it('past: yarın reddedilir', async () => {
         await create('date', 'past');
         await typeText(ymd(0, 2));
-        expect(host.control.hasError('dateOutOfRange')).toBeTrue();
+        expect(host.control.hasError('dateOutOfRange')).toBe(true);
     });
 
     it('past/datetime: gelecekteki saat reddedilir (mesajda sınır saati de görünür), geçmiş serbest', async () => {
@@ -110,7 +110,7 @@ describe('DateInputComponent — limit', () => {
         await typeText('241119911430');
         expect(host.control.errors).toBeNull();
         await typeText(ymd(1) + '1000');
-        expect(host.control.hasError('dateOutOfRange')).toBeTrue();
+        expect(host.control.hasError('dateOutOfRange')).toBe(true);
         expect(fixture.nativeElement.textContent).toMatch(/Tarih ve saat \d{2}\.\d{2}\.\d{4} \d{2}:\d{2} veya öncesi olmalıdır\./);
     });
 
@@ -119,15 +119,15 @@ describe('DateInputComponent — limit', () => {
         await typeText(ymd(4));
         expect(host.control.errors).toBeNull();
         await typeText(ymd(6));
-        expect(host.control.hasError('dateOutOfRange')).toBeTrue();
+        expect(host.control.hasError('dateOutOfRange')).toBe(true);
         await typeText('21055555');
-        expect(host.control.hasError('dateOutOfRange')).toBeTrue();
+        expect(host.control.hasError('dateOutOfRange')).toBe(true);
     });
 
     it('açık max, limit politikasının önüne geçer', async () => {
         await create('date', 'past', '2026-10-31');
         await typeText('01112026');
-        expect(host.control.hasError('dateOutOfRange')).toBeTrue();
+        expect(host.control.hasError('dateOutOfRange')).toBe(true);
         expect(fixture.nativeElement.textContent).toContain('Tarih 31.10.2026 veya öncesi olmalıdır.');
     });
 

@@ -54,14 +54,14 @@ describe('portal mobil paket kuralları', () => {
 
     describe('portalServiceWorkerEnabled', () => {
         it('yalnız tarayıcıdaki üretim derlemesinde açıktır', () => {
-            expect(portalServiceWorkerEnabled(false, false)).toBeTrue();
-            expect(portalServiceWorkerEnabled(false, true)).toBeFalse();
-            expect(portalServiceWorkerEnabled(true, false)).toBeFalse();
-            expect(portalServiceWorkerEnabled(true, true)).toBeFalse();
+            expect(portalServiceWorkerEnabled(false, false)).toBe(true);
+            expect(portalServiceWorkerEnabled(false, true)).toBe(false);
+            expect(portalServiceWorkerEnabled(true, false)).toBe(false);
+            expect(portalServiceWorkerEnabled(true, true)).toBe(false);
         });
     });
 
     it('tarayıcıda (test ortamı) yerel platform değildir', () => {
-        expect(isPortalNativePlatform()).toBeFalse();
+        expect(isPortalNativePlatform()).toBe(false);
     });
 });

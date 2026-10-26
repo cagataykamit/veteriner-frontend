@@ -24,8 +24,12 @@ describe('menu-group-state', () => {
     });
 
     it('depo hata fırlatırsa okuma ve yazma sessizce geçer', () => {
-        spyOn(Storage.prototype, 'getItem').and.throwError('engelli');
-        spyOn(Storage.prototype, 'setItem').and.throwError('engelli');
+        vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+            throw new Error('engelli');
+        });
+        vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+            throw new Error('engelli');
+        });
         expect(readMenuGroupPreferences()).toEqual({});
         expect(() => writeMenuGroupPreferences({ Klinik: true })).not.toThrow();
     });

@@ -1,18 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder } from '@angular/forms';
 import { mapClientDetailDtoToVm, mapCreateClientToApiBody } from '@/app/features/clients/data/client.mapper';
-import {
-    createClientInvoicingFormGroup,
-    isClientInvoicingDtoEmpty,
-    mapClientInvoicingDtoToFormValue,
-    mapClientInvoicingFormToDto
-} from '@/app/features/clients/forms/client-invoicing-form.factory';
-import {
-    clientInvoicingFieldErrorMessage,
-    formatClientInvoicingSummary,
-    mapClientInvoicingSummaryDtoToVm,
-    parseClientInvoicingFieldErrors
-} from '@/app/features/clients/utils/client-invoicing.utils';
+import { createClientInvoicingFormGroup, isClientInvoicingDtoEmpty, mapClientInvoicingDtoToFormValue, mapClientInvoicingFormToDto } from '@/app/features/clients/forms/client-invoicing-form.factory';
+import { clientInvoicingFieldErrorMessage, formatClientInvoicingSummary, mapClientInvoicingSummaryDtoToVm, parseClientInvoicingFieldErrors } from '@/app/features/clients/utils/client-invoicing.utils';
 
 describe('client-invoicing (ADR-036)', () => {
     const fb = new FormBuilder();
@@ -20,9 +10,7 @@ describe('client-invoicing (ADR-036)', () => {
     it('form → gövde: kişi türüne göre gizlenen alanlar gönderilmez', () => {
         const base = mapClientInvoicingDtoToFormValue(null);
 
-        expect(
-            mapClientInvoicingFormToDto({ ...base, personType: 'Individual', nationalId: ' 10000000146 ', taxNumber: '1234567890', billingProvince: ' İzmir ' })
-        ).toEqual({
+        expect(mapClientInvoicingFormToDto({ ...base, personType: 'Individual', nationalId: ' 10000000146 ', taxNumber: '1234567890', billingProvince: ' İzmir ' })).toEqual({
             personType: 'Individual',
             nationalId: '10000000146',
             taxNumber: null,
@@ -41,7 +29,7 @@ describe('client-invoicing (ADR-036)', () => {
 
         const none = mapClientInvoicingFormToDto({ ...base, nationalId: '10000000146' });
 
-        expect(isClientInvoicingDtoEmpty(none)).toBeTrue();
+        expect(isClientInvoicingDtoEmpty(none)).toBe(true);
     });
 
     it('form: TCKN/VKN doğrulanır, tür değişince gizlenen alan boşalır', () => {
@@ -49,21 +37,21 @@ describe('client-invoicing (ADR-036)', () => {
 
         form.controls.personType.setValue('Individual');
         form.controls.nationalId.setValue('12345678901');
-        expect(form.invalid).toBeTrue();
+        expect(form.invalid).toBe(true);
         expect(clientInvoicingFieldErrorMessage('nationalId', form.controls.nationalId.errors)).toBe('TCKN 11 haneli ve geçerli olmalıdır.');
 
         form.controls.personType.setValue('Corporate');
         expect(form.controls.nationalId.value).toBe('');
-        expect(form.valid).toBeTrue();
+        expect(form.valid).toBe(true);
 
         form.controls.taxNumber.setValue('1234567891');
         expect(clientInvoicingFieldErrorMessage('taxNumber', form.controls.taxNumber.errors)).toBe('Geçerli bir VKN (10 hane) veya TCKN (11 hane) girin.');
 
         // Şahıs şirketi: vergi numarası olarak TCKN.
         form.controls.taxNumber.setValue('10000000146');
-        expect(form.controls.taxNumber.valid).toBeTrue();
+        expect(form.controls.taxNumber.valid).toBe(true);
         form.controls.taxNumber.setValue('12345678901');
-        expect(form.controls.taxNumber.valid).toBeFalse();
+        expect(form.controls.taxNumber.valid).toBe(false);
     });
 
     it('kart satırı: kurumsal vergi numarası 11 haneliyse TCKN etiketiyle maskeli gösterilir', () => {
@@ -86,7 +74,7 @@ describe('client-invoicing (ADR-036)', () => {
     });
 
     it('gövde: invoicingIdentity yalnız verildiğinde girer (PUT: yok = dokunma)', () => {
-        expect('invoicingIdentity' in mapCreateClientToApiBody({ fullName: 'Ali' })).toBeFalse();
+        expect('invoicingIdentity' in mapCreateClientToApiBody({ fullName: 'Ali' })).toBe(false);
 
         const identity = mapClientInvoicingFormToDto({ ...mapClientInvoicingDtoToFormValue(null), personType: 'Individual', nationalId: '10000000146' });
 

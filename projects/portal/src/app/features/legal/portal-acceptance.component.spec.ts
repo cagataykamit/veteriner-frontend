@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
@@ -21,8 +22,8 @@ const DONE: PortalAcceptanceStatus = { requiresAcceptance: false, pendingDocumen
 describe('PortalAcceptanceComponent (engelleyici kabul adımları)', () => {
     let fixture: ComponentFixture<PortalAcceptanceComponent>;
     let el: HTMLElement;
-    let legal: jasmine.SpyObj<PortalLegalApi>;
-    let session: jasmine.SpyObj<PortalSessionService>;
+    let legal: MockedObject<PortalLegalApi>;
+    let session: MockedObject<PortalSessionService>;
     let router: Router;
 
     async function settle(): Promise<void> {
@@ -31,25 +32,31 @@ describe('PortalAcceptanceComponent (engelleyici kabul adımları)', () => {
     }
 
     async function start(status: PortalAcceptanceStatus): Promise<void> {
-        legal.myAcceptances.and.returnValue(of(status));
+        legal.myAcceptances.mockReturnValue(of(status));
         fixture = TestBed.createComponent(PortalAcceptanceComponent);
         el = fixture.nativeElement;
         await settle();
     }
 
     beforeEach(async () => {
-        legal = jasmine.createSpyObj<PortalLegalApi>('PortalLegalApi', ['myAcceptances', 'accept', 'clinicDisclosure', 'acknowledgeClinicDisclosure']);
-        legal.clinicDisclosure.and.returnValue(
-            of({ linkId: 'link-1', clinicId: 'clinic-1', clinicName: 'Merkez', text: 'MERKEZ — AYDINLATMA METNİ\nVeri sorumlusu Merkez.', isDefault: true, acknowledgedAtUtc: null })
-        );
-        session = jasmine.createSpyObj<PortalSessionService>('PortalSessionService', ['markAcceptanceCleared', 'logout']);
-        session.logout.and.returnValue(of(undefined));
+        legal = {
+            myAcceptances: vi.fn().mockName('PortalLegalApi.myAcceptances'),
+            accept: vi.fn().mockName('PortalLegalApi.accept'),
+            clinicDisclosure: vi.fn().mockName('PortalLegalApi.clinicDisclosure'),
+            acknowledgeClinicDisclosure: vi.fn().mockName('PortalLegalApi.acknowledgeClinicDisclosure')
+        } as unknown as MockedObject<PortalLegalApi>;
+        legal.clinicDisclosure.mockReturnValue(of({ linkId: 'link-1', clinicId: 'clinic-1', clinicName: 'Merkez', text: 'MERKEZ — AYDINLATMA METNİ\nVeri sorumlusu Merkez.', isDefault: true, acknowledgedAtUtc: null }));
+        session = {
+            markAcceptanceCleared: vi.fn().mockName('PortalSessionService.markAcceptanceCleared'),
+            logout: vi.fn().mockName('PortalSessionService.logout')
+        } as unknown as MockedObject<PortalSessionService>;
+        session.logout.mockReturnValue(of(undefined));
         await TestBed.configureTestingModule({
             imports: [PortalAcceptanceComponent],
             providers: [provideRouter([]), { provide: PortalLegalApi, useValue: legal }, { provide: PortalSessionService, useValue: session }]
         }).compileComponents();
         router = TestBed.inject(Router);
-        spyOn(router, 'navigateByUrl').and.resolveTo(true);
+        vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
     });
 
     afterEach(() => fixture?.destroy());
@@ -61,7 +68,7 @@ describe('PortalAcceptanceComponent (engelleyici kabul adımları)', () => {
         expect(el.textContent).toContain('Gizlilik Politikası (sürüm 0.1)');
         const labels = Array.from(el.querySelectorAll('button')).map((b) => b.textContent?.trim());
 
-        expect(labels.some((l) => /atla|kapat|sonra/i.test(l ?? ''))).toBeFalse();
+        expect(labels.some((l) => /atla|kapat|sonra/i.test(l ?? ''))).toBe(false);
     });
 
     it('onay kutusu işaretlenmeden kabul gönderilmez', async () => {
@@ -74,8 +81,8 @@ describe('PortalAcceptanceComponent (engelleyici kabul adımları)', () => {
     });
 
     it('belgeler kabul edilince klinik aydınlatma metni adımına geçer; onaylanınca portal açılır', async () => {
-        legal.accept.and.returnValue(of(DISCLOSURE_PENDING));
-        legal.acknowledgeClinicDisclosure.and.returnValue(of(undefined));
+        legal.accept.mockReturnValue(of(DISCLOSURE_PENDING));
+        legal.acknowledgeClinicDisclosure.mockReturnValue(of(undefined));
         await start(DOCS_PENDING);
 
         el.querySelector<HTMLInputElement>('portal-legal-consent input[type=checkbox]')!.click();
@@ -87,7 +94,7 @@ describe('PortalAcceptanceComponent (engelleyici kabul adımları)', () => {
         expect(el.querySelector('[data-testid=disclosure-text]')?.textContent).toContain('AYDINLATMA METNİ');
         expect(session.markAcceptanceCleared).not.toHaveBeenCalled();
 
-        legal.myAcceptances.and.returnValue(of(DONE));
+        legal.myAcceptances.mockReturnValue(of(DONE));
         buttonByText(el, 'Okudum, bilgilendirildim')!.click();
         await settle();
 

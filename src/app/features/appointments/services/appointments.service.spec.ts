@@ -62,14 +62,15 @@ describe('AppointmentsService — durum geçişleri', () => {
         ['Appointments.HasVisit', 'geliş kaydı var'],
         ['Appointments.InvalidStatusTransition', 'durumu bu işleme uygun değil']
     ]) {
-        it(`400 ${code} Türkçe mesaja çevrilir`, (done) => {
-            service.markNoShow('a1').subscribe({
-                error: (e: Error) => {
-                    expect(e.message.toLocaleLowerCase('tr-TR')).toContain(text.toLocaleLowerCase('tr-TR'));
-                    done();
-                }
-            });
-            http.expectOne('http://api.test/api/v1/appointments/a1/no-show').flush({ status: 400, extensions: { code } }, { status: 400, statusText: 'Bad Request' });
-        });
+        it(`400 ${code} Türkçe mesaja çevrilir`, () =>
+            new Promise<void>((done) => {
+                service.markNoShow('a1').subscribe({
+                    error: (e: Error) => {
+                        expect(e.message.toLocaleLowerCase('tr-TR')).toContain(text.toLocaleLowerCase('tr-TR'));
+                        done();
+                    }
+                });
+                http.expectOne('http://api.test/api/v1/appointments/a1/no-show').flush({ status: 400, extensions: { code } }, { status: 400, statusText: 'Bad Request' });
+            }));
     }
 });

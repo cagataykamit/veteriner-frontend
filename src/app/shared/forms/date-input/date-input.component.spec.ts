@@ -87,7 +87,7 @@ describe('DateInputComponent', () => {
         await create('date');
         await typeText('31.02.2026');
         expect(host.control.value).toBe('');
-        expect(host.control.hasError('dateInvalid')).toBeTrue();
+        expect(host.control.hasError('dateInvalid')).toBe(true);
         expect(fixture.nativeElement.textContent).not.toContain('Geçerli bir tarih girin'); // yazarken gösterilmez
         input().blur();
         fixture.detectChanges();
@@ -95,7 +95,7 @@ describe('DateInputComponent', () => {
         expect(fixture.nativeElement.textContent).toContain('Geçerli bir tarih girin (gg.aa.yyyy).');
         await typeText('28.02.2026');
         expect(host.control.value).toBe('2026-02-28');
-        expect(host.control.hasError('dateInvalid')).toBeFalse();
+        expect(host.control.hasError('dateInvalid')).toBe(false);
         expect(fixture.nativeElement.textContent).not.toContain('Geçerli bir tarih girin');
     });
 
@@ -113,12 +113,12 @@ describe('DateInputComponent', () => {
         await wait(50);
         expect(input().value).toBe('11.10.2026');
         await typeText('31.02.2026');
-        expect(host.control.hasError('dateInvalid')).toBeTrue();
+        expect(host.control.hasError('dateInvalid')).toBe(true);
         host.control.setValue('');
         fixture.detectChanges();
         await wait(50);
         expect(input().value).toBe('');
-        expect(host.control.hasError('dateInvalid')).toBeFalse();
+        expect(host.control.hasError('dateInvalid')).toBe(false);
     });
 
     it('tarih-saat: formdan gelen değer gg.aa.yyyy ss:dd görünür', async () => {
@@ -162,9 +162,9 @@ describe('DateInputComponent', () => {
         const dayEl = (n: string) => [...document.querySelectorAll('.p-datepicker-day')].find((d) => d.textContent?.trim() === n && !d.classList.contains('p-datepicker-other-month')) as HTMLElement;
         const disabled = (e: HTMLElement) => e.classList.contains('p-disabled') || e.getAttribute('aria-disabled') === 'true' || e.hasAttribute('data-p-disabled');
 
-        expect(disabled(dayEl('3'))).toBeTrue();
-        expect(disabled(dayEl('25'))).toBeTrue();
-        expect(disabled(dayEl('12'))).toBeFalse();
+        expect(disabled(dayEl('3'))).toBe(true);
+        expect(disabled(dayEl('25'))).toBe(true);
+        expect(disabled(dayEl('12'))).toBe(false);
     });
 
     it('× temizler: değer boş olur', async () => {
@@ -187,7 +187,7 @@ describe('DateInputComponent', () => {
         host.control.disable();
         fixture.detectChanges();
         await wait(50);
-        expect(input().disabled).toBeTrue();
+        expect(input().disabled).toBe(true);
     });
 
     it('İstanbul dönüşümü: bileşen metni değiştirmez, mevcut dönüşüm doğru UTC verir', async () => {
@@ -222,7 +222,7 @@ describe('DateInputComponent', () => {
             btn.focus();
             fixture.detectChanges();
             await wait(600);
-            expect(panelOpen()).toBeFalse();
+            expect(panelOpen()).toBe(false);
             btn.remove();
         });
 
@@ -237,7 +237,7 @@ describe('DateInputComponent', () => {
             btn.focus();
             fixture.detectChanges();
             await wait(600);
-            expect(panelOpen()).toBeFalse();
+            expect(panelOpen()).toBe(false);
             btn.remove();
         });
 
@@ -266,7 +266,7 @@ describe('DateInputComponent', () => {
             day.click();
             fixture.detectChanges();
             await wait(600);
-            expect(panelOpen()).toBeFalse();
+            expect(panelOpen()).toBe(false);
         });
 
         it('yazılan tam tarihten sonra dışarı basınca panel kapanır (maske yolu)', async () => {
@@ -280,7 +280,7 @@ describe('DateInputComponent', () => {
             btn.focus();
             fixture.detectChanges();
             await wait(600);
-            expect(panelOpen()).toBeFalse();
+            expect(panelOpen()).toBe(false);
             btn.remove();
         });
 
@@ -293,7 +293,7 @@ describe('DateInputComponent', () => {
             btn.focus();
             fixture.detectChanges();
             await wait(600);
-            expect(panelOpen()).toBeFalse();
+            expect(panelOpen()).toBe(false);
             btn.remove();
         });
 

@@ -31,12 +31,9 @@ describe('AppMenu', () => {
     };
 
     const root = (fixture: ComponentFixture<AppMenu>) => fixture.nativeElement as HTMLElement;
-    const labels = (fixture: ComponentFixture<AppMenu>) =>
-        Array.from(root(fixture).querySelectorAll('.layout-menuitem-text')).map((el) => el.textContent?.trim());
-    const link = (fixture: ComponentFixture<AppMenu>, label: string) =>
-        Array.from(root(fixture).querySelectorAll('a')).find((a) => a.querySelector('.layout-menuitem-text')?.textContent?.trim() === label)!;
-    const badges = (fixture: ComponentFixture<AppMenu>) =>
-        Array.from(root(fixture).querySelectorAll('.layout-menuitem-badge')).map((el) => el.firstChild?.textContent);
+    const labels = (fixture: ComponentFixture<AppMenu>) => Array.from(root(fixture).querySelectorAll('.layout-menuitem-text')).map((el) => el.textContent?.trim());
+    const link = (fixture: ComponentFixture<AppMenu>, label: string) => Array.from(root(fixture).querySelectorAll('a')).find((a) => a.querySelector('.layout-menuitem-text')?.textContent?.trim() === label)!;
+    const badges = (fixture: ComponentFixture<AppMenu>) => Array.from(root(fixture).querySelectorAll('.layout-menuitem-badge')).map((el) => el.firstChild?.textContent);
 
     beforeEach(() => {
         localStorage.clear();
@@ -49,32 +46,13 @@ describe('AppMenu', () => {
     /** Başlık ve öğe sırası: başlık "# Ad", öğe adı düz; simge şeridinde ayırıcı "—". */
     const outline = (fixture: ComponentFixture<AppMenu>) =>
         Array.from(root(fixture).querySelectorAll('.layout-menu-heading, .layout-menu-divider, li[appMenuitem]')).map((el) =>
-            el.classList.contains('layout-menu-heading')
-                ? `# ${el.textContent?.trim()}`
-                : el.classList.contains('layout-menu-divider')
-                  ? '—'
-                  : el.querySelector('.layout-menuitem-text')?.textContent?.trim()
+            el.classList.contains('layout-menu-heading') ? `# ${el.textContent?.trim()}` : el.classList.contains('layout-menu-divider') ? '—' : el.querySelector('.layout-menuitem-text')?.textContent?.trim()
         );
 
     it('menü ADR-023 bölüm başlıklarıyla gruplanır; başlıklar açılıp kapanmaz, Yönetim bölümü alta sabittir', () => {
         const fixture = create();
 
-        expect(outline(fixture)).toEqual([
-            '# Günlük iş',
-            'Bugün',
-            'Randevular',
-            '# Müşteri ve hasta',
-            'Müşteri ve Hasta',
-            '# Klinik',
-            'Kayıtlar',
-            '# Para ve stok',
-            'Para',
-            'Stok',
-            '# Yönetim',
-            'Raporlar',
-            'Özet',
-            'Ayarlar'
-        ]);
+        expect(outline(fixture)).toEqual(['# Günlük iş', 'Bugün', 'Randevular', '# Müşteri ve hasta', 'Müşteri ve Hasta', '# Klinik', 'Kayıtlar', '# Para ve stok', 'Para', 'Stok', '# Yönetim', 'Raporlar', 'Özet', 'Ayarlar']);
         expect(root(fixture).querySelector('.layout-menu-group-toggle')).toBeNull();
         expect(root(fixture).querySelector('.layout-menu-divider')).toBeNull();
         const pinned = root(fixture).querySelector('.layout-menu-pinned')!;
@@ -171,7 +149,7 @@ describe('AppMenu', () => {
         const tabbed = ['Randevular', 'Müşteri ve Hasta', 'Kayıtlar', 'Para', 'Stok'];
 
         afterEach(() => {
-            jasmine.clock().uninstall();
+            vi.useRealTimers();
             panels().forEach((p) => p.remove());
         });
 
@@ -181,9 +159,9 @@ describe('AppMenu', () => {
             for (const label of ['Bugün', ...tabbed, 'Raporlar', 'Özet', 'Ayarlar']) {
                 const hasFlyout = tabbed.includes(label);
 
-                expect(link(fixture, label).querySelector('.layout-menuitem-flyout-toggler') !== null).withContext(label).toBe(hasFlyout);
-                expect(link(fixture, label).getAttribute('aria-haspopup')).withContext(label).toBe(hasFlyout ? 'menu' : null);
-                expect(link(fixture, label).getAttribute('aria-expanded')).withContext(label).toBe(hasFlyout ? 'false' : null);
+                expect(link(fixture, label).querySelector('.layout-menuitem-flyout-toggler') !== null, label).toBe(hasFlyout);
+                expect(link(fixture, label).getAttribute('aria-haspopup'), label).toBe(hasFlyout ? 'menu' : null);
+                expect(link(fixture, label).getAttribute('aria-expanded'), label).toBe(hasFlyout ? 'false' : null);
             }
 
             hover(fixture, 'Bugün');
@@ -192,7 +170,7 @@ describe('AppMenu', () => {
         });
 
         it('fareyle üzerine gelince sekmeler body altındaki panelde açılır (kenar çubuğu kırpmaz); panele geçerken kapanmaz, çıkınca kapanır', () => {
-            jasmine.clock().install();
+            vi.useFakeTimers();
             const fixture = create();
 
             hover(fixture, 'Kayıtlar');
@@ -206,14 +184,14 @@ describe('AppMenu', () => {
             expect(panel().querySelector('.layout-menu-flyout-heading')).toBeNull();
 
             pointer(row(fixture, 'Kayıtlar'), 'pointerleave');
-            jasmine.clock().tick(100);
+            vi.advanceTimersByTime(100);
             pointer(panel(), 'pointerenter');
-            jasmine.clock().tick(500);
+            vi.advanceTimersByTime(500);
             fixture.detectChanges();
             expect(panels().length).toBe(1);
 
             pointer(panel(), 'pointerleave');
-            jasmine.clock().tick(MENU_FLYOUT_CLOSE_DELAY_MS);
+            vi.advanceTimersByTime(MENU_FLYOUT_CLOSE_DELAY_MS);
             fixture.detectChanges();
             expect(panels()).toEqual([]);
             expect(link(fixture, 'Kayıtlar').getAttribute('aria-expanded')).toBe('false');
@@ -269,7 +247,7 @@ describe('AppMenu', () => {
             const lab = items().find((a) => a.textContent?.includes('Lab sonuçları'))!;
 
             expect(lab.querySelector('.layout-menuitem-badge')?.firstChild?.textContent).toBe('4');
-            expect(items().filter((a) => a.querySelector('.layout-menuitem-badge'))).toHaveSize(1);
+            expect(items().filter((a) => a.querySelector('.layout-menuitem-badge'))).toHaveLength(1);
         });
 
         it('sekmeye tıklamak o sayfaya gider ve paneli kapatır', async () => {
@@ -321,7 +299,7 @@ describe('AppMenu', () => {
 
             stok.dispatchEvent(enter);
             fixture.detectChanges();
-            expect(enter.defaultPrevented).withContext('satırın gezinmesi yapılmaz').toBeTrue();
+            expect(enter.defaultPrevented, 'satırın gezinmesi yapılmaz').toBe(true);
             expect(itemLabels()).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul']);
             expect(stok.getAttribute('aria-expanded')).toBe('true');
             expect(stok.getAttribute('aria-controls')).toBe(panel().id);
@@ -348,7 +326,7 @@ describe('AppMenu', () => {
 
             para.dispatchEvent(space);
             fixture.detectChanges();
-            expect(space.defaultPrevented).toBeTrue();
+            expect(space.defaultPrevented).toBe(true);
             expect(panels().length).toBe(1);
             expect(document.activeElement).toBe(para);
             key(para, ' ');
@@ -381,7 +359,7 @@ describe('AppMenu', () => {
             const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
 
             calendar.dispatchEvent(enter);
-            expect(enter.defaultPrevented).withContext('panel Enter tuşunu engellemez').toBeFalse();
+            expect(enter.defaultPrevented, 'panel Enter tuşunu engellemez').toBe(false);
             calendar.click();
             await fixture.whenStable();
             fixture.detectChanges();
@@ -395,13 +373,13 @@ describe('AppMenu', () => {
 
             link(fixture, 'Para').dispatchEvent(ctrlEnter);
             fixture.detectChanges();
-            expect(ctrlEnter.defaultPrevented).toBeFalse();
+            expect(ctrlEnter.defaultPrevented).toBe(false);
             expect(panels()).toEqual([]);
 
             const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
 
             link(fixture, 'Bugün').dispatchEvent(enter);
-            expect(enter.defaultPrevented).toBeFalse();
+            expect(enter.defaultPrevented).toBe(false);
         });
 
         it('klavye: Tab panelden çıkarken paneli kapatır ve odağı satıra verir (tarayıcı oradan devam eder)', () => {
@@ -415,7 +393,7 @@ describe('AppMenu', () => {
 
             items()[0].dispatchEvent(tab);
             fixture.detectChanges();
-            expect(tab.defaultPrevented).toBeFalse();
+            expect(tab.defaultPrevented).toBe(false);
             expect(document.activeElement).toBe(para);
             expect(panels()).toEqual([]);
         });

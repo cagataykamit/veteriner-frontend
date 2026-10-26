@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -52,31 +53,29 @@ const dto = (): ClientDataExportDto => ({
 
 describe('ClientDataExportPageComponent', () => {
     let fixture: ComponentFixture<ClientDataExportPageComponent>;
-    let getClientDataExport: jasmine.Spy;
+    let getClientDataExport: Mock;
 
     const el = () => fixture.nativeElement as HTMLElement;
 
     const create = () => {
         TestBed.configureTestingModule({
             imports: [ClientDataExportPageComponent],
-            providers: [
-                provideRouter([]),
-                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'c1' }) } } },
-                { provide: ClientsService, useValue: { getClientDataExport } }
-            ]
+            providers: [provideRouter([]), { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'c1' }) } } }, { provide: ClientsService, useValue: { getClientDataExport } }]
         });
         fixture = TestBed.createComponent(ClientDataExportPageComponent);
         fixture.detectChanges();
     };
 
     beforeEach(() => {
-        getClientDataExport = jasmine.createSpy('getClientDataExport').and.returnValue(of(dto()));
+        getClientDataExport = vi.fn().mockName('getClientDataExport').mockReturnValue(of(dto()));
     });
 
     it('başlık müşteri adıyla, üretim tarihi, bölümler tablo; boş bölüm ve kesilme notu', () => {
         create();
 
-        expect(getClientDataExport).toHaveBeenCalledOnceWith('c1');
+        expect(getClientDataExport).toHaveBeenCalledTimes(1);
+
+        expect(getClientDataExport).toHaveBeenCalledWith('c1');
         expect(el().querySelector('[data-testid="data-export-title"]')?.textContent).toBe('Veri kopyası — Ali Veli');
         expect(el().querySelector('[data-testid="data-export-generated"]')?.textContent).toContain('Üretim tarihi:');
         expect(el().querySelector('[data-testid="data-export-pets"] table')?.textContent).toContain('Pamuk');
@@ -90,21 +89,21 @@ describe('ClientDataExportPageComponent', () => {
 
     it('JSON indir yüklenen yanıtı indirir, sunucuya yeni istek atmaz', () => {
         create();
-        const createObjectURL = spyOn(URL, 'createObjectURL').and.returnValue('blob:x');
+        const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:x');
 
-        spyOn(URL, 'revokeObjectURL');
-        spyOn(HTMLAnchorElement.prototype, 'click');
+        vi.spyOn(URL, 'revokeObjectURL').mockReturnValue(undefined);
+        vi.spyOn(HTMLAnchorElement.prototype, 'click').mockReturnValue(undefined);
 
         (el().querySelector('[data-testid="data-export-json"] button') as HTMLButtonElement).click();
 
         expect(createObjectURL).toHaveBeenCalledTimes(1);
-        expect((createObjectURL.calls.mostRecent().args[0] as Blob).type).toBe('application/json');
+        expect((vi.mocked(createObjectURL).mock.lastCall![0] as Blob).type).toBe('application/json');
         expect(getClientDataExport).toHaveBeenCalledTimes(1);
     });
 
     it('Yazdır KVKK belge yazdırma düzenini kullanır', () => {
         create();
-        const print = spyOn(window, 'print');
+        const print = vi.spyOn(window, 'print').mockReturnValue(undefined);
 
         (el().querySelector('[data-testid="data-export-print"] button') as HTMLButtonElement).click();
 
@@ -115,7 +114,7 @@ describe('ClientDataExportPageComponent', () => {
     });
 
     it('hata durumunda mesaj gösterilir', () => {
-        getClientDataExport.and.returnValue(throwError(() => new Error('Müşteri bulunamadı.')));
+        getClientDataExport.mockReturnValue(throwError(() => new Error('Müşteri bulunamadı.')));
         create();
 
         expect(el().textContent).toContain('Müşteri bulunamadı.');

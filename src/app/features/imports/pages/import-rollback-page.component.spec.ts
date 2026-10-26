@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
@@ -42,11 +43,17 @@ const preview = (over: Partial<ImportRollbackPreviewDto> = {}): ImportRollbackPr
 
 describe('ImportRollbackPageComponent', () => {
     let fixture: ComponentFixture<ImportRollbackPageComponent>;
-    let imports: jasmine.SpyObj<ImportsService>;
+    let imports: MockedObject<ImportsService>;
 
-    function create(status: ImportBatchDto['status'], opts: { claim?: boolean; preview?: ImportRollbackPreviewDto } = {}): HTMLElement {
-        imports.getBatch.and.returnValue(of(batch(status)));
-        imports.getRollbackPreview.and.returnValue(of(opts.preview ?? preview()));
+    function create(
+        status: ImportBatchDto['status'],
+        opts: {
+            claim?: boolean;
+            preview?: ImportRollbackPreviewDto;
+        } = {}
+    ): HTMLElement {
+        imports.getBatch.mockReturnValue(of(batch(status)));
+        imports.getRollbackPreview.mockReturnValue(of(opts.preview ?? preview()));
         TestBed.configureTestingModule({
             imports: [ImportRollbackPageComponent],
             providers: [
@@ -74,7 +81,12 @@ describe('ImportRollbackPageComponent', () => {
     }
 
     beforeEach(() => {
-        imports = jasmine.createSpyObj<ImportsService>('ImportsService', ['getBatch', 'getRollbackPreview', 'rollback', 'getProgress']);
+        imports = {
+            getBatch: vi.fn().mockName('ImportsService.getBatch'),
+            getRollbackPreview: vi.fn().mockName('ImportsService.getRollbackPreview'),
+            rollback: vi.fn().mockName('ImportsService.rollback'),
+            getProgress: vi.fn().mockName('ImportsService.getProgress')
+        } as unknown as MockedObject<ImportsService>;
     });
 
     it('Imports.Commit yoksa önizleme istemez ve eylem göstermez', () => {
@@ -100,21 +112,21 @@ describe('ImportRollbackPageComponent', () => {
 
         expect(fixture.componentInstance.policy()).toBe('Fail');
         fill('', true);
-        expect(submitButton(el)?.disabled).toBeTrue();
+        expect(submitButton(el)?.disabled).toBe(true);
         fill('Yanlış dosya', false);
-        expect(submitButton(el)?.disabled).toBeTrue();
+        expect(submitButton(el)?.disabled).toBe(true);
         fill('Yanlış dosya', true);
-        expect(submitButton(el)?.disabled).toBeFalse();
+        expect(submitButton(el)?.disabled).toBe(false);
     });
 
     it('gerekçeyi kırpıp seçilen politikayla ve form açılışında üretilen tek requestId ile gönderir', () => {
         create('Committed');
-        imports.rollback.and.returnValue(of(batch('RollingBack')));
-        imports.getProgress.and.returnValue(of({ id: 'b1', status: 'RollingBack', phase: 'RollingBack', processed: 1, total: 4, updatedAtUtc: null, committedAtUtc: null, leaseActive: true }));
+        imports.rollback.mockReturnValue(of(batch('RollingBack')));
+        imports.getProgress.mockReturnValue(of({ id: 'b1', status: 'RollingBack', phase: 'RollingBack', processed: 1, total: 4, updatedAtUtc: null, committedAtUtc: null, leaseActive: true }));
         fixture.componentInstance.policy.set('DeleteUnblockedOnly');
         fill('  Yanlış dosya  ', true);
         fixture.componentInstance.submit();
-        const body = imports.rollback.calls.mostRecent().args[1];
+        const body = vi.mocked(imports.rollback).mock.lastCall![1];
 
         expect(body.reason).toBe('Yanlış dosya');
         expect(body.blockedPolicy).toBe('DeleteUnblockedOnly');
@@ -129,7 +141,7 @@ describe('ImportRollbackPageComponent', () => {
             error: { code: 'Imports.RollbackBlocked', extensions: { blocked: { clients: 1, pets: 0, vaccinations: 0 }, blockedItems: [{ entity: 'Client', id: 'c-9', table: 'customers', rowNumber: 3, reasons: ['ClientModified'] }] } }
         });
 
-        imports.rollback.and.returnValue(throwError(() => err));
+        imports.rollback.mockReturnValue(throwError(() => err));
         fill('Yanlış dosya', true);
         fixture.componentInstance.submit();
         fixture.detectChanges();
@@ -142,15 +154,12 @@ describe('ImportRollbackPageComponent', () => {
 
     it('409 RequestIdConflict: sade mesaj gösterir ve sonraki gönderimde yeni requestId kullanır', () => {
         create('Committed');
-        imports.rollback.and.returnValues(
-            throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.RequestIdConflict' } })),
-            throwError(() => new HttpErrorResponse({ status: 500 }))
-        );
+        imports.rollback.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.RequestIdConflict' } }))).mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 500 })));
         fill('Yanlış dosya', true);
         fixture.componentInstance.submit();
         expect(fixture.componentInstance.error()).toContain('farklı bir seçimle');
         fixture.componentInstance.submit();
-        const [first, second] = imports.rollback.calls.allArgs().map((a) => a[1].requestId);
+        const [first, second] = vi.mocked(imports.rollback).mock.calls.map((a) => a[1].requestId);
 
         expect(first).not.toBe(second);
     });
@@ -173,7 +182,7 @@ describe('ImportRollbackPageComponent', () => {
     });
 
     it('RollingBack: ilerleme yoklar ve formu göstermez', async () => {
-        imports.getProgress.and.returnValue(of({ id: 'b1', status: 'RollingBack', phase: 'RollingBack', processed: 2, total: 8, updatedAtUtc: null, committedAtUtc: null, leaseActive: true }));
+        imports.getProgress.mockReturnValue(of({ id: 'b1', status: 'RollingBack', phase: 'RollingBack', processed: 2, total: 8, updatedAtUtc: null, committedAtUtc: null, leaseActive: true }));
         const el = create('RollingBack');
 
         await new Promise((r) => setTimeout(r, 20));

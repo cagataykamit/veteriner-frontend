@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
@@ -25,7 +26,7 @@ const suggestion = (over: Partial<ChargeSuggestionVm> = {}): ChargeSuggestionVm 
 describe('ChargeSuggestionConvertDialogComponent', () => {
     let fixture: ComponentFixture<ChargeSuggestionConvertDialogComponent>;
     let cmp: ChargeSuggestionConvertDialogComponent;
-    let execute: jasmine.Spy;
+    let execute: Mock;
     let converted: number;
 
     const create = (s: ChargeSuggestionVm) => {
@@ -40,7 +41,7 @@ describe('ChargeSuggestionConvertDialogComponent', () => {
     };
 
     beforeEach(async () => {
-        execute = jasmine.createSpy('execute').and.returnValue(of(null));
+        execute = vi.fn().mockName('execute').mockReturnValue(of(null));
         await TestBed.configureTestingModule({ imports: [ChargeSuggestionConvertDialogComponent] }).compileComponents();
     });
 
@@ -48,16 +49,18 @@ describe('ChargeSuggestionConvertDialogComponent', () => {
         create(suggestion());
         expect(cmp.form.getRawValue()).toEqual({ description: 'Serum fizyolojik', quantity: 2, unitPrice: 125 });
         cmp.onSubmit();
-        expect(execute).toHaveBeenCalledOnceWith({});
+        expect(execute).toHaveBeenCalledTimes(1);
+        expect(execute).toHaveBeenCalledWith({});
         expect(converted).toBe(1);
-        expect(cmp.visible()).toBeFalse();
+        expect(cmp.visible()).toBe(false);
     });
 
     it('yalnız değişen alanlar gönderilir', () => {
         create(suggestion());
         cmp.form.patchValue({ quantity: 3, unitPrice: 130 });
         cmp.onSubmit();
-        expect(execute).toHaveBeenCalledOnceWith({ quantity: 3, unitPrice: 130 });
+        expect(execute).toHaveBeenCalledTimes(1);
+        expect(execute).toHaveBeenCalledWith({ quantity: 3, unitPrice: 130 });
     });
 
     it('fiyatı olmayan kalemde birim fiyat boş ve zorunludur', () => {
@@ -67,15 +70,16 @@ describe('ChargeSuggestionConvertDialogComponent', () => {
         expect(execute).not.toHaveBeenCalled();
         cmp.form.controls.unitPrice.setValue(90);
         cmp.onSubmit();
-        expect(execute).toHaveBeenCalledOnceWith({ unitPrice: 90 });
+        expect(execute).toHaveBeenCalledTimes(1);
+        expect(execute).toHaveBeenCalledWith({ unitPrice: 90 });
     });
 
     it('hata diyalogda Türkçe mesajla kalır ve kapanmaz', () => {
         create(suggestion());
-        execute.and.returnValue(throwError(() => new Error('Kalem aynı anda başka biri tarafından değiştirildi.')));
+        execute.mockReturnValue(throwError(() => new Error('Kalem aynı anda başka biri tarafından değiştirildi.')));
         cmp.onSubmit();
         expect(cmp.submitError()).toBe('Kalem aynı anda başka biri tarafından değiştirildi.');
-        expect(cmp.visible()).toBeTrue();
+        expect(cmp.visible()).toBe(true);
         expect(converted).toBe(0);
     });
 });

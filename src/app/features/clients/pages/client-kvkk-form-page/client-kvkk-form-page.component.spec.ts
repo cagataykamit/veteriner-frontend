@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -22,7 +23,7 @@ const template = (over: Partial<KvkkFormTemplateVm> = {}): KvkkFormTemplateVm =>
 
 describe('ClientKvkkFormPageComponent', () => {
     let fixture: ComponentFixture<ClientKvkkFormPageComponent>;
-    let getTemplate: jasmine.Spy;
+    let getTemplate: Mock;
     let clinicId: string | null;
     let routeData: Record<string, unknown>;
 
@@ -46,12 +47,13 @@ describe('ClientKvkkFormPageComponent', () => {
     beforeEach(() => {
         clinicId = 'k1';
         routeData = {};
-        getTemplate = jasmine.createSpy('getTemplate').and.returnValue(of(template()));
+        getTemplate = vi.fn().mockName('getTemplate').mockReturnValue(of(template()));
     });
 
     it('açık rıza: aktif kliniğin şablonunu müşteri adı ve bugünle doldurur; kutu ve imza bloğu basılır; düzenlenmiş metinde uyarı yok', () => {
         create();
-        expect(getTemplate).toHaveBeenCalledOnceWith('k1', 'consent');
+        expect(getTemplate).toHaveBeenCalledTimes(1);
+        expect(getTemplate).toHaveBeenCalledWith('k1', 'consent');
         expect(el().textContent).toContain('KVKK açık rıza formu');
         expect(el().querySelector('[data-testid="kvkk-form-text"]')?.textContent).toBe(`Pati Kliniği — Ali Veli — ${kvkkFormDate()}`);
         expect(el().querySelector('[data-testid="kvkk-form-choices"]')?.textContent).toContain('Kabul etmiyorum');
@@ -62,18 +64,18 @@ describe('ClientKvkkFormPageComponent', () => {
     });
 
     it('metin sürümü (ADR-032): varsayılan metin 0 "Varsayılan metin" basılır; sürüm gelmezse satır yok', () => {
-        getTemplate.and.returnValue(of(template({ isDefault: true, textVersion: 0 })));
+        getTemplate.mockReturnValue(of(template({ isDefault: true, textVersion: 0 })));
         create();
         expect(el().querySelector('[data-testid="kvkk-form-text-version"]')?.textContent).toContain('Metin sürümü: Varsayılan metin');
 
         TestBed.resetTestingModule();
-        getTemplate.and.returnValue(of(template({ textVersion: null })));
+        getTemplate.mockReturnValue(of(template({ textVersion: null })));
         create();
         expect(el().querySelector('[data-testid="kvkk-form-text-version"]')).toBeNull();
     });
 
     it('varsayılan taslak metinde yazdırmadan önce uyarı; düzenleme bağlantısı yalnız Clinics.Update ile', () => {
-        getTemplate.and.returnValue(of(template({ isDefault: true })));
+        getTemplate.mockReturnValue(of(template({ isDefault: true })));
         create();
         expect(el().querySelector('[data-testid="kvkk-default-warning"]')?.textContent).toContain('hukuk danışmanınızca onaylanmadan');
         expect(el().querySelector('a[href="/panel/settings/kvkk-form"]')).toBeNull();
@@ -85,10 +87,12 @@ describe('ClientKvkkFormPageComponent', () => {
 
     it('aydınlatma (rota verisi): aydınlatma şablonu doldurulur; Kabul/Kabul etmiyorum kutuları ve imza bloğu basılmaz', () => {
         routeData = { kvkkKind: 'disclosure' };
-        getTemplate.and.returnValue(of(template({ text: 'Bilgilendirilen: {{clientName}}\nDüzenleme tarihi: {{date}}' })));
+        getTemplate.mockReturnValue(of(template({ text: 'Bilgilendirilen: {{clientName}}\nDüzenleme tarihi: {{date}}' })));
         create();
 
-        expect(getTemplate).toHaveBeenCalledOnceWith('k1', 'disclosure');
+        expect(getTemplate).toHaveBeenCalledTimes(1);
+
+        expect(getTemplate).toHaveBeenCalledWith('k1', 'disclosure');
         expect(el().textContent).toContain('KVKK aydınlatma metni');
         expect(el().querySelector('[data-testid="kvkk-form-text"]')?.textContent).toBe(`Bilgilendirilen: Ali Veli\nDüzenleme tarihi: ${kvkkFormDate()}`);
         expect(el().querySelector('[data-testid="kvkk-form-choices"]')).toBeNull();
@@ -96,9 +100,9 @@ describe('ClientKvkkFormPageComponent', () => {
         expect(el().querySelector('[data-testid="kvkk-print"]')).not.toBeNull();
     });
 
-    it('aydınlatma taslağında düzenleme bağlantısı Ayarlar\'ı aydınlatma türüyle açar', () => {
+    it("aydınlatma taslağında düzenleme bağlantısı Ayarlar'ı aydınlatma türüyle açar", () => {
         routeData = { kvkkKind: 'disclosure' };
-        getTemplate.and.returnValue(of(template({ isDefault: true })));
+        getTemplate.mockReturnValue(of(template({ isDefault: true })));
         create(['Clinics.Update']);
 
         expect(el().querySelector('a[href="/panel/settings/kvkk-form?kind=disclosure"]')).not.toBeNull();

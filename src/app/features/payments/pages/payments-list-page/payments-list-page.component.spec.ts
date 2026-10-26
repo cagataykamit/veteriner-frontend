@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { firstValueFrom, of } from 'rxjs';
@@ -23,7 +24,7 @@ const row: PaymentListItemVm = {
 
 describe('PaymentsListPageComponent — iptal', () => {
     let fixture: ComponentFixture<PaymentsListPageComponent>;
-    let payments: jasmine.SpyObj<PaymentsService>;
+    let payments: MockedObject<PaymentsService>;
     let claims: Set<string>;
     let mutationBlocked: boolean;
 
@@ -45,8 +46,11 @@ describe('PaymentsListPageComponent — iptal', () => {
 
     beforeEach(() => {
         sessionStorage.clear();
-        payments = jasmine.createSpyObj<PaymentsService>('PaymentsService', ['getPayments', 'voidPayment']);
-        payments.getPayments.and.returnValue(of({ items: [row], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
+        payments = {
+            getPayments: vi.fn().mockName('PaymentsService.getPayments'),
+            voidPayment: vi.fn().mockName('PaymentsService.voidPayment')
+        } as unknown as MockedObject<PaymentsService>;
+        payments.getPayments.mockReturnValue(of({ items: [row], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
         claims = new Set(['Payments.Read']);
         mutationBlocked = false;
     });
@@ -98,7 +102,7 @@ describe('PaymentsListPageComponent — iptal', () => {
     it('uzun müşteri adı tabloda tek satırda kesilir; tam ad ipucunda kalır', async () => {
         const longName = 'Ayşe Gülizar Karamanoğlu Yılmaz';
 
-        payments.getPayments.and.returnValue(of({ items: [{ ...row, clientName: longName }], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
+        payments.getPayments.mockReturnValue(of({ items: [{ ...row, clientName: longName }], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
         await setup();
         const el = fixture.nativeElement.querySelector(`table [title="${longName}"]`) as HTMLElement;
 
@@ -108,14 +112,15 @@ describe('PaymentsListPageComponent — iptal', () => {
 
     it('iptal diyaloğu seçili ödemeyi gerekçeyle iptal eder', async () => {
         claims.add('Payments.Correct');
-        payments.voidPayment.and.returnValue(of(void 0));
+        payments.voidPayment.mockReturnValue(of(void 0));
         await setup();
         const cmp = fixture.componentInstance;
 
         cmp.openVoid(row);
         expect(cmp.voidSummary()).toContain('Ali Veli');
         await firstValueFrom(cmp.voidPayment('Yanlış tutar girildi'));
-        expect(payments.voidPayment).toHaveBeenCalledOnceWith('p1', 'Yanlış tutar girildi');
+        expect(payments.voidPayment).toHaveBeenCalledTimes(1);
+        expect(payments.voidPayment).toHaveBeenCalledWith('p1', 'Yanlış tutar girildi');
     });
 
     /** ADR-026 madde 6: Düzenle, detay sayfasındaki Düzenle ile aynı yetki ve salt okunur koşuluyla; sıra Detay, Düzenle, İptal et. */
@@ -125,11 +130,11 @@ describe('PaymentsListPageComponent — iptal', () => {
         await setup();
         const edits = rowEditActions(fixture.nativeElement);
 
-        expect(edits.length).withContext('tablo + mobil kart').toBe(2);
+        expect(edits.length, 'tablo + mobil kart').toBe(2);
 
         for (const edit of edits) {
             expect(edit.getAttribute('href')).toBe('/panel/payments/p1/edit');
-            expect(isRightAfterDetail(edit)).toBeTrue();
+            expect(isRightAfterDetail(edit)).toBe(true);
             expect(edit.closest('app-row-action-button')!.nextElementSibling!.querySelector('.fa-ban')).not.toBeNull();
         }
     });
@@ -145,13 +150,13 @@ describe('PaymentsListPageComponent — iptal', () => {
         const edits = rowEditActions(fixture.nativeElement);
 
         expect(edits.length).toBe(2);
-        expect(edits.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBeTrue();
+        expect(edits.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBe(true);
     });
 
     it('iptal sonrası liste yeniden okunur', async () => {
         claims.add('Payments.Correct');
         await setup();
-        payments.getPayments.calls.reset();
+        payments.getPayments.mockClear();
         fixture.componentInstance.afterVoid();
         expect(payments.getPayments).toHaveBeenCalledTimes(1);
     });

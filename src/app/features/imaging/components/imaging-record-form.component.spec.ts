@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { Component, Directive, forwardRef, input, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { type ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -50,12 +51,12 @@ class StubPetAlertBannerComponent {
 }
 
 describe('ImagingRecordFormComponent — hata korumalı kayıt ve yükleme (L6)', () => {
-    let create: jasmine.Spy;
-    let upload: jasmine.Spy;
+    let create: Mock;
+    let upload: Mock;
 
     const setup = () => {
-        create = jasmine.createSpy('create').and.returnValue(of('r1'));
-        upload = jasmine.createSpy('upload');
+        create = vi.fn().mockName('create').mockReturnValue(of('r1'));
+        upload = vi.fn().mockName('upload');
         TestBed.configureTestingModule({
             imports: [ImagingRecordFormComponent],
             providers: [
@@ -92,7 +93,7 @@ describe('ImagingRecordFormComponent — hata korumalı kayıt ve yükleme (L6)'
 
         await c.onSubmit();
 
-        expect(c.filesMissing()).toBeTrue();
+        expect(c.filesMissing()).toBe(true);
         expect(create).not.toHaveBeenCalled();
     });
 
@@ -102,25 +103,25 @@ describe('ImagingRecordFormComponent — hata korumalı kayıt ve yükleme (L6)'
 
         c.saved.subscribe((id) => saved.push(id));
         uploader.addFiles([jpg()]);
-        upload.and.returnValue(throwError(() => new Error('Dosya deposu şu anda kullanılamıyor.')));
+        upload.mockReturnValue(throwError(() => new Error('Dosya deposu şu anda kullanılamıyor.')));
 
         await c.onSubmit();
         fixture.detectChanges();
 
         expect(create).toHaveBeenCalledTimes(1);
-        expect(create.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ clinicId: 'clinic-1', petId: 'pet-1', modality: 'XRay', description: 'Toraks LL', clinicalNote: 'Kardiyomegali yok' }));
+        expect(vi.mocked(create).mock.lastCall![0]).toEqual(expect.objectContaining({ clinicId: 'clinic-1', petId: 'pet-1', modality: 'XRay', description: 'Toraks LL', clinicalNote: 'Kardiyomegali yok' }));
         expect(c.recordId()).toBe('r1');
         expect(c.submitError()).toContain('1 dosya yüklenemedi');
         expect(c.form.getRawValue().description).toBe('Toraks LL');
         expect(saved).toEqual([]);
         expect((fixture.nativeElement as HTMLElement).textContent).toContain('Dosyaları yükle');
 
-        upload.and.returnValue(of({ type: 'done', file: { id: 'f1', fileName: 'a.jpg', contentType: 'image/jpeg', kind: 'Image', sizeBytes: 3, uploadedAtUtc: '' } }));
+        upload.mockReturnValue(of({ type: 'done', file: { id: 'f1', fileName: 'a.jpg', contentType: 'image/jpeg', kind: 'Image', sizeBytes: 3, uploadedAtUtc: '' } }));
         await c.onSubmit();
 
         expect(create).toHaveBeenCalledTimes(1);
         expect(upload).toHaveBeenCalledTimes(2);
-        expect(upload.calls.mostRecent().args[0]).toBe('/api/v1/imaging-records/r1');
+        expect(vi.mocked(upload).mock.lastCall![0]).toBe('/api/v1/imaging-records/r1');
         expect(saved).toEqual(['r1']);
     });
 
@@ -130,13 +131,13 @@ describe('ImagingRecordFormComponent — hata korumalı kayıt ve yükleme (L6)'
 
         c.saved.subscribe((id) => saved.push(id));
         uploader.addFiles([jpg()]);
-        upload.and.returnValue(throwError(() => new Error('Dosya deposu şu anda kullanılamıyor.')));
+        upload.mockReturnValue(throwError(() => new Error('Dosya deposu şu anda kullanılamıyor.')));
         await c.onSubmit();
         fixture.detectChanges();
 
         expect(c.submitError()).toContain('1 dosya yüklenemedi');
 
-        upload.and.returnValue(of({ type: 'done', file: { id: 'f1', fileName: 'a.jpg', contentType: 'image/jpeg', kind: 'Image', sizeBytes: 3, uploadedAtUtc: '' } }));
+        upload.mockReturnValue(of({ type: 'done', file: { id: 'f1', fileName: 'a.jpg', contentType: 'image/jpeg', kind: 'Image', sizeBytes: 3, uploadedAtUtc: '' } }));
         uploader.retry(uploader.items()[0]);
         await Promise.resolve();
 
@@ -147,7 +148,7 @@ describe('ImagingRecordFormComponent — hata korumalı kayıt ve yükleme (L6)'
     it('kayıt oluşturma hatasında metin formda kalır ve dosya gönderilmez', async () => {
         const { c, uploader } = setup();
 
-        create.and.returnValue(throwError(() => new Error('x')));
+        create.mockReturnValue(throwError(() => new Error('x')));
         uploader.addFiles([jpg()]);
         await c.onSubmit();
 

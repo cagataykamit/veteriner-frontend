@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -8,7 +9,7 @@ import { PortalLegalApi } from './portal-legal.api';
 describe('PortalLegalPageComponent (sürüm gösterimi)', () => {
     let fixture: ComponentFixture<PortalLegalPageComponent>;
     let el: HTMLElement;
-    let legal: jasmine.SpyObj<PortalLegalApi>;
+    let legal: MockedObject<PortalLegalApi>;
 
     async function open(documentType: 'PortalTerms' | 'PortalPrivacy'): Promise<void> {
         fixture = TestBed.createComponent(PortalLegalPageComponent);
@@ -19,7 +20,9 @@ describe('PortalLegalPageComponent (sürüm gösterimi)', () => {
     }
 
     beforeEach(async () => {
-        legal = jasmine.createSpyObj<PortalLegalApi>('PortalLegalApi', ['documents']);
+        legal = {
+            documents: vi.fn().mockName('PortalLegalApi.documents')
+        } as unknown as MockedObject<PortalLegalApi>;
         await TestBed.configureTestingModule({
             imports: [PortalLegalPageComponent],
             providers: [provideRouter([]), { provide: PortalLegalApi, useValue: legal }]
@@ -29,7 +32,7 @@ describe('PortalLegalPageComponent (sürüm gösterimi)', () => {
     afterEach(() => fixture?.destroy());
 
     it('sürüm numarasını backend listesinden gösterir; 0.x taslak olarak işaretlenir', async () => {
-        legal.documents.and.returnValue(
+        legal.documents.mockReturnValue(
             of([
                 { documentType: 'PortalTerms', version: '0.1' },
                 { documentType: 'PortalPrivacy', version: '1.0' }
@@ -42,7 +45,7 @@ describe('PortalLegalPageComponent (sürüm gösterimi)', () => {
     });
 
     it('taslak bandı tek ayardan gelir ve metin bölümleri gösterilir', async () => {
-        legal.documents.and.returnValue(of([{ documentType: 'PortalTerms', version: '0.1' }]));
+        legal.documents.mockReturnValue(of([{ documentType: 'PortalTerms', version: '0.1' }]));
         await open('PortalTerms');
 
         expect(el.querySelector('[data-testid=legal-version]')?.textContent?.trim()).toBe(`Sürüm: 0.1 (taslak) · ${PORTAL_TERMS_DOCUMENT.statusLine}`);
@@ -52,7 +55,7 @@ describe('PortalLegalPageComponent (sürüm gösterimi)', () => {
     });
 
     it('sürüm alınamazsa metin yine görünür, sürüm uydurulmaz', async () => {
-        legal.documents.and.returnValue(throwError(() => new Error('ağ')));
+        legal.documents.mockReturnValue(throwError(() => new Error('ağ')));
         await open('PortalTerms');
 
         expect(el.querySelector('[data-testid=legal-version]')?.textContent?.trim()).toBe(portalLegalVersionLine(PORTAL_TERMS_DOCUMENT, null));

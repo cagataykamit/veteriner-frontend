@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { LayoutService } from './layout.service';
 
@@ -9,18 +10,18 @@ describe('LayoutService menü daraltma', () => {
     beforeEach(() => {
         localStorage.removeItem(KEY);
         service = TestBed.inject(LayoutService);
-        spyOn(service, 'isDesktop').and.returnValue(true);
+        vi.spyOn(service, 'isDesktop').mockReturnValue(true);
     });
 
     afterEach(() => localStorage.removeItem(KEY));
 
     it('☰ masaüstünde menüyü simge şeridine daraltır ve geri açar', () => {
         service.restoreMenuCollapsed('u1');
-        expect(service.layoutState().staticMenuDesktopInactive).toBeFalse();
+        expect(service.layoutState().staticMenuDesktopInactive).toBe(false);
         service.onMenuToggle();
-        expect(service.layoutState().staticMenuDesktopInactive).toBeTrue();
+        expect(service.layoutState().staticMenuDesktopInactive).toBe(true);
         service.onMenuToggle();
-        expect(service.layoutState().staticMenuDesktopInactive).toBeFalse();
+        expect(service.layoutState().staticMenuDesktopInactive).toBe(false);
     });
 
     it('tercih kullanıcı için saklanır ve sonraki girişte geri yüklenir', () => {
@@ -30,29 +31,31 @@ describe('LayoutService menü daraltma', () => {
 
         service.layoutState.update((s) => ({ ...s, staticMenuDesktopInactive: false }));
         service.restoreMenuCollapsed('u1');
-        expect(service.layoutState().staticMenuDesktopInactive).toBeTrue();
+        expect(service.layoutState().staticMenuDesktopInactive).toBe(true);
     });
 
     it('başka kullanıcının tercihi bu kullanıcıyı etkilemez', () => {
         service.restoreMenuCollapsed('u1');
         service.onMenuToggle();
         service.restoreMenuCollapsed('u2');
-        expect(service.layoutState().staticMenuDesktopInactive).toBeFalse();
+        expect(service.layoutState().staticMenuDesktopInactive).toBe(false);
     });
 
     it('depo kullanılamasa da çalışma anında daralır', () => {
-        spyOn(Storage.prototype, 'setItem').and.throwError('engelli');
+        vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+            throw new Error('engelli');
+        });
         service.restoreMenuCollapsed('u1');
         expect(() => service.onMenuToggle()).not.toThrow();
-        expect(service.layoutState().staticMenuDesktopInactive).toBeTrue();
+        expect(service.layoutState().staticMenuDesktopInactive).toBe(true);
     });
 
     it('dar ekranda ☰ çekmeceyi açar; daraltma tercihini değiştirmez', () => {
-        (service.isDesktop as jasmine.Spy).and.returnValue(false);
+        (service.isDesktop as Mock).mockReturnValue(false);
         service.restoreMenuCollapsed('u1');
         service.onMenuToggle();
-        expect(service.layoutState().mobileMenuActive).toBeTrue();
-        expect(service.layoutState().staticMenuDesktopInactive).toBeFalse();
+        expect(service.layoutState().mobileMenuActive).toBe(true);
+        expect(service.layoutState().staticMenuDesktopInactive).toBe(false);
         expect(localStorage.getItem(KEY)).toBeNull();
     });
 });

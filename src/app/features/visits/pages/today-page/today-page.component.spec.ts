@@ -1,3 +1,4 @@
+import type { Mock, MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -25,7 +26,7 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     clientName: 'Ali Veli',
     clientPhone: null,
     scheduledAtUtc: null,
-    arrivedAtUtc: new Date(NOW.getTime() - 12 * 60_000).toISOString(),
+    arrivedAtUtc: new Date(NOW.getTime() - 12 * 60000).toISOString(),
     careStatus: 'Waiting',
     appointmentStatus: null,
     responsibleVeterinarianName: 'Dr. Ayşe',
@@ -61,20 +62,26 @@ const visitVm: VisitVm = {
 
 describe('TodayPageComponent', () => {
     beforeEach(() => {
-        jasmine.clock().install();
-        jasmine.clock().mockDate(NOW);
+        vi.useFakeTimers();
+        vi.setSystemTime(NOW);
     });
 
-    afterEach(() => jasmine.clock().uninstall());
+    afterEach(() => vi.useRealTimers());
 
-    let visits: jasmine.SpyObj<VisitsService>;
-    let toasts: jasmine.Spy;
+    let visits: MockedObject<VisitsService>;
+    let toasts: Mock;
 
     const create = async (claims: string[], today: TodayVm, vetUserId: string | null = null): Promise<ComponentFixture<TodayPageComponent>> => {
-        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday', 'startVisit', 'completeVisit', 'getVeterinarians', 'getCurrentVeterinarianUserId']);
-        visits.getToday.and.returnValue(of(today));
-        visits.getVeterinarians.and.returnValue(of([]));
-        visits.getCurrentVeterinarianUserId.and.returnValue(of(vetUserId));
+        visits = {
+            getToday: vi.fn().mockName('VisitsService.getToday'),
+            startVisit: vi.fn().mockName('VisitsService.startVisit'),
+            completeVisit: vi.fn().mockName('VisitsService.completeVisit'),
+            getVeterinarians: vi.fn().mockName('VisitsService.getVeterinarians'),
+            getCurrentVeterinarianUserId: vi.fn().mockName('VisitsService.getCurrentVeterinarianUserId')
+        } as unknown as MockedObject<VisitsService>;
+        visits.getToday.mockReturnValue(of(today));
+        visits.getVeterinarians.mockReturnValue(of([]));
+        visits.getCurrentVeterinarianUserId.mockReturnValue(of(vetUserId));
 
         await TestBed.configureTestingModule({
             imports: [TodayPageComponent],
@@ -90,15 +97,14 @@ describe('TodayPageComponent', () => {
 
         const fixture = TestBed.createComponent(TodayPageComponent);
 
-        toasts = spyOn(fixture.debugElement.injector.get(MessageService), 'add');
+        toasts = vi.spyOn(fixture.debugElement.injector.get(MessageService), 'add').mockReturnValue(undefined);
         fixture.detectChanges();
 
         return fixture;
     };
 
     const text = (f: ComponentFixture<TodayPageComponent>) => (f.nativeElement as HTMLElement).textContent ?? '';
-    const buttons = (f: ComponentFixture<TodayPageComponent>) =>
-        Array.from((f.nativeElement as HTMLElement).querySelectorAll('button')).map((b) => b.textContent?.trim() ?? '');
+    const buttons = (f: ComponentFixture<TodayPageComponent>) => Array.from((f.nativeElement as HTMLElement).querySelectorAll('button')).map((b) => b.textContent?.trim() ?? '');
 
     it('gruplar, hekim adı ve bekleme süresi gösterilir; göstergeler yoksa çip ve açık iş şeridi görünmez', async () => {
         const f = await create(['Visits.Read'], {
@@ -146,10 +152,7 @@ describe('TodayPageComponent', () => {
         const f = await create(['Visits.Read'], {
             date: 'd',
             activeHospitalizations: [],
-            items: [
-                item({ chargeIndicator: 'PartiallyPaid', chargedAmount: 1000, allocatedAmount: 400, outstandingAmount: 600, clientOutstandingAmount: 900, hasActiveHospitalization: true }),
-                item({ key: 'x', visitId: 'x' })
-            ]
+            items: [item({ chargeIndicator: 'PartiallyPaid', chargedAmount: 1000, allocatedAmount: 400, outstandingAmount: 600, clientOutstandingAmount: 900, hasActiveHospitalization: true }), item({ key: 'x', visitId: 'x' })]
         });
         const t = text(f);
 
@@ -170,7 +173,7 @@ describe('TodayPageComponent', () => {
             petId: 'p1',
             petName: 'Pamuk',
             clientName: 'Ali Veli',
-            admittedAtUtc: new Date(NOW.getTime() - 3 * 86_400_000 - 60_000).toISOString(),
+            admittedAtUtc: new Date(NOW.getTime() - 3 * 86400000 - 60000).toISOString(),
             plannedDischargeAtUtc: null,
             ...over
         });
@@ -228,8 +231,7 @@ describe('TodayPageComponent', () => {
     });
 
     describe('açık iş çipleri ve şerit', () => {
-        const chipTexts = (f: ComponentFixture<TodayPageComponent>) =>
-            Array.from((f.nativeElement as HTMLElement).querySelectorAll('p-tag')).map((e) => e.textContent?.trim() ?? '');
+        const chipTexts = (f: ComponentFixture<TodayPageComponent>) => Array.from((f.nativeElement as HTMLElement).querySelectorAll('p-tag')).map((e) => e.textContent?.trim() ?? '');
 
         it('Lab bekliyor sayısı, Ödeme bekliyor ve kısmi çipleri; çipler simge taşır', async () => {
             const f = await create(['Visits.Read'], {
@@ -276,7 +278,7 @@ describe('TodayPageComponent', () => {
                 activeHospitalizations: [],
                 items: [item({ visitId: 'v9', clientId: 'cl7', chargeIndicator: 'PaymentPending' })]
             });
-            const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+            const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
             const btn = Array.from((f.nativeElement as HTMLElement).querySelectorAll('button')).find((b) => b.textContent?.includes('Ödeme bekliyor')) as HTMLButtonElement;
 
             expect(btn).toBeDefined();
@@ -287,7 +289,7 @@ describe('TodayPageComponent', () => {
         it('Payments.Create yoksa Ödeme bekliyor çipi düğme değildir', async () => {
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ chargeIndicator: 'PaymentPending' })] });
 
-            expect(buttons(f).some((b) => b.includes('Ödeme bekliyor'))).toBeFalse();
+            expect(buttons(f).some((b) => b.includes('Ödeme bekliyor'))).toBe(false);
             expect(text(f)).toContain('Ödeme bekliyor');
         });
 
@@ -397,9 +399,7 @@ describe('TodayPageComponent', () => {
             activeHospitalizations: [],
             items: [item({ key: 'w' }), item({ key: 'i', careStatus: 'InProgress' }), item({ key: 'c', careStatus: 'Completed' })]
         });
-        const headers = Array.from((f.nativeElement as HTMLElement).querySelectorAll('section')).map((s) =>
-            Array.from(s.querySelectorAll('th')).map((th) => th.textContent?.trim())
-        );
+        const headers = Array.from((f.nativeElement as HTMLElement).querySelectorAll('section')).map((s) => Array.from(s.querySelectorAll('th')).map((th) => th.textContent?.trim()));
 
         expect(headers[0]).toContain('Bekleme');
         expect(headers[1]).toContain('Süre');
@@ -415,9 +415,12 @@ describe('TodayPageComponent', () => {
     });
 
     it('ilk yükleme hatası hata durumunu gösterir', async () => {
-        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday', 'getCurrentVeterinarianUserId']);
-        visits.getCurrentVeterinarianUserId.and.returnValue(of(null));
-        visits.getToday.and.returnValue(throwError(() => new Error('Bugün listesi yüklenemedi.')));
+        visits = {
+            getToday: vi.fn().mockName('VisitsService.getToday'),
+            getCurrentVeterinarianUserId: vi.fn().mockName('VisitsService.getCurrentVeterinarianUserId')
+        } as unknown as MockedObject<VisitsService>;
+        visits.getCurrentVeterinarianUserId.mockReturnValue(of(null));
+        visits.getToday.mockReturnValue(throwError(() => new Error('Bugün listesi yüklenemedi.')));
         await TestBed.configureTestingModule({
             imports: [TodayPageComponent],
             providers: [
@@ -461,7 +464,7 @@ describe('TodayPageComponent', () => {
         const f = await create(['Visits.Read', 'Payments.Create'], today);
 
         expect(keys(f)).toContain('collectPayment');
-        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
         f.componentInstance.openPayment(today.items[0]);
         expect(navigate).toHaveBeenCalledWith(['/panel/payments/new'], { queryParams: { clientId: 'cl7', visitId: 'v9' } });
@@ -470,7 +473,7 @@ describe('TodayPageComponent', () => {
     it('menüden Ödeme al, menü kapanana (onHide) kadar sayfa değiştirmez', async () => {
         const today: TodayVm = { date: '2026-10-10', activeHospitalizations: [], items: [item({ visitId: 'v9', clientId: 'cl7' })] };
         const f = await create(['Visits.Read', 'Payments.Create'], today);
-        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
         const c = f.componentInstance;
 
         c.openRowMenu(new Event('click'), today.items[0], [{ key: 'collectPayment', label: 'Ödeme al', icon: 'pi pi-wallet' } as never]);
@@ -493,7 +496,7 @@ describe('TodayPageComponent', () => {
         const f = await create(['Visits.Read', 'Charges.Create'], today);
 
         expect(keys(f)).toContain('addCharge');
-        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
         f.componentInstance.openCharge(today.items[0]);
         expect(navigate).toHaveBeenCalledWith(['/panel/charges/new'], { queryParams: { clientId: 'cl7', petId: 'p7', visitId: 'v9' } });
@@ -502,7 +505,7 @@ describe('TodayPageComponent', () => {
     it('menüden Ücret ekle, menü kapanana (onHide) kadar sayfa değiştirmez', async () => {
         const today: TodayVm = { date: '2026-10-10', activeHospitalizations: [], items: [item({ visitId: 'v9', clientId: 'cl7', petId: 'p7' })] };
         const f = await create(['Visits.Read', 'Charges.Create'], today);
-        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
         const c = f.componentInstance;
 
         c.openRowMenu(new Event('click'), today.items[0], [{ key: 'addCharge', label: 'Ücret ekle', icon: 'pi pi-plus' } as never]);
@@ -575,11 +578,13 @@ describe('TodayPageComponent', () => {
 
     it('muayeneye geçiş: visitId ile hasta bağlamı query olarak taşınır', async () => {
         const f = await create(['Visits.Read', 'Examinations.Create'], { date: 'd', activeHospitalizations: [], items: [item()] });
-        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
         f.componentInstance.openExamination(item());
 
-        expect(navigate).toHaveBeenCalledOnceWith(['/panel/examinations/new'], {
+        expect(navigate).toHaveBeenCalledTimes(1);
+
+        expect(navigate).toHaveBeenCalledWith(['/panel/examinations/new'], {
             queryParams: { visitId: 'v1', clientId: 'cl1', petId: 'p1' }
         });
     });
@@ -588,32 +593,32 @@ describe('TodayPageComponent', () => {
         const f = await create(['Visits.Read', 'Visits.Update'], { date: 'd', activeHospitalizations: [], items: [item()] });
         const pending = new Subject<VisitVm>();
 
-        visits.startVisit.and.returnValue(pending);
+        visits.startVisit.mockReturnValue(pending);
         const row = item();
 
         f.componentInstance.transition(row, 'start');
         f.componentInstance.transition(row, 'start');
         expect(visits.startVisit).toHaveBeenCalledTimes(1);
-        expect(f.componentInstance.isBusy(row)).toBeTrue();
+        expect(f.componentInstance.isBusy(row)).toBe(true);
 
-        const callsBefore = visits.getToday.calls.count();
+        const callsBefore = vi.mocked(visits.getToday).mock.calls.length;
 
         pending.next(visitVm);
         pending.complete();
-        expect(f.componentInstance.isBusy(row)).toBeFalse();
-        expect(visits.getToday.calls.count()).toBe(callsBefore + 1);
+        expect(f.componentInstance.isBusy(row)).toBe(false);
+        expect(vi.mocked(visits.getToday).mock.calls.length).toBe(callsBefore + 1);
     });
 
     it('başlatma hatasında hata toast ı gösterilir ve liste yenilenir', async () => {
         const f = await create(['Visits.Read', 'Visits.Update'], { date: 'd', activeHospitalizations: [], items: [item()] });
 
-        visits.startVisit.and.returnValue(throwError(() => new Error('Bu geçiş yapılamaz.')));
-        const callsBefore = visits.getToday.calls.count();
+        visits.startVisit.mockReturnValue(throwError(() => new Error('Bu geçiş yapılamaz.')));
+        const callsBefore = vi.mocked(visits.getToday).mock.calls.length;
 
         f.componentInstance.transition(item(), 'start');
 
-        expect(toasts.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ severity: 'error', detail: 'Bu geçiş yapılamaz.' }));
-        expect(visits.getToday.calls.count()).toBe(callsBefore + 1);
+        expect(vi.mocked(toasts).mock.lastCall![0]).toEqual(expect.objectContaining({ severity: 'error', detail: 'Bu geçiş yapılamaz.' }));
+        expect(vi.mocked(visits.getToday).mock.calls.length).toBe(callsBefore + 1);
     });
 
     it('created:false yanıtı hata değil bilgi mesajıdır', async () => {
@@ -621,13 +626,13 @@ describe('TodayPageComponent', () => {
 
         f.componentInstance.onArrived({ created: false, visit: { ...visitVm } });
 
-        expect(toasts.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ severity: 'info', summary: 'Açık geliş kaydı zaten var.' }));
+        expect(vi.mocked(toasts).mock.lastCall![0]).toEqual(expect.objectContaining({ severity: 'info', summary: 'Açık geliş kaydı zaten var.' }));
     });
 
     it('otomatik yenileme hatasında eski liste kalır ve uyarı gösterilir', async () => {
         const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item()] });
 
-        visits.getToday.and.returnValue(throwError(() => new Error('x')));
+        visits.getToday.mockReturnValue(throwError(() => new Error('x')));
         f.componentInstance.refresh('silent');
         f.detectChanges();
 
@@ -635,17 +640,19 @@ describe('TodayPageComponent', () => {
         expect(text(f)).toContain('Liste güncellenemedi');
     });
     describe('grup tabloları ve rozetler', () => {
-        const noShowItem = (over: Partial<TodayItemVm> = {}) =>
-            item({ key: 'n', visitId: null, appointmentId: 'a1', careStatus: null, arrivedAtUtc: null, scheduledAtUtc: '2026-10-10T07:00:00Z', appointmentStatus: 'NoShow', ...over });
-        const section = (f: ComponentFixture<TodayPageComponent>, title: string) =>
-            (f.nativeElement as HTMLElement).querySelector(`section[aria-label="${title}"]`) as HTMLElement;
+        const noShowItem = (over: Partial<TodayItemVm> = {}) => item({ key: 'n', visitId: null, appointmentId: 'a1', careStatus: null, arrivedAtUtc: null, scheduledAtUtc: '2026-10-10T07:00:00Z', appointmentStatus: 'NoShow', ...over });
+        const section = (f: ComponentFixture<TodayPageComponent>, title: string) => (f.nativeElement as HTMLElement).querySelector(`section[aria-label="${title}"]`) as HTMLElement;
 
         it('tüm gruplar aynı sütun genişliklerini ve sabit tablo düzenini kullanır; başlık sayısı eşit', async () => {
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'w' }), item({ key: 'p', careStatus: 'InProgress' }), item({ key: 'c', careStatus: 'Completed' }), noShowItem()] });
             const tables = Array.from((f.nativeElement as HTMLElement).querySelectorAll('section table'));
 
             expect(tables.length).toBe(4);
-            const widths = tables.map((t) => Array.from(t.querySelectorAll('colgroup col')).map((c) => (c as HTMLElement).className).join('|'));
+            const widths = tables.map((t) =>
+                Array.from(t.querySelectorAll('colgroup col'))
+                    .map((c) => (c as HTMLElement).className)
+                    .join('|')
+            );
 
             expect(new Set(widths).size).toBe(1);
             expect(widths[0].split('|').length).toBe(8);
@@ -669,7 +676,11 @@ describe('TodayPageComponent', () => {
         });
 
         it('iki kip: Hekim ve Ödeme sütunları dar kipte gizlenir; hekim adı Hasta hücresine, ödeme/yatış rozeti Durum hücresine taşınır; başlıklar tek satır, Durum rozetleri sütuna sığar', async () => {
-            const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'w', isCarriedOver: true, hasActiveHospitalization: true, chargeIndicator: 'PaymentPending', chargedAmount: 1000, allocatedAmount: 0, outstandingAmount: 1000 })] });
+            const f = await create(['Visits.Read'], {
+                date: 'd',
+                activeHospitalizations: [],
+                items: [item({ key: 'w', isCarriedOver: true, hasActiveHospitalization: true, chargeIndicator: 'PaymentPending', chargedAmount: 1000, allocatedAmount: 0, outstandingAmount: 1000 })]
+            });
             const host = f.nativeElement as HTMLElement;
             const hideCompact = '@max-[76rem]:hidden';
             const ths = Array.from(host.querySelectorAll('thead th'));
@@ -691,13 +702,17 @@ describe('TodayPageComponent', () => {
             // dar kip yedekleri yalnız dar kipte görünür (geniş kipte @min-[76rem]:hidden)
             const compactOnly = Array.from(host.querySelectorAll('tbody *')).filter((e) => e.classList.contains('@min-[76rem]:hidden'));
 
-            expect(compactOnly.some((e) => e.textContent?.includes('Dr. Ayşe'))).toBeTrue();
-            expect(compactOnly.some((e) => e.textContent?.includes('Ödeme bekliyor'))).toBeTrue();
-            expect(compactOnly.some((e) => e.textContent?.includes('Yatışta'))).toBeTrue();
+            expect(compactOnly.some((e) => e.textContent?.includes('Dr. Ayşe'))).toBe(true);
+            expect(compactOnly.some((e) => e.textContent?.includes('Ödeme bekliyor'))).toBe(true);
+            expect(compactOnly.some((e) => e.textContent?.includes('Yatışta'))).toBe(true);
         });
 
         it('uzun ad kısaltılır ve tam adı ipucuyla (title) gösterilir: Sahip, Hasta, Hekim', async () => {
-            const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'w', clientName: 'Çok Uzun İsimli Müşteri Soyadıgeçen', petName: 'Çok uzun hasta adı', responsibleVeterinarianName: 'Dr. Çok Uzun Hekim Adı' })] });
+            const f = await create(['Visits.Read'], {
+                date: 'd',
+                activeHospitalizations: [],
+                items: [item({ key: 'w', clientName: 'Çok Uzun İsimli Müşteri Soyadıgeçen', petName: 'Çok uzun hasta adı', responsibleVeterinarianName: 'Dr. Çok Uzun Hekim Adı' })]
+            });
             const host = f.nativeElement as HTMLElement;
             const titled = Array.from(host.querySelectorAll('tbody [title]')).map((e) => e.getAttribute('title'));
 
@@ -708,10 +723,13 @@ describe('TodayPageComponent', () => {
 
         it('eylem düğmeleri sabit ızgara yuvalarında: birincil=1, ikincil=2, acil=3, ⋯=4 (satırlar arası hiza; konum tarayıcıda ölçülür, Tailwind testte yüklü değil)', async () => {
             const claims = ['Visits.Read', 'Visits.Create', 'Visits.Update', 'Visits.Correct', 'Examinations.Create'];
-            const planned = item({ key: 'p', visitId: null, appointmentId: 'a1', careStatus: null, arrivedAtUtc: null, scheduledAtUtc: new Date(NOW.getTime() + 3_600_000).toISOString(), appointmentStatus: 'Scheduled' });
+            const planned = item({ key: 'p', visitId: null, appointmentId: 'a1', careStatus: null, arrivedAtUtc: null, scheduledAtUtc: new Date(NOW.getTime() + 3600000).toISOString(), appointmentStatus: 'Scheduled' });
             const f = await create(claims, { date: 'd', activeHospitalizations: [], items: [item({ key: 'w' }), item({ key: 'i', careStatus: 'InProgress' }), planned] });
             const host = f.nativeElement as HTMLElement;
-            const slotOf = (label: string) => Array.from(host.querySelectorAll('tbody p-button')).filter((p) => p.textContent?.trim() === label).map((p) => Array.from(p.classList).find((c) => c.startsWith('col-start-')));
+            const slotOf = (label: string) =>
+                Array.from(host.querySelectorAll('tbody p-button'))
+                    .filter((p) => p.textContent?.trim() === label)
+                    .map((p) => Array.from(p.classList).find((c) => c.startsWith('col-start-')));
 
             expect(slotOf('Muayene aç')).toEqual(['col-start-1', 'col-start-1']);
             expect(slotOf('Geldi')).toEqual(['col-start-1']);
@@ -740,11 +758,12 @@ describe('TodayPageComponent', () => {
             expect(tagHost.getAttribute('title')).toBe('Önceki günden kalan açık geliş; tamamlayın veya hatalı işaretleyin');
             const tag = tagHost.querySelector('.p-tag')!;
 
-            expect(tag.classList.contains('p-tag-secondary')).toBeTrue();
-            expect(tag.classList.contains('p-tag-contrast')).toBeFalse();        });
+            expect(tag.classList.contains('p-tag-secondary')).toBe(true);
+            expect(tag.classList.contains('p-tag-contrast')).toBe(false);
+        });
 
         it('12 saati aşan açık gelişte sönük "Unutulmuş olabilir" ipucu; kısa sürede ve tamamlananda yok', async () => {
-            const old = new Date(NOW.getTime() - 13 * 3_600_000).toISOString();
+            const old = new Date(NOW.getTime() - 13 * 3600000).toISOString();
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'old', arrivedAtUtc: old }), item({ key: 'new' }), item({ key: 'done', careStatus: 'Completed', arrivedAtUtc: old })] });
             const hints = ((f.nativeElement as HTMLElement).textContent ?? '').match(/Unutulmuş olabilir/g) ?? [];
 
@@ -753,8 +772,7 @@ describe('TodayPageComponent', () => {
     });
 
     describe('dar ekranda kart düzeni', () => {
-        const narrow = (matches: boolean) =>
-            spyOn(window, 'matchMedia').and.returnValue({ matches, addEventListener: () => undefined, removeEventListener: () => undefined } as unknown as MediaQueryList);
+        const narrow = (matches: boolean) => vi.spyOn(window, 'matchMedia').mockReturnValue({ matches, addEventListener: () => undefined, removeEventListener: () => undefined } as unknown as MediaQueryList);
         const today: TodayVm = {
             date: 'd',
             activeHospitalizations: [],
@@ -792,8 +810,8 @@ describe('TodayPageComponent', () => {
                 date: 'd',
                 items: [],
                 activeHospitalizations: [
-                    { hospitalizationId: 'h1', petId: 'p1', petName: 'Pamuk', clientName: 'Ali Veli', admittedAtUtc: new Date(NOW.getTime() - 3 * 86_400_000 - 60_000).toISOString(), plannedDischargeAtUtc: null },
-                    { hospitalizationId: 'h2', petId: 'p2', petName: 'Boncuk', clientName: 'Ayşe Kaya', admittedAtUtc: new Date(NOW.getTime() - 86_400_000 - 60_000).toISOString(), plannedDischargeAtUtc: null }
+                    { hospitalizationId: 'h1', petId: 'p1', petName: 'Pamuk', clientName: 'Ali Veli', admittedAtUtc: new Date(NOW.getTime() - 3 * 86400000 - 60000).toISOString(), plannedDischargeAtUtc: null },
+                    { hospitalizationId: 'h2', petId: 'p2', petName: 'Boncuk', clientName: 'Ayşe Kaya', admittedAtUtc: new Date(NOW.getTime() - 86400000 - 60000).toISOString(), plannedDischargeAtUtc: null }
                 ]
             };
 
@@ -837,13 +855,17 @@ describe('TodayPageComponent', () => {
 
 describe('TodayPageComponent — Benim hastalarım', () => {
     const today: TodayVm = { date: 'd', activeHospitalizations: [], items: [] };
-    let visits: jasmine.SpyObj<VisitsService>;
+    let visits: MockedObject<VisitsService>;
 
     const create = async (claims: string[], vetUserId: string | null): Promise<ComponentFixture<TodayPageComponent>> => {
-        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday', 'getVeterinarians', 'getCurrentVeterinarianUserId']);
-        visits.getToday.and.returnValue(of(today));
-        visits.getVeterinarians.and.returnValue(of([]));
-        visits.getCurrentVeterinarianUserId.and.returnValue(of(vetUserId));
+        visits = {
+            getToday: vi.fn().mockName('VisitsService.getToday'),
+            getVeterinarians: vi.fn().mockName('VisitsService.getVeterinarians'),
+            getCurrentVeterinarianUserId: vi.fn().mockName('VisitsService.getCurrentVeterinarianUserId')
+        } as unknown as MockedObject<VisitsService>;
+        visits.getToday.mockReturnValue(of(today));
+        visits.getVeterinarians.mockReturnValue(of([]));
+        visits.getCurrentVeterinarianUserId.mockReturnValue(of(vetUserId));
         await TestBed.configureTestingModule({
             imports: [TodayPageComponent],
             providers: [
@@ -865,31 +887,40 @@ describe('TodayPageComponent — Benim hastalarım', () => {
     it('hekim: varsayılan Benim hastalarım; ilk istek kullanıcı kimliğiyle gider, Tümü süzgeci kaldırır', async () => {
         const f = await create(['Visits.Read', 'Visits.Create'], 'u1');
 
-        expect(visits.getToday).toHaveBeenCalledOnceWith({ voided: false, responsibleVeterinarianUserId: 'u1' });
+        expect(visits.getToday).toHaveBeenCalledTimes(1);
+
+        expect(visits.getToday).toHaveBeenCalledWith({ voided: false, responsibleVeterinarianUserId: 'u1' });
         f.componentInstance.setScope('all');
-        expect(visits.getToday.calls.mostRecent().args[0]).toEqual({ voided: false });
+        expect(vi.mocked(visits.getToday).mock.lastCall![0]).toEqual({ voided: false });
     });
 
     it('hekim değil: süzgeç görünmez, kimlik gönderilmez', async () => {
         const f = await create(['Visits.Read', 'Visits.Create'], null);
 
-        expect(visits.getToday).toHaveBeenCalledOnceWith({ voided: false });
+        expect(visits.getToday).toHaveBeenCalledTimes(1);
+
+        expect(visits.getToday).toHaveBeenCalledWith({ voided: false });
         expect((f.nativeElement as HTMLElement).textContent).not.toContain('Benim hastalarım');
     });
 
     it('Visits.Create yoksa hekim sorgusu yapılmaz ve süzgeç yok', async () => {
         await create(['Visits.Read'], 'u1');
         expect(visits.getCurrentVeterinarianUserId).not.toHaveBeenCalled();
-        expect(visits.getToday).toHaveBeenCalledOnceWith({ voided: false });
+        expect(visits.getToday).toHaveBeenCalledTimes(1);
+        expect(visits.getToday).toHaveBeenCalledWith({ voided: false });
     });
 });
 
 describe('TodayPageComponent — Benim hastalarım boş liste', () => {
     it('hekimin listesi boşken Size atanmış hasta yok mesajı ve Tümü’ne geç bağlantısı çıkar', async () => {
-        const visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getToday', 'getVeterinarians', 'getCurrentVeterinarianUserId']);
+        const visits = {
+            getToday: vi.fn().mockName('VisitsService.getToday'),
+            getVeterinarians: vi.fn().mockName('VisitsService.getVeterinarians'),
+            getCurrentVeterinarianUserId: vi.fn().mockName('VisitsService.getCurrentVeterinarianUserId')
+        };
 
-        visits.getToday.and.returnValue(of({ date: 'd', activeHospitalizations: [], items: [] }));
-        visits.getCurrentVeterinarianUserId.and.returnValue(of('u1'));
+        visits.getToday.mockReturnValue(of({ date: 'd', activeHospitalizations: [], items: [] }));
+        visits.getCurrentVeterinarianUserId.mockReturnValue(of('u1'));
         await TestBed.configureTestingModule({
             imports: [TodayPageComponent],
             providers: [
@@ -914,9 +945,8 @@ describe('TodayPageComponent — Benim hastalarım boş liste', () => {
 
         expect(toAll).toBeDefined();
         toAll!.click();
-        expect(visits.getToday.calls.mostRecent().args[0]).toEqual({ voided: false });
+        expect(vi.mocked(visits.getToday).mock.lastCall![0]).toEqual({ voided: false });
         f.detectChanges();
         expect((f.nativeElement as HTMLElement).textContent).toContain('Bugün için randevu veya gelen hasta yok.');
     });
-
 });

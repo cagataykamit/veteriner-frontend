@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -28,11 +29,14 @@ const visitResult = {
 describe('VisitArrivalDialogComponent (hızlı kayıt entegrasyonu)', () => {
     let fixture: ComponentFixture<VisitArrivalDialogComponent>;
     let cmp: VisitArrivalDialogComponent;
-    let visits: jasmine.SpyObj<VisitsService>;
+    let visits: MockedObject<VisitsService>;
 
     const create = (claims: string[]) => {
-        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['createVisit', 'getVeterinarians']);
-        visits.getVeterinarians.and.returnValue(of([]));
+        visits = {
+            createVisit: vi.fn().mockName('VisitsService.createVisit'),
+            getVeterinarians: vi.fn().mockName('VisitsService.getVeterinarians')
+        } as unknown as MockedObject<VisitsService>;
+        visits.getVeterinarians.mockReturnValue(of([]));
         TestBed.configureTestingModule({
             imports: [VisitArrivalDialogComponent],
             providers: [
@@ -98,7 +102,7 @@ describe('VisitArrivalDialogComponent (hızlı kayıt entegrasyonu)', () => {
 
     it('hızlı kayıt tamamlanınca hasta seçilir ve geliş (Visit) hemen açılır', () => {
         create(['Clients.Create', 'Pets.Create']);
-        visits.createVisit.and.returnValue(of(visitResult));
+        visits.createVisit.mockReturnValue(of(visitResult));
         const arrived: unknown[] = [];
 
         cmp.arrived.subscribe((r) => arrived.push(r));
@@ -106,22 +110,24 @@ describe('VisitArrivalDialogComponent (hızlı kayıt entegrasyonu)', () => {
         cmp.openRegistration(null);
         cmp.onRegistered(registeredPet);
 
-        expect(visits.createVisit).toHaveBeenCalledOnceWith({ clinicId: 'c1', petId: 'p-new', responsibleVeterinarianUserId: '', isUrgent: false });
+        expect(visits.createVisit).toHaveBeenCalledTimes(1);
+
+        expect(visits.createVisit).toHaveBeenCalledWith({ clinicId: 'c1', petId: 'p-new', responsibleVeterinarianUserId: '', isUrgent: false });
         expect(arrived.length).toBe(1);
         expect(cmp.registration()).toBeNull();
     });
 
     it('Visit adımı hata verirse hasta yeniden oluşturulmaz; mesaj hangi adımın başarısız olduğunu söyler; tekrar denenebilir', () => {
         create(['Clients.Create', 'Pets.Create']);
-        visits.createVisit.and.returnValue(throwError(() => new Error('Sunucu hatası.')));
+        visits.createVisit.mockReturnValue(throwError(() => new Error('Sunucu hatası.')));
         cmp.onRegistered(registeredPet);
 
         expect(cmp.submitError()).toBe("Kayıt tamamlandı, ancak geliş kaydı oluşturulamadı: Sunucu hatası. Yeniden denemek için Kaydet'e basın.");
         expect(cmp.form.controls.pet.value).toEqual(registeredPet);
 
-        visits.createVisit.and.returnValue(of(visitResult));
+        visits.createVisit.mockReturnValue(of(visitResult));
         cmp.onSubmit();
         expect(visits.createVisit).toHaveBeenCalledTimes(2);
-        expect(visits.createVisit.calls.mostRecent().args[0].petId).toBe('p-new');
+        expect(vi.mocked(visits.createVisit).mock.lastCall![0].petId).toBe('p-new');
     });
 });

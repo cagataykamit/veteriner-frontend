@@ -33,8 +33,7 @@ describe('DashboardPageComponent hızlı işlemler', () => {
         return fixture;
     };
 
-    const walkInButton = (fixture: ComponentFixture<DashboardPageComponent>): HTMLButtonElement | undefined =>
-        Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button')).find((b) => b.textContent?.includes('Randevusuz geliş'));
+    const walkInButton = (fixture: ComponentFixture<DashboardPageComponent>): HTMLButtonElement | undefined => Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button')).find((b) => b.textContent?.includes('Randevusuz geliş'));
 
     it('Visits.Create izni varken Randevusuz geliş düğmesi görünür, diğer düğmeler kalır', () => {
         const fixture = create([VISITS_CREATE_CLAIM, APPOINTMENTS_READ_CLAIM]);
@@ -53,15 +52,15 @@ describe('DashboardPageComponent hızlı işlemler', () => {
     it('abonelik salt okunursa düğme devre dışıdır', () => {
         const fixture = create([VISITS_CREATE_CLAIM], true);
 
-        expect(walkInButton(fixture)?.disabled).toBeTrue();
+        expect(walkInButton(fixture)?.disabled).toBe(true);
     });
 
     it('düğme geliş diyaloğunu açar; kayıt sonrası Bugün sayfasına gidilir', () => {
         const fixture = create([VISITS_CREATE_CLAIM]);
-        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
         walkInButton(fixture)!.click();
-        expect(fixture.componentInstance.walkInOpen()).toBeTrue();
+        expect(fixture.componentInstance.walkInOpen()).toBe(true);
         fixture.componentInstance.onWalkInArrived();
         expect(navigate).toHaveBeenCalledWith(['/panel/today']);
     });

@@ -21,7 +21,7 @@ describe('hbs-status.utils', () => {
             markedByName: null,
             isTracked: true
         });
-        expect(mapHbsEntryDtoToVm({ status: 'NotEntered', isTracked: false })?.isTracked).toBeFalse();
+        expect(mapHbsEntryDtoToVm({ status: 'NotEntered', isTracked: false })?.isTracked).toBe(false);
         expect(mapHbsEntryDtoToVm({ status: 'X' as never })).toBeNull();
         expect(mapHbsEntryDtoToVm(undefined)).toBeNull();
     });

@@ -59,12 +59,7 @@ describe('groupTodayItems', () => {
     });
 
     it('süre sütunu başlığı gruba göre: Bekleme / Süre; planlı ve tamamlananlarda yok', () => {
-        const groups = groupTodayItems([
-            item({ key: 'w', careStatus: 'Waiting' }),
-            item({ key: 'i', careStatus: 'InProgress' }),
-            item({ key: 'p', visitId: null, careStatus: null }),
-            item({ key: 'c', careStatus: 'Completed' })
-        ]);
+        const groups = groupTodayItems([item({ key: 'w', careStatus: 'Waiting' }), item({ key: 'i', careStatus: 'InProgress' }), item({ key: 'p', visitId: null, careStatus: null }), item({ key: 'c', careStatus: 'Completed' })]);
 
         expect(groups.map((g) => g.elapsedLabel)).toEqual(['Bekleme', 'Süre', null, null]);
     });
@@ -78,15 +73,15 @@ describe('todayItemActions', () => {
     it('Scheduled randevu ve Visit yok: Geldi', () => {
         const a = todayItemActions(item({ visitId: null, careStatus: null, appointmentId: 'a1', appointmentStatus: 'Scheduled' }));
 
-        expect(a.canMarkArrived).toBeTrue();
-        expect(a.canCorrect).toBeFalse();
-        expect(a.canOpenExamination).toBeFalse();
+        expect(a.canMarkArrived).toBe(true);
+        expect(a.canCorrect).toBe(false);
+        expect(a.canOpenExamination).toBe(false);
     });
 
     it('muayeneyle tamamlanmış (Visit siz) randevuya Geldi yok', () => {
         const a = todayItemActions(item({ visitId: null, careStatus: null, appointmentId: 'a1', appointmentStatus: 'Completed' }));
 
-        expect(a.canMarkArrived).toBeFalse();
+        expect(a.canMarkArrived).toBe(false);
     });
 
     it('Bekliyor: başlat + muayene; Devam ediyor: tamamla + muayene; Tamamlandı: yalnızca düzeltme', () => {
@@ -148,7 +143,7 @@ describe('correctionActionOptions', () => {
 
 describe('waitAlertLevel', () => {
     const now = new Date('2026-10-10T08:00:00Z');
-    const arrivedMinutesAgo = (m: number) => new Date(now.getTime() - m * 60_000).toISOString();
+    const arrivedMinutesAgo = (m: number) => new Date(now.getTime() - m * 60000).toISOString();
     const waiting = (m: number, over: Partial<TodayItemVm> = {}) => item({ arrivedAtUtc: arrivedMinutesAgo(m), ...over });
 
     it('eşik sınırları: 29 none, 30 warning, 59 warning, 60 critical', () => {
@@ -186,29 +181,28 @@ describe('yanlış işaretlenen satır', () => {
         expect(groupTodayItems([voided]).map((g) => g.key)).toEqual(['voided']);
         const a = todayItemActions(voided);
 
-        expect(a.canRestore).toBeTrue();
-        expect(a.canCorrect || a.canStartCare || a.canOpenExamination || a.canCompleteCare).toBeFalse();
+        expect(a.canRestore).toBe(true);
+        expect(a.canCorrect || a.canStartCare || a.canOpenExamination || a.canCompleteCare).toBe(false);
     });
 
     it('normal satırda geri alma yok', () => {
-        expect(todayItemActions(item()).canRestore).toBeFalse();
+        expect(todayItemActions(item()).canRestore).toBe(false);
     });
 });
 
 describe('canToggleUrgency', () => {
     it('yalnızca açık kayıtta; tamamlanmış, yanlış işaretli ve planlı satırda yok', () => {
-        expect(todayItemActions(item({ careStatus: 'Waiting' })).canToggleUrgency).toBeTrue();
-        expect(todayItemActions(item({ careStatus: 'InProgress' })).canToggleUrgency).toBeTrue();
-        expect(todayItemActions(item({ careStatus: 'Completed' })).canToggleUrgency).toBeFalse();
-        expect(todayItemActions(item({ isVoided: true })).canToggleUrgency).toBeFalse();
-        expect(todayItemActions(item({ visitId: null, careStatus: null })).canToggleUrgency).toBeFalse();
+        expect(todayItemActions(item({ careStatus: 'Waiting' })).canToggleUrgency).toBe(true);
+        expect(todayItemActions(item({ careStatus: 'InProgress' })).canToggleUrgency).toBe(true);
+        expect(todayItemActions(item({ careStatus: 'Completed' })).canToggleUrgency).toBe(false);
+        expect(todayItemActions(item({ isVoided: true })).canToggleUrgency).toBe(false);
+        expect(todayItemActions(item({ visitId: null, careStatus: null })).canToggleUrgency).toBe(false);
     });
 });
 
 describe('Gelmedi (NoShow) satırı', () => {
     const now = new Date('2026-10-10T10:00:00Z');
-    const planned = (over: Partial<TodayItemVm> = {}) =>
-        item({ visitId: null, key: 'a1', appointmentId: 'a1', careStatus: null, arrivedAtUtc: null, appointmentStatus: 'Scheduled', scheduledAtUtc: '2026-10-10T09:00:00Z', ...over });
+    const planned = (over: Partial<TodayItemVm> = {}) => item({ visitId: null, key: 'a1', appointmentId: 'a1', careStatus: null, arrivedAtUtc: null, appointmentStatus: 'Scheduled', scheduledAtUtc: '2026-10-10T09:00:00Z', ...over });
 
     it('Visit siz NoShow randevu en sonda Gelmedi grubuna düşer', () => {
         const groups = groupTodayItems([planned({ key: 'ns', appointmentStatus: 'NoShow' }), item({ key: 'c', careStatus: 'Completed' }), planned({ key: 'p' })]);
@@ -217,19 +211,19 @@ describe('Gelmedi (NoShow) satırı', () => {
     });
 
     it('saati geçmiş planlı satırda Gelmedi işaretlenir; gelecek saatte işaretlenemez', () => {
-        expect(todayItemActions(planned(), now).canMarkNoShow).toBeTrue();
-        expect(todayItemActions(planned({ scheduledAtUtc: '2026-10-10T11:00:00Z' }), now).canMarkNoShow).toBeFalse();
+        expect(todayItemActions(planned(), now).canMarkNoShow).toBe(true);
+        expect(todayItemActions(planned({ scheduledAtUtc: '2026-10-10T11:00:00Z' }), now).canMarkNoShow).toBe(false);
     });
 
     it('Gelmedi satırında geri alma ve geç gelen için Geldi var; Visit li satırda gelmedi yok', () => {
         const ns = todayItemActions(planned({ appointmentStatus: 'NoShow' }), now);
 
-        expect(ns.canRevertNoShow).toBeTrue();
-        expect(ns.canMarkArrived).toBeTrue();
-        expect(ns.canMarkNoShow).toBeFalse();
+        expect(ns.canRevertNoShow).toBe(true);
+        expect(ns.canMarkArrived).toBe(true);
+        expect(ns.canMarkNoShow).toBe(false);
         const withVisit = todayItemActions(item({ appointmentId: 'a1', appointmentStatus: 'Scheduled', scheduledAtUtc: '2026-10-10T09:00:00Z' }), now);
 
-        expect(withVisit.canMarkNoShow || withVisit.canRevertNoShow).toBeFalse();
+        expect(withVisit.canMarkNoShow || withVisit.canRevertNoShow).toBe(false);
     });
 });
 
@@ -271,7 +265,7 @@ describe('satır eylem düzeni (görünür / menü)', () => {
         expect(secondary(item({ isVoided: true }), pay)).toEqual(['restore']);
     });
 
-    it('Ücret ekle: yetki varsa Ödeme al\'dan önce; yanlış işaretli satırda ve yetkisizde yok', () => {
+    it("Ücret ekle: yetki varsa Ödeme al'dan önce; yanlış işaretli satırda ve yetkisizde yok", () => {
         const charge = { ...all, canCreateCharge: true };
 
         expect(secondary(item(), charge)).toEqual(['addCharge', 'correct']);
@@ -288,20 +282,20 @@ describe('satır eylem düzeni (görünür / menü)', () => {
 
 describe('isPossiblyForgottenVisit', () => {
     const now = new Date('2026-10-11T12:00:00Z');
-    const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000).toISOString();
+    const hoursAgo = (h: number) => new Date(now.getTime() - h * 3600000).toISOString();
 
     it('açık geliş 12 saati aşınca (sınır dahil) true', () => {
-        expect(isPossiblyForgottenVisit(item({ careStatus: 'Waiting', arrivedAtUtc: hoursAgo(12) }), now)).toBeTrue();
-        expect(isPossiblyForgottenVisit(item({ careStatus: 'InProgress', arrivedAtUtc: hoursAgo(23) }), now)).toBeTrue();
+        expect(isPossiblyForgottenVisit(item({ careStatus: 'Waiting', arrivedAtUtc: hoursAgo(12) }), now)).toBe(true);
+        expect(isPossiblyForgottenVisit(item({ careStatus: 'InProgress', arrivedAtUtc: hoursAgo(23) }), now)).toBe(true);
     });
 
     it('12 saatten kısa süre false', () => {
-        expect(isPossiblyForgottenVisit(item({ careStatus: 'Waiting', arrivedAtUtc: hoursAgo(11.9) }), now)).toBeFalse();
+        expect(isPossiblyForgottenVisit(item({ careStatus: 'Waiting', arrivedAtUtc: hoursAgo(11.9) }), now)).toBe(false);
     });
 
     it('tamamlanan, planlı ve gelişi olmayan satır false', () => {
-        expect(isPossiblyForgottenVisit(item({ careStatus: 'Completed', arrivedAtUtc: hoursAgo(30) }), now)).toBeFalse();
-        expect(isPossiblyForgottenVisit(item({ careStatus: null, arrivedAtUtc: null }), now)).toBeFalse();
+        expect(isPossiblyForgottenVisit(item({ careStatus: 'Completed', arrivedAtUtc: hoursAgo(30) }), now)).toBe(false);
+        expect(isPossiblyForgottenVisit(item({ careStatus: null, arrivedAtUtc: null }), now)).toBe(false);
     });
 });
 
@@ -323,7 +317,7 @@ describe('todayOpenChips', () => {
         expect(c.label).toBe('Ücret yok');
         expect(c.severity).toBe('danger');
         expect(c.title).toContain('3 işlem');
-        expect(c.payable).toBeFalse();
+        expect(c.payable).toBe(false);
     });
 
     it('Ödeme bekliyor ve Kısmi ödeme ödemeye geçilebilir', () => {
@@ -336,7 +330,7 @@ describe('todayOpenChips', () => {
 
         expect(c.key).toBe('chargePending');
         expect(c.label).toBe('Ücret bekliyor (3)');
-        expect(c.reviewable).toBeTrue();
+        expect(c.reviewable).toBe(true);
         expect(rest).toEqual([]);
     });
 
@@ -362,6 +356,6 @@ describe('todayOpenChips', () => {
     it('her çipin simgesi var (yalnız renkle ayrım yok)', () => {
         const all = chips({ chargeIndicator: 'ChargeMissing', awaitingLabCount: 1 }).concat(chips({ chargeIndicator: 'PaymentPending' }));
 
-        expect(all.every((c) => c.icon.startsWith('pi '))).toBeTrue();
+        expect(all.every((c) => c.icon.startsWith('pi '))).toBe(true);
     });
 });

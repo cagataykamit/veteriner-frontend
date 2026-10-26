@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -31,7 +32,7 @@ const APPT: AppointmentDetailVm = {
 
 describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () => {
     let claims: Set<string>;
-    let createVisit: jasmine.Spy;
+    let createVisit: Mock;
 
     const create = (query: Record<string, string> = {}) => {
         TestBed.configureTestingModule({
@@ -57,12 +58,15 @@ describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () =>
 
     beforeEach(() => {
         claims = new Set(['Examinations.Create', 'Visits.Create']);
-        createVisit = jasmine.createSpy('createVisit').and.returnValue(of({ created: true, visit: { id: 'v1' } }));
+        createVisit = vi
+            .fn()
+            .mockName('createVisit')
+            .mockReturnValue(of({ created: true, visit: { id: 'v1' } }));
     });
 
     it('Visits.Create varsa önce geliş açılır ve muayene visitId taşıyarak açılır', () => {
         const fixture = create();
-        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
         examButton(fixture.nativeElement)!.click();
         expect(createVisit).toHaveBeenCalledWith({ appointmentId: 'a1', responsibleVeterinarianUserId: 'vet1' });
@@ -70,18 +74,18 @@ describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () =>
     });
 
     it('mevcut açık geliş döndüğünde de (created: false) o gelişle muayene açılır', () => {
-        createVisit.and.returnValue(of({ created: false, visit: { id: 'v-existing' } }));
+        createVisit.mockReturnValue(of({ created: false, visit: { id: 'v-existing' } }));
         const fixture = create();
-        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
         examButton(fixture.nativeElement)!.click();
-        expect(navigate.calls.mostRecent().args[1]).toEqual({ queryParams: { visitId: 'v-existing', clientId: 'cl1', petId: 'p1' } });
+        expect(vi.mocked(navigate).mock.lastCall![1]).toEqual({ queryParams: { visitId: 'v-existing', clientId: 'cl1', petId: 'p1' } });
     });
 
     it('geliş açılamazsa hata gösterilir ve muayene açılmaz', () => {
-        createVisit.and.returnValue(throwError(() => new Error('Sunucu hatası')));
+        createVisit.mockReturnValue(throwError(() => new Error('Sunucu hatası')));
         const fixture = create();
-        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
         examButton(fixture.nativeElement)!.click();
         fixture.detectChanges();

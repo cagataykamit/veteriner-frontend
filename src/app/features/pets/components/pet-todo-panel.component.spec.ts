@@ -43,8 +43,8 @@ describe('PetTodoPanelComponent', () => {
 
         expect(action.textContent).toContain('Ücretlendir');
         expect(action.getAttribute('href')).toBe('/panel/charges/pending?petId=p1');
-        expect(action.classList).withContext('eylem çubuğuyla aynı boyut').not.toContain('p-button-sm');
-        expect(row.classList).withContext('dar ekranda eylem alta iner').toContain('flex-wrap');
+        expect(action.classList, 'eylem çubuğuyla aynı boyut').not.toContain('p-button-sm');
+        expect(row.classList, 'dar ekranda eylem alta iner').toContain('flex-wrap');
         expect(root.querySelector('[data-testid="todo-count"]')?.textContent).toContain('1');
     });
 
@@ -56,7 +56,7 @@ describe('PetTodoPanelComponent', () => {
 
         expect(root.querySelector('[data-testid="todo-empty"]')).toBeNull();
         expect(root.querySelector('[data-testid="todo-failed"]')?.textContent).toContain('Lab');
-        expect(root.querySelector('[data-testid="todo-retry"]')).withContext('sayfa yeniden okuma sunmuyorsa düğme yok').toBeNull();
+        expect(root.querySelector('[data-testid="todo-retry"]'), 'sayfa yeniden okuma sunmuyorsa düğme yok').toBeNull();
     });
 
     it('hiçbir kaynağı okuma izni yoksa "yok" değil "yetkiniz yok" der', () => {

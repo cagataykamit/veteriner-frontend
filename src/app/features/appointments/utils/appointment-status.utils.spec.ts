@@ -19,39 +19,39 @@ describe('appointment status — Gelmedi (NoShow)', () => {
     });
 
     it('isAppointmentNoShowStatus / canRevert yalnızca Gelmedi için', () => {
-        expect(isAppointmentNoShowStatus(3)).toBeTrue();
-        expect(isAppointmentNoShowStatus(0)).toBeFalse();
-        expect(canRevertAppointmentNoShow(3)).toBeTrue();
-        expect(canRevertAppointmentNoShow(2)).toBeFalse();
+        expect(isAppointmentNoShowStatus(3)).toBe(true);
+        expect(isAppointmentNoShowStatus(0)).toBe(false);
+        expect(canRevertAppointmentNoShow(3)).toBe(true);
+        expect(canRevertAppointmentNoShow(2)).toBe(false);
     });
 
     describe('canMarkAppointmentNoShow', () => {
         const now = new Date('2026-10-10T10:00:00Z');
 
         it('yalnızca saati geçmiş Planlandı randevuda', () => {
-            expect(canMarkAppointmentNoShow(0, '2026-10-10T09:59:00Z', now)).toBeTrue();
-            expect(canMarkAppointmentNoShow(0, '2026-10-10T10:00:00Z', now)).toBeTrue();
-            expect(canMarkAppointmentNoShow(0, '2026-10-10T10:01:00Z', now)).toBeFalse();
+            expect(canMarkAppointmentNoShow(0, '2026-10-10T09:59:00Z', now)).toBe(true);
+            expect(canMarkAppointmentNoShow(0, '2026-10-10T10:00:00Z', now)).toBe(true);
+            expect(canMarkAppointmentNoShow(0, '2026-10-10T10:01:00Z', now)).toBe(false);
         });
 
         it('Tamamlandı / İptal / Gelmedi veya geçersiz saatte yok', () => {
             for (const s of [1, 2, 3, null]) {
-                expect(canMarkAppointmentNoShow(s, '2026-10-10T09:00:00Z', now)).toBeFalse();
+                expect(canMarkAppointmentNoShow(s, '2026-10-10T09:00:00Z', now)).toBe(false);
             }
 
-            expect(canMarkAppointmentNoShow(0, null, now)).toBeFalse();
-            expect(canMarkAppointmentNoShow(0, 'geçersiz', now)).toBeFalse();
+            expect(canMarkAppointmentNoShow(0, null, now)).toBe(false);
+            expect(canMarkAppointmentNoShow(0, 'geçersiz', now)).toBe(false);
         });
     });
 });
 
 describe('appointment status — İptal', () => {
     it('canCancelAppointment yalnızca Planlandı randevuda (sunucu geçişi Scheduled → Cancelled)', () => {
-        expect(canCancelAppointment(0)).toBeTrue();
-        expect(canCancelAppointment('Scheduled')).toBeTrue();
+        expect(canCancelAppointment(0)).toBe(true);
+        expect(canCancelAppointment('Scheduled')).toBe(true);
 
         for (const s of [1, 2, 3, null, undefined, 'x']) {
-            expect(canCancelAppointment(s)).toBeFalse();
+            expect(canCancelAppointment(s)).toBe(false);
         }
     });
 });

@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -12,12 +13,12 @@ const ali = { id: 'c1', fullName: 'Ali Veli', phone: '+90 532 123 45 67', petNam
 
 describe('PatientSearchService', () => {
     let claims: Set<string>;
-    let global: jasmine.SpyObj<GlobalSearchService>;
-    let pets: jasmine.SpyObj<PetsService>;
+    let global: MockedObject<GlobalSearchService>;
+    let pets: MockedObject<PetsService>;
     let service: PatientSearchService;
 
     const run = (result: GlobalSearchResultVm) => {
-        global.search.and.returnValue(of(result));
+        global.search.mockReturnValue(of(result));
         let out: unknown;
 
         service.search('x').subscribe((r) => (out = r));
@@ -27,8 +28,13 @@ describe('PatientSearchService', () => {
 
     beforeEach(() => {
         claims = new Set(['Pets.Read', 'Clients.Read']);
-        global = jasmine.createSpyObj<GlobalSearchService>('GlobalSearchService', ['search', 'canSearch']);
-        pets = jasmine.createSpyObj<PetsService>('PetsService', ['getPets']);
+        global = {
+            search: vi.fn().mockName('GlobalSearchService.search'),
+            canSearch: vi.fn().mockName('GlobalSearchService.canSearch')
+        } as unknown as MockedObject<GlobalSearchService>;
+        pets = {
+            getPets: vi.fn().mockName('PetsService.getPets')
+        } as unknown as MockedObject<PetsService>;
         TestBed.configureTestingModule({
             providers: [
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
@@ -47,7 +53,7 @@ describe('PatientSearchService', () => {
     });
 
     it('sahip adıyla bulunan müşterinin hayvanları eklenir; doğrudan bulunan hayvan tekrarlanmaz', () => {
-        pets.getPets.and.returnValue(of(page([petItem('p1', 'Pamuk'), petItem('p2', 'Boncuk')])));
+        pets.getPets.mockReturnValue(of(page([petItem('p1', 'Pamuk'), petItem('p2', 'Boncuk')])));
         const r = run({ clients: [ali], pets: [{ id: 'p1', name: 'Pamuk', clientId: 'c1', summary: 'Kedi · Tekir', ownerName: 'Ali Veli', ownerPhone: '', microchip: '', deceased: false }], failedKinds: [] });
 
         expect(pets.getPets).toHaveBeenCalledWith({ page: 1, pageSize: 5, clientId: 'c1' });
@@ -57,7 +63,7 @@ describe('PatientSearchService', () => {
     });
 
     it('hayvanı olmayan sahip ayrı listelenir', () => {
-        pets.getPets.and.returnValue(of(page([])));
+        pets.getPets.mockReturnValue(of(page([])));
         const r = run({ clients: [ali], pets: [], failedKinds: [] });
 
         expect(r.patients).toEqual([]);
@@ -73,7 +79,7 @@ describe('PatientSearchService', () => {
     });
 
     it('başka sahibe ait dönen hayvan süzülür; kısmi hata iletilir', () => {
-        pets.getPets.and.returnValue(of(page([petItem('p9', 'Karabaş', 'c2')])));
+        pets.getPets.mockReturnValue(of(page([petItem('p9', 'Karabaş', 'c2')])));
         const r = run({ clients: [ali], pets: [], failedKinds: ['pets'] });
 
         expect(r.patients).toEqual([]);

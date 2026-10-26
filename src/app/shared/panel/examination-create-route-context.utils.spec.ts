@@ -21,12 +21,12 @@ describe('hayvan rota bağlamı', () => {
         const client = new FormControl('', { nonNullable: true });
         const pet = new FormControl('', { nonNullable: true });
 
-        expect(prefillPetFromRoute(params({ clientId: 'c1', petId: 'p1' }), client, pet)).toBeTrue();
+        expect(prefillPetFromRoute(params({ clientId: 'c1', petId: 'p1' }), client, pet)).toBe(true);
         expect([client.value, pet.value]).toEqual(['c1', 'p1']);
         const c2 = new FormControl('', { nonNullable: true });
         const p2 = new FormControl('', { nonNullable: true });
 
-        expect(prefillPetFromRoute(params({ clientId: 'c1' }), c2, p2)).toBeFalse();
+        expect(prefillPetFromRoute(params({ clientId: 'c1' }), c2, p2)).toBe(false);
         expect([c2.value, p2.value]).toEqual(['', '']);
     });
 });

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -9,7 +10,11 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
 import { isLastRowAction, rowDangerActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import { SalesListPageComponent } from './sales-list-page.component';
 
-const paged = (over: { voided?: boolean } = {}) =>
+const paged = (
+    over: {
+        voided?: boolean;
+    } = {}
+) =>
     mapPagedSalesToVm({
         items: [
             {
@@ -34,8 +39,8 @@ const paged = (over: { voided?: boolean } = {}) =>
 
 describe('SalesListPageComponent', () => {
     let fixture: ComponentFixture<SalesListPageComponent>;
-    let getSales: jasmine.Spy;
-    let voidSale: jasmine.Spy;
+    let getSales: Mock;
+    let voidSale: Mock;
     let claims: Set<string>;
 
     const el = () => fixture.nativeElement as HTMLElement;
@@ -58,8 +63,8 @@ describe('SalesListPageComponent', () => {
 
     beforeEach(() => {
         claims = new Set(['Sales.Read', 'Sales.Create']);
-        getSales = jasmine.createSpy('getSales').and.returnValue(of(paged()));
-        voidSale = jasmine.createSpy('voidSale').and.returnValue(of({}));
+        getSales = vi.fn().mockName('getSales').mockReturnValue(of(paged()));
+        voidSale = vi.fn().mockName('voidSale').mockReturnValue(of({}));
     });
 
     it('satırı müşteri, ürün özeti ve toplamla listeler; iptaller varsayılan olarak istenmez', async () => {
@@ -69,14 +74,14 @@ describe('SalesListPageComponent', () => {
         expect(row).toContain('Peşin müşteri');
         expect(row).toContain('Mama');
         expect(row).toContain('Geçerli');
-        expect(getSales.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ includeVoided: false, page: 1 }));
+        expect(vi.mocked(getSales).mock.lastCall![0]).toEqual(expect.objectContaining({ includeVoided: false, page: 1 }));
     });
 
     it('"İptal edilenleri göster" işaretlenince includeVoided ile yeniden yükler', async () => {
         await setup();
         fixture.componentInstance.includeVoided = true;
         fixture.componentInstance.applyFilters();
-        expect(getSales.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ includeVoided: true, page: 1 }));
+        expect(vi.mocked(getSales).mock.lastCall![0]).toEqual(expect.objectContaining({ includeVoided: true, page: 1 }));
     });
 
     it('Hızlı satış düğmesi yalnız Sales.Create ile görünür', async () => {
@@ -96,17 +101,20 @@ describe('SalesListPageComponent', () => {
 
         expect(voids.length).toBe(1);
         expect(voids[0].getAttribute('aria-label')).toBe('İptal et');
-        expect(isLastRowAction(voids[0])).toBeTrue();
+        expect(isLastRowAction(voids[0])).toBe(true);
         expect(voids[0].closest('app-row-action-button')?.previousElementSibling?.querySelector('.fa-eye')).not.toBeNull();
 
         TestBed.resetTestingModule();
-        getSales = jasmine.createSpy('getSales').and.returnValue(of(paged({ voided: true })));
+        getSales = vi
+            .fn()
+            .mockName('getSales')
+            .mockReturnValue(of(paged({ voided: true })));
         await setup();
         expect(rowDangerActions(el()).length).toBe(0);
 
         TestBed.resetTestingModule();
         claims = new Set(['Sales.Read']);
-        getSales = jasmine.createSpy('getSales').and.returnValue(of(paged()));
+        getSales = vi.fn().mockName('getSales').mockReturnValue(of(paged()));
         await setup();
         expect(rowDangerActions(el()).length).toBe(0);
     });
@@ -122,24 +130,26 @@ describe('SalesListPageComponent', () => {
         expect(voidDialog).not.toBeNull();
         const dialog = fixture.debugElement.query((d) => d.name === 'app-reason-confirm-dialog').componentInstance as ReasonConfirmDialogComponent;
 
-        expect(dialog.visible()).toBeTrue();
+        expect(dialog.visible()).toBe(true);
         expect(dialog.summary()).toBe('Peşin müşteri · ' + paged().items[0].totalText);
         expect(voidSale).not.toHaveBeenCalled();
 
-        getSales.calls.reset();
+        getSales.mockClear();
         dialog.form.controls.reason.setValue('Yanlış ürün okutuldu');
         dialog.onSubmit();
 
-        expect(voidSale).toHaveBeenCalledOnceWith('s1', { reason: 'Yanlış ürün okutuldu', stockOutcome: 'StockReturned' });
+        expect(voidSale).toHaveBeenCalledTimes(1);
+
+        expect(voidSale).toHaveBeenCalledWith('s1', { reason: 'Yanlış ürün okutuldu', stockOutcome: 'StockReturned' });
         expect(getSales).toHaveBeenCalledTimes(1);
     });
 
     it('boş sonuçta boş durum, hatada hata durumu gösterilir', async () => {
-        getSales.and.returnValue(of({ ...paged(), items: [], totalItems: 0 }));
+        getSales.mockReturnValue(of({ ...paged(), items: [], totalItems: 0 }));
         await setup();
         expect(el().textContent).toContain('Satış bulunamadı.');
         TestBed.resetTestingModule();
-        getSales = jasmine.createSpy().and.returnValue(throwError(() => new Error('Satış listesi yüklenemedi.')));
+        getSales = vi.fn().mockReturnValue(throwError(() => new Error('Satış listesi yüklenemedi.')));
         await setup();
         expect(el().textContent).toContain('Satış listesi yüklenemedi.');
     });

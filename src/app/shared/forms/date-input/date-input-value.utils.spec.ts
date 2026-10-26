@@ -59,11 +59,11 @@ describe('date-input-value utils', () => {
 
 describe('isDateWithoutTime', () => {
     it('yalnız tam tarih saat yok sayılır', () => {
-        expect(isDateWithoutTime('15.10.2026')).toBeTrue();
-        expect(isDateWithoutTime(' 15.10.2026 ')).toBeTrue();
-        expect(isDateWithoutTime('15.10.2026 14')).toBeFalse();
-        expect(isDateWithoutTime('15.10.2026 14:30')).toBeFalse();
-        expect(isDateWithoutTime('15.10.20')).toBeFalse();
-        expect(isDateWithoutTime('')).toBeFalse();
+        expect(isDateWithoutTime('15.10.2026')).toBe(true);
+        expect(isDateWithoutTime(' 15.10.2026 ')).toBe(true);
+        expect(isDateWithoutTime('15.10.2026 14')).toBe(false);
+        expect(isDateWithoutTime('15.10.2026 14:30')).toBe(false);
+        expect(isDateWithoutTime('15.10.20')).toBe(false);
+        expect(isDateWithoutTime('')).toBe(false);
     });
 });

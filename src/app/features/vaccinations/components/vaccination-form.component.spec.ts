@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
@@ -18,15 +19,34 @@ const product = (id: string, name: string, kind: string) => ({ id, name, kind, s
 const stockResult = (over: Partial<AdministrationCreateResultVm['stock']> = {}, created = true): AdministrationCreateResultVm => ({
     created,
     administration: {
-        id: 'a1', petId: 'p1', examinationId: null, treatmentId: null, productId: 'pr1', productName: 'Nobivac', productSku: null, unit: 'doz', quantity: 1,
-        administeredAtUtc: '2026-10-14T08:00:00Z', notes: null, isVoided: false, voidedAtUtc: null, voidReason: null, voidStockOutcome: null,
-        addedAfterFinalization: false, lateEntryReason: null, createdAtUtc: '2026-10-14T08:00:00Z', batchId: null, lotNumber: 'L1', expiryDate: null, vaccinationId: 'v1'
+        id: 'a1',
+        petId: 'p1',
+        examinationId: null,
+        treatmentId: null,
+        productId: 'pr1',
+        productName: 'Nobivac',
+        productSku: null,
+        unit: 'doz',
+        quantity: 1,
+        administeredAtUtc: '2026-10-14T08:00:00Z',
+        notes: null,
+        isVoided: false,
+        voidedAtUtc: null,
+        voidReason: null,
+        voidStockOutcome: null,
+        addedAfterFinalization: false,
+        lateEntryReason: null,
+        createdAtUtc: '2026-10-14T08:00:00Z',
+        batchId: null,
+        lotNumber: 'L1',
+        expiryDate: null,
+        vaccinationId: 'v1'
     },
     stock: { quantityOnHand: 9, availableQuantity: 8, minimumStockLevel: 2, isBelowMinimum: false, ...over }
 });
 
 describe('VaccinationFormComponent — aşı + stoktan düşen uygulama', () => {
-    let service: jasmine.SpyObj<VaccinationsService>;
+    let service: MockedObject<VaccinationsService>;
     let saved: VaccinationSavedEvent[];
     let canStock: boolean;
 
@@ -62,8 +82,10 @@ describe('VaccinationFormComponent — aşı + stoktan düşen uygulama', () => 
         localStorage.removeItem('vetinity.vaccine.lastProductId');
         canStock = true;
         saved = [];
-        service = jasmine.createSpyObj<VaccinationsService>('VaccinationsService', ['createVaccination']);
-        service.createVaccination.and.returnValue(of({ id: 'v1', stockResult: null }));
+        service = {
+            createVaccination: vi.fn().mockName('VaccinationsService.createVaccination')
+        } as unknown as MockedObject<VaccinationsService>;
+        service.createVaccination.mockReturnValue(of({ id: 'v1', stockResult: null }));
     });
 
     it('yalnız aşı türündeki ürünler seçenek olur', () => {
@@ -83,7 +105,7 @@ describe('VaccinationFormComponent — aşı + stoktan düşen uygulama', () => 
         const cmp = create();
 
         cmp.onSubmit();
-        const payload = service.createVaccination.calls.mostRecent().args[0];
+        const payload = vi.mocked(service.createVaccination).mock.lastCall![0];
 
         expect(payload.productId).toBeUndefined();
         expect(payload.requestId).toBeUndefined();
@@ -96,23 +118,23 @@ describe('VaccinationFormComponent — aşı + stoktan düşen uygulama', () => 
         cmp.form.controls.productId.setValue('pr1');
         expect(cmp.form.controls.quantity.value).toBe(1);
         cmp.form.controls.quantity.setValue(0);
-        expect(cmp.form.valid).toBeFalse();
+        expect(cmp.form.valid).toBe(false);
         cmp.form.controls.productId.setValue('');
         expect(cmp.form.controls.quantity.value).toBeNull();
-        expect(cmp.form.valid).toBeTrue();
+        expect(cmp.form.valid).toBe(true);
     });
 
     it('ürünle gönderimde ürün, miktar, parti ve requestId gider; başarıda stok bildirimi detaya taşınır', () => {
-        service.createVaccination.and.returnValue(of({ id: 'v1', stockResult: stockResult() }));
+        service.createVaccination.mockReturnValue(of({ id: 'v1', stockResult: stockResult() }));
         const cmp = create();
 
         cmp.form.controls.productId.setValue('pr1');
         cmp.form.controls.quantity.setValue(2);
         cmp.form.controls.batchId.setValue('b9');
         cmp.onSubmit();
-        const payload = service.createVaccination.calls.mostRecent().args[0];
+        const payload = vi.mocked(service.createVaccination).mock.lastCall![0];
 
-        expect(payload).toEqual(jasmine.objectContaining({ productId: 'pr1', quantity: 2, batchId: 'b9' }));
+        expect(payload).toEqual(expect.objectContaining({ productId: 'pr1', quantity: 2, batchId: 'b9' }));
         expect(payload.requestId).toBeTruthy();
         expect(saved[0].stockNotice?.text).toContain('kalan kullanılabilir stok 8 doz');
         expect(localStorage.getItem('vetinity.vaccine.lastProductId')).toBe('pr1');
@@ -121,15 +143,12 @@ describe('VaccinationFormComponent — aşı + stoktan düşen uygulama', () => 
     it('hata sonrası yeniden denemede aynı requestId kullanılır (çift düşüm yok)', () => {
         const cmp = create();
 
-        service.createVaccination.and.returnValues(
-            throwError(() => new HttpErrorResponse({ status: 409, error: { extensions: { code: 'Vaccinations.ConcurrencyConflict' } } })),
-            of({ id: 'v1', stockResult: null })
-        );
+        service.createVaccination.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 409, error: { extensions: { code: 'Vaccinations.ConcurrencyConflict' } } }))).mockReturnValueOnce(of({ id: 'v1', stockResult: null }));
         cmp.form.controls.productId.setValue('pr1');
         cmp.onSubmit();
         expect(cmp.submitError()).toContain('iki kez düşülmez');
         cmp.onSubmit();
-        const ids = service.createVaccination.calls.all().map((c) => c.args[0].requestId);
+        const ids = vi.mocked(service.createVaccination).mock.calls.map((c) => c[0].requestId);
 
         expect(ids[0]).toBe(ids[1]);
     });

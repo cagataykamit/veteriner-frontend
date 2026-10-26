@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -58,13 +59,19 @@ const NO_DATA: ExampleClinicStatusDto = { hasExampleData: false, counts: EMPTY_C
 const HAS_DATA: ExampleClinicStatusDto = { hasExampleData: true, counts: COUNTS };
 
 describe('ExampleClinicLoadCardComponent (TRIAL-002, örnek veri temizliği)', () => {
-    let service: jasmine.SpyObj<ExampleClinicService>;
-    let messages: jasmine.SpyObj<MessageService>;
+    let service: MockedObject<ExampleClinicService>;
+    let messages: MockedObject<MessageService>;
 
     const create = async (canManage: boolean, trialing: boolean, status: ExampleClinicStatusDto | Error = NO_DATA, writable = true): Promise<ComponentFixture<ExampleClinicLoadCardComponent>> => {
-        service = jasmine.createSpyObj<ExampleClinicService>('ExampleClinicService', ['load', 'getStatus', 'clear']);
-        service.getStatus.and.returnValue(status instanceof Error ? throwError(() => status) : of(status));
-        messages = jasmine.createSpyObj<MessageService>('MessageService', ['add']);
+        service = {
+            load: vi.fn().mockName('ExampleClinicService.load'),
+            getStatus: vi.fn().mockName('ExampleClinicService.getStatus'),
+            clear: vi.fn().mockName('ExampleClinicService.clear')
+        } as unknown as MockedObject<ExampleClinicService>;
+        service.getStatus.mockReturnValue(status instanceof Error ? throwError(() => status) : of(status));
+        messages = {
+            add: vi.fn().mockName('MessageService.add')
+        } as unknown as MockedObject<MessageService>;
         await TestBed.configureTestingModule({
             imports: [ExampleClinicLoadCardComponent],
             providers: [provideRouter([]), { provide: ExampleClinicService, useValue: service }, { provide: MessageService, useValue: messages }]
@@ -111,7 +118,7 @@ describe('ExampleClinicLoadCardComponent (TRIAL-002, örnek veri temizliği)', (
     it('başarıda özet sayaçlarını, Bugün bağlantısını ve toast gösterir', async () => {
         const f = await create(true, true);
 
-        service.load.and.returnValue(of(SUMMARY));
+        service.load.mockReturnValue(of(SUMMARY));
         f.componentInstance.load();
         f.detectChanges();
 
@@ -121,7 +128,7 @@ describe('ExampleClinicLoadCardComponent (TRIAL-002, örnek veri temizliği)', (
         expect(host(f).querySelector('[data-testid="example-clinic-count-pets"]')?.textContent).toContain('20');
         expect(host(f).querySelector('a[href="/panel/today"]')).not.toBeNull();
         expect(loadButton(f)).toBeNull();
-        expect(messages.add).toHaveBeenCalledWith(jasmine.objectContaining({ severity: 'success', detail: '12 müşteri, 20 hasta, 38 randevu' }));
+        expect(messages.add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'success', detail: '12 müşteri, 20 hasta, 38 randevu' }));
         // Yüklemeden sonra durum yenilenir (temizlik eylemi sonraki açılışta hazır olsun).
         expect(service.getStatus).toHaveBeenCalledTimes(2);
     });
@@ -129,12 +136,12 @@ describe('ExampleClinicLoadCardComponent (TRIAL-002, örnek veri temizliği)', (
     it('409 AlreadyLoaded: mesajı gösterir ve düğmeyi gizler', async () => {
         const f = await create(true, true);
 
-        service.load.and.returnValue(throwError(() => new ExampleClinicError('Kurumunuzda zaten müşteri ya da hasta kaydı var; örnek klinik yalnız boş kuruma yüklenebilir.', EXAMPLE_CLINIC_ALREADY_LOADED_CODE)));
+        service.load.mockReturnValue(throwError(() => new ExampleClinicError('Kurumunuzda zaten müşteri ya da hasta kaydı var; örnek klinik yalnız boş kuruma yüklenebilir.', EXAMPLE_CLINIC_ALREADY_LOADED_CODE)));
         f.componentInstance.load();
         f.detectChanges();
 
         expect(host(f).querySelector('[data-testid="example-clinic-error"]')?.textContent).toContain('zaten müşteri ya da hasta kaydı var');
-        expect(f.componentInstance.blocked()).toBeTrue();
+        expect(f.componentInstance.blocked()).toBe(true);
         expect(loadButton(f)).toBeNull();
         expect(messages.add).not.toHaveBeenCalled();
     });
@@ -142,12 +149,12 @@ describe('ExampleClinicLoadCardComponent (TRIAL-002, örnek veri temizliği)', (
     it('diğer hatalarda mesajı gösterir, düğme kalır', async () => {
         const f = await create(true, true);
 
-        service.load.and.returnValue(throwError(() => new ExampleClinicError('Bu kuruma erişim yetkiniz bulunmuyor.', 'Tenants.AccessDenied')));
+        service.load.mockReturnValue(throwError(() => new ExampleClinicError('Bu kuruma erişim yetkiniz bulunmuyor.', 'Tenants.AccessDenied')));
         f.componentInstance.load();
         f.detectChanges();
 
         expect(host(f).querySelector('[data-testid="example-clinic-error"]')?.textContent).toContain('erişim yetkiniz');
-        expect(f.componentInstance.blocked()).toBeFalse();
+        expect(f.componentInstance.blocked()).toBe(false);
         expect(loadButton(f)).not.toBeNull();
     });
 
@@ -173,42 +180,42 @@ describe('ExampleClinicLoadCardComponent (TRIAL-002, örnek veri temizliği)', (
         expect(notes?.textContent).toContain('2 kayıt daha');
         expect(document.querySelector('[data-testid="example-clinic-clear-deactivated"]')?.textContent).toContain('1 örnek ürün');
 
-        service.clear.and.returnValue(of(COUNTS));
+        service.clear.mockReturnValue(of(COUNTS));
         f.componentInstance.clear();
         f.detectChanges();
 
         expect(service.clear).toHaveBeenCalledTimes(1);
-        expect(f.componentInstance.clearConfirmVisible()).toBeFalse();
+        expect(f.componentInstance.clearConfirmVisible()).toBe(false);
         expect(host(f).querySelector('[data-testid="example-clinic-cleared"]')).not.toBeNull();
         expect(host(f).textContent).toContain('pasife alındı');
         expect(clearButton(f)).toBeNull();
-        expect(messages.add).toHaveBeenCalledWith(jasmine.objectContaining({ severity: 'success', summary: 'Örnek veriler silindi' }));
+        expect(messages.add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'success', summary: 'Örnek veriler silindi' }));
     });
 
     it('409 NotLoaded: diyalog kapanır, durum yenilenir ve bilgi verilir', async () => {
         const f = await create(true, false, HAS_DATA);
 
         f.componentInstance.openClearConfirm();
-        service.clear.and.returnValue(throwError(() => new ExampleClinicError('Kurumunuzda temizlenecek örnek veri kalmamış.', EXAMPLE_CLINIC_NOT_LOADED_CODE)));
-        service.getStatus.and.returnValue(of(NO_DATA));
+        service.clear.mockReturnValue(throwError(() => new ExampleClinicError('Kurumunuzda temizlenecek örnek veri kalmamış.', EXAMPLE_CLINIC_NOT_LOADED_CODE)));
+        service.getStatus.mockReturnValue(of(NO_DATA));
         f.componentInstance.clear();
         f.detectChanges();
 
-        expect(f.componentInstance.clearConfirmVisible()).toBeFalse();
+        expect(f.componentInstance.clearConfirmVisible()).toBe(false);
         expect(service.getStatus).toHaveBeenCalledTimes(2);
         expect(host(f).classList).toContain('hidden');
-        expect(messages.add).toHaveBeenCalledWith(jasmine.objectContaining({ severity: 'info' }));
+        expect(messages.add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'info' }));
     });
 
     it('diğer temizlik hatalarında diyalog açık kalır ve hata gösterilir', async () => {
         const f = await create(true, false, HAS_DATA);
 
         f.componentInstance.openClearConfirm();
-        service.clear.and.returnValue(throwError(() => new ExampleClinicError('Aboneliğiniz salt okunur modda; örnek veri temizlenemez.', 'Subscriptions.TenantReadOnly')));
+        service.clear.mockReturnValue(throwError(() => new ExampleClinicError('Aboneliğiniz salt okunur modda; örnek veri temizlenemez.', 'Subscriptions.TenantReadOnly')));
         f.componentInstance.clear();
         f.detectChanges();
 
-        expect(f.componentInstance.clearConfirmVisible()).toBeTrue();
+        expect(f.componentInstance.clearConfirmVisible()).toBe(true);
         expect(f.componentInstance.clearError()).toContain('salt okunur');
         expect(document.querySelector('[data-testid="example-clinic-clear-error"]')?.textContent).toContain('salt okunur');
         expect(clearButton(f)).not.toBeNull();

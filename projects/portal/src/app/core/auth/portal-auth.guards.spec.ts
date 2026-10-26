@@ -1,3 +1,4 @@
+import type { Mock, MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, provideRouter, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -10,20 +11,31 @@ import { PortalSessionService } from './portal-session.service';
 const route = {} as ActivatedRouteSnapshot;
 const state = { url: '/account' } as RouterStateSnapshot;
 
-describe('portal guard\'ları', () => {
-    let session: jasmine.SpyObj<PortalSessionService> & { acceptanceCleared: jasmine.Spy; needsClinicSelection: jasmine.Spy };
-    let legal: jasmine.SpyObj<PortalLegalApi>;
+describe("portal guard'ları", () => {
+    let session: MockedObject<PortalSessionService> & {
+        acceptanceCleared: Mock;
+        needsClinicSelection: Mock;
+    };
+    let legal: MockedObject<PortalLegalApi>;
     let router: Router;
 
     const run = <T>(guard: () => T): T => TestBed.runInInjectionContext(guard);
     const urlOf = (result: unknown) => router.serializeUrl(result as UrlTree);
 
     beforeEach(() => {
-        session = Object.assign(jasmine.createSpyObj<PortalSessionService>('PortalSessionService', ['ensureSession', 'markAcceptanceCleared']), {
-            acceptanceCleared: jasmine.createSpy('acceptanceCleared').and.returnValue(false),
-            needsClinicSelection: jasmine.createSpy('needsClinicSelection').and.returnValue(false)
-        });
-        legal = jasmine.createSpyObj<PortalLegalApi>('PortalLegalApi', ['myAcceptances']);
+        session = Object.assign(
+            {
+                ensureSession: vi.fn().mockName('PortalSessionService.ensureSession'),
+                markAcceptanceCleared: vi.fn().mockName('PortalSessionService.markAcceptanceCleared')
+            } as unknown as MockedObject<PortalSessionService>,
+            {
+                acceptanceCleared: vi.fn().mockName('acceptanceCleared').mockReturnValue(false),
+                needsClinicSelection: vi.fn().mockName('needsClinicSelection').mockReturnValue(false)
+            }
+        );
+        legal = {
+            myAcceptances: vi.fn().mockName('PortalLegalApi.myAcceptances')
+        } as unknown as MockedObject<PortalLegalApi>;
         TestBed.configureTestingModule({
             providers: [provideRouter([]), { provide: PortalSessionService, useValue: session }, { provide: PortalLegalApi, useValue: legal }]
         });
@@ -31,7 +43,7 @@ describe('portal guard\'ları', () => {
     });
 
     function withStatus(status: PortalSessionStatus): void {
-        session.ensureSession.and.resolveTo(status);
+        session.ensureSession.mockResolvedValue(status);
     }
 
     it('oturum yoksa dönüş adresiyle girişe yönlendirir', async () => {
@@ -42,7 +54,7 @@ describe('portal guard\'ları', () => {
 
     it('oturum varsa geçirir; sunucuya ulaşılamıyorsa çevrimdışı sayfasına gönderir', async () => {
         withStatus('authenticated');
-        expect(await run(() => portalAuthGuard(route, state))).toBeTrue();
+        expect(await run(() => portalAuthGuard(route, state))).toBe(true);
 
         withStatus('offline');
         expect(urlOf(await run(() => portalAuthGuard(route, state)))).toBe('/offline');
@@ -53,10 +65,10 @@ describe('portal guard\'ları', () => {
         expect(urlOf(await run(() => portalGuestGuard(route, state)))).toBe('/');
 
         withStatus('anonymous');
-        expect(await run(() => portalGuestGuard(route, state))).toBeTrue();
+        expect(await run(() => portalGuestGuard(route, state))).toBe(true);
     });
 
-    describe('kabul guard\'ı (engelleyici)', () => {
+    describe("kabul guard'ı (engelleyici)", () => {
         const pending: PortalAcceptanceStatus = {
             requiresAcceptance: true,
             pendingDocuments: [{ documentType: 'PortalTerms', version: '0.1' }],
@@ -71,53 +83,53 @@ describe('portal guard\'ları', () => {
 
         beforeEach(() => withStatus('authenticated'));
 
-        it('oturum yoksa sunucuya sormaz; yönlendirmeyi kimlik guard\'ına bırakır', async () => {
+        it("oturum yoksa sunucuya sormaz; yönlendirmeyi kimlik guard'ına bırakır", async () => {
             withStatus('anonymous');
 
-            expect(await run(() => portalAcceptanceGuard(route, state))).toBeFalse();
+            expect(await run(() => portalAcceptanceGuard(route, state))).toBe(false);
             expect(legal.myAcceptances).not.toHaveBeenCalled();
         });
 
         it('bekleyen belge varsa portalı açmaz', async () => {
-            legal.myAcceptances.and.returnValue(of(pending));
+            legal.myAcceptances.mockReturnValue(of(pending));
 
             expect(urlOf(await run(() => portalAcceptanceGuard(route, state)))).toBe('/accept');
         });
 
         it('onaylanmamış klinik aydınlatma metni varsa portalı açmaz', async () => {
-            legal.myAcceptances.and.returnValue(of(disclosurePending));
+            legal.myAcceptances.mockReturnValue(of(disclosurePending));
 
             expect(urlOf(await run(() => portalAcceptanceGuard(route, state)))).toBe('/accept');
         });
 
         it('durum okunamazsa da geçirmez', async () => {
-            legal.myAcceptances.and.returnValue(throwError(() => new Error('ağ')));
+            legal.myAcceptances.mockReturnValue(throwError(() => new Error('ağ')));
 
             expect(urlOf(await run(() => portalAcceptanceGuard(route, state)))).toBe('/accept');
         });
 
         it('hepsi onaylıysa geçirir ve sonucu oturumda saklar', async () => {
-            legal.myAcceptances.and.returnValue(of(done));
+            legal.myAcceptances.mockReturnValue(of(done));
 
-            expect(await run(() => portalAcceptanceGuard(route, state))).toBeTrue();
+            expect(await run(() => portalAcceptanceGuard(route, state))).toBe(true);
             expect(session.markAcceptanceCleared).toHaveBeenCalled();
         });
 
         it('oturumda onay temizse sunucuya sormaz', async () => {
-            session.acceptanceCleared.and.returnValue(true);
+            session.acceptanceCleared.mockReturnValue(true);
 
-            expect(await run(() => portalAcceptanceGuard(route, state))).toBeTrue();
+            expect(await run(() => portalAcceptanceGuard(route, state))).toBe(true);
             expect(legal.myAcceptances).not.toHaveBeenCalled();
         });
     });
 
     it('çok klinikte seçim yoksa klinik seçimine yönlendirir', async () => {
         withStatus('authenticated');
-        session.needsClinicSelection.and.returnValue(true);
+        session.needsClinicSelection.mockReturnValue(true);
         expect(urlOf(await run(() => portalClinicGuard(route, state)))).toBe('/clinics');
 
-        session.needsClinicSelection.and.returnValue(false);
-        expect(await run(() => portalClinicGuard(route, state))).toBeTrue();
+        session.needsClinicSelection.mockReturnValue(false);
+        expect(await run(() => portalClinicGuard(route, state))).toBe(true);
     });
 
     it('dönüş adresi yalnız uygulama içi yol olabilir', () => {

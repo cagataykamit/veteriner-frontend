@@ -7,6 +7,6 @@ describe('chargeSuggestionsQueryToHttpParams', () => {
         expect(p.get('clinicId')).toBe('k1');
         expect(p.get('clientId')).toBe('c1');
         expect(p.get('pageSize')).toBe('200');
-        expect(p.has('petId')).toBeFalse();
+        expect(p.has('petId')).toBe(false);
     });
 });

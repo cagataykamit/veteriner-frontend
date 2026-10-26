@@ -66,7 +66,7 @@ describe('SalesPartnersService ve DiscountCodesService (ADR-037)', () => {
     it('anonim doğrulama gövdesi yalnız kodu taşır; kiracı kodu JWT kiracısına gider', () => {
         const codes = TestBed.inject(DiscountCodesService);
 
-        spyOn(TestBed.inject(AuthService), 'getAccessToken').and.returnValue(jwtWithTenant('t-1'));
+        vi.spyOn(TestBed.inject(AuthService), 'getAccessToken').mockReturnValue(jwtWithTenant('t-1'));
 
         codes.validate('ISIK10').subscribe();
         const validate = http.expectOne('http://api.test/api/v1/public/discount-codes/validate');

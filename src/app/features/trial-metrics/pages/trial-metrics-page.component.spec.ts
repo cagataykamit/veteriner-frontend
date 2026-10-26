@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -37,7 +38,7 @@ const EMPTY: TrialActivationMetricsDto = {
 };
 
 describe('Deneme ölçümleri sayfası (TRIAL-008)', () => {
-    let service: jasmine.SpyObj<TrialMetricsService>;
+    let service: MockedObject<TrialMetricsService>;
     let fixture: ComponentFixture<TrialMetricsPageComponent>;
 
     const text = (selector: string): string => (fixture.nativeElement as HTMLElement).querySelector(selector)?.textContent?.trim() ?? '';
@@ -53,8 +54,10 @@ describe('Deneme ölçümleri sayfası (TRIAL-008)', () => {
     };
 
     beforeEach(() => {
-        service = jasmine.createSpyObj<TrialMetricsService>('TrialMetricsService', ['summary']);
-        service.summary.and.returnValue(of(METRICS));
+        service = {
+            summary: vi.fn().mockName('TrialMetricsService.summary')
+        } as unknown as MockedObject<TrialMetricsService>;
+        service.summary.mockReturnValue(of(METRICS));
     });
 
     it('biçimleyiciler: oran yüzde, dakika "dk", payda yoksa tire', () => {
@@ -68,9 +71,9 @@ describe('Deneme ölçümleri sayfası (TRIAL-008)', () => {
         await create();
 
         expect(service.summary).toHaveBeenCalledTimes(1);
-        const [fromUtc, toUtc] = service.summary.calls.mostRecent().args;
+        const [fromUtc, toUtc] = vi.mocked(service.summary).mock.lastCall!;
 
-        expect(Math.round((new Date(toUtc).getTime() - new Date(fromUtc).getTime()) / 86_400_000)).toBe(30);
+        expect(Math.round((new Date(toUtc).getTime() - new Date(fromUtc).getTime()) / 86400000)).toBe(30);
 
         expect(text('[data-testid="tm-period-text"]')).toContain('40');
         expect(text('[data-testid="tm-card-starts"] [data-testid="tm-card-value"]')).toBe('40');
@@ -91,8 +94,8 @@ describe('Deneme ölçümleri sayfası (TRIAL-008)', () => {
 
         expect(breakdown.length).toBe(3);
         expect(breakdown[0].textContent).toContain('Müşteri ekleme');
-        expect(breakdown[0].textContent).toContain('%40', 'aktive olanlar (25) içinde pay');
-        expect(breakdown[2].textContent).toContain('BilinmeyenTur', 'bilinmeyen tür ham adıyla gösterilir');
+        expect(breakdown[0].textContent, 'aktive olanlar (25) içinde pay').toContain('%40');
+        expect(breakdown[2].textContent, 'bilinmeyen tür ham adıyla gösterilir').toContain('BilinmeyenTur');
     });
 
     it('dönem değişince yeniden yükler; aynı dönem tekrar istek atmaz', async () => {
@@ -104,14 +107,14 @@ describe('Deneme ölçümleri sayfası (TRIAL-008)', () => {
         fixture.componentInstance.selectPeriod(7);
         await fixture.whenStable();
         expect(service.summary).toHaveBeenCalledTimes(2);
-        const [fromUtc, toUtc] = service.summary.calls.mostRecent().args;
+        const [fromUtc, toUtc] = vi.mocked(service.summary).mock.lastCall!;
 
-        expect(Math.round((new Date(toUtc).getTime() - new Date(fromUtc).getTime()) / 86_400_000)).toBe(7);
+        expect(Math.round((new Date(toUtc).getTime() - new Date(fromUtc).getTime()) / 86400000)).toBe(7);
         expect(text('[data-testid="tm-period-text"]')).toContain('son 7 gün');
     });
 
     it('boş kohortta oranları tire gösterir ve dağılım boş mesajı verir', async () => {
-        service.summary.and.returnValue(of(EMPTY));
+        service.summary.mockReturnValue(of(EMPTY));
 
         await create();
 
@@ -122,7 +125,7 @@ describe('Deneme ölçümleri sayfası (TRIAL-008)', () => {
     });
 
     it('servis hatasında hata durumu ve yeniden dene gösterir', async () => {
-        service.summary.and.returnValue(throwError(() => new Error('Dönem geçersiz: başlangıç bitişten önce ve aralık en çok 366 gün olmalı.')));
+        service.summary.mockReturnValue(throwError(() => new Error('Dönem geçersiz: başlangıç bitişten önce ve aralık en çok 366 gün olmalı.')));
 
         await create();
 

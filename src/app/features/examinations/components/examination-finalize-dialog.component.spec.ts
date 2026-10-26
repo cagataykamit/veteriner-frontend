@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import type { ExaminationFinalizeResultVm } from '@/app/features/examinations/models/examination-vm.model';
@@ -9,11 +10,13 @@ const result: ExaminationFinalizeResultVm = { id: 'e1', rowVersion: 'V2', status
 describe('ExaminationFinalizeDialogComponent', () => {
     let fixture: ComponentFixture<ExaminationFinalizeDialogComponent>;
     let cmp: ExaminationFinalizeDialogComponent;
-    let service: jasmine.SpyObj<ExaminationsService>;
+    let service: MockedObject<ExaminationsService>;
     let finalized: ExaminationFinalizeResultVm[];
 
     beforeEach(async () => {
-        service = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', ['finalizeExamination']);
+        service = {
+            finalizeExamination: vi.fn().mockName('ExaminationsService.finalizeExamination')
+        } as unknown as MockedObject<ExaminationsService>;
         await TestBed.configureTestingModule({
             imports: [ExaminationFinalizeDialogComponent],
             providers: [{ provide: ExaminationsService, useValue: service }]
@@ -41,25 +44,28 @@ describe('ExaminationFinalizeDialogComponent', () => {
 
         fixture.componentRef.setInput('warnings', ['Değerlendirme / tanı girilmemiş.']);
         fixture.detectChanges();
-        service.finalizeExamination.and.returnValue(of(result));
+        service.finalizeExamination.mockReturnValue(of(result));
         cmp.onSubmit();
 
         expect(document.body.querySelector('[data-testid="finalize-warnings"]')?.textContent).toContain('tanı girilmemiş');
-        expect(service.finalizeExamination).toHaveBeenCalledOnceWith('e1', 'V1');
+        expect(service.finalizeExamination).toHaveBeenCalledTimes(1);
+        expect(service.finalizeExamination).toHaveBeenCalledWith('e1', 'V1');
     });
 
     it('ekranın açıldığı rowVersion ile kesinleştirir; başarıda kapanır ve sonuç bildirilir', () => {
-        service.finalizeExamination.and.returnValue(of(result));
+        service.finalizeExamination.mockReturnValue(of(result));
 
         cmp.onSubmit();
 
-        expect(service.finalizeExamination).toHaveBeenCalledOnceWith('e1', 'V1');
+        expect(service.finalizeExamination).toHaveBeenCalledTimes(1);
+
+        expect(service.finalizeExamination).toHaveBeenCalledWith('e1', 'V1');
         expect(finalized).toEqual([result]);
-        expect(cmp.visible()).toBeFalse();
+        expect(cmp.visible()).toBe(false);
     });
 
     it('gönderim sürerken çift tıklama ikinci istek atmaz', () => {
-        service.finalizeExamination.and.returnValue(new Subject<ExaminationFinalizeResultVm>());
+        service.finalizeExamination.mockReturnValue(new Subject<ExaminationFinalizeResultVm>());
 
         cmp.onSubmit();
         cmp.onSubmit();
@@ -77,15 +83,13 @@ describe('ExaminationFinalizeDialogComponent', () => {
     });
 
     it('409 çakışmasında mesaj gösterilir, diyalog açık kalır, kilit açılır', () => {
-        service.finalizeExamination.and.returnValue(
-            throwError(() => new Error('Muayene siz ekranı açtıktan sonra başka biri tarafından değiştirilmiş.'))
-        );
+        service.finalizeExamination.mockReturnValue(throwError(() => new Error('Muayene siz ekranı açtıktan sonra başka biri tarafından değiştirilmiş.')));
 
         cmp.onSubmit();
 
         expect(cmp.submitError()).toContain('başka biri tarafından değiştirilmiş');
-        expect(cmp.visible()).toBeTrue();
-        expect(cmp.submitting()).toBeFalse();
+        expect(cmp.visible()).toBe(true);
+        expect(cmp.submitting()).toBe(false);
         expect(finalized.length).toBe(0);
     });
 });

@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
@@ -11,7 +12,7 @@ const row: CareInstructionVm = { id: 'ci1', text: 'Günde iki kez yemek', create
 
 describe('CareInstructionsSectionComponent', () => {
     let fixture: ComponentFixture<CareInstructionsSectionComponent>;
-    let service: jasmine.SpyObj<CareInstructionsService>;
+    let service: MockedObject<CareInstructionsService>;
     let claims: Set<string>;
     let mutationBlocked: boolean;
 
@@ -43,8 +44,12 @@ describe('CareInstructionsSectionComponent', () => {
     };
 
     beforeEach(() => {
-        service = jasmine.createSpyObj<CareInstructionsService>('CareInstructionsService', ['getCareInstructions', 'createCareInstruction', 'updateCareInstruction']);
-        service.getCareInstructions.and.returnValue(of([row]));
+        service = {
+            getCareInstructions: vi.fn().mockName('CareInstructionsService.getCareInstructions'),
+            createCareInstruction: vi.fn().mockName('CareInstructionsService.createCareInstruction'),
+            updateCareInstruction: vi.fn().mockName('CareInstructionsService.updateCareInstruction')
+        } as unknown as MockedObject<CareInstructionsService>;
+        service.getCareInstructions.mockReturnValue(of([row]));
         claims = new Set(['CareInstructions.Read']);
         mutationBlocked = false;
     });
@@ -52,7 +57,7 @@ describe('CareInstructionsSectionComponent', () => {
     it('okuma izni yoksa hiçbir şey çizmez ve istek atmaz', async () => {
         claims.clear();
         await setup();
-        expect(has('care-instructions-section')).toBeFalse();
+        expect(has('care-instructions-section')).toBe(false);
         expect(service.getCareInstructions).not.toHaveBeenCalled();
     });
 
@@ -60,39 +65,39 @@ describe('CareInstructionsSectionComponent', () => {
         await setup();
         expect(root().textContent).toContain('Günde iki kez yemek');
         expect(service.getCareInstructions).toHaveBeenCalledWith({ hospitalizationId: 'h1' });
-        expect(has('care-instruction-add')).toBeFalse();
-        expect(has('care-instruction-edit')).toBeFalse();
+        expect(has('care-instruction-add')).toBe(false);
+        expect(has('care-instruction-edit')).toBe(false);
     });
 
     it('yazma izinleriyle düğmeler görünür; salt okunur kiracıda gizlenir', async () => {
         claims = new Set(['CareInstructions.Read', 'CareInstructions.Create', 'CareInstructions.Update']);
         await setup();
-        expect(has('care-instruction-add')).toBeTrue();
-        expect(has('care-instruction-edit')).toBeTrue();
+        expect(has('care-instruction-add')).toBe(true);
+        expect(has('care-instruction-edit')).toBe(true);
     });
 
     it('salt okunur kiracıda yazma düğmeleri gizlenir', async () => {
         claims = new Set(['CareInstructions.Read', 'CareInstructions.Create', 'CareInstructions.Update']);
         mutationBlocked = true;
         await setup();
-        expect(has('care-instruction-add')).toBeFalse();
-        expect(has('care-instruction-edit')).toBeFalse();
+        expect(has('care-instruction-add')).toBe(false);
+        expect(has('care-instruction-edit')).toBe(false);
     });
 
     it('ekleme: yatış ve hayvanla kaydeder, listeyi yeniler', async () => {
         claims = new Set(['CareInstructions.Read', 'CareInstructions.Create']);
-        service.createCareInstruction.and.returnValue(of({ id: 'ci2' }));
+        service.createCareInstruction.mockReturnValue(of({ id: 'ci2' }));
         await setup();
         fixture.componentInstance.openCreate();
         await typeAndSubmit('Dinlendirin');
         expect(service.createCareInstruction).toHaveBeenCalledWith({ petId: 'p1', hospitalizationId: 'h1', text: 'Dinlendirin' });
         expect(service.getCareInstructions).toHaveBeenCalledTimes(2);
-        expect(fixture.componentInstance.dialogVisible).toBeFalse();
+        expect(fixture.componentInstance.dialogVisible).toBe(false);
     });
 
     it('düzenleme: kayıtlı rowVersion ile gider', async () => {
         claims = new Set(['CareInstructions.Read', 'CareInstructions.Update']);
-        service.updateCareInstruction.and.returnValue(of({ id: 'ci1', rowVersion: 'v2' }));
+        service.updateCareInstruction.mockReturnValue(of({ id: 'ci1', rowVersion: 'v2' }));
         await setup();
         fixture.componentInstance.openEdit(row);
         expect(fixture.componentInstance.form.controls.text.value).toBe(row.text);
@@ -102,19 +107,17 @@ describe('CareInstructionsSectionComponent', () => {
 
     it('409 çakışma: mesaj ve "güncel kaydı yükle" düğmesi görünür; düğme listeyi yeniden yükler', async () => {
         claims = new Set(['CareInstructions.Read', 'CareInstructions.Update']);
-        service.updateCareInstruction.and.returnValue(
-            throwError(() => new HttpErrorResponse({ status: 409, error: { extensions: { code: 'CareInstructions.ConcurrencyConflict' } } }))
-        );
+        service.updateCareInstruction.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { extensions: { code: 'CareInstructions.ConcurrencyConflict' } } })));
         await setup();
         fixture.componentInstance.openEdit(row);
         await typeAndSubmit('Benim metnim');
-        expect(fixture.componentInstance.conflict()).toBeTrue();
+        expect(fixture.componentInstance.conflict()).toBe(true);
         expect(fixture.componentInstance.submitError()).toContain('başka biri tarafından güncellendi');
         expect(document.body.textContent).toContain('Yazdıklarımı atıp güncel kaydı yükle');
 
         fixture.componentInstance.discardAndReload();
         expect(service.getCareInstructions).toHaveBeenCalledTimes(2);
-        expect(fixture.componentInstance.dialogVisible).toBeFalse();
+        expect(fixture.componentInstance.dialogVisible).toBe(false);
     });
 
     it('boş / yalnız boşluk metin kaydedilmez', async () => {
@@ -129,7 +132,7 @@ describe('CareInstructionsSectionComponent', () => {
         await setup();
         const pending = new Subject<CareInstructionVm[]>();
 
-        service.getCareInstructions.and.returnValue(pending);
+        service.getCareInstructions.mockReturnValue(pending);
         fixture.componentInstance.reload();
         fixture.detectChanges();
 

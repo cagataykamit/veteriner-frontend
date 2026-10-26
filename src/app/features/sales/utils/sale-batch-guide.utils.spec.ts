@@ -24,10 +24,10 @@ describe('sale-batch-guide.utils', () => {
     it('seçenekler: Otomatik ilk, süresi geçmiş parti seçilemez', () => {
         const options = saleBatchOptions(info());
 
-        expect(options[0]).toEqual(jasmine.objectContaining({ value: '', disabled: false }));
-        expect(options.find((o) => o.value === 'old')).toEqual(jasmine.objectContaining({ disabled: true }));
+        expect(options[0]).toEqual(expect.objectContaining({ value: '', disabled: false }));
+        expect(options.find((o) => o.value === 'old')).toEqual(expect.objectContaining({ disabled: true }));
         expect(options.find((o) => o.value === 'old')!.label).toContain('süresi geçmiş');
-        expect(options.find((o) => o.value === 'ok')!.disabled).toBeFalse();
+        expect(options.find((o) => o.value === 'ok')!.disabled).toBe(false);
     });
 
     it('stok özeti kullanılabilir ve süresi geçmiş miktarı gösterir', () => {
@@ -46,13 +46,13 @@ describe('sale-batch-guide.utils', () => {
         const guide = saleBatchGuide(info(), '', 3);
 
         expect(guide.hintText).toContain('Önerilen parti: L-OK');
-        expect(guide.warn).toBeFalse();
+        expect(guide.warn).toBe(false);
     });
 
     it('hiçbir parti yetmiyorsa uyarır', () => {
         const guide = saleBatchGuide(info(), '', 50);
 
-        expect(guide.warn).toBeTrue();
+        expect(guide.warn).toBe(true);
         expect(guide.hintText).toContain('tek başına karşılamıyor');
     });
 
@@ -60,15 +60,15 @@ describe('sale-batch-guide.utils', () => {
         const onlyExpired = mapProductStockBatchesDtoToVm(dto({ batches: [dto().batches![0]], availableQuantity: 0 }));
         const guide = saleBatchGuide(onlyExpired, '', 4);
 
-        expect(guide.warn).toBeTrue();
+        expect(guide.warn).toBe(true);
         expect(guide.hintText).toContain('süresi geçmiş');
     });
 
     it('seçili parti: kalan yetiyorsa bilgi, yetmiyorsa uyarı', () => {
-        expect(saleBatchGuide(info(), 'ok', 4)).toEqual(jasmine.objectContaining({ warn: false }));
+        expect(saleBatchGuide(info(), 'ok', 4)).toEqual(expect.objectContaining({ warn: false }));
         const over = saleBatchGuide(info(), 'ok', 11);
 
-        expect(over.warn).toBeTrue();
+        expect(over.warn).toBe(true);
         expect(over.hintText).toContain('ayrı bir satır');
     });
 

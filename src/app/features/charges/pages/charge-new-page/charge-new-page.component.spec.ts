@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { type Observable, of, Subject, throwError } from 'rxjs';
@@ -34,8 +35,7 @@ const created: ChargeVm = {
     vatRate: null
 };
 
-const todayItem = (over: Partial<TodayItemVm>): TodayItemVm =>
-    ({ key: 'v1', visitId: 'v1', petId: 'p1', petName: 'Pamuk', clientId: 'cl1', arrivedAtUtc: '2026-10-10T07:00:00Z', isVoided: false, ...over }) as TodayItemVm;
+const todayItem = (over: Partial<TodayItemVm>): TodayItemVm => ({ key: 'v1', visitId: 'v1', petId: 'p1', petName: 'Pamuk', clientId: 'cl1', arrivedAtUtc: '2026-10-10T07:00:00Z', isVoided: false, ...over }) as TodayItemVm;
 
 interface ExamQuery {
     clientId: string;
@@ -54,7 +54,7 @@ const exam = (id: string, petName: string): ExamItem => ({ id, examinedAtUtc: '2
 describe('ChargeNewPageComponent', () => {
     let fixture: ComponentFixture<ChargeNewPageComponent>;
     let cmp: ChargeNewPageComponent;
-    let charges: jasmine.SpyObj<ChargesService>;
+    let charges: MockedObject<ChargesService>;
     let router: Router;
     let claims: Set<string>;
     let mutationBlocked: boolean;
@@ -62,7 +62,9 @@ describe('ChargeNewPageComponent', () => {
     let queryVisitId: string | null = null;
     let queryPetId: string | null = null;
     let queryExaminationId: string | null = null;
-    let getExaminations: (q: ExamQuery) => Observable<{ items: ExamItem[] }>;
+    let getExaminations: (q: ExamQuery) => Observable<{
+        items: ExamItem[];
+    }>;
 
     const setup = async () => {
         await TestBed.configureTestingModule({
@@ -102,8 +104,7 @@ describe('ChargeNewPageComponent', () => {
                     useValue: {
                         snapshot: {
                             queryParamMap: {
-                                get: (k: string) =>
-                                    k === 'clientId' ? queryClientId : k === 'visitId' ? queryVisitId : k === 'petId' ? queryPetId : k === 'examinationId' ? queryExaminationId : null
+                                get: (k: string) => (k === 'clientId' ? queryClientId : k === 'visitId' ? queryVisitId : k === 'petId' ? queryPetId : k === 'examinationId' ? queryExaminationId : null)
                             }
                         }
                     }
@@ -111,7 +112,7 @@ describe('ChargeNewPageComponent', () => {
             ]
         }).compileComponents();
         router = TestBed.inject(Router);
-        spyOn(router, 'navigate').and.resolveTo(true);
+        vi.spyOn(router, 'navigate').mockResolvedValue(true);
         fixture = TestBed.createComponent(ChargeNewPageComponent);
         cmp = fixture.componentInstance;
         fixture.detectChanges();
@@ -123,7 +124,9 @@ describe('ChargeNewPageComponent', () => {
     };
 
     beforeEach(() => {
-        charges = jasmine.createSpyObj<ChargesService>('ChargesService', ['createCharge']);
+        charges = {
+            createCharge: vi.fn().mockName('ChargesService.createCharge')
+        } as unknown as MockedObject<ChargesService>;
         claims = new Set(['Visits.Read', 'Examinations.Read']);
         mutationBlocked = false;
         queryVisitId = null;
@@ -144,41 +147,41 @@ describe('ChargeNewPageComponent', () => {
         await setup();
         fill({ quantity: 0.001, unitPrice: 1 });
         expect(cmp.amountPreview()).toBeNull();
-        expect(cmp.amountRoundsToZero()).toBeTrue();
+        expect(cmp.amountRoundsToZero()).toBe(true);
         cmp.onSubmit();
         expect(charges.createCharge).not.toHaveBeenCalled();
     });
 
     it('zorunlu alanlar ve sınırlar: müşteri/açıklama/birim fiyat boşsa, miktar 0 veya fazla ondalıksa geçersiz', async () => {
         await setup();
-        expect(cmp.form.valid).toBeFalse();
+        expect(cmp.form.valid).toBe(false);
         fill({ description: '   ' });
-        expect(cmp.form.controls.description.invalid).toBeTrue();
+        expect(cmp.form.controls.description.invalid).toBe(true);
         fill({ description: 'a'.repeat(501) });
-        expect(cmp.form.controls.description.hasError('maxlength')).toBeTrue();
+        expect(cmp.form.controls.description.hasError('maxlength')).toBe(true);
         fill({ description: 'ok', quantity: 0 });
-        expect(cmp.form.controls.quantity.invalid).toBeTrue();
+        expect(cmp.form.controls.quantity.invalid).toBe(true);
         fill({ quantity: 1.2345 });
-        expect(cmp.form.controls.quantity.invalid).toBeTrue();
+        expect(cmp.form.controls.quantity.invalid).toBe(true);
         fill({ quantity: 1, unitPrice: 10.123 });
-        expect(cmp.form.controls.unitPrice.invalid).toBeTrue();
+        expect(cmp.form.controls.unitPrice.invalid).toBe(true);
         fill({ unitPrice: 10.12 });
-        expect(cmp.form.valid).toBeTrue();
+        expect(cmp.form.valid).toBe(true);
     });
 
     it('geçersiz formda istek atılmaz', async () => {
         await setup();
         cmp.onSubmit();
         expect(charges.createCharge).not.toHaveBeenCalled();
-        expect(cmp.form.controls.clientId.touched).toBeTrue();
+        expect(cmp.form.controls.clientId.touched).toBe(true);
     });
 
     it('geçerli formda isteği requestId ile gönderir ve listeye yönlendirir', async () => {
-        charges.createCharge.and.returnValue(of({ created: true, charge: created } as ChargeCreateResultVm));
+        charges.createCharge.mockReturnValue(of({ created: true, charge: created } as ChargeCreateResultVm));
         await setup();
         fill({ description: ' Genel muayene ' });
         cmp.onSubmit();
-        const req = charges.createCharge.calls.mostRecent().args[0];
+        const req = vi.mocked(charges.createCharge).mock.lastCall![0];
 
         expect(req.clientId).toBe('cl1');
         expect(req.quantity).toBe(1);
@@ -191,7 +194,7 @@ describe('ChargeNewPageComponent', () => {
         claims.add('Payments.Create');
         const withVisit = { ...created, visitId: 'v1', examinationId: 'ex1' };
 
-        charges.createCharge.and.returnValue(of({ created: true, charge: withVisit } as ChargeCreateResultVm));
+        charges.createCharge.mockReturnValue(of({ created: true, charge: withVisit } as ChargeCreateResultVm));
         await setup();
         fill();
         cmp.onSubmit(cmp.canCollectPayment);
@@ -217,28 +220,28 @@ describe('ChargeNewPageComponent', () => {
     it('çift tıklama: istek sürerken ikinci gönderim yapılmaz ve düğme kilitlidir', async () => {
         const pending = new Subject<ChargeCreateResultVm>();
 
-        charges.createCharge.and.returnValue(pending);
+        charges.createCharge.mockReturnValue(pending);
         await setup();
         fill();
         cmp.onSubmit();
         cmp.onSubmit();
         fixture.detectChanges();
         expect(charges.createCharge).toHaveBeenCalledTimes(1);
-        expect(cmp.submitting()).toBeTrue();
-        expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBeTrue();
+        expect(cmp.submitting()).toBe(true);
+        expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBe(true);
     });
 
     it('hata sonrası mesaj gösterilir, düğme açılır ve yeniden denemede aynı requestId kullanılır', async () => {
-        charges.createCharge.and.returnValue(throwError(() => new Error('Geliş kaydındaki hasta bu müşteriye ait değil.')));
+        charges.createCharge.mockReturnValue(throwError(() => new Error('Geliş kaydındaki hasta bu müşteriye ait değil.')));
         await setup();
         fill();
         cmp.onSubmit();
         fixture.detectChanges();
-        expect(cmp.submitting()).toBeFalse();
+        expect(cmp.submitting()).toBe(false);
         expect(cmp.submitError()).toBe('Geliş kaydındaki hasta bu müşteriye ait değil.');
         expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('bu müşteriye ait değil');
         cmp.onSubmit();
-        const [first, second] = charges.createCharge.calls.allArgs().map((a) => a[0].requestId);
+        const [first, second] = vi.mocked(charges.createCharge).mock.calls.map((a) => a[0].requestId);
 
         expect(second).toBe(first);
         expect(router.navigate).not.toHaveBeenCalled();
@@ -313,7 +316,7 @@ describe('ChargeNewPageComponent', () => {
         expect(cmp.form.controls.clientId.value).toBe('cl1');
         expect(cmp.form.controls.petId.value).toBe('p2');
         expect(cmp.form.controls.examinationId.value).toBe('ex2');
-        expect(queries[queries.length - 1]).toEqual(jasmine.objectContaining({ clientId: 'cl1', petId: 'p2' }));
+        expect(queries[queries.length - 1]).toEqual(expect.objectContaining({ clientId: 'cl1', petId: 'p2' }));
     });
 
     it('kullanıcı hayvanı değiştirince adresten gelen muayene ön ayarı düşer', async () => {
@@ -343,7 +346,12 @@ describe('ChargeNewPageComponent', () => {
     });
 
     describe('muayene seçenekleri yarışı', () => {
-        let pending: Map<string, Subject<{ items: ExamItem[] }>>;
+        let pending: Map<
+            string,
+            Subject<{
+                items: ExamItem[];
+            }>
+        >;
         const key = (q: ExamQuery) => `${q.clientId}|${q.petId ?? ''}`;
 
         const respond = (k: string, items: ExamItem[]) => {
@@ -357,7 +365,9 @@ describe('ChargeNewPageComponent', () => {
             pending = new Map();
 
             getExaminations = (q) => {
-                const s = new Subject<{ items: ExamItem[] }>();
+                const s = new Subject<{
+                    items: ExamItem[];
+                }>();
 
                 pending.set(key(q), s);
 
@@ -376,7 +386,7 @@ describe('ChargeNewPageComponent', () => {
             respond('cl1|', [exam('ex1', 'Pamuk'), exam('ex2', 'Boncuk')]);
 
             expect(optionIds()).toEqual(['ex2']);
-            expect(cmp.loadingExaminations()).toBeFalse();
+            expect(cmp.loadingExaminations()).toBe(false);
         });
 
         it('adresten müşteri ve hasta birlikte dolunca geç gelen yalnız-müşteri yanıtı hasta listesini ezmez', async () => {
@@ -389,7 +399,7 @@ describe('ChargeNewPageComponent', () => {
             respond('cl1|', [exam('ex1', 'Pamuk'), exam('ex2', 'Boncuk')]);
 
             expect(optionIds()).toEqual(['ex1']);
-            expect(cmp.loadingExaminations()).toBeFalse();
+            expect(cmp.loadingExaminations()).toBe(false);
         });
 
         it('bekleyen istek varken müşteri temizlenirse yükleniyor durumu kapanır ve eski yanıt yok sayılır', async () => {
@@ -400,17 +410,17 @@ describe('ChargeNewPageComponent', () => {
             respond('cl1|', [exam('ex1', 'Pamuk')]);
 
             expect(optionIds()).toEqual([]);
-            expect(cmp.loadingExaminations()).toBeFalse();
+            expect(cmp.loadingExaminations()).toBe(false);
         });
     });
 
     it('seçilen geliş ve muayene isteğe taşınır', async () => {
-        charges.createCharge.and.returnValue(of({ created: true, charge: created } as ChargeCreateResultVm));
+        charges.createCharge.mockReturnValue(of({ created: true, charge: created } as ChargeCreateResultVm));
         await setup();
         fill();
         cmp.form.patchValue({ visitId: 'v1', examinationId: 'ex1' });
         cmp.onSubmit();
-        const req = charges.createCharge.calls.mostRecent().args[0];
+        const req = vi.mocked(charges.createCharge).mock.lastCall![0];
 
         expect(req.visitId).toBe('v1');
         expect(req.examinationId).toBe('ex1');
@@ -429,7 +439,6 @@ describe('ChargeNewPageComponent', () => {
         fill();
         expect(fixture.nativeElement.textContent).not.toContain('yeni hasta');
     });
-
 
     it('Visits.Read / Examinations.Read yoksa ilgili seçiciler gösterilmez', async () => {
         claims = new Set();

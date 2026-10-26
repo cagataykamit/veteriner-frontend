@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { AdministrationCreateDialogComponent } from '@/app/features/administrations/components/administration-create-dialog.component';
@@ -76,15 +77,19 @@ const result = (created: boolean): AdministrationCreateResultVm => ({
 describe('AdministrationCreateDialogComponent', () => {
     let fixture: ComponentFixture<AdministrationCreateDialogComponent>;
     let cmp: AdministrationCreateDialogComponent;
-    let service: jasmine.SpyObj<AdministrationsService>;
+    let service: MockedObject<AdministrationsService>;
     let saved: AdministrationCreateResultVm[];
-    let batches: jasmine.SpyObj<StockBatchService>;
+    let batches: MockedObject<StockBatchService>;
 
     beforeEach(async () => {
-        service = jasmine.createSpyObj<AdministrationsService>('AdministrationsService', ['createAdministration']);
-        service.createAdministration.and.returnValue(of(result(true)));
-        batches = jasmine.createSpyObj<StockBatchService>('StockBatchService', ['getByProduct']);
-        batches.getByProduct.and.returnValue(of(batchInfo([batch('b1', { expiryDate: '2026-12-01' }), batch('b2', { remainingQuantity: 9, remainingText: '9' })])));
+        service = {
+            createAdministration: vi.fn().mockName('AdministrationsService.createAdministration')
+        } as unknown as MockedObject<AdministrationsService>;
+        service.createAdministration.mockReturnValue(of(result(true)));
+        batches = {
+            getByProduct: vi.fn().mockName('StockBatchService.getByProduct')
+        } as unknown as MockedObject<StockBatchService>;
+        batches.getByProduct.mockReturnValue(of(batchInfo([batch('b1', { expiryDate: '2026-12-01' }), batch('b2', { remainingQuantity: 9, remainingText: '9' })])));
         await TestBed.configureTestingModule({
             imports: [AdministrationCreateDialogComponent],
             providers: [
@@ -107,7 +112,7 @@ describe('AdministrationCreateDialogComponent', () => {
     it('ürün ve miktar olmadan gönderilmez', () => {
         cmp.onSubmit();
         expect(service.createAdministration).not.toHaveBeenCalled();
-        expect(cmp.form.controls.productId.touched).toBeTrue();
+        expect(cmp.form.controls.productId.touched).toBe(true);
     });
 
     it('sınır dışı miktarlar reddedilir (0, 4 ondalık, 100000 üstü)', () => {
@@ -115,11 +120,11 @@ describe('AdministrationCreateDialogComponent', () => {
 
         for (const q of [0, -1, 0.0001, 100001]) {
             cmp.form.controls.quantity.setValue(q);
-            expect(cmp.form.controls.quantity.valid).withContext(String(q)).toBeFalse();
+            expect(cmp.form.controls.quantity.valid, String(q)).toBe(false);
         }
 
         cmp.form.controls.quantity.setValue(0.5);
-        expect(cmp.form.controls.quantity.valid).toBeTrue();
+        expect(cmp.form.controls.quantity.valid).toBe(true);
     });
 
     it('seçilen ürünün birimi miktar etiketinde gösterilir', () => {
@@ -131,16 +136,16 @@ describe('AdministrationCreateDialogComponent', () => {
     it('geçerli formda bağlam ve requestId ile çağırır, başarıda kapanır ve saved yayar', () => {
         cmp.form.patchValue({ productId: 'pr1', quantity: 0.5, notes: 'Damar yolu' });
         cmp.onSubmit();
-        const arg = service.createAdministration.calls.mostRecent().args[0];
+        const arg = vi.mocked(service.createAdministration).mock.lastCall![0];
 
-        expect(arg).toEqual(jasmine.objectContaining({ petId: 'p1', examinationId: 'e1', productId: 'pr1', quantity: 0.5, notes: 'Damar yolu', administeredAtUtc: null }));
+        expect(arg).toEqual(expect.objectContaining({ petId: 'p1', examinationId: 'e1', productId: 'pr1', quantity: 0.5, notes: 'Damar yolu', administeredAtUtc: null }));
         expect(arg.requestId).toBeTruthy();
-        expect(cmp.visible()).toBeFalse();
+        expect(cmp.visible()).toBe(false);
         expect(saved.length).toBe(1);
     });
 
     it('sunucu hatası (ör. yetersiz stok) miktar veya ürün değişince temizlenir', () => {
-        service.createAdministration.and.returnValue(throwError(() => new Error('Yetersiz stok.')));
+        service.createAdministration.mockReturnValue(throwError(() => new Error('Yetersiz stok.')));
         cmp.form.patchValue({ productId: 'pr1', quantity: 10 });
         cmp.onSubmit();
         expect(cmp.submitError()).toBe('Yetersiz stok.');
@@ -152,22 +157,22 @@ describe('AdministrationCreateDialogComponent', () => {
         cmp.form.controls.productId.setValue('pr1');
         cmp.form.controls.quantity.markAsTouched();
         fixture.detectChanges();
-        expect(document.body.textContent).not.toContain('0\'dan büyük');
+        expect(document.body.textContent).not.toContain("0'dan büyük");
         cmp.form.controls.quantity.setValue(0);
         cmp.form.controls.quantity.markAsDirty();
         fixture.detectChanges();
-        expect(document.body.textContent).toContain('0\'dan büyük');
+        expect(document.body.textContent).toContain("0'dan büyük");
     });
 
     it('hata sonrası yeniden denemede aynı requestId kullanılır; başarıdan sonra yenilenir', () => {
-        service.createAdministration.and.returnValue(throwError(() => new Error('Stok aynı anda başka bir işlemle değişti.')));
+        service.createAdministration.mockReturnValue(throwError(() => new Error('Stok aynı anda başka bir işlemle değişti.')));
         cmp.form.patchValue({ productId: 'pr1', quantity: 1 });
         cmp.onSubmit();
         expect(cmp.submitError()).toBe('Stok aynı anda başka bir işlemle değişti.');
-        expect(cmp.visible()).toBeTrue();
-        service.createAdministration.and.returnValue(of(result(true)));
+        expect(cmp.visible()).toBe(true);
+        service.createAdministration.mockReturnValue(of(result(true)));
         cmp.onSubmit();
-        const [first, second] = service.createAdministration.calls.all().map((c) => c.args[0].requestId);
+        const [first, second] = vi.mocked(service.createAdministration).mock.calls.map((c) => c[0].requestId);
 
         expect(second).toBe(first);
 
@@ -175,14 +180,14 @@ describe('AdministrationCreateDialogComponent', () => {
         fixture.detectChanges();
         cmp.form.patchValue({ productId: 'pr1', quantity: 1 });
         cmp.onSubmit();
-        expect(service.createAdministration.calls.mostRecent().args[0].requestId).not.toBe(first);
+        expect(vi.mocked(service.createAdministration).mock.lastCall![0].requestId).not.toBe(first);
     });
 
     it('taslak muayenede gerekçe alanı yok ve lateEntryReason gönderilmez', () => {
         expect((fixture.nativeElement as HTMLElement).ownerDocument.querySelector('[data-testid="late-entry-reason"]')).toBeNull();
         cmp.form.patchValue({ productId: 'pr1', quantity: 1, lateEntryReason: 'yok sayılmalı' });
         cmp.onSubmit();
-        expect(service.createAdministration.calls.mostRecent().args[0].lateEntryReason).toBeNull();
+        expect(vi.mocked(service.createAdministration).mock.lastCall![0].lateEntryReason).toBeNull();
     });
 
     it('sonradan eklemede gerekçe 5–500 karakter zorunlu; geçerliyse lateEntryReason ile gider', () => {
@@ -202,7 +207,7 @@ describe('AdministrationCreateDialogComponent', () => {
 
         cmp.form.patchValue({ lateEntryReason: '  İlaç yazılmayı unutuldu ' });
         cmp.onSubmit();
-        expect(service.createAdministration.calls.mostRecent().args[0].lateEntryReason).toBe('  İlaç yazılmayı unutuldu ');
+        expect(vi.mocked(service.createAdministration).mock.lastCall![0].lateEntryReason).toBe('  İlaç yazılmayı unutuldu ');
     });
 
     it('ürün seçilince aktif klinik için parti listesi istenir ve otomatik seçenek varsayılandır', () => {
@@ -213,12 +218,12 @@ describe('AdministrationCreateDialogComponent', () => {
         expect(cmp.batchOptions().map((o) => o.value)).toEqual(['', 'b1', 'b2']);
     });
 
-    it('otomatikte batchId gönderilmez ve SKT\'si en yakın yeterli parti önerilir', () => {
+    it("otomatikte batchId gönderilmez ve SKT'si en yakın yeterli parti önerilir", () => {
         cmp.form.patchValue({ productId: 'pr1', quantity: 2 });
         fixture.detectChanges();
         expect(cmp.batchGuide()?.text).toContain('LOT-b1');
         cmp.onSubmit();
-        expect(service.createAdministration.calls.mostRecent().args[0].batchId).toBeNull();
+        expect(vi.mocked(service.createAdministration).mock.lastCall![0].batchId).toBeNull();
     });
 
     it('miktar ilk partiyi aşınca öneri sıradaki yeterli partiye geçer', () => {
@@ -229,30 +234,30 @@ describe('AdministrationCreateDialogComponent', () => {
     it('seçilen parti batchId olarak gider; kalanı aşan miktar uyarılır', () => {
         cmp.form.patchValue({ productId: 'pr1', quantity: 5 });
         cmp.form.controls.batchId.setValue('b1');
-        expect(cmp.batchGuide()).toEqual(jasmine.objectContaining({ warn: true }));
+        expect(cmp.batchGuide()).toEqual(expect.objectContaining({ warn: true }));
         cmp.form.controls.quantity.setValue(3);
-        expect(cmp.batchGuide()?.warn).toBeFalse();
+        expect(cmp.batchGuide()?.warn).toBe(false);
         expect(cmp.batchGuide()?.text).toContain('kalan 4');
         cmp.onSubmit();
-        expect(service.createAdministration.calls.mostRecent().args[0].batchId).toBe('b1');
+        expect(vi.mocked(service.createAdministration).mock.lastCall![0].batchId).toBe('b1');
     });
 
     it('süresi geçmiş parti seçilemez (devre dışı)', () => {
-        batches.getByProduct.and.returnValue(of(batchInfo([batch('old', { isExpired: true, expiryStatus: 'expired' }), batch('b2')])));
+        batches.getByProduct.mockReturnValue(of(batchInfo([batch('old', { isExpired: true, expiryStatus: 'expired' }), batch('b2')])));
         cmp.form.patchValue({ productId: 'pr2' });
         const old = cmp.batchOptions().find((o) => o.value === 'old');
 
-        expect(old?.disabled).toBeTrue();
+        expect(old?.disabled).toBe(true);
         expect(old?.label).toContain('süresi geçmiş');
     });
 
     it('parti okunamazsa (yetki vb.) uygulama otomatik FEFO ile kaydedilebilir', () => {
-        batches.getByProduct.and.returnValue(throwError(() => new Error('Parti bilgileri yüklenemedi.')));
+        batches.getByProduct.mockReturnValue(throwError(() => new Error('Parti bilgileri yüklenemedi.')));
         cmp.form.patchValue({ productId: 'pr1', quantity: 1 });
         fixture.detectChanges();
         expect(cmp.batchesError()).toBe('Parti bilgileri yüklenemedi.');
         cmp.onSubmit();
-        expect(service.createAdministration.calls.mostRecent().args[0].batchId).toBeNull();
+        expect(vi.mocked(service.createAdministration).mock.lastCall![0].batchId).toBeNull();
     });
 
     it('ürün değişince seçili parti sıfırlanır', () => {
@@ -263,11 +268,11 @@ describe('AdministrationCreateDialogComponent', () => {
     });
 
     it('çağrı sürerken ikinci gönderim yoksayılır', () => {
-        service.createAdministration.and.returnValue(new Subject<AdministrationCreateResultVm>());
+        service.createAdministration.mockReturnValue(new Subject<AdministrationCreateResultVm>());
         cmp.form.patchValue({ productId: 'pr1', quantity: 1 });
         cmp.onSubmit();
         cmp.onSubmit();
         expect(service.createAdministration).toHaveBeenCalledTimes(1);
-        expect(cmp.submitting()).toBeTrue();
+        expect(cmp.submitting()).toBe(true);
     });
 });

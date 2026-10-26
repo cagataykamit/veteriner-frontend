@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
@@ -22,18 +23,17 @@ const defaults: ClinicTaxpayerSettingsDto = {
 };
 
 describe('ClinicTaxpayerSettingsSectionComponent', () => {
-    let service: jasmine.SpyObj<ClinicTaxpayerSettingsService>;
+    let service: MockedObject<ClinicTaxpayerSettingsService>;
 
     const render = () => {
-        service = jasmine.createSpyObj<ClinicTaxpayerSettingsService>('ClinicTaxpayerSettingsService', ['get', 'update']);
-        service.get.and.returnValue(of(defaults));
+        service = {
+            get: vi.fn().mockName('ClinicTaxpayerSettingsService.get'),
+            update: vi.fn().mockName('ClinicTaxpayerSettingsService.update')
+        } as unknown as MockedObject<ClinicTaxpayerSettingsService>;
+        service.get.mockReturnValue(of(defaults));
         TestBed.configureTestingModule({
             imports: [ClinicTaxpayerSettingsSectionComponent],
-            providers: [
-                MessageService,
-                { provide: ClinicTaxpayerSettingsService, useValue: service },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
-            ]
+            providers: [MessageService, { provide: ClinicTaxpayerSettingsService, useValue: service }, { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }]
         });
         const fixture = TestBed.createComponent(ClinicTaxpayerSettingsSectionComponent);
 
@@ -59,16 +59,16 @@ describe('ClinicTaxpayerSettingsSectionComponent', () => {
         cmp.form.controls.taxIdentityNumber.setValue('1234567891');
         cmp.form.controls.taxIdentityNumber.markAsTouched();
         fixture.detectChanges();
-        expect(cmp.form.invalid).toBeTrue();
+        expect(cmp.form.invalid).toBe(true);
         expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="taxpayer-error-identity"]')?.textContent).toContain('VKN');
 
         cmp.form.controls.taxIdentityNumber.setValue('10000000146');
         cmp.form.controls.withholdingRate.setValue(150);
-        expect(cmp.form.invalid).toBeTrue();
+        expect(cmp.form.invalid).toBe(true);
 
         cmp.form.controls.withholdingRate.setValue(20);
         cmp.form.controls.taxpayerType.setValue('SelfEmployed');
-        service.update.and.returnValue(of({ ...defaults, isConfigured: true, taxpayerType: 'SelfEmployed', taxIdentityNumber: '10000000146', withholdingRate: 20 }));
+        service.update.mockReturnValue(of({ ...defaults, isConfigured: true, taxpayerType: 'SelfEmployed', taxIdentityNumber: '10000000146', withholdingRate: 20 }));
         cmp.save();
 
         expect(service.update).toHaveBeenCalledWith('k1', {

@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject } from 'rxjs';
 import type { ExaminationAddendumVm } from '@/app/features/examinations/models/examination-vm.model';
@@ -8,13 +9,16 @@ const addendum: ExaminationAddendumVm = { id: 'a1', reason: 'Hatalı kilo', text
 
 describe('ExaminationAddendaSectionComponent', () => {
     let fixture: ComponentFixture<ExaminationAddendaSectionComponent>;
-    let service: jasmine.SpyObj<ExaminationsService>;
+    let service: MockedObject<ExaminationsService>;
 
     const text = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
 
     beforeEach(async () => {
-        service = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', ['getAddenda', 'addAddendum']);
-        service.getAddenda.and.returnValue(of([addendum]));
+        service = {
+            getAddenda: vi.fn().mockName('ExaminationsService.getAddenda'),
+            addAddendum: vi.fn().mockName('ExaminationsService.addAddendum')
+        } as unknown as MockedObject<ExaminationsService>;
+        service.getAddenda.mockReturnValue(of([addendum]));
         await TestBed.configureTestingModule({
             imports: [ExaminationAddendaSectionComponent],
             providers: [{ provide: ExaminationsService, useValue: service }]
@@ -27,7 +31,7 @@ describe('ExaminationAddendaSectionComponent', () => {
     it('yeni ek not sonrası yenilemede liste yerinde kalır; "yükleniyor" yalnız ilk yüklemede görünür (alttaki bölümler zıplamaz)', () => {
         const pending = new Subject<ExaminationAddendumVm[]>();
 
-        service.getAddenda.and.returnValue(pending);
+        service.getAddenda.mockReturnValue(pending);
         fixture.componentInstance.load();
         fixture.detectChanges();
 

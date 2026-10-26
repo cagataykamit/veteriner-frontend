@@ -58,13 +58,11 @@ describe('PublicDemoRequestFormComponent (TRIAL-005)', () => {
         const req = http.expectOne(url);
 
         expect(req.request.method).toBe('POST');
-        expect(req.request.body).toEqual(
-            jasmine.objectContaining({ contactName: 'Ayşe Yılmaz', clinicSize: 'SmallTeam', city: null, website: null, privacyNoticeAccepted: true })
-        );
+        expect(req.request.body).toEqual(expect.objectContaining({ contactName: 'Ayşe Yılmaz', clinicSize: 'SmallTeam', city: null, website: null, privacyNoticeAccepted: true }));
         req.flush(null, { status: 204, statusText: 'No Content' });
         fixture.detectChanges();
 
-        expect(component.sent()).toBeTrue();
+        expect(component.sent()).toBe(true);
         expect(root().querySelector('[role="status"]')?.textContent).toContain('Talebiniz alındı');
         expect(root().querySelector('form')).toBeNull();
     });
@@ -76,8 +74,8 @@ describe('PublicDemoRequestFormComponent (TRIAL-005)', () => {
         http.expectOne(url).flush({ code: 'RateLimit.Exceeded' }, { status: 429, statusText: 'Too Many Requests' });
         fixture.detectChanges();
 
-        expect(component.sent()).toBeFalse();
+        expect(component.sent()).toBe(false);
         expect(root().querySelector('[role="alert"]')?.textContent).toContain('birkaç dakika sonra');
-        expect(component.submitting()).toBeFalse();
+        expect(component.submitting()).toBe(false);
     });
 });

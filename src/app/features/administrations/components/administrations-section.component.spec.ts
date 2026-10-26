@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, EMPTY, Subject } from 'rxjs';
@@ -38,11 +39,16 @@ const page = (items: AdministrationVm[]): AdministrationsPagedVm => ({ items, pa
 
 describe('AdministrationsSectionComponent', () => {
     let fixture: ComponentFixture<AdministrationsSectionComponent>;
-    let service: jasmine.SpyObj<AdministrationsService>;
+    let service: MockedObject<AdministrationsService>;
     let claims: Set<string>;
     let mutationBlocked: boolean;
 
-    const setup = async (inputs: { locked?: boolean; treatmentId?: string } = {}) => {
+    const setup = async (
+        inputs: {
+            locked?: boolean;
+            treatmentId?: string;
+        } = {}
+    ) => {
         await TestBed.configureTestingModule({
             imports: [AdministrationsSectionComponent],
             providers: [
@@ -74,8 +80,11 @@ describe('AdministrationsSectionComponent', () => {
     const has = (testId: string) => !!(fixture.nativeElement as HTMLElement).querySelector(`[data-testid="${testId}"]`);
 
     beforeEach(() => {
-        service = jasmine.createSpyObj<AdministrationsService>('AdministrationsService', ['getAdministrations', 'voidAdministration']);
-        service.getAdministrations.and.returnValue(of(page([row])));
+        service = {
+            getAdministrations: vi.fn().mockName('AdministrationsService.getAdministrations'),
+            voidAdministration: vi.fn().mockName('AdministrationsService.voidAdministration')
+        } as unknown as MockedObject<AdministrationsService>;
+        service.getAdministrations.mockReturnValue(of(page([row])));
         claims = new Set(['Administrations.Read']);
         mutationBlocked = false;
     });
@@ -83,32 +92,32 @@ describe('AdministrationsSectionComponent', () => {
     it('okuma izni yoksa hiçbir şey çizmez ve istek atmaz', async () => {
         claims.clear();
         await setup();
-        expect(has('administrations-section')).toBeFalse();
+        expect(has('administrations-section')).toBe(false);
         expect(service.getAdministrations).not.toHaveBeenCalled();
     });
 
     it('yalnız okuma izniyle liste görünür, Uygulama ekle ve İptal et görünmez', async () => {
         await setup();
         expect(text()).toContain('Serum');
-        expect(has('administration-add')).toBeFalse();
+        expect(has('administration-add')).toBe(false);
         expect(voidButton()).toBeNull();
     });
 
     it('muayene bağlamında muayeneye göre süzer; tedavi bağlamında tedaviye göre', async () => {
         await setup();
-        expect(service.getAdministrations.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ examinationId: 'e1', treatmentId: undefined, includeVoided: false }));
+        expect(vi.mocked(service.getAdministrations).mock.lastCall![0]).toEqual(expect.objectContaining({ examinationId: 'e1', treatmentId: undefined, includeVoided: false }));
         TestBed.resetTestingModule();
-        service.getAdministrations.calls.reset();
+        service.getAdministrations.mockClear();
         await setup({ treatmentId: 't1' });
-        expect(service.getAdministrations.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ treatmentId: 't1', examinationId: undefined }));
+        expect(vi.mocked(service.getAdministrations).mock.lastCall![0]).toEqual(expect.objectContaining({ treatmentId: 't1', examinationId: undefined }));
     });
 
     it('iptal edilenler varsayılan gizlidir; "İptal edilenleri göster" ile yeniden yüklenir', async () => {
         await setup();
-        expect(service.getAdministrations.calls.mostRecent().args[0]?.includeVoided).toBeFalse();
-        service.getAdministrations.calls.reset();
+        expect(vi.mocked(service.getAdministrations).mock.lastCall![0]?.includeVoided).toBe(false);
+        service.getAdministrations.mockClear();
         fixture.componentInstance.setShowVoided(true);
-        expect(service.getAdministrations.calls.mostRecent().args[0]?.includeVoided).toBeTrue();
+        expect(vi.mocked(service.getAdministrations).mock.lastCall![0]?.includeVoided).toBe(true);
         fixture.detectChanges();
         expect(text()).toContain('İptal edilenleri göster');
     });
@@ -117,7 +126,7 @@ describe('AdministrationsSectionComponent', () => {
         await setup();
         const pending = new Subject<AdministrationsPagedVm>();
 
-        service.getAdministrations.and.returnValue(pending);
+        service.getAdministrations.mockReturnValue(pending);
         fixture.componentInstance.setShowVoided(true);
         fixture.detectChanges();
 
@@ -131,7 +140,7 @@ describe('AdministrationsSectionComponent', () => {
 
     it('kayıt yokken boş durum tek satır; süzgeç ve Uygulama ekle başlık satırında kalır', async () => {
         claims.add('Administrations.Create');
-        service.getAdministrations.and.returnValue(of(page([])));
+        service.getAdministrations.mockReturnValue(of(page([])));
         await setup();
         const el = fixture.nativeElement as HTMLElement;
 
@@ -146,26 +155,33 @@ describe('AdministrationsSectionComponent', () => {
     it('Create izniyle Uygulama ekle görünür; Correct izniyle İptal et görünür', async () => {
         claims.add('Administrations.Create').add('Administrations.Correct');
         await setup();
-        expect(has('administration-add')).toBeTrue();
+        expect(has('administration-add')).toBe(true);
         expect(voidButton()).not.toBeNull();
     });
 
     it('kesinleşmiş muayenede ekleme görünür (sonradan ekleme), açıklama görünür, iptal sürer', async () => {
         claims.add('Administrations.Create').add('Administrations.Correct');
         await setup({ locked: true });
-        expect(has('administration-add')).toBeTrue();
-        expect(has('administrations-locked')).toBeTrue();
+        expect(has('administration-add')).toBe(true);
+        expect(has('administrations-locked')).toBe(true);
         expect(text()).toContain('gerekçe yazılarak sonradan eklenebilir');
         expect(voidButton()).not.toBeNull();
     });
 
     it('kesinleşmiş muayenede Create izni yoksa ekleme gizli', async () => {
         await setup({ locked: true });
-        expect(has('administration-add')).toBeFalse();
+        expect(has('administration-add')).toBe(false);
     });
 
     it('sonradan eklenen satırda rozet ve gerekçe görünür; taslak satırda görünmez', async () => {
-        service.getAdministrations.and.returnValue(of(page([{ ...row, addedAfterFinalization: true, lateEntryReason: 'Unutulan serum' }, { ...row, id: 'a2' }])));
+        service.getAdministrations.mockReturnValue(
+            of(
+                page([
+                    { ...row, addedAfterFinalization: true, lateEntryReason: 'Unutulan serum' },
+                    { ...row, id: 'a2' }
+                ])
+            )
+        );
         await setup();
         expect(fixture.nativeElement.querySelectorAll('[data-testid="late-entry"]').length).toBe(1);
         expect(text()).toContain('Kesinleştirmeden sonra eklendi');
@@ -173,8 +189,13 @@ describe('AdministrationsSectionComponent', () => {
     });
 
     it('iptal edilmiş satırda stok sonucu görünür (iade / zarar)', async () => {
-        service.getAdministrations.and.returnValue(
-            of(page([{ ...row, isVoided: true, voidReason: 'Döküldü', voidStockOutcome: 'WrittenOff' }, { ...row, id: 'a2', isVoided: true, voidReason: 'Yanlış', voidStockOutcome: 'StockReturned' }]))
+        service.getAdministrations.mockReturnValue(
+            of(
+                page([
+                    { ...row, isVoided: true, voidReason: 'Döküldü', voidStockOutcome: 'WrittenOff' },
+                    { ...row, id: 'a2', isVoided: true, voidReason: 'Yanlış', voidStockOutcome: 'StockReturned' }
+                ])
+            )
         );
         await setup();
         expect(text()).toContain('Zarar / imha olarak yazıldı');
@@ -195,13 +216,13 @@ describe('AdministrationsSectionComponent', () => {
         claims.add('Administrations.Create').add('Administrations.Correct');
         mutationBlocked = true;
         await setup();
-        expect(has('administration-add')).toBeFalse();
+        expect(has('administration-add')).toBe(false);
         expect(voidButton()).toBeNull();
     });
 
     it('iptal edilmiş satırda İptal rozeti ve gerekçe görünür, İptal et düğmesi görünmez', async () => {
         claims.add('Administrations.Correct');
-        service.getAdministrations.and.returnValue(of(page([{ ...row, isVoided: true, voidReason: 'Yanlış ürün' }])));
+        service.getAdministrations.mockReturnValue(of(page([{ ...row, isVoided: true, voidReason: 'Yanlış ürün' }])));
         await setup();
         expect(text()).toContain('Yanlış ürün');
         expect(voidButton()).toBeNull();

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import type { StoredFileVm } from './stored-file.model';
@@ -8,12 +9,21 @@ const image = (id: string): StoredFileVm => ({ id, fileName: `${id}.jpg`, conten
 const pdf: StoredFileVm = { id: 'p1', fileName: 'rapor.pdf', contentType: 'application/pdf', kind: 'Pdf', sizeBytes: 4096, uploadedAtUtc: '2026-10-22T10:00:00Z' };
 
 describe('StoredFileGalleryComponent — önizleme', () => {
-    let service: { accessUrl: jasmine.Spy; content: jasmine.Spy };
+    let service: {
+        accessUrl: Mock;
+        content: Mock;
+    };
 
     const create = (files: StoredFileVm[]) => {
         service = {
-            accessUrl: jasmine.createSpy('accessUrl').and.callFake((_: string, id: string) => of(`https://api/signed/${id}?sig=1`)),
-            content: jasmine.createSpy('content').and.returnValue(of({ blob: new Blob(['%PDF']), fileName: 'rapor.pdf' }))
+            accessUrl: vi
+                .fn()
+                .mockName('accessUrl')
+                .mockImplementation((_: string, id: string) => of(`https://api/signed/${id}?sig=1`)),
+            content: vi
+                .fn()
+                .mockName('content')
+                .mockReturnValue(of({ blob: new Blob(['%PDF']), fileName: 'rapor.pdf' }))
         };
         TestBed.configureTestingModule({ imports: [StoredFileGalleryComponent], providers: [{ provide: StoredFilesService, useValue: service }] });
         const fixture = TestBed.createComponent(StoredFileGalleryComponent);
@@ -32,7 +42,7 @@ describe('StoredFileGalleryComponent — önizleme', () => {
 
         expect(service.accessUrl).toHaveBeenCalledTimes(2);
         expect(imgs.map((i) => i.getAttribute('src'))).toEqual(['https://api/signed/a?sig=1', 'https://api/signed/b?sig=1']);
-        expect(imgs.every((i) => i.getAttribute('loading') === 'lazy')).toBeTrue();
+        expect(imgs.every((i) => i.getAttribute('loading') === 'lazy')).toBe(true);
         expect(imgs[0].alt).toBe('Röntgen, 22.10.2026 — görüntü 1/2');
     });
 
@@ -43,7 +53,7 @@ describe('StoredFileGalleryComponent — önizleme', () => {
         fixture.detectChanges();
 
         expect(fixture.componentInstance.lightboxFile()?.id).toBe('a');
-        expect(fixture.componentInstance.lightboxOpen).toBeTrue();
+        expect(fixture.componentInstance.lightboxOpen).toBe(true);
     });
 
     it('süresi dolmuş URL bir kez yenilenir', () => {
@@ -56,9 +66,9 @@ describe('StoredFileGalleryComponent — önizleme', () => {
     });
 
     it('PDF Bearer ile alınıp yeni sekmede açılır', () => {
-        const tab = { location: { href: '' }, close: jasmine.createSpy('close') } as unknown as Window;
+        const tab = { location: { href: '' }, close: vi.fn().mockName('close') } as unknown as Window;
 
-        spyOn(window, 'open').and.returnValue(tab);
+        vi.spyOn(window, 'open').mockReturnValue(tab);
         const fixture = create([pdf]);
 
         fixture.componentInstance.openPdf(pdf);

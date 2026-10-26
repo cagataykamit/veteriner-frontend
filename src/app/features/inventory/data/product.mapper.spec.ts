@@ -22,7 +22,7 @@ describe('product.mapper hizmet türü', () => {
     it('hizmet isteği kind Service, fiyat ve birimle gider', () => {
         const req = mapProductUpsertFormValueToCreateRequest(form());
 
-        expect(req).toEqual(jasmine.objectContaining({ name: 'Genel muayene', kind: 'Service', unit: 'Adet', unitPrice: 750, controlledClass: 'None' }));
+        expect(req).toEqual(expect.objectContaining({ name: 'Genel muayene', kind: 'Service', unit: 'Adet', unitPrice: 750, controlledClass: 'None' }));
     });
 
     it('hizmette gizli sınıflandırma alanlarında eski değer kalsa bile gönderilmez', () => {

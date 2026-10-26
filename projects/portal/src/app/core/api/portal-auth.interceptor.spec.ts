@@ -18,7 +18,7 @@ describe('portalAuthInterceptor', () => {
         backend = TestBed.inject(HttpTestingController);
         store = TestBed.inject(PortalTokenStore);
         router = TestBed.inject(Router);
-        spyOn(router, 'navigate').and.resolveTo(true);
+        vi.spyOn(router, 'navigate').mockResolvedValue(true);
         store.save(testTokens(1));
     });
 
@@ -38,12 +38,12 @@ describe('portalAuthInterceptor', () => {
         http.get(`${BASE}/invites/abc`).subscribe();
         http.get('/api/v1/clients').subscribe();
 
-        expect(backend.expectOne(`${BASE}/auth/login`).request.headers.has('Authorization')).toBeFalse();
-        expect(backend.expectOne(`${BASE}/invites/abc`).request.headers.has('Authorization')).toBeFalse();
-        expect(backend.expectOne('/api/v1/clients').request.headers.has('Authorization')).toBeFalse();
+        expect(backend.expectOne(`${BASE}/auth/login`).request.headers.has('Authorization')).toBe(false);
+        expect(backend.expectOne(`${BASE}/invites/abc`).request.headers.has('Authorization')).toBe(false);
+        expect(backend.expectOne('/api/v1/clients').request.headers.has('Authorization')).toBe(false);
     });
 
-    it('401 sonrası bir kez yeniler ve isteği yeni token\'la tekrarlar', async () => {
+    it("401 sonrası bir kez yeniler ve isteği yeni token'la tekrarlar", async () => {
         let body: unknown;
 
         http.get(`${BASE}/me`).subscribe((b) => (body = b));

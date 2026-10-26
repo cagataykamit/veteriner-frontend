@@ -57,11 +57,11 @@ describe('HospitalizationsListPageComponent — satırda Düzenle', () => {
     it("aktif yatışta Hospitalizations.Update varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", () => {
         const edits = rowEditActions(create([row({})], [HOSPITALIZATIONS_UPDATE_CLAIM]));
 
-        expect(edits.length).withContext('tablo + mobil kart').toBe(2);
+        expect(edits.length, 'tablo + mobil kart').toBe(2);
 
         for (const edit of edits) {
             expect(edit.getAttribute('href')).toBe('/panel/hospitalizations/h1/edit');
-            expect(isRightAfterDetail(edit)).toBeTrue();
+            expect(isRightAfterDetail(edit)).toBe(true);
         }
     });
 
@@ -76,6 +76,6 @@ describe('HospitalizationsListPageComponent — satırda Düzenle', () => {
         const readOnly = rowEditActions(create([row({})], [HOSPITALIZATIONS_UPDATE_CLAIM], true));
 
         expect(readOnly.length).toBe(2);
-        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBeTrue();
+        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBe(true);
     });
 });

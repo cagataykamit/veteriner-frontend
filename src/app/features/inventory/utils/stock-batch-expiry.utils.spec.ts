@@ -31,7 +31,7 @@ describe('mapStockBatchDtoToVm', () => {
     it('backend isExpired işaretini esas alır ve rozet üretir', () => {
         const vm = mapStockBatchDtoToVm({ ...dto, expiryDate: '2026-10-01', isExpired: true }, '2026-10-13');
 
-        expect(vm.isExpired).toBeTrue();
+        expect(vm.isExpired).toBe(true);
         expect(vm.expiryBadgeLabel).toBe('Süresi geçmiş');
         expect(vm.expiryBadgeSeverity).toBe('danger');
     });
@@ -43,7 +43,7 @@ describe('mapStockBatchDtoToVm', () => {
         expect(vm.expiryBadgeLabel).toBe('SKT yaklaşıyor (7 gün)');
     });
 
-    it('SKT\'siz partide rozet yok, seri no yoksa tire', () => {
+    it("SKT'siz partide rozet yok, seri no yoksa tire", () => {
         const vm = mapStockBatchDtoToVm({ ...dto, isExpired: false }, '2026-10-13');
 
         expect(vm.expiryBadgeLabel).toBe('');

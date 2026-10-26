@@ -38,8 +38,8 @@ describe('mapPetTimelinePageDtoToVm', () => {
         });
 
         expect(page.items.length).toBe(2);
-        expect(page.items[0]).toEqual(jasmine.objectContaining({ key: 'Treatment:t1', linkType: 'Treatment', linkId: 't1', relatedExaminationId: 'e1' }));
-        expect(page.items[1].isVoided).toBeTrue();
+        expect(page.items[0]).toEqual(expect.objectContaining({ key: 'Treatment:t1', linkType: 'Treatment', linkId: 't1', relatedExaminationId: 'e1' }));
+        expect(page.items[1].isVoided).toBe(true);
         expect(page.nextCursor).toBe('abc');
         expect(page.omittedTypes).toEqual(['LabResult']);
     });
@@ -52,8 +52,8 @@ describe('mapPetTimelinePageDtoToVm', () => {
             ]
         });
 
-        expect(page.items[0]).toEqual(jasmine.objectContaining({ summary: '1.5 şişe', addedAfterFinalization: true, relatedExaminationId: 'e1' }));
-        expect(page.items[1].addedAfterFinalization).toBeFalse();
+        expect(page.items[0]).toEqual(expect.objectContaining({ summary: '1.5 şişe', addedAfterFinalization: true, relatedExaminationId: 'e1' }));
+        expect(page.items[1].addedAfterFinalization).toBe(false);
         expect(petTimelineStatusLabel(page.items[0])).toBeNull();
         expect(petTimelineStatusLabel(page.items[1])).toBeNull();
         expect(petTimelineEventLink(page.items[0])).toBeNull();

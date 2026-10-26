@@ -34,9 +34,7 @@ describe('pet uyarıları — mapper', () => {
 
     it('düzenleme yüklenen uyarıyı aynen geri gönderir (kazara silme yok)', () => {
         const edit = mapPetDetailDtoToEditVm({ id: 'p1', petAlerts: { flags: ['Aggressive', 'Allergy'], note: 'Isırır' } });
-        const body = mapCreatePetToApiBody(
-            mapPetUpsertFormToCreateRequest(form({ alertFlags: edit.petAlerts!.flags, alertNote: edit.petAlerts!.note ?? '' }), [])
-        );
+        const body = mapCreatePetToApiBody(mapPetUpsertFormToCreateRequest(form({ alertFlags: edit.petAlerts!.flags, alertNote: edit.petAlerts!.note ?? '' }), []));
 
         expect(body.alertFlags).toEqual(['Allergy', 'Aggressive']);
         expect(body.alertNote).toBe('Isırır');
@@ -53,8 +51,8 @@ describe('pet uyarıları — mapper', () => {
         const req = { ...mapPetUpsertFormToCreateRequest(form(), []), alertFlags: undefined, alertNote: undefined };
         const body = mapCreatePetToApiBody(req);
 
-        expect('alertFlags' in body).toBeFalse();
-        expect('alertNote' in body).toBeFalse();
+        expect('alertFlags' in body).toBe(false);
+        expect('alertNote' in body).toBe(false);
     });
 });
 
@@ -65,7 +63,7 @@ describe('pet HBS kimlik no — mapper (ADR-036)', () => {
 
         const req = { ...mapPetUpsertFormToCreateRequest(form(), []), hbsAnimalId: undefined };
 
-        expect('hbsAnimalId' in mapCreatePetToApiBody(req)).toBeFalse();
+        expect('hbsAnimalId' in mapCreatePetToApiBody(req)).toBe(false);
     });
 
     it('detay ve düzenleme VM eşlenir', () => {

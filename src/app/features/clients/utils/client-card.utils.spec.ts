@@ -6,11 +6,9 @@ import { buildClientPetRows, buildClientTodo, type ClientTodoContext, type Clien
 
 const NOW = new Date('2026-10-14T09:00:00Z');
 
-const charge = (id: string, petId: string, petName: string, description = 'Serum'): ChargeSuggestionVm =>
-    ({ id, petId, petName, clientId: 'c1', description }) as ChargeSuggestionVm;
+const charge = (id: string, petId: string, petName: string, description = 'Serum'): ChargeSuggestionVm => ({ id, petId, petName, clientId: 'c1', description }) as ChargeSuggestionVm;
 
-const openCharge = (petId: string | null, petName: string | null, outstandingAmount: number): ClientOpenChargeVm =>
-    ({ chargeId: `ch-${petId}-${outstandingAmount}`, petId, petName, outstandingAmount }) as ClientOpenChargeVm;
+const openCharge = (petId: string | null, petName: string | null, outstandingAmount: number): ClientOpenChargeVm => ({ chargeId: `ch-${petId}-${outstandingAmount}`, petId, petName, outstandingAmount }) as ClientOpenChargeVm;
 
 const balance = (openCharges: ClientOpenChargeVm[]): ClientBalanceVm => ({
     clientId: 'c1',
@@ -34,8 +32,7 @@ const pet = (id: string, name: string): PetListItemVm => ({
     status: 'Active'
 });
 
-const appointment = (id: string, petId: string, scheduledAtUtc: string, status = 0): AppointmentListItemVm =>
-    ({ id, petId, petName: '', scheduledAtUtc, status }) as AppointmentListItemVm;
+const appointment = (id: string, petId: string, scheduledAtUtc: string, status = 0): AppointmentListItemVm => ({ id, petId, petName: '', scheduledAtUtc, status }) as AppointmentListItemVm;
 
 const ctx = (claims: string[], over: Partial<ClientTodoContext> = {}): ClientTodoContext => ({
     clientId: 'c1',
@@ -53,10 +50,7 @@ describe('buildClientTodo', () => {
     });
 
     it('ücret bekleyen işlemler hayvan başına tek satır, hayvan adıyla ve hayvana süzülmüş Ücretlendir eylemiyle gelir', () => {
-        const view = buildClientTodo(
-            sources({ pendingCharges: { state: 'ok', data: [charge('1', 'p1', 'Pamuk'), charge('2', 'p2', 'Karabaş', 'Kuduz aşısı'), charge('3', 'p1', 'Pamuk', 'Enjeksiyon')] } }),
-            ctx(['Charges.Create'])
-        );
+        const view = buildClientTodo(sources({ pendingCharges: { state: 'ok', data: [charge('1', 'p1', 'Pamuk'), charge('2', 'p2', 'Karabaş', 'Kuduz aşısı'), charge('3', 'p1', 'Pamuk', 'Enjeksiyon')] } }), ctx(['Charges.Create']));
 
         expect(view.items.map((i) => i.title)).toEqual(['Pamuk: 2 işlem ücret bekliyor', 'Karabaş: 1 işlem ücret bekliyor']);
         expect(view.items[0].detail).toBe('Serum, Enjeksiyon');
@@ -91,7 +85,7 @@ describe('buildClientTodo', () => {
 
         expect(view).toEqual({ items: [], loading: true, failed: ['Bakiye'], forbidden: false });
         expect(buildClientTodo({ pendingCharges: null, balance: null }, ctx([]))).toEqual({ items: [], loading: false, failed: [], forbidden: true });
-        expect(buildClientTodo({ pendingCharges: null, balance: { state: 'loading' } }, ctx([])).forbidden).toBeFalse();
+        expect(buildClientTodo({ pendingCharges: null, balance: { state: 'loading' } }, ctx([])).forbidden).toBe(false);
     });
 });
 
@@ -129,7 +123,7 @@ describe('pendingChargesSummary (müşteri bazlı ücret bekleyen, sözleşme §
     });
 
     it('sayfa tüm kalemleri içermiyorsa kısmi işaretlenir', () => {
-        expect(pendingChargesSummary({ items: [priced('a', 1, 10)], totalItems: 250 }).partial).toBeTrue();
+        expect(pendingChargesSummary({ items: [priced('a', 1, 10)], totalItems: 250 }).partial).toBe(true);
         expect(pendingChargesSummary({ items: [], totalItems: 0 })).toEqual({ count: 0, amount: 0, currency: 'TRY', unpricedCount: 0, partial: false });
     });
 });

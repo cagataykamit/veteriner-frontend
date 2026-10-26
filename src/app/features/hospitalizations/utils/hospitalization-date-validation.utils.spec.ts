@@ -1,32 +1,23 @@
 import { FormControl, FormGroup } from '@angular/forms';
-import {
-    HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY,
-    hospitalizationPlannedBeforeAdmissionMessage,
-    hospitalizationPlannedDischargeMin,
-    plannedDischargeNotBeforeAdmissionValidator
-} from './hospitalization-date-validation.utils';
+import { HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY, hospitalizationPlannedBeforeAdmissionMessage, hospitalizationPlannedDischargeMin, plannedDischargeNotBeforeAdmissionValidator } from './hospitalization-date-validation.utils';
 
 describe('planlı taburcu / yatış tarihi kuralı', () => {
-    const group = (admitted: string, planned: string) =>
-        new FormGroup(
-            { admittedAtLocal: new FormControl(admitted), plannedDischargeAtLocal: new FormControl(planned) },
-            { validators: [plannedDischargeNotBeforeAdmissionValidator()] }
-        );
+    const group = (admitted: string, planned: string) => new FormGroup({ admittedAtLocal: new FormControl(admitted), plannedDischargeAtLocal: new FormControl(planned) }, { validators: [plannedDischargeNotBeforeAdmissionValidator()] });
 
     it('planlı taburcu yatıştan önceyse hata verir', () => {
-        expect(group('2026-10-12T10:00', '1991-11-24T15:30').hasError(HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY)).toBeTrue();
-        expect(group('2026-10-12T10:00', '2026-10-12T09:59').hasError(HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY)).toBeTrue();
+        expect(group('2026-10-12T10:00', '1991-11-24T15:30').hasError(HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY)).toBe(true);
+        expect(group('2026-10-12T10:00', '2026-10-12T09:59').hasError(HOSPITALIZATION_PLANNED_BEFORE_ADMISSION_ERROR_KEY)).toBe(true);
     });
 
     it('eşit veya sonraki değer geçerli', () => {
-        expect(group('2026-10-12T10:00', '2026-10-12T10:00').valid).toBeTrue();
-        expect(group('2026-10-12T10:00', '2026-10-15T08:00').valid).toBeTrue();
+        expect(group('2026-10-12T10:00', '2026-10-12T10:00').valid).toBe(true);
+        expect(group('2026-10-12T10:00', '2026-10-15T08:00').valid).toBe(true);
     });
 
     it('biri boş veya çözümlenemezse bu kural susar (zorunluluk/biçim başka denetimde)', () => {
-        expect(group('2026-10-12T10:00', '').valid).toBeTrue();
-        expect(group('', '2026-10-12T10:00').valid).toBeTrue();
-        expect(group('2026-10-12', '2026-10-11T10:00').valid).toBeTrue();
+        expect(group('2026-10-12T10:00', '').valid).toBe(true);
+        expect(group('', '2026-10-12T10:00').valid).toBe(true);
+        expect(group('2026-10-12', '2026-10-11T10:00').valid).toBe(true);
     });
 
     it('planlı taburcu alt sınırı: geçerli yatış tarihi, yoksa yedek sınır', () => {

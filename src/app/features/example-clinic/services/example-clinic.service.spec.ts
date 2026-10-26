@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -17,7 +18,7 @@ describe('ExampleClinicService (TRIAL-002, örnek veri temizliği)', () => {
         service = TestBed.inject(ExampleClinicService);
         http = TestBed.inject(HttpTestingController);
         auth = TestBed.inject(AuthService);
-        spyOn(auth, 'getAccessToken').and.returnValue(jwtWithTenant('t-1'));
+        vi.spyOn(auth, 'getAccessToken').mockReturnValue(jwtWithTenant('t-1'));
     });
 
     afterEach(() => http.verify());
@@ -46,9 +47,9 @@ describe('ExampleClinicService (TRIAL-002, örnek veri temizliği)', () => {
         expect(errors.length).toBe(2);
         expect(errors[0]).toBeInstanceOf(ExampleClinicError);
         expect(errors[0].code).toBe(EXAMPLE_CLINIC_ALREADY_LOADED_CODE);
-        expect(errors[0].isBlocking).toBeTrue();
+        expect(errors[0].isBlocking).toBe(true);
         expect(errors[0].message).toContain('zaten müşteri ya da hasta kaydı var');
-        expect(errors[1].isBlocking).toBeTrue();
+        expect(errors[1].isBlocking).toBe(true);
         expect(errors[1].message).toContain('yalnız deneme süresinde');
     });
 
@@ -58,12 +59,12 @@ describe('ExampleClinicService (TRIAL-002, örnek veri temizliği)', () => {
         service.load().subscribe({ error: (e: ExampleClinicError) => (error = e) });
         http.expectOne('http://api.test/api/v1/tenants/t-1/example-clinic').flush({ status: 403, extensions: { code: 'Tenants.AccessDenied' } }, { status: 403, statusText: 'Forbidden' });
 
-        expect(error!.isBlocking).toBeFalse();
+        expect(error!.isBlocking).toBe(false);
         expect(error!.message).toBe('Bu kuruma erişim yetkiniz bulunmuyor.');
     });
 
     it('kiracı okunamazsa istek atmadan hata döner', () => {
-        (auth.getAccessToken as jasmine.Spy).and.returnValue(null);
+        (auth.getAccessToken as Mock).mockReturnValue(null);
         let message = '';
 
         service.load().subscribe({ error: (e: Error) => (message = e.message) });
@@ -85,7 +86,7 @@ describe('ExampleClinicService (TRIAL-002, örnek veri temizliği)', () => {
         expect(req.request.method).toBe('GET');
         req.flush({ hasExampleData: true, counts: { clients: 12, pets: 20 } });
 
-        expect(hasExampleData).toBeTrue();
+        expect(hasExampleData).toBe(true);
         expect(clients).toBe(12);
     });
 
@@ -107,8 +108,8 @@ describe('ExampleClinicService (TRIAL-002, örnek veri temizliği)', () => {
         service.clear().subscribe({ error: (e: ExampleClinicError) => (error = e) });
         http.expectOne('http://api.test/api/v1/tenants/t-1/example-clinic').flush({ status: 409, extensions: { code: EXAMPLE_CLINIC_NOT_LOADED_CODE } }, { status: 409, statusText: 'Conflict' });
 
-        expect(error!.isNotLoaded).toBeTrue();
-        expect(error!.isBlocking).toBeFalse();
+        expect(error!.isNotLoaded).toBe(true);
+        expect(error!.isBlocking).toBe(false);
         expect(error!.message).toContain('temizlenecek örnek veri kalmamış');
     });
 
@@ -118,7 +119,7 @@ describe('ExampleClinicService (TRIAL-002, örnek veri temizliği)', () => {
         service.clear().subscribe({ error: (e: ExampleClinicError) => (error = e) });
         http.expectOne('http://api.test/api/v1/tenants/t-1/example-clinic').flush({ status: 403, extensions: { code: 'Subscriptions.TenantReadOnly' } }, { status: 403, statusText: 'Forbidden' });
 
-        expect(error!.isNotLoaded).toBeFalse();
+        expect(error!.isNotLoaded).toBe(false);
         expect(error!.message).toContain('salt okunur');
     });
 });

@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import type { SubscriptionDiscountDto } from '@/app/features/sales-partners/models/sales-partner.model';
@@ -16,11 +17,15 @@ const NONE: SubscriptionDiscountDto = {
 const APPLIED: SubscriptionDiscountDto = { ...NONE, applied: true, code: 'ISIK10', discountPercent: 10, discountMonths: 12, canApply: false };
 
 describe('SubscriptionDiscountCardComponent (ADR-037)', () => {
-    let codes: jasmine.SpyObj<DiscountCodesService>;
+    let codes: MockedObject<DiscountCodesService>;
 
     const create = async (state: SubscriptionDiscountDto | null, canManage: boolean): Promise<ComponentFixture<SubscriptionDiscountCardComponent>> => {
-        codes = jasmine.createSpyObj<DiscountCodesService>('DiscountCodesService', ['getSubscriptionDiscount', 'applySubscriptionDiscount', 'validate']);
-        codes.getSubscriptionDiscount.and.returnValue(state ? of(state) : throwError(() => new Error('x')));
+        codes = {
+            getSubscriptionDiscount: vi.fn().mockName('DiscountCodesService.getSubscriptionDiscount'),
+            applySubscriptionDiscount: vi.fn().mockName('DiscountCodesService.applySubscriptionDiscount'),
+            validate: vi.fn().mockName('DiscountCodesService.validate')
+        } as unknown as MockedObject<DiscountCodesService>;
+        codes.getSubscriptionDiscount.mockReturnValue(state ? of(state) : throwError(() => new Error('x')));
         await TestBed.configureTestingModule({
             imports: [SubscriptionDiscountCardComponent],
             providers: [{ provide: DiscountCodesService, useValue: codes }]
@@ -44,7 +49,7 @@ describe('SubscriptionDiscountCardComponent (ADR-037)', () => {
     it('kod girilebiliyorsa ve yönetme yetkisi varsa alanı gösterir; geçerli kodla uygular', async () => {
         const f = await create(NONE, true);
 
-        codes.applySubscriptionDiscount.and.returnValue(of(APPLIED));
+        codes.applySubscriptionDiscount.mockReturnValue(of(APPLIED));
 
         expect(host(f).querySelector('[data-testid="subscription-discount-apply"]')).not.toBeNull();
 
@@ -53,7 +58,9 @@ describe('SubscriptionDiscountCardComponent (ADR-037)', () => {
         f.componentInstance.apply();
         f.detectChanges();
 
-        expect(codes.applySubscriptionDiscount).toHaveBeenCalledOnceWith('ISIK10');
+        expect(codes.applySubscriptionDiscount).toHaveBeenCalledTimes(1);
+
+        expect(codes.applySubscriptionDiscount).toHaveBeenCalledWith('ISIK10');
         expect(host(f).querySelector('[data-testid="subscription-discount-applied"]')).not.toBeNull();
     });
 

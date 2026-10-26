@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject } from 'rxjs';
 import type { ProductStockBatchesVm } from '@/app/features/inventory/models/stock-batch-vm.model';
@@ -21,13 +22,15 @@ const vm = (available: string): ProductStockBatchesVm => ({
 
 describe('ProductStockBatchesComponent', () => {
     let fixture: ComponentFixture<ProductStockBatchesComponent>;
-    let service: jasmine.SpyObj<StockBatchService>;
+    let service: MockedObject<StockBatchService>;
 
     const text = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
 
     beforeEach(async () => {
-        service = jasmine.createSpyObj<StockBatchService>('StockBatchService', ['getByProduct']);
-        service.getByProduct.and.returnValue(of(vm('5')));
+        service = {
+            getByProduct: vi.fn().mockName('StockBatchService.getByProduct')
+        } as unknown as MockedObject<StockBatchService>;
+        service.getByProduct.mockReturnValue(of(vm('5')));
         await TestBed.configureTestingModule({
             imports: [ProductStockBatchesComponent],
             providers: [{ provide: StockBatchService, useValue: service }]
@@ -41,7 +44,7 @@ describe('ProductStockBatchesComponent', () => {
     it('stok işlemi sonrası yenilemede özet yerinde kalır; "yükleniyor" yalnız ilk yüklemede görünür (alttaki bölümler zıplamaz)', () => {
         const pending = new Subject<ProductStockBatchesVm>();
 
-        service.getByProduct.and.returnValue(pending);
+        service.getByProduct.mockReturnValue(pending);
         fixture.componentRef.setInput('reloadKey', 1);
         fixture.detectChanges();
 

@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { Component, forwardRef, input, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -70,11 +71,15 @@ const convertedResult = (): ChargeCreateResultVm => ({
 });
 
 describe('ChargeSuggestionsPageComponent', () => {
-    let service: jasmine.SpyObj<ChargeSuggestionsService>;
+    let service: MockedObject<ChargeSuggestionsService>;
 
     const open = async (claims: string[], items: ChargeSuggestionVm[], url = '/panel/charges/pending') => {
-        service = jasmine.createSpyObj<ChargeSuggestionsService>('ChargeSuggestionsService', ['getPending', 'convert', 'waive']);
-        service.getPending.and.returnValue(of({ items, page: 1, pageSize: 200, totalItems: items.length, totalPages: 1 }));
+        service = {
+            getPending: vi.fn().mockName('ChargeSuggestionsService.getPending'),
+            convert: vi.fn().mockName('ChargeSuggestionsService.convert'),
+            waive: vi.fn().mockName('ChargeSuggestionsService.waive')
+        } as unknown as MockedObject<ChargeSuggestionsService>;
+        service.getPending.mockReturnValue(of({ items, page: 1, pageSize: 200, totalItems: items.length, totalPages: 1 }));
         TestBed.configureTestingModule({
             providers: [
                 provideRouter([{ path: 'panel/charges/pending', component: ChargeSuggestionsPageComponent }]),
@@ -105,16 +110,16 @@ describe('ChargeSuggestionsPageComponent', () => {
         expect(text(harness)).toContain('Serum fizyolojik');
         expect(text(harness)).toContain('Ali Veli');
         expect(text(harness)).toContain('yalnız görüntülenir');
-        expect(labels(harness).some((l) => l.includes('Ücrete çevir'))).toBeFalse();
-        expect(labels(harness).some((l) => l.includes('Ücretsiz say'))).toBeFalse();
+        expect(labels(harness).some((l) => l.includes('Ücrete çevir'))).toBe(false);
+        expect(labels(harness).some((l) => l.includes('Ücretsiz say'))).toBe(false);
         expect(text(harness)).not.toContain('İşlemler');
     });
 
     it('resepsiyon (Charges.Create) çevir ve ücretsiz say düğmelerini görür', async () => {
         const { harness } = await open(['Charges.Read', 'Charges.Create'], [suggestion()]);
 
-        expect(labels(harness).some((l) => l.includes('Ücrete çevir'))).toBeTrue();
-        expect(labels(harness).some((l) => l.includes('Ücretsiz say'))).toBeTrue();
+        expect(labels(harness).some((l) => l.includes('Ücrete çevir'))).toBe(true);
+        expect(labels(harness).some((l) => l.includes('Ücretsiz say'))).toBe(true);
     });
 
     it('Ücretsiz say yalnız simgeyle yer tutar; erişilebilir ad ve ipucu korunur', async () => {
@@ -133,7 +138,7 @@ describe('ChargeSuggestionsPageComponent', () => {
         for (const value of [long.clientName, long.petName, long.description]) {
             const el = (harness.routeNativeElement as HTMLElement).querySelector(`[title="${value}"]`) as HTMLElement;
 
-            expect(el).withContext(value).not.toBeNull();
+            expect(el, value).not.toBeNull();
             expect(el.classList).toContain('truncate');
         }
     });
@@ -141,13 +146,15 @@ describe('ChargeSuggestionsPageComponent', () => {
     it('tek tık: gövde yalnız requestId taşır, kalem listeden düşer, ücret kaydı ve Ödeme al bağlantısı çıkar', async () => {
         const { harness, cmp } = await open(['Charges.Read', 'Charges.Create', 'Payments.Create'], [suggestion()]);
 
-        service.convert.and.returnValue(of(convertedResult()));
-        service.getPending.calls.reset();
+        service.convert.mockReturnValue(of(convertedResult()));
+        service.getPending.mockClear();
         cmp.convertQuick(suggestion());
         harness.detectChanges();
 
-        expect(service.convert).toHaveBeenCalledOnceWith('s1', { requestId: jasmine.any(String) });
-        expect(Object.keys(service.convert.calls.mostRecent().args[1])).toEqual(['requestId']);
+        expect(service.convert).toHaveBeenCalledTimes(1);
+
+        expect(service.convert).toHaveBeenCalledWith('s1', { requestId: expect.any(String) });
+        expect(Object.keys(vi.mocked(service.convert).mock.lastCall![1])).toEqual(['requestId']);
         expect(cmp.rows()).toEqual([]);
         expect(text(harness)).toContain('Ücrete çevrildi');
         expect(text(harness)).toContain('250');
@@ -162,25 +169,22 @@ describe('ChargeSuggestionsPageComponent', () => {
     it('Ödeme al yalnız Payments.Create olanda görünür', async () => {
         const { harness, cmp } = await open(['Charges.Read', 'Charges.Create'], [suggestion()]);
 
-        service.convert.and.returnValue(of(convertedResult()));
+        service.convert.mockReturnValue(of(convertedResult()));
         cmp.convertQuick(suggestion());
         harness.detectChanges();
-        expect(labels(harness).some((l) => l.includes('Ödeme al'))).toBeFalse();
-        expect(labels(harness).some((l) => l.includes('Ücret kaydı'))).toBeTrue();
+        expect(labels(harness).some((l) => l.includes('Ödeme al'))).toBe(false);
+        expect(labels(harness).some((l) => l.includes('Ücret kaydı'))).toBe(true);
     });
 
     it('hata sonrası yeniden denemede aynı requestId gider (çift ücret olmaz); başarıdan sonra yenisi üretilir', async () => {
         const { cmp } = await open(['Charges.Read', 'Charges.Create'], [suggestion()]);
 
-        service.convert.and.returnValues(
-            throwError(() => new Error('Bağlantı hatası')),
-            of(convertedResult())
-        );
+        service.convert.mockReturnValueOnce(throwError(() => new Error('Bağlantı hatası'))).mockReturnValueOnce(of(convertedResult()));
         cmp.convertQuick(suggestion());
         expect(cmp.actionError()).toBe('Bağlantı hatası');
         cmp.convertQuick(suggestion());
 
-        const [first, second] = service.convert.calls.allArgs().map((a) => a[1].requestId);
+        const [first, second] = vi.mocked(service.convert).mock.calls.map((a) => a[1].requestId);
 
         expect(first).toBe(second);
         expect(cmp.actionError()).toBeNull();
@@ -189,8 +193,8 @@ describe('ChargeSuggestionsPageComponent', () => {
     it('çevirme hatasında liste sunucudan yenilenir', async () => {
         const { cmp } = await open(['Charges.Read', 'Charges.Create'], [suggestion()]);
 
-        service.convert.and.returnValue(throwError(() => new Error('Bu kalem zaten ücrete çevrilmiş.')));
-        service.getPending.calls.reset();
+        service.convert.mockReturnValue(throwError(() => new Error('Bu kalem zaten ücrete çevrilmiş.')));
+        service.getPending.mockClear();
         cmp.convertQuick(suggestion());
         expect(service.getPending).toHaveBeenCalledTimes(1);
         expect(cmp.actionError()).toContain('zaten ücrete çevrilmiş');
@@ -199,33 +203,35 @@ describe('ChargeSuggestionsPageComponent', () => {
     it('fiyatı olmayan kalemde tek tık yok; Fiyat gir ve çevir var', async () => {
         const { harness } = await open(['Charges.Read', 'Charges.Create'], [suggestion({ suggestedUnitPrice: null })]);
 
-        expect(labels(harness).some((l) => l === 'Ücrete çevir')).toBeFalse();
-        expect(labels(harness).some((l) => l.includes('Fiyat gir ve çevir'))).toBeTrue();
+        expect(labels(harness).some((l) => l === 'Ücrete çevir')).toBe(false);
+        expect(labels(harness).some((l) => l.includes('Fiyat gir ve çevir'))).toBe(true);
         expect(text(harness)).toContain('Fiyat yok');
     });
 
     it('düzenleyerek çevirme: yalnız değişen alanlar ve aynı deneme için aynı requestId', async () => {
         const { cmp } = await open(['Charges.Read', 'Charges.Create'], [suggestion()]);
 
-        service.convert.and.returnValue(of(convertedResult()));
+        service.convert.mockReturnValue(of(convertedResult()));
         cmp.target.set(suggestion());
         cmp.convertEdited({ unitPrice: 130 }).subscribe();
-        expect(service.convert).toHaveBeenCalledOnceWith('s1', { unitPrice: 130, requestId: jasmine.any(String) });
+        expect(service.convert).toHaveBeenCalledTimes(1);
+        expect(service.convert).toHaveBeenCalledWith('s1', { unitPrice: 130, requestId: expect.any(String) });
     });
 
     it('ücretsiz say: gerekçe servise gider', async () => {
         const { cmp } = await open(['Charges.Read', 'Charges.Create'], [suggestion()]);
 
-        service.waive.and.returnValue(of(suggestion()));
+        service.waive.mockReturnValue(of(suggestion()));
         cmp.target.set(suggestion());
         cmp.waive('Müşteriye bedelsiz verildi').subscribe();
-        expect(service.waive).toHaveBeenCalledOnceWith('s1', 'Müşteriye bedelsiz verildi');
+        expect(service.waive).toHaveBeenCalledTimes(1);
+        expect(service.waive).toHaveBeenCalledWith('s1', 'Müşteriye bedelsiz verildi');
     });
 
     it('ziyaret bağlamı sorguya taşınır ve süzgeç çipi görünür', async () => {
         const { harness } = await open(['Charges.Read'], [suggestion()], '/panel/charges/pending?visitId=v1');
 
-        expect(service.getPending).toHaveBeenCalledWith(jasmine.objectContaining({ visitId: 'v1', pageSize: 200 }));
+        expect(service.getPending).toHaveBeenCalledWith(expect.objectContaining({ visitId: 'v1', pageSize: 200 }));
         expect(text(harness)).toContain('Seçili ziyaretin kalemleri');
     });
 

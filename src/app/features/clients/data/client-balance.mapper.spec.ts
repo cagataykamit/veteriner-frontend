@@ -43,10 +43,8 @@ describe('mapClientBalanceDtoToVm', () => {
 
         expect(vm.outstandingAmount).toBe(1100);
         expect(vm.openCharges.map((c) => c.chargeId)).toEqual(['ch1', 'ch2']);
-        expect(vm.openCharges[0]).toEqual(
-            jasmine.objectContaining({ petId: 'p1', petName: 'Pamuk', visitId: 'v1', examinationId: 'ex1', outstandingAmount: 600 })
-        );
-        expect(vm.openCharges[1]).toEqual(jasmine.objectContaining({ petId: null, visitId: null, visitArrivedAtUtc: null }));
+        expect(vm.openCharges[0]).toEqual(expect.objectContaining({ petId: 'p1', petName: 'Pamuk', visitId: 'v1', examinationId: 'ex1', outstandingAmount: 600 }));
+        expect(vm.openCharges[1]).toEqual(expect.objectContaining({ petId: null, visitId: null, visitArrivedAtUtc: null }));
     });
 
     it('açık ücreti olmayan müşteride boş liste döner', () => {

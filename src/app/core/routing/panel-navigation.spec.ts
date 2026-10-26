@@ -18,11 +18,18 @@ import {
 import { PLATFORM_ADMIN_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 /** Klinik kullanıcısının alabileceği en geniş izin kümesi; platform yöneticisi claim'i izin değildir (ADR-037). */
-const allClaims = new Set<string>(
-    [...MENU_GROUPS, ...SETTINGS_SECTIONS].flatMap((g) => g.entries.flatMap((e) => e.claims ?? [])).filter((c) => c !== PLATFORM_ADMIN_CLAIM)
-);
-const labels = (groups: { entries: readonly { label: string }[] }[]) => groups.flatMap((g) => g.entries.map((e) => e.label));
-const only = (...claims: string[]) => (c: string) => claims.includes(c);
+const allClaims = new Set<string>([...MENU_GROUPS, ...SETTINGS_SECTIONS].flatMap((g) => g.entries.flatMap((e) => e.claims ?? [])).filter((c) => c !== PLATFORM_ADMIN_CLAIM));
+const labels = (
+    groups: {
+        entries: readonly {
+            label: string;
+        }[];
+    }[]
+) => groups.flatMap((g) => g.entries.map((e) => e.label));
+const only =
+    (...claims: string[]) =>
+    (c: string) =>
+        claims.includes(c);
 const entry = (label: string) => MENU_GROUPS.flatMap((g) => g.entries).find((e) => e.label === label)!;
 
 describe('panel-navigation — kayıt defteri kartları', () => {
@@ -47,11 +54,11 @@ describe('panel-navigation', () => {
             ['Para ve stok', ['Para', 'Stok']],
             ['Yönetim', ['Raporlar', 'Özet', 'Ayarlar']]
         ]);
-        expect(groups.every((g) => g.label === undefined)).toBeTrue();
+        expect(groups.every((g) => g.label === undefined)).toBe(true);
         const last = groups[groups.length - 1];
 
-        expect(last.pinned).toBeTrue();
-        expect(groups.filter((g) => g.pinned)).toHaveSize(1);
+        expect(last.pinned).toBe(true);
+        expect(groups.filter((g) => g.pinned)).toHaveLength(1);
     });
 
     it('tüm girişleri izinle gizlenen bölüm başlığıyla birlikte düşer', () => {
@@ -158,9 +165,7 @@ describe('panel-navigation', () => {
 
     it('muayene şablonları kartı Tanımlar altında yönetim izniyle görünür; okuma/uygulama izni kart açmaz', () => {
         expect(visibleEntries(DEFINITION_ENTRIES, only('ExaminationTemplates.Read', 'ExaminationTemplates.Apply'))).toEqual([]);
-        expect(visibleEntries(DEFINITION_ENTRIES, only('ExaminationTemplates.Update')).map((e) => e.route)).toEqual([
-            '/panel/settings/definitions/examination-templates'
-        ]);
+        expect(visibleEntries(DEFINITION_ENTRIES, only('ExaminationTemplates.Update')).map((e) => e.route)).toEqual(['/panel/settings/definitions/examination-templates']);
         expect(labels(visibleGroups(SETTINGS_SECTIONS, only('ExaminationTemplates.Deactivate')))).toContain('Tanımlar');
     });
 
@@ -180,7 +185,7 @@ describe('panel-navigation', () => {
     it('menüde tek Raporlar girişi vardır; ayrı rapor öğeleri yoktur', () => {
         const all = labels(visibleGroups(MENU_GROUPS, (c) => allClaims.has(c)));
 
-        expect(all.filter((l) => l === 'Raporlar')).toHaveSize(1);
+        expect(all.filter((l) => l === 'Raporlar')).toHaveLength(1);
         expect(all.filter((l) => l.endsWith('Raporu'))).toEqual([]);
     });
 
@@ -213,7 +218,7 @@ describe('panel-navigation', () => {
     it('groupForUrl menüde olmayan adres için undefined, Ayarlar için sabitlenen grubu verir', () => {
         expect(groupForUrl(MENU_GROUPS, '/panel/today')?.label).toBeUndefined();
         expect(groupForUrl(MENU_GROUPS, '/panel/today')?.pinned).toBeUndefined();
-        expect(groupForUrl(MENU_GROUPS, '/panel/settings/account')?.pinned).toBeTrue();
+        expect(groupForUrl(MENU_GROUPS, '/panel/settings/account')?.pinned).toBe(true);
         expect(groupForUrl(MENU_GROUPS, '/panel/petsx')).toBeUndefined();
     });
 
@@ -222,7 +227,7 @@ describe('panel-navigation', () => {
             for (const item of group.entries) {
                 const category = categoryForUrl(MENU_GROUPS, item.route);
 
-                expect(category).withContext(item.label).toBeTruthy();
+                expect(category, item.label).toBeTruthy();
                 expect(category).not.toBe(group.heading);
             }
         }
@@ -264,7 +269,7 @@ describe('panel-navigation', () => {
             expect(tabs('/panel/pets?clientId=c1')?.tabs.map((t) => t.label)).toEqual(['Ara', 'Müşteriler', 'Hastalar']);
             expect(tabs('/panel/pets?clientId=c1')?.active.label).toBe('Hastalar');
             expect(tabs('/panel/appointments/calendar')?.active.label).toBe('Takvim');
-            expect(tabs('/panel/administrations')?.tabs).toHaveSize(8);
+            expect(tabs('/panel/administrations')?.tabs).toHaveLength(8);
             expect(tabs('/panel/imaging')?.active.label).toBe('Görüntüleme');
         });
 
@@ -300,16 +305,7 @@ describe('panel-navigation', () => {
         const flyout = (label: string, url: string, hasClaim: (c: string) => boolean = () => true) => flyoutTabsFor(entry(label), url, hasClaim);
 
         it('sekmeli öğede yetkili sekmeleri verir; sekmesiz öğede ve tek sekme yetkiliyken panel yoktur', () => {
-            expect(flyout('Kayıtlar', '/panel/today')?.tabs.map((t) => t.label)).toEqual([
-                'Muayeneler',
-                'Tedaviler',
-                'Reçeteler',
-                'Aşılar',
-                'Lab sonuçları',
-                'Görüntüleme',
-                'Yatışlar',
-                'Uygulamalar'
-            ]);
+            expect(flyout('Kayıtlar', '/panel/today')?.tabs.map((t) => t.label)).toEqual(['Muayeneler', 'Tedaviler', 'Reçeteler', 'Aşılar', 'Lab sonuçları', 'Görüntüleme', 'Yatışlar', 'Uygulamalar']);
             expect(flyout('Stok', '/panel/today', only('Products.Read'))?.tabs.map((t) => t.label)).toEqual(['Ürünler', 'Stok durumu']);
             expect(flyout('Stok', '/panel/today', only('StockMovements.Read'))).toBeUndefined();
             expect(flyout('Bugün', '/panel/today')).toBeUndefined();

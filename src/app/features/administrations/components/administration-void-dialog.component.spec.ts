@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { AdministrationVoidDialogComponent } from '@/app/features/administrations/components/administration-void-dialog.component';
@@ -33,7 +34,7 @@ const target: AdministrationVm = {
 describe('AdministrationVoidDialogComponent', () => {
     let fixture: ComponentFixture<AdministrationVoidDialogComponent>;
     let cmp: AdministrationVoidDialogComponent;
-    let service: jasmine.SpyObj<AdministrationsService>;
+    let service: MockedObject<AdministrationsService>;
     let voided: AdministrationStockOutcome[];
 
     const reasonDialog = () => fixture.debugElement.children[0].componentInstance as ReasonConfirmDialogComponent;
@@ -44,8 +45,10 @@ describe('AdministrationVoidDialogComponent', () => {
     };
 
     beforeEach(async () => {
-        service = jasmine.createSpyObj<AdministrationsService>('AdministrationsService', ['voidAdministration']);
-        service.voidAdministration.and.returnValue(of({ ...target, isVoided: true }));
+        service = {
+            voidAdministration: vi.fn().mockName('AdministrationsService.voidAdministration')
+        } as unknown as MockedObject<AdministrationsService>;
+        service.voidAdministration.mockReturnValue(of({ ...target, isVoided: true }));
         await TestBed.configureTestingModule({
             imports: [AdministrationVoidDialogComponent],
             providers: [{ provide: AdministrationsService, useValue: service }]

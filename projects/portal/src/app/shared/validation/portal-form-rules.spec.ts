@@ -7,12 +7,12 @@ describe('portal form kuralları', () => {
 
     it('güçlü parola kuralı backend ile aynı', () => {
         expect(password('Guclu.Parola1')).toBeNull();
-        expect(password('kisa1A!')).toEqual(jasmine.objectContaining({ minlength: true }));
-        expect(password('kucukharf1!')).toEqual(jasmine.objectContaining({ missingUppercase: true }));
-        expect(password('BUYUKHARF1!')).toEqual(jasmine.objectContaining({ missingLowercase: true }));
-        expect(password('Rakamsiz!!')).toEqual(jasmine.objectContaining({ missingDigit: true }));
-        expect(password('Ozelsiz123')).toEqual(jasmine.objectContaining({ missingSpecialChar: true }));
-        expect(password(`Aa1!${'x'.repeat(125)}`)).toEqual(jasmine.objectContaining({ maxlength: true }));
+        expect(password('kisa1A!')).toEqual(expect.objectContaining({ minlength: true }));
+        expect(password('kucukharf1!')).toEqual(expect.objectContaining({ missingUppercase: true }));
+        expect(password('BUYUKHARF1!')).toEqual(expect.objectContaining({ missingLowercase: true }));
+        expect(password('Rakamsiz!!')).toEqual(expect.objectContaining({ missingDigit: true }));
+        expect(password('Ozelsiz123')).toEqual(expect.objectContaining({ missingSpecialChar: true }));
+        expect(password(`Aa1!${'x'.repeat(125)}`)).toEqual(expect.objectContaining({ maxlength: true }));
     });
 
     it('kod 6 hanedir; boşluklar atılır', () => {

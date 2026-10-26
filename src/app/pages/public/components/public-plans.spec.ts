@@ -1,18 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import {
-    decidedFeatureRows,
-    formatPlanLimit,
-    formatPlanPrice,
-    hasPlanComparison,
-    planHighlights,
-    planPriceView,
-    pricingSummaryText,
-    pricingTermsText,
-    PRICING_PLAN_DEFS,
-    type PricingFeatureRowDef,
-    type PricingPlanDef
-} from '@/app/features/public/utils/pricing-plan.utils';
+import { decidedFeatureRows, formatPlanLimit, formatPlanPrice, hasPlanComparison, planHighlights, planPriceView, pricingSummaryText, pricingTermsText, PRICING_PLAN_DEFS, type PricingFeatureRowDef, type PricingPlanDef } from '@/app/features/public/utils/pricing-plan.utils';
 import { subscriptionPlanLabel, subscriptionPlanLimitLabels } from '@/app/features/subscriptions/utils/subscription-plan.utils';
 import { PublicPlanCardsComponent } from './public-plan-cards.component';
 import { PublicPlanComparisonComponent } from './public-plan-comparison.component';
@@ -58,7 +46,7 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         expect(planHighlights('pro')).toContain('Hasta sahibi portalı');
         expect(planHighlights('pro')).not.toContain('Çok klinik yönetimi ve klinikler arası yetki');
         expect(planHighlights('premium')).toContain('Çok klinik yönetimi ve klinikler arası yetki');
-        expect(hasPlanComparison()).toBeTrue();
+        expect(hasPlanComparison()).toBe(true);
     });
 
     it('fiyat görünümü: aylık birim; teklifli pakette "İletişime geçin"', () => {
@@ -66,7 +54,7 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         expect(planPriceView(PRICING_PLAN_DEFS[1])).toEqual({ amount: '₺1.990', unit: '/ ay' });
         expect(planPriceView(PRICING_PLAN_DEFS[2])).toEqual({ amount: 'İletişime geçin', unit: null });
         expect(planPriceView(EMPTY_PLANS[0])).toBeNull();
-        expect(hasPlanComparison(EMPTY_PLANS, [])).toBeFalse();
+        expect(hasPlanComparison(EMPTY_PLANS, [])).toBe(false);
     });
 
     it('biçimlendirme: TL tutar, sınır etiketi; null → null', () => {
@@ -82,7 +70,7 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         expect(planHighlights('basic', SAMPLE_ROWS)).toEqual([]);
         expect(planHighlights('pro', SAMPLE_ROWS)).toEqual(['Yatış takibi']);
         expect(decidedFeatureRows(SAMPLE_ROWS).map((r) => r.label)).not.toContain('Karar verilmemiş satır');
-        expect(hasPlanComparison(SAMPLE_PLANS, [])).toBeTrue();
+        expect(hasPlanComparison(SAMPLE_PLANS, [])).toBe(true);
     });
 
     it('panel abonelik kartı: paket adı ve sınır etiketleri aynı veriden', () => {
@@ -154,10 +142,7 @@ describe('PublicPlanComparisonComponent', () => {
         fixture.componentRef.setInput('featureRows', SAMPLE_ROWS);
         fixture.detectChanges();
         const el = fixture.nativeElement as HTMLElement;
-        const cells = (label: string): string[] =>
-            Array.from(Array.from(el.querySelectorAll('tbody tr')).find((tr) => tr.querySelector('th')?.textContent?.trim() === label)!.querySelectorAll('td')).map(
-                (td) => td.textContent?.trim() ?? ''
-            );
+        const cells = (label: string): string[] => Array.from(Array.from(el.querySelectorAll('tbody tr')).find((tr) => tr.querySelector('th')?.textContent?.trim() === label)!.querySelectorAll('td')).map((td) => td.textContent?.trim() ?? '');
 
         expect(Array.from(el.querySelectorAll('thead th')).map((th) => th.textContent?.trim())).toEqual(['Özellik', ...PRICING_PLAN_DEFS.map((p) => p.title)]);
         expect(Array.from(el.querySelectorAll('th[scope="colgroup"]')).map((th) => th.textContent?.trim())).toEqual(['Fiyat', 'Sınırlar', 'Günlük iş', 'Yönetim']);

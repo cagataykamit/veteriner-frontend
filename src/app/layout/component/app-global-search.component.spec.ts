@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
@@ -12,13 +13,16 @@ const result: GlobalSearchResultVm = {
 
 describe('AppGlobalSearch', () => {
     let fixture: ComponentFixture<AppGlobalSearch>;
-    let search: jasmine.SpyObj<GlobalSearchService>;
+    let search: MockedObject<GlobalSearchService>;
     let router: Router;
 
     const create = (canSearch = true) => {
-        search = jasmine.createSpyObj<GlobalSearchService>('GlobalSearchService', ['search', 'canSearch']);
-        search.canSearch.and.returnValue(canSearch);
-        search.search.and.returnValue(of(result));
+        search = {
+            search: vi.fn().mockName('GlobalSearchService.search'),
+            canSearch: vi.fn().mockName('GlobalSearchService.canSearch')
+        } as unknown as MockedObject<GlobalSearchService>;
+        search.canSearch.mockReturnValue(canSearch);
+        search.search.mockReturnValue(of(result));
         TestBed.configureTestingModule({
             imports: [AppGlobalSearch],
             providers: [provideRouter([]), { provide: GlobalSearchService, useValue: search }]
@@ -39,7 +43,12 @@ describe('AppGlobalSearch', () => {
 
     const dialogOpen = () => !!document.querySelector('.p-dialog');
     // Kapanış animasyonu bitene kadar DOM'da kalabilir; açık/kapalı durumu bileşenden okunur.
-    const isVisible = () => (fixture.componentInstance as unknown as { visible: () => boolean }).visible();
+    const isVisible = () =>
+        (
+            fixture.componentInstance as unknown as {
+                visible: () => boolean;
+            }
+        ).visible();
 
     const settle = async () => {
         await fixture.whenStable();
@@ -61,15 +70,15 @@ describe('AppGlobalSearch', () => {
         create(false);
         expect(fixture.nativeElement.querySelector('button')).toBeNull();
         key({ key: 'k', ctrlKey: true });
-        expect(dialogOpen()).toBeFalse();
+        expect(dialogOpen()).toBe(false);
     });
 
     it('Ctrl+K ve / pencereyi açar; yazı alanında / açmaz', async () => {
         create();
         const slash = key({ key: '/' });
 
-        expect(slash.defaultPrevented).toBeTrue();
-        expect(dialogOpen()).toBeTrue();
+        expect(slash.defaultPrevented).toBe(true);
+        expect(dialogOpen()).toBe(true);
 
         TestBed.resetTestingModule();
         document.querySelectorAll('.p-dialog-mask').forEach((el) => el.remove());
@@ -78,9 +87,9 @@ describe('AppGlobalSearch', () => {
 
         key({ key: '/' }, field);
         field.remove();
-        expect(dialogOpen()).toBeFalse();
+        expect(dialogOpen()).toBe(false);
         key({ key: 'k', ctrlKey: true });
-        expect(dialogOpen()).toBeTrue();
+        expect(dialogOpen()).toBe(true);
     });
 
     it('açılır açılmaz giriş alanına odaklanır (animasyon beklenmez)', () => {
@@ -96,7 +105,8 @@ describe('AppGlobalSearch', () => {
         await typeQuery('a');
         expect(search.search).not.toHaveBeenCalled();
         await typeQuery('pamuk');
-        expect(search.search).toHaveBeenCalledOnceWith('pamuk');
+        expect(search.search).toHaveBeenCalledTimes(1);
+        expect(search.search).toHaveBeenCalledWith('pamuk');
         const text = document.querySelector('.p-dialog')!.textContent!;
 
         expect(text).toContain('Müşteriler');
@@ -108,7 +118,7 @@ describe('AppGlobalSearch', () => {
 
     it('ok tuşları seçimi gezdirir, Enter seçili kaydın detayına gider', async () => {
         create();
-        const navigate = spyOn(router, 'navigate').and.resolveTo(true);
+        const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
         key({ key: '/' });
         await typeQuery('pamuk');
@@ -118,16 +128,16 @@ describe('AppGlobalSearch', () => {
         expect(input.getAttribute('aria-activedescendant')).toBe('global-search-listbox-option-1');
         key({ key: 'Enter' }, input);
         expect(navigate).toHaveBeenCalledWith(['/panel/pets', 'p1']);
-        expect(isVisible()).toBeFalse();
+        expect(isVisible()).toBe(false);
     });
 
     it('sonuç yoksa boş durum, tam hata olursa uyarı gösterir', async () => {
         create();
         key({ key: '/' });
-        search.search.and.returnValue(of({ clients: [], pets: [], failedKinds: [] }));
+        search.search.mockReturnValue(of({ clients: [], pets: [], failedKinds: [] }));
         await typeQuery('yok');
         expect(document.querySelector('.p-dialog')!.textContent).toContain('Sonuç bulunamadı.');
-        search.search.and.returnValue(throwError(() => new Error('x')));
+        search.search.mockReturnValue(throwError(() => new Error('x')));
         await typeQuery('hata');
         expect(document.querySelector('.p-dialog [role="alert"]')!.textContent).toContain('Arama yapılamadı');
     });
@@ -137,7 +147,7 @@ describe('AppGlobalSearch', () => {
         key({ key: '/' });
         const pending = new Subject<GlobalSearchResultVm>();
 
-        search.search.and.returnValue(pending);
+        search.search.mockReturnValue(pending);
         await typeQuery('pamuk');
         expect(document.querySelector('.p-dialog')!.textContent).toContain('Aranıyor');
         pending.next(result);
@@ -151,6 +161,6 @@ describe('AppGlobalSearch', () => {
         key({ key: '/' });
         key({ key: 'Escape' }, document.querySelector('.p-dialog')!);
         await settle();
-        expect(isVisible()).toBeFalse();
+        expect(isVisible()).toBe(false);
     });
 });

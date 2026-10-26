@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -21,7 +22,7 @@ const paged = (items: ClinicalTermDto[]) => of({ items, page: 1, pageSize: 50, t
 describe('ClinicalTermsPageComponent', () => {
     let fixture: ComponentFixture<ClinicalTermsPageComponent>;
     let cmp: ClinicalTermsPageComponent;
-    let terms: jasmine.SpyObj<ClinicalTermsService>;
+    let terms: MockedObject<ClinicalTermsService>;
     let claims: Set<string>;
     let blocked: boolean;
 
@@ -46,15 +47,18 @@ describe('ClinicalTermsPageComponent', () => {
     beforeEach(() => {
         claims = new Set(['ClinicalTerms.Read', 'ClinicalTerms.Create', 'ClinicalTerms.Update', 'ClinicalTerms.Deactivate']);
         blocked = false;
-        terms = jasmine.createSpyObj<ClinicalTermsService>('ClinicalTermsService', ['list', 'create', 'rename', 'setActive']);
-        terms.list.and.returnValue(
-            paged([term('s1', 'Gastroenterit', { isSystem: true }), term('c1', 'Otitis', {}), term('c2', 'Eski tanı', { isActive: false })])
-        );
+        terms = {
+            list: vi.fn().mockName('ClinicalTermsService.list'),
+            create: vi.fn().mockName('ClinicalTermsService.create'),
+            rename: vi.fn().mockName('ClinicalTermsService.rename'),
+            setActive: vi.fn().mockName('ClinicalTermsService.setActive')
+        } as unknown as MockedObject<ClinicalTermsService>;
+        terms.list.mockReturnValue(paged([term('s1', 'Gastroenterit', { isSystem: true }), term('c1', 'Otitis', {}), term('c2', 'Eski tanı', { isActive: false })]));
     });
 
     it('pasifler dahil tanı listesini yükler; sistem terimi rozetle ayrışır ve salt okunurdur', async () => {
         await create();
-        expect(terms.list).toHaveBeenCalledWith(jasmine.objectContaining({ kind: 'Diagnosis', includeInactive: true, page: 1 }));
+        expect(terms.list).toHaveBeenCalledWith(expect.objectContaining({ kind: 'Diagnosis', includeInactive: true, page: 1 }));
         const rows = rowTexts();
 
         expect(rows[0]).toContain('Sistem');
@@ -70,10 +74,10 @@ describe('ClinicalTermsPageComponent', () => {
     it('tür değişince ve aramada liste yeniden istenir', async () => {
         await create();
         cmp.onKindChange('Complaint');
-        expect(terms.list).toHaveBeenCalledWith(jasmine.objectContaining({ kind: 'Complaint', page: 1 }));
+        expect(terms.list).toHaveBeenCalledWith(expect.objectContaining({ kind: 'Complaint', page: 1 }));
         cmp.searchInput = ' ishal ';
         cmp.applySearch();
-        expect(terms.list).toHaveBeenCalledWith(jasmine.objectContaining({ kind: 'Complaint', search: 'ishal' }));
+        expect(terms.list).toHaveBeenCalledWith(expect.objectContaining({ kind: 'Complaint', search: 'ishal' }));
     });
 
     it('izin yoksa yazma düğmeleri görünmez', async () => {
@@ -91,36 +95,36 @@ describe('ClinicalTermsPageComponent', () => {
     });
 
     it('yeni terim seçili türde eklenir', async () => {
-        terms.create.and.returnValue(of(term('n1', 'Kulak akıntısı')));
+        terms.create.mockReturnValue(of(term('n1', 'Kulak akıntısı')));
         await create();
         cmp.openCreate();
         cmp.dialogForm.setValue({ name: 'Kulak akıntısı' });
         cmp.submitDialog();
         expect(terms.create).toHaveBeenCalledWith('Diagnosis', 'Kulak akıntısı');
-        expect(cmp.dialogVisible()).toBeFalse();
+        expect(cmp.dialogVisible()).toBe(false);
     });
 
     it('ad düzeltme rowVersion gönderir; 409 çakışmada pencere kapanır, mesaj gösterilir ve liste yenilenir', async () => {
-        terms.rename.and.returnValue(throwError(() => new ClinicalTermError('Kayıt bu arada değişmiş; liste yenilendi, tekrar deneyin.', true)));
+        terms.rename.mockReturnValue(throwError(() => new ClinicalTermError('Kayıt bu arada değişmiş; liste yenilendi, tekrar deneyin.', true)));
         await create();
-        const before = terms.list.calls.count();
+        const before = vi.mocked(terms.list).mock.calls.length;
 
         cmp.openRename(term('c1', 'Otitis'));
         cmp.dialogForm.setValue({ name: 'Otitis externa' });
         cmp.submitDialog();
         expect(terms.rename).toHaveBeenCalledWith('c1', 'Otitis externa', 'V1');
-        expect(cmp.dialogVisible()).toBeFalse();
+        expect(cmp.dialogVisible()).toBe(false);
         expect(cmp.listActionError()).toContain('değişmiş');
-        expect(terms.list.calls.count()).toBe(before + 1);
+        expect(vi.mocked(terms.list).mock.calls.length).toBe(before + 1);
     });
 
     it('mükerrer ad hatası pencerede kalır', async () => {
-        terms.create.and.returnValue(throwError(() => new ClinicalTermError('Bu ad sözlükte zaten var.', false)));
+        terms.create.mockReturnValue(throwError(() => new ClinicalTermError('Bu ad sözlükte zaten var.', false)));
         await create();
         cmp.openCreate();
         cmp.dialogForm.setValue({ name: 'GASTROENTERİT' });
         cmp.submitDialog();
-        expect(cmp.dialogVisible()).toBeTrue();
+        expect(cmp.dialogVisible()).toBe(true);
         expect(cmp.dialogError()).toBe('Bu ad sözlükte zaten var.');
     });
 
@@ -129,13 +133,13 @@ describe('ClinicalTermsPageComponent', () => {
         const system = term('s1', 'Gastroenterit', { isSystem: true });
 
         cmp.openRename(system);
-        expect(cmp.dialogVisible()).toBeFalse();
+        expect(cmp.dialogVisible()).toBe(false);
         cmp.setActive(system, false);
         expect(terms.setActive).not.toHaveBeenCalled();
     });
 
     it('etkinleştir pasif terimi açar ve listeyi yeniler', async () => {
-        terms.setActive.and.returnValue(of(undefined));
+        terms.setActive.mockReturnValue(of(undefined));
         await create();
         cmp.setActive(term('c2', 'Eski tanı', { isActive: false }), true);
         expect(terms.setActive).toHaveBeenCalledWith('c2', true);

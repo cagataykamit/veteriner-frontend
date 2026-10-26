@@ -48,12 +48,16 @@ const detailVm: ExaminationDetailVm = {
 
 describe('ExaminationDetailPageComponent — kayıt sonrası toast', () => {
     const create = (queryParams: Record<string, string>) => {
-        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
-        const route = TestBed.inject(ActivatedRoute) as unknown as { snapshot: { queryParamMap: unknown } };
+        const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+        const route = TestBed.inject(ActivatedRoute) as unknown as {
+            snapshot: {
+                queryParamMap: unknown;
+            };
+        };
 
         route.snapshot.queryParamMap = convertToParamMap(queryParams);
         const fixture = TestBed.createComponent(ExaminationDetailPageComponent);
-        const toastAdd = spyOn(fixture.debugElement.injector.get(MessageService), 'add');
+        const toastAdd = vi.spyOn(fixture.debugElement.injector.get(MessageService), 'add').mockReturnValue(undefined);
 
         fixture.detectChanges();
 
@@ -100,8 +104,10 @@ describe('ExaminationDetailPageComponent — kayıt sonrası toast', () => {
     it('?saved=1 ile açılınca "Muayene kaydedildi." toast ı gösterilir ve işaret URL den kaldırılır', () => {
         const { navigate, toastAdd } = create({ saved: '1' });
 
-        expect(toastAdd).toHaveBeenCalledOnceWith(jasmine.objectContaining({ severity: 'success', detail: 'Muayene kaydedildi.' }));
-        expect(navigate).toHaveBeenCalledWith([], jasmine.objectContaining({ queryParams: { saved: null }, replaceUrl: true }));
+        expect(toastAdd).toHaveBeenCalledTimes(1);
+
+        expect(toastAdd).toHaveBeenCalledWith(expect.objectContaining({ severity: 'success', detail: 'Muayene kaydedildi.' }));
+        expect(navigate).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { saved: null }, replaceUrl: true }));
     });
 
     it('işaret yokken toast gösterilmez', () => {
@@ -122,11 +128,16 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
     };
 
     const setup = async (vm: ExaminationDetailVm, claims: string[], relatedSummary: object = { examinationId: 'e1' }, readOnly = false) => {
-        const service = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', ['getExaminationById', 'getExaminationRelatedSummary', 'getAddenda', 'finalizeExamination']);
+        const service = {
+            getExaminationById: vi.fn().mockName('ExaminationsService.getExaminationById'),
+            getExaminationRelatedSummary: vi.fn().mockName('ExaminationsService.getExaminationRelatedSummary'),
+            getAddenda: vi.fn().mockName('ExaminationsService.getAddenda'),
+            finalizeExamination: vi.fn().mockName('ExaminationsService.finalizeExamination')
+        };
 
-        service.getExaminationById.and.returnValue(of(vm));
-        service.getExaminationRelatedSummary.and.returnValue(of(relatedSummary) as never);
-        service.getAddenda.and.returnValue(of([{ id: 'a1', reason: 'Hatalı kilo', text: 'Doğru kilo 12,4', createdAtUtc: '2026-10-11T10:05:00Z', createdByName: 'Dr. Ayşe' }]));
+        service.getExaminationById.mockReturnValue(of(vm));
+        service.getExaminationRelatedSummary.mockReturnValue(of(relatedSummary) as never);
+        service.getAddenda.mockReturnValue(of([{ id: 'a1', reason: 'Hatalı kilo', text: 'Doğru kilo 12,4', createdAtUtc: '2026-10-11T10:05:00Z', createdByName: 'Dr. Ayşe' }]));
         await TestBed.configureTestingModule({
             imports: [ExaminationDetailPageComponent],
             providers: [
@@ -168,9 +179,9 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
     it('Veteriner (Finalize+Update) taslakta Kesinleştir ve Düzenle görür; ek not bölümü yok', async () => {
         const { el } = await setup(detailVm, ['Examinations.Update', 'Examinations.Finalize', 'Examinations.Addendum']);
 
-        expect(has(el, 'finalize-open')).toBeTrue();
+        expect(has(el, 'finalize-open')).toBe(true);
         expect(label(el)).toContain('Düzenle');
-        expect(has(el, 'addenda-section')).toBeFalse();
+        expect(has(el, 'addenda-section')).toBe(false);
         expect(label(el)).toContain('Taslak');
     });
 
@@ -192,14 +203,14 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
 
         (el.querySelector('[data-testid="finalize-checklist"] [data-testid="finalize-open"]') as HTMLButtonElement).click();
 
-        expect(fixture.componentInstance.finalizeDialogVisible()).toBeTrue();
+        expect(fixture.componentInstance.finalizeDialogVisible()).toBe(true);
     });
 
     it('kurum salt okunurken kartta Kesinleştir görünmez', async () => {
         const { el } = await setup(detailVm, ['Examinations.Update', 'Examinations.Finalize'], { examinationId: 'e1' }, true);
 
-        expect(has(el, 'finalize-checklist')).toBeTrue();
-        expect(has(el, 'finalize-open')).toBeFalse();
+        expect(has(el, 'finalize-checklist')).toBe(true);
+        expect(has(el, 'finalize-open')).toBe(false);
     });
 
     it('kontrol listesi sütunu geniş ekranda üst çubuğun altında sabit, dar ekranda akışta kalır', async () => {
@@ -215,18 +226,18 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
     it('Sekreter (izinsiz) taslakta Kesinleştir görmez', async () => {
         const { el } = await setup(detailVm, ['Examinations.Read']);
 
-        expect(has(el, 'finalize-open')).toBeFalse();
+        expect(has(el, 'finalize-open')).toBe(false);
     });
 
     it('kesinleşmiş muayenede Düzenle ve Kesinleştir gizli; kesinleştiren ve ek notlar görünür', async () => {
         const { el } = await setup(finalizedVm, ['Examinations.Update', 'Examinations.Finalize', 'Examinations.Addendum']);
 
-        expect(has(el, 'finalize-open')).toBeFalse();
+        expect(has(el, 'finalize-open')).toBe(false);
         expect(el.querySelector('a[href$="/e1/edit"]')).toBeNull();
         expect(label(el)).toContain('Kesinleşti');
         expect(el.querySelector('[data-testid="finalized-info"]')?.textContent).toContain('Dr. Ayşe');
         expect(el.querySelectorAll('[data-testid="addendum-item"]').length).toBe(1);
-        expect(has(el, 'addendum-open')).toBeTrue();
+        expect(has(el, 'addendum-open')).toBe(true);
     });
 
     const ADD_CLAIMS = ['Treatments.Create', 'Prescriptions.Create', 'Vaccinations.Create', 'LabResults.Create', 'Hospitalizations.Create'];
@@ -235,14 +246,14 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
     it('taslakta işlem ekleme düğmeleri tek İşlemler bölümünde etkin görünür; kilit nedeni yok', async () => {
         const { el } = await setup(detailVm, ADD_CLAIMS);
 
-        expect(has(el, 'procedures-section')).toBeTrue();
+        expect(has(el, 'procedures-section')).toBe(true);
 
         for (const kind of ['treatment', 'prescription', 'vaccination', 'lab', 'hospitalization']) {
-            expect(addButton(el, kind)).withContext(kind).not.toBeNull();
-            expect(addButton(el, kind)?.disabled).withContext(kind).toBeFalse();
+            expect(addButton(el, kind), kind).not.toBeNull();
+            expect(addButton(el, kind)?.disabled, kind).toBe(false);
         }
 
-        expect(has(el, 'procedure-lock-reason')).toBeFalse();
+        expect(has(el, 'procedure-lock-reason')).toBe(false);
         expect(el.querySelector('a[href*="/panel/treatments/new"]')).toBeNull();
     });
 
@@ -253,15 +264,15 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(addButton(el, 'lab')).not.toBeNull();
 
         for (const kind of ['prescription', 'vaccination', 'hospitalization']) {
-            expect(addButton(el, kind)).withContext(kind).toBeNull();
+            expect(addButton(el, kind), kind).toBeNull();
         }
     });
 
     it('yetkisiz kullanıcı İşlemler listesini görür ama ekleme çubuğu çizilmez', async () => {
         const { el } = await setup(detailVm, ['Examinations.Read']);
 
-        expect(has(el, 'procedures-section')).toBeTrue();
-        expect(has(el, 'procedure-add-bar')).toBeFalse();
+        expect(has(el, 'procedures-section')).toBe(true);
+        expect(has(el, 'procedure-add-bar')).toBe(false);
     });
 
     it('hasta bandı ve uyarı rozet alanı muayene sayfasında çizilir', async () => {
@@ -325,8 +336,8 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         for (const path of ['payments', 'examinations', 'appointments']) {
             const a = Array.from(el.querySelectorAll(`a[href^="/panel/${path}?"]`));
 
-            expect(a.length).withContext(path).toBeGreaterThan(0);
-            expect(a[0].getAttribute('href')).withContext(path).toContain('petId=pet-1');
+            expect(a.length, path).toBeGreaterThan(0);
+            expect(a[0].getAttribute('href'), path).toContain('petId=pet-1');
         }
     });
 
@@ -334,11 +345,11 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const { el } = await setup(finalizedVm, ADD_CLAIMS);
 
         for (const kind of ['treatment', 'prescription', 'vaccination']) {
-            expect(addButton(el, kind)?.disabled).withContext(kind).toBeTrue();
+            expect(addButton(el, kind)?.disabled, kind).toBe(true);
         }
 
-        expect(addButton(el, 'lab')?.disabled).toBeFalse();
-        expect(addButton(el, 'hospitalization')?.disabled).toBeFalse();
+        expect(addButton(el, 'lab')?.disabled).toBe(false);
+        expect(addButton(el, 'hospitalization')?.disabled).toBe(false);
         expect(el.querySelector('[data-testid="procedure-lock-reason"]')?.textContent).toContain('yalnız gerekçeli uygulama ve ek not eklenebilir');
     });
 
@@ -347,9 +358,9 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
 
         const warnings = fixture.componentInstance.finalizeWarnings();
 
-        expect(warnings.some((w) => w.includes('tanı'))).toBeTrue();
-        expect(warnings.some((w) => w.includes('Plan'))).toBeTrue();
-        expect(warnings.some((w) => w.includes('Muayeneye bağlı'))).toBeTrue();
+        expect(warnings.some((w) => w.includes('tanı'))).toBe(true);
+        expect(warnings.some((w) => w.includes('Plan'))).toBe(true);
+        expect(warnings.some((w) => w.includes('Muayeneye bağlı'))).toBe(true);
     });
 
     it('çalışma alanı: solda hasta bağlamı, ortada kayıt, sağda kesinleştirme kontrol listesi', async () => {
@@ -409,13 +420,13 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const { el } = await setup(finalizedVm, ['Examinations.Read']);
 
         expect(el.querySelectorAll('[data-testid="addendum-item"]').length).toBe(1);
-        expect(has(el, 'addendum-open')).toBeFalse();
+        expect(has(el, 'addendum-open')).toBe(false);
     });
 
     const TEMPLATE_CLAIMS = ['ExaminationTemplates.Read', 'ExaminationTemplates.Apply', 'Examinations.Update', 'Administrations.Create'];
 
     it('Şablon uygula taslakta dört izin birlikteyken görünür; biri eksikse veya muayene kesinleşmişse görünmez', async () => {
-        expect(has((await setup(detailVm, TEMPLATE_CLAIMS)).el, 'template-apply-open')).toBeTrue();
+        expect(has((await setup(detailVm, TEMPLATE_CLAIMS)).el, 'template-apply-open')).toBe(true);
         TestBed.resetTestingModule();
         expect(
             has(
@@ -427,16 +438,16 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
                 ).el,
                 'template-apply-open'
             )
-        ).toBeFalse();
+        ).toBe(false);
         TestBed.resetTestingModule();
-        expect(has((await setup(finalizedVm, TEMPLATE_CLAIMS)).el, 'template-apply-open')).toBeFalse();
+        expect(has((await setup(finalizedVm, TEMPLATE_CLAIMS)).el, 'template-apply-open')).toBe(false);
     });
 
     it('şablon uygulandıktan sonra muayene ve ilgili kayıt özeti yeniden okunur', async () => {
         const { fixture, service } = await setup(detailVm, TEMPLATE_CLAIMS);
 
-        service.getExaminationById.and.returnValue(of({ ...detailVm, visitReason: 'İştahsızlık, Kulak kaşıntısı', rowVersion: 'V2' }));
-        const relatedBefore = service.getExaminationRelatedSummary.calls.count();
+        service.getExaminationById.mockReturnValue(of({ ...detailVm, visitReason: 'İştahsızlık, Kulak kaşıntısı', rowVersion: 'V2' }));
+        const relatedBefore = vi.mocked(service.getExaminationRelatedSummary).mock.calls.length;
 
         fixture.componentInstance.onTemplateApplied({
             template: { id: 't1', name: 'Otitis paketi', visitReason: 'Kulak kaşıntısı', findings: null, plan: null, isActive: true, isSystem: false, lines: [], rowVersion: 'T1' },
@@ -445,19 +456,19 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
 
         expect(fixture.componentInstance.exam()?.rowVersion).toBe('V2');
         expect(fixture.componentInstance.exam()?.visitReason).toContain('Kulak kaşıntısı');
-        expect(service.getExaminationRelatedSummary.calls.count()).toBe(relatedBefore + 1);
+        expect(vi.mocked(service.getExaminationRelatedSummary).mock.calls.length).toBe(relatedBefore + 1);
     });
 
     it('kesinleştirme sonrası durum Kesinleşti olur, sürüm yenilenir ve düğme kalkar', async () => {
         const { fixture, service, el } = await setup(detailVm, ['Examinations.Update', 'Examinations.Finalize']);
 
-        service.getExaminationById.and.returnValue(of(finalizedVm));
+        service.getExaminationById.mockReturnValue(of(finalizedVm));
 
         fixture.componentInstance.onFinalized({ id: 'e1', rowVersion: 'V2', status: 'Finalized', finalizedAtUtc: '2026-10-11T09:30:00Z' });
         fixture.detectChanges();
 
         expect(fixture.componentInstance.exam()?.status).toBe('Finalized');
         expect(fixture.componentInstance.exam()?.rowVersion).toBe('V2');
-        expect(has(el, 'finalize-open')).toBeFalse();
+        expect(has(el, 'finalize-open')).toBe(false);
     });
 });

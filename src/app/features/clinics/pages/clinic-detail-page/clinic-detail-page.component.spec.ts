@@ -15,12 +15,14 @@ describe('ClinicDetailPageComponent — çalışma saatleri ve randevu varsayıl
     const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
     beforeEach(async () => {
-        const clinics = jasmine.createSpyObj<ClinicsService>('ClinicsService', ['getClinicById', 'getWorkingHours', 'getAppointmentSettings']);
+        const clinics = {
+            getClinicById: vi.fn().mockName('ClinicsService.getClinicById'),
+            getWorkingHours: vi.fn().mockName('ClinicsService.getWorkingHours'),
+            getAppointmentSettings: vi.fn().mockName('ClinicsService.getAppointmentSettings')
+        };
 
-        clinics.getClinicById.and.returnValue(
-            of({ id: 'c1', name: 'Merkez Pati', city: 'İstanbul', isActive: true, phone: '', email: '', address: '', description: '' })
-        );
-        clinics.getWorkingHours.and.returnValue(
+        clinics.getClinicById.mockReturnValue(of({ id: 'c1', name: 'Merkez Pati', city: 'İstanbul', isActive: true, phone: '', email: '', address: '', description: '' }));
+        clinics.getWorkingHours.mockReturnValue(
             of(
                 DAYS.map((dayLabel, dayOfWeek) => ({
                     dayOfWeek,
@@ -33,7 +35,7 @@ describe('ClinicDetailPageComponent — çalışma saatleri ve randevu varsayıl
                 }))
             )
         );
-        clinics.getAppointmentSettings.and.returnValue(of({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false }));
+        clinics.getAppointmentSettings.mockReturnValue(of({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false }));
         await TestBed.configureTestingModule({
             imports: [ClinicDetailPageComponent],
             providers: [
@@ -65,7 +67,7 @@ describe('ClinicDetailPageComponent — çalışma saatleri ve randevu varsayıl
         const times = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('app-date-input input')) as HTMLInputElement[];
 
         expect(times.length).toBe(28);
-        expect(times.some((i) => i.value === '09:00')).toBeTrue();
+        expect(times.some((i) => i.value === '09:00')).toBe(true);
         expect(text).not.toContain('Randevu varsayılanları yükleniyor');
     });
 });

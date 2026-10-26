@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
@@ -9,7 +10,7 @@ import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { RegisterPageComponent } from './register-page.component';
 
 describe('RegisterPageComponent', () => {
-    let api: jasmine.SpyObj<ApiClient>;
+    let api: MockedObject<ApiClient>;
     let claims: Set<string>;
 
     function create(register: string): ComponentFixture<RegisterPageComponent> {
@@ -24,8 +25,11 @@ describe('RegisterPageComponent', () => {
     beforeEach(() => {
         sessionStorage.clear();
         claims = new Set(['Examinations.Read', 'Prescriptions.Read', 'StockMovements.Read', 'Administrations.Read', 'Vaccinations.Read', 'Products.Read']);
-        api = jasmine.createSpyObj<ApiClient>('ApiClient', ['get', 'getBlob']);
-        api.get.and.callFake(((path: string) =>
+        api = {
+            get: vi.fn().mockName('ApiClient.get'),
+            getBlob: vi.fn().mockName('ApiClient.getBlob')
+        } as unknown as MockedObject<ApiClient>;
+        api.get.mockImplementation(((path: string) =>
             of(
                 path.endsWith('/controlled-substances')
                     ? {
@@ -64,43 +68,53 @@ describe('RegisterPageComponent', () => {
                             ]
                         }
                       : path.endsWith('/prescriptions')
-                    ? {
-                          totalCount: 1,
-                          items: [
-                              {
-                                  rowNumber: 1,
-                                  prescriptionId: 'p1',
-                                  prescribedAtUtc: '2026-10-05T09:00:00Z',
-                                  ownerName: 'Ali',
-                                  species: 'İnek',
-                                  animalCount: 1,
-                                  items: [{ name: 'Dectomax', quantity: 1 }]
-                              }
-                          ]
-                      }
-                    : {
-                          totalCount: 1,
-                          items: [
-                              {
-                                  rowNumber: 1,
-                                  examinedAtUtc: '2026-10-05T09:00:00Z',
-                                  ownerName: 'Ayşe',
-                                  petName: 'Pamuk',
-                                  species: 'Kedi',
-                                  complaint: 'Kusma',
-                                  treatments: [],
-                                  prescriptions: [],
-                                  administrations: []
-                              }
-                          ]
-                      }
-            )) as never
-        );
-        api.getBlob.and.returnValue(of(new HttpResponse({ body: new Blob(['x']), headers: new HttpHeaders() })));
+                        ? {
+                              totalCount: 1,
+                              items: [
+                                  {
+                                      rowNumber: 1,
+                                      prescriptionId: 'p1',
+                                      prescribedAtUtc: '2026-10-05T09:00:00Z',
+                                      ownerName: 'Ali',
+                                      species: 'İnek',
+                                      animalCount: 1,
+                                      items: [{ name: 'Dectomax', quantity: 1 }]
+                                  }
+                              ]
+                          }
+                        : {
+                              totalCount: 1,
+                              items: [
+                                  {
+                                      rowNumber: 1,
+                                      examinedAtUtc: '2026-10-05T09:00:00Z',
+                                      ownerName: 'Ayşe',
+                                      petName: 'Pamuk',
+                                      species: 'Kedi',
+                                      complaint: 'Kusma',
+                                      treatments: [],
+                                      prescriptions: [],
+                                      administrations: []
+                                  }
+                              ]
+                          }
+            )) as never);
+        api.getBlob.mockReturnValue(of(new HttpResponse({ body: new Blob(['x']), headers: new HttpHeaders() })));
         TestBed.configureTestingModule({
             providers: [
                 provideRouter([]),
-                { provide: ProductService, useValue: { getProducts: () => of({ items: [{ id: 'pr1', name: 'Karma Aşı', kind: 'Vaccine' }, { id: 'pr2', name: 'Serum', kind: 'Medicine' }] }) } },
+                {
+                    provide: ProductService,
+                    useValue: {
+                        getProducts: () =>
+                            of({
+                                items: [
+                                    { id: 'pr1', name: 'Karma Aşı', kind: 'Vaccine' },
+                                    { id: 'pr2', name: 'Serum', kind: 'Medicine' }
+                                ]
+                            })
+                    }
+                },
                 { provide: VisitsService, useValue: { getVeterinarians: () => of([{ userId: 'u1', name: 'Dr. Veli' }]) } },
                 { provide: ApiClient, useValue: api },
                 {
@@ -143,21 +157,21 @@ describe('RegisterPageComponent', () => {
 
     it('liste ve dışa aktarma aynı süzgeçle çağrılır (from/to yyyy-MM-dd)', () => {
         const fixture = create('prescriptions');
-        const listParams = api.get.calls.mostRecent().args[1] as HttpParams;
+        const listParams = vi.mocked(api.get).mock.lastCall![1] as HttpParams;
 
         expect(listParams.get('from')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
         fixture.componentInstance.state.exportCsv();
         fixture.componentInstance.state.exportXlsx();
 
-        for (const call of api.getBlob.calls.all()) {
-            const p = call.args[1] as HttpParams;
+        for (const call of vi.mocked(api.getBlob).mock.calls) {
+            const p = call[1] as HttpParams;
 
             expect(p.get('from')).toBe(listParams.get('from'));
             expect(p.get('to')).toBe(listParams.get('to'));
-            expect(p.has('page')).toBeFalse();
+            expect(p.has('page')).toBe(false);
         }
 
-        expect(api.getBlob.calls.count()).toBe(2);
+        expect(vi.mocked(api.getBlob).mock.calls.length).toBe(2);
     });
 
     it('yazdırma görünümü: sade başlık, tekrar eden thead, imza alanı ve ekran-dışı sınıflar; gövde sınıfı sayfayla yaşar', () => {
@@ -178,7 +192,7 @@ describe('RegisterPageComponent', () => {
 
     it('Yazdır düğmesi tarayıcı yazdırmasını açar', () => {
         const fixture = create('examinations');
-        const print = spyOn(window, 'print');
+        const print = vi.spyOn(window, 'print').mockReturnValue(undefined);
 
         fixture.componentInstance.print();
         expect(print).toHaveBeenCalled();
@@ -209,11 +223,11 @@ describe('RegisterPageComponent', () => {
         fixture.componentInstance.setExtra('productId', 'pr1');
         fixture.componentInstance.setExtra('includeVoided', 'true');
         fixture.componentInstance.state.applyFilters();
-        const params = api.get.calls.mostRecent().args[1] as HttpParams;
+        const params = vi.mocked(api.get).mock.lastCall![1] as HttpParams;
 
         expect(params.get('productId')).toBe('pr1');
         expect(params.get('includeVoided')).toBe('true');
-        expect(params.has('veterinarianId')).toBeFalse();
+        expect(params.has('veterinarianId')).toBe(false);
     });
 
     it('aşı kayıt defterinde yalnız iptal edilen girişleri göster süzgeci vardır', () => {

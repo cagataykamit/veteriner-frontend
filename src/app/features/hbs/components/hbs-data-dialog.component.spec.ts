@@ -1,3 +1,4 @@
+import type { Mock, MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import type { HbsDataDto, HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
@@ -27,8 +28,8 @@ describe('HbsDataDialogComponent', () => {
 
     const saved: HbsEntryVm = { status: 'Entered', referenceNumber: '2RX4K9', notRequiredReason: null, markedAtUtc: '2026-10-22T09:00:00Z', markedByName: 'Dr. Ayşe', isTracked: true };
 
-    let hbs: jasmine.SpyObj<HbsService>;
-    let clipboard: jasmine.Spy;
+    let hbs: MockedObject<HbsService>;
+    let clipboard: Mock;
 
     const open = (canEdit = true) => {
         TestBed.configureTestingModule({
@@ -50,10 +51,13 @@ describe('HbsDataDialogComponent', () => {
     const click = (testId: string) => (body().querySelector(`[data-testid="${testId}"] button, button[data-testid="${testId}"]`) as HTMLButtonElement).click();
 
     beforeEach(() => {
-        hbs = jasmine.createSpyObj<HbsService>('HbsService', ['getHbsData', 'updateHbsEntry']);
-        hbs.getHbsData.and.returnValue(of(data));
-        hbs.updateHbsEntry.and.returnValue(of(saved));
-        clipboard = spyOn(navigator.clipboard, 'writeText').and.returnValue(Promise.resolve());
+        hbs = {
+            getHbsData: vi.fn().mockName('HbsService.getHbsData'),
+            updateHbsEntry: vi.fn().mockName('HbsService.updateHbsEntry')
+        } as unknown as MockedObject<HbsService>;
+        hbs.getHbsData.mockReturnValue(of(data));
+        hbs.updateHbsEntry.mockReturnValue(of(saved));
+        clipboard = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
     });
 
     it('alanları satır satır, boşu "—" ile ve her satırda kopyala simgesiyle gösterir', () => {
@@ -65,7 +69,7 @@ describe('HbsDataDialogComponent', () => {
         expect(rows.length).toBe(3);
         expect(rows[0].textContent).toContain('Pamuk');
         expect(rows[1].textContent).toContain('—');
-        expect(body().querySelector('[data-testid="hbs-copy-animal.hbsAnimalId"] button')?.hasAttribute('disabled')).toBeTrue();
+        expect(body().querySelector('[data-testid="hbs-copy-animal.hbsAnimalId"] button')?.hasAttribute('disabled')).toBe(true);
         expect(body().querySelector('[data-testid="hbs-identity-masked"]')).not.toBeNull();
     });
 
@@ -114,7 +118,7 @@ describe('HbsDataDialogComponent', () => {
     });
 
     it('kayıt hatası diyalogda gösterilir', () => {
-        hbs.updateHbsEntry.and.returnValue(throwError(() => new Error('HBS numarası en fazla 50 karakter olabilir.')));
+        hbs.updateHbsEntry.mockReturnValue(throwError(() => new Error('HBS numarası en fazla 50 karakter olabilir.')));
         const fixture = open();
 
         fixture.componentInstance.save('Entered');

@@ -210,7 +210,7 @@ describe('DateInputComponent — maske, hata ve aralık (gerçek input)', () => 
         await typeChars('31022026');
         expect(fixture.nativeElement.textContent).not.toContain('Geçerli bir tarih girin');
         await blur();
-        expect(host.control.hasError('dateInvalid')).toBeTrue();
+        expect(host.control.hasError('dateInvalid')).toBe(true);
         expect(fixture.nativeElement.textContent).toContain('Geçerli bir tarih girin (gg.aa.yyyy).');
     });
 
@@ -219,7 +219,7 @@ describe('DateInputComponent — maske, hata ve aralık (gerçek input)', () => 
         await typeChars('15102026');
         expect(fixture.nativeElement.textContent).not.toContain('Saati de girin');
         await blur();
-        expect(host.control.hasError('dateInvalid')).toBeTrue();
+        expect(host.control.hasError('dateInvalid')).toBe(true);
         expect(fixture.nativeElement.textContent).toContain('Saati de girin (gg.aa.yyyy ss:dd).');
     });
 
@@ -236,14 +236,14 @@ describe('DateInputComponent — maske, hata ve aralık (gerçek input)', () => 
         await typeChars('2411');
         expect(fixture.nativeElement.textContent).not.toContain('Geçerli bir tarih girin');
         await blur();
-        expect(host.control.hasError('dateInvalid')).toBeTrue();
+        expect(host.control.hasError('dateInvalid')).toBe(true);
     });
 
     it('min dışı yazılan tarih: dateOutOfRange ve Türkçe mesaj', async () => {
         await create('date', '2026-10-04', null);
         await typeChars('01102026');
         await blur();
-        expect(host.control.hasError('dateOutOfRange')).toBeTrue();
+        expect(host.control.hasError('dateOutOfRange')).toBe(true);
         expect(fixture.nativeElement.textContent).toContain('Tarih 04.10.2026 veya sonrası olmalıdır.');
     });
 
@@ -251,7 +251,7 @@ describe('DateInputComponent — maske, hata ve aralık (gerçek input)', () => 
         await create('date', '2026-10-01', '2026-10-31');
         await typeChars('15112026');
         await blur();
-        expect(host.control.hasError('dateOutOfRange')).toBeTrue();
+        expect(host.control.hasError('dateOutOfRange')).toBe(true);
         expect(fixture.nativeElement.textContent).toContain('Tarih 01.10.2026 ile 31.10.2026 arasında olmalıdır.');
     });
 
@@ -288,7 +288,7 @@ describe('DateInputComponent — maske, hata ve aralık (gerçek input)', () => 
         await create('date');
         await typeChars('31022026');
         await blur();
-        expect(host.control.hasError('dateInvalid')).toBeTrue();
+        expect(host.control.hasError('dateInvalid')).toBe(true);
         input().focus();
         input().select();
         await typeChars('28022026');

@@ -1,10 +1,4 @@
-import {
-    mapPetDetailDtoToVm,
-    mapPetListItemDtoToVm,
-    mapPetStatusUpdateResultDtoToVm,
-    mapPetStatusUpdateToApiBody,
-    petsQueryToHttpParams
-} from '@/app/features/pets/data/pet.mapper';
+import { mapPetDetailDtoToVm, mapPetListItemDtoToVm, mapPetStatusUpdateResultDtoToVm, mapPetStatusUpdateToApiBody, petsQueryToHttpParams } from '@/app/features/pets/data/pet.mapper';
 import { parsePetLifeStatus } from '@/app/features/pets/utils/pet-status.utils';
 
 describe('pet.mapper hayvan durumu (ADR-020 S5)', () => {
@@ -43,6 +37,6 @@ describe('pet.mapper hayvan durumu (ADR-020 S5)', () => {
 
     it('liste sorgusu Status süzgecini yalnız verilirse gönderir', () => {
         expect(petsQueryToHttpParams({ clientId: 'c1', status: 'Active' }).get('Status')).toBe('Active');
-        expect(petsQueryToHttpParams({ clientId: 'c1' }).has('Status')).toBeFalse();
+        expect(petsQueryToHttpParams({ clientId: 'c1' }).has('Status')).toBe(false);
     });
 });
