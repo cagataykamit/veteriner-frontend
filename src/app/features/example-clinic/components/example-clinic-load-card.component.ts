@@ -68,7 +68,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                 @if (exampleData(); as counts) {
                     <p class="mt-0 mb-3">Aşağıdaki örnek kayıtlar ve bunlara bağlı her şey kalıcı olarak silinecek. <strong>Bu işlem geri alınamaz.</strong></p>
                     <app-example-clinic-summary [summary]="counts" [note]="false" />
-                    <ul class="text-sm text-muted-color mt-3 mb-0 pl-4" data-testid="example-clinic-clear-notes">
+                    <ul class="text-sm text-muted-color mt-3 mb-0 pl-5 list-disc" data-testid="example-clinic-clear-notes">
                         <li>Örnek müşteri ve hastalara sonradan eklediğiniz muayene, ödeme, randevu gibi kayıtlar da silinir.</li>
                         @if (otherRecords(counts) > 0) {
                             <li>Bunlara bağlı {{ otherRecords(counts) }} kayıt daha (ziyaret, reçete, görüntüleme, yatış vb.) silinir.</li>
