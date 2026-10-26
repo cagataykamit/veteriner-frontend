@@ -11,7 +11,7 @@ import { CLIENT_SEARCH_MIN_LENGTH, ClientSearchService } from '@/app/features/cl
 import type { ClientSearchResultVm } from '@/app/features/clients/services/client-search.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { canShowQuickClientCreateButton } from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
-import { QuickClientDialogComponent } from '@/app/shared/forms/quick-create/quick-client-dialog.component';
+import { QuickClientDialogComponent } from '@/app/features/clients/components/quick-client-dialog.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**

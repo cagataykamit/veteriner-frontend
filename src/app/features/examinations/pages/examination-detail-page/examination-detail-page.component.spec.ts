@@ -14,7 +14,7 @@ import { ExaminationsService } from '@/app/features/examinations/services/examin
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
-import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
+import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
 import { ExaminationDetailPageComponent } from './examination-detail-page.component';
 
 const detailVm: ExaminationDetailVm = {

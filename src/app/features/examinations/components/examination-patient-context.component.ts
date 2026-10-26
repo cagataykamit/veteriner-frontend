@@ -11,7 +11,7 @@ import type { TreatmentListItemVm } from '@/app/features/treatments/models/treat
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
-import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
+import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /** Bölüm yükleme durumu; `null` = bölüm bu kullanıcıya gösterilmez (okuma izni yok). */

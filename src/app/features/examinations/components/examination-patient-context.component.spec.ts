@@ -6,7 +6,7 @@ import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.mod
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
-import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
+import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
 import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import { ExaminationPatientContextComponent } from './examination-patient-context.component';
 

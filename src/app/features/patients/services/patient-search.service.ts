@@ -4,7 +4,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { PETS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { ClientSearchResultVm } from '@/app/features/clients/services/client-search.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { GlobalSearchService } from '@/app/shared/global-search/global-search.service';
+import { GlobalSearchService } from '@/app/features/patients/services/global-search.service';
 
 const MAX_PATIENTS = 15;
 const PETS_PER_OWNER = 5;

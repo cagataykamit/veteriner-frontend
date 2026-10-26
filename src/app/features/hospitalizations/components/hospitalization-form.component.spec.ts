@@ -14,9 +14,9 @@ import { HospitalizationWardsService } from '@/app/features/hospitalization-ward
 import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
-import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
-import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
-import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
+import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
+import { PetSearchComponent } from '@/app/features/pets/components/pet-search.component';
+import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
 import { HospitalizationFormComponent } from './hospitalization-form.component';
 
 /** Arama bileşenlerinin yerine basit değer erişimcisi (sunucu araması bu testin konusu değil). */

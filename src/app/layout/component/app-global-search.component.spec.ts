@@ -2,7 +2,7 @@ import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
-import { GlobalSearchResultVm, GlobalSearchService } from '@/app/shared/global-search/global-search.service';
+import { GlobalSearchResultVm, GlobalSearchService } from '@/app/features/patients/services/global-search.service';
 import { AppGlobalSearch } from './app-global-search.component';
 
 const result: GlobalSearchResultVm = {

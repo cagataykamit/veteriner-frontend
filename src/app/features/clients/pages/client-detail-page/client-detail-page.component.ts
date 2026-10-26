@@ -26,7 +26,7 @@ import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.u
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { PatientActionBarComponent } from '@/app/shared/panel/patient-action-bar/patient-action-bar.component';
+import { PatientActionBarComponent } from '@/app/features/patients/components/patient-action-bar/patient-action-bar.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';

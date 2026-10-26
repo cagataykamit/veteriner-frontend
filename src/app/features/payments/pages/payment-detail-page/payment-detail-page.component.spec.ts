@@ -6,7 +6,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import type { PaymentDetailVm } from '@/app/features/payments/models/payment-vm.model';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
+import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
 import { PaymentDetailPageComponent } from './payment-detail-page.component';
 
 const payment: PaymentDetailVm = {

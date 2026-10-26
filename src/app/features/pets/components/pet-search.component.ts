@@ -10,7 +10,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { filterPetsByClientId, petSelectLabel } from '@/app/shared/forms/client-pet-selection.utils';
-import { QuickPetDialogComponent } from '@/app/shared/forms/quick-create/quick-pet-dialog.component';
+import { QuickPetDialogComponent } from '@/app/features/pets/components/quick-pet-dialog.component';
 import { canShowQuickPetCreateButton } from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
