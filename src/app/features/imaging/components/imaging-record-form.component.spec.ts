@@ -12,7 +12,7 @@ import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-s
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { StoredFileUploadComponent } from '@/app/shared/files/stored-file-upload.component';
 import { StoredFilesService } from '@/app/shared/files/stored-files.service';
-import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
+import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
 import { ImagingRecordFormComponent } from './imaging-record-form.component';
 
 /** Arama bileşenlerinin yerine basit değer erişimcisi (sunucu araması bu testin konusu değil). */

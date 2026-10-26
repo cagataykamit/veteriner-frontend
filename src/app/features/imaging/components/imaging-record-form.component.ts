@@ -18,7 +18,7 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
 import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { StoredFileUploadComponent } from '@/app/shared/files/stored-file-upload.component';
 import { parseExaminationCreateRouteContext, prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
-import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
+import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';

@@ -22,7 +22,7 @@ import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
+import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';

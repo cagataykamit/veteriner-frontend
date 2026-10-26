@@ -25,7 +25,7 @@ import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
+import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';

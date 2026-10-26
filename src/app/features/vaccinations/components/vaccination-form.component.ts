@@ -23,7 +23,7 @@ import { VaccinationsService } from '@/app/features/vaccinations/services/vaccin
 import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/services/vaccine-definitions.service';
 import type { VaccineDefinitionListItemVm } from '@/app/features/vaccine-definitions/models/vaccine-definition-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
+import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
 import { parseVaccinationCreateRouteContext, type VaccinationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';

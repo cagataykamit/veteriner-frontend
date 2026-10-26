@@ -21,7 +21,7 @@ import { PetsService } from '@/app/features/pets/services/pets.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { parseExaminationCreateRouteContext, prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
-import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
+import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import { dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';

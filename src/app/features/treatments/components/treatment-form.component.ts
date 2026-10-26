@@ -21,7 +21,7 @@ import { PetsService } from '@/app/features/pets/services/pets.service';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
+import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
 import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import { TREATMENT_DATE_TOO_FAR_PAST_MESSAGE, treatmentDateNotTooFarPastValidator, treatmentDateTimeLocalMinAllowed } from '@/app/features/treatments/utils/treatment-date-validation.utils';
