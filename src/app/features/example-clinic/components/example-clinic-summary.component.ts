@@ -1,9 +1,9 @@
 import { Component, computed, input } from '@angular/core';
 import { mapExampleClinicSummaryToRows } from '@/app/features/example-clinic/data/example-clinic.mapper';
-import type { ExampleClinicLoadSummaryDto } from '@/app/features/example-clinic/models/example-clinic-api.model';
+import type { ExampleClinicCounts } from '@/app/features/example-clinic/models/example-clinic-api.model';
 
 /**
- * "Yüklenen örnek içerik" sayaçları (ADR-002): kayıt tamamlandı ekranı ve abonelik kartı aynı bileşeni kullanır.
+ * "Yüklenen örnek içerik" sayaçları (ADR-002): kayıt tamamlandı ekranı, abonelik kartı ve temizlik onayı aynı bileşeni kullanır.
  * Veri sentetiktir; işaret notu burada tek yerde yazılır.
  */
 @Component({
@@ -18,11 +18,15 @@ import type { ExampleClinicLoadSummaryDto } from '@/app/features/example-clinic/
                 </div>
             }
         </div>
-        <p class="text-xs text-muted-color m-0 mt-3">Örnek veriler tamamen sentetiktir, gerçek müşteri verisi içermez ve kayıtlarda "ÖRNEK" olarak işaretlidir.</p>
+        @if (note()) {
+            <p class="text-xs text-muted-color m-0 mt-3">Örnek veriler tamamen sentetiktir, gerçek müşteri verisi içermez ve kayıtlarda "ÖRNEK" olarak işaretlidir.</p>
+        }
     `
 })
 export class ExampleClinicSummaryComponent {
-    readonly summary = input.required<ExampleClinicLoadSummaryDto>();
+    readonly summary = input.required<ExampleClinicCounts>();
+    /** Sentetik veri notu; temizlik onayında/sonucunda gizlenir. */
+    readonly note = input(true);
 
     readonly rows = computed(() => mapExampleClinicSummaryToRows(this.summary()));
 }

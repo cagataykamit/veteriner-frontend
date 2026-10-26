@@ -196,7 +196,7 @@ interface ReturnBannerVm {
                     </div>
                 </div>
 
-                <app-example-clinic-load-card class="col-span-12" [canManage]="canManageSubscriptionOperations(s)" [trialing]="isTrialingSubscription(s)" />
+                <app-example-clinic-load-card class="col-span-12" [canManage]="canManageSubscriptionOperations(s)" [trialing]="isTrialingSubscription(s)" [writable]="!isExpiredReadOnlySubscription(s)" />
 
                 <app-subscription-discount-card class="col-span-12" [canManage]="canManageSubscriptionOperations(s)" />
 
