@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, DestroyRef, ElementRef, inject, OnDestroy, signal, viewChild } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, inject, OnDestroy, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MenuItem, MessageService } from 'primeng/api';
 import { Menu, MenuModule } from 'primeng/menu';
@@ -32,6 +32,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     imports: [CommonModule, MenuModule, ToastModule],
     providers: [MessageService],
     host: { class: 'app-clinic-switcher' },
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-toast position="bottom-right" />
 
@@ -50,29 +51,11 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     >
                         <i class="pi pi-building" aria-hidden="true"></i>
                         <span class="layout-topbar-clinic-text">{{ label }}</span>
-                        <i
-                            class="pi pi-angle-down layout-topbar-clinic__caret"
-                            [class.layout-topbar-clinic__caret--busy]="loading() || submitting()"
-                            aria-hidden="true"
-                        ></i>
+                        <i class="pi pi-angle-down layout-topbar-clinic__caret" [class.layout-topbar-clinic__caret--busy]="loading() || submitting()" aria-hidden="true"></i>
                     </button>
-                    <p-menu
-                        #clinicMenu
-                        [popup]="true"
-                        [model]="menuItems()"
-                        styleClass="layout-clinic-switcher-menu"
-                        appendTo="body"
-                        (onShow)="menuOpen.set(true)"
-                        (onHide)="menuOpen.set(false)"
-                    />
+                    <p-menu #clinicMenu [popup]="true" [model]="menuItems()" styleClass="layout-clinic-switcher-menu" appendTo="body" (onShow)="menuOpen.set(true)" (onHide)="menuOpen.set(false)" />
                 } @else {
-                    <span
-                        class="layout-topbar-clinic layout-topbar-clinic-trigger layout-topbar-clinic-trigger--readonly"
-                        [attr.title]="label"
-                        [attr.aria-label]="'Aktif klinik: ' + label"
-                        aria-disabled="true"
-                        tabindex="-1"
-                    >
+                    <span class="layout-topbar-clinic layout-topbar-clinic-trigger layout-topbar-clinic-trigger--readonly" [attr.title]="label" [attr.aria-label]="'Aktif klinik: ' + label" aria-disabled="true" tabindex="-1">
                         <i class="pi pi-building" aria-hidden="true"></i>
                         <span class="layout-topbar-clinic-text">{{ label }}</span>
                     </span>
@@ -103,9 +86,7 @@ export class AppClinicSwitcher implements OnDestroy {
     readonly canOpenClinicSwitcher = computed(() => this.clinics().length > 1);
 
     constructor() {
-        this.clinicListRefresh.onRefreshRequested
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(() => this.reloadClinics(true));
+        this.clinicListRefresh.onRefreshRequested.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.reloadClinics(true));
 
         // Tek klinik kullanıcı tıklamadan önce liste bilinir; button yalnızca çoklu klinikte render edilir.
         this.reloadClinics(false);
@@ -164,7 +145,8 @@ export class AppClinicSwitcher implements OnDestroy {
             return;
         }
 
-        this.menuRef()?.show({ currentTarget: target });
+        // PrimeNG 22 imzası `Event` ister; menü yalnız `currentTarget`'ı okur.
+        this.menuRef()?.show({ currentTarget: target } as unknown as Event);
     }
 
     private reloadClinics(forceRefresh = false, then?: () => void): void {
@@ -248,7 +230,5 @@ function filterClinicsForSelection(list: readonly ClinicSummary[]): ClinicSummar
 
 /** Türkçe duyarlı sıralama; aynı tüketim mantığı `select-clinic.ts` ile uyumlu. */
 function sortClinicsByName(list: readonly ClinicSummary[]): ClinicSummary[] {
-    return [...list].sort((a, b) =>
-        a.name.localeCompare(b.name, 'tr-TR', { sensitivity: 'base' })
-    );
+    return [...list].sort((a, b) => a.name.localeCompare(b.name, 'tr-TR', { sensitivity: 'base' }));
 }

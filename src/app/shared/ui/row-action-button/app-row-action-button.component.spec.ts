@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
@@ -7,6 +7,7 @@ import { AppRowActionButtonComponent, type RowActionKind } from './app-row-actio
 
 @Component({
     imports: [AppRowActionButtonComponent],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `<app-row-action-button [action]="action" [label]="label" [link]="link" [disabled]="disabled" [loading]="loading" (pressed)="presses = presses + 1" />`
 })
 class HostComponent {
@@ -48,8 +49,8 @@ describe('AppRowActionButtonComponent', () => {
             expect(i.classList).withContext(action).toContain(icon);
             expect(i.getAttribute('aria-hidden')).toBe('true');
             expect(control().getAttribute('aria-label')).withContext(action).toBe(label);
-            expect(tooltip().content).withContext(action).toBe(label);
-            expect(tooltip().tooltipPosition).toBe('top');
+            expect(tooltip().content()).withContext(action).toBe(label);
+            expect(tooltip().tooltipPosition()).toBe('top');
             expect(control().textContent!.trim()).toBe('');
         }
     });
@@ -75,7 +76,7 @@ describe('AppRowActionButtonComponent', () => {
         });
 
         expect(control().getAttribute('aria-label')).toBe('Düzelt');
-        expect(tooltip().content).toBe('Düzelt');
+        expect(tooltip().content()).toBe('Düzelt');
         expect(control().querySelector('i')!.classList).toContain('fa-pen-to-square');
     });
 
@@ -105,7 +106,7 @@ describe('AppRowActionButtonComponent', () => {
 
         expect(control().tagName).toBe('BUTTON');
         expect(control().getAttribute('aria-disabled')).toBe('true');
-        expect(tooltip().content).toBe('Düzenle (salt okunur)');
+        expect(tooltip().content()).toBe('Düzenle (salt okunur)');
         control().click();
         expect(host.presses).toBe(0);
     });

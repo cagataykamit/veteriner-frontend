@@ -1,16 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, DestroyRef, ElementRef, forwardRef, inject, input, signal, viewChild } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, forwardRef, inject, input, signal, viewChild, ChangeDetectionStrategy, type WritableSignal } from '@angular/core';
 import { AbstractControl, ControlValueAccessor, FormsModule, NG_VALIDATORS, NG_VALUE_ACCESSOR, ValidationErrors, Validator } from '@angular/forms';
 import { DatePicker, DatePickerModule } from 'primeng/datepicker';
 import { DateInputLimit, resolveLimitMax } from '@/app/shared/forms/date-input/date-input-limits.utils';
-import {
-    applyDateMask,
-    DateInputType,
-    formatDateInputDisplay,
-    formatDateInputValue,
-    isDateWithoutTime,
-    parseDateInputValue
-} from '@/app/shared/forms/date-input/date-input-value.utils';
+import { applyDateMask, DateInputType, formatDateInputDisplay, formatDateInputValue, isDateWithoutTime, parseDateInputValue } from '@/app/shared/forms/date-input/date-input-value.utils';
 
 const PLACEHOLDERS: Record<DateInputType, string> = {
     date: 'gg.aa.yyyy',
@@ -28,9 +21,8 @@ const TIME_MISSING_MESSAGE = 'Saati de girin (gg.aa.yyyy ss:dd).';
 
 /** PrimeNG DatePicker'ın bu bileşenin kapatma/sorgulama için kullandığı iç alanları (genel API yalnız `hideOverlay` verir, o da odağı girdiye çeker). */
 interface PickerInternals {
-    overlayVisible: boolean;
+    overlayVisible: WritableSignal<boolean>;
     overlay: HTMLElement | null;
-    cd: { markForCheck(): void };
 }
 
 /** Sayfada aynı anda en çok bir takvim paneli açık kalır: yenisi açılınca öncekini kapatır. */
@@ -54,6 +46,7 @@ let openInstance: DateInputComponent | null = null;
         { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => DateInputComponent), multi: true },
         { provide: NG_VALIDATORS, useExisting: forwardRef(() => DateInputComponent), multi: true }
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-datepicker
             [inputId]="inputId()"
@@ -203,9 +196,8 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
     private closePanel(): void {
         const picker = this.picker() as unknown as PickerInternals | undefined;
 
-        if (picker?.overlayVisible) {
-            picker.overlayVisible = false;
-            picker.cd.markForCheck();
+        if (picker?.overlayVisible()) {
+            picker.overlayVisible.set(false);
         }
     }
 

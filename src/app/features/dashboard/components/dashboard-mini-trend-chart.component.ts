@@ -1,4 +1,5 @@
-import { afterNextRender, Component, effect, inject, input, signal } from '@angular/core';
+import { afterNextRender, Component, effect, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
+import type { ChartData } from 'chart.js';
 import { ChartModule } from 'primeng/chart';
 import type { DashboardTrendDayVm } from '@/app/features/dashboard/models/dashboard-trend.model';
 import { LayoutService } from '@/app/layout/service/layout.service';
@@ -9,6 +10,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
     selector: 'app-dashboard-mini-trend-chart',
     standalone: true,
     imports: [ChartModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="flex flex-col h-full min-h-[10rem]">
             <span class="block text-muted-color font-medium mb-2 text-sm">{{ title() }}</span>
@@ -27,7 +29,7 @@ export class DashboardMiniTrendChartComponent {
 
     private readonly layoutService = inject(LayoutService);
 
-    readonly chartData = signal<Record<string, unknown> | null>(null);
+    readonly chartData = signal<ChartData<'line'> | null>(null);
     readonly chartOptions = signal<Record<string, unknown> | null>(null);
 
     constructor() {

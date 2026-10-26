@@ -4,10 +4,20 @@
         "outDir": "../../out-tsc/portal-spec",
         "rootDir": "./src",
         "types": ["jasmine"],
-        "baseUrl": ".",
         "paths": {
             "@portal/*": ["./src/*"]
         }
     },
-    "include": ["src/**/*.spec.ts", "src/**/*.d.ts"]
+    "include": [
+      "src/**/*.spec.ts",
+      "src/**/*.d.ts"
+    ],
+    "angularCompilerOptions": {
+      "extendedDiagnostics": {
+        "checks": {
+          "nullishCoalescingNotNullable": "suppress",
+          "optionalChainNotNullable": "suppress"
+        }
+      }
+    }
 }

@@ -1,5 +1,7 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
+import { startWith, switchMap } from 'rxjs';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import type { ClientPersonType } from '@/app/features/clients/models/client-api.model';
@@ -14,23 +16,15 @@ import { CLIENT_PERSON_TYPE_OPTIONS, clientInvoicingFieldErrorMessage } from '@/
     selector: 'app-client-invoicing-fields',
     standalone: true,
     imports: [ReactiveFormsModule, InputTextModule, SelectModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <details class="rounded-lg border border-surface-200 dark:border-surface-700 px-4 py-3" [open]="open()" data-testid="client-invoicing-section">
-            <summary class="cursor-pointer font-medium">
-                Fatura bilgileri <span class="text-sm font-normal text-muted-color">(isteğe bağlı)</span>
-            </summary>
+            <summary class="cursor-pointer font-medium">Fatura bilgileri <span class="text-sm font-normal text-muted-color">(isteğe bağlı)</span></summary>
             <p class="text-sm text-muted-color mt-2 mb-4">Yalnız fatura veya e-belge kesilirken gerekir. Kimlik ve vergi numarası kayıtta maskeli gösterilir.</p>
             <div class="grid grid-cols-12 gap-4" [formGroup]="form()">
                 <div class="col-span-12 md:col-span-6">
                     <label for="invoicingPersonType" class="block text-sm font-medium text-muted-color mb-2">Kişi türü</label>
-                    <p-select
-                        inputId="invoicingPersonType"
-                        formControlName="personType"
-                        [options]="personTypeOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        styleClass="w-full"
-                    />
+                    <p-select inputId="invoicingPersonType" formControlName="personType" [options]="personTypeOptions" optionLabel="label" optionValue="value" class="w-full" />
                 </div>
                 @if (personType() === 'Individual') {
                     <div class="col-span-12 md:col-span-6">
@@ -99,9 +93,11 @@ export class ClientInvoicingFieldsComponent {
 
     protected readonly personTypeOptions = [...CLIENT_PERSON_TYPE_OPTIONS];
 
-    personType(): ClientPersonType | null {
-        return this.form().controls.personType.value;
-    }
+    /** Kişi türü sinyal olarak izlenir: değer koddan değişse de (zoneless) görünüm güncellenir. */
+    readonly personType = toSignal(
+        toObservable(this.form).pipe(switchMap((form) => form.controls.personType.valueChanges.pipe(startWith(form.controls.personType.value)))),
+        { initialValue: null as ClientPersonType | null }
+    );
 
     fieldMessage(field: ClientInvoicingFieldKey): string | null {
         const api = this.apiErrors()[field];
