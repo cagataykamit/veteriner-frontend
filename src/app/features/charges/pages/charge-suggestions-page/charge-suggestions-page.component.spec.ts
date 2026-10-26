@@ -9,7 +9,7 @@ import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-su
 import type { ChargeCreateResultVm } from '@/app/features/charges/models/charge-vm.model';
 import { ChargeSuggestionsService } from '@/app/features/charges/services/charge-suggestions.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
+import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
 import { ChargeSuggestionsPageComponent } from './charge-suggestions-page.component';
 
 @Component({
