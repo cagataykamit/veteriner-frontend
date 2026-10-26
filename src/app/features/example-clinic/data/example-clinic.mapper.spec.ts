@@ -1,5 +1,5 @@
-import type { ExampleClinicLoadSummaryDto } from '@/app/features/example-clinic/models/example-clinic-api.model';
-import { exampleClinicSummaryShortText, mapExampleClinicSummaryToRows } from './example-clinic.mapper';
+import type { ExampleClinicDataCountsDto, ExampleClinicLoadSummaryDto } from '@/app/features/example-clinic/models/example-clinic-api.model';
+import { exampleClinicDeactivatedProducts, exampleClinicOtherRecords, exampleClinicSummaryShortText, mapExampleClinicSummaryToRows } from './example-clinic.mapper';
 
 const SUMMARY: ExampleClinicLoadSummaryDto = {
     tenantId: 't1',
@@ -38,5 +38,14 @@ describe('example-clinic.mapper (TRIAL-002)', () => {
 
     it('toast için kısa metin üretir', () => {
         expect(exampleClinicSummaryShortText(SUMMARY)).toBe('12 müşteri, 20 hasta, 38 randevu');
+    });
+
+    it('temizlik sayılarını da aynı satırlara çevirir; pasif ürün ve diğer kayıtlar ayrı okunur', () => {
+        const counts: ExampleClinicDataCountsDto = { ...SUMMARY, products: 9, productsDeactivated: 1, otherRecords: 3 };
+
+        expect(mapExampleClinicSummaryToRows(counts).find((r) => r.key === 'products')?.count).toBe(9);
+        expect(exampleClinicDeactivatedProducts(counts)).toBe(1);
+        expect(exampleClinicOtherRecords(counts)).toBe(3);
+        expect(exampleClinicOtherRecords({ ...counts, otherRecords: Number.NaN })).toBe(0);
     });
 });
