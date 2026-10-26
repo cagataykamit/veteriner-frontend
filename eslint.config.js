@@ -74,8 +74,8 @@ export default tseslint.config(
     },
     {
         // Katman yönü: core ve shared, features'a bağımlı olmaz (features → core/shared tek yön). Tip importu (sözleşme) serbesttir;
-        // çalışma zamanı importu uyarıdır: mevcut ihlaller (shared/forms arama bileşenleri, Pets/Clients servisleri) kademeli
-        // olarak shared/domain altına taşınır; yenisi eklenmez.
+        // çalışma zamanı importu uyarıdır (mevcut ihlal yok): özellik servisini kullanan bileşen/servis (arama, hızlı kayıt,
+        // hasta eylem çubuğu vb.) shared'da değil o özelliğin altında yaşar.
         files: ['src/app/core/**/*.ts', 'src/app/shared/**/*.ts'],
         rules: {
             '@typescript-eslint/no-restricted-imports': [
