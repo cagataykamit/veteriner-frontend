@@ -27,8 +27,8 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
-import { QuickBreedDialogComponent } from '@/app/shared/forms/quick-create/quick-breed-dialog.component';
-import { QuickSpeciesDialogComponent } from '@/app/shared/forms/quick-create/quick-species-dialog.component';
+import { QuickBreedDialogComponent } from '@/app/features/breeds/components/quick-breed-dialog.component';
+import { QuickSpeciesDialogComponent } from '@/app/features/species/components/quick-species-dialog.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { DATE_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';

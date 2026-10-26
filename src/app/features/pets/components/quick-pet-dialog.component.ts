@@ -16,7 +16,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { QuickBreedDialogComponent } from '@/app/shared/forms/quick-create/quick-breed-dialog.component';
+import { QuickBreedDialogComponent } from '@/app/features/breeds/components/quick-breed-dialog.component';
 
 /**
  * Seçili müşteri için tam sayfa ayrılmadan hayvan oluşturma (`mapPetUpsertFormToCreateRequest` ile aynı write hattı).
