@@ -1,8 +1,16 @@
-// Üretim derlemesi için `environment.ts` içindeki `apiBaseUrl` değerini API_BASE_URL ortam değişkeninden yazar.
+// Üretim derlemesi için API adresini API_BASE_URL ortam değişkeninden yazar (ADR-033: panel ve portal aynı API host'unu kullanır):
+//   - panel  `src/environments/environment.ts`                 → `apiBaseUrl: <API_BASE_URL>`
+//   - portal `projects/portal/src/environments/environment.ts` → `portalApiBaseUrl: <API_BASE_URL>/api/portal/v1`
 // Gizli değer değildir (tarayıcıya zaten gider). Kullanım: API_BASE_URL=https://api.example.com node scripts/set-api-base-url.mjs
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const target = new URL('../src/environments/environment.ts', import.meta.url);
+const PORTAL_API_PATH = '/api/portal/v1';
+
+const targets = [
+    { file: new URL('../src/environments/environment.ts', import.meta.url), key: 'apiBaseUrl', suffix: '' },
+    { file: new URL('../projects/portal/src/environments/environment.ts', import.meta.url), key: 'portalApiBaseUrl', suffix: PORTAL_API_PATH }
+];
+
 const value = process.env.API_BASE_URL?.trim();
 
 if (!value) {
@@ -23,12 +31,19 @@ if (url.protocol !== 'https:' || value.endsWith('/') || url.search || url.hash) 
     process.exit(1);
 }
 
-const source = readFileSync(target, 'utf8');
-const pattern = /apiBaseUrl:\s*'[^']*'/;
-if (!pattern.test(source)) {
-    console.error('environment.ts içinde apiBaseUrl bulunamadı.');
-    process.exit(1);
-}
+// Önce iki dosya da doğrulanır, sonra yazılır: biri bozuksa diğeri de değişmez.
+const edits = targets.map(({ file, key, suffix }) => {
+    const source = readFileSync(file, 'utf8');
+    const pattern = new RegExp(`${key}:\\s*'[^']*'`);
+    if (!pattern.test(source)) {
+        console.error(`${file.pathname} içinde ${key} bulunamadı.`);
+        process.exit(1);
+    }
+    const next = `${value}${suffix}`;
+    return { file, key, next, content: source.replace(pattern, `${key}: '${next}'`) };
+});
 
-writeFileSync(target, source.replace(pattern, `apiBaseUrl: '${value}'`));
-console.log(`environment.ts apiBaseUrl = ${value}`);
+for (const { file, key, next, content } of edits) {
+    writeFileSync(file, content);
+    console.log(`${key} = ${next}`);
+}

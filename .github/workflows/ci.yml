@@ -78,6 +78,7 @@ jobs:
           npm audit --audit-level=high || echo "::warning::npm audit: yüksek seviyeli açık var (ayrıntı yukarıda)."
 
       # Üretim API adresi depo DEĞİŞKENİ (gizli değil): Settings → Secrets and variables → Actions → Variables → API_BASE_URL.
+      # Betik panelin apiBaseUrl'ini ve portalın portalApiBaseUrl'ini (…/api/portal/v1) birlikte yazar; iki build de bu adımdan sonra.
       # Tanımsızsa derleme depodaki varsayılanla sürer; etiket (sürüm) derlemesinde tanımsızlık hatadır.
       - name: Set production API URL
         env:
@@ -89,7 +90,7 @@ jobs:
             echo "::error::Sürüm derlemesi için API_BASE_URL deposu değişkeni tanımlı olmalı."
             exit 1
           else
-            echo "::warning::API_BASE_URL tanımlı değil; environment.ts içindeki varsayılan apiBaseUrl kullanılacak (dağıtılabilir değil)."
+            echo "::warning::API_BASE_URL tanımlı değil; panel ve portal environment.ts içindeki varsayılan localhost API adresi kullanılacak (dağıtılabilir değil)."
           fi
 
       - name: Build (production)
