@@ -38,7 +38,6 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
             [searchPlaceholder]="copy.vaccinationsReportSearchPlaceholder"
             [extraFilter]="{ label: copy.vaccinationsReportColStatus, options: statusOptions }"
             [activeBadges]="false"
-            [petFilter]="false"
         />
 
         <app-report-results [state]="state" [summaryLine]="true" [emptyMessage]="copy.vaccinationsReportEmptyMessage" [emptyHint]="copy.vaccinationsReportEmptyHint">

@@ -5,10 +5,8 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import type { AnyReportListState } from '@/app/features/reports/shared/report-list-state';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import type { DateInputLimit } from '@/app/shared/forms/date-input/date-input-limits.utils';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
-import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
@@ -19,7 +17,10 @@ export interface ReportExtraFilter {
     readonly options?: { label: string; value: string }[];
 }
 
-/** Rapor sayfalarının ortak süzgeç kartı: tarih aralığı, klinik, rapora özgü süzgeç, müşteri, hayvan, arama ve dışa aktarma (anlık görüntü raporlarında tarih, müşteri ve hayvan yok). */
+/**
+ * Rapor sayfalarının ortak süzgeç kartı: tarih aralığı, klinik, rapora özgü süzgeç, arama ve dışa aktarma (anlık görüntü raporlarında tarih yok).
+ * Müşteri/hasta seçicisi yoktur: arama müşteri ve hasta adında da arar, sonuç tablosu müşteriyi gösterir.
+ */
 @Component({
     selector: 'app-report-filter-bar',
     standalone: true,
@@ -30,8 +31,6 @@ export interface ReportExtraFilter {
         InputNumberModule,
         FilterFieldComponent,
         DateInputComponent,
-        ClientSearchComponent,
-        PetSearchComponent,
         SearchInputComponent,
         AppTrialLimitNoticeComponent
     ],
@@ -105,16 +104,6 @@ export interface ReportExtraFilter {
                     }
                 }
                 <ng-content select="[extraFilters]" />
-                @if (!s.snapshot && !s.dateRangeOnly) {
-                    <app-filter-field [label]="copy.labelClient" [labelId]="idPrefix() + 'ClientLabel'" [active]="activeBadges() && s.isClientFilterActive()" width="grow">
-                        <app-client-search [inputId]="idPrefix() + 'Client'" [ngModel]="s.clientIdFilter" (ngModelChange)="s.onClientFilterChange($event)" />
-                    </app-filter-field>
-                    @if (petFilter()) {
-                        <app-filter-field [label]="copy.labelPet" [labelId]="idPrefix() + 'PetLabel'" [active]="activeBadges() && s.isPetFilterActive()" width="grow">
-                            <app-pet-search [inputId]="idPrefix() + 'Pet'" [requireClient]="false" [clientId]="s.clientIdFilter" [ngModel]="s.petIdFilter" (ngModelChange)="s.petIdFilter = $event; s.scheduleApply()" />
-                        </app-filter-field>
-                    }
-                }
                 @if (!s.dateRangeOnly) {
                     <app-filter-field [label]="copy.reportsFilterSearch" [labelFor]="idPrefix() + 'Search'" [active]="activeBadges() && s.isSearchActive()" width="grow">
                         <app-search-input [inputId]="idPrefix() + 'Search'" [placeholder]="searchPlaceholder()" [(value)]="s.searchInput" (searchRequested)="s.applyFilters()" />
@@ -163,6 +152,4 @@ export class ReportFilterBarComponent {
     readonly extraFilter = input<ReportExtraFilter | null>(null);
     /** Etkin süzgeçlerde "Aktif" rozeti gösterilsin mi (sade ekranlarda kapatılır). */
     readonly activeBadges = input(true);
-    /** Hayvan seçim kutusu; müşteri ve arama alanı hayvanı zaten bulduğu ekranlarda kapatılır (`petId` sorgu alanı durumda korunur). */
-    readonly petFilter = input(true);
 }

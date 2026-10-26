@@ -5,8 +5,6 @@ export interface ExaminationsReportQuery {
     from?: string;
     to?: string;
     clinicId?: string;
-    clientId?: string;
-    petId?: string;
     appointmentId?: string;
     search?: string;
     page?: number;
@@ -31,14 +29,6 @@ export function examinationsReportQueryToHttpParams(query: ExaminationsReportQue
 
     if (query.clinicId?.trim()) {
         p = p.set('clinicId', query.clinicId.trim());
-    }
-
-    if (query.clientId?.trim()) {
-        p = p.set('clientId', query.clientId.trim());
-    }
-
-    if (query.petId?.trim()) {
-        p = p.set('petId', query.petId.trim());
     }
 
     if (query.appointmentId?.trim()) {

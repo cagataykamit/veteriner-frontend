@@ -6,8 +6,6 @@ export interface VaccinationsReportQuery {
     to?: string;
     clinicId?: string;
     status?: string;
-    clientId?: string;
-    petId?: string;
     search?: string;
     page?: number;
     pageSize?: number;
@@ -35,14 +33,6 @@ export function vaccinationsReportQueryToHttpParams(query: VaccinationsReportQue
 
     if (query.status?.trim()) {
         p = p.set('status', query.status.trim());
-    }
-
-    if (query.clientId?.trim()) {
-        p = p.set('clientId', query.clientId.trim());
-    }
-
-    if (query.petId?.trim()) {
-        p = p.set('petId', query.petId.trim());
     }
 
     if (query.search?.trim()) {

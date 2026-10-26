@@ -6,8 +6,6 @@ export interface PaymentsReportQuery {
     to?: string;
     clinicId?: string;
     method?: string;
-    clientId?: string;
-    petId?: string;
     search?: string;
     page?: number;
     pageSize?: number;
@@ -35,14 +33,6 @@ export function paymentsReportQueryToHttpParams(query: PaymentsReportQuery, opts
 
     if (query.method?.trim()) {
         p = p.set('method', query.method.trim());
-    }
-
-    if (query.clientId?.trim()) {
-        p = p.set('clientId', query.clientId.trim());
-    }
-
-    if (query.petId?.trim()) {
-        p = p.set('petId', query.petId.trim());
     }
 
     if (query.search?.trim()) {
