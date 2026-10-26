@@ -454,6 +454,8 @@ export const ApiEndpoints = {
         validateDiscountCode: () => `/api/v1/public/discount-codes/validate`,
         /** Anonim: hukuki belgelerin güncel sürümleri (`LEGAL_ACCEPTANCE_API_CONTRACT.md` §3). */
         legalDocuments: () => `/api/v1/public/legal-documents`,
+        /** Anonim, hız sınırlı (IP başına 10 dakikada 3): canlı demo talebi, 204 (`TRIAL_DEMO_REQUEST_API_CONTRACT.md`). */
+        demoRequests: () => `/api/v1/public/demo-requests`,
         inviteByToken: (token: string) => `/api/v1/public/invites/${encodeURIComponent(token)}`,
         inviteAccept: (token: string) => `/api/v1/public/invites/${encodeURIComponent(token)}/accept`,
         inviteSignupAndAccept: (token: string) => `/api/v1/public/invites/${encodeURIComponent(token)}/signup-and-accept`

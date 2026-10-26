@@ -647,21 +647,6 @@ html.public-site-root {
     color: #0b1220;
 }
 
-/* İletişim: e-posta şablonu */
-.public-page .public-mail-template {
-    padding: 1rem;
-    border-radius: var(--public-radius-button);
-    border: 1px solid var(--public-border);
-    background: var(--p-surface-50);
-    color: var(--p-surface-700);
-    font-family: inherit;
-}
-
-.app-dark .public-page .public-mail-template {
-    background: #0b1220;
-    color: var(--p-surface-200);
-}
-
 /* —— Ana sayfa (5.1): kahraman gradienti kenardan kenara, akış sekmeleri —— */
 
 /* Tek gradient: lacivert → teal; yalnız kahraman (bölüm 3). Üstündeki metin beyaz, lacivert ağırlıklı zemin ≥ 4.5:1. */

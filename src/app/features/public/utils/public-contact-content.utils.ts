@@ -3,7 +3,7 @@
  * değer girilince yalnız bu dosya değişir.
  */
 
-/** Teklif, demo ve destek e-postası; `null` ise `mailto:` bağlantısı gösterilmez. */
+/** Teklif ve destek e-postası (iletişim kartında); `null` ise gösterilmez. Demo talebi formla gelir (TRIAL-005). */
 export const PUBLIC_CONTACT_EMAIL: string | null = null;
 
 /** Telefon (görünen biçim); `null` ise gösterilmez. */
@@ -15,21 +15,6 @@ export const PUBLIC_SUPPORT_RESPONSE_TIME: string | null = null;
 
 /** Alt bilgi ve hakkımızdaki tüzel kişi adı; `null` ise yalnız "Vetinity" yazar. */
 export const PUBLIC_LEGAL_ENTITY_NAME: string | null = null;
-
-/** Demo/teklif e-postasının konu ve gövde şablonu (mailto). */
-export const PUBLIC_CONTACT_MAIL_SUBJECT = 'Vetinity — demo ve paket bilgisi';
-export const PUBLIC_CONTACT_MAIL_BODY = ['Klinik adı:', 'Şehir:', 'Telefon:', 'Kaç kullanıcı / şube:', 'Bugün hangi programı ya da yöntemi kullanıyorsunuz:', 'Mesajınız:'].join('\n');
-
-/** `mailto:` adresi; e-posta yoksa `null`. */
-export function publicContactMailto(): string | null {
-    if (!PUBLIC_CONTACT_EMAIL) {
-        return null;
-    }
-
-    const params = new URLSearchParams({ subject: PUBLIC_CONTACT_MAIL_SUBJECT, body: PUBLIC_CONTACT_MAIL_BODY });
-
-    return `mailto:${PUBLIC_CONTACT_EMAIL}?${params.toString().replace(/\+/g, '%20')}`;
-}
 
 export interface PublicContactCardRowDef {
     readonly label: string;
