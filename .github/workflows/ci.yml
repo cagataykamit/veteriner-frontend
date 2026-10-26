@@ -98,9 +98,12 @@ jobs:
       - name: Build portal (production)
         run: npx ng build portal --configuration production
 
-      # Proje verilmeyince her iki projenin (panel + portal) testleri koşar.
+      # Proje verilmeyince her iki projenin (panel + portal) testleri koşar. Vitest tarayıcı kipi (Playwright, başlıksız
+      # Chromium): runner'daki Google Chrome kullanılır (CHROME_BIN), Playwright tarayıcısı indirilmez.
       - name: Test (headless)
-        run: npx ng test --watch=false --karma-config=karma.ci.conf.cjs
+        run: |
+          export CHROME_BIN="${CHROME_BIN:-$(command -v google-chrome)}"
+          npx ng test --watch=false
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
