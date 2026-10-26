@@ -42,7 +42,8 @@ export const PANEL_COPY = {
     reportsClinicPanelDefault: 'Panel seçili klinik',
     reportsLoadingMessage: 'Rapor yükleniyor…',
     reportsLoadErrorFallback: 'Rapor verileri yüklenemedi.',
-    reportsFixFilterHint: 'Filtreleri (ör. tarih aralığını) düzeltip Filtrele düğmesine basın.',
+    /** Tüm raporlarda süzgeç değişince sonuç kendiliğinden yenilenir (kayıt defterleri ve gün sonundaki Filtrele düğmesi isteğe bağlıdır). */
+    reportsFixFilterHint: 'Filtreleri (ör. tarih aralığını) düzeltin; sonuç kendiliğinden yenilenir.',
     /** Kayıt defterleri */
     registerPeriodHint: 'Tarih aralığını seçip Filtrele düğmesine basın. Defterler en çok 366 günlük aralıkla okunur.',
     registerFormatUnverified: 'Resmî defter biçimine uygunluk doğrulanmamıştır; yasal gereklilikler için mevzuatı kontrol edin.',
