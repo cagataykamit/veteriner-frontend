@@ -55,3 +55,16 @@ describe('appointment status — İptal', () => {
         }
     });
 });
+
+describe('appointment status — dizgi kodları dilden bağımsız eşlenir', () => {
+    it('büyük harfli kodlar, "I" içerenler dahil (Türkçe ı/İ dönüşümüne takılmaz), eşlenir', () => {
+        expect(parseAppointmentStatusRawToEnum('SCHEDULED')).toBe(0);
+        expect(parseAppointmentStatusRawToEnum('PLANLANDI')).toBe(0);
+        expect(parseAppointmentStatusRawToEnum('COMPLETED')).toBe(1);
+        expect(parseAppointmentStatusRawToEnum('TAMAMLANDI')).toBe(1);
+        expect(parseAppointmentStatusRawToEnum('CANCELLED')).toBe(2);
+        expect(parseAppointmentStatusRawToEnum('IPTAL')).toBe(2);
+        expect(parseAppointmentStatusRawToEnum('NO-SHOW')).toBe(3);
+        expect(parseAppointmentStatusRawToEnum('GELMEDI')).toBe(3);
+    });
+});

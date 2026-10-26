@@ -44,7 +44,7 @@ export function parseAppointmentStatusRawToEnum(raw: unknown): number | null {
         return i >= 0 && i <= 3 ? i : null;
     }
 
-    const k = s.toLocaleLowerCase('tr-TR');
+    const k = s.toLowerCase();
 
     if (k === 'scheduled' || k === 'planned' || k === 'planlandi' || k === 'planlandı') {
         return 0;

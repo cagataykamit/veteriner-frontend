@@ -33,7 +33,7 @@ export function parseVaccinationStatusRawToEnum(raw: unknown): VaccinationStatus
         return parseVaccinationStatusRawToEnum(i);
     }
 
-    const k = s.toLocaleLowerCase('tr-TR');
+    const k = s.toLowerCase();
 
     if (k === 'planned' || k === 'scheduled' || k === 'planlandi' || k === 'planlandı') {
         return 0;
