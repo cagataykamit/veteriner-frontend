@@ -37,6 +37,9 @@ export default tseslint.config(
             '@angular-eslint/component-class-suffix': ['error', { suffixes: [''] }],
             '@angular-eslint/no-host-metadata-property': 'off',
             '@angular-eslint/no-output-on-prefix': 'off',
+            // Angular 22'de varsayılan OnPush. Geçişte mevcut bileşenler davranış değişmesin diye `Eager` ile işaretlendi
+            // (ng update); OnPush'a bileşen bileşen geçilir. Yeni bileşen changeDetection yazmadan OnPush olur.
+            '@angular-eslint/prefer-on-push-component-change-detection': 'off',
             '@typescript-eslint/no-explicit-any': 'off',
             '@typescript-eslint/no-inferrable-types': 'off',
             // `_` önekli parametre bilinçli kullanılmıyor demektir (arayüz imzası); `...rest` ile ayıklanan alan da kullanılmaz.
