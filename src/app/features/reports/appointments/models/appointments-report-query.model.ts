@@ -7,8 +7,6 @@ export interface AppointmentsReportQuery {
     clinicId?: string;
     /** Backend `AppointmentStatus` (0/1/2) — string olarak gönderilir. */
     status?: string;
-    clientId?: string;
-    petId?: string;
     search?: string;
     page?: number;
     pageSize?: number;
@@ -36,14 +34,6 @@ export function appointmentsReportQueryToHttpParams(query: AppointmentsReportQue
 
     if (query.status?.trim()) {
         p = p.set('status', query.status.trim());
-    }
-
-    if (query.clientId?.trim()) {
-        p = p.set('clientId', query.clientId.trim());
-    }
-
-    if (query.petId?.trim()) {
-        p = p.set('petId', query.petId.trim());
     }
 
     if (query.search?.trim()) {

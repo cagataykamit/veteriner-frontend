@@ -189,6 +189,18 @@ describe('ReportListState', () => {
         expect(second.currentPage()).toBe(2);
     });
 
+    it('eski oturumda kalan müşteri/hasta seçimi (clientId/petId) sorguya ve yeni kayda girmez', () => {
+        sessionStorage.setItem(KEY, JSON.stringify({ search: 'pamuk', clientId: 'cl-1', petId: 'pet-1', page: 1, pageSize: 25 }));
+        const state = create();
+
+        state.init();
+        const q = source.loadReport.calls.mostRecent().args[0] as Record<string, unknown>;
+
+        expect(q['search']).toBe('pamuk');
+        expect('clientId' in q || 'petId' in q).toBeFalse();
+        expect(Object.keys(JSON.parse(sessionStorage.getItem(KEY)!))).not.toContain('clientId');
+    });
+
     it('sayfa boyutu değişince ilk sayfaya döner; mobil sayfalayıcı sonraki tablo olayını yutar', () => {
         const state = create();
 

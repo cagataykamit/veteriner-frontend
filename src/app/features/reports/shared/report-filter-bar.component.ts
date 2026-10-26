@@ -1,14 +1,12 @@
-import { Component, computed, input, OnInit, signal } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import type { AnyReportListState } from '@/app/features/reports/shared/report-list-state';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
 import type { DateInputLimit } from '@/app/shared/forms/date-input/date-input-limits.utils';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
-import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
@@ -20,8 +18,8 @@ export interface ReportExtraFilter {
 }
 
 /**
- * Rapor sayfalarının ortak süzgeç kartı: tarih aralığı, klinik, rapora özgü süzgeç, arama ve dışa aktarma; müşteri/hasta seçicileri
- * "Müşteri veya hasta seç" altında katlanır (anlık görüntü raporlarında tarih, müşteri ve hayvan yok).
+ * Rapor sayfalarının ortak süzgeç kartı: tarih aralığı, klinik, rapora özgü süzgeç, arama ve dışa aktarma (anlık görüntü raporlarında tarih yok).
+ * Müşteri/hasta seçicisi yoktur: arama müşteri ve hasta adında da arar, sonuç tablosu müşteriyi gösterir.
  */
 @Component({
     selector: 'app-report-filter-bar',
@@ -33,8 +31,6 @@ export interface ReportExtraFilter {
         InputNumberModule,
         FilterFieldComponent,
         DateInputComponent,
-        ClientSearchComponent,
-        PetSearchComponent,
         SearchInputComponent,
         AppTrialLimitNoticeComponent
     ],
@@ -113,20 +109,6 @@ export interface ReportExtraFilter {
                         <app-search-input [inputId]="idPrefix() + 'Search'" [placeholder]="searchPlaceholder()" [(value)]="s.searchInput" (searchRequested)="s.applyFilters()" />
                     </app-filter-field>
                 }
-                @if (hasEntityFilters()) {
-                    <button
-                        pButton
-                        type="button"
-                        [label]="entityToggleLabel()"
-                        [icon]="entityFiltersOpen() ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
-                        iconPos="right"
-                        severity="secondary"
-                        [text]="true"
-                        [attr.aria-expanded]="entityFiltersOpen()"
-                        [attr.aria-controls]="idPrefix() + 'EntityFilters'"
-                        (click)="entityFiltersOpen.set(!entityFiltersOpen())"
-                    ></button>
-                }
                 <div class="col-span-12 md:col-span-6 flex flex-wrap gap-2 justify-end">
                     <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="s.resetFilters()" [disabled]="s.loading()" />
                     @if (s.dateRangeOnly) {
@@ -154,24 +136,11 @@ export interface ReportExtraFilter {
                     }
                     <ng-content select="[barActions]" />
                 </div>
-                @if (hasEntityFilters() && entityFiltersOpen()) {
-                    <div [id]="idPrefix() + 'EntityFilters'" class="w-full flex flex-wrap items-end gap-3">
-                        <p class="w-full text-sm text-muted-color m-0">{{ entityHint() }}</p>
-                        <app-filter-field [label]="copy.labelClient" [labelId]="idPrefix() + 'ClientLabel'" [active]="activeBadges() && s.isClientFilterActive()" width="grow">
-                            <app-client-search [inputId]="idPrefix() + 'Client'" [ngModel]="s.clientIdFilter" (ngModelChange)="s.onClientFilterChange($event)" />
-                        </app-filter-field>
-                        @if (petFilter()) {
-                            <app-filter-field [label]="copy.labelPet" [labelId]="idPrefix() + 'PetLabel'" [active]="activeBadges() && s.isPetFilterActive()" width="grow">
-                                <app-pet-search [inputId]="idPrefix() + 'Pet'" [requireClient]="false" [clientId]="s.clientIdFilter" [ngModel]="s.petIdFilter" (ngModelChange)="s.petIdFilter = $event; s.scheduleApply()" />
-                            </app-filter-field>
-                        }
-                    </div>
-                }
             </div>
         </div>
     `
 })
-export class ReportFilterBarComponent implements OnInit {
+export class ReportFilterBarComponent {
     readonly copy = PANEL_COPY;
     readonly state = input.required<AnyReportListState>();
     /** Alan kimliklerinin öneki (`apptRep` → `apptRepFrom`, `apptRepClinic`…). */
@@ -183,30 +152,4 @@ export class ReportFilterBarComponent implements OnInit {
     readonly extraFilter = input<ReportExtraFilter | null>(null);
     /** Etkin süzgeçlerde "Aktif" rozeti gösterilsin mi (sade ekranlarda kapatılır). */
     readonly activeBadges = input(true);
-    /** Hayvan seçim kutusu; müşteri ve arama alanı hayvanı zaten bulduğu ekranlarda kapatılır (`petId` sorgu alanı durumda korunur). */
-    readonly petFilter = input(true);
-
-    /** Müşteri/hasta seçicileri katlanır bölümdedir: ad aramasını birincil Arama kutusu karşılar, seçici tek kayda daraltmak içindir. */
-    readonly entityFiltersOpen = signal(false);
-    readonly hasEntityFilters = computed(() => !this.state().snapshot && !this.state().dateRangeOnly);
-    /** Kapalı bölümdeki seçili süzgeç sayısı düğmede görünür; seçim gözden kaybolmaz. */
-    readonly activeEntityFilterCount = computed(() => {
-        const s = this.state();
-
-        return (s.isClientFilterActive() ? 1 : 0) + (this.petFilter() && s.isPetFilterActive() ? 1 : 0);
-    });
-    readonly entityToggleLabel = computed(() => {
-        const label = this.petFilter() ? this.copy.reportsEntityFilterToggle : this.copy.reportsEntityFilterToggleClientOnly;
-        const count = this.activeEntityFilterCount();
-
-        return count ? `${label} (${count})` : label;
-    });
-    readonly entityHint = computed(() => (this.petFilter() ? this.copy.reportsEntityFilterHint : this.copy.reportsEntityFilterHintClientOnly));
-
-    ngOnInit(): void {
-        // Sayfaya seçili müşteri/hastayla dönülünce (oturumdan geri yükleme) bölüm açık başlar.
-        if (this.activeEntityFilterCount()) {
-            this.entityFiltersOpen.set(true);
-        }
-    }
 }

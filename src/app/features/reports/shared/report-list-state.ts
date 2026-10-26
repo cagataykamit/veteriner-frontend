@@ -25,8 +25,6 @@ export interface ReportListQueryBase {
     from?: string;
     to?: string;
     clinicId?: string;
-    clientId?: string;
-    petId?: string;
     /** Kayıt defterlerine özgü süzgeçler (`extraKeys`); değerler metin olarak gider (`includeVoided`: `true`). */
     includeVoided?: string;
     productId?: string;
@@ -65,9 +63,9 @@ export interface ReportListConfig<Q, R> {
     exportFilePrefix: string;
     /** Rapora özgü tek süzgeç (ödeme: `method`, randevu ve aşı: `status`, borç: `minAmount`). */
     extraFilterKey?: 'method' | 'status' | 'minAmount';
-    /** "Şu anki" durum raporu: tarih aralığı, müşteri ve hayvan süzgeci yoktur (borç raporu). */
+    /** "Şu anki" durum raporu: tarih aralığı süzgeci yoktur (borç raporu). */
     snapshot?: boolean;
-    /** Kayıt defterleri: yalnız tarih aralığı + klinik süzgeci; `from`/`to` takvim günü (`yyyy-MM-dd`) olarak gider, arama/müşteri/hayvan yoktur. */
+    /** Kayıt defterleri: yalnız tarih aralığı + klinik süzgeci; `from`/`to` takvim günü (`yyyy-MM-dd`) olarak gider, arama yoktur. */
     dateRangeOnly?: boolean;
     /** Rapora özgü ek süzgeçler (birden çok olabilir); `extraInputs` / `activeExtras` ile yönetilir. */
     extraKeys?: readonly ReportExtraKey[];
@@ -116,8 +114,6 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
     readonly activeToDate = signal('');
     readonly activeExtra = signal('');
     readonly activeClinicId = signal('');
-    readonly activeClientId = signal('');
-    readonly activePetId = signal('');
     readonly activeExtras = signal<Readonly<Record<string, string>>>({});
 
     fromDateInput = '';
@@ -125,8 +121,6 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
     searchInput = '';
     extraFilter = '';
     clinicIdFilter = '';
-    clientIdFilter = '';
-    petIdFilter = '';
     extraInputs: Record<string, string> = {};
 
     readonly clinicOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.reportsClinicPanelDefault, value: '' }]);
@@ -173,12 +167,6 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         this.bootstrapReportAfterMyClinics();
     }
 
-    onClientFilterChange(clientId: string | null): void {
-        this.clientIdFilter = clientId ?? '';
-        this.petIdFilter = '';
-        this.scheduleApply();
-    }
-
     applyFilters(): void {
         this.dateFilterError.set(null);
 
@@ -212,8 +200,6 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         this.activeToDate.set(to);
         this.activeExtra.set(safeTrim(this.extraFilter));
         this.activeClinicId.set(safeTrim(this.clinicIdFilter));
-        this.activeClientId.set(safeTrim(this.clientIdFilter));
-        this.activePetId.set(safeTrim(this.petIdFilter));
         this.activeExtras.set(this.trimmedExtraInputs());
         this.stripJwtMisalignedReportClinicIfNeeded();
         this.first.set(0);
@@ -227,15 +213,11 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         this.searchInput = '';
         this.extraFilter = '';
         this.clinicIdFilter = '';
-        this.clientIdFilter = '';
-        this.petIdFilter = '';
         this.extraInputs = {};
         this.activeExtras.set({});
         this.activeSearch.set('');
         this.activeExtra.set('');
         this.activeClinicId.set('');
-        this.activeClientId.set('');
-        this.activePetId.set('');
         this.bootstrapDefaultDates();
         this.activeFromDate.set(this.fromDateInput.trim());
         this.activeToDate.set(this.toDateInput.trim());
@@ -290,14 +272,6 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
 
     isClinicActive(): boolean {
         return !!this.activeClinicId().trim();
-    }
-
-    isClientFilterActive(): boolean {
-        return !!this.activeClientId().trim();
-    }
-
-    isPetFilterActive(): boolean {
-        return !!this.activePetId().trim();
     }
 
     private trimmedExtraInputs(): Record<string, string> {
@@ -470,8 +444,6 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
             to: (dayOnly ? toYmd : toYmd ? dateOnlyInputToIstanbulEndUtcIso(toYmd) : '') || undefined,
             ...(extraKey ? { [extraKey]: this.activeExtra() || undefined } : {}),
             clinicId: this.activeClinicId().trim() || undefined,
-            clientId: this.activeClientId().trim() || undefined,
-            petId: this.activePetId().trim() || undefined,
             ...Object.fromEntries((this.config.extraKeys ?? []).map((key) => [key, this.activeExtras()[key] || undefined]))
         } as Q;
     }
@@ -550,8 +522,6 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
             this.toDateInput = safeTrim(parsed['toDate']);
             this.extraFilter = extraFilterKey ? safeTrim(parsed[extraFilterKey]) : '';
             this.clinicIdFilter = safeTrim(parsed['clinicId']);
-            this.clientIdFilter = safeTrim(parsed['clientId']);
-            this.petIdFilter = safeTrim(parsed['petId']);
             this.extraInputs = Object.fromEntries((this.config.extraKeys ?? []).map((key) => [key, safeTrim(parsed[key])]));
 
             // Tarihler restore'da tek taraflı geldiyse varsayılan döneme dön.
@@ -567,8 +537,6 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
             this.activeToDate.set(this.toDateInput);
             this.activeExtra.set(this.extraFilter);
             this.activeClinicId.set(this.clinicIdFilter);
-            this.activeClientId.set(this.clientIdFilter);
-            this.activePetId.set(this.petIdFilter);
             this.activeExtras.set(this.trimmedExtraInputs());
             this.pageSize.set(pageSize);
             this.currentPage.set(page);
@@ -593,8 +561,6 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
                 toDate: safeTrim(this.toDateInput),
                 ...(extraFilterKey ? { [extraFilterKey]: safeTrim(this.extraFilter) } : {}),
                 clinicId: safeTrim(this.clinicIdFilter),
-                clientId: safeTrim(this.clientIdFilter),
-                petId: safeTrim(this.petIdFilter),
                 ...this.trimmedExtraInputs(),
                 page,
                 pageSize

@@ -23,7 +23,7 @@ describe('RegisterReportSource', () => {
     it('liste yalnız tarih aralığı, klinik ve sayfalamayı gönderir; sayfa bilgisini isteğe göre ekler', () => {
         let result: unknown;
 
-        source.loadReport({ ...query, search: 'x', clientId: 'k', petId: 'p' }).subscribe((r) => (result = r));
+        source.loadReport({ ...query, search: 'x' }).subscribe((r) => (result = r));
         const [path, params] = api.get.calls.mostRecent().args as [string, HttpParams];
 
         expect(path).toBe('/api/v1/reports/registers/examinations');

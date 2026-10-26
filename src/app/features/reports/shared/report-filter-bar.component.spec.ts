@@ -10,34 +10,26 @@ import { ReportListQueryBase, ReportListResultBase, ReportListSource, ReportList
 
 const KEY = 'panel:reports:filter-bar-test:listState';
 
-describe('ReportFilterBarComponent — arama birincil, müşteri/hasta katlanır', () => {
+describe('ReportFilterBarComponent — müşteri/hasta seçicisi yok, yalnız arama', () => {
     let source: jasmine.SpyObj<ReportListSource<ReportListQueryBase, ReportListResultBase>>;
 
-    function createState(config: { snapshot?: boolean; dateRangeOnly?: boolean } = {}) {
+    function create(config: { snapshot?: boolean; dateRangeOnly?: boolean } = {}): HTMLElement {
         const state = TestBed.runInInjectionContext(
             () => new ReportListState<ReportListQueryBase, ReportListResultBase>({ source, stateKey: KEY, readClaim: 'Test.Read', exportFilePrefix: 'test', ...config })
         );
 
         state.init();
-
-        return state;
-    }
-
-    function create(state = createState(), petFilter = true) {
         const fixture = TestBed.createComponent(ReportFilterBarComponent);
 
         fixture.componentRef.setInput('state', state);
         fixture.componentRef.setInput('idPrefix', 'tRep');
         fixture.componentRef.setInput('periodHint', '');
-        fixture.componentRef.setInput('searchPlaceholder', 'Ara…');
+        fixture.componentRef.setInput('searchPlaceholder', 'Müşteri, hasta veya not ile ara…');
         fixture.componentRef.setInput('dateLimit', 'past');
-        fixture.componentRef.setInput('petFilter', petFilter);
         fixture.detectChanges();
 
-        return fixture;
+        return fixture.nativeElement;
     }
-
-    const toggle = (el: HTMLElement) => el.querySelector<HTMLButtonElement>('button[aria-controls="tRepEntityFilters"]');
 
     beforeEach(() => {
         sessionStorage.removeItem(KEY);
@@ -62,42 +54,16 @@ describe('ReportFilterBarComponent — arama birincil, müşteri/hasta katlanır
         });
     });
 
-    it('ilk açılışta yalnız Arama görünür; seçiciler "Müşteri veya hasta seç" düğmesiyle açılır ve ne yaptıkları yazar', () => {
-        const fixture = create();
-        const el: HTMLElement = fixture.nativeElement;
+    it('dönem raporunda Arama var; Müşteri ve Hasta seçicileri yok', () => {
+        const el = create();
 
-        expect(el.querySelector('app-search-input')).not.toBeNull();
+        expect(el.querySelector<HTMLInputElement>('#tRepSearch')?.placeholder).toBe('Müşteri, hasta veya not ile ara…');
         expect(el.querySelector('app-client-search, app-pet-search')).toBeNull();
-        expect(toggle(el)!.textContent).toContain('Müşteri veya hasta seç');
-        expect(toggle(el)!.getAttribute('aria-expanded')).toBe('false');
-
-        toggle(el)!.click();
-        fixture.detectChanges();
-
-        expect(toggle(el)!.getAttribute('aria-expanded')).toBe('true');
-        expect(el.querySelector('#tRepEntityFilters app-client-search')).not.toBeNull();
-        expect(el.querySelector('#tRepEntityFilters app-pet-search')).not.toBeNull();
-        expect(el.textContent).toContain('Yalnız seçtiğiniz müşterinin veya hastanın kayıtları listelenir');
+        expect(el.textContent).not.toContain('Müşteri seç');
     });
 
-    it('oturumdan seçili müşteriyle dönülünce bölüm açık başlar ve düğme seçim sayısını gösterir', () => {
-        sessionStorage.setItem(KEY, JSON.stringify({ clientId: 'cl-1', page: 1, pageSize: 25 }));
-        const fixture = create();
-        const el: HTMLElement = fixture.nativeElement;
-
-        expect(el.querySelector('#tRepEntityFilters app-client-search')).not.toBeNull();
-        expect(toggle(el)!.textContent).toContain('Müşteri veya hasta seç (1)');
-
-        toggle(el)!.click();
-        fixture.detectChanges();
-
-        expect(el.querySelector('app-client-search')).toBeNull();
-        expect(toggle(el)!.textContent).toContain('(1)');
-    });
-
-    it('anlık görüntü ve yalnız tarih aralığı raporlarında müşteri/hasta düğmesi yoktur', () => {
-        expect(toggle(create(createState({ snapshot: true })).nativeElement)).toBeNull();
-        sessionStorage.removeItem(KEY);
-        expect(toggle(create(createState({ dateRangeOnly: true })).nativeElement)).toBeNull();
+    it('anlık görüntü raporunda da yalnız Arama var; yalnız tarih aralığı raporunda arama da yok', () => {
+        expect(create({ snapshot: true }).querySelector('app-search-input')).not.toBeNull();
+        expect(create({ dateRangeOnly: true }).querySelector('app-search-input, app-client-search, app-pet-search')).toBeNull();
     });
 });

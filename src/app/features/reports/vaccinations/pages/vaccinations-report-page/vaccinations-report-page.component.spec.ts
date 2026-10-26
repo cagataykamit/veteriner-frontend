@@ -50,20 +50,13 @@ describe('VaccinationsReportPageComponent — sade filtre alanı', () => {
         });
     });
 
-    it('Arama alanı birincil; Müşteri seçici "Müşteri seç" altında, hayvan seçim kutusu yok', () => {
-        const fixture = create();
-        const el: HTMLElement = fixture.nativeElement;
+    it('yalnız Arama alanı var (müşteri/hasta seçicisi yok); sonuçta Müşteri sütunu görünür', () => {
+        const el: HTMLElement = create().nativeElement;
 
         expect(el.querySelector('app-search-input')).not.toBeNull();
-        expect(el.querySelector('app-client-search')).toBeNull();
-
-        const toggle = el.querySelector<HTMLButtonElement>('button[aria-controls="vacRepEntityFilters"]')!;
-
-        expect(toggle.textContent).toContain('Müşteri seç');
-        toggle.click();
-        fixture.detectChanges();
-        expect(el.querySelector('app-client-search')).not.toBeNull();
-        expect(el.querySelector('app-pet-search')).toBeNull();
+        expect(el.querySelector('app-client-search, app-pet-search')).toBeNull();
+        expect(Array.from(el.querySelectorAll('th')).map((th) => th.textContent?.trim())).toContain('Müşteri');
+        expect(el.textContent).toContain('Ayşe');
     });
 
     it('"Aktif" rozeti çıkmaz', () => {
@@ -82,12 +75,15 @@ describe('VaccinationsReportPageComponent — sade filtre alanı', () => {
         expect(el.textContent).toContain('7 kayıt');
     });
 
-    it('petId sorgu alanı desteklenmeye devam eder (süzgeç durumundan sorguya gider)', () => {
+    it('arama metni sorguya gider; clientId/petId gönderilmez', () => {
         const fixture = create();
 
-        fixture.componentInstance.state.petIdFilter = 'pet-1';
+        fixture.componentInstance.state.searchInput = 'Pamuk';
         fixture.componentInstance.state.applyFilters();
-        expect(source.loadReport.calls.mostRecent().args[0].petId).toBe('pet-1');
+        const q = source.loadReport.calls.mostRecent().args[0] as unknown as Record<string, unknown>;
+
+        expect(q['search']).toBe('Pamuk');
+        expect('clientId' in q || 'petId' in q).toBeFalse();
     });
 
     it('422 Trial.ExportLimitExceeded: sunucunun detail metni ve "Aboneliğe geç" bağlantısı gösterilir (TRIAL-004)', () => {
