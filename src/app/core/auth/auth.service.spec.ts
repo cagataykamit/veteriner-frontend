@@ -122,13 +122,25 @@ describe('AuthService', () => {
             });
 
             expect(auth.hasOperationClaim('visits.read')).toBe(true);
-            expect(auth.hasOperationClaim('  clients.CREATE ')).toBe(true);
+            expect(auth.hasOperationClaim('  CLIENTS.CREATE ')).toBe(true);
             expect(auth.hasOperationClaim('Charges.Read')).toBe(true);
             expect(auth.hasOperationClaim('Payments.Create')).toBe(true);
             expect(auth.hasOperationClaim('Admin')).toBe(true);
             expect(auth.hasOperationClaim('Visits')).toBe(false);
             expect(auth.hasOperationClaim('Visits.Create')).toBe(false);
             expect(auth.hasOperationClaim('   ')).toBe(false);
+        });
+
+        it('büyük/küçük harf duyarsızlığı dilden bağımsızdır: "I" içeren kodlar Türkçe ı/İ dönüşümüne takılmaz', () => {
+            const auth = create();
+
+            auth.setSession({ accessToken: jwt({ permissions: ['Clients.Create', 'Imports.Read', 'CLINICS.UPDATE'] }), refreshToken: null, expiresAt: null });
+
+            expect(auth.hasOperationClaim('CLIENTS.CREATE')).toBe(true);
+            expect(auth.hasOperationClaim('Imports.Read')).toBe(true);
+            expect(auth.hasOperationClaim('imports.read')).toBe(true);
+            expect(auth.hasOperationClaim('IMPORTS.READ')).toBe(true);
+            expect(auth.hasOperationClaim('Clinics.Update')).toBe(true);
         });
 
         it('token yoksa hiçbir claim yok', () => {
