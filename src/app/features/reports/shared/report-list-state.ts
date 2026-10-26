@@ -131,6 +131,10 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
 
     readonly clinicOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.reportsClinicPanelDefault, value: '' }]);
 
+    /**
+     * Tablo ilk sonuçla oluşurken yaydığı tembel yükleme olayı yutulur. Sonuç alanı yenilemede tabloyu yeniden kurmadığından
+     * bayrak yalnız açılışta kurulur; sonradan kurulursa takılı kalıp kullanıcının bir sonraki sayfa tıklamasını yutar.
+     */
     private suppressNextLazy = false;
     private lastLoadKey = '';
     private clinicSummariesLoadedOk = false;
@@ -260,7 +264,6 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
     }
 
     onMobilePageChange(state: PaginatorState): void {
-        this.suppressNextLazy = true;
         this.changePage(state.first ?? 0, state.rows ?? this.pageSize());
     }
 
@@ -513,7 +516,6 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
                 if (err instanceof HttpErrorResponse && explicitQueryClinicId && isReportRecoverableClinicConstraint403(err)) {
                     this.lastLoadKey = '';
                     this.clearStaleUiClinicFilterSilently();
-                    this.suppressNextLazy = true;
                     this.loadFromServer(1, this.pageSize(), true);
 
                     return;
