@@ -62,7 +62,7 @@ describe('PatientActionBarComponent', () => {
         claims.add('Visits.Create');
         let el: HTMLElement = create({ clientId: 'cl1', petId: 'p1', petLabel: 'Pamuk — Kedi', clientName: 'Ali Veli' }).nativeElement;
 
-        expect(Array.from(el.querySelectorAll('button')).some((b) => b.textContent?.includes('Geldi'))).toBeTrue();
+        expect(Array.from(el.querySelectorAll('button')).some((b) => b.textContent?.includes('Geldi'))).toBe(true);
         TestBed.resetTestingModule();
         claims.delete('Visits.Create');
         el = create({ clientId: 'cl1', petId: 'p1' }).nativeElement;
@@ -74,7 +74,7 @@ describe('PatientActionBarComponent', () => {
         const fixture = create({ clientId: 'cl1' });
         const el: HTMLElement = fixture.nativeElement;
 
-        expect(Array.from(el.querySelectorAll('button')).some((b) => b.textContent?.includes('Geldi'))).toBeTrue();
+        expect(Array.from(el.querySelectorAll('button')).some((b) => b.textContent?.includes('Geldi'))).toBe(true);
         const appt = el.querySelector('a[href^="/panel/appointments/new"]') as HTMLAnchorElement;
 
         expect(appt.getAttribute('href')).toBe('/panel/appointments/new?clientId=cl1');

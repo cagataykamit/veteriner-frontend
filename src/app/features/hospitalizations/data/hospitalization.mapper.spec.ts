@@ -41,21 +41,21 @@ describe('hospitalization mapper — konum (HOSP-002)', () => {
         const body = mapCreateHospitalizationToApiBody({ ...write, roomId: ' r1 ' });
 
         expect(body.roomId).toBe('r1');
-        expect('location' in body).toBeFalse();
-        expect('clearRoom' in body).toBeFalse();
+        expect('location' in body).toBe(false);
+        expect('clearRoom' in body).toBe(false);
     });
 
     it('yazma gövdesi: clearRoom yalnız oda seçili değilken gider', () => {
-        expect(mapCreateHospitalizationToApiBody({ ...write, clearRoom: true }).clearRoom).toBeTrue();
-        expect('clearRoom' in mapCreateHospitalizationToApiBody({ ...write, roomId: 'r1', clearRoom: true })).toBeFalse();
-        expect('clearRoom' in mapCreateHospitalizationToApiBody(write)).toBeFalse();
+        expect(mapCreateHospitalizationToApiBody({ ...write, clearRoom: true }).clearRoom).toBe(true);
+        expect('clearRoom' in mapCreateHospitalizationToApiBody({ ...write, roomId: 'r1', clearRoom: true })).toBe(false);
+        expect('clearRoom' in mapCreateHospitalizationToApiBody(write)).toBe(false);
     });
 
     it('form adaptörü boş oda seçimini null, clearRoom bayrağını boolean yapar', () => {
         const req = mapHospitalizationUpsertFormToCreateRequest({ ...write, roomId: '', clearRoom: undefined });
 
         expect(req.roomId).toBeNull();
-        expect(req.clearRoom).toBeFalse();
+        expect(req.clearRoom).toBe(false);
         expect(mapHospitalizationUpsertFormToCreateRequest({ ...write, roomId: 'r2', clearRoom: true }).roomId).toBe('r2');
     });
 });
@@ -89,23 +89,23 @@ describe('hospitalization mapper — liste tarih parametreleri', () => {
         const withDates = hospitalizationsQueryToHttpParams({ fromDate: '2026-10-08', toDate: '2026-10-09' });
 
         for (const k of ['FromDate', 'ToDate', 'fromDate', 'toDate']) {
-            expect(withDates.has(k)).toBeFalse();
+            expect(withDates.has(k)).toBe(false);
         }
 
         const none = hospitalizationsQueryToHttpParams({});
 
-        expect(none.has('dateFromUtc')).toBeFalse();
-        expect(none.has('dateToUtc')).toBeFalse();
+        expect(none.has('dateFromUtc')).toBe(false);
+        expect(none.has('dateToUtc')).toBe(false);
     });
 
     it('yalnızca bitiş verilirse yalnızca dateToUtc gider; geçersiz tarih atlanır', () => {
         const onlyTo = hospitalizationsQueryToHttpParams({ toDate: '2026-10-08' });
 
-        expect(onlyTo.has('dateFromUtc')).toBeFalse();
+        expect(onlyTo.has('dateFromUtc')).toBe(false);
         expect(onlyTo.get('dateToUtc')).toBe('2026-10-08T20:59:59.999Z');
         const invalid = hospitalizationsQueryToHttpParams({ fromDate: 'abc', toDate: '  ' });
 
-        expect(invalid.has('dateFromUtc')).toBeFalse();
-        expect(invalid.has('dateToUtc')).toBeFalse();
+        expect(invalid.has('dateFromUtc')).toBe(false);
+        expect(invalid.has('dateToUtc')).toBe(false);
     });
 });

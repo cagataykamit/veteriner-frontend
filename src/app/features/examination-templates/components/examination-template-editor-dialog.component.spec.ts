@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -7,8 +8,7 @@ import type { ProductListItemVm } from '@/app/features/inventory/models/product-
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { ExaminationTemplateEditorDialogComponent } from './examination-template-editor-dialog.component';
 
-const product = (id: string, name: string, kind: ProductListItemVm['kind']): ProductListItemVm =>
-    ({ id, name, kind, sku: '—', unit: 'Adet', isActive: true }) as ProductListItemVm;
+const product = (id: string, name: string, kind: ProductListItemVm['kind']): ProductListItemVm => ({ id, name, kind, sku: '—', unit: 'Adet', isActive: true }) as ProductListItemVm;
 
 const own: ExaminationTemplateDto = {
     id: 't1',
@@ -28,8 +28,8 @@ const own: ExaminationTemplateDto = {
 describe('ExaminationTemplateEditorDialogComponent', () => {
     let fixture: ComponentFixture<ExaminationTemplateEditorDialogComponent>;
     let cmp: ExaminationTemplateEditorDialogComponent;
-    let templates: jasmine.SpyObj<ExaminationTemplatesService>;
-    let products: jasmine.SpyObj<ProductService>;
+    let templates: MockedObject<ExaminationTemplatesService>;
+    let products: MockedObject<ProductService>;
     let saved: ExaminationTemplateDto[];
     let conflicts: string[];
 
@@ -56,9 +56,14 @@ describe('ExaminationTemplateEditorDialogComponent', () => {
     }
 
     beforeEach(() => {
-        templates = jasmine.createSpyObj<ExaminationTemplatesService>('ExaminationTemplatesService', ['create', 'update']);
-        products = jasmine.createSpyObj<ProductService>('ProductService', ['getProducts']);
-        products.getProducts.and.returnValue(
+        templates = {
+            create: vi.fn().mockName('ExaminationTemplatesService.create'),
+            update: vi.fn().mockName('ExaminationTemplatesService.update')
+        } as unknown as MockedObject<ExaminationTemplatesService>;
+        products = {
+            getProducts: vi.fn().mockName('ProductService.getProducts')
+        } as unknown as MockedObject<ProductService>;
+        products.getProducts.mockReturnValue(
             of({
                 items: [product('p1', 'Kulak damlası', 'Medicine'), product('s1', 'Kulak temizliği', 'Service'), product('v1', 'Kuduz aşısı', 'Vaccine')],
                 page: 1,
@@ -82,45 +87,43 @@ describe('ExaminationTemplateEditorDialogComponent', () => {
     });
 
     it('düzenleme tam gövdeyi rowVersion ile PUT eder; boş metin null gider', async () => {
-        templates.update.and.returnValue(of(own));
+        templates.update.mockReturnValue(of(own));
         await open('edit', own);
         cmp.removeLine(1);
         cmp.submit();
-        expect(templates.update).toHaveBeenCalledOnceWith(
-            't1',
-            { name: 'Otitis paketi', visitReason: 'Kulak kaşıntısı', findings: null, plan: 'Kontrol: 7 gün', lines: [{ productId: 'p1', quantity: 2 }] },
-            'R1'
-        );
+        expect(templates.update).toHaveBeenCalledTimes(1);
+        expect(templates.update).toHaveBeenCalledWith('t1', { name: 'Otitis paketi', visitReason: 'Kulak kaşıntısı', findings: null, plan: 'Kontrol: 7 gün', lines: [{ productId: 'p1', quantity: 2 }] }, 'R1');
         expect(saved).toEqual([own]);
-        expect(cmp.visible()).toBeFalse();
+        expect(cmp.visible()).toBe(false);
     });
 
     it('kopyala ve düzenle içeriği yeni adla POST eder', async () => {
-        templates.create.and.returnValue(of(own));
+        templates.create.mockReturnValue(of(own));
         const system = { ...own, id: 'sys', isSystem: true, lines: [] };
 
         await open('copy', system);
         expect(cmp.form.controls.name.value).toBe('Otitis paketi (kopya)');
         cmp.submit();
-        expect(templates.create).toHaveBeenCalledOnceWith(jasmine.objectContaining({ name: 'Otitis paketi (kopya)', visitReason: 'Kulak kaşıntısı', lines: [] }));
+        expect(templates.create).toHaveBeenCalledTimes(1);
+        expect(templates.create).toHaveBeenCalledWith(expect.objectContaining({ name: 'Otitis paketi (kopya)', visitReason: 'Kulak kaşıntısı', lines: [] }));
         expect(templates.update).not.toHaveBeenCalled();
     });
 
     it('içerik yoksa veya aynı ürün iki kez varsa kaydetmez', async () => {
         await open('create', null);
         cmp.form.controls.name.setValue('Boş');
-        expect(cmp.form.hasError('contentRequired')).toBeTrue();
+        expect(cmp.form.hasError('contentRequired')).toBe(true);
         cmp.addLine();
         cmp.addLine();
         cmp.lines.at(0).setValue({ productId: 'p1', quantity: 1 });
         cmp.lines.at(1).setValue({ productId: 'p1', quantity: 2 });
-        expect(cmp.form.hasError('duplicateProduct')).toBeTrue();
+        expect(cmp.form.hasError('duplicateProduct')).toBe(true);
         cmp.submit();
         expect(templates.create).not.toHaveBeenCalled();
     });
 
     it('reddedilen satır ürün adıyla bildirilir ve işaretlenir; pencere açık kalır', async () => {
-        templates.create.and.returnValue(throwError(() => new ExaminationTemplateError('Ürün pasif; satırı çıkarın.', 'ExaminationTemplates.ProductInactive', 'p1')));
+        templates.create.mockReturnValue(throwError(() => new ExaminationTemplateError('Ürün pasif; satırı çıkarın.', 'ExaminationTemplates.ProductInactive', 'p1')));
         await open('create', null);
         cmp.form.controls.name.setValue('Yeni');
         cmp.addLine();
@@ -128,15 +131,15 @@ describe('ExaminationTemplateEditorDialogComponent', () => {
         cmp.submit();
         expect(cmp.submitError()).toBe('"Kulak damlası" satırı: Ürün pasif; satırı çıkarın.');
         expect(cmp.errorProductId()).toBe('p1');
-        expect(cmp.visible()).toBeTrue();
+        expect(cmp.visible()).toBe(true);
     });
 
     it('409 sürüm çakışmasında pencere kapanır ve sayfaya bildirilir', async () => {
-        templates.update.and.returnValue(throwError(() => new ExaminationTemplateError('Şablon bu arada değişmiş.', 'ExaminationTemplates.ConcurrencyConflict')));
+        templates.update.mockReturnValue(throwError(() => new ExaminationTemplateError('Şablon bu arada değişmiş.', 'ExaminationTemplates.ConcurrencyConflict')));
         await open('edit', own);
         cmp.removeLine(1);
         cmp.submit();
-        expect(cmp.visible()).toBeFalse();
+        expect(cmp.visible()).toBe(false);
         expect(conflicts).toEqual(['Şablon bu arada değişmiş.']);
     });
 

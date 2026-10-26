@@ -27,17 +27,17 @@ describe('PortalSessionService', () => {
 
     it('refresh token yoksa istek atmadan anonim döner', async () => {
         expect(await session.ensureSession()).toBe('anonymous');
-        expect(session.isAuthenticated()).toBeFalse();
+        expect(session.isAuthenticated()).toBe(false);
     });
 
-    it('açılışta refresh token\'ı döndürür, /me yükler; access token yalnız bellekte kalır', async () => {
+    it("açılışta refresh token'ı döndürür, /me yükler; access token yalnız bellekte kalır", async () => {
         localStorage.setItem(PORTAL_STORAGE_KEYS.refreshToken, 'refresh-0');
         const result = session.ensureSession();
 
         const refresh = await expectOneSoon(http, `${BASE}/auth/refresh`);
 
         expect(refresh.request.body).toEqual({ refreshToken: 'refresh-0' });
-        expect(refresh.request.headers.has('Authorization')).toBeFalse();
+        expect(refresh.request.headers.has('Authorization')).toBe(false);
         refresh.flush(tokens(1));
         const me = await expectOneSoon(http, `${BASE}/me`);
 
@@ -59,16 +59,13 @@ describe('PortalSessionService', () => {
         localStorage.setItem(PORTAL_STORAGE_KEYS.refreshToken, 'refresh-0');
         const result = session.ensureSession();
 
-        (await expectOneSoon(http, `${BASE}/auth/refresh`)).flush(
-            { extensions: { code: 'Portal.Auth.Unauthorized.InvalidRefreshToken' } },
-            { status: 401, statusText: 'Unauthorized' }
-        );
+        (await expectOneSoon(http, `${BASE}/auth/refresh`)).flush({ extensions: { code: 'Portal.Auth.Unauthorized.InvalidRefreshToken' } }, { status: 401, statusText: 'Unauthorized' });
 
         expect(await result).toBe('anonymous');
         expect(localStorage.getItem(PORTAL_STORAGE_KEYS.refreshToken)).toBeNull();
     });
 
-    it('ağ hatasında çevrimdışı döner ve refresh token\'ı korur', async () => {
+    it("ağ hatasında çevrimdışı döner ve refresh token'ı korur", async () => {
         localStorage.setItem(PORTAL_STORAGE_KEYS.refreshToken, 'refresh-0');
         const result = session.ensureSession();
 
@@ -90,7 +87,7 @@ describe('PortalSessionService', () => {
         expect(received).toEqual(['access-2', 'access-2']);
     });
 
-    it('çıkışta refresh token\'ı sunucuya bildirir ve yerel oturumu siler', async () => {
+    it("çıkışta refresh token'ı sunucuya bildirir ve yerel oturumu siler", async () => {
         store.save(tokens(1));
         store.setActiveLinkId('link-1');
         let done = false;
@@ -102,7 +99,7 @@ describe('PortalSessionService', () => {
         expect(req.request.headers.get('Authorization')).toBe('Bearer access-1');
         req.flush(null, { status: 204, statusText: 'No Content' });
 
-        expect(done).toBeTrue();
+        expect(done).toBe(true);
         expect(store.accessToken()).toBeNull();
         expect(localStorage.getItem(PORTAL_STORAGE_KEYS.refreshToken)).toBeNull();
         expect(localStorage.getItem(PORTAL_STORAGE_KEYS.activeLinkId)).toBeNull();
@@ -116,7 +113,7 @@ describe('PortalSessionService', () => {
         session.loadMe().subscribe();
         http.expectOne(`${BASE}/me`).flush(twoLinks);
 
-        expect(session.needsClinicSelection()).toBeTrue();
+        expect(session.needsClinicSelection()).toBe(true);
 
         session.selectLink('link-2');
 
@@ -128,7 +125,7 @@ describe('PortalSessionService', () => {
         const panelKeys = ['veteriner.access_token', 'veteriner.refresh_token', 'veteriner.active_clinic_id', 'veteriner.active_clinic_name'];
 
         Object.values(PORTAL_STORAGE_KEYS).forEach((key) => {
-            expect(key.startsWith('vetinity.portal.')).toBeTrue();
+            expect(key.startsWith('vetinity.portal.')).toBe(true);
             expect(panelKeys).not.toContain(key);
         });
     });

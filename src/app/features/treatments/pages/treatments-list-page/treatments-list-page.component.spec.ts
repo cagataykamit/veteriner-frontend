@@ -11,7 +11,10 @@ import { TreatmentsListPageComponent } from './treatments-list-page.component';
 
 describe('TreatmentsListPageComponent — detaydan gelen hayvan süzgeci', () => {
     const setup = (query: Record<string, string>) => {
-        const getTreatments = jasmine.createSpy('getTreatments').and.returnValue(of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }));
+        const getTreatments = vi
+            .fn()
+            .mockName('getTreatments')
+            .mockReturnValue(of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }));
 
         TestBed.configureTestingModule({
             imports: [TreatmentsListPageComponent],
@@ -33,7 +36,7 @@ describe('TreatmentsListPageComponent — detaydan gelen hayvan süzgeci', () =>
     it('petId sorgu parametresi API çağrısına gider ve süzgeç etiketi görünür', () => {
         const { getTreatments, el } = setup({ petId: 'pet-1' });
 
-        expect(getTreatments.calls.mostRecent().args[0].petId).toBe('pet-1');
+        expect(vi.mocked(getTreatments).mock.lastCall![0].petId).toBe('pet-1');
         expect(el.querySelector('[data-testid="context-filter-chip"]')).not.toBeNull();
     });
 
@@ -43,14 +46,14 @@ describe('TreatmentsListPageComponent — detaydan gelen hayvan süzgeci', () =>
         (el.querySelector('[data-testid="context-filter-clear"]') as HTMLButtonElement).click();
         fixture.detectChanges();
 
-        expect(getTreatments.calls.mostRecent().args[0].petId).toBeUndefined();
+        expect(vi.mocked(getTreatments).mock.lastCall![0].petId).toBeUndefined();
         expect(el.querySelector('[data-testid="context-filter-chip"]')).toBeNull();
     });
 
     it('parametre yoksa süzgeç yok', () => {
         const { getTreatments, el } = setup({});
 
-        expect(getTreatments.calls.mostRecent().args[0].petId).toBeUndefined();
+        expect(vi.mocked(getTreatments).mock.lastCall![0].petId).toBeUndefined();
         expect(el.querySelector('[data-testid="context-filter-chip"]')).toBeNull();
     });
 });
@@ -94,11 +97,11 @@ describe('TreatmentsListPageComponent — satırda Düzenle', () => {
     it("Treatments.Update varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", () => {
         const edits = rowEditActions(create([TREATMENTS_UPDATE_CLAIM]));
 
-        expect(edits.length).withContext('tablo + mobil kart').toBe(2);
+        expect(edits.length, 'tablo + mobil kart').toBe(2);
 
         for (const edit of edits) {
             expect(edit.getAttribute('href')).toBe('/panel/treatments/t1/edit');
-            expect(isRightAfterDetail(edit)).toBeTrue();
+            expect(isRightAfterDetail(edit)).toBe(true);
         }
     });
 
@@ -109,6 +112,6 @@ describe('TreatmentsListPageComponent — satırda Düzenle', () => {
         const readOnly = rowEditActions(create([TREATMENTS_UPDATE_CLAIM], true));
 
         expect(readOnly.length).toBe(2);
-        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBeTrue();
+        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBe(true);
     });
 });

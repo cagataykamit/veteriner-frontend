@@ -1,14 +1,5 @@
 import type { ExaminationRelatedSummaryVm } from '@/app/features/examinations/models/examination-vm.model';
-import {
-    buildProcedureRows,
-    FINALIZED_IMAGING_NOTE,
-    FINALIZED_LOCK_MESSAGE,
-    finalizeChecklist,
-    finalizeWarnings,
-    procedureAddState,
-    READ_ONLY_TENANT_MESSAGE,
-    type ProcedureKind
-} from './examination-procedures.utils';
+import { buildProcedureRows, FINALIZED_IMAGING_NOTE, FINALIZED_LOCK_MESSAGE, finalizeChecklist, finalizeWarnings, procedureAddState, READ_ONLY_TENANT_MESSAGE, type ProcedureKind } from './examination-procedures.utils';
 
 const summary = (over: Partial<ExaminationRelatedSummaryVm> = {}): ExaminationRelatedSummaryVm => ({
     examinationId: 'e1',
@@ -40,16 +31,16 @@ describe('procedureAddState', () => {
         for (const kind of ['treatment', 'prescription', 'vaccination'] as ProcedureKind[]) {
             const s = procedureAddState(kind, { ...open, finalized: true });
 
-            expect(s.disabled).withContext(kind).toBeTrue();
-            expect(s.reason).withContext(kind).toBe(FINALIZED_LOCK_MESSAGE);
+            expect(s.disabled, kind).toBe(true);
+            expect(s.reason, kind).toBe(FINALIZED_LOCK_MESSAGE);
         }
     });
 
     it('kesinleşmiş muayenede lab açık, yatış açık ama muayeneye bağlanmaz notu taşır', () => {
-        expect(procedureAddState('lab', { ...open, finalized: true }).disabled).toBeFalse();
+        expect(procedureAddState('lab', { ...open, finalized: true }).disabled).toBe(false);
         const h = procedureAddState('hospitalization', { ...open, finalized: true });
 
-        expect(h.disabled).toBeFalse();
+        expect(h.disabled).toBe(false);
         expect(h.note).toContain('muayenesiz');
     });
 
@@ -57,7 +48,7 @@ describe('procedureAddState', () => {
         expect(procedureAddState('imaging', open)).toEqual({ disabled: false, reason: null, note: null });
         const s = procedureAddState('imaging', { ...open, finalized: true });
 
-        expect(s.disabled).toBeFalse();
+        expect(s.disabled).toBe(false);
         expect(s.note).toBe(FINALIZED_IMAGING_NOTE);
     });
 
@@ -137,10 +128,7 @@ describe('finalizeWarnings', () => {
     });
 
     it('tanı ve plan doluysa ve işlem varsa uyarı yoktur', () => {
-        const w = finalizeWarnings(
-            { assessment: 'Gastrit', plan: '3 gün kontrol' },
-            summary({ treatments: [{ id: 't1', treatmentDateUtc: null, clinicId: null, clinicName: null, title: 'T' }] })
-        );
+        const w = finalizeWarnings({ assessment: 'Gastrit', plan: '3 gün kontrol' }, summary({ treatments: [{ id: 't1', treatmentDateUtc: null, clinicId: null, clinicName: null, title: 'T' }] }));
 
         expect(w).toEqual([]);
     });
@@ -178,17 +166,11 @@ describe('finalizeChecklist', () => {
             ['procedures', false],
             ['pendingCharges', false]
         ]);
-        expect(finalizeWarnings({ assessment: 'Gastrit', plan: '—' }, summary({ pendingChargeCount: 1 }))).toEqual(
-            items.filter((i) => !i.ok).map((i) => i.warning)
-        );
+        expect(finalizeWarnings({ assessment: 'Gastrit', plan: '—' }, summary({ pendingChargeCount: 1 }))).toEqual(items.filter((i) => !i.ok).map((i) => i.warning));
     });
 
     it('özet yokken yalnız tanı ve plan maddeleri; ücret sayısı bilinmiyorsa ücret maddesi yok', () => {
         expect(finalizeChecklist({ assessment: 'x', plan: 'y' }, null).map((i) => i.key)).toEqual(['assessment', 'plan']);
-        expect(finalizeChecklist({ assessment: 'x', plan: 'y' }, summary({ pendingChargeCount: null })).map((i) => i.key)).toEqual([
-            'assessment',
-            'plan',
-            'procedures'
-        ]);
+        expect(finalizeChecklist({ assessment: 'x', plan: 'y' }, summary({ pendingChargeCount: null })).map((i) => i.key)).toEqual(['assessment', 'plan', 'procedures']);
     });
 });

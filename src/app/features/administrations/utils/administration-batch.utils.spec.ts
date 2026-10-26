@@ -38,13 +38,13 @@ describe('suggestAdministrationBatch', () => {
     it('miktar yokken ilk (SKT en yakın) geçerli partiyi önerir', () => {
         const s = suggestAdministrationBatch(info([batch('old', 5, true), batch('a', 1), batch('b', 9)]), null);
 
-        expect(s).toEqual({ kind: 'batch', batch: jasmine.objectContaining({ id: 'a' }) });
+        expect(s).toEqual({ kind: 'batch', batch: expect.objectContaining({ id: 'a' }) });
     });
 
     it('ilk yeterli ve süresi geçmemiş partiyi seçer (bölünmüş düşüm yok)', () => {
         const s = suggestAdministrationBatch(info([batch('a', 1), batch('b', 9)]), 4);
 
-        expect(s).toEqual({ kind: 'batch', batch: jasmine.objectContaining({ id: 'b' }) });
+        expect(s).toEqual({ kind: 'batch', batch: expect.objectContaining({ id: 'b' }) });
     });
 
     it('yeterli parti yoksa yeterli partisiz bakiyeyi önerir', () => {

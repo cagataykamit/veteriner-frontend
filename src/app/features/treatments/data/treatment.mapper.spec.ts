@@ -29,31 +29,31 @@ describe('treatment mapper — liste tarih parametreleri', () => {
         const withDates = treatmentsQueryToHttpParams({ fromDate: '2026-10-08', toDate: '2026-10-09' });
 
         for (const k of ['FromDate', 'ToDate', 'fromDate', 'toDate']) {
-            expect(withDates.has(k)).toBeFalse();
+            expect(withDates.has(k)).toBe(false);
         }
 
         const none = treatmentsQueryToHttpParams({});
 
-        expect(none.has('dateFromUtc')).toBeFalse();
-        expect(none.has('dateToUtc')).toBeFalse();
+        expect(none.has('dateFromUtc')).toBe(false);
+        expect(none.has('dateToUtc')).toBe(false);
     });
 
     it('yalnızca bitiş verilirse yalnızca dateToUtc gider; geçersiz tarih atlanır', () => {
         const onlyTo = treatmentsQueryToHttpParams({ toDate: '2026-10-08' });
 
-        expect(onlyTo.has('dateFromUtc')).toBeFalse();
+        expect(onlyTo.has('dateFromUtc')).toBe(false);
         expect(onlyTo.get('dateToUtc')).toBe('2026-10-08T20:59:59.999Z');
         const invalid = treatmentsQueryToHttpParams({ fromDate: 'abc', toDate: '  ' });
 
-        expect(invalid.has('dateFromUtc')).toBeFalse();
-        expect(invalid.has('dateToUtc')).toBeFalse();
+        expect(invalid.has('dateFromUtc')).toBe(false);
+        expect(invalid.has('dateToUtc')).toBe(false);
     });
 });
 
 describe('treatment mapper — aktif tedavi süzgeci (ADR-025)', () => {
     it('active=true yalnız istenince gider; verilmezse parametre yok (tümü)', () => {
         expect(treatmentsQueryToHttpParams({ petId: 'p1', active: true }).get('active')).toBe('true');
-        expect(treatmentsQueryToHttpParams({ petId: 'p1' }).has('active')).toBeFalse();
-        expect(treatmentsQueryToHttpParams({ active: false }).has('active')).toBeFalse();
+        expect(treatmentsQueryToHttpParams({ petId: 'p1' }).has('active')).toBe(false);
+        expect(treatmentsQueryToHttpParams({ active: false }).has('active')).toBe(false);
     });
 });

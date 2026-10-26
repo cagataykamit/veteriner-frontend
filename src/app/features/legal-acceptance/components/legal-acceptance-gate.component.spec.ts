@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
@@ -21,23 +22,29 @@ const doneStatus: MyLegalAcceptanceStatusDto = { requiresAcceptance: false, pend
 describe('LegalAcceptanceGateComponent', () => {
     let fixture: ComponentFixture<LegalAcceptanceGateComponent>;
     let cmp: LegalAcceptanceGateComponent;
-    let legal: jasmine.SpyObj<LegalAcceptanceService>;
-    let auth: jasmine.SpyObj<AuthService>;
+    let legal: MockedObject<LegalAcceptanceService>;
+    let auth: MockedObject<AuthService>;
 
     const dialog = (): HTMLElement | null => document.querySelector('.legal-acceptance-gate');
     const buttons = (): HTMLButtonElement[] => Array.from(document.querySelectorAll<HTMLButtonElement>('.legal-acceptance-gate button'));
     const acceptButton = (): HTMLButtonElement | undefined => buttons().find((b) => b.textContent?.includes('Kabul et ve devam et'));
 
     function create(status: MyLegalAcceptanceStatusDto): void {
-        legal.getMyStatus.and.returnValue(of(status));
+        legal.getMyStatus.mockReturnValue(of(status));
         fixture = TestBed.createComponent(LegalAcceptanceGateComponent);
         cmp = fixture.componentInstance;
         fixture.detectChanges();
     }
 
     beforeEach(async () => {
-        legal = jasmine.createSpyObj<LegalAcceptanceService>('LegalAcceptanceService', ['getMyStatus', 'accept']);
-        auth = jasmine.createSpyObj<AuthService>('AuthService', ['logoutCurrentSession', 'logout']);
+        legal = {
+            getMyStatus: vi.fn().mockName('LegalAcceptanceService.getMyStatus'),
+            accept: vi.fn().mockName('LegalAcceptanceService.accept')
+        } as unknown as MockedObject<LegalAcceptanceService>;
+        auth = {
+            logoutCurrentSession: vi.fn().mockName('AuthService.logoutCurrentSession'),
+            logout: vi.fn().mockName('AuthService.logout')
+        } as unknown as MockedObject<AuthService>;
         await TestBed.configureTestingModule({
             imports: [LegalAcceptanceGateComponent],
             providers: [provideRouter([]), { provide: LegalAcceptanceService, useValue: legal }, { provide: AuthService, useValue: auth }]
@@ -58,26 +65,26 @@ describe('LegalAcceptanceGateComponent', () => {
         const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('.legal-acceptance-gate-documents a'));
 
         expect(links.map((a) => a.getAttribute('href'))).toEqual(['/kullanim-sartlari', '/gizlilik']);
-        expect(links.every((a) => a.target === '_blank')).toBeTrue();
+        expect(links.every((a) => a.target === '_blank')).toBe(true);
         expect(dialog()?.textContent).toContain('Sürüm 0.1 (taslak)');
         expect(document.querySelector('.legal-acceptance-gate .p-dialog-close-button')).toBeNull();
-        expect(buttons().some((b) => b.textContent?.includes('Çıkış yap'))).toBeTrue();
+        expect(buttons().some((b) => b.textContent?.includes('Çıkış yap'))).toBe(true);
     });
 
     it('onay kutusu işaretlenmeden kabul düğmesi pasiftir', () => {
         create(pendingStatus);
 
-        expect(acceptButton()?.disabled).toBeTrue();
+        expect(acceptButton()?.disabled).toBe(true);
 
         cmp.consent.set(true);
         fixture.detectChanges();
 
-        expect(acceptButton()?.disabled).toBeFalse();
+        expect(acceptButton()?.disabled).toBe(false);
     });
 
     it('kabul gösterilen sürümleri gönderir ve pencereyi kapatır', () => {
         create(pendingStatus);
-        legal.accept.and.returnValue(of(doneStatus));
+        legal.accept.mockReturnValue(of(doneStatus));
 
         cmp.consent.set(true);
         cmp.accept();
@@ -86,7 +93,7 @@ describe('LegalAcceptanceGateComponent', () => {
         expect(legal.accept).toHaveBeenCalledWith(pendingStatus.pendingDocuments);
         expect(cmp.pending()).toEqual([]);
         // Kapanış animasyonu sürerken öğe DOM'da kalabilir; görünürlük bekleyen listeye bağlıdır.
-        expect(dialog()?.classList.contains('p-dialog-leave-active') ?? true).toBeTrue();
+        expect(dialog()?.classList.contains('p-dialog-leave-active') ?? true).toBe(true);
     });
 
     it('409 VersionOutdated: durumu yeniden okur, yeni sürümü gösterir ve onayı sıfırlar', () => {
@@ -94,22 +101,22 @@ describe('LegalAcceptanceGateComponent', () => {
         const outdated = new HttpErrorResponse({ status: 409, error: { status: 409, extensions: { code: LEGAL_VERSION_OUTDATED_CODE } } });
         const newer: MyLegalAcceptanceStatusDto = { requiresAcceptance: true, pendingDocuments: [{ documentType: 'Terms', version: '1.0' }] };
 
-        legal.accept.and.returnValue(throwError(() => outdated));
-        legal.getMyStatus.and.returnValue(of(newer));
+        legal.accept.mockReturnValue(throwError(() => outdated));
+        legal.getMyStatus.mockReturnValue(of(newer));
         cmp.consent.set(true);
         cmp.accept();
         fixture.detectChanges();
 
         expect(legal.getMyStatus).toHaveBeenCalledTimes(2);
         expect(cmp.pending()).toEqual(newer.pendingDocuments);
-        expect(cmp.consent()).toBeFalse();
+        expect(cmp.consent()).toBe(false);
         expect(document.querySelector('.legal-acceptance-gate-error')?.textContent?.trim()).toBe(LEGAL_ACCEPTANCE_CODE_MESSAGES[LEGAL_VERSION_OUTDATED_CODE]);
         expect(dialog()?.textContent).toContain('Sürüm 1.0');
         expect(dialog()?.textContent).not.toContain('(taslak)');
     });
 
     it('durum okunamazsa paneli engellemez', () => {
-        legal.getMyStatus.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+        legal.getMyStatus.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
         fixture = TestBed.createComponent(LegalAcceptanceGateComponent);
         fixture.detectChanges();
 
@@ -120,8 +127,8 @@ describe('LegalAcceptanceGateComponent', () => {
         create(pendingStatus);
         const router = TestBed.inject(Router);
 
-        spyOn(router, 'navigate').and.resolveTo(true);
-        auth.logoutCurrentSession.and.returnValue(of({ success: true }));
+        vi.spyOn(router, 'navigate').mockResolvedValue(true);
+        auth.logoutCurrentSession.mockReturnValue(of({ success: true }));
 
         cmp.logout();
 

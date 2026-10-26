@@ -9,15 +9,15 @@ describe('stok: kullanılabilir / süresi geçmiş', () => {
 
         expect(vm.availableText).toBe('3');
         expect(vm.expiredText).toBe('5');
-        expect(vm.hasExpired).toBeTrue();
-        expect(vm.isBelowMinimum).toBeTrue();
+        expect(vm.hasExpired).toBe(true);
+        expect(vm.isBelowMinimum).toBe(true);
         expect(vm.statusLabel).toBe('Düşük stok');
     });
 
     it('toplam 8 > minimum 5 olsa da sunucu bayrağı false ise istemci yeniden hesaplamaz', () => {
         const vm = mapProductStockDtoToVm({ ...base, availableQuantity: 8, expiredQuantity: 0, isBelowMinimum: false });
 
-        expect(vm.hasExpired).toBeFalse();
+        expect(vm.hasExpired).toBe(false);
         expect(vm.statusLabel).toBe('Yeterli');
     });
 

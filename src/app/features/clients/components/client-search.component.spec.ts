@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -25,16 +26,19 @@ describe('ClientSearchComponent', () => {
     let fixture: ComponentFixture<HostComponent>;
     let host: HostComponent;
     let cmp: ClientSearchComponent;
-    let search: jasmine.SpyObj<ClientSearchService>;
+    let search: MockedObject<ClientSearchService>;
     let claims: Set<string>;
     let mutationBlocked: boolean;
 
     beforeEach(async () => {
         claims = new Set(['Clients.Create']);
         mutationBlocked = false;
-        search = jasmine.createSpyObj<ClientSearchService>('ClientSearchService', ['search', 'getById']);
-        search.search.and.returnValue(of([ali]));
-        search.getById.and.returnValue(of(ali));
+        search = {
+            search: vi.fn().mockName('ClientSearchService.search'),
+            getById: vi.fn().mockName('ClientSearchService.getById')
+        } as unknown as MockedObject<ClientSearchService>;
+        search.search.mockReturnValue(of([ali]));
+        search.getById.mockReturnValue(of(ali));
         await TestBed.configureTestingModule({
             imports: [HostComponent],
             providers: [
@@ -88,17 +92,18 @@ describe('ClientSearchComponent', () => {
 
     it('arama sunucuya gider ve sonuçlar listelenir', () => {
         cmp.onComplete({ query: 'ali', originalEvent: new Event('x') });
-        expect(search.search).toHaveBeenCalledOnceWith('ali');
+        expect(search.search).toHaveBeenCalledTimes(1);
+        expect(search.search).toHaveBeenCalledWith('ali');
         expect(cmp.suggestions()).toEqual([ali]);
     });
 
     it('arama hatası boş liste ve Türkçe mesaj olur', () => {
-        search.search.and.returnValue(throwError(() => new Error('Müşteri listesi yüklenemedi.')));
+        search.search.mockReturnValue(throwError(() => new Error('Müşteri listesi yüklenemedi.')));
         cmp.onComplete({ query: 'ali', originalEvent: new Event('x') });
         expect(cmp.suggestions()).toEqual([]);
         expect(cmp.searchError()).toBe('Müşteri listesi yüklenemedi.');
         cmp.onComplete({ query: 'ali', originalEvent: new Event('x') });
-        search.search.and.returnValue(of([]));
+        search.search.mockReturnValue(of([]));
         cmp.onComplete({ query: 'veli', originalEvent: new Event('x') });
         expect(cmp.searchError()).toBeNull();
     });
@@ -119,19 +124,20 @@ describe('ClientSearchComponent', () => {
 
     it('formdan gelen kimlik için etiket sunucudan çözülür; boş değer seçimi temizler', () => {
         host.control.setValue('c1');
-        expect(search.getById).toHaveBeenCalledOnceWith('c1');
+        expect(search.getById).toHaveBeenCalledTimes(1);
+        expect(search.getById).toHaveBeenCalledWith('c1');
         expect(cmp.model()).toEqual(ali);
         host.control.setValue('');
         expect(cmp.model()).toBeNull();
     });
 
     it('"Yeni müşteri ekle" yalnız Clients.Create varken ve salt okunur değilken görünür', () => {
-        expect(cmp.canCreate()).toBeTrue();
+        expect(cmp.canCreate()).toBe(true);
         claims.clear();
-        expect(cmp.canCreate()).toBeFalse();
+        expect(cmp.canCreate()).toBe(false);
         claims.add('Clients.Create');
         mutationBlocked = true;
-        expect(cmp.canCreate()).toBeFalse();
+        expect(cmp.canCreate()).toBe(false);
     });
 
     it('hızlı kayıtla oluşan müşteri otomatik seçilir', () => {
@@ -142,6 +148,6 @@ describe('ClientSearchComponent', () => {
 
     it('devre dışı bırakılabilir', () => {
         host.control.disable();
-        expect(cmp.disabled()).toBeTrue();
+        expect(cmp.disabled()).toBe(true);
     });
 });

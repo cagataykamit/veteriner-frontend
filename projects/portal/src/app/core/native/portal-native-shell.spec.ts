@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { Location } from '@angular/common';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -13,24 +14,34 @@ type Listener = (event: never) => void;
 
 describe('PortalNativeShell', () => {
     let listeners: Map<string, Listener>;
-    let app: { addListener: jasmine.Spy; exitApp: jasmine.Spy };
-    let splashScreen: { hide: jasmine.Spy };
-    let systemBars: { setStyle: jasmine.Spy };
+    let app: {
+        addListener: Mock;
+        exitApp: Mock;
+    };
+    let splashScreen: {
+        hide: Mock;
+    };
+    let systemBars: {
+        setStyle: Mock;
+    };
     let router: Router;
     let location: Location;
 
     beforeEach(() => {
         listeners = new Map();
         app = {
-            addListener: jasmine.createSpy('addListener').and.callFake((name: string, fn: Listener) => {
-                listeners.set(name, fn);
+            addListener: vi
+                .fn()
+                .mockName('addListener')
+                .mockImplementation((name: string, fn: Listener) => {
+                    listeners.set(name, fn);
 
-                return Promise.resolve({ remove: () => Promise.resolve() });
-            }),
-            exitApp: jasmine.createSpy('exitApp').and.resolveTo()
+                    return Promise.resolve({ remove: () => Promise.resolve() });
+                }),
+            exitApp: vi.fn().mockName('exitApp').mockResolvedValue(undefined)
         };
-        splashScreen = { hide: jasmine.createSpy('hide').and.resolveTo() };
-        systemBars = { setStyle: jasmine.createSpy('setStyle').and.resolveTo() };
+        splashScreen = { hide: vi.fn().mockName('hide').mockResolvedValue(undefined) };
+        systemBars = { setStyle: vi.fn().mockName('setStyle').mockResolvedValue(undefined) };
 
         TestBed.configureTestingModule({
             providers: [
@@ -64,7 +75,8 @@ describe('PortalNativeShell', () => {
 
         expect(app.addListener).toHaveBeenCalledTimes(2);
         expect([...listeners.keys()]).toEqual(['appUrlOpen', 'backButton']);
-        expect(systemBars.setStyle).toHaveBeenCalledOnceWith({ style: SystemBarsStyle.Light });
+        expect(systemBars.setStyle).toHaveBeenCalledTimes(1);
+        expect(systemBars.setStyle).toHaveBeenCalledWith({ style: SystemBarsStyle.Light });
     });
 
     it('portal adresindeki davet bağlantısını uygulama içinde açar', async () => {
@@ -77,7 +89,7 @@ describe('PortalNativeShell', () => {
     });
 
     it('başka alan adındaki bağlantıyı yok sayar', () => {
-        const navigate = spyOn(router, 'navigateByUrl').and.callThrough();
+        const navigate = vi.spyOn(router, 'navigateByUrl');
 
         start();
         emit('appUrlOpen', { url: 'https://example.com/invite?token=abc' });
@@ -97,7 +109,7 @@ describe('PortalNativeShell', () => {
     });
 
     it('geri tuşu iç sayfada önceki ekrana döner', async () => {
-        const back = spyOn(location, 'back');
+        const back = vi.spyOn(location, 'back').mockReturnValue(undefined);
 
         start();
         await router.navigateByUrl('/pets/p-1');
@@ -108,7 +120,7 @@ describe('PortalNativeShell', () => {
     });
 
     it('geri tuşu ana sayfada uygulamadan çıkar', async () => {
-        const back = spyOn(location, 'back');
+        const back = vi.spyOn(location, 'back').mockReturnValue(undefined);
 
         start();
         await router.navigateByUrl('/');

@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -12,7 +13,7 @@ const STATE_KEY = 'panel:reports:end-of-day:listState';
 const zeroAmounts = { collectedAmount: 0, collectedCount: 0, voidedAmount: 0, voidedCount: 0, netAmount: 0, salesCollectedAmount: 0 };
 
 describe('EndOfDayPageComponent', () => {
-    let api: jasmine.SpyObj<ApiClient>;
+    let api: MockedObject<ApiClient>;
     let claims: Set<string>;
     let openItems: Record<string, number | null>;
 
@@ -24,14 +25,17 @@ describe('EndOfDayPageComponent', () => {
         return fixture;
     }
 
-    const calls = (suffix: string) => api.get.calls.allArgs().filter(([path]) => (path as string).endsWith(suffix));
+    const calls = (suffix: string) => vi.mocked(api.get).mock.calls.filter(([path]) => (path as string).endsWith(suffix));
 
     beforeEach(() => {
         sessionStorage.clear();
         claims = new Set(['Payments.Read', 'Charges.Read', 'Visits.Read', 'LabResults.Read']);
         openItems = { unchargedVisitCount: 2, outstandingVisitCount: 1, outstandingAmount: 350, awaitingLabCount: 3, incompleteVisitCount: 4 };
-        api = jasmine.createSpyObj<ApiClient>('ApiClient', ['get', 'getBlob']);
-        api.get.and.callFake(((path: string) => {
+        api = {
+            get: vi.fn().mockName('ApiClient.get'),
+            getBlob: vi.fn().mockName('ApiClient.getBlob')
+        } as unknown as MockedObject<ApiClient>;
+        api.get.mockImplementation(((path: string) => {
             if (path.endsWith('/daily-transactions')) {
                 return of({
                     currency: 'TRY',
@@ -54,8 +58,35 @@ describe('EndOfDayPageComponent', () => {
                         correctionCount: 0
                     },
                     items: [
-                        { occurredAtUtc: '2026-10-14T07:00:00Z', kind: 'Payment', referenceId: 'p1', clientId: 'c1', clientName: 'Ayşe Demir', petId: 'pt1', petName: 'Pamuk', amount: 600, paymentMethod: 'Cash', isDirectSale: false, isVoided: true, performedByName: 'Sema', clinicId: 'k1' },
-                        { occurredAtUtc: '2026-10-14T13:00:00Z', kind: 'PaymentVoid', referenceId: 'p1', clientId: 'c1', clientName: 'Ayşe Demir', amount: 600, paymentMethod: 'Cash', isDirectSale: false, isVoided: true, reason: 'Hatalı giriş', performedByName: 'Yönetici', clinicId: 'k1' }
+                        {
+                            occurredAtUtc: '2026-10-14T07:00:00Z',
+                            kind: 'Payment',
+                            referenceId: 'p1',
+                            clientId: 'c1',
+                            clientName: 'Ayşe Demir',
+                            petId: 'pt1',
+                            petName: 'Pamuk',
+                            amount: 600,
+                            paymentMethod: 'Cash',
+                            isDirectSale: false,
+                            isVoided: true,
+                            performedByName: 'Sema',
+                            clinicId: 'k1'
+                        },
+                        {
+                            occurredAtUtc: '2026-10-14T13:00:00Z',
+                            kind: 'PaymentVoid',
+                            referenceId: 'p1',
+                            clientId: 'c1',
+                            clientName: 'Ayşe Demir',
+                            amount: 600,
+                            paymentMethod: 'Cash',
+                            isDirectSale: false,
+                            isVoided: true,
+                            reason: 'Hatalı giriş',
+                            performedByName: 'Yönetici',
+                            clinicId: 'k1'
+                        }
                     ]
                 });
             }
@@ -78,7 +109,7 @@ describe('EndOfDayPageComponent', () => {
 
             return of({ from: '2026-10-14', to: '2026-10-14', clinicId: 'k1', openItems });
         }) as never);
-        api.getBlob.and.returnValue(of(new HttpResponse({ body: new Blob(['x']), headers: new HttpHeaders() })));
+        api.getBlob.mockReturnValue(of(new HttpResponse({ body: new Blob(['x']), headers: new HttpHeaders() })));
         TestBed.configureTestingModule({
             providers: [
                 provideRouter([]),
@@ -168,11 +199,11 @@ describe('EndOfDayPageComponent', () => {
 
         fixture.componentInstance.state.exportCsv();
         fixture.componentInstance.state.exportXlsx();
-        const [csvPath, csvParams] = api.getBlob.calls.argsFor(0) as [string, HttpParams];
+        const [csvPath, csvParams] = vi.mocked(api.getBlob).mock.calls[0] as [string, HttpParams];
 
         expect(csvPath).toBe('/api/v1/reports/daily-transactions/export');
-        expect(api.getBlob.calls.argsFor(1)[0]).toBe('/api/v1/reports/daily-transactions/export-xlsx');
-        expect(csvParams.has('page')).toBeFalse();
+        expect(vi.mocked(api.getBlob).mock.calls[1][0]).toBe('/api/v1/reports/daily-transactions/export-xlsx');
+        expect(csvParams.has('page')).toBe(false);
         expect(csvParams.get('from')).toBe(localDateYyyyMmDd());
     });
 

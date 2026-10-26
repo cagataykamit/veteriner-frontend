@@ -73,7 +73,7 @@ describe('ExaminationProceduresSectionComponent', () => {
         cmp.open('treatment');
         fixture.detectChanges();
 
-        expect(cmp.drawerVisible()).toBeTrue();
+        expect(cmp.drawerVisible()).toBe(true);
         const ctx = cmp.contextParams();
 
         expect(ctx.get('clientId')).toBe('client-1');
@@ -87,7 +87,7 @@ describe('ExaminationProceduresSectionComponent', () => {
         cmp.open('treatment');
         cmp.onSaved('treatment');
 
-        expect(cmp.drawerVisible()).toBeFalse();
+        expect(cmp.drawerVisible()).toBe(false);
         expect(changed).toBe(1);
         expect(cmp.notice()).toBe('Tedavi kaydedildi.');
     });
@@ -153,7 +153,7 @@ describe('ExaminationProceduresSectionComponent', () => {
         cmp.open('treatment');
         fixture.detectChanges();
 
-        expect(cmp.drawerVisible()).toBeFalse();
+        expect(cmp.drawerVisible()).toBe(false);
         expect(el.querySelector('[data-testid="procedure-lock-reason"]')?.textContent).toContain('Muayene kesinleşti');
     });
 
@@ -163,13 +163,13 @@ describe('ExaminationProceduresSectionComponent', () => {
 
         expect(el.querySelector('[data-testid="procedure-lock-reason"]')?.textContent).toContain('salt okunur');
         cmp.open('treatment');
-        expect(cmp.drawerVisible()).toBeFalse();
+        expect(cmp.drawerVisible()).toBe(false);
     });
 
     it('müşteri veya hayvanı olmayan muayenede ekleme kapalıdır', () => {
         create({ ...exam, petId: null } as ExaminationDetailVm);
 
-        expect(cmp.state('treatment').disabled).toBeTrue();
+        expect(cmp.state('treatment').disabled).toBe(true);
         expect(cmp.state('treatment').reason).toContain('hasta');
     });
 });

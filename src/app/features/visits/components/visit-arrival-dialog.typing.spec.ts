@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -15,10 +16,13 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 describe('VisitArrivalDialogComponent (hasta arama alanına yazma)', () => {
     let fixture: ComponentFixture<VisitArrivalDialogComponent>;
     let cmp: VisitArrivalDialogComponent;
-    let getPets: jasmine.Spy;
+    let getPets: Mock;
 
     beforeEach(async () => {
-        getPets = jasmine.createSpy('getPets').and.returnValue(of({ items: [{ id: 'p1', clientId: 'cl1', name: 'Pamuk', speciesName: 'Kedi' }] }));
+        getPets = vi
+            .fn()
+            .mockName('getPets')
+            .mockReturnValue(of({ items: [{ id: 'p1', clientId: 'cl1', name: 'Pamuk', speciesName: 'Kedi' }] }));
         await TestBed.configureTestingModule({
             imports: [VisitArrivalDialogComponent],
             providers: [
@@ -39,9 +43,9 @@ describe('VisitArrivalDialogComponent (hasta arama alanına yazma)', () => {
     it('yazılan metin, dialog açılış animasyonu bittikten sonra da silinmez; arama tetiklenir; seçilince geçerli olur', async () => {
         const input = document.querySelector('#va-pet') as HTMLInputElement;
 
-        expect(input).withContext('arama alanı render edilmeli').not.toBeNull();
-        expect(input.disabled).toBeFalse();
-        expect(input.readOnly).toBeFalse();
+        expect(input, 'arama alanı render edilmeli').not.toBeNull();
+        expect(input.disabled).toBe(false);
+        expect(input.readOnly).toBe(false);
 
         input.focus();
         input.value = 'pam';
@@ -51,11 +55,12 @@ describe('VisitArrivalDialogComponent (hasta arama alanına yazma)', () => {
         fixture.detectChanges();
 
         expect(input.value).toBe('pam');
-        expect(getPets).toHaveBeenCalledOnceWith({ page: 1, pageSize: 10, search: 'pam', status: 'Active' });
+        expect(getPets).toHaveBeenCalledTimes(1);
+        expect(getPets).toHaveBeenCalledWith({ page: 1, pageSize: 10, search: 'pam', status: 'Active' });
         expect(cmp.petSuggestions().length).toBe(1);
-        expect(cmp.form.controls.pet.valid).withContext('yalnızca yazılmış metin geçersiz').toBeFalse();
+        expect(cmp.form.controls.pet.valid, 'yalnızca yazılmış metin geçersiz').toBe(false);
 
         cmp.form.controls.pet.setValue(cmp.petSuggestions()[0]);
-        expect(cmp.form.controls.pet.valid).toBeTrue();
+        expect(cmp.form.controls.pet.valid).toBe(true);
     });
 });

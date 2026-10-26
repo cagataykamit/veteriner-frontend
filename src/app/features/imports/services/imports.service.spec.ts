@@ -66,7 +66,13 @@ describe('ImportsService', () => {
 
         service.validate('b1').subscribe({ error: (e: unknown) => (error = e) });
         http.expectOne('http://api.test/api/v1/imports/batches/b1/validate').flush({ code: 'Imports.AnotherJobRunning' }, { status: 409, statusText: 'Conflict' });
-        expect((error as { status: number }).status).toBe(409);
+        expect(
+            (
+                error as {
+                    status: number;
+                }
+            ).status
+        ).toBe(409);
     });
 
     it('satır süzgeçlerini sorguya ekler, boş olanları eklemez', () => {
@@ -75,7 +81,7 @@ describe('ImportsService', () => {
 
         expect(req.request.params.get('table')).toBe('pets');
         expect(req.request.params.get('status')).toBe('Error');
-        expect(req.request.params.has('code')).toBeFalse();
+        expect(req.request.params.has('code')).toBe(false);
         req.flush({ items: [], page: 1, pageSize: 25, totalItems: 0, totalPages: 0 });
     });
 

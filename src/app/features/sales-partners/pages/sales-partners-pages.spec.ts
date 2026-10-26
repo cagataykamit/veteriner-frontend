@@ -1,14 +1,10 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router, UrlTree } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { platformAdminGuard } from '@/app/core/auth/platform-admin.guard';
-import type {
-    DiscountRedemptionRowDto,
-    SalesPartnerDetailDto,
-    SalesPartnerDto,
-    SalesPartnerSummaryDto
-} from '@/app/features/sales-partners/models/sales-partner.model';
+import type { DiscountRedemptionRowDto, SalesPartnerDetailDto, SalesPartnerDto, SalesPartnerSummaryDto } from '@/app/features/sales-partners/models/sales-partner.model';
 import { SalesPartnersService } from '@/app/features/sales-partners/services/sales-partners.service';
 import { SalesPartnerDetailPageComponent } from './sales-partner-detail-page.component';
 import { SalesPartnersListPageComponent } from './sales-partners-list-page.component';
@@ -17,10 +13,10 @@ const SUMMARY: SalesPartnerSummaryDto = {
     redemptionCount: 3,
     trialCustomerCount: 2,
     paidCustomerCount: 1,
-    revenueNetMinor: 89_910,
-    commissionEarnedMinor: 17_982,
+    revenueNetMinor: 89910,
+    commissionEarnedMinor: 17982,
     commissionPaidMinor: 0,
-    commissionPendingMinor: 17_982,
+    commissionPendingMinor: 17982,
     commissionClawbackMinor: 0
 };
 
@@ -74,10 +70,10 @@ const REDEMPTIONS: DiscountRedemptionRowDto[] = [
                 checkoutSessionId: 's1',
                 billingPeriod: 'Monthly',
                 collectedAtUtc: '2026-11-05T09:00:00Z',
-                grossAmountMinor: 99_900,
-                discountAmountMinor: 9_990,
-                netAmountMinor: 89_910,
-                commissionAmountMinor: 17_982,
+                grossAmountMinor: 99900,
+                discountAmountMinor: 9990,
+                netAmountMinor: 89910,
+                commissionAmountMinor: 17982,
                 status: 'Accrued',
                 paidAtUtc: null,
                 paidNote: null,
@@ -89,22 +85,22 @@ const REDEMPTIONS: DiscountRedemptionRowDto[] = [
 ];
 
 describe('Satış ortakları ekranları (ADR-037)', () => {
-    let service: jasmine.SpyObj<SalesPartnersService>;
+    let service: MockedObject<SalesPartnersService>;
 
     beforeEach(() => {
-        service = jasmine.createSpyObj<SalesPartnersService>('SalesPartnersService', [
-            'list',
-            'get',
-            'redemptions',
-            'markPaid',
-            'setCodeActive',
-            'exportCsv',
-            'cancelCollection'
-        ]);
-        service.list.and.returnValue(of([PARTNER]));
-        service.get.and.returnValue(of(DETAIL));
-        service.redemptions.and.returnValue(of(REDEMPTIONS));
-        service.markPaid.and.returnValue(of(1));
+        service = {
+            list: vi.fn().mockName('SalesPartnersService.list'),
+            get: vi.fn().mockName('SalesPartnersService.get'),
+            redemptions: vi.fn().mockName('SalesPartnersService.redemptions'),
+            markPaid: vi.fn().mockName('SalesPartnersService.markPaid'),
+            setCodeActive: vi.fn().mockName('SalesPartnersService.setCodeActive'),
+            exportCsv: vi.fn().mockName('SalesPartnersService.exportCsv'),
+            cancelCollection: vi.fn().mockName('SalesPartnersService.cancelCollection')
+        } as unknown as MockedObject<SalesPartnersService>;
+        service.list.mockReturnValue(of([PARTNER]));
+        service.get.mockReturnValue(of(DETAIL));
+        service.redemptions.mockReturnValue(of(REDEMPTIONS));
+        service.markPaid.mockReturnValue(of(1));
     });
 
     describe('platformAdminGuard', () => {
@@ -116,7 +112,7 @@ describe('Satış ortakları ekranları (ADR-037)', () => {
             return TestBed.runInInjectionContext(() => platformAdminGuard({} as never, {} as never)) as boolean | UrlTree;
         };
 
-        it('platform yöneticisine izin verir', () => expect(run(true)).toBeTrue());
+        it('platform yöneticisine izin verir', () => expect(run(true)).toBe(true));
 
         it('klinik kullanıcısını bulunamadı sayfasına gönderir', () => {
             const result = run(false);
@@ -155,11 +151,7 @@ describe('Satış ortakları ekranları (ADR-037)', () => {
         beforeEach(async () => {
             await TestBed.configureTestingModule({
                 imports: [SalesPartnerDetailPageComponent],
-                providers: [
-                    provideRouter([]),
-                    { provide: SalesPartnersService, useValue: service },
-                    { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'p1' }) } } }
-                ]
+                providers: [provideRouter([]), { provide: SalesPartnersService, useValue: service }, { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'p1' }) } } }]
             }).compileComponents();
             fixture = TestBed.createComponent(SalesPartnerDetailPageComponent);
             cmp = fixture.componentInstance;
@@ -172,7 +164,7 @@ describe('Satış ortakları ekranları (ADR-037)', () => {
             expect(host.querySelector('[data-testid="sp-code-row"]')?.textContent).toContain('ISIK10');
             expect(host.querySelector('[data-testid="sp-redemption"]')?.textContent).toContain('Pati Klinik');
             expect(host.querySelector('[data-testid="sp-collection-row"]')?.textContent).toContain('Tahakkuk');
-            expect(host.querySelector<HTMLButtonElement>('[data-testid="sp-mark-paid"] button')?.disabled).toBeTrue();
+            expect(host.querySelector<HTMLButtonElement>('[data-testid="sp-mark-paid"] button')?.disabled).toBe(true);
         });
 
         it('seçilen tahakkuk satırlarını tarih ve notla ödendi işaretler', () => {
@@ -182,8 +174,8 @@ describe('Satış ortakları ekranları (ADR-037)', () => {
             cmp.paidNote = ' Havale ';
             cmp.markPaid();
 
-            expect(cmp.selectedIds()).withContext('yeniden yüklemede seçim temizlenir').toEqual([]);
-            const [partnerId, ids, paidAtUtc, note] = service.markPaid.calls.mostRecent().args;
+            expect(cmp.selectedIds(), 'yeniden yüklemede seçim temizlenir').toEqual([]);
+            const [partnerId, ids, paidAtUtc, note] = vi.mocked(service.markPaid).mock.lastCall!;
 
             expect(partnerId).toBe('p1');
             expect(ids).toEqual(['x1']);

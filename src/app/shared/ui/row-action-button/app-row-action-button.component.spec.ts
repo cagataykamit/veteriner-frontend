@@ -45,11 +45,11 @@ describe('AppRowActionButtonComponent', () => {
             const { control, tooltip } = create((h) => (h.action = action));
             const i = control().querySelector('i')!;
 
-            expect(i.classList).withContext(action).toContain('fa-solid');
-            expect(i.classList).withContext(action).toContain(icon);
+            expect(i.classList, action).toContain('fa-solid');
+            expect(i.classList, action).toContain(icon);
             expect(i.getAttribute('aria-hidden')).toBe('true');
-            expect(control().getAttribute('aria-label')).withContext(action).toBe(label);
-            expect(tooltip().content()).withContext(action).toBe(label);
+            expect(control().getAttribute('aria-label'), action).toBe(label);
+            expect(tooltip().content(), action).toBe(label);
             expect(tooltip().tooltipPosition()).toBe('top');
             expect(control().textContent!.trim()).toBe('');
         }
@@ -65,7 +65,7 @@ describe('AppRowActionButtonComponent', () => {
             TestBed.resetTestingModule();
             const { control } = create((h) => (h.action = action));
 
-            expect(control().classList.contains('row-action-button--danger')).withContext(action).toBe(danger);
+            expect(control().classList.contains('row-action-button--danger'), action).toBe(danger);
         }
     });
 

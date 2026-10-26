@@ -1,10 +1,4 @@
-import {
-    mapClientDetailDtoToVm,
-    mapClientKvkkConsentDtoToVm,
-    mapClientKvkkConsentUpdateToApiBody,
-    mapClientUpsertFormValueToCreateRequest,
-    mapCreateClientToApiBody
-} from './client.mapper';
+import { mapClientDetailDtoToVm, mapClientKvkkConsentDtoToVm, mapClientKvkkConsentUpdateToApiBody, mapClientUpsertFormValueToCreateRequest, mapCreateClientToApiBody } from './client.mapper';
 import { parseClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
 import { kvkkConsentStatusLabel, parseKvkkConsentStatus } from '@/app/features/clients/utils/client-kvkk-consent.utils';
 
@@ -36,9 +30,7 @@ describe('client.mapper KVKK rıza (ADR-021)', () => {
             templateVersion: null,
             templateHash: null
         });
-        expect(
-            mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'Declined', kvkkConsentRecordedOn: '2026-10-15', remindersOptedOut: true, rowVersion: 'rv2' })
-        ).withContext('PUT yanıtı Ret sonrası bayrağı taşır (ADR-025)').toEqual({
+        expect(mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'Declined', kvkkConsentRecordedOn: '2026-10-15', remindersOptedOut: true, rowVersion: 'rv2' }), 'PUT yanıtı Ret sonrası bayrağı taşır (ADR-025)').toEqual({
             kvkkConsent: { status: 'Declined', recordedOn: '2026-10-15', recordedByName: null, templateVersion: null, templateHash: null },
             remindersOptedOut: true,
             rowVersion: 'rv2'
@@ -52,15 +44,9 @@ describe('client.mapper KVKK rıza (ADR-021)', () => {
     it('metin sürümü (ADR-032): Kabul/Ret iken sürüm ve tam özet okunur; Yok iken ve geçersiz sürümde boş', () => {
         const hash = 'a'.repeat(64);
 
-        expect(mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'Accepted', kvkkConsentTemplateVersion: 3, kvkkConsentTemplateHash: hash }).kvkkConsent).toEqual(
-            jasmine.objectContaining({ templateVersion: 3, templateHash: hash })
-        );
-        expect(mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'Declined', kvkkConsentTemplateVersion: 0, kvkkConsentTemplateHash: hash }).kvkkConsent.templateVersion)
-            .withContext('varsayılan metin 0 korunur')
-            .toBe(0);
-        expect(mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'None', kvkkConsentTemplateVersion: 3, kvkkConsentTemplateHash: hash }).kvkkConsent).toEqual(
-            jasmine.objectContaining({ templateVersion: null, templateHash: null })
-        );
+        expect(mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'Accepted', kvkkConsentTemplateVersion: 3, kvkkConsentTemplateHash: hash }).kvkkConsent).toEqual(expect.objectContaining({ templateVersion: 3, templateHash: hash }));
+        expect(mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'Declined', kvkkConsentTemplateVersion: 0, kvkkConsentTemplateHash: hash }).kvkkConsent.templateVersion, 'varsayılan metin 0 korunur').toBe(0);
+        expect(mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'None', kvkkConsentTemplateVersion: 3, kvkkConsentTemplateHash: hash }).kvkkConsent).toEqual(expect.objectContaining({ templateVersion: null, templateHash: null }));
         expect(mapClientKvkkConsentDtoToVm({ kvkkConsentStatus: 'Accepted', kvkkConsentTemplateVersion: -1 }).kvkkConsent.templateVersion).toBeNull();
     });
 
@@ -101,13 +87,11 @@ describe('client.mapper iletişim tercihi (ADR-020 S5)', () => {
             remindersOptedOut: false
         });
 
-        expect(mapCreateClientToApiBody(fromForm)).toEqual(
-            jasmine.objectContaining({ fullName: 'Ali Veli', preferredContactChannel: 'None', remindersOptedOut: false })
-        );
+        expect(mapCreateClientToApiBody(fromForm)).toEqual(expect.objectContaining({ fullName: 'Ali Veli', preferredContactChannel: 'None', remindersOptedOut: false }));
 
         const body = mapCreateClientToApiBody({ fullName: 'Ali Veli' });
 
-        expect('preferredContactChannel' in body).toBeFalse();
-        expect('remindersOptedOut' in body).toBeFalse();
+        expect('preferredContactChannel' in body).toBe(false);
+        expect('remindersOptedOut' in body).toBe(false);
     });
 });

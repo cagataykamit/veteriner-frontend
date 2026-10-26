@@ -1,17 +1,5 @@
 import type { SaleProductVm } from '@/app/features/sales/models/sale-vm.model';
-import {
-    type CartLine,
-    cartLineAmount,
-    cartLineError,
-    cartRequestError,
-    cartTotal,
-    effectivePaymentAmount,
-    newCartLine,
-    paymentError,
-    pickScannedProduct,
-    SALE_MAX_LINES,
-    toCreateSaleRequest
-} from './sale-cart.utils';
+import { type CartLine, cartLineAmount, cartLineError, cartRequestError, cartTotal, effectivePaymentAmount, newCartLine, paymentError, pickScannedProduct, SALE_MAX_LINES, toCreateSaleRequest } from './sale-cart.utils';
 
 const product = (over: Partial<SaleProductVm> = {}): SaleProductVm => ({
     id: 'p1',
@@ -31,7 +19,7 @@ const full = { mode: 'full', method: 'Cash', amount: null } as const;
 
 describe('sale-cart.utils', () => {
     it('yeni satır ürünün fiyatı ve miktar 1 ile başlar, parti otomattır', () => {
-        expect(newCartLine(product(), 'k')).toEqual(jasmine.objectContaining({ quantity: 1, unitPrice: 45.5, batchId: '' }));
+        expect(newCartLine(product(), 'k')).toEqual(expect.objectContaining({ quantity: 1, unitPrice: 45.5, batchId: '' }));
     });
 
     it('satır tutarı miktar × birim fiyatın 2 haneye yuvarlanmışıdır; geçersizde 0', () => {
@@ -41,7 +29,12 @@ describe('sale-cart.utils', () => {
     });
 
     it('sepet toplamı kuruş toplamıdır (kayan nokta kayması yok)', () => {
-        expect(cartTotal([{ quantity: 1, unitPrice: 0.1 }, { quantity: 1, unitPrice: 0.2 }])).toBe(0.3);
+        expect(
+            cartTotal([
+                { quantity: 1, unitPrice: 0.1 },
+                { quantity: 1, unitPrice: 0.2 }
+            ])
+        ).toBe(0.3);
         expect(cartTotal([])).toBe(0);
     });
 
@@ -66,7 +59,7 @@ describe('sale-cart.utils', () => {
         const partial = (amount: number | null) => paymentError(100, false, { mode: 'partial', method: 'Cash', amount });
 
         expect(partial(40)).toBeNull();
-        expect(partial(null)).toContain('0\'dan büyük');
+        expect(partial(null)).toContain("0'dan büyük");
         expect(partial(100)).toContain('toplamdan az');
         expect(partial(120)).toContain('toplamdan az');
         expect(paymentError(100, true, { mode: 'partial', method: 'Cash', amount: null })).toBeNull();

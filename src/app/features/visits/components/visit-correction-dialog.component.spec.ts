@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import type { TodayItemVm, VisitVm } from '@/app/features/visits/models/visit-vm.model';
@@ -51,11 +52,13 @@ const visit: VisitVm = {
 describe('VisitCorrectionDialogComponent', () => {
     let fixture: ComponentFixture<VisitCorrectionDialogComponent>;
     let cmp: VisitCorrectionDialogComponent;
-    let visits: jasmine.SpyObj<VisitsService>;
+    let visits: MockedObject<VisitsService>;
     let corrected: VisitVm[];
 
     beforeEach(async () => {
-        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['correctVisit']);
+        visits = {
+            correctVisit: vi.fn().mockName('VisitsService.correctVisit')
+        } as unknown as MockedObject<VisitsService>;
         await TestBed.configureTestingModule({
             imports: [VisitCorrectionDialogComponent],
             providers: [{ provide: VisitsService, useValue: visits }]
@@ -76,7 +79,10 @@ describe('VisitCorrectionDialogComponent', () => {
     });
 
     /** Karma sayfasının betik metinlerini dışarıda bırakmak için yalnız diyalog içeriği okunur. */
-    const dialogText = (): string => Array.from(document.querySelectorAll('.p-dialog')).map((d) => d.textContent ?? '').join(' ');
+    const dialogText = (): string =>
+        Array.from(document.querySelectorAll('.p-dialog'))
+            .map((d) => d.textContent ?? '')
+            .join(' ');
 
     it('etiket "Yapılacak düzeltme *"', () => {
         const label = document.querySelector('label[for="vc-action"]');
@@ -121,24 +127,26 @@ describe('VisitCorrectionDialogComponent', () => {
         cmp.form.controls.reason.setValue('  ab  ');
         cmp.onSubmit();
         expect(visits.correctVisit).not.toHaveBeenCalled();
-        expect(cmp.form.controls.reason.touched).toBeTrue();
+        expect(cmp.form.controls.reason.touched).toBe(true);
     });
 
     it('geçerli düzeltme gerekçeyle gönderilir, diyalog kapanır ve satır güncellenmek üzere bildirilir', () => {
-        visits.correctVisit.and.returnValue(of(visit));
+        visits.correctVisit.mockReturnValue(of(visit));
         cmp.form.controls.action.setValue('InProgress');
         cmp.form.controls.reason.setValue('Yanlış tamamlandı');
         cmp.onSubmit();
 
-        expect(visits.correctVisit).toHaveBeenCalledOnceWith('v1', { action: 'InProgress', reason: 'Yanlış tamamlandı' });
+        expect(visits.correctVisit).toHaveBeenCalledTimes(1);
+
+        expect(visits.correctVisit).toHaveBeenCalledWith('v1', { action: 'InProgress', reason: 'Yanlış tamamlandı' });
         expect(corrected).toEqual([visit]);
-        expect(cmp.visible()).toBeFalse();
+        expect(cmp.visible()).toBe(false);
     });
 
     it('çift tıklama ikinci istek üretmez', () => {
         const pending = new Subject<VisitVm>();
 
-        visits.correctVisit.and.returnValue(pending);
+        visits.correctVisit.mockReturnValue(pending);
         cmp.form.controls.action.setValue('Mistaken');
         cmp.form.controls.reason.setValue('Başka hasta kaydedildi');
         cmp.onSubmit();
@@ -147,24 +155,27 @@ describe('VisitCorrectionDialogComponent', () => {
     });
 
     it('hata mesajı gösterilir ve diyalog açık kalır', () => {
-        visits.correctVisit.and.returnValue(throwError(() => new Error('Muayenesi olan geliş yanlış geliş olarak işaretlenemez.')));
+        visits.correctVisit.mockReturnValue(throwError(() => new Error('Muayenesi olan geliş yanlış geliş olarak işaretlenemez.')));
         cmp.form.controls.action.setValue('Mistaken');
         cmp.form.controls.reason.setValue('Başka hasta kaydedildi');
         cmp.onSubmit();
 
         expect(cmp.submitError()).toBe('Muayenesi olan geliş yanlış geliş olarak işaretlenemez.');
-        expect(cmp.visible()).toBeTrue();
-        expect(cmp.submitting()).toBeFalse();
+        expect(cmp.visible()).toBe(true);
+        expect(cmp.submitting()).toBe(false);
     });
 });
 
 describe('VisitCorrectionDialogComponent — restore modu', () => {
     let fixture: ComponentFixture<VisitCorrectionDialogComponent>;
     let cmp: VisitCorrectionDialogComponent;
-    let visits: jasmine.SpyObj<VisitsService>;
+    let visits: MockedObject<VisitsService>;
 
     beforeEach(async () => {
-        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['correctVisit', 'restoreVisit']);
+        visits = {
+            correctVisit: vi.fn().mockName('VisitsService.correctVisit'),
+            restoreVisit: vi.fn().mockName('VisitsService.restoreVisit')
+        } as unknown as MockedObject<VisitsService>;
         await TestBed.configureTestingModule({
             imports: [VisitCorrectionDialogComponent],
             providers: [{ provide: VisitsService, useValue: visits }]
@@ -185,19 +196,20 @@ describe('VisitCorrectionDialogComponent — restore modu', () => {
     });
 
     it('geçerli gerekçeyle restoreVisit çağrılır, correctVisit çağrılmaz', () => {
-        visits.restoreVisit.and.returnValue(of(visit));
+        visits.restoreVisit.mockReturnValue(of(visit));
         cmp.form.controls.reason.setValue('Yanlışlıkla işaretlendi');
         cmp.onSubmit();
-        expect(visits.restoreVisit).toHaveBeenCalledOnceWith('v1', 'Yanlışlıkla işaretlendi');
+        expect(visits.restoreVisit).toHaveBeenCalledTimes(1);
+        expect(visits.restoreVisit).toHaveBeenCalledWith('v1', 'Yanlışlıkla işaretlendi');
         expect(visits.correctVisit).not.toHaveBeenCalled();
-        expect(cmp.visible()).toBeFalse();
+        expect(cmp.visible()).toBe(false);
     });
 
     it('409 mesajı gösterilir, diyalog açık kalır', () => {
-        visits.restoreVisit.and.returnValue(throwError(() => new Error('Bu hastanın başka açık geliş kaydı var.')));
+        visits.restoreVisit.mockReturnValue(throwError(() => new Error('Bu hastanın başka açık geliş kaydı var.')));
         cmp.form.controls.reason.setValue('Yanlışlıkla işaretlendi');
         cmp.onSubmit();
         expect(cmp.submitError()).toBe('Bu hastanın başka açık geliş kaydı var.');
-        expect(cmp.visible()).toBeTrue();
+        expect(cmp.visible()).toBe(true);
     });
 });

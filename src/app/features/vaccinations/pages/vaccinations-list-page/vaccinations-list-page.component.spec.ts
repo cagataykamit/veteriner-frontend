@@ -13,9 +13,10 @@ const STATE_KEY = 'panel:vaccinations:listState';
 
 describe('VaccinationsListPageComponent — karttan gelen süzgeç bağlantısı', () => {
     const setup = (query: Record<string, string>) => {
-        const getVaccinations = jasmine
-            .createSpy('getVaccinations')
-            .and.returnValue(of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }));
+        const getVaccinations = vi
+            .fn()
+            .mockName('getVaccinations')
+            .mockReturnValue(of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }));
 
         TestBed.configureTestingModule({
             imports: [VaccinationsListPageComponent],
@@ -27,7 +28,7 @@ describe('VaccinationsListPageComponent — karttan gelen süzgeç bağlantısı
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
         });
-        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
         const fixture = TestBed.createComponent(VaccinationsListPageComponent);
 
         fixture.detectChanges();
@@ -40,20 +41,20 @@ describe('VaccinationsListPageComponent — karttan gelen süzgeç bağlantısı
 
     it('status, tarih aralığı ve onlyReceivingCare API çağrısına gider, süzgeç çubuğunda etkin görünür ve adresten kaldırılır', () => {
         const { getVaccinations, navigate, cmp } = setup({ status: '0', fromDate: '2026-10-16', toDate: '2026-10-23', onlyReceivingCare: 'true' });
-        const args = getVaccinations.calls.mostRecent().args[0];
+        const args = vi.mocked(getVaccinations).mock.lastCall![0];
 
         expect(args.status).toBe('0');
         expect(args.fromDate).toBe('2026-10-16');
         expect(args.toDate).toBe('2026-10-23');
-        expect(args.onlyReceivingCare).toBeTrue();
+        expect(args.onlyReceivingCare).toBe(true);
         expect(args.onlyOverdue).toBeUndefined();
-        expect(cmp.isStatusActive()).toBeTrue();
-        expect(cmp.isFromDateActive()).toBeTrue();
-        expect(cmp.isToDateActive()).toBeTrue();
-        expect(cmp.isReceivingCareActive()).toBeTrue();
+        expect(cmp.isStatusActive()).toBe(true);
+        expect(cmp.isFromDateActive()).toBe(true);
+        expect(cmp.isToDateActive()).toBe(true);
+        expect(cmp.isReceivingCareActive()).toBe(true);
         expect(navigate).toHaveBeenCalledWith(
             [],
-            jasmine.objectContaining({
+            expect.objectContaining({
                 queryParams: { status: null, fromDate: null, toDate: null, onlyReceivingCare: null, hbsStatus: null, overdue: null },
                 replaceUrl: true
             })
@@ -64,34 +65,34 @@ describe('VaccinationsListPageComponent — karttan gelen süzgeç bağlantısı
         sessionStorage.setItem(STATE_KEY, JSON.stringify({ search: 'eski', status: '1', fromDate: '2025-01-01', toDate: '2025-01-31', page: 3, pageSize: 20 }));
 
         const { getVaccinations } = setup({ status: '0', fromDate: '2026-10-16', onlyReceivingCare: 'true' });
-        const args = getVaccinations.calls.mostRecent().args[0];
+        const args = vi.mocked(getVaccinations).mock.lastCall![0];
 
         expect(args.search).toBeUndefined();
         expect(args.toDate).toBeUndefined();
         expect(args.page).toBe(1);
-        expect(JSON.parse(sessionStorage.getItem(STATE_KEY)!)).toEqual(jasmine.objectContaining({ status: '0', fromDate: '2026-10-16', onlyReceivingCare: true }));
+        expect(JSON.parse(sessionStorage.getItem(STATE_KEY)!)).toEqual(expect.objectContaining({ status: '0', fromDate: '2026-10-16', onlyReceivingCare: true }));
     });
 
     it('süzgeç parametresi yoksa oturum durumu (yaşayanlar süzgeci dahil) korunur; Temizle süzgeci kaldırır', () => {
         sessionStorage.setItem(STATE_KEY, JSON.stringify({ search: '', status: '2', fromDate: '', toDate: '', page: 2, pageSize: 10, onlyReceivingCare: true }));
 
         const { getVaccinations, cmp } = setup({ status: 'x' });
-        const args = getVaccinations.calls.mostRecent().args[0];
+        const args = vi.mocked(getVaccinations).mock.lastCall![0];
 
         expect(args.status).toBe('2');
-        expect(args.onlyReceivingCare).toBeTrue();
+        expect(args.onlyReceivingCare).toBe(true);
         expect(args.page).toBe(2);
 
         cmp.resetFilters();
-        expect(getVaccinations.calls.mostRecent().args[0].onlyReceivingCare).toBeUndefined();
-        expect(cmp.isReceivingCareActive()).toBeFalse();
+        expect(vi.mocked(getVaccinations).mock.lastCall![0].onlyReceivingCare).toBeUndefined();
+        expect(cmp.isReceivingCareActive()).toBe(false);
     });
 
     it('gecikmiş derin bağlantısı (overdue=true) önceliklidir', () => {
         const { getVaccinations } = setup({ overdue: 'true', fromDate: '2026-10-16' });
-        const args = getVaccinations.calls.mostRecent().args[0];
+        const args = vi.mocked(getVaccinations).mock.lastCall![0];
 
-        expect(args.onlyOverdue).toBeTrue();
+        expect(args.onlyOverdue).toBe(true);
         expect(args.status).toBe('0');
         expect(args.fromDate).toBeUndefined();
     });
@@ -141,11 +142,11 @@ describe('VaccinationsListPageComponent — satırda Düzenle', () => {
     it("Vaccinations.Update ve VaccineDefinitions.Read varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", () => {
         const edits = rowEditActions(create(EDIT_CLAIMS));
 
-        expect(edits.length).withContext('tablo + mobil kart').toBe(2);
+        expect(edits.length, 'tablo + mobil kart').toBe(2);
 
         for (const edit of edits) {
             expect(edit.getAttribute('href')).toBe('/panel/vaccinations/v1/edit');
-            expect(isRightAfterDetail(edit)).toBeTrue();
+            expect(isRightAfterDetail(edit)).toBe(true);
         }
     });
 
@@ -159,6 +160,6 @@ describe('VaccinationsListPageComponent — satırda Düzenle', () => {
         const readOnly = rowEditActions(create(EDIT_CLAIMS, true));
 
         expect(readOnly.length).toBe(2);
-        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBeTrue();
+        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBe(true);
     });
 });

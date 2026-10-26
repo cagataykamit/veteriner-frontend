@@ -142,23 +142,46 @@ export function formatPlanLimit(limit: PricingPlanLimit, unit: string): string |
     return limit === 'coklu' ? `Çok ${unit}` : `${limit} ${unit}`;
 }
 
+/** Ödeme dönemi (BILL-001). */
+export type PricingBillingPeriod = 'monthly' | 'yearly';
+
+/** Yıllık ödemede alınan ay sayısı: 12 ay için 10 ay ("2 ay hediye"). Backend `SubscriptionPricing.YearlyBilledMonths` ile aynı. */
+export const YEARLY_BILLED_MONTHS = 10;
+
+/** `999` → `9990`; aylık tutar yoksa `null`. */
+export function yearlyPriceTry(def: PricingPlanDef): number | null {
+    return def.monthlyPriceTry == null ? null : def.monthlyPriceTry * YEARLY_BILLED_MONTHS;
+}
+
 export interface PricingPriceView {
     /** "₺999" ya da "İletişime geçin". */
     readonly amount: string;
-    /** "/ ay"; teklifli pakette `null`. */
+    /** "/ ay" ya da "/ yıl"; teklifli pakette `null`. */
     readonly unit: string | null;
+    /** Yıllıkta "2 ay hediye · aylık ₺833'e denk"; aksi halde `null`. */
+    readonly note: string | null;
 }
 
-/** Kart ve tablo için aylık fiyat görünümü; tutar ve teklif bilgisi yoksa `null`. */
-export function planPriceView(def: PricingPlanDef): PricingPriceView | null {
+/** Kart ve tablo için fiyat görünümü (varsayılan aylık); tutar ve teklif bilgisi yoksa `null`. */
+export function planPriceView(def: PricingPlanDef, period: PricingBillingPeriod = 'monthly'): PricingPriceView | null {
     if (def.priceOnRequest) {
-        return { amount: 'İletişime geçin', unit: null };
+        return { amount: 'İletişime geçin', unit: null, note: null };
     }
 
-    return def.monthlyPriceTry == null ? null : { amount: formatTry(def.monthlyPriceTry), unit: '/ ay' };
+    const yearly = yearlyPriceTry(def);
+
+    if (def.monthlyPriceTry == null || yearly == null) {
+        return null;
+    }
+
+    if (period === 'monthly') {
+        return { amount: formatTry(def.monthlyPriceTry), unit: '/ ay', note: null };
+    }
+
+    return { amount: formatTry(yearly), unit: '/ yıl', note: `${12 - YEARLY_BILLED_MONTHS} ay hediye · aylık ${formatTry(Math.round(yearly / 12))}'e denk` };
 }
 
-/** "Fiyatlar KDV hariç" — fiyat koşulu notu (aylık faturalandırma; yıllık ödeme ve indirim yok, ADR-035). */
+/** "Fiyatlar KDV hariç" — fiyat koşulu notu (ADR-035; yıllık ödeme BILL-001). */
 export function pricingTermsText(): string {
     return `Fiyatlar ${PRICING_VAT_NOTE}`;
 }

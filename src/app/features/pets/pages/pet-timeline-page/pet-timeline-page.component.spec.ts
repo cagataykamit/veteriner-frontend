@@ -67,7 +67,7 @@ describe('PetTimelinePageComponent', () => {
         responder = () => of(page([item('Examination', 'e1'), item('Treatment', 't1', { relatedExaminationId: 'e1' }), item('Visit', 'v1')]));
         create();
 
-        expect(calls[0]).toEqual(jasmine.objectContaining({ includeVoided: false, types: [], cursor: null, limit: 20 }));
+        expect(calls[0]).toEqual(expect.objectContaining({ includeVoided: false, types: [], cursor: null, limit: 20 }));
         expect(el().querySelectorAll('[data-testid="type-icon"]').length).toBe(3);
         expect(el().querySelectorAll('[data-testid="event-link"]').length).toBe(2);
         expect(el().querySelectorAll('[data-testid="examination-link"]').length).toBe(1);
@@ -75,14 +75,7 @@ describe('PetTimelinePageComponent', () => {
     });
 
     it('uygulama satırı: miktar özeti kırmızı değil, sonradan eklendi rozeti yalnız işaretli satırda', () => {
-        responder = () =>
-            of(
-                page([
-                    item('Administration', 'a1', { summary: '1.5 şişe', addedAfterFinalization: true, relatedExaminationId: 'e1' }),
-                    item('Administration', 'a2', { summary: '1 şişe' }),
-                    item('Visit', 'v1', { summary: 'Acil' })
-                ])
-            );
+        responder = () => of(page([item('Administration', 'a1', { summary: '1.5 şişe', addedAfterFinalization: true, relatedExaminationId: 'e1' }), item('Administration', 'a2', { summary: '1 şişe' }), item('Visit', 'v1', { summary: 'Acil' })]));
         create();
 
         expect(el().querySelectorAll('[data-testid="late-entry"]').length).toBe(1);
@@ -112,7 +105,7 @@ describe('PetTimelinePageComponent', () => {
         (el().querySelector('[data-testid="load-more"]') as HTMLButtonElement).click();
         fixture.detectChanges();
 
-        expect(calls[1]).toEqual(jasmine.objectContaining({ cursor: 'CUR1', includeVoided: false }));
+        expect(calls[1]).toEqual(expect.objectContaining({ cursor: 'CUR1', includeVoided: false }));
         expect(fixture.componentInstance.items().map((i) => i.key)).toEqual(['Visit:v1', 'Visit:v2']);
         expect(el().querySelector('[data-testid="load-more"]')).toBeNull();
     });
@@ -142,14 +135,13 @@ describe('PetTimelinePageComponent', () => {
     });
 
     it('iptal/yanlış işaretli süzgeci açılınca liste baştan, imleçsiz ve includeVoided=true ile istenir; işaretli satır etiketlenir', () => {
-        responder = (q) =>
-            of(page(q.includeVoided ? [item('Vaccination', 'a1', { isVoided: true, status: 'Cancelled' })] : [item('Visit', 'v1')], q.includeVoided ? null : 'CUR1'));
+        responder = (q) => of(page(q.includeVoided ? [item('Vaccination', 'a1', { isVoided: true, status: 'Cancelled' })] : [item('Visit', 'v1')], q.includeVoided ? null : 'CUR1'));
         create();
 
         fixture.componentInstance.setIncludeVoided(true);
         fixture.detectChanges();
 
-        expect(calls[1]).toEqual(jasmine.objectContaining({ includeVoided: true, cursor: null }));
+        expect(calls[1]).toEqual(expect.objectContaining({ includeVoided: true, cursor: null }));
         expect(el().querySelector('[data-testid="voided"]')?.textContent).toContain('İptal / yanlış işaretli');
         expect(fixture.componentInstance.items().length).toBe(1);
     });
@@ -161,7 +153,7 @@ describe('PetTimelinePageComponent', () => {
         fixture.componentInstance.setDateRange('2026-10-10', '2026-10-12');
 
         expect(calls.length).toBe(2);
-        expect(calls[1]).toEqual(jasmine.objectContaining({ fromDate: '2026-10-10', toDate: '2026-10-12', cursor: null }));
+        expect(calls[1]).toEqual(expect.objectContaining({ fromDate: '2026-10-10', toDate: '2026-10-12', cursor: null }));
     });
 
     it('tür seçimi sözleşme sırasıyla types olarak gönderilir', () => {

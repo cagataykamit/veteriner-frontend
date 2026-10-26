@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { firstValueFrom, of, throwError } from 'rxjs';
@@ -32,7 +33,7 @@ const page = (items: ChargeVm[]): ChargesPagedVm => ({ items, page: 1, pageSize:
 
 describe('ChargesListPageComponent', () => {
     let fixture: ComponentFixture<ChargesListPageComponent>;
-    let charges: jasmine.SpyObj<ChargesService>;
+    let charges: MockedObject<ChargesService>;
     let claims: Set<string>;
     let mutationBlocked: boolean;
     let queryClientId: string | null;
@@ -56,8 +57,11 @@ describe('ChargesListPageComponent', () => {
     };
 
     beforeEach(() => {
-        charges = jasmine.createSpyObj<ChargesService>('ChargesService', ['getCharges', 'voidCharge']);
-        charges.getCharges.and.returnValue(of(page([row])));
+        charges = {
+            getCharges: vi.fn().mockName('ChargesService.getCharges'),
+            voidCharge: vi.fn().mockName('ChargesService.voidCharge')
+        } as unknown as MockedObject<ChargesService>;
+        charges.getCharges.mockReturnValue(of(page([row])));
         claims = new Set(['Charges.Read']);
         mutationBlocked = false;
         queryClientId = null;
@@ -85,7 +89,7 @@ describe('ChargesListPageComponent', () => {
     });
 
     it('kalan 0 ise sade "Ödendi" gösterilir', async () => {
-        charges.getCharges.and.returnValue(of(page([{ ...row, allocatedAmount: 751, outstandingAmount: 0 }])));
+        charges.getCharges.mockReturnValue(of(page([{ ...row, allocatedAmount: 751, outstandingAmount: 0 }])));
         await setup();
         expect(fixture.nativeElement.textContent).toContain('Ödendi');
     });
@@ -114,11 +118,11 @@ describe('ChargesListPageComponent', () => {
     it('query clientId ile müşteri filtresi uygulanır', async () => {
         queryClientId = 'cl1';
         await setup();
-        expect(charges.getCharges.calls.first().args[0]).toEqual(jasmine.objectContaining({ page: 1, clientId: 'cl1' }));
+        expect(vi.mocked(charges.getCharges).mock.calls[0][0]).toEqual(expect.objectContaining({ page: 1, clientId: 'cl1' }));
     });
 
     it('boş liste ve hata durumları gösterilir', async () => {
-        charges.getCharges.and.returnValue(of(page([])));
+        charges.getCharges.mockReturnValue(of(page([])));
         await setup();
         expect(fixture.nativeElement.textContent).toContain('Ücret kaydı yok');
     });
@@ -141,12 +145,12 @@ describe('ChargesListPageComponent', () => {
         ] as const) {
             const button = actionButton(label);
 
-            expect(button).withContext(label).not.toBeNull();
+            expect(button, label).not.toBeNull();
             expect(button!.textContent!.trim()).toBe('');
-            expect(button!.closest('app-row-action-button')).withContext(label).not.toBeNull();
+            expect(button!.closest('app-row-action-button'), label).not.toBeNull();
             expect(button!.querySelector('i')!.classList).toContain('fa-solid');
             expect(button!.querySelector('i')!.classList).toContain(icon);
-            expect(button!.classList.contains('row-action-button--danger')).withContext(label).toBe(danger);
+            expect(button!.classList.contains('row-action-button--danger'), label).toBe(danger);
         }
     });
 
@@ -155,7 +159,7 @@ describe('ChargesListPageComponent', () => {
         await setup();
         const pay = Array.from(fixture.nativeElement.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>).find((a) => a.textContent?.includes('Ödeme al'));
 
-        expect(pay).withContext('Ödeme al').toBeDefined();
+        expect(pay, 'Ödeme al').toBeDefined();
         expect(pay!.closest('app-row-action-button')).toBeNull();
     });
 
@@ -165,10 +169,10 @@ describe('ChargesListPageComponent', () => {
         const cmp = fixture.componentInstance;
 
         actionButton('Düzelt')!.click();
-        expect(cmp.correctionVisible).toBeTrue();
+        expect(cmp.correctionVisible).toBe(true);
         expect(cmp.actionTarget()).toEqual(row);
         actionButton('İptal et')!.click();
-        expect(cmp.voidVisible).toBeTrue();
+        expect(cmp.voidVisible).toBe(true);
     });
 
     it('salt okunur kiracıda eylemler yerine bilgi gösterilir', async () => {
@@ -183,13 +187,13 @@ describe('ChargesListPageComponent', () => {
     it('uzun müşteri, hayvan ve açıklama tek satırda kesilir; tam metin ipucunda kalır', async () => {
         const long = { ...row, clientName: 'Ayşe Gülizar Karamanoğlu Yılmaz', petName: 'Prenses Minnoş Pamukçuk', description: 'Kapsamlı genel muayene ve kan tahlili' };
 
-        charges.getCharges.and.returnValue(of(page([long])));
+        charges.getCharges.mockReturnValue(of(page([long])));
         await setup();
 
         for (const text of [long.clientName, long.petName, long.description]) {
             const el = fixture.nativeElement.querySelector(`[title="${text}"]`) as HTMLElement;
 
-            expect(el).withContext(text).not.toBeNull();
+            expect(el, text).not.toBeNull();
             expect(el.classList).toContain('truncate');
             expect(el.textContent!.trim()).toBe(text);
         }
@@ -218,11 +222,11 @@ describe('ChargesListPageComponent', () => {
         expect(fixture.nativeElement.textContent).not.toContain('Ödeme al');
         TestBed.resetTestingModule();
         claims.add('Payments.Create');
-        charges.getCharges.and.returnValue(of(page([{ ...row, allocatedAmount: 751, outstandingAmount: 0 }])));
+        charges.getCharges.mockReturnValue(of(page([{ ...row, allocatedAmount: 751, outstandingAmount: 0 }])));
         await setup();
         expect(fixture.nativeElement.textContent).not.toContain('Ödeme al');
         TestBed.resetTestingModule();
-        charges.getCharges.and.returnValue(of(page([row])));
+        charges.getCharges.mockReturnValue(of(page([row])));
         mutationBlocked = true;
         await setup();
         expect(fixture.nativeElement.textContent).not.toContain('Ödeme al');
@@ -230,30 +234,31 @@ describe('ChargesListPageComponent', () => {
 
     it('iptal diyaloğu satırın ücretini iptal eder ve listeyi yeniden okur', async () => {
         claims.add('Charges.Correct');
-        charges.voidCharge.and.returnValue(of(void 0));
+        charges.voidCharge.mockReturnValue(of(void 0));
         await setup();
         const cmp = fixture.componentInstance;
 
         cmp.openVoid(row);
         await firstValueFrom(cmp.voidCharge('Yanlış girildi'));
-        expect(charges.voidCharge).toHaveBeenCalledOnceWith('ch1', 'Yanlış girildi');
-        const before = charges.getCharges.calls.count();
+        expect(charges.voidCharge).toHaveBeenCalledTimes(1);
+        expect(charges.voidCharge).toHaveBeenCalledWith('ch1', 'Yanlış girildi');
+        const before = vi.mocked(charges.getCharges).mock.calls.length;
 
         cmp.reload();
-        expect(charges.getCharges.calls.count()).toBe(before + 1);
+        expect(vi.mocked(charges.getCharges).mock.calls.length).toBe(before + 1);
     });
 
     it('son sayfadaki son kayıt kalkınca boş sayfa yerine önceki sayfa yüklenir', async () => {
         await setup();
-        charges.getCharges.calls.reset();
-        charges.getCharges.and.returnValues(of({ items: [], page: 2, pageSize: 20, totalItems: 20, totalPages: 1 }), of(page([row])));
+        charges.getCharges.mockClear();
+        charges.getCharges.mockReturnValueOnce(of({ items: [], page: 2, pageSize: 20, totalItems: 20, totalPages: 1 })).mockReturnValueOnce(of(page([row])));
         fixture.componentInstance.onLazyLoad({ first: 20, rows: 20 });
-        expect(charges.getCharges.calls.allArgs().map((a) => a[0]?.page)).toEqual([2, 1]);
+        expect(vi.mocked(charges.getCharges).mock.calls.map((a) => a[0]?.page)).toEqual([2, 1]);
         expect(fixture.componentInstance.rows()).toEqual([row]);
     });
 
     it('yükleme hatasını gösterir', async () => {
-        charges.getCharges.and.returnValue(throwError(() => new Error('Ücret listesi yüklenemedi.')));
+        charges.getCharges.mockReturnValue(throwError(() => new Error('Ücret listesi yüklenemedi.')));
         await setup();
         expect(fixture.nativeElement.textContent).toContain('Ücret listesi yüklenemedi.');
     });

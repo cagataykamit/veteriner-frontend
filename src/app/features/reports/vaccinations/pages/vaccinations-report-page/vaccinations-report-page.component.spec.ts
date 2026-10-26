@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { HttpErrorResponse, provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -10,7 +11,7 @@ import { userErrorFromHttp } from '@/app/shared/utils/api-error.utils';
 import { VaccinationsReportPageComponent } from './vaccinations-report-page.component';
 
 describe('VaccinationsReportPageComponent — sade filtre alanı', () => {
-    let source: jasmine.SpyObj<VaccinationsReportService>;
+    let source: MockedObject<VaccinationsReportService>;
 
     function create() {
         const fixture = TestBed.createComponent(VaccinationsReportPageComponent);
@@ -22,8 +23,12 @@ describe('VaccinationsReportPageComponent — sade filtre alanı', () => {
 
     beforeEach(() => {
         sessionStorage.clear();
-        source = jasmine.createSpyObj<VaccinationsReportService>('VaccinationsReportService', ['loadReport', 'exportCsvBlob', 'exportXlsxBlob']);
-        source.loadReport.and.callFake(((q: { page?: number; pageSize?: number }) =>
+        source = {
+            loadReport: vi.fn().mockName('VaccinationsReportService.loadReport'),
+            exportCsvBlob: vi.fn().mockName('VaccinationsReportService.exportCsvBlob'),
+            exportXlsxBlob: vi.fn().mockName('VaccinationsReportService.exportXlsxBlob')
+        } as unknown as MockedObject<VaccinationsReportService>;
+        source.loadReport.mockImplementation(((q: { page?: number; pageSize?: number }) =>
             of({
                 page: q.page ?? 1,
                 pageSize: q.pageSize ?? 10,
@@ -80,17 +85,17 @@ describe('VaccinationsReportPageComponent — sade filtre alanı', () => {
 
         fixture.componentInstance.state.searchInput = 'Pamuk';
         fixture.componentInstance.state.applyFilters();
-        const q = source.loadReport.calls.mostRecent().args[0] as unknown as Record<string, unknown>;
+        const q = vi.mocked(source.loadReport).mock.lastCall![0] as unknown as Record<string, unknown>;
 
         expect(q['search']).toBe('Pamuk');
-        expect('clientId' in q || 'petId' in q).toBeFalse();
+        expect('clientId' in q || 'petId' in q).toBe(false);
     });
 
     it('422 Trial.ExportLimitExceeded: sunucunun detail metni ve "Aboneliğe geç" bağlantısı gösterilir (TRIAL-004)', () => {
         const detail = 'Deneme sürümünde dışa aktarma en fazla 1000 satır sınırı; abonelikle kalkar. Filtreyi daraltın.';
         const http = new HttpErrorResponse({ status: 422, error: { status: 422, title: 'İş kuralı ihlali', detail, code: 'Trial.ExportLimitExceeded' } });
 
-        source.exportCsvBlob.and.returnValue(throwError(() => userErrorFromHttp(http, 'Dışa aktarma işlemi tamamlanamadı.')));
+        source.exportCsvBlob.mockReturnValue(throwError(() => userErrorFromHttp(http, 'Dışa aktarma işlemi tamamlanamadı.')));
         const fixture = create();
 
         fixture.componentInstance.state.exportCsv();
@@ -107,7 +112,7 @@ describe('VaccinationsReportPageComponent — sade filtre alanı', () => {
     it('ücretli kiracı dışa aktarma hatası (400 ReportExportTooManyRows) düz hata metni kalır, abonelik bağlantısı çıkmaz', () => {
         const http = new HttpErrorResponse({ status: 400, error: { detail: 'Dışa aktarma için çok fazla satır.', code: 'Vaccinations.ReportExportTooManyRows' } });
 
-        source.exportCsvBlob.and.returnValue(throwError(() => userErrorFromHttp(http, 'Dışa aktarma işlemi tamamlanamadı.')));
+        source.exportCsvBlob.mockReturnValue(throwError(() => userErrorFromHttp(http, 'Dışa aktarma işlemi tamamlanamadı.')));
         const fixture = create();
 
         fixture.componentInstance.state.exportCsv();

@@ -1,12 +1,5 @@
 import type { ClientDataExportDto } from '@/app/features/clients/models/client-data-export-api.model';
-import {
-    clientDataExportBalanceFacts,
-    clientDataExportClientFacts,
-    clientDataExportFileName,
-    clientDataExportJson,
-    clientDataExportKvkkFacts,
-    clientDataExportTables
-} from '@/app/features/clients/utils/client-data-export.utils';
+import { clientDataExportBalanceFacts, clientDataExportClientFacts, clientDataExportFileName, clientDataExportJson, clientDataExportKvkkFacts, clientDataExportTables } from '@/app/features/clients/utils/client-data-export.utils';
 
 const section = <T>(items: T[], isTruncated = false) => ({ items, isTruncated });
 
@@ -40,9 +33,7 @@ const sampleClientDataExport = (over: Partial<ClientDataExportDto> = {}): Client
             deceasedOn: '2026-09-01'
         }
     ]),
-    appointments: section([
-        { scheduledAtUtc: '2026-10-01T07:00:00Z', durationMinutes: 30, petId: 'p1', petName: 'Pamuk', appointmentType: 'Vaccination', status: 'Cancelled' }
-    ]),
+    appointments: section([{ scheduledAtUtc: '2026-10-01T07:00:00Z', durationMinutes: 30, petId: 'p1', petName: 'Pamuk', appointmentType: 'Vaccination', status: 'Cancelled' }]),
     examinations: section([{ examinedAtUtc: '2026-09-01T07:00:00Z', petId: 'p1', petName: 'Pamuk', complaint: 'Kusma', assessment: null, status: 'Finalized' }]),
     vaccinations: section([], true),
     treatments: section([]),
@@ -80,7 +71,13 @@ const sampleClientDataExport = (over: Partial<ClientDataExportDto> = {}): Client
 });
 
 describe('client-data-export.utils', () => {
-    const value = (facts: { label: string; value: string }[], label: string) => facts.find((f) => f.label === label)?.value;
+    const value = (
+        facts: {
+            label: string;
+            value: string;
+        }[],
+        label: string
+    ) => facts.find((f) => f.label === label)?.value;
 
     it('müşteri ve rıza bilgileri etiketlenir; boş alan tire', () => {
         const dto = sampleClientDataExport();
@@ -108,11 +105,11 @@ describe('client-data-export.utils', () => {
         expect(byKey('pets').rows[0].at(-1)).toContain('Vefat');
         expect(byKey('appointments').columns).toContain('Hasta');
         expect(byKey('appointments').rows[0]).toContain('İptal');
-        expect(byKey('examinations').rows[0]).toEqual(jasmine.arrayContaining(['Kusma', '—']));
+        expect(byKey('examinations').rows[0]).toEqual(expect.arrayContaining(['Kusma', '—']));
         expect(byKey('prescriptions').rows[0]).toContain('İlaç A, İlaç B');
         expect(byKey('charges').rows[0].at(-1)).toContain('İptal edildi');
         expect(byKey('payments').rows[0].at(-1)).toBe('Geçerli');
-        expect(byKey('vaccinations').isTruncated).toBeTrue();
+        expect(byKey('vaccinations').isTruncated).toBe(true);
         expect(byKey('treatments').rows).toEqual([]);
     });
 

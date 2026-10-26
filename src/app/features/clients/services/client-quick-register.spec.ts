@@ -39,49 +39,53 @@ describe('ClientsService.quickRegister', () => {
 
     afterEach(() => http.verify());
 
-    it('201: POST quick-register gövdesi gider, clientId ve petId döner', (done) => {
-        service.quickRegister(request).subscribe((r) => {
-            expect(r).toEqual({ clientId: 'c1', petId: 'p1' });
-            done();
-        });
-        const req = http.expectOne('http://api.test/api/v1/clients/quick-register');
-
-        expect(req.request.method).toBe('POST');
-        expect(req.request.body).toEqual(request);
-        req.flush({ clientId: 'c1', petId: 'p1' }, { status: 201, statusText: 'Created' });
-    });
-
-    it('409 Clients.DuplicateClient ham HttpErrorResponse olarak iletilir (kod ayrıştırılabilsin)', (done) => {
-        service.quickRegister(request).subscribe({
-            next: () => fail('hata bekleniyordu'),
-            error: (e: unknown) => {
-                expect(e).toBeInstanceOf(HttpErrorResponse);
-                expect((e as HttpErrorResponse).status).toBe(409);
+    it('201: POST quick-register gövdesi gider, clientId ve petId döner', () =>
+        new Promise<void>((done) => {
+            service.quickRegister(request).subscribe((r) => {
+                expect(r).toEqual({ clientId: 'c1', petId: 'p1' });
                 done();
-            }
-        });
-        http.expectOne('http://api.test/api/v1/clients/quick-register').flush({ status: 409, extensions: { code: 'Clients.DuplicateClient' } }, { status: 409, statusText: 'Conflict' });
-    });
+            });
+            const req = http.expectOne('http://api.test/api/v1/clients/quick-register');
 
-    it('403 ham iletilir', (done) => {
-        service.quickRegister(request).subscribe({
-            next: () => fail('hata bekleniyordu'),
-            error: (e: unknown) => {
-                expect((e as HttpErrorResponse).status).toBe(403);
-                done();
-            }
-        });
-        http.expectOne('http://api.test/api/v1/clients/quick-register').flush(null, { status: 403, statusText: 'Forbidden' });
-    });
+            expect(req.request.method).toBe('POST');
+            expect(req.request.body).toEqual(request);
+            req.flush({ clientId: 'c1', petId: 'p1' }, { status: 201, statusText: 'Created' });
+        }));
 
-    it('yanıtta kimlik eksikse açık hata verir', (done) => {
-        service.quickRegister(request).subscribe({
-            next: () => fail('hata bekleniyordu'),
-            error: (e: unknown) => {
-                expect((e as Error).message).toContain('kimliği okunamadı');
-                done();
-            }
-        });
-        http.expectOne('http://api.test/api/v1/clients/quick-register').flush({ clientId: 'c1' }, { status: 201, statusText: 'Created' });
-    });
+    it('409 Clients.DuplicateClient ham HttpErrorResponse olarak iletilir (kod ayrıştırılabilsin)', () =>
+        new Promise<void>((done) => {
+            service.quickRegister(request).subscribe({
+                next: () => expect.fail('hata bekleniyordu'),
+                error: (e: unknown) => {
+                    expect(e).toBeInstanceOf(HttpErrorResponse);
+                    expect((e as HttpErrorResponse).status).toBe(409);
+                    done();
+                }
+            });
+            http.expectOne('http://api.test/api/v1/clients/quick-register').flush({ status: 409, extensions: { code: 'Clients.DuplicateClient' } }, { status: 409, statusText: 'Conflict' });
+        }));
+
+    it('403 ham iletilir', () =>
+        new Promise<void>((done) => {
+            service.quickRegister(request).subscribe({
+                next: () => expect.fail('hata bekleniyordu'),
+                error: (e: unknown) => {
+                    expect((e as HttpErrorResponse).status).toBe(403);
+                    done();
+                }
+            });
+            http.expectOne('http://api.test/api/v1/clients/quick-register').flush(null, { status: 403, statusText: 'Forbidden' });
+        }));
+
+    it('yanıtta kimlik eksikse açık hata verir', () =>
+        new Promise<void>((done) => {
+            service.quickRegister(request).subscribe({
+                next: () => expect.fail('hata bekleniyordu'),
+                error: (e: unknown) => {
+                    expect((e as Error).message).toContain('kimliği okunamadı');
+                    done();
+                }
+            });
+            http.expectOne('http://api.test/api/v1/clients/quick-register').flush({ clientId: 'c1' }, { status: 201, statusText: 'Created' });
+        }));
 });

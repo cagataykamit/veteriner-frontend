@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
@@ -11,10 +12,10 @@ import { ClientsListPageComponent } from './clients-list-page.component';
 /** Ortak arama davranışı (ürün kararı): yazdıkça arar, Enter anında, × listeyi geri getirir, "Ara" düğmesi yok. */
 describe('ClientsListPageComponent — ortak arama davranışı', () => {
     let fixture: ComponentFixture<ClientsListPageComponent>;
-    let clients: jasmine.SpyObj<ClientsService>;
+    let clients: MockedObject<ClientsService>;
     const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
     const input = () => fixture.nativeElement.querySelector('input#clientSearch') as HTMLInputElement;
-    const searches = () => clients.getClients.calls.allArgs().map((a) => a[0].search ?? '');
+    const searches = () => vi.mocked(clients.getClients).mock.calls.map((a) => a[0].search ?? '');
 
     const type = async (text: string) => {
         input().value = text;
@@ -25,16 +26,13 @@ describe('ClientsListPageComponent — ortak arama davranışı', () => {
 
     beforeEach(async () => {
         sessionStorage.clear();
-        clients = jasmine.createSpyObj<ClientsService>('ClientsService', ['getClients']);
-        clients.getClients.and.returnValue(of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }));
+        clients = {
+            getClients: vi.fn().mockName('ClientsService.getClients')
+        } as unknown as MockedObject<ClientsService>;
+        clients.getClients.mockReturnValue(of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }));
         await TestBed.configureTestingModule({
             imports: [ClientsListPageComponent],
-            providers: [
-                provideRouter([]),
-                { provide: ClientsService, useValue: clients },
-                { provide: AuthService, useValue: { hasOperationClaim: () => false } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
-            ]
+            providers: [provideRouter([]), { provide: ClientsService, useValue: clients }, { provide: AuthService, useValue: { hasOperationClaim: () => false } }, { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }]
         }).compileComponents();
         fixture = TestBed.createComponent(ClientsListPageComponent);
         fixture.detectChanges();
@@ -52,23 +50,23 @@ describe('ClientsListPageComponent — ortak arama davranışı', () => {
     });
 
     it('2+ karakter yazınca bekleme sonrası sunucu aramasına gider; tek karakterde gitmez', async () => {
-        const before = clients.getClients.calls.count();
+        const before = vi.mocked(clients.getClients).mock.calls.length;
 
         await type('a');
         await wait(500);
-        expect(clients.getClients.calls.count()).toBe(before);
+        expect(vi.mocked(clients.getClients).mock.calls.length).toBe(before);
         await type('ali');
         await wait(500);
         expect(searches().pop()).toBe('ali');
-        expect(clients.getClients.calls.count()).toBe(before + 1);
+        expect(vi.mocked(clients.getClients).mock.calls.length).toBe(before + 1);
     });
 
     it('Enter anında arar', async () => {
-        const before = clients.getClients.calls.count();
+        const before = vi.mocked(clients.getClients).mock.calls.length;
 
         await type('veli');
         input().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-        expect(clients.getClients.calls.count()).toBe(before + 1);
+        expect(vi.mocked(clients.getClients).mock.calls.length).toBe(before + 1);
         expect(searches().pop()).toBe('veli');
     });
 
@@ -89,17 +87,14 @@ describe('ClientsListPageComponent — ortak arama davranışı', () => {
 describe('ClientsListPageComponent — tek başlık', () => {
     function create(response: ReturnType<ClientsService['getClients']> = of({ items: [], page: 1, pageSize: 10, totalItems: 16, totalPages: 2 })): HTMLElement {
         sessionStorage.clear();
-        const clients = jasmine.createSpyObj<ClientsService>('ClientsService', ['getClients']);
+        const clients = {
+            getClients: vi.fn().mockName('ClientsService.getClients')
+        };
 
-        clients.getClients.and.returnValue(response);
+        clients.getClients.mockReturnValue(response);
         TestBed.configureTestingModule({
             imports: [ClientsListPageComponent],
-            providers: [
-                provideRouter([]),
-                { provide: ClientsService, useValue: clients },
-                { provide: AuthService, useValue: { hasOperationClaim: () => true } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
-            ]
+            providers: [provideRouter([]), { provide: ClientsService, useValue: clients }, { provide: AuthService, useValue: { hasOperationClaim: () => true } }, { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }]
         });
         const fixture = TestBed.createComponent(ClientsListPageComponent);
 
@@ -144,19 +139,14 @@ describe('ClientsListPageComponent — satır eylemleri', () => {
 
     beforeEach(async () => {
         sessionStorage.clear();
-        const clients = jasmine.createSpyObj<ClientsService>('ClientsService', ['getClients']);
+        const clients = {
+            getClients: vi.fn().mockName('ClientsService.getClients')
+        };
 
-        clients.getClients.and.returnValue(
-            of({ items: [{ id: 'c1', fullName: 'Ali Veli', phone: '5551112233', email: 'ali@example.com', createdAtUtc: '2026-10-10T07:00:00Z' }], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 })
-        );
+        clients.getClients.mockReturnValue(of({ items: [{ id: 'c1', fullName: 'Ali Veli', phone: '5551112233', email: 'ali@example.com', createdAtUtc: '2026-10-10T07:00:00Z' }], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
         await TestBed.configureTestingModule({
             imports: [ClientsListPageComponent],
-            providers: [
-                provideRouter([]),
-                { provide: ClientsService, useValue: clients },
-                { provide: AuthService, useValue: { hasOperationClaim: () => false } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
-            ]
+            providers: [provideRouter([]), { provide: ClientsService, useValue: clients }, { provide: AuthService, useValue: { hasOperationClaim: () => false } }, { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }]
         }).compileComponents();
         fixture = TestBed.createComponent(ClientsListPageComponent);
         fixture.detectChanges();
@@ -171,7 +161,7 @@ describe('ClientsListPageComponent — satır eylemleri', () => {
         const details = Array.from(el.querySelectorAll<HTMLAnchorElement>('app-row-action-button a[aria-label="Detay"]'));
 
         expect(el.textContent).not.toContain('Detay');
-        expect(details.length).withContext('tablo + mobil kart').toBe(2);
+        expect(details.length, 'tablo + mobil kart').toBe(2);
 
         for (const link of details) {
             expect(link.getAttribute('href')).toBe('/panel/clients/c1');
@@ -185,11 +175,11 @@ describe('ClientsListPageComponent — satır eylemleri', () => {
 describe('ClientsListPageComponent — satırda Düzenle', () => {
     const create = async (claims: string[], mutationBlocked = false): Promise<HTMLElement> => {
         sessionStorage.clear();
-        const clients = jasmine.createSpyObj<ClientsService>('ClientsService', ['getClients']);
+        const clients = {
+            getClients: vi.fn().mockName('ClientsService.getClients')
+        };
 
-        clients.getClients.and.returnValue(
-            of({ items: [{ id: 'c1', fullName: 'Ali Veli', phone: '5551112233', email: 'ali@example.com', createdAtUtc: '2026-10-10T07:00:00Z' }], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 })
-        );
+        clients.getClients.mockReturnValue(of({ items: [{ id: 'c1', fullName: 'Ali Veli', phone: '5551112233', email: 'ali@example.com', createdAtUtc: '2026-10-10T07:00:00Z' }], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
         TestBed.configureTestingModule({
             imports: [ClientsListPageComponent],
             providers: [
@@ -213,12 +203,12 @@ describe('ClientsListPageComponent — satırda Düzenle', () => {
     it("Clients.Update varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", async () => {
         const edits = rowEditActions(await create([CLIENTS_UPDATE_CLAIM]));
 
-        expect(edits.length).withContext('tablo + mobil kart').toBe(2);
+        expect(edits.length, 'tablo + mobil kart').toBe(2);
 
         for (const edit of edits) {
             expect(edit.getAttribute('href')).toBe('/panel/clients/c1/edit');
             expect(edit.getAttribute('aria-label')).toBe('Düzenle');
-            expect(isRightAfterDetail(edit)).toBeTrue();
+            expect(isRightAfterDetail(edit)).toBe(true);
         }
     });
 
@@ -237,7 +227,6 @@ describe('ClientsListPageComponent — satırda Düzenle', () => {
             expect(edit.getAttribute('aria-label')).toBe('Düzenle (salt okunur)');
         }
     });
-
 
     /** ADR-026 madde 7: müşterinin silme akışı yok (KVKK ayrı süreç); tüm yetkilerle bile Sil/İptal simgesi konmaz. */
     it('silme akışı olmadığı için satırda Sil/İptal simgesi yoktur', async () => {

@@ -12,13 +12,13 @@ import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-r
 import { IMAGING_MODALITY_OPTIONS } from '@/app/features/imaging/utils/imaging.utils';
 import { examinationListItemFromDetail, prescriptionExaminationSelectOption } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
+import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
 import { type SelectOption, trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
-import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
+import { PetSearchComponent } from '@/app/features/pets/components/pet-search.component';
 import { StoredFileUploadComponent } from '@/app/shared/files/stored-file-upload.component';
 import { parseExaminationCreateRouteContext, prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
-import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
+import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';

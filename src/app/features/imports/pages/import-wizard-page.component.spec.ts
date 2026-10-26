@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { HttpErrorResponse, provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -65,10 +66,10 @@ const preview = (over: Partial<ImportPreviewDto> = {}): ImportPreviewDto => ({
 
 describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
     let fixture: ComponentFixture<ImportWizardPageComponent>;
-    let imports: jasmine.SpyObj<ImportsService>;
+    let imports: MockedObject<ImportsService>;
 
     function create(initial: ImportBatchDto): HTMLElement {
-        imports.getBatch.and.returnValue(of(initial));
+        imports.getBatch.mockReturnValue(of(initial));
         TestBed.configureTestingModule({
             imports: [ImportWizardPageComponent],
             providers: [
@@ -89,34 +90,41 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
 
     /** Yoklama zamanlayıcısını ilerletir ve görünümü günceller. */
     function advance(ms: number): void {
-        jasmine.clock().tick(ms);
+        vi.advanceTimersByTime(ms);
         fixture.detectChanges();
     }
 
     const text = (el: HTMLElement) => el.textContent ?? '';
 
     beforeEach(() => {
-        jasmine.clock().install();
-        jasmine.clock().mockDate(new Date('2026-10-15T09:00:00Z'));
-        imports = jasmine.createSpyObj<ImportsService>('ImportsService', ['getBatch', 'getPreview', 'getRows', 'saveMapping', 'validate', 'getProgress']);
-        imports.getRows.and.returnValue(of({ items: [], page: 1, pageSize: 25, totalItems: 0, totalPages: 0 }));
-        imports.getPreview.and.returnValue(of(preview()));
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-10-15T09:00:00Z'));
+        imports = {
+            getBatch: vi.fn().mockName('ImportsService.getBatch'),
+            getPreview: vi.fn().mockName('ImportsService.getPreview'),
+            getRows: vi.fn().mockName('ImportsService.getRows'),
+            saveMapping: vi.fn().mockName('ImportsService.saveMapping'),
+            validate: vi.fn().mockName('ImportsService.validate'),
+            getProgress: vi.fn().mockName('ImportsService.getProgress')
+        } as unknown as MockedObject<ImportsService>;
+        imports.getRows.mockReturnValue(of({ items: [], page: 1, pageSize: 25, totalItems: 0, totalPages: 0 }));
+        imports.getPreview.mockReturnValue(of(preview()));
     });
 
     afterEach(() => {
         fixture?.destroy();
-        jasmine.clock().uninstall();
+        vi.useRealTimers();
     });
 
     it('Doğrula: istek hemen döner, ilerleme gösterilir; Validated olunca parti ve önizleme okunur, validationId oradan gelir', () => {
         const el = create(batch('Mapped'));
 
-        imports.saveMapping.and.returnValue(of(batch('Mapped')));
-        imports.validate.and.returnValue(of(batch('Validating')));
-        imports.getProgress.and.returnValues(of(progress('Validating', 30)), of(progress('Validated')));
+        imports.saveMapping.mockReturnValue(of(batch('Mapped')));
+        imports.validate.mockReturnValue(of(batch('Validating')));
+        imports.getProgress.mockReturnValueOnce(of(progress('Validating', 30))).mockReturnValueOnce(of(progress('Validated')));
 
         fixture.componentInstance.saveAndValidate();
-        imports.getBatch.and.returnValue(of(batch('Validated', 'v-new')));
+        imports.getBatch.mockReturnValue(of(batch('Validated', 'v-new')));
         advance(0);
 
         expect(imports.validate).toHaveBeenCalledWith('b1');
@@ -124,7 +132,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
         expect(text(el)).toContain('Satırlar doğrulanıyor');
         expect(text(el)).toContain('30 / 120 satır işlendi');
         expect(imports.getPreview).not.toHaveBeenCalled();
-        expect(fixture.componentInstance.canGoTo(2)).toBeFalse();
+        expect(fixture.componentInstance.canGoTo(2)).toBe(false);
 
         advance(IMPORT_PROGRESS_POLL_MS);
 
@@ -142,9 +150,9 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
     it('ValidationFailed: anlaşılır hata gösterir; "Yeniden doğrula" eşlemeyi yeniden kaydetmeden doğrular', () => {
         const el = create(batch('Validating'));
 
-        imports.getProgress.and.returnValue(of(progress('ValidationFailed')));
-        imports.getPreview.and.returnValue(of(preview({ status: 'ValidationFailed', validationId: null, canCommit: false })));
-        imports.getBatch.and.returnValue(of(batch('ValidationFailed')));
+        imports.getProgress.mockReturnValue(of(progress('ValidationFailed')));
+        imports.getPreview.mockReturnValue(of(preview({ status: 'ValidationFailed', validationId: null, canCommit: false })));
+        imports.getBatch.mockReturnValue(of(batch('ValidationFailed')));
         advance(0);
 
         expect(text(el)).toContain('beklenmeyen bir sorun');
@@ -152,8 +160,8 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
 
         expect(retry).toBeDefined();
 
-        imports.validate.and.returnValue(of(batch('Validating')));
-        imports.getProgress.and.returnValue(of(progress('Validating', 0, true)));
+        imports.validate.mockReturnValue(of(batch('Validating')));
+        imports.getProgress.mockReturnValue(of(progress('Validating', 0, true)));
         retry!.click();
         advance(0);
 
@@ -163,7 +171,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
     });
 
     it('geri dönüş: parti Validating ise ilerleme ekranı yoklamayla kendiliğinden sürer; eylemler kapalıdır', () => {
-        imports.getProgress.and.returnValue(of(progress('Validating', 60)));
+        imports.getProgress.mockReturnValue(of(progress('Validating', 60)));
         const el = create(batch('Validating'));
 
         advance(0);
@@ -173,14 +181,14 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
         expect(text(el)).toContain('60 / 120 satır işlendi');
         expect(text(el)).toContain('eşleme değiştirilemez, içe aktarma silinemez ve aktarma başlatılamaz');
         expect(imports.getPreview).not.toHaveBeenCalled();
-        expect([2, 3, 4].some((n) => fixture.componentInstance.canGoTo(n))).toBeFalse();
+        expect([2, 3, 4].some((n) => fixture.componentInstance.canGoTo(n))).toBe(false);
     });
 
     it('409 InvalidState (başka sekmede doğrulama başlamış): mesajı gösterir, partiyi yeniden okuyup yoklamaya geçer', () => {
         create(batch('Mapped'));
-        imports.saveMapping.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.InvalidState' } })));
-        imports.getBatch.and.returnValue(of(batch('Validating')));
-        imports.getProgress.and.returnValue(of(progress('Validating', 10)));
+        imports.saveMapping.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.InvalidState' } })));
+        imports.getBatch.mockReturnValue(of(batch('Validating')));
+        imports.getProgress.mockReturnValue(of(progress('Validating', 10)));
 
         fixture.componentInstance.saveAndValidate();
         advance(0);
@@ -192,7 +200,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
     });
 
     it('ağ hatası: tek hata yutulur, art arda hatalarda "Bağlantı sorunu" ve yeniden dene gösterilir', () => {
-        imports.getProgress.and.returnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
+        imports.getProgress.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
         const el = create(batch('Validating'));
 
         advance(0);
@@ -201,7 +209,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
         advance(IMPORT_PROGRESS_POLL_MS * (IMPORT_PROGRESS_MAX_FAILURES - 1));
         expect(text(el)).toContain('Bağlantı sorunu');
 
-        imports.getProgress.and.returnValue(of(progress('Validating', 90)));
+        imports.getProgress.mockReturnValue(of(progress('Validating', 90)));
         const retry = Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Yeniden dene'));
 
         retry!.click();
@@ -212,7 +220,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
     });
 
     it('kira uzun süre boşsa "beklenenden uzun sürüyor" notu gösterir', () => {
-        imports.getProgress.and.returnValue(of(progress('Validating', 0, false)));
+        imports.getProgress.mockReturnValue(of(progress('Validating', 0, false)));
         const el = create(batch('Validating'));
 
         advance(0);
@@ -224,7 +232,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
     });
 
     it('uygulama sürerken aynı yoklayıcıyla onay adımında ilerler', () => {
-        imports.getProgress.and.returnValue(of(progress('Committing', 40)));
+        imports.getProgress.mockReturnValue(of(progress('Committing', 40)));
         const el = create(batch('Committing', 'v1'));
 
         advance(0);

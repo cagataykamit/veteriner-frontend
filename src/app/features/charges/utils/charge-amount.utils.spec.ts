@@ -37,9 +37,9 @@ describe('computeChargeAmount', () => {
 
 describe('hasAtMostDecimals', () => {
     it('ondalık sayısını sınırlar', () => {
-        expect(hasAtMostDecimals(1.25, 2)).toBeTrue();
-        expect(hasAtMostDecimals(1.255, 2)).toBeFalse();
-        expect(hasAtMostDecimals(0.1 + 0.2, 2)).toBeTrue();
+        expect(hasAtMostDecimals(1.25, 2)).toBe(true);
+        expect(hasAtMostDecimals(1.255, 2)).toBe(false);
+        expect(hasAtMostDecimals(0.1 + 0.2, 2)).toBe(true);
     });
 });
 

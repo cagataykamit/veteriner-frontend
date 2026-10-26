@@ -1,3 +1,4 @@
+import type { Mock, MockedObject } from 'vitest';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -9,7 +10,7 @@ import { AppointmentsService } from '@/app/features/appointments/services/appoin
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { DetailRelatedSummariesService } from '@/app/shared/panel/detail-related-summaries.service';
+import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { VisitVm } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
@@ -30,14 +31,18 @@ const visit = (over: Partial<VisitVm> = {}): VisitVm => ({
 });
 
 describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
-    let examinations: jasmine.SpyObj<ExaminationsService>;
-    let visits: jasmine.SpyObj<VisitsService>;
-    let navigate: jasmine.Spy;
+    let examinations: MockedObject<ExaminationsService>;
+    let visits: MockedObject<VisitsService>;
+    let navigate: Mock;
 
     const create = (query: Record<string, string>, visitResult: Observable<VisitVm>) => {
-        examinations = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', ['createExamination']);
-        visits = jasmine.createSpyObj<VisitsService>('VisitsService', ['getVisitById']);
-        visits.getVisitById.and.returnValue(visitResult);
+        examinations = {
+            createExamination: vi.fn().mockName('ExaminationsService.createExamination')
+        } as unknown as MockedObject<ExaminationsService>;
+        visits = {
+            getVisitById: vi.fn().mockName('VisitsService.getVisitById')
+        } as unknown as MockedObject<VisitsService>;
+        visits.getVisitById.mockReturnValue(visitResult);
 
         TestBed.configureTestingModule({
             imports: [ExaminationWorkspacePageComponent],
@@ -62,7 +67,7 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
                 { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli', phone: '555', email: '—' }) } }
             ]
         });
-        navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
         const fixture = TestBed.createComponent(ExaminationWorkspacePageComponent);
 
         fixture.detectChanges();
@@ -75,18 +80,18 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
     it('açık Visit doğrulanır: hasta seçimi istenmez, müşteri seçimi kilitli, yalnızca visitId ile kaydedilir', () => {
         const cmp = create(ctxQuery, of(visit()));
 
-        examinations.createExamination.and.returnValue(of({ id: 'e1', rowVersion: 'A' }));
+        examinations.createExamination.mockReturnValue(of({ id: 'e1', rowVersion: 'A' }));
 
         expect(cmp.visitContextId()).toBe('visit-1');
         expect(cmp.selectedPetId()).toBe('pet-1');
-        expect(cmp.selectionForm.controls.clientId.disabled).toBeTrue();
-        expect(cmp.selectionForm.invalid).toBeFalse();
+        expect(cmp.selectionForm.controls.clientId.disabled).toBe(true);
+        expect(cmp.selectionForm.invalid).toBe(false);
 
         cmp.form.patchValue({ examinationDate: '2026-10-10', examinationTime: '13:30', visitReason: 'Kontrol' });
         cmp.onSubmit();
 
         expect(examinations.createExamination).toHaveBeenCalledTimes(1);
-        const payload = examinations.createExamination.calls.mostRecent().args[0];
+        const payload = vi.mocked(examinations.createExamination).mock.lastCall![0];
 
         expect(payload.visitId).toBe('visit-1');
         expect(payload.petId).toBeUndefined();
@@ -100,7 +105,7 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
 
         expect(cmp.visitContextId()).toBeNull();
         expect(cmp.selectionError()).toContain('muayene açılamaz');
-        expect(cmp.selectionForm.controls.clientId.enabled).toBeTrue();
+        expect(cmp.selectionForm.controls.clientId.enabled).toBe(true);
     });
 
     it('yanlış geliş işaretli Visit reddedilir', () => {
@@ -131,6 +136,6 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
 
         expect(visits.getVisitById).not.toHaveBeenCalled();
         expect(cmp.visitContextId()).toBeNull();
-        expect(cmp.selectionForm.controls.clientId.enabled).toBeTrue();
+        expect(cmp.selectionForm.controls.clientId.enabled).toBe(true);
     });
 });

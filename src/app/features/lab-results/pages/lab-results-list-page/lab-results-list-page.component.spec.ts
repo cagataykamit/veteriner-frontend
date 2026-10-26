@@ -29,7 +29,10 @@ const row = (over: Partial<LabResultListItemVm>): LabResultListItemVm => ({
 
 describe('LabResultsListPageComponent — istem ve sonuç tarihi', () => {
     const setup = (items: LabResultListItemVm[]) => {
-        const getLabResults = jasmine.createSpy('getLabResults').and.returnValue(of({ items, page: 1, pageSize: 10, totalItems: items.length, totalPages: 1 }));
+        const getLabResults = vi
+            .fn()
+            .mockName('getLabResults')
+            .mockReturnValue(of({ items, page: 1, pageSize: 10, totalItems: items.length, totalPages: 1 }));
 
         TestBed.configureTestingModule({
             imports: [LabResultsListPageComponent],
@@ -66,7 +69,7 @@ describe('LabResultsListPageComponent — istem ve sonuç tarihi', () => {
 
         expect(requested).toEqual([formatUtcIsoAsLocalDateTimeDisplay('2026-10-10T08:00:00Z'), formatUtcIsoAsLocalDateTimeDisplay('2026-10-10T08:00:00Z')]);
         expect(results[1]).toBe(formatUtcIsoAsLocalDateTimeDisplay('2026-10-12T14:30:00Z'));
-        expect(results[0]).withContext('sonucu gelmemiş istemde sonuç tarihi istem tarihiyle doldurulmaz').toBe(formatUtcIsoAsLocalDateTimeDisplay(null));
+        expect(results[0], 'sonucu gelmemiş istemde sonuç tarihi istem tarihiyle doldurulmaz').toBe(formatUtcIsoAsLocalDateTimeDisplay(null));
     });
 });
 
@@ -94,11 +97,11 @@ describe('LabResultsListPageComponent — satırda Düzenle', () => {
         const el = create([row({}), row({ id: 'l2', status: 'Resulted' })], [LAB_RESULTS_UPDATE_CLAIM]);
         const edits = rowEditActions(el);
 
-        expect(edits.length).withContext('2 satır × tablo + mobil kart').toBe(4);
-        expect(edits.every((e) => isRightAfterDetail(e))).toBeTrue();
+        expect(edits.length, '2 satır × tablo + mobil kart').toBe(4);
+        expect(edits.every((e) => isRightAfterDetail(e))).toBe(true);
         expect(edits.map((e) => e.getAttribute('href'))).toEqual(['/panel/lab-results/l1/edit', '/panel/lab-results/l2/edit', '/panel/lab-results/l1/edit', '/panel/lab-results/l2/edit']);
         expect(edits.map((e) => e.getAttribute('aria-label'))).toEqual(['Sonuç gir', 'Düzenle', 'Sonuç gir', 'Düzenle']);
-        expect(el.querySelector('a.text-primary[href$="/edit"]')).withContext('eski metin bağlantısı kalmaz').toBeNull();
+        expect(el.querySelector('a.text-primary[href$="/edit"]'), 'eski metin bağlantısı kalmaz').toBeNull();
     });
 
     it('iptal edilmiş sonuçta ve yetki yokken Düzenle görünmez; salt okunur kiracıda pasiftir', () => {
@@ -111,7 +114,7 @@ describe('LabResultsListPageComponent — satırda Düzenle', () => {
         const readOnly = rowEditActions(create([row({})], [LAB_RESULTS_UPDATE_CLAIM], true));
 
         expect(readOnly.length).toBe(2);
-        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBeTrue();
+        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBe(true);
         expect(readOnly[0].getAttribute('aria-label')).toBe('Sonuç gir (salt okunur)');
     });
 });
@@ -120,9 +123,18 @@ describe('LabResultsListPageComponent — satırda Düzenle', () => {
 describe('LabResultsListPageComponent — satırda İptal', () => {
     const create = (items: LabResultListItemVm[], claims: string[], mutationBlocked = false) => {
         const service = {
-            getLabResults: jasmine.createSpy('getLabResults').and.returnValue(of({ items, page: 1, pageSize: 10, totalItems: items.length, totalPages: 1 })),
-            getLabResultById: jasmine.createSpy('getLabResultById').and.returnValue(of({ rowVersion: 'V7' })),
-            cancelLabResult: jasmine.createSpy('cancelLabResult').and.returnValue(of(void 0))
+            getLabResults: vi
+                .fn()
+                .mockName('getLabResults')
+                .mockReturnValue(of({ items, page: 1, pageSize: 10, totalItems: items.length, totalPages: 1 })),
+            getLabResultById: vi
+                .fn()
+                .mockName('getLabResultById')
+                .mockReturnValue(of({ rowVersion: 'V7' })),
+            cancelLabResult: vi
+                .fn()
+                .mockName('cancelLabResult')
+                .mockReturnValue(of(void 0))
         };
 
         TestBed.configureTestingModule({
@@ -146,8 +158,8 @@ describe('LabResultsListPageComponent — satırda İptal', () => {
         const { el } = create([row({}), row({ id: 'l2', status: 'Resulted' }), row({ id: 'l3', status: 'Cancelled' })], [LAB_RESULTS_UPDATE_CLAIM]);
         const voids = rowDangerActions(el);
 
-        expect(voids.length).withContext('2 iptal edilebilir satır × tablo + mobil kart').toBe(4);
-        expect(voids.every((v) => v.querySelector('.fa-ban') && v.getAttribute('aria-label') === 'İptal et' && isLastRowAction(v))).toBeTrue();
+        expect(voids.length, '2 iptal edilebilir satır × tablo + mobil kart').toBe(4);
+        expect(voids.every((v) => v.querySelector('.fa-ban') && v.getAttribute('aria-label') === 'İptal et' && isLastRowAction(v))).toBe(true);
 
         TestBed.resetTestingModule();
         expect(rowDangerActions(create([row({})], []).el).length).toBe(0);
@@ -164,17 +176,18 @@ describe('LabResultsListPageComponent — satırda İptal', () => {
 
         const dialog = fixture.debugElement.query((d) => d.name === 'app-reason-confirm-dialog').componentInstance as ReasonConfirmDialogComponent;
 
-        expect(dialog.visible()).toBeTrue();
+        expect(dialog.visible()).toBe(true);
         expect(dialog.header()).toBe('Lab kaydını iptal et');
         expect(dialog.summary()).toBe('Hemogram · Pamuk');
         expect(service.cancelLabResult).not.toHaveBeenCalled();
 
-        service.getLabResults.calls.reset();
+        service.getLabResults.mockClear();
         dialog.form.controls.reason.setValue('Yanlış hastaya istendi');
         dialog.onSubmit();
 
         expect(service.getLabResultById).toHaveBeenCalledWith('l1');
-        expect(service.cancelLabResult).toHaveBeenCalledOnceWith('l1', 'Yanlış hastaya istendi', 'V7');
+        expect(service.cancelLabResult).toHaveBeenCalledTimes(1);
+        expect(service.cancelLabResult).toHaveBeenCalledWith('l1', 'Yanlış hastaya istendi', 'V7');
         expect(service.getLabResults).toHaveBeenCalledTimes(1);
     });
 });

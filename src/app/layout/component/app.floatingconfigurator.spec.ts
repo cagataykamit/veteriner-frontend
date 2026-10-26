@@ -8,7 +8,7 @@ describe('AppFloatingConfigurator tema düğmesi', () => {
     beforeEach(() => {
         storedTheme = localStorage.getItem(VETINITY_THEME_STORAGE_KEY);
         // Arka arkaya geçişler birbirini iptal edip işlenmemiş reddetme bırakmasın.
-        spyOn(document, 'startViewTransition').and.callFake(((update: () => void) => {
+        vi.spyOn(document, 'startViewTransition').mockImplementation(((update: () => void) => {
             update();
 
             return {} as ViewTransition;
@@ -38,7 +38,7 @@ describe('AppFloatingConfigurator tema düğmesi', () => {
         button.click();
         fixture.detectChanges();
 
-        expect(TestBed.inject(LayoutService).isDarkTheme()).toBeTrue();
+        expect(TestBed.inject(LayoutService).isDarkTheme()).toBe(true);
         expect(button.getAttribute('aria-label')).toBe('Açık temaya geç');
     });
 });

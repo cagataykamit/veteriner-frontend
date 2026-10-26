@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -25,8 +26,8 @@ const dto = (over: Partial<SaleDto> = {}): SaleDto => ({
 
 describe('SaleDetailPageComponent', () => {
     let fixture: ComponentFixture<SaleDetailPageComponent>;
-    let getSaleById: jasmine.Spy;
-    let voidSale: jasmine.Spy;
+    let getSaleById: Mock;
+    let voidSale: Mock;
     let claims: Set<string>;
 
     const el = () => fixture.nativeElement as HTMLElement;
@@ -34,10 +35,22 @@ describe('SaleDetailPageComponent', () => {
     const buttonLabels = () => Array.from(el().querySelectorAll('button')).map((b) => b.textContent?.trim() ?? '');
 
     const setup = async (sale: SaleDto = dto()) => {
-        getSaleById = jasmine.createSpy('getSaleById').and.returnValue(of(mapSaleDtoToDetailVm(sale)));
-        voidSale = jasmine.createSpy('voidSale').and.callFake((_id: string, r: { stockOutcome: 'StockReturned' | 'WrittenOff'; reason: string }) =>
-            of(mapSaleDtoToDetailVm(dto({ status: 'Voided', paidAmount: 0, outstandingAmount: 0, voidReason: r.reason, voidStockOutcome: r.stockOutcome })))
-        );
+        getSaleById = vi
+            .fn()
+            .mockName('getSaleById')
+            .mockReturnValue(of(mapSaleDtoToDetailVm(sale)));
+        voidSale = vi
+            .fn()
+            .mockName('voidSale')
+            .mockImplementation(
+                (
+                    _id: string,
+                    r: {
+                        stockOutcome: 'StockReturned' | 'WrittenOff';
+                        reason: string;
+                    }
+                ) => of(mapSaleDtoToDetailVm(dto({ status: 'Voided', paidAmount: 0, outstandingAmount: 0, voidReason: r.reason, voidStockOutcome: r.stockOutcome })))
+            );
         await TestBed.configureTestingModule({
             imports: [SaleDetailPageComponent],
             providers: [
@@ -62,21 +75,21 @@ describe('SaleDetailPageComponent', () => {
         expect(text()).toContain('Ali Veli');
         expect(text()).toContain('Kalan borç');
         expect(el().querySelector('.sale-receipt')!.textContent).toContain('resmî belge, fatura veya e-belge değildir');
-        expect(buttonLabels().some((l) => l.includes('Fişi yazdır'))).toBeTrue();
+        expect(buttonLabels().some((l) => l.includes('Fişi yazdır'))).toBe(true);
     });
 
     it('iptal düğmesi yalnız Sales.Correct ile görünür', async () => {
         await setup();
-        expect(buttonLabels().some((l) => l.includes('İptal et'))).toBeTrue();
+        expect(buttonLabels().some((l) => l.includes('İptal et'))).toBe(true);
         TestBed.resetTestingModule();
         claims = new Set(['Sales.Read']);
         await setup();
-        expect(buttonLabels().some((l) => l.includes('İptal et'))).toBeFalse();
+        expect(buttonLabels().some((l) => l.includes('İptal et'))).toBe(false);
     });
 
     it('iptal edilmiş satışta iptal düğmesi yoktur, iptal bilgisi gösterilir', async () => {
         await setup(dto({ status: 'Voided', voidReason: 'Yanlış ürün', voidStockOutcome: 'WrittenOff', paidAmount: 0, outstandingAmount: 0 }));
-        expect(buttonLabels().some((l) => l.includes('İptal et'))).toBeFalse();
+        expect(buttonLabels().some((l) => l.includes('İptal et'))).toBe(false);
         const info = el().querySelector('[data-testid="sale-void-info"]')!.textContent!;
 
         expect(info).toContain('Yanlış ürün');
@@ -97,7 +110,12 @@ describe('SaleDetailPageComponent', () => {
         expect(body).toContain('Zarar yaz');
         expect(body).toContain('Kısmi iade yoktur');
 
-        const dialog = fixture.debugElement.query((d) => d.name === 'app-sale-void-dialog').componentInstance as { execute: (r: string) => import('rxjs').Observable<unknown>; stockOutcome: { set: (v: string) => void } };
+        const dialog = fixture.debugElement.query((d) => d.name === 'app-sale-void-dialog').componentInstance as {
+            execute: (r: string) => import('rxjs').Observable<unknown>;
+            stockOutcome: {
+                set: (v: string) => void;
+            };
+        };
 
         dialog.stockOutcome.set('WrittenOff');
         dialog.execute('Yanlış ürün satıldı').subscribe();
@@ -105,7 +123,7 @@ describe('SaleDetailPageComponent', () => {
     });
 
     it('yükleme hatasında hata durumu gösterilir', async () => {
-        getSaleById = jasmine.createSpy().and.returnValue(throwError(() => new Error('Satış bulunamadı.')));
+        getSaleById = vi.fn().mockReturnValue(throwError(() => new Error('Satış bulunamadı.')));
         await TestBed.configureTestingModule({
             imports: [SaleDetailPageComponent],
             providers: [

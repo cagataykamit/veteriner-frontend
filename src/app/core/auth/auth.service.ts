@@ -177,11 +177,11 @@ export class AuthService {
     }
 
     /**
-     * JWT claim kontrolü (case-insensitive tam eşleşme).
+     * JWT claim kontrolü (case-insensitive tam eşleşme; kodlar ASCII teknik kimlik, karşılaştırma dilden bağımsız — tr-TR'de I → ı olurdu).
      * Örn: `Vaccinations.Read`
      */
     hasOperationClaim(claim: string): boolean {
-        const wanted = claim.trim().toLocaleLowerCase('tr-TR');
+        const wanted = claim.trim().toLowerCase();
 
         if (!wanted) {
             return false;
@@ -667,7 +667,7 @@ export class AuthService {
 
         for (const k of keys) {
             this.collectClaimStrings(payload[k]).forEach((v) => {
-                const n = v.trim().toLocaleLowerCase('tr-TR');
+                const n = v.trim().toLowerCase();
 
                 if (n) {
                     out.add(n);

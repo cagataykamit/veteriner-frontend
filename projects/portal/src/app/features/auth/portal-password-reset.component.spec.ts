@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -9,7 +10,7 @@ import { PortalPasswordResetComponent, RESET_CODE_SENT_MESSAGE } from './portal-
 describe('PortalPasswordResetComponent', () => {
     let fixture: ComponentFixture<PortalPasswordResetComponent>;
     let el: HTMLElement;
-    let api: jasmine.SpyObj<PortalAuthApi>;
+    let api: MockedObject<PortalAuthApi>;
 
     async function click(text: string): Promise<void> {
         buttonByText(el, text)!.click();
@@ -18,8 +19,11 @@ describe('PortalPasswordResetComponent', () => {
     }
 
     beforeEach(async () => {
-        api = jasmine.createSpyObj<PortalAuthApi>('PortalAuthApi', ['requestPasswordReset', 'confirmPasswordReset']);
-        api.requestPasswordReset.and.returnValue(of(undefined));
+        api = {
+            requestPasswordReset: vi.fn().mockName('PortalAuthApi.requestPasswordReset'),
+            confirmPasswordReset: vi.fn().mockName('PortalAuthApi.confirmPasswordReset')
+        } as unknown as MockedObject<PortalAuthApi>;
+        api.requestPasswordReset.mockReturnValue(of(undefined));
         await TestBed.configureTestingModule({
             imports: [PortalPasswordResetComponent],
             providers: [provideRouter([]), { provide: PortalAuthApi, useValue: api }]
@@ -58,7 +62,7 @@ describe('PortalPasswordResetComponent', () => {
     });
 
     it('başarıda tüm oturumların kapandığını söyler; geçersiz kodda Türkçe mesaj', async () => {
-        api.confirmPasswordReset.and.returnValue(throwError(() => problem(401, PORTAL_ERROR_CODES.invalidCredentials)));
+        api.confirmPasswordReset.mockReturnValue(throwError(() => problem(401, PORTAL_ERROR_CODES.invalidCredentials)));
         await toConfirmStep();
         typeInto(el, '#reset-code', '123456');
         typeInto(el, '#reset-password', 'Guclu.Parola1');
@@ -67,7 +71,7 @@ describe('PortalPasswordResetComponent', () => {
 
         expect(el.querySelector('[role=alert]')?.textContent).toContain('Kod doğrulanamadı');
 
-        api.confirmPasswordReset.and.returnValue(of(undefined));
+        api.confirmPasswordReset.mockReturnValue(of(undefined));
         await click('Parolayı güncelle');
 
         expect(api.confirmPasswordReset).toHaveBeenCalledWith('ayse@example.com', '123456', 'Guclu.Parola1');

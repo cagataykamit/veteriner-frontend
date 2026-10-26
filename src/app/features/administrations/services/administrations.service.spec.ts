@@ -38,118 +38,126 @@ describe('AdministrationsService', () => {
 
     afterEach(() => http.verify());
 
-    it('liste: aktif klinik gider, iptaller varsayılan istenmez', (done) => {
-        service.getAdministrations({ examinationId: 'e1' }).subscribe((r) => {
-            expect(r.items[0].isVoided).toBeFalse();
-            expect(r.items[0].examinationId).toBe('e1');
-            done();
-        });
-        const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/administrations');
-
-        expect(req.request.params.get('clinicId')).toBe('c1');
-        expect(req.request.params.get('examinationId')).toBe('e1');
-        expect(req.request.params.has('includeVoided')).toBeFalse();
-        req.flush({ items: [dto], page: 1, pageSize: 20, totalItems: 1, totalPages: 1 });
-    });
-
-    it('liste: includeVoided true gönderilir ve iptal durumu eşlenir', (done) => {
-        service.getAdministrations({ includeVoided: true }).subscribe((r) => {
-            expect(r.items[0].isVoided).toBeTrue();
-            done();
-        });
-        const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/administrations');
-
-        expect(req.request.params.get('includeVoided')).toBe('true');
-        req.flush({ items: [{ ...dto, status: 'Voided', voidReason: 'Yanlış ürün' }], page: 1, pageSize: 20, totalItems: 1, totalPages: 1 });
-    });
-
-    it('ekleme 201: gövdede clinicId ve requestId var; stok bilgisi döner', (done) => {
-        service.createAdministration(request).subscribe((r) => {
-            expect(r.created).toBeTrue();
-            expect(r.stock.isBelowMinimum).toBeTrue();
-            expect(r.administration.unit).toBe('şişe');
-            done();
-        });
-        const req = http.expectOne('http://api.test/api/v1/administrations');
-
-        expect(req.request.method).toBe('POST');
-        expect(req.request.body).toEqual({
-            clinicId: 'c1',
-            petId: 'p1',
-            examinationId: 'e1',
-            treatmentId: null,
-            productId: 'pr1',
-            quantity: 0.5,
-            administeredAtUtc: null,
-            notes: null,
-            lateEntryReason: null,
-            requestId: 'rid-1'
-        });
-        req.flush({ created: true, administration: dto, stock: { quantityOnHand: 1, minimumStockLevel: 5, isBelowMinimum: true } }, { status: 201, statusText: 'Created' });
-    });
-
-    it('ekleme 200 (aynı requestId): created false, hata değildir', (done) => {
-        service.createAdministration(request).subscribe((r) => {
-            expect(r.created).toBeFalse();
-            done();
-        });
-        http.expectOne('http://api.test/api/v1/administrations').flush({
-            created: false,
-            administration: dto,
-            stock: { quantityOnHand: 9, minimumStockLevel: 5, isBelowMinimum: false }
-        });
-    });
-
-    it('klinik yoksa istek atılmaz', (done) => {
-        TestBed.inject(AuthService).getClinicId = () => null;
-        service.createAdministration(request).subscribe({
-            error: (e: Error) => {
-                expect(e.message).toContain('Aktif klinik');
+    it('liste: aktif klinik gider, iptaller varsayılan istenmez', () =>
+        new Promise<void>((done) => {
+            service.getAdministrations({ examinationId: 'e1' }).subscribe((r) => {
+                expect(r.items[0].isVoided).toBe(false);
+                expect(r.items[0].examinationId).toBe('e1');
                 done();
-            }
-        });
-        http.expectNone('http://api.test/api/v1/administrations');
-    });
+            });
+            const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/administrations');
 
-    it('iptal: gerekçe kırpılarak /void a gider; varsayılan sonuç StockReturned, iptal edilmiş kayıt döner', (done) => {
-        service.voidAdministration('a1', '  Yanlış ürün seçildi ').subscribe((r) => {
-            expect(r.isVoided).toBeTrue();
-            expect(r.voidStockOutcome).toBe('StockReturned');
-            done();
-        });
-        const req = http.expectOne('http://api.test/api/v1/administrations/a1/void');
+            expect(req.request.params.get('clinicId')).toBe('c1');
+            expect(req.request.params.get('examinationId')).toBe('e1');
+            expect(req.request.params.has('includeVoided')).toBe(false);
+            req.flush({ items: [dto], page: 1, pageSize: 20, totalItems: 1, totalPages: 1 });
+        }));
 
-        expect(req.request.method).toBe('POST');
-        expect(req.request.body).toEqual({ reason: 'Yanlış ürün seçildi', stockOutcome: 'StockReturned' });
-        req.flush({ ...dto, status: 'Voided', voidReason: 'Yanlış ürün seçildi', voidStockOutcome: 'StockReturned' });
-    });
+    it('liste: includeVoided true gönderilir ve iptal durumu eşlenir', () =>
+        new Promise<void>((done) => {
+            service.getAdministrations({ includeVoided: true }).subscribe((r) => {
+                expect(r.items[0].isVoided).toBe(true);
+                done();
+            });
+            const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/administrations');
 
-    it('iptal: zarar/imha seçimi stockOutcome=WrittenOff olarak gider ve yanıttan okunur', (done) => {
-        service.voidAdministration('a1', 'Şişe kırıldı', 'WrittenOff').subscribe((r) => {
-            expect(r.voidStockOutcome).toBe('WrittenOff');
-            done();
-        });
-        const req = http.expectOne('http://api.test/api/v1/administrations/a1/void');
+            expect(req.request.params.get('includeVoided')).toBe('true');
+            req.flush({ items: [{ ...dto, status: 'Voided', voidReason: 'Yanlış ürün' }], page: 1, pageSize: 20, totalItems: 1, totalPages: 1 });
+        }));
 
-        expect(req.request.body).toEqual({ reason: 'Şişe kırıldı', stockOutcome: 'WrittenOff' });
-        req.flush({ ...dto, status: 'Voided', voidReason: 'Şişe kırıldı', voidStockOutcome: 'WrittenOff' });
-    });
+    it('ekleme 201: gövdede clinicId ve requestId var; stok bilgisi döner', () =>
+        new Promise<void>((done) => {
+            service.createAdministration(request).subscribe((r) => {
+                expect(r.created).toBe(true);
+                expect(r.stock.isBelowMinimum).toBe(true);
+                expect(r.administration.unit).toBe('şişe');
+                done();
+            });
+            const req = http.expectOne('http://api.test/api/v1/administrations');
 
-    it('ekleme: lateEntryReason gövdeye girer; sonradan ekleme alanları okunur', (done) => {
-        service.createAdministration({ ...request, lateEntryReason: ' Unutulmuş ' }).subscribe((r) => {
-            expect(r.administration.addedAfterFinalization).toBeTrue();
-            expect(r.administration.lateEntryReason).toBe('Unutulmuş');
-            done();
-        });
-        const req = http.expectOne('http://api.test/api/v1/administrations');
+            expect(req.request.method).toBe('POST');
+            expect(req.request.body).toEqual({
+                clinicId: 'c1',
+                petId: 'p1',
+                examinationId: 'e1',
+                treatmentId: null,
+                productId: 'pr1',
+                quantity: 0.5,
+                administeredAtUtc: null,
+                notes: null,
+                lateEntryReason: null,
+                requestId: 'rid-1'
+            });
+            req.flush({ created: true, administration: dto, stock: { quantityOnHand: 1, minimumStockLevel: 5, isBelowMinimum: true } }, { status: 201, statusText: 'Created' });
+        }));
 
-        expect(req.request.body.lateEntryReason).toBe('Unutulmuş');
-        req.flush({
-            created: true,
-            administration: { ...dto, addedAfterFinalization: true, lateEntryReason: 'Unutulmuş' },
-            stock: { quantityOnHand: 1, minimumStockLevel: 0, isBelowMinimum: false }
-        });
-    });
+    it('ekleme 200 (aynı requestId): created false, hata değildir', () =>
+        new Promise<void>((done) => {
+            service.createAdministration(request).subscribe((r) => {
+                expect(r.created).toBe(false);
+                done();
+            });
+            http.expectOne('http://api.test/api/v1/administrations').flush({
+                created: false,
+                administration: dto,
+                stock: { quantityOnHand: 9, minimumStockLevel: 5, isBelowMinimum: false }
+            });
+        }));
+
+    it('klinik yoksa istek atılmaz', () =>
+        new Promise<void>((done) => {
+            TestBed.inject(AuthService).getClinicId = () => null;
+            service.createAdministration(request).subscribe({
+                error: (e: Error) => {
+                    expect(e.message).toContain('Aktif klinik');
+                    done();
+                }
+            });
+            http.expectNone('http://api.test/api/v1/administrations');
+        }));
+
+    it('iptal: gerekçe kırpılarak /void a gider; varsayılan sonuç StockReturned, iptal edilmiş kayıt döner', () =>
+        new Promise<void>((done) => {
+            service.voidAdministration('a1', '  Yanlış ürün seçildi ').subscribe((r) => {
+                expect(r.isVoided).toBe(true);
+                expect(r.voidStockOutcome).toBe('StockReturned');
+                done();
+            });
+            const req = http.expectOne('http://api.test/api/v1/administrations/a1/void');
+
+            expect(req.request.method).toBe('POST');
+            expect(req.request.body).toEqual({ reason: 'Yanlış ürün seçildi', stockOutcome: 'StockReturned' });
+            req.flush({ ...dto, status: 'Voided', voidReason: 'Yanlış ürün seçildi', voidStockOutcome: 'StockReturned' });
+        }));
+
+    it('iptal: zarar/imha seçimi stockOutcome=WrittenOff olarak gider ve yanıttan okunur', () =>
+        new Promise<void>((done) => {
+            service.voidAdministration('a1', 'Şişe kırıldı', 'WrittenOff').subscribe((r) => {
+                expect(r.voidStockOutcome).toBe('WrittenOff');
+                done();
+            });
+            const req = http.expectOne('http://api.test/api/v1/administrations/a1/void');
+
+            expect(req.request.body).toEqual({ reason: 'Şişe kırıldı', stockOutcome: 'WrittenOff' });
+            req.flush({ ...dto, status: 'Voided', voidReason: 'Şişe kırıldı', voidStockOutcome: 'WrittenOff' });
+        }));
+
+    it('ekleme: lateEntryReason gövdeye girer; sonradan ekleme alanları okunur', () =>
+        new Promise<void>((done) => {
+            service.createAdministration({ ...request, lateEntryReason: ' Unutulmuş ' }).subscribe((r) => {
+                expect(r.administration.addedAfterFinalization).toBe(true);
+                expect(r.administration.lateEntryReason).toBe('Unutulmuş');
+                done();
+            });
+            const req = http.expectOne('http://api.test/api/v1/administrations');
+
+            expect(req.request.body.lateEntryReason).toBe('Unutulmuş');
+            req.flush({
+                created: true,
+                administration: { ...dto, addedAfterFinalization: true, lateEntryReason: 'Unutulmuş' },
+                stock: { quantityOnHand: 1, minimumStockLevel: 0, isBelowMinimum: false }
+            });
+        }));
 
     it('hata kodları Türkçe mesaja çevrilir', () => {
         const problem = (code: string, status: number) => new HttpErrorResponse({ status, error: { title: 'x', extensions: { code } } });

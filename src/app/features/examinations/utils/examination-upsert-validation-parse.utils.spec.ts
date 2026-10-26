@@ -1,34 +1,28 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import {
-    EXAMINATION_CONCURRENCY_CONFLICT_MESSAGE,
-    parseExaminationUpsertHttpError
-} from '@/app/features/examinations/utils/examination-upsert-validation-parse.utils';
+import { EXAMINATION_CONCURRENCY_CONFLICT_MESSAGE, parseExaminationUpsertHttpError } from '@/app/features/examinations/utils/examination-upsert-validation-parse.utils';
 
-const problem = (status: number, code: string, extra: Record<string, unknown> = {}) =>
-    new HttpErrorResponse({ status, error: { status, extensions: { code }, ...extra } });
+const problem = (status: number, code: string, extra: Record<string, unknown> = {}) => new HttpErrorResponse({ status, error: { status, extensions: { code }, ...extra } });
 
 describe('parseExaminationUpsertHttpError', () => {
     it('409 + ConcurrencyConflict çakışma olarak işaretlenir ve code taşınır', () => {
         const r = parseExaminationUpsertHttpError(problem(409, 'Examinations.ConcurrencyConflict', { detail: 'sunucu metni' }));
 
-        expect(r.isConcurrencyConflict).toBeTrue();
+        expect(r.isConcurrencyConflict).toBe(true);
         expect(r.code).toBe('Examinations.ConcurrencyConflict');
         expect(r.summaryMessage).toBe(EXAMINATION_CONCURRENCY_CONFLICT_MESSAGE);
     });
 
     it('AppointmentChangeNotAllowed 400 döner ve çakışma sayılmaz', () => {
-        const r = parseExaminationUpsertHttpError(
-            problem(400, 'Examinations.AppointmentChangeNotAllowed', { detail: 'Randevu değiştirilemez.' })
-        );
+        const r = parseExaminationUpsertHttpError(problem(400, 'Examinations.AppointmentChangeNotAllowed', { detail: 'Randevu değiştirilemez.' }));
 
-        expect(r.isConcurrencyConflict).toBeFalse();
+        expect(r.isConcurrencyConflict).toBe(false);
         expect(r.code).toBe('Examinations.AppointmentChangeNotAllowed');
         expect(r.summaryMessage).toBe('Randevu değiştirilemez.');
     });
 
     it('ConcurrencyConflict kodu 409 olmayan durumda çakışma sayılmaz; başka 409 kodu da sayılmaz', () => {
-        expect(parseExaminationUpsertHttpError(problem(400, 'Examinations.ConcurrencyConflict')).isConcurrencyConflict).toBeFalse();
-        expect(parseExaminationUpsertHttpError(problem(409, 'Examinations.Other')).isConcurrencyConflict).toBeFalse();
+        expect(parseExaminationUpsertHttpError(problem(400, 'Examinations.ConcurrencyConflict')).isConcurrencyConflict).toBe(false);
+        expect(parseExaminationUpsertHttpError(problem(409, 'Examinations.Other')).isConcurrencyConflict).toBe(false);
     });
 
     it('doğrulama alan hatalarını yeni alanlar için de ayrıştırır ve özet verir', () => {
@@ -52,7 +46,7 @@ describe('parseExaminationUpsertHttpError', () => {
         const r = parseExaminationUpsertHttpError(new HttpErrorResponse({ status: 0 }));
 
         expect(r.code).toBeNull();
-        expect(r.isConcurrencyConflict).toBeFalse();
+        expect(r.isConcurrencyConflict).toBe(false);
         expect(r.summaryMessage).toBeTruthy();
     });
 });

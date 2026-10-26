@@ -32,52 +32,56 @@ describe('CareInstructionsService', () => {
 
     afterEach(() => http.verify());
 
-    it('liste: yatış ve aktif klinik süzgeciyle istenir, rowVersion taşınır', (done) => {
-        service.getCareInstructions({ hospitalizationId: 'h1' }).subscribe((rows) => {
-            expect(rows).toEqual([{ id: 'ci1', text: 'Günde iki kez yemek', createdAtUtc: dto.createdAtUtc, updatedAtUtc: null, rowVersion: 'AAAAAAAAB9E=' }]);
-            done();
-        });
-        const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/care-instructions');
-
-        expect(req.request.params.get('hospitalizationId')).toBe('h1');
-        expect(req.request.params.get('clinicId')).toBe('c1');
-        req.flush({ items: [dto], page: 1, pageSize: 50, totalItems: 1, totalPages: 1 });
-    });
-
-    it('ekleme: klinik, hayvan, yatış ve kırpılmış metin gider; 201 gövdesi id olarak okunur', (done) => {
-        service.createCareInstruction({ petId: 'p1', hospitalizationId: 'h1', text: '  Dinlendirin ' }).subscribe((r) => {
-            expect(r.id).toBe('ci2');
-            done();
-        });
-        const req = http.expectOne('http://api.test/api/v1/care-instructions');
-
-        expect(req.request.method).toBe('POST');
-        expect(req.request.body).toEqual({ clinicId: 'c1', petId: 'p1', hospitalizationId: 'h1', text: 'Dinlendirin' });
-        req.flush('ci2', { status: 201, statusText: 'Created' });
-    });
-
-    it('ekleme: aktif klinik yoksa istek atılmaz', (done) => {
-        clinicId = null;
-        service.createCareInstruction({ petId: 'p1', hospitalizationId: 'h1', text: 'x' }).subscribe({
-            error: (e: Error) => {
-                expect(e.message).toContain('klinik');
+    it('liste: yatış ve aktif klinik süzgeciyle istenir, rowVersion taşınır', () =>
+        new Promise<void>((done) => {
+            service.getCareInstructions({ hospitalizationId: 'h1' }).subscribe((rows) => {
+                expect(rows).toEqual([{ id: 'ci1', text: 'Günde iki kez yemek', createdAtUtc: dto.createdAtUtc, updatedAtUtc: null, rowVersion: 'AAAAAAAAB9E=' }]);
                 done();
-            }
-        });
-        http.expectNone('http://api.test/api/v1/care-instructions');
-    });
+            });
+            const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/care-instructions');
 
-    it('güncelleme: yalnız metin ve rowVersion gider; 409 ham HttpErrorResponse olarak iletilir', (done) => {
-        service.updateCareInstruction('ci1', ' Yeni metin ', 'AAAAAAAAB9E=').subscribe({
-            error: (e: unknown) => {
-                expect((e as HttpErrorResponse).status).toBe(409);
+            expect(req.request.params.get('hospitalizationId')).toBe('h1');
+            expect(req.request.params.get('clinicId')).toBe('c1');
+            req.flush({ items: [dto], page: 1, pageSize: 50, totalItems: 1, totalPages: 1 });
+        }));
+
+    it('ekleme: klinik, hayvan, yatış ve kırpılmış metin gider; 201 gövdesi id olarak okunur', () =>
+        new Promise<void>((done) => {
+            service.createCareInstruction({ petId: 'p1', hospitalizationId: 'h1', text: '  Dinlendirin ' }).subscribe((r) => {
+                expect(r.id).toBe('ci2');
                 done();
-            }
-        });
-        const req = http.expectOne('http://api.test/api/v1/care-instructions/ci1');
+            });
+            const req = http.expectOne('http://api.test/api/v1/care-instructions');
 
-        expect(req.request.method).toBe('PUT');
-        expect(req.request.body).toEqual({ text: 'Yeni metin', rowVersion: 'AAAAAAAAB9E=' });
-        req.flush({ extensions: { code: 'CareInstructions.ConcurrencyConflict' } }, { status: 409, statusText: 'Conflict' });
-    });
+            expect(req.request.method).toBe('POST');
+            expect(req.request.body).toEqual({ clinicId: 'c1', petId: 'p1', hospitalizationId: 'h1', text: 'Dinlendirin' });
+            req.flush('ci2', { status: 201, statusText: 'Created' });
+        }));
+
+    it('ekleme: aktif klinik yoksa istek atılmaz', () =>
+        new Promise<void>((done) => {
+            clinicId = null;
+            service.createCareInstruction({ petId: 'p1', hospitalizationId: 'h1', text: 'x' }).subscribe({
+                error: (e: Error) => {
+                    expect(e.message).toContain('klinik');
+                    done();
+                }
+            });
+            http.expectNone('http://api.test/api/v1/care-instructions');
+        }));
+
+    it('güncelleme: yalnız metin ve rowVersion gider; 409 ham HttpErrorResponse olarak iletilir', () =>
+        new Promise<void>((done) => {
+            service.updateCareInstruction('ci1', ' Yeni metin ', 'AAAAAAAAB9E=').subscribe({
+                error: (e: unknown) => {
+                    expect((e as HttpErrorResponse).status).toBe(409);
+                    done();
+                }
+            });
+            const req = http.expectOne('http://api.test/api/v1/care-instructions/ci1');
+
+            expect(req.request.method).toBe('PUT');
+            expect(req.request.body).toEqual({ text: 'Yeni metin', rowVersion: 'AAAAAAAAB9E=' });
+            req.flush({ extensions: { code: 'CareInstructions.ConcurrencyConflict' } }, { status: 409, statusText: 'Conflict' });
+        }));
 });

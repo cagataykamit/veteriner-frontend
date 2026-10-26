@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -14,7 +15,7 @@ const PAMUK = { petId: 'p1', petName: 'Pamuk', summary: 'Kedi · Tekir', microch
 describe('PatientsHomePageComponent (arama-öncelikli Hastalar girişi)', () => {
     let claims: Set<string>;
     let mutationBlocked: boolean;
-    let search: jasmine.Spy;
+    let search: Mock;
 
     const create = () => {
         TestBed.configureTestingModule({
@@ -47,7 +48,10 @@ describe('PatientsHomePageComponent (arama-öncelikli Hastalar girişi)', () => 
     beforeEach(() => {
         claims = new Set(['Clients.Read', 'Pets.Read', 'Clients.Create', 'Pets.Create', 'Visits.Create', 'Examinations.Create', 'Appointments.Create']);
         mutationBlocked = false;
-        search = jasmine.createSpy('search').and.returnValue(of({ patients: [PAMUK], owners: [], failedKinds: [] } satisfies PatientSearchResultVm));
+        search = vi
+            .fn()
+            .mockName('search')
+            .mockReturnValue(of({ patients: [PAMUK], owners: [], failedKinds: [] } satisfies PatientSearchResultVm));
     });
 
     it('açılışta önce arama kutusu görünür; tablo yoktur ve arama yapılmaz', () => {
@@ -80,7 +84,7 @@ describe('PatientsHomePageComponent (arama-öncelikli Hastalar girişi)', () => 
     });
 
     it('vefat eden hayvan rozetle ayrışır; satırda Geldi, Muayene başlat ve Randevu al yoktur', () => {
-        search.and.returnValue(of({ patients: [{ ...PAMUK, deceased: true }], owners: [], failedKinds: [] }));
+        search.mockReturnValue(of({ patients: [{ ...PAMUK, deceased: true }], owners: [], failedKinds: [] }));
         const row = typeAndSearch(create(), 'pamuk').querySelector('.patient-row') as HTMLElement;
 
         expect(row.querySelector('[data-testid="patient-deceased"]')?.textContent).toContain('Vefat');
@@ -104,20 +108,20 @@ describe('PatientsHomePageComponent (arama-öncelikli Hastalar girişi)', () => 
     });
 
     it('sonuç yoksa mesaj ve öne çıkan Yeni kayıt eylemi görünür', () => {
-        search.and.returnValue(of({ patients: [], owners: [], failedKinds: [] }));
+        search.mockReturnValue(of({ patients: [], owners: [], failedKinds: [] }));
         const fixture = create();
         const el = typeAndSearch(fixture, 'zzz');
 
         expect(el.textContent).toContain('için sonuç bulunamadı');
         expect(el.textContent).toContain('Yeni kayıt: müşteri ve hasta');
-        expect(fixture.componentInstance.noResults()).toBeTrue();
+        expect(fixture.componentInstance.noResults()).toBe(true);
     });
 
     it('sonuç varken de Yeni kayıt aramanın altında ikincil olarak durur; kayıt izni yoksa yoktur', () => {
         let fixture = create();
 
         expect(typeAndSearch(fixture, 'pamuk').textContent).toContain('Yeni kayıt: müşteri ve hasta');
-        expect(fixture.componentInstance.noResults()).toBeFalse();
+        expect(fixture.componentInstance.noResults()).toBe(false);
         TestBed.resetTestingModule();
         claims.delete('Clients.Create');
         fixture = create();
@@ -125,7 +129,7 @@ describe('PatientsHomePageComponent (arama-öncelikli Hastalar girişi)', () => 
     });
 
     it('hayvanı olmayan sahip satırında Yeni hayvan eylemi vardır', () => {
-        search.and.returnValue(of({ patients: [], owners: [{ clientId: 'c9', name: 'Veli Can', phone: '0532' }], failedKinds: [] }));
+        search.mockReturnValue(of({ patients: [], owners: [{ clientId: 'c9', name: 'Veli Can', phone: '0532' }], failedKinds: [] }));
         const el = typeAndSearch(create(), 'veli');
         const row = el.querySelector('.owner-row') as HTMLElement;
 
@@ -137,11 +141,11 @@ describe('PatientsHomePageComponent (arama-öncelikli Hastalar girişi)', () => 
     });
 
     it('arama hatasında uyarı gösterilir; kısa terimde arama yapılmaz', () => {
-        search.and.returnValue(throwError(() => new Error('x')));
+        search.mockReturnValue(throwError(() => new Error('x')));
         const fixture = create();
 
         expect(typeAndSearch(fixture, 'pa').querySelector('[role="alert"]')?.textContent).toContain('Arama yapılamadı');
-        search.calls.reset();
+        search.mockClear();
         typeAndSearch(fixture, 'p');
         expect(search).not.toHaveBeenCalled();
         expect(fixture.componentInstance.status()).toBe('idle');

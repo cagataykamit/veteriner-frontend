@@ -17,21 +17,21 @@ describe('PetAlertFieldsComponent', () => {
     });
 
     it('başlangıçta (form henüz geçersizken bile) not alanı geçersiz görünmez', () => {
-        expect(form.invalid).toBeTrue();
+        expect(form.invalid).toBe(true);
         expect(note().classList).not.toContain('ng-invalid');
-        expect(note().readOnly).toBeTrue();
+        expect(note().readOnly).toBe(true);
     });
 
     it('200 karakteri aşan not alanı geçersiz işaretler', () => {
         form.controls.alertNote.setValue('x'.repeat(201));
         fixture.detectChanges();
-        expect(form.controls.alertNote.invalid).toBeTrue();
+        expect(form.controls.alertNote.invalid).toBe(true);
         expect(note().classList).toContain('ng-invalid');
     });
 
     it('bayrak seçilince not alanı yazılabilir olur', () => {
         form.controls.alertFlags.setValue(['Allergy']);
         fixture.detectChanges();
-        expect(note().readOnly).toBeFalse();
+        expect(note().readOnly).toBe(false);
     });
 });

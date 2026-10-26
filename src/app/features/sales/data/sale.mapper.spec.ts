@@ -1,12 +1,5 @@
 import type { SaleDto } from '@/app/features/sales/models/sale-api.model';
-import {
-    isSellableProduct,
-    mapCreateSaleResponseToVm,
-    mapPagedSalesToVm,
-    mapProductDtoToSaleProductVm,
-    mapSaleDtoToDetailVm,
-    salesQueryToHttpParams
-} from './sale.mapper';
+import { isSellableProduct, mapCreateSaleResponseToVm, mapPagedSalesToVm, mapProductDtoToSaleProductVm, mapSaleDtoToDetailVm, salesQueryToHttpParams } from './sale.mapper';
 
 const sale = (over: Partial<SaleDto> = {}): SaleDto => ({
     id: 's1',
@@ -20,9 +13,7 @@ const sale = (over: Partial<SaleDto> = {}): SaleDto => ({
     currency: 'TRY',
     paidAmount: 91,
     outstandingAmount: 0,
-    lines: [
-        { id: 'sl1', productId: 'p1', productName: 'Mama', unit: 'kg', quantity: 2, unitPrice: 45.5, lineAmount: 91, lotNumber: 'L-1', expiryDate: '2027-01-31' }
-    ],
+    lines: [{ id: 'sl1', productId: 'p1', productName: 'Mama', unit: 'kg', quantity: 2, unitPrice: 45.5, lineAmount: 91, lotNumber: 'L-1', expiryDate: '2027-01-31' }],
     ...over
 });
 
@@ -31,10 +22,10 @@ describe('sale.mapper', () => {
         const vm = mapSaleDtoToDetailVm(sale());
 
         expect(vm.clientName).toBe('Peşin müşteri');
-        expect(vm.isWalkIn).toBeTrue();
-        expect(vm.isVoided).toBeFalse();
+        expect(vm.isWalkIn).toBe(true);
+        expect(vm.isVoided).toBe(false);
         expect(vm.statusLabel).toBe('Geçerli');
-        expect(vm.hasOutstanding).toBeFalse();
+        expect(vm.hasOutstanding).toBe(false);
         expect(vm.totalAmount).toBe(91);
         expect(vm.lines[0].productName).toBe('Mama');
         expect(vm.lines[0].batchText).toContain('L-1');
@@ -45,12 +36,12 @@ describe('sale.mapper', () => {
     it('veresiyeli satış kalan borç gösterir; iptal edilmiş satışta kalan borç yok sayılır', () => {
         const open = mapSaleDtoToDetailVm(sale({ isWalkIn: false, clientName: 'Ali Veli', paidAmount: 40, outstandingAmount: 51 }));
 
-        expect(open.hasOutstanding).toBeTrue();
+        expect(open.hasOutstanding).toBe(true);
         expect(open.clientName).toBe('Ali Veli');
         const voided = mapSaleDtoToDetailVm(sale({ status: 'Voided', paidAmount: 0, outstandingAmount: 51, voidReason: 'Yanlış ürün', voidStockOutcome: 'WrittenOff' }));
 
-        expect(voided.isVoided).toBeTrue();
-        expect(voided.hasOutstanding).toBeFalse();
+        expect(voided.isVoided).toBe(true);
+        expect(voided.hasOutstanding).toBe(false);
         expect(voided.statusLabel).toBe('İptal edildi');
         expect(voided.voidStockOutcomeLabel).toBe('Zarar yazıldı');
     });
@@ -64,7 +55,7 @@ describe('sale.mapper', () => {
     it('sayfalı liste ve oluşturma yanıtı eşlenir; aynı requestId yanıtı created:false taşır', () => {
         const paged = mapPagedSalesToVm({ items: [sale()], page: 2, pageSize: 20, totalItems: 21, totalPages: 2 });
 
-        expect(paged.items).toHaveSize(1);
+        expect(paged.items).toHaveLength(1);
         expect(paged.totalPages).toBe(2);
         const created = mapCreateSaleResponseToVm({
             created: false,
@@ -72,7 +63,7 @@ describe('sale.mapper', () => {
             stocks: [{ productId: 'p1', quantityOnHand: 3, isBelowMinimum: true }]
         });
 
-        expect(created.created).toBeFalse();
+        expect(created.created).toBe(false);
         expect(created.stocks).toEqual([{ productId: 'p1', quantityText: '3', isBelowMinimum: true }]);
     });
 
@@ -81,9 +72,9 @@ describe('sale.mapper', () => {
 
         expect(base.get('page')).toBe('2');
         expect(base.get('pageSize')).toBe('50');
-        expect(base.has('clientId')).toBeFalse();
+        expect(base.has('clientId')).toBe(false);
         expect(base.get('fromUtc')).toBe('2026-10-01T00:00:00Z');
-        expect(base.has('includeVoided')).toBeFalse();
+        expect(base.has('includeVoided')).toBe(false);
         expect(salesQueryToHttpParams({ includeVoided: true }).get('includeVoided')).toBe('true');
     });
 
@@ -92,11 +83,11 @@ describe('sale.mapper', () => {
 
         expect(normal.unitPrice).toBe(45.5);
         expect(normal.barcode).toBe('869');
-        expect(isSellableProduct(normal)).toBeTrue();
-        expect(isSellableProduct({ kind: 'Medicine', controlledClass: 'None' })).toBeTrue();
-        expect(isSellableProduct({ kind: 'Vaccine', controlledClass: 'None' })).toBeFalse();
-        expect(isSellableProduct({ kind: 'Service', controlledClass: 'None' })).toBeFalse();
-        expect(isSellableProduct({ kind: 'Medicine', controlledClass: 'Narcotic' })).toBeFalse();
-        expect(isSellableProduct({ kind: 'Other', controlledClass: 'Psychotropic' })).toBeFalse();
+        expect(isSellableProduct(normal)).toBe(true);
+        expect(isSellableProduct({ kind: 'Medicine', controlledClass: 'None' })).toBe(true);
+        expect(isSellableProduct({ kind: 'Vaccine', controlledClass: 'None' })).toBe(false);
+        expect(isSellableProduct({ kind: 'Service', controlledClass: 'None' })).toBe(false);
+        expect(isSellableProduct({ kind: 'Medicine', controlledClass: 'Narcotic' })).toBe(false);
+        expect(isSellableProduct({ kind: 'Other', controlledClass: 'Psychotropic' })).toBe(false);
     });
 });

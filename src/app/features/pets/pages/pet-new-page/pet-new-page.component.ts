@@ -1,5 +1,5 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
-import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
+import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
@@ -24,8 +24,8 @@ import { petMicrochipFormatWarning } from '@/app/features/pets/utils/pet-microch
 import { PET_GENDER_FORM_OPTIONS } from '@/app/features/pets/utils/pet-status.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
-import { QuickBreedDialogComponent } from '@/app/shared/forms/quick-create/quick-breed-dialog.component';
-import { QuickSpeciesDialogComponent } from '@/app/shared/forms/quick-create/quick-species-dialog.component';
+import { QuickBreedDialogComponent } from '@/app/features/breeds/components/quick-breed-dialog.component';
+import { QuickSpeciesDialogComponent } from '@/app/features/species/components/quick-species-dialog.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { DATE_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';

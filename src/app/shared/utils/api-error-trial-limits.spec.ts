@@ -3,8 +3,7 @@ import { isTrialLimitError, messageFromHttpError, trialLimitProblemCode, TrialLi
 
 const EXPORT_DETAIL = 'Deneme sürümünde dışa aktarma en fazla 1000 satır sınırı; abonelikle kalkar. Filtreyi daraltın.';
 
-const problem = (code: string, detail: string | null = EXPORT_DETAIL, status = 422) =>
-    new HttpErrorResponse({ status, error: { status, title: 'İş kuralı ihlali', detail, code } });
+const problem = (code: string, detail: string | null = EXPORT_DETAIL, status = 422) => new HttpErrorResponse({ status, error: { status, title: 'İş kuralı ihlali', detail, code } });
 
 describe('api-error: deneme kısıtları (TRIAL-004, docs/TRIAL_LIMITS_API_CONTRACT.md §3)', () => {
     it('Trial.ExportLimitExceeded: sunucunun detail metni olduğu gibi gösterilir', () => {
@@ -41,10 +40,10 @@ describe('api-error: deneme kısıtları (TRIAL-004, docs/TRIAL_LIMITS_API_CONTR
     });
 
     it('isTrialLimitError: TrialLimitError ve ham Trial.* HttpErrorResponse için true; diğerleri false', () => {
-        expect(isTrialLimitError(new TrialLimitError('m', 'Trial.ImportLimitExceeded'))).toBeTrue();
-        expect(isTrialLimitError(problem('Trial.ImportLimitExceeded'))).toBeTrue();
-        expect(isTrialLimitError(problem('Imports.TooManyRows', 'x', 400))).toBeFalse();
-        expect(isTrialLimitError(new Error('Trial.ExportLimitExceeded'))).toBeFalse();
-        expect(isTrialLimitError(null)).toBeFalse();
+        expect(isTrialLimitError(new TrialLimitError('m', 'Trial.ImportLimitExceeded'))).toBe(true);
+        expect(isTrialLimitError(problem('Trial.ImportLimitExceeded'))).toBe(true);
+        expect(isTrialLimitError(problem('Imports.TooManyRows', 'x', 400))).toBe(false);
+        expect(isTrialLimitError(new Error('Trial.ExportLimitExceeded'))).toBe(false);
+        expect(isTrialLimitError(null)).toBe(false);
     });
 });

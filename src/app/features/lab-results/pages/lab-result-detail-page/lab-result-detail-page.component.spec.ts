@@ -79,8 +79,14 @@ describe('LabResultDetailPageComponent — başlık eylemleri', () => {
 describe('LabResultDetailPageComponent — İptal et', () => {
     it('liste satırıyla ortak iptal diyaloğunu açar; onayda ekranın açıldığı sürümle iptal eder ve kaydı yeniler', () => {
         const service = {
-            getLabResultById: jasmine.createSpy('getLabResultById').and.returnValue(of(vm('Requested'))),
-            cancelLabResult: jasmine.createSpy('cancelLabResult').and.returnValue(of(void 0))
+            getLabResultById: vi
+                .fn()
+                .mockName('getLabResultById')
+                .mockReturnValue(of(vm('Requested'))),
+            cancelLabResult: vi
+                .fn()
+                .mockName('cancelLabResult')
+                .mockReturnValue(of(void 0))
         };
 
         TestBed.configureTestingModule({
@@ -106,23 +112,26 @@ describe('LabResultDetailPageComponent — İptal et', () => {
         expect(fixture.debugElement.query((d) => d.name === 'app-lab-result-cancel-dialog')).not.toBeNull();
         const dialog = fixture.debugElement.query((d) => d.name === 'app-reason-confirm-dialog').componentInstance as ReasonConfirmDialogComponent;
 
-        expect(dialog.visible()).toBeTrue();
+        expect(dialog.visible()).toBe(true);
         expect(service.cancelLabResult).not.toHaveBeenCalled();
 
-        service.getLabResultById.calls.reset();
+        service.getLabResultById.mockClear();
         dialog.form.controls.reason.setValue('Yanlış hastaya istendi');
         dialog.onSubmit();
 
-        expect(service.cancelLabResult).toHaveBeenCalledOnceWith('l1', 'Yanlış hastaya istendi', 'V1');
-        expect(service.getLabResultById).withContext('yalnız yenileme; sürüm zaten ekrandan gelir').toHaveBeenCalledTimes(1);
+        expect(service.cancelLabResult).toHaveBeenCalledTimes(1);
+
+        expect(service.cancelLabResult).toHaveBeenCalledWith('l1', 'Yanlış hastaya istendi', 'V1');
+        expect(service.getLabResultById, 'yalnız yenileme; sürüm zaten ekrandan gelir').toHaveBeenCalledTimes(1);
     });
 });
 
 describe('LabResultDetailPageComponent — dosyalar', () => {
     const render = (status: LabResultStatus, canUpdate: boolean) => {
-        const list = jasmine.createSpy('list').and.returnValue(
-            of([{ id: 'f1', fileName: 'sonuc.pdf', contentType: 'application/pdf', kind: 'Pdf', sizeBytes: 10, uploadedAtUtc: '' }])
-        );
+        const list = vi
+            .fn()
+            .mockName('list')
+            .mockReturnValue(of([{ id: 'f1', fileName: 'sonuc.pdf', contentType: 'application/pdf', kind: 'Pdf', sizeBytes: 10, uploadedAtUtc: '' }]));
 
         TestBed.configureTestingModule({
             imports: [LabResultDetailPageComponent],

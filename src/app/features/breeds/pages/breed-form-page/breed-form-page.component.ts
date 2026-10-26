@@ -14,7 +14,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { BREEDS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { BREEDS_CREATE_CLAIM, BREEDS_UPDATE_CLAIM, SPECIES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { SpeciesService } from '@/app/features/species/services/species.service';
-import { QuickSpeciesDialogComponent } from '@/app/shared/forms/quick-create/quick-species-dialog.component';
+import { QuickSpeciesDialogComponent } from '@/app/features/species/components/quick-species-dialog.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';

@@ -34,7 +34,7 @@ describe('PortalAppointmentsComponent (randevularım)', () => {
         configurePortalPage(PortalAppointmentsComponent, createSessionStub());
         http = TestBed.inject(HttpTestingController);
         router = TestBed.inject(Router);
-        spyOn(router, 'navigate').and.resolveTo(true);
+        vi.spyOn(router, 'navigate').mockResolvedValue(true);
         fixture = TestBed.createComponent(PortalAppointmentsComponent);
         el = fixture.nativeElement;
 
@@ -55,13 +55,7 @@ describe('PortalAppointmentsComponent (randevularım)', () => {
         expect(el.querySelector('portal-skeleton')).not.toBeNull();
         expect(el.querySelector('[role=tab][aria-selected=true]')?.textContent).toContain('Yaklaşan');
 
-        expectList('upcoming', 1).flush(
-            page([
-                appointment(),
-                appointment({ appointmentId: 'ap-2', status: 'Cancelled', appointmentType: 'Other' }),
-                appointment({ appointmentId: 'ap-3', status: 'NoShow', appointmentType: 'Checkup' })
-            ])
-        );
+        expectList('upcoming', 1).flush(page([appointment(), appointment({ appointmentId: 'ap-2', status: 'Cancelled', appointmentType: 'Other' }), appointment({ appointmentId: 'ap-3', status: 'NoShow', appointmentType: 'Checkup' })]));
         await settle();
 
         const rows = el.querySelectorAll('[data-testid=appointment-list] li');

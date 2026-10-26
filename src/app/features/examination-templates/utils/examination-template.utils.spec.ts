@@ -28,8 +28,8 @@ const result = (over: object = {}) => ({ examinationId: 'e1', rowVersion: 'V2', 
 
 describe('examination-template.utils', () => {
     it('metin: boşluktan ibaret metin yok sayılır', () => {
-        expect(templateHasText(template({ findings: '  ' }))).toBeFalse();
-        expect(templateHasText(template({ plan: 'Kontrol: 7 gün' }))).toBeTrue();
+        expect(templateHasText(template({ findings: '  ' }))).toBe(false);
+        expect(templateHasText(template({ plan: 'Kontrol: 7 gün' }))).toBe(true);
     });
 
     it('içerik özeti ve pasif satırlar', () => {

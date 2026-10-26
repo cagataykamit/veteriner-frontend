@@ -29,7 +29,7 @@ describe('ClientsService — portal erişimi (PORTAL_API_CONTRACT §4)', () => {
 
         expect(req.request.method).toBe('GET');
         req.flush({ clientId: 'c 1', canInvite: true, inviteBlockedCode: null, links: [], invites: [] });
-        expect(canInvite).toBeTrue();
+        expect(canInvite).toBe(true);
     });
 
     it('davet gövdesine aktif klinik yazılır; klinik yoksa gövde boş', () => {
@@ -74,8 +74,8 @@ describe('ClientsService — portal erişimi (PORTAL_API_CONTRACT §4)', () => {
         expect(close.request.method).toBe('POST');
         close.flush(null, { status: 204, statusText: 'No Content' });
 
-        expect(revoked).toBeTrue();
-        expect(closed).toBeTrue();
+        expect(revoked).toBe(true);
+        expect(closed).toBe(true);
     });
 
     it('409 OwnerPortal.LinkAlreadyClosed mesajı', () => {

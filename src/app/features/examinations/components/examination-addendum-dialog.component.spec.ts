@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
@@ -10,11 +11,13 @@ const addendum: ExaminationAddendumVm = { id: 'a1', reason: 'Hatalı kilo', text
 describe('ExaminationAddendumDialogComponent', () => {
     let fixture: ComponentFixture<ExaminationAddendumDialogComponent>;
     let cmp: ExaminationAddendumDialogComponent;
-    let service: jasmine.SpyObj<ExaminationsService>;
+    let service: MockedObject<ExaminationsService>;
     let added: ExaminationAddendumVm[];
 
     beforeEach(async () => {
-        service = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', ['addAddendum']);
+        service = {
+            addAddendum: vi.fn().mockName('ExaminationsService.addAddendum')
+        } as unknown as MockedObject<ExaminationsService>;
         await TestBed.configureTestingModule({
             imports: [ExaminationAddendumDialogComponent],
             providers: [{ provide: ExaminationsService, useValue: service }]
@@ -34,22 +37,22 @@ describe('ExaminationAddendumDialogComponent', () => {
 
     it('gerekçe kırpılmış 5–500, metin kırpılmış 1–4000 olmalı', () => {
         fill('abcd', 'x');
-        expect(cmp.form.controls.reason.invalid).toBeTrue();
+        expect(cmp.form.controls.reason.invalid).toBe(true);
 
         fill('     ab     ', 'x');
-        expect(cmp.form.controls.reason.invalid).toBeTrue();
+        expect(cmp.form.controls.reason.invalid).toBe(true);
 
         fill('a'.repeat(501), 'x');
-        expect(cmp.form.controls.reason.invalid).toBeTrue();
+        expect(cmp.form.controls.reason.invalid).toBe(true);
 
         fill('abcde', '   ');
-        expect(cmp.form.controls.text.invalid).toBeTrue();
+        expect(cmp.form.controls.text.invalid).toBe(true);
 
         fill('abcde', 'x'.repeat(4001));
-        expect(cmp.form.controls.text.invalid).toBeTrue();
+        expect(cmp.form.controls.text.invalid).toBe(true);
 
         fill('abcde', 'x'.repeat(4000));
-        expect(cmp.form.valid).toBeTrue();
+        expect(cmp.form.valid).toBe(true);
     });
 
     it('geçersiz formda istek atılmaz', () => {
@@ -62,7 +65,7 @@ describe('ExaminationAddendumDialogComponent', () => {
     it('gönderim sürerken tekrar tıklama ikinci ek not oluşturmaz (backend idempotent değil)', () => {
         const pending = new Subject<ExaminationAddendumVm>();
 
-        service.addAddendum.and.returnValue(pending);
+        service.addAddendum.mockReturnValue(pending);
         fill('Hatalı kilo', 'Doğru kilo 12,4');
 
         cmp.onSubmit();
@@ -70,29 +73,31 @@ describe('ExaminationAddendumDialogComponent', () => {
         cmp.onSubmit();
 
         expect(service.addAddendum).toHaveBeenCalledTimes(1);
-        expect(cmp.submitting()).toBeTrue();
+        expect(cmp.submitting()).toBe(true);
     });
 
     it('başarıda diyalog kapanır ve ek not bildirilir', () => {
-        service.addAddendum.and.returnValue(of(addendum));
+        service.addAddendum.mockReturnValue(of(addendum));
         fill('Hatalı kilo', 'Doğru kilo 12,4');
 
         cmp.onSubmit();
 
-        expect(service.addAddendum).toHaveBeenCalledOnceWith('e1', { reason: 'Hatalı kilo', text: 'Doğru kilo 12,4' });
+        expect(service.addAddendum).toHaveBeenCalledTimes(1);
+
+        expect(service.addAddendum).toHaveBeenCalledWith('e1', { reason: 'Hatalı kilo', text: 'Doğru kilo 12,4' });
         expect(added).toEqual([addendum]);
-        expect(cmp.visible()).toBeFalse();
-        expect(cmp.submitting()).toBeFalse();
+        expect(cmp.visible()).toBe(false);
+        expect(cmp.submitting()).toBe(false);
     });
 
     it('hatada mesaj gösterilir, diyalog açık kalır ve kilit açılır (tekrar denenebilir)', () => {
-        service.addAddendum.and.returnValues(throwError(() => new Error('Ek not yalnızca kesinleşmiş muayeneye eklenebilir.')), of(addendum));
+        service.addAddendum.mockReturnValueOnce(throwError(() => new Error('Ek not yalnızca kesinleşmiş muayeneye eklenebilir.'))).mockReturnValueOnce(of(addendum));
         fill('Hatalı kilo', 'Doğru kilo 12,4');
 
         cmp.onSubmit();
         expect(cmp.submitError()).toContain('yalnızca kesinleşmiş');
-        expect(cmp.visible()).toBeTrue();
-        expect(cmp.submitting()).toBeFalse();
+        expect(cmp.visible()).toBe(true);
+        expect(cmp.submitting()).toBe(false);
 
         cmp.onSubmit();
         expect(service.addAddendum).toHaveBeenCalledTimes(2);
@@ -100,7 +105,7 @@ describe('ExaminationAddendumDialogComponent', () => {
     });
 
     it('HttpErrorResponse hatası da Türkçe mesaja çevrilir', () => {
-        service.addAddendum.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403, error: null })));
+        service.addAddendum.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403, error: null })));
         fill('Hatalı kilo', 'Doğru kilo 12,4');
 
         cmp.onSubmit();

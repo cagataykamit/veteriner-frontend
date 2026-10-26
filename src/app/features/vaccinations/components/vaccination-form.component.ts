@@ -1,7 +1,7 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
-import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
-import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
+import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
+import { PetSearchComponent } from '@/app/features/pets/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
@@ -23,7 +23,7 @@ import { VaccinationsService } from '@/app/features/vaccinations/services/vaccin
 import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/services/vaccine-definitions.service';
 import type { VaccineDefinitionListItemVm } from '@/app/features/vaccine-definitions/models/vaccine-definition-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
+import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
 import { parseVaccinationCreateRouteContext, type VaccinationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';

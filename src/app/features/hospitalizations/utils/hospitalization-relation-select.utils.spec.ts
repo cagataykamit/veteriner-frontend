@@ -1,10 +1,6 @@
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
-import {
-    FINALIZED_EXAMINATION_OPTION_HINT,
-    hospitalizationExaminationOption,
-    hospitalizationVisitOptions
-} from '@/app/features/hospitalizations/utils/hospitalization-relation-select.utils';
+import { FINALIZED_EXAMINATION_OPTION_HINT, hospitalizationExaminationOption, hospitalizationVisitOptions } from '@/app/features/hospitalizations/utils/hospitalization-relation-select.utils';
 
 function exam(status: ExaminationListItemVm['status']): ExaminationListItemVm {
     return {
@@ -30,7 +26,7 @@ describe('hospitalization-relation-select.utils', () => {
     it('kesinleşmiş muayene açıklamayla pasif, taslak seçilebilir', () => {
         const finalized = hospitalizationExaminationOption(exam('Finalized'));
 
-        expect(finalized.disabled).toBeTrue();
+        expect(finalized.disabled).toBe(true);
         expect(finalized.label).toContain(FINALIZED_EXAMINATION_OPTION_HINT);
         const draft = hospitalizationExaminationOption(exam('Draft'));
 

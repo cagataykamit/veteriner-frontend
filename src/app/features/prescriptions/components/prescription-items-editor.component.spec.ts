@@ -1,14 +1,10 @@
+import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { PrescriptionItemsEditorComponent } from '@/app/features/prescriptions/components/prescription-items-editor.component';
-import {
-    createPrescriptionItemGroup,
-    createPrescriptionItemsArray,
-    PRESCRIPTION_ITEMS_MAX,
-    prescriptionItemsFormToInputs
-} from '@/app/features/prescriptions/utils/prescription-items-form.utils';
+import { createPrescriptionItemGroup, createPrescriptionItemsArray, PRESCRIPTION_ITEMS_MAX, prescriptionItemsFormToInputs } from '@/app/features/prescriptions/utils/prescription-items-form.utils';
 
 const product = { id: 'pr1', name: 'Serum', sku: '—', categoryName: '—', unit: 'şişe', unitPriceText: '—', currency: 'TRY', isActive: true, statusLabel: 'Aktif', statusSeverity: 'success' };
 
@@ -16,11 +12,14 @@ describe('PrescriptionItemsEditorComponent', () => {
     let fixture: ComponentFixture<PrescriptionItemsEditorComponent>;
     let cmp: PrescriptionItemsEditorComponent;
     let claims: Set<string>;
-    let getProducts: jasmine.Spy;
+    let getProducts: Mock;
     const items = createPrescriptionItemsArray();
 
     const setup = async () => {
-        getProducts = jasmine.createSpy('getProducts').and.returnValue(of({ items: [product], page: 1, pageSize: 200, totalItems: 1, totalPages: 1 }));
+        getProducts = vi
+            .fn()
+            .mockName('getProducts')
+            .mockReturnValue(of({ items: [product], page: 1, pageSize: 200, totalItems: 1, totalPages: 1 }));
         await TestBed.configureTestingModule({
             imports: [PrescriptionItemsEditorComponent],
             providers: [
@@ -67,7 +66,7 @@ describe('PrescriptionItemsEditorComponent', () => {
         }
 
         await setup();
-        expect(el().querySelector('[data-testid="prescription-item-add"] button')?.hasAttribute('disabled')).toBeTrue();
+        expect(el().querySelector('[data-testid="prescription-item-add"] button')?.hasAttribute('disabled')).toBe(true);
         cmp.addRow();
         expect(items.length).toBe(PRESCRIPTION_ITEMS_MAX);
     });
@@ -75,12 +74,12 @@ describe('PrescriptionItemsEditorComponent', () => {
     it('ad ve ürün ikisi de boşsa satır geçersiz; yalnız ad veya yalnız ürün geçerli', () => {
         const g = createPrescriptionItemGroup();
 
-        expect(g.hasError('nameOrProductRequired')).toBeTrue();
+        expect(g.hasError('nameOrProductRequired')).toBe(true);
         g.controls.name.setValue('Dış ilaç');
-        expect(g.valid).toBeTrue();
+        expect(g.valid).toBe(true);
         g.controls.name.setValue('');
         g.controls.productId.setValue('pr1');
-        expect(g.valid).toBeTrue();
+        expect(g.valid).toBe(true);
     });
 
     it('miktar 0, 4 ondalık veya çok büyükse geçersiz', () => {
@@ -88,11 +87,11 @@ describe('PrescriptionItemsEditorComponent', () => {
 
         for (const q of [0, -2, 0.0001, 100001]) {
             g.controls.quantity.setValue(q);
-            expect(g.controls.quantity.valid).withContext(String(q)).toBeFalse();
+            expect(g.controls.quantity.valid, String(q)).toBe(false);
         }
 
         g.controls.quantity.setValue(14);
-        expect(g.valid).toBeTrue();
+        expect(g.valid).toBe(true);
     });
 
     it('ürün seçilince boş ad ürün adıyla dolar, dolu ad korunur; temizlenince bağ boşalır', async () => {
@@ -115,15 +114,13 @@ describe('PrescriptionItemsEditorComponent', () => {
         claims.clear();
         await setup();
         expect(getProducts).not.toHaveBeenCalled();
-        expect(cmp.canPickProduct).toBeFalse();
+        expect(cmp.canPickProduct).toBe(false);
     });
 
     it('istek satırları kırpılır; ürün bağı olmayan satır productId null gönderir', () => {
         const arr = createPrescriptionItemsArray([{ name: ' Amoksisilin ', productId: null, instructions: ' 2x1 ', quantity: 14, dose: ' 1 tablet ', unit: ' kutu ', lotNumber: '' }]);
 
-        expect(prescriptionItemsFormToInputs(arr)).toEqual([
-            { name: 'Amoksisilin', productId: null, instructions: '2x1', quantity: 14, dose: '1 tablet', unit: 'kutu', lotNumber: null }
-        ]);
+        expect(prescriptionItemsFormToInputs(arr)).toEqual([{ name: 'Amoksisilin', productId: null, instructions: '2x1', quantity: 14, dose: '1 tablet', unit: 'kutu', lotNumber: null }]);
     });
 
     it('satırda birim, doz ve parti/seri no alanları bulunur (ADR-036)', async () => {

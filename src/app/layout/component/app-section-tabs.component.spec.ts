@@ -25,8 +25,7 @@ describe('AppSectionTabsComponent', () => {
         return fixture;
     };
 
-    const tabs = (fixture: ComponentFixture<AppSectionTabsComponent>) =>
-        Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('nav a'));
+    const tabs = (fixture: ComponentFixture<AppSectionTabsComponent>) => Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('nav a'));
 
     beforeEach(() => {
         claims = () => true;
@@ -53,6 +52,6 @@ describe('AppSectionTabsComponent', () => {
         const lab = tabs(fixture).find((a) => a.textContent?.includes('Lab sonuçları'));
 
         expect(lab?.textContent).toContain('(4');
-        expect(tabs(fixture).filter((a) => a.textContent?.includes('('))).toHaveSize(1);
+        expect(tabs(fixture).filter((a) => a.textContent?.includes('('))).toHaveLength(1);
     });
 });

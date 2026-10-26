@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -57,7 +58,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
     let fixture: ComponentFixture<ClientDetailPageComponent>;
     let claims: Set<string>;
     let pets: PetCardSection<PetListItemVm[]>;
-    let pendingChargesSpy: jasmine.Spy;
+    let pendingChargesSpy: Mock;
 
     const el = () => fixture.nativeElement as HTMLElement;
 
@@ -102,9 +103,10 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
     beforeEach(() => {
         claims = new Set(['Clients.Update', 'Examinations.Create', 'Charges.Read', 'Charges.Create', 'Visits.Create', 'Appointments.Create']);
         pets = { state: 'ok', data: [pet('p1', 'Pamuk'), pet('p2', 'Karabaş')] };
-        pendingChargesSpy = jasmine
-            .createSpy('clientPendingCharges')
-            .and.returnValue(
+        pendingChargesSpy = vi
+            .fn()
+            .mockName('clientPendingCharges')
+            .mockReturnValue(
                 of({
                     state: 'ok',
                     data: { items: [{ id: 's1', petId: 'p2', petName: 'Karabaş', description: 'Serum', quantity: 2, suggestedUnitPrice: 50, currency: 'TRY' } as ChargeSuggestionVm], page: 1, pageSize: 200, totalItems: 1, totalPages: 1 }
@@ -128,7 +130,8 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         expect(el().textContent).toContain('Ödeme özeti');
         expect(el().textContent).toContain('Son muayeneler');
         expect(el().textContent).not.toContain('Genel bilgiler');
-        expect(pendingChargesSpy).toHaveBeenCalledOnceWith('c1');
+        expect(pendingChargesSpy).toHaveBeenCalledTimes(1);
+        expect(pendingChargesSpy).toHaveBeenCalledWith('c1');
         expect(el().querySelector('[data-testid="account-pending-charges"]')?.textContent).toContain('1 işlem');
         expect(el().querySelector('[data-testid="pending-amount"]')?.textContent).toContain('100');
     });
@@ -140,21 +143,22 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         expect(el().querySelector('[data-testid="client-data-export-action"]')?.getAttribute('href')).toBe('/panel/clients/c1/data-export');
         expect(el().querySelector('[data-testid="kvkk-mark-action"]')).not.toBeNull();
 
-        const toasts = spyOn(fixture.debugElement.injector.get(MessageService), 'add');
+        const toasts = vi.spyOn(fixture.debugElement.injector.get(MessageService), 'add').mockReturnValue(undefined);
 
         fixture.componentInstance.onKvkkChanged({ kvkkConsent: { status: 'Declined', recordedOn: '2026-10-01', recordedByName: 'Ayşe', templateVersion: null, templateHash: null }, remindersOptedOut: true, rowVersion: 'rv2' });
         fixture.detectChanges();
         expect(fixture.componentInstance.client()?.rowVersion).toBe('rv2');
         expect(el().querySelector('[data-testid="client-kvkk-status"]')?.textContent).toContain('Ret');
         // ADR-025: Ret hatırlatmayı sunucuda kapatır; kart yanıttaki bayrağı gösterir ve kısa bildirim verir.
-        expect(fixture.componentInstance.client()?.remindersOptedOut).toBeTrue();
+        expect(fixture.componentInstance.client()?.remindersOptedOut).toBe(true);
         expect(el().querySelector('[data-testid="client-reminders-opted-out"]')).not.toBeNull();
-        expect(toasts).toHaveBeenCalledOnceWith(jasmine.objectContaining({ summary: 'Ret işaretlendi; hatırlatmalar kapatıldı.' }));
+        expect(toasts).toHaveBeenCalledTimes(1);
+        expect(toasts).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Ret işaretlendi; hatırlatmalar kapatıldı.' }));
 
-        toasts.calls.reset();
+        toasts.mockClear();
         fixture.componentInstance.onKvkkChanged({ kvkkConsent: { status: 'Accepted', recordedOn: '2026-10-02', recordedByName: 'Ayşe', templateVersion: null, templateHash: null }, remindersOptedOut: true, rowVersion: 'rv3' });
         fixture.detectChanges();
-        expect(fixture.componentInstance.client()?.remindersOptedOut).withContext('Kabul bayrağı kendiliğinden kapatmaz').toBeTrue();
+        expect(fixture.componentInstance.client()?.remindersOptedOut, 'Kabul bayrağı kendiliğinden kapatmaz').toBe(true);
         expect(toasts).not.toHaveBeenCalled();
 
         TestBed.resetTestingModule();
@@ -162,7 +166,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         create();
         expect(el().querySelector('[data-testid="kvkk-print-action"]')).not.toBeNull();
         expect(el().querySelector('[data-testid="kvkk-disclosure-print-action"]')).not.toBeNull();
-        expect(el().querySelector('[data-testid="client-data-export-action"]')).withContext('veri kopyası Clients.Read ile').not.toBeNull();
+        expect(el().querySelector('[data-testid="client-data-export-action"]'), 'veri kopyası Clients.Read ile').not.toBeNull();
         expect(el().querySelector('[data-testid="kvkk-mark-action"]')).toBeNull();
     });
 
@@ -206,12 +210,13 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
     it('hayvan listesi alınamasa da ücret bekleyenler müşteri süzgeciyle okunur; ücret okunamazsa alınamadı gösterilir', () => {
         pets = { state: 'error' };
         create();
-        expect(pendingChargesSpy).toHaveBeenCalledOnceWith('c1');
+        expect(pendingChargesSpy).toHaveBeenCalledTimes(1);
+        expect(pendingChargesSpy).toHaveBeenCalledWith('c1');
         expect(el().querySelector('[data-testid="pets-failed"]')).not.toBeNull();
         expect(el().querySelector('[data-testid="account-pending-charges"]')?.textContent).toContain('1 işlem');
 
         TestBed.resetTestingModule();
-        pendingChargesSpy.and.returnValue(of({ state: 'error' }));
+        pendingChargesSpy.mockReturnValue(of({ state: 'error' }));
         create();
         expect(el().querySelector('[data-testid="account-pending-charges"]')?.textContent).toContain('alınamadı');
         expect(el().querySelector('[data-testid="todo-failed"]')?.textContent).toContain('Ücret bekleyen işlem');

@@ -17,8 +17,14 @@ describe('TenantMembersListPageComponent — satırda Kurumdan çıkar', () => {
     const create = (claims: string[], mutationBlocked = false) => {
         const items = [member('U-SELF', 'ben@klinik.test'), member('u2', 'ayse@klinik.test')];
         const service = {
-            getMembers: jasmine.createSpy('getMembers').and.returnValue(of({ items, page: 1, pageSize: 10, totalItems: items.length, totalPages: 1 })),
-            removeMember: jasmine.createSpy('removeMember').and.returnValue(of(void 0))
+            getMembers: vi
+                .fn()
+                .mockName('getMembers')
+                .mockReturnValue(of({ items, page: 1, pageSize: 10, totalItems: items.length, totalPages: 1 })),
+            removeMember: vi
+                .fn()
+                .mockName('removeMember')
+                .mockReturnValue(of(void 0))
         };
 
         TestBed.configureTestingModule({
@@ -41,8 +47,8 @@ describe('TenantMembersListPageComponent — satırda Kurumdan çıkar', () => {
         const { el } = create([TENANT_MANAGEMENT_CLAIM]);
         const removes = rowDangerActions(el);
 
-        expect(removes.length).withContext('yalnız ikinci üye × tablo + mobil kart').toBe(2);
-        expect(removes.every((r) => r.querySelector('.fa-trash-can') && r.getAttribute('aria-label') === 'Kurumdan çıkar' && isLastRowAction(r))).toBeTrue();
+        expect(removes.length, 'yalnız ikinci üye × tablo + mobil kart').toBe(2);
+        expect(removes.every((r) => r.querySelector('.fa-trash-can') && r.getAttribute('aria-label') === 'Kurumdan çıkar' && isLastRowAction(r))).toBe(true);
 
         TestBed.resetTestingModule();
         expect(rowDangerActions(create([]).el).length).toBe(0);
@@ -59,15 +65,17 @@ describe('TenantMembersListPageComponent — satırda Kurumdan çıkar', () => {
 
         const dialog = fixture.debugElement.query((d) => d.name === 'app-tenant-member-remove-dialog').componentInstance as TenantMemberRemoveDialogComponent;
 
-        expect(dialog.visible()).toBeTrue();
+        expect(dialog.visible()).toBe(true);
         expect(dialog.member()?.email).toBe('ayse@klinik.test');
         expect(service.removeMember).not.toHaveBeenCalled();
 
-        service.getMembers.calls.reset();
+        service.getMembers.mockClear();
         dialog.confirm();
 
-        expect(service.removeMember).toHaveBeenCalledOnceWith('u2');
-        expect(dialog.visible()).toBeFalse();
+        expect(service.removeMember).toHaveBeenCalledTimes(1);
+
+        expect(service.removeMember).toHaveBeenCalledWith('u2');
+        expect(dialog.visible()).toBe(false);
         expect(service.getMembers).toHaveBeenCalledTimes(1);
     });
 });

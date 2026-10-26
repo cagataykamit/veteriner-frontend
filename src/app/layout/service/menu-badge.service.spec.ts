@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
@@ -24,20 +25,25 @@ describe('menuBadgeLabel', () => {
 });
 
 describe('MenuBadgeService', () => {
-    const today = (...statuses: Array<'Waiting' | 'InProgress' | null>) =>
-        ({ date: '2026-10-13', items: statuses.map((careStatus) => ({ careStatus })), activeHospitalizations: [] }) as unknown as TodayVm;
+    const today = (...statuses: Array<'Waiting' | 'InProgress' | null>) => ({ date: '2026-10-13', items: statuses.map((careStatus) => ({ careStatus })), activeHospitalizations: [] }) as unknown as TodayVm;
 
     let claims: Set<string>;
     let clinicId: string;
-    let getToday: jasmine.Spy;
-    let getLabResults: jasmine.Spy;
+    let getToday: Mock;
+    let getLabResults: Mock;
     let service: MenuBadgeService;
 
     beforeEach(() => {
         claims = new Set([VISITS_READ_CLAIM, LAB_RESULTS_READ_CLAIM]);
         clinicId = 'clinic-1';
-        getToday = jasmine.createSpy('getToday').and.returnValue(of(today('Waiting', 'Waiting', 'InProgress', null)));
-        getLabResults = jasmine.createSpy('getLabResults').and.returnValue(of({ items: [], page: 1, pageSize: 1, totalItems: 7, totalPages: 7 }));
+        getToday = vi
+            .fn()
+            .mockName('getToday')
+            .mockReturnValue(of(today('Waiting', 'Waiting', 'InProgress', null)));
+        getLabResults = vi
+            .fn()
+            .mockName('getLabResults')
+            .mockReturnValue(of({ items: [], page: 1, pageSize: 1, totalItems: 7, totalPages: 7 }));
         TestBed.configureTestingModule({
             providers: [
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => clinicId } },
@@ -80,7 +86,7 @@ describe('MenuBadgeService', () => {
 
     it('hata olursa son değer korunur', () => {
         service.refresh();
-        getToday.and.returnValue(throwError(() => new Error('ağ')));
+        getToday.mockReturnValue(throwError(() => new Error('ağ')));
         service.refresh();
         expect(service.count('waitingVisits')).toBe(2);
     });
@@ -88,7 +94,7 @@ describe('MenuBadgeService', () => {
     it('klinik değişince eski kliniğin sayacı yeni yanıt gelene kadar gösterilmez', () => {
         service.refresh();
         clinicId = 'clinic-2';
-        getToday.and.returnValue(new Subject());
+        getToday.mockReturnValue(new Subject());
         service.refresh();
         expect(service.count('waitingVisits')).toBeNull();
     });

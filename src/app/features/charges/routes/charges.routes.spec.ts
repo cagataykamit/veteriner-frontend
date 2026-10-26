@@ -19,19 +19,19 @@ describe('charges.routes yetki korumaları', () => {
     it('liste Charges.Read ister; yoksa /notfound', () => {
         expect((run('') as UrlTree).toString()).toBe('/notfound');
         claims.add('Charges.Read');
-        expect(run('')).toBeTrue();
+        expect(run('')).toBe(true);
     });
 
     it('bekleyen ücretler Charges.Read ister; hekim de girer (çevirme düğmeleri sayfada Charges.Create ile açılır)', () => {
         expect((run('pending') as UrlTree).toString()).toBe('/notfound');
         claims.add('Charges.Read');
-        expect(run('pending')).toBeTrue();
+        expect(run('pending')).toBe(true);
     });
 
     it('ekleme Charges.Create ister; yalnız okuyan (Veteriner) giremez', () => {
         claims.add('Charges.Read');
         expect((run('new') as UrlTree).toString()).toBe('/notfound');
         claims.add('Charges.Create');
-        expect(run('new')).toBeTrue();
+        expect(run('new')).toBe(true);
     });
 });

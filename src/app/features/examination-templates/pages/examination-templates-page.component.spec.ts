@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -25,7 +26,7 @@ const paged = (items: ExaminationTemplateDto[]) => of({ items, page: 1, pageSize
 describe('ExaminationTemplatesPageComponent', () => {
     let fixture: ComponentFixture<ExaminationTemplatesPageComponent>;
     let cmp: ExaminationTemplatesPageComponent;
-    let templates: jasmine.SpyObj<ExaminationTemplatesService>;
+    let templates: MockedObject<ExaminationTemplatesService>;
     let claims: Set<string>;
     let blocked: boolean;
 
@@ -33,10 +34,7 @@ describe('ExaminationTemplatesPageComponent', () => {
     /** Satır metni ve simge düğmelerinin erişilebilir adları (Düzenle simge düğmesidir, ADR-026). */
     const rowTexts = () =>
         Array.from(root().querySelectorAll('[data-testid="template-row"]')).map((r) =>
-            [r.textContent ?? '', ...Array.from(r.querySelectorAll('app-row-action-button [aria-label]')).map((b) => b.getAttribute('aria-label'))]
-                .join(' ')
-                .replace(/\s+/g, ' ')
-                .trim()
+            [r.textContent ?? '', ...Array.from(r.querySelectorAll('app-row-action-button [aria-label]')).map((b) => b.getAttribute('aria-label'))].join(' ').replace(/\s+/g, ' ').trim()
         );
 
     async function create(): Promise<void> {
@@ -56,22 +54,19 @@ describe('ExaminationTemplatesPageComponent', () => {
     }
 
     beforeEach(() => {
-        claims = new Set([
-            'ExaminationTemplates.Read',
-            'ExaminationTemplates.Create',
-            'ExaminationTemplates.Update',
-            'ExaminationTemplates.Deactivate',
-            'Products.Read'
-        ]);
+        claims = new Set(['ExaminationTemplates.Read', 'ExaminationTemplates.Create', 'ExaminationTemplates.Update', 'ExaminationTemplates.Deactivate', 'Products.Read']);
         blocked = false;
-        templates = jasmine.createSpyObj<ExaminationTemplatesService>('ExaminationTemplatesService', ['list', 'create', 'update', 'setActive']);
-        templates.list.and.returnValue(
+        templates = {
+            list: vi.fn().mockName('ExaminationTemplatesService.list'),
+            create: vi.fn().mockName('ExaminationTemplatesService.create'),
+            update: vi.fn().mockName('ExaminationTemplatesService.update'),
+            setActive: vi.fn().mockName('ExaminationTemplatesService.setActive')
+        } as unknown as MockedObject<ExaminationTemplatesService>;
+        templates.list.mockReturnValue(
             paged([
                 tpl('s1', 'Rutin muayene', { isSystem: true }),
                 tpl('c1', 'Otitis paketi', {
-                    lines: [
-                        { productId: 'p1', productName: 'Damla', unit: 'Şişe', productKind: 'Medicine', productIsActive: false, quantity: 1, currentUnitPrice: 0, currency: 'TRY' }
-                    ]
+                    lines: [{ productId: 'p1', productName: 'Damla', unit: 'Şişe', productKind: 'Medicine', productIsActive: false, quantity: 1, currentUnitPrice: 0, currency: 'TRY' }]
                 }),
                 tpl('c2', 'Eski paket', { isActive: false })
             ])
@@ -80,7 +75,7 @@ describe('ExaminationTemplatesPageComponent', () => {
 
     it('pasifler dahil listeler; sistem şablonu rozetli, salt okunur ve kopyalanabilir', async () => {
         await create();
-        expect(templates.list).toHaveBeenCalledWith(jasmine.objectContaining({ includeInactive: true, page: 1 }));
+        expect(templates.list).toHaveBeenCalledWith(expect.objectContaining({ includeInactive: true, page: 1 }));
         const rows = rowTexts();
 
         expect(rows[0]).toContain('Sistem');
@@ -98,7 +93,7 @@ describe('ExaminationTemplatesPageComponent', () => {
         await create();
         cmp.searchInput = ' otitis ';
         cmp.applySearch();
-        expect(templates.list).toHaveBeenCalledWith(jasmine.objectContaining({ search: 'otitis', page: 1 }));
+        expect(templates.list).toHaveBeenCalledWith(expect.objectContaining({ search: 'otitis', page: 1 }));
     });
 
     it('izin yoksa yazma düğmeleri görünmez', async () => {
@@ -120,26 +115,26 @@ describe('ExaminationTemplatesPageComponent', () => {
         const system = tpl('s1', 'Rutin muayene', { isSystem: true });
 
         cmp.openEditor('edit', system);
-        expect(cmp.editorVisible()).toBeFalse();
+        expect(cmp.editorVisible()).toBe(false);
         cmp.setActive(system, false);
         expect(templates.setActive).not.toHaveBeenCalled();
         cmp.openEditor('copy', system);
-        expect(cmp.editorVisible()).toBeTrue();
+        expect(cmp.editorVisible()).toBe(true);
         expect(cmp.editorMode()).toBe('copy');
         expect(cmp.editorSource()).toBe(system);
     });
 
     it('düzenleyici çakışması mesaj gösterir ve listeyi yeniler', async () => {
         await create();
-        const before = templates.list.calls.count();
+        const before = vi.mocked(templates.list).mock.calls.length;
 
         cmp.onEditorConflict('Şablon bu arada değişmiş; liste yenilendi, tekrar deneyin.');
         expect(cmp.listActionError()).toContain('değişmiş');
-        expect(templates.list.calls.count()).toBe(before + 1);
+        expect(vi.mocked(templates.list).mock.calls.length).toBe(before + 1);
     });
 
     it('etkinleştir pasif şablonu açar ve listeyi yeniler', async () => {
-        templates.setActive.and.returnValue(of(undefined));
+        templates.setActive.mockReturnValue(of(undefined));
         await create();
         cmp.setActive(tpl('c2', 'Eski paket', { isActive: false }), true);
         expect(templates.setActive).toHaveBeenCalledWith('c2', true);

@@ -1,11 +1,4 @@
-import {
-    mapCorrectVisitToApiBody,
-    mapCreateVisitToApiBody,
-    mapTodayDtoToVm,
-    mapVeterinarianDtoToVm,
-    mapVisitCreateResultDtoToVm,
-    todayQueryToHttpParams
-} from '@/app/features/visits/data/visit.mapper';
+import { mapCorrectVisitToApiBody, mapCreateVisitToApiBody, mapTodayDtoToVm, mapVeterinarianDtoToVm, mapVisitCreateResultDtoToVm, todayQueryToHttpParams } from '@/app/features/visits/data/visit.mapper';
 import type { TodayItemDto, VisitDto } from '@/app/features/visits/models/visit-api.model';
 
 const visitDto = (over: Partial<VisitDto> = {}): VisitDto => ({
@@ -41,7 +34,7 @@ describe('visit mapper — okuma', () => {
     it('create yanıtında created bayrağını korur ve Visit i eşler', () => {
         const vm = mapVisitCreateResultDtoToVm({ created: false, visit: visitDto({ appointmentId: ' a1 ', responsibleVeterinarianName: 'Dr. Ayşe' }) });
 
-        expect(vm.created).toBeFalse();
+        expect(vm.created).toBe(false);
         expect(vm.visit.appointmentId).toBe('a1');
         expect(vm.visit.responsibleVeterinarianName).toBe('Dr. Ayşe');
         expect(vm.visit.careStatus).toBe('Waiting');
@@ -52,10 +45,7 @@ describe('visit mapper — okuma', () => {
             date: '2026-10-10',
             clinicId: 'c1',
             generatedAtUtc: '2026-10-10T08:00:00Z',
-            items: [
-                itemDto({ visitId: 'v1', appointmentId: 'a1' }),
-                itemDto({ visitId: null, appointmentId: 'a2', careStatus: null, appointmentStatus: 'Scheduled', arrivedAtUtc: null })
-            ]
+            items: [itemDto({ visitId: 'v1', appointmentId: 'a1' }), itemDto({ visitId: null, appointmentId: 'a2', careStatus: null, appointmentStatus: 'Scheduled', arrivedAtUtc: null })]
         });
 
         expect(vm.items.map((i) => i.key)).toEqual(['v1', 'a2']);
@@ -90,10 +80,10 @@ describe('visit mapper — okuma', () => {
             ]
         }).items;
 
-        expect(full.hasActiveHospitalization).toBeTrue();
+        expect(full.hasActiveHospitalization).toBe(true);
         expect(full.careStatus).toBe('Waiting');
         expect([full.chargedAmount, full.allocatedAmount, full.outstandingAmount, full.clientOutstandingAmount]).toEqual([1000, 400, 600, 900]);
-        expect(missing.hasActiveHospitalization).toBeFalse();
+        expect(missing.hasActiveHospitalization).toBe(false);
         expect([missing.chargedAmount, missing.allocatedAmount, missing.outstandingAmount, missing.clientOutstandingAmount]).toEqual([null, null, null, null]);
         expect([zero.chargedAmount, zero.clientOutstandingAmount]).toEqual([0, 0]);
     });
@@ -114,11 +104,7 @@ describe('visit mapper — okuma', () => {
             date: 'd',
             clinicId: 'c',
             generatedAtUtc: 'g',
-            items: [
-                itemDto({ chargeIndicator: 'ChargeMissing', chargeableWorkCount: 2, awaitingLabCount: 1 }),
-                itemDto({}),
-                itemDto({ chargeIndicator: 'Paid', chargeableWorkCount: 0, awaitingLabCount: 0 })
-            ]
+            items: [itemDto({ chargeIndicator: 'ChargeMissing', chargeableWorkCount: 2, awaitingLabCount: 1 }), itemDto({}), itemDto({ chargeIndicator: 'Paid', chargeableWorkCount: 0, awaitingLabCount: 0 })]
         }).items;
 
         expect([full.chargeIndicator, full.chargeableWorkCount, full.awaitingLabCount]).toEqual(['ChargeMissing', 2, 1]);

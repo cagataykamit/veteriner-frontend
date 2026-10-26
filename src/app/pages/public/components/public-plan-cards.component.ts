@@ -1,4 +1,4 @@
-import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import {
@@ -8,6 +8,8 @@ import {
     PRICING_FEATURE_ROWS,
     PRICING_PLAN_DEFS,
     PRICING_VAT_NOTE,
+    YEARLY_BILLED_MONTHS,
+    type PricingBillingPeriod,
     type PricingFeatureRowDef,
     type PricingPlanDef,
     type PricingPriceView
@@ -30,6 +32,18 @@ interface PlanCardVm {
     imports: [RouterLink],
     changeDetection: ChangeDetectionStrategy.Eager,
     template: `
+        @if (periodToggle()) {
+            <div class="mb-6 flex flex-wrap items-center justify-center gap-3">
+                <div class="flex gap-2" role="group" aria-label="Ödeme dönemi">
+                    @for (option of periodOptions; track option.value) {
+                        <button type="button" class="public-chip-tab" [class.public-chip-tab--active]="period() === option.value" [attr.aria-pressed]="period() === option.value" (click)="period.set(option.value)">
+                            {{ option.label }}
+                        </button>
+                    }
+                </div>
+                <span class="public-plan-badge">{{ yearlyGiftLabel }}</span>
+            </div>
+        }
         <ul class="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-3 md:gap-6">
             @for (card of cards(); track card.def.slug) {
                 <li class="public-card public-plan-card flex flex-col p-6 md:p-7" [class.public-plan-card--recommended]="card.def.recommended" [attr.data-plan]="card.def.slug">
@@ -49,7 +63,9 @@ interface PlanCardVm {
                             }
                         </p>
                         <p class="m-0 mt-1 min-h-5 text-sm text-muted-color">
-                            @if (card.price.unit) {
+                            @if (card.price.note) {
+                                {{ card.price.note }} · {{ vatNote }}
+                            } @else if (card.price.unit) {
                                 {{ vatNote }}
                             } @else {
                                 Kliniğinize göre teklif
@@ -112,11 +128,19 @@ export class PublicPlanCardsComponent {
 
     readonly paths = PUBLIC_PATHS;
     readonly vatNote = PRICING_VAT_NOTE;
+    /** Paketler sayfasında Aylık/Yıllık anahtarı (BILL-001); ana sayfa yalnız aylık gösterir. */
+    readonly periodToggle = input(false);
+    readonly period = signal<PricingBillingPeriod>('monthly');
+    readonly periodOptions: readonly { readonly value: PricingBillingPeriod; readonly label: string }[] = [
+        { value: 'monthly', label: 'Aylık' },
+        { value: 'yearly', label: 'Yıllık' }
+    ];
+    readonly yearlyGiftLabel = `Yıllıkta ${12 - YEARLY_BILLED_MONTHS} ay hediye`;
 
     readonly cards = computed<readonly PlanCardVm[]>(() =>
         this.plans().map((def) => ({
             def,
-            price: planPriceView(def),
+            price: planPriceView(def, this.period()),
             limits: [
                 { label: formatPlanLimit(def.maxClinics, 'klinik'), icon: 'pi pi-building' },
                 { label: formatPlanLimit(def.maxUsers, 'kullanıcı'), icon: 'pi pi-users' }

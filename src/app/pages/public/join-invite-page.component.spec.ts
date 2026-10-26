@@ -1,3 +1,4 @@
+import type { MockedObject } from "vitest";
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
@@ -29,14 +30,13 @@ const invite = (overrides: Partial<PublicInviteVm> = {}): PublicInviteVm => ({
 describe('JoinInvitePageComponent hukuki onay (ADR-029)', () => {
     let fixture: ComponentFixture<JoinInvitePageComponent>;
     let cmp: JoinInvitePageComponent;
-    let invites: jasmine.SpyObj<PublicInviteService>;
+    let invites: MockedObject<PublicInviteService>;
 
     const host = (): HTMLElement => fixture.nativeElement as HTMLElement;
-    const submitButton = (): HTMLButtonElement | undefined =>
-        Array.from(host().querySelectorAll<HTMLButtonElement>('button')).find((b) => b.textContent?.includes('Hesap oluştur ve katıl'));
+    const submitButton = (): HTMLButtonElement | undefined => Array.from(host().querySelectorAll<HTMLButtonElement>('button')).find((b) => b.textContent?.includes('Hesap oluştur ve katıl'));
 
     function create(vm: PublicInviteVm): void {
-        invites.getInviteByToken.and.returnValue(of(vm));
+        invites.getInviteByToken.mockReturnValue(of(vm));
         fixture = TestBed.createComponent(JoinInvitePageComponent);
         cmp = fixture.componentInstance;
         fixture.detectChanges();
@@ -44,10 +44,17 @@ describe('JoinInvitePageComponent hukuki onay (ADR-029)', () => {
     }
 
     beforeEach(async () => {
-        invites = jasmine.createSpyObj<PublicInviteService>('PublicInviteService', ['getInviteByToken', 'signupAndAccept', 'acceptInvite']);
-        const auth = jasmine.createSpyObj<AuthService>('AuthService', ['isAuthenticated', 'logout']);
+        invites = {
+            getInviteByToken: vi.fn().mockName("PublicInviteService.getInviteByToken"),
+            signupAndAccept: vi.fn().mockName("PublicInviteService.signupAndAccept"),
+            acceptInvite: vi.fn().mockName("PublicInviteService.acceptInvite")
+        } as unknown as MockedObject<PublicInviteService>;
+        const auth = {
+            isAuthenticated: vi.fn().mockName("AuthService.isAuthenticated"),
+            logout: vi.fn().mockName("AuthService.logout")
+        };
 
-        auth.isAuthenticated.and.returnValue(false);
+        auth.isAuthenticated.mockReturnValue(false);
         await TestBed.configureTestingModule({
             imports: [JoinInvitePageComponent],
             providers: [
@@ -69,16 +76,16 @@ describe('JoinInvitePageComponent hukuki onay (ADR-029)', () => {
 
     it('kutu işaretlenmeden gönderim pasif; işaretlenince belgeler gövdeye eklenir', () => {
         create(invite());
-        invites.signupAndAccept.and.returnValue(of(undefined));
+        invites.signupAndAccept.mockReturnValue(of(undefined));
 
-        expect(submitButton()?.disabled).toBeTrue();
+        expect(submitButton()?.disabled).toBe(true);
         cmp.onSignupAndAccept(cmp.vm()!);
         expect(invites.signupAndAccept).not.toHaveBeenCalled();
         expect(cmp.actionError()).toBe(LEGAL_ACCEPTANCE_CODE_MESSAGES['LegalAcceptances.Required']);
 
         cmp.legalConsent.set(true);
         fixture.detectChanges();
-        expect(submitButton()?.disabled).toBeFalse();
+        expect(submitButton()?.disabled).toBe(false);
 
         cmp.onSignupAndAccept(cmp.vm()!);
 
@@ -94,28 +101,25 @@ describe('JoinInvitePageComponent hukuki onay (ADR-029)', () => {
         const newer = invite({ requiredLegalDocuments: [{ documentType: 'Terms', version: '1.0' }, { documentType: 'Privacy', version: '0.1' }] });
         const outdated = new HttpErrorResponse({ status: 409, error: { status: 409, extensions: { code: LEGAL_VERSION_OUTDATED_CODE } } });
 
-        invites.signupAndAccept.and.returnValue(throwError(() => outdated));
-        invites.getInviteByToken.and.returnValue(of(newer));
+        invites.signupAndAccept.mockReturnValue(throwError(() => outdated));
+        invites.getInviteByToken.mockReturnValue(of(newer));
         cmp.legalConsent.set(true);
         cmp.onSignupAndAccept(cmp.vm()!);
 
         expect(cmp.actionError()).toBe(LEGAL_ACCEPTANCE_CODE_MESSAGES[LEGAL_VERSION_OUTDATED_CODE]);
-        expect(cmp.legalConsent()).toBeFalse();
+        expect(cmp.legalConsent()).toBe(false);
         expect(cmp.vm()?.requiredLegalDocuments[0].version).toBe('1.0');
         expect(cmp.invitePassword).toBe('Abc12345!');
     });
 
     it('eşleyici requiredLegalDocuments alanını okur, tanınmayan türleri atar', () => {
-        const vm = mapPublicInviteDetailsDtoToVm(
-            {
-                requiredLegalDocuments: [
-                    { documentType: 'Terms', version: '0.1' },
-                    { documentType: 'Cookies', version: '0.1' },
-                    { documentType: 'DataProcessing', version: ' 0.1 ' }
-                ]
-            },
-            'tok'
-        );
+        const vm = mapPublicInviteDetailsDtoToVm({
+            requiredLegalDocuments: [
+                { documentType: 'Terms', version: '0.1' },
+                { documentType: 'Cookies', version: '0.1' },
+                { documentType: 'DataProcessing', version: ' 0.1 ' }
+            ]
+        }, 'tok');
 
         expect(vm?.requiredLegalDocuments).toEqual([
             { documentType: 'Terms', version: '0.1' },

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -25,10 +26,13 @@ const row = (id: string, status: 'Active' | 'Cancelled' = 'Active'): ImagingReco
 });
 
 describe('ImagingListPageComponent', () => {
-    let list: jasmine.Spy;
+    let list: Mock;
 
     const render = (claims: string[], petId = '') => {
-        list = jasmine.createSpy('list').and.returnValue(of({ items: [row('a'), row('b', 'Cancelled')], page: 1, pageSize: 20, totalItems: 2, totalPages: 1 }));
+        list = vi
+            .fn()
+            .mockName('list')
+            .mockReturnValue(of({ items: [row('a'), row('b', 'Cancelled')], page: 1, pageSize: 20, totalItems: 2, totalPages: 1 }));
         TestBed.configureTestingModule({
             imports: [ImagingListPageComponent],
             providers: [
@@ -65,14 +69,12 @@ describe('ImagingListPageComponent', () => {
         const fixture = render([IMAGING_READ_CLAIM], 'pet-9');
         const c = fixture.componentInstance;
 
-        expect(list.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ petId: 'pet-9', page: 1 }));
+        expect(vi.mocked(list).mock.lastCall![0]).toEqual(expect.objectContaining({ petId: 'pet-9', page: 1 }));
         c.modalityInput = 'XRay';
         c.fromDateInput = '2026-10-20';
         c.toDateInput = '2026-10-01';
         c.applyFilters();
 
-        expect(list.calls.mostRecent().args[0]).toEqual(
-            jasmine.objectContaining({ petId: 'pet-9', modality: 'XRay', fromDate: '2026-10-01', toDate: '2026-10-20' })
-        );
+        expect(vi.mocked(list).mock.lastCall![0]).toEqual(expect.objectContaining({ petId: 'pet-9', modality: 'XRay', fromDate: '2026-10-01', toDate: '2026-10-20' }));
     });
 });

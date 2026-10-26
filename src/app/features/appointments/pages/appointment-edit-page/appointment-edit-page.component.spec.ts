@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -25,10 +26,10 @@ const APPT: AppointmentEditVm = {
 };
 
 describe('AppointmentEditPageComponent - durum salt okunur', () => {
-    let updateAppointment: jasmine.Spy;
+    let updateAppointment: Mock;
 
     const create = (appt: AppointmentEditVm = APPT) => {
-        updateAppointment = jasmine.createSpy('updateAppointment').and.returnValue(of(undefined));
+        updateAppointment = vi.fn().mockName('updateAppointment').mockReturnValue(of(undefined));
         TestBed.configureTestingModule({
             imports: [AppointmentEditPageComponent],
             providers: [
@@ -43,7 +44,7 @@ describe('AppointmentEditPageComponent - durum salt okunur', () => {
                 { provide: AppointmentsService, useValue: { getAppointmentForEditById: () => of(appt), updateAppointment } }
             ]
         });
-        spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
         const fixture = TestBed.createComponent(AppointmentEditPageComponent);
 
         fixture.detectChanges();
@@ -65,7 +66,7 @@ describe('AppointmentEditPageComponent - durum salt okunur', () => {
         fixture.componentInstance.onSubmit();
 
         expect(updateAppointment).toHaveBeenCalledTimes(1);
-        const [id, payload] = updateAppointment.calls.mostRecent().args;
+        const [id, payload] = vi.mocked(updateAppointment).mock.lastCall!;
 
         expect(id).toBe('a1');
         expect(payload.status).toBe(0);

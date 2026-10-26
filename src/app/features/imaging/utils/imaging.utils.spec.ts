@@ -9,8 +9,8 @@ describe('imaging.utils', () => {
         expect(p.get('Modality')).toBe('XRay');
         expect(p.get('dateFromUtc')).toBe('2026-10-21T21:00:00.000Z');
         expect(p.get('dateToUtc')).toMatch(/^2026-10-22T20:59:59/);
-        expect(p.has('Search')).toBeFalse();
-        expect(p.has('Status')).toBeFalse();
+        expect(p.has('Search')).toBe(false);
+        expect(p.has('Status')).toBe(false);
     });
 
     it('tür etiketi ve alt metin', () => {

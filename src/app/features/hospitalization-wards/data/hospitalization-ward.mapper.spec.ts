@@ -1,7 +1,4 @@
-import {
-    mapHospitalizationLocationFormToApiBody,
-    mapHospitalizationWardsDtoToVm
-} from '@/app/features/hospitalization-wards/data/hospitalization-ward.mapper';
+import { mapHospitalizationLocationFormToApiBody, mapHospitalizationWardsDtoToVm } from '@/app/features/hospitalization-wards/data/hospitalization-ward.mapper';
 
 describe('hospitalization-ward.mapper', () => {
     it('GET listesi: sunucu sırası korunur, odalar bölüm kimliğiyle bağlanır, eksik alanlar güvenli değer alır', () => {
@@ -28,7 +25,7 @@ describe('hospitalization-ward.mapper', () => {
             ['r1', 'w1', 1, true],
             ['r2', 'w1', 0, false]
         ]);
-        expect(vm[1].isActive).toBeFalse();
+        expect(vm[1].isActive).toBe(false);
         expect(vm[1].rooms).toEqual([]);
     });
 

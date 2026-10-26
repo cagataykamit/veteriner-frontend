@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
@@ -37,9 +38,16 @@ const committed = (): ImportBatchDto => ({ ...batch('Committed'), committedAtUtc
 
 describe('ImportCommitStepComponent', () => {
     let fixture: ComponentFixture<ImportCommitStepComponent>;
-    let imports: jasmine.SpyObj<ImportsService>;
+    let imports: MockedObject<ImportsService>;
 
-    function create(b: ImportBatchDto, opts: { preview?: ImportPreviewDto; claim?: boolean; progress?: ImportCommitProgressDto } = {}): HTMLElement {
+    function create(
+        b: ImportBatchDto,
+        opts: {
+            preview?: ImportPreviewDto;
+            claim?: boolean;
+            progress?: ImportCommitProgressDto;
+        } = {}
+    ): HTMLElement {
         fixture = TestBed.createComponent(ImportCommitStepComponent);
         fixture.componentRef.setInput('batch', b);
         fixture.componentRef.setInput('preview', opts.preview ?? preview);
@@ -51,17 +59,24 @@ describe('ImportCommitStepComponent', () => {
     }
 
     beforeEach(() => {
-        imports = jasmine.createSpyObj<ImportsService>('ImportsService', ['commit', 'releaseReminders', 'downloadErrorReport']);
+        imports = {
+            commit: vi.fn().mockName('ImportsService.commit'),
+            releaseReminders: vi.fn().mockName('ImportsService.releaseReminders'),
+            downloadErrorReport: vi.fn().mockName('ImportsService.downloadErrorReport')
+        } as unknown as MockedObject<ImportsService>;
         TestBed.configureTestingModule({ imports: [ImportCommitStepComponent], providers: [{ provide: ImportsService, useValue: imports }] });
     });
 
     it('uç yayında değilken (404 gövdesiz) nazik mesaj gösterir ve başarı bildirmez', () => {
-        imports.commit.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
+        imports.commit.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
         const emitted: ImportBatchDto[] = [];
 
         create(batch('Validated'));
         fixture.componentInstance.batchChange.subscribe((b) => emitted.push(b));
-        const cmp = fixture.componentInstance as unknown as { confirmed: boolean; commit(): void };
+        const cmp = fixture.componentInstance as unknown as {
+            confirmed: boolean;
+            commit(): void;
+        };
 
         cmp.confirmed = true;
         cmp.commit();
@@ -73,9 +88,12 @@ describe('ImportCommitStepComponent', () => {
     });
 
     it('gerçek hata kodunu "henüz etkin değil" saymaz', () => {
-        imports.commit.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.ValidationStale' } })));
+        imports.commit.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.ValidationStale' } })));
         create(batch('Validated'));
-        const cmp = fixture.componentInstance as unknown as { confirmed: boolean; commit(): void };
+        const cmp = fixture.componentInstance as unknown as {
+            confirmed: boolean;
+            commit(): void;
+        };
 
         cmp.confirmed = true;
         cmp.commit();
@@ -88,7 +106,11 @@ describe('ImportCommitStepComponent', () => {
 
     it('onay işaretlenmeden aktarmayı başlatmaz', () => {
         create(batch('Validated'));
-        (fixture.componentInstance as unknown as { commit(): void }).commit();
+        (
+            fixture.componentInstance as unknown as {
+                commit(): void;
+            }
+        ).commit();
         expect(imports.commit).not.toHaveBeenCalled();
     });
 
@@ -106,12 +128,15 @@ describe('ImportCommitStepComponent', () => {
     });
 
     it('409 CommitBlocked engelleri Türkçe listeler ve önizlemenin yenilenmesini ister', () => {
-        imports.commit.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.CommitBlocked', blockers: ['Imports.OwnerLinkUnavailable'] } })));
+        imports.commit.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.CommitBlocked', blockers: ['Imports.OwnerLinkUnavailable'] } })));
         create(batch('Validated'));
         let stale = 0;
 
         fixture.componentInstance.previewStale.subscribe(() => stale++);
-        const cmp = fixture.componentInstance as unknown as { confirmed: boolean; commit(): void };
+        const cmp = fixture.componentInstance as unknown as {
+            confirmed: boolean;
+            commit(): void;
+        };
 
         cmp.confirmed = true;
         cmp.commit();
@@ -125,9 +150,12 @@ describe('ImportCommitStepComponent', () => {
     });
 
     it('403 AccessDenied sade yetki mesajı gösterir', () => {
-        imports.commit.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403, error: { code: 'Imports.AccessDenied' } })));
+        imports.commit.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403, error: { code: 'Imports.AccessDenied' } })));
         create(batch('Validated'));
-        const cmp = fixture.componentInstance as unknown as { confirmed: boolean; commit(): void };
+        const cmp = fixture.componentInstance as unknown as {
+            confirmed: boolean;
+            commit(): void;
+        };
 
         cmp.confirmed = true;
         cmp.commit();
@@ -159,12 +187,14 @@ describe('ImportCommitStepComponent', () => {
     it('hatırlatma açma: sayı onayıyla gönderir, kiracı notunu gösterir, parti güncellemesini bildirir', () => {
         const released = { ...committed(), remindersReleasedAtUtc: '2026-10-14T09:05:00Z' };
 
-        imports.releaseReminders.and.returnValue(of({ batch: released, reminderImpact: committedPreview.reminderImpact, alreadyReleased: false, note: 'Ayar kapalı.' }));
+        imports.releaseReminders.mockReturnValue(of({ batch: released, reminderImpact: committedPreview.reminderImpact, alreadyReleased: false, note: 'Ayar kapalı.' }));
         create(committed(), { preview: committedPreview });
         const emitted: ImportBatchDto[] = [];
 
         fixture.componentInstance.batchChange.subscribe((b) => emitted.push(b));
-        const cmp = fixture.componentInstance as unknown as { release(p: ImportPreviewDto): void };
+        const cmp = fixture.componentInstance as unknown as {
+            release(p: ImportPreviewDto): void;
+        };
 
         cmp.release(committedPreview);
         expect(imports.releaseReminders).toHaveBeenCalledWith('b1', 5);
@@ -175,18 +205,22 @@ describe('ImportCommitStepComponent', () => {
     });
 
     it('sayı tutmazsa 409 sonrası güncel sayıyı gösterip yeniden onay ister', () => {
-        imports.releaseReminders.and.returnValues(
-            throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.ReminderImpactChanged', emailsWithinReminderWindow: 9 } })),
-            of({ batch: committed(), reminderImpact: committedPreview.reminderImpact, alreadyReleased: true, note: null })
-        );
+        imports.releaseReminders
+            .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.ReminderImpactChanged', emailsWithinReminderWindow: 9 } })))
+            .mockReturnValueOnce(of({ batch: committed(), reminderImpact: committedPreview.reminderImpact, alreadyReleased: true, note: null }));
         create(committed(), { preview: committedPreview });
-        const cmp = fixture.componentInstance as unknown as { release(p: ImportPreviewDto): void; confirmingRelease: { set(v: boolean): void } };
+        const cmp = fixture.componentInstance as unknown as {
+            release(p: ImportPreviewDto): void;
+            confirmingRelease: {
+                set(v: boolean): void;
+            };
+        };
 
         cmp.confirmingRelease.set(true);
         cmp.release(committedPreview);
         fixture.detectChanges();
         expect((fixture.nativeElement as HTMLElement).textContent).toContain('9 aşı için hatırlatma açılsın mı');
         cmp.release(committedPreview);
-        expect(imports.releaseReminders.calls.mostRecent().args).toEqual(['b1', 9]);
+        expect(vi.mocked(imports.releaseReminders).mock.lastCall).toEqual(['b1', 9]);
     });
 });

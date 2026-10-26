@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -12,12 +13,14 @@ import { PetsListPageComponent } from './pets-list-page.component';
 
 /** Hayvanlar listesi: sahip araması "Arama" kutusundadır; ayrı müşteri seçicisi yoktur, müşteri kartından gelen süzgeç çip olarak görünür. */
 describe('PetsListPageComponent — süzgeçler', () => {
-    let pets: jasmine.SpyObj<PetsService>;
+    let pets: MockedObject<PetsService>;
 
     function create(queryParams: Record<string, string> = {}): HTMLElement {
         sessionStorage.clear();
-        pets = jasmine.createSpyObj<PetsService>('PetsService', ['getPets']);
-        pets.getPets.and.returnValue(of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }));
+        pets = {
+            getPets: vi.fn().mockName('PetsService.getPets')
+        } as unknown as MockedObject<PetsService>;
+        pets.getPets.mockReturnValue(of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }));
         TestBed.configureTestingModule({
             imports: [PetsListPageComponent],
             providers: [
@@ -54,13 +57,13 @@ describe('PetsListPageComponent — süzgeçler', () => {
         const el = create({ clientId: 'c1' });
 
         expect(el.querySelector('app-context-filter-chip')).not.toBeNull();
-        expect(pets.getPets.calls.mostRecent().args[0].clientId).toBe('c1');
+        expect(vi.mocked(pets.getPets).mock.lastCall![0].clientId).toBe('c1');
     });
 });
 
 /** ADR-025 madde 1: liste ilk açılışta yaşayanları gösterir; "Tümü" / "Vefat edenler" seçilebilir, derin bağlantılar korunur. */
 describe('PetsListPageComponent — durum süzgeci varsayılanı', () => {
-    let pets: jasmine.SpyObj<PetsService>;
+    let pets: MockedObject<PetsService>;
 
     function create(queryParams: Record<string, string> = {}, stored?: object): PetsListPageComponent {
         sessionStorage.clear();
@@ -69,8 +72,10 @@ describe('PetsListPageComponent — durum süzgeci varsayılanı', () => {
             sessionStorage.setItem('panel:pets:listState', JSON.stringify(stored));
         }
 
-        pets = jasmine.createSpyObj<PetsService>('PetsService', ['getPets']);
-        pets.getPets.and.returnValue(of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }));
+        pets = {
+            getPets: vi.fn().mockName('PetsService.getPets')
+        } as unknown as MockedObject<PetsService>;
+        pets.getPets.mockReturnValue(of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }));
         TestBed.configureTestingModule({
             imports: [PetsListPageComponent],
             providers: [
@@ -89,7 +94,7 @@ describe('PetsListPageComponent — durum süzgeci varsayılanı', () => {
         return fixture.componentInstance;
     }
 
-    const lastStatus = () => pets.getPets.calls.mostRecent().args[0].status;
+    const lastStatus = () => vi.mocked(pets.getPets).mock.lastCall![0].status;
 
     afterEach(() => sessionStorage.clear());
 
@@ -98,7 +103,7 @@ describe('PetsListPageComponent — durum süzgeci varsayılanı', () => {
 
         expect(lastStatus()).toBe('Active');
         expect(c.statusInput).toBe('Active');
-        expect(c.isStatusActive()).toBeFalse();
+        expect(c.isStatusActive()).toBe(false);
         expect(c.statusOptions.map((o) => o.label)).toEqual(['Yaşayanlar', 'Vefat edenler', 'Tümü']);
     });
 
@@ -108,7 +113,7 @@ describe('PetsListPageComponent — durum süzgeci varsayılanı', () => {
         c.statusInput = 'All';
         c.applyFilters();
         expect(lastStatus()).toBeUndefined();
-        expect(c.isStatusActive()).toBeTrue();
+        expect(c.isStatusActive()).toBe(true);
 
         c.statusInput = 'Deceased';
         c.applyFilters();
@@ -173,11 +178,11 @@ describe('PetsListPageComponent — satırda Düzenle', () => {
     it("Pets.Update varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", () => {
         const edits = rowEditActions(create([PETS_UPDATE_CLAIM]));
 
-        expect(edits.length).withContext('tablo + mobil kart').toBe(2);
+        expect(edits.length, 'tablo + mobil kart').toBe(2);
 
         for (const edit of edits) {
             expect(edit.getAttribute('href')).toBe('/panel/pets/p1/edit');
-            expect(isRightAfterDetail(edit)).toBeTrue();
+            expect(isRightAfterDetail(edit)).toBe(true);
         }
     });
 
@@ -188,6 +193,6 @@ describe('PetsListPageComponent — satırda Düzenle', () => {
         const readOnly = rowEditActions(create([PETS_UPDATE_CLAIM], true));
 
         expect(readOnly.length).toBe(2);
-        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBeTrue();
+        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBe(true);
     });
 });

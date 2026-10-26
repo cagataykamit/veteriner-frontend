@@ -1,10 +1,5 @@
 import type { VaccinationDetailDto } from '@/app/features/vaccinations/models/vaccination-api.model';
-import {
-    mapCreateVaccinationToApiBody,
-    mapVaccinationCreateResponse,
-    mapVaccinationDetailDtoToVm,
-    vaccinationsQueryToHttpParams
-} from '@/app/features/vaccinations/data/vaccination.mapper';
+import { mapCreateVaccinationToApiBody, mapVaccinationCreateResponse, mapVaccinationDetailDtoToVm, vaccinationsQueryToHttpParams } from '@/app/features/vaccinations/data/vaccination.mapper';
 
 const base = { clinicId: 'c1', petId: 'p1', vaccineDefinitionId: 'd1', status: 1, appliedAtUtc: '2026-10-14T08:00:00Z' };
 
@@ -22,7 +17,7 @@ describe('vaccination.mapper — aşı + stok düşümü', () => {
         it('ürün varsa miktar, requestId ve seçilmişse parti gönderilir; otomatikte parti yok', () => {
             const auto = mapCreateVaccinationToApiBody({ ...base, productId: 'pr1', quantity: 1, batchId: '', requestId: 'r1' });
 
-            expect(auto).toEqual(jasmine.objectContaining({ productId: 'pr1', quantity: 1, requestId: 'r1' }));
+            expect(auto).toEqual(expect.objectContaining({ productId: 'pr1', quantity: 1, requestId: 'r1' }));
             expect(auto.batchId).toBeUndefined();
             const manual = mapCreateVaccinationToApiBody({ ...base, productId: 'pr1', quantity: 0.5, batchId: 'b2', requestId: 'r1' });
 
@@ -40,13 +35,26 @@ describe('vaccination.mapper — aşı + stok düşümü', () => {
                 {
                     created: true,
                     id: 'v1',
-                    administration: { id: 'a1', petId: 'p1', productId: 'pr1', productName: 'Nobivac', unit: 'doz', quantity: 1, status: 'Active', administeredAtUtc: '2026-10-14T08:00:00Z', createdAtUtc: '2026-10-14T08:00:00Z', createdByUserId: 'u1', vaccinationId: 'v1', lotNumber: 'L1' },
+                    administration: {
+                        id: 'a1',
+                        petId: 'p1',
+                        productId: 'pr1',
+                        productName: 'Nobivac',
+                        unit: 'doz',
+                        quantity: 1,
+                        status: 'Active',
+                        administeredAtUtc: '2026-10-14T08:00:00Z',
+                        createdAtUtc: '2026-10-14T08:00:00Z',
+                        createdByUserId: 'u1',
+                        vaccinationId: 'v1',
+                        lotNumber: 'L1'
+                    },
                     stock: { quantityOnHand: 9, availableQuantity: 8, minimumStockLevel: 2, isBelowMinimum: false }
                 },
                 'v1'
             );
 
-            expect(r.stockResult?.created).toBeTrue();
+            expect(r.stockResult?.created).toBe(true);
             expect(r.stockResult?.administration.vaccinationId).toBe('v1');
             expect(r.stockResult?.stock.availableQuantity).toBe(8);
         });
@@ -87,24 +95,24 @@ describe('vaccination.mapper — liste parametreleri', () => {
         const withDates = vaccinationsQueryToHttpParams({ fromDate: '2026-10-08', toDate: '2026-10-09' });
 
         for (const k of ['FromDate', 'ToDate', 'fromDate', 'toDate', 'dueFromUtc', 'dueToUtc', 'appliedFromUtc', 'appliedToUtc']) {
-            expect(withDates.has(k)).toBeFalse();
+            expect(withDates.has(k)).toBe(false);
         }
 
         const none = vaccinationsQueryToHttpParams({});
 
-        expect(none.has('dateFromUtc')).toBeFalse();
-        expect(none.has('dateToUtc')).toBeFalse();
+        expect(none.has('dateFromUtc')).toBe(false);
+        expect(none.has('dateToUtc')).toBe(false);
     });
 
     it('yalnızca bitiş verilirse yalnızca dateToUtc gider; geçersiz tarih atlanır', () => {
         const onlyTo = vaccinationsQueryToHttpParams({ toDate: '2026-10-08' });
 
-        expect(onlyTo.has('dateFromUtc')).toBeFalse();
+        expect(onlyTo.has('dateFromUtc')).toBe(false);
         expect(onlyTo.get('dateToUtc')).toBe('2026-10-08T20:59:59.999Z');
         const invalid = vaccinationsQueryToHttpParams({ fromDate: 'abc', toDate: '  ' });
 
-        expect(invalid.has('dateFromUtc')).toBeFalse();
-        expect(invalid.has('dateToUtc')).toBeFalse();
+        expect(invalid.has('dateFromUtc')).toBe(false);
+        expect(invalid.has('dateToUtc')).toBe(false);
     });
 
     it('müşteri, durum, sıralama ve yön diğer süzgeçlerle birlikte gider', () => {
@@ -119,7 +127,7 @@ describe('vaccination.mapper — liste parametreleri', () => {
 
     it('onlyReceivingCare yalnız true iken gider (varsayılan liste vefat edenleri de içerir)', () => {
         expect(vaccinationsQueryToHttpParams({ onlyReceivingCare: true }).get('onlyReceivingCare')).toBe('true');
-        expect(vaccinationsQueryToHttpParams({}).has('onlyReceivingCare')).toBeFalse();
-        expect(vaccinationsQueryToHttpParams({ onlyReceivingCare: false }).has('onlyReceivingCare')).toBeFalse();
+        expect(vaccinationsQueryToHttpParams({}).has('onlyReceivingCare')).toBe(false);
+        expect(vaccinationsQueryToHttpParams({ onlyReceivingCare: false }).has('onlyReceivingCare')).toBe(false);
     });
 });

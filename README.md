@@ -38,11 +38,14 @@ This will compile your project and store the build artifacts in the `dist/` dire
 
 ## Running unit tests
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+Birim testleri Angular'ın [Vitest](https://vitest.dev) koşucusuyla (`@angular/build:unit-test`) tarayıcı kipinde, başlıksız Chromium'da koşar:
 
 ```bash
-ng test
+ng test            # panel + portal (izleme kipi; tek koşu için --watch=false)
+ng test portal     # yalnız portal
 ```
+
+Tarayıcı: `CHROME_BIN` ortam değişkeni verilirse o Chrome kullanılır (örn. Windows'ta `C:/Program Files/Google/Chrome/Application/chrome.exe`); verilmezse Playwright'ın Chromium'u gerekir (bir kez `npx playwright install chromium`).
 
 ## Running end-to-end tests
 
@@ -60,7 +63,7 @@ For more information on using the Angular CLI, including detailed command refere
 
 ## CI/CD ve sürüm
 
-`.github/workflows/ci.yml` (push `main`, `v*` etiketi, pull request, elle): `npm ci` → `ng build --configuration production` → `ng test` (ChromeHeadless, `karma.ci.conf.cjs`) → `dist` artifact'ı (`web-<sürüm>`). Dağıtım (CD) yok; hosting kurulumu ayrı iştir. İş akışı henüz GitHub'da çalışmadı.
+`.github/workflows/ci.yml` (push `main`, `v*` etiketi, pull request, elle): `npm ci` → `ng build --configuration production` → `ng test` (Vitest, başlıksız Chrome) → `dist` artifact'ı (`web-<sürüm>`). Dağıtım (CD) yok; hosting kurulumu ayrı iştir. İş akışı henüz GitHub'da çalışmadı.
 
 **Sürüm:** git etiketi `vMAJOR.MINOR.PATCH[-önsürüm]` (örn. `v1.0.0`) → artifact adındaki sürüm; etiketsiz koşu `0.0.0-ci.<koşu no>`. Etiketi yalnız `main`'de testler yeşilken atın ve push edin (kullanıcı işi). Geçersiz etiket koşuyu düşürür.
 

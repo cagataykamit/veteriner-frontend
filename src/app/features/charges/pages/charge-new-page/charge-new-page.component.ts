@@ -18,9 +18,9 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
-import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
+import { PetSearchComponent } from '@/app/features/pets/components/pet-search.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
+import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay, formatUtcIsoAsLocalTimeDisplay, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';

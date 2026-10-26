@@ -1,9 +1,4 @@
-import {
-    mapPaymentDetailDtoToVm,
-    mapPaymentListItemDtoToVm,
-    MULTIPLE_PETS_LABEL,
-    paymentsQueryToHttpParams
-} from '@/app/features/payments/data/payment.mapper';
+import { mapPaymentDetailDtoToVm, mapPaymentListItemDtoToVm, MULTIPLE_PETS_LABEL, paymentsQueryToHttpParams } from '@/app/features/payments/data/payment.mapper';
 
 describe('payment mapper — liste tarih parametreleri', () => {
     it('İstanbul gününü iki ucu dahil [paidFromUtc, paidToUtc] olarak gönderir', () => {
@@ -34,24 +29,24 @@ describe('payment mapper — liste tarih parametreleri', () => {
         const withDates = paymentsQueryToHttpParams({ paidFromDate: '2026-10-08', paidToDate: '2026-10-09' });
 
         for (const k of ['FromDate', 'ToDate', 'fromDate', 'toDate', 'dateFromUtc', 'dateToUtc']) {
-            expect(withDates.has(k)).toBeFalse();
+            expect(withDates.has(k)).toBe(false);
         }
 
         const none = paymentsQueryToHttpParams({});
 
-        expect(none.has('paidFromUtc')).toBeFalse();
-        expect(none.has('paidToUtc')).toBeFalse();
+        expect(none.has('paidFromUtc')).toBe(false);
+        expect(none.has('paidToUtc')).toBe(false);
     });
 
     it('yalnızca bitiş verilirse yalnızca paidToUtc gider; geçersiz tarih atlanır', () => {
         const onlyTo = paymentsQueryToHttpParams({ paidToDate: '2026-10-08' });
 
-        expect(onlyTo.has('paidFromUtc')).toBeFalse();
+        expect(onlyTo.has('paidFromUtc')).toBe(false);
         expect(onlyTo.get('paidToUtc')).toBe('2026-10-08T20:59:59.999Z');
         const invalid = paymentsQueryToHttpParams({ paidFromDate: 'abc', paidToDate: '  ' });
 
-        expect(invalid.has('paidFromUtc')).toBeFalse();
-        expect(invalid.has('paidToUtc')).toBeFalse();
+        expect(invalid.has('paidFromUtc')).toBe(false);
+        expect(invalid.has('paidToUtc')).toBe(false);
     });
 });
 

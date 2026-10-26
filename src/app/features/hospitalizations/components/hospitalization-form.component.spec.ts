@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Directive, forwardRef, input, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -13,9 +14,9 @@ import { HospitalizationWardsService } from '@/app/features/hospitalization-ward
 import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
-import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
-import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
-import { PetAlertBannerComponent } from '@/app/shared/pet-alerts/pet-alert-banner.component';
+import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
+import { PetSearchComponent } from '@/app/features/pets/components/pet-search.component';
+import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
 import { HospitalizationFormComponent } from './hospitalization-form.component';
 
 /** Arama bileşenlerinin yerine basit değer erişimcisi (sunucu araması bu testin konusu değil). */
@@ -69,8 +70,8 @@ const wards: HospitalizationWardVm[] = [
 
 describe('HospitalizationFormComponent — konum: bölüm → oda (HOSP-002)', () => {
     let fixture: ComponentFixture<HospitalizationFormComponent>;
-    let create: jasmine.Spy;
-    let listWards: jasmine.Spy;
+    let create: Mock;
+    let listWards: Mock;
 
     const setup = async () => {
         await TestBed.configureTestingModule({
@@ -106,8 +107,11 @@ describe('HospitalizationFormComponent — konum: bölüm → oda (HOSP-002)', (
     };
 
     beforeEach(() => {
-        create = jasmine.createSpy('createHospitalization').and.returnValue(of({ id: 'h1' }));
-        listWards = jasmine.createSpy('listWards').and.returnValue(of(wards));
+        create = vi
+            .fn()
+            .mockName('createHospitalization')
+            .mockReturnValue(of({ id: 'h1' }));
+        listWards = vi.fn().mockName('listWards').mockReturnValue(of(wards));
     });
 
     it('aktif kliniğin tanımlarını yükler; bölüm seçenekleri "Konum yok" + aktif bölümler, oda bölüm seçilince aktif odalar', async () => {
@@ -115,10 +119,10 @@ describe('HospitalizationFormComponent — konum: bölüm → oda (HOSP-002)', (
 
         expect(listWards).toHaveBeenCalledWith('clinic-1');
         expect(c.wardOptions().map((o) => o.label)).toEqual(['Konum yok', 'Yoğun bakım']);
-        expect(c.form.controls.roomId.disabled).toBeTrue();
+        expect(c.form.controls.roomId.disabled).toBe(true);
 
         c.form.controls.wardId.setValue('w1');
-        expect(c.form.controls.roomId.disabled).toBeFalse();
+        expect(c.form.controls.roomId.disabled).toBe(false);
         expect(c.roomOptions().map((o) => o.value)).toEqual(['r1']);
     });
 
@@ -131,11 +135,11 @@ describe('HospitalizationFormComponent — konum: bölüm → oda (HOSP-002)', (
         c.onSubmit();
 
         expect(create).toHaveBeenCalledTimes(1);
-        const payload = create.calls.mostRecent().args[0];
+        const payload = vi.mocked(create).mock.lastCall![0];
 
         expect(payload.roomId).toBe('r1');
         expect(payload.location).toBeNull();
-        expect(payload.clearRoom).toBeFalse();
+        expect(payload.clearRoom).toBe(false);
     });
 
     it('"Konum yok" iken roomId null gider; bölüm seçili ama oda seçilmemişse form gönderilmez', async () => {
@@ -143,21 +147,21 @@ describe('HospitalizationFormComponent — konum: bölüm → oda (HOSP-002)', (
 
         fillRequired(c);
         c.onSubmit();
-        expect(create.calls.mostRecent().args[0].roomId).toBeNull();
+        expect(vi.mocked(create).mock.lastCall![0].roomId).toBeNull();
 
-        create.calls.reset();
+        create.mockClear();
         c.form.controls.wardId.setValue('w1');
         c.onSubmit();
         expect(create).not.toHaveBeenCalled();
-        expect(c.form.invalid).toBeTrue();
+        expect(c.form.invalid).toBe(true);
 
         c.form.controls.wardId.setValue('');
         expect(c.form.controls.roomId.value).toBe('');
-        expect(c.form.controls.roomId.disabled).toBeTrue();
+        expect(c.form.controls.roomId.disabled).toBe(true);
     });
 
     it('Hospitalizations.RoomInactive oda alanında gösterilir', async () => {
-        create.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { extensions: { code: 'Hospitalizations.RoomInactive' } } })));
+        create.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { extensions: { code: 'Hospitalizations.RoomInactive' } } })));
         const c = await setup();
 
         fillRequired(c);
@@ -171,7 +175,7 @@ describe('HospitalizationFormComponent — konum: bölüm → oda (HOSP-002)', (
     });
 
     it('tanımlar yüklenemezse bölüm alanında hata görünür, form yine de odasız kaydedilebilir', async () => {
-        listWards.and.returnValue(throwError(() => new Error('Yatış konumları yüklenemedi.')));
+        listWards.mockReturnValue(throwError(() => new Error('Yatış konumları yüklenemedi.')));
         const c = await setup();
 
         expect(c.wardsError()).toBe('Yatış konumları yüklenemedi.');

@@ -1,16 +1,6 @@
 import { buildPatientActions } from './patient-actions.utils';
 
-const ALL = new Set([
-    'Visits.Create',
-    'Examinations.Create',
-    'Appointments.Create',
-    'Vaccinations.Create',
-    'LabResults.Create',
-    'Hospitalizations.Create',
-    'Charges.Create',
-    'Payments.Create',
-    'Pets.Create'
-]);
+const ALL = new Set(['Visits.Create', 'Examinations.Create', 'Appointments.Create', 'Vaccinations.Create', 'LabResults.Create', 'Hospitalizations.Create', 'Charges.Create', 'Payments.Create', 'Pets.Create']);
 
 describe('buildPatientActions', () => {
     it('hayvan sayfasında tüm yetkilerle eylemler sırayla gelir; Yeni hayvan yoktur', () => {
@@ -24,7 +14,7 @@ describe('buildPatientActions', () => {
         const byKey = (k: string) => actions.find((a) => a.key === k)!;
 
         expect(byKey('arrive').route).toBeNull();
-        expect(byKey('examination')).toEqual(jasmine.objectContaining({ route: '/panel/examinations/new', queryParams: { clientId: 'cl1', petId: 'p1' } }));
+        expect(byKey('examination')).toEqual(expect.objectContaining({ route: '/panel/examinations/new', queryParams: { clientId: 'cl1', petId: 'p1' } }));
         expect(byKey('charge').queryParams).toEqual({ clientId: 'cl1', petId: 'p1' });
         expect(byKey('payment').queryParams).toEqual({ clientId: 'cl1' });
     });
@@ -33,8 +23,8 @@ describe('buildPatientActions', () => {
         const actions = buildPatientActions({ clientId: 'cl1', petId: null }, (c) => ALL.has(c));
 
         expect(actions.map((a) => a.label)).toEqual(['Geldi', 'Randevu al', 'Yeni hasta', 'Ücret ekle', 'Ödeme al']);
-        expect(actions.every((a) => a.queryParams['petId'] === undefined)).toBeTrue();
-        expect(actions[2]).toEqual(jasmine.objectContaining({ route: '/panel/pets/new', queryParams: { clientId: 'cl1' } }));
+        expect(actions.every((a) => a.queryParams['petId'] === undefined)).toBe(true);
+        expect(actions[2]).toEqual(expect.objectContaining({ route: '/panel/pets/new', queryParams: { clientId: 'cl1' } }));
     });
 
     it('vefat eden hayvanda Geldi, Muayene başlat ve Randevu al gizlenir; diğer eylemler kalır', () => {

@@ -18,7 +18,7 @@ describe('reports.routes — borç raporu yetkisi', () => {
     }
 
     it('Charges.Read ile açılır', () => {
-        expect(canActivate(['Charges.Read'])).toBeTrue();
+        expect(canActivate(['Charges.Read'])).toBe(true);
     });
 
     it('Payments.Read tek başına yetmez; /notfound yönlenir', () => {
@@ -42,8 +42,8 @@ describe('reports.routes — kayıt defteri yetkisi', () => {
     }
 
     it('muayene defteri Examinations.Read, reçete defteri Prescriptions.Read ister', () => {
-        expect(canActivate('registers/examinations', ['Examinations.Read'])).toBeTrue();
-        expect(canActivate('registers/prescriptions', ['Prescriptions.Read'])).toBeTrue();
+        expect(canActivate('registers/examinations', ['Examinations.Read'])).toBe(true);
+        expect(canActivate('registers/prescriptions', ['Prescriptions.Read'])).toBe(true);
     });
 
     it('karşı izin yetmez; /notfound yönlenir', () => {
@@ -59,18 +59,23 @@ describe('reports.routes — kayıt defteri yetkisi', () => {
     it('stok defterleri StockMovements.Read ister; narkotik defteri ve aşı bilgi raporu izinlerin hepsini birlikte ister', () => {
         const notFound = '/notfound' as unknown as UrlTree;
 
-        expect(canActivate('registers/vaccines', ['StockMovements.Read'])).toBeTrue();
-        expect(canActivate('registers/medications', ['StockMovements.Read'])).toBeTrue();
+        expect(canActivate('registers/vaccines', ['StockMovements.Read'])).toBe(true);
+        expect(canActivate('registers/medications', ['StockMovements.Read'])).toBe(true);
         expect(canActivate('registers/vaccines', ['Administrations.Read'])).toBe(notFound);
-        expect(canActivate('registers/controlled-substances', ['StockMovements.Read', 'Administrations.Read'])).toBeTrue();
+        expect(canActivate('registers/controlled-substances', ['StockMovements.Read', 'Administrations.Read'])).toBe(true);
         expect(canActivate('registers/controlled-substances', ['StockMovements.Read'])).toBe(notFound);
         expect(canActivate('registers/controlled-substances', ['Administrations.Read'])).toBe(notFound);
         const info = ['Administrations.Read', 'Vaccinations.Read', 'Products.Read'];
 
-        expect(canActivate('registers/vaccine-info', info)).toBeTrue();
+        expect(canActivate('registers/vaccine-info', info)).toBe(true);
 
         for (const missing of info) {
-            expect(canActivate('registers/vaccine-info', info.filter((c) => c !== missing))).toBe(notFound);
+            expect(
+                canActivate(
+                    'registers/vaccine-info',
+                    info.filter((c) => c !== missing)
+                )
+            ).toBe(notFound);
         }
     });
 
@@ -97,8 +102,8 @@ describe('reports.routes — gün sonu yetkisi', () => {
     }
 
     it('Payments.Read veya Visits.Read ile açılır', () => {
-        expect(canActivate(['Payments.Read'])).toBeTrue();
-        expect(canActivate(['Visits.Read'])).toBeTrue();
+        expect(canActivate(['Payments.Read'])).toBe(true);
+        expect(canActivate(['Visits.Read'])).toBe(true);
     });
 
     it('Charges.Read tek başına yetmez; /notfound yönlenir', () => {

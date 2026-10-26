@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
@@ -11,13 +12,15 @@ const INVALID: DiscountCodeValidationDto = { valid: false, code: null, discountP
 describe('DiscountCodeFieldComponent (ADR-037)', () => {
     let fixture: ComponentFixture<DiscountCodeFieldComponent>;
     let cmp: DiscountCodeFieldComponent;
-    let codes: jasmine.SpyObj<DiscountCodesService>;
+    let codes: MockedObject<DiscountCodesService>;
     let emitted: (DiscountCodeValidationDto | null)[];
 
     const status = (): string => (fixture.nativeElement as HTMLElement).querySelector('[data-testid="discount-code-status"]')?.textContent?.trim() ?? '';
 
     beforeEach(async () => {
-        codes = jasmine.createSpyObj<DiscountCodesService>('DiscountCodesService', ['validate']);
+        codes = {
+            validate: vi.fn().mockName('DiscountCodesService.validate')
+        } as unknown as MockedObject<DiscountCodesService>;
         await TestBed.configureTestingModule({
             imports: [DiscountCodeFieldComponent],
             providers: [{ provide: DiscountCodesService, useValue: codes }]
@@ -27,36 +30,38 @@ describe('DiscountCodeFieldComponent (ADR-037)', () => {
         cmp = fixture.componentInstance;
         emitted = [];
         cmp.validated.subscribe((v) => emitted.push(v));
-        jasmine.clock().install();
-        jasmine.clock().mockDate(new Date(2026, 9, 22, 9, 0, 0));
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date(2026, 9, 22, 9, 0, 0));
         fixture.detectChanges();
     });
 
-    afterEach(() => jasmine.clock().uninstall());
+    afterEach(() => vi.useRealTimers());
 
     it('yazarken normalize eder, bekledikten sonra doğrular ve indirim notunu gösterir', () => {
-        codes.validate.and.returnValue(of(VALID));
+        codes.validate.mockReturnValue(of(VALID));
 
         cmp.onInput(' ışık10 ');
-        jasmine.clock().tick(300);
+        vi.advanceTimersByTime(300);
 
         expect(codes.validate).not.toHaveBeenCalled();
         expect(cmp.code()).toBe('ISIK10');
 
-        jasmine.clock().tick(400);
+        vi.advanceTimersByTime(400);
         fixture.detectChanges();
 
-        expect(codes.validate).toHaveBeenCalledOnceWith('ISIK10');
+        expect(codes.validate).toHaveBeenCalledTimes(1);
+
+        expect(codes.validate).toHaveBeenCalledWith('ISIK10');
         expect(status()).toBe('%10 indirim, ilk 12 ay');
         expect(emitted.at(-1)).toEqual(VALID);
     });
 
     it('geçersiz kodda tek tip hata metni gösterir ve sonuç boş döner', () => {
-        codes.validate.and.returnValue(of(INVALID));
+        codes.validate.mockReturnValue(of(INVALID));
 
         cmp.onInput('YANLIS');
         cmp.validateNow();
-        jasmine.clock().tick(700);
+        vi.advanceTimersByTime(700);
         fixture.detectChanges();
 
         expect(codes.validate).toHaveBeenCalledTimes(1);
@@ -65,11 +70,11 @@ describe('DiscountCodeFieldComponent (ADR-037)', () => {
     });
 
     it('hız sınırında ayrı bir uyarı gösterir', () => {
-        codes.validate.and.returnValue(throwError(() => new HttpErrorResponse({ status: 429 })));
+        codes.validate.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 429 })));
 
         cmp.onInput('ISIK10');
         cmp.validateNow();
-        jasmine.clock().tick(700);
+        vi.advanceTimersByTime(700);
         fixture.detectChanges();
 
         expect(status()).toContain('Çok fazla deneme');
@@ -78,7 +83,7 @@ describe('DiscountCodeFieldComponent (ADR-037)', () => {
 
     it('üç karakterden kısa kodu sunucuya sormaz', () => {
         cmp.onInput('AB');
-        jasmine.clock().tick(700);
+        vi.advanceTimersByTime(700);
 
         expect(codes.validate).not.toHaveBeenCalled();
         expect(cmp.status()).toBe('invalid');

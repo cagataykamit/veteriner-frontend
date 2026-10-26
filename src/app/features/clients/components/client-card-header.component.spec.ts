@@ -52,9 +52,7 @@ describe('ClientCardHeaderComponent', () => {
             }
         });
 
-        expect(el.querySelector('[data-testid="client-invoicing-summary"]')?.textContent?.trim()).toBe(
-            'Kurumsal · Örnek Ltd. · VKN 123*****90 · Kadıköy VD · Kadıköy / İstanbul'
-        );
+        expect(el.querySelector('[data-testid="client-invoicing-summary"]')?.textContent?.trim()).toBe('Kurumsal · Örnek Ltd. · VKN 123*****90 · Kadıköy VD · Kadıköy / İstanbul');
     });
 
     const render = (inputs: {
@@ -80,7 +78,13 @@ describe('ClientCardHeaderComponent', () => {
     it('iletişim: aranabilir telefon, e-posta bağlantısı ve adres; hesap durumu: borç, ücret bekleyen, son muayene, sonraki randevu', () => {
         const el = render({
             balance: { state: 'ok', data: { outstandingAmount: 1250, currency: 'TRY' } as ClientBalanceVm },
-            pendingCharges: { state: 'ok', data: pending([{ id: 'x', quantity: 2, suggestedUnitPrice: 100, currency: 'TRY' }, { id: 'y', quantity: 1, suggestedUnitPrice: null, currency: 'TRY' }]) },
+            pendingCharges: {
+                state: 'ok',
+                data: pending([
+                    { id: 'x', quantity: 2, suggestedUnitPrice: 100, currency: 'TRY' },
+                    { id: 'y', quantity: 1, suggestedUnitPrice: null, currency: 'TRY' }
+                ])
+            },
             lastExamination: { state: 'ok', data: { id: 'e1', examinedAtUtc: '2026-10-10T08:00:00Z', petName: 'Pamuk' } as ExaminationListItemVm },
             nextAppointment: { state: 'ok', data: { id: 'a1', scheduledAtUtc: '2026-10-20T08:00:00Z', petName: 'Karabaş' } as AppointmentListItemVm }
         });
@@ -126,8 +130,7 @@ describe('ClientCardHeaderComponent', () => {
     });
 
     it('KVKK metin sürümü (ADR-032): numara, varsayılan metin 0, bilinmeyen null; Yok iken gösterilmez', () => {
-        const consent = (templateVersion: number | null, templateHash: string | null) =>
-            ({ ...client, kvkkConsent: { status: 'Accepted', recordedOn: '2026-10-15', recordedByName: null, templateVersion, templateHash } }) as ClientDetailVm;
+        const consent = (templateVersion: number | null, templateHash: string | null) => ({ ...client, kvkkConsent: { status: 'Accepted', recordedOn: '2026-10-15', recordedByName: null, templateVersion, templateHash } }) as ClientDetailVm;
         const hash = 'b'.repeat(64);
 
         let el = render({});
@@ -150,7 +153,7 @@ describe('ClientCardHeaderComponent', () => {
         const unknown = el.querySelector('[data-testid="client-kvkk-text-version"]');
 
         expect(unknown?.textContent).toContain('metin sürümü: Bilinmiyor');
-        expect(unknown?.hasAttribute('title')).toBeFalse();
+        expect(unknown?.hasAttribute('title')).toBe(false);
     });
 
     it('sayfa tüm kalemleri içermiyorsa sayı totalItems, tutar "en az" ile gösterilir', () => {

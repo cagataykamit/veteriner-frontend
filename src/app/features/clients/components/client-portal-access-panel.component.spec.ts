@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -51,7 +52,7 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
     let fixture: ComponentFixture<ClientPortalAccessPanelComponent>;
     let access: ClientPortalAccessDto;
     let readOnly: ReturnType<typeof signal<boolean>>;
-    let service: jasmine.SpyObj<ClientsService>;
+    let service: MockedObject<ClientsService>;
     let messages: MessageService;
 
     const el = () => fixture.nativeElement as HTMLElement;
@@ -62,15 +63,10 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
     const create = () => {
         TestBed.configureTestingModule({
             imports: [ClientPortalAccessPanelComponent],
-            providers: [
-                provideRouter([]),
-                MessageService,
-                { provide: ClientsService, useValue: service },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: readOnly } }
-            ]
+            providers: [provideRouter([]), MessageService, { provide: ClientsService, useValue: service }, { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: readOnly } }]
         });
         messages = TestBed.inject(MessageService);
-        spyOn(messages, 'add');
+        vi.spyOn(messages, 'add').mockReturnValue(undefined);
         fixture = TestBed.createComponent(ClientPortalAccessPanelComponent);
         fixture.componentRef.setInput('client', client);
         fixture.detectChanges();
@@ -79,19 +75,26 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
     beforeEach(() => {
         access = none;
         readOnly = signal(false);
-        service = jasmine.createSpyObj<ClientsService>('ClientsService', ['getPortalAccess', 'sendPortalInvite', 'revokePortalInvite', 'closePortalLink']);
-        service.getPortalAccess.and.callFake(() => of(access));
-        service.sendPortalInvite.and.returnValue(of(pendingInvite));
-        service.revokePortalInvite.and.returnValue(of(undefined));
-        service.closePortalLink.and.returnValue(of(undefined));
+        service = {
+            getPortalAccess: vi.fn().mockName('ClientsService.getPortalAccess'),
+            sendPortalInvite: vi.fn().mockName('ClientsService.sendPortalInvite'),
+            revokePortalInvite: vi.fn().mockName('ClientsService.revokePortalInvite'),
+            closePortalLink: vi.fn().mockName('ClientsService.closePortalLink')
+        } as unknown as MockedObject<ClientsService>;
+        service.getPortalAccess.mockImplementation(() => of(access));
+        service.sendPortalInvite.mockReturnValue(of(pendingInvite));
+        service.revokePortalInvite.mockReturnValue(of(undefined));
+        service.closePortalLink.mockReturnValue(of(undefined));
     });
 
     it('davet yok: durum ve "Portal daveti gönder" etkin; iptal/kapat yok', () => {
         create();
 
-        expect(service.getPortalAccess).toHaveBeenCalledOnceWith('c1');
+        expect(service.getPortalAccess).toHaveBeenCalledTimes(1);
+
+        expect(service.getPortalAccess).toHaveBeenCalledWith('c1');
         expect(status()).toContain('Davet gönderilmedi');
-        expect(q('client-portal-invite')?.disabled).toBeFalse();
+        expect(q('client-portal-invite')?.disabled).toBe(false);
         expect(q('client-portal-invite')?.textContent).toContain('Portal daveti gönder');
         expect(q('client-portal-revoke')).toBeNull();
         expect(q('client-portal-close')).toBeNull();
@@ -127,14 +130,14 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
 
         expect(status()).toContain('Portal erişimi kapalı');
         expect(status()).toContain('kapatılma: 12.10.2026');
-        expect(q('client-portal-invite')?.disabled).toBeFalse();
+        expect(q('client-portal-invite')?.disabled).toBe(false);
     });
 
     it('e-posta yoksa davet pasif ve nedeni yazılı', () => {
         access = { ...none, canInvite: false, inviteBlockedCode: 'OwnerPortal.ClientEmailMissing' };
         create();
 
-        expect(q('client-portal-invite')?.disabled).toBeTrue();
+        expect(q('client-portal-invite')?.disabled).toBe(true);
         expect(q('client-portal-invite-blocked')?.textContent).toContain('müşteri kaydında e-posta yok');
     });
 
@@ -142,7 +145,7 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
         access = { ...none, canInvite: false, inviteBlockedCode: 'OwnerPortal.ClientOptedOut' };
         create();
 
-        expect(q('client-portal-invite')?.disabled).toBeTrue();
+        expect(q('client-portal-invite')?.disabled).toBe(true);
         expect(q('client-portal-invite-blocked')?.textContent).toContain('KVKK açık rızayı reddetmiş ya da hatırlatma istemiyor');
     });
 
@@ -151,29 +154,31 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
         access = { ...none, invites: [pendingInvite] };
         create();
 
-        expect(q('client-portal-invite')?.disabled).toBeTrue();
+        expect(q('client-portal-invite')?.disabled).toBe(true);
         expect(q('client-portal-invite')?.textContent).toContain('(salt okunur)');
-        expect(q('client-portal-revoke')?.disabled).toBeFalse();
+        expect(q('client-portal-revoke')?.disabled).toBe(false);
     });
 
-    it('davet gönder: servis çağrılır, başarı toast\'ı ve durum yeniden okunur', () => {
+    it("davet gönder: servis çağrılır, başarı toast'ı ve durum yeniden okunur", () => {
         create();
         access = { ...none, invites: [pendingInvite] };
         q('client-portal-invite')!.click();
         fixture.detectChanges();
 
-        expect(service.sendPortalInvite).toHaveBeenCalledOnceWith('c1');
-        expect(messages.add).toHaveBeenCalledWith(jasmine.objectContaining({ severity: 'success', summary: 'Portal daveti gönderildi.' }));
+        expect(service.sendPortalInvite).toHaveBeenCalledTimes(1);
+
+        expect(service.sendPortalInvite).toHaveBeenCalledWith('c1');
+        expect(messages.add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'success', summary: 'Portal daveti gönderildi.' }));
         expect(service.getPortalAccess).toHaveBeenCalledTimes(2);
         expect(status()).toContain('Davet bekliyor');
     });
 
-    it('davet 409: hata toast\'ında sunucu mesajı', () => {
-        service.sendPortalInvite.and.returnValue(throwError(() => new Error('Portal daveti bu müşteriye gönderilemez: müşteri KVKK açık rızayı reddetmiş ya da hatırlatma istemiyor.')));
+    it("davet 409: hata toast'ında sunucu mesajı", () => {
+        service.sendPortalInvite.mockReturnValue(throwError(() => new Error('Portal daveti bu müşteriye gönderilemez: müşteri KVKK açık rızayı reddetmiş ya da hatırlatma istemiyor.')));
         create();
         q('client-portal-invite')!.click();
 
-        expect(messages.add).toHaveBeenCalledWith(jasmine.objectContaining({ severity: 'error', detail: jasmine.stringContaining('gönderilemez') }));
+        expect(messages.add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error', detail: expect.stringContaining('gönderilemez') }));
     });
 
     it('daveti iptal et: onay penceresi; kabulde servis çağrılır, vazgeçte çağrılmaz', () => {
@@ -181,7 +186,7 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
         create();
         let captured: Confirmation | undefined;
 
-        spyOn(confirmation(), 'confirm').and.callFake((c: Confirmation) => {
+        vi.spyOn(confirmation(), 'confirm').mockImplementation((c: Confirmation) => {
             captured = c;
 
             return confirmation();
@@ -194,16 +199,18 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
 
         captured!.accept!();
 
-        expect(service.revokePortalInvite).toHaveBeenCalledOnceWith('c1', 'i1');
-        expect(messages.add).toHaveBeenCalledWith(jasmine.objectContaining({ severity: 'success', summary: 'Davet iptal edildi.' }));
+        expect(service.revokePortalInvite).toHaveBeenCalledTimes(1);
+
+        expect(service.revokePortalInvite).toHaveBeenCalledWith('c1', 'i1');
+        expect(messages.add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'success', summary: 'Davet iptal edildi.' }));
     });
 
-    it('erişimi kapat: onay metni sonucu açık söyler; kabulde servis ve başarı toast\'ı', () => {
+    it("erişimi kapat: onay metni sonucu açık söyler; kabulde servis ve başarı toast'ı", () => {
         access = { ...none, canInvite: false, inviteBlockedCode: 'OwnerPortal.AlreadyLinked', links: [activeLink] };
         create();
         let captured: Confirmation | undefined;
 
-        spyOn(confirmation(), 'confirm').and.callFake((c: Confirmation) => {
+        vi.spyOn(confirmation(), 'confirm').mockImplementation((c: Confirmation) => {
             captured = c;
 
             return confirmation();
@@ -215,10 +222,10 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
 
         captured!.accept!();
 
-        expect(service.closePortalLink).toHaveBeenCalledOnceWith('c1', 'l1');
-        expect(messages.add).toHaveBeenCalledWith(
-            jasmine.objectContaining({ severity: 'success', summary: 'Portal erişimi kapatıldı.', detail: 'Müşteri portala Merkez kliniği için giremez; tekrar davet edilebilir.' })
-        );
+        expect(service.closePortalLink).toHaveBeenCalledTimes(1);
+
+        expect(service.closePortalLink).toHaveBeenCalledWith('c1', 'l1');
+        expect(messages.add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'success', summary: 'Portal erişimi kapatıldı.', detail: 'Müşteri portala Merkez kliniği için giremez; tekrar davet edilebilir.' }));
     });
 
     it('müşteri kaydı değişince (rowVersion) durum yeniden okunur', () => {
@@ -230,7 +237,7 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
     });
 
     it('yükleme hatası hata durumunda gösterilir', () => {
-        service.getPortalAccess.and.returnValue(throwError(() => new Error('Portal erişim durumu yüklenemedi.')));
+        service.getPortalAccess.mockReturnValue(throwError(() => new Error('Portal erişim durumu yüklenemedi.')));
         create();
 
         expect(el().textContent).toContain('Portal erişim durumu yüklenemedi.');

@@ -1,6 +1,6 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
-import { ClientSearchComponent } from '@/app/shared/forms/client-search/client-search.component';
-import { PetSearchComponent } from '@/app/shared/forms/pet-search/pet-search.component';
+import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
+import { PetSearchComponent } from '@/app/features/pets/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
@@ -95,7 +95,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         </div>
                         <div class="col-span-12 md:col-span-4">
                             <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati *</label>
-                            <app-date-input inputId="paidAtLocal" type="datetime-local" formControlName="paidAtLocal" [min]="paymentDateMinAllowed()" limit="past" />
+                            <app-date-input inputId="paidAtLocal" type="datetime-local" formControlName="paidAtLocal" [min]="paymentDateMinAllowed" limit="past" />
                             @if (form.controls.paidAtLocal.hasError('dateYearInvalid') && form.controls.paidAtLocal.touched) {
                                 <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (form.controls.paidAtLocal.hasError('paymentDateTooFarPast') && form.controls.paidAtLocal.touched) {
@@ -145,6 +145,8 @@ export class PaymentEditPageComponent implements OnInit {
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
     readonly paymentLoadRetryEnabled = signal(false);
+    /** Ödeme zamanı alt sınırı sayfa açılışında bir kez hesaplanır: şablonda her değişiklik algılama turunda yeniden hesaplanınca dakika sınırında NG0100 veriyordu. 7 gün kuralını doğrulayıcı (paymentDateNotTooFarPastValidator) her an uygular. */
+    readonly paymentDateMinAllowed = effectiveDateTimeLocalInputMin(paymentDateTimeLocalMinAllowed());
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly selectionError = signal<string | null>(null);
@@ -244,10 +246,6 @@ export class PaymentEditPageComponent implements OnInit {
                 this.loading.set(false);
             }
         });
-    }
-
-    paymentDateMinAllowed(): string {
-        return effectiveDateTimeLocalInputMin(paymentDateTimeLocalMinAllowed());
     }
 
     onSubmit(): void {

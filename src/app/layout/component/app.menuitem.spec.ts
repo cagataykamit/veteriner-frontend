@@ -36,7 +36,7 @@ describe('AppMenuitem', () => {
 
     it('gezinme bitiminde aktif durumu günceller', () => {
         const fixture = create();
-        const update = spyOn(fixture.componentInstance, 'updateActiveStateFromRoute');
+        const update = vi.spyOn(fixture.componentInstance, 'updateActiveStateFromRoute').mockReturnValue(undefined);
 
         navigationEnd();
 
@@ -45,7 +45,7 @@ describe('AppMenuitem', () => {
 
     it('bileşen yok edildikten sonra router olaylarını dinlemez (sızıntı yok)', () => {
         const fixture = create();
-        const update = spyOn(fixture.componentInstance, 'updateActiveStateFromRoute');
+        const update = vi.spyOn(fixture.componentInstance, 'updateActiveStateFromRoute').mockReturnValue(undefined);
 
         fixture.destroy();
         navigationEnd();

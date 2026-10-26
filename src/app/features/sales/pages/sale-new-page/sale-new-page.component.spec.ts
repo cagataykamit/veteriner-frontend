@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -48,8 +49,8 @@ const saleResponse = (created = true) =>
 describe('SaleNewPageComponent', () => {
     let fixture: ComponentFixture<SaleNewPageComponent>;
     let cmp: SaleNewPageComponent;
-    let search: jasmine.Spy;
-    let createSale: jasmine.Spy;
+    let search: Mock;
+    let createSale: Mock;
     let mutationBlocked: boolean;
 
     const el = () => fixture.nativeElement as HTMLElement;
@@ -68,8 +69,14 @@ describe('SaleNewPageComponent', () => {
 
     beforeEach(async () => {
         mutationBlocked = false;
-        search = jasmine.createSpy('search').and.callFake((term: string) => of([mama, sampuan].filter((p) => p.barcode === term || p.name.toLowerCase().includes(term.toLowerCase()))));
-        createSale = jasmine.createSpy('createSale').and.callFake(() => of(saleResponse()));
+        search = vi
+            .fn()
+            .mockName('search')
+            .mockImplementation((term: string) => of([mama, sampuan].filter((p) => p.barcode === term || p.name.toLowerCase().includes(term.toLowerCase()))));
+        createSale = vi
+            .fn()
+            .mockName('createSale')
+            .mockImplementation(() => of(saleResponse()));
         const batches = mapProductStockBatchesDtoToVm({
             productId: 'p1',
             clinicId: 'c1',
@@ -106,12 +113,12 @@ describe('SaleNewPageComponent', () => {
         await fixture.whenStable();
         expect(document.activeElement).toBe(searchInput());
         expect(el().querySelector('[data-testid="sale-cart"]')!.textContent).toContain('Sepet boş');
-        expect(submitButton().disabled).toBeTrue();
+        expect(submitButton().disabled).toBe(true);
     });
 
     it('Enter ile barkod eşleşmesi doğrudan sepete eklenir ve arama kutusu temizlenir', async () => {
         await typeAndEnter('8690001');
-        expect(el().querySelectorAll('[data-testid="sale-line"]')).toHaveSize(1);
+        expect(el().querySelectorAll('[data-testid="sale-line"]')).toHaveLength(1);
         expect(el().querySelector('[data-testid="sale-line"]')!.textContent).toContain('Mama 1 kg');
         expect(searchInput().value).toBe('');
         expect(el().querySelector('[data-testid="sale-totals"]')!.textContent).toContain('45,50');
@@ -120,18 +127,18 @@ describe('SaleNewPageComponent', () => {
     it('aynı ürün tekrar okutulunca yeni satır açılmaz, miktar artar', async () => {
         await typeAndEnter('8690001');
         await typeAndEnter('8690001');
-        expect(el().querySelectorAll('[data-testid="sale-line"]')).toHaveSize(1);
+        expect(el().querySelectorAll('[data-testid="sale-line"]')).toHaveLength(1);
         expect(cmp['lines']()[0].quantity).toBe(2);
         expect(el().querySelector('[data-testid="sale-totals"]')!.textContent).toContain('91,00');
     });
 
     it('belirsiz aramada Enter listeyi gösterir, satıra tıklayınca ekler', async () => {
-        search.and.returnValue(of([mama, sampuan]));
+        search.mockReturnValue(of([mama, sampuan]));
         await typeAndEnter('a');
-        expect(cmp['lines']()).toHaveSize(0);
+        expect(cmp['lines']()).toHaveLength(0);
         const options = el().querySelectorAll<HTMLButtonElement>('[data-testid="sale-results"] button');
 
-        expect(options).toHaveSize(2);
+        expect(options).toHaveLength(2);
         options[1].click();
         fixture.detectChanges();
         expect(cmp['lines']().map((l) => l.product.id)).toEqual(['p2']);
@@ -152,7 +159,7 @@ describe('SaleNewPageComponent', () => {
         await typeAndEnter('8690001');
         const batch = cmp['lineViews']()[0].batch!;
 
-        expect(batch.options!.find((o) => o.value === 'old')!.disabled).toBeTrue();
+        expect(batch.options!.find((o) => o.value === 'old')!.disabled).toBe(true);
         expect(el().querySelector('[data-testid="sale-batch"]')!.textContent).toContain('Kullanılabilir 10 adet · Süresi geçmiş 5 adet');
     });
 
@@ -160,12 +167,12 @@ describe('SaleNewPageComponent', () => {
         await typeAndEnter('8690001');
         expect(el().querySelector('[data-testid="sale-mode"]')).toBeNull();
         expect(el().querySelector('[data-testid="sale-walk-in"]')).not.toBeNull();
-        expect(submitButton().disabled).toBeFalse();
+        expect(submitButton().disabled).toBe(false);
 
         cmp['submit']();
         fixture.detectChanges();
 
-        const req = createSale.calls.mostRecent().args[0] as CreateSaleRequest;
+        const req = vi.mocked(createSale).mock.lastCall![0] as CreateSaleRequest;
 
         expect(req.clientId).toBeUndefined();
         expect(req.clinicId).toBe('c1');
@@ -187,7 +194,7 @@ describe('SaleNewPageComponent', () => {
 
         cmp['submit']();
 
-        const req = createSale.calls.mostRecent().args[0] as CreateSaleRequest;
+        const req = vi.mocked(createSale).mock.lastCall![0] as CreateSaleRequest;
 
         expect(req.clientId).toBe('cl1');
         expect(req.payment).toBeUndefined();
@@ -199,14 +206,14 @@ describe('SaleNewPageComponent', () => {
         cmp['mode'].set('partial');
         cmp['partialAmount'].set(100);
         fixture.detectChanges();
-        expect(submitButton().disabled).toBeTrue();
+        expect(submitButton().disabled).toBe(true);
         expect(el().textContent).toContain('toplamdan az olmalı');
 
         cmp['partialAmount'].set(20);
         fixture.detectChanges();
-        expect(submitButton().disabled).toBeFalse();
+        expect(submitButton().disabled).toBe(false);
         cmp['submit']();
-        expect((createSale.calls.mostRecent().args[0] as CreateSaleRequest).payment).toEqual({ method: 'Cash', amount: 20 });
+        expect((vi.mocked(createSale).mock.lastCall![0] as CreateSaleRequest).payment).toEqual({ method: 'Cash', amount: 20 });
     });
 
     it('müşteri temizlenince ödeme modu tam ödemeye döner', async () => {
@@ -217,37 +224,40 @@ describe('SaleNewPageComponent', () => {
     });
 
     it('hata sonrası mesaj gösterilir; yeniden gönderim aynı requestId ile yapılır, başarıdan sonra yenilenir', async () => {
-        createSale.and.returnValues(throwError(() => new Error('Sunucuya ulaşılamıyor. Bağlantıyı kontrol edin.')), of(saleResponse(false)), of(saleResponse()));
+        createSale
+            .mockReturnValueOnce(throwError(() => new Error('Sunucuya ulaşılamıyor. Bağlantıyı kontrol edin.')))
+            .mockReturnValueOnce(of(saleResponse(false)))
+            .mockReturnValueOnce(of(saleResponse()));
         await typeAndEnter('8690001');
 
         cmp['submit']();
         fixture.detectChanges();
         expect(el().querySelector('[data-testid="sale-error"]')!.textContent).toContain('Sunucuya ulaşılamıyor');
         expect(el().textContent).toContain('satış iki kez kaydedilmez');
-        const firstId = (createSale.calls.mostRecent().args[0] as CreateSaleRequest).requestId;
+        const firstId = (vi.mocked(createSale).mock.lastCall![0] as CreateSaleRequest).requestId;
 
         cmp['submit']();
         fixture.detectChanges();
-        expect((createSale.calls.mostRecent().args[0] as CreateSaleRequest).requestId).toBe(firstId);
+        expect((vi.mocked(createSale).mock.lastCall![0] as CreateSaleRequest).requestId).toBe(firstId);
         expect(el().querySelector('[data-testid="sale-done"]')!.textContent).toContain('daha önce kaydedilmişti');
 
         el().querySelector<HTMLButtonElement>('[data-testid="sale-new"] button')!.click();
         fixture.detectChanges();
         await typeAndEnter('8690001');
         cmp['submit']();
-        expect((createSale.calls.mostRecent().args[0] as CreateSaleRequest).requestId).not.toBe(firstId);
+        expect((vi.mocked(createSale).mock.lastCall![0] as CreateSaleRequest).requestId).not.toBe(firstId);
     });
 
     it('abonelik salt okunursa gönderim kapalıdır', async () => {
         mutationBlocked = true;
         await typeAndEnter('8690001');
-        expect(submitButton().disabled).toBeTrue();
+        expect(submitButton().disabled).toBe(true);
         cmp['submit']();
         expect(createSale).not.toHaveBeenCalled();
     });
 
     it('arama hatası kutunun altında gösterilir', async () => {
-        search.and.returnValue(throwError(() => new Error('Ürünler aranamadı.')));
+        search.mockReturnValue(throwError(() => new Error('Ürünler aranamadı.')));
         await typeAndEnter('xyz');
         expect(el().textContent).toContain('Ürünler aranamadı.');
     });

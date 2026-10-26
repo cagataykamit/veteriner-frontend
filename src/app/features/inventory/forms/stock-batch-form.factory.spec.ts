@@ -1,13 +1,7 @@
 import { FormBuilder } from '@angular/forms';
 import { mapProductUpsertFormValueToCreateRequest, mapProductUpsertFormValueToUpdateRequest } from '@/app/features/inventory/data/product.mapper';
 import { mapStockMovementUpsertFormValueToCreateRequest } from '@/app/features/inventory/data/stock-movement.mapper';
-import {
-    applyStockBatchRequirement,
-    createStockBatchFormGroup,
-    getAcknowledgeExpiredRequest,
-    getStockBatchRequest,
-    syncStockBatchGroup
-} from '@/app/features/inventory/forms/stock-batch-form.factory';
+import { applyStockBatchRequirement, createStockBatchFormGroup, getAcknowledgeExpiredRequest, getStockBatchRequest, syncStockBatchGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
 import { createStockMovementFormGroup, getStockMovementFormValue } from '@/app/features/inventory/forms/stock-movement-form.factory';
 import type { ProductUpsertFormValue } from '@/app/features/inventory/models/product-upsert-form.model';
 import { productRequiresLotAndExpiry } from '@/app/features/inventory/utils/product-classification.utils';
@@ -23,33 +17,31 @@ describe('stock batch form', () => {
         const g = createStockBatchFormGroup(fb);
 
         g.patchValue({ lotNumber: ' L-1 ', expiryDate: '2027-01-31', supplierName: 'Vet İlaç' });
-        expect(getStockBatchRequest(g)).toEqual(
-            jasmine.objectContaining({ lotNumber: 'L-1', expiryDate: '2027-01-31', supplierName: 'Vet İlaç', invoiceNumber: null, coldChainMonitor: null })
-        );
+        expect(getStockBatchRequest(g)).toEqual(expect.objectContaining({ lotNumber: 'L-1', expiryDate: '2027-01-31', supplierName: 'Vet İlaç', invoiceNumber: null, coldChainMonitor: null }));
     });
 
     it('zorunlu üründe seri no ve SKT boşsa geçersiz; zorunluluk kalkınca geçerli', () => {
         const g = createStockBatchFormGroup(fb);
 
         applyStockBatchRequirement(g, true);
-        expect(g.controls.lotNumber.hasError('required')).toBeTrue();
-        expect(g.controls.expiryDate.hasError('required')).toBeTrue();
+        expect(g.controls.lotNumber.hasError('required')).toBe(true);
+        expect(g.controls.expiryDate.hasError('required')).toBe(true);
         // SKT geçmişse onay istenir (ayrı test); bu test yalnız zorunluluğu sınar, bu yüzden uzak gelecek tarih.
         g.patchValue({ lotNumber: 'L', expiryDate: '2999-01-01' });
-        expect(g.valid).toBeTrue();
+        expect(g.valid).toBe(true);
         applyStockBatchRequirement(g, false);
         g.patchValue({ lotNumber: '', expiryDate: '' });
-        expect(g.valid).toBeTrue();
+        expect(g.valid).toBe(true);
     });
 
     it('SKT geçmişse onay kutusu işaretlenmeden geçersiz; onayla geçerli ve istek bayrağı eklenir', () => {
         const g = createStockBatchFormGroup(fb);
 
         g.patchValue({ lotNumber: 'L', expiryDate: '2020-01-01' });
-        expect(g.hasError('expiredNotAcknowledged')).toBeTrue();
+        expect(g.hasError('expiredNotAcknowledged')).toBe(true);
         expect(getAcknowledgeExpiredRequest(g)).toEqual({});
         g.patchValue({ acknowledgeExpired: true });
-        expect(g.valid).toBeTrue();
+        expect(g.valid).toBe(true);
         expect(getAcknowledgeExpiredRequest(g)).toEqual({ acknowledgeExpired: true });
         g.patchValue({ expiryDate: '2999-01-01' });
         expect(getAcknowledgeExpiredRequest(g)).toEqual({});
@@ -59,28 +51,28 @@ describe('stock batch form', () => {
         const g = createStockBatchFormGroup(fb);
 
         g.patchValue({ receivedDate: '2026-10-10', dispatchedDate: '2026-10-11' });
-        expect(g.hasError('dispatchedAfterReceived')).toBeTrue();
+        expect(g.hasError('dispatchedAfterReceived')).toBe(true);
         g.patchValue({ dispatchedDate: '2026-10-09' });
-        expect(g.valid).toBeTrue();
+        expect(g.valid).toBe(true);
     });
 
     it('stok girişi dışında parti bloğu pasif olur ve doğrulamayı etkilemez', () => {
         const g = createStockBatchFormGroup(fb);
 
         syncStockBatchGroup(g, { active: false, required: true });
-        expect(g.disabled).toBeTrue();
-        expect(g.valid).toBeFalse(); // pasif grup `invalid` değildir ama `valid` de değildir
-        expect(g.invalid).toBeFalse();
+        expect(g.disabled).toBe(true);
+        expect(g.valid).toBe(false); // pasif grup `invalid` değildir ama `valid` de değildir
+        expect(g.invalid).toBe(false);
         syncStockBatchGroup(g, { active: true, required: true });
-        expect(g.invalid).toBeTrue();
+        expect(g.invalid).toBe(true);
     });
 
     it('sınıfa göre zorunluluk: aşı veya kontrollü ürün', () => {
-        expect(productRequiresLotAndExpiry('Vaccine', 'None')).toBeTrue();
-        expect(productRequiresLotAndExpiry('Medicine', 'Narcotic')).toBeTrue();
-        expect(productRequiresLotAndExpiry('Other', 'Psychotropic')).toBeTrue();
-        expect(productRequiresLotAndExpiry('Medicine', 'None')).toBeFalse();
-        expect(productRequiresLotAndExpiry('Other', 'None')).toBeFalse();
+        expect(productRequiresLotAndExpiry('Vaccine', 'None')).toBe(true);
+        expect(productRequiresLotAndExpiry('Medicine', 'Narcotic')).toBe(true);
+        expect(productRequiresLotAndExpiry('Other', 'Psychotropic')).toBe(true);
+        expect(productRequiresLotAndExpiry('Medicine', 'None')).toBe(false);
+        expect(productRequiresLotAndExpiry('Other', 'None')).toBe(false);
     });
 
     it('stok hareketi isteğine yalnız girişte batch ve requestId girer', () => {
@@ -91,12 +83,12 @@ describe('stock batch form', () => {
         const entry = mapStockMovementUpsertFormValueToCreateRequest(getStockMovementFormValue(form, 'rid-1'));
 
         expect(entry.requestId).toBe('rid-1');
-        expect(entry.batch).toEqual(jasmine.objectContaining({ lotNumber: 'L-9', expiryDate: '2027-05-01' }));
+        expect(entry.batch).toEqual(expect.objectContaining({ lotNumber: 'L-9', expiryDate: '2027-05-01' }));
 
         form.patchValue({ movementType: 'Out' });
         const out = mapStockMovementUpsertFormValueToCreateRequest(getStockMovementFormValue(form, 'rid-2'));
 
-        expect('batch' in out).toBeFalse();
+        expect('batch' in out).toBe(false);
     });
 });
 

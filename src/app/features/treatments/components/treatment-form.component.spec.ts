@@ -25,9 +25,12 @@ const exam = {
 
 describe('TreatmentFormComponent — muayene bağlamı', () => {
     const setup = (queryParams: Record<string, string>, examination: ExaminationDetailVm = exam) => {
-        const examinations = jasmine.createSpyObj<ExaminationsService>('ExaminationsService', ['getExaminationById', 'getExaminations']);
+        const examinations = {
+            getExaminationById: vi.fn().mockName('ExaminationsService.getExaminationById'),
+            getExaminations: vi.fn().mockName('ExaminationsService.getExaminations')
+        };
 
-        examinations.getExaminationById.and.returnValue(of(examination));
+        examinations.getExaminationById.mockReturnValue(of(examination));
         TestBed.configureTestingModule({
             imports: [TreatmentFormComponent],
             providers: [
@@ -55,11 +58,13 @@ describe('TreatmentFormComponent — muayene bağlamı', () => {
         const { fixture, examinations } = setup({ clientId: 'client-1', petId: 'pet-1', examinationId: 'e1' });
         const raw = fixture.componentInstance.form.getRawValue();
 
-        expect(examinations.getExaminationById).toHaveBeenCalledOnceWith('e1');
+        expect(examinations.getExaminationById).toHaveBeenCalledTimes(1);
+
+        expect(examinations.getExaminationById).toHaveBeenCalledWith('e1');
         expect(raw.clientId).toBe('client-1');
         expect(raw.petId).toBe('pet-1');
         expect(raw.examinationId).toBe('e1');
-        expect(fixture.componentInstance.contextFromExamination()).toBeTrue();
+        expect(fixture.componentInstance.contextFromExamination()).toBe(true);
     });
 
     it('kesinleşmiş muayene bağlamıyla açılınca kilit uyarısı formun üstünde, Kaydet öncesinde görünür', () => {
@@ -79,7 +84,7 @@ describe('TreatmentFormComponent — muayene bağlamı', () => {
         expect(examinations.getExaminationById).not.toHaveBeenCalled();
         expect(raw.clientId).toBe('');
         expect(raw.examinationId).toBe('');
-        expect(fixture.componentInstance.contextFromExamination()).toBeFalse();
+        expect(fixture.componentInstance.contextFromExamination()).toBe(false);
     });
 
     it('adres çubuğu bağlamı muayeneyle uyuşmazsa form doldurulmaz ve uyarı gösterilir', () => {

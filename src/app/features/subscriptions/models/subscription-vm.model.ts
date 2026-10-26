@@ -1,3 +1,6 @@
+/** Ödeme dönemi (BILL-001); backend string değeriyle aynı. */
+export type SubscriptionBillingPeriod = 'Monthly' | 'Yearly';
+
 export type SubscriptionStatusKey = 'trialing' | 'active' | 'readonly' | 'cancelled' | 'unknown';
 
 export interface SubscriptionPlanVm {
@@ -25,6 +28,7 @@ export interface SubscriptionSummaryVm {
     isReadOnly: boolean;
     canManageSubscription: boolean;
     availablePlans: SubscriptionPlanVm[];
+    billingPeriod: SubscriptionBillingPeriod;
 }
 
 export type PendingPlanChangeTypeKey = 'downgrade' | 'upgrade' | 'unknown';
@@ -69,4 +73,5 @@ export interface SubscriptionCheckoutSessionVm {
     proratedChargeMinor: number | null;
     chargeCurrencyCode: string | null;
     prorationRatio: number | null;
+    billingPeriod: SubscriptionBillingPeriod;
 }

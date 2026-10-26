@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -28,16 +29,19 @@ describe('PetSearchComponent', () => {
     let fixture: ComponentFixture<HostComponent>;
     let host: HostComponent;
     let cmp: PetSearchComponent;
-    let pets: jasmine.SpyObj<PetsService>;
+    let pets: MockedObject<PetsService>;
     let claims: Set<string>;
 
     const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
     beforeEach(async () => {
         claims = new Set(['Pets.Create']);
-        pets = jasmine.createSpyObj<PetsService>('PetsService', ['getPets', 'getPetById']);
-        pets.getPets.and.returnValue(paged([pet('p1', 'Pamuk'), pet('p2', 'Boncuk'), pet('px', 'Başkası', 'c2')]) as never);
-        pets.getPetById.and.returnValue(of({ id: 'p1', name: 'Pamuk', speciesName: 'Kedi' }) as never);
+        pets = {
+            getPets: vi.fn().mockName('PetsService.getPets'),
+            getPetById: vi.fn().mockName('PetsService.getPetById')
+        } as unknown as MockedObject<PetsService>;
+        pets.getPets.mockReturnValue(paged([pet('p1', 'Pamuk'), pet('p2', 'Boncuk'), pet('px', 'Başkası', 'c2')]) as never);
+        pets.getPetById.mockReturnValue(of({ id: 'p1', name: 'Pamuk', speciesName: 'Kedi' }) as never);
         await TestBed.configureTestingModule({
             imports: [HostComponent],
             providers: [
@@ -57,16 +61,16 @@ describe('PetSearchComponent', () => {
     it('sahibin hayvanlarını sunucudan yükler; başka sahibin hayvanını süzer', async () => {
         cmp.onComplete({ query: '', originalEvent: new Event('x') });
         await wait(0);
-        expect(pets.getPets).toHaveBeenCalledWith(jasmine.objectContaining({ clientId: 'c1', search: undefined }));
+        expect(pets.getPets).toHaveBeenCalledWith(expect.objectContaining({ clientId: 'c1', search: undefined }));
         expect(cmp.suggestions().map((s) => s.id)).toEqual(['p1', 'p2']);
         expect(cmp.suggestions()[0].label).toBe('Pamuk — Kedi');
     });
 
     it('varsayılan: durum süzgeci gönderilmez, vefat eden hayvan etiketle ayrışır', async () => {
-        pets.getPets.and.returnValue(paged([pet('p1', 'Pamuk', 'c1', 'Deceased')]) as never);
+        pets.getPets.mockReturnValue(paged([pet('p1', 'Pamuk', 'c1', 'Deceased')]) as never);
         cmp.onComplete({ query: '', originalEvent: new Event('x') });
         await wait(0);
-        expect(pets.getPets).toHaveBeenCalledWith(jasmine.objectContaining({ status: undefined }));
+        expect(pets.getPets).toHaveBeenCalledWith(expect.objectContaining({ status: undefined }));
         expect(cmp.suggestions()[0].label).toBe('Pamuk — Kedi (vefat)');
     });
 
@@ -75,13 +79,13 @@ describe('PetSearchComponent', () => {
         fixture.detectChanges();
         cmp.onComplete({ query: '', originalEvent: new Event('x') });
         await wait(0);
-        expect(pets.getPets).toHaveBeenCalledWith(jasmine.objectContaining({ clientId: 'c1', status: 'Active' }));
+        expect(pets.getPets).toHaveBeenCalledWith(expect.objectContaining({ clientId: 'c1', status: 'Active' }));
     });
 
     it('yazılan metin sunucu aramasına search olarak gider', async () => {
         cmp.onComplete({ query: ' bon ', originalEvent: new Event('x') });
         await wait(0);
-        expect(pets.getPets).toHaveBeenCalledWith(jasmine.objectContaining({ clientId: 'c1', search: 'bon' }));
+        expect(pets.getPets).toHaveBeenCalledWith(expect.objectContaining({ clientId: 'c1', search: 'bon' }));
     });
 
     it('gerçek input: yazılan metin silinmez ve debounce sonrası arama yapılır', async () => {
@@ -105,7 +109,8 @@ describe('PetSearchComponent', () => {
 
     it('formdan gelen kimlik için etiket çözülür; boş değer temizler', () => {
         host.control.setValue('p1');
-        expect(pets.getPetById).toHaveBeenCalledOnceWith('p1');
+        expect(pets.getPetById).toHaveBeenCalledTimes(1);
+        expect(pets.getPetById).toHaveBeenCalledWith('p1');
         expect(cmp.model()).toEqual({ id: 'p1', label: 'Pamuk — Kedi' });
         host.control.setValue('');
         expect(cmp.model()).toBeNull();
@@ -124,14 +129,14 @@ describe('PetSearchComponent', () => {
     it('müşteri yokken alan kapalı, yeni hayvan eylemi yok', () => {
         host.clientId.set('');
         fixture.detectChanges();
-        expect(cmp.canCreate()).toBeFalse();
-        expect((fixture.nativeElement.querySelector('input') as HTMLInputElement).disabled).toBeTrue();
+        expect(cmp.canCreate()).toBe(false);
+        expect((fixture.nativeElement.querySelector('input') as HTMLInputElement).disabled).toBe(true);
     });
 
     it('"yeni hayvan" yalnız Pets.Create varken görünür', () => {
-        expect(cmp.canCreate()).toBeTrue();
+        expect(cmp.canCreate()).toBe(true);
         claims.clear();
-        expect(cmp.canCreate()).toBeFalse();
+        expect(cmp.canCreate()).toBe(false);
     });
 
     it('hızlı kayıtla eklenen hayvan seçilir', () => {
@@ -140,7 +145,7 @@ describe('PetSearchComponent', () => {
     });
 
     it('arama hatasında Türkçe mesaj ve boş liste', async () => {
-        pets.getPets.and.returnValue(throwError(() => new Error('Hasta listesi yüklenemedi.')));
+        pets.getPets.mockReturnValue(throwError(() => new Error('Hasta listesi yüklenemedi.')));
         cmp.onComplete({ query: 'x', originalEvent: new Event('x') });
         await wait(0);
         expect(cmp.suggestions()).toEqual([]);

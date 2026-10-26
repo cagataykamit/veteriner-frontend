@@ -34,21 +34,21 @@ describe('reçete satırları (mapper)', () => {
     });
 
     it('items verilmezse gövdede items alanı yoktur (PUT satırlara dokunmaz)', () => {
-        expect('items' in mapCreatePrescriptionToApiBody(base)).toBeFalse();
-        expect('items' in mapCreatePrescriptionToApiBody({ ...base, items: undefined })).toBeFalse();
+        expect('items' in mapCreatePrescriptionToApiBody(base)).toBe(false);
+        expect('items' in mapCreatePrescriptionToApiBody({ ...base, items: undefined })).toBe(false);
     });
 
     it('boş dizi gövdeye girer (tüm satırları sil); dolu dizi kırpılarak gider', () => {
         expect(mapCreatePrescriptionToApiBody({ ...base, items: [] }).items).toEqual([]);
-        expect(
-            mapCreatePrescriptionToApiBody({ ...base, items: [{ name: '  Amoksisilin ', productId: ' ', instructions: ' ', quantity: 14 }] }).items
-        ).toEqual([{ name: 'Amoksisilin', productId: null, instructions: null, quantity: 14, dose: null, unit: null, lotNumber: null }]);
+        expect(mapCreatePrescriptionToApiBody({ ...base, items: [{ name: '  Amoksisilin ', productId: ' ', instructions: ' ', quantity: 14 }] }).items).toEqual([
+            { name: 'Amoksisilin', productId: null, instructions: null, quantity: 14, dose: null, unit: null, lotNumber: null }
+        ]);
     });
 
     it('doz, birim ve parti/seri no kırpılarak gövdeye girer (ADR-036)', () => {
-        expect(
-            mapCreatePrescriptionToApiBody({ ...base, items: [{ name: 'Amoksisilin', dose: ' 1 tablet ', unit: ' kutu ', lotNumber: ' L-77 ' }] }).items
-        ).toEqual([{ name: 'Amoksisilin', productId: null, instructions: null, quantity: null, dose: '1 tablet', unit: 'kutu', lotNumber: 'L-77' }]);
+        expect(mapCreatePrescriptionToApiBody({ ...base, items: [{ name: 'Amoksisilin', dose: ' 1 tablet ', unit: ' kutu ', lotNumber: ' L-77 ' }] }).items).toEqual([
+            { name: 'Amoksisilin', productId: null, instructions: null, quantity: null, dose: '1 tablet', unit: 'kutu', lotNumber: 'L-77' }
+        ]);
     });
 
     it('detaydaki HBS kaydı ve listedeki HBS durumu eşlenir', () => {

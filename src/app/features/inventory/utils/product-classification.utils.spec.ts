@@ -8,9 +8,9 @@ describe('product-classification.utils (hizmet türü)', () => {
     });
 
     it('hizmet stok takipli değildir ve lot/SKT istemez', () => {
-        expect(isStockTrackedKind('Service')).toBeFalse();
-        expect(isStockTrackedKind('Medicine')).toBeTrue();
-        expect(productRequiresLotAndExpiry('Service', 'None')).toBeFalse();
+        expect(isStockTrackedKind('Service')).toBe(false);
+        expect(isStockTrackedKind('Medicine')).toBe(true);
+        expect(productRequiresLotAndExpiry('Service', 'None')).toBe(false);
     });
 
     it('yeni kayıtta tüm türler seçilebilir', () => {

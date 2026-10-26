@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
@@ -12,12 +13,20 @@ const httpError = (status: number, body: unknown) => new HttpErrorResponse({ sta
 describe('VisitQuickRegistrationComponent', () => {
     let fixture: ComponentFixture<VisitQuickRegistrationComponent>;
     let cmp: VisitQuickRegistrationComponent;
-    let clients: jasmine.SpyObj<ClientsService>;
-    let pets: jasmine.SpyObj<PetsService>;
+    let clients: MockedObject<ClientsService>;
+    let pets: MockedObject<PetsService>;
     let registered: PetSuggestion[];
     let cancelled: number;
 
-    const create = (inputs: { searchTerm?: string; existingOwner?: { id: string; name: string } | null } = {}) => {
+    const create = (
+        inputs: {
+            searchTerm?: string;
+            existingOwner?: {
+                id: string;
+                name: string;
+            } | null;
+        } = {}
+    ) => {
         fixture = TestBed.createComponent(VisitQuickRegistrationComponent);
         cmp = fixture.componentInstance;
         fixture.componentRef.setInput('searchTerm', inputs.searchTerm ?? '');
@@ -35,10 +44,14 @@ describe('VisitQuickRegistrationComponent', () => {
     };
 
     beforeEach(() => {
-        clients = jasmine.createSpyObj<ClientsService>('ClientsService', ['quickRegister']);
-        pets = jasmine.createSpyObj<PetsService>('PetsService', ['createPet']);
-        clients.quickRegister.and.returnValue(of({ clientId: 'c-new', petId: 'p-new' }));
-        pets.createPet.and.returnValue(of({ id: 'p-new' }));
+        clients = {
+            quickRegister: vi.fn().mockName('ClientsService.quickRegister')
+        } as unknown as MockedObject<ClientsService>;
+        pets = {
+            createPet: vi.fn().mockName('PetsService.createPet')
+        } as unknown as MockedObject<PetsService>;
+        clients.quickRegister.mockReturnValue(of({ clientId: 'c-new', petId: 'p-new' }));
+        pets.createPet.mockReturnValue(of({ id: 'p-new' }));
         TestBed.configureTestingModule({
             imports: [VisitQuickRegistrationComponent],
             providers: [
@@ -65,23 +78,23 @@ describe('VisitQuickRegistrationComponent', () => {
         create();
         cmp.petForm.patchValue({ name: 'Pamuk', speciesId: 's1' });
         cmp.clientForm.patchValue({ fullName: 'Ayşe Yılmaz', phone: '' });
-        expect(cmp.canSubmit()).toBeFalse();
+        expect(cmp.canSubmit()).toBe(false);
         cmp.clientForm.patchValue({ phone: '123' });
-        expect(cmp.canSubmit()).toBeFalse();
+        expect(cmp.canSubmit()).toBe(false);
         cmp.clientForm.patchValue({ fullName: 'A', phone: '0532 123 45 67' });
-        expect(cmp.canSubmit()).toBeFalse();
+        expect(cmp.canSubmit()).toBe(false);
         cmp.clientForm.patchValue({ fullName: 'Ayşe Yılmaz' });
-        expect(cmp.canSubmit()).toBeTrue();
+        expect(cmp.canSubmit()).toBe(true);
     });
 
     it('hayvan adı ve tür zorunludur', () => {
         create();
         cmp.clientForm.patchValue({ fullName: 'Ayşe Yılmaz', phone: '0532 123 45 67' });
-        expect(cmp.canSubmit()).toBeFalse();
+        expect(cmp.canSubmit()).toBe(false);
         cmp.petForm.patchValue({ name: 'Pamuk' });
-        expect(cmp.canSubmit()).toBeFalse();
+        expect(cmp.canSubmit()).toBe(false);
         cmp.petForm.patchValue({ speciesId: 's1' });
-        expect(cmp.canSubmit()).toBeTrue();
+        expect(cmp.canSubmit()).toBe(true);
     });
 
     it('yeni müşteri: tek quick-register çağrısı; müşteri ve hayvan ayrı ayrı oluşturulmaz; sahip adlı etiket yayılır', () => {
@@ -90,7 +103,9 @@ describe('VisitQuickRegistrationComponent', () => {
         cmp.petForm.patchValue({ microchipNumber: '985121001234567' });
         cmp.submit();
 
-        expect(clients.quickRegister).toHaveBeenCalledOnceWith({
+        expect(clients.quickRegister).toHaveBeenCalledTimes(1);
+
+        expect(clients.quickRegister).toHaveBeenCalledWith({
             fullName: 'Ayşe Yılmaz',
             phone: '0532 123 45 67',
             petName: 'Pamuk',
@@ -102,49 +117,47 @@ describe('VisitQuickRegistrationComponent', () => {
     });
 
     it('çift tıklama: yanıt gelmeden ikinci gönderim ikinci istek üretmez', () => {
-        clients.quickRegister.and.returnValue(new Subject());
+        clients.quickRegister.mockReturnValue(new Subject());
         create();
         fillValid();
         cmp.submit();
         cmp.submit();
         expect(clients.quickRegister).toHaveBeenCalledTimes(1);
-        expect(cmp.submitting()).toBeTrue();
+        expect(cmp.submitting()).toBe(true);
     });
 
     it('409 Clients.DuplicateClient: mesaj aramadan seçmeye yönlendirir, düğme "Aramaya dön" olur', () => {
-        clients.quickRegister.and.returnValue(
-            throwError(() => httpError(409, { status: 409, extensions: { code: 'Clients.DuplicateClient' } }))
-        );
+        clients.quickRegister.mockReturnValue(throwError(() => httpError(409, { status: 409, extensions: { code: 'Clients.DuplicateClient' } })));
         create();
         fillValid();
         cmp.submit();
 
-        expect(cmp.duplicateClient()).toBeTrue();
+        expect(cmp.duplicateClient()).toBe(true);
         expect(cmp.stepError()).toBe('Bu ad ve telefonla kayıtlı müşteri var. Aramada müşteriyi bulup seçin.');
-        expect(cmp.submitting()).toBeFalse();
+        expect(cmp.submitting()).toBe(false);
         expect(registered.length).toBe(0);
     });
 
     it('400 alan hatası: sunucu mesajı gösterilir, form değerleri korunur, tekrar denenebilir', () => {
-        clients.quickRegister.and.returnValue(throwError(() => httpError(400, { status: 400, errors: { phone: ['Telefon geçersiz.'] } })));
+        clients.quickRegister.mockReturnValue(throwError(() => httpError(400, { status: 400, errors: { phone: ['Telefon geçersiz.'] } })));
         create();
         fillValid();
         cmp.submit();
 
         expect(cmp.stepError()).toBeTruthy();
-        expect(cmp.duplicateClient()).toBeFalse();
+        expect(cmp.duplicateClient()).toBe(false);
         expect(cmp.clientForm.controls.fullName.value).toBe('Ayşe Yılmaz');
-        expect(cmp.submitting()).toBeFalse();
+        expect(cmp.submitting()).toBe(false);
     });
 
     it('403 ve 404 hatası mesaj gösterir, kayıt yayılmaz', () => {
-        clients.quickRegister.and.returnValue(throwError(() => httpError(403, null)));
+        clients.quickRegister.mockReturnValue(throwError(() => httpError(403, null)));
         create();
         fillValid();
         cmp.submit();
         expect(cmp.stepError()).toBe('Bu işlem için yetkiniz yok.');
 
-        clients.quickRegister.and.returnValue(throwError(() => httpError(404, { status: 404, extensions: { code: 'Pets.SpeciesNotFound' }, detail: 'Tür bulunamadı.' })));
+        clients.quickRegister.mockReturnValue(throwError(() => httpError(404, { status: 404, extensions: { code: 'Pets.SpeciesNotFound' }, detail: 'Tür bulunamadı.' })));
         cmp.submit();
         expect(cmp.stepError()).toContain('Tür bulunamadı');
         expect(registered.length).toBe(0);
@@ -159,16 +172,16 @@ describe('VisitQuickRegistrationComponent', () => {
     it('kayıtlı sahibe hayvan ekleme: quick-register çağrılmaz, POST /pets sahip kimliğiyle gider', () => {
         create({ existingOwner: { id: 'c-old', name: 'Veli Kaya' } });
         cmp.petForm.patchValue({ name: 'Pamuk', speciesId: 's1' });
-        expect(cmp.canSubmit()).toBeTrue();
+        expect(cmp.canSubmit()).toBe(true);
         cmp.submit();
 
         expect(clients.quickRegister).not.toHaveBeenCalled();
-        expect(pets.createPet.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ clientId: 'c-old', name: 'Pamuk', speciesId: 's1' }));
+        expect(vi.mocked(pets.createPet).mock.lastCall![0]).toEqual(expect.objectContaining({ clientId: 'c-old', name: 'Pamuk', speciesId: 's1' }));
         expect(registered[0]).toEqual({ id: 'p-new', label: 'Pamuk — Kedi · Sahip: Veli Kaya', clientId: 'c-old', clientName: 'Veli Kaya' });
     });
 
     it('kayıtlı sahibe hayvan eklerken hata mesajı gösterilir', () => {
-        pets.createPet.and.returnValue(throwError(() => httpError(400, { status: 400, errors: { name: ['Hayvan adı geçersiz.'] } })));
+        pets.createPet.mockReturnValue(throwError(() => httpError(400, { status: 400, errors: { name: ['Hayvan adı geçersiz.'] } })));
         create({ existingOwner: { id: 'c-old', name: 'Veli Kaya' } });
         cmp.petForm.patchValue({ name: 'Pamuk', speciesId: 's1' });
         cmp.submit();

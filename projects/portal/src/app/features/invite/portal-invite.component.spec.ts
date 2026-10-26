@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -21,12 +22,12 @@ const NEW_ACCOUNT: PortalInvitePreview = {
 describe('PortalInviteComponent (davet akışı)', () => {
     let fixture: ComponentFixture<PortalInviteComponent>;
     let el: HTMLElement;
-    let api: jasmine.SpyObj<PortalInviteApi>;
-    let session: jasmine.SpyObj<PortalSessionService>;
+    let api: MockedObject<PortalInviteApi>;
+    let session: MockedObject<PortalSessionService>;
     let router: Router;
 
     async function create(token: string | undefined, preview$ = of(NEW_ACCOUNT)): Promise<void> {
-        api.preview.and.returnValue(preview$);
+        api.preview.mockReturnValue(preview$);
         fixture = TestBed.createComponent(PortalInviteComponent);
         fixture.componentRef.setInput('token', token);
         el = fixture.nativeElement;
@@ -51,15 +52,21 @@ describe('PortalInviteComponent (davet akışı)', () => {
     }
 
     beforeEach(async () => {
-        api = jasmine.createSpyObj<PortalInviteApi>('PortalInviteApi', ['preview', 'accept']);
-        session = jasmine.createSpyObj<PortalSessionService>('PortalSessionService', ['startSession', 'selectLink']);
-        session.startSession.and.returnValue(of(TEST_ME));
+        api = {
+            preview: vi.fn().mockName('PortalInviteApi.preview'),
+            accept: vi.fn().mockName('PortalInviteApi.accept')
+        } as unknown as MockedObject<PortalInviteApi>;
+        session = {
+            startSession: vi.fn().mockName('PortalSessionService.startSession'),
+            selectLink: vi.fn().mockName('PortalSessionService.selectLink')
+        } as unknown as MockedObject<PortalSessionService>;
+        session.startSession.mockReturnValue(of(TEST_ME));
         await TestBed.configureTestingModule({
             imports: [PortalInviteComponent],
             providers: [provideRouter([]), { provide: PortalInviteApi, useValue: api }, { provide: PortalSessionService, useValue: session }]
         }).compileComponents();
         router = TestBed.inject(Router);
-        spyOn(router, 'navigateByUrl').and.resolveTo(true);
+        vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
     });
 
     afterEach(() => fixture?.destroy());
@@ -72,7 +79,10 @@ describe('PortalInviteComponent (davet akışı)', () => {
     });
 
     it('404 davette sebep ayırt etmeden geçersiz mesajı gösterir', async () => {
-        await create('tok', throwError(() => problem(404, PORTAL_ERROR_CODES.inviteNotFound)));
+        await create(
+            'tok',
+            throwError(() => problem(404, PORTAL_ERROR_CODES.inviteNotFound))
+        );
 
         expect(el.textContent).toContain('Davet geçersiz');
         expect(el.querySelector('form')).toBeNull();
@@ -97,7 +107,7 @@ describe('PortalInviteComponent (davet akışı)', () => {
     });
 
     it('kodla giriş seçiliyken parolasız kabul eder, oturum açar ve adres çubuğundaki daveti bırakır', async () => {
-        api.accept.and.returnValue(of({ linkId: 'link-9', ...testTokens(1) }));
+        api.accept.mockReturnValue(of({ linkId: 'link-9', ...testTokens(1) }));
         await create('tok');
         typeInto(el, '#invite-display-name', '  Ayşe  ');
         consent();
@@ -110,7 +120,7 @@ describe('PortalInviteComponent (davet akışı)', () => {
     });
 
     it('parola seçilince güçlü parola ve eşleşme doğrulanır', async () => {
-        api.accept.and.returnValue(of({ linkId: 'link-9', ...testTokens(1) }));
+        api.accept.mockReturnValue(of({ linkId: 'link-9', ...testTokens(1) }));
         await create('tok');
         el.querySelector<HTMLInputElement>('input[type=radio][value=password]')!.click();
         await settle();
@@ -131,7 +141,7 @@ describe('PortalInviteComponent (davet akışı)', () => {
     });
 
     it('hesabı olan kullanıcıdan ad ve parola istemez', async () => {
-        api.accept.and.returnValue(of({ linkId: 'link-9', ...testTokens(1) }));
+        api.accept.mockReturnValue(of({ linkId: 'link-9', ...testTokens(1) }));
         await create('tok', of({ ...NEW_ACCOUNT, hasAccount: true, requiredLegalDocuments: [] }));
 
         expect(el.querySelector('#invite-display-name')).toBeNull();
@@ -144,7 +154,7 @@ describe('PortalInviteComponent (davet akışı)', () => {
     });
 
     it('sunucu hatasını Türkçe mesajla gösterir', async () => {
-        api.accept.and.returnValue(throwError(() => problem(409, PORTAL_ERROR_CODES.alreadyLinked)));
+        api.accept.mockReturnValue(throwError(() => problem(409, PORTAL_ERROR_CODES.alreadyLinked)));
         await create('tok');
         consent();
         await submit();

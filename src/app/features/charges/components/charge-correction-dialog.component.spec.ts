@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import type { ChargeVm } from '@/app/features/charges/models/charge-vm.model';
@@ -27,11 +28,13 @@ const charge: ChargeVm = {
 describe('ChargeCorrectionDialogComponent', () => {
     let fixture: ComponentFixture<ChargeCorrectionDialogComponent>;
     let cmp: ChargeCorrectionDialogComponent;
-    let charges: jasmine.SpyObj<ChargesService>;
+    let charges: MockedObject<ChargesService>;
     let corrected: ChargeVm[];
 
     beforeEach(async () => {
-        charges = jasmine.createSpyObj<ChargesService>('ChargesService', ['correctCharge']);
+        charges = {
+            correctCharge: vi.fn().mockName('ChargesService.correctCharge')
+        } as unknown as MockedObject<ChargesService>;
         await TestBed.configureTestingModule({
             imports: [ChargeCorrectionDialogComponent],
             providers: [{ provide: ChargesService, useValue: charges }]
@@ -65,32 +68,34 @@ describe('ChargeCorrectionDialogComponent', () => {
     it('değişiklik + gerekçeyle ücret düzeltilir, diyalog kapanır ve güncel ücret yayılır', () => {
         const updated = { ...charge, unitPrice: 600, amount: 600 };
 
-        charges.correctCharge.and.returnValue(of(updated));
+        charges.correctCharge.mockReturnValue(of(updated));
         cmp.form.patchValue({ unitPrice: 600, reason: 'Fiyat yanlış okundu' });
         cmp.onSubmit();
-        expect(charges.correctCharge).toHaveBeenCalledOnceWith('ch1', { description: 'Genel muayene', quantity: 1, unitPrice: 600, reason: 'Fiyat yanlış okundu', lineKind: 'Service', vatRate: null });
-        expect(cmp.visible()).toBeFalse();
+        expect(charges.correctCharge).toHaveBeenCalledTimes(1);
+        expect(charges.correctCharge).toHaveBeenCalledWith('ch1', { description: 'Genel muayene', quantity: 1, unitPrice: 600, reason: 'Fiyat yanlış okundu', lineKind: 'Service', vatRate: null });
+        expect(cmp.visible()).toBe(false);
         expect(corrected).toEqual([updated]);
     });
 
     it('yalnız KDV oranı / satır türü değişikliği de düzeltme sayılır (ADR-036)', () => {
-        charges.correctCharge.and.returnValue(of({ ...charge, lineKind: 'Product', vatRate: 10 }));
+        charges.correctCharge.mockReturnValue(of({ ...charge, lineKind: 'Product', vatRate: 10 }));
         cmp.form.patchValue({ lineKind: 'Product', vatRate: 10, reason: 'Ürün satışıydı' });
         cmp.onSubmit();
-        expect(charges.correctCharge).toHaveBeenCalledOnceWith('ch1', jasmine.objectContaining({ lineKind: 'Product', vatRate: 10, unitPrice: 750 }));
+        expect(charges.correctCharge).toHaveBeenCalledTimes(1);
+        expect(charges.correctCharge).toHaveBeenCalledWith('ch1', expect.objectContaining({ lineKind: 'Product', vatRate: 10, unitPrice: 750 }));
     });
 
     it('409 tahsis altı hatası diyalogda gösterilir, diyalog açık kalır', () => {
-        charges.correctCharge.and.returnValue(throwError(() => new Error('Yeni tutar, bu ücrete bağlı ödemelerin toplamının altında olamaz.')));
+        charges.correctCharge.mockReturnValue(throwError(() => new Error('Yeni tutar, bu ücrete bağlı ödemelerin toplamının altında olamaz.')));
         cmp.form.patchValue({ unitPrice: 300, reason: 'Fiyat yanlış okundu' });
         cmp.onSubmit();
-        expect(cmp.visible()).toBeTrue();
+        expect(cmp.visible()).toBe(true);
         expect(cmp.submitError()).toContain('toplamının altında');
         expect(corrected).toEqual([]);
     });
 
     it('geçersiz birim fiyat (0) formu geçersiz yapar', () => {
         cmp.form.patchValue({ unitPrice: 0, reason: 'Fiyat yanlış okundu' });
-        expect(cmp.form.invalid).toBeTrue();
+        expect(cmp.form.invalid).toBe(true);
     });
 });

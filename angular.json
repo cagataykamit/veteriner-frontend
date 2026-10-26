@@ -16,7 +16,7 @@
             "prefix": "app",
             "architect": {
                 "build": {
-                    "builder": "@angular-devkit/build-angular:application",
+                    "builder": "@angular/build:application",
                     "options": {
                         "outputPath": "dist/vetinity-web",
                         "index": "src/index.html",
@@ -89,12 +89,22 @@
                                     "with": "src/environments/environment.staging.ts"
                                 }
                             ]
+                        },
+                        "testing": {
+                            "aot": false,
+                            "optimization": false,
+                            "extractLicenses": false,
+                            "assets": [
+                                "src/favicon.ico",
+                                "src/assets"
+                            ],
+                            "styles": []
                         }
                     },
                     "defaultConfiguration": "production"
                 },
                 "serve": {
-                    "builder": "@angular-devkit/build-angular:dev-server",
+                    "builder": "@angular/build:dev-server",
                     "options": {
                         "proxyConfig": "proxy.conf.json"
                     },
@@ -109,19 +119,17 @@
                     "defaultConfiguration": "development"
                 },
                 "extract-i18n": {
-                    "builder": "@angular-devkit/build-angular:extract-i18n"
+                    "builder": "@angular/build:extract-i18n"
                 },
                 "test": {
-                    "builder": "@angular-devkit/build-angular:karma",
+                    "builder": "@angular/build:unit-test",
                     "options": {
                         "tsConfig": "tsconfig.spec.json",
-                        "inlineStyleLanguage": "scss",
-                        "assets": [
-                            "src/favicon.ico",
-                            "src/assets"
-                        ],
-                        "styles": [],
-                        "scripts": []
+                        "buildTarget": ":build:testing",
+                        "runner": "vitest",
+                        "browsers": ["ChromiumHeadless"],
+                        "browserViewport": "800x600",
+                        "runnerConfig": true
                     }
                 }
             }
@@ -138,7 +146,7 @@
             "prefix": "portal",
             "architect": {
                 "build": {
-                    "builder": "@angular-devkit/build-angular:application",
+                    "builder": "@angular/build:application",
                     "options": {
                         "outputPath": "dist/portal",
                         "index": "projects/portal/src/index.html",
@@ -196,12 +204,18 @@
                                     "with": "projects/portal/src/environments/environment.development.ts"
                                 }
                             ]
+                        },
+                        "testing": {
+                            "aot": false,
+                            "optimization": false,
+                            "extractLicenses": false,
+                            "styles": []
                         }
                     },
                     "defaultConfiguration": "production"
                 },
                 "serve": {
-                    "builder": "@angular-devkit/build-angular:dev-server",
+                    "builder": "@angular/build:dev-server",
                     "options": {
                         "port": 4300,
                         "proxyConfig": "projects/portal/proxy.conf.json"
@@ -217,13 +231,14 @@
                     "defaultConfiguration": "development"
                 },
                 "test": {
-                    "builder": "@angular-devkit/build-angular:karma",
+                    "builder": "@angular/build:unit-test",
                     "options": {
                         "tsConfig": "projects/portal/tsconfig.spec.json",
-                        "inlineStyleLanguage": "scss",
-                        "assets": [{ "glob": "**/*", "input": "projects/portal/public" }],
-                        "styles": [],
-                        "scripts": []
+                        "buildTarget": ":build:testing",
+                        "runner": "vitest",
+                        "browsers": ["ChromiumHeadless"],
+                        "browserViewport": "800x600",
+                        "runnerConfig": true
                     }
                 }
             }

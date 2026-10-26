@@ -1,11 +1,4 @@
-import {
-    chargesQueryToHttpParams,
-    mapChargeCreateResultDtoToVm,
-    mapChargeDtoToVm,
-    mapCorrectChargeToApiBody,
-    mapCreateChargeToApiBody,
-    mapPagedChargesToVm
-} from '@/app/features/charges/data/charge.mapper';
+import { chargesQueryToHttpParams, mapChargeCreateResultDtoToVm, mapChargeDtoToVm, mapCorrectChargeToApiBody, mapCreateChargeToApiBody, mapPagedChargesToVm } from '@/app/features/charges/data/charge.mapper';
 import type { ChargeDto } from '@/app/features/charges/models/charge-api.model';
 
 const dto = (over: Partial<ChargeDto> = {}): ChargeDto => ({
@@ -65,7 +58,7 @@ describe('charge mapper — okuma', () => {
     it('create sonucunda created bayrağını korur', () => {
         const vm = mapChargeCreateResultDtoToVm({ created: false, charge: dto() });
 
-        expect(vm.created).toBeFalse();
+        expect(vm.created).toBe(false);
         expect(vm.charge.id).toBe('ch1');
     });
 });
@@ -94,19 +87,19 @@ describe('charge mapper — yazma ve sorgu', () => {
             unitPrice: 10.5,
             requestId: 'rid'
         });
-        expect('amount' in body).toBeFalse();
-        expect('currency' in body).toBeFalse();
+        expect('amount' in body).toBe(false);
+        expect('currency' in body).toBe(false);
     });
 
     it('satır türü ve KDV (ADR-036): okumada eski yanıt hizmet/varsayılan; yazmada tax nesnesi', () => {
         expect(mapChargeDtoToVm(dto()).lineKind).toBe('Service');
         expect(mapChargeDtoToVm(dto()).vatRate).toBeNull();
-        expect(mapChargeDtoToVm(dto({ lineKind: 'Product', vatRate: 10 }))).toEqual(jasmine.objectContaining({ lineKind: 'Product', vatRate: 10 }));
+        expect(mapChargeDtoToVm(dto({ lineKind: 'Product', vatRate: 10 }))).toEqual(expect.objectContaining({ lineKind: 'Product', vatRate: 10 }));
 
         const base = { clientId: 'cl1', description: 'Mama', quantity: 1, unitPrice: 100, requestId: 'rid' };
 
         expect(mapCreateChargeToApiBody('c1', { ...base, lineKind: 'Product', vatRate: null }).tax).toEqual({ lineKind: 'Product', vatRate: null });
-        expect('tax' in mapCreateChargeToApiBody('c1', base)).toBeFalse();
+        expect('tax' in mapCreateChargeToApiBody('c1', base)).toBe(false);
         expect(mapCorrectChargeToApiBody({ description: 'Mama', quantity: 1, unitPrice: 100, reason: 'KDV yanlış', lineKind: 'Service', vatRate: 20 }).tax).toEqual({
             lineKind: 'Service',
             vatRate: 20
@@ -120,7 +113,7 @@ describe('charge mapper — yazma ve sorgu', () => {
         expect(p.get('pageSize')).toBe('20');
         expect(p.get('clinicId')).toBe('c1');
         expect(p.get('clientId')).toBe('cl1');
-        expect(p.has('petId')).toBeFalse();
-        expect(p.has('visitId')).toBeFalse();
+        expect(p.has('petId')).toBe(false);
+        expect(p.has('visitId')).toBe(false);
     });
 });

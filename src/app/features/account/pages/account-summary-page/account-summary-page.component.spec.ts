@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -12,7 +13,7 @@ describe('AccountSummaryPageComponent (görünen ad)', () => {
     let fixture: ComponentFixture<AccountSummaryPageComponent>;
     let cmp: AccountSummaryPageComponent;
     let http: HttpTestingController;
-    let toasts: jasmine.Spy;
+    let toasts: Mock;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
@@ -22,7 +23,7 @@ describe('AccountSummaryPageComponent (görünen ad)', () => {
         http = TestBed.inject(HttpTestingController);
         fixture = TestBed.createComponent(AccountSummaryPageComponent);
         cmp = fixture.componentInstance;
-        toasts = spyOn(fixture.debugElement.injector.get(MessageService), 'add');
+        toasts = vi.spyOn(fixture.debugElement.injector.get(MessageService), 'add').mockReturnValue(undefined);
         fixture.detectChanges();
         http.expectOne('http://api.test/api/v1/me/account-summary').flush(summary);
         fixture.detectChanges();
@@ -32,7 +33,7 @@ describe('AccountSummaryPageComponent (görünen ad)', () => {
 
     it('mevcut ad alana yüklenir ve değişmeden kaydet kapalıdır', () => {
         expect(cmp.displayNameControl.value).toBe('ali.veli');
-        expect(cmp.displayNameControl.pristine).toBeTrue();
+        expect(cmp.displayNameControl.pristine).toBe(true);
     });
 
     it('kaydet: kırpılmış ad PUT edilir, özet güncellenir, toast gösterilir', () => {
@@ -47,8 +48,8 @@ describe('AccountSummaryPageComponent (görünen ad)', () => {
         req.flush(null, { status: 204, statusText: 'No Content' });
 
         expect(cmp.summary()?.displayName).toBe('Dr. Ayşe Yılmaz');
-        expect(cmp.displayNameControl.pristine).toBeTrue();
-        expect(toasts.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ severity: 'success' }));
+        expect(cmp.displayNameControl.pristine).toBe(true);
+        expect(vi.mocked(toasts).mock.lastCall![0]).toEqual(expect.objectContaining({ severity: 'success' }));
     });
 
     it('boş değer adı temizler (displayName: null)', () => {
@@ -75,7 +76,7 @@ describe('AccountSummaryPageComponent (görünen ad)', () => {
 
         req.flush({ detail: 'Ad geçersiz.' }, { status: 400, statusText: 'Bad Request' });
 
-        expect(cmp.displayNameSaving()).toBeFalse();
+        expect(cmp.displayNameSaving()).toBe(false);
         expect(cmp.displayNameError()).toBe('Ad geçersiz.');
     });
 });

@@ -147,7 +147,7 @@ describe('VaccinationDetailPageComponent — HBS', () => {
 
         expect(el.querySelector('[data-testid="hbs-section"]')?.textContent).toContain("HBS'e girilmedi");
         expect(el.querySelector('[data-testid="hbs-open-dialog"]')).not.toBeNull();
-        expect(fixture.componentInstance.canUpdateHbs).toBeTrue();
+        expect(fixture.componentInstance.canUpdateHbs).toBe(true);
     });
 
     it('kaydedilen HBS durumu rozete yansır', () => {
@@ -160,6 +160,6 @@ describe('VaccinationDetailPageComponent — HBS', () => {
     });
 
     it('Vaccinations.Update yoksa geri kayıt yetkisi yoktur', () => {
-        expect(create([]).componentInstance.canUpdateHbs).toBeFalse();
+        expect(create([]).componentInstance.canUpdateHbs).toBe(false);
     });
 });

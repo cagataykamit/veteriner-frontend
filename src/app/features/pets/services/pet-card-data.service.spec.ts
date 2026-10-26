@@ -13,10 +13,19 @@ import { PetCardDataService } from './pet-card-data.service';
 describe('PetCardDataService', () => {
     let claims: Set<string>;
     let service: PetCardDataService;
-    const clients = jasmine.createSpyObj<ClientsService>('ClientsService', ['getClientBalance']);
-    const chargeSuggestions = jasmine.createSpyObj<ChargeSuggestionsService>('ChargeSuggestionsService', ['getPending']);
-    const pets = jasmine.createSpyObj<PetsService>('PetsService', ['getPets', 'getPetOpenItems']);
-    const treatments = jasmine.createSpyObj<TreatmentsService>('TreatmentsService', ['getTreatments']);
+    const clients = {
+        getClientBalance: vi.fn().mockName('ClientsService.getClientBalance')
+    };
+    const chargeSuggestions = {
+        getPending: vi.fn().mockName('ChargeSuggestionsService.getPending')
+    };
+    const pets = {
+        getPets: vi.fn().mockName('PetsService.getPets'),
+        getPetOpenItems: vi.fn().mockName('PetsService.getPetOpenItems')
+    };
+    const treatments = {
+        getTreatments: vi.fn().mockName('TreatmentsService.getTreatments')
+    };
 
     const collect = <T>(source: { subscribe(fn: (v: PetCardSection<T>) => void): unknown }) => {
         const values: PetCardSection<T>[] = [];
@@ -28,9 +37,9 @@ describe('PetCardDataService', () => {
 
     beforeEach(() => {
         claims = new Set(['Pets.Read']);
-        pets.getPetOpenItems.calls.reset();
-        clients.getClientBalance.calls.reset();
-        chargeSuggestions.getPending.calls.reset();
+        pets.getPetOpenItems.mockClear();
+        clients.getClientBalance.mockClear();
+        chargeSuggestions.getPending.mockClear();
         TestBed.configureTestingModule({
             providers: [
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
@@ -47,11 +56,13 @@ describe('PetCardDataService', () => {
     it('hasta Yapılacaklar tek istekte açık işler ucundan okunur; önce yükleniyor, sonra veri yayar', () => {
         const vm = { petId: 'p1' } as PetOpenItemsVm;
 
-        pets.getPetOpenItems.and.returnValue(of(vm));
+        pets.getPetOpenItems.mockReturnValue(of(vm));
 
         const values = collect(service.openItems('p1'));
 
-        expect(pets.getPetOpenItems).toHaveBeenCalledOnceWith('p1');
+        expect(pets.getPetOpenItems).toHaveBeenCalledTimes(1);
+
+        expect(pets.getPetOpenItems).toHaveBeenCalledWith('p1');
         expect(values).toEqual([{ state: 'loading' }, { state: 'ok', data: vm }]);
     });
 
@@ -61,7 +72,7 @@ describe('PetCardDataService', () => {
         expect(pets.getPetOpenItems).not.toHaveBeenCalled();
 
         claims.add('Pets.Read');
-        pets.getPetOpenItems.and.returnValue(throwError(() => new Error('x')));
+        pets.getPetOpenItems.mockReturnValue(throwError(() => new Error('x')));
         expect(collect(service.openItems('p1'))).toEqual([{ state: 'loading' }, { state: 'error' }]);
     });
 
@@ -79,11 +90,18 @@ describe('PetCardDataService', () => {
 
     it('müşteri kartı: hayvanlar (vefat edenler dahil, durum süzgeçsiz) müşteriye süzülür', () => {
         claims.add('Pets.Read');
-        pets.getPets.and.returnValue(of({ items: [{ id: 'p1', clientId: 'c1' }, { id: 'p9', clientId: 'c9' }] }) as never);
+        pets.getPets.mockReturnValue(
+            of({
+                items: [
+                    { id: 'p1', clientId: 'c1' },
+                    { id: 'p9', clientId: 'c9' }
+                ]
+            }) as never
+        );
         const petValues = collect(service.clientPets('c1'));
 
-        expect(pets.getPets).toHaveBeenCalledWith(jasmine.objectContaining({ clientId: 'c1' }));
-        expect(pets.getPets.calls.mostRecent().args[0].status).toBeUndefined();
+        expect(pets.getPets).toHaveBeenCalledWith(expect.objectContaining({ clientId: 'c1' }));
+        expect(vi.mocked(pets.getPets).mock.lastCall![0].status).toBeUndefined();
         const lastPets = petValues[1];
 
         expect(lastPets?.state === 'ok' ? lastPets.data.map((p) => p.id) : null).toEqual(['p1']);
@@ -96,10 +114,12 @@ describe('PetCardDataService', () => {
         claims.add('Charges.Read');
         const page = { items: [{ id: 's1', petId: 'p1' }], page: 1, pageSize: 200, totalItems: 1, totalPages: 1 };
 
-        chargeSuggestions.getPending.and.returnValue(of(page) as never);
+        chargeSuggestions.getPending.mockReturnValue(of(page) as never);
         const values = collect(service.clientPendingCharges('c1'));
 
-        expect(chargeSuggestions.getPending).toHaveBeenCalledOnceWith({ page: 1, pageSize: 200, clientId: 'c1' });
+        expect(chargeSuggestions.getPending).toHaveBeenCalledTimes(1);
+
+        expect(chargeSuggestions.getPending).toHaveBeenCalledWith({ page: 1, pageSize: 200, clientId: 'c1' });
         expect(values[1]).toEqual({ state: 'ok', data: page } as never);
     });
 
@@ -110,10 +130,10 @@ describe('PetCardDataService', () => {
             { id: 't9', petId: 'p9', followUpDateUtc: '2026-10-21T00:00:00Z' }
         ];
 
-        treatments.getTreatments.and.returnValue(of({ items, page: 1, pageSize: 50, totalItems: 2, totalPages: 1 }) as never);
+        treatments.getTreatments.mockReturnValue(of({ items, page: 1, pageSize: 50, totalItems: 2, totalPages: 1 }) as never);
         const values = collect(service.followUpTreatments('p1'));
 
-        expect(treatments.getTreatments).toHaveBeenCalledWith(jasmine.objectContaining({ petId: 'p1', active: true }));
+        expect(treatments.getTreatments).toHaveBeenCalledWith(expect.objectContaining({ petId: 'p1', active: true }));
         const last = values[1];
 
         expect(last?.state === 'ok' ? last.data.map((t) => t.id) : null).toEqual(['t1']);

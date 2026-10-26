@@ -14,18 +14,18 @@ describe('hospitalization-upsert-validation-parse.utils', () => {
     it('409 Hospitalizations.ConcurrencyConflict çakışma sayılır ve anlaşılır mesaj verir', () => {
         const parsed = parseHospitalizationUpsertHttpError(problem(409, 'Hospitalizations.ConcurrencyConflict'));
 
-        expect(parsed.isConcurrencyConflict).toBeTrue();
+        expect(parsed.isConcurrencyConflict).toBe(true);
         expect(parsed.summaryMessage).toContain('başka biri tarafından güncellendi');
     });
 
     it('taburcuda da aynı çakışma kodu tanınır', () => {
-        expect(parseHospitalizationDischargeHttpError(problem(409, 'Hospitalizations.ConcurrencyConflict')).isConcurrencyConflict).toBeTrue();
+        expect(parseHospitalizationDischargeHttpError(problem(409, 'Hospitalizations.ConcurrencyConflict')).isConcurrencyConflict).toBe(true);
     });
 
     it('409 Examinations.Finalized muayene alanına yatışa özel Türkçe mesaj yazar, çakışma değildir', () => {
         const parsed = parseHospitalizationUpsertHttpError(problem(409, 'Examinations.Finalized'));
 
-        expect(parsed.isConcurrencyConflict).toBeFalse();
+        expect(parsed.isConcurrencyConflict).toBe(false);
         expect(parsed.fieldErrors.examinationId).toBe(HOSPITALIZATION_EXAMINATION_FINALIZED_MESSAGE);
     });
 
@@ -36,7 +36,7 @@ describe('hospitalization-upsert-validation-parse.utils', () => {
     });
 
     it('çakışma dışı hata çakışma işaretlemez', () => {
-        expect(parseHospitalizationUpsertHttpError(problem(400, 'Hospitalizations.VisitClinicMismatch')).isConcurrencyConflict).toBeFalse();
+        expect(parseHospitalizationUpsertHttpError(problem(400, 'Hospitalizations.VisitClinicMismatch')).isConcurrencyConflict).toBe(false);
     });
 
     it('oda kodları (RoomNotFound 404, RoomInactive 409) oda alanına Türkçe mesaj yazar, çakışma değildir', () => {
@@ -45,7 +45,7 @@ describe('hospitalization-upsert-validation-parse.utils', () => {
 
         expect(notFound.fieldErrors.roomId).toBe(HOSPITALIZATION_ROOM_PROBLEM_MESSAGES['Hospitalizations.RoomNotFound']);
         expect(inactive.fieldErrors.roomId).toContain('pasife alınmış');
-        expect(inactive.isConcurrencyConflict).toBeFalse();
+        expect(inactive.isConcurrencyConflict).toBe(false);
     });
 
     it('sunucunun location / clearRoom alan hataları oda alanında gösterilir', () => {

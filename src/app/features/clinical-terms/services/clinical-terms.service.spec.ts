@@ -64,15 +64,15 @@ describe('ClinicalTermsService', () => {
 
         service.rename('t1', 'X', 'V1').subscribe({ error: (e: ClinicalTermError) => (conflict = e) });
         http.expectOne('http://api.test/api/v1/clinical-terms/t1').flush({ status: 409, code: 'ClinicalTerms.ConcurrencyConflict' }, { status: 409, statusText: 'Conflict' });
-        expect(conflict?.isConflict).toBeTrue();
-        expect(conflict?.isDuplicateName).toBeFalse();
+        expect(conflict?.isConflict).toBe(true);
+        expect(conflict?.isDuplicateName).toBe(false);
 
         let duplicate: ClinicalTermError | undefined;
 
         service.create('Diagnosis', 'GASTROENTERİT').subscribe({ error: (e: ClinicalTermError) => (duplicate = e) });
         http.expectOne('http://api.test/api/v1/clinical-terms').flush({ status: 409, extensions: { code: 'ClinicalTerms.DuplicateName' } }, { status: 409, statusText: 'Conflict' });
-        expect(duplicate?.isConflict).toBeFalse();
-        expect(duplicate?.isDuplicateName).toBeTrue();
+        expect(duplicate?.isConflict).toBe(false);
+        expect(duplicate?.isDuplicateName).toBe(true);
         expect(duplicate?.message).toContain('zaten var');
     });
 });

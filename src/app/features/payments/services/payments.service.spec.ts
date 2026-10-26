@@ -19,25 +19,27 @@ describe('PaymentsService.voidPayment', () => {
 
     afterEach(() => http.verify());
 
-    it('POST void ucuna kırpılmış gerekçe gider; 204 boş döner', (done) => {
-        service.voidPayment('p1', ' Yanlış tutar girildi ').subscribe((r) => {
-            expect(r).toBeUndefined();
-            done();
-        });
-        const req = http.expectOne('http://api.test/api/v1/payments/p1/void');
-
-        expect(req.request.method).toBe('POST');
-        expect(req.request.body).toEqual({ reason: 'Yanlış tutar girildi' });
-        req.flush(null, { status: 204, statusText: 'No Content' });
-    });
-
-    it('409 zaten iptal: Türkçe mesajlı Error', (done) => {
-        service.voidPayment('p1', 'Yanlış tutar').subscribe({
-            error: (e: Error) => {
-                expect(e.message).toContain('zaten iptal edilmiş');
+    it('POST void ucuna kırpılmış gerekçe gider; 204 boş döner', () =>
+        new Promise<void>((done) => {
+            service.voidPayment('p1', ' Yanlış tutar girildi ').subscribe((r) => {
+                expect(r).toBeUndefined();
                 done();
-            }
-        });
-        http.expectOne('http://api.test/api/v1/payments/p1/void').flush({ title: 'Conflict', extensions: { code: 'Payments.AlreadyVoided' } }, { status: 409, statusText: 'Conflict' });
-    });
+            });
+            const req = http.expectOne('http://api.test/api/v1/payments/p1/void');
+
+            expect(req.request.method).toBe('POST');
+            expect(req.request.body).toEqual({ reason: 'Yanlış tutar girildi' });
+            req.flush(null, { status: 204, statusText: 'No Content' });
+        }));
+
+    it('409 zaten iptal: Türkçe mesajlı Error', () =>
+        new Promise<void>((done) => {
+            service.voidPayment('p1', 'Yanlış tutar').subscribe({
+                error: (e: Error) => {
+                    expect(e.message).toContain('zaten iptal edilmiş');
+                    done();
+                }
+            });
+            http.expectOne('http://api.test/api/v1/payments/p1/void').flush({ title: 'Conflict', extensions: { code: 'Payments.AlreadyVoided' } }, { status: 409, statusText: 'Conflict' });
+        }));
 });

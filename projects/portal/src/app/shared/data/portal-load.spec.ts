@@ -5,7 +5,9 @@ import { PORTAL_NETWORK_ERROR_MESSAGE } from '@portal/app/core/errors/portal-err
 import { page } from '@portal/app/testing/portal-fixtures';
 import { PortalLoad, PortalPagedLoad } from './portal-load';
 
-function destroyRef(): DestroyRef & { destroy(): void } {
+function destroyRef(): DestroyRef & {
+    destroy(): void;
+} {
     const callbacks: (() => void)[] = [];
 
     return {
@@ -16,7 +18,9 @@ function destroyRef(): DestroyRef & { destroy(): void } {
             return () => undefined;
         },
         destroy: () => callbacks.forEach((cb) => cb())
-    } as unknown as DestroyRef & { destroy(): void };
+    } as unknown as DestroyRef & {
+        destroy(): void;
+    };
 }
 
 describe('PortalLoad / PortalPagedLoad', () => {
@@ -51,7 +55,7 @@ describe('PortalLoad / PortalPagedLoad', () => {
         expect(load.data()).toBeNull();
 
         ref.destroy();
-        expect(second.observed).toBeFalse();
+        expect(second.observed).toBe(false);
     });
 
     it('sayfalama: sonraki sayfa eklenir, son sayfada daha fazla yoktur', () => {
@@ -65,12 +69,12 @@ describe('PortalLoad / PortalPagedLoad', () => {
             return of(pages[p - 1]);
         });
         expect(load.items()).toEqual(['a', 'b']);
-        expect(load.hasMore()).toBeTrue();
+        expect(load.hasMore()).toBe(true);
 
         load.loadMore();
         expect(requested).toEqual([1, 2]);
         expect(load.items()).toEqual(['a', 'b', 'c']);
-        expect(load.hasMore()).toBeFalse();
+        expect(load.hasMore()).toBe(false);
     });
 
     it('sonraki sayfa hatası yüklenen satırları silmez; tekrar dene aynı sayfayı ister', () => {

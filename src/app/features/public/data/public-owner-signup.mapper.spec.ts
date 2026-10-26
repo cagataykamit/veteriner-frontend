@@ -17,18 +17,18 @@ describe('public-owner-signup.mapper (TRIAL-002)', () => {
     it('örnek klinik seçimini startWithExampleClinic=true olarak gönderir ve metinleri kırpar', () => {
         const body = mapPublicOwnerSignupFormToRequest(FORM);
 
-        expect(body.startWithExampleClinic).toBeTrue();
+        expect(body.startWithExampleClinic).toBe(true);
         expect(body.tenantName).toBe('Pati Kurum');
         expect(body.email).toBe('sahip@example.com');
         expect(body.password).toBe('Abc12345!');
         expect(body.acceptedLegalDocuments).toEqual(FORM.acceptedLegalDocuments);
-        expect('discountCode' in body).toBeFalse();
+        expect('discountCode' in body).toBe(false);
     });
 
     it('boş klinik seçiminde bayrak false; ortak kodu varsa gövdeye eklenir', () => {
         const body = mapPublicOwnerSignupFormToRequest({ ...FORM, startMode: 'empty', discountCode: ' ISIK10 ' });
 
-        expect(body.startWithExampleClinic).toBeFalse();
+        expect(body.startWithExampleClinic).toBe(false);
         expect(body.discountCode).toBe('ISIK10');
     });
 });

@@ -179,7 +179,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
         expect(el().textContent).not.toContain('Son randevular');
     });
 
-    it('hekim (muayene açabilen) klinik özeti, yalnız ödeme alan resepsiyon Yapılacaklar\'ı öne alır', () => {
+    it("hekim (muayene açabilen) klinik özeti, yalnız ödeme alan resepsiyon Yapılacaklar'ı öne alır", () => {
         create();
         expect(el().querySelector('[data-testid="clinical-column"]')?.classList).toContain('order-first');
         expect(el().querySelector('[data-testid="todo-column"]')?.classList).not.toContain('order-first');
@@ -209,8 +209,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
     });
 
     it('yetkisiz (Forbidden) bölüm satır ve başlık alanı göstermez, "yok" da demez', () => {
-        openItemsSource = () =>
-            of({ state: 'ok', data: openItems({ outstanding: { state: 'Forbidden', data: null }, nextAppointment: { state: 'Forbidden', data: null } }) });
+        openItemsSource = () => of({ state: 'ok', data: openItems({ outstanding: { state: 'Forbidden', data: null }, nextAppointment: { state: 'Forbidden', data: null } }) });
         create();
 
         expect(el().querySelector('[data-testid="todo-openBalance"]')).toBeNull();
@@ -259,7 +258,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
 
         retry();
         expect(openItemsCalls).toBe(2);
-        expect(el().querySelector('[data-testid="todo-failed"]')).withContext('hata sürüyor').not.toBeNull();
+        expect(el().querySelector('[data-testid="todo-failed"]'), 'hata sürüyor').not.toBeNull();
 
         openItemsSource = () => of({ state: 'ok', data: openItems() });
         retry();

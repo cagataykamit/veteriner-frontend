@@ -52,11 +52,11 @@ describe('hospitalization-location-select.utils', () => {
     it('bölüm seçildiyse oda zorunlu; bölüm yoksa ya da oda seçildiyse geçerli', () => {
         const group = new FormGroup({ wardId: new FormControl(''), roomId: new FormControl('') }, roomRequiredWhenWardSelectedValidator());
 
-        expect(group.valid).toBeTrue();
+        expect(group.valid).toBe(true);
         group.patchValue({ wardId: 'w1' });
-        expect(group.hasError(HOSPITALIZATION_ROOM_REQUIRED_ERROR_KEY)).toBeTrue();
+        expect(group.hasError(HOSPITALIZATION_ROOM_REQUIRED_ERROR_KEY)).toBe(true);
         group.patchValue({ roomId: 'r1' });
-        expect(group.valid).toBeTrue();
+        expect(group.valid).toBe(true);
     });
 
     it('PUT oda alanları: değişmedi → dokunma; yeni oda → roomId; "Konum yok" → clearRoom ve konum metni temizlenir', () => {

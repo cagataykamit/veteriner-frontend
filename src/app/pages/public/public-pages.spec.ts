@@ -14,18 +14,7 @@ import { PUBLIC_NAV_LINKS, PUBLIC_PATHS } from '@/app/features/public/utils/publ
 import { PUBLIC_REGISTERS } from '@/app/features/public/utils/public-registers-content.utils';
 import { PUBLIC_SCREENSHOTS } from '@/app/features/public/utils/public-screenshots.utils';
 import { formatPlanPrice, PRICING_FEATURE_ROWS, PRICING_NOT_AVAILABLE, PRICING_PLAN_DEFS } from '@/app/features/public/utils/pricing-plan.utils';
-import {
-    PUBLIC_ABOUT_PAGE_META,
-    PUBLIC_CONTACT_PAGE_META,
-    PUBLIC_FAQ_PAGE_META,
-    PUBLIC_FEATURES_PAGE_META,
-    PUBLIC_HOME_PAGE_META,
-    PUBLIC_MIGRATION_PAGE_META,
-    PUBLIC_OG_IMAGE_PATH,
-    PUBLIC_PACKAGES_PAGE_META,
-    PUBLIC_REGISTERS_PAGE_META,
-    PUBLIC_SITE_ORIGIN
-} from '@/app/features/public/utils/public-seo.utils';
+import { PUBLIC_ABOUT_PAGE_META, PUBLIC_CONTACT_PAGE_META, PUBLIC_FAQ_PAGE_META, PUBLIC_FEATURES_PAGE_META, PUBLIC_HOME_PAGE_META, PUBLIC_MIGRATION_PAGE_META, PUBLIC_OG_IMAGE_PATH, PUBLIC_PACKAGES_PAGE_META, PUBLIC_REGISTERS_PAGE_META, PUBLIC_SITE_ORIGIN } from '@/app/features/public/utils/public-seo.utils';
 
 /** Tanıtım sayfaları: ortak iskelet, rota, başlık ve içerik sabitleri. */
 describe('Tanıtım sayfaları (PublicLayout)', () => {
@@ -83,11 +72,11 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
     it('tanıtım iskeleti kök yazı boyutu sınıfını ekler; auth sayfasına geçince kaldırır', async () => {
         await harness.navigateByUrl(PUBLIC_PATHS.home);
 
-        expect(document.documentElement.classList.contains('public-site-root')).toBeTrue();
+        expect(document.documentElement.classList.contains('public-site-root')).toBe(true);
 
         await harness.navigateByUrl('/auth/login');
 
-        expect(document.documentElement.classList.contains('public-site-root')).toBeFalse();
+        expect(document.documentElement.classList.contains('public-site-root')).toBe(false);
     });
 
     it('/pricing eski adresi /paketler sayfasına yönlendirir', async () => {
@@ -138,7 +127,8 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
             if (p.priceOnRequest) {
                 expect(card.textContent).toContain('İletişime geçin');
                 expect(card.querySelector(`a[href="${PUBLIC_PATHS.contact}"]`)).not.toBeNull();
-            } else {
+            }
+            else {
                 expect(card.textContent).toContain(formatPlanPrice(p.monthlyPriceTry)!);
                 expect(card.querySelector(`a[href="/auth/signup?plan=${p.slug}"]`)).not.toBeNull();
             }
@@ -147,19 +137,30 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(root().textContent).not.toContain('Fiyat yakında');
     });
 
-    it('paketler: yalnız aylık fiyat (dönem seçici, yıllık tutar ve indirim yok); karşılaştırma tablosu tüm özellik satırlarını gösterir', async () => {
+    it('paketler: Aylık/Yıllık anahtarı (BILL-001) aylıkla açılır, yıllıkta 10 aylık tutar; karşılaştırma tablosu tüm özellik satırlarını gösterir', async () => {
         await harness.navigateByUrl(PUBLIC_PATHS.packages);
         harness.detectChanges();
 
-        const prices = texts('[data-plan], table.public-plan-table').join(' ');
+        const cardPrices = () => texts('[data-plan]').join(' ');
+        const toggle = root().querySelector('[aria-label="Ödeme dönemi"]');
 
-        expect(root().querySelector('[aria-label="Ödeme dönemi"]')).toBeNull();
-        expect(prices).not.toMatch(/yıllık|\/ yıl|hediye/i);
-        expect(prices).toContain('/ ay');
-        expect(root().textContent).not.toMatch(/hediye|indirim/i);
+        expect(toggle).not.toBeNull();
+        expect(cardPrices()).toContain('/ ay');
+        expect(cardPrices()).not.toMatch(/\/ yıl/);
+        expect(root().textContent).not.toMatch(/indirim/i);
+
+        const yearly = Array.from(toggle!.querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Yıllık')!;
+
+        yearly.click();
+        harness.detectChanges();
+
+        expect(yearly.getAttribute('aria-pressed')).toBe('true');
+        expect(cardPrices()).toContain('₺9.990');
+        expect(cardPrices()).toContain('/ yıl');
+        expect(cardPrices()).toContain('2 ay hediye');
         const rowHeaders = texts('table.public-plan-table tbody th[scope="row"]');
 
-        PRICING_FEATURE_ROWS.forEach((r) => expect(rowHeaders.some((t) => t.startsWith(r.label))).withContext(r.label).toBeTrue());
+        PRICING_FEATURE_ROWS.forEach((r) => expect(rowHeaders.some((t) => t.startsWith(r.label)), r.label).toBe(true));
         expect(texts('#packages-not-title + ul li')).toEqual([...PRICING_NOT_AVAILABLE]);
     });
 
@@ -169,8 +170,11 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         const data = JSON.parse(document.head.querySelector('script[data-public-json-ld="packages-offers"]')?.textContent ?? '{}');
         const priced = PRICING_PLAN_DEFS.filter((p) => p.monthlyPriceTry != null);
 
-        expect(data.offers.map((o: { name: string; price: number }) => [o.name, o.price])).toEqual(priced.map((p) => [p.title, p.monthlyPriceTry]));
-        expect(data.offers[0].priceSpecification.valueAddedTaxIncluded).toBeFalse();
+        expect(data.offers.map((o: {
+            name: string;
+            price: number;
+        }) => [o.name, o.price])).toEqual(priced.map((p) => [p.title, p.monthlyPriceTry]));
+        expect(data.offers[0].priceSpecification.valueAddedTaxIncluded).toBe(false);
     });
 
     it('sss: kategori sekmeleri; seçilen kategorinin soruları görünür', async () => {
@@ -328,7 +332,9 @@ describe('Tanıtım SEO (WEB-003)', () => {
         const data = JSON.parse(script!.textContent ?? '{}');
 
         expect(data['@type']).toBe('FAQPage');
-        expect(data.mainEntity.map((q: { name: string }) => q.name)).toEqual(PUBLIC_HOME_FAQS.map((f) => f.question));
+        expect(data.mainEntity.map((q: {
+            name: string;
+        }) => q.name)).toEqual(PUBLIC_HOME_FAQS.map((f) => f.question));
 
         await harness.navigateByUrl(PUBLIC_PATHS.about);
 

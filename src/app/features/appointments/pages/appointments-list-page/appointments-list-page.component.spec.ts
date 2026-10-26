@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -14,7 +15,10 @@ const STATE_KEY = 'panel:appointments:listState';
 
 describe('AppointmentsListPageComponent — karttan gelen süzgeç bağlantısı', () => {
     const setup = (query: Record<string, string>) => {
-        const getAppointments = jasmine.createSpy('getAppointments').and.returnValue(of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }));
+        const getAppointments = vi
+            .fn()
+            .mockName('getAppointments')
+            .mockReturnValue(of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }));
 
         TestBed.configureTestingModule({
             imports: [AppointmentsListPageComponent],
@@ -26,7 +30,7 @@ describe('AppointmentsListPageComponent — karttan gelen süzgeç bağlantısı
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
         });
-        const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+        const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
         const fixture = TestBed.createComponent(AppointmentsListPageComponent);
 
         fixture.detectChanges();
@@ -39,7 +43,7 @@ describe('AppointmentsListPageComponent — karttan gelen süzgeç bağlantısı
 
     it('status ve fromDate API çağrısına gider, süzgeç çubuğunda etkin görünür ve adres çubuğundan kaldırılır', () => {
         const { getAppointments, navigate, cmp } = setup({ petId: 'pet-1', status: '0', fromDate: '2026-10-16' });
-        const args = getAppointments.calls.mostRecent().args[0];
+        const args = vi.mocked(getAppointments).mock.lastCall![0];
 
         expect(args.petId).toBe('pet-1');
         expect(args.status).toBe('0');
@@ -47,17 +51,17 @@ describe('AppointmentsListPageComponent — karttan gelen süzgeç bağlantısı
         expect(args.toDate).toBeUndefined();
         expect(cmp.statusFilter).toBe('0');
         expect(cmp.fromDateInput).toBe('2026-10-16');
-        expect(cmp.isStatusActive()).toBeTrue();
-        expect(cmp.isFromDateActive()).toBeTrue();
-        expect(cmp.isToDateActive()).toBeFalse();
-        expect(navigate).toHaveBeenCalledWith([], jasmine.objectContaining({ queryParams: { status: null, fromDate: null, toDate: null }, replaceUrl: true }));
+        expect(cmp.isStatusActive()).toBe(true);
+        expect(cmp.isFromDateActive()).toBe(true);
+        expect(cmp.isToDateActive()).toBe(false);
+        expect(navigate).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { status: null, fromDate: null, toDate: null }, replaceUrl: true }));
     });
 
     it('bağlantı süzgeçleri oturumdaki eski süzgeçlerin (arama, sayfa) yerine geçer', () => {
         sessionStorage.setItem(STATE_KEY, JSON.stringify({ search: 'eski', status: '2', fromDate: '2025-01-01', toDate: '2025-01-31', page: 3, pageSize: 20 }));
 
         const { getAppointments } = setup({ fromDate: '2026-10-16', toDate: '2026-10-16' });
-        const args = getAppointments.calls.mostRecent().args[0];
+        const args = vi.mocked(getAppointments).mock.lastCall![0];
 
         expect(args.search).toBeUndefined();
         expect(args.status).toBeUndefined();
@@ -71,7 +75,7 @@ describe('AppointmentsListPageComponent — karttan gelen süzgeç bağlantısı
         sessionStorage.setItem(STATE_KEY, JSON.stringify({ search: '', status: '1', fromDate: '', toDate: '', page: 2, pageSize: 10 }));
 
         const { getAppointments, navigate } = setup({ status: 'x', fromDate: '16.10.2026' });
-        const args = getAppointments.calls.mostRecent().args[0];
+        const args = vi.mocked(getAppointments).mock.lastCall![0];
 
         expect(args.status).toBe('1');
         expect(args.fromDate).toBeUndefined();
@@ -123,11 +127,11 @@ describe('AppointmentsListPageComponent — satırda Düzenle', () => {
     it("Appointments.Reschedule varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", () => {
         const edits = rowEditActions(create([APPOINTMENTS_RESCHEDULE_CLAIM]));
 
-        expect(edits.length).withContext('tablo + mobil kart').toBe(2);
+        expect(edits.length, 'tablo + mobil kart').toBe(2);
 
         for (const edit of edits) {
             expect(edit.getAttribute('href')).toBe('/panel/appointments/a1/edit');
-            expect(isRightAfterDetail(edit)).toBeTrue();
+            expect(isRightAfterDetail(edit)).toBe(true);
         }
     });
 
@@ -138,7 +142,7 @@ describe('AppointmentsListPageComponent — satırda Düzenle', () => {
         const readOnly = rowEditActions(create([APPOINTMENTS_RESCHEDULE_CLAIM], true));
 
         expect(readOnly.length).toBe(2);
-        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBeTrue();
+        expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBe(true);
     });
 });
 
@@ -161,12 +165,24 @@ describe('AppointmentsListPageComponent — satırda İptal', () => {
         lifecycleStatus: null
     });
 
-    let getAppointments: jasmine.Spy;
-    let cancelAppointment: jasmine.Spy;
+    let getAppointments: Mock;
+    let cancelAppointment: Mock;
 
-    const create = (claims: string[], opts: { status?: number; mutationBlocked?: boolean } = {}) => {
-        getAppointments = jasmine.createSpy('getAppointments').and.returnValue(of({ items: [appt(opts.status ?? 0)], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
-        cancelAppointment = jasmine.createSpy('cancelAppointment').and.returnValue(of(void 0));
+    const create = (
+        claims: string[],
+        opts: {
+            status?: number;
+            mutationBlocked?: boolean;
+        } = {}
+    ) => {
+        getAppointments = vi
+            .fn()
+            .mockName('getAppointments')
+            .mockReturnValue(of({ items: [appt(opts.status ?? 0)], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }));
+        cancelAppointment = vi
+            .fn()
+            .mockName('cancelAppointment')
+            .mockReturnValue(of(void 0));
         TestBed.configureTestingModule({
             imports: [AppointmentsListPageComponent],
             providers: [
@@ -184,8 +200,7 @@ describe('AppointmentsListPageComponent — satırda İptal', () => {
         return { fixture, el: fixture.nativeElement as HTMLElement };
     };
 
-    const dialogOf = (fixture: ReturnType<typeof create>['fixture']) =>
-        fixture.debugElement.query((d) => d.name === 'app-reason-confirm-dialog').componentInstance as ReasonConfirmDialogComponent;
+    const dialogOf = (fixture: ReturnType<typeof create>['fixture']) => fixture.debugElement.query((d) => d.name === 'app-reason-confirm-dialog').componentInstance as ReasonConfirmDialogComponent;
 
     beforeEach(() => sessionStorage.removeItem(STATE_KEY));
     afterEach(() => sessionStorage.removeItem(STATE_KEY));
@@ -193,11 +208,11 @@ describe('AppointmentsListPageComponent — satırda İptal', () => {
     it("Appointments.Cancel ile Planlandı randevuda tablo ve mobil kartta Detay, Düzenle'den sonra son eylemdir", () => {
         const voids = rowDangerActions(create([APPOINTMENTS_RESCHEDULE_CLAIM, APPOINTMENTS_CANCEL_CLAIM]).el);
 
-        expect(voids.length).withContext('tablo + mobil kart').toBe(2);
+        expect(voids.length, 'tablo + mobil kart').toBe(2);
 
         for (const v of voids) {
             expect(v.getAttribute('aria-label')).toBe('İptal et');
-            expect(isLastRowAction(v)).toBeTrue();
+            expect(isLastRowAction(v)).toBe(true);
             expect(v.closest('app-row-action-button')?.previousElementSibling?.querySelector('.fa-pen-to-square')).not.toBeNull();
         }
     });
@@ -210,7 +225,7 @@ describe('AppointmentsListPageComponent — satırda İptal', () => {
 
         for (const status of [1, 2, 3]) {
             TestBed.resetTestingModule();
-            expect(rowDangerActions(create([APPOINTMENTS_CANCEL_CLAIM], { status }).el).length).withContext(`durum ${status}`).toBe(0);
+            expect(rowDangerActions(create([APPOINTMENTS_CANCEL_CLAIM], { status }).el).length, `durum ${status}`).toBe(0);
         }
     });
 
@@ -223,19 +238,21 @@ describe('AppointmentsListPageComponent — satırda İptal', () => {
         expect(fixture.debugElement.query((d) => d.name === 'app-appointment-cancel-dialog')).not.toBeNull();
         const dialog = dialogOf(fixture);
 
-        expect(dialog.visible()).toBeTrue();
-        expect(dialog.reasonOptional()).toBeTrue();
+        expect(dialog.visible()).toBe(true);
+        expect(dialog.reasonOptional()).toBe(true);
         expect(dialog.summary()).toContain('Pamuk · Ali Veli · 16.10.2026');
         expect(dialog.description()).toContain('geri alınamaz');
         expect(cancelAppointment).not.toHaveBeenCalled();
 
-        getAppointments.calls.reset();
+        getAppointments.mockClear();
         dialog.form.controls.reason.setValue('Sahibi aradı');
         dialog.onSubmit();
 
-        expect(cancelAppointment).toHaveBeenCalledOnceWith('a1', 'Sahibi aradı');
+        expect(cancelAppointment).toHaveBeenCalledTimes(1);
+
+        expect(cancelAppointment).toHaveBeenCalledWith('a1', 'Sahibi aradı');
         expect(getAppointments).toHaveBeenCalledTimes(1);
-        expect(dialog.visible()).toBeFalse();
+        expect(dialog.visible()).toBe(false);
     });
 
     it('mobil karttan açılıp vazgeçilirse servis çağrılmaz ve liste yenilenmez', () => {
@@ -245,8 +262,8 @@ describe('AppointmentsListPageComponent — satırda İptal', () => {
         fixture.detectChanges();
         const dialog = dialogOf(fixture);
 
-        expect(dialog.visible()).toBeTrue();
-        getAppointments.calls.reset();
+        expect(dialog.visible()).toBe(true);
+        getAppointments.mockClear();
         dialog.close();
         fixture.detectChanges();
 

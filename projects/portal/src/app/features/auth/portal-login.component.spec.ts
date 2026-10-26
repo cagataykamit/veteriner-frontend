@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -10,8 +11,8 @@ import { LOGIN_CODE_INVALID_MESSAGE, LOGIN_CODE_SENT_MESSAGE, LOGIN_PASSWORD_INV
 describe('PortalLoginComponent (kod ve parola girişi)', () => {
     let fixture: ComponentFixture<PortalLoginComponent>;
     let el: HTMLElement;
-    let api: jasmine.SpyObj<PortalAuthApi>;
-    let session: jasmine.SpyObj<PortalSessionService>;
+    let api: MockedObject<PortalAuthApi>;
+    let session: MockedObject<PortalSessionService>;
     let router: Router;
 
     async function settle(): Promise<void> {
@@ -31,15 +32,21 @@ describe('PortalLoginComponent (kod ve parola girişi)', () => {
     }
 
     beforeEach(async () => {
-        api = jasmine.createSpyObj<PortalAuthApi>('PortalAuthApi', ['requestCode', 'verifyCode', 'login']);
-        session = jasmine.createSpyObj<PortalSessionService>('PortalSessionService', ['startSession']);
-        session.startSession.and.returnValue(of(TEST_ME));
+        api = {
+            requestCode: vi.fn().mockName('PortalAuthApi.requestCode'),
+            verifyCode: vi.fn().mockName('PortalAuthApi.verifyCode'),
+            login: vi.fn().mockName('PortalAuthApi.login')
+        } as unknown as MockedObject<PortalAuthApi>;
+        session = {
+            startSession: vi.fn().mockName('PortalSessionService.startSession')
+        } as unknown as MockedObject<PortalSessionService>;
+        session.startSession.mockReturnValue(of(TEST_ME));
         await TestBed.configureTestingModule({
             imports: [PortalLoginComponent],
             providers: [provideRouter([]), { provide: PortalAuthApi, useValue: api }, { provide: PortalSessionService, useValue: session }]
         }).compileComponents();
         router = TestBed.inject(Router);
-        spyOn(router, 'navigateByUrl').and.resolveTo(true);
+        vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
         fixture = TestBed.createComponent(PortalLoginComponent);
         el = fixture.nativeElement;
         await settle();
@@ -60,19 +67,19 @@ describe('PortalLoginComponent (kod ve parola girişi)', () => {
     });
 
     it('kod isteğinde hesabın varlığını ele vermeyen bilgi gösterir ve kod alanını açar', async () => {
-        api.requestCode.and.returnValue(of(undefined));
+        api.requestCode.mockReturnValue(of(undefined));
         typeInto(el, '#login-email', ' ayse@example.com ');
         await click('Kod gönder');
 
         expect(api.requestCode).toHaveBeenCalledWith('ayse@example.com');
         expect(el.textContent).toContain(LOGIN_CODE_SENT_MESSAGE);
         expect(el.querySelector('#login-code')).not.toBeNull();
-        expect(buttonByText(el, 'Kodu tekrar gönder')?.disabled).toBeTrue();
+        expect(buttonByText(el, 'Kodu tekrar gönder')?.disabled).toBe(true);
     });
 
     it('kod 6 haneli değilse doğrulamaz; doğru biçimde boşlukları atarak gönderir', async () => {
-        api.requestCode.and.returnValue(of(undefined));
-        api.verifyCode.and.returnValue(of(testTokens(1)));
+        api.requestCode.mockReturnValue(of(undefined));
+        api.verifyCode.mockReturnValue(of(testTokens(1)));
         typeInto(el, '#login-email', 'ayse@example.com');
         await click('Kod gönder');
 
@@ -91,8 +98,8 @@ describe('PortalLoginComponent (kod ve parola girişi)', () => {
     });
 
     it('yanlış kodda kod/kilit ayrımı yapmayan mesaj gösterir', async () => {
-        api.requestCode.and.returnValue(of(undefined));
-        api.verifyCode.and.returnValue(throwError(() => problem(401, PORTAL_ERROR_CODES.invalidCredentials)));
+        api.requestCode.mockReturnValue(of(undefined));
+        api.verifyCode.mockReturnValue(throwError(() => problem(401, PORTAL_ERROR_CODES.invalidCredentials)));
         typeInto(el, '#login-email', 'ayse@example.com');
         await click('Kod gönder');
         typeInto(el, '#login-code', '000000');
@@ -103,7 +110,7 @@ describe('PortalLoginComponent (kod ve parola girişi)', () => {
     });
 
     it('parola girişinde boş parolayı engeller, hatalı girişte Türkçe mesaj gösterir', async () => {
-        api.login.and.returnValue(throwError(() => problem(401, PORTAL_ERROR_CODES.invalidCredentials)));
+        api.login.mockReturnValue(throwError(() => problem(401, PORTAL_ERROR_CODES.invalidCredentials)));
         await click('Parola');
         typeInto(el, '#login-email', 'ayse@example.com');
         await click('Giriş yap');
@@ -119,7 +126,7 @@ describe('PortalLoginComponent (kod ve parola girişi)', () => {
     });
 
     it('başarılı parola girişinde yalnız uygulama içi dönüş adresine gider', async () => {
-        api.login.and.returnValue(of(testTokens(1)));
+        api.login.mockReturnValue(of(testTokens(1)));
         fixture.componentRef.setInput('returnUrl', '//evil.example');
         await click('Parola');
         typeInto(el, '#login-email', 'ayse@example.com');
@@ -130,7 +137,7 @@ describe('PortalLoginComponent (kod ve parola girişi)', () => {
     });
 
     it('hız sınırında bekleme mesajı gösterir', async () => {
-        api.requestCode.and.returnValue(throwError(() => problem(429)));
+        api.requestCode.mockReturnValue(throwError(() => problem(429)));
         typeInto(el, '#login-email', 'ayse@example.com');
         await click('Kod gönder');
 
