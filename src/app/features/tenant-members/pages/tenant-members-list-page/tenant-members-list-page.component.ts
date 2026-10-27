@@ -77,7 +77,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 <app-search-input inputId="tmSearch" placeholder="E-posta…" [(value)]="searchInput" (searchRequested)="applySearch()" />
                             </div>
                             <div class="flex flex-wrap gap-2 shrink-0">
-                                <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                                <button pButton type="button" severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                             </div>
                         </div>
                     </div>

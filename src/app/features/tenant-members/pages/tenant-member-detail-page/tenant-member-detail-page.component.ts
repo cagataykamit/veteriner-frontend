@@ -76,7 +76,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                 <div class="card mb-4 border-red-200 dark:border-red-800 bg-red-50/30 dark:bg-red-950/20">
                     <h5 class="mt-0 mb-3 text-red-700 dark:text-red-300">Yıkıcı işlem</h5>
                     <div class="flex flex-wrap gap-2">
-                        <p-button label="Üyeyi kurumdan çıkar" icon="pi pi-user-minus" severity="danger" [disabled]="busyAdd() || busyAddClinic()" (onClick)="openRemoveMemberConfirm()" />
+                        <button pButton type="button" severity="danger" [disabled]="busyAdd() || busyAddClinic()" (click)="openRemoveMemberConfirm()"><i class="p-button-icon pi pi-user-minus"></i>Üyeyi kurumdan çıkar</button>
                     </div>
                 </div>
             }
@@ -108,14 +108,13 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                     }
                                 </select>
                             </div>
-                            <p-button
-                                label="Ekle"
-                                icon="pi pi-plus"
-                                styleClass="shrink-0"
-                                [loading]="busyAdd()"
-                                [disabled]="!selectedClaimId() || assignableFiltered().length === 0 || busyRemoveClaimId() !== null || busyAddClinic() || busyRemoveClinicId() !== null"
-                                (onClick)="onAddRole()"
-                            />
+                            <button
+                                pButton
+                                type="button"
+                                class="shrink-0"
+                                [disabled]="!selectedClaimId() || assignableFiltered().length === 0 || busyRemoveClaimId() !== null || busyAddClinic() || busyRemoveClinicId() !== null || busyAdd()"
+                                (click)="onAddRole()"
+                            ><i class="p-button-icon" [class]="busyAdd() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>Ekle</button>
                         </div>
                     } @else if (ro.mutationBlocked()) {
                         <p class="text-sm text-muted-color mt-0 mb-3">Salt okunur kurumda rol ekleyemezsiniz.</p>
@@ -130,15 +129,14 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 <div class="inline-flex flex-wrap items-center gap-2 max-w-full rounded-full border border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-800/40 px-3 py-1.5 text-sm">
                                     <span class="font-medium break-words">{{ c.name }}</span>
                                     @if (canManageTenantAccess() && !m.isCurrentUser && c.canRemove) {
-                                        <p-button
-                                            label="Kaldır"
-                                            icon="pi pi-times"
+                                        <button
+                                            pButton
+                                            type="button"
                                             severity="danger"
-                                            styleClass="p-button-sm p-button-text shrink-0"
-                                            [loading]="busyRemoveClaimId() === c.id"
-                                            [disabled]="busyAdd() || busyAddClinic() || busyRemoveClinicId() !== null || (busyRemoveClaimId() !== null && busyRemoveClaimId() !== c.id)"
-                                            (onClick)="onRemoveRole(c.id)"
-                                        />
+                                            class="p-button-sm p-button-text shrink-0"
+                                            [disabled]="busyAdd() || busyAddClinic() || busyRemoveClinicId() !== null || (busyRemoveClaimId() !== null && busyRemoveClaimId() !== c.id) || busyRemoveClaimId() === c.id"
+                                            (click)="onRemoveRole(c.id)"
+                                        ><i class="p-button-icon" [class]="busyRemoveClaimId() === c.id ? 'pi pi-spin pi-spinner' : 'pi pi-times'"></i>Kaldır</button>
                                     }
                                 </div>
                             }
@@ -152,7 +150,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                             <p class="text-xs text-orange-600 dark:text-orange-400 m-0 mb-2" role="status">{{ mxErr }}</p>
                         }
                         @if (canManageTenantAccess()) {
-                            <p-button [label]="copy.tenantMemberViewPermissionSummaryButton" icon="pi pi-list" styleClass="p-button-outlined" (onClick)="openPermissionSummary()" />
+                            <button pButton type="button" class="p-button-outlined" (click)="openPermissionSummary()"><i class="p-button-icon pi pi-list"></i>{{ copy.tenantMemberViewPermissionSummaryButton }}</button>
                         }
                         <p-dialog
                             [header]="copy.tenantMemberPermissionDialogTitle"
@@ -247,14 +245,13 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                     }
                                 </select>
                             </div>
-                            <p-button
-                                label="Ekle"
-                                icon="pi pi-plus"
-                                styleClass="shrink-0"
-                                [loading]="busyAddClinic()"
-                                [disabled]="!selectedClinicId() || assignableClinicsFiltered().length === 0 || busyAdd() || busyRemoveClaimId() !== null || busyRemoveClinicId() !== null"
-                                (onClick)="onAddClinic()"
-                            />
+                            <button
+                                pButton
+                                type="button"
+                                class="shrink-0"
+                                [disabled]="!selectedClinicId() || assignableClinicsFiltered().length === 0 || busyAdd() || busyRemoveClaimId() !== null || busyRemoveClinicId() !== null || busyAddClinic()"
+                                (click)="onAddClinic()"
+                            ><i class="p-button-icon" [class]="busyAddClinic() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>Ekle</button>
                         </div>
                     } @else if (ro.mutationBlocked()) {
                         <p class="text-sm text-muted-color mt-0 mb-3">Salt okunur kurumda klinik üyeliği ekleyemez veya kaldıramazsınız.</p>
@@ -275,15 +272,14 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                             <span class="text-xs text-muted-color">Pasif</span>
                                         }
                                         @if (canManageTenantAccess() && !m.isCurrentUser && cl.canRemove) {
-                                            <p-button
-                                                label="Kaldır"
-                                                icon="pi pi-times"
+                                            <button
+                                                pButton
+                                                type="button"
                                                 severity="danger"
-                                                styleClass="p-button-sm p-button-text shrink-0"
-                                                [loading]="busyRemoveClinicId() === cl.id"
-                                                [disabled]="busyAddClinic() || busyAdd() || busyRemoveClaimId() !== null || (busyRemoveClinicId() !== null && busyRemoveClinicId() !== cl.id)"
-                                                (onClick)="onRemoveClinic(cl.id)"
-                                            />
+                                                class="p-button-sm p-button-text shrink-0"
+                                                [disabled]="busyAddClinic() || busyAdd() || busyRemoveClaimId() !== null || (busyRemoveClinicId() !== null && busyRemoveClinicId() !== cl.id) || busyRemoveClinicId() === cl.id"
+                                                (click)="onRemoveClinic(cl.id)"
+                                            ><i class="p-button-icon" [class]="busyRemoveClinicId() === cl.id ? 'pi pi-spin pi-spinner' : 'pi pi-times'"></i>Kaldır</button>
                                         }
                                     </div>
                                 </li>

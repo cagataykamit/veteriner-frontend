@@ -26,8 +26,8 @@ const REMOVE_FAILED = 'Üye çıkarılamadı. Lütfen tekrar deneyin.';
                 <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ error() }}</p>
             }
             <div class="flex flex-wrap justify-end gap-2">
-                <p-button type="button" label="Vazgeç" severity="secondary" [disabled]="busy()" (onClick)="visible.set(false)" />
-                <p-button type="button" label="Üyeyi çıkar" icon="pi pi-user-minus" severity="danger" [loading]="busy()" [disabled]="busy()" (onClick)="confirm()" />
+                <button pButton type="button" severity="secondary" [disabled]="busy()" (click)="visible.set(false)">Vazgeç</button>
+                <button pButton type="button" severity="danger" [disabled]="busy()" (click)="confirm()"><i class="p-button-icon" [class]="busy() ? 'pi pi-spin pi-spinner' : 'pi pi-user-minus'"></i>Üyeyi çıkar</button>
             </div>
         </p-dialog>
     `
