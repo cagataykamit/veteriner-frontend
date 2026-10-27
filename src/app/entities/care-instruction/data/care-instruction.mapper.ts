@@ -4,12 +4,12 @@ import type {
     CareInstructionDto,
     CareInstructionPagedResultDto,
     CareInstructionUpdateRequestDto
-} from '@/app/features/care-instructions/models/care-instruction-api.model';
+} from '@/app/entities/care-instruction/models/care-instruction-api.model';
 import type {
     CareInstructionsListQuery,
     CareInstructionVm,
     CreateCareInstructionRequest
-} from '@/app/features/care-instructions/models/care-instruction-vm.model';
+} from '@/app/entities/care-instruction/models/care-instruction-vm.model';
 
 export function mapCareInstructionDtoToVm(dto: CareInstructionDto): CareInstructionVm {
     return {

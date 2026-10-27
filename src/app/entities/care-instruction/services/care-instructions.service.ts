@@ -8,16 +8,16 @@ import {
     mapCreateCareInstructionToApiBody,
     mapPagedCareInstructionsToVm,
     mapUpdateCareInstructionToApiBody
-} from '@/app/features/care-instructions/data/care-instruction.mapper';
+} from '@/app/entities/care-instruction/data/care-instruction.mapper';
 import type {
     CareInstructionPagedResultDto,
     CareInstructionWriteResultDto
-} from '@/app/features/care-instructions/models/care-instruction-api.model';
+} from '@/app/entities/care-instruction/models/care-instruction-api.model';
 import type {
     CareInstructionsListQuery,
     CareInstructionVm,
     CreateCareInstructionRequest
-} from '@/app/features/care-instructions/models/care-instruction-vm.model';
+} from '@/app/entities/care-instruction/models/care-instruction-vm.model';
 import { toUserError } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })

@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { CareInstructionsService } from '@/app/features/care-instructions/services/care-instructions.service';
+import { CareInstructionsService } from '@/app/entities/care-instruction/services/care-instructions.service';
 
 const dto = {
     id: 'ci1',

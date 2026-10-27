@@ -3,9 +3,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { CareInstructionsSectionComponent } from '@/app/features/care-instructions/components/care-instructions-section.component';
-import type { CareInstructionVm } from '@/app/features/care-instructions/models/care-instruction-vm.model';
-import { CareInstructionsService } from '@/app/features/care-instructions/services/care-instructions.service';
+import { CareInstructionsSectionComponent } from '@/app/entities/care-instruction/components/care-instructions-section.component';
+import type { CareInstructionVm } from '@/app/entities/care-instruction/models/care-instruction-vm.model';
+import { CareInstructionsService } from '@/app/entities/care-instruction/services/care-instructions.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 const row: CareInstructionVm = { id: 'ci1', text: 'Günde iki kez yemek', createdAtUtc: '2026-10-13T08:00:00Z', updatedAtUtc: null, rowVersion: 'v1' };

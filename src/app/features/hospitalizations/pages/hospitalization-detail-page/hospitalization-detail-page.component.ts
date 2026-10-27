@@ -6,7 +6,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { CareInstructionsSectionComponent } from '@/app/features/care-instructions/components/care-instructions-section.component';
+import { CareInstructionsSectionComponent } from '@/app/entities/care-instruction/components/care-instructions-section.component';
 import type { HospitalizationDetailVm } from '@/app/entities/hospitalization/models/hospitalization-vm.model';
 import { HospitalizationsService } from '@/app/entities/hospitalization/services/hospitalizations.service';
 import { type HospitalizationDischargeFieldErrors, parseHospitalizationDischargeHttpError } from '@/app/entities/hospitalization/utils/hospitalization-upsert-validation-parse.utils';
