@@ -89,7 +89,7 @@ describe('ExampleClinicLoadCardComponent (TRIAL-002, örnek veri temizliği)', (
     };
 
     const host = (f: ComponentFixture<ExampleClinicLoadCardComponent>) => f.nativeElement as HTMLElement;
-    const loadButton = (f: ComponentFixture<ExampleClinicLoadCardComponent>) => host(f).querySelector<HTMLButtonElement>('[data-testid="example-clinic-load-button"] button, button[data-testid="example-clinic-load-button"]');
+    const loadButton = (f: ComponentFixture<ExampleClinicLoadCardComponent>) => host(f).querySelector<HTMLButtonElement>('button[data-testid="example-clinic-load-button"]');
     const clearButton = (f: ComponentFixture<ExampleClinicLoadCardComponent>) => host(f).querySelector('[data-testid="example-clinic-clear-button"]');
 
     it('deneme + yönetme yetkisinde yükle düğmesini gösterir', async () => {

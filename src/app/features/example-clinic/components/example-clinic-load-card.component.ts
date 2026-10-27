@@ -37,7 +37,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     <app-example-clinic-summary [summary]="s" />
                     <div class="mt-3">
                         <a [routerLink]="todayRoute" class="no-underline">
-                            <p-button type="button" label="Bugün'e git" icon="pi pi-calendar" severity="secondary" />
+                            <button pButton type="button" severity="secondary"><i class="p-button-icon pi pi-calendar"></i>Bugün'e git</button>
                         </a>
                     </div>
                 } @else if (exampleData(); as counts) {
@@ -47,9 +47,9 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     <app-example-clinic-summary [summary]="counts" />
                     <div class="mt-3 flex flex-wrap gap-2">
                         <a [routerLink]="todayRoute" class="no-underline">
-                            <p-button type="button" label="Bugün'e git" icon="pi pi-calendar" severity="secondary" />
+                            <button pButton type="button" severity="secondary"><i class="p-button-icon pi pi-calendar"></i>Bugün'e git</button>
                         </a>
-                        <p-button type="button" label="Örnek veriyi temizle" icon="pi pi-trash" severity="danger" [outlined]="true" (onClick)="openClearConfirm()" data-testid="example-clinic-clear-button" />
+                        <button pButton type="button" severity="danger" [outlined]="true" (click)="openClearConfirm()" data-testid="example-clinic-clear-button"><i class="p-button-icon pi pi-trash"></i>Örnek veriyi temizle</button>
                     </div>
                 } @else {
                     <p class="text-sm text-muted-color mt-0 mb-3">
@@ -57,7 +57,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         "ÖRNEK" olarak işaretlidir. Yalnız henüz müşteri ya da hasta kaydı olmayan kuruma yüklenir.
                     </p>
                     @if (!blocked()) {
-                        <p-button type="button" label="Örnek Veteriner Kliniğini yükle" icon="pi pi-download" [loading]="loading()" [disabled]="loading()" (onClick)="load()" data-testid="example-clinic-load-button" />
+                        <button pButton type="button" [disabled]="loading()" (click)="load()" data-testid="example-clinic-load-button"><i class="p-button-icon" [class]="loading() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Örnek Veteriner Kliniğini yükle</button>
                     }
                     @if (error()) {
                         <p class="text-sm mt-3 mb-0" [class.text-red-500]="!blocked()" [class.text-muted-color]="blocked()" role="alert" data-testid="example-clinic-error">{{ error() }}</p>
@@ -84,8 +84,8 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     }
                 }
                 <ng-template #footer>
-                    <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="clearConfirmVisible.set(false)" [disabled]="clearing()" />
-                    <p-button type="button" label="Kalıcı olarak sil" icon="pi pi-trash" severity="danger" [loading]="clearing()" [disabled]="clearing()" (onClick)="clear()" data-testid="example-clinic-clear-confirm" />
+                    <button pButton type="button" severity="secondary" (click)="clearConfirmVisible.set(false)" [disabled]="clearing()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
+                    <button pButton type="button" severity="danger" [disabled]="clearing()" (click)="clear()" data-testid="example-clinic-clear-confirm"><i class="p-button-icon" [class]="clearing() ? 'pi pi-spin pi-spinner' : 'pi pi-trash'"></i>Kalıcı olarak sil</button>
                 </ng-template>
             </p-dialog>
         }
