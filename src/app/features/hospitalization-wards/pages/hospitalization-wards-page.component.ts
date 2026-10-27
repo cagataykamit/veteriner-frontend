@@ -19,9 +19,9 @@ import {
     type HospitalizationLocationFormValue,
     type HospitalizationRoomVm,
     type HospitalizationWardVm
-} from '@/app/features/hospitalization-wards/models/hospitalization-ward-vm.model';
-import { HospitalizationWardsService } from '@/app/features/hospitalization-wards/services/hospitalization-wards.service';
-import { HospitalizationWardError } from '@/app/features/hospitalization-wards/utils/hospitalization-ward-error.utils';
+} from '@/app/entities/hospitalization-ward/models/hospitalization-ward-vm.model';
+import { HospitalizationWardsService } from '@/app/entities/hospitalization-ward/services/hospitalization-wards.service';
+import { HospitalizationWardError } from '@/app/entities/hospitalization-ward/utils/hospitalization-ward-error.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';

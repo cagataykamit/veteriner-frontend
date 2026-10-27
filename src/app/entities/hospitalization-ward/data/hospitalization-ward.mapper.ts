@@ -2,12 +2,12 @@ import type {
     HospitalizationLocationWriteRequestDto,
     HospitalizationRoomDto,
     HospitalizationWardDto
-} from '@/app/features/hospitalization-wards/models/hospitalization-ward-api.model';
+} from '@/app/entities/hospitalization-ward/models/hospitalization-ward-api.model';
 import type {
     HospitalizationLocationFormValue,
     HospitalizationRoomVm,
     HospitalizationWardVm
-} from '@/app/features/hospitalization-wards/models/hospitalization-ward-vm.model';
+} from '@/app/entities/hospitalization-ward/models/hospitalization-ward-vm.model';
 
 function trimmed(v: string | null | undefined): string {
     return typeof v === 'string' ? v.trim() : '';

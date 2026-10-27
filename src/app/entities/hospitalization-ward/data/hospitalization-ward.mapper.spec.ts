@@ -1,4 +1,4 @@
-import { mapHospitalizationLocationFormToApiBody, mapHospitalizationWardsDtoToVm } from '@/app/features/hospitalization-wards/data/hospitalization-ward.mapper';
+import { mapHospitalizationLocationFormToApiBody, mapHospitalizationWardsDtoToVm } from '@/app/entities/hospitalization-ward/data/hospitalization-ward.mapper';
 
 describe('hospitalization-ward.mapper', () => {
     it('GET listesi: sunucu sırası korunur, odalar bölüm kimliğiyle bağlanır, eksik alanlar güvenli değer alır', () => {

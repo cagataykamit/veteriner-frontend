@@ -20,8 +20,8 @@ import type { HospitalizationEditVm } from '@/app/features/hospitalizations/mode
 import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';
 import { type HospitalizationUpsertFieldErrors, type HospitalizationUpsertFormFieldKey, parseHospitalizationUpsertHttpError } from '@/app/features/hospitalizations/utils/hospitalization-upsert-validation-parse.utils';
 import { hospitalizationExaminationOption, hospitalizationVisitOptions, type HospitalizationRelationOption } from '@/app/features/hospitalizations/utils/hospitalization-relation-select.utils';
-import type { HospitalizationWardVm } from '@/app/features/hospitalization-wards/models/hospitalization-ward-vm.model';
-import { HospitalizationWardsService } from '@/app/features/hospitalization-wards/services/hospitalization-wards.service';
+import type { HospitalizationWardVm } from '@/app/entities/hospitalization-ward/models/hospitalization-ward-vm.model';
+import { HospitalizationWardsService } from '@/app/entities/hospitalization-ward/services/hospitalization-wards.service';
 import {
     HOSPITALIZATION_ROOM_REQUIRED_ERROR_KEY,
     hospitalizationRoomOptions,

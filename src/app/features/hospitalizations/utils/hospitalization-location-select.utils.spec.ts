@@ -1,5 +1,5 @@
 import { FormControl, FormGroup } from '@angular/forms';
-import type { HospitalizationWardVm } from '@/app/features/hospitalization-wards/models/hospitalization-ward-vm.model';
+import type { HospitalizationWardVm } from '@/app/entities/hospitalization-ward/models/hospitalization-ward-vm.model';
 import {
     HOSPITALIZATION_ROOM_REQUIRED_ERROR_KEY,
     hospitalizationRoomOptions,

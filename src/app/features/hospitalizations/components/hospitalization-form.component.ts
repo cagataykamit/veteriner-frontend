@@ -18,8 +18,8 @@ import { mapHospitalizationUpsertFormToCreateRequest } from '@/app/features/hosp
 import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';
 import { type HospitalizationUpsertFieldErrors, parseHospitalizationUpsertHttpError } from '@/app/features/hospitalizations/utils/hospitalization-upsert-validation-parse.utils';
 import { FINALIZED_EXAMINATION_OPTION_HINT, hospitalizationExaminationOption, hospitalizationVisitOptions, type HospitalizationRelationOption } from '@/app/features/hospitalizations/utils/hospitalization-relation-select.utils';
-import type { HospitalizationWardVm } from '@/app/features/hospitalization-wards/models/hospitalization-ward-vm.model';
-import { HospitalizationWardsService } from '@/app/features/hospitalization-wards/services/hospitalization-wards.service';
+import type { HospitalizationWardVm } from '@/app/entities/hospitalization-ward/models/hospitalization-ward-vm.model';
+import { HospitalizationWardsService } from '@/app/entities/hospitalization-ward/services/hospitalization-wards.service';
 import { HOSPITALIZATION_ROOM_REQUIRED_ERROR_KEY, hospitalizationRoomOptions, hospitalizationWardOptions, roomRequiredWhenWardSelectedValidator } from '@/app/features/hospitalizations/utils/hospitalization-location-select.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { examinationListItemFromDetail } from '@/app/entities/prescription/utils/prescription-relation-select.utils';

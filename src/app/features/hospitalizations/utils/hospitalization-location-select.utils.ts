@@ -1,5 +1,5 @@
 import type { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-import type { HospitalizationWardVm } from '@/app/features/hospitalization-wards/models/hospitalization-ward-vm.model';
+import type { HospitalizationWardVm } from '@/app/entities/hospitalization-ward/models/hospitalization-ward-vm.model';
 import type { HospitalizationUpsertFormAdapterInput } from '@/app/features/hospitalizations/data/hospitalization.mapper';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 

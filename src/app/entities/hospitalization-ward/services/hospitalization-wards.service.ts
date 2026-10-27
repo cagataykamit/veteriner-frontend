@@ -7,18 +7,18 @@ import {
     mapHospitalizationRoomDtoToVm,
     mapHospitalizationWardDtoToVm,
     mapHospitalizationWardsDtoToVm
-} from '@/app/features/hospitalization-wards/data/hospitalization-ward.mapper';
+} from '@/app/entities/hospitalization-ward/data/hospitalization-ward.mapper';
 import type {
     HospitalizationLocationWriteRequestDto,
     HospitalizationRoomDto,
     HospitalizationWardDto
-} from '@/app/features/hospitalization-wards/models/hospitalization-ward-api.model';
+} from '@/app/entities/hospitalization-ward/models/hospitalization-ward-api.model';
 import type {
     HospitalizationLocationFormValue,
     HospitalizationRoomVm,
     HospitalizationWardVm
-} from '@/app/features/hospitalization-wards/models/hospitalization-ward-vm.model';
-import { toHospitalizationWardError } from '@/app/features/hospitalization-wards/utils/hospitalization-ward-error.utils';
+} from '@/app/entities/hospitalization-ward/models/hospitalization-ward-vm.model';
+import { toHospitalizationWardError } from '@/app/entities/hospitalization-ward/utils/hospitalization-ward-error.utils';
 
 /**
  * Klinik tanımlı yatış bölümleri ve odaları (HOSP-002, sözleşme §10): Tanımlar ekranı ve yatış formu seçicisi buradan okur.

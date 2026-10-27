@@ -5,9 +5,9 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
-import type { HospitalizationWardVm } from '@/app/features/hospitalization-wards/models/hospitalization-ward-vm.model';
-import { HospitalizationWardsService } from '@/app/features/hospitalization-wards/services/hospitalization-wards.service';
-import { HospitalizationWardError } from '@/app/features/hospitalization-wards/utils/hospitalization-ward-error.utils';
+import type { HospitalizationWardVm } from '@/app/entities/hospitalization-ward/models/hospitalization-ward-vm.model';
+import { HospitalizationWardsService } from '@/app/entities/hospitalization-ward/services/hospitalization-wards.service';
+import { HospitalizationWardError } from '@/app/entities/hospitalization-ward/utils/hospitalization-ward-error.utils';
 import { HospitalizationWardsPageComponent } from './hospitalization-wards-page.component';
 
 const ward = (id: string, name: string, over: Partial<HospitalizationWardVm> = {}): HospitalizationWardVm => ({
