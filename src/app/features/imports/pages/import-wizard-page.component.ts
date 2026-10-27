@@ -54,7 +54,7 @@ const STEPS: readonly { n: number; label: string }[] = [
                 @if (batch(); as b) {
                     <app-status-tag [label]="statusLabel(b.status)" [severity]="statusSeverity(b.status)" />
                 }
-                <p-button size="small" severity="secondary" icon="pi pi-arrow-left" label="Geçmişe dön" [routerLink]="listRoute" />
+                <a pButton size="small" severity="secondary" [routerLink]="listRoute"><i class="p-button-icon pi pi-arrow-left"></i>Geçmişe dön</a>
             </div>
         </app-page-header>
 
@@ -129,12 +129,12 @@ const STEPS: readonly { n: number; label: string }[] = [
                                 <app-import-review-step [batch]="b" [preview]="preview()" [canManage]="canManage && draft()" [busy]="busy()" [(choices)]="choices" (applyValues)="saveAndValidate()" />
                                 <div class="flex flex-wrap gap-2 mt-4">
                                     @if (canManage && draft()) {
-                                        <p-button severity="secondary" icon="pi pi-arrow-left" label="Eşlemeye dön" (onClick)="step.set(2)" />
+                                        <button pButton type="button" severity="secondary" (click)="step.set(2)"><i class="p-button-icon pi pi-arrow-left"></i>Eşlemeye dön</button>
                                     }
                                     @if (canManage && b.status === 'ValidationFailed') {
-                                        <p-button severity="secondary" icon="pi pi-refresh" label="Yeniden doğrula" [loading]="busy()" (onClick)="revalidate()" />
+                                        <button pButton type="button" severity="secondary" [disabled]="busy()" (click)="revalidate()"><i class="p-button-icon" [class]="busy() ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"></i>Yeniden doğrula</button>
                                     }
-                                    <p-button icon="pi pi-arrow-right" iconPos="right" label="Onay adımına geç" [disabled]="!commitStepReachable()" (onClick)="step.set(4)" />
+                                    <button pButton type="button" [disabled]="!commitStepReachable()" (click)="step.set(4)">Onay adımına geç<i class="p-button-icon pi pi-arrow-right"></i></button>
                                 </div>
                             } @else if (busy()) {
                                 <app-loading-state message="Doğrulanıyor…" />
@@ -147,7 +147,7 @@ const STEPS: readonly { n: number; label: string }[] = [
                             <app-import-commit-step [batch]="b" [preview]="preview()" [canCommitClaim]="canCommit" [progress]="progress()" [stalled]="stalled()" (batchChange)="onBatchChange($event)" (previewStale)="loadPreview()" />
                             @if (b.status === 'Validated') {
                                 <div class="mt-4">
-                                    <p-button severity="secondary" icon="pi pi-arrow-left" label="Doğrulama sonucuna dön" (onClick)="step.set(3)" />
+                                    <button pButton type="button" severity="secondary" (click)="step.set(3)"><i class="p-button-icon pi pi-arrow-left"></i>Doğrulama sonucuna dön</button>
                                 </div>
                             }
                         }
@@ -155,7 +155,7 @@ const STEPS: readonly { n: number; label: string }[] = [
                     @if (jobRunning() && pollError()) {
                         <p-message severity="warn" class="w-full mt-4" role="alert">
                             {{ pollError() }}
-                            <p-button size="small" severity="secondary" icon="pi pi-refresh" label="Yeniden dene" styleClass="ml-2" (onClick)="retryPolling()" />
+                            <button pButton type="button" size="small" severity="secondary" class="ml-2" (click)="retryPolling()"><i class="p-button-icon pi pi-refresh"></i>Yeniden dene</button>
                         </p-message>
                     }
                 </div>

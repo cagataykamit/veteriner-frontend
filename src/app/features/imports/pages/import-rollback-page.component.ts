@@ -65,7 +65,7 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                 @if (batch(); as b) {
                     <app-status-tag [label]="statusLabel(b.status)" [severity]="statusSeverity(b.status)" />
                 }
-                <p-button size="small" severity="secondary" icon="pi pi-arrow-left" label="Geçmişe dön" [routerLink]="listRoute" />
+                <a pButton size="small" severity="secondary" [routerLink]="listRoute"><i class="p-button-icon pi pi-arrow-left"></i>Geçmişe dön</a>
             </div>
         </app-page-header>
 
@@ -109,7 +109,7 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                     @if (pollError()) {
                         <p-message severity="warn" class="w-full mt-2" role="alert">
                             {{ pollError() }}
-                            <p-button size="small" severity="secondary" icon="pi pi-refresh" label="Yeniden dene" styleClass="ml-2" (onClick)="startPolling(b.id)" />
+                            <button pButton type="button" size="small" severity="secondary" class="ml-2" (click)="startPolling(b.id)"><i class="p-button-icon pi pi-refresh"></i>Yeniden dene</button>
                         </p-message>
                     }
                 } @else if (!screenAvailable()) {
@@ -201,7 +201,7 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                             <p-checkbox inputId="rollbackAck" [binary]="true" [ngModel]="ack()" (ngModelChange)="ack.set($event)" />
                             <label for="rollbackAck" class="cursor-pointer">Silinen kayıtların geri getirilemeyeceğini anlıyorum.</label>
                         </div>
-                        <p-button severity="danger" icon="pi pi-undo" [label]="isRetry() ? 'Geri almayı yeniden dene' : 'Kayıtları geri al'" [disabled]="!canSubmit()" [loading]="busy()" (onClick)="submit()" />
+                        <button pButton type="button" severity="danger" [disabled]="!canSubmit() || busy()" data-testid="import-rollback-submit" (click)="submit()"><i class="p-button-icon" [class]="busy() ? 'pi pi-spin pi-spinner' : 'pi pi-undo'"></i>{{ isRetry() ? 'Geri almayı yeniden dene' : 'Kayıtları geri al' }}</button>
                     </section>
                 }
             </div>

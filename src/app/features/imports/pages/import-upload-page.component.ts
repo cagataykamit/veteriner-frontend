@@ -30,7 +30,7 @@ type UploadMode = 'xlsx' | 'csv';
     template: `
         <app-page-header title="Yeni içe aktarma" description="Adım 1 / 4 · Şablonu indirin, kayıtlarınızı doldurun ve dosyayı yükleyin. Bu adımda hiçbir kayıt oluşmaz.">
             <div actions>
-                <p-button size="small" severity="secondary" icon="pi pi-arrow-left" label="Geçmişe dön" [routerLink]="listRoute" />
+                <a pButton size="small" severity="secondary" [routerLink]="listRoute"><i class="p-button-icon pi pi-arrow-left"></i>Geçmişe dön</a>
             </div>
         </app-page-header>
 
@@ -39,9 +39,9 @@ type UploadMode = 'xlsx' | 'csv';
                 <h6 class="m-0">1. Şablonu indirin</h6>
                 <p class="text-muted-color m-0">Şablon müşteri, hasta ve aşı sayfalarını içerir. Kendi dosyanızı da yükleyebilirsiniz; sütunları sonraki adımda eşlersiniz.</p>
                 <div class="flex flex-wrap gap-2">
-                    <p-button size="small" severity="secondary" icon="pi pi-file-excel" label="Excel şablonu" [loading]="templateBusy() === 'xlsx'" (onClick)="template('xlsx')" />
+                    <button pButton type="button" size="small" severity="secondary" [disabled]="templateBusy() === 'xlsx'" (click)="template('xlsx')"><i class="p-button-icon" [class]="templateBusy() === 'xlsx' ? 'pi pi-spin pi-spinner' : 'pi pi-file-excel'"></i>Excel şablonu</button>
                     @for (t of tables; track t) {
-                        <p-button size="small" severity="secondary" icon="pi pi-file" [label]="'CSV: ' + tableLabels[t]" [loading]="templateBusy() === t" (onClick)="template('csv', t)" />
+                        <button pButton type="button" size="small" severity="secondary" [disabled]="templateBusy() === t" (click)="template('csv', t)"><i class="p-button-icon" [class]="templateBusy() === t ? 'pi pi-spin pi-spinner' : 'pi pi-file'"></i>{{ 'CSV: ' + tableLabels[t] }}</button>
                     }
                 </div>
             </section>
@@ -108,7 +108,7 @@ type UploadMode = 'xlsx' | 'csv';
             }
 
             <div class="flex flex-wrap gap-2">
-                <p-button icon="pi pi-upload" label="Yükle ve eşlemeye geç" [disabled]="!canSubmit" [loading]="submitting()" (onClick)="submit()" />
+                <button pButton type="button" [disabled]="!canSubmit || submitting()" (click)="submit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-upload'"></i>Yükle ve eşlemeye geç</button>
             </div>
         </div>
     `

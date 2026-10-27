@@ -21,10 +21,10 @@ import { precheckImportFile } from '@/app/features/imports/utils/import-labels.u
             <div class="font-medium mb-1">{{ label() }}</div>
             @if (file(); as f) {
                 <div class="text-sm break-words mb-2"><i class="pi pi-file mr-1"></i>{{ f.name }} ({{ sizeText() }})</div>
-                <p-button size="small" severity="secondary" label="Dosyayı kaldır" icon="pi pi-times" (onClick)="clear()" />
+                <button pButton type="button" size="small" severity="secondary" (click)="clear()"><i class="p-button-icon pi pi-times"></i>Dosyayı kaldır</button>
             } @else {
                 <div class="text-sm text-muted-color mb-2">{{ hint() }}</div>
-                <p-button size="small" severity="secondary" icon="pi pi-upload" label="Dosya seç" (onClick)="picker.click()" />
+                <button pButton type="button" size="small" severity="secondary" (click)="picker.click()"><i class="p-button-icon pi pi-upload"></i>Dosya seç</button>
             }
             <input #picker type="file" class="hidden" [accept]="extension()" [attr.aria-label]="label()" (change)="onPick($event)" />
             @if (error()) {

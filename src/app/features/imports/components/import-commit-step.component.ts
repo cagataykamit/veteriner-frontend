@@ -79,7 +79,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                         <p-checkbox inputId="importConfirm" [binary]="true" [(ngModel)]="confirmed" />
                         <label for="importConfirm" class="cursor-pointer">Özeti inceledim; kayıtların yukarıdaki gibi oluşturulmasını onaylıyorum.</label>
                     </div>
-                    <p-button icon="pi pi-play" label="Aktarmayı başlat" [disabled]="!confirmed || !preview()?.canCommit" [loading]="busy()" (onClick)="commit()" />
+                    <button pButton type="button" [disabled]="!confirmed || !preview()?.canCommit || busy()" (click)="commit()"><i class="p-button-icon" [class]="busy() ? 'pi pi-spin pi-spinner' : 'pi pi-play'"></i>Aktarmayı başlat</button>
                 }
             }
             @case ('Committing') {
@@ -118,12 +118,12 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                                 } @else if (!canCommitClaim()) {
                                     <small class="text-muted-color">Hatırlatmaları açmak için aktarma yetkisi gerekir.</small>
                                 } @else if (!confirmingRelease()) {
-                                    <p-button size="small" severity="secondary" icon="pi pi-bell" label="Hatırlatmaları aç…" (onClick)="confirmingRelease.set(true)" />
+                                    <button pButton type="button" size="small" severity="secondary" (click)="confirmingRelease.set(true)"><i class="p-button-icon pi pi-bell"></i>Hatırlatmaları aç…</button>
                                 } @else {
                                     <div class="flex flex-wrap items-center gap-2">
                                         <span class="text-sm">{{ releaseCount(p) }} aşı için hatırlatma açılsın mı? Bu işlem geri alınamaz.</span>
-                                        <p-button size="small" label="Evet, aç" [loading]="releaseBusy()" (onClick)="release(p)" />
-                                        <p-button size="small" severity="secondary" label="Vazgeç" (onClick)="confirmingRelease.set(false)" />
+                                        <button pButton type="button" size="small" [disabled]="releaseBusy()" (click)="release(p)">@if (releaseBusy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Evet, aç</button>
+                                        <button pButton type="button" size="small" severity="secondary" (click)="confirmingRelease.set(false)">Vazgeç</button>
                                     </div>
                                 }
                                 @if (releaseError()) {
@@ -170,8 +170,8 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
             @if (hasProblemRows()) {
                 <div class="flex flex-wrap items-center gap-2 mt-3">
                     <span class="text-sm text-muted-color">Aktarılamayan satırların nedenleri hata raporunda:</span>
-                    <p-button size="small" severity="secondary" icon="pi pi-download" label="Hata raporu (Excel)" [loading]="reportBusy() === 'xlsx'" (onClick)="downloadReport('xlsx')" />
-                    <p-button size="small" severity="secondary" icon="pi pi-download" label="CSV" [loading]="reportBusy() === 'csv'" (onClick)="downloadReport('csv')" />
+                    <button pButton type="button" size="small" severity="secondary" [disabled]="reportBusy() === 'xlsx'" (click)="downloadReport('xlsx')"><i class="p-button-icon" [class]="reportBusy() === 'xlsx' ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Hata raporu (Excel)</button>
+                    <button pButton type="button" size="small" severity="secondary" [disabled]="reportBusy() === 'csv'" (click)="downloadReport('csv')"><i class="p-button-icon" [class]="reportBusy() === 'csv' ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>CSV</button>
                 </div>
                 @if (reportError()) {
                     <p-message severity="error" class="w-full mt-2" role="alert">{{ reportError() }}</p-message>

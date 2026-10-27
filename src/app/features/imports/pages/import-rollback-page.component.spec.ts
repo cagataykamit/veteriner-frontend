@@ -70,7 +70,7 @@ describe('ImportRollbackPageComponent', () => {
     }
 
     const text = (el: HTMLElement) => el.textContent ?? '';
-    const submitButton = (el: HTMLElement) => el.querySelector('p-button[icon="pi pi-undo"] button') as HTMLButtonElement | null;
+    const submitButton = (el: HTMLElement) => el.querySelector('[data-testid="import-rollback-submit"]') as HTMLButtonElement | null;
 
     function fill(reason: string, ack: boolean): void {
         const c = fixture.componentInstance;

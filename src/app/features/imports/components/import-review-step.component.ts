@@ -107,7 +107,7 @@ const ROW_PAGE_SIZE = 25;
                     </div>
                     @if (canManage()) {
                         <div class="mt-4 flex flex-wrap items-center gap-2">
-                            <p-button icon="pi pi-refresh" label="Eşlemeleri uygula ve yeniden doğrula" [disabled]="!hasChoices()" [loading]="busy()" (onClick)="applyValues.emit()" />
+                            <button pButton type="button" [disabled]="!hasChoices() || busy()" (click)="applyValues.emit()"><i class="p-button-icon" [class]="busy() ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"></i>Eşlemeleri uygula ve yeniden doğrula</button>
                             <small class="text-muted-color">Seçimler sayfa yenilenirse sıfırlanabilir; kaydedince yeniden doğrulanır.</small>
                         </div>
                     }
@@ -179,11 +179,11 @@ const ROW_PAGE_SIZE = 25;
                                 ariaLabel="Durum süzgeci"
                             />
                             @if (codeFilter()) {
-                                <p-button size="small" severity="secondary" icon="pi pi-times" [label]="issueLabel(codeFilter()!)" (onClick)="filterByCode(null)" />
+                                <button pButton type="button" size="small" severity="secondary" (click)="filterByCode(null)"><i class="p-button-icon pi pi-times"></i>{{ issueLabel(codeFilter()!) }}</button>
                             }
                             @if (hasErrors(p)) {
-                                <p-button size="small" severity="secondary" icon="pi pi-download" label="Hata raporu (Excel)" [loading]="reportBusy() === 'xlsx'" (onClick)="downloadReport('xlsx')" />
-                                <p-button size="small" severity="secondary" icon="pi pi-download" label="CSV" [loading]="reportBusy() === 'csv'" (onClick)="downloadReport('csv')" />
+                                <button pButton type="button" size="small" severity="secondary" [disabled]="reportBusy() === 'xlsx'" (click)="downloadReport('xlsx')"><i class="p-button-icon" [class]="reportBusy() === 'xlsx' ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Hata raporu (Excel)</button>
+                                <button pButton type="button" size="small" severity="secondary" [disabled]="reportBusy() === 'csv'" (click)="downloadReport('csv')"><i class="p-button-icon" [class]="reportBusy() === 'csv' ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>CSV</button>
                             }
                         </div>
                     </div>

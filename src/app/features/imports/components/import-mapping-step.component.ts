@@ -92,7 +92,7 @@ interface SourceOption {
 
         @if (!readOnly()) {
             <div class="flex flex-wrap gap-2">
-                <p-button icon="pi pi-check" label="Kaydet ve doğrula" [disabled]="!complete()" [loading]="busy()" (onClick)="saveRequested.emit()" />
+                <button pButton type="button" [disabled]="!complete() || busy()" (click)="saveRequested.emit()"><i class="p-button-icon" [class]="busy() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet ve doğrula</button>
             </div>
             @if (!complete()) {
                 <small class="block text-muted-color mt-2">Devam etmek için zorunlu alanları eşleyin.</small>

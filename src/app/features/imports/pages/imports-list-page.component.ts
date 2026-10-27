@@ -30,9 +30,9 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
     template: `
         <app-page-header title="Veri içe aktarma" description="Eski sistemdeki müşteri, hasta ve aşı geçmişini Excel veya CSV dosyasıyla aktarın. Her adım onayınızla ilerler; aktarmadan önce sonucu görürsünüz.">
             <div actions class="flex flex-wrap gap-2">
-                <p-button size="small" severity="secondary" icon="pi pi-download" label="Excel şablonu" [loading]="templateBusy()" (onClick)="downloadTemplate()" />
+                <button pButton type="button" size="small" severity="secondary" [disabled]="templateBusy()" (click)="downloadTemplate()"><i class="p-button-icon" [class]="templateBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Excel şablonu</button>
                 @if (canManage) {
-                    <p-button size="small" icon="pi pi-plus" label="Yeni içe aktarma" [routerLink]="newRoute" />
+                    <a pButton size="small" [routerLink]="newRoute"><i class="p-button-icon pi pi-plus"></i>Yeni içe aktarma</a>
                 }
             </div>
         </app-page-header>
@@ -77,12 +77,12 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                 <div class="flex flex-wrap items-center gap-2">
                                     @if (discardingId() === b.id) {
                                         <span class="text-sm">Taslak silinsin mi?</span>
-                                        <p-button size="small" severity="danger" label="Sil" [loading]="busyId() === b.id" (onClick)="discard(b)" />
-                                        <p-button size="small" severity="secondary" label="Vazgeç" (onClick)="discardingId.set(null)" />
+                                        <button pButton type="button" size="small" severity="danger" [disabled]="busyId() === b.id" (click)="discard(b)">@if (busyId() === b.id) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Sil</button>
+                                        <button pButton type="button" size="small" severity="secondary" (click)="discardingId.set(null)">Vazgeç</button>
                                     } @else {
-                                        <p-button size="small" severity="secondary" [label]="isDraft(b) && canManage ? 'Devam et' : 'Aç'" [routerLink]="[b.id]" />
+                                        <a pButton size="small" severity="secondary" [routerLink]="[b.id]">{{ isDraft(b) && canManage ? 'Devam et' : 'Aç' }}</a>
                                         @if (canCommit && canRollback(b)) {
-                                            <p-button size="small" severity="danger" [outlined]="true" icon="pi pi-undo" [label]="b.status === 'RollingBack' ? 'Geri alma durumu' : 'Geri al'" [routerLink]="[b.id, 'rollback']" />
+                                            <a pButton size="small" severity="danger" [outlined]="true" [routerLink]="[b.id, 'rollback']"><i class="p-button-icon pi pi-undo"></i>{{ b.status === 'RollingBack' ? 'Geri alma durumu' : 'Geri al' }}</a>
                                         }
                                         @if (canManage && isDraft(b)) {
                                             <app-row-action-button action="delete" label="Taslağı sil" (pressed)="discardingId.set(b.id)" />
