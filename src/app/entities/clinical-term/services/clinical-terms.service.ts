@@ -42,7 +42,7 @@ function toClinicalTermError<T>(fallback: string): MonoTypeOperatorFunction<T> {
         }
 
         const code = problemCodeFromHttpError(err);
-        const message = (code && CLINICAL_TERM_PROBLEM_MESSAGES[code]) || messageFromHttpError(err, fallback);
+        const message = messageFromHttpError(err, fallback, CLINICAL_TERM_PROBLEM_MESSAGES);
 
         return throwError(() => new ClinicalTermError(message, code === CONCURRENCY_CONFLICT_CODE, code === DUPLICATE_NAME_CODE));
     });

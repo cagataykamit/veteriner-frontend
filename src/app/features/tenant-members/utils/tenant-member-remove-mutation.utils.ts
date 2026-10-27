@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, problemMessageByCode } from '@/app/shared/utils/api-error.utils';
 
 function extractProblemCode(err: HttpErrorResponse): string | null {
     const body = err.error as unknown;
@@ -56,20 +56,5 @@ const MEMBER_REMOVE_MESSAGES: Record<string, string> = {
 export function memberRemoveMessage(err: HttpErrorResponse, fallback: string): string {
     const code = extractProblemCode(err);
 
-    if (code) {
-        const direct = MEMBER_REMOVE_MESSAGES[code];
-
-        if (direct) {
-            return direct;
-        }
-
-        const normalized = code.replace(/\./g, '');
-        const fuzzy = MEMBER_REMOVE_MESSAGES[normalized];
-
-        if (fuzzy) {
-            return fuzzy;
-        }
-    }
-
-    return messageFromHttpError(err, fallback);
+    return problemMessageByCode(code, MEMBER_REMOVE_MESSAGES) ?? messageFromHttpError(err, fallback);
 }

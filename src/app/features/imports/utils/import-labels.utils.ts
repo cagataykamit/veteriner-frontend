@@ -180,9 +180,7 @@ export function importErrorMessage(err: unknown, fallback: string): string {
         return err instanceof Error && err.message ? err.message : fallback;
     }
 
-    const code = problemCodeFromHttpError(err);
-
-    return (code && PROBLEM_MESSAGES[code]) || messageFromHttpError(err, fallback);
+    return messageFromHttpError(err, fallback, PROBLEM_MESSAGES);
 }
 
 /** Hata gövdesindeki problem kodu (örn. `Imports.DuplicateFile`). */

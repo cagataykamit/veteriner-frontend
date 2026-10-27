@@ -12,7 +12,7 @@ import type {
     SalesPartnerDto,
     SalesPartnerInput
 } from '@/app/entities/sales-partner/models/sales-partner.model';
-import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 const SALES_PARTNER_PROBLEM_MESSAGES: Record<string, string> = {
     'DiscountCodes.DuplicateCode': 'Bu kod zaten kullanılıyor; farklı bir kod yazın.',
@@ -30,9 +30,7 @@ function toSalesPartnerError<T>(fallback: string): MonoTypeOperatorFunction<T> {
             return throwError(() => err);
         }
 
-        const code = problemCodeFromHttpError(err);
-
-        return throwError(() => new Error((code && SALES_PARTNER_PROBLEM_MESSAGES[code]) || messageFromHttpError(err, fallback)));
+        return throwError(() => new Error(messageFromHttpError(err, fallback, SALES_PARTNER_PROBLEM_MESSAGES)));
     });
 }
 

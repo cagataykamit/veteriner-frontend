@@ -32,9 +32,7 @@ export class HospitalizationWardError extends Error {
 }
 
 export function hospitalizationWardProblemMessage(err: HttpErrorResponse, fallback: string): string {
-    const code = problemCodeFromHttpError(err);
-
-    return (code && HOSPITALIZATION_WARD_PROBLEM_MESSAGES[code]) || messageFromHttpError(err, fallback);
+    return messageFromHttpError(err, fallback, HOSPITALIZATION_WARD_PROBLEM_MESSAGES);
 }
 
 export function toHospitalizationWardError<T>(fallback: string): MonoTypeOperatorFunction<T> {

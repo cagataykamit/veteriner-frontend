@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, problemMessageByCode } from '@/app/shared/utils/api-error.utils';
 
 function extractProblemCode(err: HttpErrorResponse): string | null {
     const body = err.error as unknown;
@@ -43,16 +43,10 @@ export function clinicAppointmentSettingsMutationMessage(err: HttpErrorResponse,
     const code = extractProblemCode(err);
 
     if (code) {
-        const direct = APPOINTMENT_SETTINGS_MESSAGES[code];
+        const mapped = problemMessageByCode(code, APPOINTMENT_SETTINGS_MESSAGES);
 
-        if (direct) {
-            return direct;
-        }
-
-        const normalized = APPOINTMENT_SETTINGS_MESSAGES[code.replace(/\./g, '')];
-
-        if (normalized) {
-            return normalized;
+        if (mapped) {
+            return mapped;
         }
 
         const lowerCode = code.toLowerCase();

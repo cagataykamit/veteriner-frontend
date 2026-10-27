@@ -81,7 +81,7 @@ export class ExampleClinicService {
 
                 const code = problemCodeFromHttpError(err);
 
-                return throwError(() => new ExampleClinicError((code && EXAMPLE_CLINIC_PROBLEM_MESSAGES[code]) || messageFromHttpError(err, fallback), code));
+                return throwError(() => new ExampleClinicError(messageFromHttpError(err, fallback, EXAMPLE_CLINIC_PROBLEM_MESSAGES), code));
             })
         );
     }

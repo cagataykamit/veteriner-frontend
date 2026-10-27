@@ -7,7 +7,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { resolveTenantIdFromJwt } from '@/app/core/auth/jwt-tenant.utils';
 import type { DiscountCodeValidationDto, SubscriptionDiscountDto } from '@/app/entities/sales-partner/models/sales-partner.model';
 import { DISCOUNT_CODE_INVALID_MESSAGE } from '@/app/entities/sales-partner/utils/discount-code.utils';
-import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 const DISCOUNT_CODE_PROBLEM_MESSAGES: Record<string, string> = {
     'DiscountCodes.Invalid': DISCOUNT_CODE_INVALID_MESSAGE,
@@ -21,9 +21,7 @@ export function discountCodeErrorMessage(err: unknown, fallback: string): string
         return err instanceof Error ? err.message : fallback;
     }
 
-    const code = problemCodeFromHttpError(err);
-
-    return (code && DISCOUNT_CODE_PROBLEM_MESSAGES[code]) || messageFromHttpError(err, fallback);
+    return messageFromHttpError(err, fallback, DISCOUNT_CODE_PROBLEM_MESSAGES);
 }
 
 /** Müşteri tarafı kod uçları: anonim doğrulama ve kiracının abonelik kodu (ADR-037). */

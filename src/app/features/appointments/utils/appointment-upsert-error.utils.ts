@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, problemMessageByCode } from '@/app/shared/utils/api-error.utils';
 
 const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';
 
@@ -58,15 +58,7 @@ function extractAppointmentProblemCode(err: HttpErrorResponse): string | null {
 }
 
 function conflictMessageForProblemCode(code: string): string | null {
-    const direct = APPOINTMENT_CONFLICT_CODE_MESSAGES[code];
-
-    if (direct) {
-        return direct;
-    }
-
-    const noDots = code.replace(/\./g, '');
-
-    return APPOINTMENT_CONFLICT_CODE_MESSAGES[noDots] ?? null;
+    return problemMessageByCode(code, APPOINTMENT_CONFLICT_CODE_MESSAGES);
 }
 
 function isWeak409ConflictText(s: string): boolean {

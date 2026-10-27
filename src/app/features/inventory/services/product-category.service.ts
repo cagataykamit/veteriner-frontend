@@ -17,7 +17,7 @@ import type {
 } from '@/app/entities/inventory/models/product-api.model';
 import type { ProductCategoriesListQuery } from '@/app/entities/inventory/models/product-query.model';
 import type { ProductCategoryListItemVm } from '@/app/entities/inventory/models/product-vm.model';
-import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 const PRODUCT_CATEGORY_PROBLEM_MESSAGES: Record<string, string> = {
     'ProductCategories.NameAlreadyExists': 'Bu kategori adı zaten kullanılıyor.',
@@ -31,20 +31,7 @@ const PRODUCT_CATEGORY_PROBLEM_MESSAGES: Record<string, string> = {
 };
 
 function productCategoryMutationMessage(err: HttpErrorResponse, fallback: string): string {
-    const code = problemCodeFromHttpError(err);
-
-    if (code) {
-        const mapped =
-            PRODUCT_CATEGORY_PROBLEM_MESSAGES[code] ??
-            PRODUCT_CATEGORY_PROBLEM_MESSAGES[code.replace(/\./g, '')] ??
-            null;
-
-        if (mapped) {
-            return mapped;
-        }
-    }
-
-    return messageFromHttpError(err, fallback);
+    return messageFromHttpError(err, fallback, PRODUCT_CATEGORY_PROBLEM_MESSAGES);
 }
 
 @Injectable({ providedIn: 'root' })

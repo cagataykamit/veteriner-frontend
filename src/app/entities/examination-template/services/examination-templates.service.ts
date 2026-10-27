@@ -69,7 +69,7 @@ function toExaminationTemplateError<T>(fallback: string): MonoTypeOperatorFuncti
         }
 
         const code = problemCodeFromHttpError(err);
-        const message = (code && EXAMINATION_TEMPLATE_PROBLEM_MESSAGES[code]) || messageFromHttpError(err, fallback);
+        const message = messageFromHttpError(err, fallback, EXAMINATION_TEMPLATE_PROBLEM_MESSAGES);
 
         return throwError(() => new ExaminationTemplateError(message, code, problemProductId(err)));
     });

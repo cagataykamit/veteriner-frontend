@@ -4,7 +4,7 @@ import { catchError, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import type { TrialActivationMetricsDto } from '@/app/features/trial-metrics/models/trial-metrics.model';
-import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 const TRIAL_METRICS_PROBLEM_MESSAGES: Record<string, string> = {
     'TrialMetrics.InvalidRange': 'Dönem geçersiz: başlangıç bitişten önce ve aralık en çok 366 gün olmalı.'
@@ -25,9 +25,7 @@ export class TrialMetricsService {
                     return throwError(() => err);
                 }
 
-                const code = problemCodeFromHttpError(err);
-
-                return throwError(() => new Error((code && TRIAL_METRICS_PROBLEM_MESSAGES[code]) || messageFromHttpError(err, 'Deneme ölçümleri yüklenemedi.')));
+                return throwError(() => new Error(messageFromHttpError(err, 'Deneme ölçümleri yüklenemedi.', TRIAL_METRICS_PROBLEM_MESSAGES)));
             })
         );
     }

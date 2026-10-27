@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, problemMessageByCode } from '@/app/shared/utils/api-error.utils';
 
 function extractProblemCode(err: HttpErrorResponse): string | null {
     const body = err.error as unknown;
@@ -56,22 +56,7 @@ const CLINIC_MESSAGES: Record<string, string> = {
 export function clinicSettingsMutationMessage(err: HttpErrorResponse, fallback: string): string {
     const code = extractProblemCode(err);
 
-    if (code) {
-        const direct = CLINIC_MESSAGES[code];
-
-        if (direct) {
-            return direct;
-        }
-
-        const norm = code.replace(/\./g, '');
-        const fuzzy = CLINIC_MESSAGES[norm];
-
-        if (fuzzy) {
-            return fuzzy;
-        }
-    }
-
-    return messageFromHttpError(err, fallback);
+    return problemMessageByCode(code, CLINIC_MESSAGES) ?? messageFromHttpError(err, fallback);
 }
 
 export function isClinicActivateAlreadyActive(err: HttpErrorResponse): boolean {

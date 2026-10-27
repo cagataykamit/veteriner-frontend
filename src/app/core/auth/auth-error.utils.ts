@@ -4,6 +4,7 @@ import {
     isUnhelpfulProblemText,
     messageFromHttpError,
     panelHttpFailureMessage,
+    problemMessageByCode,
     rateLimitUserMessage
 } from '@/app/shared/utils/api-error.utils';
 
@@ -42,16 +43,10 @@ function messageForAuthProblemCode(code: string, context: 'login' | 'general'): 
         return null;
     }
 
-    const exact = AUTH_PROBLEM_CODE_MESSAGES[trimmed];
+    const mapped = problemMessageByCode(trimmed, AUTH_PROBLEM_CODE_MESSAGES);
 
-    if (exact) {
-        return exact;
-    }
-
-    const fuzzy = AUTH_PROBLEM_CODE_MESSAGES[trimmed.replace(/\./g, '')];
-
-    if (fuzzy) {
-        return fuzzy;
+    if (mapped) {
+        return mapped;
     }
 
     if (trimmed.startsWith('Auth.Unauthorized.')) {
