@@ -10,6 +10,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 type MatrixRowView = TenantRolePermissionMatrixRowVm & { groups: PermissionGroupPanelVm[] };
 
@@ -105,7 +106,7 @@ export class TenantRolePermissionMatrixPageComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message ?? this.copy.tenantRoleMatrixLoadError);
+                this.error.set(panelHttpFailureMessage(e, this.copy.tenantRoleMatrixLoadError));
                 this.loading.set(false);
             }
         });
