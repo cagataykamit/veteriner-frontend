@@ -117,8 +117,8 @@ const TEXT_PREVIEW: readonly { field: 'visitReason' | 'findings' | 'plan'; label
             }
 
             <ng-template #footer>
-                <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button type="button" label="Uygula" icon="pi pi-check" [loading]="submitting()" [disabled]="!canSubmit()" data-testid="template-apply-confirm" (onClick)="onSubmit()" />
+                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
+                <button pButton type="button" [disabled]="!canSubmit() || submitting()" data-testid="template-apply-confirm" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Uygula</button>
             </ng-template>
         </p-dialog>
     `

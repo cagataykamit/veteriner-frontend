@@ -93,7 +93,7 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
                     <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                         <span class="block text-sm font-medium text-muted-color">İşlem / ürün satırları</span>
                         @if (canPickProduct) {
-                            <p-button type="button" label="Satır ekle" icon="pi pi-plus" size="small" severity="secondary" data-testid="template-line-add" [disabled]="lines.length >= linesMax" (onClick)="addLine()" />
+                            <button pButton type="button" size="small" severity="secondary" data-testid="template-line-add" [disabled]="lines.length >= linesMax" (click)="addLine()"><i class="p-button-icon pi pi-plus"></i>Satır ekle</button>
                         }
                     </div>
                     <p class="text-sm text-muted-color mt-0 mb-3">Uygulanınca stoklu ürün stoktan düşer, hizmet ücret bekleyen kalem olur; fiyat o günkü ürün kartından gelir. Aşı, aşı kaydı ekranından girilir.</p>
@@ -141,7 +141,7 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
                                 }
                             </div>
                             <div class="col-span-4 md:col-span-2 flex md:pt-5 justify-end">
-                                <p-button type="button" icon="pi pi-trash" severity="danger" [text]="true" ariaLabel="Satırı sil" data-testid="template-line-remove" (onClick)="removeLine(i)" />
+                                <button pButton type="button" iconOnly severity="danger" [text]="true" aria-label="Satırı sil" data-testid="template-line-remove" (click)="removeLine(i)"><i class="p-button-icon pi pi-trash"></i></button>
                             </div>
                         </div>
                     }
@@ -157,8 +157,8 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
                 }
 
                 <div class="flex flex-wrap justify-end gap-2 pt-2">
-                    <p-button type="button" [label]="copy.buttonCancel" severity="secondary" (onClick)="visible.set(false)" [disabled]="submitting()" />
-                    <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting()" data-testid="template-save" />
+                    <button pButton type="button" severity="secondary" (click)="visible.set(false)" [disabled]="submitting()">{{ copy.buttonCancel }}</button>
+                    <button pButton type="submit" [disabled]="form.invalid || submitting()" data-testid="template-save"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                 </div>
             </form>
         </p-dialog>
