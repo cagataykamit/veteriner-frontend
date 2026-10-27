@@ -3,6 +3,15 @@ import tseslint from 'typescript-eslint';
 import angular from 'angular-eslint';
 import prettier from 'eslint-config-prettier';
 
+// Katman yönü: core/shared ← features ← layout/pages (uygulama kabuğu ve rota sayfaları). Alt katman üst katmanı içe aktarmaz.
+// Tip importu (sözleşme) serbesttir. Tek istisna: tema/yerleşim durumu LayoutService'tedir; grafik gibi bileşenler tema
+// değişince yeniden çizmek için onu okuyabilir.
+const shellImports = {
+    regex: '^@/app/(pages/|layout/(?!service/layout\\.service$))',
+    allowTypeImports: true,
+    message: 'Uygulama kabuğu (layout) ve rota sayfaları (pages) en üst katmandır; alt katman onları içe aktarmaz. Paylaşılan servisi core altına taşıyın.'
+};
+
 export default tseslint.config(
     {
         ignores: ['**/dist/**', '.angular/**', 'node_modules/**']
@@ -73,23 +82,29 @@ export default tseslint.config(
         }
     },
     {
-        // Katman yönü: core ve shared, features'a bağımlı olmaz (features → core/shared tek yön). Tip importu (sözleşme) serbesttir;
-        // çalışma zamanı importu uyarıdır (mevcut ihlal yok): özellik servisini kullanan bileşen/servis (arama, hızlı kayıt,
-        // hasta eylem çubuğu vb.) shared'da değil o özelliğin altında yaşar.
+        // core ve shared, features'a bağımlı olmaz: özellik servisini kullanan bileşen/servis (arama, hızlı kayıt, hasta eylem
+        // çubuğu vb.) shared'da değil o özelliğin altında yaşar.
         files: ['src/app/core/**/*.ts', 'src/app/shared/**/*.ts'],
         rules: {
             '@typescript-eslint/no-restricted-imports': [
-                'warn',
+                'error',
                 {
                     patterns: [
                         {
                             group: ['@/app/features/*', '@/app/features/**', '**/features/**'],
                             allowTypeImports: true,
                             message: 'core/shared, features içinden çalışma zamanı kodu içe aktarmaz; paylaşılan servisi/modeli core veya shared altına taşıyın.'
-                        }
+                        },
+                        shellImports
                     ]
                 }
             ]
+        }
+    },
+    {
+        files: ['src/app/features/**/*.ts'],
+        rules: {
+            '@typescript-eslint/no-restricted-imports': ['error', { patterns: [shellImports] }]
         }
     },
     {
