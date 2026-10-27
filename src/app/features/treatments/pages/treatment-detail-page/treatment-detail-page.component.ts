@@ -3,8 +3,8 @@ import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@ang
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AdministrationsSectionComponent } from '@/app/entities/administration/components/administrations-section.component';
-import type { TreatmentDetailVm } from '@/app/features/treatments/models/treatment-vm.model';
-import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
+import type { TreatmentDetailVm } from '@/app/entities/treatment/models/treatment-vm.model';
+import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';

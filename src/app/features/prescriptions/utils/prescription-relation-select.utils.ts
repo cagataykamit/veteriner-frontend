@@ -1,5 +1,5 @@
 import type { ExaminationDetailVm, ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
-import type { TreatmentDetailVm, TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
+import type { TreatmentDetailVm, TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 

@@ -20,7 +20,7 @@ import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { buildPetGeneralFields } from '@/app/features/pets/utils/pet-general-fields.utils';
 import { buildPetTodo, openItemsSection, ownerOutstandingSection, type PetCardSection, petCardEmphasis, petIdentityParts } from '@/app/features/pets/utils/pet-card.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
+import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import { PatientActionBarComponent } from '@/app/features/patients/components/patient-action-bar/patient-action-bar.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';

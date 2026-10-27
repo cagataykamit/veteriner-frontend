@@ -10,11 +10,11 @@ import {
     mapTreatmentDetailDtoToEditVm,
     mapTreatmentDetailDtoToVm,
     treatmentsQueryToHttpParams
-} from '@/app/features/treatments/data/treatment.mapper';
-import type { TreatmentDetailDto, TreatmentListItemDtoPagedResult } from '@/app/features/treatments/models/treatment-api.model';
-import type { CreateTreatmentRequest } from '@/app/features/treatments/models/treatment-create.model';
-import type { TreatmentsListQuery } from '@/app/features/treatments/models/treatment-query.model';
-import type { TreatmentDetailVm, TreatmentEditVm, TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
+} from '@/app/entities/treatment/data/treatment.mapper';
+import type { TreatmentDetailDto, TreatmentListItemDtoPagedResult } from '@/app/entities/treatment/models/treatment-api.model';
+import type { CreateTreatmentRequest } from '@/app/entities/treatment/models/treatment-create.model';
+import type { TreatmentsListQuery } from '@/app/entities/treatment/models/treatment-query.model';
+import type { TreatmentDetailVm, TreatmentEditVm, TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface TreatmentsPagedVm {

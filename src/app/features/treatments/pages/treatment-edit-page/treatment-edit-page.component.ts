@@ -15,10 +15,10 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { examinationListItemFromDetail, prescriptionExaminationSelectOption } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
-import { followUpBeforeTreatmentMessage, mapTreatmentUpsertFormToCreateRequest } from '@/app/features/treatments/data/treatment.mapper';
-import type { TreatmentEditVm } from '@/app/features/treatments/models/treatment-vm.model';
-import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
-import { type TreatmentUpsertFieldErrors, type TreatmentUpsertFormFieldKey, parseTreatmentUpsertHttpError } from '@/app/features/treatments/utils/treatment-upsert-validation-parse.utils';
+import { followUpBeforeTreatmentMessage, mapTreatmentUpsertFormToCreateRequest } from '@/app/entities/treatment/data/treatment.mapper';
+import type { TreatmentEditVm } from '@/app/entities/treatment/models/treatment-vm.model';
+import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
+import { type TreatmentUpsertFieldErrors, type TreatmentUpsertFormFieldKey, parseTreatmentUpsertHttpError } from '@/app/entities/treatment/utils/treatment-upsert-validation-parse.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -29,7 +29,7 @@ import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
-import { TREATMENT_DATE_TOO_FAR_PAST_MESSAGE, treatmentDateNotTooFarPastValidator, treatmentDateTimeLocalMinAllowed } from '@/app/features/treatments/utils/treatment-date-validation.utils';
+import { TREATMENT_DATE_TOO_FAR_PAST_MESSAGE, treatmentDateNotTooFarPastValidator, treatmentDateTimeLocalMinAllowed } from '@/app/entities/treatment/utils/treatment-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 @Component({

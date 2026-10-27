@@ -1,4 +1,4 @@
-import { treatmentsQueryToHttpParams } from '@/app/features/treatments/data/treatment.mapper';
+import { treatmentsQueryToHttpParams } from '@/app/entities/treatment/data/treatment.mapper';
 
 describe('treatment mapper — liste tarih parametreleri', () => {
     it('İstanbul gününü iki ucu dahil [dateFromUtc, dateToUtc] olarak gönderir', () => {

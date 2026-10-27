@@ -8,7 +8,7 @@ import {
 import {
     TREATMENT_DATE_TOO_FAR_PAST_MESSAGE,
     isTreatmentDateTooFarPastEnglishMessage
-} from '@/app/features/treatments/utils/treatment-date-validation.utils';
+} from '@/app/entities/treatment/utils/treatment-date-validation.utils';
 
 const SUMMARY_FIELD_ERRORS = 'Lütfen hatalı alanları düzeltin.';
 const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';

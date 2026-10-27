@@ -4,7 +4,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { PetSummaryVm } from '@/app/entities/pet/models/pet-summary-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
-import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
+import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
 import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
 import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';

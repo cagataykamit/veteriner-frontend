@@ -4,8 +4,8 @@ import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
-import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
+import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
+import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 import { isRightAfterDetail, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import { TreatmentsListPageComponent } from './treatments-list-page.component';
 

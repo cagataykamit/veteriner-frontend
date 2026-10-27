@@ -10,7 +10,7 @@ import type { ExaminationDetailVm } from '@/app/entities/examination/models/exam
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { TreatmentsService } from '../services/treatments.service';
+import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 import { TreatmentFormComponent } from './treatment-form.component';
 
 const exam = {

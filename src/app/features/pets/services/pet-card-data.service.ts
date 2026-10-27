@@ -17,8 +17,8 @@ import type { PetOpenItemsVm } from '@/app/entities/pet/models/pet-open-items-vm
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
-import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
-import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
+import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
+import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 
 /** Hasta/müşteri başına kayıt sayısı küçüktür; tek sayfa yeterli (aşan kısım listede "Tümü" ile görülür). */
 const FETCH_SIZE = 50;

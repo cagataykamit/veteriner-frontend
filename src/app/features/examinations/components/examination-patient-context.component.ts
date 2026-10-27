@@ -7,8 +7,8 @@ import type { ExaminationListItemVm } from '@/app/entities/examination/models/ex
 import { contextWeight } from '@/app/features/examinations/utils/examination-patient-context.utils';
 import type { PetSummaryVm } from '@/app/entities/pet/models/pet-summary-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
-import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
-import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
+import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
+import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 import type { VaccinationListItemVm } from '@/app/entities/vaccination/models/vaccination-vm.model';
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
 import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';

@@ -4,7 +4,7 @@ import type { ExaminationDetailVm } from '@/app/entities/examination/models/exam
 import { mapPetSummaryDtoToVm } from '@/app/entities/pet/data/pet-summary.mapper';
 import type { PetSummaryDto } from '@/app/entities/pet/models/pet-summary-api.model';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
-import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
+import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import { PetSummaryCardComponent } from './pet-summary-card.component';
 
 const ok: PetSummaryDto = {

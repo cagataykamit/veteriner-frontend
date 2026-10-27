@@ -23,8 +23,8 @@ import { createPrescriptionItemGroup, createPrescriptionItemsArray, prescription
 import { type PrescriptionUpsertFieldErrors, type PrescriptionUpsertFormFieldKey, parsePrescriptionUpsertHttpError } from '@/app/features/prescriptions/utils/prescription-upsert-validation-parse.utils';
 import { examinationListItemFromDetail, filterTreatmentsByExamination, prescriptionExaminationSelectOption, prescriptionTreatmentSelectOption, treatmentListItemFromDetail } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
-import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
-import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
+import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
+import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
