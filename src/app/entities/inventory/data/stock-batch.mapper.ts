@@ -1,12 +1,12 @@
-import { formatStockQuantityDisplay } from '@/app/features/inventory/data/product-stock.mapper';
-import type { ProductStockBatchesDto, StockBatchDto } from '@/app/features/inventory/models/stock-batch-api.model';
-import type { ProductStockBatchesVm, StockBatchExpiryStatus, StockBatchVm } from '@/app/features/inventory/models/stock-batch-vm.model';
+import { formatStockQuantityDisplay } from '@/app/entities/inventory/data/product-stock.mapper';
+import type { ProductStockBatchesDto, StockBatchDto } from '@/app/entities/inventory/models/stock-batch-api.model';
+import type { ProductStockBatchesVm, StockBatchExpiryStatus, StockBatchVm } from '@/app/entities/inventory/models/stock-batch-vm.model';
 import {
     istanbulTodayYmdNow,
     stockBatchDaysLeft,
     stockBatchExpiryStatus,
     toYmdOrNull
-} from '@/app/features/inventory/utils/stock-batch-expiry.utils';
+} from '@/app/entities/inventory/utils/stock-batch-expiry.utils';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 

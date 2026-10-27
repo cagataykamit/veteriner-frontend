@@ -1,5 +1,5 @@
 import { suggestAdministrationBatch } from '@/app/features/administrations/utils/administration-batch.utils';
-import type { ProductStockBatchesVm, StockBatchVm } from '@/app/features/inventory/models/stock-batch-vm.model';
+import type { ProductStockBatchesVm, StockBatchVm } from '@/app/entities/inventory/models/stock-batch-vm.model';
 
 const batch = (id: string, remaining: number, isExpired = false): StockBatchVm => ({
     id,

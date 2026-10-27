@@ -4,8 +4,8 @@ import type {
     ProductStockDtoPagedResult,
     ProductStocksListQuery,
     UpdateProductStockMinimumStockLevelRequest
-} from '@/app/features/inventory/models/product-stock-api.model';
-import type { ProductStockVm } from '@/app/features/inventory/models/product-stock-vm.model';
+} from '@/app/entities/inventory/models/product-stock-api.model';
+import type { ProductStockVm } from '@/app/entities/inventory/models/product-stock-vm.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 

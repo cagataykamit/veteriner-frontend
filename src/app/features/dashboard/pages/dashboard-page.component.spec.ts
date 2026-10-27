@@ -7,7 +7,7 @@ import { DashboardService } from '@/app/features/dashboard/services/dashboard.se
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
-import { ProductStockService } from '@/app/features/inventory/services/product-stock.service';
+import { ProductStockService } from '@/app/entities/inventory/services/product-stock.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { DashboardPageComponent } from './dashboard-page.component';
 

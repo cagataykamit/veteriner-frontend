@@ -7,8 +7,8 @@ import {
     mapPagedProductStocksToVm,
     productStocksQueryToHttpParams,
     type ProductStocksPagedVm
-} from '@/app/features/inventory/data/product-stock.mapper';
-import type { ProductStockDtoPagedResult, ProductStocksListQuery } from '@/app/features/inventory/models/product-stock-api.model';
+} from '@/app/entities/inventory/data/product-stock.mapper';
+import type { ProductStockDtoPagedResult, ProductStocksListQuery } from '@/app/entities/inventory/models/product-stock-api.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })

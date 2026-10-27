@@ -11,8 +11,8 @@ import { createAdministrationBatchPicker } from '@/app/features/administrations/
 import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
 import type { AdministrationCreateResultVm } from '@/app/features/administrations/models/administration-vm.model';
 import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/entities/charge/utils/charge-amount.utils';
-import type { ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
-import { ProductService } from '@/app/features/inventory/services/product.service';
+import type { ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';

@@ -5,7 +5,7 @@ import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { ExaminationTemplateDto } from '@/app/features/examination-templates/models/examination-template.model';
 import { ExaminationTemplatesService } from '@/app/features/examination-templates/services/examination-templates.service';
-import { ProductService } from '@/app/features/inventory/services/product.service';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ExaminationTemplatesPageComponent } from './examination-templates-page.component';
 

@@ -5,7 +5,7 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { ProductService } from '@/app/features/inventory/services/product.service';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { RegisterPageComponent } from './register-page.component';
 

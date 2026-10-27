@@ -1,4 +1,4 @@
-import type { StockMovementBatchRequest } from '@/app/features/inventory/models/stock-batch-api.model';
+import type { StockMovementBatchRequest } from '@/app/entities/inventory/models/stock-batch-api.model';
 
 /**
  * Backend — stok hareketi DTO’ları (GET /stock-movements, GET /products/{id}/stock-movements).

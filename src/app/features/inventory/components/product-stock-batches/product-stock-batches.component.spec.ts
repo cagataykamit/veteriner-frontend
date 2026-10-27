@@ -1,8 +1,8 @@
 import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject } from 'rxjs';
-import type { ProductStockBatchesVm } from '@/app/features/inventory/models/stock-batch-vm.model';
-import { StockBatchService } from '@/app/features/inventory/services/stock-batch.service';
+import type { ProductStockBatchesVm } from '@/app/entities/inventory/models/stock-batch-vm.model';
+import { StockBatchService } from '@/app/entities/inventory/services/stock-batch.service';
 import { ProductStockBatchesComponent } from './product-stock-batches.component';
 
 const vm = (available: string): ProductStockBatchesVm => ({

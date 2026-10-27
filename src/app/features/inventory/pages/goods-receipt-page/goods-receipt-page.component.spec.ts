@@ -9,8 +9,8 @@ import { GoodsReceiptPageComponent } from '@/app/features/inventory/pages/goods-
 import type { CreateGoodsReceiptRequest } from '@/app/features/inventory/models/goods-receipt-api.model';
 import { GoodsReceiptSubmitError, type GoodsReceiptProductPick } from '@/app/features/inventory/models/goods-receipt-form.model';
 import { GoodsReceiptService } from '@/app/features/inventory/services/goods-receipt.service';
-import { ProductService } from '@/app/features/inventory/services/product.service';
-import type { ProductDetailVm } from '@/app/features/inventory/models/product-vm.model';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
+import type { ProductDetailVm } from '@/app/entities/inventory/models/product-vm.model';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 const plain: GoodsReceiptProductPick = { id: 'p1', label: 'Serum (S1)', barcode: '869', requiresLotAndExpiry: false };

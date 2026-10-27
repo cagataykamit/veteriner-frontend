@@ -1,5 +1,5 @@
-import { mapStockBatchDtoToVm } from '@/app/features/inventory/data/stock-batch.mapper';
-import { STOCK_BATCH_EXPIRY_WARNING_DAYS, stockBatchExpiryStatus, toYmdOrNull } from '@/app/features/inventory/utils/stock-batch-expiry.utils';
+import { mapStockBatchDtoToVm } from '@/app/entities/inventory/data/stock-batch.mapper';
+import { STOCK_BATCH_EXPIRY_WARNING_DAYS, stockBatchExpiryStatus, toYmdOrNull } from '@/app/entities/inventory/utils/stock-batch-expiry.utils';
 
 describe('stockBatchExpiryStatus', () => {
     const today = '2026-10-13';

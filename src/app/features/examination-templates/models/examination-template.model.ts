@@ -1,5 +1,5 @@
 import type { AdministrationDto } from '@/app/features/administrations/models/administration-api.model';
-import type { ProductKindApi } from '@/app/features/inventory/models/product-api.model';
+import type { ProductKindApi } from '@/app/entities/inventory/models/product-api.model';
 
 /** Sınırlar `EXAMINATION_TEMPLATE_API_CONTRACT.md` §1 ile aynı (sunucu da denetler). */
 export const EXAMINATION_TEMPLATE_NAME_MAX = 200;

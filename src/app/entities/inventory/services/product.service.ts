@@ -9,23 +9,23 @@ import {
     mapProductUpsertFormValueToCreateRequest,
     mapProductUpsertFormValueToUpdateRequest,
     productsQueryToHttpParams
-} from '@/app/features/inventory/data/product.mapper';
+} from '@/app/entities/inventory/data/product.mapper';
 import {
     mapMinimumStockLevelValueToRequest,
     mapProductStockDtoToVm
-} from '@/app/features/inventory/data/product-stock.mapper';
+} from '@/app/entities/inventory/data/product-stock.mapper';
 import type {
     CreateProductRequest,
     ProductDto,
     ProductDtoPagedResult,
     UpdateProductRequest
-} from '@/app/features/inventory/models/product-api.model';
-import type { ProductStockDto } from '@/app/features/inventory/models/product-stock-api.model';
-import type { ProductStockVm } from '@/app/features/inventory/models/product-stock-vm.model';
-import type { ProductUpsertFormValue } from '@/app/features/inventory/models/product-upsert-form.model';
-import type { ProductsListQuery } from '@/app/features/inventory/models/product-query.model';
-import type { ProductDetailVm, ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
-import { isStockTrackedKind } from '@/app/features/inventory/utils/product-classification.utils';
+} from '@/app/entities/inventory/models/product-api.model';
+import type { ProductStockDto } from '@/app/entities/inventory/models/product-stock-api.model';
+import type { ProductStockVm } from '@/app/entities/inventory/models/product-stock-vm.model';
+import type { ProductUpsertFormValue } from '@/app/entities/inventory/models/product-upsert-form.model';
+import type { ProductsListQuery } from '@/app/entities/inventory/models/product-query.model';
+import type { ProductDetailVm, ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
+import { isStockTrackedKind } from '@/app/entities/inventory/utils/product-classification.utils';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 const PRODUCT_STOCK_CONCURRENCY_MESSAGE =

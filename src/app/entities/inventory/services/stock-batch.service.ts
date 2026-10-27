@@ -3,9 +3,9 @@ import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
-import { mapProductStockBatchesDtoToVm } from '@/app/features/inventory/data/stock-batch.mapper';
-import type { ProductStockBatchesDto } from '@/app/features/inventory/models/stock-batch-api.model';
-import type { ProductStockBatchesVm } from '@/app/features/inventory/models/stock-batch-vm.model';
+import { mapProductStockBatchesDtoToVm } from '@/app/entities/inventory/data/stock-batch.mapper';
+import type { ProductStockBatchesDto } from '@/app/entities/inventory/models/stock-batch-api.model';
+import type { ProductStockBatchesVm } from '@/app/entities/inventory/models/stock-batch-vm.model';
 import { toUserError } from '@/app/shared/utils/api-error.utils';
 
 /** Parti okuma uçları (`StockMovements.Read`; `docs/BATCH_STOCK_API_CONTRACT.md` §7). */

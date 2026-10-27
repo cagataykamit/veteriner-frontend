@@ -3,9 +3,9 @@ import type {
     ProductCategoryDto,
     ProductCategoryDtoPagedResult,
     UpdateProductCategoryRequest
-} from '@/app/features/inventory/models/product-api.model';
+} from '@/app/entities/inventory/models/product-api.model';
 import type { ProductCategoryFormValue } from '@/app/features/inventory/models/product-category-form.model';
-import type { ProductCategoryListItemVm } from '@/app/features/inventory/models/product-vm.model';
+import type { ProductCategoryListItemVm } from '@/app/entities/inventory/models/product-vm.model';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 

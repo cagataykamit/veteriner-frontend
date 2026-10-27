@@ -1,5 +1,5 @@
 import { suggestAdministrationBatch } from '@/app/features/administrations/utils/administration-batch.utils';
-import type { ProductStockBatchesVm } from '@/app/features/inventory/models/stock-batch-vm.model';
+import type { ProductStockBatchesVm } from '@/app/entities/inventory/models/stock-batch-vm.model';
 
 export interface SaleBatchGuide {
     /** Kullanılabilir / süresi geçmiş miktar özeti. */

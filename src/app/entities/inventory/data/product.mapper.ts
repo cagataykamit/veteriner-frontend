@@ -5,17 +5,17 @@ import type {
     ProductDto,
     ProductDtoPagedResult,
     UpdateProductRequest
-} from '@/app/features/inventory/models/product-api.model';
-import type { ProductCategoriesListQuery, ProductsListQuery } from '@/app/features/inventory/models/product-query.model';
-import type { ProductUpsertFormValue } from '@/app/features/inventory/models/product-upsert-form.model';
-import type { ProductDetailVm, ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
+} from '@/app/entities/inventory/models/product-api.model';
+import type { ProductCategoriesListQuery, ProductsListQuery } from '@/app/entities/inventory/models/product-query.model';
+import type { ProductUpsertFormValue } from '@/app/entities/inventory/models/product-upsert-form.model';
+import type { ProductDetailVm, ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
 import {
     productControlledClassFromApi,
     productControlledClassLabel,
     productKindFromApi,
     productKindLabel,
     productRequiresLotAndExpiry
-} from '@/app/features/inventory/utils/product-classification.utils';
+} from '@/app/entities/inventory/utils/product-classification.utils';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatMoney } from '@/app/shared/utils/money.utils';

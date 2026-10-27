@@ -4,8 +4,8 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { ExaminationTemplateDto } from '@/app/features/examination-templates/models/examination-template.model';
 import { ExaminationTemplateError, ExaminationTemplatesService } from '@/app/features/examination-templates/services/examination-templates.service';
-import type { ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
-import { ProductService } from '@/app/features/inventory/services/product.service';
+import type { ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { ExaminationTemplateEditorDialogComponent } from './examination-template-editor-dialog.component';
 
 const product = (id: string, name: string, kind: ProductListItemVm['kind']): ProductListItemVm => ({ id, name, kind, sku: '—', unit: 'Adet', isActive: true }) as ProductListItemVm;

@@ -1,6 +1,6 @@
 import { AbstractControl, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
-import type { StockMovementBatchRequest } from '@/app/features/inventory/models/stock-batch-api.model';
-import { istanbulTodayYmdNow, stockBatchExpiryStatus, toYmdOrNull } from '@/app/features/inventory/utils/stock-batch-expiry.utils';
+import type { StockMovementBatchRequest } from '@/app/entities/inventory/models/stock-batch-api.model';
+import { istanbulTodayYmdNow, stockBatchExpiryStatus, toYmdOrNull } from '@/app/entities/inventory/utils/stock-batch-expiry.utils';
 
 export const STOCK_BATCH_LOT_MAX = 100;
 export const STOCK_BATCH_SUPPLIER_MAX = 200;

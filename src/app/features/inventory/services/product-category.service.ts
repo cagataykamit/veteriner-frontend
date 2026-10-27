@@ -8,15 +8,15 @@ import {
     mapProductCategoryDtoToListVm,
     type ProductCategoriesPagedVm
 } from '@/app/features/inventory/data/product-category.mapper';
-import { productCategoriesQueryToHttpParams } from '@/app/features/inventory/data/product.mapper';
+import { productCategoriesQueryToHttpParams } from '@/app/entities/inventory/data/product.mapper';
 import type {
     CreateProductCategoryRequest,
     ProductCategoryDto,
     ProductCategoryDtoPagedResult,
     UpdateProductCategoryRequest
-} from '@/app/features/inventory/models/product-api.model';
-import type { ProductCategoriesListQuery } from '@/app/features/inventory/models/product-query.model';
-import type { ProductCategoryListItemVm } from '@/app/features/inventory/models/product-vm.model';
+} from '@/app/entities/inventory/models/product-api.model';
+import type { ProductCategoriesListQuery } from '@/app/entities/inventory/models/product-query.model';
+import type { ProductCategoryListItemVm } from '@/app/entities/inventory/models/product-vm.model';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 const PRODUCT_CATEGORY_PROBLEM_MESSAGES: Record<string, string> = {

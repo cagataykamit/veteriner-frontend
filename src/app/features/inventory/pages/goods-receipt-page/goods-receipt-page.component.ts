@@ -16,7 +16,7 @@ import { isStockBatchExpiryPast, STOCK_BATCH_INVOICE_MAX, STOCK_BATCH_LOT_MAX, S
 import { GOODS_RECEIPT_MAX_LINES } from '@/app/features/inventory/models/goods-receipt-api.model';
 import { GoodsReceiptSubmitError, type GoodsReceiptProductPick, type GoodsReceiptResultVm } from '@/app/features/inventory/models/goods-receipt-form.model';
 import { GoodsReceiptService } from '@/app/features/inventory/services/goods-receipt.service';
-import { ProductService } from '@/app/features/inventory/services/product.service';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { goodsReceiptTotalCost } from '@/app/features/inventory/utils/goods-receipt.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';

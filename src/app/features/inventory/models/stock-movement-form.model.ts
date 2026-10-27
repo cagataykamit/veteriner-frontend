@@ -1,4 +1,4 @@
-import type { StockMovementBatchRequest } from '@/app/features/inventory/models/stock-batch-api.model';
+import type { StockMovementBatchRequest } from '@/app/entities/inventory/models/stock-batch-api.model';
 
 /** Form/UI kanonik hareket tipi — POST’ta `mapMovementTypeToApiValue` ile sayıya çevrilir. */
 export type StockMovementFormMovementType = 'Initial' | 'In' | 'Out' | 'Adjustment';

@@ -1,5 +1,5 @@
 import { mapProductUpsertFormValueToCreateRequest, mapProductUpsertFormValueToUpdateRequest } from './product.mapper';
-import type { ProductUpsertFormValue } from '@/app/features/inventory/models/product-upsert-form.model';
+import type { ProductUpsertFormValue } from '@/app/entities/inventory/models/product-upsert-form.model';
 
 const form = (over: Partial<ProductUpsertFormValue> = {}): ProductUpsertFormValue => ({
     name: ' Genel muayene ',

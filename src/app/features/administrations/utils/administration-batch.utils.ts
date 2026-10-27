@@ -1,4 +1,4 @@
-import type { ProductStockBatchesVm, StockBatchVm } from '@/app/features/inventory/models/stock-batch-vm.model';
+import type { ProductStockBatchesVm, StockBatchVm } from '@/app/entities/inventory/models/stock-batch-vm.model';
 
 /**
  * Uygulama partisi "otomatik" bırakıldığında sunucunun FEFO seçimini önceden gösterir (`BATCH_STOCK_API_CONTRACT.md` §1, §6):

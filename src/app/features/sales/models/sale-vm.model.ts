@@ -1,5 +1,5 @@
 import type { SaleStockOutcomeApi } from '@/app/features/sales/models/sale-api.model';
-import type { ProductControlledClassApi, ProductKindApi } from '@/app/features/inventory/models/product-api.model';
+import type { ProductControlledClassApi, ProductKindApi } from '@/app/entities/inventory/models/product-api.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
 export interface SaleLineVm {

@@ -13,7 +13,7 @@ import type {
     AdministrationVm,
     CreateAdministrationRequest
 } from '@/app/features/administrations/models/administration-vm.model';
-import { toYmdOrNull } from '@/app/features/inventory/utils/stock-batch-expiry.utils';
+import { toYmdOrNull } from '@/app/entities/inventory/utils/stock-batch-expiry.utils';
 
 function trimmedOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();

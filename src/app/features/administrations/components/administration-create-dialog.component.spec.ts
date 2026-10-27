@@ -5,9 +5,9 @@ import { AdministrationCreateDialogComponent } from '@/app/features/administrati
 import type { AdministrationCreateResultVm } from '@/app/features/administrations/models/administration-vm.model';
 import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { ProductStockBatchesVm, StockBatchVm } from '@/app/features/inventory/models/stock-batch-vm.model';
-import { ProductService } from '@/app/features/inventory/services/product.service';
-import { StockBatchService } from '@/app/features/inventory/services/stock-batch.service';
+import type { ProductStockBatchesVm, StockBatchVm } from '@/app/entities/inventory/models/stock-batch-vm.model';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
+import { StockBatchService } from '@/app/entities/inventory/services/stock-batch.service';
 
 const product = { id: 'pr1', name: 'Serum', sku: 'SRM-1', categoryName: '—', unit: 'şişe', unitPriceText: '—', currency: 'TRY', isActive: true, statusLabel: 'Aktif', statusSeverity: 'success' };
 

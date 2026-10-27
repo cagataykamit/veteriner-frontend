@@ -1,4 +1,4 @@
-import type { StockBatchExpiryStatus } from '@/app/features/inventory/models/stock-batch-vm.model';
+import type { StockBatchExpiryStatus } from '@/app/entities/inventory/models/stock-batch-vm.model';
 import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 
 /** SKT'ye bu kadar gün veya daha az kalan parti "yaklaşan" sayılır (sözleşmede eşik yok; arayüz kararı). */

@@ -18,7 +18,7 @@ import type { TableLazyLoadEvent } from 'primeng/table';
 import { TextareaModule } from 'primeng/textarea';
 import { mapProductCategoryDtoToFormValue, mapProductCategoryFormToCreateRequest, mapProductCategoryFormToUpdateRequest } from '@/app/features/inventory/data/product-category.mapper';
 import { createProductCategoryFormGroup, getProductCategoryFormValue, type ProductCategoryFormControls } from '@/app/features/inventory/forms/product-category-form.factory';
-import type { ProductCategoryListItemVm } from '@/app/features/inventory/models/product-vm.model';
+import type { ProductCategoryListItemVm } from '@/app/entities/inventory/models/product-vm.model';
 import { ProductCategoryService } from '@/app/features/inventory/services/product-category.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';

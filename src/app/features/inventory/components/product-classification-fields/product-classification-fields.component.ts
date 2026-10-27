@@ -3,8 +3,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { PRODUCT_CLASSIFICATION_TEXT_MAX, type ProductUpsertFormGroup } from '@/app/features/inventory/forms/product-upsert-form.factory';
-import type { ProductKindApi } from '@/app/features/inventory/models/product-api.model';
-import { PRODUCT_CONTROLLED_CLASS_OPTIONS, productKindOptionsFor, productRequiresLotAndExpiry } from '@/app/features/inventory/utils/product-classification.utils';
+import type { ProductKindApi } from '@/app/entities/inventory/models/product-api.model';
+import { PRODUCT_CONTROLLED_CLASS_OPTIONS, productKindOptionsFor, productRequiresLotAndExpiry } from '@/app/entities/inventory/utils/product-classification.utils';
 
 /** Ürün create/edit formunun sınıflandırma alanları: tür, kontrollü sınıf, farmakolojik/takdim şekli, ambalaj (`BATCH_STOCK_API_CONTRACT.md` §2). */
 @Component({

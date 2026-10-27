@@ -1,5 +1,5 @@
 import { FormBuilder, Validators } from '@angular/forms';
-import type { ProductControlledClassApi, ProductKindApi } from '@/app/features/inventory/models/product-api.model';
+import type { ProductControlledClassApi, ProductKindApi } from '@/app/entities/inventory/models/product-api.model';
 
 export const PRODUCT_CLASSIFICATION_TEXT_MAX = 100;
 

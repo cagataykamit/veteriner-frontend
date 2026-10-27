@@ -6,8 +6,8 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { AdministrationsSectionComponent } from '@/app/features/administrations/components/administrations-section.component';
 import type { AdministrationsPagedVm, AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
 import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
-import { StockBatchService } from '@/app/features/inventory/services/stock-batch.service';
-import { ProductService } from '@/app/features/inventory/services/product.service';
+import { StockBatchService } from '@/app/entities/inventory/services/stock-batch.service';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 const row: AdministrationVm = {

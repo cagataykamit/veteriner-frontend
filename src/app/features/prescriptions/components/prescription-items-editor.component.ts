@@ -5,8 +5,8 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PRODUCTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import type { ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
-import { ProductService } from '@/app/features/inventory/services/product.service';
+import type { ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
 import {
     createPrescriptionItemGroup,
     PRESCRIPTION_ITEM_DOSE_MAX,

@@ -1,4 +1,4 @@
-import type { ProductControlledClassApi, ProductKindApi } from '@/app/features/inventory/models/product-api.model';
+import type { ProductControlledClassApi, ProductKindApi } from '@/app/entities/inventory/models/product-api.model';
 
 export const PRODUCT_KIND_OPTIONS: readonly { label: string; value: ProductKindApi }[] = [
     { label: 'Diğer', value: 'Other' },

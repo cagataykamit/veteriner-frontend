@@ -1,4 +1,4 @@
-import type { ProductControlledClassApi, ProductKindApi } from '@/app/features/inventory/models/product-api.model';
+import type { ProductControlledClassApi, ProductKindApi } from '@/app/entities/inventory/models/product-api.model';
 
 /** Ürün create/update formundan mapper’a giden düz değerler. */
 export interface ProductUpsertFormValue {

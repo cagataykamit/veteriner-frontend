@@ -11,7 +11,7 @@ import type {
 } from '@/app/features/inventory/models/stock-movement-form.model';
 import type { StockMovementsListQuery } from '@/app/features/inventory/models/stock-movement-query.model';
 import type { StockMovementVm } from '@/app/features/inventory/models/stock-movement-vm.model';
-import { formatStockQuantityDisplay } from '@/app/features/inventory/data/product-stock.mapper';
+import { formatStockQuantityDisplay } from '@/app/entities/inventory/data/product-stock.mapper';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import {
     dateOnlyInputToIstanbulEndUtcIso,

@@ -1,7 +1,7 @@
 import { Component, effect, inject, input, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { TableModule } from 'primeng/table';
-import type { ProductStockBatchesVm } from '@/app/features/inventory/models/stock-batch-vm.model';
-import { StockBatchService } from '@/app/features/inventory/services/stock-batch.service';
+import type { ProductStockBatchesVm } from '@/app/entities/inventory/models/stock-batch-vm.model';
+import { StockBatchService } from '@/app/entities/inventory/services/stock-batch.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';

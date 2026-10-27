@@ -15,7 +15,7 @@ import type { TableLazyLoadEvent } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import type { StockMovementVm } from '@/app/features/inventory/models/stock-movement-vm.model';
 import { StockMovementCreateDialogComponent } from '@/app/features/inventory/components/stock-movement-create-dialog/stock-movement-create-dialog.component';
-import { ProductService } from '@/app/features/inventory/services/product.service';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';

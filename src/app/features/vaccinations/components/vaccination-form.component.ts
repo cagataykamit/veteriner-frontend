@@ -14,8 +14,8 @@ import { AdministrationBatchFieldComponent } from '@/app/features/administration
 import { administrationSavedNotice } from '@/app/features/administrations/utils/administration-labels';
 import { createAdministrationBatchPicker } from '@/app/features/administrations/utils/administration-batch-picker';
 import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/entities/charge/utils/charge-amount.utils';
-import type { ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
-import { ProductService } from '@/app/features/inventory/services/product.service';
+import type { ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { ADMINISTRATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import type { CreateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';

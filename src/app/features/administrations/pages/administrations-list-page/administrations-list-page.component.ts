@@ -13,7 +13,7 @@ import { AdministrationRowMarksComponent } from '@/app/features/administrations/
 import { AdministrationVoidDialogComponent } from '@/app/features/administrations/components/administration-void-dialog.component';
 import type { AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
 import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
-import { ProductService } from '@/app/features/inventory/services/product.service';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';

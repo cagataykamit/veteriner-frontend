@@ -1,7 +1,7 @@
 import { HttpParams } from '@angular/common/http';
-import { formatStockQuantityDisplay } from '@/app/features/inventory/data/product-stock.mapper';
-import type { ProductDto } from '@/app/features/inventory/models/product-api.model';
-import { isStockTrackedKind, productControlledClassFromApi, productKindFromApi } from '@/app/features/inventory/utils/product-classification.utils';
+import { formatStockQuantityDisplay } from '@/app/entities/inventory/data/product-stock.mapper';
+import type { ProductDto } from '@/app/entities/inventory/models/product-api.model';
+import { isStockTrackedKind, productControlledClassFromApi, productKindFromApi } from '@/app/entities/inventory/utils/product-classification.utils';
 import type {
     CreateSaleResponseDto,
     SaleDto,
@@ -18,7 +18,7 @@ import type {
     SaleProductVm,
     SalesPagedVm
 } from '@/app/features/sales/models/sale-vm.model';
-import { toYmdOrNull } from '@/app/features/inventory/utils/stock-batch-expiry.utils';
+import { toYmdOrNull } from '@/app/entities/inventory/utils/stock-batch-expiry.utils';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 

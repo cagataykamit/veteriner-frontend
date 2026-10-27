@@ -1,5 +1,5 @@
-import { mapProductStockBatchesDtoToVm } from '@/app/features/inventory/data/stock-batch.mapper';
-import type { ProductStockBatchesDto } from '@/app/features/inventory/models/stock-batch-api.model';
+import { mapProductStockBatchesDtoToVm } from '@/app/entities/inventory/data/stock-batch.mapper';
+import type { ProductStockBatchesDto } from '@/app/entities/inventory/models/stock-batch-api.model';
 import { saleBatchGuide, saleBatchOptions } from './sale-batch-guide.utils';
 
 const dto = (over: Partial<ProductStockBatchesDto> = {}): ProductStockBatchesDto => ({

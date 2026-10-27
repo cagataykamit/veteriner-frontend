@@ -20,9 +20,9 @@ import {
 } from '@/app/features/examination-templates/models/examination-template.model';
 import { ExaminationTemplateError, ExaminationTemplatesService, TEMPLATE_CONCURRENCY_CONFLICT_CODE } from '@/app/features/examination-templates/services/examination-templates.service';
 import { templateHasText } from '@/app/features/examination-templates/utils/examination-template.utils';
-import type { ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
-import { ProductService } from '@/app/features/inventory/services/product.service';
-import { isStockTrackedKind } from '@/app/features/inventory/utils/product-classification.utils';
+import type { ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
+import { isStockTrackedKind } from '@/app/entities/inventory/utils/product-classification.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
 export type ExaminationTemplateEditorMode = 'create' | 'edit' | 'copy';

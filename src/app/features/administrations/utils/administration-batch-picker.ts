@@ -4,8 +4,8 @@ import type { AbstractControl } from '@angular/forms';
 import { catchError, merge, of, startWith, switchMap, tap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { suggestAdministrationBatch } from '@/app/features/administrations/utils/administration-batch.utils';
-import type { ProductStockBatchesVm } from '@/app/features/inventory/models/stock-batch-vm.model';
-import { StockBatchService } from '@/app/features/inventory/services/stock-batch.service';
+import type { ProductStockBatchesVm } from '@/app/entities/inventory/models/stock-batch-vm.model';
+import { StockBatchService } from '@/app/entities/inventory/services/stock-batch.service';
 
 export interface AdministrationBatchPickerControls {
     productId: AbstractControl<string | null>;

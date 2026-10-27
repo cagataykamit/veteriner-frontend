@@ -1,5 +1,5 @@
-import { mapProductStockDtoToVm } from '@/app/features/inventory/data/product-stock.mapper';
-import { mapProductStockBatchesDtoToVm } from '@/app/features/inventory/data/stock-batch.mapper';
+import { mapProductStockDtoToVm } from '@/app/entities/inventory/data/product-stock.mapper';
+import { mapProductStockBatchesDtoToVm } from '@/app/entities/inventory/data/stock-batch.mapper';
 
 describe('stok: kullanılabilir / süresi geçmiş', () => {
     const base = { id: 's1', quantityOnHand: 8, minimumStockLevel: 5 };

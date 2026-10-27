@@ -1,10 +1,10 @@
 import { FormBuilder } from '@angular/forms';
-import { mapProductUpsertFormValueToCreateRequest, mapProductUpsertFormValueToUpdateRequest } from '@/app/features/inventory/data/product.mapper';
+import { mapProductUpsertFormValueToCreateRequest, mapProductUpsertFormValueToUpdateRequest } from '@/app/entities/inventory/data/product.mapper';
 import { mapStockMovementUpsertFormValueToCreateRequest } from '@/app/features/inventory/data/stock-movement.mapper';
 import { applyStockBatchRequirement, createStockBatchFormGroup, getAcknowledgeExpiredRequest, getStockBatchRequest, syncStockBatchGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
 import { createStockMovementFormGroup, getStockMovementFormValue } from '@/app/features/inventory/forms/stock-movement-form.factory';
-import type { ProductUpsertFormValue } from '@/app/features/inventory/models/product-upsert-form.model';
-import { productRequiresLotAndExpiry } from '@/app/features/inventory/utils/product-classification.utils';
+import type { ProductUpsertFormValue } from '@/app/entities/inventory/models/product-upsert-form.model';
+import { productRequiresLotAndExpiry } from '@/app/entities/inventory/utils/product-classification.utils';
 
 describe('stock batch form', () => {
     const fb = new FormBuilder();

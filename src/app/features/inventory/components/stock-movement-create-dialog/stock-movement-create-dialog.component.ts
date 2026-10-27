@@ -13,7 +13,7 @@ import { mapStockMovementUpsertFormValueToCreateRequest } from '@/app/features/i
 import { createStockMovementFormGroup, getStockMovementFormValue, STOCK_MOVEMENT_CREATE_MOVEMENT_OPTIONS } from '@/app/features/inventory/forms/stock-movement-form.factory';
 import type { StockMovementFormMovementType } from '@/app/features/inventory/models/stock-movement-form.model';
 import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
-import { ProductService } from '@/app/features/inventory/services/product.service';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';

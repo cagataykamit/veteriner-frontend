@@ -4,7 +4,7 @@ import { DialogModule } from 'primeng/dialog';
 import type { ExaminationTemplateApplyResultDto, ExaminationTemplateDto, ExaminationTemplateLineDto } from '@/app/features/examination-templates/models/examination-template.model';
 import { EXAMINATION_CONCURRENCY_CONFLICT_CODE, EXAMINATION_FINALIZED_CODE, ExaminationTemplateError, ExaminationTemplatesService } from '@/app/features/examination-templates/services/examination-templates.service';
 import { templateContentSummary, templateInactiveLineNames } from '@/app/features/examination-templates/utils/examination-template.utils';
-import { isStockTrackedKind } from '@/app/features/inventory/utils/product-classification.utils';
+import { isStockTrackedKind } from '@/app/entities/inventory/utils/product-classification.utils';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatMoney } from '@/app/shared/utils/money.utils';

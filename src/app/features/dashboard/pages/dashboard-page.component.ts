@@ -29,8 +29,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { VisitArrivalDialogComponent } from '@/app/features/visits/components/visit-arrival-dialog.component';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
-import type { ProductStockVm } from '@/app/features/inventory/models/product-stock-vm.model';
-import { ProductStockService } from '@/app/features/inventory/services/product-stock.service';
+import type { ProductStockVm } from '@/app/entities/inventory/models/product-stock-vm.model';
+import { ProductStockService } from '@/app/entities/inventory/services/product-stock.service';
 import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({
