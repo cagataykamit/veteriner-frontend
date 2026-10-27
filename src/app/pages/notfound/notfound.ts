@@ -46,7 +46,7 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
                                 <span class="text-surface-600 dark:text-surface-200 lg:text-xl">Vetinity panelinize giriş yapın.</span>
                             </span>
                         </a>
-                        <p-button label="Ana sayfaya dön" routerLink="/" styleClass="public-notfound-submit" />
+                        <a pButton routerLink="/" class="public-notfound-submit">Ana sayfaya dön</a>
                     </div>
                 </div>
             </div>

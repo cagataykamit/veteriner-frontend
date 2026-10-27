@@ -120,7 +120,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                     }
 
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <p-button type="submit" label="Demo iste" styleClass="w-full sm:w-auto" [loading]="submitting()" [disabled]="submitting()" />
+                        <button pButton type="submit" class="w-full sm:w-auto" [disabled]="submitting()">@if (submitting()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Demo iste</button>
                         <span class="text-sm text-muted-color">
                             Hemen denemek isterseniz <a routerLink="/auth/signup" class="public-brand-link">14 gün ücretsiz başlayın</a>.
                         </span>

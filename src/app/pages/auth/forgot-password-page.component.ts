@@ -46,7 +46,7 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
                                 <span class="public-auth-subtitle">{{ successMessage }}</span>
                             </div>
                             <div class="public-auth-form">
-                                <p-button label="Giriş sayfasına dön" styleClass="w-full public-auth-submit" (onClick)="goToLogin()"></p-button>
+                                <button pButton type="button" class="w-full public-auth-submit" (click)="goToLogin()">Giriş sayfasına dön</button>
                             </div>
                         } @else {
                             <div class="public-auth-header">
@@ -73,7 +73,7 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
                                     }
                                 </div>
 
-                                <p-button type="submit" label="Sıfırlama Bağlantısı Gönder" styleClass="w-full public-auth-submit" [loading]="loading()" [disabled]="loading()"></p-button>
+                                <button pButton type="submit" class="w-full public-auth-submit" [disabled]="loading()">@if (loading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Sıfırlama Bağlantısı Gönder</button>
 
                                 @if (formError()) {
                                     <div class="public-auth-alert" role="alert" aria-live="assertive">

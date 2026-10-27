@@ -56,11 +56,11 @@ const RESET_PASSWORD_FIELD_MAP: Record<string, ResetPasswordFieldKey> = {
 
                         @if (submitted()) {
                             <div class="public-auth-form">
-                                <p-button label="Giriş yap" styleClass="w-full public-auth-submit" (onClick)="goToLogin()"></p-button>
+                                <button pButton type="button" class="w-full public-auth-submit" (click)="goToLogin()">Giriş yap</button>
                             </div>
                         } @else if (!token()) {
                             <div class="public-auth-form">
-                                <p-button label="Giriş sayfasına dön" styleClass="w-full public-auth-submit" (onClick)="goToLogin()"></p-button>
+                                <button pButton type="button" class="w-full public-auth-submit" (click)="goToLogin()">Giriş sayfasına dön</button>
                             </div>
                         } @else {
                             <form class="public-auth-form" (ngSubmit)="onSubmit(resetForm)" autocomplete="on" #resetForm="ngForm">
@@ -109,7 +109,7 @@ const RESET_PASSWORD_FIELD_MAP: Record<string, ResetPasswordFieldKey> = {
                                     }
                                 </div>
 
-                                <p-button type="submit" label="Şifreyi güncelle" styleClass="w-full public-auth-submit" [loading]="loading()" [disabled]="loading()"></p-button>
+                                <button pButton type="submit" class="w-full public-auth-submit" [disabled]="loading()">@if (loading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Şifreyi güncelle</button>
 
                                 @if (formError()) {
                                     <div class="public-auth-alert" role="alert" aria-live="assertive">

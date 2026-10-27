@@ -50,7 +50,7 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
                                         [disabled]="submitting()"
                                     />
                                 </div>
-                                <p-button type="button" label="Devam et" icon="pi pi-check" styleClass="w-full public-auth-submit" [disabled]="!selectedClinicId || submitting()" [loading]="submitting()" (onClick)="onContinue()" />
+                                <button pButton type="button" class="w-full public-auth-submit" [disabled]="!selectedClinicId || submitting()" (click)="onContinue()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Devam et</button>
                             </div>
                         }
 

@@ -67,9 +67,9 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
                             </ul>
                         }
                         @if (sm === 'accept') {
-                            <p-button label="Panele git" styleClass="w-full" (onClick)="goToPanel()" />
+                            <button pButton type="button" class="w-full" (click)="goToPanel()">Panele git</button>
                         } @else {
-                            <p-button label="Giriş yap" styleClass="w-full" (onClick)="goToLoginAfterSignup()" />
+                            <button pButton type="button" class="w-full" (click)="goToLoginAfterSignup()">Giriş yap</button>
                         }
                     } @else if (vm(); as inv) {
                         <h2 class="mt-0 mb-2 text-xl text-surface-900 dark:text-surface-0">Davet</h2>
@@ -118,12 +118,12 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
 
                         @if (!auth.isAuthenticated() && inv.requiresLogin) {
                             <p class="m-0 mb-3 text-sm">Bu daveti kabul etmek için önce giriş yapmalısınız.</p>
-                            <p-button label="Giriş yap" styleClass="w-full mb-3" (onClick)="goToLogin(inv)" />
+                            <button pButton type="button" class="w-full mb-3" (click)="goToLogin(inv)">Giriş yap</button>
                         }
 
                         @if (!auth.isAuthenticated() && !inv.requiresLogin && !inv.requiresSignup && inv.canJoin && !inv.isExpired) {
                             <p class="m-0 mb-3 text-sm">Devam etmek için giriş yapın.</p>
-                            <p-button label="Giriş yap" styleClass="w-full mb-3" (onClick)="goToLogin(inv)" />
+                            <button pButton type="button" class="w-full mb-3" (click)="goToLogin(inv)">Giriş yap</button>
                         }
 
                         @if (!auth.isAuthenticated() && inv.requiresSignup && !inv.isExpired && inv.canJoin) {
@@ -151,23 +151,23 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
                                     />
                                 </div>
                             }
-                            <p-button
-                                label="Hesap oluştur ve katıl"
-                                styleClass="w-full"
-                                [loading]="actionLoading()"
+                            <button
+                                pButton
+                                type="button"
+                                class="w-full"
                                 [disabled]="actionLoading() || (inv.requiredLegalDocuments.length > 0 && !legalConsent())"
-                                (onClick)="onSignupAndAccept(inv)"
-                            />
+                                (click)="onSignupAndAccept(inv)"
+                            >@if (actionLoading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Hesap oluştur ve katıl</button>
                         }
 
                         @if (showAccept(inv)) {
-                            <p-button
-                                label="Daveti kabul et"
-                                styleClass="w-full"
-                                [loading]="actionLoading()"
+                            <button
+                                pButton
+                                type="button"
+                                class="w-full"
                                 [disabled]="actionLoading()"
-                                (onClick)="onAccept(inv)"
-                            />
+                                (click)="onAccept(inv)"
+                            >@if (actionLoading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Daveti kabul et</button>
                         }
 
                         @if (actionError(); as ae) {

@@ -21,7 +21,7 @@ import { AppFloatingConfigurator } from '../../layout/component/app.floatingconf
                             <span class="text-muted-color mb-8">You do not have the necessary permisions. Please contact admins.</span>
                             <img src="https://primefaces.org/cdn/templates/sakai/auth/asset-access.svg" alt="Access denied" class="mb-8" width="80%" />
                             <div class="col-span-12 mt-8 text-center">
-                                <p-button label="Go to Dashboard" routerLink="/" severity="warn" />
+                                <a pButton routerLink="/" severity="warn">Go to Dashboard</a>
                             </div>
                         </div>
                     </div>

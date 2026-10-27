@@ -81,7 +81,7 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
                                     </div>
                                 </div>
                             </div>
-                            <p-button label="Giriş yap" styleClass="w-full mb-4 public-auth-submit" (onClick)="goToLogin()" />
+                            <button pButton type="button" class="w-full mb-4 public-auth-submit" (click)="goToLogin()">Giriş yap</button>
                             <div class="text-center">
                                 <a routerLink="/paketler" class="public-brand-link no-underline text-sm">Paketlere dön</a>
                             </div>
@@ -163,7 +163,7 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 
                                 <app-legal-consent-checkbox inputId="signupLegalConsent" [documents]="legalDocumentTypes()" [disabled]="submitting()" [(checked)]="legalConsent" />
 
-                                <p-button label="Hesabı oluştur" styleClass="w-full public-auth-submit" [loading]="submitting()" [disabled]="submitting() || !legalConsent()" (onClick)="submit()" />
+                                <button pButton type="button" class="w-full public-auth-submit" [disabled]="submitting() || !legalConsent()" (click)="submit()">@if (submitting()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Hesabı oluştur</button>
 
                                 @if (formError()) {
                                     <div class="rounded-sm border-l-[3px] border-l-red-400/75 bg-red-500/[0.06] py-2 px-3 dark:border-l-red-500/45 dark:bg-red-500/[0.08]" role="alert" aria-live="assertive">

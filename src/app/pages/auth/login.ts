@@ -107,7 +107,7 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
                                 </div>
                                 <a routerLink="/auth/forgot-password" class="font-medium no-underline ml-2 text-right cursor-pointer public-brand-link">Şifremi unuttum</a>
                             </div>
-                            <p-button type="submit" label="Giriş yap" styleClass="w-full public-auth-submit" [loading]="signInLoading()" [disabled]="signInLoading()"></p-button>
+                            <button pButton type="submit" class="w-full public-auth-submit" [disabled]="signInLoading()">@if (signInLoading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Giriş yap</button>
                             @if (loginError()) {
                                 <div class="public-auth-alert" role="alert" aria-live="assertive">
                                     <div class="public-auth-alert-box">
