@@ -3,8 +3,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
-import { PrescriptionItemsEditorComponent } from '@/app/features/prescriptions/components/prescription-items-editor.component';
-import { createPrescriptionItemGroup, createPrescriptionItemsArray, PRESCRIPTION_ITEMS_MAX, prescriptionItemsFormToInputs } from '@/app/features/prescriptions/utils/prescription-items-form.utils';
+import { PrescriptionItemsEditorComponent } from '@/app/entities/prescription/components/prescription-items-editor.component';
+import { createPrescriptionItemGroup, createPrescriptionItemsArray, PRESCRIPTION_ITEMS_MAX, prescriptionItemsFormToInputs } from '@/app/entities/prescription/utils/prescription-items-form.utils';
 
 const product = { id: 'pr1', name: 'Serum', sku: '—', categoryName: '—', unit: 'şişe', unitPriceText: '—', currency: 'TRY', isActive: true, statusLabel: 'Aktif', statusSeverity: 'success' };
 

@@ -31,7 +31,7 @@ import {
     roomRequiredWhenWardSelectedValidator
 } from '@/app/features/hospitalizations/utils/hospitalization-location-select.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
-import { examinationListItemFromDetail } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
+import { examinationListItemFromDetail } from '@/app/entities/prescription/utils/prescription-relation-select.utils';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';

@@ -7,8 +7,8 @@ import { ExaminationsService } from '@/app/entities/examination/services/examina
 import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
 import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
-import { PrescriptionsService } from '@/app/features/prescriptions/services/prescriptions.service';
-import type { PrescriptionListItemVm } from '@/app/features/prescriptions/models/prescription-vm.model';
+import { PrescriptionsService } from '@/app/entities/prescription/services/prescriptions.service';
+import type { PrescriptionListItemVm } from '@/app/entities/prescription/models/prescription-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';

@@ -8,7 +8,7 @@ import {
 import {
     PRESCRIPTION_DATE_TOO_FAR_PAST_MESSAGE,
     isPrescriptionDateTooFarPastBackendMessage
-} from '@/app/features/prescriptions/utils/prescription-date-validation.utils';
+} from '@/app/entities/prescription/utils/prescription-date-validation.utils';
 
 const SUMMARY_FIELD_ERRORS = 'Lütfen hatalı alanları düzeltin.';
 const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';

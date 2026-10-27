@@ -1,4 +1,4 @@
-import { prescriptionsQueryToHttpParams } from '@/app/features/prescriptions/data/prescription.mapper';
+import { prescriptionsQueryToHttpParams } from '@/app/entities/prescription/data/prescription.mapper';
 
 describe('prescription mapper — liste tarih parametreleri', () => {
     it('İstanbul gününü iki ucu dahil [dateFromUtc, dateToUtc] olarak gönderir', () => {

@@ -1,6 +1,6 @@
-import { mapCreatePrescriptionToApiBody, mapPrescriptionDetailDtoToEditVm, mapPrescriptionDetailDtoToVm } from '@/app/features/prescriptions/data/prescription.mapper';
-import type { PrescriptionDetailDto } from '@/app/features/prescriptions/models/prescription-api.model';
-import type { CreatePrescriptionRequest } from '@/app/features/prescriptions/models/prescription-create.model';
+import { mapCreatePrescriptionToApiBody, mapPrescriptionDetailDtoToEditVm, mapPrescriptionDetailDtoToVm } from '@/app/entities/prescription/data/prescription.mapper';
+import type { PrescriptionDetailDto } from '@/app/entities/prescription/models/prescription-api.model';
+import type { CreatePrescriptionRequest } from '@/app/entities/prescription/models/prescription-create.model';
 
 const base: CreatePrescriptionRequest = {
     clinicId: 'c1',

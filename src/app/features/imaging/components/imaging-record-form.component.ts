@@ -10,7 +10,7 @@ import { ExaminationsService } from '@/app/entities/examination/services/examina
 import type { ImagingModality } from '@/app/features/imaging/models/imaging.model';
 import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-records.service';
 import { IMAGING_MODALITY_OPTIONS } from '@/app/features/imaging/utils/imaging.utils';
-import { examinationListItemFromDetail, prescriptionExaminationSelectOption } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
+import { examinationListItemFromDetail, prescriptionExaminationSelectOption } from '@/app/entities/prescription/utils/prescription-relation-select.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { type SelectOption, trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';

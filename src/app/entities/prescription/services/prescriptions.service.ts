@@ -10,11 +10,11 @@ import {
     mapPrescriptionDetailDtoToEditVm,
     mapPrescriptionDetailDtoToVm,
     prescriptionsQueryToHttpParams
-} from '@/app/features/prescriptions/data/prescription.mapper';
-import type { PrescriptionDetailDto, PrescriptionListItemDtoPagedResult } from '@/app/features/prescriptions/models/prescription-api.model';
-import type { CreatePrescriptionRequest } from '@/app/features/prescriptions/models/prescription-create.model';
-import type { PrescriptionsListQuery } from '@/app/features/prescriptions/models/prescription-query.model';
-import type { PrescriptionDetailVm, PrescriptionEditVm, PrescriptionListItemVm } from '@/app/features/prescriptions/models/prescription-vm.model';
+} from '@/app/entities/prescription/data/prescription.mapper';
+import type { PrescriptionDetailDto, PrescriptionListItemDtoPagedResult } from '@/app/entities/prescription/models/prescription-api.model';
+import type { CreatePrescriptionRequest } from '@/app/entities/prescription/models/prescription-create.model';
+import type { PrescriptionsListQuery } from '@/app/entities/prescription/models/prescription-query.model';
+import type { PrescriptionDetailVm, PrescriptionEditVm, PrescriptionListItemVm } from '@/app/entities/prescription/models/prescription-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface PrescriptionsPagedVm {

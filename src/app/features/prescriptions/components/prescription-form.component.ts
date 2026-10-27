@@ -14,13 +14,13 @@ import { forkJoin } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
-import { followUpBeforePrescribedMessage, mapPrescriptionUpsertFormToCreateRequest } from '@/app/features/prescriptions/data/prescription.mapper';
-import { PrescriptionItemsEditorComponent } from '@/app/features/prescriptions/components/prescription-items-editor.component';
-import { PrescriptionsService } from '@/app/features/prescriptions/services/prescriptions.service';
-import { createPrescriptionItemsArray, prescriptionItemsFormToInputs } from '@/app/features/prescriptions/utils/prescription-items-form.utils';
-import { type PrescriptionUpsertFieldErrors, parsePrescriptionUpsertHttpError } from '@/app/features/prescriptions/utils/prescription-upsert-validation-parse.utils';
+import { followUpBeforePrescribedMessage, mapPrescriptionUpsertFormToCreateRequest } from '@/app/entities/prescription/data/prescription.mapper';
+import { PrescriptionItemsEditorComponent } from '@/app/entities/prescription/components/prescription-items-editor.component';
+import { PrescriptionsService } from '@/app/entities/prescription/services/prescriptions.service';
+import { createPrescriptionItemsArray, prescriptionItemsFormToInputs } from '@/app/entities/prescription/utils/prescription-items-form.utils';
+import { type PrescriptionUpsertFieldErrors, parsePrescriptionUpsertHttpError } from '@/app/entities/prescription/utils/prescription-upsert-validation-parse.utils';
 import type { ExaminationDetailVm, ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
-import { examinationListItemFromDetail, filterTreatmentsByExamination, prescriptionExaminationSelectOption, prescriptionTreatmentSelectOption, treatmentListItemFromDetail } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
+import { examinationListItemFromDetail, filterTreatmentsByExamination, prescriptionExaminationSelectOption, prescriptionTreatmentSelectOption, treatmentListItemFromDetail } from '@/app/entities/prescription/utils/prescription-relation-select.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import type { TreatmentDetailVm, TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
@@ -30,7 +30,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
-import { PRESCRIPTION_DATE_TOO_FAR_PAST_MESSAGE, prescriptionDateNotTooFarPastValidator, prescriptionDateTimeLocalMinAllowed } from '@/app/features/prescriptions/utils/prescription-date-validation.utils';
+import { PRESCRIPTION_DATE_TOO_FAR_PAST_MESSAGE, prescriptionDateNotTooFarPastValidator, prescriptionDateTimeLocalMinAllowed } from '@/app/entities/prescription/utils/prescription-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 @Component({

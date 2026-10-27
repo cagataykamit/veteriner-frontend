@@ -19,7 +19,7 @@ import type { LabResultEditVm, LabResultStatus } from '@/app/entities/lab-result
 import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';
 import { type LabResultUpsertFieldErrors, type LabResultUpsertFormFieldKey, parseLabResultUpsertHttpError } from '@/app/entities/lab-result/utils/lab-result-upsert-validation-parse.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
-import { examinationListItemFromDetail, prescriptionExaminationSelectOption } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
+import { examinationListItemFromDetail, prescriptionExaminationSelectOption } from '@/app/entities/prescription/utils/prescription-relation-select.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';

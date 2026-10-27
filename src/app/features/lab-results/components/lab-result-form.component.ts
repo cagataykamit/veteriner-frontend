@@ -13,7 +13,7 @@ import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
-import { examinationListItemFromDetail, prescriptionExaminationSelectOption } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
+import { examinationListItemFromDetail, prescriptionExaminationSelectOption } from '@/app/entities/prescription/utils/prescription-relation-select.utils';
 import { mapLabResultUpsertFormToCreateRequest } from '@/app/entities/lab-result/data/lab-result.mapper';
 import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';
 import { type LabResultUpsertFieldErrors, parseLabResultUpsertHttpError } from '@/app/entities/lab-result/utils/lab-result-upsert-validation-parse.utils';

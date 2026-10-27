@@ -7,10 +7,10 @@ import type {
     PrescriptionListItemDtoPagedResult,
     PrescriptionItemWriteDto,
     PrescriptionWriteRequestDto
-} from '@/app/features/prescriptions/models/prescription-api.model';
-import type { CreatePrescriptionRequest, PrescriptionItemInput } from '@/app/features/prescriptions/models/prescription-create.model';
-import type { PrescriptionsListQuery } from '@/app/features/prescriptions/models/prescription-query.model';
-import type { PrescriptionDetailVm, PrescriptionEditVm, PrescriptionItemVm, PrescriptionListItemVm } from '@/app/features/prescriptions/models/prescription-vm.model';
+} from '@/app/entities/prescription/models/prescription-api.model';
+import type { CreatePrescriptionRequest, PrescriptionItemInput } from '@/app/entities/prescription/models/prescription-create.model';
+import type { PrescriptionsListQuery } from '@/app/entities/prescription/models/prescription-query.model';
+import type { PrescriptionDetailVm, PrescriptionEditVm, PrescriptionItemVm, PrescriptionListItemVm } from '@/app/entities/prescription/models/prescription-vm.model';
 import {
     dateOnlyInputToIstanbulEndUtcIso,
     dateOnlyInputToIstanbulStartUtcIso,

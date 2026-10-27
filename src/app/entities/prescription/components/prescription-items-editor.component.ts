@@ -18,7 +18,7 @@ import {
     PRESCRIPTION_ITEM_QUANTITY_MAX_DECIMALS,
     PRESCRIPTION_ITEMS_MAX,
     type PrescriptionItemFormGroup
-} from '@/app/features/prescriptions/utils/prescription-items-form.utils';
+} from '@/app/entities/prescription/utils/prescription-items-form.utils';
 
 /**
  * Reçete satırları editörü: serbest ad + opsiyonel katalog ürünü (D2); miktar, birim, doz ve parti/seri no yapılandırılmış alanlardır
