@@ -1,4 +1,5 @@
 import type { SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
+import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 
 /** Kiracı yazma erişimi kapalı — ödeme/yenileme CTA akışı gerekir. */
 export function isExpiredReadOnlySubscription(summary: SubscriptionSummaryVm): boolean {
@@ -78,4 +79,13 @@ export function shouldShowMisleadingNextRenewal(summary: SubscriptionSummaryVm):
 /** Expired/read-only yenileme veya paket seçimi checkout'u — proration değil tam ödeme metni. */
 export function isRenewalCheckoutContext(summary: SubscriptionSummaryVm): boolean {
     return isExpiredReadOnlySubscription(summary);
+}
+
+/** "Yenileme bekliyor" satırı: süresi dolmuşsa metin, değilse sonraki faturalama tarihi. */
+export function nextRenewalWaitingText(summary: SubscriptionSummaryVm): string {
+    if (isExpiredReadOnlySubscription(summary)) {
+        return 'Süre doldu';
+    }
+
+    return formatDateDisplay(summary.nextBillingAtUtc || summary.currentPeriodEndUtc);
 }
