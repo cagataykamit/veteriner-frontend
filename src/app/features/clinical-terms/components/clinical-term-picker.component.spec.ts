@@ -172,7 +172,7 @@ describe('ClinicalTermPickerComponent', () => {
         it('izinli kullanıcı Etkinleştir ile terimi etkinleştirir ve adı alana yazar', async () => {
             claims.add('ClinicalTerms.Deactivate');
             await addConflicting();
-            const button = notice()?.querySelector('[data-testid="clinical-term-activate"] button') as HTMLButtonElement;
+            const button = notice()?.querySelector('button[data-testid="clinical-term-activate"]') as HTMLButtonElement;
 
             expect(button).not.toBeNull();
             button.click();

@@ -62,17 +62,16 @@ const PLACEHOLDERS: Record<ClinicalTermKind, string> = {
                                 <span>Sözlükte bulunamadı.</span>
                                 @if (canAdd()) {
                                     <div>
-                                        <p-button
+                                        <button
+                                            pButton
                                             type="button"
-                                            [label]="'‘' + lastQuery().trim() + '’ sözlüğe ekle'"
-                                            icon="pi pi-plus"
                                             [text]="true"
                                             size="small"
-                                            styleClass="p-0"
-                                            [loading]="adding()"
+                                            class="p-0"
+                                            [disabled]="adding()"
                                             data-testid="clinical-term-add"
-                                            (onClick)="addLastQuery()"
-                                        />
+                                            (click)="addLastQuery()"
+                                        ><i class="p-button-icon" [class]="adding() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>{{ '‘' + lastQuery().trim() + '’ sözlüğe ekle' }}</button>
                                     </div>
                                 }
                             }
@@ -83,7 +82,7 @@ const PLACEHOLDERS: Record<ClinicalTermKind, string> = {
                     <div class="flex flex-wrap items-center gap-x-2" role="status" data-testid="clinical-term-inactive">
                         <small>‘{{ t.name }}’ sözlükte pasif olarak kayıtlı.</small>
                         @if (canActivate()) {
-                            <p-button type="button" label="Etkinleştir" [text]="true" size="small" styleClass="p-0" [loading]="activating()" data-testid="clinical-term-activate" (onClick)="activate()" />
+                            <button pButton type="button" [text]="true" size="small" class="p-0" [disabled]="activating()" data-testid="clinical-term-activate" (click)="activate()">@if (activating()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Etkinleştir</button>
                         } @else {
                             <small class="text-muted-color">Etkinleştirmek için yöneticiye başvurun.</small>
                         }
