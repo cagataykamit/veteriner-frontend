@@ -38,15 +38,16 @@ export function newCartLine(product: SaleProductVm, key: string): CartLine {
 
 /**
  * Okuyucu/Enter ile ürün seçimi: barkod ya da SKU tam eşleşmesi, yoksa tek sonuç; belirsizse `null` (liste gösterilir).
+ * Kodlar dilden bağımsız karşılaştırılır (`tr-TR` kuralı "I"yı "ı" yapar; backend araması da harmanlamayla "I" = "i" eşler).
  */
 export function pickScannedProduct(term: string, results: readonly SaleProductVm[]): SaleProductVm | null {
-    const t = term.trim().toLocaleLowerCase('tr-TR');
+    const t = term.trim().toLowerCase();
 
     if (!t) {
         return null;
     }
 
-    const exact = results.filter((p) => p.barcode.toLocaleLowerCase('tr-TR') === t || p.sku.toLocaleLowerCase('tr-TR') === t);
+    const exact = results.filter((p) => p.barcode.toLowerCase() === t || p.sku.toLowerCase() === t);
 
     if (exact.length === 1) {
         return exact[0];

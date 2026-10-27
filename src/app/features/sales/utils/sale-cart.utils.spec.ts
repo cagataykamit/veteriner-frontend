@@ -85,6 +85,14 @@ describe('sale-cart.utils', () => {
             expect(pickScannedProduct('a-1', [a, b])).toBe(a);
         });
 
+        it('kodu dilden bağımsız karşılaştırır: "I" ile "i" eşleşir (tr-TR kuralı "ı" yapardı)', () => {
+            const i1 = product({ id: 'i1', barcode: 'MIX-01', sku: 'VIT-I' });
+            const other = product({ id: 'o', barcode: '333', sku: 'C-1' });
+
+            expect(pickScannedProduct('mix-01', [i1, other])).toBe(i1);
+            expect(pickScannedProduct('vit-i', [i1, other])).toBe(i1);
+        });
+
         it('tam eşleşme yoksa tek sonucu seçer; birden çok belirsiz sonuçta null', () => {
             expect(pickScannedProduct('pire', [a])).toBe(a);
             expect(pickScannedProduct('pire', [a, b])).toBeNull();
