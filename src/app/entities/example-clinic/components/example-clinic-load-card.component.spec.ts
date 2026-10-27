@@ -3,8 +3,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { of, throwError } from 'rxjs';
-import type { ExampleClinicDataCountsDto, ExampleClinicLoadSummaryDto, ExampleClinicStatusDto } from '@/app/features/example-clinic/models/example-clinic-api.model';
-import { EXAMPLE_CLINIC_ALREADY_LOADED_CODE, EXAMPLE_CLINIC_NOT_LOADED_CODE, ExampleClinicError, ExampleClinicService } from '@/app/features/example-clinic/services/example-clinic.service';
+import type { ExampleClinicDataCountsDto, ExampleClinicLoadSummaryDto, ExampleClinicStatusDto } from '@/app/entities/example-clinic/models/example-clinic-api.model';
+import { EXAMPLE_CLINIC_ALREADY_LOADED_CODE, EXAMPLE_CLINIC_NOT_LOADED_CODE, ExampleClinicError, ExampleClinicService } from '@/app/entities/example-clinic/services/example-clinic.service';
 import { ExampleClinicLoadCardComponent } from './example-clinic-load-card.component';
 
 const SUMMARY: ExampleClinicLoadSummaryDto = {

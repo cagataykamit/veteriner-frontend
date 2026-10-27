@@ -14,7 +14,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { SubscriptionDiscountCardComponent } from '@/app/features/sales-partners/components/subscription-discount-card.component';
-import { ExampleClinicLoadCardComponent } from '@/app/features/example-clinic/components/example-clinic-load-card.component';
+import { ExampleClinicLoadCardComponent } from '@/app/entities/example-clinic/components/example-clinic-load-card.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 import type {

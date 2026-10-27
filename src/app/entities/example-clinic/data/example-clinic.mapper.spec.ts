@@ -1,4 +1,4 @@
-import type { ExampleClinicDataCountsDto, ExampleClinicLoadSummaryDto } from '@/app/features/example-clinic/models/example-clinic-api.model';
+import type { ExampleClinicDataCountsDto, ExampleClinicLoadSummaryDto } from '@/app/entities/example-clinic/models/example-clinic-api.model';
 import { exampleClinicDeactivatedProducts, exampleClinicOtherRecords, exampleClinicSummaryShortText, mapExampleClinicSummaryToRows } from './example-clinic.mapper';
 
 const SUMMARY: ExampleClinicLoadSummaryDto = {

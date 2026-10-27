@@ -1,6 +1,6 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
-import { mapExampleClinicSummaryToRows } from '@/app/features/example-clinic/data/example-clinic.mapper';
-import type { ExampleClinicCounts } from '@/app/features/example-clinic/models/example-clinic-api.model';
+import { mapExampleClinicSummaryToRows } from '@/app/entities/example-clinic/data/example-clinic.mapper';
+import type { ExampleClinicCounts } from '@/app/entities/example-clinic/models/example-clinic-api.model';
 
 /**
  * "Yüklenen örnek içerik" sayaçları (ADR-002): kayıt tamamlandı ekranı, abonelik kartı ve temizlik onayı aynı bileşeni kullanır.

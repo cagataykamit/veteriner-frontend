@@ -5,7 +5,7 @@ import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { resolveTenantIdFromJwt } from '@/app/core/auth/jwt-tenant.utils';
-import type { ExampleClinicDataCountsDto, ExampleClinicLoadSummaryDto, ExampleClinicStatusDto } from '@/app/features/example-clinic/models/example-clinic-api.model';
+import type { ExampleClinicDataCountsDto, ExampleClinicLoadSummaryDto, ExampleClinicStatusDto } from '@/app/entities/example-clinic/models/example-clinic-api.model';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export const EXAMPLE_CLINIC_ALREADY_LOADED_CODE = 'Tenants.ExampleClinicAlreadyLoaded' as const;

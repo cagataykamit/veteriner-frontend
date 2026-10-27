@@ -4,10 +4,10 @@ import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TODAY_ROUTE } from '@/app/core/routing/panel-navigation';
-import { ExampleClinicSummaryComponent } from '@/app/features/example-clinic/components/example-clinic-summary.component';
-import { exampleClinicDeactivatedProducts, exampleClinicOtherRecords, exampleClinicSummaryShortText } from '@/app/features/example-clinic/data/example-clinic.mapper';
-import type { ExampleClinicDataCountsDto, ExampleClinicLoadSummaryDto, ExampleClinicStatusDto } from '@/app/features/example-clinic/models/example-clinic-api.model';
-import { ExampleClinicError, ExampleClinicService } from '@/app/features/example-clinic/services/example-clinic.service';
+import { ExampleClinicSummaryComponent } from '@/app/entities/example-clinic/components/example-clinic-summary.component';
+import { exampleClinicDeactivatedProducts, exampleClinicOtherRecords, exampleClinicSummaryShortText } from '@/app/entities/example-clinic/data/example-clinic.mapper';
+import type { ExampleClinicDataCountsDto, ExampleClinicLoadSummaryDto, ExampleClinicStatusDto } from '@/app/entities/example-clinic/models/example-clinic-api.model';
+import { ExampleClinicError, ExampleClinicService } from '@/app/entities/example-clinic/services/example-clinic.service';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
 /**

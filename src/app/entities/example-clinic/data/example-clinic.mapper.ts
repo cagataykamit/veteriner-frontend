@@ -1,5 +1,5 @@
-import type { ExampleClinicCounts, ExampleClinicDataCountsDto } from '@/app/features/example-clinic/models/example-clinic-api.model';
-import type { ExampleClinicSummaryRowVm } from '@/app/features/example-clinic/models/example-clinic-vm.model';
+import type { ExampleClinicCounts, ExampleClinicDataCountsDto } from '@/app/entities/example-clinic/models/example-clinic-api.model';
+import type { ExampleClinicSummaryRowVm } from '@/app/entities/example-clinic/models/example-clinic-vm.model';
 
 type SummaryCountKey = keyof ExampleClinicCounts;
 

@@ -1,4 +1,4 @@
-import type { ExampleClinicLoadSummaryDto } from '@/app/features/example-clinic/models/example-clinic-api.model';
+import type { ExampleClinicLoadSummaryDto } from '@/app/entities/example-clinic/models/example-clinic-api.model';
 import type { LegalDocumentVersionDto } from '@/app/features/legal-acceptance/models/legal-acceptance.model';
 
 export interface PublicOwnerSignupRequestDto {
