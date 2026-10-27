@@ -8,7 +8,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
     selector: 'app-read-only-banner',
     standalone: true,
     imports: [CommonModule, RouterLink, ButtonModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (ctx.accessState(); as a) {
             @if (a.isReadOnly) {

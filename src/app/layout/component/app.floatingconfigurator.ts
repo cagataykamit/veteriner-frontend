@@ -6,7 +6,7 @@ import { LayoutService } from '@/app/layout/service/layout.service';
 @Component({
     selector: 'app-floating-configurator',
     imports: [CommonModule, ButtonModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div [ngClass]="float() ? 'fixed top-8 right-8' : ''">
             <button pButton type="button" iconOnly (click)="toggleDarkMode()" [rounded]="true" severity="secondary" [class]="toggleClass()" [attr.aria-label]="themeToggleLabel()"><i class="p-button-icon" [class]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"></i></button>
