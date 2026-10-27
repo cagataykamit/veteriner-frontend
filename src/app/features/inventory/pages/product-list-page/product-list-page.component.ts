@@ -9,10 +9,9 @@ import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
-import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
-import type { TableLazyLoadEvent } from 'primeng/table';
+import { ListPageState } from '@/app/shared/list/list-page-state';
 import type { ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -113,7 +112,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                 [totalRecords]="totalItems()"
                                 [lazy]="true"
                                 [first]="first()"
-                                (onLazyLoad)="onTableLazyLoad($event)"
+                                (onLazyLoad)="list.onTableLazyLoad($event)"
                                 [tableStyle]="{ 'min-width': '62rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
@@ -224,7 +223,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                                 [rowsPerPageOptions]="rowsPerPageOptions"
-                                (onPageChange)="onMobilePageChange($event)"
+                                (onPageChange)="list.onMobilePageChange($event)"
                             />
                         </div>
                     }
@@ -251,15 +250,44 @@ export class ProductListPageComponent implements OnInit {
     readonly rowMutatingId = signal<string | null>(null);
     readonly listActionError = signal<string | null>(null);
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
+    readonly list = new ListPageState<ProductListItemVm>({
+        fetch: (page, pageSize) =>
+            this.productService
+                .getProducts({
+                    page,
+                    pageSize,
+                    search: this.activeSearch().trim() || undefined,
+                    isActive: this.parseIsActive(this.activeIsActiveFilter())
+                }),
+        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}|${this.activeIsActiveFilter()}`,
+        persist: {
+            key: PRODUCTS_LIST_STATE_KEY,
+            save: (): Omit<ProductsListState, 'page' | 'pageSize'> => ({
+                search: this.searchInput.trim(),
+                isActiveFilter: this.activeIsActiveFilter()
+            }),
+            restore: (state) => {
+                const parsed = state as Partial<ProductsListState>;
 
-    readonly rawItems = signal<ProductListItemVm[]>([]);
-    readonly totalItems = signal(0);
-    readonly rowsPerPageOptions = [10, 20, 25, 50];
-    readonly pageSize = signal(10);
-    readonly first = signal(0);
-    readonly currentPage = signal(1);
+                this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
+                this.activeSearch.set(this.searchInput.trim());
+                const af = typeof parsed.isActiveFilter === 'string' ? parsed.isActiveFilter : '';
+
+                this.isActiveFilter = af === 'true' || af === 'false' ? af : '';
+                this.activeIsActiveFilter.set(this.isActiveFilter);
+            }
+        }
+    });
+
+    readonly loading = this.list.loading;
+    readonly error = this.list.error;
+
+    readonly rawItems = this.list.items;
+    readonly totalItems = this.list.totalItems;
+    readonly rowsPerPageOptions = this.list.rowsPerPageOptions;
+    readonly pageSize = this.list.pageSize;
+    readonly first = this.list.first;
+    readonly currentPage = this.list.currentPage;
 
     readonly activeSearch = signal('');
     readonly activeIsActiveFilter = signal('');
@@ -275,28 +303,20 @@ export class ProductListPageComponent implements OnInit {
         { label: 'Pasif', value: 'false' }
     ];
 
-    private suppressNextLazy = false;
-    private lastLoadKey = '';
-
     ngOnInit(): void {
-        const restored = this.restoreStateFromSessionStorage();
+        const restored = this.list.restore();
 
         if (!restored) {
-            this.currentPage.set(1);
-            this.first.set(0);
+            this.list.goToFirstPage();
         }
 
-        this.suppressNextLazy = true;
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeIsActiveFilter());
+        this.list.startInitialLoad();
     }
 
     applyFilters(): void {
         this.activeSearch.set(this.searchInput.trim());
         this.activeIsActiveFilter.set(String(this.isActiveFilter ?? '').trim());
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.persistStateToSessionStorage(1, this.pageSize());
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeIsActiveFilter());
+        this.list.loadFirstPage();
     }
 
     resetFilters(): void {
@@ -304,62 +324,11 @@ export class ProductListPageComponent implements OnInit {
         this.isActiveFilter = '';
         this.activeSearch.set('');
         this.activeIsActiveFilter.set('');
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.clearStateFromSessionStorage();
-        this.loadFromServer(1, this.pageSize(), '', '');
+        this.list.resetToFirstPage();
     }
 
     reload(): void {
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeIsActiveFilter(), true);
-    }
-
-    onTableLazyLoad(event: TableLazyLoadEvent): void {
-        if (this.suppressNextLazy) {
-            this.suppressNextLazy = false;
-
-            return;
-        }
-
-        const rows = event.rows ?? this.pageSize();
-        const eventFirst = event.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows, this.activeSearch(), this.activeIsActiveFilter());
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeIsActiveFilter());
-    }
-
-    onMobilePageChange(state: PaginatorState): void {
-        const rows = state.rows ?? this.pageSize();
-        const eventFirst = state.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        this.suppressNextLazy = true;
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows, this.activeSearch(), this.activeIsActiveFilter());
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeIsActiveFilter());
+        this.list.reload();
     }
 
     isSearchActive(): boolean {
@@ -446,88 +415,4 @@ export class ProductListPageComponent implements OnInit {
         return undefined;
     }
 
-    private loadFromServer(page: number, pageSize: number, search: string, isActiveFilterStr: string, force = false): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${isActiveFilterStr}`;
-
-        if (!force && key === this.lastLoadKey) {
-            return;
-        }
-
-        this.lastLoadKey = key;
-        this.loading.set(true);
-        this.error.set(null);
-        this.productService
-            .getProducts({
-                page,
-                pageSize,
-                search: search.trim() || undefined,
-                isActive: this.parseIsActive(isActiveFilterStr)
-            })
-            .subscribe({
-                next: (r) => {
-                    this.rawItems.set(r.items);
-                    this.totalItems.set(r.totalItems);
-                    this.pageSize.set(r.pageSize);
-                    this.currentPage.set(r.page);
-                    this.first.set((r.page - 1) * r.pageSize);
-                    this.persistStateToSessionStorage(r.page, r.pageSize);
-                    this.loading.set(false);
-                },
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
-                    this.loading.set(false);
-                }
-            });
-    }
-
-    private restoreStateFromSessionStorage(): boolean {
-        const raw = sessionStorage.getItem(PRODUCTS_LIST_STATE_KEY);
-
-        if (!raw) {
-            return false;
-        }
-
-        try {
-            const parsed = JSON.parse(raw) as Partial<ProductsListState>;
-            const page = Number(parsed.page);
-            const pageSize = Number(parsed.pageSize);
-
-            if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
-                sessionStorage.removeItem(PRODUCTS_LIST_STATE_KEY);
-
-                return false;
-            }
-
-            this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
-            this.activeSearch.set(this.searchInput.trim());
-            const af = typeof parsed.isActiveFilter === 'string' ? parsed.isActiveFilter : '';
-
-            this.isActiveFilter = af === 'true' || af === 'false' ? af : '';
-            this.activeIsActiveFilter.set(this.isActiveFilter);
-            this.pageSize.set(pageSize);
-            this.currentPage.set(page);
-            this.first.set((page - 1) * pageSize);
-
-            return true;
-        } catch {
-            sessionStorage.removeItem(PRODUCTS_LIST_STATE_KEY);
-
-            return false;
-        }
-    }
-
-    private persistStateToSessionStorage(page: number, pageSize: number): void {
-        const state: ProductsListState = {
-            search: this.searchInput.trim(),
-            isActiveFilter: this.activeIsActiveFilter(),
-            page,
-            pageSize
-        };
-
-        sessionStorage.setItem(PRODUCTS_LIST_STATE_KEY, JSON.stringify(state));
-    }
-
-    private clearStateFromSessionStorage(): void {
-        sessionStorage.removeItem(PRODUCTS_LIST_STATE_KEY);
-    }
 }

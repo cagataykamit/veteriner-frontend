@@ -10,10 +10,9 @@ import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
-import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
-import type { TableLazyLoadEvent } from 'primeng/table';
+import { ListPageState } from '@/app/shared/list/list-page-state';
 import { ToastModule } from 'primeng/toast';
 import type { StockMovementVm } from '@/app/features/inventory/models/stock-movement-vm.model';
 import { StockMovementCreateDialogComponent } from '@/app/features/inventory/components/stock-movement-create-dialog/stock-movement-create-dialog.component';
@@ -137,7 +136,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                 [totalRecords]="totalItems()"
                                 [lazy]="true"
                                 [first]="first()"
-                                (onLazyLoad)="onTableLazyLoad($event)"
+                                (onLazyLoad)="list.onTableLazyLoad($event)"
                                 [tableStyle]="{ 'min-width': '72rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
@@ -212,7 +211,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                                 [rowsPerPageOptions]="rowsPerPageOptions"
-                                (onPageChange)="onMobilePageChange($event)"
+                                (onPageChange)="list.onMobilePageChange($event)"
                             />
                         </div>
                     }
@@ -236,17 +235,52 @@ export class StockMovementsPageComponent implements OnInit {
     readonly canExportStockMovements = computed(() => this.auth.hasOperationClaim(STOCK_MOVEMENTS_READ_CLAIM));
     readonly createDialogOpen = signal(false);
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
+    readonly list = new ListPageState<StockMovementVm>({
+        fetch: (page, pageSize) =>
+            this.stockMovementService
+                .list({
+                    page,
+                    pageSize,
+                    search: this.activeSearch().trim() || undefined,
+                    movementType: this.activeMovementType().trim() || undefined,
+                    dateFromUtc: this.activeDateFrom().trim() || undefined,
+                    dateToUtc: this.activeDateTo().trim() || undefined
+                }),
+        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}|${this.activeMovementType()}|${this.activeDateFrom()}|${this.activeDateTo()}`,
+        persist: {
+            key: LIST_STATE_KEY,
+            save: (): Omit<StockMovementsListState, 'page' | 'pageSize'> => ({
+                search: this.searchInput.trim(),
+                movementType: this.activeMovementType(),
+                dateFrom: this.dateFromInput.trim(),
+                dateTo: this.dateToInput.trim()
+            }),
+            restore: (state) => {
+                const parsed = state as Partial<StockMovementsListState>;
+
+                this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
+                this.activeSearch.set(this.searchInput.trim());
+                this.movementTypeFilter = typeof parsed.movementType === 'string' && ['', 'Initial', 'In', 'Out', 'Adjustment', 'Reversal'].includes(parsed.movementType) ? parsed.movementType : '';
+                this.activeMovementType.set(this.movementTypeFilter);
+                this.dateFromInput = typeof parsed.dateFrom === 'string' ? parsed.dateFrom : '';
+                this.dateToInput = typeof parsed.dateTo === 'string' ? parsed.dateTo : '';
+                this.activeDateFrom.set(this.dateFromInput.trim());
+                this.activeDateTo.set(this.dateToInput.trim());
+            }
+        }
+    });
+
+    readonly loading = this.list.loading;
+    readonly error = this.list.error;
     readonly exporting = signal(false);
     readonly exportError = signal<string | null>(null);
 
-    readonly rawItems = signal<StockMovementVm[]>([]);
-    readonly totalItems = signal(0);
-    readonly rowsPerPageOptions = [10, 20, 25, 50];
-    readonly pageSize = signal(10);
-    readonly first = signal(0);
-    readonly currentPage = signal(1);
+    readonly rawItems = this.list.items;
+    readonly totalItems = this.list.totalItems;
+    readonly rowsPerPageOptions = this.list.rowsPerPageOptions;
+    readonly pageSize = this.list.pageSize;
+    readonly first = this.list.first;
+    readonly currentPage = this.list.currentPage;
 
     readonly activeSearch = signal('');
     readonly activeMovementType = signal('');
@@ -268,19 +302,14 @@ export class StockMovementsPageComponent implements OnInit {
 
     readonly displayedRows = computed(() => this.rawItems());
 
-    private suppressNextLazy = false;
-    private lastLoadKey = '';
-
     ngOnInit(): void {
-        const restored = this.restoreStateFromSessionStorage();
+        const restored = this.list.restore();
 
         if (!restored) {
-            this.currentPage.set(1);
-            this.first.set(0);
+            this.list.goToFirstPage();
         }
 
-        this.suppressNextLazy = true;
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeMovementType(), this.activeDateFrom(), this.activeDateTo());
+        this.list.startInitialLoad();
     }
 
     applyFilters(): void {
@@ -301,10 +330,7 @@ export class StockMovementsPageComponent implements OnInit {
         this.activeMovementType.set(String(this.movementTypeFilter ?? '').trim());
         this.activeDateFrom.set(from);
         this.activeDateTo.set(to);
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.persistStateToSessionStorage(1, this.pageSize());
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeMovementType(), this.activeDateFrom(), this.activeDateTo());
+        this.list.loadFirstPage();
     }
 
     resetFilters(): void {
@@ -317,63 +343,12 @@ export class StockMovementsPageComponent implements OnInit {
         this.activeMovementType.set('');
         this.activeDateFrom.set('');
         this.activeDateTo.set('');
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.clearStateFromSessionStorage();
-        this.loadFromServer(1, this.pageSize(), '', '', '', '');
+        this.list.resetToFirstPage();
     }
 
     reload(): void {
         this.exportError.set(null);
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeMovementType(), this.activeDateFrom(), this.activeDateTo(), true);
-    }
-
-    onTableLazyLoad(event: TableLazyLoadEvent): void {
-        if (this.suppressNextLazy) {
-            this.suppressNextLazy = false;
-
-            return;
-        }
-
-        const rows = event.rows ?? this.pageSize();
-        const eventFirst = event.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows, this.activeSearch(), this.activeMovementType(), this.activeDateFrom(), this.activeDateTo());
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeMovementType(), this.activeDateFrom(), this.activeDateTo());
-    }
-
-    onMobilePageChange(state: PaginatorState): void {
-        const rows = state.rows ?? this.pageSize();
-        const eventFirst = state.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        this.suppressNextLazy = true;
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows, this.activeSearch(), this.activeMovementType(), this.activeDateFrom(), this.activeDateTo());
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeMovementType(), this.activeDateFrom(), this.activeDateTo());
+        this.list.reload();
     }
 
     isSearchActive(): boolean {
@@ -390,97 +365,6 @@ export class StockMovementsPageComponent implements OnInit {
 
     isToActive(): boolean {
         return !!this.activeDateTo().trim();
-    }
-
-    private loadFromServer(page: number, pageSize: number, search: string, movementType: string, dateFrom: string, dateTo: string, force = false): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${movementType}|${dateFrom}|${dateTo}`;
-
-        if (!force && key === this.lastLoadKey) {
-            return;
-        }
-
-        this.lastLoadKey = key;
-        this.loading.set(true);
-        this.error.set(null);
-        this.stockMovementService
-            .list({
-                page,
-                pageSize,
-                search: search.trim() || undefined,
-                movementType: movementType.trim() || undefined,
-                dateFromUtc: dateFrom.trim() || undefined,
-                dateToUtc: dateTo.trim() || undefined
-            })
-            .subscribe({
-                next: (r) => {
-                    this.rawItems.set(r.items);
-                    this.totalItems.set(r.totalItems);
-                    this.pageSize.set(r.pageSize);
-                    this.currentPage.set(r.page);
-                    this.first.set((r.page - 1) * r.pageSize);
-                    this.persistStateToSessionStorage(r.page, r.pageSize);
-                    this.loading.set(false);
-                },
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
-                    this.loading.set(false);
-                }
-            });
-    }
-
-    private restoreStateFromSessionStorage(): boolean {
-        const raw = sessionStorage.getItem(LIST_STATE_KEY);
-
-        if (!raw) {
-            return false;
-        }
-
-        try {
-            const parsed = JSON.parse(raw) as Partial<StockMovementsListState>;
-            const page = Number(parsed.page);
-            const pageSize = Number(parsed.pageSize);
-
-            if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
-                sessionStorage.removeItem(LIST_STATE_KEY);
-
-                return false;
-            }
-
-            this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
-            this.activeSearch.set(this.searchInput.trim());
-            this.movementTypeFilter = typeof parsed.movementType === 'string' && ['', 'Initial', 'In', 'Out', 'Adjustment', 'Reversal'].includes(parsed.movementType) ? parsed.movementType : '';
-            this.activeMovementType.set(this.movementTypeFilter);
-            this.dateFromInput = typeof parsed.dateFrom === 'string' ? parsed.dateFrom : '';
-            this.dateToInput = typeof parsed.dateTo === 'string' ? parsed.dateTo : '';
-            this.activeDateFrom.set(this.dateFromInput.trim());
-            this.activeDateTo.set(this.dateToInput.trim());
-            this.pageSize.set(pageSize);
-            this.currentPage.set(page);
-            this.first.set((page - 1) * pageSize);
-
-            return true;
-        } catch {
-            sessionStorage.removeItem(LIST_STATE_KEY);
-
-            return false;
-        }
-    }
-
-    private persistStateToSessionStorage(page: number, pageSize: number): void {
-        const state: StockMovementsListState = {
-            search: this.searchInput.trim(),
-            movementType: this.activeMovementType(),
-            dateFrom: this.dateFromInput.trim(),
-            dateTo: this.dateToInput.trim(),
-            page,
-            pageSize
-        };
-
-        sessionStorage.setItem(LIST_STATE_KEY, JSON.stringify(state));
-    }
-
-    private clearStateFromSessionStorage(): void {
-        sessionStorage.removeItem(LIST_STATE_KEY);
     }
 
     onStockMovementCreated(): void {
