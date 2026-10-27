@@ -133,15 +133,13 @@ interface ReturnBannerVm {
                     }
                     @if (banner.showRefreshCta) {
                         <div class="mt-3">
-                            <p-button
+                            <button
+                                pButton
                                 type="button"
-                                label="Durumu yenile"
-                                icon="pi pi-refresh"
                                 severity="secondary"
-                                [loading]="subscriptionRefreshLoading()"
                                 [disabled]="subscriptionRefreshLoading() || postCheckoutSyncing()"
-                                (onClick)="refreshSubscriptionSnapshot()"
-                            />
+                                (click)="refreshSubscriptionSnapshot()"
+                            ><i class="p-button-icon" [class]="subscriptionRefreshLoading() ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"></i>Durumu yenile</button>
                         </div>
                     }
                 </div>
@@ -287,14 +285,12 @@ interface ReturnBannerVm {
                                         }
                                         @if (canManageSubscriptionOperations(s) && shouldShowPlanAction(plan, s)) {
                                             <div class="mt-3">
-                                                <p-button
+                                                <button
+                                                    pButton
                                                     type="button"
-                                                    [label]="planActionLabel(plan, s)"
-                                                    icon="pi pi-arrow-right"
-                                                    [loading]="planActionLoadingCode() === plan.code || schedulingDowngradeCode() === plan.code"
-                                                    [disabled]="planActionLoadingCode() !== null || schedulingDowngradeCode() !== null || finalizing() || postCheckoutSyncing()"
-                                                    (onClick)="onPlanAction(plan)"
-                                                />
+                                                    [disabled]="planActionLoadingCode() !== null || schedulingDowngradeCode() !== null || finalizing() || postCheckoutSyncing() || planActionLoadingCode() === plan.code || schedulingDowngradeCode() === plan.code"
+                                                    (click)="onPlanAction(plan)"
+                                                ><i class="p-button-icon" [class]="planActionLoadingCode() === plan.code || schedulingDowngradeCode() === plan.code ? 'pi pi-spin pi-spinner' : 'pi pi-arrow-right'"></i>{{ planActionLabel(plan, s) }}</button>
                                             </div>
                                         }
                                     </div>
@@ -362,15 +358,13 @@ interface ReturnBannerVm {
                             }
                             @if (canManageSubscriptionOperations(s)) {
                                 <div class="flex items-center gap-2">
-                                    <p-button
+                                    <button
+                                        pButton
                                         type="button"
-                                        [label]="pendingPlanChangeCancelLabel(s)"
-                                        icon="pi pi-times"
                                         severity="secondary"
-                                        [loading]="pendingCancelLoading()"
                                         [disabled]="pendingCancelLoading() || planActionLoadingCode() !== null || finalizing() || postCheckoutSyncing()"
-                                        (onClick)="cancelPendingPlanChange()"
-                                    />
+                                        (click)="cancelPendingPlanChange()"
+                                    ><i class="p-button-icon" [class]="pendingCancelLoading() ? 'pi pi-spin pi-spinner' : 'pi pi-times'"></i>{{ pendingPlanChangeCancelLabel(s) }}</button>
                                 </div>
                                 @if (pendingCancelError()) {
                                     <p class="text-red-500 mt-3 mb-0 text-sm">{{ pendingCancelError() }}</p>
@@ -445,33 +439,28 @@ interface ReturnBannerVm {
                                 }
                                 <div class="flex flex-wrap gap-2">
                                     @if (session.checkoutUrl) {
-                                        <p-button
+                                        <button
+                                            pButton
                                             type="button"
-                                            [label]="checkoutPaymentButtonLabel()"
-                                            icon="pi pi-external-link"
-                                            (onClick)="goToHostedCheckout(session.checkoutUrl)"
+                                            (click)="goToHostedCheckout(session.checkoutUrl)"
                                             [disabled]="planActionLoadingCode() !== null || schedulingDowngradeCode() !== null || finalizing() || postCheckoutSyncing()"
-                                        />
+                                        ><i class="p-button-icon pi pi-external-link"></i>{{ checkoutPaymentButtonLabel() }}</button>
                                     }
-                                    <p-button
+                                    <button
+                                        pButton
                                         type="button"
-                                        label="Durumu yenile"
-                                        icon="pi pi-refresh"
                                         severity="secondary"
-                                        [loading]="checkoutLoading()"
-                                        [disabled]="planActionLoadingCode() !== null || schedulingDowngradeCode() !== null || finalizing() || postCheckoutSyncing()"
-                                        (onClick)="refreshCheckout()"
-                                    />
+                                        [disabled]="planActionLoadingCode() !== null || schedulingDowngradeCode() !== null || finalizing() || postCheckoutSyncing() || checkoutLoading()"
+                                        (click)="refreshCheckout()"
+                                    ><i class="p-button-icon" [class]="checkoutLoading() ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"></i>Durumu yenile</button>
                                     @if (shouldOfferManualCheckoutFinalize(session)) {
-                                        <p-button
+                                        <button
+                                            pButton
                                             type="button"
-                                            label="Ödemeyi tamamla"
-                                            icon="pi pi-check"
                                             severity="secondary"
-                                            [loading]="finalizing()"
                                             [disabled]="!session.canContinue || finalizing() || planActionLoadingCode() !== null || schedulingDowngradeCode() !== null || postCheckoutSyncing()"
-                                            (onClick)="finalizeCheckout()"
-                                        />
+                                            (click)="finalizeCheckout()"
+                                        ><i class="p-button-icon" [class]="finalizing() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Ödemeyi tamamla</button>
                                     }
                                 </div>
                                 @if (!session.canContinue) {
@@ -481,14 +470,12 @@ interface ReturnBannerVm {
                                 <p class="text-sm text-muted-color m-0 mb-0">Henüz başlatılmış bir ödeme işlemi bulunmuyor.</p>
                                 @if (isExpiredReadOnlySubscription(s)) {
                                     <div class="mt-3">
-                                        <p-button
+                                        <button
+                                            pButton
                                             type="button"
-                                            label="Ödeme başlat"
-                                            icon="pi pi-credit-card"
-                                            [loading]="planActionLoadingCode() === s.planCode || checkoutLoading()"
-                                            [disabled]="planActionLoadingCode() !== null || schedulingDowngradeCode() !== null || finalizing() || postCheckoutSyncing() || !s.planCode"
-                                            (onClick)="startPaymentForCurrentPlan()"
-                                        />
+                                            [disabled]="planActionLoadingCode() !== null || schedulingDowngradeCode() !== null || finalizing() || postCheckoutSyncing() || !s.planCode || planActionLoadingCode() === s.planCode || checkoutLoading()"
+                                            (click)="startPaymentForCurrentPlan()"
+                                        ><i class="p-button-icon" [class]="planActionLoadingCode() === s.planCode || checkoutLoading() ? 'pi pi-spin pi-spinner' : 'pi pi-credit-card'"></i>Ödeme başlat</button>
                                     </div>
                                 }
                             }
