@@ -198,8 +198,8 @@ type DialogTarget =
                     <small class="text-muted-color">Listede ve yatış formunda küçükten büyüğe sıralanır.</small>
                 </div>
                 <div class="flex flex-wrap justify-end gap-2 pt-2">
-                    <p-button type="button" [label]="copy.buttonCancel" severity="secondary" (onClick)="dialogVisible.set(false)" [disabled]="submitting()" />
-                    <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="dialogForm.invalid || submitting()" />
+                    <button pButton type="button" severity="secondary" (click)="dialogVisible.set(false)" [disabled]="submitting()">{{ copy.buttonCancel }}</button>
+                    <button pButton type="submit" [disabled]="dialogForm.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                 </div>
             </form>
         </p-dialog>
