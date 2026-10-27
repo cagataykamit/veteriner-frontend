@@ -13,7 +13,7 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
     selector: 'app-public-about-page',
     standalone: true,
     imports: [RouterLink, PublicPageHeaderComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-public-page-header eyebrow="Hakkımızda" title="Küçük veteriner klinikleri için, klinikle birlikte" />
 

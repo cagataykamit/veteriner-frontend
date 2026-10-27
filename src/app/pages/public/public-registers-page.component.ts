@@ -18,7 +18,7 @@ import { PublicScreenshotComponent } from './components/public-screenshot.compon
     selector: 'app-public-registers-page',
     standalone: true,
     imports: [PublicPageHeaderComponent, PublicScreenshotComponent, PublicCtaComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-public-page-header
             eyebrow="Defterler ve KVKK"

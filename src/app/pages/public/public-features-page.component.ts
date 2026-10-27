@@ -12,7 +12,7 @@ import { PublicScreenshotComponent } from './components/public-screenshot.compon
     selector: 'app-public-features-page',
     standalone: true,
     imports: [PublicPageHeaderComponent, PublicScreenshotComponent, PublicCtaComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-public-page-header
             eyebrow="Özellikler"

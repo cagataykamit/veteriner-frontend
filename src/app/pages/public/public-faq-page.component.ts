@@ -12,7 +12,7 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
     selector: 'app-public-faq-page',
     standalone: true,
     imports: [PublicPageHeaderComponent, PublicFaqListComponent, PublicCtaComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-public-page-header eyebrow="SSS" title="Sık sorulan sorular" lead="Fiyat, deneme, güvenlik, geçiş ve destek hakkında kısa yanıtlar." />
 

@@ -16,7 +16,7 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
     selector: 'app-public-contact-page',
     standalone: true,
     imports: [RouterLink, PublicPageHeaderComponent, PublicDemoRequestFormComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-public-page-header
             eyebrow="İletişim"

@@ -8,7 +8,7 @@ import { PUBLIC_SCREENSHOTS, publicScreenshotSrc, type PublicScreenshotKey } fro
 @Component({
     selector: 'app-public-screenshot',
     standalone: true,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <figure class="public-shot m-0">
             <img

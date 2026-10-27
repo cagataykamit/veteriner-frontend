@@ -10,7 +10,7 @@ import { PUBLIC_FOOTER_PRODUCT_LINKS, PUBLIC_FOOTER_SUPPORT_LINKS } from '@/app/
     selector: 'app-public-footer',
     standalone: true,
     imports: [RouterLink],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <footer class="public-footer mt-16 md:mt-24">
             <div class="mx-auto max-w-6xl px-4 pb-8 pt-12 md:px-6 md:pt-14">

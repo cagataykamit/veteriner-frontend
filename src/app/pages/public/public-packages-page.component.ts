@@ -28,7 +28,7 @@ const PRICING_FAQ_JSON_LD_ID = 'packages-faq';
     selector: 'app-public-packages-page',
     standalone: true,
     imports: [PublicPageHeaderComponent, PublicPlanCardsComponent, PublicPlanComparisonComponent, PublicFaqListComponent, PublicCtaComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-public-page-header
             eyebrow="Paketler"

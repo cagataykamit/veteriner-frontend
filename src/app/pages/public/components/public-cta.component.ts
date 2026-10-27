@@ -7,7 +7,7 @@ import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.util
     selector: 'app-public-cta',
     standalone: true,
     imports: [RouterLink],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="mx-auto max-w-6xl px-4 md:px-6" [attr.aria-labelledby]="headingId()">
             <div class="public-cta-card px-6 py-10 text-center md:px-12 md:py-14">

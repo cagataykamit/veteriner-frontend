@@ -5,7 +5,7 @@ import { LEGAL_DRAFT_NOTICE } from '@/app/entities/legal-document/utils/legal-do
 @Component({
     selector: 'app-legal-draft-notice',
     standalone: true,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (notice) {
             <div

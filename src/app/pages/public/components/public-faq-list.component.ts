@@ -5,7 +5,7 @@ import type { PublicFaqDef } from '@/app/features/public/utils/public-faq-conten
 @Component({
     selector: 'app-public-faq-list',
     standalone: true,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="flex w-full flex-col gap-3">
             @for (faq of items(); track faq.question; let i = $index) {

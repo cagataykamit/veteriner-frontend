@@ -30,7 +30,7 @@ interface PlanCardVm {
     selector: 'app-public-plan-cards',
     standalone: true,
     imports: [RouterLink],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (periodToggle()) {
             <div class="mb-6 flex flex-wrap items-center justify-center gap-3">

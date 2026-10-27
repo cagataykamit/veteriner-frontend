@@ -4,7 +4,7 @@ import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 @Component({
     selector: 'app-public-page-header',
     standalone: true,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="public-soft-surface border-b border-[var(--public-border)]">
             <div class="mx-auto max-w-6xl px-4 py-10 md:px-6 md:py-14">

@@ -17,7 +17,7 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
     selector: 'app-public-migration-page',
     standalone: true,
     imports: [PublicPageHeaderComponent, PublicFaqListComponent, PublicCtaComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-public-page-header
             eyebrow="Geçiş"

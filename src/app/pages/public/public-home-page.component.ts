@@ -34,7 +34,7 @@ const HOME_FAQ_JSON_LD_ID = 'home-faq';
     selector: 'app-public-home-page',
     standalone: true,
     imports: [RouterLink, PublicScreenshotComponent, PublicPlanCardsComponent, PublicFaqListComponent, PublicCtaComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <!-- 1 Kahraman: gradient kenardan kenara, sol metin, sağ ekran -->
         <section class="public-hero-gradient" aria-labelledby="public-home-hero-title">

@@ -7,7 +7,7 @@ import { PUBLIC_LEGAL_LINKS } from '@/app/entities/legal-document/utils/legal-do
     selector: 'app-public-legal-links',
     standalone: true,
     imports: [RouterLink],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <nav class="public-legal-links mt-6 flex flex-wrap items-center justify-center gap-x-2 text-xs text-muted-color" aria-label="Hukuki metinler">
             @for (link of links; track link.path; let last = $last) {

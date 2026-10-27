@@ -30,7 +30,7 @@ interface ComparisonGroupVm {
 @Component({
     selector: 'app-public-plan-comparison',
     standalone: true,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (hasRows()) {
             <div class="public-card overflow-x-auto">
