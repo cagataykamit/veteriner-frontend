@@ -53,17 +53,16 @@ const PDF_URL_REVOKE_MS = 60_000;
                         </div>
                         <div class="flex gap-1">
                             @if (file.kind === 'Pdf') {
-                                <p-button type="button" label="Aç" icon="pi pi-external-link" size="small" [text]="true" (onClick)="openPdf(file)" />
+                                <button pButton type="button" size="small" [text]="true" (click)="openPdf(file)"><i class="p-button-icon pi pi-external-link"></i>Aç</button>
                             }
-                            <p-button
+                            <button
+                                pButton
                                 type="button"
-                                label="İndir"
-                                icon="pi pi-download"
                                 size="small"
                                 [text]="true"
                                 [attr.aria-label]="file.fileName + ' indir'"
-                                (onClick)="download(file)"
-                            />
+                                (click)="download(file)"
+                            ><i class="p-button-icon pi pi-download"></i>İndir</button>
                         </div>
                     </li>
                 }
@@ -88,9 +87,9 @@ const PDF_URL_REVOKE_MS = 60_000;
                     }
                     @if (images().length > 1) {
                         <div class="flex gap-2">
-                            <p-button type="button" icon="pi pi-chevron-left" label="Önceki" severity="secondary" [text]="true" (onClick)="step(-1)" />
+                            <button pButton type="button" severity="secondary" [text]="true" (click)="step(-1)"><i class="p-button-icon pi pi-chevron-left"></i>Önceki</button>
                             <span class="text-sm text-muted-color self-center">{{ lightboxImageIndex() + 1 }} / {{ images().length }}</span>
-                            <p-button type="button" icon="pi pi-chevron-right" iconPos="right" label="Sonraki" severity="secondary" [text]="true" (onClick)="step(1)" />
+                            <button pButton type="button" severity="secondary" [text]="true" (click)="step(1)">Sonraki<i class="p-button-icon pi pi-chevron-right"></i></button>
                         </div>
                     }
                 </div>

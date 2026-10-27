@@ -15,7 +15,7 @@ import { ButtonModule } from 'primeng/button';
                 <span class="text-muted-color text-sm mb-4">{{ detail() }}</span>
             }
             @if (showRetry()) {
-                <p-button [label]="retryLabel()" icon="pi pi-refresh" severity="secondary" (onClick)="retry.emit()" />
+                <button pButton type="button" severity="secondary" (click)="retry.emit()"><i class="p-button-icon pi pi-refresh"></i>{{ retryLabel() }}</button>
             }
         </div>
     `

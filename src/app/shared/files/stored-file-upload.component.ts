@@ -46,17 +46,16 @@ let nextKey = 1;
             <p class="mt-2 mb-2 text-sm" [id]="hintId">
                 Dosyaları buraya sürükleyin veya seçin. JPEG, PNG, WebP, PDF; en çok {{ maxSizeLabel }}.
             </p>
-            <p-button
+            <button
+                pButton
                 type="button"
-                label="Dosya seç"
-                icon="pi pi-folder-open"
                 severity="secondary"
                 [outlined]="true"
                 size="small"
                 [disabled]="disabled()"
                 [attr.aria-describedby]="hintId"
-                (onClick)="picker.click()"
-            />
+                (click)="picker.click()"
+            ><i class="p-button-icon pi pi-folder-open"></i>Dosya seç</button>
             <input #picker type="file" class="hidden" multiple [accept]="accept" (change)="onPicked($event)" data-testid="file-input" />
         </div>
 
@@ -69,18 +68,19 @@ let nextKey = 1;
                             <span class="font-medium break-all flex-1 min-w-0">{{ item.name }}</span>
                             <span class="text-xs text-muted-color">{{ size(item.size) }}</span>
                             @if (item.status === 'failed') {
-                                <p-button type="button" label="Yeniden dene" icon="pi pi-refresh" size="small" [text]="true" [disabled]="busy() || !ownerPath()" (onClick)="retry(item)" />
+                                <button pButton type="button" size="small" [text]="true" [disabled]="busy() || !ownerPath()" (click)="retry(item)"><i class="p-button-icon pi pi-refresh"></i>Yeniden dene</button>
                             }
                             @if (item.status !== 'uploading' && item.status !== 'done') {
-                                <p-button
+                                <button
+                                    pButton
                                     type="button"
-                                    icon="pi pi-times"
+                                    iconOnly
                                     size="small"
                                     [text]="true"
                                     severity="secondary"
                                     [attr.aria-label]="item.name + ' dosyasını listeden çıkar'"
-                                    (onClick)="remove(item)"
-                                />
+                                    (click)="remove(item)"
+                                ><i class="p-button-icon pi pi-times"></i></button>
                             }
                         </div>
                         @if (item.status === 'uploading') {
