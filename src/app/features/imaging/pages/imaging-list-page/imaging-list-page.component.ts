@@ -66,7 +66,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                             <label for="imgSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
                             <app-search-input inputId="imgSearch" placeholder="Hasta, müşteri veya açıklama…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </div>
-                        <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                     </app-list-header>
                     <div class="grid grid-cols-12 gap-3 items-end">
                         <div class="col-span-12 md:col-span-3">
