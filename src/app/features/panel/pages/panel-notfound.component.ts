@@ -13,7 +13,7 @@ import { ButtonModule } from 'primeng/button';
             <i class="pi pi-compass text-4xl text-muted-color mb-4"></i>
             <h1 class="text-2xl font-semibold mt-0 mb-2">Sayfa bulunamadı</h1>
             <p class="text-muted-color mt-0 mb-6">Aradığınız sayfa mevcut değil veya taşınmış olabilir.</p>
-            <p-button label="Ana sayfaya dön" icon="pi pi-home" routerLink="/panel" />
+            <a pButton routerLink="/panel"><i class="p-button-icon pi pi-home"></i>Ana sayfaya dön</a>
         </div>
     `
 })
