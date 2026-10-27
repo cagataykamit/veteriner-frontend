@@ -7,7 +7,7 @@ import { precheckImportFile } from '@/app/features/imports/utils/import-labels.u
     selector: 'app-import-drop-zone',
     standalone: true,
     imports: [ButtonModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div
             class="rounded-border border-2 border-dashed p-4 text-center transition-colors"

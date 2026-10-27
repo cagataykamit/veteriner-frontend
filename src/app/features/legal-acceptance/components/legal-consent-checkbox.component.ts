@@ -11,7 +11,7 @@ import { LEGAL_DOCUMENTS_BY_TYPE, type LegalDocumentType } from '@/app/entities/
     selector: 'app-legal-consent-checkbox',
     standalone: true,
     imports: [FormsModule, CheckboxModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="legal-consent flex items-start gap-2">
             <p-checkbox [inputId]="inputId()" [binary]="true" [(ngModel)]="checked" [disabled]="disabled()" />

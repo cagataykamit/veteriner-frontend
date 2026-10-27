@@ -19,7 +19,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
     standalone: true,
     imports: [AppStatusTagComponent, TrDatePipe],
     host: { class: 'contents' },
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @let s = summary();
         <div class="col-span-12">

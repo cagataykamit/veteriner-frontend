@@ -9,7 +9,7 @@ import { CHARGE_LINE_KIND_OPTIONS, type ChargeLineKind, chargeVatRateOptionsIncl
     standalone: true,
     imports: [ReactiveFormsModule, SelectModule],
     host: { class: 'contents' },
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div [class]="cellClass()">
             <label [for]="idPrefix() + '-line-kind'" class="block text-sm font-medium text-muted-color mb-2">Satır türü</label>

@@ -18,7 +18,7 @@ interface SourceOption {
     selector: 'app-import-mapping-step',
     standalone: true,
     imports: [FormsModule, ButtonModule, MessageModule, SelectModule, AppStatusTagComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p class="text-muted-color mt-0">Dosyanızdaki sütunları sistem alanlarıyla eşleyin. Önerileri kontrol edin; * işaretli alanlar zorunludur. Yeni tür veya aşı tanımı oluşturulmaz.</p>
 

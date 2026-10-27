@@ -7,7 +7,7 @@ import { ProgressBarModule } from 'primeng/progressbar';
     selector: 'app-import-job-progress',
     standalone: true,
     imports: [MessageModule, ProgressBarModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-progressbar [mode]="percent() === null ? 'indeterminate' : 'determinate'" [value]="percent() ?? 0" />
         @if (progress(); as pr) {

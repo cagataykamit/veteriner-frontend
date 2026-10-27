@@ -13,7 +13,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
     standalone: true,
     imports: [TagModule, MoneyPipe],
     host: { class: 'flex flex-wrap gap-1 min-w-0' },
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @for (chip of chips(); track chip.key) {
             @if (chip.reviewable) {

@@ -10,7 +10,7 @@ import { CLIENT_CONTACT_CHANNEL_OPTIONS } from '@/app/entities/client/utils/clie
     selector: 'app-client-contact-preference-fields',
     standalone: true,
     imports: [ReactiveFormsModule, SelectModule, CheckboxModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <fieldset class="border-0 p-0 m-0 grid grid-cols-12 gap-4">
             <legend class="sr-only">İletişim tercihi</legend>

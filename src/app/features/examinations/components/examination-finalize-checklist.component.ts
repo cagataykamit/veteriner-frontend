@@ -14,7 +14,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     selector: 'app-examination-finalize-checklist',
     standalone: true,
     imports: [RouterLink, ButtonModule, TrDateTimePipe],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="card mb-0 p-4" aria-label="Kesinleştirme kontrolü" data-testid="finalize-checklist">
             @if (exam().status === 'Finalized') {

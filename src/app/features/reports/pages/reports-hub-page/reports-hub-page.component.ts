@@ -9,7 +9,7 @@ import { NavigationCardsComponent } from '@/app/shared/ui/navigation-cards/navig
     selector: 'app-reports-hub-page',
     standalone: true,
     imports: [AppPageHeaderComponent, NavigationCardsComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Raporlar" description="Randevu, klinik ve para raporlarına buradan ulaşın." />
 

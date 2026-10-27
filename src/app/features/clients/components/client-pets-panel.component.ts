@@ -14,7 +14,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     selector: 'app-client-pets-panel',
     standalone: true,
     imports: [RouterLink, TrDateTimePipe],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="card mb-0 h-full" aria-labelledby="client-pets-title" data-testid="client-pets">
             <div class="flex flex-wrap items-center gap-2 mb-3">

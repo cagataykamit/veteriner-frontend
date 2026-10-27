@@ -7,7 +7,7 @@ import { ButtonModule } from 'primeng/button';
     selector: 'app-panel-notfound',
     standalone: true,
     imports: [RouterLink, ButtonModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card flex flex-col items-center text-center py-12">
             <i class="pi pi-compass text-4xl text-muted-color mb-4"></i>

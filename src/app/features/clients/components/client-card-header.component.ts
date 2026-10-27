@@ -28,7 +28,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     imports: [RouterLink, CardAccountStatusComponent, MoneyPipe, TrDatePipe, TrDateTimePipe],
     /** `.card:last-child` alt boşluğu sıfırladığından boşluk ana öğede (bölüm bileşenin tek çocuğu). */
     host: { class: 'block mb-4' },
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="card mb-0" aria-label="İletişim ve hesap durumu" data-testid="client-card-header">
             <p class="m-0 flex flex-wrap gap-x-6 gap-y-1" aria-label="İletişim">

@@ -15,7 +15,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
     selector: 'app-subscription-plan-cards',
     standalone: true,
     imports: [FormsModule, ButtonModule, SelectButtonModule, AppEmptyStateComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @let s = summary();
         <div class="card mb-0">

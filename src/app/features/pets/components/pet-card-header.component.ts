@@ -22,7 +22,7 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
     selector: 'app-pet-card-header',
     standalone: true,
     imports: [RouterLink, PetAlertBadgesComponent, CardAccountStatusComponent, TrDatePipe, TrDateTimePipe],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="card mb-4" aria-label="Sahip, uyarılar ve hesap durumu" data-testid="pet-card-header">
             @if (pet().status === 'Deceased') {

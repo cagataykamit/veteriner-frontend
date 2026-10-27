@@ -8,7 +8,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     selector: 'app-definitions-page',
     standalone: true,
     imports: [AppPageHeaderComponent, NavigationCardsComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [categoryLink]="settingsRoute" categoryLinkLabel="Ayarlar" title="Tanımlar" description="Tür, ırk, ürün kategorisi, tanı/şikâyet sözlüğü, muayene şablonları ve yatış konumları gibi referans kayıtlarını yönetin." />
         <app-navigation-cards [entries]="entries" />

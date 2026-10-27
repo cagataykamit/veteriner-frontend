@@ -8,7 +8,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     selector: 'app-settings-home-page',
     standalone: true,
     imports: [AppPageHeaderComponent, NavigationCardsComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Ayarlar" description="Hesap, klinik, iletişim ve tanım ayarları." />
 

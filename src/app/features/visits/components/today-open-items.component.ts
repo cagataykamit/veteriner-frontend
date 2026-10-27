@@ -27,7 +27,7 @@ const TONE_MUTED = 'text-muted-color border-surface-300 dark:border-surface-700'
     selector: 'app-today-open-items',
     standalone: true,
     imports: [RouterLink],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="flex flex-wrap items-center gap-2 mb-4" aria-label="Açık işler" data-testid="open-items-strip">
             <span class="text-sm font-medium">Açık işler</span>

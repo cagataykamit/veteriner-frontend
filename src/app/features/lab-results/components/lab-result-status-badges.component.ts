@@ -8,7 +8,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
     selector: 'app-lab-result-status-badges',
     standalone: true,
     imports: [AppStatusTagComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (status(); as s) {
             <span class="inline-flex flex-wrap gap-1 items-center">
