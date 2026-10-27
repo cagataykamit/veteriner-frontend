@@ -128,8 +128,8 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                         {{ copy.cancelledAppointmentExamCreateHint }}
                     </p>
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <p-button type="button" label="Randevu detayı" icon="pi pi-calendar" (onClick)="goAppointmentDetail()" />
-                        <p-button type="button" label="Randevu listesi" icon="pi pi-list" severity="secondary" (onClick)="goAppointmentsList()" />
+                        <button pButton type="button" (click)="goAppointmentDetail()"><i class="p-button-icon pi pi-calendar"></i>Randevu detayı</button>
+                        <button pButton type="button" severity="secondary" (click)="goAppointmentsList()"><i class="p-button-icon pi pi-list"></i>Randevu listesi</button>
                     </div>
                 </div>
             } @else {
@@ -322,15 +322,15 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
                                     <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ submitError() }}</p>
                                     <div class="flex flex-wrap gap-4 items-center mt-3">
                                         <a [routerLink]="['/panel/examinations', examinationId]" target="_blank" rel="noopener" class="text-primary font-medium no-underline">Güncel kaydı yeni sekmede aç →</a>
-                                        <p-button type="button" label="Yazdıklarımı atıp güncel kaydı yükle" icon="pi pi-refresh" severity="secondary" size="small" (onClick)="discardAndReload()" />
+                                        <button pButton type="button" severity="secondary" size="small" (click)="discardAndReload()"><i class="p-button-icon pi pi-refresh"></i>Yazdıklarımı atıp güncel kaydı yükle</button>
                                     </div>
                                 </div>
                             } @else if (submitError()) {
                                 <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
                             }
                             <div class="flex flex-wrap gap-2 mt-4">
-                                <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="saveDisabled()" />
-                                <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="onCancel()" [disabled]="submitting()" />
+                                <button pButton type="submit" [disabled]="saveDisabled() || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                                <button pButton type="button" severity="secondary" (click)="onCancel()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                             </div>
                         </div>
                     </form>

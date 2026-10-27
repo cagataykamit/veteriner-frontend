@@ -241,7 +241,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
     });
 
     const ADD_CLAIMS = ['Treatments.Create', 'Prescriptions.Create', 'Vaccinations.Create', 'LabResults.Create', 'Hospitalizations.Create'];
-    const addButton = (el: HTMLElement, kind: string) => el.querySelector(`[data-testid="procedure-add-${kind}"] button`) as HTMLButtonElement | null;
+    const addButton = (el: HTMLElement, kind: string) => el.querySelector(`button[data-testid="procedure-add-${kind}"]`) as HTMLButtonElement | null;
 
     it('taslakta işlem ekleme düğmeleri tek İşlemler bölümünde etkin görünür; kilit nedeni yok', async () => {
         const { el } = await setup(detailVm, ADD_CLAIMS);

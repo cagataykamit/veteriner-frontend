@@ -52,8 +52,8 @@ function addendumText(c: { value: unknown }): { addendumText: true } | null {
                 }
             </form>
             <ng-template #footer>
-                <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button type="button" label="Ek notu kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting()" data-testid="addendum-submit" (onClick)="onSubmit()" />
+                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
+                <button pButton type="button" [disabled]="form.invalid || submitting()" data-testid="addendum-submit" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Ek notu kaydet</button>
             </ng-template>
         </p-dialog>
     `

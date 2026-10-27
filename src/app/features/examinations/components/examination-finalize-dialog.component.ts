@@ -36,8 +36,8 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 <p class="text-red-500 mt-3 mb-0" role="alert" data-testid="finalize-error">{{ submitError() }}</p>
             }
             <ng-template #footer>
-                <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button type="button" label="Kesinleştir" icon="pi pi-lock" [loading]="submitting()" [disabled]="submitting() || !rowVersion()" data-testid="finalize-confirm" (onClick)="onSubmit()" />
+                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
+                <button pButton type="button" [disabled]="submitting() || !rowVersion()" data-testid="finalize-confirm" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-lock'"></i>Kesinleştir</button>
             </ng-template>
         </p-dialog>
     `

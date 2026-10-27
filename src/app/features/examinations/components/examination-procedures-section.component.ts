@@ -68,7 +68,7 @@ const ADD_ICON: Record<ProcedureKind, string> = {
                 <div class="flex flex-wrap items-center gap-2 mb-2" data-testid="procedure-add-bar">
                     <span class="text-sm text-muted-color">+ Ekle:</span>
                     @for (kind of visibleKinds(); track kind) {
-                        <p-button size="small" severity="secondary" [outlined]="true" [label]="label(kind)" [icon]="icon(kind)" [disabled]="state(kind).disabled" [attr.data-testid]="'procedure-add-' + kind" (onClick)="open(kind)" />
+                        <button pButton type="button" size="small" severity="secondary" [outlined]="true" [disabled]="state(kind).disabled" [attr.data-testid]="'procedure-add-' + kind" (click)="open(kind)"><i class="p-button-icon" [class]="icon(kind)"></i>{{ label(kind) }}</button>
                     }
                 </div>
                 @for (reason of lockReasons(); track reason) {
