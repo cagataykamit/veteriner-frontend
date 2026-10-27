@@ -1,6 +1,6 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { VaccinationFormComponent, type VaccinationSavedEvent } from '@/app/features/vaccinations/components/vaccination-form.component';
+import { VaccinationFormComponent, type VaccinationSavedEvent } from '@/app/entities/procedure/components/vaccination-form.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 
 /** Ayrı oluşturma sayfası: form bileşenini adres çubuğu bağlamıyla (query) çalıştırır; kayıttan sonra detaya gider. */

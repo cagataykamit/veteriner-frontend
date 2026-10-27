@@ -1,6 +1,6 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ImagingRecordFormComponent } from '@/app/features/imaging/components/imaging-record-form.component';
+import { ImagingRecordFormComponent } from '@/app/entities/procedure/components/imaging-record-form.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 
 /** Yeni görüntüleme kaydı: form adres çubuğu bağlamıyla (hasta / muayene) çalışır; kayıt ve dosyalar tamamlanınca detaya gider. */
