@@ -17,7 +17,7 @@ import { ExaminationFinalizeChecklistComponent } from '@/app/features/examinatio
 import { ExaminationFinalizeDialogComponent } from '@/app/features/examinations/components/examination-finalize-dialog.component';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { examinationStatusLabel, examinationStatusSeverity, isExaminationEditable } from '@/app/entities/examination/utils/examination-status.utils';
-import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
+import { paymentMethodLabel } from '@/app/entities/payment/utils/payment-method.utils';
 import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
 import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';

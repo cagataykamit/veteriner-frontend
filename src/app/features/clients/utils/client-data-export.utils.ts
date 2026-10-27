@@ -5,7 +5,7 @@ import { clientContactChannelLabel, parseClientContactChannel } from '@/app/enti
 import { formatClientInvoicingSummary, mapClientInvoicingSummaryDtoToVm } from '@/app/entities/client/utils/client-invoicing.utils';
 import { kvkkConsentStatusLabel, parseKvkkConsentStatus } from '@/app/entities/client/utils/client-kvkk-consent.utils';
 import { examinationStatusLabel } from '@/app/entities/examination/utils/examination-status.utils';
-import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
+import { paymentMethodLabel } from '@/app/entities/payment/utils/payment-method.utils';
 import { parsePetLifeStatus, petGenderLabel, petLifeStatusLabel } from '@/app/entities/pet/utils/pet-status.utils';
 import { vaccinationStatusLabel } from '@/app/entities/vaccination/utils/vaccination-status.utils';
 import { formatDateDisplay, formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay, localDateTimeYyyyMmDd_HHmmForFileName } from '@/app/shared/utils/date.utils';

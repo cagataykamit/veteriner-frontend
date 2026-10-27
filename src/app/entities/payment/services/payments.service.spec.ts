@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PaymentsService } from '@/app/features/payments/services/payments.service';
+import { PaymentsService } from '@/app/entities/payment/services/payments.service';
 
 describe('PaymentsService.voidPayment', () => {
     let service: PaymentsService;

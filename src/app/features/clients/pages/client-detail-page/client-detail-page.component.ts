@@ -20,7 +20,7 @@ import { PetTodoPanelComponent } from '@/app/features/pets/components/pet-todo-p
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PetCardDataService } from '@/app/features/pets/services/pet-card-data.service';
 import { nextScheduledAppointment, okData, type PetCardSection, petCardEmphasis } from '@/app/features/pets/utils/pet-card.utils';
-import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
+import { paymentMethodLabel } from '@/app/entities/payment/utils/payment-method.utils';
 import type { PetSuggestion } from '@/app/entities/visit/models/visit-vm.model';
 import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';

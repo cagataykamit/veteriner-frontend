@@ -11,11 +11,11 @@ import {
     mapPaymentDetailDtoToVm,
     mapPagedPaymentsToVm,
     paymentsQueryToHttpParams
-} from '@/app/features/payments/data/payment.mapper';
-import type { PaymentDetailDto, PaymentListItemDtoPagedResult } from '@/app/features/payments/models/payment-api.model';
-import type { CreatePaymentRequest, UpdatePaymentRequest } from '@/app/features/payments/models/payment-create.model';
-import type { PaymentsListQuery } from '@/app/features/payments/models/payment-query.model';
-import type { PaymentDetailVm, PaymentEditVm, PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
+} from '@/app/entities/payment/data/payment.mapper';
+import type { PaymentDetailDto, PaymentListItemDtoPagedResult } from '@/app/entities/payment/models/payment-api.model';
+import type { CreatePaymentRequest, UpdatePaymentRequest } from '@/app/entities/payment/models/payment-create.model';
+import type { PaymentsListQuery } from '@/app/entities/payment/models/payment-query.model';
+import type { PaymentDetailVm, PaymentEditVm, PaymentListItemVm } from '@/app/entities/payment/models/payment-vm.model';
 import { messageFromHttpError, toUserError } from '@/app/shared/utils/api-error.utils';
 
 export interface PaymentsPagedVm {

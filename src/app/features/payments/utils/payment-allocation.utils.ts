@@ -1,4 +1,4 @@
-import type { PaymentAllocationInput } from '@/app/features/payments/models/payment-create.model';
+import type { PaymentAllocationInput } from '@/app/entities/payment/models/payment-create.model';
 
 /** Yeni ödemeler yalnızca TRY (`PAYMENT_ALLOCATION_API_CONTRACT.md` §2). */
 export const PAYMENT_CURRENCY = 'TRY';

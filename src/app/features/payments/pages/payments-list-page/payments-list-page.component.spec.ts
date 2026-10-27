@@ -5,8 +5,8 @@ import { firstValueFrom, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PAYMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { isRightAfterDetail, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
-import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
-import { PaymentsService } from '@/app/features/payments/services/payments.service';
+import type { PaymentListItemVm } from '@/app/entities/payment/models/payment-vm.model';
+import { PaymentsService } from '@/app/entities/payment/services/payments.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { PaymentsListPageComponent } from './payments-list-page.component';
 

@@ -1,5 +1,5 @@
-import type { PaymentListItemDto } from '@/app/features/payments/models/payment-api.model';
-import { mapPaymentListItemDtoToVm } from '@/app/features/payments/data/payment.mapper';
+import type { PaymentListItemDto } from '@/app/entities/payment/models/payment-api.model';
+import { mapPaymentListItemDtoToVm } from '@/app/entities/payment/data/payment.mapper';
 import type { PaymentReportRowVm, PaymentsReportResultVm } from '@/app/features/reports/payments/models/payments-report.model';
 import type { PaymentsReportDto } from '@/app/features/reports/payments/models/payments-report-api.model';
 

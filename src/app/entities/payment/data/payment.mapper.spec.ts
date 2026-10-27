@@ -1,4 +1,4 @@
-import { mapPaymentDetailDtoToVm, mapPaymentListItemDtoToVm, MULTIPLE_PETS_LABEL, paymentsQueryToHttpParams } from '@/app/features/payments/data/payment.mapper';
+import { mapPaymentDetailDtoToVm, mapPaymentListItemDtoToVm, MULTIPLE_PETS_LABEL, paymentsQueryToHttpParams } from '@/app/entities/payment/data/payment.mapper';
 
 describe('payment mapper — liste tarih parametreleri', () => {
     it('İstanbul gününü iki ucu dahil [paidFromUtc, paidToUtc] olarak gönderir', () => {

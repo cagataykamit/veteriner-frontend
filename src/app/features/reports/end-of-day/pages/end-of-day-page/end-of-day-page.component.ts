@@ -15,7 +15,7 @@ import { dayText } from '@/app/features/reports/registers/data/register-definiti
 import { ReportFilterBarComponent } from '@/app/features/reports/shared/report-filter-bar.component';
 import { ReportListState, type ReportExtraKey, type ReportListQueryBase } from '@/app/features/reports/shared/report-list-state';
 import { ReportResultsComponent } from '@/app/features/reports/shared/report-results.component';
-import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
+import { paymentMethodLabel } from '@/app/entities/payment/utils/payment-method.utils';
 import type { TodayOpenItemsVm } from '@/app/entities/visit/models/visit-vm.model';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';

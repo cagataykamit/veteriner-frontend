@@ -1,4 +1,4 @@
-import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
+import type { PaymentListItemVm } from '@/app/entities/payment/models/payment-vm.model';
 
 /** Ödeme raporu tablo satırı — liste VM + klinik / not gösterimi. */
 export type PaymentReportRowVm = PaymentListItemVm & {

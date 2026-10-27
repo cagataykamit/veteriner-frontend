@@ -3,7 +3,7 @@ import { Component, OnInit, computed, inject, ChangeDetectionStrategy } from '@a
 import { RouterLink } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { PAYMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
+import { paymentMethodLabel } from '@/app/entities/payment/utils/payment-method.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import type { PaymentsReportQuery } from '@/app/features/reports/payments/models/payments-report-query.model';
 import type { PaymentsReportResultVm } from '@/app/features/reports/payments/models/payments-report.model';

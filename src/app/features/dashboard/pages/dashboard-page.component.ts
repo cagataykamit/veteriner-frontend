@@ -11,7 +11,7 @@ import type { DashboardTrendDayVm } from '@/app/features/dashboard/models/dashbo
 import { buildSevenDayTrendPoints } from '@/app/features/dashboard/utils/dashboard-trend.utils';
 import { DashboardService, dashboardVmWithPendingLists, mergeDashboardListPhaseIntoVm } from '@/app/features/dashboard/services/dashboard.service';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/entities/appointment/utils/appointment-status.utils';
-import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
+import { paymentMethodLabel } from '@/app/entities/payment/utils/payment-method.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';

@@ -8,7 +8,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import type { ClientBalanceVm, ClientOpenChargeVm } from '@/app/entities/client/models/client-balance-vm.model';
 import { ClientSearchService } from '@/app/entities/client/services/client-search.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
-import { PaymentsService } from '@/app/features/payments/services/payments.service';
+import { PaymentsService } from '@/app/entities/payment/services/payments.service';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';

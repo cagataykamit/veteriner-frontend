@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import type { Subscription } from 'rxjs';
-import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
+import { paymentMethodLabel } from '@/app/entities/payment/utils/payment-method.utils';
 import { PetTimelineItemComponent } from '@/app/features/pets/components/pet-timeline-item.component';
 import type { PetTimelineItemVm } from '@/app/entities/pet/models/pet-timeline-vm.model';
 import type { PetHistoryPaymentItemVm } from '@/app/entities/pet/models/pet-vm.model';

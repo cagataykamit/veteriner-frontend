@@ -5,14 +5,14 @@ import type {
     PaymentDetailDto,
     PaymentListItemDto,
     PaymentListItemDtoPagedResult
-} from '@/app/features/payments/models/payment-api.model';
-import type { CreatePaymentRequest, UpdatePaymentRequest } from '@/app/features/payments/models/payment-create.model';
-import type { PaymentsListQuery } from '@/app/features/payments/models/payment-query.model';
-import type { PaymentDetailVm, PaymentEditVm, PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
+} from '@/app/entities/payment/models/payment-api.model';
+import type { CreatePaymentRequest, UpdatePaymentRequest } from '@/app/entities/payment/models/payment-create.model';
+import type { PaymentsListQuery } from '@/app/entities/payment/models/payment-query.model';
+import type { PaymentDetailVm, PaymentEditVm, PaymentListItemVm } from '@/app/entities/payment/models/payment-vm.model';
 import {
     paymentMethodCanonicalToApiEnum,
     resolvePaymentMethodFormValue
-} from '@/app/features/payments/utils/payment-method.utils';
+} from '@/app/entities/payment/utils/payment-method.utils';
 import { dateOnlyInputToIstanbulEndUtcIso, dateOnlyInputToIstanbulStartUtcIso } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
