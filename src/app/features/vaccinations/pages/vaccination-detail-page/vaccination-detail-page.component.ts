@@ -14,13 +14,13 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { formatDateDisplay, formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ADMINISTRATIONS_READ_CLAIM, VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { canOpenVaccinationEdit } from '@/app/entities/vaccination/utils/vaccination-access.utils';
 import { HbsSectionComponent } from '@/app/entities/hbs/components/hbs-section.component';
 import type { HbsEntryVm } from '@/app/entities/hbs/models/hbs.model';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
 @Component({
     selector: 'app-vaccination-detail-page',
@@ -183,11 +183,15 @@ export class VaccinationDetailPageComponent implements OnInit {
     readonly canReadAdministrations = this.auth.hasOperationClaim(ADMINISTRATIONS_READ_CLAIM);
     readonly formatDay = (v: string | null) => (v ? formatDateDisplay(v) : '—');
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
-    readonly vac = signal<VaccinationDetailVm | null>(null);
+    private readonly loader = new RouteEntityLoader<VaccinationDetailVm>({
+        fetch: (id) => this.vaccinationsService.getVaccinationById(id),
+        invalidIdMessage: 'Geçersiz aşı kaydı.',
+        errorMessage: (e) => panelHttpFailureMessage(e, 'Aşı kaydı yüklenemedi.')
+    });
 
-    private lastId: string | null = null;
+    readonly loading = this.loader.loading;
+    readonly error = this.loader.error;
+    readonly vac = this.loader.value;
 
     readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     /** Düzenleme rotasının yetki koşuluyla aynı (aşı kataloğu okuma dahil). */
@@ -229,53 +233,10 @@ export class VaccinationDetailPageComponent implements OnInit {
             });
         }
 
-        this.route.paramMap
-            .pipe(
-                switchMap((params) => {
-                    const id = params.get('id');
-
-                    if (!id) {
-                        this.error.set('Geçersiz aşı kaydı.');
-                        this.loading.set(false);
-
-                        return EMPTY;
-                    }
-
-                    this.lastId = id;
-                    this.loading.set(true);
-                    this.error.set(null);
-
-                    return this.vaccinationsService.getVaccinationById(id);
-                })
-            )
-            .subscribe({
-                next: (x) => {
-                    this.vac.set(x);
-                    this.loading.set(false);
-                },
-                error: (e: unknown) => {
-                    this.error.set(panelHttpFailureMessage(e, 'Aşı kaydı yüklenemedi.'));
-                    this.loading.set(false);
-                }
-            });
+        this.loader.init();
     }
 
     reload(): void {
-        if (!this.lastId) {
-            return;
-        }
-
-        this.loading.set(true);
-        this.error.set(null);
-        this.vaccinationsService.getVaccinationById(this.lastId).subscribe({
-            next: (x) => {
-                this.vac.set(x);
-                this.loading.set(false);
-            },
-            error: (e: unknown) => {
-                this.error.set(panelHttpFailureMessage(e, 'Aşı kaydı yüklenemedi.'));
-                this.loading.set(false);
-            }
-        });
+        this.loader.reload();
     }
 }

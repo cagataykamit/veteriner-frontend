@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnDestroy, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { EMPTY, type Observable, Subscription, switchMap } from 'rxjs';
+import { type Observable, Subscription } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { IMAGING_READ_CLAIM, PETS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
@@ -25,6 +25,7 @@ import { PatientActionBarComponent } from '@/app/entities/patient/components/pat
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
 /**
  * Hasta (hayvan) kartı — okuma öncelikli 360 görünüm (ADR-020 karar 1-3): başlık ve hesap durumu, her zaman görünür eylem çubuğu,
@@ -160,9 +161,17 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     /** Yeni oluşturma sonrası kısa onay (query `saved=1`). */
     readonly showSavedBanner = signal(false);
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
-    readonly pet = signal<PetDetailVm | null>(null);
+    private readonly loader = new RouteEntityLoader<PetDetailVm>({
+        fetch: (id) => this.petsService.getPetById(id),
+        invalidIdMessage: 'Geçersiz pet.',
+        onRouteChange: () => this.resetCard(),
+        onReload: () => this.resetCard(),
+        onLoaded: (p) => this.onPetLoaded(p)
+    });
+
+    readonly loading = this.loader.loading;
+    readonly error = this.loader.error;
+    readonly pet = this.loader.value;
     readonly showEmptyFields = signal(false);
     readonly generalFields = computed(() => {
         const p = this.pet();
@@ -205,7 +214,6 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
         })
     );
 
-    private lastId: string | null = null;
     private cardSubscriptions = new Subscription();
     private examinationSubscription: Subscription | null = null;
     private openItemsSubscription: Subscription | null = null;
@@ -223,34 +231,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
             });
         }
 
-        this.route.paramMap
-            .pipe(
-                switchMap((params) => {
-                    const id = params.get('id');
-
-                    this.resetCard();
-
-                    if (!id) {
-                        this.error.set('Geçersiz pet.');
-                        this.loading.set(false);
-
-                        return EMPTY;
-                    }
-
-                    this.lastId = id;
-                    this.loading.set(true);
-                    this.error.set(null);
-
-                    return this.petsService.getPetById(id);
-                })
-            )
-            .subscribe({
-                next: (p) => this.onPetLoaded(p),
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
-                    this.loading.set(false);
-                }
-            });
+        this.loader.init();
     }
 
     ngOnDestroy(): void {
@@ -258,20 +239,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     }
 
     reload(): void {
-        if (!this.lastId) {
-            return;
-        }
-
-        this.resetCard();
-        this.loading.set(true);
-        this.error.set(null);
-        this.petsService.getPetById(this.lastId).subscribe({
-            next: (p) => this.onPetLoaded(p),
-            error: (e: Error) => {
-                this.error.set(e.message ?? 'Yükleme hatası');
-                this.loading.set(false);
-            }
-        });
+        this.loader.reload();
     }
 
     /** Durum yanıtı yeni `rowVersion` taşır; açık işler yeniden okunur (vefat eden hastada aşı bölümü boş gelir). */
@@ -286,29 +254,29 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
 
     /** Yalnız hayvan kaydı (durum, rowVersion) yenilenir; kart bölümleri yerinde kalır (eşzamanlılık çakışması sonrası). */
     refreshPet(): void {
-        if (!this.lastId) {
+        if (!this.loader.id) {
             return;
         }
 
-        this.petsService.getPetById(this.lastId).subscribe({ next: (p) => this.pet.set(p), error: () => undefined });
+        this.petsService.getPetById(this.loader.id).subscribe({ next: (p) => this.pet.set(p), error: () => undefined });
     }
 
     retrySummary(): void {
-        if (this.lastId) {
-            this.loadSummary(this.lastId);
+        if (this.loader.id) {
+            this.loadSummary(this.loader.id);
         }
     }
 
     retryHistory(): void {
-        if (this.lastId) {
-            this.loadHistory(this.lastId);
+        if (this.loader.id) {
+            this.loadHistory(this.loader.id);
         }
     }
 
     /** Randevu iptali sonrası (sonraki randevu açık işlerdedir) ve Yapılacaklar'da "Yeniden dene"; okumadır, salt okunur kiracıda da çalışır. */
     reloadOpenItems(): void {
-        if (this.lastId) {
-            this.loadOpenItems(this.lastId);
+        if (this.loader.id) {
+            this.loadOpenItems(this.loader.id);
         }
     }
 
@@ -328,8 +296,6 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     }
 
     private onPetLoaded(p: PetDetailVm): void {
-        this.pet.set(p);
-        this.loading.set(false);
         this.loadHistory(p.id);
         this.loadSummary(p.id);
         this.loadOpenItems(p.id);

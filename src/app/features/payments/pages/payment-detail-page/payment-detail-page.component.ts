@@ -18,11 +18,11 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PAYMENTS_CORRECT_CLAIM, PAYMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
 @Component({
     selector: 'app-payment-detail-page',
@@ -204,9 +204,15 @@ export class PaymentDetailPageComponent implements OnInit {
 
     readonly emptyMark = '—';
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
-    readonly payment = signal<PaymentDetailVm | null>(null);
+    private readonly loader = new RouteEntityLoader<PaymentDetailVm>({
+        fetch: (id) => this.paymentsService.getPaymentById(id),
+        invalidIdMessage: 'Geçersiz ödeme.',
+        onLoaded: (x) => this.loadRelatedBlocks(x)
+    });
+
+    readonly loading = this.loader.loading;
+    readonly error = this.loader.error;
+    readonly payment = this.loader.value;
 
     readonly exLoading = signal(false);
     readonly exError = signal<string | null>(null);
@@ -218,8 +224,6 @@ export class PaymentDetailPageComponent implements OnInit {
 
     readonly exItemsView = computed(() => sliceDetailRelatedList(this.exItems()));
     readonly apptItemsView = computed(() => sliceDetailRelatedList(this.apptItems()));
-
-    private lastId: string | null = null;
 
     readonly formatPaidAtUtc = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly methodLabel = paymentMethodLabel;
@@ -251,36 +255,7 @@ export class PaymentDetailPageComponent implements OnInit {
             });
         }
 
-        this.route.paramMap
-            .pipe(
-                switchMap((params) => {
-                    const id = params.get('id');
-
-                    if (!id) {
-                        this.error.set('Geçersiz ödeme.');
-                        this.loading.set(false);
-
-                        return EMPTY;
-                    }
-
-                    this.lastId = id;
-                    this.loading.set(true);
-                    this.error.set(null);
-
-                    return this.paymentsService.getPaymentById(id);
-                })
-            )
-            .subscribe({
-                next: (x) => {
-                    this.payment.set(x);
-                    this.loading.set(false);
-                    this.loadRelatedBlocks(x);
-                },
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
-                    this.loading.set(false);
-                }
-            });
+        this.loader.init();
     }
 
     /** İptal edilen ödeme artık okunamaz (404); listeye dönülür. */
@@ -289,23 +264,7 @@ export class PaymentDetailPageComponent implements OnInit {
     }
 
     reload(): void {
-        if (!this.lastId) {
-            return;
-        }
-
-        this.loading.set(true);
-        this.error.set(null);
-        this.paymentsService.getPaymentById(this.lastId).subscribe({
-            next: (x) => {
-                this.payment.set(x);
-                this.loading.set(false);
-                this.loadRelatedBlocks(x);
-            },
-            error: (e: Error) => {
-                this.error.set(e.message ?? 'Yükleme hatası');
-                this.loading.set(false);
-            }
-        });
+        this.loader.reload();
     }
 
     private loadRelatedBlocks(p: PaymentDetailVm): void {

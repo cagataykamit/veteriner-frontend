@@ -33,10 +33,11 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { EMPTY, Subscription, switchMap } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
 /**
  * Müşteri kartı — okuma öncelikli 360 görünüm (ADR-020 karar 6, hasta kartıyla aynı ilke): iletişim ve hesap durumu,
@@ -303,9 +304,17 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
 
     readonly copy = PANEL_COPY;
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
-    readonly client = signal<ClientDetailVm | null>(null);
+    private readonly loader = new RouteEntityLoader<ClientDetailVm>({
+        fetch: (id) => this.clientsService.getClientById(id),
+        invalidIdMessage: 'Geçersiz client.',
+        onRouteChange: () => this.resetCard(),
+        onReload: () => this.resetCard(),
+        onLoaded: (c) => this.onClientLoaded(c)
+    });
+
+    readonly loading = this.loader.loading;
+    readonly error = this.loader.error;
+    readonly client = this.loader.value;
     /** Yeni oluşturma sonrası kısa onay (query `saved=1`). */
     readonly showSavedBanner = signal(false);
     readonly kvkkDialogOpen = signal(false);
@@ -392,7 +401,6 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
         return { id: pet.id, label: `${pet.name} — ${pet.speciesName} · Sahip: ${c.fullName}`, clientId: c.id, clientName: c.fullName };
     });
 
-    private lastId: string | null = null;
     private cardSubscriptions = new Subscription();
 
     ngOnInit(): void {
@@ -406,34 +414,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
             });
         }
 
-        this.route.paramMap
-            .pipe(
-                switchMap((params) => {
-                    const id = params.get('id');
-
-                    this.resetCard();
-
-                    if (!id) {
-                        this.error.set('Geçersiz client.');
-                        this.loading.set(false);
-
-                        return EMPTY;
-                    }
-
-                    this.lastId = id;
-                    this.loading.set(true);
-                    this.error.set(null);
-
-                    return this.clientsService.getClientById(id);
-                })
-            )
-            .subscribe({
-                next: (c) => this.onClientLoaded(c),
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
-                    this.loading.set(false);
-                }
-            });
+        this.loader.init();
     }
 
     ngOnDestroy(): void {
@@ -441,20 +422,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     }
 
     reload(): void {
-        if (!this.lastId) {
-            return;
-        }
-
-        this.resetCard();
-        this.loading.set(true);
-        this.error.set(null);
-        this.clientsService.getClientById(this.lastId).subscribe({
-            next: (c) => this.onClientLoaded(c),
-            error: (e: Error) => {
-                this.error.set(e.message ?? 'Yükleme hatası');
-                this.loading.set(false);
-            }
-        });
+        this.loader.reload();
     }
 
     /**
@@ -475,22 +443,22 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
 
     /** Yalnız müşteri kaydını yeniler (409 sonrası güncel rıza ve `rowVersion`); kartın diğer bölümleri yeniden yüklenmez. */
     refreshClient(): void {
-        if (!this.lastId) {
+        if (!this.loader.id) {
             return;
         }
 
-        this.clientsService.getClientById(this.lastId).subscribe({
+        this.clientsService.getClientById(this.loader.id).subscribe({
             next: (c) => this.client.set(c),
             error: () => undefined
         });
     }
 
     retryPaymentSummary(): void {
-        if (!this.lastId) {
+        if (!this.loader.id) {
             return;
         }
 
-        this.loadPaymentSummary(this.lastId);
+        this.loadPaymentSummary(this.loader.id);
     }
 
     /** Son özet (randevu/muayene) kart bölümüne; özet yetki ayrımı yapmaz, hata `error` olur. */
@@ -507,8 +475,6 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     }
 
     private onClientLoaded(c: ClientDetailVm): void {
-        this.client.set(c);
-        this.loading.set(false);
         this.loadRecentSummary(c.id);
         this.loadPaymentSummary(c.id);
         this.cardSubscriptions.add(this.cardData.ownerBalance(c.id).subscribe((s) => this.balance.set(s)));
