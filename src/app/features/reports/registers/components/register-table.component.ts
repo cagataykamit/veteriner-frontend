@@ -17,7 +17,7 @@ import type { AnyRegisterDefinition } from '@/app/features/reports/registers/dat
             <table class="register-screen-table">
                 <thead>
                     <tr>
-                        @for (col of definition().screenColumns; track $index) {
+                        @for (col of definition().screenColumns; track col) {
                             <th [class.register-nowrap]="col.nowrap">{{ col.header }}</th>
                         }
                     </tr>
@@ -25,7 +25,7 @@ import type { AnyRegisterDefinition } from '@/app/features/reports/registers/dat
                 <tbody>
                     @for (row of rows(); track row.rowNumber) {
                         <tr>
-                            @for (col of definition().screenColumns; track $index) {
+                            @for (col of definition().screenColumns; track col) {
                                 <td [style.min-width]="col.minWidth" [class.register-nowrap]="col.nowrap" [class.register-clip]="col.clip">
                                     @for (line of filled(col.lines(row)); track $index) {
                                         <div [class]="'register-line register-line-' + (line.tone ?? 'plain')" [attr.title]="col.clip ? line.text : null">
@@ -51,7 +51,7 @@ import type { AnyRegisterDefinition } from '@/app/features/reports/registers/dat
         <table class="register-print-table">
             <thead>
                 <tr class="register-head-row">
-                    @for (cell of header().top; track $index) {
+                    @for (cell of header().top; track cell) {
                         <th [attr.colspan]="cell.colSpan" [attr.rowspan]="cell.rowSpan">{{ cell.label }}</th>
                     }
                 </tr>
@@ -66,7 +66,7 @@ import type { AnyRegisterDefinition } from '@/app/features/reports/registers/dat
             <tbody>
                 @for (row of rows(); track row.rowNumber) {
                     <tr>
-                        @for (col of definition().columns; track $index) {
+                        @for (col of definition().columns; track col) {
                             <td>{{ col.cell(row) }}</td>
                         }
                     </tr>

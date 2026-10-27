@@ -57,6 +57,7 @@ export interface PrescriptionEditVm {
 }
 
 export interface PrescriptionItemVm {
+    id: string;
     name: string;
     /** Katalog ürün bağı varsa kimlik; serbest satırda `null`. */
     productId: string | null;

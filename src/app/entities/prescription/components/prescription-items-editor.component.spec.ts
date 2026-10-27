@@ -118,7 +118,7 @@ describe('PrescriptionItemsEditorComponent', () => {
     });
 
     it('istek satırları kırpılır; ürün bağı olmayan satır productId null gönderir', () => {
-        const arr = createPrescriptionItemsArray([{ name: ' Amoksisilin ', productId: null, instructions: ' 2x1 ', quantity: 14, dose: ' 1 tablet ', unit: ' kutu ', lotNumber: '' }]);
+        const arr = createPrescriptionItemsArray([{ id: 'i1', name: ' Amoksisilin ', productId: null, instructions: ' 2x1 ', quantity: 14, dose: ' 1 tablet ', unit: ' kutu ', lotNumber: '' }]);
 
         expect(prescriptionItemsFormToInputs(arr)).toEqual([{ name: 'Amoksisilin', productId: null, instructions: '2x1', quantity: 14, dose: '1 tablet', unit: 'kutu', lotNumber: null }]);
     });

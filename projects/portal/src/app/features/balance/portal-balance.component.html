@@ -83,7 +83,7 @@
                 @default {
                     @if (payments.items().length) {
                         <ul class="portal-list" data-testid="payment-list">
-                            @for (p of payments.items(); track $index) {
+                            @for (p of payments.items(); track p) {
                                 <li class="portal-row">
                                     <div class="portal-row-head">
                                         <p class="portal-row-title">{{ money(p.amount, p.currency) }}</p>

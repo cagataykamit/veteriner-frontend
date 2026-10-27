@@ -27,7 +27,7 @@ const source: ReportListSource<ReportListQueryBase, Result> = {
     template: `
         <app-report-results [state]="state" emptyMessage="Kayıt yok" emptyHint="Süzgeci değiştirin">
             <ng-template #rows>
-                @for (row of state.report()!.items; track $index) {
+                @for (row of state.report()!.items; track row.name) {
                     <div class="test-row">{{ row.name }}</div>
                 }
             </ng-template>

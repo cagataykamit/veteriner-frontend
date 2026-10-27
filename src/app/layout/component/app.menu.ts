@@ -31,7 +31,7 @@ interface MenuSection {
     changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <ul class="layout-menu">
-            @for (section of scrollingSections(); track $index) {
+            @for (section of scrollingSections(); track section.label ?? section.heading) {
                 @if (section.label && rail()) {
                     <li class="layout-menu-divider" role="separator"></li>
                     @for (item of section.items; track item.label) {
@@ -58,7 +58,7 @@ interface MenuSection {
         </ul>
         @if (pinnedSections().length) {
             <ul class="layout-menu layout-menu-pinned">
-                @for (section of pinnedSections(); track $index) {
+                @for (section of pinnedSections(); track section.label ?? section.heading) {
                     <ng-container *ngTemplateOutlet="flatSection; context: { $implicit: section }" />
                 }
             </ul>

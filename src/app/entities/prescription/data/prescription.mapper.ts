@@ -110,6 +110,7 @@ export function mapPrescriptionItemDtosToVm(items: PrescriptionItemDto[] | null 
     return [...(items ?? [])]
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map((i) => ({
+            id: i.id,
             name: i.name ?? '',
             productId: firstTrimmed(i.productId),
             instructions: i.instructions?.trim() ?? '',

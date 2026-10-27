@@ -75,7 +75,7 @@ import { triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @for (row of t.rows; track $index) {
+                                        @for (row of t.rows; track row) {
                                             <tr>
                                                 @for (cell of row; track $index) {
                                                     <td class="align-top px-2 py-1 border-b border-surface break-words">{{ cell }}</td>

@@ -28,8 +28,8 @@ describe('reçete satırları (mapper)', () => {
         });
 
         expect(vm.items).toEqual([
-            { name: 'Dış ilaç', productId: null, instructions: 'Günde 2 kez', quantity: null, dose: '', unit: '', lotNumber: '' },
-            { name: 'Serum', productId: 'pr1', instructions: '', quantity: 0.5, dose: '5 ml', unit: 'şişe', lotNumber: 'L-1' }
+            { id: 'i1', name: 'Dış ilaç', productId: null, instructions: 'Günde 2 kez', quantity: null, dose: '', unit: '', lotNumber: '' },
+            { id: 'i2', name: 'Serum', productId: 'pr1', instructions: '', quantity: 0.5, dose: '5 ml', unit: 'şişe', lotNumber: 'L-1' }
         ]);
     });
 

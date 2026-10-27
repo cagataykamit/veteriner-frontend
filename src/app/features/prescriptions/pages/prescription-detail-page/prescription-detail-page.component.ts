@@ -127,7 +127,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                         <div class="card" data-testid="prescription-items">
                             <h5 class="mt-0 mb-4">İlaç / ürün satırları</h5>
                             <ul class="list-none m-0 p-0">
-                                @for (item of row()!.items; track $index) {
+                                @for (item of row()!.items; track item.id) {
                                     <li class="mb-3 last:mb-0 min-w-0">
                                         <div class="font-medium break-words">
                                             {{ item.name }}
