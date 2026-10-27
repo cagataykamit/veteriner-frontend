@@ -58,8 +58,8 @@ const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
                     </div>
                 }
                 <div class="flex flex-wrap justify-end gap-2 pt-2">
-                    <p-button type="button" [label]="copy.buttonCancel" severity="secondary" (onClick)="visible.set(false)" [disabled]="submitting()" />
-                    <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="submitting()" />
+                    <button pButton type="button" severity="secondary" (click)="visible.set(false)" [disabled]="submitting()">{{ copy.buttonCancel }}</button>
+                    <button pButton type="submit" [disabled]="submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                 </div>
             </form>
         </p-dialog>

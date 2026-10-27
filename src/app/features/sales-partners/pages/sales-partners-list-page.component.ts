@@ -22,7 +22,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
     changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <app-page-header title="Satış ortakları" description="Ortak kodlarıyla gelen kurumlar, ciro ve komisyon. Yalnız Vetinity platform yöneticisi görür.">
-            <button actions pButton type="button" severity="secondary" [loading]="exporting()" (click)="exportCsv()" data-testid="sp-export"><i class="pi pi-download"></i>CSV indir</button>
+            <button actions pButton type="button" severity="secondary" [disabled]="exporting()" (click)="exportCsv()" data-testid="sp-export"><i [class]="exporting() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>CSV indir</button>
             <button actions pButton type="button" (click)="openCreate()" data-testid="sp-new"><i class="pi pi-plus"></i>Yeni ortak</button>
         </app-page-header>
 

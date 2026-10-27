@@ -164,7 +164,7 @@ describe('Satış ortakları ekranları (ADR-037)', () => {
             expect(host.querySelector('[data-testid="sp-code-row"]')?.textContent).toContain('ISIK10');
             expect(host.querySelector('[data-testid="sp-redemption"]')?.textContent).toContain('Pati Klinik');
             expect(host.querySelector('[data-testid="sp-collection-row"]')?.textContent).toContain('Tahakkuk');
-            expect(host.querySelector<HTMLButtonElement>('[data-testid="sp-mark-paid"] button')?.disabled).toBe(true);
+            expect(host.querySelector<HTMLButtonElement>('button[data-testid="sp-mark-paid"]')?.disabled).toBe(true);
         });
 
         it('seçilen tahakkuk satırlarını tarih ve notla ödendi işaretler', () => {

@@ -55,7 +55,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
             <div class="card"><app-error-state [detail]="error()!" (retry)="load()" /></div>
         } @else if (partner(); as p) {
             <app-page-header categoryLink="/panel/sales-partners" categoryLinkLabel="Satış ortakları" [title]="p.name" [description]="contactLine(p)">
-                <button actions pButton type="button" severity="secondary" [loading]="exporting()" (click)="exportCsv()"><i class="pi pi-download"></i>CSV indir</button>
+                <button actions pButton type="button" severity="secondary" [disabled]="exporting()" (click)="exportCsv()"><i [class]="exporting() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>CSV indir</button>
                 <button actions pButton type="button" severity="secondary" (click)="partnerDialogVisible.set(true)"><i class="fa-solid fa-pen-to-square"></i>Düzenle</button>
             </app-page-header>
 
@@ -92,7 +92,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
             <div class="card">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <h5 class="m-0">Kodlar</h5>
-                    <p-button label="Yeni kod" icon="pi pi-plus" size="small" (onClick)="openCode(null)" data-testid="sp-new-code" />
+                    <button pButton type="button" size="small" (click)="openCode(null)" data-testid="sp-new-code"><i class="p-button-icon pi pi-plus"></i>Yeni kod</button>
                 </div>
                 @if (codes().length === 0) {
                     <app-empty-state message="Bu ortağın kodu yok." />
@@ -124,7 +124,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
                                             @if (c.isActive) {
                                                 <app-row-action-button action="void" label="Kodu kapat" [loading]="mutatingId() === c.id" (pressed)="setCodeActive(c, false)" />
                                             } @else {
-                                                <p-button label="Aç" size="small" severity="secondary" [text]="true" [loading]="mutatingId() === c.id" (onClick)="setCodeActive(c, true)" />
+                                                <button pButton type="button" size="small" severity="secondary" [text]="true" [disabled]="mutatingId() === c.id" (click)="setCodeActive(c, true)">@if (mutatingId() === c.id) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Aç</button>
                                             }
                                         </div>
                                     </td>
@@ -138,7 +138,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
             <div class="card">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <h5 class="m-0">Kullanımlar ve tahsilatlar</h5>
-                    <p-button label="Seçilenleri ödendi işaretle" icon="pi pi-check" size="small" [disabled]="selectedIds().length === 0" (onClick)="openMarkPaid()" data-testid="sp-mark-paid" />
+                    <button pButton type="button" size="small" [disabled]="selectedIds().length === 0" (click)="openMarkPaid()" data-testid="sp-mark-paid"><i class="p-button-icon pi pi-check"></i>Seçilenleri ödendi işaretle</button>
                 </div>
                 @if (redemptions().length === 0) {
                     <app-empty-state message="Bu ortağın kodunu kullanan kurum yok." />
@@ -227,8 +227,8 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
                         <p class="text-red-500 text-sm m-0" role="alert">{{ markPaidError() }}</p>
                     }
                     <div class="flex justify-end gap-2">
-                        <p-button [label]="copy.buttonCancel" severity="secondary" (onClick)="markPaidVisible.set(false)" [disabled]="markingPaid()" />
-                        <p-button label="Ödendi işaretle" icon="pi pi-check" [loading]="markingPaid()" [disabled]="!paidOn || markingPaid()" (onClick)="markPaid()" />
+                        <button pButton type="button" severity="secondary" (click)="markPaidVisible.set(false)" [disabled]="markingPaid()">{{ copy.buttonCancel }}</button>
+                        <button pButton type="button" [disabled]="!paidOn || markingPaid()" (click)="markPaid()"><i class="p-button-icon" [class]="markingPaid() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Ödendi işaretle</button>
                     </div>
                 </div>
             </p-dialog>

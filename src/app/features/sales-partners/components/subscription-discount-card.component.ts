@@ -40,7 +40,7 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
                         <div class="w-full md:max-w-sm">
                             <app-discount-code-field inputId="subscriptionDiscountCode" [disabled]="applying()" [(code)]="code" (validated)="valid.set(!!$event)" />
                         </div>
-                        <p-button label="Uygula" icon="pi pi-check" styleClass="md:mt-7" [loading]="applying()" [disabled]="!valid() || applying()" (onClick)="apply()" data-testid="subscription-discount-apply-button" />
+                        <button pButton type="button" class="max-md:self-start md:mt-7" [disabled]="!valid() || applying()" (click)="apply()" data-testid="subscription-discount-apply-button"><i class="p-button-icon" [class]="applying() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Uygula</button>
                     </div>
                     @if (error()) {
                         <p class="text-red-500 text-sm mt-2 mb-0" role="alert">{{ error() }}</p>
