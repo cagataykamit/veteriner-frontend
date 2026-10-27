@@ -7,7 +7,7 @@ import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
 import type { PetSuggestion } from '@/app/entities/visit/models/visit-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
-import { VisitArrivalDialogComponent } from '@/app/entities/visit/components/visit-arrival-dialog.component';
+import { VisitArrivalDialogComponent } from './visit-arrival-dialog.component';
 
 const registeredPet: PetSuggestion = { id: 'p-new', label: 'Pamuk — Kedi · Sahip: Ayşe', clientId: 'c-new', clientName: 'Ayşe' };
 const visitResult = {

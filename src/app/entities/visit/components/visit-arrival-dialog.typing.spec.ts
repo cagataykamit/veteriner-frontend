@@ -5,7 +5,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
-import { VisitArrivalDialogComponent } from '@/app/entities/visit/components/visit-arrival-dialog.component';
+import { VisitArrivalDialogComponent } from './visit-arrival-dialog.component';
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
