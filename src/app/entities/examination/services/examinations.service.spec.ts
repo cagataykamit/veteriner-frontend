@@ -146,6 +146,15 @@ describe('ExaminationsService', () => {
             expect(messages[1]).toContain('zaten kesinleştirilmiş');
         });
 
+        it('finalize 404: ücret ekranıyla ortak Examinations.NotFound kodunda kesinleştirmenin kendi metni gösterilir', () => {
+            let message = '';
+
+            service.finalizeExamination('e1', 'V').subscribe({ error: (e: Error) => (message = e.message) });
+            http.expectOne('http://api.test/api/v1/examinations/e1/finalize').flush(problem(404, 'Examinations.NotFound'), { status: 404, statusText: 'Not Found' });
+
+            expect(message).toBe('Muayene bulunamadı veya artık erişilemiyor.');
+        });
+
         it('ek not listesi: GET /addenda; ad çözülemeyen kayıt null ad ile gelir', () =>
             new Promise<void>((done) => {
                 service.getAddenda('e1').subscribe((list) => {

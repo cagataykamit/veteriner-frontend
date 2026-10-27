@@ -89,6 +89,20 @@ describe('SalesService', () => {
             http.expectOne('http://api.test/api/v1/sales').flush({ detail: 'Kullanılabilir 3 adet, süresi geçmiş 2 adet.', extensions: { code: 'Sales.InsufficientStock' } }, { status: 400, statusText: 'Bad Request' });
         }));
 
+    it.each([
+        ['StockMovements.ConcurrencyConflict', 'Stok aynı anda başka bir işlemle değişti. Tekrar deneyin; aynı satış iki kez yazılmaz.'],
+        ['StockBatches.NotFound', 'Seçilen parti bulunamadı. Partiyi yeniden seçin.']
+    ])('oluşturma hatası: başka ekranlarla ortak %s kodunda satışın kendi metni gösterilir', (code, expected) =>
+        new Promise<void>((done) => {
+            service.createSale(request).subscribe({
+                error: (e: Error) => {
+                    expect(e.message).toBe(expected);
+                    done();
+                }
+            });
+            http.expectOne('http://api.test/api/v1/sales').flush({ extensions: { code } }, { status: 409, statusText: 'Conflict' });
+        }));
+
     it('iptal: gerekçe kırpılır, stok sonucu gönderilir, güncel satış döner', () =>
         new Promise<void>((done) => {
             service.voidSale('s1', { reason: '  Yanlış ürün  ', stockOutcome: 'WrittenOff' }).subscribe((s) => {

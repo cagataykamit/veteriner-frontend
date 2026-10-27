@@ -166,9 +166,12 @@ function trialLimitProblemUserMessage(err: HttpErrorResponse): string | null {
     return TRIAL_LIMIT_FALLBACK_MESSAGES[code] ?? TRIAL_LIMIT_GENERIC_MESSAGE;
 }
 
-/** HTTP hatasını kullanıcı mesajlı `Error`'a çevirir; deneme kısıtında `TrialLimitError` (ekran eylem bağlantısı ekler). */
-export function userErrorFromHttp(err: HttpErrorResponse, fallback: string): Error {
-    const message = messageFromHttpError(err, fallback);
+/**
+ * HTTP hatasını kullanıcı mesajlı `Error`'a çevirir; deneme kısıtında `TrialLimitError` (ekran eylem bağlantısı ekler).
+ * `overrides`: ekranın kendi tablosu; aynı kod başka tabloda da varsa ekranın metni öncelikli gösterilir.
+ */
+export function userErrorFromHttp(err: HttpErrorResponse, fallback: string, overrides?: ProblemMessages): Error {
+    const message = messageFromHttpError(err, fallback, overrides);
     const trialCode = trialLimitProblemCode(err);
 
     return trialCode ? new TrialLimitError(message, trialCode) : new Error(message);
@@ -431,9 +434,9 @@ export function isReportRecoverableClinicConstraint403(err: unknown): boolean {
 }
 
 /** Hatayı kullanıcıya gösterilecek Türkçe mesajlı `Error`'a çevirir (backend `code` eşlemesi `messageFromHttpError` içinde; deneme kısıtı `TrialLimitError`). */
-export function toUserError<T>(fallback: string): MonoTypeOperatorFunction<T> {
+export function toUserError<T>(fallback: string, overrides?: ProblemMessages): MonoTypeOperatorFunction<T> {
     return catchError((err: unknown) =>
-        throwError(() => (err instanceof HttpErrorResponse ? userErrorFromHttp(err, fallback) : err))
+        throwError(() => (err instanceof HttpErrorResponse ? userErrorFromHttp(err, fallback, overrides) : err))
     );
 }
 

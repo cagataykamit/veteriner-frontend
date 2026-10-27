@@ -40,6 +40,7 @@ import type {
     ExaminationRelatedSummaryVm,
     ExaminationWriteResultVm
 } from '@/app/entities/examination/models/examination-vm.model';
+import { EXAMINATION_FINALIZE_PROBLEM_MESSAGES } from '@/app/entities/examination/utils/examination-error.utils';
 import { messageFromHttpError, toUserError } from '@/app/shared/utils/api-error.utils';
 
 export interface ExaminationsPagedVm {
@@ -97,7 +98,7 @@ export class ExaminationsService {
     finalizeExamination(id: string, rowVersion: string): Observable<ExaminationFinalizeResultVm> {
         return this.api.post<ExaminationFinalizeResultDto>(ApiEndpoints.examinations.finalize(id), mapFinalizeExaminationToApiBody(rowVersion)).pipe(
             map((dto) => mapExaminationFinalizeResultDtoToVm(dto)),
-            toUserError('Muayene kesinleştirilemedi.')
+            toUserError('Muayene kesinleştirilemedi.', EXAMINATION_FINALIZE_PROBLEM_MESSAGES)
         );
     }
 

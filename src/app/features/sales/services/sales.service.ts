@@ -18,6 +18,7 @@ import type {
     VoidSaleRequest
 } from '@/app/features/sales/models/sale-api.model';
 import type { CreateSaleResultVm, SaleDetailVm, SalesPagedVm } from '@/app/features/sales/models/sale-vm.model';
+import { SALE_PANEL_PROBLEM_MESSAGES } from '@/app/features/sales/utils/sale-error.utils';
 import { toUserError } from '@/app/shared/utils/api-error.utils';
 
 /** Doğrudan satış uçları (`docs/DIRECT_SALE_API_CONTRACT.md` §3). */
@@ -31,22 +32,22 @@ export class SalesService {
 
         return this.api
             .get<SaleDtoPagedResult>(ApiEndpoints.sales.list(), salesQueryToHttpParams(merged))
-            .pipe(map(mapPagedSalesToVm), toUserError('Satış listesi yüklenemedi.'));
+            .pipe(map(mapPagedSalesToVm), toUserError('Satış listesi yüklenemedi.', SALE_PANEL_PROBLEM_MESSAGES));
     }
 
     getSaleById(id: string): Observable<SaleDetailVm> {
-        return this.api.get<SaleDto>(ApiEndpoints.sales.byId(id)).pipe(map(mapSaleDtoToDetailVm), toUserError('Satış bulunamadı veya yüklenemedi.'));
+        return this.api.get<SaleDto>(ApiEndpoints.sales.byId(id)).pipe(map(mapSaleDtoToDetailVm), toUserError('Satış bulunamadı veya yüklenemedi.', SALE_PANEL_PROBLEM_MESSAGES));
     }
 
     /** `requestId` sepet başına bir kez üretilir; aynı kimlikle tekrar gönderim `200 created:false` döner ve başarıdır. */
     createSale(request: CreateSaleRequest): Observable<CreateSaleResultVm> {
-        return this.api.post<CreateSaleResponseDto>(ApiEndpoints.sales.list(), request).pipe(map(mapCreateSaleResponseToVm), toUserError('Satış kaydedilemedi.'));
+        return this.api.post<CreateSaleResponseDto>(ApiEndpoints.sales.list(), request).pipe(map(mapCreateSaleResponseToVm), toUserError('Satış kaydedilemedi.', SALE_PANEL_PROBLEM_MESSAGES));
     }
 
     /** `Sales.Correct`; yalnız tam iptal. Hata mesajları (ör. `Charges.VoidBlockedByAllocation`) `messageFromHttpError` ile eşlenir. */
     voidSale(id: string, request: VoidSaleRequest): Observable<SaleDetailVm> {
         const body: VoidSaleRequest = { reason: request.reason.trim(), stockOutcome: request.stockOutcome };
 
-        return this.api.post<SaleDto>(ApiEndpoints.sales.void(id), body).pipe(map(mapSaleDtoToDetailVm), toUserError('Satış iptal edilemedi.'));
+        return this.api.post<SaleDto>(ApiEndpoints.sales.void(id), body).pipe(map(mapSaleDtoToDetailVm), toUserError('Satış iptal edilemedi.', SALE_PANEL_PROBLEM_MESSAGES));
     }
 }

@@ -6,6 +6,7 @@ import { productsQueryToHttpParams } from '@/app/entities/inventory/data/product
 import type { ProductDtoPagedResult } from '@/app/entities/inventory/models/product-api.model';
 import { isSellableProduct, mapProductDtoToSaleProductVm } from '@/app/features/sales/data/sale.mapper';
 import type { SaleProductVm } from '@/app/features/sales/models/sale-vm.model';
+import { SALE_PANEL_PROBLEM_MESSAGES } from '@/app/features/sales/utils/sale-error.utils';
 import { toUserError } from '@/app/shared/utils/api-error.utils';
 
 const SEARCH_PAGE_SIZE = 12;
@@ -23,7 +24,7 @@ export class SaleProductSearchService {
 
         return this.api.get<ProductDtoPagedResult>(ApiEndpoints.products.list(), params).pipe(
             map((r) => (r.items ?? []).map(mapProductDtoToSaleProductVm).filter(isSellableProduct)),
-            toUserError('Ürünler aranamadı.')
+            toUserError('Ürünler aranamadı.', SALE_PANEL_PROBLEM_MESSAGES)
         );
     }
 }
