@@ -97,8 +97,8 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <p-button type="submit" [label]="editing() ? 'Güncelle' : copy.buttonSave" icon="pi pi-check" [loading]="submitting() || loading()" [disabled]="form.invalid || submitting() || loading() || ro.mutationBlocked()" />
-                        <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
+                        <button pButton type="submit" [disabled]="form.invalid || submitting() || loading() || ro.mutationBlocked() || submitting() || loading()"><i class="p-button-icon" [class]="submitting() || loading() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ editing() ? 'Güncelle' : copy.buttonSave }}</button>
+                        <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>
             </div>
