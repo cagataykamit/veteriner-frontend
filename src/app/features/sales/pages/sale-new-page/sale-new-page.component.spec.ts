@@ -55,7 +55,7 @@ describe('SaleNewPageComponent', () => {
 
     const el = () => fixture.nativeElement as HTMLElement;
     const searchInput = () => el().querySelector<HTMLInputElement>('#sale-search')!;
-    const submitButton = () => el().querySelector<HTMLButtonElement>('[data-testid="sale-submit"] button')!;
+    const submitButton = () => el().querySelector<HTMLButtonElement>('button[data-testid="sale-submit"]')!;
 
     const typeAndEnter = async (text: string) => {
         const input = searchInput();
@@ -241,7 +241,7 @@ describe('SaleNewPageComponent', () => {
         expect((vi.mocked(createSale).mock.lastCall![0] as CreateSaleRequest).requestId).toBe(firstId);
         expect(el().querySelector('[data-testid="sale-done"]')!.textContent).toContain('daha önce kaydedilmişti');
 
-        el().querySelector<HTMLButtonElement>('[data-testid="sale-new"] button')!.click();
+        el().querySelector<HTMLButtonElement>('button[data-testid="sale-new"]')!.click();
         fixture.detectChanges();
         await typeAndEnter('8690001');
         cmp['submit']();

@@ -63,7 +63,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                     <p-checkbox inputId="saleVoided" [binary]="true" [(ngModel)]="includeVoided" (ngModelChange)="applyFilters()" />
                     İptal edilenleri göster
                 </label>
-                <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                <button pButton type="button" severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
             </div>
 
             @if (loading() && rows().length === 0) {

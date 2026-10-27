@@ -37,9 +37,9 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
         } @else if (sale(); as s) {
             <app-page-header categoryLink="/panel/sales" categoryLinkLabel="Satış listesine dön" title="Satış" [description]="soldAt(s)">
                 <div actions class="flex flex-wrap gap-2">
-                    <p-button type="button" label="Fişi yazdır" icon="pi pi-print" severity="secondary" (onClick)="print()" />
+                    <button pButton type="button" severity="secondary" (click)="print()"><i class="p-button-icon pi pi-print"></i>Fişi yazdır</button>
                     @if (canVoid && !s.isVoided && !ro.mutationBlocked()) {
-                        <p-button type="button" label="İptal et" icon="pi pi-ban" severity="danger" [outlined]="true" (onClick)="voidVisible.set(true)" />
+                        <button pButton type="button" severity="danger" [outlined]="true" (click)="voidVisible.set(true)"><i class="p-button-icon pi pi-ban"></i>İptal et</button>
                     }
                 </div>
             </app-page-header>

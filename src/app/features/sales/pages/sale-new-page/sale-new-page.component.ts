@@ -82,11 +82,11 @@ function numberFromInput(event: Event): number | null {
                         }
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <p-button type="button" label="Fişi yazdır" icon="pi pi-print" severity="secondary" (onClick)="print()" />
+                        <button pButton type="button" severity="secondary" (click)="print()"><i class="p-button-icon pi pi-print"></i>Fişi yazdır</button>
                         @if (canReadSales) {
                             <a [routerLink]="['/panel/sales', result.sale.id]" pButton type="button" class="p-button-secondary"><i class="pi pi-external-link"></i>Satış detayı</a>
                         }
-                        <p-button type="button" label="Yeni satış" icon="pi pi-plus" (onClick)="startNew()" data-testid="sale-new" />
+                        <button pButton type="button" (click)="startNew()" data-testid="sale-new"><i class="p-button-icon pi pi-plus"></i>Yeni satış</button>
                     </div>
                 </div>
                 @if (lowStockNames().length > 0) {
@@ -154,7 +154,7 @@ function numberFromInput(event: Event): number | null {
                                             <div class="font-medium">{{ v.line.product.name }}</div>
                                             <div class="text-xs text-muted-color">{{ productMeta(v.line.product) }}</div>
                                         </div>
-                                        <p-button type="button" icon="pi pi-trash" severity="danger" [text]="true" size="small" [attr.aria-label]="'Satırı kaldır: ' + v.line.product.name" (onClick)="removeLine(v.line.key)" />
+                                        <button pButton type="button" iconOnly severity="danger" [text]="true" size="small" [attr.aria-label]="'Satırı kaldır: ' + v.line.product.name" (click)="removeLine(v.line.key)"><i class="p-button-icon pi pi-trash"></i></button>
                                     </div>
                                     <div class="grid grid-cols-12 gap-3 items-end">
                                         <div class="col-span-6 sm:col-span-3">
@@ -252,7 +252,7 @@ function numberFromInput(event: Event): number | null {
                             <p class="text-red-500 mt-3 mb-1" role="alert" data-testid="sale-error">{{ submitError() }}</p>
                             <small class="text-muted-color block">Aynı sepeti yeniden göndermek güvenlidir; satış iki kez kaydedilmez.</small>
                         }
-                        <p-button class="block mt-4" styleClass="w-full" type="button" label="Satışı tamamla" icon="pi pi-check" [loading]="submitting()" [disabled]="!canSubmit()" (onClick)="submit()" data-testid="sale-submit" />
+                        <button pButton type="button" class="mt-4 w-full" [disabled]="!canSubmit() || submitting()" (click)="submit()" data-testid="sale-submit"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Satışı tamamla</button>
                         @if (ro.mutationBlocked()) {
                             <small class="block mt-2 text-muted-color">Kurum aboneliği salt okunur; satış kaydedilemez.</small>
                         }
