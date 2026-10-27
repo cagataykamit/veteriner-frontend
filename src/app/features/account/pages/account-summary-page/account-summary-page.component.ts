@@ -72,7 +72,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                                 }
                             </div>
 
-                            <p-button label="Şifre Değiştir" icon="pi pi-lock" severity="secondary" styleClass="shrink-0 w-full sm:w-auto" routerLink="/panel/settings/account/change-password" />
+                            <a pButton severity="secondary" class="shrink-0 w-full sm:w-auto" routerLink="/panel/settings/account/change-password"><i class="p-button-icon pi pi-lock"></i>Şifre Değiştir</a>
                         </div>
                     </div>
 
@@ -122,7 +122,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                                 <label for="displayName" class="block text-sm font-medium text-muted-color mb-2">Görünen ad</label>
                                 <div class="flex flex-col gap-2 sm:flex-row">
                                     <input id="displayName" pInputText class="w-full" [formControl]="displayNameControl" [maxlength]="displayNameMax" autocomplete="name" />
-                                    <p-button type="submit" label="Kaydet" icon="pi pi-check" [loading]="displayNameSaving()" [disabled]="displayNameSaving() || displayNameControl.pristine" />
+                                    <button pButton type="submit" class="max-sm:self-start" [disabled]="displayNameSaving() || displayNameControl.pristine"><i class="p-button-icon" [class]="displayNameSaving() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
                                 </div>
                                 <small class="text-muted-color block mt-1"> Hasta kabulünde sorumlu hekim olarak bu ad gösterilir. Boş bırakırsanız e-postanızdan türetilen ad kullanılır. </small>
                                 @if (displayNameError()) {

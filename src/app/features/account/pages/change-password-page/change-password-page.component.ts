@@ -115,7 +115,7 @@ function resolveChangePasswordErrorMessage(err: unknown): string {
                         }
                     </div>
 
-                    <p-button type="submit" label="Kaydet" icon="pi pi-save" styleClass="w-full" [loading]="saving()" [disabled]="form.invalid || saving()" />
+                    <button pButton type="submit" class="w-full" [disabled]="form.invalid || saving()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
                 </form>
             </div>
         </div>
