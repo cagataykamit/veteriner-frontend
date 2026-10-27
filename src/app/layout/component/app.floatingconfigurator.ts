@@ -9,7 +9,7 @@ import { LayoutService } from '@/app/layout/service/layout.service';
     changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div [ngClass]="float() ? 'fixed top-8 right-8' : ''">
-            <p-button type="button" (onClick)="toggleDarkMode()" [rounded]="true" [icon]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" [class]="toggleClass()" [ariaLabel]="themeToggleLabel()" />
+            <button pButton type="button" iconOnly (click)="toggleDarkMode()" [rounded]="true" severity="secondary" [class]="toggleClass()" [attr.aria-label]="themeToggleLabel()"><i class="p-button-icon" [class]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"></i></button>
         </div>
     `
 })
