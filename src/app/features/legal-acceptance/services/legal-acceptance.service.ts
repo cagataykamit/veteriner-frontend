@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { catchError, Observable, shareReplay, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
-import type { LegalDocumentVersionDto, MyLegalAcceptanceStatusDto } from '@/app/features/legal-acceptance/models/legal-acceptance.model';
+import type { LegalDocumentVersionDto, MyLegalAcceptanceStatusDto } from '@/app/entities/legal-document/models/legal-acceptance.model';
 
 /** Sürümlü hukuki kabul (ADR-029). Sürümlerin tek kaynağı backend'dir; istemci sürüm numarası tutmaz. */
 @Injectable({ providedIn: 'root' })

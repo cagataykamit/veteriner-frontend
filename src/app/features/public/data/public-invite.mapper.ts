@@ -1,6 +1,6 @@
 import type { PublicInviteDetailsDto } from '@/app/features/public/models/public-invite-api.model';
 import type { PublicInviteVm } from '@/app/features/public/models/public-invite-vm.model';
-import type { LegalDocumentVersionDto } from '@/app/features/legal-acceptance/models/legal-acceptance.model';
+import type { LegalDocumentVersionDto } from '@/app/entities/legal-document/models/legal-acceptance.model';
 import { LEGAL_DOCUMENTS_BY_TYPE, type LegalDocumentType } from '@/app/entities/legal-document/utils/legal-documents.utils';
 
 const EM = '—';

@@ -1,4 +1,4 @@
-import type { LegalDocumentVersionDto } from '@/app/features/legal-acceptance/models/legal-acceptance.model';
+import type { LegalDocumentVersionDto } from '@/app/entities/legal-document/models/legal-acceptance.model';
 
 export interface PublicInviteVm {
     inviteToken: string;

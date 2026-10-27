@@ -1,4 +1,4 @@
-import type { LegalDocumentVersionDto } from '@/app/features/legal-acceptance/models/legal-acceptance.model';
+import type { LegalDocumentVersionDto } from '@/app/entities/legal-document/models/legal-acceptance.model';
 
 /** GET /api/v1/public/invites/{token} */
 export interface PublicInviteDetailsDto {

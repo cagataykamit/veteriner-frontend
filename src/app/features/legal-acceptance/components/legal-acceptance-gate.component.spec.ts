@@ -4,7 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { MyLegalAcceptanceStatusDto } from '@/app/features/legal-acceptance/models/legal-acceptance.model';
+import type { MyLegalAcceptanceStatusDto } from '@/app/entities/legal-document/models/legal-acceptance.model';
 import { LegalAcceptanceService } from '@/app/features/legal-acceptance/services/legal-acceptance.service';
 import { LEGAL_ACCEPTANCE_CODE_MESSAGES, LEGAL_VERSION_OUTDATED_CODE } from '@/app/entities/legal-document/utils/legal-acceptance-error.utils';
 import { LegalAcceptanceGateComponent } from './legal-acceptance-gate.component';
