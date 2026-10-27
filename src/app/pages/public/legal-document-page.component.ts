@@ -12,7 +12,7 @@ import {
     legalVersionLine,
     type LegalDocumentKey,
     type LegalSectionDef
-} from '@/app/features/public/utils/legal-documents.utils';
+} from '@/app/entities/legal-document/utils/legal-documents.utils';
 import { setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 
 /**

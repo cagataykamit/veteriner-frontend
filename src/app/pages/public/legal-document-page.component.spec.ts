@@ -14,7 +14,7 @@ import {
     legalVersionLine,
     PRIVACY_POLICY_DOCUMENT,
     TERMS_OF_USE_DOCUMENT
-} from '@/app/features/public/utils/legal-documents.utils';
+} from '@/app/entities/legal-document/utils/legal-documents.utils';
 
 const VERSIONS_URL = 'http://api.test/api/v1/public/legal-documents';
 const VERSIONS = [

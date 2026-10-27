@@ -23,8 +23,8 @@ import { PublicLegalLinksComponent } from '@/app/pages/public/components/public-
 import { LegalConsentCheckboxComponent } from '@/app/features/legal-acceptance/components/legal-consent-checkbox.component';
 import type { LegalDocumentVersionDto } from '@/app/features/legal-acceptance/models/legal-acceptance.model';
 import { LegalAcceptanceService } from '@/app/features/legal-acceptance/services/legal-acceptance.service';
-import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/app/features/legal-acceptance/utils/legal-acceptance-error.utils';
-import { LEGAL_DOCUMENTS_BY_TYPE, type LegalDocumentType } from '@/app/features/public/utils/legal-documents.utils';
+import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/app/entities/legal-document/utils/legal-acceptance-error.utils';
+import { LEGAL_DOCUMENTS_BY_TYPE, type LegalDocumentType } from '@/app/entities/legal-document/utils/legal-documents.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import { PASSWORD_POLICY_HINT, validateStrongPasswordValue } from '@/app/core/validation/password-policy.util';
 import { DiscountCodeFieldComponent } from '@/app/features/sales-partners/components/discount-code-field.component';

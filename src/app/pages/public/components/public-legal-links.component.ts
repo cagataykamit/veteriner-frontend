@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { PUBLIC_LEGAL_LINKS } from '@/app/features/public/utils/legal-documents.utils';
+import { PUBLIC_LEGAL_LINKS } from '@/app/entities/legal-document/utils/legal-documents.utils';
 
 /** Giriş/kayıt sayfalarının altındaki sade hukuki bağlantı satırı ("Gizlilik Politikası · Kullanım Şartları"). */
 @Component({

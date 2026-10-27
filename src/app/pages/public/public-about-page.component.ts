@@ -2,7 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
-import { DATA_PROCESSING_AGREEMENT_DOCUMENT, PUBLIC_LEGAL_LINKS } from '@/app/features/public/utils/legal-documents.utils';
+import { DATA_PROCESSING_AGREEMENT_DOCUMENT, PUBLIC_LEGAL_LINKS } from '@/app/entities/legal-document/utils/legal-documents.utils';
 import { PUBLIC_ABOUT_PARAGRAPHS, PUBLIC_LEGAL_ENTITY_NAME, PUBLIC_SUPPORT_HOURS } from '@/app/features/public/utils/public-contact-content.utils';
 import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { PUBLIC_ABOUT_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';

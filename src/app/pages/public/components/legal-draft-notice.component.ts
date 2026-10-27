@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { LEGAL_DRAFT_NOTICE } from '@/app/features/public/utils/legal-documents.utils';
+import { LEGAL_DRAFT_NOTICE } from '@/app/entities/legal-document/utils/legal-documents.utils';
 
 /** Hukuki metin taslak bandı; `LEGAL_DRAFT_NOTICE` null olunca hiçbir şey göstermez. */
 @Component({

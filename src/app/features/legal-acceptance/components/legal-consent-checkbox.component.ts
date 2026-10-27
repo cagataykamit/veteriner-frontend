@@ -1,7 +1,7 @@
 import { Component, computed, input, model, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CheckboxModule } from 'primeng/checkbox';
-import { LEGAL_DOCUMENTS_BY_TYPE, type LegalDocumentType } from '@/app/features/public/utils/legal-documents.utils';
+import { LEGAL_DOCUMENTS_BY_TYPE, type LegalDocumentType } from '@/app/entities/legal-document/utils/legal-documents.utils';
 
 /**
  * Hukuki metinler için tek onay kutusu (ADR-029 madde 4): belgeler yeni sekmede açılır, böylece form kaybolmaz.

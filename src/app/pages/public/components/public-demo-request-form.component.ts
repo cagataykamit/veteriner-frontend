@@ -12,7 +12,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { mapPublicDemoRequestFormToRequest, validatePublicDemoRequestForm, type PublicDemoRequestFieldErrors } from '@/app/features/public/data/public-demo-request.mapper';
 import { DEMO_CLINIC_SIZE_OPTIONS, DEMO_REQUEST_LIMITS, emptyPublicDemoRequestForm, type PublicDemoRequestForm } from '@/app/features/public/models/public-demo-request.model';
 import { PublicDemoRequestService } from '@/app/features/public/services/public-demo-request.service';
-import { PRIVACY_POLICY_PATH } from '@/app/features/public/utils/legal-documents.utils';
+import { PRIVACY_POLICY_PATH } from '@/app/entities/legal-document/utils/legal-documents.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 /**

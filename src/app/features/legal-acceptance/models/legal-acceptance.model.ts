@@ -1,4 +1,4 @@
-import type { LegalDocumentType } from '@/app/features/public/utils/legal-documents.utils';
+import type { LegalDocumentType } from '@/app/entities/legal-document/utils/legal-documents.utils';
 
 /** Belge ve güncel sürümü (`GET /public/legal-documents`, bekleyen kabul, davet `requiredLegalDocuments`). */
 export interface LegalDocumentVersionDto {
