@@ -11,8 +11,8 @@ import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
-import type { TenantInviteListItemVm } from '@/app/features/tenant-invites/models/tenant-invite-vm.model';
-import { TenantInvitesService } from '@/app/features/tenant-invites/services/tenant-invites.service';
+import type { TenantInviteListItemVm } from '@/app/entities/tenant-invite/models/tenant-invite-vm.model';
+import { TenantInvitesService } from '@/app/entities/tenant-invite/services/tenant-invites.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -20,7 +20,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { tenantInviteDisplayStatusSeverity } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
+import { tenantInviteDisplayStatusSeverity } from '@/app/entities/tenant-invite/utils/tenant-invite-status.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 

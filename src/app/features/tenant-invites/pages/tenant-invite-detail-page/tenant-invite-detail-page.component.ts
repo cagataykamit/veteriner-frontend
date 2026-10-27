@@ -8,14 +8,14 @@ import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import type { TenantInviteDetailVm } from '@/app/features/tenant-invites/models/tenant-invite-vm.model';
-import { TenantInvitesService } from '@/app/features/tenant-invites/services/tenant-invites.service';
+import type { TenantInviteDetailVm } from '@/app/entities/tenant-invite/models/tenant-invite-vm.model';
+import { TenantInvitesService } from '@/app/entities/tenant-invite/services/tenant-invites.service';
 import { buildPublicJoinInviteUrl } from '@/app/features/tenant-invites/utils/join-invite-link.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { tenantInviteDisplayStatusSeverity } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
+import { tenantInviteDisplayStatusSeverity } from '@/app/entities/tenant-invite/utils/tenant-invite-status.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 

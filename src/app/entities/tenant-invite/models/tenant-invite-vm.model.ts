@@ -1,4 +1,4 @@
-import type { TenantInviteLifecycle } from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
+import type { TenantInviteLifecycle } from '@/app/entities/tenant-invite/utils/tenant-invite-status.utils';
 
 export interface OperationClaimOptionVm {
     id: string;

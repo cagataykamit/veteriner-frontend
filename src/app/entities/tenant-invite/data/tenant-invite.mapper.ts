@@ -1,12 +1,12 @@
 import { HttpParams } from '@angular/common/http';
-import type { TenantInviteCreateRequestDto } from '@/app/features/tenant-invites/models/tenant-invite-api.model';
-import type { TenantInvitesListQuery } from '@/app/features/tenant-invites/models/tenant-invite-list-query.model';
+import type { TenantInviteCreateRequestDto } from '@/app/entities/tenant-invite/models/tenant-invite-api.model';
+import type { TenantInvitesListQuery } from '@/app/entities/tenant-invite/models/tenant-invite-list-query.model';
 import type {
     OperationClaimOptionVm,
     TenantInviteCreatedVm,
     TenantInviteDetailVm,
     TenantInviteListItemVm
-} from '@/app/features/tenant-invites/models/tenant-invite-vm.model';
+} from '@/app/entities/tenant-invite/models/tenant-invite-vm.model';
 import {
     parseTenantInviteStatusCode,
     resolveInviteActions,
@@ -14,7 +14,7 @@ import {
     tenantInviteDisplayStatusLabel,
     tenantInviteLifecycleFromRaw,
     tenantInviteResolveDisplayLifecycle
-} from '@/app/features/tenant-invites/utils/tenant-invite-status.utils';
+} from '@/app/entities/tenant-invite/utils/tenant-invite-status.utils';
 
 function isRecord(x: unknown): x is Record<string, unknown> {
     return x !== null && typeof x === 'object';

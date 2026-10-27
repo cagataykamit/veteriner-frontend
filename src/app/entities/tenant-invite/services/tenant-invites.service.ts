@@ -12,15 +12,15 @@ import {
     mapTenantInviteCreatedDto,
     mapTenantInviteDetailRaw,
     tenantInvitesListQueryToHttpParams
-} from '@/app/features/tenant-invites/data/tenant-invite.mapper';
-import type { TenantInviteCreateRequestDto, TenantInviteListItemDtoPagedResult } from '@/app/features/tenant-invites/models/tenant-invite-api.model';
-import type { TenantInvitesListQuery } from '@/app/features/tenant-invites/models/tenant-invite-list-query.model';
+} from '@/app/entities/tenant-invite/data/tenant-invite.mapper';
+import type { TenantInviteCreateRequestDto, TenantInviteListItemDtoPagedResult } from '@/app/entities/tenant-invite/models/tenant-invite-api.model';
+import type { TenantInvitesListQuery } from '@/app/entities/tenant-invite/models/tenant-invite-list-query.model';
 import type {
     OperationClaimOptionVm,
     TenantInviteCreatedVm,
     TenantInviteDetailVm,
     TenantInviteListItemVm
-} from '@/app/features/tenant-invites/models/tenant-invite-vm.model';
+} from '@/app/entities/tenant-invite/models/tenant-invite-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface TenantInvitesPagedVm {
