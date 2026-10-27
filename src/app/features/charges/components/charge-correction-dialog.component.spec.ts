@@ -1,7 +1,7 @@
 import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import type { ChargeVm } from '@/app/features/charges/models/charge-vm.model';
+import type { ChargeVm } from '@/app/entities/charge/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
 import { ChargeCorrectionDialogComponent } from './charge-correction-dialog.component';
 

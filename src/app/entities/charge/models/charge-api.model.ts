@@ -1,4 +1,4 @@
-import type { ChargeLineKind } from '@/app/features/charges/utils/charge-tax.utils';
+import type { ChargeLineKind } from '@/app/entities/charge/utils/charge-tax.utils';
 
 /**
  * Ücret (Charge) API DTO'ları — `docs/CHARGES_API_CONTRACT.md`.

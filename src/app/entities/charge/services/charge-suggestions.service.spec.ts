@@ -3,9 +3,9 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { ChargeDto } from '@/app/features/charges/models/charge-api.model';
-import type { ChargeSuggestionDto } from '@/app/features/charges/models/charge-suggestion-api.model';
-import { ChargeSuggestionsService } from '@/app/features/charges/services/charge-suggestions.service';
+import type { ChargeDto } from '@/app/entities/charge/models/charge-api.model';
+import type { ChargeSuggestionDto } from '@/app/entities/charge/models/charge-suggestion-api.model';
+import { ChargeSuggestionsService } from '@/app/entities/charge/services/charge-suggestions.service';
 
 const suggestion: ChargeSuggestionDto = {
     id: 's1',

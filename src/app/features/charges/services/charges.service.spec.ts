@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { ChargeDto } from '@/app/features/charges/models/charge-api.model';
+import type { ChargeDto } from '@/app/entities/charge/models/charge-api.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 

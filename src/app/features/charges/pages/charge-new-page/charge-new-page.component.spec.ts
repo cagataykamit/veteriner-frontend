@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { type Observable, of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { ChargeCreateResultVm, ChargeVm } from '@/app/features/charges/models/charge-vm.model';
+import type { ChargeCreateResultVm, ChargeVm } from '@/app/entities/charge/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
 import { ClientSearchService } from '@/app/entities/client/services/client-search.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';

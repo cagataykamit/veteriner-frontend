@@ -5,7 +5,7 @@ import {
     CHARGE_UNIT_PRICE_MAX_DECIMALS,
     computeChargeAmount,
     hasAtMostDecimals
-} from '@/app/features/charges/utils/charge-amount.utils';
+} from '@/app/entities/charge/utils/charge-amount.utils';
 import type { CreateSaleRequest, SalePaymentMethodApi } from '@/app/features/sales/models/sale-api.model';
 import type { SaleProductVm } from '@/app/features/sales/models/sale-vm.model';
 

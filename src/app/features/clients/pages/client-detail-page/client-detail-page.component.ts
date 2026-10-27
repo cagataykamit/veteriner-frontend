@@ -6,7 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import { appointmentStatusLabel } from '@/app/entities/appointment/utils/appointment-status.utils';
-import type { ChargeSuggestionsPagedVm, ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
+import type { ChargeSuggestionsPagedVm, ChargeSuggestionVm } from '@/app/entities/charge/models/charge-suggestion-vm.model';
 import { ClientCardHeaderComponent } from '@/app/features/clients/components/client-card-header.component';
 import { ClientKvkkConsentDialogComponent } from '@/app/features/clients/components/client-kvkk-consent-dialog.component';
 import { ClientPetsPanelComponent } from '@/app/features/clients/components/client-pets-panel.component';

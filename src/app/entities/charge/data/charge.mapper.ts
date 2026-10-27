@@ -6,7 +6,7 @@ import type {
     ChargeDto,
     ChargePagedResultDto,
     ChargeTaxDto
-} from '@/app/features/charges/models/charge-api.model';
+} from '@/app/entities/charge/models/charge-api.model';
 import type {
     ChargeCreateResultVm,
     ChargesListQuery,
@@ -14,8 +14,8 @@ import type {
     ChargeVm,
     CorrectChargeRequest,
     CreateChargeRequest
-} from '@/app/features/charges/models/charge-vm.model';
-import { parseChargeLineKind } from '@/app/features/charges/utils/charge-tax.utils';
+} from '@/app/entities/charge/models/charge-vm.model';
+import { parseChargeLineKind } from '@/app/entities/charge/utils/charge-tax.utils';
 
 function trimmedOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();

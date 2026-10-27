@@ -13,7 +13,7 @@ import { SelectModule } from 'primeng/select';
 import { AdministrationBatchFieldComponent } from '@/app/features/administrations/components/administration-batch-field.component';
 import { administrationSavedNotice } from '@/app/features/administrations/utils/administration-labels';
 import { createAdministrationBatchPicker } from '@/app/features/administrations/utils/administration-batch-picker';
-import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/features/charges/utils/charge-amount.utils';
+import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/entities/charge/utils/charge-amount.utils';
 import type { ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { ADMINISTRATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';

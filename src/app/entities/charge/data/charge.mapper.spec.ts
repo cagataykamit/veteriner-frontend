@@ -1,5 +1,5 @@
-import { chargesQueryToHttpParams, mapChargeCreateResultDtoToVm, mapChargeDtoToVm, mapCorrectChargeToApiBody, mapCreateChargeToApiBody, mapPagedChargesToVm } from '@/app/features/charges/data/charge.mapper';
-import type { ChargeDto } from '@/app/features/charges/models/charge-api.model';
+import { chargesQueryToHttpParams, mapChargeCreateResultDtoToVm, mapChargeDtoToVm, mapCorrectChargeToApiBody, mapCreateChargeToApiBody, mapPagedChargesToVm } from '@/app/entities/charge/data/charge.mapper';
+import type { ChargeDto } from '@/app/entities/charge/models/charge-api.model';
 
 const dto = (over: Partial<ChargeDto> = {}): ChargeDto => ({
     id: 'ch1',

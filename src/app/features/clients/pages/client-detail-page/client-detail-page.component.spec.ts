@@ -5,7 +5,7 @@ import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
-import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
+import type { ChargeSuggestionVm } from '@/app/entities/charge/models/charge-suggestion-vm.model';
 import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
 import type { ClientDetailVm, ClientPaymentSummaryVm } from '@/app/entities/client/models/client-vm.model';
 import { ClientsService } from '@/app/entities/client/services/clients.service';

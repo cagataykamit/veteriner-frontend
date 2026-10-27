@@ -7,8 +7,8 @@ import {
     PETS_READ_CLAIM,
     TREATMENTS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
-import type { ChargeSuggestionsPagedVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
-import { ChargeSuggestionsService } from '@/app/features/charges/services/charge-suggestions.service';
+import type { ChargeSuggestionsPagedVm } from '@/app/entities/charge/models/charge-suggestion-vm.model';
+import { ChargeSuggestionsService } from '@/app/entities/charge/services/charge-suggestions.service';
 import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';

@@ -3,25 +3,25 @@ import { map, Observable } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { mapChargeCreateResultDtoToVm } from '@/app/features/charges/data/charge.mapper';
+import { mapChargeCreateResultDtoToVm } from '@/app/entities/charge/data/charge.mapper';
 import {
     chargeSuggestionsQueryToHttpParams,
     mapChargeSuggestionDtoToVm,
     mapConvertChargeSuggestionToApiBody,
     mapPagedChargeSuggestionsToVm
-} from '@/app/features/charges/data/charge-suggestion.mapper';
+} from '@/app/entities/charge/data/charge-suggestion.mapper';
 import type {
     ChargeSuggestionDto,
     ChargeSuggestionPagedResultDto
-} from '@/app/features/charges/models/charge-suggestion-api.model';
-import type { ChargeCreateResultDto } from '@/app/features/charges/models/charge-api.model';
+} from '@/app/entities/charge/models/charge-suggestion-api.model';
+import type { ChargeCreateResultDto } from '@/app/entities/charge/models/charge-api.model';
 import type {
     ChargeSuggestionsListQuery,
     ChargeSuggestionsPagedVm,
     ChargeSuggestionVm,
     ConvertChargeSuggestionRequest
-} from '@/app/features/charges/models/charge-suggestion-vm.model';
-import type { ChargeCreateResultVm } from '@/app/features/charges/models/charge-vm.model';
+} from '@/app/entities/charge/models/charge-suggestion-vm.model';
+import type { ChargeCreateResultVm } from '@/app/entities/charge/models/charge-vm.model';
 import { toUserError } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })

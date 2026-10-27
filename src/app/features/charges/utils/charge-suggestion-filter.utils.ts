@@ -1,4 +1,4 @@
-import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
+import type { ChargeSuggestionVm } from '@/app/entities/charge/models/charge-suggestion-vm.model';
 import { addGregorianDaysToYmd, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 
 export type ChargeSuggestionPeriod = 'all' | 'today' | 'week';

@@ -1,5 +1,5 @@
 import { FormControl } from '@angular/forms';
-import { chargeNumberValidator, computeChargeAmount, hasAtMostDecimals } from '@/app/features/charges/utils/charge-amount.utils';
+import { chargeNumberValidator, computeChargeAmount, hasAtMostDecimals } from '@/app/entities/charge/utils/charge-amount.utils';
 
 describe('computeChargeAmount', () => {
     it('miktar × birim fiyatı 2 haneye yuvarlar', () => {

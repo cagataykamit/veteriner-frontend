@@ -1,5 +1,5 @@
 import { type AbstractControl, FormArray, FormControl, FormGroup, Validators, type ValidationErrors } from '@angular/forms';
-import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/features/charges/utils/charge-amount.utils';
+import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/entities/charge/utils/charge-amount.utils';
 import type { PrescriptionItemInput } from '@/app/features/prescriptions/models/prescription-create.model';
 import type { PrescriptionItemVm } from '@/app/features/prescriptions/models/prescription-vm.model';
 

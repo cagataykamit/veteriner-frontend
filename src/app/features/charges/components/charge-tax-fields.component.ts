@@ -1,7 +1,7 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
-import { CHARGE_LINE_KIND_OPTIONS, type ChargeLineKind, chargeVatRateOptionsIncluding } from '@/app/features/charges/utils/charge-tax.utils';
+import { CHARGE_LINE_KIND_OPTIONS, type ChargeLineKind, chargeVatRateOptionsIncluding } from '@/app/entities/charge/utils/charge-tax.utils';
 
 /** Ücret formlarındaki satır türü ve KDV oranı seçimi (ADR-036); yeni ücret ve düzeltme aynı alanları kullanır. */
 @Component({

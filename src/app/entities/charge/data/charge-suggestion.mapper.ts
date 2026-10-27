@@ -3,13 +3,13 @@ import type {
     ChargeSuggestionDto,
     ChargeSuggestionPagedResultDto,
     ConvertChargeSuggestionRequestDto
-} from '@/app/features/charges/models/charge-suggestion-api.model';
+} from '@/app/entities/charge/models/charge-suggestion-api.model';
 import type {
     ChargeSuggestionsListQuery,
     ChargeSuggestionsPagedVm,
     ChargeSuggestionVm,
     ConvertChargeSuggestionRequest
-} from '@/app/features/charges/models/charge-suggestion-vm.model';
+} from '@/app/entities/charge/models/charge-suggestion-vm.model';
 
 function trimmedOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();

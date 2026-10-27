@@ -1,4 +1,4 @@
-import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
+import type { ChargeSuggestionVm } from '@/app/entities/charge/models/charge-suggestion-vm.model';
 import { filterChargeSuggestions } from './charge-suggestion-filter.utils';
 
 const item = (id: string, clientId: string, occurredAtUtc: string): ChargeSuggestionVm => ({

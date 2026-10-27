@@ -10,8 +10,8 @@ import {
     mapCorrectChargeToApiBody,
     mapCreateChargeToApiBody,
     mapPagedChargesToVm
-} from '@/app/features/charges/data/charge.mapper';
-import type { ChargeCreateResultDto, ChargeDto, ChargePagedResultDto } from '@/app/features/charges/models/charge-api.model';
+} from '@/app/entities/charge/data/charge.mapper';
+import type { ChargeCreateResultDto, ChargeDto, ChargePagedResultDto } from '@/app/entities/charge/models/charge-api.model';
 import type {
     ChargeCreateResultVm,
     ChargesListQuery,
@@ -19,7 +19,7 @@ import type {
     ChargeVm,
     CorrectChargeRequest,
     CreateChargeRequest
-} from '@/app/features/charges/models/charge-vm.model';
+} from '@/app/entities/charge/models/charge-vm.model';
 import { toUserError } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })

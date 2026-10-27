@@ -1,7 +1,7 @@
 import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
+import type { ChargeSuggestionVm } from '@/app/entities/charge/models/charge-suggestion-vm.model';
 import { ChargeSuggestionConvertDialogComponent } from './charge-suggestion-convert-dialog.component';
 
 const suggestion = (over: Partial<ChargeSuggestionVm> = {}): ChargeSuggestionVm => ({

@@ -9,7 +9,7 @@ import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PRODUCTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/features/charges/utils/charge-amount.utils';
+import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/entities/charge/utils/charge-amount.utils';
 import {
     EXAMINATION_TEMPLATE_LINES_MAX,
     EXAMINATION_TEMPLATE_NAME_MAX,

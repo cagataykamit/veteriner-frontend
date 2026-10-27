@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { firstValueFrom, of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { ChargesPagedVm, ChargeVm } from '@/app/features/charges/models/charge-vm.model';
+import type { ChargesPagedVm, ChargeVm } from '@/app/entities/charge/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
 import { ClientSearchService } from '@/app/entities/client/services/client-search.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
