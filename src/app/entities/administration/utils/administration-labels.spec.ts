@@ -1,5 +1,5 @@
-import type { AdministrationCreateResultVm } from '@/app/features/administrations/models/administration-vm.model';
-import { administrationSavedNotice } from '@/app/features/administrations/utils/administration-labels';
+import type { AdministrationCreateResultVm } from '@/app/entities/administration/models/administration-vm.model';
+import { administrationSavedNotice } from '@/app/entities/administration/utils/administration-labels';
 
 const result = (created: boolean, isBelowMinimum: boolean): AdministrationCreateResultVm => ({
     created,

@@ -4,7 +4,7 @@ import type {
     AdministrationCreateResultDto,
     AdministrationDto,
     AdministrationPagedResultDto
-} from '@/app/features/administrations/models/administration-api.model';
+} from '@/app/entities/administration/models/administration-api.model';
 import type {
     AdministrationCreateResultVm,
     AdministrationsListQuery,
@@ -12,7 +12,7 @@ import type {
     AdministrationStockOutcome,
     AdministrationVm,
     CreateAdministrationRequest
-} from '@/app/features/administrations/models/administration-vm.model';
+} from '@/app/entities/administration/models/administration-vm.model';
 import { toYmdOrNull } from '@/app/entities/inventory/utils/stock-batch-expiry.utils';
 
 function trimmedOrNull(v: string | null | undefined): string | null {

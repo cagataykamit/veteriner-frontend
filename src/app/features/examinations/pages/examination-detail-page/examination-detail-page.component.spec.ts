@@ -7,7 +7,7 @@ import { of, EMPTY } from 'rxjs';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
-import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
+import { AdministrationsService } from '@/app/entities/administration/services/administrations.service';
 import { StockBatchService } from '@/app/entities/inventory/services/stock-batch.service';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';

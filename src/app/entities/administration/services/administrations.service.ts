@@ -9,12 +9,12 @@ import {
     mapAdministrationDtoToVm,
     mapCreateAdministrationToApiBody,
     mapPagedAdministrationsToVm
-} from '@/app/features/administrations/data/administration.mapper';
+} from '@/app/entities/administration/data/administration.mapper';
 import type {
     AdministrationCreateResultDto,
     AdministrationDto,
     AdministrationPagedResultDto
-} from '@/app/features/administrations/models/administration-api.model';
+} from '@/app/entities/administration/models/administration-api.model';
 import type {
     AdministrationCreateResultVm,
     AdministrationStockOutcome,
@@ -22,7 +22,7 @@ import type {
     AdministrationsPagedVm,
     AdministrationVm,
     CreateAdministrationRequest
-} from '@/app/features/administrations/models/administration-vm.model';
+} from '@/app/entities/administration/models/administration-vm.model';
 import { toUserError } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })

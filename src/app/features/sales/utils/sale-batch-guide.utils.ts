@@ -1,4 +1,4 @@
-import { suggestAdministrationBatch } from '@/app/features/administrations/utils/administration-batch.utils';
+import { suggestAdministrationBatch } from '@/app/entities/administration/utils/administration-batch.utils';
 import type { ProductStockBatchesVm } from '@/app/entities/inventory/models/stock-batch-vm.model';
 
 export interface SaleBatchGuide {

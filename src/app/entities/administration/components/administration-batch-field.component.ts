@@ -1,7 +1,7 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
-import type { AdministrationBatchPicker } from '@/app/features/administrations/utils/administration-batch-picker';
+import type { AdministrationBatchPicker } from '@/app/entities/administration/utils/administration-batch-picker';
 
 /**
  * Parti seçimi alanı (seri no / SKT): "Otomatik" FEFO + manuel parti, süresi geçmiş parti devre dışı,

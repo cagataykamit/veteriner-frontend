@@ -1,4 +1,4 @@
-import type { AdministrationCreateResultVm } from '@/app/features/administrations/models/administration-vm.model';
+import type { AdministrationCreateResultVm } from '@/app/entities/administration/models/administration-vm.model';
 import type { HbsEntryStatus, HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
 
 /**

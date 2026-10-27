@@ -1,6 +1,6 @@
 import { HttpParams } from '@angular/common/http';
-import { mapAdministrationCreateResultDtoToVm } from '@/app/features/administrations/data/administration.mapper';
-import type { AdministrationCreateResultDto } from '@/app/features/administrations/models/administration-api.model';
+import { mapAdministrationCreateResultDtoToVm } from '@/app/entities/administration/data/administration.mapper';
+import type { AdministrationCreateResultDto } from '@/app/entities/administration/models/administration-api.model';
 import { mapHbsEntryDtoToVm, parseHbsStatus } from '@/app/features/hbs/utils/hbs-status.utils';
 import { toYmdOrNull } from '@/app/entities/inventory/utils/stock-batch-expiry.utils';
 import type {

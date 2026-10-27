@@ -1,9 +1,9 @@
 import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { AdministrationVoidDialogComponent } from '@/app/features/administrations/components/administration-void-dialog.component';
-import type { AdministrationStockOutcome, AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
-import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
+import { AdministrationVoidDialogComponent } from '@/app/entities/administration/components/administration-void-dialog.component';
+import type { AdministrationStockOutcome, AdministrationVm } from '@/app/entities/administration/models/administration-vm.model';
+import { AdministrationsService } from '@/app/entities/administration/services/administrations.service';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 
 const target: AdministrationVm = {

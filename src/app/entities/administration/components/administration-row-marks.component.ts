@@ -1,7 +1,7 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import type { AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
-import { ADMINISTRATION_LATE_ENTRY_LABEL, administrationBatchText, administrationStockOutcomeLabel } from '@/app/features/administrations/utils/administration-labels';
+import type { AdministrationVm } from '@/app/entities/administration/models/administration-vm.model';
+import { ADMINISTRATION_LATE_ENTRY_LABEL, administrationBatchText, administrationStockOutcomeLabel } from '@/app/entities/administration/utils/administration-labels';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
 /** Uygulama satırının işaretleri: düşülen parti (seri no, SKT), "Kesinleştirmeden sonra eklendi" (+ gerekçe) ve iptal (+ stok sonucu, gerekçe). */

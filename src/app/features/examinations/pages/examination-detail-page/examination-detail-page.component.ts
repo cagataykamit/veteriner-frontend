@@ -8,7 +8,7 @@ import type { AppointmentListItemVm } from '@/app/entities/appointment/models/ap
 import { appointmentTypeDisplayLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
 import type { ExaminationDetailVm, ExaminationFinalizeResultVm, ExaminationRelatedSummaryVm } from '@/app/entities/examination/models/examination-vm.model';
 import { ExaminationAddendaSectionComponent } from '@/app/features/examinations/components/examination-addenda-section.component';
-import { AdministrationsSectionComponent } from '@/app/features/administrations/components/administrations-section.component';
+import { AdministrationsSectionComponent } from '@/app/entities/administration/components/administrations-section.component';
 import { ExaminationPatientHeaderComponent } from '@/app/features/examinations/components/examination-patient-header.component';
 import { ExaminationPatientContextComponent } from '@/app/features/examinations/components/examination-patient-context.component';
 import { ExaminationProceduresSectionComponent } from '@/app/features/examinations/components/examination-procedures-section.component';

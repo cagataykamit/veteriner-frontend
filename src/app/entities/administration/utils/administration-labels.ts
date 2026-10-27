@@ -1,4 +1,4 @@
-import type { AdministrationCreateResultVm, AdministrationStockOutcome, AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
+import type { AdministrationCreateResultVm, AdministrationStockOutcome, AdministrationVm } from '@/app/entities/administration/models/administration-vm.model';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
 
 /** Satır, muayene özeti ve timeline'da aynı rozet metni (ADR-013). */

@@ -1,4 +1,4 @@
-import type { AdministrationDto } from '@/app/features/administrations/models/administration-api.model';
+import type { AdministrationDto } from '@/app/entities/administration/models/administration-api.model';
 import type { ProductKindApi } from '@/app/entities/inventory/models/product-api.model';
 
 /** Sınırlar `EXAMINATION_TEMPLATE_API_CONTRACT.md` §1 ile aynı (sunucu da denetler). */

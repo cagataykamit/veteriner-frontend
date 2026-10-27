@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { AdministrationsSectionComponent } from '@/app/features/administrations/components/administrations-section.component';
+import { AdministrationsSectionComponent } from '@/app/entities/administration/components/administrations-section.component';
 import type { TreatmentDetailVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';

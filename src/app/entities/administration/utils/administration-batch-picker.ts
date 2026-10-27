@@ -3,7 +3,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import type { AbstractControl } from '@angular/forms';
 import { catchError, merge, of, startWith, switchMap, tap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { suggestAdministrationBatch } from '@/app/features/administrations/utils/administration-batch.utils';
+import { suggestAdministrationBatch } from '@/app/entities/administration/utils/administration-batch.utils';
 import type { ProductStockBatchesVm } from '@/app/entities/inventory/models/stock-batch-vm.model';
 import { StockBatchService } from '@/app/entities/inventory/services/stock-batch.service';
 

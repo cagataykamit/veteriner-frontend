@@ -3,8 +3,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { AdministrationDto } from '@/app/features/administrations/models/administration-api.model';
-import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
+import type { AdministrationDto } from '@/app/entities/administration/models/administration-api.model';
+import { AdministrationsService } from '@/app/entities/administration/services/administrations.service';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 const dto: AdministrationDto = {

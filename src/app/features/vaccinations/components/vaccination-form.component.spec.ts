@@ -9,7 +9,7 @@ import { ProductService } from '@/app/entities/inventory/services/product.servic
 import { StockBatchService } from '@/app/entities/inventory/services/stock-batch.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import type { AdministrationCreateResultVm } from '@/app/features/administrations/models/administration-vm.model';
+import type { AdministrationCreateResultVm } from '@/app/entities/administration/models/administration-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/services/vaccine-definitions.service';
 import { VaccinationFormComponent, type VaccinationSavedEvent } from './vaccination-form.component';

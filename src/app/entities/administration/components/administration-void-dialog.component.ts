@@ -1,8 +1,8 @@
 import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import type { AdministrationStockOutcome, AdministrationVm } from '@/app/features/administrations/models/administration-vm.model';
-import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
+import type { AdministrationStockOutcome, AdministrationVm } from '@/app/entities/administration/models/administration-vm.model';
+import { AdministrationsService } from '@/app/entities/administration/services/administrations.service';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 
 /**

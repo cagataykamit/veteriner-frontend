@@ -1,9 +1,9 @@
 import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
-import { AdministrationCreateDialogComponent } from '@/app/features/administrations/components/administration-create-dialog.component';
-import type { AdministrationCreateResultVm } from '@/app/features/administrations/models/administration-vm.model';
-import { AdministrationsService } from '@/app/features/administrations/services/administrations.service';
+import { AdministrationCreateDialogComponent } from '@/app/entities/administration/components/administration-create-dialog.component';
+import type { AdministrationCreateResultVm } from '@/app/entities/administration/models/administration-vm.model';
+import { AdministrationsService } from '@/app/entities/administration/services/administrations.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { ProductStockBatchesVm, StockBatchVm } from '@/app/entities/inventory/models/stock-batch-vm.model';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
