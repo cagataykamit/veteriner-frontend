@@ -72,7 +72,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 <app-search-input inputId="tiSearch" placeholder="E-posta…" [(value)]="searchInput" (searchRequested)="applySearch()" />
                             </div>
                             <div class="flex flex-wrap gap-2 shrink-0">
-                                <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                                <button pButton type="button" severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                             </div>
                         </div>
                     </div>
@@ -123,15 +123,13 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                                     <app-row-action-button action="void" [loading]="isRowBusy(row.id, 'cancel')" [disabled]="anyRowBusy() && !isRowBusy(row.id, 'cancel')" (pressed)="onCancelInvite(row.id)" />
                                                 }
                                                 @if (row.canResend && canManageTenantAccess()) {
-                                                    <p-button
+                                                    <button
+                                                        pButton
                                                         type="button"
-                                                        label="Yeniden gönder"
-                                                        icon="pi pi-send"
-                                                        styleClass="p-button-sm p-button-text"
-                                                        [loading]="isRowBusy(row.id, 'resend')"
-                                                        [disabled]="anyRowBusy() && !isRowBusy(row.id, 'resend')"
-                                                        (onClick)="onResendInvite(row.id)"
-                                                    />
+                                                        class="p-button-sm p-button-text"
+                                                        [disabled]="anyRowBusy() && !isRowBusy(row.id, 'resend') || isRowBusy(row.id, 'resend')"
+                                                        (click)="onResendInvite(row.id)"
+                                                    ><i class="p-button-icon" [class]="isRowBusy(row.id, 'resend') ? 'pi pi-spin pi-spinner' : 'pi pi-send'"></i>Yeniden gönder</button>
                                                 }
                                             </div>
                                         </td>
@@ -163,15 +161,13 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                             <app-row-action-button action="void" [loading]="isRowBusy(row.id, 'cancel')" [disabled]="anyRowBusy() && !isRowBusy(row.id, 'cancel')" (pressed)="onCancelInvite(row.id)" />
                                         }
                                         @if (row.canResend && canManageTenantAccess()) {
-                                            <p-button
+                                            <button
+                                                pButton
                                                 type="button"
-                                                label="Yeniden gönder"
-                                                icon="pi pi-send"
-                                                styleClass="p-button-sm p-button-text"
-                                                [loading]="isRowBusy(row.id, 'resend')"
-                                                [disabled]="anyRowBusy() && !isRowBusy(row.id, 'resend')"
-                                                (onClick)="onResendInvite(row.id)"
-                                            />
+                                                class="p-button-sm p-button-text"
+                                                [disabled]="anyRowBusy() && !isRowBusy(row.id, 'resend') || isRowBusy(row.id, 'resend')"
+                                                (click)="onResendInvite(row.id)"
+                                            ><i class="p-button-icon" [class]="isRowBusy(row.id, 'resend') ? 'pi pi-spin pi-spinner' : 'pi pi-send'"></i>Yeniden gönder</button>
                                         }
                                     </div>
                                 </div>

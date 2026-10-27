@@ -35,7 +35,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         } @else if (pageError(); as pe) {
             <div class="card">
                 <p class="text-red-500 m-0" role="alert">{{ pe }}</p>
-                <p-button class="mt-3" label="Yeniden dene" icon="pi pi-refresh" (onClick)="reload()" />
+                <button pButton type="button" class="mt-3" (click)="reload()"><i class="p-button-icon pi pi-refresh"></i>Yeniden dene</button>
             </div>
         } @else {
             @if (claimsLoadError(); as cle) {
@@ -103,7 +103,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <p-button type="submit" label="Davet oluştur" icon="pi pi-send" [loading]="submitting()" [disabled]="form.invalid || submitting() || clinics().length === 0 || operationClaims().length === 0 || !canManageTenantAccess()" />
+                        <button pButton type="submit" [disabled]="form.invalid || submitting() || clinics().length === 0 || operationClaims().length === 0 || !canManageTenantAccess()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-send'"></i>Davet oluştur</button>
                     </div>
                 </form>
             </div>
@@ -119,7 +119,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         {{ joinUrl() }}
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <p-button label="Bağlantıyı kopyala" icon="pi pi-copy" (onClick)="copyJoinLink()" [disabled]="!joinUrl()" />
+                        <button pButton type="button" (click)="copyJoinLink()" [disabled]="!joinUrl()"><i class="p-button-icon pi pi-copy"></i>Bağlantıyı kopyala</button>
                         @if (copyFeedback(); as cf) {
                             <span class="text-sm self-center" [class.text-green-600]="cf === 'ok'" [class.text-red-500]="cf === 'fail'">
                                 @if (cf === 'ok') {

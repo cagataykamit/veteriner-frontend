@@ -41,10 +41,10 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
             <div class="card mb-4">
                 <div class="flex flex-wrap gap-2 mb-4">
                     @if (d.canCancel && canManageTenantAccess()) {
-                        <p-button label="Daveti iptal et" icon="pi pi-times" severity="danger" [loading]="cancelBusy()" [disabled]="resendBusy()" (onClick)="onCancel(d.id)" />
+                        <button pButton type="button" severity="danger" [disabled]="resendBusy() || cancelBusy()" (click)="onCancel(d.id)"><i class="p-button-icon" [class]="cancelBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-times'"></i>Daveti iptal et</button>
                     }
                     @if (d.canResend && canManageTenantAccess()) {
-                        <p-button label="Yeniden gönder" icon="pi pi-send" [loading]="resendBusy()" [disabled]="cancelBusy()" (onClick)="onResend(d.id)" />
+                        <button pButton type="button" [disabled]="cancelBusy() || resendBusy()" (click)="onResend(d.id)"><i class="p-button-icon" [class]="resendBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-send'"></i>Yeniden gönder</button>
                     }
                     @if (ro.mutationBlocked()) {
                         <p class="text-sm text-muted-color m-0 self-center">Salt okunur kurumda iptal ve yeniden gönder kullanılamaz.</p>
