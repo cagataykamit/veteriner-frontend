@@ -10,7 +10,7 @@ import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { authFailureMessage } from '@/app/core/auth/auth-error.utils';
 import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { ClinicSwitcherRefreshService } from '@/app/layout/service/clinic-switcher-refresh.service';
+import { ClinicSwitcherRefreshService } from '@/app/core/tenant/clinic-switcher-refresh.service';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 

@@ -15,7 +15,7 @@ import { ClinicsService } from '@/app/features/clinics/services/clinics.service'
 import { clinicSettingsMutationMessage } from '@/app/features/clinics/utils/clinic-settings-mutation.utils';
 import { parseClinicUpsertHttpError, type ClinicUpsertFieldErrors } from '@/app/features/clinics/utils/clinic-upsert-validation-parse.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { ClinicSwitcherRefreshService } from '@/app/layout/service/clinic-switcher-refresh.service';
+import { ClinicSwitcherRefreshService } from '@/app/core/tenant/clinic-switcher-refresh.service';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 

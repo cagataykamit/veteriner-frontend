@@ -80,7 +80,7 @@ export const appRoutes: Routes = [
         path: 'join/:token',
         loadComponent: () => import('./app/pages/public/join-invite-page.component').then((m) => m.JoinInvitePageComponent)
     },
-    { path: 'auth', loadChildren: () => import('./app/features/auth/auth.routes') },
+    { path: 'auth', loadChildren: () => import('./app/pages/auth/auth.routes') },
     // Satış ortağı bağlantısı (ADR-037): kodu oturum belleğine alıp kayıt sayfasına yönlendirir.
     { path: 'r/:code', canActivate: [referralCodeRedirect], children: [] },
     { path: '**', redirectTo: '/notfound' }
