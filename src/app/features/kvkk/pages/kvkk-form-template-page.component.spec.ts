@@ -5,8 +5,8 @@ import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angul
 import { ConfirmationService } from 'primeng/api';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { KvkkFormTemplateVm } from '@/app/features/kvkk/models/kvkk-form-template.model';
-import { KvkkFormTemplateService } from '@/app/features/kvkk/services/kvkk-form-template.service';
+import type { KvkkFormTemplateVm } from '@/app/entities/kvkk/models/kvkk-form-template.model';
+import { KvkkFormTemplateService } from '@/app/entities/kvkk/services/kvkk-form-template.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { KvkkFormTemplatePageComponent } from './kvkk-form-template-page.component';
 

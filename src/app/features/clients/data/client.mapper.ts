@@ -34,7 +34,7 @@ import type { ClientsListQuery } from '@/app/features/clients/models/client-quer
 import { parseClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
 import { mapClientInvoicingSummaryDtoToVm } from '@/app/features/clients/utils/client-invoicing.utils';
 import { parseKvkkConsentStatus } from '@/app/features/clients/utils/client-kvkk-consent.utils';
-import { parseKvkkTextVersion } from '@/app/features/kvkk/utils/kvkk-form.utils';
+import { parseKvkkTextVersion } from '@/app/entities/kvkk/utils/kvkk-form.utils';
 
 const EM = '—';
 

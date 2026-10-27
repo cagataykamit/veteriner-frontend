@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { fillKvkkFormTemplate, KVKK_TEMPLATE_KINDS, kvkkTextVersionLabel, type KvkkTemplateKind } from '@/app/features/kvkk/utils/kvkk-form.utils';
+import { fillKvkkFormTemplate, KVKK_TEMPLATE_KINDS, kvkkTextVersionLabel, type KvkkTemplateKind } from '@/app/entities/kvkk/utils/kvkk-form.utils';
 
 /**
  * Yazdırılan KVKK belgesi: başlıkta klinik adı ve şablon metni (yer tutucular doldurulmuş, düz metin; HTML yorumlanmaz).

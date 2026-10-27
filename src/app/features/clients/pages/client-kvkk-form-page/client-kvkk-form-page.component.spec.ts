@@ -4,9 +4,9 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import type { KvkkFormTemplateVm } from '@/app/features/kvkk/models/kvkk-form-template.model';
-import { KvkkFormTemplateService } from '@/app/features/kvkk/services/kvkk-form-template.service';
-import { kvkkFormDate } from '@/app/features/kvkk/utils/kvkk-form.utils';
+import type { KvkkFormTemplateVm } from '@/app/entities/kvkk/models/kvkk-form-template.model';
+import { KvkkFormTemplateService } from '@/app/entities/kvkk/services/kvkk-form-template.service';
+import { kvkkFormDate } from '@/app/entities/kvkk/utils/kvkk-form.utils';
 import { ClientKvkkFormPageComponent } from './client-kvkk-form-page.component';
 
 const template = (over: Partial<KvkkFormTemplateVm> = {}): KvkkFormTemplateVm => ({

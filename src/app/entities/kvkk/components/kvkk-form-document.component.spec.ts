@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import type { KvkkTemplateKind } from '@/app/features/kvkk/utils/kvkk-form.utils';
+import type { KvkkTemplateKind } from '@/app/entities/kvkk/utils/kvkk-form.utils';
 import { KvkkFormDocumentComponent } from './kvkk-form-document.component';
 
 describe('KvkkFormDocumentComponent', () => {

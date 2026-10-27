@@ -1,5 +1,5 @@
-import type { KvkkFormTemplateDto, KvkkFormTemplateUpdateRequestDto, KvkkFormTemplateVm } from '@/app/features/kvkk/models/kvkk-form-template.model';
-import { KVKK_FORM_MAX_LENGTH, KVKK_FORM_PLACEHOLDERS, parseKvkkTextVersion } from '@/app/features/kvkk/utils/kvkk-form.utils';
+import type { KvkkFormTemplateDto, KvkkFormTemplateUpdateRequestDto, KvkkFormTemplateVm } from '@/app/entities/kvkk/models/kvkk-form-template.model';
+import { KVKK_FORM_MAX_LENGTH, KVKK_FORM_PLACEHOLDERS, parseKvkkTextVersion } from '@/app/entities/kvkk/utils/kvkk-form.utils';
 
 function trimmedOrNull(v: string | null | undefined): string | null {
     return v?.trim() ? v.trim() : null;

@@ -3,9 +3,9 @@ import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
-import { kvkkFormTemplateToPutBody, mapKvkkFormTemplateDtoToVm } from '@/app/features/kvkk/data/kvkk-form-template.mapper';
-import type { KvkkFormTemplateDto, KvkkFormTemplateVm } from '@/app/features/kvkk/models/kvkk-form-template.model';
-import type { KvkkTemplateKind } from '@/app/features/kvkk/utils/kvkk-form.utils';
+import { kvkkFormTemplateToPutBody, mapKvkkFormTemplateDtoToVm } from '@/app/entities/kvkk/data/kvkk-form-template.mapper';
+import type { KvkkFormTemplateDto, KvkkFormTemplateVm } from '@/app/entities/kvkk/models/kvkk-form-template.model';
+import type { KvkkTemplateKind } from '@/app/entities/kvkk/utils/kvkk-form.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 const TEMPLATE_URL: Readonly<Record<KvkkTemplateKind, (clinicId: string) => string>> = {

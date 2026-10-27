@@ -9,7 +9,7 @@ import { clientContactChannelLabel } from '@/app/features/clients/utils/client-c
 import { formatClientInvoicingSummary } from '@/app/features/clients/utils/client-invoicing.utils';
 import { kvkkConsentStatusLabel } from '@/app/features/clients/utils/client-kvkk-consent.utils';
 import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
-import { kvkkTextVersionLabel } from '@/app/features/kvkk/utils/kvkk-form.utils';
+import { kvkkTextVersionLabel } from '@/app/entities/kvkk/utils/kvkk-form.utils';
 import { CardAccountStatusComponent } from '@/app/features/pets/components/card-account-status.component';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';

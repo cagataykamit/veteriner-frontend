@@ -4,7 +4,7 @@ import { ButtonModule } from 'primeng/button';
 import type { ClientDataExportDto } from '@/app/features/clients/models/client-data-export-api.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { clientDataExportBalanceFacts, clientDataExportClientFacts, clientDataExportFileName, clientDataExportJson, clientDataExportKvkkFacts, clientDataExportTables } from '@/app/features/clients/utils/client-data-export.utils';
-import { printKvkkForm } from '@/app/features/kvkk/utils/kvkk-form.utils';
+import { printKvkkForm } from '@/app/entities/kvkk/utils/kvkk-form.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
