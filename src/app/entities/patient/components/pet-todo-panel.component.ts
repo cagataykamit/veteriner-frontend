@@ -14,7 +14,7 @@ const TONE_CLASS: Record<PetTodoItem['tone'], string> = {
     selector: 'app-pet-todo-panel',
     standalone: true,
     imports: [RouterLink, ButtonModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="card mb-0 h-full" aria-labelledby="pet-todo-title" data-testid="pet-todo">
             <div class="flex items-center gap-2 mb-3">

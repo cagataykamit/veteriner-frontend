@@ -9,7 +9,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
     selector: 'app-administration-row-marks',
     standalone: true,
     imports: [AppStatusTagComponent, RouterLink],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (batchText(); as text) {
             <div class="text-xs text-muted-color" data-testid="batch-info">{{ text }}</div>

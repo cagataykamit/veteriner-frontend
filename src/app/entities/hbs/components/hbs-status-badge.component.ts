@@ -8,7 +8,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
     selector: 'app-hbs-status-badge',
     standalone: true,
     imports: [AppStatusTagComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (status(); as s) {
             <app-status-tag data-testid="hbs-status-badge" [label]="label()" [severity]="severity()" />

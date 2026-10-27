@@ -13,7 +13,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     selector: 'app-card-account-status',
     standalone: true,
     imports: [RouterLink, TrDateTimePipe],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <dl class="m-0 mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex flex-wrap gap-x-8 gap-y-2" aria-label="Hesap durumu">
             @if (balance(); as b) {

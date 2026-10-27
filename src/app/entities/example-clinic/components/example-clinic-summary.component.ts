@@ -9,7 +9,7 @@ import type { ExampleClinicCounts } from '@/app/entities/example-clinic/models/e
 @Component({
     selector: 'app-example-clinic-summary',
     standalone: true,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2" data-testid="example-clinic-summary">
             @for (row of rows(); track row.key) {

@@ -11,7 +11,7 @@ import type { AdministrationBatchPicker } from '@/app/entities/administration/ut
     selector: 'app-administration-batch-field',
     standalone: true,
     imports: [ReactiveFormsModule, SelectModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div data-testid="administration-batch">
             <label [for]="inputId()" class="block text-sm font-medium text-muted-color mb-2">Parti (seri no / SKT)</label>
