@@ -71,7 +71,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                         <app-filter-field label="Arama" labelFor="productSearch" [active]="isSearchActive()" width="grow">
                             <app-search-input inputId="productSearch" placeholder="Ad, SKU veya barkod…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </app-filter-field>
-                        <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canCreateProduct && !ro.mutationBlocked()) {
                             <a actions routerLink="/panel/products/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni ürün</a>
                         } @else if (canCreateProduct && ro.mutationBlocked()) {

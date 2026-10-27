@@ -148,8 +148,8 @@ type SelectOption = { label: string; value: string };
                 }
 
                 <div class="flex flex-wrap justify-end gap-2 mt-2">
-                    <p-button type="button" label="İptal" severity="secondary" [disabled]="submitting()" (onClick)="onCancel()" />
-                    <p-button type="submit" label="Kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="submitDisabled()" />
+                    <button pButton type="button" severity="secondary" [disabled]="submitting()" (click)="onCancel()">İptal</button>
+                    <button pButton type="submit" [disabled]="submitDisabled() || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
                 </div>
             </form>
         </p-dialog>

@@ -82,9 +82,9 @@ const PRODUCT_STOCK_CSV_HEADERS = ['Ürün', 'SKU', 'Kategori', 'Klinik', 'Kulla
                         <app-filter-field label="Arama" labelFor="stockSearch" [active]="isSearchActive()" width="grow">
                             <app-search-input inputId="stockSearch" placeholder="Ürün adı, SKU…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </app-filter-field>
-                        <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canExportStocks()) {
-                            <p-button actions label="Dışa aktar" icon="pi pi-download" severity="help" (onClick)="exportCsv()" [loading]="exporting()" [disabled]="loading() || exporting()" />
+                            <button pButton type="button" actions severity="help" (click)="exportCsv()" [disabled]="loading() || exporting()"><i class="p-button-icon" [class]="exporting() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Dışa aktar</button>
                         }
                     </app-list-header>
                     <div class="flex flex-wrap items-end gap-3">

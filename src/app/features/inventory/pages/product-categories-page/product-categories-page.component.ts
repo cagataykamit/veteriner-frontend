@@ -103,7 +103,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                                     <app-search-input inputId="catSearch" placeholder="Kategori adı…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                                 </app-filter-field>
                                 <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                                    <button pButton type="button" severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                                 </div>
                             </div>
                         </div>
@@ -260,8 +260,8 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                     }
                 </div>
                 <div class="flex flex-wrap justify-end gap-2 pt-2">
-                    <p-button type="button" [label]="copy.buttonCancel" severity="secondary" (onClick)="closeDialog()" [disabled]="dialogSubmitting()" />
-                    <p-button type="submit" [label]="dialogSubmitLabel()" icon="pi pi-check" [loading]="dialogSubmitting()" [disabled]="dialogForm.invalid || dialogSubmitting() || ro.mutationBlocked()" />
+                    <button pButton type="button" severity="secondary" (click)="closeDialog()" [disabled]="dialogSubmitting()">{{ copy.buttonCancel }}</button>
+                    <button pButton type="submit" [disabled]="dialogForm.invalid || dialogSubmitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="dialogSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ dialogSubmitLabel() }}</button>
                 </div>
             </form>
         </p-dialog>

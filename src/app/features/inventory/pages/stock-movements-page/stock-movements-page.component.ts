@@ -86,9 +86,9 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                         <app-filter-field label="Arama" labelFor="smSearch" [active]="isSearchActive()" width="grow">
                             <app-search-input inputId="smSearch" placeholder="Ürün, SKU, kategori, klinik…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </app-filter-field>
-                        <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canExportStockMovements()) {
-                            <p-button actions label="Dışa aktar" icon="pi pi-download" severity="help" (onClick)="exportCsv()" [loading]="exporting()" [disabled]="loading() || exporting()" />
+                            <button pButton type="button" actions severity="help" (click)="exportCsv()" [disabled]="loading() || exporting()"><i class="p-button-icon" [class]="exporting() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Dışa aktar</button>
                         }
                         @if (canCreateStockMovement && !ro.mutationBlocked()) {
                             <button actions pButton type="button" class="p-button-primary" (click)="createDialogOpen.set(true)"><i class="pi pi-plus"></i>Yeni stok hareketi</button>

@@ -128,17 +128,17 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                            
                            
                             severity="primary"
-                            styleClass="whitespace-nowrap"
+                            class="whitespace-nowrap"
                             [disabled]="isHeaderStockOperationDisabled()"
                             [title]="headerStockOperationTitle()"
                             (click)="openStockOperationFromHeader()"
                         ><i class="pi pi-sync"></i>Stok işlemi</button>
                     }
                     @if (canDeactivateProduct && !ro.mutationBlocked() && p.isActive) {
-                        <button pButton type="button" severity="danger" class="p-button-secondary" [loading]="mutationBusy()" [disabled]="mutationBusy()" (click)="onDeactivateClick()"><i class="pi pi-ban"></i>Pasifleştir</button>
+                        <button pButton type="button" severity="danger" class="p-button-secondary" [disabled]="mutationBusy()" (click)="onDeactivateClick()"><i [class]="mutationBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-ban'"></i>Pasifleştir</button>
                     }
                     @if (canUpdateProduct && !ro.mutationBlocked() && !p.isActive) {
-                        <button pButton type="button" class="p-button-secondary" [loading]="mutationBusy()" [disabled]="mutationBusy()" (click)="onActivateClick()"><i class="pi pi-check"></i>Aktifleştir</button>
+                        <button pButton type="button" class="p-button-secondary" [disabled]="mutationBusy()" (click)="onActivateClick()"><i [class]="mutationBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Aktifleştir</button>
                     }
                 </div>
             </app-page-header>
@@ -251,16 +251,15 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                                                 <span class="text-muted-color text-base min-w-0 text-center block px-1 break-words leading-snug" [title]="row.updatedAtText">{{ row.updatedAtText }}</span>
                                                 <span class="flex justify-center items-center min-h-[2.5rem] max-w-full">
                                                     @if (canOpenStockOperation()) {
-                                                        <p-button
+                                                        <button
+                                                            pButton
                                                             type="button"
-                                                            label="Stok işlemi"
-                                                            icon="pi pi-sync"
                                                             size="small"
                                                             severity="primary"
-                                                            styleClass="!py-2 !px-3 !text-sm !font-semibold whitespace-nowrap shadow-sm"
+                                                            class="!py-2 !px-3 !text-sm !font-semibold whitespace-nowrap shadow-sm"
                                                             title="Stok girişi, çıkışı veya minimum stok"
-                                                            (onClick)="openStockOperationDialog(row)"
-                                                        />
+                                                            (click)="openStockOperationDialog(row)"
+                                                        ><i class="p-button-icon pi pi-sync"></i>Stok işlemi</button>
                                                     }
                                                 </span>
                                             </div>
@@ -299,16 +298,15 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                                             </dl>
                                             @if (canOpenStockOperation()) {
                                                 <div class="flex flex-wrap justify-end gap-2 mt-2.5 pt-2 border-t border-surface-200 dark:border-surface-700">
-                                                    <p-button
+                                                    <button
+                                                        pButton
                                                         type="button"
-                                                        label="Stok işlemi"
-                                                        icon="pi pi-sync"
                                                         size="small"
                                                         severity="primary"
-                                                        styleClass="!py-2 !px-3 !text-sm !font-semibold shadow-sm"
+                                                        class="!py-2 !px-3 !text-sm !font-semibold shadow-sm"
                                                         title="Stok girişi, çıkışı veya minimum stok"
-                                                        (onClick)="openStockOperationDialog(row)"
-                                                    />
+                                                        (click)="openStockOperationDialog(row)"
+                                                    ><i class="p-button-icon pi pi-sync"></i>Stok işlemi</button>
                                                 </div>
                                             }
                                         </div>
@@ -461,14 +459,12 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                     <p class="text-red-500 m-0 text-sm leading-relaxed" role="alert">{{ stockOperationSubmitError() }}</p>
                 }
                 <div class="flex flex-wrap justify-end gap-2 pt-3 mt-1 border-t border-surface-200 dark:border-surface-700">
-                    <p-button type="button" [label]="copy.buttonCancel" severity="secondary" (onClick)="closeStockOperationDialog()" [disabled]="stockOperationSubmitting()" />
-                    <p-button
+                    <button pButton type="button" severity="secondary" (click)="closeStockOperationDialog()" [disabled]="stockOperationSubmitting()">{{ copy.buttonCancel }}</button>
+                    <button
+                        pButton
                         type="submit"
-                        [label]="copy.buttonSave"
-                        icon="pi pi-check"
-                        [loading]="stockOperationSubmitting()"
                         [disabled]="stockOperationForm.invalid || stockOperationSubmitting() || ro.mutationBlocked() || stockOperationPickIncomplete()"
-                    />
+                    ><i class="p-button-icon" [class]="stockOperationSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                 </div>
             </form>
         </p-dialog>

@@ -60,7 +60,7 @@ const MONEY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximum
                     </p>
                     <div class="flex flex-wrap gap-2">
                         <a routerLink="/panel/stocks" class="p-button p-component no-underline">Stok durumuna git</a>
-                        <p-button label="Yeni mal kabul" icon="pi pi-plus" severity="secondary" (onClick)="startNew()" />
+                        <button pButton type="button" severity="secondary" (click)="startNew()"><i class="p-button-icon pi pi-plus"></i>Yeni mal kabul</button>
                     </div>
                 </div>
             } @else {
@@ -205,7 +205,7 @@ const MONEY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximum
                                             </td>
                                             <td class="p-2 text-right text-sm pt-4 whitespace-nowrap">{{ lineTotalText(line) }}</td>
                                             <td class="p-2">
-                                                <p-button type="button" icon="pi pi-trash" severity="danger" [text]="true" [disabled]="lines.length === 1" (onClick)="removeLine(i)" [attr.aria-label]="'Satır ' + (i + 1) + ' sil'" />
+                                                <button pButton type="button" iconOnly severity="danger" [text]="true" [disabled]="lines.length === 1" (click)="removeLine(i)" [attr.aria-label]="'Satır ' + (i + 1) + ' sil'"><i class="p-button-icon pi pi-trash"></i></button>
                                             </td>
                                         </tr>
                                         @if (rowNotes(line, i); as notes) {
@@ -230,7 +230,7 @@ const MONEY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximum
                         </div>
                         <div class="flex flex-wrap items-center justify-between gap-3 mt-3">
                             <div class="flex items-center gap-3">
-                                <p-button type="button" label="Satır ekle" icon="pi pi-plus" severity="secondary" [disabled]="lines.length >= maxLines" (onClick)="addLine()" />
+                                <button pButton type="button" severity="secondary" [disabled]="lines.length >= maxLines" (click)="addLine()"><i class="p-button-icon pi pi-plus"></i>Satır ekle</button>
                                 <span class="text-xs text-muted-color">{{ lines.length }} / {{ maxLines }} satır</span>
                             </div>
                             <div class="text-sm">
@@ -247,7 +247,7 @@ const MONEY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximum
                     }
 
                     <div class="flex flex-wrap justify-end gap-2">
-                        <p-button type="submit" label="Kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="submitting() || ro.mutationBlocked()" />
+                        <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
                     </div>
                 </form>
             }
