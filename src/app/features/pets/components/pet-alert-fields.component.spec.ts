@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormBuilder } from '@angular/forms';
-import { createPetUpsertFormGroup, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
+import { createPetUpsertFormGroup, type PetUpsertFormGroup } from '@/app/entities/pet/forms/pet-upsert-form.factory';
 import { PetAlertFieldsComponent } from './pet-alert-fields.component';
 
 describe('PetAlertFieldsComponent', () => {

@@ -7,10 +7,10 @@ import {
 import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
-import type { PetOpenItemsVm, PetOpenVaccinationVm } from '@/app/features/pets/models/pet-open-items-vm.model';
-import type { PetSummarySectionVm } from '@/app/features/pets/models/pet-summary-vm.model';
-import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/features/pets/models/pet-vm.model';
-import { petGenderLabel } from '@/app/features/pets/utils/pet-status.utils';
+import type { PetOpenItemsVm, PetOpenVaccinationVm } from '@/app/entities/pet/models/pet-open-items-vm.model';
+import type { PetSummarySectionVm } from '@/app/entities/pet/models/pet-summary-vm.model';
+import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/entities/pet/models/pet-vm.model';
+import { petGenderLabel } from '@/app/entities/pet/utils/pet-status.utils';
 import { parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { upcomingScheduledAppointmentsLinkQuery } from '@/app/entities/appointment/utils/appointments-list-link.utils';
 import { canOpenVaccinationEdit } from '@/app/features/vaccinations/utils/vaccination-access.utils';

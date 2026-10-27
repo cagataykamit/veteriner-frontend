@@ -1,7 +1,7 @@
-import { mapPetOpenItemsDtoToVm } from '@/app/features/pets/data/pet-open-items.mapper';
-import type { PetOpenItemsDto } from '@/app/features/pets/models/pet-open-items-api.model';
-import type { PetOpenItemsVm } from '@/app/features/pets/models/pet-open-items-vm.model';
-import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/features/pets/models/pet-vm.model';
+import { mapPetOpenItemsDtoToVm } from '@/app/entities/pet/data/pet-open-items.mapper';
+import type { PetOpenItemsDto } from '@/app/entities/pet/models/pet-open-items-api.model';
+import type { PetOpenItemsVm } from '@/app/entities/pet/models/pet-open-items-vm.model';
+import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import {
     buildPetTodo,

@@ -5,7 +5,7 @@ import { BreedsService } from '@/app/entities/breed/services/breeds.service';
 import { ImportReviewStepComponent } from '@/app/features/imports/components/import-review-step.component';
 import type { ImportBatchDto, ImportPreviewDto, ImportRowDto, ImportRowPageDto, ImportTableSummaryDto } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
-import { PetColorsService } from '@/app/features/pets/services/pet-colors.service';
+import { PetColorsService } from '@/app/entities/pet/services/pet-colors.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/services/vaccine-definitions.service';
 

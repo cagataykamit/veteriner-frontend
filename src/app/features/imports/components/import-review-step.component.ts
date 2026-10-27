@@ -13,7 +13,7 @@ import { saveDownload } from '@/app/features/imports/utils/import-download.utils
 import { IMPORT_SEVERITY_LABELS, IMPORT_VALUE_KIND_LABELS, importErrorCode, importErrorMessage, importIssueLabel, importSeverityTag } from '@/app/features/imports/utils/import-labels.utils';
 import { fieldLabel, IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
 import { IMPORT_VALUE_SKIP, type ImportValueChoices, valueChoiceKey } from '@/app/features/imports/utils/import-value-mapping.utils';
-import { PetColorsService } from '@/app/features/pets/services/pet-colors.service';
+import { PetColorsService } from '@/app/entities/pet/services/pet-colors.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/services/vaccine-definitions.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';

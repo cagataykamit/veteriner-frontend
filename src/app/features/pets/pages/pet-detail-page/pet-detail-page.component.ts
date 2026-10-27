@@ -11,12 +11,12 @@ import { PetCardHeaderComponent } from '@/app/features/pets/components/pet-card-
 import { PetCardTimelineComponent } from '@/app/features/pets/components/pet-card-timeline.component';
 import { PetSummaryCardComponent } from '@/app/features/pets/components/pet-summary-card.component';
 import { PetTodoPanelComponent } from '@/app/features/pets/components/pet-todo-panel.component';
-import type { PetOpenItemsVm } from '@/app/features/pets/models/pet-open-items-vm.model';
-import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
+import type { PetOpenItemsVm } from '@/app/entities/pet/models/pet-open-items-vm.model';
+import type { PetSummaryVm } from '@/app/entities/pet/models/pet-summary-vm.model';
 import { PetStatusDialogComponent } from '@/app/features/pets/components/pet-status-dialog.component';
-import type { PetDetailVm, PetHistoryBlockKey, PetHistorySummaryVm, PetStatusUpdateResult } from '@/app/features/pets/models/pet-vm.model';
+import type { PetDetailVm, PetHistoryBlockKey, PetHistorySummaryVm, PetStatusUpdateResult } from '@/app/entities/pet/models/pet-vm.model';
 import { PetCardDataService } from '@/app/features/pets/services/pet-card-data.service';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { buildPetGeneralFields } from '@/app/features/pets/utils/pet-general-fields.utils';
 import { buildPetTodo, openItemsSection, ownerOutstandingSection, type PetCardSection, petCardEmphasis, petIdentityParts } from '@/app/features/pets/utils/pet-card.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';

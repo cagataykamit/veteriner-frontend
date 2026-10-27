@@ -1,5 +1,5 @@
-import { mapCreatePetToApiBody, mapPetDetailDtoToEditVm, mapPetDetailDtoToVm, mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.mapper';
-import type { PetUpsertFormValue } from '@/app/features/pets/forms/pet-upsert-form.model';
+import { mapCreatePetToApiBody, mapPetDetailDtoToEditVm, mapPetDetailDtoToVm, mapPetUpsertFormToCreateRequest } from '@/app/entities/pet/data/pet.mapper';
+import type { PetUpsertFormValue } from '@/app/entities/pet/forms/pet-upsert-form.model';
 
 const form = (over: Partial<PetUpsertFormValue> = {}): PetUpsertFormValue => ({
     clientId: 'c1',

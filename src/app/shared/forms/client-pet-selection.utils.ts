@@ -1,5 +1,5 @@
 import type { ClientListItemVm } from '@/app/features/clients/models/client-vm.model';
-import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
+import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 
 export interface SelectOption {

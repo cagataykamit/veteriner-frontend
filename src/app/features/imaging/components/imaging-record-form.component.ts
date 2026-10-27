@@ -15,10 +15,10 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
 import { type SelectOption, trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
-import { PetSearchComponent } from '@/app/features/pets/components/pet-search.component';
+import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { StoredFileUploadComponent } from '@/app/shared/files/stored-file-upload.component';
 import { parseExaminationCreateRouteContext, prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
-import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
+import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';

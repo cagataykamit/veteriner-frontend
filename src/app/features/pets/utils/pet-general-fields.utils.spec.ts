@@ -1,4 +1,4 @@
-import type { PetDetailVm } from '@/app/features/pets/models/pet-vm.model';
+import type { PetDetailVm } from '@/app/entities/pet/models/pet-vm.model';
 import { buildPetGeneralFields } from './pet-general-fields.utils';
 
 const pet = (over: Partial<PetDetailVm>): PetDetailVm =>

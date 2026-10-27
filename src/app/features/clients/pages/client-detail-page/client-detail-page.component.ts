@@ -17,7 +17,7 @@ import type { ClientDetailVm, ClientKvkkConsentUpdateResult, ClientPaymentSummar
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { buildClientPetRows, buildClientTodo, type ClientPetRow, soleActivePet } from '@/app/features/clients/utils/client-card.utils';
 import { PetTodoPanelComponent } from '@/app/features/pets/components/pet-todo-panel.component';
-import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
+import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PetCardDataService } from '@/app/features/pets/services/pet-card-data.service';
 import { nextScheduledAppointment, okData, type PetCardSection, petCardEmphasis } from '@/app/features/pets/utils/pet-card.utils';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';

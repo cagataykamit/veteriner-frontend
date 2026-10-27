@@ -6,7 +6,7 @@ import { formatClientInvoicingSummary, mapClientInvoicingSummaryDtoToVm } from '
 import { kvkkConsentStatusLabel, parseKvkkConsentStatus } from '@/app/features/clients/utils/client-kvkk-consent.utils';
 import { examinationStatusLabel } from '@/app/entities/examination/utils/examination-status.utils';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
-import { parsePetLifeStatus, petGenderLabel, petLifeStatusLabel } from '@/app/features/pets/utils/pet-status.utils';
+import { parsePetLifeStatus, petGenderLabel, petLifeStatusLabel } from '@/app/entities/pet/utils/pet-status.utils';
 import { vaccinationStatusLabel } from '@/app/features/vaccinations/utils/vaccination-status.utils';
 import { formatDateDisplay, formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay, localDateTimeYyyyMmDd_HHmmForFileName } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';

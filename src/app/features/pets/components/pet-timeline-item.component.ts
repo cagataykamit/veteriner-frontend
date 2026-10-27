@@ -1,7 +1,7 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ADMINISTRATION_LATE_ENTRY_LABEL } from '@/app/features/administrations/utils/administration-labels';
-import type { PetTimelineItemVm } from '@/app/features/pets/models/pet-timeline-vm.model';
+import type { PetTimelineItemVm } from '@/app/entities/pet/models/pet-timeline-vm.model';
 import { PET_TIMELINE_VOIDED_LABEL, petTimelineEventLink, petTimelineExaminationLink, petTimelineStatusLabel, petTimelineTypeIcon, petTimelineTypeLabel } from '@/app/features/pets/utils/pet-timeline.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 

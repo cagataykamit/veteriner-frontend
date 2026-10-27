@@ -1,4 +1,4 @@
-import type { PetLifeStatus } from '@/app/features/pets/utils/pet-status.utils';
+import type { PetLifeStatus } from '@/app/entities/pet/utils/pet-status.utils';
 
 /**
  * GET `/api/v1/pets` — HttpParams: `Page`, `PageSize`, `Search`, `Sort`, `Order`, `SpeciesId`, `ClientId`, `Status` (+ opsiyonel legacy `Species`).

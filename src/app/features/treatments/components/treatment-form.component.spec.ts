@@ -8,7 +8,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TreatmentsService } from '../services/treatments.service';
 import { TreatmentFormComponent } from './treatment-form.component';

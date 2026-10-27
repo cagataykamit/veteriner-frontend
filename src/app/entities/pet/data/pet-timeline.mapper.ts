@@ -1,7 +1,7 @@
 import { HttpParams } from '@angular/common/http';
 import { istanbulDateRangeToUtcIso } from '@/app/shared/utils/date.utils';
-import type { PetTimelineItemDto, PetTimelinePageDto } from '@/app/features/pets/models/pet-timeline-api.model';
-import type { PetTimelineItemVm, PetTimelinePageVm, PetTimelineQuery } from '@/app/features/pets/models/pet-timeline-vm.model';
+import type { PetTimelineItemDto, PetTimelinePageDto } from '@/app/entities/pet/models/pet-timeline-api.model';
+import type { PetTimelineItemVm, PetTimelinePageVm, PetTimelineQuery } from '@/app/entities/pet/models/pet-timeline-vm.model';
 
 function trimOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();

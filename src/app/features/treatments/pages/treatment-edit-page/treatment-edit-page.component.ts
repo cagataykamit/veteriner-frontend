@@ -1,6 +1,6 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
-import { PetSearchComponent } from '@/app/features/pets/components/pet-search.component';
+import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
@@ -19,13 +19,13 @@ import { followUpBeforeTreatmentMessage, mapTreatmentUpsertFormToCreateRequest }
 import type { TreatmentEditVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
 import { type TreatmentUpsertFieldErrors, type TreatmentUpsertFormFieldKey, parseTreatmentUpsertHttpError } from '@/app/features/treatments/utils/treatment-upsert-validation-parse.utils';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
+import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';

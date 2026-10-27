@@ -7,8 +7,8 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
-import type { PetDetailVm } from '@/app/features/pets/models/pet-vm.model';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import type { PetDetailVm } from '@/app/entities/pet/models/pet-vm.model';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { PetStatusDialogComponent } from './pet-status-dialog.component';
 

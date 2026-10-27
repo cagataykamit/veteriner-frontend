@@ -11,7 +11,7 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import type { ExaminationEditVm } from '@/app/entities/examination/models/examination-vm.model';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { EXAMINATION_CONCURRENCY_CONFLICT_MESSAGE } from '@/app/features/examinations/utils/examination-upsert-validation-parse.utils';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ExaminationWorkspacePageComponent } from './examination-workspace-page.component';

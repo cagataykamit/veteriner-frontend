@@ -1,5 +1,5 @@
-import { mapPetDetailDtoToVm, mapPetListItemDtoToVm, mapPetStatusUpdateResultDtoToVm, mapPetStatusUpdateToApiBody, petsQueryToHttpParams } from '@/app/features/pets/data/pet.mapper';
-import { parsePetLifeStatus } from '@/app/features/pets/utils/pet-status.utils';
+import { mapPetDetailDtoToVm, mapPetListItemDtoToVm, mapPetStatusUpdateResultDtoToVm, mapPetStatusUpdateToApiBody, petsQueryToHttpParams } from '@/app/entities/pet/data/pet.mapper';
+import { parsePetLifeStatus } from '@/app/entities/pet/utils/pet-status.utils';
 
 describe('pet.mapper hayvan durumu (ADR-020 S5)', () => {
     it('durum metin veya enum sayısından okunur; eksik/bilinmeyen değer aktiftir', () => {

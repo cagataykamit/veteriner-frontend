@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { LabResultDetailVm, LabResultStatus } from '@/app/entities/lab-result/models/lab-result-vm.model';
 import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';

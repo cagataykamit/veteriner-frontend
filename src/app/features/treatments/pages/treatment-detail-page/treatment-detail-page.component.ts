@@ -8,7 +8,7 @@ import { TreatmentsService } from '@/app/features/treatments/services/treatments
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
+import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';

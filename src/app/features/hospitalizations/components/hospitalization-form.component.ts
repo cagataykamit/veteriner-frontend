@@ -1,6 +1,6 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
-import { PetSearchComponent } from '@/app/features/pets/components/pet-search.component';
+import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
@@ -21,13 +21,13 @@ import { FINALIZED_EXAMINATION_OPTION_HINT, hospitalizationExaminationOption, ho
 import type { HospitalizationWardVm } from '@/app/features/hospitalization-wards/models/hospitalization-ward-vm.model';
 import { HospitalizationWardsService } from '@/app/features/hospitalization-wards/services/hospitalization-wards.service';
 import { HOSPITALIZATION_ROOM_REQUIRED_ERROR_KEY, hospitalizationRoomOptions, hospitalizationWardOptions, roomRequiredWhenWardSelectedValidator } from '@/app/features/hospitalizations/utils/hospitalization-location-select.utils';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { examinationListItemFromDetail } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
-import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
+import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';

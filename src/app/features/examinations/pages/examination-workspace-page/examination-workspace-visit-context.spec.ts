@@ -9,7 +9,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { VisitVm } from '@/app/features/visits/models/visit-vm.model';

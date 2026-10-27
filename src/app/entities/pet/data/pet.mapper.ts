@@ -11,11 +11,11 @@ import type {
     PetListItemDtoPagedResult,
     PetStatusUpdateRequestDto,
     PetStatusUpdateResultDto
-} from '@/app/features/pets/models/pet-api.model';
-import type { PetUpsertFormValue } from '@/app/features/pets/forms/pet-upsert-form.model';
-import type { CreatePetRequest } from '@/app/features/pets/models/pet-create.model';
+} from '@/app/entities/pet/models/pet-api.model';
+import type { PetUpsertFormValue } from '@/app/entities/pet/forms/pet-upsert-form.model';
+import type { CreatePetRequest } from '@/app/entities/pet/models/pet-create.model';
 import { parseDecimalFormInput } from '@/app/shared/utils/decimal-form.utils';
-import type { PetsListQuery } from '@/app/features/pets/models/pet-query.model';
+import type { PetsListQuery } from '@/app/entities/pet/models/pet-query.model';
 import type {
     PetDetailVm,
     PetEditVm,
@@ -23,10 +23,10 @@ import type {
     PetListItemVm,
     PetStatusUpdateRequest,
     PetStatusUpdateResult
-} from '@/app/features/pets/models/pet-vm.model';
-import { PET_HISTORY_BLOCK_KEYS } from '@/app/features/pets/models/pet-vm.model';
+} from '@/app/entities/pet/models/pet-vm.model';
+import { PET_HISTORY_BLOCK_KEYS } from '@/app/entities/pet/models/pet-vm.model';
 import { mapPetAlertsDtoToVm, petAlertsFormToWrite } from '@/app/shared/pet-alerts/pet-alerts.utils';
-import { normalizePetGender, parsePetLifeStatus, resolvePetGenderFormValue } from '@/app/features/pets/utils/pet-status.utils';
+import { normalizePetGender, parsePetLifeStatus, resolvePetGenderFormValue } from '@/app/entities/pet/utils/pet-status.utils';
 
 const EM = '—';
 

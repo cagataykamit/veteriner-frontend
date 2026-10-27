@@ -1,8 +1,8 @@
 import { FormBuilder, Validators } from '@angular/forms';
 import type { FormControl, FormGroup } from '@angular/forms';
-import type { PetUpsertFormValue } from '@/app/features/pets/forms/pet-upsert-form.model';
+import type { PetUpsertFormValue } from '@/app/entities/pet/forms/pet-upsert-form.model';
 import { PET_ALERT_NOTE_MAX, type PetAlertFlag } from '@/app/shared/pet-alerts/pet-alerts.utils';
-import { petBirthDateValidator, petWeightStrValidator } from '@/app/features/pets/utils/pet-create-form.validators';
+import { petBirthDateValidator, petWeightStrValidator } from '@/app/entities/pet/utils/pet-create-form.validators';
 
 /** Angular typed forms: form değeri `PetUpsertFormValue` ile kilitli. */
 export type PetUpsertFormGroup = FormGroup<{

@@ -1,5 +1,5 @@
 import { Component, effect, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
 import { NO_PET_ALERTS, type PetAlertsVm } from '@/app/shared/pet-alerts/pet-alerts.utils';
 

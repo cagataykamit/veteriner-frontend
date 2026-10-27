@@ -7,10 +7,10 @@ import { ButtonModule } from 'primeng/button';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { filterPetsByClientId, petSelectLabel } from '@/app/shared/forms/client-pet-selection.utils';
-import { QuickPetDialogComponent } from '@/app/features/pets/components/quick-pet-dialog.component';
+import { QuickPetDialogComponent } from '@/app/entities/pet/components/quick-pet-dialog.component';
 import { canShowQuickPetCreateButton } from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 

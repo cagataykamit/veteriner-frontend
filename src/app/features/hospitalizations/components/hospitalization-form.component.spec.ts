@@ -12,11 +12,11 @@ import { ExaminationsService } from '@/app/entities/examination/services/examina
 import type { HospitalizationWardVm } from '@/app/features/hospitalization-wards/models/hospitalization-ward-vm.model';
 import { HospitalizationWardsService } from '@/app/features/hospitalization-wards/services/hospitalization-wards.service';
 import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
-import { PetSearchComponent } from '@/app/features/pets/components/pet-search.component';
-import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
+import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
+import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { HospitalizationFormComponent } from './hospitalization-form.component';
 
 /** Arama bileşenlerinin yerine basit değer erişimcisi (sunucu araması bu testin konusu değil). */

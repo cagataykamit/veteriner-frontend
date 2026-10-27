@@ -4,8 +4,8 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { CLIENTS_READ_CLAIM, PETS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
 import type { ClientSearchResultVm } from '@/app/features/clients/services/client-search.service';
-import type { PetDetailVm, PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import type { PetDetailVm, PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 
 const MAX_PET_RESULTS = 5;

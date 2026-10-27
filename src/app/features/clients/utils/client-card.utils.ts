@@ -3,7 +3,7 @@ import type { AppointmentListItemVm } from '@/app/entities/appointment/models/ap
 import type { ChargeSuggestionsPagedVm, ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import { computeChargeAmount } from '@/app/features/charges/utils/charge-amount.utils';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
-import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
+import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import {
     nextScheduledAppointment,
     okData,

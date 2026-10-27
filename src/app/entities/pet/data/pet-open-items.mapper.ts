@@ -1,4 +1,4 @@
-import { finiteOrNull, mapSection, trimOrNull } from '@/app/features/pets/data/pet-summary.mapper';
+import { finiteOrNull, mapSection, trimOrNull } from '@/app/entities/pet/data/pet-summary.mapper';
 import type {
     PetNextAppointmentDto,
     PetOpenItemsDto,
@@ -8,7 +8,7 @@ import type {
     PetOpenVaccinationsDto,
     PetOutstandingDto,
     PetPendingChargesSummaryDto
-} from '@/app/features/pets/models/pet-open-items-api.model';
+} from '@/app/entities/pet/models/pet-open-items-api.model';
 import type {
     PetNextAppointmentVm,
     PetOpenItemsVm,
@@ -18,7 +18,7 @@ import type {
     PetOpenVaccinationVm,
     PetOutstandingVm,
     PetPendingChargesSummaryVm
-} from '@/app/features/pets/models/pet-open-items-vm.model';
+} from '@/app/entities/pet/models/pet-open-items-vm.model';
 
 /** Kimliksiz satır atlanır (eylem bağlantısı kurulamaz). */
 function mapRows<TDto extends { id?: string | null }, TVm>(rows: TDto[] | null | undefined, map: (id: string, dto: TDto) => TVm): TVm[] {

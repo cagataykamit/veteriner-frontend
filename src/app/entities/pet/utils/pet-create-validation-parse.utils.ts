@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { messageFromPetCreateHttpError } from '@/app/features/pets/utils/pet-create-error.utils';
+import { messageFromPetCreateHttpError } from '@/app/entities/pet/utils/pet-create-error.utils';
 import { parseValidationHttpError } from '@/app/shared/utils/validation-error-parse.utils';
 
 const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';

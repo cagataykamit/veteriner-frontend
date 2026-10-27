@@ -1,4 +1,4 @@
-import { mapPetTimelinePageDtoToVm, petTimelineQueryToHttpParams } from '@/app/features/pets/data/pet-timeline.mapper';
+import { mapPetTimelinePageDtoToVm, petTimelineQueryToHttpParams } from '@/app/entities/pet/data/pet-timeline.mapper';
 
 describe('petTimelineQueryToHttpParams', () => {
     it('types tekrarlı parametre; includeVoided yalnız true iken; imleç aynen', () => {

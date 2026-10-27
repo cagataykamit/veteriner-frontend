@@ -1,6 +1,6 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
-import { PetSearchComponent } from '@/app/features/pets/components/pet-search.component';
+import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, effect, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
@@ -17,7 +17,7 @@ import { mapAppointmentUpsertFormToCreateRequest } from '@/app/entities/appointm
 import type { ClinicWorkingHourVm } from '@/app/features/clinics/models/clinic-working-hours-vm.model';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { type AppointmentUpsertFieldErrors, type AppointmentUpsertFormFieldKey, parseAppointmentUpsertHttpError } from '@/app/features/appointments/utils/appointment-upsert-validation-parse.utils';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import {

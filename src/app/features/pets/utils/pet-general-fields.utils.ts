@@ -1,5 +1,5 @@
-import type { PetDetailVm } from '@/app/features/pets/models/pet-vm.model';
-import { petGenderLabel } from '@/app/features/pets/utils/pet-status.utils';
+import type { PetDetailVm } from '@/app/entities/pet/models/pet-vm.model';
+import { petGenderLabel } from '@/app/entities/pet/utils/pet-status.utils';
 
 const EMPTY = '—';
 

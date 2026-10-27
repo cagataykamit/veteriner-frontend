@@ -1,6 +1,6 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
-import { PetSearchComponent } from '@/app/features/pets/components/pet-search.component';
+import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
@@ -23,7 +23,7 @@ import type { ExaminationEditVm } from '@/app/entities/examination/models/examin
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { EXAMINATION_TIME_SELECT_OPTIONS, examinationTimeSelectOptionsWithLegacy } from '@/app/features/examinations/utils/examination-time-options.utils';
 import { type ExaminationUpsertFieldErrors, type ExaminationUpsertFormFieldKey, parseExaminationUpsertHttpError } from '@/app/features/examinations/utils/examination-upsert-validation-parse.utils';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';

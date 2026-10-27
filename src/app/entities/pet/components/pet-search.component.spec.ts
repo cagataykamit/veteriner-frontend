@@ -4,7 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { BreedsService } from '@/app/entities/breed/services/breeds.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';

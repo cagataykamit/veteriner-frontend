@@ -1,6 +1,6 @@
 import type { LabResultStatus } from '@/app/entities/lab-result/models/lab-result-vm.model';
 import type { PetAlertsVm } from '@/app/shared/pet-alerts/pet-alerts.utils';
-import type { PetLifeStatus } from '@/app/features/pets/utils/pet-status.utils';
+import type { PetLifeStatus } from '@/app/entities/pet/utils/pet-status.utils';
 export interface PetListItemVm {
     id: string;
     /** Liste DTO’sunda varsa; client’a göre filtre için (API ClientId yok sayarsa yedek). */

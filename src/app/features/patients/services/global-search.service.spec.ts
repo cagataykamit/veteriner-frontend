@@ -4,8 +4,8 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
 import type { ClientSearchResultVm } from '@/app/features/clients/services/client-search.service';
-import type { PetDetailVm, PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import type { PetDetailVm, PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { GlobalSearchService } from './global-search.service';
 
 const ali: ClientSearchResultVm = { id: 'c1', fullName: 'Ali Veli', phone: '+90 532 123 45 67', petNames: ['Pamuk'], label: 'Ali Veli — +90 532 123 45 67' };

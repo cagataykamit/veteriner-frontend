@@ -9,8 +9,8 @@ import { PaymentsService } from '@/app/features/payments/services/payments.servi
 import type { PaymentListItemVm } from '@/app/features/payments/models/payment-vm.model';
 import { PrescriptionsService } from '@/app/features/prescriptions/services/prescriptions.service';
 import type { PrescriptionListItemVm } from '@/app/features/prescriptions/models/prescription-vm.model';
-import { PetsService } from '@/app/features/pets/services/pets.service';
-import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
+import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';

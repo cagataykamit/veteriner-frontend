@@ -1,7 +1,7 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CheckboxModule } from 'primeng/checkbox';
-import type { PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
+import type { PetUpsertFormGroup } from '@/app/entities/pet/forms/pet-upsert-form.factory';
 import { PET_ALERT_NOTE_MAX, PET_ALERT_OPTIONS } from '@/app/shared/pet-alerts/pet-alerts.utils';
 
 /** Hayvan oluşturma/düzenleme formunun "Uyarılar" bölümü (dört bayrak + kısa not). Not, bayrak seçilmeden kapalıdır. */

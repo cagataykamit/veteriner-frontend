@@ -1,4 +1,4 @@
-import type { PetSummarySectionDto } from '@/app/features/pets/models/pet-summary-api.model';
+import type { PetSummarySectionDto } from '@/app/entities/pet/models/pet-summary-api.model';
 
 /** GET /pets/{id}/open-items — `docs/PET_OPEN_ITEMS_API_CONTRACT.md` §1. Bölüm zarfı hasta özetiyle aynı. */
 export interface PetOpenVaccinationDto {

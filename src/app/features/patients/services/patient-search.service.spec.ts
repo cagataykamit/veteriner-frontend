@@ -2,8 +2,8 @@ import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { GlobalSearchService, type GlobalSearchResultVm } from '@/app/features/patients/services/global-search.service';
 import { PatientSearchService } from './patient-search.service';
 

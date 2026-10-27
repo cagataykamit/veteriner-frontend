@@ -1,4 +1,4 @@
-import type { PetColorListItemDto } from '@/app/features/pets/models/pet-color-api.model';
+import type { PetColorListItemDto } from '@/app/entities/pet/models/pet-color-api.model';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 
 function pickPetColorId(o: Record<string, unknown>): string | null {

@@ -1,5 +1,5 @@
-import type { PetTimelineItemVm } from '@/app/features/pets/models/pet-timeline-vm.model';
-import { mapPetTimelinePageDtoToVm } from '@/app/features/pets/data/pet-timeline.mapper';
+import type { PetTimelineItemVm } from '@/app/entities/pet/models/pet-timeline-vm.model';
+import { mapPetTimelinePageDtoToVm } from '@/app/entities/pet/data/pet-timeline.mapper';
 import {
     mergePetTimelineItems,
     paymentToPetTimelineItem,

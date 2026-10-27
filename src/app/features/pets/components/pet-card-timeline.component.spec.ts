@@ -1,9 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
-import type { PetTimelinePageVm, PetTimelineQuery } from '@/app/features/pets/models/pet-timeline-vm.model';
-import type { PetHistoryPaymentItemVm } from '@/app/features/pets/models/pet-vm.model';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import type { PetTimelinePageVm, PetTimelineQuery } from '@/app/entities/pet/models/pet-timeline-vm.model';
+import type { PetHistoryPaymentItemVm } from '@/app/entities/pet/models/pet-vm.model';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import { PET_CARD_TIMELINE_LIMIT, PetCardTimelineComponent } from './pet-card-timeline.component';
 

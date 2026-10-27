@@ -12,8 +12,8 @@ import { APPOINTMENTS_CANCEL_CLAIM, APPOINTMENTS_READ_CLAIM } from '@/app/core/a
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { appointmentTypeDisplayLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
-import type { PetDetailVm, PetStatusUpdateResult } from '@/app/features/pets/models/pet-vm.model';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import type { PetDetailVm, PetStatusUpdateResult } from '@/app/entities/pet/models/pet-vm.model';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { upcomingScheduledAppointments } from '@/app/features/pets/utils/pet-card.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';

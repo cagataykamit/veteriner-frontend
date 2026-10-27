@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
-import type { PetTimelinePageVm, PetTimelineQuery } from '@/app/features/pets/models/pet-timeline-vm.model';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import type { PetTimelinePageVm, PetTimelineQuery } from '@/app/entities/pet/models/pet-timeline-vm.model';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { PetTimelinePageComponent } from './pet-timeline-page.component';
 
 const item = (type: string, id: string, over: Record<string, unknown> = {}) => ({

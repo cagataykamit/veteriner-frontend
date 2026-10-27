@@ -2,9 +2,9 @@ import { Component, computed, input, ChangeDetectionStrategy } from '@angular/co
 import { RouterLink } from '@angular/router';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import { CardAccountStatusComponent } from '@/app/features/pets/components/card-account-status.component';
-import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
-import type { PetNextAppointmentVm } from '@/app/features/pets/models/pet-open-items-vm.model';
-import type { PetDetailVm } from '@/app/features/pets/models/pet-vm.model';
+import type { PetSummaryVm } from '@/app/entities/pet/models/pet-summary-vm.model';
+import type { PetNextAppointmentVm } from '@/app/entities/pet/models/pet-open-items-vm.model';
+import type { PetDetailVm } from '@/app/entities/pet/models/pet-vm.model';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import { careStatusLabel } from '@/app/features/visits/utils/visit-status.utils';
 import type { VisitCareStatus } from '@/app/features/visits/models/visit-vm.model';

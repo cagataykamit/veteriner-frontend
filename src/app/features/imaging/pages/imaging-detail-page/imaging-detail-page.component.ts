@@ -11,7 +11,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import type { StoredFileVm } from '@/app/shared/files/stored-file.model';
 import { StoredFileGalleryComponent } from '@/app/shared/files/stored-file-gallery.component';
 import { StoredFileUploadComponent } from '@/app/shared/files/stored-file-upload.component';
-import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
+import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';

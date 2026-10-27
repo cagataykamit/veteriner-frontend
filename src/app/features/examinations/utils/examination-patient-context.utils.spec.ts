@@ -1,4 +1,4 @@
-import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
+import type { PetSummaryVm } from '@/app/entities/pet/models/pet-summary-vm.model';
 import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import { contextWeight } from './examination-patient-context.utils';
 

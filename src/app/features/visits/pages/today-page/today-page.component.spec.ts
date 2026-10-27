@@ -6,7 +6,7 @@ import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TodayHospitalizationVm, TodayItemVm, TodayVm, VisitVm } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';

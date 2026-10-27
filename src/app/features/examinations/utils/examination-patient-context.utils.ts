@@ -1,4 +1,4 @@
-import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
+import type { PetSummaryVm } from '@/app/entities/pet/models/pet-summary-vm.model';
 
 /** Muayene çalışma alanı yan panelinde gösterilen kilo: önce son muayene ölçümü, yoksa tarihsiz profil kilosu. */
 export interface ContextWeightVm {

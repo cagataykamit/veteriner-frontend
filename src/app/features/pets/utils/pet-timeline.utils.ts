@@ -1,4 +1,4 @@
-import type { PetTimelineItemVm, PetTimelineType } from '@/app/features/pets/models/pet-timeline-vm.model';
+import type { PetTimelineItemVm, PetTimelineType } from '@/app/entities/pet/models/pet-timeline-vm.model';
 import { careStatusLabel } from '@/app/features/visits/utils/visit-status.utils';
 import type { VisitCareStatus } from '@/app/features/visits/models/visit-vm.model';
 import { parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';

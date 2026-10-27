@@ -13,9 +13,9 @@ import type { ClientBalanceVm } from '@/app/features/clients/models/client-balan
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
-import type { PetOpenItemsVm } from '@/app/features/pets/models/pet-open-items-vm.model';
-import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import type { PetOpenItemsVm } from '@/app/entities/pet/models/pet-open-items-vm.model';
+import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';

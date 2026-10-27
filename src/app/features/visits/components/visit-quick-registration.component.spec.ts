@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
 import type { PetSuggestion } from '@/app/features/visits/models/visit-vm.model';
 import { VisitQuickRegistrationComponent } from './visit-quick-registration.component';

@@ -9,7 +9,7 @@ import { ClientSearchService } from '@/app/features/clients/services/client-sear
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { BreedsService } from '@/app/entities/breed/services/breeds.service';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';

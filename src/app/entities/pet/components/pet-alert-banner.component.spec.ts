@@ -1,8 +1,8 @@
 import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import type { PetDetailVm } from '@/app/features/pets/models/pet-vm.model';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import type { PetDetailVm } from '@/app/entities/pet/models/pet-vm.model';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { PetAlertBannerComponent } from './pet-alert-banner.component';
 
 describe('PetAlertBannerComponent', () => {

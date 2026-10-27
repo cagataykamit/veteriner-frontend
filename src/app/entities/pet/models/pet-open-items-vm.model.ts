@@ -1,4 +1,4 @@
-import type { PetSummarySectionVm } from '@/app/features/pets/models/pet-summary-vm.model';
+import type { PetSummarySectionVm } from '@/app/entities/pet/models/pet-summary-vm.model';
 
 /** Planlı aşı; gecikmiş/yaklaşan ayrımı ve 30 günlük pencere sunucudadır. */
 export interface PetOpenVaccinationVm {

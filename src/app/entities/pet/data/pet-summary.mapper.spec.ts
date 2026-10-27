@@ -1,6 +1,6 @@
-import { mapPetHistorySummaryDtoToVm } from '@/app/features/pets/data/pet.mapper';
-import { mapPetSummaryDtoToVm } from '@/app/features/pets/data/pet-summary.mapper';
-import type { PetSummaryDto } from '@/app/features/pets/models/pet-summary-api.model';
+import { mapPetHistorySummaryDtoToVm } from '@/app/entities/pet/data/pet.mapper';
+import { mapPetSummaryDtoToVm } from '@/app/entities/pet/data/pet-summary.mapper';
+import type { PetSummaryDto } from '@/app/entities/pet/models/pet-summary-api.model';
 
 const full: PetSummaryDto = {
     petId: 'p1',

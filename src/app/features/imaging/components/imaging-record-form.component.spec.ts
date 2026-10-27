@@ -10,10 +10,10 @@ import { ExaminationsService } from '@/app/entities/examination/services/examina
 import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-records.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
-import { PetSearchComponent } from '@/app/features/pets/components/pet-search.component';
+import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { StoredFileUploadComponent } from '@/app/shared/files/stored-file-upload.component';
 import { StoredFilesService } from '@/app/shared/files/stored-files.service';
-import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-alert-banner.component';
+import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { ImagingRecordFormComponent } from './imaging-record-form.component';
 
 /** Arama bileşenlerinin yerine basit değer erişimcisi (sunucu araması bu testin konusu değil). */

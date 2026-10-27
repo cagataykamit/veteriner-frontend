@@ -10,10 +10,10 @@ import { createClientUpsertFormGroup } from '@/app/features/clients/forms/client
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { parseClientCreateHttpError, type ClientCreateFieldErrors } from '@/app/features/clients/utils/client-create-validation-parse.utils';
 import { clientUpsertFieldErrorMessage } from '@/app/features/clients/utils/client-upsert.validation.utils';
-import { mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.mapper';
-import { createPetUpsertFormGroup, getPetUpsertFormValue } from '@/app/features/pets/forms/pet-upsert-form.factory';
-import { PetsService } from '@/app/features/pets/services/pets.service';
-import { parsePetCreateHttpError } from '@/app/features/pets/utils/pet-create-validation-parse.utils';
+import { mapPetUpsertFormToCreateRequest } from '@/app/entities/pet/data/pet.mapper';
+import { createPetUpsertFormGroup, getPetUpsertFormValue } from '@/app/entities/pet/forms/pet-upsert-form.factory';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
+import { parsePetCreateHttpError } from '@/app/entities/pet/utils/pet-create-validation-parse.utils';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
 import type { PetSuggestion } from '@/app/features/visits/models/visit-vm.model';
 import { splitSearchTermForRegistration } from '@/app/features/visits/utils/visit-registration.utils';

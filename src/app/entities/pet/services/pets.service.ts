@@ -13,19 +13,19 @@ import {
     mapPetStatusUpdateResultDtoToVm,
     mapPetStatusUpdateToApiBody,
     petsQueryToHttpParams
-} from '@/app/features/pets/data/pet.mapper';
-import { mapPetOpenItemsDtoToVm } from '@/app/features/pets/data/pet-open-items.mapper';
-import { mapPetSummaryDtoToVm } from '@/app/features/pets/data/pet-summary.mapper';
-import type { PetDetailDto, PetHistorySummaryDto, PetListItemDtoPagedResult, PetStatusUpdateResultDto } from '@/app/features/pets/models/pet-api.model';
-import { mapPetTimelinePageDtoToVm, petTimelineQueryToHttpParams } from '@/app/features/pets/data/pet-timeline.mapper';
-import type { PetTimelinePageDto } from '@/app/features/pets/models/pet-timeline-api.model';
-import type { PetTimelinePageVm, PetTimelineQuery } from '@/app/features/pets/models/pet-timeline-vm.model';
-import type { PetOpenItemsDto } from '@/app/features/pets/models/pet-open-items-api.model';
-import type { PetOpenItemsVm } from '@/app/features/pets/models/pet-open-items-vm.model';
-import type { PetSummaryDto } from '@/app/features/pets/models/pet-summary-api.model';
-import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
-import type { CreatePetRequest } from '@/app/features/pets/models/pet-create.model';
-import type { PetsListQuery } from '@/app/features/pets/models/pet-query.model';
+} from '@/app/entities/pet/data/pet.mapper';
+import { mapPetOpenItemsDtoToVm } from '@/app/entities/pet/data/pet-open-items.mapper';
+import { mapPetSummaryDtoToVm } from '@/app/entities/pet/data/pet-summary.mapper';
+import type { PetDetailDto, PetHistorySummaryDto, PetListItemDtoPagedResult, PetStatusUpdateResultDto } from '@/app/entities/pet/models/pet-api.model';
+import { mapPetTimelinePageDtoToVm, petTimelineQueryToHttpParams } from '@/app/entities/pet/data/pet-timeline.mapper';
+import type { PetTimelinePageDto } from '@/app/entities/pet/models/pet-timeline-api.model';
+import type { PetTimelinePageVm, PetTimelineQuery } from '@/app/entities/pet/models/pet-timeline-vm.model';
+import type { PetOpenItemsDto } from '@/app/entities/pet/models/pet-open-items-api.model';
+import type { PetOpenItemsVm } from '@/app/entities/pet/models/pet-open-items-vm.model';
+import type { PetSummaryDto } from '@/app/entities/pet/models/pet-summary-api.model';
+import type { PetSummaryVm } from '@/app/entities/pet/models/pet-summary-vm.model';
+import type { CreatePetRequest } from '@/app/entities/pet/models/pet-create.model';
+import type { PetsListQuery } from '@/app/entities/pet/models/pet-query.model';
 import type {
     PetDetailVm,
     PetEditVm,
@@ -33,7 +33,7 @@ import type {
     PetListItemVm,
     PetStatusUpdateRequest,
     PetStatusUpdateResult
-} from '@/app/features/pets/models/pet-vm.model';
+} from '@/app/entities/pet/models/pet-vm.model';
 import { messageFromHttpError, toUserError } from '@/app/shared/utils/api-error.utils';
 
 export interface PetsPagedVm {

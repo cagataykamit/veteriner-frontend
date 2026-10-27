@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
-import { mapPetColorListResponseToSelectOptions } from '@/app/features/pets/data/pet-color.mapper';
+import { mapPetColorListResponseToSelectOptions } from '@/app/entities/pet/data/pet-color.mapper';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 

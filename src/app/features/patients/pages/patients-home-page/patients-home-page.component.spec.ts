@@ -7,7 +7,7 @@ import { PatientSearchService, type PatientSearchResultVm } from '@/app/features
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { PatientsHomePageComponent } from './patients-home-page.component';
 
 const PAMUK = { petId: 'p1', petName: 'Pamuk', summary: 'Kedi · Tekir', microchip: '985', clientId: 'c1', ownerName: 'Ali Veli', ownerPhone: '+90 532 123 45 67', deceased: false };

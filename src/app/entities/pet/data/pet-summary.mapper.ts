@@ -8,7 +8,7 @@ import type {
     PetSummaryVaccinationsDto,
     PetSummaryVisitDto,
     PetSummaryWeightDto
-} from '@/app/features/pets/models/pet-summary-api.model';
+} from '@/app/entities/pet/models/pet-summary-api.model';
 import type {
     PetSummaryAppliedVaccinationVm,
     PetSummaryDueVaccinationVm,
@@ -20,7 +20,7 @@ import type {
     PetSummaryVisitVm,
     PetSummaryVm,
     PetSummaryWeightVm
-} from '@/app/features/pets/models/pet-summary-vm.model';
+} from '@/app/entities/pet/models/pet-summary-vm.model';
 import { mapPetAlertsDtoToVm } from '@/app/shared/pet-alerts/pet-alerts.utils';
 
 export function trimOrNull(v: string | null | undefined): string | null {

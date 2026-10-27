@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { PetsService } from '@/app/features/pets/services/pets.service';
+import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { VisitArrivalDialogComponent } from './visit-arrival-dialog.component';
 
