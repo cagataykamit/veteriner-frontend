@@ -1,5 +1,5 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
-import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
+import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -13,7 +13,7 @@ import { SelectModule } from 'primeng/select';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { mapHospitalizationUpsertFormToCreateRequest } from '@/app/features/hospitalizations/data/hospitalization.mapper';
 import type { HospitalizationEditVm } from '@/app/features/hospitalizations/models/hospitalization-vm.model';

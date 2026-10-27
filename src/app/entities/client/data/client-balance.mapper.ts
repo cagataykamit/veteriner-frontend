@@ -1,5 +1,5 @@
-import type { ClientBalanceDto } from '@/app/features/clients/models/client-balance-api.model';
-import type { ClientBalanceVm, ClientOpenChargeVm } from '@/app/features/clients/models/client-balance-vm.model';
+import type { ClientBalanceDto } from '@/app/entities/client/models/client-balance-api.model';
+import type { ClientBalanceVm, ClientOpenChargeVm } from '@/app/entities/client/models/client-balance-vm.model';
 
 function trimmedOrNull(v: string | null | undefined): string | null {
     const t = v?.trim();

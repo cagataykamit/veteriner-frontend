@@ -1,4 +1,4 @@
-import type { ClientBalanceDto } from '@/app/features/clients/models/client-balance-api.model';
+import type { ClientBalanceDto } from '@/app/entities/client/models/client-balance-api.model';
 import { mapClientBalanceDtoToVm } from './client-balance.mapper';
 
 const charge = (chargeId: string, over: object = {}) => ({

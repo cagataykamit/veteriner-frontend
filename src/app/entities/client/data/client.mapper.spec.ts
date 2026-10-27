@@ -1,6 +1,6 @@
 import { mapClientDetailDtoToVm, mapClientKvkkConsentDtoToVm, mapClientKvkkConsentUpdateToApiBody, mapClientUpsertFormValueToCreateRequest, mapCreateClientToApiBody } from './client.mapper';
-import { parseClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
-import { kvkkConsentStatusLabel, parseKvkkConsentStatus } from '@/app/features/clients/utils/client-kvkk-consent.utils';
+import { parseClientContactChannel } from '@/app/entities/client/utils/client-contact-preference.utils';
+import { kvkkConsentStatusLabel, parseKvkkConsentStatus } from '@/app/entities/client/utils/client-kvkk-consent.utils';
 
 describe('client.mapper KVKK rıza (ADR-021)', () => {
     it('detay: durum, tarih, işaretleyen ve rowVersion okunur; eski yanıtta alan yoksa Yok', () => {

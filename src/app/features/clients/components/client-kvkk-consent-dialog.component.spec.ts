@@ -2,8 +2,8 @@ import type { Mock } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import type { ClientDetailVm } from '@/app/entities/client/models/client-vm.model';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ClientKvkkConsentDialogComponent } from './client-kvkk-consent-dialog.component';
 
 const client = { id: 'c1', fullName: 'Ali Veli', kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null, templateVersion: null, templateHash: null }, rowVersion: 'rv1' } as ClientDetailVm;

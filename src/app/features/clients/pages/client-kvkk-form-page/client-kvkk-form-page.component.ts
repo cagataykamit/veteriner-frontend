@@ -4,7 +4,7 @@ import { ButtonModule } from 'primeng/button';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLINICS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { KvkkFormDocumentComponent } from '@/app/entities/kvkk/components/kvkk-form-document.component';
 import type { KvkkFormTemplateVm } from '@/app/entities/kvkk/models/kvkk-form-template.model';
 import { KvkkFormTemplateService } from '@/app/entities/kvkk/services/kvkk-form-template.service';

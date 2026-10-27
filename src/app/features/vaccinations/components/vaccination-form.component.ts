@@ -1,6 +1,6 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
-import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
+import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -17,7 +17,7 @@ import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidato
 import type { ProductListItemVm } from '@/app/features/inventory/models/product-vm.model';
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { ADMINISTRATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import type { CreateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/services/vaccine-definitions.service';

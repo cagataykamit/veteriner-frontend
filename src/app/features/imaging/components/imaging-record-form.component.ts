@@ -12,7 +12,7 @@ import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-r
 import { IMAGING_MODALITY_OPTIONS } from '@/app/features/imaging/utils/imaging.utils';
 import { examinationListItemFromDetail, prescriptionExaminationSelectOption } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
+import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { type SelectOption, trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';

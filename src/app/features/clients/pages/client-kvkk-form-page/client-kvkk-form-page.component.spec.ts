@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import type { KvkkFormTemplateVm } from '@/app/entities/kvkk/models/kvkk-form-template.model';
 import { KvkkFormTemplateService } from '@/app/entities/kvkk/services/kvkk-form-template.service';
 import { kvkkFormDate } from '@/app/entities/kvkk/utils/kvkk-form.utils';

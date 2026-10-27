@@ -5,7 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { catchError, debounceTime, of, Subject, switchMap } from 'rxjs';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { CLIENT_SEARCH_MIN_LENGTH } from '@/app/features/clients/services/client-search.service';
+import { CLIENT_SEARCH_MIN_LENGTH } from '@/app/entities/client/services/client-search.service';
 import { GlobalSearchResultVm, GlobalSearchService } from '@/app/features/patients/services/global-search.service';
 
 type SearchStatus = 'idle' | 'loading' | 'ready' | 'error';

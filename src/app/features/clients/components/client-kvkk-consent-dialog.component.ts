@@ -5,9 +5,9 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import type { ClientDetailVm, ClientKvkkConsentUpdateResult } from '@/app/features/clients/models/client-vm.model';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { KVKK_CONSENT_STATUS_OPTIONS, type KvkkConsentStatus } from '@/app/features/clients/utils/client-kvkk-consent.utils';
+import type { ClientDetailVm, ClientKvkkConsentUpdateResult } from '@/app/entities/client/models/client-vm.model';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
+import { KVKK_CONSENT_STATUS_OPTIONS, type KvkkConsentStatus } from '@/app/entities/client/utils/client-kvkk-consent.utils';
 import { panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 

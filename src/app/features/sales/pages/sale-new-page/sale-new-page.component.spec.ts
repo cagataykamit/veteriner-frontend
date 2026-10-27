@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
+import { ClientSearchService } from '@/app/entities/client/services/client-search.service';
 import { mapProductStockBatchesDtoToVm } from '@/app/features/inventory/data/stock-batch.mapper';
 import { StockBatchService } from '@/app/features/inventory/services/stock-batch.service';
 import { mapCreateSaleResponseToVm } from '@/app/features/sales/data/sale.mapper';

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { FormBuilder } from '@angular/forms';
-import { createClientInvoicingFormGroup } from '@/app/features/clients/forms/client-invoicing-form.factory';
+import { createClientInvoicingFormGroup } from '@/app/entities/client/forms/client-invoicing-form.factory';
 import { ClientInvoicingFieldsComponent } from './client-invoicing-fields.component';
 
 describe('ClientInvoicingFieldsComponent', () => {

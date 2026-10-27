@@ -1,8 +1,8 @@
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import type { ClientDataExportDto } from '@/app/features/clients/models/client-data-export-api.model';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import type { ClientDataExportDto } from '@/app/entities/client/models/client-data-export-api.model';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { clientDataExportBalanceFacts, clientDataExportClientFacts, clientDataExportFileName, clientDataExportJson, clientDataExportKvkkFacts, clientDataExportTables } from '@/app/features/clients/utils/client-data-export.utils';
 import { printKvkkForm } from '@/app/entities/kvkk/utils/kvkk-form.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';

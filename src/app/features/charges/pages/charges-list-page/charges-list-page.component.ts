@@ -11,7 +11,7 @@ import { ChargeCorrectionDialogComponent } from '@/app/features/charges/componen
 import type { ChargeVm } from '@/app/features/charges/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
+import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';

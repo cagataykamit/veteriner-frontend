@@ -2,7 +2,7 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { KvkkFormTemplateService } from './kvkk-form-template.service';
 
 describe('KvkkFormTemplateService ve müşteri rıza ucu', () => {

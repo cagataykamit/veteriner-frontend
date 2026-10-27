@@ -4,7 +4,7 @@ import { NEVER, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { APPOINTMENTS_READ_CLAIM, VISITS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { DashboardService } from '@/app/features/dashboard/services/dashboard.service';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { ProductStockService } from '@/app/features/inventory/services/product-stock.service';

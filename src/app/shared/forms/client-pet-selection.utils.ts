@@ -1,4 +1,4 @@
-import type { ClientListItemVm } from '@/app/features/clients/models/client-vm.model';
+import type { ClientListItemVm } from '@/app/entities/client/models/client-vm.model';
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 

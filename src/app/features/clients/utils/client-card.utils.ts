@@ -2,7 +2,7 @@ import { CHARGES_CREATE_CLAIM, PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/ope
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import type { ChargeSuggestionsPagedVm, ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import { computeChargeAmount } from '@/app/features/charges/utils/charge-amount.utils';
-import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
+import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import {
     nextScheduledAppointment,

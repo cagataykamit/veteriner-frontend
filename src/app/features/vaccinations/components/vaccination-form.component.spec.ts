@@ -4,7 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ProductService } from '@/app/features/inventory/services/product.service';
 import { StockBatchService } from '@/app/features/inventory/services/stock-batch.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';

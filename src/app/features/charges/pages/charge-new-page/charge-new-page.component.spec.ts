@@ -5,7 +5,7 @@ import { type Observable, of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { ChargeCreateResultVm, ChargeVm } from '@/app/features/charges/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
-import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
+import { ClientSearchService } from '@/app/entities/client/services/client-search.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { BreedsService } from '@/app/entities/breed/services/breeds.service';

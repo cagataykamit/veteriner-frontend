@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import type { ClientDetailVm } from '@/app/entities/client/models/client-vm.model';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { formatPetAgeTr } from '@/app/features/examinations/utils/pet-age.utils';
 import type { PetDetailVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';

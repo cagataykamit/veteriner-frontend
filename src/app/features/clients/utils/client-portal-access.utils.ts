@@ -1,4 +1,4 @@
-import type { ClientPortalAccessDto, ClientPortalInviteDto, ClientPortalLinkDto } from '@/app/features/clients/models/client-portal-access-api.model';
+import type { ClientPortalAccessDto, ClientPortalInviteDto, ClientPortalLinkDto } from '@/app/entities/client/models/client-portal-access-api.model';
 
 /**
  * Müşteri kartındaki portal durumu (ADR-031 K3): önce aktif bağ, sonra bekleyen davet, sonra kapatılmış bağ; hiçbiri yoksa davet yok.

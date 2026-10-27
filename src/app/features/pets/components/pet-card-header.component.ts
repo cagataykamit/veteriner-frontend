@@ -1,6 +1,6 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
+import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
 import { CardAccountStatusComponent } from '@/app/features/pets/components/card-account-status.component';
 import type { PetSummaryVm } from '@/app/entities/pet/models/pet-summary-vm.model';
 import type { PetNextAppointmentVm } from '@/app/entities/pet/models/pet-open-items-vm.model';

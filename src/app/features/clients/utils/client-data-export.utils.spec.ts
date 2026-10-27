@@ -1,4 +1,4 @@
-import type { ClientDataExportDto } from '@/app/features/clients/models/client-data-export-api.model';
+import type { ClientDataExportDto } from '@/app/entities/client/models/client-data-export-api.model';
 import { clientDataExportBalanceFacts, clientDataExportClientFacts, clientDataExportFileName, clientDataExportJson, clientDataExportKvkkFacts, clientDataExportTables } from '@/app/features/clients/utils/client-data-export.utils';
 
 const section = <T>(items: T[], isTruncated = false) => ({ items, isTruncated });

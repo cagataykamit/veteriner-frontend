@@ -4,9 +4,9 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { startWith, switchMap } from 'rxjs';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import type { ClientPersonType } from '@/app/features/clients/models/client-api.model';
-import type { ClientInvoicingFieldKey, ClientInvoicingFormGroup } from '@/app/features/clients/forms/client-invoicing-form.factory';
-import { CLIENT_PERSON_TYPE_OPTIONS, clientInvoicingFieldErrorMessage } from '@/app/features/clients/utils/client-invoicing.utils';
+import type { ClientPersonType } from '@/app/entities/client/models/client-api.model';
+import type { ClientInvoicingFieldKey, ClientInvoicingFormGroup } from '@/app/entities/client/forms/client-invoicing-form.factory';
+import { CLIENT_PERSON_TYPE_OPTIONS, clientInvoicingFieldErrorMessage } from '@/app/entities/client/utils/client-invoicing.utils';
 
 /**
  * Müşteri yeni/düzenle formunun açılır "Fatura bilgileri" bölümü (ADR-036 Dilim 1). Tüm alanlar isteğe bağlıdır;

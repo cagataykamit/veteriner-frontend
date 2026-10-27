@@ -1,5 +1,5 @@
-import type { ClientInvoicingIdentityDto } from '@/app/features/clients/models/client-api.model';
-import type { ClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
+import type { ClientInvoicingIdentityDto } from '@/app/entities/client/models/client-api.model';
+import type { ClientContactChannel } from '@/app/entities/client/utils/client-contact-preference.utils';
 
 /**
  * Yeni müşteri / düzenleme — UI / servis isteği.

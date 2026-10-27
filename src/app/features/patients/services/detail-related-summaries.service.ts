@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { map, type Observable, of } from 'rxjs';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';

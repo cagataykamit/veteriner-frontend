@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { catchError, forkJoin, map, Observable, of, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PETS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import type { ClientSearchResultVm } from '@/app/features/clients/services/client-search.service';
+import type { ClientSearchResultVm } from '@/app/entities/client/services/client-search.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { GlobalSearchService } from '@/app/features/patients/services/global-search.service';
 

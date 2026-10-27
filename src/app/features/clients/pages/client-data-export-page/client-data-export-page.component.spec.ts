@@ -2,8 +2,8 @@ import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import type { ClientDataExportDto } from '@/app/features/clients/models/client-data-export-api.model';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import type { ClientDataExportDto } from '@/app/entities/client/models/client-data-export-api.model';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ClientDataExportPageComponent } from './client-data-export-page.component';
 
 const empty = { items: [], isTruncated: false };

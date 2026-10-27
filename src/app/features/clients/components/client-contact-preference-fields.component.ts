@@ -2,8 +2,8 @@ import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
-import type { ClientUpsertFormGroup } from '@/app/features/clients/forms/client-upsert-form.factory';
-import { CLIENT_CONTACT_CHANNEL_OPTIONS } from '@/app/features/clients/utils/client-contact-preference.utils';
+import type { ClientUpsertFormGroup } from '@/app/entities/client/forms/client-upsert-form.factory';
+import { CLIENT_CONTACT_CHANNEL_OPTIONS } from '@/app/entities/client/utils/client-contact-preference.utils';
 
 /** Müşteri yeni/düzenle formunun "İletişim tercihi" bölümü: tercih edilen kanal (yalnız bilgi) ve otomatik hatırlatma istememe. */
 @Component({

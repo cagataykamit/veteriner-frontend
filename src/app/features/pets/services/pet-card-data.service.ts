@@ -9,8 +9,8 @@ import {
 } from '@/app/core/auth/operation-claims.constants';
 import type { ChargeSuggestionsPagedVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import { ChargeSuggestionsService } from '@/app/features/charges/services/charge-suggestions.service';
-import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import type { PetOpenItemsVm } from '@/app/entities/pet/models/pet-open-items-vm.model';

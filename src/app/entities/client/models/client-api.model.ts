@@ -1,4 +1,4 @@
-import type { ClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
+import type { ClientContactChannel } from '@/app/entities/client/utils/client-contact-preference.utils';
 
 /**
  * Swagger ile uyumlu ham DTO'lar (Backend Veteriner API).

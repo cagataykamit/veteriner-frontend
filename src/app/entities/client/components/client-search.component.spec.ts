@@ -4,9 +4,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
-import type { ClientSearchResultVm } from '@/app/features/clients/services/client-search.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
+import { ClientSearchService } from '@/app/entities/client/services/client-search.service';
+import type { ClientSearchResultVm } from '@/app/entities/client/services/client-search.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientSearchComponent } from './client-search.component';
 

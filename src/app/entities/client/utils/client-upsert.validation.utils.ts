@@ -1,9 +1,9 @@
 import { AbstractControl, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
-import type { ClientCreateFormFieldKey } from '@/app/features/clients/utils/client-create-validation-parse.utils';
+import type { ClientCreateFormFieldKey } from '@/app/entities/client/utils/client-create-validation-parse.utils';
 import {
     isValidTurkishMobileDigits,
     turkishMobilePhoneValidator
-} from '@/app/features/clients/utils/client-create-phone.utils';
+} from '@/app/entities/client/utils/client-create-phone.utils';
 
 /** Backend sözleşmesi yoksa güvenli üst sınırlar. */
 export const CLIENT_UPSERT_FIELD_MAX = {

@@ -1,6 +1,6 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
-import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
+import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -10,7 +10,7 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import type { UpdateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
 import type { VaccinationEditVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';

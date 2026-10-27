@@ -2,8 +2,8 @@ import { HttpErrorResponse, provideHttpClient, withXhr } from '@angular/common/h
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
-import { mapQuickRegisterFormsToRequest, mapQuickRegisterResultDtoToVm, mapQuickRegisterToApiBody } from '@/app/features/clients/data/client.mapper';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { mapQuickRegisterFormsToRequest, mapQuickRegisterResultDtoToVm, mapQuickRegisterToApiBody } from '@/app/entities/client/data/client.mapper';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 
 describe('hızlı kayıt — mapper', () => {
     it('form değerleri kırpılır; e-posta/adres isteğe girmez; boş mikroçip gönderilmez', () => {

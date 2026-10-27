@@ -1,8 +1,8 @@
 import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientSearchService } from '@/app/entities/client/services/client-search.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 
 const client = (id: string, fullName: string, phone = '905321234567') => ({ id, fullName, phone, email: '', createdAtUtc: null });

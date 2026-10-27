@@ -5,7 +5,7 @@ import { of, Subject } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { isRightAfterDetail, rowDangerActions, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientsListPageComponent } from './clients-list-page.component';
 

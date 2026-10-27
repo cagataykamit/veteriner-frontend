@@ -1,6 +1,6 @@
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
-import type { ClientBalanceVm, ClientOpenChargeVm } from '@/app/features/clients/models/client-balance-vm.model';
+import type { ClientBalanceVm, ClientOpenChargeVm } from '@/app/entities/client/models/client-balance-vm.model';
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { buildClientPetRows, buildClientTodo, type ClientTodoContext, type ClientTodoSources, pendingChargesSummary, soleActivePet } from './client-card.utils';
 

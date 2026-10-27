@@ -11,10 +11,10 @@ import { ClientCardHeaderComponent } from '@/app/features/clients/components/cli
 import { ClientKvkkConsentDialogComponent } from '@/app/features/clients/components/client-kvkk-consent-dialog.component';
 import { ClientPetsPanelComponent } from '@/app/features/clients/components/client-pets-panel.component';
 import { ClientPortalAccessPanelComponent } from '@/app/features/clients/components/client-portal-access-panel.component';
-import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
+import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
 import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
-import type { ClientDetailVm, ClientKvkkConsentUpdateResult, ClientPaymentSummaryVm } from '@/app/features/clients/models/client-vm.model';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import type { ClientDetailVm, ClientKvkkConsentUpdateResult, ClientPaymentSummaryVm } from '@/app/entities/client/models/client-vm.model';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { buildClientPetRows, buildClientTodo, type ClientPetRow, soleActivePet } from '@/app/features/clients/utils/client-card.utils';
 import { PetTodoPanelComponent } from '@/app/features/pets/components/pet-todo-panel.component';
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';

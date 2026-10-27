@@ -18,9 +18,9 @@ import type {
     ClientRecentExaminationSummaryItemDto,
     ClientRecentSummaryDto,
     QuickRegisterResultDto
-} from '@/app/features/clients/models/client-api.model';
-import type { ClientUpsertFormValue } from '@/app/features/clients/forms/client-upsert-form.model';
-import type { CreateClientRequest, QuickRegisterRequest, QuickRegisterResult } from '@/app/features/clients/models/client-create.model';
+} from '@/app/entities/client/models/client-api.model';
+import type { ClientUpsertFormValue } from '@/app/entities/client/forms/client-upsert-form.model';
+import type { CreateClientRequest, QuickRegisterRequest, QuickRegisterResult } from '@/app/entities/client/models/client-create.model';
 import type {
     ClientDetailVm,
     ClientKvkkConsentUpdateRequest,
@@ -28,12 +28,12 @@ import type {
     ClientListItemVm,
     ClientPaymentSummaryVm,
     ClientRecentSummaryVm
-} from '@/app/features/clients/models/client-vm.model';
+} from '@/app/entities/client/models/client-vm.model';
 import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
-import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
-import { parseClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
-import { mapClientInvoicingSummaryDtoToVm } from '@/app/features/clients/utils/client-invoicing.utils';
-import { parseKvkkConsentStatus } from '@/app/features/clients/utils/client-kvkk-consent.utils';
+import type { ClientsListQuery } from '@/app/entities/client/models/client-query.model';
+import { parseClientContactChannel } from '@/app/entities/client/utils/client-contact-preference.utils';
+import { mapClientInvoicingSummaryDtoToVm } from '@/app/entities/client/utils/client-invoicing.utils';
+import { parseKvkkConsentStatus } from '@/app/entities/client/utils/client-kvkk-consent.utils';
 import { parseKvkkTextVersion } from '@/app/entities/kvkk/utils/kvkk-form.utils';
 
 const EM = '—';

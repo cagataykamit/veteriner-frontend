@@ -1,4 +1,4 @@
-import type { ClientInvoicingSummaryDto } from '@/app/features/clients/models/client-api.model';
+import type { ClientInvoicingSummaryDto } from '@/app/entities/client/models/client-api.model';
 
 /**
  * `GET /api/v1/clients/{id}/data-export` yanıtı (`CLIENT_DATA_EXPORT_API_CONTRACT.md`, ADR-032 madde 2).

@@ -15,7 +15,7 @@ import {
     mapQuickRegisterResultDtoToVm,
     mapQuickRegisterToApiBody,
     clientsQueryToHttpParams
-} from '@/app/features/clients/data/client.mapper';
+} from '@/app/entities/client/data/client.mapper';
 import type {
     ClientDetailDto,
     ClientInvoicingIdentityDto,
@@ -24,9 +24,9 @@ import type {
     ClientPaymentSummaryDto,
     ClientRecentSummaryDto,
     QuickRegisterResultDto
-} from '@/app/features/clients/models/client-api.model';
-import type { CreateClientRequest, QuickRegisterRequest, QuickRegisterResult } from '@/app/features/clients/models/client-create.model';
-import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
+} from '@/app/entities/client/models/client-api.model';
+import type { CreateClientRequest, QuickRegisterRequest, QuickRegisterResult } from '@/app/entities/client/models/client-create.model';
+import type { ClientsListQuery } from '@/app/entities/client/models/client-query.model';
 import type {
     ClientDetailVm,
     ClientKvkkConsentUpdateRequest,
@@ -34,12 +34,12 @@ import type {
     ClientListItemVm,
     ClientPaymentSummaryVm,
     ClientRecentSummaryVm
-} from '@/app/features/clients/models/client-vm.model';
-import { mapClientBalanceDtoToVm } from '@/app/features/clients/data/client-balance.mapper';
-import type { ClientBalanceDto } from '@/app/features/clients/models/client-balance-api.model';
-import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
-import type { ClientDataExportDto } from '@/app/features/clients/models/client-data-export-api.model';
-import type { ClientPortalAccessDto, ClientPortalInviteDto } from '@/app/features/clients/models/client-portal-access-api.model';
+} from '@/app/entities/client/models/client-vm.model';
+import { mapClientBalanceDtoToVm } from '@/app/entities/client/data/client-balance.mapper';
+import type { ClientBalanceDto } from '@/app/entities/client/models/client-balance-api.model';
+import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
+import type { ClientDataExportDto } from '@/app/entities/client/models/client-data-export-api.model';
+import type { ClientPortalAccessDto, ClientPortalInviteDto } from '@/app/entities/client/models/client-portal-access-api.model';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { messageFromHttpError, toUserError } from '@/app/shared/utils/api-error.utils';
 

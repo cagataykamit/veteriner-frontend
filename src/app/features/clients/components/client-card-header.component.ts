@@ -2,12 +2,12 @@ import { Component, computed, input, ChangeDetectionStrategy } from '@angular/co
 import { RouterLink } from '@angular/router';
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import type { ChargeSuggestionsPagedVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
-import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
-import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';
+import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
+import type { ClientDetailVm } from '@/app/entities/client/models/client-vm.model';
 import { pendingChargesSummary } from '@/app/features/clients/utils/client-card.utils';
-import { clientContactChannelLabel } from '@/app/features/clients/utils/client-contact-preference.utils';
-import { formatClientInvoicingSummary } from '@/app/features/clients/utils/client-invoicing.utils';
-import { kvkkConsentStatusLabel } from '@/app/features/clients/utils/client-kvkk-consent.utils';
+import { clientContactChannelLabel } from '@/app/entities/client/utils/client-contact-preference.utils';
+import { formatClientInvoicingSummary } from '@/app/entities/client/utils/client-invoicing.utils';
+import { kvkkConsentStatusLabel } from '@/app/entities/client/utils/client-kvkk-consent.utils';
 import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import { kvkkTextVersionLabel } from '@/app/entities/kvkk/utils/kvkk-form.utils';
 import { CardAccountStatusComponent } from '@/app/features/pets/components/card-account-status.component';

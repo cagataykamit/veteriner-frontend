@@ -1,6 +1,6 @@
 import { FormBuilder, Validators } from '@angular/forms';
 import type { FormControl, FormGroup } from '@angular/forms';
-import type { ClientInvoicingIdentityDto, ClientPersonType } from '@/app/features/clients/models/client-api.model';
+import type { ClientInvoicingIdentityDto, ClientPersonType } from '@/app/entities/client/models/client-api.model';
 import { nationalIdValidator, taxpayerIdentityValidator } from '@/app/shared/utils/turkish-tax-identity.utils';
 
 /** Sözleşme üst sınırları (`INVOICING_IDENTITY_API_CONTRACT.md` §2). */

@@ -10,7 +10,7 @@ import { SelectModule } from 'primeng/select';
 import { catchError, forkJoin, map, Observable, of, Subject, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLIENTS_CREATE_CLAIM, PETS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { VisitQuickRegistrationComponent, type RegistrationOwner } from '@/app/features/visits/components/visit-quick-registration.component';

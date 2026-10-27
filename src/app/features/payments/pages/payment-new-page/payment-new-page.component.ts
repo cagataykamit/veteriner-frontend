@@ -1,5 +1,5 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
-import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
+import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
@@ -9,8 +9,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
-import type { ClientOpenChargeVm } from '@/app/features/clients/models/client-balance-vm.model';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
+import type { ClientOpenChargeVm } from '@/app/entities/client/models/client-balance-vm.model';
 import { mapPaymentUpsertFormToWriteRequest } from '@/app/features/payments/data/payment.mapper';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
 import { allocationAmountError, allocationTotal, buildAllocations, PAYMENT_CURRENCY } from '@/app/features/payments/utils/payment-allocation.utils';

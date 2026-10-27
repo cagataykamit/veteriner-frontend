@@ -4,9 +4,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { type Confirmation, ConfirmationService, MessageService } from 'primeng/api';
 import { of, throwError } from 'rxjs';
-import type { ClientPortalAccessDto, ClientPortalInviteDto, ClientPortalLinkDto } from '@/app/features/clients/models/client-portal-access-api.model';
-import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import type { ClientPortalAccessDto, ClientPortalInviteDto, ClientPortalLinkDto } from '@/app/entities/client/models/client-portal-access-api.model';
+import type { ClientDetailVm } from '@/app/entities/client/models/client-vm.model';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientPortalAccessPanelComponent } from './client-portal-access-panel.component';
 

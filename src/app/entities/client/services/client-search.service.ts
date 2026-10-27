@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { catchError, forkJoin, map, Observable, of, switchMap } from 'rxjs';
-import type { ClientListItemVm } from '@/app/features/clients/models/client-vm.model';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import type { ClientListItemVm } from '@/app/entities/client/models/client-vm.model';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { filterPetsByClientId } from '@/app/shared/forms/client-pet-selection.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';

@@ -1,9 +1,9 @@
 import { appointmentStatusLabel } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { appointmentTypeLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
-import type { ClientDataExportDto, ClientDataExportSectionDto } from '@/app/features/clients/models/client-data-export-api.model';
-import { clientContactChannelLabel, parseClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
-import { formatClientInvoicingSummary, mapClientInvoicingSummaryDtoToVm } from '@/app/features/clients/utils/client-invoicing.utils';
-import { kvkkConsentStatusLabel, parseKvkkConsentStatus } from '@/app/features/clients/utils/client-kvkk-consent.utils';
+import type { ClientDataExportDto, ClientDataExportSectionDto } from '@/app/entities/client/models/client-data-export-api.model';
+import { clientContactChannelLabel, parseClientContactChannel } from '@/app/entities/client/utils/client-contact-preference.utils';
+import { formatClientInvoicingSummary, mapClientInvoicingSummaryDtoToVm } from '@/app/entities/client/utils/client-invoicing.utils';
+import { kvkkConsentStatusLabel, parseKvkkConsentStatus } from '@/app/entities/client/utils/client-kvkk-consent.utils';
 import { examinationStatusLabel } from '@/app/entities/examination/utils/examination-status.utils';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
 import { parsePetLifeStatus, petGenderLabel, petLifeStatusLabel } from '@/app/entities/pet/utils/pet-status.utils';

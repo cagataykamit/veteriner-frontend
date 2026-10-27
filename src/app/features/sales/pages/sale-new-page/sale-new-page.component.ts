@@ -33,7 +33,7 @@ import {
 } from '@/app/features/sales/utils/sale-cart.utils';
 import { printSaleReceipt } from '@/app/features/sales/utils/sale-receipt-print.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
+import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { MoneyPipe } from '@/app/shared/pipes/money.pipe';

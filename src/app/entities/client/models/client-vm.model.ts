@@ -1,8 +1,8 @@
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
-import type { ClientPersonType } from '@/app/features/clients/models/client-api.model';
+import type { ClientPersonType } from '@/app/entities/client/models/client-api.model';
 import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
-import type { ClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
-import type { KvkkConsentStatus } from '@/app/features/clients/utils/client-kvkk-consent.utils';
+import type { ClientContactChannel } from '@/app/entities/client/utils/client-contact-preference.utils';
+import type { KvkkConsentStatus } from '@/app/entities/client/utils/client-kvkk-consent.utils';
 
 export interface ClientListItemVm {
     id: string;

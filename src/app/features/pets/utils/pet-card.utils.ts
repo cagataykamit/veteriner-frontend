@@ -5,7 +5,7 @@ import {
     PAYMENTS_CREATE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
-import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
+import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import type { PetOpenItemsVm, PetOpenVaccinationVm } from '@/app/entities/pet/models/pet-open-items-vm.model';
 import type { PetSummarySectionVm } from '@/app/entities/pet/models/pet-summary-vm.model';

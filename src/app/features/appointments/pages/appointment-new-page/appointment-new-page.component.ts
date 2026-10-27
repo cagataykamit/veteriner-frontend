@@ -1,5 +1,5 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
-import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
+import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -11,7 +11,7 @@ import { prefillPetFromRoute } from '@/app/shared/panel/examination-create-route
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
 import { mapAppointmentUpsertFormToCreateRequest } from '@/app/entities/appointment/data/appointment.mapper';
 import type { ClinicWorkingHourVm } from '@/app/features/clinics/models/clinic-working-hours-vm.model';

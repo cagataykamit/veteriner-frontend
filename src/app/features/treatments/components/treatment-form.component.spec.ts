@@ -5,7 +5,7 @@ import { convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
+import { ClientSearchService } from '@/app/entities/client/services/client-search.service';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';

@@ -1,5 +1,5 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
-import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';
+import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -13,7 +13,7 @@ import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { isAppointmentCancelledStatus } from '@/app/entities/appointment/utils/appointment-status.utils';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ClinicalTermPickerComponent } from '@/app/features/clinical-terms/components/clinical-term-picker.component';
 import { ExaminationPatientContextComponent } from '@/app/features/examinations/components/examination-patient-context.component';
 import { ExaminationPatientHeaderComponent } from '@/app/features/examinations/components/examination-patient-header.component';

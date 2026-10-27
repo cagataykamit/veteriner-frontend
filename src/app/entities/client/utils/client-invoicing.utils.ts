@@ -1,8 +1,8 @@
 import type { HttpErrorResponse } from '@angular/common/http';
 import type { ValidationErrors } from '@angular/forms';
-import type { ClientInvoicingSummaryDto, ClientPersonType } from '@/app/features/clients/models/client-api.model';
-import type { ClientInvoicingSummaryVm } from '@/app/features/clients/models/client-vm.model';
-import { CLIENT_INVOICING_MAX, type ClientInvoicingFieldKey } from '@/app/features/clients/forms/client-invoicing-form.factory';
+import type { ClientInvoicingSummaryDto, ClientPersonType } from '@/app/entities/client/models/client-api.model';
+import type { ClientInvoicingSummaryVm } from '@/app/entities/client/models/client-vm.model';
+import { CLIENT_INVOICING_MAX, type ClientInvoicingFieldKey } from '@/app/entities/client/forms/client-invoicing-form.factory';
 import { NATIONAL_ID_LENGTH, TAX_IDENTITY_MSG_NATIONAL_ID, TAX_IDENTITY_MSG_TAXPAYER } from '@/app/shared/utils/turkish-tax-identity.utils';
 import { parseValidationFieldErrors } from '@/app/shared/utils/validation-error-parse.utils';
 

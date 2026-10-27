@@ -6,7 +6,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { PatientSearchService, type PatientSearchResultVm } from '@/app/features/patients/services/patient-search.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { PatientsHomePageComponent } from './patients-home-page.component';
 

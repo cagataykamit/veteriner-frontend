@@ -1,8 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { CLIENT_CREATE_PHONE_MSG_INVALID } from '@/app/features/clients/utils/client-create-phone.utils';
-import { CLIENT_UPSERT_MSG_EMAIL_INVALID } from '@/app/features/clients/utils/client-upsert.validation.utils';
+import { CLIENT_CREATE_PHONE_MSG_INVALID } from '@/app/entities/client/utils/client-create-phone.utils';
+import { CLIENT_UPSERT_MSG_EMAIL_INVALID } from '@/app/entities/client/utils/client-upsert.validation.utils';
 import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
-import { messageFromClientCreateHttpError } from '@/app/features/clients/utils/client-create-error.utils';
+import { messageFromClientCreateHttpError } from '@/app/entities/client/utils/client-create-error.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { parseValidationHttpError } from '@/app/shared/utils/validation-error-parse.utils';
 

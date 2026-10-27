@@ -7,7 +7,7 @@ import { EMPTY, Observable, of, throwError } from 'rxjs';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
-import { ClientsService } from '@/app/features/clients/services/clients.service';
+import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';

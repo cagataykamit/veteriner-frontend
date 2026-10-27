@@ -1,8 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder } from '@angular/forms';
-import { mapClientDetailDtoToVm, mapCreateClientToApiBody } from '@/app/features/clients/data/client.mapper';
-import { createClientInvoicingFormGroup, isClientInvoicingDtoEmpty, mapClientInvoicingDtoToFormValue, mapClientInvoicingFormToDto } from '@/app/features/clients/forms/client-invoicing-form.factory';
-import { clientInvoicingFieldErrorMessage, formatClientInvoicingSummary, mapClientInvoicingSummaryDtoToVm, parseClientInvoicingFieldErrors } from '@/app/features/clients/utils/client-invoicing.utils';
+import { mapClientDetailDtoToVm, mapCreateClientToApiBody } from '@/app/entities/client/data/client.mapper';
+import { createClientInvoicingFormGroup, isClientInvoicingDtoEmpty, mapClientInvoicingDtoToFormValue, mapClientInvoicingFormToDto } from '@/app/entities/client/forms/client-invoicing-form.factory';
+import { clientInvoicingFieldErrorMessage, formatClientInvoicingSummary, mapClientInvoicingSummaryDtoToVm, parseClientInvoicingFieldErrors } from '@/app/entities/client/utils/client-invoicing.utils';
 
 describe('client-invoicing (ADR-036)', () => {
     const fb = new FormBuilder();
