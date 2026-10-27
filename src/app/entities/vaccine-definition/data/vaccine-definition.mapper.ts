@@ -1,6 +1,6 @@
 import { HttpParams } from '@angular/common/http';
-import type { VaccineDefinitionDto, VaccineDefinitionDtoPagedResult } from '@/app/features/vaccine-definitions/models/vaccine-definition-api.model';
-import type { VaccineDefinitionListItemVm } from '@/app/features/vaccine-definitions/models/vaccine-definition-vm.model';
+import type { VaccineDefinitionDto, VaccineDefinitionDtoPagedResult } from '@/app/entities/vaccine-definition/models/vaccine-definition-api.model';
+import type { VaccineDefinitionListItemVm } from '@/app/entities/vaccine-definition/models/vaccine-definition-vm.model';
 
 function firstTrimmed(...vals: Array<string | null | undefined>): string | null {
     for (const v of vals) {

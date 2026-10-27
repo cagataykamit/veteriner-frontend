@@ -11,7 +11,7 @@ import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { AdministrationCreateResultVm } from '@/app/entities/administration/models/administration-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
-import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/services/vaccine-definitions.service';
+import { VaccineDefinitionsService } from '@/app/entities/vaccine-definition/services/vaccine-definitions.service';
 import { VaccinationFormComponent, type VaccinationSavedEvent } from './vaccination-form.component';
 
 const product = (id: string, name: string, kind: string) => ({ id, name, kind, sku: '—', categoryName: '—', unit: 'doz', unitPriceText: '—', currency: 'TRY', isActive: true, statusLabel: 'Aktif', statusSeverity: 'success' });

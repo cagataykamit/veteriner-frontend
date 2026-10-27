@@ -20,8 +20,8 @@ import { ADMINISTRATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.c
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import type { CreateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
-import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/services/vaccine-definitions.service';
-import type { VaccineDefinitionListItemVm } from '@/app/features/vaccine-definitions/models/vaccine-definition-vm.model';
+import { VaccineDefinitionsService } from '@/app/entities/vaccine-definition/services/vaccine-definitions.service';
+import type { VaccineDefinitionListItemVm } from '@/app/entities/vaccine-definition/models/vaccine-definition-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { parseVaccinationCreateRouteContext, type VaccinationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';

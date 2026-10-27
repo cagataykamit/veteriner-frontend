@@ -15,7 +15,7 @@ import { fieldLabel, IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/i
 import { IMPORT_VALUE_SKIP, type ImportValueChoices, valueChoiceKey } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { PetColorsService } from '@/app/entities/pet/services/pet-colors.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
-import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/services/vaccine-definitions.service';
+import { VaccineDefinitionsService } from '@/app/entities/vaccine-definition/services/vaccine-definitions.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';

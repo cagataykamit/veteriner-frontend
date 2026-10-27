@@ -7,9 +7,9 @@ import {
     mapPagedVaccineDefinitionsToVm,
     vaccineDefinitionsQueryToHttpParams,
     type VaccineDefinitionsListParams
-} from '@/app/features/vaccine-definitions/data/vaccine-definition.mapper';
-import type { VaccineDefinitionDtoPagedResult } from '@/app/features/vaccine-definitions/models/vaccine-definition-api.model';
-import type { VaccineDefinitionListItemVm } from '@/app/features/vaccine-definitions/models/vaccine-definition-vm.model';
+} from '@/app/entities/vaccine-definition/data/vaccine-definition.mapper';
+import type { VaccineDefinitionDtoPagedResult } from '@/app/entities/vaccine-definition/models/vaccine-definition-api.model';
+import type { VaccineDefinitionListItemVm } from '@/app/entities/vaccine-definition/models/vaccine-definition-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface VaccineDefinitionsPagedVm {

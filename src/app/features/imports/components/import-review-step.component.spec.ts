@@ -7,7 +7,7 @@ import type { ImportBatchDto, ImportPreviewDto, ImportRowDto, ImportRowPageDto, 
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { PetColorsService } from '@/app/entities/pet/services/pet-colors.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
-import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/services/vaccine-definitions.service';
+import { VaccineDefinitionsService } from '@/app/entities/vaccine-definition/services/vaccine-definitions.service';
 
 const zero: ImportTableSummaryDto = { total: 0, valid: 0, warning: 0, error: 0, willCreate: 0, willMatch: 0, willSkip: 0, created: 0, matched: 0, skipped: 0, failed: 0 };
 
