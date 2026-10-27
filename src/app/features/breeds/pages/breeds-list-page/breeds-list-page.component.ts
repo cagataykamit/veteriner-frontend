@@ -69,7 +69,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                     <app-search-input inputId="breedListSearch" placeholder="Irk veya tür adı…" [(value)]="searchDraft" (searchRequested)="applySearch()" />
                                 </div>
                                 <div class="flex flex-wrap gap-2 shrink-0">
-                                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="clearSearch()" [disabled]="loading()" />
+                                    <button pButton type="button" severity="secondary" (click)="clearSearch()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                                 </div>
                             </div>
                         </div>

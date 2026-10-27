@@ -56,7 +56,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                             }
                             @if (canShowQuickSpeciesButton()) {
                                 <div class="mt-2">
-                                    <p-button type="button" label="Yeni tür ekle" icon="pi pi-plus" [text]="true" styleClass="p-0" (onClick)="quickSpeciesOpen.set(true)" />
+                                    <button pButton type="button" [text]="true" class="p-0" (click)="quickSpeciesOpen.set(true)"><i class="p-button-icon pi pi-plus"></i>Yeni tür ekle</button>
                                 </div>
                             }
                         </div>
@@ -89,14 +89,12 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <p-button
+                        <button
+                            pButton
                             type="submit"
-                            [label]="editing() ? 'Güncelle' : copy.buttonSave"
-                            icon="pi pi-check"
-                            [loading]="submitting() || loading()"
-                            [disabled]="form.invalid || submitting() || loading() || loadingSpecies() || ro.mutationBlocked()"
-                        />
-                        <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
+                            [disabled]="form.invalid || submitting() || loading() || loadingSpecies() || ro.mutationBlocked() || submitting() || loading()"
+                        ><i class="p-button-icon" [class]="submitting() || loading() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ editing() ? 'Güncelle' : copy.buttonSave }}</button>
+                        <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>
             </div>
