@@ -39,9 +39,9 @@ import {
     EXAMINATIONS_UPDATE_CLAIM,
     PAYMENTS_CREATE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
-import { ExaminationTemplateApplyDialogComponent } from '@/app/features/examination-templates/components/examination-template-apply-dialog.component';
-import type { ExaminationTemplateApplyResultDto, ExaminationTemplateDto } from '@/app/features/examination-templates/models/examination-template.model';
-import { templateApplySummary } from '@/app/features/examination-templates/utils/examination-template.utils';
+import { ExaminationTemplateApplyDialogComponent } from '@/app/entities/examination-template/components/examination-template-apply-dialog.component';
+import type { ExaminationTemplateApplyResultDto, ExaminationTemplateDto } from '@/app/entities/examination-template/models/examination-template.model';
+import { templateApplySummary } from '@/app/entities/examination-template/utils/examination-template.utils';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 

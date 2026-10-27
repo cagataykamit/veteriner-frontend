@@ -1,4 +1,4 @@
-import type { ExaminationTemplateDto } from '@/app/features/examination-templates/models/examination-template.model';
+import type { ExaminationTemplateDto } from '@/app/entities/examination-template/models/examination-template.model';
 import { templateApplySummary, templateContentSummary, templateHasText, templateInactiveLineNames } from './examination-template.utils';
 
 const line = (productId: string, over: Partial<ExaminationTemplateDto['lines'][number]> = {}): ExaminationTemplateDto['lines'][number] => ({

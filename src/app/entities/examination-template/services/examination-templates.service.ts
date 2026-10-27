@@ -9,7 +9,7 @@ import type {
     ExaminationTemplatePagedResultDto,
     ExaminationTemplatesListQuery,
     ExaminationTemplateUpsertRequest
-} from '@/app/features/examination-templates/models/examination-template.model';
+} from '@/app/entities/examination-template/models/examination-template.model';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export const TEMPLATE_CONCURRENCY_CONFLICT_CODE = 'ExaminationTemplates.ConcurrencyConflict';

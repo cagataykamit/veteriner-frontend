@@ -1,8 +1,8 @@
 import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
-import type { ExaminationTemplateApplyResultDto, ExaminationTemplateDto } from '@/app/features/examination-templates/models/examination-template.model';
-import { ExaminationTemplateError, ExaminationTemplatesService } from '@/app/features/examination-templates/services/examination-templates.service';
+import type { ExaminationTemplateApplyResultDto, ExaminationTemplateDto } from '@/app/entities/examination-template/models/examination-template.model';
+import { ExaminationTemplateError, ExaminationTemplatesService } from '@/app/entities/examination-template/services/examination-templates.service';
 import { ExaminationTemplateApplyDialogComponent } from './examination-template-apply-dialog.component';
 
 const otitis: ExaminationTemplateDto = {

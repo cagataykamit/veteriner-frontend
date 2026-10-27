@@ -1,7 +1,7 @@
 import type {
     ExaminationTemplateApplyResultDto,
     ExaminationTemplateDto
-} from '@/app/features/examination-templates/models/examination-template.model';
+} from '@/app/entities/examination-template/models/examination-template.model';
 
 /** Şablonda muayeneye eklenecek metin var mı (şikâyet, bulgu, plan). */
 export function templateHasText(t: Pick<ExaminationTemplateDto, 'visitReason' | 'findings' | 'plan'>): boolean {

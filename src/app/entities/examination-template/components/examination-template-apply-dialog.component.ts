@@ -1,9 +1,9 @@
 import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import type { ExaminationTemplateApplyResultDto, ExaminationTemplateDto, ExaminationTemplateLineDto } from '@/app/features/examination-templates/models/examination-template.model';
-import { EXAMINATION_CONCURRENCY_CONFLICT_CODE, EXAMINATION_FINALIZED_CODE, ExaminationTemplateError, ExaminationTemplatesService } from '@/app/features/examination-templates/services/examination-templates.service';
-import { templateContentSummary, templateInactiveLineNames } from '@/app/features/examination-templates/utils/examination-template.utils';
+import type { ExaminationTemplateApplyResultDto, ExaminationTemplateDto, ExaminationTemplateLineDto } from '@/app/entities/examination-template/models/examination-template.model';
+import { EXAMINATION_CONCURRENCY_CONFLICT_CODE, EXAMINATION_FINALIZED_CODE, ExaminationTemplateError, ExaminationTemplatesService } from '@/app/entities/examination-template/services/examination-templates.service';
+import { templateContentSummary, templateInactiveLineNames } from '@/app/entities/examination-template/utils/examination-template.utils';
 import { isStockTrackedKind } from '@/app/entities/inventory/utils/product-classification.utils';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
