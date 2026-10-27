@@ -120,7 +120,7 @@ describe('ClientsListPageComponent — tek başlık', () => {
         const createLink = el.querySelector('a[href="/panel/clients/new"]')!;
         const clear = Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Temizle')!;
 
-        expect(createLink.parentElement).toBe(clear.closest('p-button')!.parentElement);
+        expect(createLink.parentElement).toBe(clear.parentElement);
         expect(el.querySelector('input#clientSearch')!.compareDocumentPosition(createLink) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 

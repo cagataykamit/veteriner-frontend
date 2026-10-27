@@ -60,7 +60,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                     <app-filter-field label="Arama" labelFor="clientSearch" [active]="isSearchActive()" width="grow">
                         <app-search-input inputId="clientSearch" placeholder="Ad, e-posta, telefon…" [(value)]="searchInput" (searchRequested)="applySearch()" />
                     </app-filter-field>
-                    <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                    <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                     @if (canCreateClient && !ro.mutationBlocked()) {
                         <a actions routerLink="/panel/clients/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Müşteri</a>
                     } @else if (canCreateClient && ro.mutationBlocked()) {

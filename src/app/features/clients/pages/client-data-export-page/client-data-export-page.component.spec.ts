@@ -94,7 +94,7 @@ describe('ClientDataExportPageComponent', () => {
         vi.spyOn(URL, 'revokeObjectURL').mockReturnValue(undefined);
         vi.spyOn(HTMLAnchorElement.prototype, 'click').mockReturnValue(undefined);
 
-        (el().querySelector('[data-testid="data-export-json"] button') as HTMLButtonElement).click();
+        (el().querySelector('button[data-testid="data-export-json"]') as HTMLButtonElement).click();
 
         expect(createObjectURL).toHaveBeenCalledTimes(1);
         expect((vi.mocked(createObjectURL).mock.lastCall![0] as Blob).type).toBe('application/json');
@@ -105,7 +105,7 @@ describe('ClientDataExportPageComponent', () => {
         create();
         const print = vi.spyOn(window, 'print').mockReturnValue(undefined);
 
-        (el().querySelector('[data-testid="data-export-print"] button') as HTMLButtonElement).click();
+        (el().querySelector('button[data-testid="data-export-print"]') as HTMLButtonElement).click();
 
         expect(print).toHaveBeenCalledTimes(1);
         expect(document.body.classList).toContain('kvkk-form-print-active');

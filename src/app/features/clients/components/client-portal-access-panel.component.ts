@@ -81,40 +81,31 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                         <button
                             pButton
                             type="button"
-                           
-                           
                             class="p-button-text p-button-sm"
                             [disabled]="!a.canInvite || ro.mutationBlocked() || busy()"
-                            [loading]="busy() === 'invite'"
                             data-testid="client-portal-invite"
                             (click)="sendInvite()"
-                        ><i [class]="ro.mutationBlocked() ? 'pi pi-lock' : 'pi pi-send'"></i>{{ inviteLabel() }}</button>
+                        ><i [class]="busy() === 'invite' ? 'pi pi-spin pi-spinner' : (ro.mutationBlocked() ? 'pi pi-lock' : 'pi pi-send')"></i>{{ inviteLabel() }}</button>
                     }
                     @if (pending(); as inv) {
                         <button
                             pButton
                             type="button"
-                           
-                           
                             class="p-button-text p-button-sm p-button-danger"
                             [disabled]="!!busy()"
-                            [loading]="busy() === 'revoke'"
                             data-testid="client-portal-revoke"
                             (click)="confirmRevoke()"
-                        ><i class="pi pi-times"></i>Daveti iptal et</button>
+                        ><i [class]="busy() === 'revoke' ? 'pi pi-spin pi-spinner' : 'pi pi-times'"></i>Daveti iptal et</button>
                     }
                     @if (linked()) {
                         <button
                             pButton
                             type="button"
-                           
-                           
                             class="p-button-text p-button-sm p-button-danger"
                             [disabled]="!!busy()"
-                            [loading]="busy() === 'close'"
                             data-testid="client-portal-close"
                             (click)="confirmClose()"
-                        ><i class="pi pi-ban"></i>Erişimi kapat</button>
+                        ><i [class]="busy() === 'close' ? 'pi pi-spin pi-spinner' : 'pi pi-ban'"></i>Erişimi kapat</button>
                     }
                 </div>
                 @if (inviteBlockedReason(); as reason) {

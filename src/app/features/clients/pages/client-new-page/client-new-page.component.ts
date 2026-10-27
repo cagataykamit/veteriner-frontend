@@ -71,8 +71,8 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || invoicingForm.invalid || submitting()" />
-                    <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
+                    <button pButton type="submit" [disabled]="form.invalid || invoicingForm.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                    <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>
         </div>

@@ -59,8 +59,8 @@ import { InputTextModule } from 'primeng/inputtext';
                 }
             </form>
             <ng-template #footer>
-                <p-button type="button" label="İptal" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button type="button" label="Müşteriyi kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting()" (onClick)="onSubmit()" />
+                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>İptal</button>
+                <button pButton type="button" [disabled]="form.invalid || submitting()" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Müşteriyi kaydet</button>
             </ng-template>
         </p-dialog>
     `

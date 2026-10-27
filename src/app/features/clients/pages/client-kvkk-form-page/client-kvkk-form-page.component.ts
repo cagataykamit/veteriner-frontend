@@ -33,7 +33,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         } @else if (template(); as t) {
             <div class="kvkk-screen-only">
                 <app-page-header [categoryLink]="['/panel/clients', clientId]" categoryLinkLabel="Müşteri kartına dön" [title]="info.documentTitle" [description]="clientName() + ' · ' + date">
-                    <p-button actions type="button" label="Yazdır" icon="pi pi-print" (onClick)="print()" data-testid="kvkk-print" />
+                    <button pButton actions type="button" (click)="print()" data-testid="kvkk-print"><i class="p-button-icon pi pi-print"></i>Yazdır</button>
                 </app-page-header>
                 @if (t.isDefault) {
                     <p class="m-0 mb-4 flex flex-wrap items-center gap-2 rounded-border border border-amber-300 dark:border-amber-700 px-3 py-2 text-sm font-medium text-amber-800 dark:text-amber-300" role="alert" data-testid="kvkk-default-warning">

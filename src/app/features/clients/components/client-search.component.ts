@@ -63,7 +63,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <span>Müşteri bulunamadı</span>
                         @if (canCreate()) {
                             <div>
-                                <p-button type="button" label="Yeni müşteri ekle" icon="pi pi-user-plus" [text]="true" size="small" styleClass="p-0" (onClick)="quickClientOpen.set(true)" />
+                                <button pButton type="button" [text]="true" size="small" class="p-0" (click)="quickClientOpen.set(true)"><i class="p-button-icon pi pi-user-plus"></i>Yeni müşteri ekle</button>
                             </div>
                         }
                     }

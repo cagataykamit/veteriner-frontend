@@ -32,8 +32,8 @@ import { triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
             <div class="kvkk-screen-only">
                 <app-page-header [categoryLink]="['/panel/clients', clientId]" categoryLinkLabel="Müşteri kartına dön" [title]="title()" [description]="generatedLine()">
                     <ng-container actions>
-                        <p-button type="button" label="JSON indir" icon="pi pi-download" severity="secondary" (onClick)="downloadJson()" data-testid="data-export-json" />
-                        <p-button type="button" label="Yazdır" icon="pi pi-print" (onClick)="print()" data-testid="data-export-print" />
+                        <button pButton type="button" severity="secondary" (click)="downloadJson()" data-testid="data-export-json"><i class="p-button-icon pi pi-download"></i>JSON indir</button>
+                        <button pButton type="button" (click)="print()" data-testid="data-export-print"><i class="p-button-icon pi pi-print"></i>Yazdır</button>
                     </ng-container>
                 </app-page-header>
             </div>

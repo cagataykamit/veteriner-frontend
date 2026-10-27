@@ -46,10 +46,10 @@ import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
             }
             <ng-template #footer>
                 @if (canRevert()) {
-                    <p-button type="button" label="Yok'a geri al" icon="pi pi-undo" severity="secondary" [text]="true" [disabled]="submitting() || !client()?.rowVersion" (onClick)="submit('None')" data-testid="kvkk-revert" />
+                    <button pButton type="button" severity="secondary" [text]="true" [disabled]="submitting() || !client()?.rowVersion" (click)="submit('None')" data-testid="kvkk-revert"><i class="p-button-icon pi pi-undo"></i>Yok'a geri al</button>
                 }
-                <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="visible.set(false)" [disabled]="submitting()" />
-                <p-button type="button" label="Kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="submitting() || !client()?.rowVersion || !!dateError()" (onClick)="submit(status.value)" />
+                <button pButton type="button" severity="secondary" (click)="visible.set(false)" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
+                <button pButton type="button" [disabled]="submitting() || !client()?.rowVersion || !!dateError()" (click)="submit(status.value)"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
             </ng-template>
         </p-dialog>
     `
