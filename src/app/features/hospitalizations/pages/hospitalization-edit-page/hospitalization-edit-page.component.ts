@@ -229,7 +229,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mt-4" role="alert">
                             <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ submitError() }}</p>
                             <div class="mt-3">
-                                <p-button type="button" label="Yazdıklarımı atıp güncel kaydı yükle" icon="pi pi-refresh" severity="secondary" size="small" (onClick)="reload()" />
+                                <button pButton type="button" severity="secondary" size="small" (click)="reload()"><i class="p-button-icon pi pi-refresh"></i>Yazdıklarımı atıp güncel kaydı yükle</button>
                             </div>
                         </div>
                     } @else if (submitError()) {
@@ -237,8 +237,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || ro.mutationBlocked()" />
-                        <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goDetail()" [disabled]="submitting()" />
+                        <button pButton type="submit" [disabled]="form.invalid || submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                        <button pButton type="button" severity="secondary" (click)="goDetail()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>
             </div>

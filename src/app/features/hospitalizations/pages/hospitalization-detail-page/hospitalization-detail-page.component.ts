@@ -64,12 +64,12 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                             @if (canUpdateHospitalization && !ro.mutationBlocked()) {
                                 <a [routerLink]="['/panel/hospitalizations', row()!.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                                 @if (canDischargeHospitalization) {
-                                    <p-button type="button" label="Taburcu et" icon="pi pi-sign-out" severity="warn" (onClick)="openDischargeDialog()" />
+                                    <button pButton type="button" severity="warn" (click)="openDischargeDialog()"><i class="p-button-icon pi pi-sign-out"></i>Taburcu et</button>
                                 }
                             } @else if (canUpdateHospitalization && ro.mutationBlocked()) {
                                 <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                                 @if (canDischargeHospitalization) {
-                                    <p-button type="button" label="Taburcu et (salt okunur)" icon="pi pi-lock" severity="secondary" [disabled]="true" />
+                                    <button pButton type="button" severity="secondary" [disabled]="true"><i class="p-button-icon pi pi-lock"></i>Taburcu et (salt okunur)</button>
                                 }
                             }
                         }
@@ -203,15 +203,15 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                     <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mt-4" role="alert">
                         <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ dischargeSubmitError() }}</p>
                         <div class="mt-3">
-                            <p-button type="button" label="Yazdıklarımı atıp güncel kaydı yükle" icon="pi pi-refresh" severity="secondary" size="small" (onClick)="discardDischargeAndReload()" />
+                            <button pButton type="button" severity="secondary" size="small" (click)="discardDischargeAndReload()"><i class="p-button-icon pi pi-refresh"></i>Yazdıklarımı atıp güncel kaydı yükle</button>
                         </div>
                     </div>
                 } @else if (dischargeSubmitError()) {
                     <p class="text-red-500 mt-4 mb-0" role="alert">{{ dischargeSubmitError() }}</p>
                 }
                 <div class="flex flex-wrap justify-end gap-2 mt-4">
-                    <p-button type="button" label="Vazgeç" severity="secondary" (onClick)="dischargeDialogVisible = false" [disabled]="dischargeSubmitting()" />
-                    <p-button type="submit" label="Taburcu et" icon="pi pi-check" [loading]="dischargeSubmitting()" [disabled]="ro.mutationBlocked()" />
+                    <button pButton type="button" severity="secondary" (click)="dischargeDialogVisible = false" [disabled]="dischargeSubmitting()">Vazgeç</button>
+                    <button pButton type="submit" [disabled]="ro.mutationBlocked() || dischargeSubmitting()"><i class="p-button-icon" [class]="dischargeSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Taburcu et</button>
                 </div>
             </form>
         </p-dialog>
