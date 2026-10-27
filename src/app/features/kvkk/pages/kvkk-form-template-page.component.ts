@@ -112,9 +112,9 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
                 }
                 <div class="mt-4 flex flex-wrap justify-end gap-2">
                     @if (stale()) {
-                        <p-button type="button" label="Güncel metni yükle" icon="pi pi-refresh" severity="secondary" (onClick)="load()" data-testid="kvkk-template-reload" />
+                        <button pButton type="button" severity="secondary" (click)="load()" data-testid="kvkk-template-reload"><i class="p-button-icon pi pi-refresh"></i>Güncel metni yükle</button>
                     }
-                    <p-button type="button" label="Kaydet" icon="pi pi-save" [loading]="saving()" [disabled]="!canSave()" (onClick)="save()" data-testid="kvkk-template-save" />
+                    <button pButton type="button" [disabled]="!canSave() || saving()" (click)="save()" data-testid="kvkk-template-save"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
                 </div>
             </div>
 

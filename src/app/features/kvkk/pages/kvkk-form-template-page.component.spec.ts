@@ -166,7 +166,7 @@ describe('KvkkFormTemplatePageComponent', () => {
 
         expect(c.saveError()).toContain('başka biri');
         expect(c.canSave()).toBe(false);
-        (el().querySelector('[data-testid="kvkk-template-reload"] button') as HTMLButtonElement).click();
+        (el().querySelector('button[data-testid="kvkk-template-reload"]') as HTMLButtonElement).click();
         fixture.detectChanges();
         expect(service.getTemplate).toHaveBeenCalledTimes(2);
         expect(c.stale()).toBe(false);
