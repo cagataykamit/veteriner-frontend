@@ -87,6 +87,25 @@ export function problemCodeFromHttpError(err: HttpErrorResponse): string | null 
     return readProblemCodeFromHttp(err);
 }
 
+/** ProblemDetails kodu → kullanıcıya gösterilecek metin. */
+export type ProblemMessages = Readonly<Record<string, string>>;
+
+/** Tablodan koda karşılık metin: önce birebir, sonra noktasız yazım (`Clinics.AccessDenied` → `ClinicsAccessDenied`). */
+export function problemMessageByCode(code: string | null | undefined, messages: ProblemMessages): string | null {
+    return code ? (messages[code] ?? messages[code.replace(/\./g, '')] ?? null) : null;
+}
+
+let domainProblemMessages: readonly ProblemMessages[] = [];
+
+/**
+ * Alan ve özellik tabloları (aşı, geliş, ücret, satış…) kendi klasörlerinde yaşar; uygulama kökü (`src/problem-messages.ts`)
+ * onları bu fonksiyonla kaydeder. `messageFromHttpError` genel eşlemeden sonra tablolara kayıt sırasıyla bakar; aynı kod
+ * birden çok tabloda varsa ilk tablonun metni kazanır. Her çağrı önceki kaydın yerine geçer.
+ */
+export function registerProblemMessages(tables: readonly ProblemMessages[]): void {
+    domainProblemMessages = tables;
+}
+
 /**
  * Deneme (trial) kiracısı kısıtları — `docs/TRIAL_LIMITS_API_CONTRACT.md` §3, §5. Kod `Trial.` önekli ve 422;
  * sunucunun `detail` metni olduğu gibi gösterilir, yanına "Aboneliğe geç" eylemi eklenir (`AppTrialLimitNoticeComponent`).
@@ -187,7 +206,7 @@ function readProblemCodeFromHttp(err: HttpErrorResponse): string | null {
 }
 
 /** Kiracı ayarları / kurum adı güncelleme vb. — `ProblemDetails` + `extensions.code`. */
-const TENANT_ORGANIZATION_PROBLEM_MESSAGES: Record<string, string> = {
+const TENANT_ORGANIZATION_PROBLEM_MESSAGES: ProblemMessages = {
     'Tenants.AccessDenied': 'Bu kuruma erişim yetkiniz bulunmuyor.',
     TenantsAccessDenied: 'Bu kuruma erişim yetkiniz bulunmuyor.',
     'Tenants.NotFound': 'Kurum kaydı bulunamadı veya artık erişilemiyor.',
@@ -197,330 +216,6 @@ const TENANT_ORGANIZATION_PROBLEM_MESSAGES: Record<string, string> = {
     'Auth.PermissionDenied': 'Bu işlem için yetkiniz yok.',
     AuthPermissionDenied: 'Bu işlem için yetkiniz yok.'
 };
-
-function tenantOrganizationProblemUserMessage(err: HttpErrorResponse): string | null {
-    const code = readProblemCodeFromHttp(err);
-
-    if (!code) {
-        return null;
-    }
-
-    return TENANT_ORGANIZATION_PROBLEM_MESSAGES[code] ?? TENANT_ORGANIZATION_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
-}
-
-/** Klinik oluşturma / panel klinik yazma — `ProblemDetails` + `extensions.code`. */
-const CLINIC_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
-    'Context.ClinicConflict':
-        'Stok bilgileri aktif klinik bağlamıyla uyuşmadığı için yüklenemedi. Lütfen sayfayı yenileyin veya aktif kliniği kontrol edin.',
-    ContextClinicConflict:
-        'Stok bilgileri aktif klinik bağlamıyla uyuşmadığı için yüklenemedi. Lütfen sayfayı yenileyin veya aktif kliniği kontrol edin.',
-    'Clinics.AccessDenied': 'Bu kliniğe erişim yetkiniz yok.',
-    ClinicsAccessDenied: 'Bu kliniğe erişim yetkiniz yok.',
-    'Clinics.DuplicateName': 'Bu isimde bir klinik zaten kayıtlı. Lütfen farklı bir klinik adı kullanın.',
-    ClinicsDuplicateName: 'Bu isimde bir klinik zaten kayıtlı. Lütfen farklı bir klinik adı kullanın.',
-    'Tenants.ContextMissing':
-        'Kurum bağlamı bulunamadı. Sayfayı yenileyip tekrar deneyin veya oturumu kapatıp yeniden giriş yapın.',
-    TenantsContextMissing:
-        'Kurum bağlamı bulunamadı. Sayfayı yenileyip tekrar deneyin veya oturumu kapatıp yeniden giriş yapın.',
-    'Tenants.TenantInactive': 'Bu kurum şu anda aktif değil; klinik eklenemiyor.',
-    TenantsTenantInactive: 'Bu kurum şu anda aktif değil; klinik eklenemiyor.',
-    /** `KVKK_CONSENT_API_CONTRACT.md` §2, §2b (açık rıza ve aydınlatma aynı kod); `Clinics.KvkkFormTemplate.Validation` backend `detail` ile gösterilir. */
-    'Clinics.KvkkFormTemplate.ConcurrencyConflict': 'Bu KVKK metni siz düzenlerken başka biri tarafından kaydedildi. Güncel metni yükleyip tekrar deneyin.'
-};
-
-function clinicPanelProblemUserMessage(err: HttpErrorResponse): string | null {
-    const code = readProblemCodeFromHttp(err);
-
-    if (!code) {
-        return null;
-    }
-
-    return CLINIC_PANEL_PROBLEM_MESSAGES[code] ?? CLINIC_PANEL_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
-}
-
-/** Hatırlatma ayarları / geçmiş — `ProblemDetails` + `extensions.code`. */
-const REMINDER_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
-    'Reminders.AccessDenied': 'Bu hatırlatma kayıtlarına erişim yetkiniz yok.',
-    RemindersAccessDenied: 'Bu hatırlatma kayıtlarına erişim yetkiniz yok.'
-};
-
-function reminderPanelProblemUserMessage(err: HttpErrorResponse): string | null {
-    const code = readProblemCodeFromHttp(err);
-
-    if (!code) {
-        return null;
-    }
-
-    return REMINDER_PANEL_PROBLEM_MESSAGES[code] ?? REMINDER_PANEL_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
-}
-
-/** Aşı oluşturma / güncelleme — `ProblemDetails` + `extensions.code`. */
-const VACCINATION_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
-    'Vaccinations.ScheduledRequiresDueAt': 'Planlanan durumda planlanan uygulama tarihi zorunludur.',
-    VaccinationsScheduledRequiresDueAt: 'Planlanan durumda planlanan uygulama tarihi zorunludur.',
-    'Vaccinations.ScheduledDueAtMustNotBePast': 'Planlanan uygulama tarihi ve saati gelecekte olmalıdır.',
-    VaccinationsScheduledDueAtMustNotBePast: 'Planlanan uygulama tarihi ve saati gelecekte olmalıdır.',
-    'Vaccinations.AppliedAtMustNotBeFuture': 'Uygulama tarihi gelecek bir tarih olamaz.',
-    VaccinationsAppliedAtMustNotBeFuture: 'Uygulama tarihi gelecek bir tarih olamaz.',
-    'Vaccinations.DueAtMustBeAfterAppliedAt': 'Sonraki uygulama tarihi, uygulama tarihinden sonra olmalıdır.',
-    VaccinationsDueAtMustBeAfterAppliedAt: 'Sonraki uygulama tarihi, uygulama tarihinden sonra olmalıdır.',
-    'Vaccinations.ScheduledMustNotHaveAppliedAt': 'Planlanan kayıtta uygulama tarihi bulunmamalıdır.',
-    VaccinationsScheduledMustNotHaveAppliedAt: 'Planlanan kayıtta uygulama tarihi bulunmamalıdır.',
-    'VaccineDefinitions.NotFound': 'Seçilen aşı tanımı bulunamadı.',
-    VaccineDefinitionsNotFound: 'Seçilen aşı tanımı bulunamadı.',
-    'VaccineDefinitions.Inactive': 'Seçilen aşı tanımı aktif değil.',
-    VaccineDefinitionsInactive: 'Seçilen aşı tanımı aktif değil.',
-    'VaccineDefinitions.InvalidSpecies': 'Seçilen aşı tanımı bu hayvan türüyle uyumlu değil.',
-    VaccineDefinitionsInvalidSpecies: 'Seçilen aşı tanımı bu hayvan türüyle uyumlu değil.',
-    'VaccineDefinitions.CoreDefinitionCannotBeModified': 'Sistem tanımlı aşı kayıtları düzenlenemez.',
-    VaccineDefinitionsCoreDefinitionCannotBeModified: 'Sistem tanımlı aşı kayıtları düzenlenemez.',
-    'VaccineDefinitions.DuplicateCode': 'Bu aşı kodu zaten kullanılıyor.',
-    VaccineDefinitionsDuplicateCode: 'Bu aşı kodu zaten kullanılıyor.',
-    'Vaccinations.ProductRequiresAppliedStatus': 'Ürün seçilen aşıda durum "Uygulandı" olmalıdır. Stoktan düşmesini istemiyorsanız ürünü boş bırakın.',
-    'Vaccinations.LinkedToAdministration':
-        'Bu aşı stoktan düşen bir uygulamaya bağlı; yalnız not ve sonraki doz tarihi değişir. Aşıyı iptal etmek için bağlı uygulamayı iptal edin.',
-    'Vaccinations.DuplicateRequestId': 'Bu istek kimliği farklı bir aşı için kullanılmış. Formu yeniden açıp tekrar deneyin.',
-    'Vaccinations.ConcurrencyConflict': 'Aşı aynı anda başka bir işlemle kaydedildi. Tekrar deneyin; aynı kayıt iki kez düşülmez.',
-    'Vaccinations.AdministrationForbidden': 'Stoktan düşen aşı kaydetme yetkiniz yok. Ürünü boş bırakıp yalnız aşı kaydı girin veya yöneticiye başvurun.'
-};
-
-/** Aşı + stok düşümü: aşı kodları ve uygulama (`Administrations.*`) kodları; kod eşleşmezse `null` (backend `detail` kullanılır). */
-export function vaccinationStockProblemUserMessage(err: HttpErrorResponse): string | null {
-    return vaccinationPanelProblemUserMessage(err) ?? administrationPanelProblemUserMessage(err);
-}
-
-function vaccinationPanelProblemUserMessage(err: HttpErrorResponse): string | null {
-    const code = readProblemCodeFromHttp(err);
-
-    if (!code) {
-        return null;
-    }
-
-    return VACCINATION_PANEL_PROBLEM_MESSAGES[code] ?? VACCINATION_PANEL_PROBLEM_MESSAGES[code.replace(/\./g, '')] ?? null;
-}
-
-/** Geliş (Visit), Bugün ve randevu durum geçişleri (Gelmedi) — `ProblemDetails` + `extensions.code`; `Visits.Validation` backend `detail` ile gösterilir. */
-const VISIT_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
-    'Visits.NotFound': 'Geliş kaydı bulunamadı veya artık kuyrukta değil. Listeyi yenileyin.',
-    'Visits.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
-    'Visits.ClinicScopeRequired': 'Bugün listesi için önce bir klinik seçmelisiniz.',
-    'Visits.AppointmentPetClinicMismatch': 'Randevu, seçilen hasta veya klinikle uyuşmuyor.',
-    'Visits.AppointmentCancelled': 'İptal edilmiş randevu için geliş kaydı açılamaz.',
-    'Visits.AppointmentNotScheduled': 'Bu randevu zaten tamamlanmış; geliş kaydı açılamaz.',
-    'Visits.InvalidStatusTransition': 'Bu geçiş yapılamaz; durum başka biri tarafından değişmiş olabilir. Listeyi yenileyin.',
-    'Visits.HasExaminations': 'Muayenesi olan geliş yanlış geliş olarak işaretlenemez.',
-    'Visits.TodayLimitExceeded': 'Bugün listesi sınırı aşıldı; tüm kayıtlar gösterilemiyor.',
-    'Visits.DuplicateActiveVisit': 'Bu hastanın başka açık geliş kaydı var; bu işlem ikinci bir açık kayıt oluşturacağı için yapılamaz.',
-    'Visits.DuplicateAppointmentVisit': 'Bu randevu için başka geliş kaydı var; geri alınamaz.',
-    'Visits.NotOpen': 'Bu geliş tamamlanmış veya yanlış geliş olarak işaretlenmiş; muayene açılamaz.',
-    'Visits.ConcurrencyConflict': 'Kayıt aynı anda başka biri tarafından güncellendi. Listeyi yenileyip tekrar deneyin.',
-    'Examinations.VisitMismatch': 'Muayene, geliş kaydındaki hasta veya randevuyla uyuşmuyor.',
-    'Examinations.AppointmentNoShow': 'Gelmedi işaretli randevuya doğrudan muayene açılamaz. Hasta geldiyse önce geliş kaydı açın veya gelmedi işaretini geri alın.',
-    'Appointments.ScheduledTooFarInPast': 'Randevu zamanı çok eski; en fazla 7 gün öncesine kadar kayıt açılabilir.',
-    'Appointments.ScheduledTooFarInFuture': 'Randevu zamanı en fazla 2 yıl ileriye planlanabilir.',
-    'Appointments.NoShowNotYetDue': 'Randevu saati henüz gelmedi; gelmedi olarak işaretlenemez.',
-    'Appointments.HasVisit': 'Bu randevu için geliş kaydı var (hasta gelmiş); gelmedi olarak işaretlenemez.',
-    'Appointments.InvalidStatusTransition': 'Randevu durumu bu işleme uygun değil; durum başka biri tarafından değişmiş olabilir. Sayfayı yenileyip tekrar deneyin.',
-    /** Yeni randevu, geliş ve muayene kapısı (`PET_STATUS_CLIENT_CONTACT_API_CONTRACT.md` §1). */
-    'Pets.Deceased': 'Bu hasta vefat etti olarak işaretli; yeni randevu, geliş veya muayene açılamaz. Yanlış işaretlendiyse hasta kartından "Aktife al" ile geri alın.',
-    'Pets.ConcurrencyConflict': 'Hasta kaydı aynı anda başka biri tarafından değiştirildi. Güncel bilgiyi yükleyip tekrar deneyin.',
-    /** Rıza işareti ve tam müşteri güncellemesi (`KVKK_CONSENT_API_CONTRACT.md` §1). */
-    'Clients.ConcurrencyConflict': 'Müşteri kaydı aynı anda başka biri tarafından değiştirildi. Güncel bilgiyi yükleyip tekrar deneyin.'
-};
-
-function visitPanelProblemUserMessage(err: HttpErrorResponse): string | null {
-    const code = readProblemCodeFromHttp(err);
-
-    return code ? (VISIT_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
-}
-
-/** Ücret (Charge) ve ödeme iptali — `docs/CHARGES_API_CONTRACT.md` §6, `FINANCE_CORRECTION_API_CONTRACT.md` §8; `*.Validation` backend `detail` ile gösterilir. */
-const CHARGE_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
-    'Charges.NotFound': 'Ücret kaydı bulunamadı.',
-    'Charges.ClinicScopeRequired': 'Ücretleri görmek için önce bir klinik seçmelisiniz.',
-    'Charges.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
-    'Clients.NotFound': 'Müşteri kaydı bulunamadı.',
-    'Pets.NotFound': 'Hasta kaydı bulunamadı.',
-    'Examinations.NotFound': 'Muayene kaydı bulunamadı.',
-    'Charges.PetClientMismatch': 'Seçilen hasta bu müşteriye ait değil.',
-    'Charges.VisitVoided': 'Yanlış olarak işaretlenmiş bir geliş kaydına ücret bağlanamaz.',
-    'Charges.VisitClinicMismatch': 'Geliş kaydı aktif klinikte değil.',
-    'Charges.VisitClientMismatch': 'Geliş kaydındaki hasta bu müşteriye ait değil.',
-    'Charges.VisitPetMismatch': 'Geliş kaydı seçilen hastayla uyuşmuyor.',
-    'Charges.ExaminationClinicMismatch': 'Muayene aktif klinikte değil.',
-    'Charges.ExaminationClientMismatch': 'Muayenedeki hasta bu müşteriye ait değil.',
-    'Charges.ExaminationPetMismatch': 'Muayene seçilen hastayla uyuşmuyor.',
-    'Charges.ExaminationVisitMismatch': 'Muayene, seçilen geliş kaydına bağlı değil.',
-    'Charges.VoidBlockedByAllocation': 'Bu ücrete ödeme bağlı olduğu için iptal edilemez. Önce ilgili ödemeyi iptal edin.',
-    'Charges.CorrectionBelowAllocated': 'Yeni tutar, bu ücrete bağlı ödemelerin toplamının altında olamaz. Önce ilgili ödemeyi iptal edin veya daha yüksek bir tutar girin.',
-    'Charges.AlreadyVoided': 'Bu ücret zaten iptal edilmiş. Listeyi yenileyin.',
-    'Charges.RequestIdVoided': 'Bu ücret kaydı iptal edilmişti. Formu yeniden açıp tekrar deneyin.',
-    'Charges.ConcurrencyConflict': 'Ücret aynı anda başka biri tarafından değiştirildi. Listeyi yenileyip tekrar deneyin.',
-    'ChargeSuggestions.NotFound': 'Ücret bekleyen kalem bulunamadı veya artık listede değil. Listeyi yenileyin.',
-    'ChargeSuggestions.ClinicScopeRequired': 'Bekleyen ücretleri görmek için önce bir klinik seçmelisiniz.',
-    'ChargeSuggestions.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
-    'ChargeSuggestions.AlreadyConverted': 'Bu kalem zaten ücrete çevrilmiş. Listeyi yenileyin; aynı kalem için ikinci ücret yazılmaz.',
-    'ChargeSuggestions.AlreadyWaived': 'Bu kalem zaten ücretsiz sayılmış. Listeyi yenileyin.',
-    'ChargeSuggestions.SourceAlreadyVoided': 'Kalemin kaynağı olan uygulama iptal edilmiş; ücret yazılamaz. Listeyi yenileyin.',
-    'ChargeSuggestions.DuplicateRequestId': 'Bu istek kimliği başka bir ücret için kullanılmış. Listeyi yenileyip tekrar deneyin.',
-    'ChargeSuggestions.ConcurrencyConflict': 'Kalem aynı anda başka biri tarafından değiştirildi. Listeyi yenileyip tekrar deneyin.',
-    'Payments.NotFound': 'Ödeme kaydı bulunamadı veya iptal edilmiş.',
-    'Payments.AlreadyVoided': 'Bu ödeme zaten iptal edilmiş. Listeyi yenileyin.',
-    'Payments.RequestIdVoided': 'Bu ödeme kaydı iptal edilmişti. Formu yeniden açıp tekrar deneyin.',
-    'Payments.ConcurrencyConflict': 'Ödeme aynı anda başka biri tarafından değiştirildi. Sayfayı yenileyip tekrar deneyin.'
-};
-
-function chargePanelProblemUserMessage(err: HttpErrorResponse): string | null {
-    const code = readProblemCodeFromHttp(err);
-
-    return code ? (CHARGE_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
-}
-
-/** Doğrudan satış — `docs/DIRECT_SALE_API_CONTRACT.md` §6; `Sales.Validation` ve `Sales.InsufficientStock` backend `detail` ile gösterilir (kullanılabilir/süresi geçmiş miktarı söyler). */
-const SALE_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
-    'Sales.NotFound': 'Satış kaydı bulunamadı.',
-    'Sales.ClinicScopeRequired': 'Satışları görmek için önce bir klinik seçmelisiniz.',
-    'Sales.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
-    'Sales.RequestIdRequired': 'İstek kimliği eksik. Sayfayı yenileyip tekrar deneyin.',
-    'Sales.ProductInactive': 'Pasif ürün satılamaz. Ürünü sepetten çıkarın.',
-    'Sales.VaccineNotSellable': 'Aşı ürünü satılamaz; aşı yalnızca hekim uygulamasıyla kaydedilir.',
-    'Sales.ControlledSubstanceNotSellable': 'Narkotik ve psikotropik ürün satılamaz.',
-    'Sales.BatchExpired': 'Seçilen partinin son kullanma tarihi geçmiş; süresi geçmiş partiden satış yapılamaz.',
-    'Sales.WalkInPaymentRequired': 'Müşteri seçilmediğinde (Peşin müşteri) ödeme zorunludur.',
-    'Sales.WalkInPaymentMustBeFull': 'Peşin müşteri satışında ödeme satış toplamına eşit olmalıdır.',
-    'Sales.PaymentExceedsTotal': 'Ödeme tutarı satış toplamını aşamaz.',
-    'Sales.DuplicateRequestId': 'Bu sepet daha önce gönderilmiş olabilir. Satış listesini kontrol edin; yoksa sepeti yeniden oluşturun.',
-    'Sales.RequestIdVoided': 'Bu satış iptal edilmişti. Sepeti yeniden gönderin.',
-    'Sales.AlreadyVoided': 'Bu satış zaten iptal edilmiş. Sayfayı yenileyin.',
-    'Sales.ConcurrencyConflict': 'Kayıt aynı anda başka bir işlemle değişti. Tekrar deneyin.',
-    'StockBatches.NotFound': 'Seçilen parti bulunamadı. Partiyi yeniden seçin.',
-    'Clients.WalkInReadOnly': 'Peşin müşteri kaydı düzenlenemez.',
-    'Products.NotFound': 'Ürün bulunamadı.',
-    'Clients.NotFound': 'Müşteri kaydı bulunamadı.',
-    'StockMovements.ConcurrencyConflict': 'Stok aynı anda başka bir işlemle değişti. Tekrar deneyin; aynı satış iki kez yazılmaz.'
-};
-
-function salePanelProblemUserMessage(err: HttpErrorResponse): string | null {
-    const code = readProblemCodeFromHttp(err);
-
-    return code ? (SALE_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
-}
-
-/** Muayene kesinleştirme / ek not —`ProblemDetails` + `extensions.code` (`docs/EXAMINATION_FINALIZE_API_CONTRACT.md`). */
-const EXAMINATION_FINALIZE_PROBLEM_MESSAGES: Record<string, string> = {
-    'Examinations.AlreadyFinalized': 'Bu muayene zaten kesinleştirilmiş. Sayfayı yenileyin.',
-    'Examinations.ConcurrencyConflict':
-        'Muayene siz ekranı açtıktan sonra başka biri tarafından değiştirilmiş. Sayfayı yenileyip içeriği kontrol ederek tekrar deneyin.',
-    'Examinations.Finalized': 'Bu muayene kesinleştirilmiş; bağlı kayıt eklenemez veya değiştirilemez. Gerekirse muayeneye ek not ekleyin.',
-    'Examinations.NotFinalized': 'Ek not yalnızca kesinleşmiş muayeneye eklenebilir.',
-    'Examinations.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
-    'Examinations.NotFound': 'Muayene bulunamadı veya artık erişilemiyor.'
-};
-
-function examinationFinalizeProblemUserMessage(err: HttpErrorResponse): string | null {
-    const code = readProblemCodeFromHttp(err);
-
-    return code ? (EXAMINATION_FINALIZE_PROBLEM_MESSAGES[code] ?? null) : null;
-}
-
-/**
- * Hasta sahibi portalı klinik paneli uçları — `PORTAL_API_CONTRACT.md` §4. Davet uygunluk kodları hem 409 yanıtında hem
- * `portal-access.inviteBlockedCode` alanında gelir; metin tek yerde (`ownerPortalProblemUserMessageByCode`).
- */
-const OWNER_PORTAL_PROBLEM_MESSAGES: Record<string, string> = {
-    'OwnerPortal.ClientEmailMissing': 'Portal daveti bu müşteriye gönderilemez: müşteri kaydında e-posta yok. Davet e-postayla gider; önce müşteri kaydına e-posta ekleyin.',
-    'OwnerPortal.ClientOptedOut': 'Portal daveti bu müşteriye gönderilemez: müşteri KVKK açık rızayı reddetmiş ya da hatırlatma istemiyor.',
-    'OwnerPortal.ClientNotInvitable': 'Portal daveti bu müşteriye gönderilemez: peşin müşteri (sistem kaydı) portala davet edilemez.',
-    'OwnerPortal.AlreadyLinked': 'Bu müşterinin portal erişimi zaten açık; yeni davet gerekmez.',
-    'OwnerPortal.ClinicRequired': 'Portal daveti için önce bir klinik seçmelisiniz.',
-    'OwnerPortal.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
-    'OwnerPortal.ClinicInvalid': 'Aktif klinik bulunamadı veya pasif; portal daveti gönderilemez.',
-    'OwnerPortal.InviteNotFound': 'Davet bulunamadı. Sayfayı yenileyin.',
-    'OwnerPortal.InviteNotPending': 'Bu davet artık beklemede değil (kabul edilmiş ya da iptal edilmiş). Sayfayı yenileyin.',
-    'OwnerPortal.LinkNotFound': 'Portal erişimi bulunamadı. Sayfayı yenileyin.',
-    'OwnerPortal.LinkAlreadyClosed': 'Bu portal erişimi zaten kapatılmış. Sayfayı yenileyin.'
-};
-
-export function ownerPortalProblemUserMessageByCode(code: string | null | undefined): string | null {
-    return code ? (OWNER_PORTAL_PROBLEM_MESSAGES[code] ?? null) : null;
-}
-
-function ownerPortalProblemUserMessage(err: HttpErrorResponse): string | null {
-    return ownerPortalProblemUserMessageByCode(readProblemCodeFromHttp(err));
-}
-
-/** Lab istem/sonuç durumu —`docs/LAB_RESULT_STATUS_API_CONTRACT.md` §5; `LabResults.Validation` backend `detail` ile gösterilir. */
-const LAB_RESULT_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
-    'LabResults.ConcurrencyConflict': 'Bu lab kaydı siz düzenlerken başka biri tarafından güncellendi.',
-    'LabResults.AlreadyCancelled': 'Bu lab kaydı zaten iptal edilmiş. Sayfayı yenileyin.',
-    'LabResults.VisitPetMismatch': 'Geliş kaydı seçilen hastayla uyuşmuyor.',
-    'LabResults.VisitClinicMismatch': 'Geliş kaydı aktif klinikte değil.',
-    'LabResults.ExaminationVisitMismatch': 'Muayene, geliş kaydına bağlı değil.'
-};
-
-function labResultPanelProblemUserMessage(err: HttpErrorResponse): string | null {
-    const code = readProblemCodeFromHttp(err);
-
-    return code ? (LAB_RESULT_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
-}
-
-/** Yatış ve bakım talimatı — `docs/HOSPITALIZATION_MODEL_API_CONTRACT.md` §2, §4, §6, §8; `*.Validation` backend `detail` ile gösterilir. */
-const HOSPITALIZATION_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
-    'Hospitalizations.ConcurrencyConflict': 'Bu yatış kaydı siz düzenlerken başka biri tarafından güncellendi.',
-    'Hospitalizations.ExaminationVisitMismatch': 'Seçilen geliş, bağlı muayenenin gelişiyle uyuşmuyor.',
-    'Hospitalizations.VisitPetMismatch': 'Geliş kaydı seçilen hastayla uyuşmuyor.',
-    'Hospitalizations.VisitClinicMismatch': 'Geliş kaydı aktif klinikte değil.',
-    'CareInstructions.ConcurrencyConflict': 'Bu bakım talimatı siz düzenlerken başka biri tarafından güncellendi.',
-    'CareInstructions.HospitalizationPetMismatch': 'Yatış seçilen hastayla uyuşmuyor.',
-    'CareInstructions.HospitalizationClinicMismatch': 'Yatış aktif klinikte değil.',
-    'CareInstructions.ExaminationPetMismatch': 'Muayene seçilen hastayla uyuşmuyor.',
-    'CareInstructions.ExaminationClinicMismatch': 'Muayene aktif klinikte değil.',
-    'CareInstructions.HospitalizationExaminationMismatch': 'Muayene, yatışın bağlı olduğu muayeneyle uyuşmuyor.',
-    'CareInstructions.VisitMismatch': 'Geliş kaydı, yatışın gelişiyle uyuşmuyor.',
-    'CareInstructions.ExaminationVisitMismatch': 'Geliş kaydı, muayenenin gelişiyle uyuşmuyor.',
-    'Hospitalizations.NotFound': 'Yatış kaydı bulunamadı.',
-    'CareInstructions.NotFound': 'Bakım talimatı bulunamadı.'
-};
-
-function hospitalizationPanelProblemUserMessage(err: HttpErrorResponse): string | null {
-    const code = readProblemCodeFromHttp(err);
-
-    return code ? (HOSPITALIZATION_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
-}
-
-/** Uygulama kaydı ve iptali — `docs/ADMINISTRATIONS_API_CONTRACT.md` §3–§6; `Administrations.Validation` backend `detail` ile gösterilir. */
-const ADMINISTRATION_PANEL_PROBLEM_MESSAGES: Record<string, string> = {
-    'Administrations.BatchExpired':
-        'Partinin son kullanma tarihi geçmiş; süresi geçmiş partiyle uygulama kaydedilemez. Süresi geçmemiş bir parti seçin. Süresi geçmiş stok, stok çıkışı veya düzeltme ile (imha/sayım) düşülür.',
-    'StockBatches.NotFound': 'Seçilen parti bulunamadı. Formu yeniden açıp partiyi tekrar seçin.',
-    'Administrations.DuplicateRequestId': 'Bu istek kimliği farklı bir uygulama için kullanılmış. Formu yeniden açıp tekrar deneyin.',
-    'Administrations.RequestIdVoided': 'Bu uygulama kaydı iptal edilmişti. Formu yeniden açıp tekrar deneyin.',
-    'Administrations.AlreadyVoided': 'Bu uygulama zaten iptal edilmiş. Listeyi yenileyin.',
-    'Administrations.LateEntryReasonRequired': 'Muayene kesinleşmiş; gerekçe (5–500 karakter) zorunludur. Uygulamayı muayene sayfasından ekleyin.',
-    'Administrations.NotFound': 'Uygulama kaydı bulunamadı.',
-    'Administrations.StockMovementNotFound': 'Uygulamanın stok hareketi bulunamadı; lütfen destek ile iletişime geçin.',
-    'Administrations.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
-    'Administrations.ClinicScopeRequired': 'Uygulamaları görmek için önce bir klinik seçmelisiniz.',
-    'Administrations.TreatmentClinicMismatch': 'Tedavi aktif klinikte değil.',
-    'Administrations.TreatmentPetMismatch': 'Tedavi seçilen hastayla uyuşmuyor.',
-    'Administrations.ExaminationClinicMismatch': 'Muayene aktif klinikte değil.',
-    'Administrations.ExaminationPetMismatch': 'Muayene seçilen hastayla uyuşmuyor.',
-    'Administrations.TreatmentExaminationMismatch': 'Tedavi, seçilen muayeneye bağlı değil.',
-    'Treatments.DateTooFarInPast': 'Uygulama zamanı en fazla 7 gün öncesine kadar girilebilir.',
-    'Treatments.DateTooFarInFuture': 'Uygulama zamanı en fazla 2 yıl ileriye girilebilir.',
-    'Products.NotFound': 'Ürün bulunamadı.',
-    'Products.Inactive': 'Bu ürün pasif; kullanılamaz. Başka bir ürün seçin veya ürünü aktifleştirin.',
-    'Products.NotStockTracked': 'Hizmetler stok takipli değildir; uygulama, satış, reçete ve stok hareketinde kullanılamaz. Stoklu bir ürün seçin.',
-    'Products.KindChangeNotAllowed': 'Ürün türü hizmete veya hizmetten değiştirilemez. Yanlış kaydı pasif yapıp doğru türde yeni kayıt açın.',
-    'Administrations.ConcurrencyConflict': 'Uygulama aynı anda başka bir işlemle değişti (ör. ücrete çevrildi). Sayfayı yenileyip tekrar deneyin.',
-    'StockMovements.ConcurrencyConflict': 'Stok aynı anda başka bir işlemle değişti. Tekrar deneyin; aynı kayıt iki kez düşülmez.'
-};
-
-function administrationPanelProblemUserMessage(err: HttpErrorResponse): string | null {
-    const code = readProblemCodeFromHttp(err);
-
-    return code ? (ADMINISTRATION_PANEL_PROBLEM_MESSAGES[code] ?? null) : null;
-}
 
 function lookupSubscriptionWriteMessageByCode(code: string): string | null {
     const t = code.trim();
@@ -597,8 +292,18 @@ function subscriptionWriteUserMessage(err: HttpErrorResponse): string | null {
     return subscriptionMissingFromProblemBody(err);
 }
 
-/** Panel listeleri / formlar: ProblemDetails, düz metin ve HTTP durumuna göre anlamlı mesaj. */
-export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek başarısız.'): string {
+/**
+ * Panel listeleri / formlar: ProblemDetails, düz metin ve HTTP durumuna göre anlamlı mesaj. `overrides` bağlama özel koda
+ * metin tablosudur (ör. bir tanım ucunun kodları); genel eşlemeden önce ona bakılır.
+ */
+export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek başarısız.', overrides?: ProblemMessages): string {
+    const code = readProblemCodeFromHttp(err);
+    const overrideMsg = overrides ? problemMessageByCode(code, overrides) : null;
+
+    if (overrideMsg) {
+        return overrideMsg;
+    }
+
     const trialLimitMsg = trialLimitProblemUserMessage(err);
 
     if (trialLimitMsg) {
@@ -611,76 +316,12 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
         return subscriptionMsg;
     }
 
-    const tenantOrgMsg = tenantOrganizationProblemUserMessage(err);
+    for (const table of [TENANT_ORGANIZATION_PROBLEM_MESSAGES, ...domainProblemMessages]) {
+        const tableMsg = problemMessageByCode(code, table);
 
-    if (tenantOrgMsg) {
-        return tenantOrgMsg;
-    }
-
-    const reminderPanelMsg = reminderPanelProblemUserMessage(err);
-
-    if (reminderPanelMsg) {
-        return reminderPanelMsg;
-    }
-
-    const vaccinationPanelMsg = vaccinationPanelProblemUserMessage(err);
-
-    if (vaccinationPanelMsg) {
-        return vaccinationPanelMsg;
-    }
-
-    const clinicPanelMsg = clinicPanelProblemUserMessage(err);
-
-    if (clinicPanelMsg) {
-        return clinicPanelMsg;
-    }
-
-    const visitPanelMsg = visitPanelProblemUserMessage(err);
-
-    if (visitPanelMsg) {
-        return visitPanelMsg;
-    }
-
-    const chargePanelMsg = chargePanelProblemUserMessage(err);
-
-    if (chargePanelMsg) {
-        return chargePanelMsg;
-    }
-
-    const administrationPanelMsg = administrationPanelProblemUserMessage(err);
-
-    if (administrationPanelMsg) {
-        return administrationPanelMsg;
-    }
-
-    const salePanelMsg = salePanelProblemUserMessage(err);
-
-    if (salePanelMsg) {
-        return salePanelMsg;
-    }
-
-    const labResultPanelMsg =labResultPanelProblemUserMessage(err);
-
-    if (labResultPanelMsg) {
-        return labResultPanelMsg;
-    }
-
-    const hospitalizationPanelMsg = hospitalizationPanelProblemUserMessage(err);
-
-    if (hospitalizationPanelMsg) {
-        return hospitalizationPanelMsg;
-    }
-
-    const examinationFinalizeMsg = examinationFinalizeProblemUserMessage(err);
-
-    if (examinationFinalizeMsg) {
-        return examinationFinalizeMsg;
-    }
-
-    const ownerPortalMsg = ownerPortalProblemUserMessage(err);
-
-    if (ownerPortalMsg) {
-        return ownerPortalMsg;
+        if (tableMsg) {
+            return tableMsg;
+        }
     }
 
     const body = err.error as ProblemDetails | string | null | undefined;

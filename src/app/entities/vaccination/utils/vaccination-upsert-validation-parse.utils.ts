@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
-import { messageFromHttpError, vaccinationStockProblemUserMessage } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { vaccinationStockProblemUserMessage } from '@/app/entities/vaccination/utils/vaccination-error.utils';
 import { parseValidationHttpError } from '@/app/shared/utils/validation-error-parse.utils';
 
 const SUMMARY_FIELD_ERRORS = 'Lütfen hatalı alanları düzeltin.';

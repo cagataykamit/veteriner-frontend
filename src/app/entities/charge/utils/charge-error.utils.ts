@@ -1,0 +1,37 @@
+import type { ProblemMessages } from '@/app/shared/utils/api-error.utils';
+
+/** Ücret (Charge) ve ödeme iptali — `docs/CHARGES_API_CONTRACT.md` §6, `FINANCE_CORRECTION_API_CONTRACT.md` §8; `*.Validation` backend `detail` ile gösterilir. */
+export const CHARGE_PANEL_PROBLEM_MESSAGES: ProblemMessages = {
+    'Charges.NotFound': 'Ücret kaydı bulunamadı.',
+    'Charges.ClinicScopeRequired': 'Ücretleri görmek için önce bir klinik seçmelisiniz.',
+    'Charges.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
+    'Clients.NotFound': 'Müşteri kaydı bulunamadı.',
+    'Pets.NotFound': 'Hasta kaydı bulunamadı.',
+    'Examinations.NotFound': 'Muayene kaydı bulunamadı.',
+    'Charges.PetClientMismatch': 'Seçilen hasta bu müşteriye ait değil.',
+    'Charges.VisitVoided': 'Yanlış olarak işaretlenmiş bir geliş kaydına ücret bağlanamaz.',
+    'Charges.VisitClinicMismatch': 'Geliş kaydı aktif klinikte değil.',
+    'Charges.VisitClientMismatch': 'Geliş kaydındaki hasta bu müşteriye ait değil.',
+    'Charges.VisitPetMismatch': 'Geliş kaydı seçilen hastayla uyuşmuyor.',
+    'Charges.ExaminationClinicMismatch': 'Muayene aktif klinikte değil.',
+    'Charges.ExaminationClientMismatch': 'Muayenedeki hasta bu müşteriye ait değil.',
+    'Charges.ExaminationPetMismatch': 'Muayene seçilen hastayla uyuşmuyor.',
+    'Charges.ExaminationVisitMismatch': 'Muayene, seçilen geliş kaydına bağlı değil.',
+    'Charges.VoidBlockedByAllocation': 'Bu ücrete ödeme bağlı olduğu için iptal edilemez. Önce ilgili ödemeyi iptal edin.',
+    'Charges.CorrectionBelowAllocated': 'Yeni tutar, bu ücrete bağlı ödemelerin toplamının altında olamaz. Önce ilgili ödemeyi iptal edin veya daha yüksek bir tutar girin.',
+    'Charges.AlreadyVoided': 'Bu ücret zaten iptal edilmiş. Listeyi yenileyin.',
+    'Charges.RequestIdVoided': 'Bu ücret kaydı iptal edilmişti. Formu yeniden açıp tekrar deneyin.',
+    'Charges.ConcurrencyConflict': 'Ücret aynı anda başka biri tarafından değiştirildi. Listeyi yenileyip tekrar deneyin.',
+    'ChargeSuggestions.NotFound': 'Ücret bekleyen kalem bulunamadı veya artık listede değil. Listeyi yenileyin.',
+    'ChargeSuggestions.ClinicScopeRequired': 'Bekleyen ücretleri görmek için önce bir klinik seçmelisiniz.',
+    'ChargeSuggestions.ClinicContextMismatch': 'İşlem aktif klinik bağlamıyla uyuşmuyor. Sayfayı yenileyip tekrar deneyin.',
+    'ChargeSuggestions.AlreadyConverted': 'Bu kalem zaten ücrete çevrilmiş. Listeyi yenileyin; aynı kalem için ikinci ücret yazılmaz.',
+    'ChargeSuggestions.AlreadyWaived': 'Bu kalem zaten ücretsiz sayılmış. Listeyi yenileyin.',
+    'ChargeSuggestions.SourceAlreadyVoided': 'Kalemin kaynağı olan uygulama iptal edilmiş; ücret yazılamaz. Listeyi yenileyin.',
+    'ChargeSuggestions.DuplicateRequestId': 'Bu istek kimliği başka bir ücret için kullanılmış. Listeyi yenileyip tekrar deneyin.',
+    'ChargeSuggestions.ConcurrencyConflict': 'Kalem aynı anda başka biri tarafından değiştirildi. Listeyi yenileyip tekrar deneyin.',
+    'Payments.NotFound': 'Ödeme kaydı bulunamadı veya iptal edilmiş.',
+    'Payments.AlreadyVoided': 'Bu ödeme zaten iptal edilmiş. Listeyi yenileyin.',
+    'Payments.RequestIdVoided': 'Bu ödeme kaydı iptal edilmişti. Formu yeniden açıp tekrar deneyin.',
+    'Payments.ConcurrencyConflict': 'Ödeme aynı anda başka biri tarafından değiştirildi. Sayfayı yenileyip tekrar deneyin.'
+};
