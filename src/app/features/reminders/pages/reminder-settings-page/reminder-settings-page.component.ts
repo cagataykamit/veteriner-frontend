@@ -84,7 +84,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     </div>
 
                     <div class="mt-4">
-                        <p-button type="submit" label="Kaydet" icon="pi pi-save" [loading]="saving()" [disabled]="form.invalid || saving() || formDisabled() || !form.dirty" />
+                        <button pButton type="submit" [disabled]="form.invalid || saving() || formDisabled() || !form.dirty"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
                     </div>
                 </form>
             </div>

@@ -100,14 +100,14 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                             <app-date-input inputId="remLogTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                         </app-filter-field>
                         <div class="col-span-12 md:col-span-4 flex flex-wrap gap-2">
-                            <p-button size="small" icon="pi pi-times" label="Temizle" severity="secondary" (onClick)="clearFilters()" />
+                            <button pButton type="button" size="small" severity="secondary" (click)="clearFilters()"><i class="p-button-icon pi pi-times"></i>Temizle</button>
                         </div>
                     </div>
 
                     @if (displayedRows().length === 0) {
                         @if (hasActiveFilters()) {
                             <app-empty-state message="Seçili filtrelere uygun hatırlatma kaydı bulunamadı." hint="Filtreleri temizleyerek tüm kayıtları görüntüleyebilirsiniz.">
-                                <p-button type="button" size="small" severity="secondary" icon="pi pi-times" label="Filtreleri temizle" (onClick)="clearFilters()" />
+                                <button pButton type="button" size="small" severity="secondary" (click)="clearFilters()"><i class="p-button-icon pi pi-times"></i>Filtreleri temizle</button>
                             </app-empty-state>
                         } @else {
                             <app-empty-state message="Henüz gönderilmiş hatırlatma bulunmuyor." />
