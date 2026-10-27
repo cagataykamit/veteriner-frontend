@@ -33,7 +33,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                     <h5 class="mt-0 mb-0">Bakım talimatları</h5>
                     @if (canAdd()) {
-                        <p-button label="Talimat ekle" icon="pi pi-plus" size="small" data-testid="care-instruction-add" (onClick)="openCreate()" />
+                        <button pButton type="button" size="small" data-testid="care-instruction-add" (click)="openCreate()"><i class="p-button-icon pi pi-plus"></i>Talimat ekle</button>
                     }
                 </div>
                 <p class="text-sm text-muted-color mt-0 mb-3">Hasta sahibine verilecek taburcu / evde bakım talimatları; yatış notundan ayrıdır.</p>
@@ -83,7 +83,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
                         <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 mt-4" role="alert" data-testid="care-instruction-conflict">
                             <p class="text-amber-800 dark:text-amber-200 m-0 font-medium">{{ submitError() }}</p>
                             <div class="mt-3">
-                                <p-button type="button" label="Yazdıklarımı atıp güncel kaydı yükle" icon="pi pi-refresh" severity="secondary" size="small" (onClick)="discardAndReload()" />
+                                <button pButton type="button" severity="secondary" size="small" (click)="discardAndReload()"><i class="p-button-icon pi pi-refresh"></i>Yazdıklarımı atıp güncel kaydı yükle</button>
                             </div>
                         </div>
                     } @else if (submitError()) {
@@ -91,8 +91,8 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
                     }
 
                     <div class="flex flex-wrap justify-end gap-2 mt-4">
-                        <p-button type="button" label="Vazgeç" severity="secondary" (onClick)="dialogVisible = false" [disabled]="submitting()" />
-                        <p-button type="submit" label="Kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || ro.mutationBlocked()" />
+                        <button pButton type="button" severity="secondary" (click)="dialogVisible = false" [disabled]="submitting()">Vazgeç</button>
+                        <button pButton type="submit" [disabled]="form.invalid || ro.mutationBlocked() || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
                     </div>
                 </form>
             </p-dialog>
