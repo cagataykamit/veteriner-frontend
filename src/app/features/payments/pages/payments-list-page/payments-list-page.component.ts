@@ -80,7 +80,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                         <app-filter-field label="Arama" labelFor="paySearch" [active]="isSearchActive()" width="grow">
                             <app-search-input inputId="paySearch" placeholder="Not, para birimi; müşteri, hasta, tür veya ırk, e-posta, telefon…" [(value)]="searchInput" (searchRequested)="applySearch()" />
                         </app-filter-field>
-                        <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canCreatePayment && !ro.mutationBlocked()) {
                             <a actions routerLink="/panel/payments/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Ödeme</a>
                         } @else if (canCreatePayment && ro.mutationBlocked()) {
