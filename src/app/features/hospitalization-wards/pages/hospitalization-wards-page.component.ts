@@ -13,7 +13,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { CLINICS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { DEFINITIONS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
+import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import {
     HOSPITALIZATION_LOCATION_NAME_MAX,
     type HospitalizationLocationFormValue,

@@ -9,20 +9,20 @@ import {
     extractCreatedClinicIdFromPostResponse,
     mapClinicDetailRaw,
     mapClinicsListRaw
-} from '@/app/features/clinics/data/clinic.mapper';
+} from '@/app/entities/clinic/data/clinic.mapper';
 import {
     mapClinicAppointmentSettingsResponse
-} from '@/app/features/clinics/data/clinic-appointment-settings.mapper';
-import { mapClinicWorkingHoursResponse } from '@/app/features/clinics/data/clinic-working-hours.mapper';
+} from '@/app/entities/clinic/data/clinic-appointment-settings.mapper';
+import { mapClinicWorkingHoursResponse } from '@/app/entities/clinic/data/clinic-working-hours.mapper';
 import type {
     UpdateClinicAppointmentSettingsRequestDto
-} from '@/app/features/clinics/models/clinic-appointment-settings-api.model';
-import type { ClinicAppointmentSettingsVm } from '@/app/features/clinics/models/clinic-appointment-settings-vm.model';
-import type { UpdateClinicWorkingHoursRequestDto } from '@/app/features/clinics/models/clinic-working-hours-api.model';
-import type { ClinicWorkingHourVm } from '@/app/features/clinics/models/clinic-working-hours-vm.model';
-import type { ClinicCreateRequestDto, ClinicDetailDto, ClinicUpdateRequestDto } from '@/app/features/clinics/models/clinic-api.model';
-import type { ClinicUpsertFormValue } from '@/app/features/clinics/models/clinic-upsert.model';
-import type { ClinicDetailVm, ClinicListItemVm } from '@/app/features/clinics/models/clinic-vm.model';
+} from '@/app/entities/clinic/models/clinic-appointment-settings-api.model';
+import type { ClinicAppointmentSettingsVm } from '@/app/entities/clinic/models/clinic-appointment-settings-vm.model';
+import type { UpdateClinicWorkingHoursRequestDto } from '@/app/entities/clinic/models/clinic-working-hours-api.model';
+import type { ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
+import type { ClinicCreateRequestDto, ClinicDetailDto, ClinicUpdateRequestDto } from '@/app/entities/clinic/models/clinic-api.model';
+import type { ClinicUpsertFormValue } from '@/app/entities/clinic/models/clinic-upsert.model';
+import type { ClinicDetailVm, ClinicListItemVm } from '@/app/entities/clinic/models/clinic-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })

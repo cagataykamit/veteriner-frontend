@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
+import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import type { HospitalizationWardVm } from '@/app/entities/hospitalization-ward/models/hospitalization-ward-vm.model';
 import { HospitalizationWardsService } from '@/app/entities/hospitalization-ward/services/hospitalization-wards.service';
 import { HospitalizationWardError } from '@/app/entities/hospitalization-ward/utils/hospitalization-ward-error.utils';

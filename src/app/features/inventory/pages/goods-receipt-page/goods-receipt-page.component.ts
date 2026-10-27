@@ -9,7 +9,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
+import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { mapGoodsReceiptFormToRequest } from '@/app/features/inventory/data/goods-receipt.mapper';
 import { createGoodsReceiptFormGroup, createGoodsReceiptLineGroup, type GoodsReceiptLineGroup } from '@/app/features/inventory/forms/goods-receipt-form.factory';
 import { isStockBatchExpiryPast, STOCK_BATCH_INVOICE_MAX, STOCK_BATCH_LOT_MAX, STOCK_BATCH_SUPPLIER_MAX, STOCK_BATCH_TRANSPORT_MAX } from '@/app/features/inventory/forms/stock-batch-form.factory';

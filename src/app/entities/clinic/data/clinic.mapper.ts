@@ -1,7 +1,7 @@
-import type { ClinicDetailDto, ClinicUpdateRequestDto } from '@/app/features/clinics/models/clinic-api.model';
-import type { ClinicUpsertFormValue } from '@/app/features/clinics/models/clinic-upsert.model';
-import { normalizeClinicPhoneForApi } from '@/app/features/clinics/utils/clinic-phone-format.utils';
-import type { ClinicDetailVm, ClinicListItemVm } from '@/app/features/clinics/models/clinic-vm.model';
+import type { ClinicDetailDto, ClinicUpdateRequestDto } from '@/app/entities/clinic/models/clinic-api.model';
+import type { ClinicUpsertFormValue } from '@/app/entities/clinic/models/clinic-upsert.model';
+import { normalizeClinicPhoneForApi } from '@/app/entities/clinic/utils/clinic-phone-format.utils';
+import type { ClinicDetailVm, ClinicListItemVm } from '@/app/entities/clinic/models/clinic-vm.model';
 
 function isRecord(x: unknown): x is Record<string, unknown> {
     return x !== null && typeof x === 'object';

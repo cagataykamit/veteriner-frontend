@@ -1,4 +1,4 @@
-import { CLINIC_PHONE_MAX } from '@/app/features/clinics/utils/clinic-profile-form.validators';
+import { CLINIC_PHONE_MAX } from '@/app/entities/clinic/utils/clinic-profile-form.validators';
 
 /** Liste/detay boş gösterim — `CLIENT_PHONE_DISPLAY_PLACEHOLDER` ile uyumlu. */
 export const CLINIC_PHONE_DISPLAY_PLACEHOLDER = '—';

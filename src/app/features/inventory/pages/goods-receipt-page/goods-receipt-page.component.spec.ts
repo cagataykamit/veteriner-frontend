@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
+import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { GoodsReceiptPageComponent } from '@/app/features/inventory/pages/goods-receipt-page/goods-receipt-page.component';
 import type { CreateGoodsReceiptRequest } from '@/app/features/inventory/models/goods-receipt-api.model';
 import { GoodsReceiptSubmitError, type GoodsReceiptProductPick } from '@/app/features/inventory/models/goods-receipt-form.model';

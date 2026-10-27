@@ -5,14 +5,14 @@ import { CLINICS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
-import type { ClinicListItemVm } from '@/app/features/clinics/models/clinic-vm.model';
-import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
+import type { ClinicListItemVm } from '@/app/entities/clinic/models/clinic-vm.model';
+import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { formatClinicPhoneForDisplay } from '@/app/features/clinics/utils/clinic-phone-format.utils';
+import { formatClinicPhoneForDisplay } from '@/app/entities/clinic/utils/clinic-phone-format.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 

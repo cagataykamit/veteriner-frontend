@@ -4,7 +4,7 @@ import { MessageService } from 'primeng/api';
 import { NEVER, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClinicTaxpayerSettingsService } from '@/app/features/clinics/services/clinic-taxpayer-settings.service';
-import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
+import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClinicDetailPageComponent } from './clinic-detail-page.component';
 

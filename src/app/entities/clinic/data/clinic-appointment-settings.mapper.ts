@@ -1,11 +1,11 @@
 import type {
     ClinicAppointmentSettingsDto,
     UpdateClinicAppointmentSettingsRequestDto
-} from '@/app/features/clinics/models/clinic-appointment-settings-api.model';
+} from '@/app/entities/clinic/models/clinic-appointment-settings-api.model';
 import type {
     ClinicAppointmentSettingsFormValue,
     ClinicAppointmentSettingsVm
-} from '@/app/features/clinics/models/clinic-appointment-settings-vm.model';
+} from '@/app/entities/clinic/models/clinic-appointment-settings-vm.model';
 
 const DEFAULT_APPOINTMENT_DURATION_MINUTES = 30;
 const DEFAULT_SLOT_INTERVAL_MINUTES = 15;

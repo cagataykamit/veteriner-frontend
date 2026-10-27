@@ -12,7 +12,7 @@ import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
-import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
+import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { RemindersService } from '@/app/features/reminders/services/reminders.service';
 import type { ReminderLogItemVm } from '@/app/features/reminders/models/reminder-log-vm.model';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';

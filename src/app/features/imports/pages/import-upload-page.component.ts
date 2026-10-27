@@ -8,7 +8,7 @@ import { SelectModule } from 'primeng/select';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { IMPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
-import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
+import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { ImportDropZoneComponent } from '@/app/features/imports/components/import-drop-zone.component';
 import type { ImportFileFormat, ImportTable } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';

@@ -1,5 +1,5 @@
-import type { ClinicWorkingHourWriteItemDto, UpdateClinicWorkingHoursRequestDto } from '@/app/features/clinics/models/clinic-working-hours-api.model';
-import type { ClinicWorkingHourFormValue, ClinicWorkingHourVm } from '@/app/features/clinics/models/clinic-working-hours-vm.model';
+import type { ClinicWorkingHourWriteItemDto, UpdateClinicWorkingHoursRequestDto } from '@/app/entities/clinic/models/clinic-working-hours-api.model';
+import type { ClinicWorkingHourFormValue, ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
 
 function isRecord(x: unknown): x is Record<string, unknown> {
     return x !== null && typeof x === 'object';
