@@ -3,8 +3,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { ClinicalTermDto } from '@/app/features/clinical-terms/models/clinical-term.model';
-import { ClinicalTermError, ClinicalTermsService } from '@/app/features/clinical-terms/services/clinical-terms.service';
+import type { ClinicalTermDto } from '@/app/entities/clinical-term/models/clinical-term.model';
+import { ClinicalTermError, ClinicalTermsService } from '@/app/entities/clinical-term/services/clinical-terms.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClinicalTermsPageComponent } from './clinical-terms-page.component';
 

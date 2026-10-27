@@ -14,7 +14,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { isAppointmentCancelledStatus } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
-import { ClinicalTermPickerComponent } from '@/app/features/clinical-terms/components/clinical-term-picker.component';
+import { ClinicalTermPickerComponent } from '@/app/entities/clinical-term/components/clinical-term-picker.component';
 import { ExaminationPatientContextComponent } from '@/app/features/examinations/components/examination-patient-context.component';
 import { ExaminationPatientHeaderComponent } from '@/app/features/examinations/components/examination-patient-header.component';
 import { mapExaminationFormToCreateRequest, isPartialVitalClear, mapExaminationFormToUpdateRequest } from '@/app/entities/examination/data/examination.mapper';

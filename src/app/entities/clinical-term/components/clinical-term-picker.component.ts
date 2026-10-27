@@ -7,9 +7,9 @@ import type { AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLINICAL_TERMS_CREATE_CLAIM, CLINICAL_TERMS_DEACTIVATE_CLAIM, CLINICAL_TERMS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { CLINICAL_TERM_NAME_MAX, type ClinicalTermDto, type ClinicalTermKind } from '@/app/features/clinical-terms/models/clinical-term.model';
-import { ClinicalTermError, ClinicalTermsService } from '@/app/features/clinical-terms/services/clinical-terms.service';
-import { appendClinicalTermToText, clinicalTermNameKey } from '@/app/features/clinical-terms/utils/clinical-term-text.utils';
+import { CLINICAL_TERM_NAME_MAX, type ClinicalTermDto, type ClinicalTermKind } from '@/app/entities/clinical-term/models/clinical-term.model';
+import { ClinicalTermError, ClinicalTermsService } from '@/app/entities/clinical-term/services/clinical-terms.service';
+import { appendClinicalTermToText, clinicalTermNameKey } from '@/app/entities/clinical-term/utils/clinical-term-text.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 

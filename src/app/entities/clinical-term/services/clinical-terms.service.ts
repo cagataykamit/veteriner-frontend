@@ -8,7 +8,7 @@ import type {
     ClinicalTermKind,
     ClinicalTermPagedResultDto,
     ClinicalTermsListQuery
-} from '@/app/features/clinical-terms/models/clinical-term.model';
+} from '@/app/entities/clinical-term/models/clinical-term.model';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 const CONCURRENCY_CONFLICT_CODE = 'ClinicalTerms.ConcurrencyConflict';
