@@ -8,7 +8,7 @@ import type { ExaminationDetailVm, ExaminationRelatedSummaryVm } from '@/app/ent
 import { buildProcedureRows, PROCEDURE_KINDS, PROCEDURE_LABEL, PROCEDURE_ROUTE_SEGMENT, procedureAddState, type ProcedureKind } from '@/app/features/examinations/utils/examination-procedures.utils';
 import { HospitalizationFormComponent } from '@/app/features/hospitalizations/components/hospitalization-form.component';
 import { ImagingRecordFormComponent } from '@/app/features/imaging/components/imaging-record-form.component';
-import { IMAGING_ADDED_AFTER_FINALIZATION_LABEL } from '@/app/features/imaging/utils/imaging.utils';
+import { IMAGING_ADDED_AFTER_FINALIZATION_LABEL } from '@/app/entities/imaging/utils/imaging.utils';
 import { LabResultFormComponent } from '@/app/features/lab-results/components/lab-result-form.component';
 import { PrescriptionFormComponent } from '@/app/features/prescriptions/components/prescription-form.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';

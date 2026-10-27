@@ -2,9 +2,9 @@ import { Component, inject, input, OnInit, signal, ChangeDetectionStrategy } fro
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { IMAGING_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import type { ImagingRecordListItemVm } from '@/app/features/imaging/models/imaging.model';
-import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-records.service';
-import { imagingModalityLabel } from '@/app/features/imaging/utils/imaging.utils';
+import type { ImagingRecordListItemVm } from '@/app/entities/imaging/models/imaging.model';
+import { ImagingRecordsService } from '@/app/entities/imaging/services/imaging-records.service';
+import { imagingModalityLabel } from '@/app/entities/imaging/utils/imaging.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 

@@ -5,7 +5,7 @@ import type {
     ImagingRecordDetailVm,
     ImagingRecordsListQuery,
     ImagingRecordStatus
-} from '@/app/features/imaging/models/imaging.model';
+} from '@/app/entities/imaging/models/imaging.model';
 import { mapStoredFileDtoToVm } from '@/app/shared/files/stored-file.utils';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { dateOnlyInputToIstanbulEndUtcIso, dateOnlyInputToIstanbulStartUtcIso, formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';

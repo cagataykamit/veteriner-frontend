@@ -7,7 +7,7 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
-import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-records.service';
+import { ImagingRecordsService } from '@/app/entities/imaging/services/imaging-records.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';

@@ -4,8 +4,8 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { IMAGING_CANCEL_CLAIM, IMAGING_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import type { ImagingRecordListItemVm } from '@/app/features/imaging/models/imaging.model';
-import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-records.service';
+import type { ImagingRecordListItemVm } from '@/app/entities/imaging/models/imaging.model';
+import { ImagingRecordsService } from '@/app/entities/imaging/services/imaging-records.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ImagingListPageComponent } from './imaging-list-page.component';
 

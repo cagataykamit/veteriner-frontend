@@ -11,8 +11,8 @@ import type {
     ImagingRecordListItemDtoPagedResult,
     ImagingRecordsListQuery,
     ImagingRecordsPagedVm
-} from '@/app/features/imaging/models/imaging.model';
-import { imagingQueryToHttpParams, mapImagingDetailDtoToVm } from '@/app/features/imaging/utils/imaging.utils';
+} from '@/app/entities/imaging/models/imaging.model';
+import { imagingQueryToHttpParams, mapImagingDetailDtoToVm } from '@/app/entities/imaging/utils/imaging.utils';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 /** Görüntüleme kayıtları (`docs/IMAGING_API_CONTRACT.md` §4); dosyalar `StoredFilesService` ile `filesOwner` kökünden. */

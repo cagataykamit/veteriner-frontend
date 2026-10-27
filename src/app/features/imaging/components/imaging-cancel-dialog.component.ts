@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input, model, output } from '@angular/core';
 import { map, of, switchMap } from 'rxjs';
-import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-records.service';
-import { imagingModalityLabel } from '@/app/features/imaging/utils/imaging.utils';
+import { ImagingRecordsService } from '@/app/entities/imaging/services/imaging-records.service';
+import { imagingModalityLabel } from '@/app/entities/imaging/utils/imaging.utils';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 
 /** İptal edilecek kayıt; `rowVersion` yoksa (liste satırı) onayda güncel sürüm detaydan okunur. */
