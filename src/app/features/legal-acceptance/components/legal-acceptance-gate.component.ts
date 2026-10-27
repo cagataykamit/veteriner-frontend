@@ -49,8 +49,8 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                 <p class="legal-acceptance-gate-error text-red-500 text-sm mt-3 mb-0" role="alert">{{ e }}</p>
             }
             <ng-template #footer>
-                <p-button type="button" label="Çıkış yap" icon="pi pi-sign-out" severity="secondary" [text]="true" [disabled]="submitting()" (onClick)="logout()" />
-                <p-button type="button" label="Kabul et ve devam et" icon="pi pi-check" [loading]="submitting()" [disabled]="!consent() || submitting()" (onClick)="accept()" />
+                <button pButton type="button" severity="secondary" [text]="true" [disabled]="submitting()" (click)="logout()"><i class="p-button-icon pi pi-sign-out"></i>Çıkış yap</button>
+                <button pButton type="button" [disabled]="!consent() || submitting()" (click)="accept()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kabul et ve devam et</button>
             </ng-template>
         </p-dialog>
     `
