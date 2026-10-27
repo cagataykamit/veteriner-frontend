@@ -60,7 +60,7 @@ const PAGE_SIZE = 20;
                         <span>Hasta bulunamadı</span>
                         @if (canCreate()) {
                             <div>
-                                <p-button type="button" label="Bu müşteri için yeni hasta ekle" icon="pi pi-plus" [text]="true" size="small" styleClass="p-0" (onClick)="quickPetOpen.set(true)" />
+                                <button pButton type="button" [text]="true" size="small" class="p-0" (click)="quickPetOpen.set(true)"><i class="p-button-icon pi pi-plus"></i>Bu müşteri için yeni hasta ekle</button>
                             </div>
                         }
                     }
@@ -68,7 +68,7 @@ const PAGE_SIZE = 20;
             </ng-template>
         </p-autocomplete>
         @if (canCreate() && clientId()) {
-            <p-button type="button" [label]="'Bu müşteri için yeni hasta'" icon="pi pi-plus" [text]="true" size="small" styleClass="p-0 mt-2" (onClick)="quickPetOpen.set(true)" />
+            <button pButton type="button" [text]="true" size="small" class="p-0 mt-2" (click)="quickPetOpen.set(true)"><i class="p-button-icon pi pi-plus"></i>{{ 'Bu müşteri için yeni hasta' }}</button>
             <app-quick-pet-dialog [(visible)]="quickPetOpen" [ownerClientId]="clientId()" (petCreated)="onPetCreated($event)" />
         }
     `

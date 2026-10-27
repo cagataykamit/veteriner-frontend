@@ -106,18 +106,16 @@ interface AppointmentCancelFailure {
             }
             <ng-template #footer>
                 @if (cancelOutcome()) {
-                    <p-button type="button" label="Kapat" icon="pi pi-times" severity="secondary" (onClick)="visible.set(false)" />
+                    <button pButton type="button" severity="secondary" (click)="visible.set(false)"><i class="p-button-icon pi pi-times"></i>Kapat</button>
                 } @else {
-                    <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="visible.set(false)" [disabled]="submitting()" />
-                    <p-button
+                    <button pButton type="button" severity="secondary" (click)="visible.set(false)" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
+                    <button
+                        pButton
                         type="button"
-                        [label]="markingDeceased() ? 'Vefat olarak işaretle' : 'Aktife al'"
-                        icon="pi pi-check"
                         [severity]="markingDeceased() ? 'danger' : 'primary'"
-                        [loading]="submitting()"
                         [disabled]="submitting() || !pet()?.rowVersion || (markingDeceased() && !!dateError())"
-                        (onClick)="onSubmit()"
-                    />
+                        (click)="onSubmit()"
+                    ><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ markingDeceased() ? 'Vefat olarak işaretle' : 'Aktife al' }}</button>
                 }
             </ng-template>
         </p-dialog>

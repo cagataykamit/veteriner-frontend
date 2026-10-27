@@ -101,7 +101,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             }
                             @if (canShowQuickSpeciesButton()) {
                                 <div class="mt-2">
-                                    <p-button type="button" label="Yeni tür ekle" icon="pi pi-plus" [text]="true" styleClass="p-0" (onClick)="quickSpeciesOpen.set(true)" />
+                                    <button pButton type="button" [text]="true" class="p-0" (click)="quickSpeciesOpen.set(true)"><i class="p-button-icon pi pi-plus"></i>Yeni tür ekle</button>
                                 </div>
                             }
                         </div>
@@ -113,7 +113,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             }
                             @if (hasSpeciesForQuickBreed() && canShowQuickBreedButton()) {
                                 <div class="mt-2">
-                                    <p-button type="button" label="Bu tür için yeni ırk" icon="pi pi-plus" [text]="true" styleClass="p-0" (onClick)="quickBreedOpen.set(true)" />
+                                    <button pButton type="button" [text]="true" class="p-0" (click)="quickBreedOpen.set(true)"><i class="p-button-icon pi pi-plus"></i>Bu tür için yeni ırk</button>
                                 </div>
                             }
                         </div>
@@ -219,8 +219,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || loadingSpecies() || loadingBreeds() || loadingColors() || ro.mutationBlocked()" />
-                        <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goDetail()" [disabled]="submitting()" />
+                        <button pButton type="submit" [disabled]="form.invalid || submitting() || loadingSpecies() || loadingBreeds() || loadingColors() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                        <button pButton type="button" severity="secondary" (click)="goDetail()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>
             </div>

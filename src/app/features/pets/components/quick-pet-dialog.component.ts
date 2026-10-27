@@ -81,7 +81,7 @@ import { QuickBreedDialogComponent } from '@/app/features/breeds/components/quic
                         }
                         @if (hasSpeciesForQuickBreed()) {
                             <div class="mt-2">
-                                <p-button type="button" label="Bu tür için yeni ırk" icon="pi pi-plus" [text]="true" styleClass="p-0" (onClick)="quickBreedOpen.set(true)" />
+                                <button pButton type="button" [text]="true" class="p-0" (click)="quickBreedOpen.set(true)"><i class="p-button-icon pi pi-plus"></i>Bu tür için yeni ırk</button>
                             </div>
                         }
                     </div>
@@ -98,8 +98,8 @@ import { QuickBreedDialogComponent } from '@/app/features/breeds/components/quic
                 }
             </form>
             <ng-template #footer>
-                <p-button type="button" label="İptal" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button type="button" label="Kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || !ownerClientIdTrimmed()" (onClick)="onSubmit()" />
+                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>İptal</button>
+                <button pButton type="button" [disabled]="form.invalid || submitting() || !ownerClientIdTrimmed()" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
             </ng-template>
         </p-dialog>
 
