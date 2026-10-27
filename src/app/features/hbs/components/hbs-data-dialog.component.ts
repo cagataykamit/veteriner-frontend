@@ -37,7 +37,7 @@ const KIND_TITLE: Readonly<Record<HbsRecordKind, string>> = {
             } @else if (data(); as d) {
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                     <app-hbs-status-badge [status]="$safeNavigationMigration(entry()?.status)" />
-                    <p-button type="button" label="Tümünü kopyala" icon="pi pi-copy" size="small" severity="secondary" data-testid="hbs-copy-all" (onClick)="copyAll()" />
+                    <button pButton type="button" size="small" severity="secondary" data-testid="hbs-copy-all" (click)="copyAll()"><i class="p-button-icon pi pi-copy"></i>Tümünü kopyala</button>
                 </div>
                 <p class="mt-0 mb-3 text-sm text-muted-color">HBS ekranında ilgili alana yapıştırmak için satırdaki kopyala simgesini kullanın. Boş alanlar Vetinity'de kayıtlı değildir.</p>
                 @if (d.ownerIdentityMasked) {
@@ -54,19 +54,20 @@ const KIND_TITLE: Readonly<Record<HbsRecordKind, string>> = {
                             <div class="flex items-center gap-2 py-1 border-b border-surface-200 dark:border-surface-700" data-testid="hbs-field">
                                 <dt class="w-5/12 text-sm text-muted-color">{{ field.label }}</dt>
                                 <dd class="m-0 flex-1 min-w-0 break-words" [class.text-muted-color]="!field.value">{{ field.value || '—' }}</dd>
-                                <p-button
+                                <button
+                                    pButton
                                     type="button"
-                                    icon="pi pi-copy"
+                                    iconOnly
                                     [text]="true"
                                     [rounded]="true"
                                     size="small"
                                     [disabled]="!field.value"
-                                    [ariaLabel]="field.label + ' kopyala'"
+                                    [attr.aria-label]="field.label + ' kopyala'"
                                     [pTooltip]="field.label + ' kopyala'"
                                     tooltipPosition="left"
                                     [attr.data-testid]="'hbs-copy-' + field.key"
-                                    (onClick)="copyField(field)"
-                                />
+                                    (click)="copyField(field)"
+                                ><i class="p-button-icon pi pi-copy"></i></button>
                             </div>
                         }
                     </dl>
@@ -115,9 +116,9 @@ const KIND_TITLE: Readonly<Record<HbsRecordKind, string>> = {
                         }
                         <div class="flex flex-wrap justify-end gap-2 mt-3">
                             @if (entry()?.status !== 'NotEntered') {
-                                <p-button type="button" label="Girilmedi olarak geri al" severity="secondary" [text]="true" [disabled]="saving()" data-testid="hbs-reset" (onClick)="save('NotEntered')" />
+                                <button pButton type="button" severity="secondary" [text]="true" [disabled]="saving()" data-testid="hbs-reset" (click)="save('NotEntered')">Girilmedi olarak geri al</button>
                             }
-                            <p-button type="button" label="Kaydet" icon="pi pi-check" [loading]="saving()" [disabled]="saving() || (mode() === 'NotRequired' && reason.invalid) || reference.invalid" data-testid="hbs-save" (onClick)="save(mode())" />
+                            <button pButton type="button" [disabled]="saving() || (mode() === 'NotRequired' && reason.invalid) || reference.invalid" data-testid="hbs-save" (click)="save(mode())"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
                         </div>
                     }
                 </div>

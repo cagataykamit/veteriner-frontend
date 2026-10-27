@@ -48,7 +48,7 @@ describe('HbsDataDialogComponent', () => {
     };
 
     const body = () => document.body;
-    const click = (testId: string) => (body().querySelector(`[data-testid="${testId}"] button, button[data-testid="${testId}"]`) as HTMLButtonElement).click();
+    const click = (testId: string) => (body().querySelector(`button[data-testid="${testId}"]`) as HTMLButtonElement).click();
 
     beforeEach(() => {
         hbs = {
@@ -69,7 +69,7 @@ describe('HbsDataDialogComponent', () => {
         expect(rows.length).toBe(3);
         expect(rows[0].textContent).toContain('Pamuk');
         expect(rows[1].textContent).toContain('—');
-        expect(body().querySelector('[data-testid="hbs-copy-animal.hbsAnimalId"] button')?.hasAttribute('disabled')).toBe(true);
+        expect(body().querySelector('button[data-testid="hbs-copy-animal.hbsAnimalId"]')?.hasAttribute('disabled')).toBe(true);
         expect(body().querySelector('[data-testid="hbs-identity-masked"]')).not.toBeNull();
     });
 

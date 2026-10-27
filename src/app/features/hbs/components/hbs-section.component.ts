@@ -20,7 +20,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                 <div class="card" data-testid="hbs-section">
                     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                         <h5 class="m-0">HBS</h5>
-                        <p-button type="button" label="HBS verisi" icon="pi pi-clipboard" severity="secondary" data-testid="hbs-open-dialog" (onClick)="dialogOpen.set(true)" />
+                        <button pButton type="button" severity="secondary" data-testid="hbs-open-dialog" (click)="dialogOpen.set(true)"><i class="p-button-icon pi pi-clipboard"></i>HBS verisi</button>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <app-hbs-status-badge [status]="e.status" />
