@@ -123,17 +123,15 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <p-button
+                    <button
+                        pButton
                         type="submit"
-                        [label]="canCollectPayment ? 'Kaydet ve ödemeyi şimdi al' : copy.buttonSave"
-                        [icon]="canCollectPayment ? 'pi pi-wallet' : 'pi pi-check'"
-                        [loading]="submitting()"
                         [disabled]="form.invalid || amountPreview() === null || submitting() || ro.mutationBlocked()"
-                    />
+                    ><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : (canCollectPayment ? 'pi pi-wallet' : 'pi pi-check')"></i>{{ canCollectPayment ? 'Kaydet ve ödemeyi şimdi al' : copy.buttonSave }}</button>
                     @if (canCollectPayment) {
-                        <p-button type="button" [label]="copy.buttonSave" icon="pi pi-check" severity="secondary" (onClick)="onSubmit(false)" [disabled]="form.invalid || amountPreview() === null || submitting() || ro.mutationBlocked()" />
+                        <button pButton type="button" severity="secondary" (click)="onSubmit(false)" [disabled]="form.invalid || amountPreview() === null || submitting() || ro.mutationBlocked()"><i class="p-button-icon pi pi-check"></i>{{ copy.buttonSave }}</button>
                     }
-                    <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goList()" [disabled]="submitting()" />
+                    <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>
         </div>

@@ -206,7 +206,7 @@ describe('ChargeNewPageComponent', () => {
     it('Payments.Create varsa birincil düğme "Kaydet ve ödemeyi şimdi al", ikincil "Kaydet" listeye döner; yoksa tek "Kaydet"', async () => {
         claims.add('Payments.Create');
         await setup();
-        const labels = () => Array.from(fixture.nativeElement.querySelectorAll('form p-button')).map((b) => (b as HTMLElement).textContent?.trim());
+        const labels = () => Array.from(fixture.nativeElement.querySelectorAll('form button[pButton]')).map((b) => (b as HTMLElement).textContent?.trim());
 
         expect(labels()).toContain('Kaydet ve ödemeyi şimdi al');
         expect(labels()).toContain('Kaydet');

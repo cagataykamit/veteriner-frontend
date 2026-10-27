@@ -85,7 +85,7 @@ interface ConvertedRow {
                     @if (canCollectPayment()) {
                         <a [routerLink]="['/panel/payments/new']" [queryParams]="paymentQueryParams(row.charge)" pButton size="small"><i class="pi pi-wallet"></i>Ödeme al</a>
                     }
-                    <p-button size="small" [text]="true" severity="secondary" icon="pi pi-times" ariaLabel="Kapat" (onClick)="dismissConverted(row.charge.id)" />
+                    <button pButton type="button" iconOnly size="small" [text]="true" severity="secondary" aria-label="Kapat" (click)="dismissConverted(row.charge.id)"><i class="p-button-icon pi pi-times"></i></button>
                 </div>
             </div>
         }
@@ -170,9 +170,9 @@ interface ConvertedRow {
                                     <td class="whitespace-nowrap">
                                         <div class="flex items-center gap-1">
                                             @if (row.suggestedUnitPrice === null) {
-                                                <p-button label="Fiyat gir ve çevir" icon="pi pi-pencil" size="small" class="mr-1" [disabled]="busy(row.id)" (onClick)="openEdit(row)" />
+                                                <button pButton type="button" size="small" class="mr-1" [disabled]="busy(row.id)" (click)="openEdit(row)"><i class="p-button-icon pi pi-pencil"></i>Fiyat gir ve çevir</button>
                                             } @else {
-                                                <p-button label="Ücrete çevir" icon="pi pi-check" size="small" class="mr-1" [loading]="busy(row.id)" (onClick)="convertQuick(row)" />
+                                                <button pButton type="button" size="small" class="mr-1" [disabled]="busy(row.id)" (click)="convertQuick(row)"><i class="p-button-icon" [class]="busy(row.id) ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Ücrete çevir</button>
                                                 <app-row-action-button action="edit" label="Düzenleyerek çevir" [disabled]="busy(row.id)" (pressed)="openEdit(row)" />
                                             }
                                             <app-row-action-button action="void" label="Ücretsiz say" [disabled]="busy(row.id)" (pressed)="openWaive(row)" />

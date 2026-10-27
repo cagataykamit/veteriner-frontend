@@ -76,8 +76,8 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
                 }
             </form>
             <ng-template #footer>
-                <p-button type="button" label="Vazgeç" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button type="button" label="Düzeltmeyi kaydet" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || unchanged() || submitting()" (onClick)="onSubmit()" />
+                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
+                <button pButton type="button" [disabled]="form.invalid || unchanged() || submitting()" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Düzeltmeyi kaydet</button>
             </ng-template>
         </p-dialog>
     `
