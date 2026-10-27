@@ -173,7 +173,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         </div>
                     </div>
                     <div class="mt-4 mb-0">
-                        <p-button type="submit" label="Kaydet" icon="pi pi-save" [loading]="saving()" [disabled]="form.invalid || saving() || ro.mutationBlocked() || busyDeactivate() || busyActivate()" />
+                        <button pButton type="submit" [disabled]="form.invalid || saving() || ro.mutationBlocked() || busyDeactivate() || busyActivate()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
                     </div>
                 </form>
             </div>
@@ -220,7 +220,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                             }
                         </div>
                         <div class="mt-4 flex justify-end">
-                            <p-button type="button" label="Çalışma saatlerini kaydet" icon="pi pi-save" severity="secondary" [loading]="whSaving()" [disabled]="!canSaveWorkingHours()" (onClick)="onSaveWorkingHours()" />
+                            <button pButton type="button" severity="secondary" [disabled]="!canSaveWorkingHours() || whSaving()" (click)="onSaveWorkingHours()"><i class="p-button-icon" [class]="whSaving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Çalışma saatlerini kaydet</button>
                         </div>
                     }
                 </div>
@@ -268,7 +268,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         </div>
 
                         <div class="mt-4 flex justify-end">
-                            <p-button type="button" label="Randevu varsayılanlarını kaydet" icon="pi pi-save" severity="secondary" [loading]="apSettingsSaving()" [disabled]="!canSaveAppointmentSettings()" (onClick)="onSaveAppointmentSettings()" />
+                            <button pButton type="button" severity="secondary" [disabled]="!canSaveAppointmentSettings() || apSettingsSaving()" (click)="onSaveAppointmentSettings()"><i class="p-button-icon" [class]="apSettingsSaving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Randevu varsayılanlarını kaydet</button>
                         </div>
                     }
                 </div>
@@ -286,9 +286,9 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     } @else {
                         <div class="flex flex-wrap gap-2">
                             @if (d.isActive === true) {
-                                <p-button type="button" label="Pasife al" icon="pi pi-ban" severity="danger" [loading]="busyDeactivate()" [disabled]="busyActivate() || saving()" (onClick)="onDeactivate()" />
+                                <button pButton type="button" severity="danger" [disabled]="busyActivate() || saving() || busyDeactivate()" (click)="onDeactivate()"><i class="p-button-icon" [class]="busyDeactivate() ? 'pi pi-spin pi-spinner' : 'pi pi-ban'"></i>Pasife al</button>
                             } @else {
-                                <p-button type="button" label="Aktifleştir" icon="pi pi-check-circle" [loading]="busyActivate()" [disabled]="busyDeactivate() || saving()" (onClick)="onActivate()" />
+                                <button pButton type="button" [disabled]="busyDeactivate() || saving() || busyActivate()" (click)="onActivate()"><i class="p-button-icon" [class]="busyActivate() ? 'pi pi-spin pi-spinner' : 'pi pi-check-circle'"></i>Aktifleştir</button>
                             }
                         </div>
                     }

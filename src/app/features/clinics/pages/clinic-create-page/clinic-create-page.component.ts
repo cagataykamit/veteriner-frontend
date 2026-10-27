@@ -101,8 +101,8 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     </div>
                 </div>
                 <div class="mt-4 mb-0 flex flex-wrap gap-2">
-                    <p-button type="submit" label="Kaydet" icon="pi pi-save" [loading]="submitting()" [disabled]="form.invalid || submitting() || ro.mutationBlocked()" />
-                    <p-button type="button" label="İptal" icon="pi pi-times" severity="secondary" [disabled]="submitting()" (onClick)="onCancel()" />
+                    <button pButton type="submit" [disabled]="form.invalid || submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
+                    <button pButton type="button" severity="secondary" [disabled]="submitting()" (click)="onCancel()"><i class="p-button-icon pi pi-times"></i>İptal</button>
                 </div>
             </form>
         </div>
