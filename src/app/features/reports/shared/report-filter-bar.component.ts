@@ -105,13 +105,13 @@ export interface ReportExtraFilter {
                     </app-filter-field>
                 }
                 <div class="col-span-12 md:col-span-6 flex flex-wrap gap-2 justify-end">
-                    <p-button [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="s.resetFilters()" [disabled]="s.loading()" />
+                    <button pButton type="button" severity="secondary" (click)="s.resetFilters()" [disabled]="s.loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                     @if (s.dateRangeOnly) {
-                        <p-button [label]="copy.reportsApplyFilter" icon="pi pi-filter" (onClick)="s.applyFilters()" [disabled]="s.loading()" />
+                        <button pButton type="button" (click)="s.applyFilters()" [disabled]="s.loading()"><i class="p-button-icon pi pi-filter"></i>{{ copy.reportsApplyFilter }}</button>
                     }
                     @if (s.canExport()) {
-                        <p-button [label]="copy.reportsExportXlsx" icon="pi pi-file-excel" severity="secondary" [outlined]="true" (onClick)="s.exportXlsx()" [loading]="s.isExporting('xlsx')" [disabled]="s.exporting() || !s.hasExportableRows()" />
-                        <p-button [label]="copy.reportsExportCsv" icon="pi pi-download" severity="secondary" [outlined]="true" (onClick)="s.exportCsv()" [loading]="s.isExporting('csv')" [disabled]="s.exporting() || !s.hasExportableRows()" />
+                        <button pButton type="button" severity="secondary" [outlined]="true" (click)="s.exportXlsx()" [disabled]="s.exporting() || !s.hasExportableRows() || s.isExporting('xlsx')"><i class="p-button-icon" [class]="s.isExporting('xlsx') ? 'pi pi-spin pi-spinner' : 'pi pi-file-excel'"></i>{{ copy.reportsExportXlsx }}</button>
+                        <button pButton type="button" severity="secondary" [outlined]="true" (click)="s.exportCsv()" [disabled]="s.exporting() || !s.hasExportableRows() || s.isExporting('csv')"><i class="p-button-icon" [class]="s.isExporting('csv') ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>{{ copy.reportsExportCsv }}</button>
                     }
                     <ng-content select="[barActions]" />
                 </div>

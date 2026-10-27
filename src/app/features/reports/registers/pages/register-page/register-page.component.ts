@@ -110,7 +110,7 @@ type RegisterRow = { readonly rowNumber: number };
                         }
                     </ng-container>
                 }
-                <p-button barActions [label]="copy.registerPrint" icon="pi pi-print" severity="secondary" [outlined]="true" (onClick)="print()" [disabled]="state.loading() || !state.report()?.items?.length" />
+                <button pButton type="button" barActions severity="secondary" [outlined]="true" (click)="print()" [disabled]="state.loading() || !state.report()?.items?.length"><i class="p-button-icon pi pi-print"></i>{{ copy.registerPrint }}</button>
             </app-report-filter-bar>
 
             <app-report-results [state]="state" [alwaysPaginate]="true" [showSummary]="false" [emptyMessage]="copy.registerEmptyMessage" [emptyHint]="copy.registerEmptyHint">

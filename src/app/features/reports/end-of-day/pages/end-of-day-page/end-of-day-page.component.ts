@@ -107,7 +107,7 @@ interface OpenItemRow {
                         </app-filter-field>
                     </ng-container>
                 }
-                <p-button barActions [label]="copy.registerPrint" icon="pi pi-print" severity="secondary" [outlined]="true" (onClick)="print()" [disabled]="state.loading()" />
+                <button pButton type="button" barActions severity="secondary" [outlined]="true" (click)="print()" [disabled]="state.loading()"><i class="p-button-icon pi pi-print"></i>{{ copy.registerPrint }}</button>
             </app-report-filter-bar>
 
             <div class="eod-print-head">
