@@ -101,8 +101,8 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
                 <p class="text-red-500 mt-3 mb-0" role="alert">{{ stepError() }}</p>
             }
             <div class="flex flex-wrap gap-2 mt-4">
-                <p-button type="button" [label]="owner() ? 'Hastayı kaydet ve geliş için seç' : 'Müşteri ve hastayı kaydet'" icon="pi pi-check" [loading]="submitting()" [disabled]="submitting() || !canSubmit()" (onClick)="submit()" />
-                <p-button type="button" [label]="duplicateClient() ? 'Aramaya dön' : 'Vazgeç'" [icon]="duplicateClient() ? 'pi pi-search' : 'pi pi-times'" severity="secondary" [disabled]="submitting()" (onClick)="cancelled.emit()" />
+                <button pButton type="button" [disabled]="submitting() || !canSubmit()" (click)="submit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ owner() ? 'Hastayı kaydet ve geliş için seç' : 'Müşteri ve hastayı kaydet' }}</button>
+                <button pButton type="button" severity="secondary" [disabled]="submitting()" (click)="cancelled.emit()"><i class="p-button-icon" [class]="duplicateClient() ? 'pi pi-search' : 'pi pi-times'"></i>{{ duplicateClient() ? 'Aramaya dön' : 'Vazgeç' }}</button>
             </div>
         </section>
     `

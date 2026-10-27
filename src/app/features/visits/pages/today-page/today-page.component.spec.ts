@@ -727,7 +727,7 @@ describe('TodayPageComponent', () => {
             const f = await create(claims, { date: 'd', activeHospitalizations: [], items: [item({ key: 'w' }), item({ key: 'i', careStatus: 'InProgress' }), planned] });
             const host = f.nativeElement as HTMLElement;
             const slotOf = (label: string) =>
-                Array.from(host.querySelectorAll('tbody p-button'))
+                Array.from(host.querySelectorAll('tbody button[pButton]'))
                     .filter((p) => p.textContent?.trim() === label)
                     .map((p) => Array.from(p.classList).find((c) => c.startsWith('col-start-')));
 
@@ -739,7 +739,7 @@ describe('TodayPageComponent', () => {
 
             expect(grid.className).toContain('grid-cols-[7.5rem_6rem_1.85rem_1.85rem]');
             expect(grid.className).toContain('@max-[50rem]:grid-cols-[2.5rem_2.5rem_1.85rem_1.85rem]'); // dar kip: yalnız ikon
-            const icons = Array.from(host.querySelectorAll('tbody p-button')).filter((p) => p.classList.contains('col-start-3') || p.classList.contains('col-start-4'));
+            const icons = Array.from(host.querySelectorAll('tbody button[pButton]')).filter((p) => p.classList.contains('col-start-3') || p.classList.contains('col-start-4'));
 
             expect(icons.length).toBeGreaterThan(1);
         });

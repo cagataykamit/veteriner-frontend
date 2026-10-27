@@ -105,9 +105,9 @@ type TodayScope = 'mine' | 'all';
         <p-toast position="bottom-right" />
         <app-page-header title="Bugün">
             <div actions class="flex flex-wrap gap-2">
-                <p-button type="button" [label]="copy.buttonRefresh" icon="pi pi-refresh" severity="secondary" (onClick)="refresh('silent')" />
+                <button pButton type="button" severity="secondary" (click)="refresh('silent')"><i class="p-button-icon pi pi-refresh"></i>{{ copy.buttonRefresh }}</button>
                 @if (canCreateVisit) {
-                    <p-button type="button" label="Randevusuz geliş" icon="pi pi-plus" [disabled]="ro.mutationBlocked()" (onClick)="openWalkInArrival()" />
+                    <button pButton type="button" [disabled]="ro.mutationBlocked()" (click)="openWalkInArrival()"><i class="p-button-icon pi pi-plus"></i>Randevusuz geliş</button>
                 }
                 @if (canCreateAppointment) {
                     <a routerLink="/panel/appointments/new" pButton type="button" class="p-button-secondary" data-testid="today-new-appointment"><i class="pi pi-calendar-plus"></i>Yeni randevu</a>
@@ -322,7 +322,7 @@ type TodayScope = 'mine' | 'all';
                     @if (scope() === 'mine') {
                         <app-empty-state [message]="view() === 'voided' ? 'Size atanmış yanlış işaretlenen geliş yok.' : 'Size atanmış hasta yok.'" hint="Tüm sırayı görmek için Tümü’ne geçin." iconClass="pi pi-user" />
                         <div class="flex justify-center mt-3">
-                            <p-button type="button" label="Tümü’ne geç" icon="pi pi-list" severity="secondary" (onClick)="setScope('all')" />
+                            <button pButton type="button" severity="secondary" (click)="setScope('all')"><i class="p-button-icon pi pi-list"></i>Tümü’ne geç</button>
                         </div>
                     } @else {
                         <app-empty-state
@@ -436,98 +436,89 @@ type TodayScope = 'mine' | 'all';
         <ng-template #actionButtons let-item>
             @let actions = actionsOf(item);
             @if (canCreateVisit && actions.canMarkArrived) {
-                <p-button
+                <button
+                    pButton
                     type="button"
-                    class="col-start-1 @max-[50rem]:[&_.p-button-label]:hidden"
-                    styleClass="w-full"
-                    label="Geldi"
-                    ariaLabel="Geldi"
+                    class="col-start-1 w-full"
+                    aria-label="Geldi"
                     [attr.title]="'Geldi'"
-                    icon="pi pi-sign-in"
                     size="small"
                     [disabled]="ro.mutationBlocked()"
-                    (onClick)="openAppointmentArrival(item)"
-                />
+                    (click)="openAppointmentArrival(item)"
+                ><i class="p-button-icon pi pi-sign-in"></i><span class="@max-[50rem]:hidden">Geldi</span></button>
             }
             @if (canCreateExamination && actions.canOpenExamination) {
-                <p-button
+                <button
+                    pButton
                     type="button"
-                    class="col-start-1 @max-[50rem]:[&_.p-button-label]:hidden"
-                    styleClass="w-full"
-                    label="Muayene aç"
-                    ariaLabel="Muayene aç"
+                    class="col-start-1 w-full"
+                    aria-label="Muayene aç"
                     [attr.title]="'Muayene aç'"
-                    icon="pi pi-file-edit"
                     size="small"
                     [disabled]="ro.mutationBlocked()"
-                    (onClick)="openExamination(item)"
-                />
+                    (click)="openExamination(item)"
+                ><i class="p-button-icon pi pi-file-edit"></i><span class="@max-[50rem]:hidden">Muayene aç</span></button>
             }
             @if (canUpdateVisit && actions.canStartCare) {
-                <p-button
+                <button
+                    pButton
                     type="button"
-                    class="col-start-2 @max-[50rem]:[&_.p-button-label]:hidden"
-                    styleClass="w-full"
-                    label="Başlat"
-                    ariaLabel="Başlat"
+                    class="col-start-2 w-full"
+                    aria-label="Başlat"
                     [attr.title]="'Başlat'"
-                    icon="pi pi-play"
                     size="small"
                     severity="secondary"
-                    [loading]="isBusy(item)"
                     [disabled]="isBusy(item) || ro.mutationBlocked()"
-                    (onClick)="transition(item, 'start')"
-                />
+                    (click)="transition(item, 'start')"
+                ><i class="p-button-icon" [class]="isBusy(item) ? 'pi pi-spin pi-spinner' : 'pi pi-play'"></i><span class="@max-[50rem]:hidden">Başlat</span></button>
             }
             @if (canUpdateVisit && actions.canCompleteCare) {
-                <p-button
+                <button
+                    pButton
                     type="button"
-                    class="col-start-2 @max-[50rem]:[&_.p-button-label]:hidden"
-                    styleClass="w-full"
-                    label="Tamamla"
-                    ariaLabel="Tamamla"
+                    class="col-start-2 w-full"
+                    aria-label="Tamamla"
                     [attr.title]="'Tamamla'"
-                    icon="pi pi-check"
                     size="small"
                     severity="secondary"
-                    [loading]="isBusy(item)"
                     [disabled]="isBusy(item) || ro.mutationBlocked()"
-                    (onClick)="transition(item, 'complete')"
-                />
+                    (click)="transition(item, 'complete')"
+                ><i class="p-button-icon" [class]="isBusy(item) ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i><span class="@max-[50rem]:hidden">Tamamla</span></button>
             }
             @let urgency = urgencyToggleOf(item, actions);
             @if (urgency) {
-                <p-button
+                <button
+                    pButton
                     type="button"
+                    iconOnly
                     class="col-start-3"
-                    icon="pi pi-exclamation-triangle"
                     size="small"
                     [severity]="urgency.pressed ? 'danger' : 'secondary'"
                     [text]="!urgency.pressed"
                     [rounded]="true"
-                    [ariaLabel]="urgency.label"
+                    [attr.aria-label]="urgency.label"
                     [attr.title]="urgency.label"
                     [attr.aria-pressed]="urgency.pressed"
-                    [loading]="isBusy(item)"
                     [disabled]="isBusy(item) || ro.mutationBlocked()"
-                    (onClick)="toggleUrgency(item)"
-                />
+                    (click)="toggleUrgency(item)"
+                ><i class="p-button-icon" [class]="isBusy(item) ? 'pi pi-spin pi-spinner' : 'pi pi-exclamation-triangle'"></i></button>
             }
             @let more = secondaryActionsOf(item, actions);
             @if (more.length > 0) {
-                <p-button
+                <button
+                    pButton
                     type="button"
+                    iconOnly
                     class="col-start-4"
-                    icon="pi pi-ellipsis-h"
                     size="small"
                     severity="secondary"
                     [text]="true"
                     [rounded]="true"
-                    ariaLabel="Diğer işlemler"
+                    aria-label="Diğer işlemler"
                     [attr.title]="'Diğer işlemler'"
                     aria-haspopup="menu"
-                    (onClick)="openRowMenu($event, item, more)"
-                />
+                    (click)="openRowMenu($event, item, more)"
+                ><i class="p-button-icon pi pi-ellipsis-h"></i></button>
             }
         </ng-template>
 

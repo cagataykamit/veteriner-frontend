@@ -53,7 +53,7 @@ describe('VisitArrivalDialogComponent (hızlı kayıt entegrasyonu)', () => {
         fixture.detectChanges();
     };
 
-    const links = () => Array.from(document.querySelectorAll('p-button button')).map((b) => b.textContent?.trim() ?? '');
+    const links = () => Array.from(document.querySelectorAll('button[pButton]')).map((b) => b.textContent?.trim() ?? '');
 
     afterEach(() => fixture.destroy());
 

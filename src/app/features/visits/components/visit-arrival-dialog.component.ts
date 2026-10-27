@@ -80,12 +80,12 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                             <div class="col-span-12 flex flex-wrap items-center gap-x-3 -mt-2">
                                 @if (canRegisterNewOwner) {
                                     <span class="text-sm text-muted-color">Hasta kayıtlı değil mi?</span>
-                                    <p-button type="button" label="Yeni müşteri ve hasta ekle" icon="pi pi-user-plus" size="small" [text]="true" (onClick)="openRegistration(null)" />
+                                    <button pButton type="button" size="small" [text]="true" (click)="openRegistration(null)"><i class="p-button-icon pi pi-user-plus"></i>Yeni müşteri ve hasta ekle</button>
                                 } @else {
                                     <small class="text-muted-color">Hasta kayıtlı değilse kaydı resepsiyon oluşturur.</small>
                                 }
                                 @if (canAddPet && selectedOwner(); as owner) {
-                                    <p-button type="button" label="Bu sahibe yeni hasta ekle" icon="pi pi-plus" size="small" [text]="true" (onClick)="openRegistration(owner)" />
+                                    <button pButton type="button" size="small" [text]="true" (click)="openRegistration(owner)"><i class="p-button-icon pi pi-plus"></i>Bu sahibe yeni hasta ekle</button>
                                 }
                             </div>
                         }
@@ -115,8 +115,8 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                 }
             </form>
             <ng-template #footer>
-                <p-button type="button" label="İptal" icon="pi pi-times" severity="secondary" (onClick)="close()" [disabled]="submitting()" />
-                <p-button type="button" [label]="appointment() ? 'Geldi olarak kaydet' : 'Kaydet'" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting()" (onClick)="onSubmit()" />
+                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>İptal</button>
+                <button pButton type="button" [disabled]="form.invalid || submitting()" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ appointment() ? 'Geldi olarak kaydet' : 'Kaydet' }}</button>
             </ng-template>
         </p-dialog>
     `
