@@ -128,7 +128,7 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
                         <app-visit-quick-registration [searchTerm]="searchedTerm()" (registered)="onRegistered($event)" (cancelled)="registering.set(false)" />
                     } @else {
                         <div class="flex flex-wrap items-center gap-3">
-                            <p-button type="button" label="Yeni kayıt: müşteri ve hasta" icon="pi pi-user-plus" [severity]="noResults() ? 'primary' : 'secondary'" [outlined]="!noResults()" (onClick)="registering.set(true)" />
+                            <button pButton type="button" [severity]="noResults() ? 'primary' : 'secondary'" [outlined]="!noResults()" (click)="registering.set(true)"><i class="p-button-icon pi pi-user-plus"></i>Yeni kayıt: müşteri ve hasta</button>
                             @if (noResults()) {
                                 <span class="text-sm text-muted-color">Kayıt bulunamadı; yeni hasta olarak ekleyebilirsiniz.</span>
                             }
