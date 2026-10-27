@@ -215,8 +215,8 @@ import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTime
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <p-button type="submit" [label]="copy.buttonSave" icon="pi pi-check" [loading]="submitting()" [disabled]="form.invalid || submitting() || vaccineDefinitionsLoading() || ro.mutationBlocked()" />
-                        <p-button type="button" [label]="copy.buttonCancel" icon="pi pi-times" severity="secondary" (onClick)="goDetail()" [disabled]="submitting()" />
+                        <button pButton type="submit" [disabled]="form.invalid || submitting() || vaccineDefinitionsLoading() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                        <button pButton type="button" severity="secondary" (click)="goDetail()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>
             </div>

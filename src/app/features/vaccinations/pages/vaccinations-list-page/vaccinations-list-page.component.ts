@@ -88,7 +88,7 @@ const RECEIVING_CARE_ONLY = 'true';
                         <app-filter-field label="Arama" labelFor="vacSearch" [active]="isSearchActive()" width="grow">
                             <app-search-input inputId="vacSearch" placeholder="Aşı adı, not; müşteri, hasta, tür veya ırk…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </app-filter-field>
-                        <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                     </app-list-header>
                     <div class="flex flex-wrap items-end gap-3">
                         <app-filter-field label="Durum" labelId="lblVacStatus" [active]="isStatusActive()" width="select">
