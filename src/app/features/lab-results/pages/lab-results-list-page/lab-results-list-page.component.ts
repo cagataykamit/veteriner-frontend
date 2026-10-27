@@ -10,9 +10,8 @@ import { CLEAR_CONTEXT_FILTER_QUERY, readContextFilterParam } from '@/app/shared
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
-import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
-import type { TableLazyLoadEvent } from 'primeng/table';
+import { ListPageState } from '@/app/shared/list/list-page-state';
 import type { LabResultListItemVm, LabResultStatus } from '@/app/entities/lab-result/models/lab-result-vm.model';
 import { LabResultStatusBadgesComponent } from '@/app/features/lab-results/components/lab-result-status-badges.component';
 import { LabResultCancelDialogComponent } from '@/app/features/lab-results/components/lab-result-cancel-dialog.component';
@@ -103,7 +102,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 [totalRecords]="totalItems()"
                                 [lazy]="true"
                                 [first]="first()"
-                                (onLazyLoad)="onTableLazyLoad($event)"
+                                (onLazyLoad)="list.onTableLazyLoad($event)"
                                 [tableStyle]="{ 'min-width': '60rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
@@ -207,7 +206,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                                 [rowsPerPageOptions]="rowsPerPageOptions"
-                                (onPageChange)="onMobilePageChange($event)"
+                                (onPageChange)="list.onMobilePageChange($event)"
                             />
                         </div>
                     }
@@ -230,15 +229,30 @@ export class LabResultsListPageComponent implements OnInit {
 
     readonly contextPetId = signal(readContextFilterParam(this.route, 'petId'));
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
+    readonly list = new ListPageState<LabResultListItemVm>({
+        fetch: (page, pageSize) =>
+            this.labResultsService
+                .getLabResults({
+                    petId: this.contextPetId() || undefined,
+                    page,
+                    pageSize,
+                    search: this.activeSearch() || undefined,
+                    fromDate: this.activeFromDate() || undefined,
+                    toDate: this.activeToDate() || undefined,
+                    status: this.activeStatus() || undefined
+                }),
+        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}|${this.activeFromDate().trim()}|${this.activeToDate().trim()}|${this.activeStatus()}|${this.contextPetId()}`
+    });
 
-    readonly rawItems = signal<LabResultListItemVm[]>([]);
-    readonly totalItems = signal(0);
-    readonly rowsPerPageOptions = [10, 20, 25, 50];
-    readonly pageSize = signal(10);
-    readonly first = signal(0);
-    readonly currentPage = signal(1);
+    readonly loading = this.list.loading;
+    readonly error = this.list.error;
+
+    readonly rawItems = this.list.items;
+    readonly totalItems = this.list.totalItems;
+    readonly rowsPerPageOptions = this.list.rowsPerPageOptions;
+    readonly pageSize = this.list.pageSize;
+    readonly first = this.list.first;
+    readonly currentPage = this.list.currentPage;
 
     readonly activeSearch = signal('');
     readonly activeFromDate = signal('');
@@ -268,12 +282,8 @@ export class LabResultsListPageComponent implements OnInit {
         this.cancelVisible = true;
     }
 
-    private suppressNextLazy = false;
-    private lastLoadKey = '';
-
     ngOnInit(): void {
-        this.suppressNextLazy = true;
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeStatus());
+        this.list.startInitialLoad();
     }
 
     applyFilters(): void {
@@ -293,8 +303,7 @@ export class LabResultsListPageComponent implements OnInit {
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
         this.activeStatus.set(this.statusInput);
-        this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeStatus());
+        this.list.loadFirstPage();
     }
 
     resetFilters(): void {
@@ -306,78 +315,18 @@ export class LabResultsListPageComponent implements OnInit {
         this.activeToDate.set('');
         this.activeStatus.set('');
         this.statusInput = '';
-        this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), '', '', '', '');
+        this.list.loadFirstPage();
     }
 
     clearContextFilter(): void {
         this.contextPetId.set('');
         void this.router.navigate([], { queryParams: CLEAR_CONTEXT_FILTER_QUERY, queryParamsHandling: 'merge', replaceUrl: true });
-        this.currentPage.set(1);
-        this.first.set(0);
+        this.list.goToFirstPage();
         this.reload();
     }
 
     reload(): void {
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeStatus(), true);
+        this.list.reload();
     }
 
-    onTableLazyLoad(event: TableLazyLoadEvent): void {
-        if (this.suppressNextLazy) {
-            this.suppressNextLazy = false;
-
-            return;
-        }
-
-        const rows = event.rows ?? 10;
-        const first = event.first ?? 0;
-        const page = Math.floor(first / rows) + 1;
-
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeStatus());
-    }
-
-    onMobilePageChange(state: PaginatorState): void {
-        const rows = state.rows ?? this.pageSize();
-        const first = state.first ?? 0;
-        const page = Math.floor(first / rows) + 1;
-
-        this.suppressNextLazy = true;
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeStatus());
-    }
-
-    private loadFromServer(page: number, pageSize: number, search: string, fromDate: string, toDate: string, status: LabResultStatus | '', force = false): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${status}|${this.contextPetId()}`;
-
-        if (!force && key === this.lastLoadKey) {
-            return;
-        }
-
-        this.lastLoadKey = key;
-        this.loading.set(true);
-        this.error.set(null);
-        this.labResultsService
-            .getLabResults({
-                petId: this.contextPetId() || undefined,
-                page,
-                pageSize,
-                search: search || undefined,
-                fromDate: fromDate || undefined,
-                toDate: toDate || undefined,
-                status: status || undefined
-            })
-            .subscribe({
-                next: (r) => {
-                    this.rawItems.set(r.items);
-                    this.totalItems.set(r.totalItems);
-                    this.pageSize.set(r.pageSize);
-                    this.currentPage.set(r.page);
-                    this.first.set((r.page - 1) * r.pageSize);
-                    this.loading.set(false);
-                },
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
-                    this.loading.set(false);
-                }
-            });
-    }
 }

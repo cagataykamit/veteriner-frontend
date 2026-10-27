@@ -8,9 +8,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
-import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
-import type { TableLazyLoadEvent } from 'primeng/table';
+import { ListPageState } from '@/app/shared/list/list-page-state';
 import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
@@ -93,7 +92,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 [totalRecords]="totalItems()"
                                 [lazy]="true"
                                 [first]="first()"
-                                (onLazyLoad)="onTableLazyLoad($event)"
+                                (onLazyLoad)="list.onTableLazyLoad($event)"
                                 [tableStyle]="{ 'min-width': '60rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
@@ -192,7 +191,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                                 [rowsPerPageOptions]="rowsPerPageOptions"
-                                (onPageChange)="onMobilePageChange($event)"
+                                (onPageChange)="list.onMobilePageChange($event)"
                             />
                         </div>
                     }
@@ -214,16 +213,29 @@ export class TreatmentsListPageComponent implements OnInit {
 
     readonly contextPetId = signal(readContextFilterParam(this.route, 'petId'));
 
-    /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
+    readonly list = new ListPageState<TreatmentListItemVm>({
+        fetch: (page, pageSize) =>
+            this.treatmentsService
+                .getTreatments({
+                    page,
+                    pageSize,
+                    petId: this.contextPetId() || undefined,
+                    search: this.activeSearch() || undefined,
+                    fromDate: this.activeFromDate() || undefined,
+                    toDate: this.activeToDate() || undefined
+                }),
+        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}|${this.activeFromDate().trim()}|${this.activeToDate().trim()}|${this.contextPetId()}`
+    });
 
-    readonly rawItems = signal<TreatmentListItemVm[]>([]);
-    readonly totalItems = signal(0);
-    readonly rowsPerPageOptions = [10, 20, 25, 50];
-    readonly pageSize = signal(10);
-    readonly first = signal(0);
-    readonly currentPage = signal(1);
+    readonly loading = this.list.loading;
+    readonly error = this.list.error;
+
+    readonly rawItems = this.list.items;
+    readonly totalItems = this.list.totalItems;
+    readonly rowsPerPageOptions = this.list.rowsPerPageOptions;
+    readonly pageSize = this.list.pageSize;
+    readonly first = this.list.first;
+    readonly currentPage = this.list.currentPage;
 
     readonly activeSearch = signal('');
     readonly activeFromDate = signal('');
@@ -234,12 +246,8 @@ export class TreatmentsListPageComponent implements OnInit {
     toDateInput = '';
     readonly displayedRows = computed(() => this.rawItems());
 
-    private suppressNextLazy = false;
-    private lastLoadKey = '';
-
     ngOnInit(): void {
-        this.suppressNextLazy = true;
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate());
+        this.list.startInitialLoad();
     }
 
     applyFilters(): void {
@@ -258,8 +266,7 @@ export class TreatmentsListPageComponent implements OnInit {
         this.activeSearch.set(this.searchInput.trim());
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
-        this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate());
+        this.list.loadFirstPage();
     }
 
     resetFilters(): void {
@@ -269,97 +276,17 @@ export class TreatmentsListPageComponent implements OnInit {
         this.activeSearch.set('');
         this.activeFromDate.set('');
         this.activeToDate.set('');
-        this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), '', '', '');
+        this.list.loadFirstPage();
     }
 
     clearContextFilter(): void {
         this.contextPetId.set('');
         void this.router.navigate([], { queryParams: CLEAR_CONTEXT_FILTER_QUERY, queryParamsHandling: 'merge', replaceUrl: true });
-        this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate());
+        this.list.loadFirstPage();
     }
 
     reload(): void {
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), true);
+        this.list.reload();
     }
 
-    onTableLazyLoad(event: TableLazyLoadEvent): void {
-        if (this.suppressNextLazy) {
-            this.suppressNextLazy = false;
-
-            return;
-        }
-
-        const rows = event.rows ?? this.pageSize();
-        const eventFirst = event.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
-    }
-
-    onMobilePageChange(state: PaginatorState): void {
-        const rows = state.rows ?? this.pageSize();
-        const eventFirst = state.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        this.suppressNextLazy = true;
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
-    }
-
-    private loadFromServer(page: number, pageSize: number, search: string, fromDate: string, toDate: string, force = false): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${this.contextPetId()}`;
-
-        if (!force && key === this.lastLoadKey) {
-            return;
-        }
-
-        this.lastLoadKey = key;
-        this.loading.set(true);
-        this.error.set(null);
-        this.treatmentsService
-            .getTreatments({
-                page,
-                pageSize,
-                petId: this.contextPetId() || undefined,
-                search: search || undefined,
-                fromDate: fromDate || undefined,
-                toDate: toDate || undefined
-            })
-            .subscribe({
-                next: (r) => {
-                    this.rawItems.set(r.items);
-                    this.totalItems.set(r.totalItems);
-                    this.pageSize.set(r.pageSize);
-                    this.currentPage.set(r.page);
-                    this.first.set((r.page - 1) * r.pageSize);
-                    this.loading.set(false);
-                },
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
-                    this.loading.set(false);
-                }
-            });
-    }
 }

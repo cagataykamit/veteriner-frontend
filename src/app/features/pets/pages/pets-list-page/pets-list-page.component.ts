@@ -10,9 +10,8 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { Paginator } from 'primeng/paginator';
-import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
-import type { TableLazyLoadEvent } from 'primeng/table';
+import { ListPageState } from '@/app/shared/list/list-page-state';
 import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PET_LIFE_STATUS_FILTER_OPTIONS, PET_LIST_DEFAULT_STATUS, parsePetListStatusFilter, type PetListStatusFilter } from '@/app/entities/pet/utils/pet-status.utils';
@@ -119,7 +118,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                 [totalRecords]="totalItems()"
                                 [lazy]="true"
                                 [first]="first()"
-                                (onLazyLoad)="onTableLazyLoad($event)"
+                                (onLazyLoad)="list.onTableLazyLoad($event)"
                                 [tableStyle]="{ 'min-width': '64rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
@@ -219,7 +218,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                                 [rowsPerPageOptions]="rowsPerPageOptions"
-                                (onPageChange)="onMobilePageChange($event)"
+                                (onPageChange)="list.onMobilePageChange($event)"
                             />
                         </div>
                     }
@@ -239,17 +238,55 @@ export class PetsListPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly speciesService = inject(SpeciesService);
 
-    /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
-    readonly loading = signal(true);
-    readonly loadingSpecies = signal(false);
-    readonly error = signal<string | null>(null);
+    readonly list = new ListPageState<PetListItemVm>({
+        fetch: (page, pageSize) => {
+            const status = this.activeStatus();
 
-    readonly rawItems = signal<PetListItemVm[]>([]);
-    readonly totalItems = signal(0);
-    readonly rowsPerPageOptions = [10, 20, 25, 50];
-    readonly pageSize = signal(10);
-    readonly first = signal(0);
-    readonly currentPage = signal(1);
+            return this.petsService
+                .getPets({
+                    page,
+                    pageSize,
+                    search: this.activeSearch() || undefined,
+                    speciesId: this.activeSpeciesId() || undefined,
+                    clientId: this.activeClientId() || undefined,
+                    status: status === 'All' ? undefined : status
+                });
+        },
+        loadKey: (page, pageSize) => {
+            const status = this.activeStatus();
+
+            return `${page}|${pageSize}|${this.activeSearch().trim()}|${this.activeSpeciesId().trim()}|${this.activeClientId().trim()}|${status}`;
+        },
+        persist: {
+            key: PETS_LIST_STATE_KEY,
+            save: (): Omit<PetsListState, 'page' | 'pageSize'> => ({
+                search: this.searchInput.trim(),
+                speciesId: this.speciesIdInput.trim(),
+                status: this.activeStatus()
+            }),
+            restore: (state) => {
+                const parsed = state as Partial<PetsListState>;
+
+                this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
+                this.speciesIdInput = typeof parsed.speciesId === 'string' ? parsed.speciesId : '';
+                this.statusInput = parsePetListStatusFilter(parsed.status) ?? PET_LIST_DEFAULT_STATUS;
+                this.activeSearch.set(this.searchInput.trim());
+                this.activeSpeciesId.set(this.speciesIdInput.trim());
+                this.activeStatus.set(this.statusInput);
+            }
+        }
+    });
+
+    readonly loading = this.list.loading;
+    readonly loadingSpecies = signal(false);
+    readonly error = this.list.error;
+
+    readonly rawItems = this.list.items;
+    readonly totalItems = this.list.totalItems;
+    readonly rowsPerPageOptions = this.list.rowsPerPageOptions;
+    readonly pageSize = this.list.pageSize;
+    readonly first = this.list.first;
+    readonly currentPage = this.list.currentPage;
 
     readonly activeSearch = signal('');
     readonly activeSpeciesId = signal('');
@@ -266,23 +303,19 @@ export class PetsListPageComponent implements OnInit {
     readonly canUpdatePet = this.auth.hasOperationClaim(PETS_UPDATE_CLAIM);
 
     readonly displayedRows = computed(() => this.rawItems());
-    private suppressNextLazy = false;
-    private lastLoadKey = '';
 
     ngOnInit(): void {
-        const restored = this.restoreStateFromSessionStorage();
+        const restored = this.list.restore();
 
         if (!restored) {
-            this.currentPage.set(1);
-            this.first.set(0);
+            this.list.goToFirstPage();
         }
 
         const contextClientId = readContextFilterParam(this.route, 'clientId');
 
         if (contextClientId) {
             this.activeClientId.set(contextClientId);
-            this.currentPage.set(1);
-            this.first.set(0);
+            this.list.goToFirstPage();
         }
 
         // Bağlantıyla gelen `?status=all|active|deceased` seçilir; müşteri kartının "Tümü →" bağlantısı (`?clientId`) önceki davranışı korur: o müşterinin tüm hastaları.
@@ -294,18 +327,14 @@ export class PetsListPageComponent implements OnInit {
         }
 
         this.loadSpeciesOptions();
-        this.suppressNextLazy = true;
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
+        this.list.startInitialLoad();
     }
 
     applyFilters(): void {
         this.activeSearch.set(this.searchInput.trim());
         this.activeSpeciesId.set(this.speciesIdInput.trim());
         this.activeStatus.set(this.statusInput ?? PET_LIST_DEFAULT_STATUS);
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.persistStateToSessionStorage(1, this.pageSize());
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
+        this.list.loadFirstPage();
     }
 
     resetFilters(): void {
@@ -316,107 +345,17 @@ export class PetsListPageComponent implements OnInit {
         this.activeSpeciesId.set('');
         this.activeClientId.set('');
         this.activeStatus.set(PET_LIST_DEFAULT_STATUS);
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.clearStateFromSessionStorage();
-        this.loadFromServer(1, this.pageSize(), '', '', '');
+        this.list.resetToFirstPage();
     }
 
     clearClientContext(): void {
         this.activeClientId.set('');
         void this.router.navigate([], { queryParams: CLEAR_CONTEXT_FILTER_QUERY, queryParamsHandling: 'merge', replaceUrl: true });
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeSpeciesId(), '');
+        this.list.loadFirstPage();
     }
 
     reload(): void {
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeSpeciesId(), this.activeClientId(), true);
-    }
-
-    onTableLazyLoad(event: TableLazyLoadEvent): void {
-        if (this.suppressNextLazy) {
-            this.suppressNextLazy = false;
-
-            return;
-        }
-
-        const rows = event.rows ?? this.pageSize();
-        const eventFirst = event.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows, this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
-    }
-
-    onMobilePageChange(state: PaginatorState): void {
-        const rows = state.rows ?? this.pageSize();
-        const eventFirst = state.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        this.suppressNextLazy = true;
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows, this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeSpeciesId(), this.activeClientId());
-    }
-
-    private loadFromServer(page: number, pageSize: number, search: string, speciesId: string, clientId: string, force = false): void {
-        const status = this.activeStatus();
-        const key = `${page}|${pageSize}|${search.trim()}|${speciesId.trim()}|${clientId.trim()}|${status}`;
-
-        if (!force && key === this.lastLoadKey) {
-            return;
-        }
-
-        this.lastLoadKey = key;
-        this.loading.set(true);
-        this.error.set(null);
-        this.petsService
-            .getPets({
-                page,
-                pageSize,
-                search: search || undefined,
-                speciesId: speciesId || undefined,
-                clientId: clientId || undefined,
-                status: status === 'All' ? undefined : status
-            })
-            .subscribe({
-                next: (r) => {
-                    this.rawItems.set(r.items);
-                    this.totalItems.set(r.totalItems);
-                    this.pageSize.set(r.pageSize);
-                    this.currentPage.set(r.page);
-                    this.first.set((r.page - 1) * r.pageSize);
-                    this.persistStateToSessionStorage(r.page, r.pageSize);
-                    this.loading.set(false);
-                },
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
-                    this.loading.set(false);
-                }
-            });
+        this.list.reload();
     }
 
     private loadSpeciesOptions(): void {
@@ -449,55 +388,4 @@ export class PetsListPageComponent implements OnInit {
         return this.activeStatus() !== PET_LIST_DEFAULT_STATUS;
     }
 
-    private restoreStateFromSessionStorage(): boolean {
-        const raw = sessionStorage.getItem(PETS_LIST_STATE_KEY);
-
-        if (!raw) {
-            return false;
-        }
-
-        try {
-            const parsed = JSON.parse(raw) as Partial<PetsListState>;
-            const page = Number(parsed.page);
-            const pageSize = Number(parsed.pageSize);
-
-            if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
-                sessionStorage.removeItem(PETS_LIST_STATE_KEY);
-
-                return false;
-            }
-
-            this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
-            this.speciesIdInput = typeof parsed.speciesId === 'string' ? parsed.speciesId : '';
-            this.statusInput = parsePetListStatusFilter(parsed.status) ?? PET_LIST_DEFAULT_STATUS;
-            this.activeSearch.set(this.searchInput.trim());
-            this.activeSpeciesId.set(this.speciesIdInput.trim());
-            this.activeStatus.set(this.statusInput);
-            this.pageSize.set(pageSize);
-            this.currentPage.set(page);
-            this.first.set((page - 1) * pageSize);
-
-            return true;
-        } catch {
-            sessionStorage.removeItem(PETS_LIST_STATE_KEY);
-
-            return false;
-        }
-    }
-
-    private persistStateToSessionStorage(page: number, pageSize: number): void {
-        const state: PetsListState = {
-            search: this.searchInput.trim(),
-            speciesId: this.speciesIdInput.trim(),
-            status: this.activeStatus(),
-            page,
-            pageSize
-        };
-
-        sessionStorage.setItem(PETS_LIST_STATE_KEY, JSON.stringify(state));
-    }
-
-    private clearStateFromSessionStorage(): void {
-        sessionStorage.removeItem(PETS_LIST_STATE_KEY);
-    }
 }

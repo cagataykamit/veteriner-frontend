@@ -12,9 +12,8 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { Paginator } from 'primeng/paginator';
-import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
-import type { TableLazyLoadEvent } from 'primeng/table';
+import { ListPageState } from '@/app/shared/list/list-page-state';
 import type { HospitalizationListItemVm } from '@/app/entities/hospitalization/models/hospitalization-vm.model';
 import { HospitalizationsService } from '@/app/entities/hospitalization/services/hospitalizations.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -118,7 +117,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                 [totalRecords]="totalItems()"
                                 [lazy]="true"
                                 [first]="first()"
-                                (onLazyLoad)="onTableLazyLoad($event)"
+                                (onLazyLoad)="list.onTableLazyLoad($event)"
                                 [tableStyle]="{ 'min-width': '70rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
@@ -236,7 +235,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                                 [rowsPerPageOptions]="rowsPerPageOptions"
-                                (onPageChange)="onMobilePageChange($event)"
+                                (onPageChange)="list.onMobilePageChange($event)"
                             />
                         </div>
                     }
@@ -267,15 +266,60 @@ export class HospitalizationsListPageComponent implements OnInit {
 
     activeFilterInput: ActiveFilterUi = 'all';
 
-    readonly loading = signal(false);
-    readonly error = signal<string | null>(null);
+    readonly list = new ListPageState<HospitalizationListItemVm>({
+        fetch: (page, pageSize) => {
+            const ao = this.activeOnlyFromFilter(this.activeFilter());
 
-    readonly rawItems = signal<HospitalizationListItemVm[]>([]);
-    readonly totalItems = signal(0);
-    readonly rowsPerPageOptions = [10, 20, 25, 50];
-    readonly pageSize = signal(10);
-    readonly first = signal(0);
-    readonly currentPage = signal(1);
+            return this.hospitalizationsService
+                .getHospitalizations({
+                    petId: this.contextPetId() || undefined,
+                    page,
+                    pageSize,
+                    search: this.activeSearch() || undefined,
+                    fromDate: this.activeFromDate() || undefined,
+                    toDate: this.activeToDate() || undefined,
+                    activeOnly: ao
+                });
+        },
+        loadKey: (page, pageSize) => {
+            const ao = this.activeOnlyFromFilter(this.activeFilter());
+
+            return `${page}|${pageSize}|${this.activeSearch().trim()}|${this.activeFromDate().trim()}|${this.activeToDate().trim()}|${this.activeFilter()}|${ao ?? 'all'}|${this.contextPetId()}`;
+        },
+        persist: {
+            key: HOSPITALIZATIONS_LIST_STATE_KEY,
+            save: (): Omit<HospitalizationsListState, 'page' | 'pageSize'> => ({
+                search: this.searchInput.trim(),
+                fromDate: this.fromDateInput.trim(),
+                toDate: this.toDateInput.trim(),
+                activeFilter: this.activeFilterInput
+            }),
+            restore: (state) => {
+                const parsed = state as Partial<HospitalizationsListState>;
+
+                const activeFilter = parsed.activeFilter === 'active' || parsed.activeFilter === 'discharged' ? parsed.activeFilter : 'all';
+
+                this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
+                this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
+                this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
+                this.activeFilterInput = activeFilter;
+                this.activeSearch.set(this.searchInput.trim());
+                this.activeFromDate.set(this.fromDateInput.trim());
+                this.activeToDate.set(this.toDateInput.trim());
+                this.activeFilter.set(activeFilter);
+            }
+        }
+    });
+
+    readonly loading = this.list.loading;
+    readonly error = this.list.error;
+
+    readonly rawItems = this.list.items;
+    readonly totalItems = this.list.totalItems;
+    readonly rowsPerPageOptions = this.list.rowsPerPageOptions;
+    readonly pageSize = this.list.pageSize;
+    readonly first = this.list.first;
+    readonly currentPage = this.list.currentPage;
 
     readonly activeSearch = signal('');
     readonly activeFromDate = signal('');
@@ -287,19 +331,14 @@ export class HospitalizationsListPageComponent implements OnInit {
     toDateInput = '';
     readonly displayedRows = computed(() => this.rawItems());
 
-    private suppressNextLazy = false;
-    private lastLoadKey = '';
-
     ngOnInit(): void {
-        const restored = this.restoreStateFromSessionStorage();
+        const restored = this.list.restore();
 
         if (!restored) {
-            this.currentPage.set(1);
-            this.first.set(0);
+            this.list.goToFirstPage();
         }
 
-        this.suppressNextLazy = true;
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeFilter());
+        this.list.startInitialLoad();
     }
 
     private activeOnlyFromFilter(f: ActiveFilterUi): boolean | undefined {
@@ -331,10 +370,7 @@ export class HospitalizationsListPageComponent implements OnInit {
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
         this.activeFilter.set(this.activeFilterInput);
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.persistStateToSessionStorage(1, this.pageSize());
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeFilter());
+        this.list.loadFirstPage();
     }
 
     resetFilters(): void {
@@ -346,85 +382,18 @@ export class HospitalizationsListPageComponent implements OnInit {
         this.activeFromDate.set('');
         this.activeToDate.set('');
         this.activeFilter.set('all');
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.clearStateFromSessionStorage();
-        this.loadFromServer(1, this.pageSize(), '', '', '', 'all');
+        this.list.resetToFirstPage();
     }
 
     clearContextFilter(): void {
         this.contextPetId.set('');
         void this.router.navigate([], { queryParams: CLEAR_CONTEXT_FILTER_QUERY, queryParamsHandling: 'merge', replaceUrl: true });
-        this.currentPage.set(1);
-        this.first.set(0);
+        this.list.goToFirstPage();
         this.reload();
     }
 
     reload(): void {
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeFilter(), true);
-    }
-
-    onTableLazyLoad(event: TableLazyLoadEvent): void {
-        if (this.suppressNextLazy) {
-            this.suppressNextLazy = false;
-
-            return;
-        }
-
-        const rows = event.rows ?? 10;
-        const first = event.first ?? 0;
-        const page = Math.floor(first / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeFilter());
-    }
-
-    onMobilePageChange(state: PaginatorState): void {
-        const rows = state.rows ?? this.pageSize();
-        const first = state.first ?? 0;
-        const page = Math.floor(first / rows) + 1;
-
-        this.suppressNextLazy = true;
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.activeFilter());
-    }
-
-    private loadFromServer(page: number, pageSize: number, search: string, fromDate: string, toDate: string, filter: ActiveFilterUi, force = false): void {
-        const ao = this.activeOnlyFromFilter(filter);
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${filter}|${ao ?? 'all'}|${this.contextPetId()}`;
-
-        if (!force && key === this.lastLoadKey) {
-            return;
-        }
-
-        this.lastLoadKey = key;
-        this.loading.set(true);
-        this.error.set(null);
-        this.hospitalizationsService
-            .getHospitalizations({
-                petId: this.contextPetId() || undefined,
-                page,
-                pageSize,
-                search: search || undefined,
-                fromDate: fromDate || undefined,
-                toDate: toDate || undefined,
-                activeOnly: ao
-            })
-            .subscribe({
-                next: (r) => {
-                    this.rawItems.set(r.items);
-                    this.totalItems.set(r.totalItems);
-                    this.pageSize.set(r.pageSize);
-                    this.currentPage.set(r.page);
-                    this.first.set((r.page - 1) * r.pageSize);
-                    this.persistStateToSessionStorage(r.page, r.pageSize);
-                    this.loading.set(false);
-                },
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
-                    this.loading.set(false);
-                }
-            });
+        this.list.reload();
     }
 
     isSearchActive(): boolean {
@@ -443,60 +412,4 @@ export class HospitalizationsListPageComponent implements OnInit {
         return !!this.activeToDate().trim();
     }
 
-    private restoreStateFromSessionStorage(): boolean {
-        const raw = sessionStorage.getItem(HOSPITALIZATIONS_LIST_STATE_KEY);
-
-        if (!raw) {
-            return false;
-        }
-
-        try {
-            const parsed = JSON.parse(raw) as Partial<HospitalizationsListState>;
-            const page = Number(parsed.page);
-            const pageSize = Number(parsed.pageSize);
-
-            if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
-                sessionStorage.removeItem(HOSPITALIZATIONS_LIST_STATE_KEY);
-
-                return false;
-            }
-
-            const activeFilter = parsed.activeFilter === 'active' || parsed.activeFilter === 'discharged' ? parsed.activeFilter : 'all';
-
-            this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
-            this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
-            this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
-            this.activeFilterInput = activeFilter;
-            this.activeSearch.set(this.searchInput.trim());
-            this.activeFromDate.set(this.fromDateInput.trim());
-            this.activeToDate.set(this.toDateInput.trim());
-            this.activeFilter.set(activeFilter);
-            this.pageSize.set(pageSize);
-            this.currentPage.set(page);
-            this.first.set((page - 1) * pageSize);
-
-            return true;
-        } catch {
-            sessionStorage.removeItem(HOSPITALIZATIONS_LIST_STATE_KEY);
-
-            return false;
-        }
-    }
-
-    private persistStateToSessionStorage(page: number, pageSize: number): void {
-        const state: HospitalizationsListState = {
-            search: this.searchInput.trim(),
-            fromDate: this.fromDateInput.trim(),
-            toDate: this.toDateInput.trim(),
-            activeFilter: this.activeFilterInput,
-            page,
-            pageSize
-        };
-
-        sessionStorage.setItem(HOSPITALIZATIONS_LIST_STATE_KEY, JSON.stringify(state));
-    }
-
-    private clearStateFromSessionStorage(): void {
-        sessionStorage.removeItem(HOSPITALIZATIONS_LIST_STATE_KEY);
-    }
 }

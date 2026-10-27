@@ -8,9 +8,8 @@ import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
-import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
-import type { TableLazyLoadEvent } from 'primeng/table';
+import { ListPageState } from '@/app/shared/list/list-page-state';
 import type { TenantInviteListItemVm } from '@/app/entities/tenant-invite/models/tenant-invite-vm.model';
 import { TenantInvitesService } from '@/app/entities/tenant-invite/services/tenant-invites.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -92,7 +91,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 [totalRecords]="totalItems()"
                                 [lazy]="true"
                                 [first]="first()"
-                                (onLazyLoad)="onTableLazyLoad($event)"
+                                (onLazyLoad)="list.onTableLazyLoad($event)"
                                 [tableStyle]="{ 'min-width': '58rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
@@ -182,7 +181,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                                 [rowsPerPageOptions]="rowsPerPageOptions"
-                                (onPageChange)="onMobilePageChange($event)"
+                                (onPageChange)="list.onMobilePageChange($event)"
                             />
                         </div>
                     }
@@ -201,49 +200,54 @@ export class TenantInviteListPageComponent implements OnInit {
 
     readonly canManageTenantAccess = computed(() => this.auth.hasOperationClaim(TENANT_MANAGEMENT_CLAIM) && !this.ro.mutationBlocked());
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
+    readonly list = new ListPageState<TenantInviteListItemVm>({
+        fetch: (page, pageSize) =>
+            this.tenantInvites
+                .getInvitesList({
+                    page,
+                    pageSize,
+                    search: this.activeSearch() || undefined
+                }),
+        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}`
+    });
+
+    readonly loading = this.list.loading;
+    readonly error = this.list.error;
     readonly actionError = signal<string | null>(null);
     readonly actionBusy = signal<{ id: string; kind: 'cancel' | 'resend' } | null>(null);
 
-    readonly rawItems = signal<TenantInviteListItemVm[]>([]);
-    readonly totalItems = signal(0);
-    readonly rowsPerPageOptions = [10, 20, 25, 50];
-    readonly pageSize = signal(10);
-    readonly first = signal(0);
-    readonly currentPage = signal(1);
+    readonly rawItems = this.list.items;
+    readonly totalItems = this.list.totalItems;
+    readonly rowsPerPageOptions = this.list.rowsPerPageOptions;
+    readonly pageSize = this.list.pageSize;
+    readonly first = this.list.first;
+    readonly currentPage = this.list.currentPage;
 
     readonly activeSearch = signal('');
     searchInput = '';
 
     readonly displayedRows = computed(() => this.rawItems());
 
-    private suppressNextLazy = false;
-    private lastLoadKey = '';
-
     ngOnInit(): void {
-        this.suppressNextLazy = true;
-        this.loadFromServer(1, this.pageSize(), this.activeSearch());
+        this.list.startInitialLoad();
     }
 
     applySearch(): void {
         this.actionError.set(null);
         this.activeSearch.set(this.searchInput.trim());
-        this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), this.activeSearch());
+        this.list.loadFirstPage();
     }
 
     resetFilters(): void {
         this.actionError.set(null);
         this.searchInput = '';
         this.activeSearch.set('');
-        this.first.set(0);
-        this.loadFromServer(1, this.pageSize(), '');
+        this.list.loadFirstPage();
     }
 
     reload(): void {
         this.actionError.set(null);
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), true);
+        this.list.reload();
     }
 
     isRowBusy(rowId: string, kind: 'cancel' | 'resend'): boolean {
@@ -295,61 +299,7 @@ export class TenantInviteListPageComponent implements OnInit {
     }
 
     private reloadCurrent(): void {
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), true);
+        this.list.reload();
     }
 
-    onTableLazyLoad(event: TableLazyLoadEvent): void {
-        if (this.suppressNextLazy) {
-            this.suppressNextLazy = false;
-
-            return;
-        }
-
-        const rows = event.rows ?? 10;
-        const first = event.first ?? 0;
-        const page = Math.floor(first / rows) + 1;
-
-        this.loadFromServer(page, rows, this.activeSearch());
-    }
-
-    onMobilePageChange(state: PaginatorState): void {
-        const rows = state.rows ?? this.pageSize();
-        const first = state.first ?? 0;
-        const page = Math.floor(first / rows) + 1;
-
-        this.suppressNextLazy = true;
-        this.loadFromServer(page, rows, this.activeSearch());
-    }
-
-    private loadFromServer(page: number, pageSize: number, search: string, force = false): void {
-        const key = `${page}|${pageSize}|${search.trim()}`;
-
-        if (!force && key === this.lastLoadKey) {
-            return;
-        }
-
-        this.lastLoadKey = key;
-        this.loading.set(true);
-        this.error.set(null);
-        this.tenantInvites
-            .getInvitesList({
-                page,
-                pageSize,
-                search: search || undefined
-            })
-            .subscribe({
-                next: (r) => {
-                    this.rawItems.set(r.items);
-                    this.totalItems.set(r.totalItems);
-                    this.pageSize.set(r.pageSize);
-                    this.currentPage.set(r.page);
-                    this.first.set((r.page - 1) * r.pageSize);
-                    this.loading.set(false);
-                },
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
-                    this.loading.set(false);
-                }
-            });
-    }
 }
