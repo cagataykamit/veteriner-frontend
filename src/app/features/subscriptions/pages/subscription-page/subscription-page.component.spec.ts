@@ -79,6 +79,7 @@ describe('SubscriptionPageComponent', () => {
     const text = () => el().textContent ?? '';
     const buttons = () => Array.from(el().querySelectorAll('button')) as HTMLButtonElement[];
     const buttonLabels = () => buttons().map((b) => b.textContent?.trim() ?? '');
+
     const button = (label: string) => {
         const b = buttons().find((x) => x.textContent?.trim() === label);
 
@@ -88,6 +89,7 @@ describe('SubscriptionPageComponent', () => {
 
         return b;
     };
+
     const click = (label: string) => {
         button(label).click();
         fixture.detectChanges();
