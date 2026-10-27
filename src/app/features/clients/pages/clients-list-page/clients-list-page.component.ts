@@ -7,9 +7,8 @@ import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
-import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
-import type { TableLazyLoadEvent } from 'primeng/table';
+import { ListPageState } from '@/app/shared/list/list-page-state';
 import type { ClientListItemVm } from '@/app/entities/client/models/client-vm.model';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -86,7 +85,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                                 [lazy]="true"
                                 [first]="first()"
                                 [loading]="loading()"
-                                (onLazyLoad)="onTableLazyLoad($event)"
+                                (onLazyLoad)="list.onTableLazyLoad($event)"
                                 [tableStyle]="{ 'min-width': '50rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
@@ -160,7 +159,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                                 [rowsPerPageOptions]="rowsPerPageOptions"
-                                (onPageChange)="onMobilePageChange($event)"
+                                (onPageChange)="list.onMobilePageChange($event)"
                             />
                         </div>
                     }
@@ -177,18 +176,32 @@ export class ClientsListPageComponent implements OnInit {
 
     private readonly clientsService = inject(ClientsService);
 
-    readonly rowsPerPageOptions = [10, 20, 25, 50];
+    readonly list = new ListPageState<ClientListItemVm>({
+        fetch: (page, pageSize) => this.clientsService.getClients({ page, pageSize, search: this.activeSearch() || undefined }),
+        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}`,
+        persist: {
+            key: CLIENTS_LIST_STATE_KEY,
+            save: (): Omit<ClientsListState, 'page' | 'pageSize'> => ({ search: this.searchInput.trim() }),
+            restore: (state) => {
+                const parsed = state as Partial<ClientsListState>;
 
-    /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
-    readonly loading = signal(true);
+                this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
+                this.activeSearch.set(this.searchInput.trim());
+            }
+        },
+        onLoaded: () => this.initialLoad.set(false)
+    });
+
+    readonly rowsPerPageOptions = this.list.rowsPerPageOptions;
+    readonly loading = this.list.loading;
     readonly initialLoad = signal(true);
-    readonly error = signal<string | null>(null);
+    readonly error = this.list.error;
 
-    readonly rawItems = signal<ClientListItemVm[]>([]);
-    readonly totalItems = signal(0);
-    readonly pageSize = signal(10);
-    readonly first = signal(0);
-    readonly currentPage = signal(1);
+    readonly rawItems = this.list.items;
+    readonly totalItems = this.list.totalItems;
+    readonly pageSize = this.list.pageSize;
+    readonly first = this.list.first;
+    readonly currentPage = this.list.currentPage;
 
     readonly activeSearch = signal('');
     searchInput = '';
@@ -197,174 +210,34 @@ export class ClientsListPageComponent implements OnInit {
     readonly canCreateClient = this.auth.hasOperationClaim(CLIENTS_CREATE_CLAIM);
     readonly canUpdateClient = this.auth.hasOperationClaim(CLIENTS_UPDATE_CLAIM);
 
-    private suppressNextLazy = false;
-    private lastLoadKey = '';
-
     ngOnInit(): void {
-        const restored = this.restoreStateFromSessionStorage();
-
-        if (!restored) {
-            this.currentPage.set(1);
-            this.first.set(0);
+        if (!this.list.restore()) {
+            this.list.goToFirstPage();
         }
 
-        this.suppressNextLazy = true;
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch());
+        this.list.startInitialLoad();
     }
 
     applySearch(): void {
         this.activeSearch.set(this.searchInput.trim());
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.suppressNextLazy = true;
-        this.persistStateToSessionStorage(1, this.pageSize());
-        this.loadFromServer(1, this.pageSize(), this.activeSearch());
+        this.list.suppressNextTableLoad();
+        this.list.loadFirstPage();
     }
 
     resetFilters(): void {
         this.searchInput = '';
         this.activeSearch.set('');
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.suppressNextLazy = true;
-        this.clearStateFromSessionStorage();
-        this.loadFromServer(1, this.pageSize(), '');
+        this.list.suppressNextTableLoad();
+        this.list.resetToFirstPage();
     }
 
     reload(): void {
-        this.suppressNextLazy = true;
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), true);
-    }
-
-    onTableLazyLoad(event: TableLazyLoadEvent): void {
-        if (this.suppressNextLazy) {
-            this.suppressNextLazy = false;
-
-            return;
-        }
-
-        const rows = event.rows ?? this.pageSize();
-        const eventFirst = event.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows, this.activeSearch());
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch());
-    }
-
-    onMobilePageChange(state: PaginatorState): void {
-        const rows = state.rows ?? this.pageSize();
-        const eventFirst = state.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        this.suppressNextLazy = true;
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows, this.activeSearch());
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch());
-    }
-
-    private loadFromServer(page: number, pageSize: number, search: string, force = false): void {
-        const key = `${page}|${pageSize}|${search.trim()}`;
-
-        if (!force && key === this.lastLoadKey) {
-            return;
-        }
-
-        this.lastLoadKey = key;
-        this.loading.set(true);
-        this.error.set(null);
-        this.clientsService
-            .getClients({
-                page,
-                pageSize,
-                search: search || undefined
-            })
-            .subscribe({
-                next: (r) => {
-                    this.rawItems.set(r.items);
-                    this.totalItems.set(r.totalItems);
-                    this.pageSize.set(r.pageSize);
-                    this.currentPage.set(r.page);
-                    this.first.set((r.page - 1) * r.pageSize);
-                    this.persistStateToSessionStorage(r.page, r.pageSize);
-                    this.initialLoad.set(false);
-                    this.loading.set(false);
-                },
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
-                    this.loading.set(false);
-                }
-            });
+        this.list.suppressNextTableLoad();
+        this.list.reload();
     }
 
     isSearchActive(): boolean {
         return !!this.activeSearch().trim();
     }
 
-    private restoreStateFromSessionStorage(): boolean {
-        const raw = sessionStorage.getItem(CLIENTS_LIST_STATE_KEY);
-
-        if (!raw) {
-            return false;
-        }
-
-        try {
-            const parsed = JSON.parse(raw) as Partial<ClientsListState>;
-            const page = Number(parsed.page);
-            const pageSize = Number(parsed.pageSize);
-
-            if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
-                sessionStorage.removeItem(CLIENTS_LIST_STATE_KEY);
-
-                return false;
-            }
-
-            this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
-            this.activeSearch.set(this.searchInput.trim());
-            this.pageSize.set(pageSize);
-            this.currentPage.set(page);
-            this.first.set((page - 1) * pageSize);
-
-            return true;
-        } catch {
-            sessionStorage.removeItem(CLIENTS_LIST_STATE_KEY);
-
-            return false;
-        }
-    }
-
-    private persistStateToSessionStorage(page: number, pageSize: number): void {
-        const state: ClientsListState = {
-            search: this.searchInput.trim(),
-            page,
-            pageSize
-        };
-
-        sessionStorage.setItem(CLIENTS_LIST_STATE_KEY, JSON.stringify(state));
-    }
-
-    private clearStateFromSessionStorage(): void {
-        sessionStorage.removeItem(CLIENTS_LIST_STATE_KEY);
-    }
 }

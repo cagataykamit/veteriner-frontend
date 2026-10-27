@@ -8,10 +8,9 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
-import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
-import type { TableLazyLoadEvent } from 'primeng/table';
+import { ListPageState } from '@/app/shared/list/list-page-state';
 import { mapProductCategoryListItemVmToSelectOption } from '@/app/features/inventory/data/product-category.mapper';
 import type { ProductStockVm } from '@/app/entities/inventory/models/product-stock-vm.model';
 import { ProductCategoryService } from '@/app/features/inventory/services/product-category.service';
@@ -140,7 +139,7 @@ const PRODUCT_STOCK_CSV_HEADERS = ['Ürün', 'SKU', 'Kategori', 'Klinik', 'Kulla
                                 [totalRecords]="totalItems()"
                                 [lazy]="true"
                                 [first]="first()"
-                                (onLazyLoad)="onTableLazyLoad($event)"
+                                (onLazyLoad)="list.onTableLazyLoad($event)"
                                 [tableStyle]="{ 'min-width': '56rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
@@ -229,7 +228,7 @@ const PRODUCT_STOCK_CSV_HEADERS = ['Ürün', 'SKU', 'Kategori', 'Klinik', 'Kulla
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                                 [rowsPerPageOptions]="rowsPerPageOptions"
-                                (onPageChange)="onMobilePageChange($event)"
+                                (onPageChange)="list.onMobilePageChange($event)"
                             />
                         </div>
                     }
@@ -251,17 +250,49 @@ export class ProductStocksPageComponent implements OnInit {
     readonly canExportStocks = computed(() => this.auth.hasOperationClaim(PRODUCTS_READ_CLAIM));
     readonly canReceiveGoods = this.auth.hasOperationClaim(STOCK_MOVEMENTS_CREATE_CLAIM);
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
+    readonly list = new ListPageState<ProductStockVm>({
+        fetch: (page, pageSize) =>
+            this.stockService
+                .list({
+                    page,
+                    pageSize,
+                    search: this.activeSearch().trim() || undefined,
+                    isBelowMinimum: this.activeLowStock() === 'low' ? true : undefined,
+                    productCategoryId: this.activeCategoryId().trim() || undefined
+                }),
+        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}|${this.activeLowStock()}|${this.activeCategoryId().trim()}`,
+        errorMessage: (e) => e instanceof Error && e.message.trim() ? e.message.trim() : 'Stok bilgileri yüklenemedi.',
+        persist: {
+            key: PRODUCT_STOCKS_LIST_STATE_KEY,
+            save: (): Omit<StocksListState, 'page' | 'pageSize'> => ({
+                search: this.searchInput,
+                lowStockFilter: this.lowStockFilterInput,
+                productCategoryId: this.categoryFilterInput
+            }),
+            restore: (state) => {
+                const parsed = state as Partial<StocksListState & { clinicId?: string }>;
+
+                this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
+                this.lowStockFilterInput = typeof parsed.lowStockFilter === 'string' ? parsed.lowStockFilter : '';
+                this.categoryFilterInput = typeof parsed.productCategoryId === 'string' ? parsed.productCategoryId : '';
+                this.activeSearch.set(this.searchInput.trim());
+                this.activeLowStock.set(String(this.lowStockFilterInput ?? '').trim());
+                this.activeCategoryId.set(String(this.categoryFilterInput ?? '').trim());
+            }
+        }
+    });
+
+    readonly loading = this.list.loading;
+    readonly error = this.list.error;
     readonly exporting = signal(false);
     readonly exportError = signal<string | null>(null);
 
-    readonly rawItems = signal<ProductStockVm[]>([]);
-    readonly totalItems = signal(0);
-    readonly rowsPerPageOptions = [10, 20, 25, 50];
-    readonly pageSize = signal(10);
-    readonly first = signal(0);
-    readonly currentPage = signal(1);
+    readonly rawItems = this.list.items;
+    readonly totalItems = this.list.totalItems;
+    readonly rowsPerPageOptions = this.list.rowsPerPageOptions;
+    readonly pageSize = this.list.pageSize;
+    readonly first = this.list.first;
+    readonly currentPage = this.list.currentPage;
 
     readonly activeSearch = signal('');
     readonly activeLowStock = signal('');
@@ -280,15 +311,11 @@ export class ProductStocksPageComponent implements OnInit {
         { label: 'Sadece düşük stok', value: 'low' }
     ];
 
-    private suppressNextLazy = false;
-    private lastLoadKey = '';
-
     ngOnInit(): void {
-        const restored = this.restoreStateFromSessionStorage();
+        const restored = this.list.restore();
 
         if (!restored) {
-            this.currentPage.set(1);
-            this.first.set(0);
+            this.list.goToFirstPage();
         }
 
         if (this.route.snapshot.queryParamMap.get('isBelowMinimum') === 'true') {
@@ -307,8 +334,7 @@ export class ProductStocksPageComponent implements OnInit {
             });
         }
 
-        this.suppressNextLazy = true;
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeLowStock(), this.activeCategoryId(), true);
+        this.list.startInitialLoad();
     }
 
     /** Düşük stok kısayolu: mal kabulü bu ürün, klinik ve önerilen miktarla açar. */
@@ -355,10 +381,7 @@ export class ProductStocksPageComponent implements OnInit {
         this.activeSearch.set(this.searchInput.trim());
         this.activeLowStock.set(String(this.lowStockFilterInput ?? '').trim());
         this.activeCategoryId.set(String(this.categoryFilterInput ?? '').trim());
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.persistStateToSessionStorage(1, this.pageSize());
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeLowStock(), this.activeCategoryId());
+        this.list.loadFirstPage();
     }
 
     resetFilters(): void {
@@ -369,63 +392,12 @@ export class ProductStocksPageComponent implements OnInit {
         this.activeSearch.set('');
         this.activeLowStock.set('');
         this.activeCategoryId.set('');
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.clearStateFromSessionStorage();
-        this.loadFromServer(1, this.pageSize(), '', '', '');
+        this.list.resetToFirstPage();
     }
 
     reload(): void {
         this.exportError.set(null);
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeLowStock(), this.activeCategoryId(), true);
-    }
-
-    onTableLazyLoad(event: TableLazyLoadEvent): void {
-        if (this.suppressNextLazy) {
-            this.suppressNextLazy = false;
-
-            return;
-        }
-
-        const rows = event.rows ?? this.pageSize();
-        const eventFirst = event.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows, this.activeSearch(), this.activeLowStock(), this.activeCategoryId());
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeLowStock(), this.activeCategoryId());
-    }
-
-    onMobilePageChange(state: PaginatorState): void {
-        const rows = state.rows ?? this.pageSize();
-        const eventFirst = state.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        this.suppressNextLazy = true;
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows, this.activeSearch(), this.activeLowStock(), this.activeCategoryId());
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeLowStock(), this.activeCategoryId());
+        this.list.reload();
     }
 
     isSearchActive(): boolean {
@@ -438,91 +410,6 @@ export class ProductStocksPageComponent implements OnInit {
 
     isCategoryFilterApplied(): boolean {
         return !!this.activeCategoryId().trim();
-    }
-
-    private loadFromServer(page: number, pageSize: number, search: string, lowStockMode: string, categoryId: string, force = false): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${lowStockMode}|${categoryId.trim()}`;
-
-        if (!force && key === this.lastLoadKey) {
-            return;
-        }
-
-        this.lastLoadKey = key;
-        this.loading.set(true);
-        this.error.set(null);
-        this.stockService
-            .list({
-                page,
-                pageSize,
-                search: search.trim() || undefined,
-                isBelowMinimum: lowStockMode === 'low' ? true : undefined,
-                productCategoryId: categoryId.trim() || undefined
-            })
-            .subscribe({
-                next: (r) => {
-                    this.rawItems.set(r.items);
-                    this.totalItems.set(r.totalItems);
-                    this.pageSize.set(r.pageSize);
-                    this.currentPage.set(r.page);
-                    this.first.set((r.page - 1) * r.pageSize);
-                    this.persistStateToSessionStorage(r.page, r.pageSize);
-                    this.loading.set(false);
-                },
-                error: (e: unknown) => {
-                    const msg = e instanceof Error && e.message.trim() ? e.message.trim() : 'Stok bilgileri yüklenemedi.';
-
-                    this.error.set(msg);
-                    this.loading.set(false);
-                }
-            });
-    }
-
-    private restoreStateFromSessionStorage(): boolean {
-        const raw = sessionStorage.getItem(PRODUCT_STOCKS_LIST_STATE_KEY);
-
-        if (!raw) {
-            return false;
-        }
-
-        try {
-            const parsed = JSON.parse(raw) as Partial<StocksListState & { clinicId?: string }>;
-            const page = Number(parsed.page);
-            const pageSize = Number(parsed.pageSize);
-
-            if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
-                return false;
-            }
-
-            this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
-            this.lowStockFilterInput = typeof parsed.lowStockFilter === 'string' ? parsed.lowStockFilter : '';
-            this.categoryFilterInput = typeof parsed.productCategoryId === 'string' ? parsed.productCategoryId : '';
-            this.activeSearch.set(this.searchInput.trim());
-            this.activeLowStock.set(String(this.lowStockFilterInput ?? '').trim());
-            this.activeCategoryId.set(String(this.categoryFilterInput ?? '').trim());
-            this.currentPage.set(page);
-            this.pageSize.set(pageSize);
-            this.first.set((page - 1) * pageSize);
-
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    private persistStateToSessionStorage(page: number, pageSize: number): void {
-        const state: StocksListState = {
-            search: this.searchInput,
-            lowStockFilter: this.lowStockFilterInput,
-            productCategoryId: this.categoryFilterInput,
-            page,
-            pageSize
-        };
-
-        sessionStorage.setItem(PRODUCT_STOCKS_LIST_STATE_KEY, JSON.stringify(state));
-    }
-
-    private clearStateFromSessionStorage(): void {
-        sessionStorage.removeItem(PRODUCT_STOCKS_LIST_STATE_KEY);
     }
 
     exportCsv(): void {

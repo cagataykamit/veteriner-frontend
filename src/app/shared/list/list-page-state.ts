@@ -103,6 +103,11 @@ export class ListPageState<T> {
         this.first.set(0);
     }
 
+    /** Tabloyu yeniden kurabilen yüklemeler (boş sonuçtan dolu sonuca geçiş) öncesi: tablonun açılış olayı yutulur. */
+    suppressNextTableLoad(): void {
+        this.suppressNextLazy = true;
+    }
+
     onTableLazyLoad(event: TableLazyLoadEvent): void {
         if (this.suppressNextLazy) {
             this.suppressNextLazy = false;

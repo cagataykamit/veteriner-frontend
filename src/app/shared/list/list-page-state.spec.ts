@@ -159,4 +159,16 @@ describe('ListPageState', () => {
         expect(onLoaded).toHaveBeenCalledWith(result(1, 20));
         expect(create().rowsPerPageOptions).toEqual([10, 20, 25, 50]);
     });
+
+    it('suppressNextTableLoad sonraki tablo olayını yutar', () => {
+        const list = create();
+
+        list.startInitialLoad();
+        list.onTableLazyLoad({ first: 0, rows: 10 });
+        list.suppressNextTableLoad();
+        list.reload();
+        list.onTableLazyLoad({ first: 10, rows: 10 });
+
+        expect(fetch).toHaveBeenCalledTimes(2);
+    });
 });
