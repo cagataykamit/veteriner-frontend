@@ -5,7 +5,7 @@ import { resolveTenantIdFromJwt } from '@/app/core/auth/jwt-tenant.utils';
 import { SUBSCRIPTIONS_MANAGE_CLAIM, SUBSCRIPTIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TenantAccessService } from '@/app/core/tenant/tenant-access.service';
 import type { TenantAccessStateVm } from '@/app/core/tenant/models/tenant-access-state-vm.model';
-import type { SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
+import type { SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
 
 /**
  * Panel genelinde kiracı salt okunur bilgisi — `GET .../tenants/{id}/access-state`.

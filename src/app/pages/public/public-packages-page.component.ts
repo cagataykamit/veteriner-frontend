@@ -2,7 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { publicFaqsOf } from '@/app/features/public/utils/public-faq-content.utils';
-import { PRICING_NOT_AVAILABLE, PRICING_PLAN_DEFS, pricingTermsText } from '@/app/features/public/utils/pricing-plan.utils';
+import { PRICING_NOT_AVAILABLE, PRICING_PLAN_DEFS, pricingTermsText } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import {
     PUBLIC_PACKAGES_PAGE_META,
     publicFaqPageJsonLd,

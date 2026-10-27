@@ -25,13 +25,13 @@ import type {
     SubscriptionCheckoutSessionVm,
     SubscriptionPlanVm,
     SubscriptionSummaryVm
-} from '@/app/features/subscriptions/models/subscription-vm.model';
+} from '@/app/entities/subscription/models/subscription-vm.model';
 import { canChooseBillingPeriod, isSwitchToYearly, SUBSCRIPTION_BILLING_PERIOD_LABELS } from '@/app/features/subscriptions/utils/subscription-billing-period.utils';
-import { defByPlanKey, planPriceView } from '@/app/features/public/utils/pricing-plan.utils';
-import type { SubscriptionSummaryRequestOptions } from '@/app/features/subscriptions/services/subscriptions.service';
-import { SubscriptionsService } from '@/app/features/subscriptions/services/subscriptions.service';
+import { defByPlanKey, planPriceView } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import type { SubscriptionSummaryRequestOptions } from '@/app/entities/subscription/services/subscriptions.service';
+import { SubscriptionsService } from '@/app/entities/subscription/services/subscriptions.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { shouldOfferManualCheckoutFinalize } from '@/app/features/subscriptions/utils/subscription-checkout-provider.utils';
+import { shouldOfferManualCheckoutFinalize } from '@/app/entities/subscription/utils/subscription-checkout-provider.utils';
 import { hasSubscriptionCheckoutReturnQuery, parseSubscriptionCheckoutReturn, type ParsedSubscriptionCheckoutReturn } from '@/app/features/subscriptions/utils/subscription-checkout-return.utils';
 import {
     clearStoredCheckoutSessionId,
@@ -42,9 +42,9 @@ import {
     readStoredCheckoutSessionId,
     writeStoredCheckoutSessionId
 } from '@/app/features/subscriptions/utils/subscription-checkout-storage.utils';
-import { subscriptionCheckoutStatusLabel, subscriptionCheckoutStatusSeverity } from '@/app/features/subscriptions/utils/subscription-checkout-status.utils';
-import { subscriptionPlanLabel, subscriptionPlanLimitLabels, subscriptionPlanRank } from '@/app/features/subscriptions/utils/subscription-plan.utils';
-import { subscriptionStatusLabel, subscriptionStatusSeverity } from '@/app/features/subscriptions/utils/subscription-status.utils';
+import { subscriptionCheckoutStatusLabel, subscriptionCheckoutStatusSeverity } from '@/app/entities/subscription/utils/subscription-checkout-status.utils';
+import { subscriptionPlanLabel, subscriptionPlanLimitLabels, subscriptionPlanRank } from '@/app/entities/subscription/utils/subscription-plan.utils';
+import { subscriptionStatusLabel, subscriptionStatusSeverity } from '@/app/entities/subscription/utils/subscription-status.utils';
 import {
     expiredReadOnlyBannerMessage,
     isActiveTrialingSubscription,

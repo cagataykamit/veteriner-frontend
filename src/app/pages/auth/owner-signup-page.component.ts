@@ -16,7 +16,7 @@ import { mapPublicOwnerSignupFormToRequest } from '@/app/features/public/data/pu
 import { PublicOwnerSignupService } from '@/app/features/public/services/public-owner-signup.service';
 import { ExampleClinicSummaryComponent } from '@/app/entities/example-clinic/components/example-clinic-summary.component';
 import { publicOwnerSignupFailureMessage } from '@/app/features/public/utils/public-owner-signup-error.utils';
-import { resolveSignupPlan, defByApiCode, type PricingPlanDef } from '@/app/features/public/utils/pricing-plan.utils';
+import { resolveSignupPlan, defByApiCode, type PricingPlanDef } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import { AUTH_SIGNUP_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 import { PublicLegalLinksComponent } from '@/app/pages/public/components/public-legal-links.component';

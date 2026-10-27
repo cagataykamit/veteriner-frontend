@@ -1,4 +1,4 @@
-import type { PendingPlanChangeDto, SubscriptionCheckoutSessionDto, SubscriptionSummaryDto } from '@/app/features/subscriptions/models/subscription-api.model';
+import type { PendingPlanChangeDto, SubscriptionCheckoutSessionDto, SubscriptionSummaryDto } from '@/app/entities/subscription/models/subscription-api.model';
 import type {
     PendingPlanChangeStatusKey,
     PendingPlanChangeTypeKey,
@@ -7,10 +7,10 @@ import type {
     SubscriptionCheckoutSessionVm,
     SubscriptionPlanVm,
     SubscriptionSummaryVm
-} from '@/app/features/subscriptions/models/subscription-vm.model';
-import { parseSubscriptionCheckoutProvider } from '@/app/features/subscriptions/utils/subscription-checkout-provider.utils';
-import { parseSubscriptionCheckoutStatus } from '@/app/features/subscriptions/utils/subscription-checkout-status.utils';
-import { parseSubscriptionStatus } from '@/app/features/subscriptions/utils/subscription-status.utils';
+} from '@/app/entities/subscription/models/subscription-vm.model';
+import { parseSubscriptionCheckoutProvider } from '@/app/entities/subscription/utils/subscription-checkout-provider.utils';
+import { parseSubscriptionCheckoutStatus } from '@/app/entities/subscription/utils/subscription-checkout-status.utils';
+import { parseSubscriptionStatus } from '@/app/entities/subscription/utils/subscription-status.utils';
 
 const EM_DASH = '—';
 

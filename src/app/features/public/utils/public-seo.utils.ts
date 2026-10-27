@@ -2,7 +2,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { environment } from '@/environments/environment';
 import type { PublicFaqDef } from './public-faq-content.utils';
 import { PUBLIC_PATHS } from './public-navigation.utils';
-import { PRICING_PLAN_DEFS, PRICING_VAT_NOTE, pricingSummaryText, type PricingPlanDef } from './pricing-plan.utils';
+import { PRICING_PLAN_DEFS, PRICING_VAT_NOTE, pricingSummaryText, type PricingPlanDef } from '@/app/entities/subscription/utils/pricing-plan.utils';
 
 /** Canlı tanıtım sitesi kökü; canonical ve OG adresleri buradan türetilir (origin'den değil: staging kendini asıl saymaz). */
 export const PUBLIC_SITE_ORIGIN = 'https://www.vetinity.com';

@@ -1,4 +1,4 @@
-import type { SubscriptionBillingPeriod, SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
+import type { SubscriptionBillingPeriod, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
 import { isActivePaidSubscription, isActiveTrialingSubscription, isExpiredReadOnlySubscription } from '@/app/features/subscriptions/utils/subscription-access.utils';
 
 /** Ödeme dönemi etiketleri (BILL-001). */

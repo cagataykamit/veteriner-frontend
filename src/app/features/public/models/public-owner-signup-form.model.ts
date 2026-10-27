@@ -1,5 +1,5 @@
 import type { LegalDocumentVersionDto } from '@/app/features/legal-acceptance/models/legal-acceptance.model';
-import type { PricingPlanApiCode } from '@/app/features/public/utils/pricing-plan.utils';
+import type { PricingPlanApiCode } from '@/app/entities/subscription/utils/pricing-plan.utils';
 
 /** "Nasıl başlayalım?" seçimi (ADR-002): örnek klinik önerilen ve varsayılan. */
 export type OnboardingStartMode = 'example' | 'empty';

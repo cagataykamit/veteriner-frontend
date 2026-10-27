@@ -1,4 +1,4 @@
-import type { SubscriptionBillingPeriod } from '@/app/features/subscriptions/models/subscription-vm.model';
+import type { SubscriptionBillingPeriod } from '@/app/entities/subscription/models/subscription-vm.model';
 
 export interface SubscriptionPlanDto {
     code?: string | null;

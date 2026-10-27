@@ -8,7 +8,7 @@ import {
     mapPendingPlanChangeDtoToVm,
     mapSubscriptionCheckoutSessionDtoToVm,
     mapSubscriptionSummaryDtoToVm
-} from '@/app/features/subscriptions/data/subscription.mapper';
+} from '@/app/entities/subscription/data/subscription.mapper';
 import type {
     FinalizeSubscriptionCheckoutRequestDto,
     PendingPlanChangeDto,
@@ -16,8 +16,8 @@ import type {
     StartSubscriptionCheckoutRequestDto,
     SubscriptionCheckoutSessionDto,
     SubscriptionSummaryDto
-} from '@/app/features/subscriptions/models/subscription-api.model';
-import type { PendingPlanChangeVm, SubscriptionBillingPeriod, SubscriptionCheckoutSessionVm, SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
+} from '@/app/entities/subscription/models/subscription-api.model';
+import type { PendingPlanChangeVm, SubscriptionBillingPeriod, SubscriptionCheckoutSessionVm, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { resolveTenantIdFromJwt } from '@/app/core/auth/jwt-tenant.utils';
 

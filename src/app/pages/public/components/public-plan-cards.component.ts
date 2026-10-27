@@ -13,7 +13,7 @@ import {
     type PricingFeatureRowDef,
     type PricingPlanDef,
     type PricingPriceView
-} from '@/app/features/public/utils/pricing-plan.utils';
+} from '@/app/entities/subscription/utils/pricing-plan.utils';
 
 interface PlanCardVm {
     readonly def: PricingPlanDef;

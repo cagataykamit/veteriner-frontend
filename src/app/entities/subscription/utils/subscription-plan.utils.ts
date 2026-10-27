@@ -1,4 +1,4 @@
-import { defByPlanKey, formatPlanLimit, PRICING_PLAN_DEFS } from '@/app/features/public/utils/pricing-plan.utils';
+import { defByPlanKey, formatPlanLimit, PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
 
 /** Paket adları tek kaynaktan (ADR-035): `basic` → "Temel", `pro` → "Profesyonel", `premium` → "Kurumsal". */
 const PLAN_LABELS: Record<string, string> = Object.fromEntries(PRICING_PLAN_DEFS.map((d) => [d.slug, d.title]));

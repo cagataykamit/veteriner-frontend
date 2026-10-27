@@ -13,7 +13,7 @@ import { PUBLIC_HOME_AUDIENCE, PUBLIC_HOME_DAY_FLOW } from '@/app/features/publi
 import { PUBLIC_NAV_LINKS, PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { PUBLIC_REGISTERS } from '@/app/features/public/utils/public-registers-content.utils';
 import { PUBLIC_SCREENSHOTS } from '@/app/features/public/utils/public-screenshots.utils';
-import { formatPlanPrice, PRICING_FEATURE_ROWS, PRICING_NOT_AVAILABLE, PRICING_PLAN_DEFS } from '@/app/features/public/utils/pricing-plan.utils';
+import { formatPlanPrice, PRICING_FEATURE_ROWS, PRICING_NOT_AVAILABLE, PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import { PUBLIC_ABOUT_PAGE_META, PUBLIC_CONTACT_PAGE_META, PUBLIC_FAQ_PAGE_META, PUBLIC_FEATURES_PAGE_META, PUBLIC_HOME_PAGE_META, PUBLIC_MIGRATION_PAGE_META, PUBLIC_OG_IMAGE_PATH, PUBLIC_PACKAGES_PAGE_META, PUBLIC_REGISTERS_PAGE_META, PUBLIC_SITE_ORIGIN } from '@/app/features/public/utils/public-seo.utils';
 
 /** Tanıtım sayfaları: ortak iskelet, rota, başlık ve içerik sabitleri. */

@@ -10,7 +10,7 @@ import {
     type PricingFeatureCell,
     type PricingFeatureRowDef,
     type PricingPlanDef
-} from '@/app/features/public/utils/pricing-plan.utils';
+} from '@/app/entities/subscription/utils/pricing-plan.utils';
 
 interface ComparisonRowVm {
     readonly label: string;

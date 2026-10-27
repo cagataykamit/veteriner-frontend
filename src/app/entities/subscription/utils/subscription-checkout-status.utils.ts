@@ -1,5 +1,5 @@
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import type { SubscriptionCheckoutStatusKey } from '@/app/features/subscriptions/models/subscription-vm.model';
+import type { SubscriptionCheckoutStatusKey } from '@/app/entities/subscription/models/subscription-vm.model';
 
 interface SubscriptionCheckoutStatusDef {
     readonly key: SubscriptionCheckoutStatusKey;

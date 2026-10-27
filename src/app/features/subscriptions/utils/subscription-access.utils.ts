@@ -1,4 +1,4 @@
-import type { SubscriptionSummaryVm } from '@/app/features/subscriptions/models/subscription-vm.model';
+import type { SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
 
 /** Kiracı yazma erişimi kapalı — ödeme/yenileme CTA akışı gerekir. */
 export function isExpiredReadOnlySubscription(summary: SubscriptionSummaryVm): boolean {

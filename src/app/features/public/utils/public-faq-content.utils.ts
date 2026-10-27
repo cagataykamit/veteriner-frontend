@@ -4,7 +4,7 @@
  * (`pricing-plan.utils.ts`, ADR-035), burada sayı yazılmaz; hatırlatma yalnız e-posta, deneme sonu kuralı yazılmaz.
  */
 
-import { PRICING_PLAN_DEFS, PRICING_VAT_NOTE, pricingSummaryText, pricingTermsText, YEARLY_BILLED_MONTHS } from './pricing-plan.utils';
+import { PRICING_PLAN_DEFS, PRICING_VAT_NOTE, pricingSummaryText, pricingTermsText, YEARLY_BILLED_MONTHS } from '@/app/entities/subscription/utils/pricing-plan.utils';
 
 /** Çok klinik sunan paketlerin adları ("Kurumsal"). */
 const MULTI_CLINIC_PLANS = PRICING_PLAN_DEFS.filter((d) => d.maxClinics === 'coklu')

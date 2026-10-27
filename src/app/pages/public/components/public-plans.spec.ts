@@ -13,8 +13,8 @@ import {
     yearlyPriceTry,
     type PricingFeatureRowDef,
     type PricingPlanDef
-} from '@/app/features/public/utils/pricing-plan.utils';
-import { subscriptionPlanLabel, subscriptionPlanLimitLabels } from '@/app/features/subscriptions/utils/subscription-plan.utils';
+} from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { subscriptionPlanLabel, subscriptionPlanLimitLabels } from '@/app/entities/subscription/utils/subscription-plan.utils';
 import { PublicPlanCardsComponent } from './public-plan-cards.component';
 import { PublicPlanComparisonComponent } from './public-plan-comparison.component';
 

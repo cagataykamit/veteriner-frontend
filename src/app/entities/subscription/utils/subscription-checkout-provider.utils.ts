@@ -1,4 +1,4 @@
-import type { SubscriptionCheckoutProviderSlug, SubscriptionCheckoutSessionVm } from '@/app/features/subscriptions/models/subscription-vm.model';
+import type { SubscriptionCheckoutProviderSlug, SubscriptionCheckoutSessionVm } from '@/app/entities/subscription/models/subscription-vm.model';
 
 function normalizeName(value: string): string {
     return value

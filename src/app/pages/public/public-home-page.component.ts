@@ -21,7 +21,7 @@ import {
     PUBLIC_REGISTERS
 } from '@/app/features/public/utils/public-registers-content.utils';
 import { PUBLIC_HOME_PAGE_META, publicFaqPageJsonLd, removePublicJsonLd, setPublicJsonLd, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
-import { pricingTermsText } from '@/app/features/public/utils/pricing-plan.utils';
+import { pricingTermsText } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicPlanCardsComponent } from './components/public-plan-cards.component';
 import { PublicFaqListComponent } from './components/public-faq-list.component';
