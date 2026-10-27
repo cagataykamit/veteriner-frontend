@@ -5,7 +5,7 @@ import { Component, input, ChangeDetectionStrategy } from '@angular/core';
     selector: 'app-empty-state',
     standalone: true,
     imports: [CommonModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="flex flex-col items-center justify-center py-8 px-4 text-center">
             <i [class]="iconClass() + ' text-muted-color text-4xl mb-4'"></i>

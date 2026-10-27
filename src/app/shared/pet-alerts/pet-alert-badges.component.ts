@@ -10,7 +10,7 @@ import { NO_PET_ALERTS, petAlertDefinitions, petAlertsSummary, type PetAlertsVm 
     selector: 'app-pet-alert-badges',
     standalone: true,
     imports: [TagModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (definitions().length > 0) {
             <span class="inline-flex flex-wrap gap-1 align-middle" role="group" [attr.title]="summary()" [attr.aria-label]="'Hasta uyarıları: ' + summary()">

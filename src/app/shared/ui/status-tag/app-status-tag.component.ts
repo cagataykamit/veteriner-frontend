@@ -8,7 +8,7 @@ export type StatusTagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'dan
     selector: 'app-status-tag',
     standalone: true,
     imports: [CommonModule, TagModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: ` <p-tag [value]="label()" [severity]="severity()" /> `
 })
 export class AppStatusTagComponent {

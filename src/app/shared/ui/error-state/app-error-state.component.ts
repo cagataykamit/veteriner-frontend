@@ -6,7 +6,7 @@ import { ButtonModule } from 'primeng/button';
     selector: 'app-error-state',
     standalone: true,
     imports: [CommonModule, ButtonModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="flex flex-col items-center justify-center py-8 px-4 text-center">
             <i class="pi pi-exclamation-circle text-muted-color text-4xl mb-4"></i>

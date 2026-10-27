@@ -6,7 +6,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
     selector: 'app-loading-state',
     standalone: true,
     imports: [CommonModule, ProgressSpinnerModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="flex flex-col items-center justify-center py-8 gap-4">
             <p-progressspinner strokeWidth="4" [style]="{ width: '40px', height: '40px' }" />

@@ -8,7 +8,7 @@ import { categoryForUrl, listLabelForUrl, MENU_GROUPS } from '@/app/core/routing
     selector: 'app-page-header',
     standalone: true,
     imports: [CommonModule, RouterLink, TooltipModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="mb-6">
             @if (categoryLink() && categoryText()) {

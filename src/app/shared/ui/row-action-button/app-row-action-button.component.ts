@@ -43,7 +43,7 @@ export const ROW_ACTIONS: Readonly<Record<RowActionKind, { readonly icon: string
             </button>
         }
     `,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     styles: `
         :host {
             display: inline-flex;
