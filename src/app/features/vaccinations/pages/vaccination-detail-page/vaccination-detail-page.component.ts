@@ -18,8 +18,8 @@ import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ADMINISTRATIONS_READ_CLAIM, VACCINATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { canOpenVaccinationEdit } from '@/app/features/vaccinations/utils/vaccination-access.utils';
-import { HbsSectionComponent } from '@/app/features/hbs/components/hbs-section.component';
-import type { HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
+import { HbsSectionComponent } from '@/app/entities/hbs/components/hbs-section.component';
+import type { HbsEntryVm } from '@/app/entities/hbs/models/hbs.model';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({

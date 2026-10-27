@@ -5,7 +5,7 @@
  * Satırda doz, birim ve parti/seri no vardır (ADR-036, `HBS_ASSISTANT_API_CONTRACT.md` §2); reçete stok düşmez.
  */
 
-import type { HbsEntryDto, HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
+import type { HbsEntryDto, HbsEntryStatus } from '@/app/entities/hbs/models/hbs.model';
 
 export interface PrescriptionListItemDto {
     id: string;

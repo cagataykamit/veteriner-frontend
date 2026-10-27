@@ -2,7 +2,7 @@
  * Reçete — UI view modelleri.
  */
 
-import type { HbsEntryStatus, HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
+import type { HbsEntryStatus, HbsEntryVm } from '@/app/entities/hbs/models/hbs.model';
 
 export interface PrescriptionListItemVm {
     id: string;

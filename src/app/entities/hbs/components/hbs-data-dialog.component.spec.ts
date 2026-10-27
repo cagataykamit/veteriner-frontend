@@ -1,8 +1,8 @@
 import type { Mock, MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import type { HbsDataDto, HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
-import { HbsService } from '@/app/features/hbs/services/hbs.service';
+import type { HbsDataDto, HbsEntryVm } from '@/app/entities/hbs/models/hbs.model';
+import { HbsService } from '@/app/entities/hbs/services/hbs.service';
 import { HbsDataDialogComponent } from './hbs-data-dialog.component';
 
 /** ADR-036 Dilim 2: HBS verisi diyaloğu — alan alan kopyalama, tümünü kopyala, maskeli kimlik notu ve geri kayıt. */

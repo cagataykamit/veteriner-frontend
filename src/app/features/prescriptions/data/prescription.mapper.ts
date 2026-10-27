@@ -1,5 +1,5 @@
 import { HttpParams } from '@angular/common/http';
-import { mapHbsEntryDtoToVm, parseHbsStatus } from '@/app/features/hbs/utils/hbs-status.utils';
+import { mapHbsEntryDtoToVm, parseHbsStatus } from '@/app/entities/hbs/utils/hbs-status.utils';
 import type {
     PrescriptionDetailDto,
     PrescriptionItemDto,

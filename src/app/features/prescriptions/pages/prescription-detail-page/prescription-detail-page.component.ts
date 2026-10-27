@@ -11,8 +11,8 @@ import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { HbsSectionComponent } from '@/app/features/hbs/components/hbs-section.component';
-import type { HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
+import { HbsSectionComponent } from '@/app/entities/hbs/components/hbs-section.component';
+import type { HbsEntryVm } from '@/app/entities/hbs/models/hbs.model';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({

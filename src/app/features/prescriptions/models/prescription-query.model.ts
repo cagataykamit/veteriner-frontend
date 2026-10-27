@@ -3,7 +3,7 @@
  * HttpParams: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order` (+ `clinicId`, `PetId`, `hbsStatus`).
  */
 
-import type { HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
+import type { HbsEntryStatus } from '@/app/entities/hbs/models/hbs.model';
 
 export interface PrescriptionsListQuery {
     page?: number;

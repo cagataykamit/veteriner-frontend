@@ -1,4 +1,4 @@
-import type { HbsEntryDto, HbsEntryStatus, HbsEntryVm, HbsRecordKind } from '@/app/features/hbs/models/hbs.model';
+import type { HbsEntryDto, HbsEntryStatus, HbsEntryVm, HbsRecordKind } from '@/app/entities/hbs/models/hbs.model';
 
 /** Sözleşme sınırları (`HBS_ASSISTANT_API_CONTRACT.md` §1). */
 export const HBS_REFERENCE_NUMBER_MAX = 50;

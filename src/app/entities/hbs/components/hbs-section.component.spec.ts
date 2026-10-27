@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import type { HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
-import { HbsService } from '@/app/features/hbs/services/hbs.service';
+import type { HbsEntryVm } from '@/app/entities/hbs/models/hbs.model';
+import { HbsService } from '@/app/entities/hbs/services/hbs.service';
 import { HbsSectionComponent } from './hbs-section.component';
 
 /** Detaydaki HBS kartı: durum rozeti, dönen numara; takip dışı kayıtta (ör. planlı aşı) kart çizilmez. */

@@ -6,7 +6,7 @@ import {
     STOCK_MOVEMENTS_READ_CLAIM,
     VACCINATIONS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
-import { HBS_STATUS_SHORT_LABEL } from '@/app/features/hbs/utils/hbs-status.utils';
+import { HBS_STATUS_SHORT_LABEL } from '@/app/entities/hbs/utils/hbs-status.utils';
 import { dayText, type RegisterCellLine, type RegisterDefinition } from '@/app/features/reports/registers/data/register-definition';
 import type {
     ControlledSubstanceRegisterRowDto,

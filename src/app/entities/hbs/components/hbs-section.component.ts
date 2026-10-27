@@ -1,9 +1,9 @@
 import { Component, computed, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
-import { HbsDataDialogComponent } from '@/app/features/hbs/components/hbs-data-dialog.component';
-import { HbsStatusBadgeComponent } from '@/app/features/hbs/components/hbs-status-badge.component';
-import type { HbsEntryVm, HbsRecordKind } from '@/app/features/hbs/models/hbs.model';
-import { HBS_REFERENCE_LABEL } from '@/app/features/hbs/utils/hbs-status.utils';
+import { HbsDataDialogComponent } from '@/app/entities/hbs/components/hbs-data-dialog.component';
+import { HbsStatusBadgeComponent } from '@/app/entities/hbs/components/hbs-status-badge.component';
+import type { HbsEntryVm, HbsRecordKind } from '@/app/entities/hbs/models/hbs.model';
+import { HBS_REFERENCE_LABEL } from '@/app/entities/hbs/utils/hbs-status.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
 /**

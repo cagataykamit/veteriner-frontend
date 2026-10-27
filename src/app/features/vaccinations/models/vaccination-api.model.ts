@@ -3,7 +3,7 @@
  * Şema farklıysa bu dosya ve mapper ince ayarlanır.
  */
 
-import type { HbsEntryDto, HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
+import type { HbsEntryDto, HbsEntryStatus } from '@/app/entities/hbs/models/hbs.model';
 
 export interface VaccinationListItemDto {
     id: string;

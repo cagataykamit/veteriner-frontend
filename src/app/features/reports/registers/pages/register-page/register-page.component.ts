@@ -17,7 +17,7 @@ import { ReportFilterBarComponent } from '@/app/features/reports/shared/report-f
 import { ReportListState, type ReportExtraKey, type ReportListQueryBase } from '@/app/features/reports/shared/report-list-state';
 import { ReportResultsComponent } from '@/app/features/reports/shared/report-results.component';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
-import { HBS_STATUS_FILTER_OPTIONS, HBS_STATUS_LABEL } from '@/app/features/hbs/utils/hbs-status.utils';
+import { HBS_STATUS_FILTER_OPTIONS, HBS_STATUS_LABEL } from '@/app/entities/hbs/utils/hbs-status.utils';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';

@@ -1,6 +1,6 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
-import type { HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
-import { HBS_STATUS_LABEL, HBS_STATUS_SEVERITY } from '@/app/features/hbs/utils/hbs-status.utils';
+import type { HbsEntryStatus } from '@/app/entities/hbs/models/hbs.model';
+import { HBS_STATUS_LABEL, HBS_STATUS_SEVERITY } from '@/app/entities/hbs/utils/hbs-status.utils';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
 /** Satırda/detayda HBS durum rozeti; durum yoksa (takip dışı kayıt) hiçbir şey çizmez. */

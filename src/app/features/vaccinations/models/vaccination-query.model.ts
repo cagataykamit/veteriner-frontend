@@ -5,7 +5,7 @@
  * `Search`: VaccineName, Notes ve pet metin kümesi (hayvan adı, tür, ırk, müşteri metni; boşsa gönderilmez).
  */
 
-import type { HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
+import type { HbsEntryStatus } from '@/app/entities/hbs/models/hbs.model';
 
 export interface VaccinationsListQuery {
     page?: number;

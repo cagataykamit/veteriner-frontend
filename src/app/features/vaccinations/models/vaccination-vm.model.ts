@@ -1,5 +1,5 @@
 import type { AdministrationCreateResultVm } from '@/app/entities/administration/models/administration-vm.model';
-import type { HbsEntryStatus, HbsEntryVm } from '@/app/features/hbs/models/hbs.model';
+import type { HbsEntryStatus, HbsEntryVm } from '@/app/entities/hbs/models/hbs.model';
 
 /**
  * Aşı listesi — UI view model.

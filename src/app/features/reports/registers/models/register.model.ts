@@ -1,4 +1,4 @@
-import type { HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
+import type { HbsEntryStatus } from '@/app/entities/hbs/models/hbs.model';
 
 /** Kayıt defteri JSON yanıtı: `{ totalCount, items }`; sayfa bilgisi isteğin kendisinden eklenir. */
 export interface RegisterDto<T> {

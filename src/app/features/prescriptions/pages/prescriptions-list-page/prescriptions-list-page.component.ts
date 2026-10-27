@@ -26,9 +26,9 @@ import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.con
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { SelectModule } from 'primeng/select';
-import { HbsStatusBadgeComponent } from '@/app/features/hbs/components/hbs-status-badge.component';
-import type { HbsEntryStatus } from '@/app/features/hbs/models/hbs.model';
-import { HBS_STATUS_FILTER_OPTIONS, parseHbsStatus } from '@/app/features/hbs/utils/hbs-status.utils';
+import { HbsStatusBadgeComponent } from '@/app/entities/hbs/components/hbs-status-badge.component';
+import type { HbsEntryStatus } from '@/app/entities/hbs/models/hbs.model';
+import { HBS_STATUS_FILTER_OPTIONS, parseHbsStatus } from '@/app/entities/hbs/utils/hbs-status.utils';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 type PrescriptionsListState = {

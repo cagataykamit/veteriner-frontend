@@ -7,7 +7,7 @@ import { VACCINE_DEFINITIONS_READ_CLAIM, VACCINATIONS_UPDATE_CLAIM } from '@/app
 import type { VaccinationDetailVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { HbsService } from '@/app/features/hbs/services/hbs.service';
+import { HbsService } from '@/app/entities/hbs/services/hbs.service';
 import { VaccinationDetailPageComponent } from './vaccination-detail-page.component';
 
 const hbsMock = { getHbsData: () => of(null), updateHbsEntry: () => of(null) };

@@ -1,4 +1,4 @@
-import { HBS_STATUS_LABEL, mapHbsEntryDtoToVm, parseHbsStatus } from '@/app/features/hbs/utils/hbs-status.utils';
+import { HBS_STATUS_LABEL, mapHbsEntryDtoToVm, parseHbsStatus } from '@/app/entities/hbs/utils/hbs-status.utils';
 
 describe('hbs-status.utils', () => {
     it('yalnız bilinen durumlar okunur', () => {

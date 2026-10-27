@@ -2,8 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
-import type { HbsDataDto, HbsEntryDto, HbsEntryVm, HbsRecordKind, UpdateHbsEntryRequest } from '@/app/features/hbs/models/hbs.model';
-import { mapHbsEntryDtoToVm } from '@/app/features/hbs/utils/hbs-status.utils';
+import type { HbsDataDto, HbsEntryDto, HbsEntryVm, HbsRecordKind, UpdateHbsEntryRequest } from '@/app/entities/hbs/models/hbs.model';
+import { mapHbsEntryDtoToVm } from '@/app/entities/hbs/utils/hbs-status.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 const ENDPOINTS: Readonly<Record<HbsRecordKind, { hbsData: (id: string) => string; hbs: (id: string) => string }>> = {
