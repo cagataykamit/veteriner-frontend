@@ -79,6 +79,7 @@ describe('ProductDetailPageComponent', () => {
     const dialogText = () => dialog()?.textContent ?? '';
     const buttonsIn = (root: ParentNode) => Array.from(root.querySelectorAll('button, a')) as HTMLElement[];
     const labels = (root: ParentNode = el()) => buttonsIn(root).map((b) => b.textContent?.trim() ?? '');
+
     const findButton = (root: ParentNode, label: string) => {
         const b = buttonsIn(root).find((x) => x.textContent?.trim() === label);
 
@@ -88,10 +89,12 @@ describe('ProductDetailPageComponent', () => {
 
         return b as HTMLButtonElement;
     };
+
     const click = (root: ParentNode, label: string) => {
         findButton(root, label).click();
         fixture.detectChanges();
     };
+
     const type = (selector: string, value: string) => {
         const input = document.querySelector(selector) as HTMLInputElement;
 
@@ -99,12 +102,14 @@ describe('ProductDetailPageComponent', () => {
         input.dispatchEvent(new Event('input'));
         fixture.detectChanges();
     };
+
     const chooseOperation = (label: string) => {
         const option = Array.from(document.querySelectorAll('.p-dialog p-selectbutton p-togglebutton')).find((x) => x.textContent?.trim() === label) as HTMLElement;
 
         option.click();
         fixture.detectChanges();
     };
+
     const submitDialog = () => {
         (dialog()!.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
         fixture.detectChanges();
