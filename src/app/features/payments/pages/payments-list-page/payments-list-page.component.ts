@@ -12,9 +12,8 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { Paginator } from 'primeng/paginator';
-import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
-import type { TableLazyLoadEvent } from 'primeng/table';
+import { ListPageState } from '@/app/shared/list/list-page-state';
 import type { PaymentListItemVm } from '@/app/entities/payment/models/payment-vm.model';
 import { PaymentsService } from '@/app/entities/payment/services/payments.service';
 import { paymentMethodLabel } from '@/app/entities/payment/utils/payment-method.utils';
@@ -32,13 +31,12 @@ import { PAYMENTS_CORRECT_CLAIM, PAYMENTS_CREATE_CLAIM, PAYMENTS_UPDATE_CLAIM } 
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 
-type PaymentsListState = {
+/** Oturumda saklanan süzgeçler; sayfa konumunu `ListPageState` ekler. */
+type PaymentsListFilters = {
     search: string;
     method: string;
     fromDate: string;
     toDate: string;
-    page: number;
-    pageSize: number;
 };
 
 const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
@@ -128,7 +126,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                 [totalRecords]="totalItems()"
                                 [lazy]="true"
                                 [first]="first()"
-                                (onLazyLoad)="onTableLazyLoad($event)"
+                                (onLazyLoad)="list.onTableLazyLoad($event)"
                                 [tableStyle]="{ 'min-width': '56rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
@@ -234,7 +232,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                                 [rowsPerPageOptions]="rowsPerPageOptions"
-                                (onPageChange)="onMobilePageChange($event)"
+                                (onPageChange)="list.onMobilePageChange($event)"
                             />
                         </div>
                     }
@@ -268,16 +266,51 @@ export class PaymentsListPageComponent implements OnInit {
     readonly contextClientId = signal(readContextFilterParam(this.route, 'clientId'));
     readonly contextFilterLabel = computed(() => (this.contextPetId() ? 'Seçili hastanın kayıtları gösteriliyor' : 'Seçili müşterinin kayıtları gösteriliyor'));
 
-    /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
+    readonly list = new ListPageState<PaymentListItemVm>({
+        fetch: (page, pageSize) =>
+            this.paymentsService.getPayments({
+                petId: this.contextPetId() || undefined,
+                clientId: this.contextClientId() || undefined,
+                page,
+                pageSize,
+                search: this.activeSearch() || undefined,
+                paidFromDate: this.activeFromDate() || undefined,
+                paidToDate: this.activeToDate() || undefined,
+                method: this.methodFilter || undefined
+            }),
+        loadKey: (page, pageSize) =>
+            `${page}|${pageSize}|${this.activeSearch().trim()}|${this.activeFromDate().trim()}|${this.activeToDate().trim()}|${this.methodFilter.trim()}|${this.contextPetId()}|${this.contextClientId()}`,
+        persist: {
+            key: PAYMENTS_LIST_STATE_KEY,
+            save: (): PaymentsListFilters => ({
+                search: this.searchInput.trim(),
+                method: this.methodFilter.trim(),
+                fromDate: this.fromDateInput.trim(),
+                toDate: this.toDateInput.trim()
+            }),
+            restore: (state) => {
+                const parsed = state as Partial<PaymentsListFilters>;
 
-    readonly rawItems = signal<PaymentListItemVm[]>([]);
-    readonly totalItems = signal(0);
-    readonly rowsPerPageOptions = [10, 20, 25, 50];
-    readonly pageSize = signal(10);
-    readonly first = signal(0);
-    readonly currentPage = signal(1);
+                this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
+                this.methodFilter = typeof parsed.method === 'string' ? parsed.method : '';
+                this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
+                this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
+                this.activeSearch.set(this.searchInput.trim());
+                this.activeFromDate.set(this.fromDateInput.trim());
+                this.activeToDate.set(this.toDateInput.trim());
+            }
+        }
+    });
+
+    readonly loading = this.list.loading;
+    readonly error = this.list.error;
+
+    readonly rawItems = this.list.items;
+    readonly totalItems = this.list.totalItems;
+    readonly rowsPerPageOptions = this.list.rowsPerPageOptions;
+    readonly pageSize = this.list.pageSize;
+    readonly first = this.list.first;
+    readonly currentPage = this.list.currentPage;
 
     readonly activeSearch = signal('');
     readonly activeFromDate = signal('');
@@ -313,19 +346,13 @@ export class PaymentsListPageComponent implements OnInit {
     readonly formatPaidAtUtc = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly methodLabel = paymentMethodLabel;
     readonly hasActiveFilters = computed(() => !!this.activeSearch().trim() || !!this.methodFilter.trim() || !!this.activeFromDate().trim() || !!this.activeToDate().trim());
-    private suppressNextLazy = false;
-    private lastLoadKey = '';
 
     ngOnInit(): void {
-        const restored = this.restoreStateFromSessionStorage();
-
-        if (!restored) {
-            this.currentPage.set(1);
-            this.first.set(0);
+        if (!this.list.restore()) {
+            this.list.goToFirstPage();
         }
 
-        this.suppressNextLazy = true;
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
+        this.list.startInitialLoad();
     }
 
     applySearch(): void {
@@ -344,10 +371,7 @@ export class PaymentsListPageComponent implements OnInit {
         this.activeSearch.set(this.searchInput.trim());
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.persistStateToSessionStorage(1, this.pageSize());
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
+        this.list.loadFirstPage();
     }
 
     resetFilters(): void {
@@ -358,10 +382,7 @@ export class PaymentsListPageComponent implements OnInit {
         this.activeFromDate.set('');
         this.activeToDate.set('');
         this.methodFilter = '';
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.clearStateFromSessionStorage();
-        this.loadFromServer(1, this.pageSize(), '', '', '', '');
+        this.list.resetToFirstPage();
     }
 
     openVoid(row: PaymentListItemVm): void {
@@ -389,93 +410,7 @@ export class PaymentsListPageComponent implements OnInit {
     }
 
     reload(): void {
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter, true);
-    }
-
-    onTableLazyLoad(event: TableLazyLoadEvent): void {
-        if (this.suppressNextLazy) {
-            this.suppressNextLazy = false;
-
-            return;
-        }
-
-        const rows = event.rows ?? this.pageSize();
-        const eventFirst = event.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
-    }
-
-    onMobilePageChange(state: PaginatorState): void {
-        const rows = state.rows ?? this.pageSize();
-        const eventFirst = state.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        this.suppressNextLazy = true;
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate(), this.methodFilter);
-    }
-
-    private loadFromServer(page: number, pageSize: number, search: string, fromDate: string, toDate: string, method: string, force = false): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${method.trim()}|${this.contextPetId()}|${this.contextClientId()}`;
-
-        if (!force && key === this.lastLoadKey) {
-            return;
-        }
-
-        this.lastLoadKey = key;
-        this.loading.set(true);
-        this.error.set(null);
-        this.paymentsService
-            .getPayments({
-                petId: this.contextPetId() || undefined,
-                clientId: this.contextClientId() || undefined,
-                page,
-                pageSize,
-                search: search || undefined,
-                paidFromDate: fromDate || undefined,
-                paidToDate: toDate || undefined,
-                method: method || undefined
-            })
-            .subscribe({
-                next: (r) => {
-                    this.rawItems.set(r.items);
-                    this.totalItems.set(r.totalItems);
-                    this.pageSize.set(r.pageSize);
-                    this.currentPage.set(r.page);
-                    this.first.set((r.page - 1) * r.pageSize);
-                    this.persistStateToSessionStorage(r.page, r.pageSize);
-                    this.loading.set(false);
-                },
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
-                    this.loading.set(false);
-                }
-            });
+        this.list.reload();
     }
 
     isSearchActive(): boolean {
@@ -494,57 +429,4 @@ export class PaymentsListPageComponent implements OnInit {
         return !!this.activeToDate().trim();
     }
 
-    private restoreStateFromSessionStorage(): boolean {
-        const raw = sessionStorage.getItem(PAYMENTS_LIST_STATE_KEY);
-
-        if (!raw) {
-            return false;
-        }
-
-        try {
-            const parsed = JSON.parse(raw) as Partial<PaymentsListState>;
-            const page = Number(parsed.page);
-            const pageSize = Number(parsed.pageSize);
-
-            if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
-                sessionStorage.removeItem(PAYMENTS_LIST_STATE_KEY);
-
-                return false;
-            }
-
-            this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
-            this.methodFilter = typeof parsed.method === 'string' ? parsed.method : '';
-            this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
-            this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
-            this.activeSearch.set(this.searchInput.trim());
-            this.activeFromDate.set(this.fromDateInput.trim());
-            this.activeToDate.set(this.toDateInput.trim());
-            this.pageSize.set(pageSize);
-            this.currentPage.set(page);
-            this.first.set((page - 1) * pageSize);
-
-            return true;
-        } catch {
-            sessionStorage.removeItem(PAYMENTS_LIST_STATE_KEY);
-
-            return false;
-        }
-    }
-
-    private persistStateToSessionStorage(page: number, pageSize: number): void {
-        const state: PaymentsListState = {
-            search: this.searchInput.trim(),
-            method: this.methodFilter.trim(),
-            fromDate: this.fromDateInput.trim(),
-            toDate: this.toDateInput.trim(),
-            page,
-            pageSize
-        };
-
-        sessionStorage.setItem(PAYMENTS_LIST_STATE_KEY, JSON.stringify(state));
-    }
-
-    private clearStateFromSessionStorage(): void {
-        sessionStorage.removeItem(PAYMENTS_LIST_STATE_KEY);
-    }
 }

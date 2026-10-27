@@ -11,9 +11,8 @@ import { CLEAR_CONTEXT_FILTER_QUERY, readContextFilterParam } from '@/app/shared
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
-import type { PaginatorState } from 'primeng/types/paginator';
 import { TableModule } from 'primeng/table';
-import type { TableLazyLoadEvent } from 'primeng/table';
+import { ListPageState } from '@/app/shared/list/list-page-state';
 import type { PrescriptionListItemVm } from '@/app/entities/prescription/models/prescription-vm.model';
 import { PrescriptionsService } from '@/app/entities/prescription/services/prescriptions.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -124,7 +123,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                 [totalRecords]="totalItems()"
                                 [lazy]="true"
                                 [first]="first()"
-                                (onLazyLoad)="onTableLazyLoad($event)"
+                                (onLazyLoad)="list.onTableLazyLoad($event)"
                                 [tableStyle]="{ 'min-width': '60rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
@@ -228,7 +227,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                                 [rowsPerPageOptions]="rowsPerPageOptions"
-                                (onPageChange)="onMobilePageChange($event)"
+                                (onPageChange)="list.onMobilePageChange($event)"
                             />
                         </div>
                     }
@@ -250,16 +249,51 @@ export class PrescriptionsListPageComponent implements OnInit {
 
     readonly contextPetId = signal(readContextFilterParam(this.route, 'petId'));
 
-    /** İlk yüklemede boş tablo flaşını önlemek için true başlar. */
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
+    readonly list = new ListPageState<PrescriptionListItemVm>({
+        fetch: (page, pageSize) =>
+            this.prescriptionsService
+                .getPrescriptions({
+                    petId: this.contextPetId() || undefined,
+                    page,
+                    pageSize,
+                    search: this.activeSearch() || undefined,
+                    fromDate: this.activeFromDate() || undefined,
+                    toDate: this.activeToDate() || undefined,
+                    hbsStatus: this.activeHbsStatus() ?? undefined
+                }),
+        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}|${this.activeFromDate().trim()}|${this.activeToDate().trim()}|${this.contextPetId()}|${this.activeHbsStatus() ?? ''}`,
+        persist: {
+            key: PRESCRIPTIONS_LIST_STATE_KEY,
+            save: (): Omit<PrescriptionsListState, 'page' | 'pageSize'> => ({
+                search: this.searchInput.trim(),
+                fromDate: this.fromDateInput.trim(),
+                toDate: this.toDateInput.trim(),
+                hbsStatus: this.activeHbsStatus() ?? undefined
+            }),
+            restore: (state) => {
+                const parsed = state as Partial<PrescriptionsListState>;
 
-    readonly rawItems = signal<PrescriptionListItemVm[]>([]);
-    readonly totalItems = signal(0);
-    readonly rowsPerPageOptions = [10, 20, 25, 50];
-    readonly pageSize = signal(10);
-    readonly first = signal(0);
-    readonly currentPage = signal(1);
+                this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
+                this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
+                this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
+                this.hbsStatusInput = parseHbsStatus(parsed.hbsStatus);
+                this.activeSearch.set(this.searchInput.trim());
+                this.activeFromDate.set(this.fromDateInput.trim());
+                this.activeToDate.set(this.toDateInput.trim());
+                this.activeHbsStatus.set(this.hbsStatusInput);
+            }
+        }
+    });
+
+    readonly loading = this.list.loading;
+    readonly error = this.list.error;
+
+    readonly rawItems = this.list.items;
+    readonly totalItems = this.list.totalItems;
+    readonly rowsPerPageOptions = this.list.rowsPerPageOptions;
+    readonly pageSize = this.list.pageSize;
+    readonly first = this.list.first;
+    readonly currentPage = this.list.currentPage;
 
     readonly activeSearch = signal('');
     readonly activeFromDate = signal('');
@@ -274,15 +308,11 @@ export class PrescriptionsListPageComponent implements OnInit {
     hbsStatusInput: HbsEntryStatus | null = null;
     readonly displayedRows = computed(() => this.rawItems());
 
-    private suppressNextLazy = false;
-    private lastLoadKey = '';
-
     ngOnInit(): void {
-        const restored = this.restoreStateFromSessionStorage();
+        const restored = this.list.restore();
 
         if (!restored) {
-            this.currentPage.set(1);
-            this.first.set(0);
+            this.list.goToFirstPage();
         }
 
         // Bugün "HBS'e girilmedi" bağlantısı: `?hbsStatus=NotEntered` saklı süzgeci ezer.
@@ -291,12 +321,10 @@ export class PrescriptionsListPageComponent implements OnInit {
         if (hbsFromLink) {
             this.hbsStatusInput = hbsFromLink;
             this.activeHbsStatus.set(hbsFromLink);
-            this.currentPage.set(1);
-            this.first.set(0);
+            this.list.goToFirstPage();
         }
 
-        this.suppressNextLazy = true;
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate());
+        this.list.startInitialLoad();
     }
 
     applyFilters(): void {
@@ -316,10 +344,7 @@ export class PrescriptionsListPageComponent implements OnInit {
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
         this.activeHbsStatus.set(parseHbsStatus(this.hbsStatusInput));
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.persistStateToSessionStorage(1, this.pageSize());
-        this.loadFromServer(1, this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate());
+        this.list.loadFirstPage();
     }
 
     resetFilters(): void {
@@ -331,107 +356,18 @@ export class PrescriptionsListPageComponent implements OnInit {
         this.activeFromDate.set('');
         this.activeToDate.set('');
         this.activeHbsStatus.set(null);
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.clearStateFromSessionStorage();
-        this.loadFromServer(1, this.pageSize(), '', '', '');
+        this.list.resetToFirstPage();
     }
 
     clearContextFilter(): void {
         this.contextPetId.set('');
         void this.router.navigate([], { queryParams: CLEAR_CONTEXT_FILTER_QUERY, queryParamsHandling: 'merge', replaceUrl: true });
-        this.currentPage.set(1);
-        this.first.set(0);
+        this.list.goToFirstPage();
         this.reload();
     }
 
     reload(): void {
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeSearch(), this.activeFromDate(), this.activeToDate(), true);
-    }
-
-    onTableLazyLoad(event: TableLazyLoadEvent): void {
-        if (this.suppressNextLazy) {
-            this.suppressNextLazy = false;
-
-            return;
-        }
-
-        const rows = event.rows ?? this.pageSize();
-        const eventFirst = event.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
-    }
-
-    onMobilePageChange(state: PaginatorState): void {
-        const rows = state.rows ?? this.pageSize();
-        const eventFirst = state.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        this.suppressNextLazy = true;
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.persistStateToSessionStorage(1, rows);
-            this.loadFromServer(1, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeSearch(), this.activeFromDate(), this.activeToDate());
-    }
-
-    private loadFromServer(page: number, pageSize: number, search: string, fromDate: string, toDate: string, force = false): void {
-        const key = `${page}|${pageSize}|${search.trim()}|${fromDate.trim()}|${toDate.trim()}|${this.contextPetId()}|${this.activeHbsStatus() ?? ''}`;
-
-        if (!force && key === this.lastLoadKey) {
-            return;
-        }
-
-        this.lastLoadKey = key;
-        this.loading.set(true);
-        this.error.set(null);
-        this.prescriptionsService
-            .getPrescriptions({
-                petId: this.contextPetId() || undefined,
-                page,
-                pageSize,
-                search: search || undefined,
-                fromDate: fromDate || undefined,
-                toDate: toDate || undefined,
-                hbsStatus: this.activeHbsStatus() ?? undefined
-            })
-            .subscribe({
-                next: (r) => {
-                    this.rawItems.set(r.items);
-                    this.totalItems.set(r.totalItems);
-                    this.pageSize.set(r.pageSize);
-                    this.currentPage.set(r.page);
-                    this.first.set((r.page - 1) * r.pageSize);
-                    this.persistStateToSessionStorage(r.page, r.pageSize);
-                    this.loading.set(false);
-                },
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
-                    this.loading.set(false);
-                }
-            });
+        this.list.reload();
     }
 
     isSearchActive(): boolean {
@@ -446,58 +382,4 @@ export class PrescriptionsListPageComponent implements OnInit {
         return !!this.activeToDate().trim();
     }
 
-    private restoreStateFromSessionStorage(): boolean {
-        const raw = sessionStorage.getItem(PRESCRIPTIONS_LIST_STATE_KEY);
-
-        if (!raw) {
-            return false;
-        }
-
-        try {
-            const parsed = JSON.parse(raw) as Partial<PrescriptionsListState>;
-            const page = Number(parsed.page);
-            const pageSize = Number(parsed.pageSize);
-
-            if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
-                sessionStorage.removeItem(PRESCRIPTIONS_LIST_STATE_KEY);
-
-                return false;
-            }
-
-            this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
-            this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
-            this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
-            this.hbsStatusInput = parseHbsStatus(parsed.hbsStatus);
-            this.activeSearch.set(this.searchInput.trim());
-            this.activeFromDate.set(this.fromDateInput.trim());
-            this.activeToDate.set(this.toDateInput.trim());
-            this.activeHbsStatus.set(this.hbsStatusInput);
-            this.pageSize.set(pageSize);
-            this.currentPage.set(page);
-            this.first.set((page - 1) * pageSize);
-
-            return true;
-        } catch {
-            sessionStorage.removeItem(PRESCRIPTIONS_LIST_STATE_KEY);
-
-            return false;
-        }
-    }
-
-    private persistStateToSessionStorage(page: number, pageSize: number): void {
-        const state: PrescriptionsListState = {
-            search: this.searchInput.trim(),
-            fromDate: this.fromDateInput.trim(),
-            toDate: this.toDateInput.trim(),
-            hbsStatus: this.activeHbsStatus() ?? undefined,
-            page,
-            pageSize
-        };
-
-        sessionStorage.setItem(PRESCRIPTIONS_LIST_STATE_KEY, JSON.stringify(state));
-    }
-
-    private clearStateFromSessionStorage(): void {
-        sessionStorage.removeItem(PRESCRIPTIONS_LIST_STATE_KEY);
-    }
 }
