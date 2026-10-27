@@ -3,8 +3,8 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { HOSPITALIZATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import type { HospitalizationListItemVm } from '@/app/features/hospitalizations/models/hospitalization-vm.model';
-import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';
+import type { HospitalizationListItemVm } from '@/app/entities/hospitalization/models/hospitalization-vm.model';
+import { HospitalizationsService } from '@/app/entities/hospitalization/services/hospitalizations.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { isRightAfterDetail, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import { HospitalizationsListPageComponent } from './hospitalizations-list-page.component';

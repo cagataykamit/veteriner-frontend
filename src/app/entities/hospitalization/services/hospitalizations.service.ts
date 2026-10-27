@@ -12,23 +12,23 @@ import {
     mapHospitalizationWriteResultDto,
     mapPagedHospitalizationsToVm,
     hospitalizationsQueryToHttpParams
-} from '@/app/features/hospitalizations/data/hospitalization.mapper';
+} from '@/app/entities/hospitalization/data/hospitalization.mapper';
 import type {
     HospitalizationDetailDto,
     HospitalizationListItemDtoPagedResult,
     HospitalizationWriteResultDto
-} from '@/app/features/hospitalizations/models/hospitalization-api.model';
+} from '@/app/entities/hospitalization/models/hospitalization-api.model';
 import type {
     CreateHospitalizationRequest,
     DischargeHospitalizationRequest,
     HospitalizationWriteResult
-} from '@/app/features/hospitalizations/models/hospitalization-create.model';
-import type { HospitalizationsListQuery } from '@/app/features/hospitalizations/models/hospitalization-query.model';
+} from '@/app/entities/hospitalization/models/hospitalization-create.model';
+import type { HospitalizationsListQuery } from '@/app/entities/hospitalization/models/hospitalization-query.model';
 import type {
     HospitalizationDetailVm,
     HospitalizationEditVm,
     HospitalizationListItemVm
-} from '@/app/features/hospitalizations/models/hospitalization-vm.model';
+} from '@/app/entities/hospitalization/models/hospitalization-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface HospitalizationsPagedVm {

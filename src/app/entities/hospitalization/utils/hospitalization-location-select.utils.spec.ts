@@ -7,7 +7,7 @@ import {
     hospitalizationWardIdForRoom,
     hospitalizationWardOptions,
     roomRequiredWhenWardSelectedValidator
-} from '@/app/features/hospitalizations/utils/hospitalization-location-select.utils';
+} from '@/app/entities/hospitalization/utils/hospitalization-location-select.utils';
 
 const wards: HospitalizationWardVm[] = [
     {

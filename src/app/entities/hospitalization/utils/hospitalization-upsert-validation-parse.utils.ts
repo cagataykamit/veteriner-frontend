@@ -8,7 +8,7 @@ import {
 import {
     HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE,
     isHospitalizationDateTooFarPastBackendMessage
-} from '@/app/features/hospitalizations/utils/hospitalization-date-validation.utils';
+} from '@/app/entities/hospitalization/utils/hospitalization-date-validation.utils';
 
 const SUMMARY_FIELD_ERRORS = 'Lütfen hatalı alanları düzeltin.';
 const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';

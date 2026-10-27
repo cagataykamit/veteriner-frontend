@@ -6,18 +6,18 @@ import type {
     HospitalizationListItemDtoPagedResult,
     HospitalizationWriteRequestDto,
     HospitalizationWriteResultDto
-} from '@/app/features/hospitalizations/models/hospitalization-api.model';
+} from '@/app/entities/hospitalization/models/hospitalization-api.model';
 import type {
     CreateHospitalizationRequest,
     DischargeHospitalizationRequest,
     HospitalizationWriteResult
-} from '@/app/features/hospitalizations/models/hospitalization-create.model';
-import type { HospitalizationsListQuery } from '@/app/features/hospitalizations/models/hospitalization-query.model';
+} from '@/app/entities/hospitalization/models/hospitalization-create.model';
+import type { HospitalizationsListQuery } from '@/app/entities/hospitalization/models/hospitalization-query.model';
 import type {
     HospitalizationDetailVm,
     HospitalizationEditVm,
     HospitalizationListItemVm
-} from '@/app/features/hospitalizations/models/hospitalization-vm.model';
+} from '@/app/entities/hospitalization/models/hospitalization-vm.model';
 import { dateOnlyInputToIstanbulEndUtcIso, dateOnlyInputToIstanbulStartUtcIso } from '@/app/shared/utils/date.utils';
 
 const EM = '—';

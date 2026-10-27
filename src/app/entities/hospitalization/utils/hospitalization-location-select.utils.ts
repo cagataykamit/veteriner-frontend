@@ -1,6 +1,6 @@
 import type { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import type { HospitalizationWardVm } from '@/app/entities/hospitalization-ward/models/hospitalization-ward-vm.model';
-import type { HospitalizationUpsertFormAdapterInput } from '@/app/features/hospitalizations/data/hospitalization.mapper';
+import type { HospitalizationUpsertFormAdapterInput } from '@/app/entities/hospitalization/data/hospitalization.mapper';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 
 /** Bölüm seçicisinin ilk seçeneği: konum atanmaz (düzenlemede mevcut oda bağı kaldırılır). */

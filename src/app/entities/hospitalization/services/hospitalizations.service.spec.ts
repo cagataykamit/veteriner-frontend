@@ -3,8 +3,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { CreateHospitalizationRequest } from '@/app/features/hospitalizations/models/hospitalization-create.model';
-import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';
+import type { CreateHospitalizationRequest } from '@/app/entities/hospitalization/models/hospitalization-create.model';
+import { HospitalizationsService } from '@/app/entities/hospitalization/services/hospitalizations.service';
 
 const URL = 'http://api.test/api/v1/hospitalizations/h1';
 

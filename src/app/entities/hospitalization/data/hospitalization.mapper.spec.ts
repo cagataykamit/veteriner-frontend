@@ -5,7 +5,7 @@ import {
     mapHospitalizationDetailDtoToEditVm,
     mapHospitalizationListItemDtoToVm,
     mapHospitalizationUpsertFormToCreateRequest
-} from '@/app/features/hospitalizations/data/hospitalization.mapper';
+} from '@/app/entities/hospitalization/data/hospitalization.mapper';
 
 describe('hospitalization mapper — konum (HOSP-002)', () => {
     const base = { id: 'h1', petName: 'Pamuk', reason: 'Gözlem', admittedAtUtc: '2026-10-10T07:00:00Z' };

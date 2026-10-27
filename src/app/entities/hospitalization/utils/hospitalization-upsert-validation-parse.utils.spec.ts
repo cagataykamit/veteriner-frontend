@@ -4,7 +4,7 @@ import {
     HOSPITALIZATION_ROOM_PROBLEM_MESSAGES,
     parseHospitalizationDischargeHttpError,
     parseHospitalizationUpsertHttpError
-} from '@/app/features/hospitalizations/utils/hospitalization-upsert-validation-parse.utils';
+} from '@/app/entities/hospitalization/utils/hospitalization-upsert-validation-parse.utils';
 
 function problem(status: number, code: string): HttpErrorResponse {
     return new HttpErrorResponse({ status, error: { extensions: { code } } });

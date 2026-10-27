@@ -15,11 +15,11 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
-import { mapHospitalizationUpsertFormToCreateRequest } from '@/app/features/hospitalizations/data/hospitalization.mapper';
-import type { HospitalizationEditVm } from '@/app/features/hospitalizations/models/hospitalization-vm.model';
-import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';
-import { type HospitalizationUpsertFieldErrors, type HospitalizationUpsertFormFieldKey, parseHospitalizationUpsertHttpError } from '@/app/features/hospitalizations/utils/hospitalization-upsert-validation-parse.utils';
-import { hospitalizationExaminationOption, hospitalizationVisitOptions, type HospitalizationRelationOption } from '@/app/features/hospitalizations/utils/hospitalization-relation-select.utils';
+import { mapHospitalizationUpsertFormToCreateRequest } from '@/app/entities/hospitalization/data/hospitalization.mapper';
+import type { HospitalizationEditVm } from '@/app/entities/hospitalization/models/hospitalization-vm.model';
+import { HospitalizationsService } from '@/app/entities/hospitalization/services/hospitalizations.service';
+import { type HospitalizationUpsertFieldErrors, type HospitalizationUpsertFormFieldKey, parseHospitalizationUpsertHttpError } from '@/app/entities/hospitalization/utils/hospitalization-upsert-validation-parse.utils';
+import { hospitalizationExaminationOption, hospitalizationVisitOptions, type HospitalizationRelationOption } from '@/app/entities/hospitalization/utils/hospitalization-relation-select.utils';
 import type { HospitalizationWardVm } from '@/app/entities/hospitalization-ward/models/hospitalization-ward-vm.model';
 import { HospitalizationWardsService } from '@/app/entities/hospitalization-ward/services/hospitalization-wards.service';
 import {
@@ -29,7 +29,7 @@ import {
     hospitalizationWardIdForRoom,
     hospitalizationWardOptions,
     roomRequiredWhenWardSelectedValidator
-} from '@/app/features/hospitalizations/utils/hospitalization-location-select.utils';
+} from '@/app/entities/hospitalization/utils/hospitalization-location-select.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { examinationListItemFromDetail } from '@/app/entities/prescription/utils/prescription-relation-select.utils';
 import type { TodayItemVm } from '@/app/entities/visit/models/visit-vm.model';
@@ -51,7 +51,7 @@ import {
     hospitalizationDateTimeLocalMinAllowed,
     hospitalizationPlannedDischargeMin,
     plannedDischargeNotBeforeAdmissionValidator
-} from '@/app/features/hospitalizations/utils/hospitalization-date-validation.utils';
+} from '@/app/entities/hospitalization/utils/hospitalization-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 @Component({

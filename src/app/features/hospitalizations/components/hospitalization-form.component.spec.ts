@@ -11,7 +11,7 @@ import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import type { HospitalizationWardVm } from '@/app/entities/hospitalization-ward/models/hospitalization-ward-vm.model';
 import { HospitalizationWardsService } from '@/app/entities/hospitalization-ward/services/hospitalization-wards.service';
-import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';
+import { HospitalizationsService } from '@/app/entities/hospitalization/services/hospitalizations.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
