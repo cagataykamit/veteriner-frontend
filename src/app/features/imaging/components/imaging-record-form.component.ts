@@ -6,7 +6,7 @@ import { convertToParamMap, type ParamMap, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import type { ImagingModality } from '@/app/features/imaging/models/imaging.model';
 import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-records.service';
 import { IMAGING_MODALITY_OPTIONS } from '@/app/features/imaging/utils/imaging.utils';

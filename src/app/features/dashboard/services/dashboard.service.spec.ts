@@ -4,7 +4,7 @@ import { of } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { DashboardService } from '@/app/features/dashboard/services/dashboard.service';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { upcomingVaccinationsFilters, vaccinationsListLinkQuery } from '@/app/features/vaccinations/utils/vaccinations-list-link.utils';

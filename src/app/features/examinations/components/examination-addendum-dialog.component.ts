@@ -2,8 +2,8 @@ import { Component, effect, inject, input, model, output, signal, untracked, Cha
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import type { ExaminationAddendumVm } from '@/app/features/examinations/models/examination-vm.model';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import type { ExaminationAddendumVm } from '@/app/entities/examination/models/examination-vm.model';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 

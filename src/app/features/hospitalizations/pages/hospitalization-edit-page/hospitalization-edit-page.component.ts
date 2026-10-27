@@ -14,7 +14,7 @@ import { firstValueFrom } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { mapHospitalizationUpsertFormToCreateRequest } from '@/app/features/hospitalizations/data/hospitalization.mapper';
 import type { HospitalizationEditVm } from '@/app/features/hospitalizations/models/hospitalization-vm.model';
 import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';

@@ -3,7 +3,7 @@ import type { LabResultStatus } from '@/app/entities/lab-result/models/lab-resul
  * Muayene — UI view modelleri.
  */
 
-import type { ExaminationStatusDto } from '@/app/features/examinations/models/examination-api.model';
+import type { ExaminationStatusDto } from '@/app/entities/examination/models/examination-api.model';
 
 /** Eski/eksik değer `Draft` sayılır (kilit kararı her zaman backend'dedir). */
 export type ExaminationStatus = ExaminationStatusDto;

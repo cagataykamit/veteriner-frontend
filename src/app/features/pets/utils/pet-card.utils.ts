@@ -6,7 +6,7 @@ import {
 } from '@/app/core/auth/operation-claims.constants';
 import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
-import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import type { PetOpenItemsVm, PetOpenVaccinationVm } from '@/app/features/pets/models/pet-open-items-vm.model';
 import type { PetSummarySectionVm } from '@/app/features/pets/models/pet-summary-vm.model';
 import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/features/pets/models/pet-vm.model';

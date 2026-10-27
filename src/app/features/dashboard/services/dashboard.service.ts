@@ -28,13 +28,13 @@ import type {
 } from '@/app/features/dashboard/models/dashboard-operational-alerts.model';
 import type { DashboardSummaryDto } from '@/app/features/dashboard/models/dashboard-summary.model';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
 import { upcomingVaccinationsFilters } from '@/app/features/vaccinations/utils/vaccinations-list-link.utils';
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
-import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 

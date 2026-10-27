@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import { mapPetSummaryDtoToVm } from '@/app/features/pets/data/pet-summary.mapper';
 import type { PetSummaryDto } from '@/app/features/pets/models/pet-summary-api.model';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';

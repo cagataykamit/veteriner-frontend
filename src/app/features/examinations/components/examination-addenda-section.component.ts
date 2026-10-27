@@ -1,8 +1,8 @@
 import { Component, inject, input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { ExaminationAddendumDialogComponent } from '@/app/features/examinations/components/examination-addendum-dialog.component';
-import type { ExaminationAddendumVm } from '@/app/features/examinations/models/examination-vm.model';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import type { ExaminationAddendumVm } from '@/app/entities/examination/models/examination-vm.model';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';

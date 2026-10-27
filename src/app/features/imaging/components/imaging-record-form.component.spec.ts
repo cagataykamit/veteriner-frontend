@@ -6,7 +6,7 @@ import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { ImagingRecordsService } from '@/app/features/imaging/services/imaging-records.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientSearchComponent } from '@/app/features/clients/components/client-search.component';

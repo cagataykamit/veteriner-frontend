@@ -8,7 +8,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import type { HospitalizationWardVm } from '@/app/features/hospitalization-wards/models/hospitalization-ward-vm.model';
 import { HospitalizationWardsService } from '@/app/features/hospitalization-wards/services/hospitalization-wards.service';
 import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';

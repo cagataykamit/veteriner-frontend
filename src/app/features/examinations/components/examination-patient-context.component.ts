@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import type { Observable } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { EXAMINATIONS_READ_CLAIM, TREATMENTS_READ_CLAIM, VACCINATIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import { contextWeight } from '@/app/features/examinations/utils/examination-patient-context.utils';
 import type { PetSummaryVm } from '@/app/features/pets/models/pet-summary-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';

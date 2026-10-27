@@ -2,8 +2,8 @@ import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
-import type { ExaminationAddendumVm } from '@/app/features/examinations/models/examination-vm.model';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import type { ExaminationAddendumVm } from '@/app/entities/examination/models/examination-vm.model';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { ExaminationAddendumDialogComponent } from './examination-addendum-dialog.component';
 
 const addendum: ExaminationAddendumVm = { id: 'a1', reason: 'Hatalı kilo', text: 'Doğru kilo 12,4', createdAtUtc: null, createdByName: null };

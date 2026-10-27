@@ -1,5 +1,5 @@
-import type { ExaminationListItemDto } from '@/app/features/examinations/models/examination-api.model';
-import { mapExaminationListItemDtoToVm } from '@/app/features/examinations/data/examination.mapper';
+import type { ExaminationListItemDto } from '@/app/entities/examination/models/examination-api.model';
+import { mapExaminationListItemDtoToVm } from '@/app/entities/examination/data/examination.mapper';
 import type { ExaminationsReportDto } from '@/app/features/reports/examinations/models/examinations-report-api.model';
 import type { ExaminationReportRowVm, ExaminationsReportResultVm } from '@/app/features/reports/examinations/models/examinations-report.model';
 

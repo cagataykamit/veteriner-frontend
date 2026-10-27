@@ -7,7 +7,7 @@ import type {
     DashboardOperationalAlertsVm
 } from '@/app/features/dashboard/models/dashboard-operational-alerts.model';
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
-import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
 
 /**

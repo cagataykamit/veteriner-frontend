@@ -3,7 +3,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ChargeSuggestionsService } from '@/app/features/charges/services/charge-suggestions.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import type { PetOpenItemsVm } from '@/app/features/pets/models/pet-open-items-vm.model';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';

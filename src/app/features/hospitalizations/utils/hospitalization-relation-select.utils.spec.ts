@@ -1,4 +1,4 @@
-import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
 import { FINALIZED_EXAMINATION_OPTION_HINT, hospitalizationExaminationOption, hospitalizationVisitOptions } from '@/app/features/hospitalizations/utils/hospitalization-relation-select.utils';
 

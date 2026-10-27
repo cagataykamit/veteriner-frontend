@@ -17,20 +17,20 @@ import {
     mapExaminationRelatedSummaryDtoToVm,
     mapPagedExaminationsToVm,
     examinationsQueryToHttpParams
-} from '@/app/features/examinations/data/examination.mapper';
+} from '@/app/entities/examination/data/examination.mapper';
 import type {
     ExaminationAddendumDto,
     ExaminationDetailDto,
     ExaminationFinalizeResultDto,
     ExaminationListItemDtoPagedResult,
     ExaminationRelatedSummaryDto
-} from '@/app/features/examinations/models/examination-api.model';
+} from '@/app/entities/examination/models/examination-api.model';
 import type {
     CreateExaminationAddendumRequest,
     CreateExaminationRequest,
     UpdateExaminationRequest
-} from '@/app/features/examinations/models/examination-create.model';
-import type { ExaminationsListQuery } from '@/app/features/examinations/models/examination-query.model';
+} from '@/app/entities/examination/models/examination-create.model';
+import type { ExaminationsListQuery } from '@/app/entities/examination/models/examination-query.model';
 import type {
     ExaminationDetailVm,
     ExaminationAddendumVm,
@@ -39,7 +39,7 @@ import type {
     ExaminationListItemVm,
     ExaminationRelatedSummaryVm,
     ExaminationWriteResultVm
-} from '@/app/features/examinations/models/examination-vm.model';
+} from '@/app/entities/examination/models/examination-vm.model';
 import { messageFromHttpError, toUserError } from '@/app/shared/utils/api-error.utils';
 
 export interface ExaminationsPagedVm {

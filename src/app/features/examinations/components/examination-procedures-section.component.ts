@@ -4,7 +4,7 @@ import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { HOSPITALIZATIONS_CREATE_CLAIM, IMAGING_CREATE_CLAIM, LAB_RESULTS_CREATE_CLAIM, PRESCRIPTIONS_CREATE_CLAIM, TREATMENTS_CREATE_CLAIM, VACCINATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import type { ExaminationDetailVm, ExaminationRelatedSummaryVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationDetailVm, ExaminationRelatedSummaryVm } from '@/app/entities/examination/models/examination-vm.model';
 import { buildProcedureRows, PROCEDURE_KINDS, PROCEDURE_LABEL, PROCEDURE_ROUTE_SEGMENT, procedureAddState, type ProcedureKind } from '@/app/features/examinations/utils/examination-procedures.utils';
 import { HospitalizationFormComponent } from '@/app/features/hospitalizations/components/hospitalization-form.component';
 import { ImagingRecordFormComponent } from '@/app/features/imaging/components/imaging-record-form.component';

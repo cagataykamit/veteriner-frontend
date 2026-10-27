@@ -4,7 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import { appointmentTypeDisplayLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
-import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import type { PaymentDetailVm } from '@/app/features/payments/models/payment-vm.model';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';

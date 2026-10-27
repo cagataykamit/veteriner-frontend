@@ -1,8 +1,8 @@
 import { Component, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import type { ExaminationFinalizeResultVm } from '@/app/features/examinations/models/examination-vm.model';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import type { ExaminationFinalizeResultVm } from '@/app/entities/examination/models/examination-vm.model';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**

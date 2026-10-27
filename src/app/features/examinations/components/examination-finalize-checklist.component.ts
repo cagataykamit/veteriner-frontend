@@ -1,7 +1,7 @@
 import { Component, computed, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import { FINALIZED_LOCK_MESSAGE, type FinalizeCheckItem } from '@/app/features/examinations/utils/examination-procedures.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 

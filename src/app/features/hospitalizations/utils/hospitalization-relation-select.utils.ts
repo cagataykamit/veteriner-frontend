@@ -1,4 +1,4 @@
-import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import { prescriptionExaminationSelectOption } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';

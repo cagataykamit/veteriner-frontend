@@ -13,7 +13,7 @@ import { ChargesService } from '@/app/features/charges/services/charges.service'
 import { CHARGE_DESCRIPTION_MAX_LENGTH, CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, CHARGE_UNIT_PRICE_MAX, CHARGE_UNIT_PRICE_MAX_DECIMALS, chargeNumberValidator, computeChargeAmount } from '@/app/features/charges/utils/charge-amount.utils';
 import type { ChargeLineKind } from '@/app/features/charges/utils/charge-tax.utils';
 import { prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';

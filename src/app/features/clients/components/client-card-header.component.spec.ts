@@ -4,7 +4,7 @@ import type { AppointmentListItemVm } from '@/app/entities/appointment/models/ap
 import type { ChargeSuggestionsPagedVm, ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';
-import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import { ClientCardHeaderComponent } from './client-card-header.component';
 

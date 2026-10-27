@@ -11,8 +11,8 @@ import type { ChargeSuggestionsPagedVm } from '@/app/features/charges/models/cha
 import { ChargeSuggestionsService } from '@/app/features/charges/services/charge-suggestions.service';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import type { PetOpenItemsVm } from '@/app/features/pets/models/pet-open-items-vm.model';
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { PetsService } from '@/app/features/pets/services/pets.service';

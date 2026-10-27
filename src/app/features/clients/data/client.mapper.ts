@@ -29,7 +29,7 @@ import type {
     ClientPaymentSummaryVm,
     ClientRecentSummaryVm
 } from '@/app/features/clients/models/client-vm.model';
-import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import type { ClientsListQuery } from '@/app/features/clients/models/client-query.model';
 import { parseClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
 import { mapClientInvoicingSummaryDtoToVm } from '@/app/features/clients/utils/client-invoicing.utils';

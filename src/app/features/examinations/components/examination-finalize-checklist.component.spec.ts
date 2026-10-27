@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import { finalizeChecklist } from '@/app/features/examinations/utils/examination-procedures.utils';
 import { ExaminationFinalizeChecklistComponent } from './examination-finalize-checklist.component';
 

@@ -1,4 +1,4 @@
-import type { ExaminationStatus } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationStatus } from '@/app/entities/examination/models/examination-vm.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
 const EM = '—';

@@ -1,4 +1,4 @@
-import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 
 /** Muayene raporu tablo satırı — liste VM + klinik/bağlı randevu/değerlendirme/not alanları. */
 export type ExaminationReportRowVm = ExaminationListItemVm & {

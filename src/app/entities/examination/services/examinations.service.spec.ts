@@ -3,8 +3,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { UpdateExaminationRequest } from '@/app/features/examinations/models/examination-create.model';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import type { UpdateExaminationRequest } from '@/app/entities/examination/models/examination-create.model';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 
 const updateReq = (over: Partial<UpdateExaminationRequest> = {}): UpdateExaminationRequest => ({
     clinicId: 'clinic-1',

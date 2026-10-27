@@ -13,7 +13,7 @@ import { SelectModule } from 'primeng/select';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { mapLabResultUpsertFormToCreateRequest } from '@/app/entities/lab-result/data/lab-result.mapper';
 import type { LabResultEditVm, LabResultStatus } from '@/app/entities/lab-result/models/lab-result-vm.model';
 import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';

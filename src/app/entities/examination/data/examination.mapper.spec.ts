@@ -10,9 +10,9 @@ import {
     mapExaminationRelatedSummaryDtoToVm,
     mapExaminationWriteResultDtoToVm,
     mapUpdateExaminationToApiBody
-} from '@/app/features/examinations/data/examination.mapper';
-import type { ExaminationWorkspaceFormValue } from '@/app/features/examinations/models/examination-form.model';
-import type { ExaminationEditVm } from '@/app/features/examinations/models/examination-vm.model';
+} from '@/app/entities/examination/data/examination.mapper';
+import type { ExaminationWorkspaceFormValue } from '@/app/entities/examination/models/examination-form.model';
+import type { ExaminationEditVm } from '@/app/entities/examination/models/examination-vm.model';
 
 const baseForm = (over: Partial<ExaminationWorkspaceFormValue> = {}): ExaminationWorkspaceFormValue => ({
     examinationDate: '2026-10-08',

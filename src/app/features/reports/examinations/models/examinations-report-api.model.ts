@@ -1,4 +1,4 @@
-import type { ExaminationListItemDto } from '@/app/features/examinations/models/examination-api.model';
+import type { ExaminationListItemDto } from '@/app/entities/examination/models/examination-api.model';
 
 /** GET `/api/v1/reports/examinations` */
 export interface ExaminationsReportDto {

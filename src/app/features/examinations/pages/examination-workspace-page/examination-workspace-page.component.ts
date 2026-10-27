@@ -17,10 +17,10 @@ import { ClientsService } from '@/app/features/clients/services/clients.service'
 import { ClinicalTermPickerComponent } from '@/app/features/clinical-terms/components/clinical-term-picker.component';
 import { ExaminationPatientContextComponent } from '@/app/features/examinations/components/examination-patient-context.component';
 import { ExaminationPatientHeaderComponent } from '@/app/features/examinations/components/examination-patient-header.component';
-import { mapExaminationFormToCreateRequest, isPartialVitalClear, mapExaminationFormToUpdateRequest } from '@/app/features/examinations/data/examination.mapper';
-import type { ExaminationWorkspaceFormValue } from '@/app/features/examinations/models/examination-form.model';
-import type { ExaminationEditVm } from '@/app/features/examinations/models/examination-vm.model';
-import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
+import { mapExaminationFormToCreateRequest, isPartialVitalClear, mapExaminationFormToUpdateRequest } from '@/app/entities/examination/data/examination.mapper';
+import type { ExaminationWorkspaceFormValue } from '@/app/entities/examination/models/examination-form.model';
+import type { ExaminationEditVm } from '@/app/entities/examination/models/examination-vm.model';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { EXAMINATION_TIME_SELECT_OPTIONS, examinationTimeSelectOptionsWithLegacy } from '@/app/features/examinations/utils/examination-time-options.utils';
 import { type ExaminationUpsertFieldErrors, type ExaminationUpsertFormFieldKey, parseExaminationUpsertHttpError } from '@/app/features/examinations/utils/examination-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';

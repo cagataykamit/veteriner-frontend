@@ -11,15 +11,15 @@ import type {
     ExaminationUpdateRequestDto,
     ExaminationUpsertRequestDto,
     ExaminationWriteResultDto
-} from '@/app/features/examinations/models/examination-api.model';
+} from '@/app/entities/examination/models/examination-api.model';
 import type {
     CreateExaminationAddendumRequest,
     CreateExaminationRequest,
     ExaminationVitalsInput,
     UpdateExaminationRequest
-} from '@/app/features/examinations/models/examination-create.model';
-import type { ExaminationWorkspaceFormValue } from '@/app/features/examinations/models/examination-form.model';
-import type { ExaminationsListQuery } from '@/app/features/examinations/models/examination-query.model';
+} from '@/app/entities/examination/models/examination-create.model';
+import type { ExaminationWorkspaceFormValue } from '@/app/entities/examination/models/examination-form.model';
+import type { ExaminationsListQuery } from '@/app/entities/examination/models/examination-query.model';
 import type {
     ExaminationAddendumVm,
     ExaminationDetailVm,
@@ -30,7 +30,7 @@ import type {
     ExaminationRelatedVaccinationStatus,
     ExaminationStatus,
     ExaminationWriteResultVm
-} from '@/app/features/examinations/models/examination-vm.model';
+} from '@/app/entities/examination/models/examination-vm.model';
 import {
     fromIstanbulDateAndTimeToUtcIso,
     fromIstanbulDateTimeLocalInputToUtcIso,

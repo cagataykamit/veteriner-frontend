@@ -1,4 +1,4 @@
-import type { ExaminationRelatedSummaryVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationRelatedSummaryVm } from '@/app/entities/examination/models/examination-vm.model';
 import { buildProcedureRows, FINALIZED_IMAGING_NOTE, FINALIZED_LOCK_MESSAGE, finalizeChecklist, finalizeWarnings, procedureAddState, READ_ONLY_TENANT_MESSAGE, type ProcedureKind } from './examination-procedures.utils';
 
 const summary = (over: Partial<ExaminationRelatedSummaryVm> = {}): ExaminationRelatedSummaryVm => ({

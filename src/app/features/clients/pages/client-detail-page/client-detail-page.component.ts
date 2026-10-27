@@ -12,7 +12,7 @@ import { ClientKvkkConsentDialogComponent } from '@/app/features/clients/compone
 import { ClientPetsPanelComponent } from '@/app/features/clients/components/client-pets-panel.component';
 import { ClientPortalAccessPanelComponent } from '@/app/features/clients/components/client-portal-access-panel.component';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
-import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import type { ClientDetailVm, ClientKvkkConsentUpdateResult, ClientPaymentSummaryVm } from '@/app/features/clients/models/client-vm.model';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { buildClientPetRows, buildClientTodo, type ClientPetRow, soleActivePet } from '@/app/features/clients/utils/client-card.utils';

@@ -5,7 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { EMPTY, type Observable, Subscription, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { IMAGING_READ_CLAIM, PETS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import type { ExaminationDetailVm } from '@/app/features/examinations/models/examination-vm.model';
+import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import { PetImagingSectionComponent } from '@/app/features/imaging/components/pet-imaging-section.component';
 import { PetCardHeaderComponent } from '@/app/features/pets/components/pet-card-header.component';
 import { PetCardTimelineComponent } from '@/app/features/pets/components/pet-card-timeline.component';
