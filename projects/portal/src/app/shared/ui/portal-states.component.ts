@@ -99,7 +99,7 @@ export class PortalSkeleton {
             <i class="fa-solid fa-triangle-exclamation portal-state-icon portal-state-icon--error" aria-hidden="true"></i>
             <p>{{ message() }}</p>
             @if (retryLabel()) {
-                <p-button [label]="retryLabel()!" severity="secondary" [outlined]="true" styleClass="portal-button-block" (onClick)="retry.emit()" />
+                <button pButton type="button" severity="secondary" [outlined]="true" class="portal-button-block" (click)="retry.emit()">{{ retryLabel()! }}</button>
             }
         </div>
     `

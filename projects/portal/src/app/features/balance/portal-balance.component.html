@@ -100,14 +100,15 @@
                             <p class="portal-field-error portal-center" role="alert">{{ payments.error() }}</p>
                         }
                         @if (payments.hasMore()) {
-                            <p-button
-                                [label]="payments.moreState() === 'error' ? 'Tekrar dene' : 'Daha fazla göster'"
+                            <button
+                                pButton
+                                type="button"
                                 severity="secondary"
                                 [outlined]="true"
-                                styleClass="portal-button-block"
-                                [loading]="payments.moreState() === 'loading'"
-                                (onClick)="payments.moreState() === 'error' ? payments.retry() : payments.loadMore()"
-                            />
+                                class="portal-button-block"
+                                [disabled]="payments.moreState() === 'loading'"
+                                (click)="payments.moreState() === 'error' ? payments.retry() : payments.loadMore()"
+                            >@if (payments.moreState() === 'loading') {<i class="p-button-icon pi pi-spin pi-spinner"></i>}{{ payments.moreState() === 'error' ? 'Tekrar dene' : 'Daha fazla göster' }}</button>
                         }
                     } @else {
                         <portal-empty-state title="Ödeme kaydı yok" message="Bu klinikte kayıtlı ödemeniz bulunmuyor." icon="fa-receipt" />

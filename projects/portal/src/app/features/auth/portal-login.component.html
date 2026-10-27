@@ -89,10 +89,10 @@
 
             <div class="portal-actions">
                 @if (method() === 'password') {
-                    <p-button type="submit" label="Giriş yap" [loading]="busy()" />
+                    <button pButton type="submit" [disabled]="busy()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Giriş yap</button>
                     <a class="portal-link-button" routerLink="/password-reset">Parolamı unuttum</a>
                 } @else if (codeSent()) {
-                    <p-button type="submit" label="Doğrula ve giriş yap" [loading]="busy()" />
+                    <button pButton type="submit" [disabled]="busy()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Doğrula ve giriş yap</button>
                     <button type="button" class="portal-link-button" [disabled]="!resend.canSend() || busy()" (click)="requestCode()">
                         @if (resend.canSend()) {
                             Kodu tekrar gönder
@@ -102,7 +102,7 @@
                     </button>
                     <button type="button" class="portal-link-button" (click)="changeEmail()">E-postayı değiştir</button>
                 } @else {
-                    <p-button type="submit" label="Kod gönder" [loading]="busy()" />
+                    <button pButton type="submit" [disabled]="busy()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Kod gönder</button>
                 }
             </div>
         </form>

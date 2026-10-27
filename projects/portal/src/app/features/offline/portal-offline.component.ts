@@ -19,7 +19,7 @@ import { PortalBrandHeader } from '@portal/app/layout/portal-brand.component';
                 <i class="fa-solid fa-wifi portal-state-icon" aria-hidden="true"></i>
                 <h1 id="offline-title" class="portal-title">İnternet bağlantısı yok</h1>
                 <p class="portal-muted">Bilgilerinizi göstermek için bağlantı gerekiyor. Bağlandığınızda tekrar deneyin.</p>
-                <p-button label="Tekrar dene" styleClass="portal-button-block" (onClick)="retry()" />
+                <button pButton type="button" class="portal-button-block" (click)="retry()">Tekrar dene</button>
             </section>
         </main>
     `

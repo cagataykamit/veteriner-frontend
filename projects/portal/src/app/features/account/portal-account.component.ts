@@ -34,13 +34,13 @@ import { portalErrorMessage } from '@portal/app/core/errors/portal-errors';
                 @if (confirmAll()) {
                     <p role="alert">Bu hesabın açık olduğu tüm cihazlardan çıkış yapılacak. Emin misiniz?</p>
                     <div class="portal-actions">
-                        <p-button label="Evet, tüm cihazlardan çıkış yap" severity="danger" [loading]="busy()" (onClick)="logoutAll()" />
-                        <p-button label="Vazgeç" severity="secondary" [outlined]="true" (onClick)="confirmAll.set(false)" />
+                        <button pButton type="button" severity="danger" [disabled]="busy()" (click)="logoutAll()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Evet, tüm cihazlardan çıkış yap</button>
+                        <button pButton type="button" severity="secondary" [outlined]="true" (click)="confirmAll.set(false)">Vazgeç</button>
                     </div>
                 } @else {
                     <div class="portal-actions">
-                        <p-button label="Çıkış yap" severity="secondary" [loading]="busy()" (onClick)="logout()" />
-                        <p-button label="Tüm cihazlardan çıkış yap" severity="danger" [outlined]="true" (onClick)="confirmAll.set(true)" />
+                        <button pButton type="button" severity="secondary" [disabled]="busy()" (click)="logout()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Çıkış yap</button>
+                        <button pButton type="button" severity="danger" [outlined]="true" (click)="confirmAll.set(true)">Tüm cihazlardan çıkış yap</button>
                     </div>
                 }
             </section>

@@ -116,7 +116,7 @@
                     }
 
                     <div class="portal-actions">
-                        <p-button type="submit" label="Daveti kabul et" [loading]="submitting()" />
+                        <button pButton type="submit" [disabled]="submitting()">@if (submitting()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Daveti kabul et</button>
                     </div>
                 </form>
             }

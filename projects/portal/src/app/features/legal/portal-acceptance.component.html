@@ -17,7 +17,7 @@
                     <p-message severity="error" role="alert">{{ message }}</p-message>
                 }
                 <div class="portal-actions">
-                    <p-button label="Onayla ve devam et" [loading]="busy()" (onClick)="acceptDocuments()" />
+                    <button pButton type="button" [disabled]="busy()" (click)="acceptDocuments()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Onayla ve devam et</button>
                     <button type="button" class="portal-link-button" (click)="logout()">Çıkış yap</button>
                 </div>
             </section>
@@ -37,7 +37,7 @@
                         <p-message severity="error" role="alert">{{ message }}</p-message>
                     }
                     <div class="portal-actions">
-                        <p-button label="Okudum, bilgilendirildim" [loading]="busy()" (onClick)="acknowledgeDisclosure()" />
+                        <button pButton type="button" [disabled]="busy()" (click)="acknowledgeDisclosure()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Okudum, bilgilendirildim</button>
                         <button type="button" class="portal-link-button" (click)="logout()">Çıkış yap</button>
                     </div>
                 </section>
