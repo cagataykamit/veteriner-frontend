@@ -1,0 +1,699 @@
+<app-page-header title="Özet" [description]="pageDescription()" />
+
+@if (!clinicContextOk()) {
+    <div class="card">
+        <app-empty-state [message]="copy.dashboardNeedClinicMessage" [hint]="copy.dashboardNeedClinicHint" iconClass="pi pi-building">
+            <a routerLink="/auth/select-clinic" [queryParams]="selectClinicQueryParams" pButton type="button" class="p-button-primary"><i class="pi pi-check"></i>Klinik seç</a>
+        </app-empty-state>
+    </div>
+} @else {
+    <div
+        class="grid grid-cols-1 gap-6 mb-6"
+        [ngClass]="{
+            'lg:grid-cols-2': !loading() && !!dash() && hasTopRightOperationalPanel(dash()!)
+        }"
+    >
+        <div>
+            <div class="card mb-0 h-full">
+                <h5 class="mt-0 mb-3 text-base font-medium text-surface-900 dark:text-surface-0">{{ copy.dashboardQuickActionsTitle }}</h5>
+                <div class="flex flex-wrap gap-2">
+                    @if (canOpenAppointments()) {
+                        <a routerLink="/panel/appointments/new" pButton type="button" class="p-button-sm"><i class="pi pi-plus"></i>Yeni Randevu</a>
+                    }
+                    @if (canCreateVisit) {
+                        <button pButton type="button" class="p-button-sm" [disabled]="ro.mutationBlocked()" (click)="walkInOpen.set(true)"><i class="pi pi-user-plus"></i>Randevusuz geliş</button>
+                    }
+                    @if (canOpenClients()) {
+                        <a routerLink="/panel/clients" pButton type="button" severity="secondary" class="p-button-sm"><i class="pi pi-users"></i>Müşteriler</a>
+                    }
+                    @if (canOpenPets()) {
+                        <a routerLink="/panel/pets" pButton type="button" severity="secondary" class="p-button-sm"><i class="pi pi-heart"></i>Hastalar</a>
+                    }
+                    @if (canShowPaymentsQuickAction()) {
+                        <a routerLink="/panel/payments" pButton type="button" severity="secondary" class="p-button-sm"><i class="pi pi-credit-card"></i>Ödemeler</a>
+                    }
+                </div>
+                @if (canCreateVisit) {
+                    <app-visit-arrival-dialog [(visible)]="walkInOpen" (arrived)="onWalkInArrived()" />
+                }
+            </div>
+        </div>
+        @if (!loading() && dash(); as d) {
+            @if (hasTopRightOperationalPanel(d)) {
+                <div class="flex flex-col gap-6">
+                    @if (d.alerts.length > 0) {
+                        <div class="card mb-0">
+                            <h5 class="mt-0 mb-4">Uyarılar</h5>
+                            <div class="flex flex-col gap-3">
+                                @for (alert of d.alerts; track alert.key) {
+                                    <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div class="min-w-0">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <app-status-tag [label]="severityLabel(alert.severity)" [severity]="statusSeverity(alert.severity)" />
+                                                    <span class="font-medium text-surface-900 dark:text-surface-0">{{ alert.title }}</span>
+                                                </div>
+                                                <p class="m-0 text-sm text-muted-color">{{ alert.description }}</p>
+                                            </div>
+                                            @if (alert.route) {
+                                                <a
+                                                    [routerLink]="[alert.route]"
+                                                    [queryParams]="alert.queryParams ?? undefined"
+                                                    pButton
+                                                    type="button"
+                                                   
+                                                    severity="secondary"
+                                                    class="p-button-sm whitespace-nowrap"
+                                                    [attr.aria-label]="alert.title + ' detayina git'"
+                                                >Git</a>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    @if (d.canViewOperationalAlerts && d.actionItems.length > 0) {
+                        <div class="card mb-0">
+                            <h5 class="mt-0 mb-4">Öncelikli işler</h5>
+                            <div class="grid grid-cols-1 gap-3">
+                                @for (item of d.actionItems; track item.key) {
+                                    <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div class="min-w-0">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <app-status-tag [label]="severityLabel(item.severity)" [severity]="statusSeverity(item.severity)" />
+                                                    <span class="font-medium text-surface-900 dark:text-surface-0">{{ item.title }}</span>
+                                                    <span class="text-sm text-muted-color">({{ item.count }})</span>
+                                                </div>
+                                                <p class="m-0 text-sm text-muted-color">{{ item.description }}</p>
+                                            </div>
+                                            @if (item.route) {
+                                                <a
+                                                    [routerLink]="[item.route]"
+                                                    [queryParams]="item.queryParams ?? undefined"
+                                                    pButton
+                                                    type="button"
+                                                   
+                                                    class="p-button-sm whitespace-nowrap"
+                                                    [attr.aria-label]="item.title + ' listesini ac'"
+                                                >İncele</a>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    @if (d.capabilities.error || d.operationalAlerts.error) {
+                        <div class="card mb-0">
+                            <p class="m-0 text-sm text-muted-color">
+                                @if (d.capabilities.error) {
+                                    {{ d.capabilities.error }}
+                                } @else if (d.operationalAlerts.error) {
+                                    {{ d.operationalAlerts.error }}
+                                }
+                            </p>
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+
+    @if (loading()) {
+        <app-loading-state message="Operasyon verileri yükleniyor…" />
+    } @else if (dash(); as d) {
+        <div class="grid grid-cols-12 gap-8">
+            <div class="col-span-12 md:col-span-6 xl:col-span-3">
+                <div class="card mb-0">
+                    <span class="block text-muted-color font-medium mb-4">Bugünkü randevular</span>
+                    <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
+                        {{ metricCount(todayAppointmentsMetric(d)) }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-span-12 md:col-span-6 xl:col-span-3">
+                <div class="card mb-0">
+                    <span class="block text-muted-color font-medium mb-4">Yaklaşan randevular</span>
+                    <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
+                        {{ metricCount($safeNavigationMigration(d.summary.data?.upcomingAppointmentsCount)) }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-span-12 md:col-span-6 xl:col-span-3">
+                <div class="card mb-0">
+                    <span class="block text-muted-color font-medium mb-4">Bugün tamamlanan</span>
+                    <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
+                        {{ metricCount($safeNavigationMigration(d.summary.data?.completedTodayCount)) }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-span-12 md:col-span-6 xl:col-span-3">
+                <div class="card mb-0">
+                    <span class="block text-muted-color font-medium mb-4">Bugün iptal</span>
+                    <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
+                        {{ metricCount($safeNavigationMigration(d.summary.data?.cancelledTodayCount)) }}
+                    </div>
+                </div>
+            </div>
+
+            @if (showLowStockCard()) {
+                <div class="col-span-12">
+                    <div class="card mb-0">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
+                            <h5 class="mt-0 mb-0">Düşük stok uyarıları</h5>
+                            <a [routerLink]="['/panel/stocks']" [queryParams]="{ isBelowMinimum: 'true' }" class="text-primary font-medium no-underline text-sm whitespace-nowrap">Stok durumu →</a>
+                        </div>
+                        @if (lowStockLoading()) {
+                            <app-loading-state message="Düşük stok bilgileri yükleniyor…" />
+                        } @else if (lowStockError()) {
+                            <p class="text-red-500 m-0 text-sm" role="alert">{{ lowStockError() }}</p>
+                        } @else {
+                            <ul class="lg:hidden list-none m-0 p-0 flex flex-col gap-3">
+                                @for (row of lowStockRows(); track row.id) {
+                                    <li class="min-w-0 flex flex-col gap-1 rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                                        <div class="min-w-0 break-words font-medium text-surface-900 dark:text-surface-0">
+                                            @if (row.productId) {
+                                                <a [routerLink]="['/panel/products', row.productId]" class="text-primary font-medium no-underline">{{ row.productName }}</a>
+                                            } @else {
+                                                {{ row.productName }}
+                                            }
+                                        </div>
+                                        <div class="text-sm text-muted-color break-words">{{ row.clinicName }}</div>
+                                        <div class="text-sm text-surface-700 dark:text-surface-200">
+                                            Kullanılabilir: <span class="font-medium">{{ row.availableText }}</span> · Min.: <span class="font-medium">{{ row.minimumStockLevelText }}</span>
+                                        </div>
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
+                                        </div>
+                                        @if (row.productId) {
+                                            <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
+                                                <a [routerLink]="['/panel/products', row.productId]" class="text-primary font-medium no-underline text-sm inline-flex py-1">Detay →</a>
+                                            </div>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                            <div class="hidden lg:block overflow-x-auto">
+                                <p-table [value]="lowStockRows()" [tableStyle]="{ 'min-width': '42rem' }" [paginator]="false">
+                                    <ng-template #header>
+                                        <tr>
+                                            <th>Ürün</th>
+                                            <th>Klinik</th>
+                                            <th>Kullanılabilir</th>
+                                            <th>Minimum</th>
+                                            <th>Durum</th>
+                                            <th></th>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template #body let-row>
+                                        <tr>
+                                            <td class="font-medium max-w-[14rem]">
+                                                @if (row.productId) {
+                                                    <a [routerLink]="['/panel/products', row.productId]" class="text-primary font-medium no-underline">{{ row.productName }}</a>
+                                                } @else {
+                                                    {{ row.productName }}
+                                                }
+                                            </td>
+                                            <td>{{ row.clinicName }}</td>
+                                            <td>{{ row.availableText }}</td>
+                                            <td>{{ row.minimumStockLevelText }}</td>
+                                            <td>
+                                                <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
+                                            </td>
+                                            <td>
+                                                @if (row.productId) {
+                                                    <a [routerLink]="['/panel/products', row.productId]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                                }
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="col-span-12 lg:col-span-6">
+                <div class="card mb-0 h-full">
+                    <app-dashboard-mini-trend-chart title="Son 7 gün — randevu" [points]="appointmentTrendPoints(d)" valueKind="count" />
+                </div>
+            </div>
+            @if (canViewFinance(d) && belowFoldLoaded()) {
+                <div class="col-span-12 lg:col-span-6">
+                    <div class="card mb-0 h-full">
+                        <app-dashboard-mini-trend-chart title="Son 7 gün — tahsilat" [points]="paidTrendPoints(d)" valueKind="money" />
+                    </div>
+                </div>
+            } @else if (canViewFinance(d) && belowFoldLoading()) {
+                <div class="col-span-12 lg:col-span-6">
+                    <div class="card mb-0 h-full flex items-center">
+                        <p class="m-0 text-sm text-muted-color">Finans verileri yükleniyor…</p>
+                    </div>
+                </div>
+            } @else if (canViewFinance(d) && !belowFoldLoaded()) {
+                <div class="col-span-12 lg:col-span-6">
+                    <div class="card mb-0 h-full flex items-center">
+                        <p class="m-0 text-sm text-muted-color">Finans trendi, bu bölüme gelince yüklenecek.</p>
+                    </div>
+                </div>
+            }
+
+            @if (canViewFinance(d) && belowFoldLoaded() && d.finance.error) {
+                <div class="col-span-12">
+                    <div class="card mb-0">
+                        <p class="text-red-500 m-0" role="alert">{{ d.finance.error }}</p>
+                        <p class="text-muted-color text-sm mt-2 mb-0">Finans kartları ve son ödemeler bu yüzden eksik olabilir.</p>
+                        <button pButton type="button" class="mt-3" size="small" severity="secondary" (click)="reload()" [attr.aria-label]="'Finans bolumunu tekrar dene'"><i class="p-button-icon pi pi-refresh"></i>Finansı tekrar dene</button>
+                    </div>
+                </div>
+            } @else if (canViewFinance(d) && belowFoldLoaded() && d.finance.data) {
+                <div class="col-span-12 sm:col-span-6 xl:col-span-2">
+                    <div class="card mb-0">
+                        <span class="block text-muted-color font-medium mb-4">Bugün alınan ödeme</span>
+                        <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ financeMoney(d.finance.data.todayTotalPaid) }}</div>
+                    </div>
+                </div>
+                <div class="col-span-12 sm:col-span-6 xl:col-span-2">
+                    <div class="card mb-0">
+                        <span class="block text-muted-color font-medium mb-4">Bu hafta alınan ödeme</span>
+                        <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ financeMoney(d.finance.data.weekTotalPaid) }}</div>
+                    </div>
+                </div>
+                <div class="col-span-12 sm:col-span-6 xl:col-span-2">
+                    <div class="card mb-0">
+                        <span class="block text-muted-color font-medium mb-4">Bu ay alınan ödeme</span>
+                        <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ financeMoney(d.finance.data.monthTotalPaid) }}</div>
+                    </div>
+                </div>
+                <div class="col-span-12 sm:col-span-6 xl:col-span-2">
+                    <div class="card mb-0">
+                        <span class="block text-muted-color font-medium mb-4">Bugün ödeme sayısı</span>
+                        <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ metricCount(d.finance.data.todayPaymentsCount) }}</div>
+                    </div>
+                </div>
+                <div class="col-span-12 sm:col-span-6 xl:col-span-2">
+                    <div class="card mb-0">
+                        <span class="block text-muted-color font-medium mb-4">Bu hafta ödeme sayısı</span>
+                        <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ metricCount(d.finance.data.weekPaymentsCount) }}</div>
+                    </div>
+                </div>
+                <div class="col-span-12 sm:col-span-6 xl:col-span-2">
+                    <div class="card mb-0">
+                        <span class="block text-muted-color font-medium mb-4">Bu ay ödeme sayısı</span>
+                        <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ metricCount(d.finance.data.monthPaymentsCount) }}</div>
+                    </div>
+                </div>
+            }
+
+            @if (d.summary.error) {
+                <div class="col-span-12">
+                    <div class="card mb-0">
+                        <p class="text-red-500 m-0" role="alert">{{ d.summary.error }}</p>
+                        <p class="text-muted-color text-sm mt-2 mb-0">Üst sayaçlar bu yüzden eksik olabilir.</p>
+                        <button pButton type="button" class="mt-3" size="small" severity="secondary" (click)="reload()" [attr.aria-label]="'Ozet bolumunu tekrar dene'"><i class="p-button-icon pi pi-refresh"></i>Özeti tekrar dene</button>
+                    </div>
+                </div>
+            } @else if (d.summary.data) {
+                <div class="col-span-12">
+                    <p class="text-muted-color text-sm m-0">
+                        Toplam <span class="font-medium">{{ d.summary.data.totalClientsCount }}</span> müşteri · <span class="font-medium">{{ d.summary.data.totalPetsCount }}</span> hasta kaydı.
+                    </p>
+                </div>
+            }
+
+            <div #belowFoldTrigger class="col-span-12 h-px"></div>
+
+            @if (!belowFoldRequested() && !belowFoldLoaded()) {
+                <div class="col-span-12">
+                    <div class="card flex flex-wrap items-center justify-between gap-3">
+                        <p class="m-0 text-sm text-muted-color">Detay listeleri bu bölüme gelince yüklenecek.</p>
+                        <button pButton type="button" size="small" severity="secondary" (click)="onManualBelowFoldLoad()"><i class="p-button-icon pi pi-download"></i>Detayları yükle</button>
+                    </div>
+                </div>
+            } @else if (belowFoldLoading() && !belowFoldLoaded()) {
+                <div class="col-span-12">
+                    <div class="card">
+                        <app-loading-state message="Detay listeleri yükleniyor…" />
+                    </div>
+                </div>
+            } @else if (belowFoldError() && !belowFoldLoaded()) {
+                <div class="col-span-12">
+                    <div class="card flex flex-wrap items-center justify-between gap-3">
+                        <p class="m-0 text-sm text-red-500">{{ belowFoldError() }}</p>
+                        <button pButton type="button" size="small" severity="secondary" (click)="onManualBelowFoldLoad()"><i class="p-button-icon pi pi-refresh"></i>Tekrar dene</button>
+                    </div>
+                </div>
+            } @else {
+                <div class="col-span-12">
+                    <div class="card">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
+                            <h5 class="mt-0 mb-0">Bugünkü randevular</h5>
+                            <a routerLink="/panel/appointments" [queryParams]="todayAppointmentsLinkQuery" class="text-primary font-medium no-underline text-sm" data-testid="today-appointments-all-link">Tümü →</a>
+                        </div>
+                        @if (listsLoading()) {
+                            <app-loading-state message="Randevu listesi yükleniyor…" />
+                        } @else if (d.todayAppointments.error) {
+                            <p class="text-red-500 m-0" role="alert">{{ d.todayAppointments.error }}</p>
+                        } @else if (d.todayAppointments.data.length === 0) {
+                            <app-empty-state message="Bugün için randevu yok." hint="Tarih filtresi yerel güne göredir." />
+                        } @else {
+                            <ul class="lg:hidden list-none m-0 p-0 flex flex-col gap-4">
+                                @for (row of d.todayAppointments.data; track row.id) {
+                                    <li class="min-w-0 flex flex-col gap-1 rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                                        <div class="text-muted-color text-sm">{{ row.scheduledAtUtc | trTime }}</div>
+                                        <div class="min-w-0 break-words font-medium text-surface-900 dark:text-surface-0">
+                                            @if (row.clientId) {
+                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
+                                            } @else {
+                                                {{ row.clientName }}
+                                            }
+                                        </div>
+                                        <div class="min-w-0 break-words text-sm text-surface-700 dark:text-surface-200">
+                                            @if (row.petId) {
+                                                <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                            } @else {
+                                                {{ row.petName }}
+                                            }
+                                        </div>
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <app-status-tag [label]="apptStatusLabel(row.status)" [severity]="apptStatusSeverity(row.status)" />
+                                        </div>
+                                        <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
+                                            <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm inline-flex py-1">Detay →</a>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                            <div class="hidden lg:block">
+                                <p-table [value]="d.todayAppointments.data" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
+                                    <ng-template #header>
+                                        <tr>
+                                            <th>Saat</th>
+                                            <th>Müşteri</th>
+                                            <th>Hasta</th>
+                                            <th>Durum</th>
+                                            <th></th>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template #body let-row>
+                                        <tr>
+                                            <td>{{ row.scheduledAtUtc | trTime }}</td>
+                                            <td>
+                                                @if (row.clientId) {
+                                                    <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
+                                                } @else {
+                                                    {{ row.clientName }}
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (row.petId) {
+                                                    <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                                } @else {
+                                                    {{ row.petName }}
+                                                }
+                                            </td>
+                                            <td>
+                                                <app-status-tag [label]="apptStatusLabel(row.status)" [severity]="apptStatusSeverity(row.status)" />
+                                            </td>
+                                            <td>
+                                                <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-span-12 xl:col-span-6">
+                    <div class="card h-full">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
+                            <h5 class="mt-0 mb-0">Yaklaşan aşılar</h5>
+                            <a routerLink="/panel/vaccinations" [queryParams]="upcomingVaccinationsLinkQuery" class="text-primary font-medium no-underline text-sm" data-testid="upcoming-vaccinations-all-link">Tümü →</a>
+                        </div>
+                        @if (listsLoading()) {
+                            <app-loading-state message="Aşı listesi yükleniyor…" />
+                        } @else if (d.upcomingVaccinations.error) {
+                            <p class="text-red-500 m-0" role="alert">{{ d.upcomingVaccinations.error }}</p>
+                        } @else if (d.upcomingVaccinations.data.length === 0) {
+                            <app-empty-state message="Önümüzdeki dönem için uygun aşı kaydı yok." />
+                        } @else {
+                            <ul class="lg:hidden list-none m-0 p-0 flex flex-col gap-4">
+                                @for (row of d.upcomingVaccinations.data; track row.id) {
+                                    <li class="min-w-0 flex flex-col gap-1 rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                                        <div class="text-muted-color text-sm">{{ row.dueAtUtc | trDate }}</div>
+                                        <div class="min-w-0 break-words font-medium text-surface-900 dark:text-surface-0">{{ row.vaccineName }}</div>
+                                        <div class="min-w-0 break-words text-sm text-surface-700 dark:text-surface-200">
+                                            @if (row.petId) {
+                                                <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                            } @else {
+                                                {{ row.petName }}
+                                            }
+                                        </div>
+                                        <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
+                                            <a [routerLink]="['/panel/vaccinations', row.id]" class="text-primary font-medium no-underline text-sm inline-flex py-1">Detay →</a>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                            <div class="hidden lg:block">
+                                <p-table [value]="d.upcomingVaccinations.data" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
+                                    <ng-template #header>
+                                        <tr>
+                                            <th>Sonraki tarih</th>
+                                            <th>Aşı</th>
+                                            <th>Hasta</th>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template #body let-row>
+                                        <tr>
+                                            <td>{{ row.dueAtUtc | trDate }}</td>
+                                            <td>{{ row.vaccineName }}</td>
+                                            <td>
+                                                @if (row.petId) {
+                                                    <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                                } @else {
+                                                    {{ row.petName }}
+                                                }
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-span-12 xl:col-span-6">
+                    <div class="card h-full">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
+                            <h5 class="mt-0 mb-0">Son muayeneler</h5>
+                            <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                        </div>
+                        @if (listsLoading()) {
+                            <app-loading-state message="Muayene listesi yükleniyor…" />
+                        } @else if (d.recentExaminations.error) {
+                            <p class="text-red-500 m-0" role="alert">{{ d.recentExaminations.error }}</p>
+                        } @else if (d.recentExaminations.data.length === 0) {
+                            <app-empty-state message="Muayene kaydı yok." />
+                        } @else {
+                            <ul class="lg:hidden list-none m-0 p-0 flex flex-col gap-4">
+                                @for (row of d.recentExaminations.data; track row.id) {
+                                    <li class="min-w-0 flex flex-col gap-1 rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                                        <div class="text-muted-color text-sm break-words">{{ row.examinedAtUtc | trDateTime }}</div>
+                                        <div class="min-w-0 break-words font-medium text-surface-900 dark:text-surface-0">{{ row.petName }}</div>
+                                        <div class="min-w-0 break-words text-sm text-surface-700 dark:text-surface-200">{{ row.clientName }}</div>
+                                        <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
+                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm inline-flex py-1">Detay →</a>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                            <div class="hidden lg:block">
+                                <p-table [value]="d.recentExaminations.data" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
+                                    <ng-template #header>
+                                        <tr>
+                                            <th>Tarih</th>
+                                            <th>Hasta</th>
+                                            <th>Müşteri</th>
+                                            <th></th>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template #body let-row>
+                                        <tr>
+                                            <td>{{ row.examinedAtUtc | trDateTime }}</td>
+                                            <td>{{ row.petName }}</td>
+                                            <td>{{ row.clientName }}</td>
+                                            <td>
+                                                <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @if (canViewFinance(d)) {
+                    <div class="col-span-12">
+                        <div class="card">
+                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
+                                <h5 class="mt-0 mb-0">Son ödemeler</h5>
+                                <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            </div>
+                            @if (d.finance.error) {
+                                <p class="text-red-500 m-0" role="alert">{{ d.finance.error }}</p>
+                                <button pButton type="button" class="mt-3" size="small" severity="secondary" (click)="reload()"><i class="p-button-icon pi pi-refresh"></i>Finansı tekrar dene</button>
+                            } @else if (!d.finance.data || d.finance.data.recentPayments.length === 0) {
+                                <app-empty-state message="Ödeme kaydı yok." hint="İlk ödeme kaydı için ödeme ekranına gidin." />
+                            } @else {
+                                <ul class="lg:hidden list-none m-0 p-0 flex flex-col gap-4">
+                                    @for (row of d.finance.data.recentPayments; track row.id) {
+                                        <li class="min-w-0 flex flex-col gap-1 rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                                            <div class="text-muted-color text-sm break-words">{{ formatPaidAtUtc(row.paidAtUtc) }}</div>
+                                            <div class="min-w-0 break-words font-medium text-surface-900 dark:text-surface-0">
+                                                @if (row.clientId) {
+                                                    <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
+                                                } @else {
+                                                    {{ row.clientName }}
+                                                }
+                                            </div>
+                                            @if (row.petId || (row.petName && row.petName.trim())) {
+                                                <div class="min-w-0 break-words text-sm text-surface-700 dark:text-surface-200">
+                                                    @if (row.petId) {
+                                                        <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                                    } @else {
+                                                        {{ row.petName }}
+                                                    }
+                                                </div>
+                                            }
+                                            <div class="min-w-0 break-words text-surface-900 dark:text-surface-0 font-medium">{{ money(row.amount, row.currency) }}</div>
+                                            <div class="text-sm text-muted-color break-words">{{ payMethodLabel(row.method) }}</div>
+                                            <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
+                                                <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm inline-flex py-1">Detay →</a>
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                                <div class="hidden lg:block">
+                                    <p-table [value]="d.finance.data.recentPayments" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
+                                        <ng-template #header>
+                                            <tr>
+                                                <th>Tarih</th>
+                                                <th>Müşteri</th>
+                                                <th>Hasta</th>
+                                                <th>Tutar</th>
+                                                <th>Yöntem</th>
+                                                <th></th>
+                                            </tr>
+                                        </ng-template>
+                                        <ng-template #body let-row>
+                                            <tr>
+                                                <td>{{ formatPaidAtUtc(row.paidAtUtc) }}</td>
+                                                <td>
+                                                    @if (row.clientId) {
+                                                        <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
+                                                    } @else {
+                                                        {{ row.clientName }}
+                                                    }
+                                                </td>
+                                                <td>
+                                                    @if (row.petId) {
+                                                        <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline">{{ row.petName }}</a>
+                                                    } @else {
+                                                        {{ row.petName }}
+                                                    }
+                                                </td>
+                                                <td>{{ money(row.amount, row.currency) }}</td>
+                                                <td>{{ payMethodLabel(row.method) }}</td>
+                                                <td>
+                                                    <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                                </td>
+                                            </tr>
+                                        </ng-template>
+                                    </p-table>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+
+            <div class="col-span-12">
+                @if (d.summary.error || !d.summary.data) {
+                    <div class="card">
+                        <h5 class="mt-0 mb-4">Son müşteri / hasta</h5>
+                        <app-empty-state message="Özet yüklenemediği için son kayıtlar gösterilemiyor." />
+                    </div>
+                } @else {
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="card mb-0 h-full">
+                            <h5 class="mt-0 mb-4">Son müşteriler</h5>
+                            @if (d.summary.data.recentClients.length === 0) {
+                                <app-empty-state message="Kayıt yok." />
+                            } @else {
+                                <p-table [value]="d.summary.data.recentClients" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
+                                    <ng-template #header>
+                                        <tr>
+                                            <th>Ad</th>
+                                            <th>Telefon</th>
+                                            <th></th>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template #body let-row>
+                                        <tr>
+                                            <td class="font-medium">{{ row.fullName ?? '—' }}</td>
+                                            <td>{{ formatClientPhoneForDisplay(row.phone) }}</td>
+                                            <td>
+                                                <a [routerLink]="['/panel/clients', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            }
+                        </div>
+                        <div class="card mb-0 h-full">
+                            <h5 class="mt-0 mb-4">Son hastalar</h5>
+                            @if (d.summary.data.recentPets.length === 0) {
+                                <app-empty-state message="Kayıt yok." />
+                            } @else {
+                                <p-table [value]="d.summary.data.recentPets" [tableStyle]="{ 'min-width': '100%' }" [paginator]="false">
+                                    <ng-template #header>
+                                        <tr>
+                                            <th>Ad</th>
+                                            <th>Tür</th>
+                                            <th></th>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template #body let-row>
+                                        <tr>
+                                            <td class="font-medium">{{ row.name ?? '—' }}</td>
+                                            <td>{{ petSpeciesText(row) }}</td>
+                                            <td>
+                                                <a [routerLink]="['/panel/pets', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="col-span-12">
+                <button pButton type="button" severity="secondary" (click)="reload()" [disabled]="loading() || listsLoading()"><i class="p-button-icon pi pi-refresh"></i>{{ copy.buttonRefresh }}</button>
+            </div>
+        </div>
+    } @else {
+        <div class="card">
+            <p class="m-0 mb-4 text-muted-color">Özet verisi alınamadı.</p>
+            <button pButton type="button" (click)="reload()" [disabled]="loading() || listsLoading()"><i class="p-button-icon pi pi-refresh"></i>{{ copy.buttonRefresh }}</button>
+        </div>
+    }
+}
