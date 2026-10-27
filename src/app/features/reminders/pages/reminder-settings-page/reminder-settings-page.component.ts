@@ -18,6 +18,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 @Component({
     selector: 'app-reminder-settings-page',
@@ -131,7 +132,7 @@ export class ReminderSettingsPageComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message ?? 'Hatırlatma ayarları yüklenemedi.');
+                this.error.set(panelHttpFailureMessage(e, 'Hatırlatma ayarları yüklenemedi.'));
                 this.loading.set(false);
             }
         });
@@ -166,7 +167,7 @@ export class ReminderSettingsPageComponent implements OnInit {
             },
             error: (e: Error) => {
                 this.saving.set(false);
-                this.saveError.set(e.message ?? 'Hatırlatma ayarları kaydedilemedi.');
+                this.saveError.set(panelHttpFailureMessage(e, 'Hatırlatma ayarları kaydedilemedi.'));
             }
         });
     }

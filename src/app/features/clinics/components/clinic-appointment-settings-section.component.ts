@@ -15,6 +15,7 @@ import { clinicAppointmentSettingsMutationMessage } from '@/app/features/clinics
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
  * Klinik ayarlarındaki "Randevu Varsayılanları" kartı: varsayılan süre, başlangıç aralığı ve çakışma izni. Yalnız
@@ -207,7 +208,7 @@ export class ClinicAppointmentSettingsSectionComponent {
                 this.apSettingsLoading.set(false);
             },
             error: (e: Error) => {
-                this.apSettingsError.set(e.message ?? 'Randevu varsayılanları yüklenemedi.');
+                this.apSettingsError.set(panelHttpFailureMessage(e, 'Randevu varsayılanları yüklenemedi.'));
                 this.apSettingsLoading.set(false);
             }
         });

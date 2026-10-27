@@ -2,6 +2,7 @@ import { signal, type WritableSignal } from '@angular/core';
 import type { Observable } from 'rxjs';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import type { PaginatorState } from 'primeng/types/paginator';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /** Sayfalı liste yanıtının iskeletin kullandığı alanları. */
 export interface ListPageResult<T> {
@@ -43,7 +44,7 @@ export interface ListPageConfig<T> {
 
 const DEFAULT_ROWS_PER_PAGE_OPTIONS = [10, 20, 25, 50];
 
-const defaultErrorMessage = (e: unknown) => (e as Error | undefined)?.message ?? 'Yükleme hatası';
+const defaultErrorMessage = (e: unknown) => panelHttpFailureMessage(e, 'Yükleme hatası');
 
 /**
  * Panel liste sayfalarının ortak iskeleti: sayfalama sinyalleri, tablo (tembel yükleme) ve mobil sayfalayıcı olayları,

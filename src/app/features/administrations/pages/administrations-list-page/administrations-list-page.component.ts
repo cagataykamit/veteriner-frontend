@@ -23,6 +23,7 @@ import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 @Component({
     selector: 'app-administrations-list-page',
@@ -239,7 +240,7 @@ export class AdministrationsListPageComponent implements OnInit {
                     this.loading.set(false);
                 },
                 error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
+                    this.error.set(panelHttpFailureMessage(e, 'Yükleme hatası'));
                     this.loading.set(false);
                 }
             });

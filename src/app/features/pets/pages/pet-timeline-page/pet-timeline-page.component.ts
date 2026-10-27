@@ -15,6 +15,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 const PAGE_SIZE = 20;
 
@@ -204,7 +205,7 @@ export class PetTimelinePageComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message ?? 'Zaman çizelgesi yüklenemedi.');
+                this.error.set(panelHttpFailureMessage(e, 'Zaman çizelgesi yüklenemedi.'));
                 this.loading.set(false);
             }
         });
@@ -230,7 +231,7 @@ export class PetTimelinePageComponent implements OnInit {
                 this.loadingMore.set(false);
             },
             error: (e: Error) => {
-                this.loadMoreError.set(e.message ?? 'Daha fazla kayıt yüklenemedi.');
+                this.loadMoreError.set(panelHttpFailureMessage(e, 'Daha fazla kayıt yüklenemedi.'));
                 this.loadingMore.set(false);
             }
         });

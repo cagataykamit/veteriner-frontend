@@ -12,6 +12,7 @@ import { KVKK_FORM_DEFAULT_TEXT_WARNING, KVKK_TEMPLATE_KINDS, kvkkFormDate, pars
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
  * Müşteri kartından "KVKK formu yazdır" (ADR-021 karar 1) ve "Aydınlatma metni yazdır" (ADR-024): aktif kliniğin ilgili şablonu müşteri adı ve
@@ -94,7 +95,7 @@ export class ClientKvkkFormPageComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message || `${this.info.documentTitle} hazırlanamadı.`);
+                this.error.set(panelHttpFailureMessage(e, `${this.info.documentTitle} hazırlanamadı.`));
                 this.loading.set(false);
             }
         });

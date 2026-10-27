@@ -18,7 +18,7 @@ import { PAYMENT_WRITE_METHOD_OPTIONS } from '@/app/entities/payment/utils/payme
 import { type PaymentUpsertFieldErrors, parsePaymentUpsertHttpError } from '@/app/features/payments/utils/payment-upsert-validation-parse.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
-import { problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import { dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import { PAYMENT_DATE_TOO_FAR_PAST_MESSAGE, paymentDateNotTooFarPastValidator, paymentDateTimeLocalMinAllowed } from '@/app/features/payments/utils/payment-date-validation.utils';
@@ -418,7 +418,7 @@ export class PaymentNewPageComponent implements OnInit {
                     return;
                 }
 
-                this.balanceError.set(e.message ?? 'Açık ücretler yüklenemedi.');
+                this.balanceError.set(panelHttpFailureMessage(e, 'Açık ücretler yüklenemedi.'));
                 this.balanceLoading.set(false);
             }
         });

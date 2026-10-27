@@ -23,6 +23,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 @Component({
     selector: 'app-charges-list-page',
@@ -255,7 +256,7 @@ export class ChargesListPageComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message ?? 'Yükleme hatası');
+                this.error.set(panelHttpFailureMessage(e, 'Yükleme hatası'));
                 this.loading.set(false);
             }
         });

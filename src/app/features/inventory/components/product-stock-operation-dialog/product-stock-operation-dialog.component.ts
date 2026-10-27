@@ -24,6 +24,7 @@ import {
 import { getAcknowledgeExpiredRequest, getStockBatchRequest, syncStockBatchGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
 import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
  * Ürün detayı stok işlemi diyaloğu: stok girişi, çıkışı ve minimum stok. Sayfa `openForRow` / `openFromHeader` ile açar;
@@ -474,7 +475,7 @@ export class ProductStockOperationDialogComponent {
                     },
                     error: (e: Error) => {
                         this.stockOperationSubmitting.set(false);
-                        this.stockOperationSubmitError.set(e.message ?? 'Stok hareketi kaydedilemedi.');
+                        this.stockOperationSubmitError.set(panelHttpFailureMessage(e, 'Stok hareketi kaydedilemedi.'));
                     }
                 });
 
@@ -499,7 +500,7 @@ export class ProductStockOperationDialogComponent {
             },
             error: (e: Error) => {
                 this.stockOperationSubmitting.set(false);
-                this.stockOperationSubmitError.set(e.message ?? 'Minimum stok güncellenemedi.');
+                this.stockOperationSubmitError.set(panelHttpFailureMessage(e, 'Minimum stok güncellenemedi.'));
             }
         });
     }

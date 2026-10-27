@@ -21,6 +21,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatUtcIsoAsLocalDateTimeDisplay, istanbulDateRangeToUtcIso } from '@/app/shared/utils/date.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /** Satış listesi (`Sales.Read`): tarih aralığı, iptal edilenleri dahil etme; satır detaya gider. */
 @Component({
@@ -205,7 +206,7 @@ export class SalesListPageComponent implements OnInit {
                     this.loading.set(false);
                 },
                 error: (e: Error) => {
-                    this.error.set(e.message || 'Satış listesi yüklenemedi.');
+                    this.error.set(panelHttpFailureMessage(e, 'Satış listesi yüklenemedi.'));
                     this.loading.set(false);
                 }
             });

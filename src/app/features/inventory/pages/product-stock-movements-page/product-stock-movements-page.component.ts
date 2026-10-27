@@ -32,6 +32,7 @@ import { triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
 import { STOCK_MOVEMENT_CSV_HEADERS, stockMovementVmToCsvRow } from '@/app/features/inventory/utils/stock-movement-export.utils';
 import { fetchAllInventoryCsvExportPages$, InventoryCsvExportRowLimitError } from '@/app/features/inventory/utils/inventory-csv-export-pagination.utils';
 import { EMPTY, catchError, of, switchMap, tap, type Observable } from 'rxjs';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 type ProductStockMovementsListState = {
     movementType: string;
@@ -337,7 +338,7 @@ export class ProductStockMovementsPageComponent implements OnInit {
                     this.suppressNextLazy = true;
                 },
                 error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
+                    this.error.set(panelHttpFailureMessage(e, 'Yükleme hatası'));
                     this.loading.set(false);
                     this.suppressNextLazy = true;
                 }
@@ -438,7 +439,7 @@ export class ProductStockMovementsPageComponent implements OnInit {
                     this.suppressNextLazy = true;
                 },
                 error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
+                    this.error.set(panelHttpFailureMessage(e, 'Yükleme hatası'));
                     this.loading.set(false);
                 }
             });

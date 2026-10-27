@@ -20,6 +20,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { OrganizationBillingProfileSectionComponent } from '@/app/features/organization/components/organization-billing-profile-section/organization-billing-profile-section.component';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 @Component({
     selector: 'app-organization-settings-page',
@@ -143,7 +144,7 @@ export class OrganizationSettingsPageComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message ?? 'Yükleme hatası');
+                this.error.set(panelHttpFailureMessage(e, 'Yükleme hatası'));
                 this.loading.set(false);
             }
         });
@@ -185,7 +186,7 @@ export class OrganizationSettingsPageComponent implements OnInit {
                     });
                 },
                 error: (e: Error) => {
-                    this.formError.set(e.message ?? 'Kayıt başarısız');
+                    this.formError.set(panelHttpFailureMessage(e, 'Kayıt başarısız'));
                 }
             });
     }

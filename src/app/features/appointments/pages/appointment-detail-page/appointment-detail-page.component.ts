@@ -339,7 +339,7 @@ export class AppointmentDetailPageComponent implements OnInit {
                 this.linkedExamLoading.set(false);
             },
             error: (e: Error) => {
-                this.linkedExamError.set(e.message ?? 'Bağlı muayeneler yüklenemedi.');
+                this.linkedExamError.set(panelHttpFailureMessage(e, 'Bağlı muayeneler yüklenemedi.'));
                 this.linkedExamLoading.set(false);
             }
         });

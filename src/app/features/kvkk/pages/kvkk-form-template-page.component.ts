@@ -232,7 +232,7 @@ export class KvkkFormTemplatePageComponent implements OnInit {
                     return;
                 }
 
-                this.loadError.set(e.message || `${KVKK_TEMPLATE_KINDS[kind].label} yüklenemedi.`);
+                this.loadError.set(panelHttpFailureMessage(e, `${KVKK_TEMPLATE_KINDS[kind].label} yüklenemedi.`));
                 this.loading.set(false);
             }
         });

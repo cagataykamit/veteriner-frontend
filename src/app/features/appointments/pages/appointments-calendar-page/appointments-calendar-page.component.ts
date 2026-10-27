@@ -15,6 +15,7 @@ import { formatDateDisplay, localDateYyyyMmDd, parseUtcApiInstantIsoString } fro
 import { AuthService } from '@/app/core/auth/auth.service';
 import { APPOINTMENTS_CREATE_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 type CalendarViewMode = 'day' | 'week';
 type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled';
@@ -452,7 +453,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
                     this.loading.set(false);
                 },
                 error: (e: Error) => {
-                    this.error.set(e.message ?? 'Takvim verileri yüklenemedi.');
+                    this.error.set(panelHttpFailureMessage(e, 'Takvim verileri yüklenemedi.'));
                     this.loading.set(false);
                 }
             });

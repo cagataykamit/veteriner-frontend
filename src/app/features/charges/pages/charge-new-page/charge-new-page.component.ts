@@ -24,6 +24,7 @@ import { ClientSearchComponent } from '@/app/entities/client/components/client-s
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay, formatUtcIsoAsLocalTimeDisplay, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 @Component({
     selector: 'app-charge-new-page',
@@ -361,7 +362,7 @@ export class ChargeNewPageComponent implements OnInit {
                 },
                 error: (e: Error) => {
                     this.submitting.set(false);
-                    this.submitError.set(e.message ?? 'Ücret kaydedilemedi.');
+                    this.submitError.set(panelHttpFailureMessage(e, 'Ücret kaydedilemedi.'));
                 }
             });
     }

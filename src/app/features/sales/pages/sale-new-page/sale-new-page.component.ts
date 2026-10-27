@@ -357,7 +357,7 @@ export class SaleNewPageComponent {
 
                     return this.productSearch.search(term).pipe(
                         catchError((e: Error) => {
-                            this.searchError.set(e.message || 'Ürünler aranamadı.');
+                            this.searchError.set(panelHttpFailureMessage(e, 'Ürünler aranamadı.'));
 
                             return of([] as SaleProductVm[]);
                         })
@@ -431,7 +431,7 @@ export class SaleNewPageComponent {
             },
             error: (e: Error) => {
                 this.searching.set(false);
-                this.searchError.set(e.message || 'Ürünler aranamadı.');
+                this.searchError.set(panelHttpFailureMessage(e, 'Ürünler aranamadı.'));
             }
         });
     }
@@ -559,7 +559,7 @@ export class SaleNewPageComponent {
         this.batchStates.update((s) => ({ ...s, [productId]: { status: 'loading' } }));
         this.stockBatches.getByProduct(productId, clinicId).subscribe({
             next: (info) => this.batchStates.update((s) => ({ ...s, [productId]: { status: 'ready', info } })),
-            error: (e: Error) => this.batchStates.update((s) => ({ ...s, [productId]: { status: 'error', message: e.message || 'Parti bilgisi yüklenemedi.' } }))
+            error: (e: Error) => this.batchStates.update((s) => ({ ...s, [productId]: { status: 'error', message: panelHttpFailureMessage(e, 'Parti bilgisi yüklenemedi.') } }))
         });
     }
 }

@@ -29,6 +29,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { catchError, forkJoin, of } from 'rxjs';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 @Component({
     selector: 'app-tenant-member-detail-page',
@@ -710,7 +711,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message ?? 'Yükleme hatası');
+                this.error.set(panelHttpFailureMessage(e, 'Yükleme hatası'));
                 this.loading.set(false);
             }
         });
@@ -722,7 +723,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
         this.tenantMembers.getMemberById(memberId).subscribe({
             next: (vm) => this.member.set(vm),
             error: (e: Error) => {
-                const msg = e.message ?? 'Liste yenilenemedi.';
+                const msg = panelHttpFailureMessage(e, 'Liste yenilenemedi.');
 
                 this.roleActionError.set(msg);
                 this.clinicActionError.set(msg);

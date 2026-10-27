@@ -6,6 +6,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
  * Bir ürünün tek klinikteki parti bakiyesi: seri/lot, SKT (yaklaşan / geçmiş rozeti), kalan, firma + partisiz (devir) bakiye.
@@ -117,7 +118,7 @@ export class ProductStockBatchesComponent {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message ?? 'Parti bilgileri yüklenemedi.');
+                this.error.set(panelHttpFailureMessage(e, 'Parti bilgileri yüklenemedi.'));
                 this.loading.set(false);
             }
         });

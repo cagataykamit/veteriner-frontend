@@ -10,6 +10,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
  * Müşteri kartından "Veri kopyası" (ADR-032 madde 2, KVKK bilgi talebi): sunucunun salt okunur kopyası tek belge olarak gösterilir,
@@ -147,7 +148,7 @@ export class ClientDataExportPageComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message || 'Veri kopyası hazırlanamadı.');
+                this.error.set(panelHttpFailureMessage(e, 'Veri kopyası hazırlanamadı.'));
                 this.loading.set(false);
             }
         });

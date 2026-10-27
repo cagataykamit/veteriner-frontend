@@ -44,6 +44,7 @@ import { templateApplySummary } from '@/app/entities/examination-template/utils/
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /** Kayıt metin bölümleri sırası; vital satırı `findings` ile `assessment` arasına girer. */
 const RECORD_TEXT_SECTIONS: readonly {
@@ -517,7 +518,7 @@ export class ExaminationDetailPageComponent implements OnInit {
                 this.relatedSummaryLoading.set(false);
             },
             error: (e: Error) => {
-                this.relatedSummaryError.set(e.message ?? 'İlgili kayıtlar yüklenemedi.');
+                this.relatedSummaryError.set(panelHttpFailureMessage(e, 'İlgili kayıtlar yüklenemedi.'));
                 this.relatedSummaryLoading.set(false);
             }
         });
@@ -544,7 +545,7 @@ export class ExaminationDetailPageComponent implements OnInit {
                 this.apptLoading.set(false);
             },
             error: (e: Error) => {
-                this.apptError.set(e.message ?? 'Randevular yüklenemedi.');
+                this.apptError.set(panelHttpFailureMessage(e, 'Randevular yüklenemedi.'));
                 this.apptLoading.set(false);
             }
         });

@@ -22,6 +22,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { dateOnlyInputToIstanbulStartUtcIso, dateOnlyInputToIstanbulEndUtcIso } from '@/app/shared/utils/date.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 type ClinicSelectOption = { label: string; value: string };
 type ReminderLogsListState = {
@@ -405,7 +406,7 @@ export class ReminderLogsPageComponent implements OnInit {
                     this.loading.set(false);
                 },
                 error: (e: Error) => {
-                    this.error.set(e.message ?? 'Hatırlatma geçmişi yüklenemedi.');
+                    this.error.set(panelHttpFailureMessage(e, 'Hatırlatma geçmişi yüklenemedi.'));
                     this.loading.set(false);
                 }
             });

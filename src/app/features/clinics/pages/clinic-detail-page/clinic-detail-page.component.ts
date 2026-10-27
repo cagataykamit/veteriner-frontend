@@ -26,6 +26,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatClinicPhoneForDisplay, formatClinicPhoneForInput } from '@/app/entities/clinic/utils/clinic-phone-format.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 @Component({
     selector: 'app-clinic-detail-page',
@@ -299,7 +300,7 @@ export class ClinicDetailPageComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.loadError.set(e.message ?? 'Yükleme hatası');
+                this.loadError.set(panelHttpFailureMessage(e, 'Yükleme hatası'));
                 this.loading.set(false);
             }
         });
@@ -480,7 +481,7 @@ export class ClinicDetailPageComponent implements OnInit {
                 this.sectionsReloadKey.update((k) => k + 1);
             },
             error: (err: Error) => {
-                this.formError.set(err.message ?? 'Liste yenilenemedi.');
+                this.formError.set(panelHttpFailureMessage(err, 'Liste yenilenemedi.'));
             }
         });
     }

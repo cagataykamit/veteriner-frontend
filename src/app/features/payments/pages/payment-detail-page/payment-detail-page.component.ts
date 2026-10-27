@@ -23,6 +23,7 @@ import { PAYMENTS_CORRECT_CLAIM, PAYMENTS_UPDATE_CLAIM } from '@/app/core/auth/o
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 @Component({
     selector: 'app-payment-detail-page',
@@ -276,7 +277,7 @@ export class PaymentDetailPageComponent implements OnInit {
                 this.exLoading.set(false);
             },
             error: (e: Error) => {
-                this.exError.set(e.message ?? 'Muayeneler yüklenemedi.');
+                this.exError.set(panelHttpFailureMessage(e, 'Muayeneler yüklenemedi.'));
                 this.exLoading.set(false);
             }
         });
@@ -289,7 +290,7 @@ export class PaymentDetailPageComponent implements OnInit {
                 this.apptLoading.set(false);
             },
             error: (e: Error) => {
-                this.apptError.set(e.message ?? 'Randevular yüklenemedi.');
+                this.apptError.set(panelHttpFailureMessage(e, 'Randevular yüklenemedi.'));
                 this.apptLoading.set(false);
             }
         });

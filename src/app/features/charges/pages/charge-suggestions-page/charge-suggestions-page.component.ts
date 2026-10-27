@@ -289,7 +289,7 @@ export class ChargeSuggestionsPageComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message ?? 'Yükleme hatası');
+                this.error.set(panelHttpFailureMessage(e, 'Yükleme hatası'));
                 this.loading.set(false);
             }
         });

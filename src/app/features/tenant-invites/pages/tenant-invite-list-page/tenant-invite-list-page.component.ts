@@ -22,6 +22,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { tenantInviteDisplayStatusSeverity } from '@/app/entities/tenant-invite/utils/tenant-invite-status.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 @Component({
     selector: 'app-tenant-invite-list-page',
@@ -274,7 +275,7 @@ export class TenantInviteListPageComponent implements OnInit {
             },
             error: (e: Error) => {
                 this.actionBusy.set(null);
-                this.actionError.set(e.message ?? 'İptal başarısız.');
+                this.actionError.set(panelHttpFailureMessage(e, 'İptal başarısız.'));
             }
         });
     }
@@ -293,7 +294,7 @@ export class TenantInviteListPageComponent implements OnInit {
             },
             error: (e: Error) => {
                 this.actionBusy.set(null);
-                this.actionError.set(e.message ?? 'Yeniden gönderim başarısız.');
+                this.actionError.set(panelHttpFailureMessage(e, 'Yeniden gönderim başarısız.'));
             }
         });
     }

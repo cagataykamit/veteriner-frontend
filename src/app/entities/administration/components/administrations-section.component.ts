@@ -18,6 +18,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
  * Muayene veya tedavi bağlamında uygulama kayıtları: liste, "Uygulama ekle" ve gerekçeli iptal.
@@ -176,7 +177,7 @@ export class AdministrationsSectionComponent {
                     this.loading.set(false);
                 },
                 error: (e: Error) => {
-                    this.error.set(e.message ?? 'Uygulamalar yüklenemedi.');
+                    this.error.set(panelHttpFailureMessage(e, 'Uygulamalar yüklenemedi.'));
                     this.loading.set(false);
                 }
             });

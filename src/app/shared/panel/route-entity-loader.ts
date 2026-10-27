@@ -2,6 +2,7 @@ import { DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { catchError, EMPTY, Observable, switchMap, tap } from 'rxjs';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 export interface RouteEntityLoaderConfig<T> {
     /** Kaydı rota kimliğiyle getirir. */
@@ -21,7 +22,7 @@ export interface RouteEntityLoaderConfig<T> {
     readonly onError?: (e: unknown) => void;
 }
 
-const defaultErrorMessage = (e: unknown) => (e as Error | undefined)?.message ?? 'Yükleme hatası';
+const defaultErrorMessage = (e: unknown) => panelHttpFailureMessage(e, 'Yükleme hatası');
 
 /**
  * Detay sayfası iskeleti: rota kimliği → kaydı getir → `loading` / `error` / `value`; aynı kimlikle `reload()`.

@@ -12,7 +12,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
-import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
@@ -149,7 +149,7 @@ export class CareInstructionsSectionComponent {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message ?? 'Bakım talimatları yüklenemedi.');
+                this.error.set(panelHttpFailureMessage(e, 'Bakım talimatları yüklenemedi.'));
                 this.loading.set(false);
             }
         });

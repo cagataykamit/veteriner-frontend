@@ -6,6 +6,7 @@ import { ExaminationsService } from '@/app/entities/examination/services/examina
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
  * Kesinleşmiş muayenenin ek notları (en eski önce) ve "Ek not ekle" eylemi.
@@ -75,7 +76,7 @@ export class ExaminationAddendaSectionComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message ?? 'Ek notlar yüklenemedi.');
+                this.error.set(panelHttpFailureMessage(e, 'Ek notlar yüklenemedi.'));
                 this.loading.set(false);
             }
         });

@@ -12,6 +12,7 @@ import { PetsService } from '@/app/entities/pet/services/pets.service';
 import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import { mergePetTimelineItems, PET_CARD_TIMELINE_FILTERS, PET_TIMELINE_PAYMENT_TYPE, type PetCardTimelineFilter, paymentToPetTimelineItem, petTimelineOmittedTypesLabel } from '@/app/features/pets/utils/pet-timeline.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /** Kartta gösterilen olay sayısı; geçmiş özetinin ödeme bloğu da en yeni 10 kaydı döndürür (birleştirme kesin kalır). */
 export const PET_CARD_TIMELINE_LIMIT = 10;
@@ -159,7 +160,7 @@ export class PetCardTimelineComponent implements OnDestroy {
             },
             error: (e: Error) => {
                 this.events.set([]);
-                this.eventsError.set(e.message ?? 'Zaman çizelgesi yüklenemedi.');
+                this.eventsError.set(panelHttpFailureMessage(e, 'Zaman çizelgesi yüklenemedi.'));
                 this.eventsLoading.set(false);
             }
         });

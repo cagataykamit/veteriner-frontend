@@ -14,6 +14,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 @Component({
     selector: 'app-sale-detail-page',
@@ -125,7 +126,7 @@ export class SaleDetailPageComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e: Error) => {
-                this.error.set(e.message || 'Satış yüklenemedi.');
+                this.error.set(panelHttpFailureMessage(e, 'Satış yüklenemedi.'));
                 this.loading.set(false);
             }
         });

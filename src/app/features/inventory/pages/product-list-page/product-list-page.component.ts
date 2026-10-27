@@ -25,6 +25,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { ConfirmationService } from 'primeng/api';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 type ProductsListState = {
     search: string;
@@ -364,7 +365,7 @@ export class ProductListPageComponent implements OnInit {
                     },
                     error: (e: Error) => {
                         this.rowMutatingId.set(null);
-                        this.listActionError.set(e.message ?? 'Pasifleştirme başarısız.');
+                        this.listActionError.set(panelHttpFailureMessage(e, 'Pasifleştirme başarısız.'));
                     }
                 });
             }
@@ -396,7 +397,7 @@ export class ProductListPageComponent implements OnInit {
                     },
                     error: (e: Error) => {
                         this.rowMutatingId.set(null);
-                        this.listActionError.set(e.message ?? 'Aktifleştirme başarısız.');
+                        this.listActionError.set(panelHttpFailureMessage(e, 'Aktifleştirme başarısız.'));
                     }
                 });
             }

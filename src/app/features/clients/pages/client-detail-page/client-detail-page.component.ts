@@ -38,6 +38,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
  * Müşteri kartı — okuma öncelikli 360 görünüm (ADR-020 karar 6, hasta kartıyla aynı ilke): iletişim ve hesap durumu,
@@ -506,7 +507,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
                 this.paymentSummaryLoading.set(false);
             },
             error: (e: Error) => {
-                this.paymentSummaryError.set(e.message ?? 'Ödeme özeti yüklenemedi.');
+                this.paymentSummaryError.set(panelHttpFailureMessage(e, 'Ödeme özeti yüklenemedi.'));
                 this.paymentSummaryLoading.set(false);
             }
         });
@@ -524,7 +525,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
             error: (e: Error) => {
                 this.apptItems.set([]);
                 this.examItems.set([]);
-                this.recentSummaryError.set(e.message ?? 'Müşteri özeti yüklenemedi.');
+                this.recentSummaryError.set(panelHttpFailureMessage(e, 'Müşteri özeti yüklenemedi.'));
                 this.recentSummaryLoading.set(false);
             }
         });

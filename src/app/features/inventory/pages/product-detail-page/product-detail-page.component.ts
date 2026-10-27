@@ -272,7 +272,7 @@ export class ProductDetailPageComponent implements OnInit {
                 this.stocksLoading.set(false);
             },
             error: (e: Error) => {
-                this.stocksError.set(e.message ?? 'Stok bilgileri yüklenemedi.');
+                this.stocksError.set(panelHttpFailureMessage(e, 'Stok bilgileri yüklenemedi.'));
                 this.stocksLoading.set(false);
             }
         });
@@ -304,7 +304,7 @@ export class ProductDetailPageComponent implements OnInit {
                     },
                     error: (e: Error) => {
                         this.mutationBusy.set(false);
-                        this.mutationError.set(e.message ?? 'Pasifleştirme başarısız.');
+                        this.mutationError.set(panelHttpFailureMessage(e, 'Pasifleştirme başarısız.'));
                     }
                 });
             }
@@ -337,7 +337,7 @@ export class ProductDetailPageComponent implements OnInit {
                     },
                     error: (e: Error) => {
                         this.mutationBusy.set(false);
-                        this.mutationError.set(e.message ?? 'Aktifleştirme başarısız.');
+                        this.mutationError.set(panelHttpFailureMessage(e, 'Aktifleştirme başarısız.'));
                     }
                 });
             }

@@ -6,6 +6,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { suggestAdministrationBatch } from '@/app/entities/administration/utils/administration-batch.utils';
 import type { ProductStockBatchesVm } from '@/app/entities/inventory/models/stock-batch-vm.model';
 import { StockBatchService } from '@/app/entities/inventory/services/stock-batch.service';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 export interface AdministrationBatchPickerControls {
     productId: AbstractControl<string | null>;
@@ -50,7 +51,7 @@ export function createAdministrationBatchPicker(controls: AdministrationBatchPic
 
         return stockBatchService.getByProduct(productId, clinicId).pipe(
             catchError((e: Error) => {
-                error.set(e.message || 'Parti bilgisi yüklenemedi.');
+                error.set(panelHttpFailureMessage(e, 'Parti bilgisi yüklenemedi.'));
 
                 return of(null);
             })

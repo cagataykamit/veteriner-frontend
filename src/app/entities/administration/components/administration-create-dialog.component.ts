@@ -263,7 +263,7 @@ export class AdministrationCreateDialogComponent {
                 this.loadingProducts.set(false);
             },
             error: (e: Error) => {
-                this.productsError.set(e.message ?? 'Ürün listesi yüklenemedi.');
+                this.productsError.set(panelHttpFailureMessage(e, 'Ürün listesi yüklenemedi.'));
                 this.loadingProducts.set(false);
             }
         });

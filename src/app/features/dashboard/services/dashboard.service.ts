@@ -30,7 +30,7 @@ import type { DashboardSummaryDto } from '@/app/features/dashboard/models/dashbo
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
 import { upcomingVaccinationsFilters } from '@/app/entities/vaccination/utils/vaccinations-list-link.utils';
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
@@ -155,7 +155,7 @@ export class DashboardService {
                 })
             ),
             catchError((e: Error): Observable<DashboardSection<DashboardSummaryNormalized | null>> =>
-                of({ data: null, error: e.message ?? 'Özet yüklenemedi.' })
+                of({ data: null, error: panelHttpFailureMessage(e, 'Özet yüklenemedi.') })
             )
         );
 

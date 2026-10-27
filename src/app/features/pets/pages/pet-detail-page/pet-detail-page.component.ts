@@ -26,6 +26,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
  * Hasta (hayvan) kartı — okuma öncelikli 360 görünüm (ADR-020 karar 1-3): başlık ve hesap durumu, her zaman görünür eylem çubuğu,
@@ -335,7 +336,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
                 this.loadLastExamination(s.lastExamination.data?.id ?? null);
             },
             error: (e: Error) => {
-                this.summaryError.set(e.message ?? 'Hasta özeti yüklenemedi.');
+                this.summaryError.set(panelHttpFailureMessage(e, 'Hasta özeti yüklenemedi.'));
                 this.summaryLoading.set(false);
             }
         });
@@ -358,7 +359,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
                 this.history.set(h);
             },
             error: (e: Error) => {
-                this.historyError.set(e.message ?? 'Hasta geçmişi yüklenemedi.');
+                this.historyError.set(panelHttpFailureMessage(e, 'Hasta geçmişi yüklenemedi.'));
             }
         });
     }

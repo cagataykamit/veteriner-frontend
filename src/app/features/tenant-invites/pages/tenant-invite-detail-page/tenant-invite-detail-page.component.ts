@@ -18,6 +18,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { tenantInviteDisplayStatusSeverity } from '@/app/entities/tenant-invite/utils/tenant-invite-status.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 @Component({
     selector: 'app-tenant-invite-detail-page',
@@ -183,7 +184,7 @@ export class TenantInviteDetailPageComponent implements OnInit {
             },
             error: (e: Error) => {
                 this.cancelBusy.set(false);
-                this.actionError.set(e.message ?? 'İptal başarısız.');
+                this.actionError.set(panelHttpFailureMessage(e, 'İptal başarısız.'));
             }
         });
     }
@@ -207,7 +208,7 @@ export class TenantInviteDetailPageComponent implements OnInit {
             },
             error: (e: Error) => {
                 this.resendBusy.set(false);
-                this.actionError.set(e.message ?? 'Yeniden gönderim başarısız.');
+                this.actionError.set(panelHttpFailureMessage(e, 'Yeniden gönderim başarısız.'));
             }
         });
     }
@@ -227,7 +228,7 @@ export class TenantInviteDetailPageComponent implements OnInit {
             },
             error: (e: Error) => {
                 this.item.set(null);
-                this.error.set(e.message ?? 'Yükleme hatası');
+                this.error.set(panelHttpFailureMessage(e, 'Yükleme hatası'));
                 this.loading.set(false);
             }
         });

@@ -18,6 +18,7 @@ import { StockMovementService } from '@/app/features/inventory/services/stock-mo
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { DATETIME_LOCAL_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 type SelectOption = { label: string; value: string };
 
@@ -293,7 +294,7 @@ export class StockMovementCreateDialogComponent {
             },
             error: (e: Error) => {
                 this.submitting.set(false);
-                this.submitError.set(e.message ?? 'Kayıt başarısız.');
+                this.submitError.set(panelHttpFailureMessage(e, 'Kayıt başarısız.'));
             }
         });
     }

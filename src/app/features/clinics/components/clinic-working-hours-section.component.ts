@@ -18,6 +18,7 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
+import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
  * Klinik ayarlarındaki "Çalışma Saatleri" kartı: haftalık gün/saat/mola formu ve kaydı. Yalnız `Clinics.Update` olan
@@ -240,7 +241,7 @@ export class ClinicWorkingHoursSectionComponent {
                 this.whLoading.set(false);
             },
             error: (e: Error) => {
-                this.whError.set(e.message ?? 'Çalışma saatleri yüklenemedi.');
+                this.whError.set(panelHttpFailureMessage(e, 'Çalışma saatleri yüklenemedi.'));
                 this.whLoading.set(false);
             }
         });
