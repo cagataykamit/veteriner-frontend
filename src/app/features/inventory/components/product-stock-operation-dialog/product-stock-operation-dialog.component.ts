@@ -1,6 +1,6 @@
 import { Component, DestroyRef, inject, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
@@ -13,49 +13,17 @@ import type { ProductStockVm } from '@/app/entities/inventory/models/product-sto
 import type { ProductDetailVm } from '@/app/entities/inventory/models/product-vm.model';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { StockBatchFieldsComponent } from '@/app/features/inventory/components/stock-batch-fields/stock-batch-fields.component';
-import { createStockBatchFormGroup, getAcknowledgeExpiredRequest, getStockBatchRequest, syncStockBatchGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
+import {
+    createProductStockOperationFormGroup,
+    optionalNonNegativeNumberValidator,
+    parseNonNegativeFormNumber,
+    parsePositiveFormNumber,
+    stockMovementAmountPositiveValidator,
+    type StockOperationKind
+} from '@/app/features/inventory/forms/product-stock-operation-form.factory';
+import { getAcknowledgeExpiredRequest, getStockBatchRequest, syncStockBatchGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
 import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-
-/** Stok giriş/çıkış: miktar > 0 */
-function stockMovementAmountPositiveValidator(): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors | null => {
-        const raw = control.value as string | number | null | undefined;
-
-        if (raw === null || raw === undefined || raw === '') {
-            return { required: true };
-        }
-
-        const n = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'));
-
-        if (!Number.isFinite(n) || n <= 0) {
-            return { minExclusive: true };
-        }
-
-        return null;
-    };
-}
-
-function optionalNonNegativeNumberValidator(): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors | null => {
-        const raw = control.value as string | number | null | undefined;
-
-        if (raw === null || raw === undefined || raw === '') {
-            return null;
-        }
-
-        const n = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'));
-
-        if (!Number.isFinite(n) || n < 0) {
-            return { min: true };
-        }
-
-        return null;
-    };
-}
-
-/** Ürün detayı — Klinik stokları tek dialog işlem tipi */
-type StockOperationKind = 'in' | 'out' | 'minimum';
 
 /**
  * Ürün detayı stok işlemi diyaloğu: stok girişi, çıkışı ve minimum stok. Sayfa `openForRow` / `openFromHeader` ile açar;
@@ -233,15 +201,7 @@ export class ProductStockOperationDialogComponent {
     /** Ürün için stok satırı yok; aktif klinik üzerinden giriş/çıkış */
     readonly stockOperationActiveClinicFallback = signal(false);
 
-    readonly stockOperationForm = this.fb.nonNullable.group({
-        clinicStockRowId: [null as string | null],
-        operationType: this.fb.nonNullable.control<StockOperationKind>('in'),
-        amount: [null as number | null],
-        unitCost: [null as number | null],
-        notes: ['', Validators.maxLength(2000)],
-        minimumStockLevel: [null as number | null],
-        batch: createStockBatchFormGroup(this.fb)
-    });
+    readonly stockOperationForm = createProductStockOperationFormGroup(this.fb);
 
     /** Form başına bir kez üretilir; hata sonrası yeniden denemede aynı kalır, diyalog kapanınca yenilenir. */
     private requestId = crypto.randomUUID();
@@ -275,12 +235,7 @@ export class ProductStockOperationDialogComponent {
 
                 this.applyOperationTypeValidators(op);
             } else {
-                this.stockOperationForm.controls.amount.clearValidators();
-                this.stockOperationForm.controls.unitCost.clearValidators();
-                this.stockOperationForm.controls.minimumStockLevel.clearValidators();
-                this.stockOperationForm.controls.amount.updateValueAndValidity({ emitEvent: false });
-                this.stockOperationForm.controls.unitCost.updateValueAndValidity({ emitEvent: false });
-                this.stockOperationForm.controls.minimumStockLevel.updateValueAndValidity({ emitEvent: false });
+                this.clearQuantityValidators();
             }
         });
     }
@@ -357,17 +312,7 @@ export class ProductStockOperationDialogComponent {
             this.clearClinicStockRowControl();
             const defaultOp = this.pickDefaultOperationType();
 
-            this.stockOperationForm.reset(
-                {
-                    clinicStockRowId: null,
-                    operationType: defaultOp,
-                    amount: null,
-                    unitCost: null,
-                    notes: '',
-                    minimumStockLevel: null
-                },
-                { emitEvent: false }
-            );
+            this.resetStockOperationForm(defaultOp);
             this.applyOperationTypeValidators(defaultOp);
             this.stockOperationDialogOpen.set(true);
 
@@ -379,23 +324,8 @@ export class ProductStockOperationDialogComponent {
         this.editingStockRow.set(null);
         this.stockOperationSubmitError.set(null);
         this.stockOperationForm.controls.clinicStockRowId.setValidators([Validators.required]);
-        this.stockOperationForm.reset(
-            {
-                clinicStockRowId: null,
-                operationType: 'in',
-                amount: null,
-                unitCost: null,
-                notes: '',
-                minimumStockLevel: null
-            },
-            { emitEvent: false }
-        );
-        this.stockOperationForm.controls.amount.clearValidators();
-        this.stockOperationForm.controls.unitCost.clearValidators();
-        this.stockOperationForm.controls.minimumStockLevel.clearValidators();
-        this.stockOperationForm.controls.amount.updateValueAndValidity({ emitEvent: false });
-        this.stockOperationForm.controls.unitCost.updateValueAndValidity({ emitEvent: false });
-        this.stockOperationForm.controls.minimumStockLevel.updateValueAndValidity({ emitEvent: false });
+        this.resetStockOperationForm('in');
+        this.clearQuantityValidators();
         this.stockOperationForm.controls.clinicStockRowId.updateValueAndValidity({ emitEvent: false });
         this.stockOperationDialogOpen.set(true);
     }
@@ -408,17 +338,7 @@ export class ProductStockOperationDialogComponent {
         this.stockOperationSubmitError.set(null);
         const defaultOp = this.pickDefaultOperationType();
 
-        this.stockOperationForm.reset(
-            {
-                clinicStockRowId: null,
-                operationType: defaultOp,
-                amount: null,
-                unitCost: null,
-                notes: '',
-                minimumStockLevel: null
-            },
-            { emitEvent: false }
-        );
+        this.resetStockOperationForm(defaultOp);
         this.applyOperationTypeValidators(defaultOp);
         this.stockOperationDialogOpen.set(true);
     }
@@ -430,17 +350,7 @@ export class ProductStockOperationDialogComponent {
         this.editingStockRow.set(null);
         this.stockOperationSubmitError.set(null);
         this.clearClinicStockRowControl();
-        this.stockOperationForm.reset(
-            {
-                clinicStockRowId: null,
-                operationType: 'in',
-                amount: null,
-                unitCost: null,
-                notes: '',
-                minimumStockLevel: null
-            },
-            { emitEvent: false }
-        );
+        this.resetStockOperationForm('in');
         this.applyOperationTypeValidators('in');
         this.stockOperationForm.markAsUntouched();
         this.requestId = crypto.randomUUID();
@@ -507,7 +417,7 @@ export class ProductStockOperationDialogComponent {
         const raw = this.stockOperationForm.getRawValue();
 
         if (op === 'in' || op === 'out') {
-            const amount = this.parsePositiveQuantity(raw.amount);
+            const amount = parsePositiveFormNumber(raw.amount);
 
             if (amount == null) {
                 this.stockOperationForm.markAllAsTouched();
@@ -517,7 +427,7 @@ export class ProductStockOperationDialogComponent {
 
             const notesTrimmed = raw.notes?.trim() ?? '';
             const defaultReason = op === 'in' ? 'Stok girişi' : 'Stok çıkışı';
-            const unitCost = op === 'in' ? this.parseOptionalNonNegativeUnitCost(raw.unitCost as number | string | null | undefined) : null;
+            const unitCost = op === 'in' ? parseNonNegativeFormNumber(raw.unitCost as number | string | null | undefined) : null;
 
             let clinicId: string | null = null;
 
@@ -644,32 +554,18 @@ export class ProductStockOperationDialogComponent {
         });
     }
 
-    private parsePositiveQuantity(raw: number | string | null | undefined): number | null {
-        if (raw === null || raw === undefined || raw === '') {
-            return null;
-        }
-
-        const n = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'));
-
-        if (!Number.isFinite(n) || n <= 0) {
-            return null;
-        }
-
-        return n;
+    private resetStockOperationForm(operationType: StockOperationKind): void {
+        this.stockOperationForm.reset({ clinicStockRowId: null, operationType, amount: null, unitCost: null, notes: '', minimumStockLevel: null }, { emitEvent: false });
     }
 
-    private parseOptionalNonNegativeUnitCost(raw: number | string | null | undefined): number | null {
-        if (raw === null || raw === undefined || raw === '') {
-            return null;
+    /** Klinik seçilmeden miktar/maliyet/minimum alanları doğrulanmaz. */
+    private clearQuantityValidators(): void {
+        const { amount, unitCost, minimumStockLevel } = this.stockOperationForm.controls;
+
+        for (const ctrl of [amount, unitCost, minimumStockLevel]) {
+            ctrl.clearValidators();
+            ctrl.updateValueAndValidity({ emitEvent: false });
         }
-
-        const n = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'));
-
-        if (!Number.isFinite(n) || n < 0) {
-            return null;
-        }
-
-        return n;
     }
 
     /** Parti bloğu yalnız stok girişinde ve en az bir alan doluyken gönderilir. */
