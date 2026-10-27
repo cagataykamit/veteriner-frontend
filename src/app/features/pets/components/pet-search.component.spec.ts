@@ -6,7 +6,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
-import { BreedsService } from '@/app/features/breeds/services/breeds.service';
+import { BreedsService } from '@/app/entities/breed/services/breeds.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { PetSearchComponent } from './pet-search.component';
 

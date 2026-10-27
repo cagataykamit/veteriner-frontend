@@ -4,9 +4,9 @@ import type {
     BreedDetailDto,
     BreedListItemDto,
     BreedUpdateRequestDto
-} from '@/app/features/breeds/models/breed-api.model';
-import type { BreedUpsertRequest } from '@/app/features/breeds/models/breed-upsert.model';
-import type { BreedDetailVm, BreedListItemVm } from '@/app/features/breeds/models/breed-vm.model';
+} from '@/app/entities/breed/models/breed-api.model';
+import type { BreedUpsertRequest } from '@/app/entities/breed/models/breed-upsert.model';
+import type { BreedDetailVm, BreedListItemVm } from '@/app/entities/breed/models/breed-vm.model';
 
 const EM = '—';
 

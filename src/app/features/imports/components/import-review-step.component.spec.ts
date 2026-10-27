@@ -1,7 +1,7 @@
 import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject } from 'rxjs';
-import { BreedsService } from '@/app/features/breeds/services/breeds.service';
+import { BreedsService } from '@/app/entities/breed/services/breeds.service';
 import { ImportReviewStepComponent } from '@/app/features/imports/components/import-review-step.component';
 import type { ImportBatchDto, ImportPreviewDto, ImportRowDto, ImportRowPageDto, ImportTableSummaryDto } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';

@@ -5,7 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.mapper';
 import { createPetUpsertFormGroup, getPetUpsertFormValue, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
-import { BreedsService } from '@/app/features/breeds/services/breeds.service';
+import { BreedsService } from '@/app/entities/breed/services/breeds.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
 import { type PetCreateFieldErrors, type PetCreateFormFieldKey, parsePetCreateHttpError } from '@/app/features/pets/utils/pet-create-validation-parse.utils';
@@ -16,7 +16,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { QuickBreedDialogComponent } from '@/app/features/breeds/components/quick-breed-dialog.component';
+import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick-breed-dialog.component';
 
 /**
  * Seçili müşteri için tam sayfa ayrılmadan hayvan oluşturma (`mapPetUpsertFormToCreateRequest` ile aynı write hattı).

@@ -12,7 +12,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { BREEDS_CREATE_CLAIM, SPECIES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { BreedsService } from '@/app/features/breeds/services/breeds.service';
+import { BreedsService } from '@/app/entities/breed/services/breeds.service';
 import { createPetUpsertFormGroup, getPetUpsertFormValue, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
 import { PetAlertFieldsComponent } from '@/app/features/pets/components/pet-alert-fields.component';
 import { mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.mapper';
@@ -27,7 +27,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
-import { QuickBreedDialogComponent } from '@/app/features/breeds/components/quick-breed-dialog.component';
+import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick-breed-dialog.component';
 import { QuickSpeciesDialogComponent } from '@/app/features/species/components/quick-species-dialog.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';

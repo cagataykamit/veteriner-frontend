@@ -6,7 +6,7 @@ import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
 import { map, Observable } from 'rxjs';
-import { BreedsService } from '@/app/features/breeds/services/breeds.service';
+import { BreedsService } from '@/app/entities/breed/services/breeds.service';
 import type { ImportBatchDto, ImportFileFormat, ImportPreviewDto, ImportRowDto, ImportRowsQuery, ImportTable, ImportUnmappedValueDto, ImportValueKind } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';

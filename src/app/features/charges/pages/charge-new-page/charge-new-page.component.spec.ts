@@ -8,7 +8,7 @@ import { ChargesService } from '@/app/features/charges/services/charges.service'
 import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { SpeciesService } from '@/app/features/species/services/species.service';
-import { BreedsService } from '@/app/features/breeds/services/breeds.service';
+import { BreedsService } from '@/app/entities/breed/services/breeds.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
