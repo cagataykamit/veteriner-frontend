@@ -107,12 +107,17 @@ describe('HospitalizationFormComponent — konum: bölüm → oda (HOSP-002)', (
     };
 
     beforeEach(() => {
+        // Yatış tarihi en fazla 7 gün geçmişe girilebilir; sabit yatış tarihi saate göre geçersizleşmesin.
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date('2026-10-21T09:00:00Z'));
         create = vi
             .fn()
             .mockName('createHospitalization')
             .mockReturnValue(of({ id: 'h1' }));
         listWards = vi.fn().mockName('listWards').mockReturnValue(of(wards));
     });
+
+    afterEach(() => vi.useRealTimers());
 
     it('aktif kliniğin tanımlarını yükler; bölüm seçenekleri "Konum yok" + aktif bölümler, oda bölüm seçilince aktif odalar', async () => {
         const c = await setup();
