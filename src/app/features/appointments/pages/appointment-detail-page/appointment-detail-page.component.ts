@@ -67,7 +67,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                         } @else if (ro.mutationBlocked()) {
                             <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Muayene Oluştur (salt okunur)</button>
                         } @else if (canOpenVisit) {
-                            <button pButton type="button" class="p-button-secondary" [loading]="startingExam()" [disabled]="startingExam()" (click)="startExamination()"><i class="pi pi-plus"></i>Muayene Oluştur</button>
+                            <button pButton type="button" class="p-button-secondary" [disabled]="startingExam()" (click)="startExamination()"><i [class]="startingExam() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>Muayene Oluştur</button>
                         } @else {
                             <a
                                 [routerLink]="['/panel/examinations/new']"

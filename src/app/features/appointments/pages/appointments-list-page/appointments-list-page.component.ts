@@ -81,7 +81,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                         <app-filter-field label="Arama" labelFor="apptSearch" [active]="isSearchActive()" width="grow">
                             <app-search-input inputId="apptSearch" placeholder="Not; müşteri, hasta, tür veya ırk metni…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </app-filter-field>
-                        <p-button actions [label]="copy.buttonClear" icon="pi pi-times" severity="secondary" (onClick)="resetFilters()" [disabled]="loading()" />
+                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canCreateAppointment && !ro.mutationBlocked()) {
                             <a actions routerLink="/panel/appointments/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Randevu</a>
                         } @else if (canCreateAppointment && ro.mutationBlocked()) {

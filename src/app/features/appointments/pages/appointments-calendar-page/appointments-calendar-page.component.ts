@@ -37,13 +37,13 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
             @if (!isPresetDateGroupedMode()) {
                 <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3 mb-4">
                     <div class="flex items-center gap-2">
-                        <p-button [severity]="viewMode() === 'day' ? undefined : 'secondary'" label="Gün" size="small" (onClick)="changeViewMode('day')" />
-                        <p-button [severity]="viewMode() === 'week' ? undefined : 'secondary'" label="Hafta" size="small" (onClick)="changeViewMode('week')" />
+                        <button pButton type="button" [severity]="viewMode() === 'day' ? undefined : 'secondary'" size="small" (click)="changeViewMode('day')">Gün</button>
+                        <button pButton type="button" [severity]="viewMode() === 'week' ? undefined : 'secondary'" size="small" (click)="changeViewMode('week')">Hafta</button>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <p-button severity="secondary" size="small" icon="pi pi-angle-left" label="Önceki" (onClick)="previous()" />
-                        <p-button severity="secondary" size="small" label="Bugün" (onClick)="goToday()" />
-                        <p-button severity="secondary" size="small" iconPos="right" icon="pi pi-angle-right" label="Sonraki" (onClick)="next()" />
+                        <button pButton type="button" severity="secondary" size="small" (click)="previous()"><i class="p-button-icon pi pi-angle-left"></i>Önceki</button>
+                        <button pButton type="button" severity="secondary" size="small" (click)="goToday()">Bugün</button>
+                        <button pButton type="button" severity="secondary" size="small" (click)="next()">Sonraki<i class="p-button-icon pi pi-angle-right"></i></button>
                     </div>
                 </div>
             }
