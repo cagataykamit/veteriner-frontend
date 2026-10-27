@@ -6,8 +6,8 @@ import type { PetSummaryVm } from '@/app/entities/pet/models/pet-summary-vm.mode
 import type { PetNextAppointmentVm } from '@/app/entities/pet/models/pet-open-items-vm.model';
 import type { PetDetailVm } from '@/app/entities/pet/models/pet-vm.model';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
-import { careStatusLabel } from '@/app/features/visits/utils/visit-status.utils';
-import type { VisitCareStatus } from '@/app/features/visits/models/visit-vm.model';
+import { careStatusLabel } from '@/app/entities/visit/utils/visit-status.utils';
+import type { VisitCareStatus } from '@/app/entities/visit/models/visit-vm.model';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
 import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';

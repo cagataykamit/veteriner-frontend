@@ -7,8 +7,8 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { CHARGES_READ_CLAIM, PAYMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { CashSummaryDto, DailyTransactionsDto, DailyTransactionsResultVm, EndOfDayOpenItemsDto } from '@/app/features/reports/end-of-day/models/end-of-day.model';
 import type { ReportListQueryBase, ReportListSource } from '@/app/features/reports/shared/report-list-state';
-import { mapTodayOpenItemsDtoToVm } from '@/app/features/visits/data/visit.mapper';
-import type { TodayOpenItemsVm } from '@/app/features/visits/models/visit-vm.model';
+import { mapTodayOpenItemsDtoToVm } from '@/app/entities/visit/data/visit.mapper';
+import type { TodayOpenItemsVm } from '@/app/entities/visit/models/visit-vm.model';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { userErrorFromHttp } from '@/app/shared/utils/api-error.utils';
 

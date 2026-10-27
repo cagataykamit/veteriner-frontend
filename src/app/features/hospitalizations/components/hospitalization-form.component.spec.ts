@@ -13,7 +13,7 @@ import type { HospitalizationWardVm } from '@/app/entities/hospitalization-ward/
 import { HospitalizationWardsService } from '@/app/entities/hospitalization-ward/services/hospitalization-wards.service';
 import { HospitalizationsService } from '@/app/features/hospitalizations/services/hospitalizations.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';

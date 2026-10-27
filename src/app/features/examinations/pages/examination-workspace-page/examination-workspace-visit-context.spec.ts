@@ -12,8 +12,8 @@ import { ExaminationsService } from '@/app/entities/examination/services/examina
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import type { VisitVm } from '@/app/features/visits/models/visit-vm.model';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
+import type { VisitVm } from '@/app/entities/visit/models/visit-vm.model';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { ExaminationWorkspacePageComponent } from './examination-workspace-page.component';
 
 const visit = (over: Partial<VisitVm> = {}): VisitVm => ({

@@ -27,7 +27,7 @@ import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { parseAppointmentExaminationRouteContext, parseVisitExaminationRouteContext, prefillPetFromRoute, type VisitExaminationRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';

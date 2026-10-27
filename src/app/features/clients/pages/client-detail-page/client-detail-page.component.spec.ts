@@ -14,7 +14,7 @@ import { PetCardDataService } from '@/app/features/pets/services/pet-card-data.s
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { ClientDetailPageComponent } from './client-detail-page.component';
 
 const client: ClientDetailVm = {

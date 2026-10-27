@@ -5,7 +5,7 @@ import { of, Subject, throwError } from 'rxjs';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
-import type { PetSuggestion } from '@/app/features/visits/models/visit-vm.model';
+import type { PetSuggestion } from '@/app/entities/visit/models/visit-vm.model';
 import { VisitQuickRegistrationComponent } from './visit-quick-registration.component';
 
 const httpError = (status: number, body: unknown) => new HttpErrorResponse({ status, error: body });

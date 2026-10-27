@@ -16,7 +16,7 @@ import { ReportFilterBarComponent } from '@/app/features/reports/shared/report-f
 import { ReportListState, type ReportExtraKey, type ReportListQueryBase } from '@/app/features/reports/shared/report-list-state';
 import { ReportResultsComponent } from '@/app/features/reports/shared/report-results.component';
 import { paymentMethodLabel } from '@/app/features/payments/utils/payment-method.utils';
-import type { TodayOpenItemsVm } from '@/app/features/visits/models/visit-vm.model';
+import type { TodayOpenItemsVm } from '@/app/entities/visit/models/visit-vm.model';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';

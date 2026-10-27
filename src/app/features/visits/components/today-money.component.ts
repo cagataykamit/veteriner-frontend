@@ -1,7 +1,7 @@
 import { Component, computed, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { TagModule } from 'primeng/tag';
-import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
-import { todayOpenChips } from '@/app/features/visits/utils/visit-status.utils';
+import type { TodayItemVm } from '@/app/entities/visit/models/visit-vm.model';
+import { todayOpenChips } from '@/app/entities/visit/utils/visit-status.utils';
 import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 
 /**

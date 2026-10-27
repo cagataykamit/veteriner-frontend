@@ -1,8 +1,8 @@
 import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
-import type { TodayItemVm, VisitVm } from '@/app/features/visits/models/visit-vm.model';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
+import type { TodayItemVm, VisitVm } from '@/app/entities/visit/models/visit-vm.model';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { VisitCorrectionDialogComponent } from './visit-correction-dialog.component';
 
 const item: TodayItemVm = {

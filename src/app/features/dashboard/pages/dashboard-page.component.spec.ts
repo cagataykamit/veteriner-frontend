@@ -6,7 +6,7 @@ import { APPOINTMENTS_READ_CLAIM, VISITS_CREATE_CLAIM } from '@/app/core/auth/op
 import { DashboardService } from '@/app/features/dashboard/services/dashboard.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { ProductStockService } from '@/app/entities/inventory/services/product-stock.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { DashboardPageComponent } from './dashboard-page.component';

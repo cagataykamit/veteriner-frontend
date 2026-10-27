@@ -6,9 +6,9 @@ import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
-import type { TodayItemVm, VisitCorrectionAction, VisitVm } from '@/app/features/visits/models/visit-vm.model';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
-import { careStatusLabel, correctionActionOptions } from '@/app/features/visits/utils/visit-status.utils';
+import type { TodayItemVm, VisitCorrectionAction, VisitVm } from '@/app/entities/visit/models/visit-vm.model';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
+import { careStatusLabel, correctionActionOptions } from '@/app/entities/visit/utils/visit-status.utils';
 import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 

@@ -1,5 +1,5 @@
-import { mapCorrectVisitToApiBody, mapCreateVisitToApiBody, mapTodayDtoToVm, mapVeterinarianDtoToVm, mapVisitCreateResultDtoToVm, todayQueryToHttpParams } from '@/app/features/visits/data/visit.mapper';
-import type { TodayItemDto, VisitDto } from '@/app/features/visits/models/visit-api.model';
+import { mapCorrectVisitToApiBody, mapCreateVisitToApiBody, mapTodayDtoToVm, mapVeterinarianDtoToVm, mapVisitCreateResultDtoToVm, todayQueryToHttpParams } from '@/app/entities/visit/data/visit.mapper';
+import type { TodayItemDto, VisitDto } from '@/app/entities/visit/models/visit-api.model';
 
 const visitDto = (over: Partial<VisitDto> = {}): VisitDto => ({
     id: 'v1',

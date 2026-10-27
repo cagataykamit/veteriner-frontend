@@ -8,8 +8,8 @@ import { AppointmentsService } from '@/app/entities/appointment/services/appoint
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import type { TodayHospitalizationVm, TodayItemVm, TodayVm, VisitVm } from '@/app/features/visits/models/visit-vm.model';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
+import type { TodayHospitalizationVm, TodayItemVm, TodayVm, VisitVm } from '@/app/entities/visit/models/visit-vm.model';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { TodayPageComponent } from './today-page.component';
 
 /** Göreli süreler ("12 dk", yatış süresi) gerçek saate değil sabit saate göre hesaplanır; describe seviyesindeki fixture'lar koşudan dakikalar önce üretilse de kaymaz. */

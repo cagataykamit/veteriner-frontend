@@ -1,5 +1,5 @@
 import type { PetAlertsVm } from '@/app/shared/pet-alerts/pet-alerts.utils';
-import type { TodayAppointmentStatusDto, TodayChargeIndicatorDto, VisitCareStatusDto } from '@/app/features/visits/models/visit-api.model';
+import type { TodayAppointmentStatusDto, TodayChargeIndicatorDto, VisitCareStatusDto } from '@/app/entities/visit/models/visit-api.model';
 
 export type VisitCareStatus = VisitCareStatusDto;
 

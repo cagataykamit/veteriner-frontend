@@ -15,8 +15,8 @@ import type { ChargeLineKind } from '@/app/entities/charge/utils/charge-tax.util
 import { prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
-import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
+import type { TodayItemVm } from '@/app/entities/visit/models/visit-vm.model';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';

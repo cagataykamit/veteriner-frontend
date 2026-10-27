@@ -6,7 +6,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { LAB_RESULTS_READ_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { MenuBadgeKey } from '@/app/core/routing/panel-navigation';
 import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 
 /** Sayaçlar bu aralıkla ve sayfa geçişlerinde yenilenir; iki yenileme arası en az `MIN_GAP_MS` geçer. */
 const REFRESH_INTERVAL_MS = 60_000;

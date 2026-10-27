@@ -12,7 +12,7 @@ import type {
     VeterinarianDto,
     VisitCreateResultDto,
     VisitDto
-} from '@/app/features/visits/models/visit-api.model';
+} from '@/app/entities/visit/models/visit-api.model';
 import type {
     CorrectVisitRequest,
     CreateVisitRequest,
@@ -24,7 +24,7 @@ import type {
     VeterinarianVm,
     VisitCreateResultVm,
     VisitVm
-} from '@/app/features/visits/models/visit-vm.model';
+} from '@/app/entities/visit/models/visit-vm.model';
 
 const EM = '—';
 

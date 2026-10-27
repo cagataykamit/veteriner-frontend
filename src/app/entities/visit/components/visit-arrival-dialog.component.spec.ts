@@ -4,8 +4,8 @@ import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
-import type { TodayItemVm, VisitCreateResultVm } from '@/app/features/visits/models/visit-vm.model';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
+import type { TodayItemVm, VisitCreateResultVm } from '@/app/entities/visit/models/visit-vm.model';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { VisitArrivalDialogComponent } from './visit-arrival-dialog.component';
 
 const result = (created: boolean): VisitCreateResultVm => ({

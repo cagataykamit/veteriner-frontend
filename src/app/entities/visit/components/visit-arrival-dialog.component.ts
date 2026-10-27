@@ -13,10 +13,10 @@ import { CLIENTS_CREATE_CLAIM, PETS_CREATE_CLAIM } from '@/app/core/auth/operati
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
-import { VisitQuickRegistrationComponent, type RegistrationOwner } from '@/app/features/visits/components/visit-quick-registration.component';
-import type { CreateVisitRequest, PetSuggestion, TodayItemVm, VisitCreateResultVm } from '@/app/features/visits/models/visit-vm.model';
-import { findVeterinarianUserId } from '@/app/features/visits/data/visit.mapper';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
+import { VisitQuickRegistrationComponent, type RegistrationOwner } from '@/app/entities/visit/components/visit-quick-registration.component';
+import type { CreateVisitRequest, PetSuggestion, TodayItemVm, VisitCreateResultVm } from '@/app/entities/visit/models/visit-vm.model';
+import { findVeterinarianUserId } from '@/app/entities/visit/data/visit.mapper';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 

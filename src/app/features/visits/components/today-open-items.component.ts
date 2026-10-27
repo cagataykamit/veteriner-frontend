@@ -1,6 +1,6 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import type { TodayOpenItemsVm } from '@/app/features/visits/models/visit-vm.model';
+import type { TodayOpenItemsVm } from '@/app/entities/visit/models/visit-vm.model';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
 interface OpenItemEntry {

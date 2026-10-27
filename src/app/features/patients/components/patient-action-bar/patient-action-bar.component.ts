@@ -3,8 +3,8 @@ import { Component, computed, inject, input, signal, ChangeDetectionStrategy } f
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { VisitArrivalDialogComponent } from '@/app/features/visits/components/visit-arrival-dialog.component';
-import type { PetSuggestion } from '@/app/features/visits/models/visit-vm.model';
+import { VisitArrivalDialogComponent } from '@/app/entities/visit/components/visit-arrival-dialog.component';
+import type { PetSuggestion } from '@/app/entities/visit/models/visit-vm.model';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { buildPatientActions } from './patient-actions.utils';
 

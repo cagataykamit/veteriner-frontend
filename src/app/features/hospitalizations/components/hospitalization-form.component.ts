@@ -23,8 +23,8 @@ import { HospitalizationWardsService } from '@/app/entities/hospitalization-ward
 import { HOSPITALIZATION_ROOM_REQUIRED_ERROR_KEY, hospitalizationRoomOptions, hospitalizationWardOptions, roomRequiredWhenWardSelectedValidator } from '@/app/features/hospitalizations/utils/hospitalization-location-select.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { examinationListItemFromDetail } from '@/app/entities/prescription/utils/prescription-relation-select.utils';
-import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
+import type { TodayItemVm } from '@/app/entities/visit/models/visit-vm.model';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';

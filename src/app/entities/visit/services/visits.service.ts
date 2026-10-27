@@ -14,13 +14,13 @@ import {
     mapVisitCreateResultDtoToVm,
     mapVisitDtoToVm,
     todayQueryToHttpParams
-} from '@/app/features/visits/data/visit.mapper';
+} from '@/app/entities/visit/data/visit.mapper';
 import type {
     TodayDto,
     VeterinarianDto,
     VisitCreateResultDto,
     VisitDto
-} from '@/app/features/visits/models/visit-api.model';
+} from '@/app/entities/visit/models/visit-api.model';
 import type {
     CorrectVisitRequest,
     CreateVisitRequest,
@@ -29,7 +29,7 @@ import type {
     VeterinarianVm,
     VisitCreateResultVm,
     VisitVm
-} from '@/app/features/visits/models/visit-vm.model';
+} from '@/app/entities/visit/models/visit-vm.model';
 import { toUserError } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })

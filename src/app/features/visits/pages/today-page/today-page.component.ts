@@ -28,10 +28,10 @@ import {
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TodayMoneyComponent } from '@/app/features/visits/components/today-money.component';
 import { TodayOpenItemsComponent } from '@/app/features/visits/components/today-open-items.component';
-import { VisitArrivalDialogComponent } from '@/app/features/visits/components/visit-arrival-dialog.component';
+import { VisitArrivalDialogComponent } from '@/app/entities/visit/components/visit-arrival-dialog.component';
 import { VisitCorrectionDialogComponent } from '@/app/features/visits/components/visit-correction-dialog.component';
-import type { TodayItemVm, TodayQuery, TodayVm, VisitCreateResultVm } from '@/app/features/visits/models/visit-vm.model';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
+import type { TodayItemVm, TodayQuery, TodayVm, VisitCreateResultVm } from '@/app/entities/visit/models/visit-vm.model';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import {
     careStatusLabel,
     careStatusSeverity,
@@ -50,7 +50,7 @@ import {
     isPossiblyForgottenVisit,
     waitAlertLevel,
     waitAlertTitle
-} from '@/app/features/visits/utils/visit-status.utils';
+} from '@/app/entities/visit/utils/visit-status.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';

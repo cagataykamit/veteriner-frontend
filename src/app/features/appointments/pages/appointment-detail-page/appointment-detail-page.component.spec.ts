@@ -6,7 +6,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import type { AppointmentDetailVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
 import { AppointmentDetailPageComponent } from './appointment-detail-page.component';
 

@@ -26,7 +26,7 @@ import type { DashboardRecentPetDto } from '@/app/features/dashboard/models/dash
 import type { DashboardActionSeverity } from '@/app/features/dashboard/models/dashboard-operational-alerts.model';
 import { PRODUCTS_READ_CLAIM, VISITS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { VisitArrivalDialogComponent } from '@/app/features/visits/components/visit-arrival-dialog.component';
+import { VisitArrivalDialogComponent } from '@/app/entities/visit/components/visit-arrival-dialog.component';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 import type { ProductStockVm } from '@/app/entities/inventory/models/product-stock-vm.model';

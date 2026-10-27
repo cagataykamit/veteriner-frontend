@@ -1,4 +1,4 @@
-import type { TodayItemVm } from '@/app/features/visits/models/visit-vm.model';
+import type { TodayItemVm } from '@/app/entities/visit/models/visit-vm.model';
 import {
     correctionActionOptions,
     formatElapsedSince,
@@ -11,7 +11,7 @@ import {
     waitAlertLevel,
     todayOpenChips,
     waitAlertTitle
-} from '@/app/features/visits/utils/visit-status.utils';
+} from '@/app/entities/visit/utils/visit-status.utils';
 
 const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     key: 'k',

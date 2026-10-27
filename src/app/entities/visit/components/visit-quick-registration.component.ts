@@ -15,8 +15,8 @@ import { createPetUpsertFormGroup, getPetUpsertFormValue } from '@/app/entities/
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { parsePetCreateHttpError } from '@/app/entities/pet/utils/pet-create-validation-parse.utils';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
-import type { PetSuggestion } from '@/app/features/visits/models/visit-vm.model';
-import { splitSearchTermForRegistration } from '@/app/features/visits/utils/visit-registration.utils';
+import type { PetSuggestion } from '@/app/entities/visit/models/visit-vm.model';
+import { splitSearchTermForRegistration } from '@/app/entities/visit/utils/visit-registration.utils';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 

@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { VisitsService } from '@/app/features/visits/services/visits.service';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 
 const visit = { id: 'v1', clinicId: 'c1', petId: 'p1', appointmentId: null, arrivedAtUtc: '2026-10-10T07:00:00Z', careStatus: 'Waiting', isVoided: false };
 

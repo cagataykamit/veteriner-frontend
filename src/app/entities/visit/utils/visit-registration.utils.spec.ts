@@ -1,4 +1,4 @@
-import { splitSearchTermForRegistration } from '@/app/features/visits/utils/visit-registration.utils';
+import { splitSearchTermForRegistration } from '@/app/entities/visit/utils/visit-registration.utils';
 
 describe('splitSearchTermForRegistration', () => {
     it('telefon biçimindeki metin telefona gider', () => {

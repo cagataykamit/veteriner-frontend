@@ -1,5 +1,5 @@
 /** Gün sonu uçlarının yanıtları (`DAILY_TRANSACTIONS_REPORT_API_CONTRACT.md`); enum değerleri metin gelir. */
-import type { TodayOpenItemsDto } from '@/app/features/visits/models/visit-api.model';
+import type { TodayOpenItemsDto } from '@/app/entities/visit/models/visit-api.model';
 
 export type DailyTransactionKind = 'Charge' | 'ChargeVoid' | 'ChargeCorrection' | 'Payment' | 'PaymentVoid' | 'PaymentCorrection';
 export type CashPaymentMethod = 'Cash' | 'Card' | 'Transfer';
