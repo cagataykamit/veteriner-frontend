@@ -13,7 +13,7 @@ import { ProductService } from '@/app/entities/inventory/services/product.servic
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
-import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
+import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
 import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
 import { ExaminationDetailPageComponent } from './examination-detail-page.component';
 

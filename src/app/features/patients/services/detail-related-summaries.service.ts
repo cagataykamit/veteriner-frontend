@@ -13,8 +13,8 @@ import { PetsService } from '@/app/entities/pet/services/pets.service';
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { TreatmentsService } from '@/app/features/treatments/services/treatments.service';
 import type { TreatmentListItemVm } from '@/app/features/treatments/models/treatment-vm.model';
-import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
-import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
+import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
+import type { VaccinationListItemVm } from '@/app/entities/vaccination/models/vaccination-vm.model';
 import { DETAIL_RELATED_LIST_LIMIT } from '@/app/shared/constants/detail-list.constants';
 
 const DETAIL_FETCH_SIZE = 24;

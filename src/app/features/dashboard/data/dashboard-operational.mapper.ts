@@ -11,9 +11,9 @@ import type {
     DashboardOperationalAlertsVm
 } from '@/app/features/dashboard/models/dashboard-operational-alerts.model';
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
-import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
+import type { VaccinationListItemVm } from '@/app/entities/vaccination/models/vaccination-vm.model';
 import { buildSevenDayTrendPoints, parseLastSevenDayAppointmentCounts } from '@/app/features/dashboard/utils/dashboard-trend.utils';
-import { upcomingVaccinationsNext7DaysFilters, vaccinationsListLinkQuery } from '@/app/features/vaccinations/utils/vaccinations-list-link.utils';
+import { upcomingVaccinationsNext7DaysFilters, vaccinationsListLinkQuery } from '@/app/entities/vaccination/utils/vaccinations-list-link.utils';
 
 /**
  * Summary DTO’da liste alanları null olabilir — tabloya güvenli varsayılan.

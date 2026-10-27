@@ -5,9 +5,9 @@ import { ApiClient } from '@/app/core/api/api.client';
 import { DashboardService } from '@/app/features/dashboard/services/dashboard.service';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
-import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
+import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { upcomingVaccinationsFilters, vaccinationsListLinkQuery } from '@/app/features/vaccinations/utils/vaccinations-list-link.utils';
+import { upcomingVaccinationsFilters, vaccinationsListLinkQuery } from '@/app/entities/vaccination/utils/vaccinations-list-link.utils';
 
 describe('DashboardService — liste fazı istekleri', () => {
     const emptyPage = { items: [], page: 1, pageSize: 8, totalItems: 0, totalPages: 0 };

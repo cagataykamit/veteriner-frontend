@@ -1,4 +1,4 @@
-import type { VaccinationListItemVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
+import type { VaccinationListItemVm } from '@/app/entities/vaccination/models/vaccination-vm.model';
 
 /** Aşı raporu tablo satırı — liste VM + klinik / ana tarih gösterimi. */
 export type VaccinationReportRowVm = VaccinationListItemVm & {

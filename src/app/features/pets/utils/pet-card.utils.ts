@@ -13,7 +13,7 @@ import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/entities/pe
 import { petGenderLabel } from '@/app/entities/pet/utils/pet-status.utils';
 import { parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { upcomingScheduledAppointmentsLinkQuery } from '@/app/entities/appointment/utils/appointments-list-link.utils';
-import { canOpenVaccinationEdit } from '@/app/features/vaccinations/utils/vaccination-access.utils';
+import { canOpenVaccinationEdit } from '@/app/entities/vaccination/utils/vaccination-access.utils';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay, parseUtcApiInstantIsoString, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 

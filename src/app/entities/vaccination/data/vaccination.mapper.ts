@@ -9,17 +9,17 @@ import type {
     VaccinationListItemDto,
     VaccinationListItemDtoPagedResult,
     VaccinationUpdateRequestDto
-} from '@/app/features/vaccinations/models/vaccination-api.model';
-import type { CreateVaccinationRequest, UpdateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
-import type { VaccinationsListQuery } from '@/app/features/vaccinations/models/vaccination-query.model';
+} from '@/app/entities/vaccination/models/vaccination-api.model';
+import type { CreateVaccinationRequest, UpdateVaccinationRequest } from '@/app/entities/vaccination/models/vaccination-create.model';
+import type { VaccinationsListQuery } from '@/app/entities/vaccination/models/vaccination-query.model';
 import type {
     VaccinationCreateResultVm,
     VaccinationDetailVm,
     VaccinationEditVm,
     VaccinationLinkedAdministrationVm,
     VaccinationListItemVm
-} from '@/app/features/vaccinations/models/vaccination-vm.model';
-import { parseVaccinationStatusRawToEnum } from '@/app/features/vaccinations/utils/vaccination-status.utils';
+} from '@/app/entities/vaccination/models/vaccination-vm.model';
+import { parseVaccinationStatusRawToEnum } from '@/app/entities/vaccination/utils/vaccination-status.utils';
 import { dateOnlyInputToIstanbulEndUtcIso, dateOnlyInputToIstanbulStartUtcIso } from '@/app/shared/utils/date.utils';
 
 const EM = '—';

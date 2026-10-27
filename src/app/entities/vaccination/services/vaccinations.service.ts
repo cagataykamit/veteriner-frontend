@@ -12,16 +12,16 @@ import {
     mapPagedVaccinationsToVm,
     mapVaccinationDetailDtoToVm,
     vaccinationsQueryToHttpParams
-} from '@/app/features/vaccinations/data/vaccination.mapper';
-import type { VaccinationDetailDto, VaccinationListItemDtoPagedResult } from '@/app/features/vaccinations/models/vaccination-api.model';
-import type { CreateVaccinationRequest, UpdateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
-import type { VaccinationsListQuery } from '@/app/features/vaccinations/models/vaccination-query.model';
+} from '@/app/entities/vaccination/data/vaccination.mapper';
+import type { VaccinationDetailDto, VaccinationListItemDtoPagedResult } from '@/app/entities/vaccination/models/vaccination-api.model';
+import type { CreateVaccinationRequest, UpdateVaccinationRequest } from '@/app/entities/vaccination/models/vaccination-create.model';
+import type { VaccinationsListQuery } from '@/app/entities/vaccination/models/vaccination-query.model';
 import type {
     VaccinationCreateResultVm,
     VaccinationDetailVm,
     VaccinationEditVm,
     VaccinationListItemVm
-} from '@/app/features/vaccinations/models/vaccination-vm.model';
+} from '@/app/entities/vaccination/models/vaccination-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface VaccinationsPagedVm {

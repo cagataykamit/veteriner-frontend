@@ -18,8 +18,8 @@ import type { ProductListItemVm } from '@/app/entities/inventory/models/product-
 import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { ADMINISTRATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
-import type { CreateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
-import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
+import type { CreateVaccinationRequest } from '@/app/entities/vaccination/models/vaccination-create.model';
+import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
 import { VaccineDefinitionsService } from '@/app/entities/vaccine-definition/services/vaccine-definitions.service';
 import type { VaccineDefinitionListItemVm } from '@/app/entities/vaccine-definition/models/vaccine-definition-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
@@ -28,9 +28,9 @@ import { parseVaccinationCreateRouteContext, type VaccinationCreateRouteContext 
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { parseVaccinationUpsertHttpError } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
-import type { VaccinationUpsertFieldErrors } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
-import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/features/vaccinations/utils/vaccination-status.utils';
+import { parseVaccinationUpsertHttpError } from '@/app/entities/vaccination/utils/vaccination-upsert-validation-parse.utils';
+import type { VaccinationUpsertFieldErrors } from '@/app/entities/vaccination/utils/vaccination-upsert-validation-parse.utils';
+import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/entities/vaccination/utils/vaccination-status.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import {
     buildVaccinationAppliedDueForSubmit,
@@ -40,7 +40,7 @@ import {
     vaccinationNextDueAfterAppliedGroupValidator,
     vaccinationPlannedNotPastValidator,
     vaccinationStatusDateFieldsAfterTransition
-} from '@/app/features/vaccinations/utils/vaccination-upsert-date-submit.utils';
+} from '@/app/entities/vaccination/utils/vaccination-upsert-date-submit.utils';
 import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 
 const LAST_VACCINE_PRODUCT_KEY = 'vetinity.vaccine.lastProductId';

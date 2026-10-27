@@ -1,4 +1,4 @@
-import { parseVaccinationStatusRawToEnum } from '@/app/features/vaccinations/utils/vaccination-status.utils';
+import { parseVaccinationStatusRawToEnum } from '@/app/entities/vaccination/utils/vaccination-status.utils';
 import type { VaccinationsReportDto, VaccinationsReportItemDto } from '@/app/features/reports/vaccinations/models/vaccinations-report-api.model';
 import type { VaccinationReportRowVm, VaccinationsReportResultVm } from '@/app/features/reports/vaccinations/models/vaccinations-report.model';
 

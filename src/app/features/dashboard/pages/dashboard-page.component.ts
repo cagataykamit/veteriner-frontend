@@ -18,7 +18,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppStatusTagComponent, type StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay, localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
 import { singleDayAppointmentsLinkQuery } from '@/app/entities/appointment/utils/appointments-list-link.utils';
-import { upcomingVaccinationsFilters, vaccinationsListLinkQuery } from '@/app/features/vaccinations/utils/vaccinations-list-link.utils';
+import { upcomingVaccinationsFilters, vaccinationsListLinkQuery } from '@/app/entities/vaccination/utils/vaccinations-list-link.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';

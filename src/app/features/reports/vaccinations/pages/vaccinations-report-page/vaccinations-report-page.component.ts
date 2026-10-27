@@ -3,7 +3,7 @@ import { Component, OnInit, computed, inject, ChangeDetectionStrategy } from '@a
 import { RouterLink } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { VACCINATIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { vaccinationStatusLabel, vaccinationStatusSeverity } from '@/app/features/vaccinations/utils/vaccination-status.utils';
+import { vaccinationStatusLabel, vaccinationStatusSeverity } from '@/app/entities/vaccination/utils/vaccination-status.utils';
 import type { VaccinationsReportQuery } from '@/app/features/reports/vaccinations/models/vaccinations-report-query.model';
 import type { VaccinationsReportResultVm } from '@/app/features/reports/vaccinations/models/vaccinations-report.model';
 import { VaccinationsReportService } from '@/app/features/reports/vaccinations/services/vaccinations-report.service';

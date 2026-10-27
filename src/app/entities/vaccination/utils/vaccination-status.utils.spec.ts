@@ -1,4 +1,4 @@
-import { parseVaccinationStatusRawToEnum } from '@/app/features/vaccinations/utils/vaccination-status.utils';
+import { parseVaccinationStatusRawToEnum } from '@/app/entities/vaccination/utils/vaccination-status.utils';
 
 describe('vaccination status — dizgi kodları dilden bağımsız eşlenir', () => {
     it('büyük harfli kodlar, "I" içerenler dahil (Türkçe ı/İ dönüşümüne takılmaz), eşlenir', () => {

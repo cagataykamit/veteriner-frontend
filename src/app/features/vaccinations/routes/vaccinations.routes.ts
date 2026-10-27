@@ -10,7 +10,7 @@ import { VaccinationDetailPageComponent } from '@/app/features/vaccinations/page
 import { VaccinationEditPageComponent } from '@/app/features/vaccinations/pages/vaccination-edit-page/vaccination-edit-page.component';
 import { VaccinationNewPageComponent } from '@/app/features/vaccinations/pages/vaccination-new-page/vaccination-new-page.component';
 import { VaccinationsListPageComponent } from '@/app/features/vaccinations/pages/vaccinations-list-page/vaccinations-list-page.component';
-import { canOpenVaccinationEdit } from '@/app/features/vaccinations/utils/vaccination-access.utils';
+import { canOpenVaccinationEdit } from '@/app/entities/vaccination/utils/vaccination-access.utils';
 
 export default [
     {

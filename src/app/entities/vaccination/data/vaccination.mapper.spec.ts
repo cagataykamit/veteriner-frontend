@@ -1,5 +1,5 @@
-import type { VaccinationDetailDto } from '@/app/features/vaccinations/models/vaccination-api.model';
-import { mapCreateVaccinationToApiBody, mapVaccinationCreateResponse, mapVaccinationDetailDtoToVm, vaccinationsQueryToHttpParams } from '@/app/features/vaccinations/data/vaccination.mapper';
+import type { VaccinationDetailDto } from '@/app/entities/vaccination/models/vaccination-api.model';
+import { mapCreateVaccinationToApiBody, mapVaccinationCreateResponse, mapVaccinationDetailDtoToVm, vaccinationsQueryToHttpParams } from '@/app/entities/vaccination/data/vaccination.mapper';
 
 const base = { clinicId: 'c1', petId: 'p1', vaccineDefinitionId: 'd1', status: 1, appliedAtUtc: '2026-10-14T08:00:00Z' };
 

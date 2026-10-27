@@ -11,13 +11,13 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
-import type { UpdateVaccinationRequest } from '@/app/features/vaccinations/models/vaccination-create.model';
-import type { VaccinationEditVm } from '@/app/features/vaccinations/models/vaccination-vm.model';
-import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
+import type { UpdateVaccinationRequest } from '@/app/entities/vaccination/models/vaccination-create.model';
+import type { VaccinationEditVm } from '@/app/entities/vaccination/models/vaccination-vm.model';
+import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
 import { VaccineDefinitionsService } from '@/app/entities/vaccine-definition/services/vaccine-definitions.service';
 import type { VaccineDefinitionListItemVm } from '@/app/entities/vaccine-definition/models/vaccine-definition-vm.model';
-import { type VaccinationUpsertFieldErrors, type VaccinationUpsertFormFieldKey, parseVaccinationUpsertHttpError } from '@/app/features/vaccinations/utils/vaccination-upsert-validation-parse.utils';
-import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/features/vaccinations/utils/vaccination-status.utils';
+import { type VaccinationUpsertFieldErrors, type VaccinationUpsertFormFieldKey, parseVaccinationUpsertHttpError } from '@/app/entities/vaccination/utils/vaccination-upsert-validation-parse.utils';
+import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/entities/vaccination/utils/vaccination-status.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -36,7 +36,7 @@ import {
     vaccinationNextDueAfterAppliedGroupValidator,
     vaccinationPlannedNotPastValidator,
     vaccinationStatusDateFieldsAfterTransition
-} from '@/app/features/vaccinations/utils/vaccination-upsert-date-submit.utils';
+} from '@/app/entities/vaccination/utils/vaccination-upsert-date-submit.utils';
 import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 
 @Component({
