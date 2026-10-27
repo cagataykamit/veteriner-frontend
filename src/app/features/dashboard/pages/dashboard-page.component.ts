@@ -321,7 +321,7 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
                             <div class="card mb-0">
                                 <p class="text-red-500 m-0" role="alert">{{ d.finance.error }}</p>
                                 <p class="text-muted-color text-sm mt-2 mb-0">Finans kartları ve son ödemeler bu yüzden eksik olabilir.</p>
-                                <p-button class="mt-3" label="Finansı tekrar dene" icon="pi pi-refresh" size="small" severity="secondary" (onClick)="reload()" [attr.aria-label]="'Finans bolumunu tekrar dene'" />
+                                <button pButton type="button" class="mt-3" size="small" severity="secondary" (click)="reload()" [attr.aria-label]="'Finans bolumunu tekrar dene'"><i class="p-button-icon pi pi-refresh"></i>Finansı tekrar dene</button>
                             </div>
                         </div>
                     } @else if (canViewFinance(d) && belowFoldLoaded() && d.finance.data) {
@@ -368,7 +368,7 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
                             <div class="card mb-0">
                                 <p class="text-red-500 m-0" role="alert">{{ d.summary.error }}</p>
                                 <p class="text-muted-color text-sm mt-2 mb-0">Üst sayaçlar bu yüzden eksik olabilir.</p>
-                                <p-button class="mt-3" label="Özeti tekrar dene" icon="pi pi-refresh" size="small" severity="secondary" (onClick)="reload()" [attr.aria-label]="'Ozet bolumunu tekrar dene'" />
+                                <button pButton type="button" class="mt-3" size="small" severity="secondary" (click)="reload()" [attr.aria-label]="'Ozet bolumunu tekrar dene'"><i class="p-button-icon pi pi-refresh"></i>Özeti tekrar dene</button>
                             </div>
                         </div>
                     } @else if (d.summary.data) {
@@ -385,7 +385,7 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
                         <div class="col-span-12">
                             <div class="card flex flex-wrap items-center justify-between gap-3">
                                 <p class="m-0 text-sm text-muted-color">Detay listeleri bu bölüme gelince yüklenecek.</p>
-                                <p-button type="button" label="Detayları yükle" icon="pi pi-download" size="small" severity="secondary" (onClick)="onManualBelowFoldLoad()" />
+                                <button pButton type="button" size="small" severity="secondary" (click)="onManualBelowFoldLoad()"><i class="p-button-icon pi pi-download"></i>Detayları yükle</button>
                             </div>
                         </div>
                     } @else if (belowFoldLoading() && !belowFoldLoaded()) {
@@ -398,7 +398,7 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
                         <div class="col-span-12">
                             <div class="card flex flex-wrap items-center justify-between gap-3">
                                 <p class="m-0 text-sm text-red-500">{{ belowFoldError() }}</p>
-                                <p-button type="button" label="Tekrar dene" icon="pi pi-refresh" size="small" severity="secondary" (onClick)="onManualBelowFoldLoad()" />
+                                <button pButton type="button" size="small" severity="secondary" (click)="onManualBelowFoldLoad()"><i class="p-button-icon pi pi-refresh"></i>Tekrar dene</button>
                             </div>
                         </div>
                     } @else {
@@ -603,7 +603,7 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
                                     </div>
                                     @if (d.finance.error) {
                                         <p class="text-red-500 m-0" role="alert">{{ d.finance.error }}</p>
-                                        <p-button class="mt-3" label="Finansı tekrar dene" icon="pi pi-refresh" size="small" severity="secondary" (onClick)="reload()" />
+                                        <button pButton type="button" class="mt-3" size="small" severity="secondary" (click)="reload()"><i class="p-button-icon pi pi-refresh"></i>Finansı tekrar dene</button>
                                     } @else if (!d.finance.data || d.finance.data.recentPayments.length === 0) {
                                         <app-empty-state message="Ödeme kaydı yok." hint="İlk ödeme kaydı için ödeme ekranına gidin." />
                                     } @else {
@@ -742,13 +742,13 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
                     </div>
 
                     <div class="col-span-12">
-                        <p-button [label]="copy.buttonRefresh" icon="pi pi-refresh" severity="secondary" (onClick)="reload()" [disabled]="loading() || listsLoading()" />
+                        <button pButton type="button" severity="secondary" (click)="reload()" [disabled]="loading() || listsLoading()"><i class="p-button-icon pi pi-refresh"></i>{{ copy.buttonRefresh }}</button>
                     </div>
                 </div>
             } @else {
                 <div class="card">
                     <p class="m-0 mb-4 text-muted-color">Özet verisi alınamadı.</p>
-                    <p-button [label]="copy.buttonRefresh" icon="pi pi-refresh" (onClick)="reload()" [disabled]="loading() || listsLoading()" />
+                    <button pButton type="button" (click)="reload()" [disabled]="loading() || listsLoading()"><i class="p-button-icon pi pi-refresh"></i>{{ copy.buttonRefresh }}</button>
                 </div>
             }
         }
