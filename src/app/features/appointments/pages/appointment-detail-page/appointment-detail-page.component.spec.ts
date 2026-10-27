@@ -7,7 +7,7 @@ import type { AppointmentDetailVm } from '@/app/entities/appointment/models/appo
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
-import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
+import { DetailRelatedSummariesService } from '@/app/entities/patient/services/detail-related-summaries.service';
 import { AppointmentDetailPageComponent } from './appointment-detail-page.component';
 
 const APPT: AppointmentDetailVm = {

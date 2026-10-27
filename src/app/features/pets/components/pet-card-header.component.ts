@@ -1,11 +1,11 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
-import { CardAccountStatusComponent } from '@/app/features/pets/components/card-account-status.component';
+import { CardAccountStatusComponent } from '@/app/entities/patient/components/card-account-status.component';
 import type { PetSummaryVm } from '@/app/entities/pet/models/pet-summary-vm.model';
 import type { PetNextAppointmentVm } from '@/app/entities/pet/models/pet-open-items-vm.model';
 import type { PetDetailVm } from '@/app/entities/pet/models/pet-vm.model';
-import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
+import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import { careStatusLabel } from '@/app/entities/visit/utils/visit-status.utils';
 import type { VisitCareStatus } from '@/app/entities/visit/models/visit-vm.model';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';

@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import { mapPetSummaryDtoToVm } from '@/app/entities/pet/data/pet-summary.mapper';
 import type { PetSummaryDto } from '@/app/entities/pet/models/pet-summary-api.model';
-import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
+import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import { PetSummaryCardComponent } from './pet-summary-card.component';
 

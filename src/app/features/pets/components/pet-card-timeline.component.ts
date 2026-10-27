@@ -9,7 +9,7 @@ import { PetTimelineItemComponent } from '@/app/features/pets/components/pet-tim
 import type { PetTimelineItemVm } from '@/app/entities/pet/models/pet-timeline-vm.model';
 import type { PetHistoryPaymentItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
-import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
+import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import { mergePetTimelineItems, PET_CARD_TIMELINE_FILTERS, PET_TIMELINE_PAYMENT_TYPE, type PetCardTimelineFilter, paymentToPetTimelineItem, petTimelineOmittedTypesLabel } from '@/app/features/pets/utils/pet-timeline.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 

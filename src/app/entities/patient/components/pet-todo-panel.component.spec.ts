@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import type { PetTodoView } from '@/app/features/pets/utils/pet-card.utils';
+import type { PetTodoView } from '@/app/entities/patient/utils/pet-card.utils';
 import { PetTodoPanelComponent } from './pet-todo-panel.component';
 
 describe('PetTodoPanelComponent', () => {

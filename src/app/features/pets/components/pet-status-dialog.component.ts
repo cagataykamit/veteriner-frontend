@@ -14,7 +14,7 @@ import { AppointmentsService } from '@/app/entities/appointment/services/appoint
 import { appointmentTypeDisplayLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
 import type { PetDetailVm, PetStatusUpdateResult } from '@/app/entities/pet/models/pet-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
-import { upcomingScheduledAppointments } from '@/app/features/pets/utils/pet-card.utils';
+import { upcomingScheduledAppointments } from '@/app/entities/patient/utils/pet-card.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';

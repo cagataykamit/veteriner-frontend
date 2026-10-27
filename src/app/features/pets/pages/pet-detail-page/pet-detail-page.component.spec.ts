@@ -8,9 +8,9 @@ import { mapPetSummaryDtoToVm } from '@/app/entities/pet/data/pet-summary.mapper
 import type { PetOpenItemsDto } from '@/app/entities/pet/models/pet-open-items-api.model';
 import type { PetOpenItemsVm } from '@/app/entities/pet/models/pet-open-items-vm.model';
 import type { PetDetailVm, PetHistorySummaryVm } from '@/app/entities/pet/models/pet-vm.model';
-import { PetCardDataService } from '@/app/features/pets/services/pet-card-data.service';
+import { PetCardDataService } from '@/app/entities/patient/services/pet-card-data.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
-import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
+import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import { PetDetailPageComponent } from './pet-detail-page.component';

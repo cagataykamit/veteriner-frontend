@@ -12,7 +12,7 @@ import type { ExaminationEditVm } from '@/app/entities/examination/models/examin
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { EXAMINATION_CONCURRENCY_CONFLICT_MESSAGE } from '@/app/features/examinations/utils/examination-upsert-validation-parse.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
-import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
+import { DetailRelatedSummariesService } from '@/app/entities/patient/services/detail-related-summaries.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ExaminationWorkspacePageComponent } from './examination-workspace-page.component';
 

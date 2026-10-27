@@ -6,7 +6,7 @@ import { AppointmentNoShowDialogComponent } from '@/app/entities/appointment/com
 import type { AppointmentDetailVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
-import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
+import { DetailRelatedSummariesService } from '@/app/entities/patient/services/detail-related-summaries.service';
 import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { appointmentStatusLabel, appointmentStatusSeverity, canMarkAppointmentNoShow, canRevertAppointmentNoShow, isAppointmentNoShowStatus, isAppointmentCancelledStatus } from '@/app/entities/appointment/utils/appointment-status.utils';

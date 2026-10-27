@@ -10,9 +10,9 @@ import type { ClientBalanceVm } from '@/app/entities/client/models/client-balanc
 import type { ClientDetailVm, ClientPaymentSummaryVm } from '@/app/entities/client/models/client-vm.model';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
-import { PetCardDataService } from '@/app/features/pets/services/pet-card-data.service';
+import { PetCardDataService } from '@/app/entities/patient/services/pet-card-data.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
-import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
+import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { ClientDetailPageComponent } from './client-detail-page.component';

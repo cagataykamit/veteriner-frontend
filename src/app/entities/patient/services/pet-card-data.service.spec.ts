@@ -6,7 +6,7 @@ import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import type { PetOpenItemsVm } from '@/app/entities/pet/models/pet-open-items-vm.model';
-import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
+import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 import { PetCardDataService } from './pet-card-data.service';
 

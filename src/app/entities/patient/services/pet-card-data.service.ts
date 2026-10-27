@@ -16,7 +16,7 @@ import { ExaminationsService } from '@/app/entities/examination/services/examina
 import type { PetOpenItemsVm } from '@/app/entities/pet/models/pet-open-items-vm.model';
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
-import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
+import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 

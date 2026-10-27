@@ -11,7 +11,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { VisitArrivalDialogComponent } from '@/app/entities/visit/components/visit-arrival-dialog.component';
 import { VisitQuickRegistrationComponent } from '@/app/entities/visit/components/visit-quick-registration.component';
 import type { PetSuggestion } from '@/app/entities/visit/models/visit-vm.model';
-import { buildPatientActions, type PatientAction, type PatientActionKey } from '@/app/features/patients/components/patient-action-bar/patient-actions.utils';
+import { buildPatientActions, type PatientAction, type PatientActionKey } from '@/app/entities/patient/components/patient-action-bar/patient-actions.utils';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { SearchInputComponent, SEARCH_MIN_LENGTH } from '@/app/shared/ui/search-input/search-input.component';
 

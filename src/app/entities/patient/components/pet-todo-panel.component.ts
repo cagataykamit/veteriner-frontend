@@ -1,7 +1,7 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import type { PetTodoItem, PetTodoView } from '@/app/features/pets/utils/pet-card.utils';
+import type { PetTodoItem, PetTodoView } from '@/app/entities/patient/utils/pet-card.utils';
 
 const TONE_CLASS: Record<PetTodoItem['tone'], string> = {
     danger: 'text-red-600 dark:text-red-400',

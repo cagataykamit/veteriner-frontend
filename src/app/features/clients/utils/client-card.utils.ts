@@ -15,7 +15,7 @@ import {
     type PetTodoItem,
     type PetTodoView,
     todoView
-} from '@/app/features/pets/utils/pet-card.utils';
+} from '@/app/entities/patient/utils/pet-card.utils';
 
 /** Müşteri kartı "Yapılacaklar" kaynakları (ADR-020 karar 6): para tarafı; klinik işler hayvan kartındadır. */
 export interface ClientTodoSources {

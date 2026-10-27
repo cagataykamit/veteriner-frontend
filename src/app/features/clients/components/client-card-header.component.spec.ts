@@ -5,7 +5,7 @@ import type { ChargeSuggestionsPagedVm, ChargeSuggestionVm } from '@/app/entitie
 import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
 import type { ClientDetailVm } from '@/app/entities/client/models/client-vm.model';
 import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
-import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
+import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import { ClientCardHeaderComponent } from './client-card-header.component';
 
 const client: ClientDetailVm = {

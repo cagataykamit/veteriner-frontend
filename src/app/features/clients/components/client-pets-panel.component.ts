@@ -1,7 +1,7 @@
 import { Component, computed, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { ClientPetRow } from '@/app/features/clients/utils/client-card.utils';
-import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
+import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 

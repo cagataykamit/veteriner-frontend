@@ -10,8 +10,8 @@ import { formatClientInvoicingSummary } from '@/app/entities/client/utils/client
 import { kvkkConsentStatusLabel } from '@/app/entities/client/utils/client-kvkk-consent.utils';
 import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import { kvkkTextVersionLabel } from '@/app/entities/kvkk/utils/kvkk-form.utils';
-import { CardAccountStatusComponent } from '@/app/features/pets/components/card-account-status.component';
-import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
+import { CardAccountStatusComponent } from '@/app/entities/patient/components/card-account-status.component';
+import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';

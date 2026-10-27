@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import type { PetNextAppointmentVm } from '@/app/entities/pet/models/pet-open-items-vm.model';
 import type { PetDetailVm } from '@/app/entities/pet/models/pet-vm.model';
-import type { PetCardSection } from '@/app/features/pets/utils/pet-card.utils';
+import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import { PetCardHeaderComponent } from './pet-card-header.component';
 
 const pet = {

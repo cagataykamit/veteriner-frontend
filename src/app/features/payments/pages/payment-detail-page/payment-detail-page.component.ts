@@ -8,7 +8,7 @@ import type { ExaminationListItemVm } from '@/app/entities/examination/models/ex
 import type { PaymentDetailVm } from '@/app/entities/payment/models/payment-vm.model';
 import { PaymentsService } from '@/app/entities/payment/services/payments.service';
 import { paymentMethodLabel } from '@/app/entities/payment/utils/payment-method.utils';
-import { DetailRelatedSummariesService } from '@/app/features/patients/services/detail-related-summaries.service';
+import { DetailRelatedSummariesService } from '@/app/entities/patient/services/detail-related-summaries.service';
 import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
