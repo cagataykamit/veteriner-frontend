@@ -34,7 +34,7 @@ import {
         <div data-testid="prescription-items-editor">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <span class="block text-sm font-medium text-muted-color">İlaç / ürün satırları</span>
-                <p-button type="button" label="Satır ekle" icon="pi pi-plus" size="small" severity="secondary" data-testid="prescription-item-add" [disabled]="items().length >= max" (onClick)="addRow()" />
+                <button pButton type="button" size="small" severity="secondary" data-testid="prescription-item-add" [disabled]="items().length >= max" (click)="addRow()"><i class="p-button-icon pi pi-plus"></i>Satır ekle</button>
             </div>
             <p class="text-sm text-muted-color mt-0 mb-3">Katalogda olmayan veya dışarıdan alınacak ilaç yalnız adla yazılabilir. Reçete stoktan düşmez; klinikte uygulanan ürün için muayene/tedavi kaydından "Uygulama ekle" kullanın.</p>
             @if (items().length === 0) {
@@ -94,7 +94,7 @@ import {
                         </div>
                     </div>
                     <div class="flex justify-end mt-2">
-                        <p-button type="button" label="Satırı sil" icon="pi pi-trash" size="small" severity="danger" [text]="true" data-testid="prescription-item-remove" (onClick)="removeRow(i)" />
+                        <button pButton type="button" size="small" severity="danger" [text]="true" data-testid="prescription-item-remove" (click)="removeRow(i)"><i class="p-button-icon pi pi-trash"></i>Satırı sil</button>
                     </div>
                 </div>
             }

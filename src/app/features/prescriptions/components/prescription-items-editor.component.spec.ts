@@ -35,7 +35,7 @@ describe('PrescriptionItemsEditorComponent', () => {
 
     const el = () => fixture.nativeElement as HTMLElement;
     const rows = () => el().querySelectorAll('[data-testid="prescription-item-row"]');
-    const click = (id: string) => (el().querySelector(`[data-testid="${id}"] button`) as HTMLButtonElement).click();
+    const click = (id: string) => (el().querySelector(`button[data-testid="${id}"]`) as HTMLButtonElement).click();
 
     beforeEach(() => {
         claims = new Set(['Products.Read']);
@@ -66,7 +66,7 @@ describe('PrescriptionItemsEditorComponent', () => {
         }
 
         await setup();
-        expect(el().querySelector('[data-testid="prescription-item-add"] button')?.hasAttribute('disabled')).toBe(true);
+        expect(el().querySelector('button[data-testid="prescription-item-add"]')?.hasAttribute('disabled')).toBe(true);
         cmp.addRow();
         expect(items.length).toBe(PRESCRIPTION_ITEMS_MAX);
     });
