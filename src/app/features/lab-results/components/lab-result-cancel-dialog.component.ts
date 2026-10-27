@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input, model, output } from '@angular/core';
 import { map, of, switchMap } from 'rxjs';
-import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
+import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 
 /** İptal edilecek lab kaydı; `rowVersion` yoksa (liste satırı) onayda güncel sürüm detaydan okunur. */

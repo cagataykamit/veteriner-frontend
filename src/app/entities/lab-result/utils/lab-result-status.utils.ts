@@ -1,4 +1,4 @@
-import type { LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
+import type { LabResultStatus } from '@/app/entities/lab-result/models/lab-result-vm.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
 export const LAB_RESULT_AWAITING_INTERPRETATION_LABEL = 'Değerlendirme bekliyor';

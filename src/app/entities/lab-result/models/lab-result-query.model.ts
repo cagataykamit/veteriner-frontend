@@ -4,7 +4,7 @@
  * HttpParams (canonical): `Page`, `PageSize`, `Search`, `clinicId`, `PetId`, `Status`, `dateFromUtc`, `dateToUtc`, `Sort`, `Order`.
  * `fromDate` / `toDate` (**yyyy-MM-dd**) istekte İstanbul günü başı / sonu UTC olarak `dateFromUtc` / `dateToUtc` gider (istem zamanı).
  */
-import type { LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
+import type { LabResultStatus } from '@/app/entities/lab-result/models/lab-result-vm.model';
 
 
 export interface LabResultsListQuery {

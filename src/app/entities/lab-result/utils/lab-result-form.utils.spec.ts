@@ -1,5 +1,5 @@
 import { FormControl, FormGroup } from '@angular/forms';
-import { labResultResultFieldsValidator } from '@/app/features/lab-results/utils/lab-result-form.utils';
+import { labResultResultFieldsValidator } from '@/app/entities/lab-result/utils/lab-result-form.utils';
 
 const group = (
     v: {

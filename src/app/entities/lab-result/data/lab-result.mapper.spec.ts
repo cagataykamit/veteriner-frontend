@@ -1,4 +1,4 @@
-import { labResultsQueryToHttpParams } from '@/app/features/lab-results/data/lab-result.mapper';
+import { labResultsQueryToHttpParams } from '@/app/entities/lab-result/data/lab-result.mapper';
 
 describe('lab-result mapper — liste tarih parametreleri', () => {
     it('İstanbul gününü iki ucu dahil [dateFromUtc, dateToUtc] olarak gönderir', () => {

@@ -10,11 +10,11 @@ import {
     mapLabResultDetailDtoToVm,
     mapPagedLabResultsToVm,
     labResultsQueryToHttpParams
-} from '@/app/features/lab-results/data/lab-result.mapper';
-import type { LabResultCancelRequestDto, LabResultDetailDto, LabResultListItemDtoPagedResult } from '@/app/features/lab-results/models/lab-result-api.model';
-import type { CreateLabResultRequest } from '@/app/features/lab-results/models/lab-result-create.model';
-import type { LabResultsListQuery } from '@/app/features/lab-results/models/lab-result-query.model';
-import type { LabResultDetailVm, LabResultEditVm, LabResultListItemVm } from '@/app/features/lab-results/models/lab-result-vm.model';
+} from '@/app/entities/lab-result/data/lab-result.mapper';
+import type { LabResultCancelRequestDto, LabResultDetailDto, LabResultListItemDtoPagedResult } from '@/app/entities/lab-result/models/lab-result-api.model';
+import type { CreateLabResultRequest } from '@/app/entities/lab-result/models/lab-result-create.model';
+import type { LabResultsListQuery } from '@/app/entities/lab-result/models/lab-result-query.model';
+import type { LabResultDetailVm, LabResultEditVm, LabResultListItemVm } from '@/app/entities/lab-result/models/lab-result-vm.model';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface LabResultsPagedVm {

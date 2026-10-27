@@ -4,11 +4,11 @@ import type {
     LabResultListItemDto,
     LabResultListItemDtoPagedResult,
     LabResultWriteRequestDto
-} from '@/app/features/lab-results/models/lab-result-api.model';
-import type { CreateLabResultRequest } from '@/app/features/lab-results/models/lab-result-create.model';
-import type { LabResultsListQuery } from '@/app/features/lab-results/models/lab-result-query.model';
-import { parseLabResultStatus } from '@/app/features/lab-results/utils/lab-result-status.utils';
-import type { LabResultDetailVm, LabResultEditVm, LabResultListItemVm } from '@/app/features/lab-results/models/lab-result-vm.model';
+} from '@/app/entities/lab-result/models/lab-result-api.model';
+import type { CreateLabResultRequest } from '@/app/entities/lab-result/models/lab-result-create.model';
+import type { LabResultsListQuery } from '@/app/entities/lab-result/models/lab-result-query.model';
+import { parseLabResultStatus } from '@/app/entities/lab-result/utils/lab-result-status.utils';
+import type { LabResultDetailVm, LabResultEditVm, LabResultListItemVm } from '@/app/entities/lab-result/models/lab-result-vm.model';
 import { dateOnlyInputToIstanbulEndUtcIso, dateOnlyInputToIstanbulStartUtcIso } from '@/app/shared/utils/date.utils';
 
 const EM = '—';

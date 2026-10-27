@@ -8,7 +8,7 @@ import {
 import {
     LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE,
     isLabResultDateTooFarPastBackendMessage
-} from '@/app/features/lab-results/utils/lab-result-date-validation.utils';
+} from '@/app/entities/lab-result/utils/lab-result-date-validation.utils';
 
 const SUMMARY_FIELD_ERRORS = 'Lütfen hatalı alanları düzeltin.';
 const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';

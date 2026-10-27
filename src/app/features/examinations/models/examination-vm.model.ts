@@ -1,4 +1,4 @@
-import type { LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
+import type { LabResultStatus } from '@/app/entities/lab-result/models/lab-result-vm.model';
 /**
  * Muayene — UI view modelleri.
  */

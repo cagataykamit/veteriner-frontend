@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { LAB_RESULTS_READ_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
+import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';
 import type { TodayVm } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { MenuBadgeService, menuBadgeLabel } from './menu-badge.service';

@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { parseLabResultUpsertHttpError } from '@/app/features/lab-results/utils/lab-result-upsert-validation-parse.utils';
+import { parseLabResultUpsertHttpError } from '@/app/entities/lab-result/utils/lab-result-upsert-validation-parse.utils';
 
 const problem = (status: number, code: string, extra: Record<string, unknown> = {}) => new HttpErrorResponse({ status, error: { status, extensions: { code }, ...extra } });
 

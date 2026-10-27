@@ -14,10 +14,10 @@ import { firstValueFrom } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
-import { mapLabResultUpsertFormToCreateRequest } from '@/app/features/lab-results/data/lab-result.mapper';
-import type { LabResultEditVm, LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
-import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
-import { type LabResultUpsertFieldErrors, type LabResultUpsertFormFieldKey, parseLabResultUpsertHttpError } from '@/app/features/lab-results/utils/lab-result-upsert-validation-parse.utils';
+import { mapLabResultUpsertFormToCreateRequest } from '@/app/entities/lab-result/data/lab-result.mapper';
+import type { LabResultEditVm, LabResultStatus } from '@/app/entities/lab-result/models/lab-result-vm.model';
+import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';
+import { type LabResultUpsertFieldErrors, type LabResultUpsertFormFieldKey, parseLabResultUpsertHttpError } from '@/app/entities/lab-result/utils/lab-result-upsert-validation-parse.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { examinationListItemFromDetail, prescriptionExaminationSelectOption } from '@/app/features/prescriptions/utils/prescription-relation-select.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -29,8 +29,8 @@ import { PetAlertBannerComponent } from '@/app/features/pets/components/pet-aler
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
-import { LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE, labResultDateNotTooFarPastValidator, labResultDateTimeLocalMinAllowed } from '@/app/features/lab-results/utils/lab-result-date-validation.utils';
-import { LAB_RESULT_INCOMPLETE_MESSAGE, LAB_RESULT_INTERPRETATION_WITHOUT_RESULT_MESSAGE, labResultResultFieldsValidator } from '@/app/features/lab-results/utils/lab-result-form.utils';
+import { LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE, labResultDateNotTooFarPastValidator, labResultDateTimeLocalMinAllowed } from '@/app/entities/lab-result/utils/lab-result-date-validation.utils';
+import { LAB_RESULT_INCOMPLETE_MESSAGE, LAB_RESULT_INTERPRETATION_WITHOUT_RESULT_MESSAGE, labResultResultFieldsValidator } from '@/app/entities/lab-result/utils/lab-result-form.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 @Component({

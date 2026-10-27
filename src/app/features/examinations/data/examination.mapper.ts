@@ -1,4 +1,4 @@
-import { parseLabResultStatus } from '@/app/features/lab-results/utils/lab-result-status.utils';
+import { parseLabResultStatus } from '@/app/entities/lab-result/utils/lab-result-status.utils';
 import { HttpParams } from '@angular/common/http';
 import type {
     ExaminationAddendumDto,

@@ -3,8 +3,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { CreateLabResultRequest } from '@/app/features/lab-results/models/lab-result-create.model';
-import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
+import type { CreateLabResultRequest } from '@/app/entities/lab-result/models/lab-result-create.model';
+import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';
 
 const updateReq = (over: Partial<CreateLabResultRequest> = {}): CreateLabResultRequest => ({
     clinicId: 'clinic-1',

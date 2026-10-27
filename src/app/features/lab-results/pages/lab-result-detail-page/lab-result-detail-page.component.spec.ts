@@ -3,8 +3,8 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { of } from 'rxjs';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { LabResultDetailVm, LabResultStatus } from '@/app/features/lab-results/models/lab-result-vm.model';
-import { LabResultsService } from '@/app/features/lab-results/services/lab-results.service';
+import type { LabResultDetailVm, LabResultStatus } from '@/app/entities/lab-result/models/lab-result-vm.model';
+import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { StoredFilesService } from '@/app/shared/files/stored-files.service';
