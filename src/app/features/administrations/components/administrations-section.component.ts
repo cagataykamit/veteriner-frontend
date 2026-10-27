@@ -55,7 +55,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                         </div>
                         <a routerLink="/panel/administrations" [queryParams]="{ petId: petId() }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         @if (canAdd()) {
-                            <p-button label="Uygulama ekle" icon="pi pi-plus" size="small" data-testid="administration-add" (onClick)="createVisible = true" />
+                            <button pButton type="button" size="small" data-testid="administration-add" (click)="createVisible = true"><i class="p-button-icon pi pi-plus"></i>Uygulama ekle</button>
                         }
                     </div>
                 </div>

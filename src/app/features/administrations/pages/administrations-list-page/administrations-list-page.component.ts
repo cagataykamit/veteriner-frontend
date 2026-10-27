@@ -76,7 +76,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                 @if (petId) {
                     <div class="flex items-center gap-2 pb-1">
                         <app-status-tag label="Hasta filtresi" severity="info" />
-                        <p-button label="Temizle" icon="pi pi-times" size="small" severity="secondary" [text]="true" (onClick)="clearPet()" />
+                        <button pButton type="button" size="small" severity="secondary" [text]="true" (click)="clearPet()"><i class="p-button-icon pi pi-times"></i>Temizle</button>
                     </div>
                 }
             </div>
