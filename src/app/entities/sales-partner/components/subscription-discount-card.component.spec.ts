@@ -1,8 +1,8 @@
 import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import type { SubscriptionDiscountDto } from '@/app/features/sales-partners/models/sales-partner.model';
-import { DiscountCodesService } from '@/app/features/sales-partners/services/discount-codes.service';
+import type { SubscriptionDiscountDto } from '@/app/entities/sales-partner/models/sales-partner.model';
+import { DiscountCodesService } from '@/app/entities/sales-partner/services/discount-codes.service';
 import { SubscriptionDiscountCardComponent } from './subscription-discount-card.component';
 
 const NONE: SubscriptionDiscountDto = {

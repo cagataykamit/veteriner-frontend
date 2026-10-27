@@ -27,9 +27,9 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
 import { LEGAL_DOCUMENTS_BY_TYPE, type LegalDocumentType } from '@/app/entities/legal-document/utils/legal-documents.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import { PASSWORD_POLICY_HINT, validateStrongPasswordValue } from '@/app/core/validation/password-policy.util';
-import { DiscountCodeFieldComponent } from '@/app/features/sales-partners/components/discount-code-field.component';
-import type { DiscountCodeValidationDto } from '@/app/features/sales-partners/models/sales-partner.model';
-import { clearPendingDiscountCode, DISCOUNT_CODE_QUERY_PARAM, discountNoteText, normalizeDiscountCodeInput, readPendingDiscountCode } from '@/app/features/sales-partners/utils/discount-code.utils';
+import { DiscountCodeFieldComponent } from '@/app/entities/sales-partner/components/discount-code-field.component';
+import type { DiscountCodeValidationDto } from '@/app/entities/sales-partner/models/sales-partner.model';
+import { clearPendingDiscountCode, DISCOUNT_CODE_QUERY_PARAM, discountNoteText, normalizeDiscountCodeInput, readPendingDiscountCode } from '@/app/entities/sales-partner/utils/discount-code.utils';
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({

@@ -5,9 +5,9 @@ import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
-import type { DiscountCodeDto } from '@/app/features/sales-partners/models/sales-partner.model';
+import type { DiscountCodeDto } from '@/app/entities/sales-partner/models/sales-partner.model';
 import { SalesPartnersService } from '@/app/features/sales-partners/services/sales-partners.service';
-import { normalizeDiscountCodeInput } from '@/app/features/sales-partners/utils/discount-code.utils';
+import { normalizeDiscountCodeInput } from '@/app/entities/sales-partner/utils/discount-code.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { fromIstanbulDateAndTimeToUtcIso, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 

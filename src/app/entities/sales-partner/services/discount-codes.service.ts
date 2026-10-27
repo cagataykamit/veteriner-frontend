@@ -5,8 +5,8 @@ import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { resolveTenantIdFromJwt } from '@/app/core/auth/jwt-tenant.utils';
-import type { DiscountCodeValidationDto, SubscriptionDiscountDto } from '@/app/features/sales-partners/models/sales-partner.model';
-import { DISCOUNT_CODE_INVALID_MESSAGE } from '@/app/features/sales-partners/utils/discount-code.utils';
+import type { DiscountCodeValidationDto, SubscriptionDiscountDto } from '@/app/entities/sales-partner/models/sales-partner.model';
+import { DISCOUNT_CODE_INVALID_MESSAGE } from '@/app/entities/sales-partner/utils/discount-code.utils';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 const DISCOUNT_CODE_PROBLEM_MESSAGES: Record<string, string> = {

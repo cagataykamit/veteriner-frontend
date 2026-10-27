@@ -8,8 +8,8 @@ import { LegalAcceptanceService } from '@/app/features/legal-acceptance/services
 import { LEGAL_ACCEPTANCE_CODE_MESSAGES, LEGAL_VERSION_OUTDATED_CODE } from '@/app/entities/legal-document/utils/legal-acceptance-error.utils';
 import type { PublicOwnerSignupRequestDto, PublicOwnerSignupResultDto } from '@/app/features/public/models/public-owner-signup-api.model';
 import { PublicOwnerSignupService } from '@/app/features/public/services/public-owner-signup.service';
-import { DiscountCodesService } from '@/app/features/sales-partners/services/discount-codes.service';
-import { PENDING_DISCOUNT_CODE_KEY } from '@/app/features/sales-partners/utils/discount-code.utils';
+import { DiscountCodesService } from '@/app/entities/sales-partner/services/discount-codes.service';
+import { PENDING_DISCOUNT_CODE_KEY } from '@/app/entities/sales-partner/utils/discount-code.utils';
 import { OwnerSignupPageComponent } from './owner-signup-page.component';
 
 const VERSIONS: LegalDocumentVersionDto[] = [

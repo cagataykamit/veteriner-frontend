@@ -4,7 +4,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter, Router, UrlTree } fro
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { platformAdminGuard } from '@/app/core/auth/platform-admin.guard';
-import type { DiscountRedemptionRowDto, SalesPartnerDetailDto, SalesPartnerDto, SalesPartnerSummaryDto } from '@/app/features/sales-partners/models/sales-partner.model';
+import type { DiscountRedemptionRowDto, SalesPartnerDetailDto, SalesPartnerDto, SalesPartnerSummaryDto } from '@/app/entities/sales-partner/models/sales-partner.model';
 import { SalesPartnersService } from '@/app/features/sales-partners/services/sales-partners.service';
 import { SalesPartnerDetailPageComponent } from './sales-partner-detail-page.component';
 import { SalesPartnersListPageComponent } from './sales-partners-list-page.component';

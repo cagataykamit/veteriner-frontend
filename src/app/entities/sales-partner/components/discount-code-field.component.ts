@@ -4,9 +4,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { catchError, distinctUntilChanged, map, of, Subject, switchMap, timer } from 'rxjs';
-import type { DiscountCodeValidationDto } from '@/app/features/sales-partners/models/sales-partner.model';
-import { DiscountCodesService } from '@/app/features/sales-partners/services/discount-codes.service';
-import { DISCOUNT_CODE_INVALID_MESSAGE, discountNoteText, normalizeDiscountCodeInput } from '@/app/features/sales-partners/utils/discount-code.utils';
+import type { DiscountCodeValidationDto } from '@/app/entities/sales-partner/models/sales-partner.model';
+import { DiscountCodesService } from '@/app/entities/sales-partner/services/discount-codes.service';
+import { DISCOUNT_CODE_INVALID_MESSAGE, discountNoteText, normalizeDiscountCodeInput } from '@/app/entities/sales-partner/utils/discount-code.utils';
 
 export type DiscountCodeFieldStatus = 'idle' | 'checking' | 'valid' | 'invalid' | 'error';
 

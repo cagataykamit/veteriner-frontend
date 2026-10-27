@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { DiscountCodesService, discountCodeErrorMessage } from './discount-codes.service';
+import { DiscountCodesService, discountCodeErrorMessage } from '@/app/entities/sales-partner/services/discount-codes.service';
 import { SalesPartnersService } from './sales-partners.service';
 
 describe('SalesPartnersService ve DiscountCodesService (ADR-037)', () => {

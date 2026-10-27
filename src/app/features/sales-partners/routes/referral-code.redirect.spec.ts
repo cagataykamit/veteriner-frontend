@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, convertToParamMap, provideRouter, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
-import { PENDING_DISCOUNT_CODE_KEY, readPendingDiscountCode } from '@/app/features/sales-partners/utils/discount-code.utils';
+import { PENDING_DISCOUNT_CODE_KEY, readPendingDiscountCode } from '@/app/entities/sales-partner/utils/discount-code.utils';
 import { referralCodeRedirect } from './referral-code.redirect';
 
 describe('referral-code.redirect (ADR-037)', () => {

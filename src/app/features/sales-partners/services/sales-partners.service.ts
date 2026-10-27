@@ -11,7 +11,7 @@ import type {
     SalesPartnerDetailDto,
     SalesPartnerDto,
     SalesPartnerInput
-} from '@/app/features/sales-partners/models/sales-partner.model';
+} from '@/app/entities/sales-partner/models/sales-partner.model';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 const SALES_PARTNER_PROBLEM_MESSAGES: Record<string, string> = {

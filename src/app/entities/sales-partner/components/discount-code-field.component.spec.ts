@@ -2,8 +2,8 @@ import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import type { DiscountCodeValidationDto } from '@/app/features/sales-partners/models/sales-partner.model';
-import { DiscountCodesService } from '@/app/features/sales-partners/services/discount-codes.service';
+import type { DiscountCodeValidationDto } from '@/app/entities/sales-partner/models/sales-partner.model';
+import { DiscountCodesService } from '@/app/entities/sales-partner/services/discount-codes.service';
 import { DiscountCodeFieldComponent } from './discount-code-field.component';
 
 const VALID: DiscountCodeValidationDto = { valid: true, code: 'ISIK10', discountPercent: 10, discountMonths: 12 };

@@ -5,7 +5,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
-import type { SalesPartnerDto } from '@/app/features/sales-partners/models/sales-partner.model';
+import type { SalesPartnerDto } from '@/app/entities/sales-partner/models/sales-partner.model';
 import { SalesPartnersService } from '@/app/features/sales-partners/services/sales-partners.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 

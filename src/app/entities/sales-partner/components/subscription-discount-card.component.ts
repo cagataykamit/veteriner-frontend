@@ -1,9 +1,9 @@
 import { Component, computed, inject, input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
-import { DiscountCodeFieldComponent } from '@/app/features/sales-partners/components/discount-code-field.component';
-import type { SubscriptionDiscountDto } from '@/app/features/sales-partners/models/sales-partner.model';
-import { DiscountCodesService } from '@/app/features/sales-partners/services/discount-codes.service';
-import { discountNoteText } from '@/app/features/sales-partners/utils/discount-code.utils';
+import { DiscountCodeFieldComponent } from '@/app/entities/sales-partner/components/discount-code-field.component';
+import type { SubscriptionDiscountDto } from '@/app/entities/sales-partner/models/sales-partner.model';
+import { DiscountCodesService } from '@/app/entities/sales-partner/services/discount-codes.service';
+import { discountNoteText } from '@/app/entities/sales-partner/utils/discount-code.utils';
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /**

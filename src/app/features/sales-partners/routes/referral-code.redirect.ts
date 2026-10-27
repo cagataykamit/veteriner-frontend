@@ -4,7 +4,7 @@ import {
     DISCOUNT_CODE_QUERY_PARAM,
     normalizeDiscountCodeInput,
     storePendingDiscountCode
-} from '@/app/features/sales-partners/utils/discount-code.utils';
+} from '@/app/entities/sales-partner/utils/discount-code.utils';
 
 /**
  * Satış ortağı bağlantısı `vetinity.com/r/KOD` (ADR-037 madde 6): kodu oturum belleğine alır ve kayıt sayfasına `kod` parametresiyle

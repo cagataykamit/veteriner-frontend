@@ -1,8 +1,8 @@
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
-import type { SalesPartnerDto } from '@/app/features/sales-partners/models/sales-partner.model';
-import { minorToAmount } from '@/app/features/sales-partners/models/sales-partner.model';
+import type { SalesPartnerDto } from '@/app/entities/sales-partner/models/sales-partner.model';
+import { minorToAmount } from '@/app/entities/sales-partner/models/sales-partner.model';
 import { SalesPartnerFormDialogComponent } from '@/app/features/sales-partners/components/sales-partner-form-dialog.component';
 import { SalesPartnersService } from '@/app/features/sales-partners/services/sales-partners.service';
 import { downloadSalesPartnerCsv } from '@/app/features/sales-partners/utils/sales-partner-csv.utils';
