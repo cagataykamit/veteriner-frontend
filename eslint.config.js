@@ -2,15 +2,28 @@ import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import angular from 'angular-eslint';
 import prettier from 'eslint-config-prettier';
+import fs from 'node:fs';
 
-// Katman yönü: core/shared ← features ← layout/pages (uygulama kabuğu ve rota sayfaları). Alt katman üst katmanı içe aktarmaz.
-// Tip importu (sözleşme) serbesttir. Tek istisna: tema/yerleşim durumu LayoutService'tedir; grafik gibi bileşenler tema
-// değişince yeniden çizmek için onu okuyabilir.
+// Katman yönü: core/shared ← entities ← features ← layout/pages (uygulama kabuğu ve rota sayfaları). Alt katman üst katmanı
+// içe aktarmaz. Tip importu (sözleşme) serbesttir; entities hariç, varlık kendi modelini taşır. Tek istisna: tema/yerleşim
+// durumu LayoutService'tedir; grafik gibi bileşenler tema değişince yeniden çizmek için onu okuyabilir.
 const shellImports = {
     regex: '^@/app/(pages/|layout/(?!service/layout\\.service$))',
     allowTypeImports: true,
     message: 'Uygulama kabuğu (layout) ve rota sayfaları (pages) en üst katmandır; alt katman onları içe aktarmaz. Paylaşılan servisi core altına taşıyın.'
 };
+
+// Özellik başka özelliği çalışma zamanında içe aktarmaz: birden çok özelliğin kullandığı servis, model, yardımcı ve küçük
+// bileşen entities altında yaşar. Özellikler arası rota bileşimi (loadChildren/loadComponent) bu kuralın dışındadır.
+const featureNames = fs
+    .readdirSync(new URL('./src/app/features', import.meta.url), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
+const otherFeatureImports = (feature) => ({
+    regex: `^@/app/features/(?!${feature}/)`,
+    allowTypeImports: true,
+    message: 'Özellik başka bir özelliği çalışma zamanında içe aktarmaz; ortak parçayı src/app/entities altına taşıyın.'
+});
 
 export default tseslint.config(
     {
@@ -82,8 +95,8 @@ export default tseslint.config(
         }
     },
     {
-        // core ve shared, features'a bağımlı olmaz: özellik servisini kullanan bileşen/servis (arama, hızlı kayıt, hasta eylem
-        // çubuğu vb.) shared'da değil o özelliğin altında yaşar.
+        // core ve shared, entities ve features'a bağımlı olmaz: varlık servisini kullanan bileşen/servis (arama, hızlı kayıt,
+        // hasta eylem çubuğu vb.) shared'da değil o varlığın ya da özelliğin altında yaşar.
         files: ['src/app/core/**/*.ts', 'src/app/shared/**/*.ts'],
         rules: {
             '@typescript-eslint/no-restricted-imports': [
@@ -91,9 +104,9 @@ export default tseslint.config(
                 {
                     patterns: [
                         {
-                            group: ['@/app/features/*', '@/app/features/**', '**/features/**'],
+                            group: ['@/app/entities/*', '@/app/entities/**', '**/entities/**', '@/app/features/*', '@/app/features/**', '**/features/**'],
                             allowTypeImports: true,
-                            message: 'core/shared, features içinden çalışma zamanı kodu içe aktarmaz; paylaşılan servisi/modeli core veya shared altına taşıyın.'
+                            message: 'core/shared, entities ve features içinden çalışma zamanı kodu içe aktarmaz; paylaşılan servisi/modeli core veya shared altına taşıyın.'
                         },
                         shellImports
                     ]
@@ -102,11 +115,29 @@ export default tseslint.config(
         }
     },
     {
-        files: ['src/app/features/**/*.ts'],
+        // entities yalnız core, shared ve başka varlığı içe aktarır; varlıklar arası döngü kurulmaz. Varlık kendi modelini
+        // taşır: üst katmandan tip importu da yoktur.
+        files: ['src/app/entities/**/*.ts'],
         rules: {
-            '@typescript-eslint/no-restricted-imports': ['error', { patterns: [shellImports] }]
+            '@typescript-eslint/no-restricted-imports': [
+                'error',
+                {
+                    patterns: [
+                        {
+                            group: ['@/app/features/*', '@/app/features/**', '**/features/**', '@/app/layout/*', '@/app/layout/**', '**/layout/**', '@/app/pages/*', '@/app/pages/**', '**/pages/**'],
+                            message: 'entities, features, layout ve pages içinden (tip dahil) içe aktarmaz; ortak parçayı entities, core veya shared altına taşıyın.'
+                        }
+                    ]
+                }
+            ]
         }
     },
+    ...featureNames.map((feature) => ({
+        files: [`src/app/features/${feature}/**/*.ts`],
+        rules: {
+            '@typescript-eslint/no-restricted-imports': ['error', { patterns: [shellImports, otherFeatureImports(feature)] }]
+        }
+    })),
     {
         files: ['**/*.html'],
         extends: [...angular.configs.templateRecommended, prettier],
