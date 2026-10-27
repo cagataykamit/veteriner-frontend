@@ -11,20 +11,20 @@ import {
     mapCreateAppointmentToApiBody,
     mapUpdateAppointmentToApiBody,
     mapPagedAppointmentsToVm
-} from '@/app/features/appointments/data/appointment.mapper';
+} from '@/app/entities/appointment/data/appointment.mapper';
 import {
     appointmentCalendarQueryToHttpParams,
     mapAppointmentCalendarItemsToVm
-} from '@/app/features/appointments/data/appointment-calendar.mapper';
-import type { AppointmentDetailDto, AppointmentListItemDtoPagedResult } from '@/app/features/appointments/models/appointment-api.model';
+} from '@/app/entities/appointment/data/appointment-calendar.mapper';
+import type { AppointmentDetailDto, AppointmentListItemDtoPagedResult } from '@/app/entities/appointment/models/appointment-api.model';
 import type {
     AppointmentCalendarItemDto,
     AppointmentCalendarQuery
-} from '@/app/features/appointments/models/appointment-calendar-api.model';
-import type { CreateAppointmentRequest, UpdateAppointmentRequest } from '@/app/features/appointments/models/appointment-create.model';
-import type { AppointmentsListQuery } from '@/app/features/appointments/models/appointment-query.model';
-import type { AppointmentDetailVm, AppointmentEditVm, AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
-import type { AppointmentCalendarItemVm } from '@/app/features/appointments/models/appointment-calendar-vm.model';
+} from '@/app/entities/appointment/models/appointment-calendar-api.model';
+import type { CreateAppointmentRequest, UpdateAppointmentRequest } from '@/app/entities/appointment/models/appointment-create.model';
+import type { AppointmentsListQuery } from '@/app/entities/appointment/models/appointment-query.model';
+import type { AppointmentDetailVm, AppointmentEditVm, AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
+import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface AppointmentsPagedVm {

@@ -3,17 +3,17 @@ import {
     formatAppointmentDurationLabel,
     normalizeAppointmentDurationMinutesFromApi,
     resolveAppointmentScheduledEndUtc
-} from '@/app/features/appointments/data/appointment.mapper';
+} from '@/app/entities/appointment/data/appointment.mapper';
 import type {
     AppointmentCalendarItemDto,
     AppointmentCalendarQuery
-} from '@/app/features/appointments/models/appointment-calendar-api.model';
+} from '@/app/entities/appointment/models/appointment-calendar-api.model';
 import type {
     AppointmentCalendarDayGroupVm,
     AppointmentCalendarItemVm
-} from '@/app/features/appointments/models/appointment-calendar-vm.model';
-import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
-import { appointmentTypeLabel } from '@/app/features/appointments/utils/appointment-type.utils';
+} from '@/app/entities/appointment/models/appointment-calendar-vm.model';
+import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/entities/appointment/utils/appointment-status.utils';
+import { appointmentTypeLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 
 const EM = '—';

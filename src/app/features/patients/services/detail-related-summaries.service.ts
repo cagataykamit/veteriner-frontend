@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { map, type Observable, of } from 'rxjs';
-import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
+import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
-import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import type { ExaminationListItemVm } from '@/app/features/examinations/models/examination-vm.model';
 import { PaymentsService } from '@/app/features/payments/services/payments.service';

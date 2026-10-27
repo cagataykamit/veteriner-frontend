@@ -6,7 +6,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angul
 import { EMPTY, Observable, of, throwError } from 'rxjs';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
+import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';

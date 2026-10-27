@@ -4,10 +4,10 @@ import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angul
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { APPOINTMENTS_CANCEL_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { isLastRowAction, isRightAfterDetail, rowDangerActions, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
-import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
+import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppointmentsListPageComponent } from './appointments-list-page.component';
 

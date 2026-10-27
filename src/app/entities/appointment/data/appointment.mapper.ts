@@ -5,15 +5,15 @@ import type {
     AppointmentListItemDto,
     AppointmentListItemDtoPagedResult,
     AppointmentUpdateRequestDto
-} from '@/app/features/appointments/models/appointment-api.model';
-import type { CreateAppointmentRequest, UpdateAppointmentRequest } from '@/app/features/appointments/models/appointment-create.model';
-import type { AppointmentsListQuery } from '@/app/features/appointments/models/appointment-query.model';
-import type { AppointmentDetailVm, AppointmentEditVm, AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+} from '@/app/entities/appointment/models/appointment-api.model';
+import type { CreateAppointmentRequest, UpdateAppointmentRequest } from '@/app/entities/appointment/models/appointment-create.model';
+import type { AppointmentsListQuery } from '@/app/entities/appointment/models/appointment-query.model';
+import type { AppointmentDetailVm, AppointmentEditVm, AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import {
     parseAppointmentTypeEnumValue,
     resolveAppointmentWriteTypeFormValue
-} from '@/app/features/appointments/utils/appointment-type.utils';
-import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
+} from '@/app/entities/appointment/utils/appointment-type.utils';
+import { parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
 import {
     dateOnlyInputToIstanbulEndUtcIso,
     dateOnlyInputToIstanbulStartUtcIso,

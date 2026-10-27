@@ -1,7 +1,7 @@
 import { parseLabResultStatus } from '@/app/features/lab-results/utils/lab-result-status.utils';
 import { HttpParams } from '@angular/common/http';
-import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
-import { parseAppointmentTypeEnumValue } from '@/app/features/appointments/utils/appointment-type.utils';
+import { parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
+import { parseAppointmentTypeEnumValue } from '@/app/entities/appointment/utils/appointment-type.utils';
 import type {
     PetCreateRequestDto,
     PetDetailDto,

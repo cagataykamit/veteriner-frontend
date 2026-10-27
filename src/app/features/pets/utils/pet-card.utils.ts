@@ -11,8 +11,8 @@ import type { PetOpenItemsVm, PetOpenVaccinationVm } from '@/app/features/pets/m
 import type { PetSummarySectionVm } from '@/app/features/pets/models/pet-summary-vm.model';
 import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { petGenderLabel } from '@/app/features/pets/utils/pet-status.utils';
-import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
-import { upcomingScheduledAppointmentsLinkQuery } from '@/app/features/appointments/utils/appointments-list-link.utils';
+import { parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
+import { upcomingScheduledAppointmentsLinkQuery } from '@/app/entities/appointment/utils/appointments-list-link.utils';
 import { canOpenVaccinationEdit } from '@/app/features/vaccinations/utils/vaccination-access.utils';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay, parseUtcApiInstantIsoString, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';

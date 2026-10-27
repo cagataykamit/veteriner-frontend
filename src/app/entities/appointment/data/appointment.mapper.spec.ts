@@ -1,4 +1,4 @@
-import { appointmentsQueryToHttpParams } from '@/app/features/appointments/data/appointment.mapper';
+import { appointmentsQueryToHttpParams } from '@/app/entities/appointment/data/appointment.mapper';
 
 describe('appointment mapper — liste tarih parametreleri', () => {
     it('İstanbul gününü iki ucu dahil [dateFromUtc, dateToUtc] olarak gönderir', () => {

@@ -1,6 +1,6 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import type { ChargeSuggestionsPagedVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';

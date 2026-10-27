@@ -6,8 +6,8 @@ import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angul
 import { of } from 'rxjs';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { AppointmentEditVm } from '@/app/features/appointments/models/appointment-vm.model';
-import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
+import type { AppointmentEditVm } from '@/app/entities/appointment/models/appointment-vm.model';
+import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { ClinicsService } from '@/app/features/clinics/services/clinics.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppointmentEditPageComponent } from './appointment-edit-page.component';

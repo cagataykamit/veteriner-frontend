@@ -6,7 +6,7 @@ import {
     canRevertAppointmentNoShow,
     isAppointmentNoShowStatus,
     parseAppointmentStatusRawToEnum
-} from '@/app/features/appointments/utils/appointment-status.utils';
+} from '@/app/entities/appointment/utils/appointment-status.utils';
 
 describe('appointment status — Gelmedi (NoShow)', () => {
     it('3 ve NoShow dizgisi Gelmedi olarak çözülür; etiket ve rozet rengi tanımlı', () => {

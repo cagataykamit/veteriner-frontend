@@ -1,6 +1,6 @@
 import type { TodayItemVm, VisitCareStatus, VisitCorrectionAction } from '@/app/features/visits/models/visit-vm.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { canMarkAppointmentNoShow, canRevertAppointmentNoShow } from '@/app/features/appointments/utils/appointment-status.utils';
+import { canMarkAppointmentNoShow, canRevertAppointmentNoShow } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 
 const CARE_STATUS_LABEL: Record<VisitCareStatus, string> = {

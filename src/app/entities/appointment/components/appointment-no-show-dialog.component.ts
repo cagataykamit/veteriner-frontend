@@ -3,7 +3,7 @@ import { Component, computed, effect, inject, input, model, output, signal, untr
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
+import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 

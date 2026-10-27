@@ -1,4 +1,4 @@
-import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 
 /** Randevu raporu tablo satırı — liste VM + klinik / not gösterimi. */
 export type AppointmentReportRowVm = AppointmentListItemVm & {

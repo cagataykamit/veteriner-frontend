@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, input, model, output } from '@angular/core';
-import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
+import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 

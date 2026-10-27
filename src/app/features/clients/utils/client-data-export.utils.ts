@@ -1,5 +1,5 @@
-import { appointmentStatusLabel } from '@/app/features/appointments/utils/appointment-status.utils';
-import { appointmentTypeLabel } from '@/app/features/appointments/utils/appointment-type.utils';
+import { appointmentStatusLabel } from '@/app/entities/appointment/utils/appointment-status.utils';
+import { appointmentTypeLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
 import type { ClientDataExportDto, ClientDataExportSectionDto } from '@/app/features/clients/models/client-data-export-api.model';
 import { clientContactChannelLabel, parseClientContactChannel } from '@/app/features/clients/utils/client-contact-preference.utils';
 import { formatClientInvoicingSummary, mapClientInvoicingSummaryDtoToVm } from '@/app/features/clients/utils/client-invoicing.utils';

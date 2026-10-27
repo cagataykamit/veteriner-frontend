@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import type { ChargeSuggestionsPagedVm, ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { ClientDetailVm } from '@/app/features/clients/models/client-vm.model';

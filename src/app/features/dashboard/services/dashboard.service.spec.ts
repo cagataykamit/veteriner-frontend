@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { DashboardService } from '@/app/features/dashboard/services/dashboard.service';
-import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
+import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
 import { VaccinationsService } from '@/app/features/vaccinations/services/vaccinations.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';

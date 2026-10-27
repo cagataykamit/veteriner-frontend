@@ -1,4 +1,4 @@
-import type { AppointmentListItemDto } from '@/app/features/appointments/models/appointment-api.model';
+import type { AppointmentListItemDto } from '@/app/entities/appointment/models/appointment-api.model';
 
 /** GET `/api/v1/reports/appointments` */
 export interface AppointmentsReportDto {

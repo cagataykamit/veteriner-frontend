@@ -1,5 +1,5 @@
 import { CHARGES_CREATE_CLAIM, PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import type { ChargeSuggestionsPagedVm, ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import { computeChargeAmount } from '@/app/features/charges/utils/charge-amount.utils';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';

@@ -3,7 +3,7 @@ import { Component, OnInit, computed, inject, ChangeDetectionStrategy } from '@a
 import { RouterLink } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { APPOINTMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/features/appointments/utils/appointment-status.utils';
+import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/entities/appointment/utils/appointment-status.utils';
 import type { AppointmentsReportQuery } from '@/app/features/reports/appointments/models/appointments-report-query.model';
 import type { AppointmentsReportResultVm } from '@/app/features/reports/appointments/models/appointments-report.model';
 import { AppointmentsReportService } from '@/app/features/reports/appointments/services/appointments-report.service';

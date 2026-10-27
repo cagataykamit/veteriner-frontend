@@ -4,7 +4,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import type { ChargeSuggestionVm } from '@/app/features/charges/models/charge-suggestion-vm.model';
 import type { ClientBalanceVm } from '@/app/features/clients/models/client-balance-vm.model';
 import type { ClientDetailVm, ClientPaymentSummaryVm } from '@/app/features/clients/models/client-vm.model';

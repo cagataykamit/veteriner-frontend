@@ -1,5 +1,5 @@
-import type { AppointmentListItemDto } from '@/app/features/appointments/models/appointment-api.model';
-import { mapAppointmentListItemDtoToVm } from '@/app/features/appointments/data/appointment.mapper';
+import type { AppointmentListItemDto } from '@/app/entities/appointment/models/appointment-api.model';
+import { mapAppointmentListItemDtoToVm } from '@/app/entities/appointment/data/appointment.mapper';
 import type { AppointmentsReportDto } from '@/app/features/reports/appointments/models/appointments-report-api.model';
 import type { AppointmentReportRowVm, AppointmentsReportResultVm } from '@/app/features/reports/appointments/models/appointments-report.model';
 

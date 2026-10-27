@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { type Observable, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { AppointmentsService } from '@/app/features/appointments/services/appointments.service';
+import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { mapPetOpenItemsDtoToVm } from '@/app/features/pets/data/pet-open-items.mapper';
 import { mapPetSummaryDtoToVm } from '@/app/features/pets/data/pet-summary.mapper';
 import type { PetOpenItemsDto } from '@/app/features/pets/models/pet-open-items-api.model';

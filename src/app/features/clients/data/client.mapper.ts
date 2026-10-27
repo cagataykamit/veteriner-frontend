@@ -3,9 +3,9 @@ import {
     formatAppointmentDurationLabel,
     normalizeAppointmentDurationMinutesFromApi,
     resolveAppointmentScheduledEndUtc
-} from '@/app/features/appointments/data/appointment.mapper';
-import { parseAppointmentStatusRawToEnum } from '@/app/features/appointments/utils/appointment-status.utils';
-import type { AppointmentListItemVm } from '@/app/features/appointments/models/appointment-vm.model';
+} from '@/app/entities/appointment/data/appointment.mapper';
+import { parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
+import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import type {
     ClientUpsertRequestDto,
     ClientDetailDto,
