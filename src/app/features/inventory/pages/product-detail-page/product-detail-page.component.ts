@@ -1,25 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { Component, inject, OnInit, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { DialogModule } from 'primeng/dialog';
-import { InputTextModule } from 'primeng/inputtext';
-import { SelectModule } from 'primeng/select';
-import { SelectButtonModule } from 'primeng/selectbutton';
-import { TextareaModule } from 'primeng/textarea';
-import { ProductStockBatchesComponent } from '@/app/features/inventory/components/product-stock-batches/product-stock-batches.component';
-import { StockBatchFieldsComponent } from '@/app/features/inventory/components/stock-batch-fields/stock-batch-fields.component';
-import { createStockBatchFormGroup, getAcknowledgeExpiredRequest, getStockBatchRequest, syncStockBatchGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
+import { ProductClinicStocksComponent } from '@/app/features/inventory/components/product-clinic-stocks/product-clinic-stocks.component';
+import { ProductStockOperationDialogComponent } from '@/app/features/inventory/components/product-stock-operation-dialog/product-stock-operation-dialog.component';
 import type { ProductDetailVm } from '@/app/entities/inventory/models/product-vm.model';
 import { isStockTrackedKind } from '@/app/entities/inventory/utils/product-classification.utils';
 import type { ProductStockVm } from '@/app/entities/inventory/models/product-stock-vm.model';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
-import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PRODUCTS_DEACTIVATE_CLAIM, PRODUCTS_UPDATE_CLAIM, STOCK_MOVEMENTS_CREATE_CLAIM, STOCK_MOVEMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { PRODUCTS_DEACTIVATE_CLAIM, PRODUCTS_UPDATE_CLAIM, STOCK_MOVEMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -27,49 +19,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { EMPTY, switchMap } from 'rxjs';
-import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
-import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { ConfirmationService } from 'primeng/api';
-
-/** Stok giriş/çıkış: miktar > 0 */
-function stockMovementAmountPositiveValidator(): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors | null => {
-        const raw = control.value as string | number | null | undefined;
-
-        if (raw === null || raw === undefined || raw === '') {
-            return { required: true };
-        }
-
-        const n = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'));
-
-        if (!Number.isFinite(n) || n <= 0) {
-            return { minExclusive: true };
-        }
-
-        return null;
-    };
-}
-
-function optionalNonNegativeNumberValidator(): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors | null => {
-        const raw = control.value as string | number | null | undefined;
-
-        if (raw === null || raw === undefined || raw === '') {
-            return null;
-        }
-
-        const n = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'));
-
-        if (!Number.isFinite(n) || n < 0) {
-            return { min: true };
-        }
-
-        return null;
-    };
-}
-
-/** Ürün detayı — Klinik stokları tek dialog işlem tipi */
-type StockOperationKind = 'in' | 'out' | 'minimum';
 
 @Component({
     selector: 'app-product-detail-page',
@@ -77,34 +27,17 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
     imports: [
         CommonModule,
         RouterLink,
-        ReactiveFormsModule,
         ButtonModule,
         ConfirmDialogModule,
-        DialogModule,
-        InputTextModule,
-        SelectModule,
-        SelectButtonModule,
-        TextareaModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
-        StockBatchFieldsComponent,
-        ProductStockBatchesComponent
+        ProductClinicStocksComponent,
+        ProductStockOperationDialogComponent
     ],
     providers: [ConfirmationService],
-    styles: [
-        `
-            /* Klinik stokları: 6 eşit kolon, dikey çizgi yok */
-            .product-stock-desktop-grid {
-                display: grid;
-                grid-template-columns: repeat(7, minmax(0, 1fr));
-                column-gap: 1rem;
-                align-items: center;
-            }
-        `
-    ],
     changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (loading()) {
@@ -195,297 +128,34 @@ type StockOperationKind = 'in' | 'out' | 'minimum';
                 </div>
 
                 @if (isStockTracked(p)) {
-                    <div class="col-span-12">
-                        <div class="card">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                                <h5 class="mt-0 mb-0 text-base font-semibold text-surface-900 dark:text-surface-0">Klinik stokları</h5>
-                                <div class="flex flex-wrap gap-3 items-center text-sm">
-                                    @if (canReadStockMovements) {
-                                        <a [routerLink]="['/panel/products', p.id, 'stock-movements']" class="text-primary font-medium no-underline whitespace-nowrap">Stok hareketleri →</a>
-                                    }
-                                    @if (canCreateStockMovement && !ro.mutationBlocked()) {
-                                        <a [routerLink]="['/panel/products', p.id, 'stock-movements']" class="text-primary font-medium no-underline whitespace-nowrap">Stok hareketi ekle →</a>
-                                    }
-                                </div>
-                            </div>
-                            @if (ro.mutationBlocked()) {
-                                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3 m-0" role="status">Salt okunur modda stok girişi, stok çıkışı ve minimum stok güncellenemez; stok bilgileri görüntülenebilir.</p>
-                            }
-                            @if (stocksLoading() && stocksRows().length === 0) {
-                                <app-loading-state message="Stok bilgileri yükleniyor…" />
-                            } @else if (stocksError()) {
-                                <app-error-state [detail]="stocksError()!" (retry)="reloadStocks()" />
-                            } @else if (stocksRowsView().total === 0) {
-                                <app-empty-state message="Bu ürün için henüz stok kaydı yok." />
-                            } @else {
-                                <!-- Masaüstü: çizgisiz kolon hizası; yalnızca satır ayırıcıları -->
-                                <div class="hidden md:block overflow-x-auto w-full" [class.opacity-60]="stocksLoading()" [attr.aria-busy]="stocksLoading()">
-                                    <div class="w-full min-w-0">
-                                        <div role="row" class="product-stock-desktop-grid px-2 py-2.5 border-b border-surface-200 dark:border-surface-700">
-                                            <span class="text-sm font-semibold text-muted-color text-center block">Klinik</span>
-                                            <span class="text-sm font-semibold text-muted-color text-center block">Kullanılabilir</span>
-                                            <span class="text-sm font-semibold text-muted-color text-center block">Süresi geçmiş</span>
-                                            <span class="text-sm font-semibold text-muted-color text-center block">Minimum stok</span>
-                                            <span class="text-sm font-semibold text-muted-color text-center block">Durum</span>
-                                            <span class="text-sm font-semibold text-muted-color text-center block px-1">Son güncelleme</span>
-                                            <span class="text-sm font-semibold text-muted-color text-center block">İşlem</span>
-                                        </div>
-                                        @for (row of stocksRowsView().displayed; track row.id) {
-                                            <div
-                                                role="row"
-                                                class="product-stock-desktop-grid px-2 py-2.5 border-b border-surface-200 dark:border-surface-700 last:border-b-0 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors duration-150"
-                                            >
-                                                <span class="font-semibold text-base text-surface-900 dark:text-surface-0 min-w-0 break-words leading-snug text-center block">{{ row.clinicName }}</span>
-                                                <span class="tabular-nums text-base font-medium text-surface-900 dark:text-surface-0 text-center block">{{ row.availableText }}</span>
-                                                <span class="tabular-nums text-base text-center block">
-                                                    @if (row.hasExpired) {
-                                                        <span class="font-medium text-red-600 dark:text-red-400" data-testid="expired-qty">{{ row.expiredText }}</span>
-                                                    } @else {
-                                                        <span class="text-muted-color">—</span>
-                                                    }
-                                                </span>
-                                                <span class="tabular-nums text-base text-surface-900 dark:text-surface-0 text-center block">{{ row.minimumStockLevelText }}</span>
-                                                <span class="flex justify-center items-center min-w-0 px-1">
-                                                    <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
-                                                </span>
-                                                <span class="text-muted-color text-base min-w-0 text-center block px-1 break-words leading-snug" [title]="row.updatedAtText">{{ row.updatedAtText }}</span>
-                                                <span class="flex justify-center items-center min-h-[2.5rem] max-w-full">
-                                                    @if (canOpenStockOperation()) {
-                                                        <button
-                                                            pButton
-                                                            type="button"
-                                                            size="small"
-                                                            severity="primary"
-                                                            class="!py-2 !px-3 !text-sm !font-semibold whitespace-nowrap shadow-sm"
-                                                            title="Stok girişi, çıkışı veya minimum stok"
-                                                            (click)="openStockOperationDialog(row)"
-                                                        ><i class="p-button-icon pi pi-sync"></i>Stok işlemi</button>
-                                                    }
-                                                </span>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                                <div class="md:hidden space-y-2.5" [class.opacity-60]="stocksLoading()" [attr.aria-busy]="stocksLoading()">
-                                    @for (row of stocksRowsView().displayed; track row.id) {
-                                        <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 px-3 py-2.5 shadow-sm">
-                                            <div class="text-base font-semibold text-surface-900 dark:text-surface-0 mb-2 leading-snug">
-                                                {{ row.clinicName }}
-                                            </div>
-                                            <dl class="m-0 grid grid-cols-12 gap-x-2 gap-y-2">
-                                                <dt class="col-span-5 text-muted-color text-sm">Kullanılabilir</dt>
-                                                <dd class="col-span-7 m-0 text-right tabular-nums text-base font-medium text-surface-900 dark:text-surface-0">
-                                                    {{ row.availableText }}
-                                                </dd>
-                                                <dt class="col-span-5 text-muted-color text-sm">Süresi geçmiş</dt>
-                                                <dd class="col-span-7 m-0 text-right tabular-nums text-base">
-                                                    @if (row.hasExpired) {
-                                                        <span class="font-medium text-red-600 dark:text-red-400" data-testid="expired-qty">{{ row.expiredText }}</span>
-                                                    } @else {
-                                                        <span class="text-muted-color">—</span>
-                                                    }
-                                                </dd>
-                                                <dt class="col-span-5 text-muted-color text-sm">Minimum stok</dt>
-                                                <dd class="col-span-7 m-0 text-right tabular-nums text-base text-surface-900 dark:text-surface-0">
-                                                    {{ row.minimumStockLevelText }}
-                                                </dd>
-                                                <dt class="col-span-5 text-muted-color text-sm self-center">Durum</dt>
-                                                <dd class="col-span-7 m-0 flex justify-end items-center">
-                                                    <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
-                                                </dd>
-                                                <dt class="col-span-12 text-muted-color text-sm pt-0.5">Son güncelleme</dt>
-                                                <dd class="col-span-12 m-0 text-muted-color text-base">{{ row.updatedAtText }}</dd>
-                                            </dl>
-                                            @if (canOpenStockOperation()) {
-                                                <div class="flex flex-wrap justify-end gap-2 mt-2.5 pt-2 border-t border-surface-200 dark:border-surface-700">
-                                                    <button
-                                                        pButton
-                                                        type="button"
-                                                        size="small"
-                                                        severity="primary"
-                                                        class="!py-2 !px-3 !text-sm !font-semibold shadow-sm"
-                                                        title="Stok girişi, çıkışı veya minimum stok"
-                                                        (click)="openStockOperationDialog(row)"
-                                                    ><i class="p-button-icon pi pi-sync"></i>Stok işlemi</button>
-                                                </div>
-                                            }
-                                        </div>
-                                    }
-                                </div>
-                            }
-                        </div>
-                    </div>
-
-                    @if (canReadStockMovements && stocksRows().length > 0) {
-                        <div class="col-span-12">
-                            <div class="card" data-testid="product-batches-card">
-                                <h5 class="mt-0 mb-4 text-base font-semibold text-surface-900 dark:text-surface-0">Partiler</h5>
-                                @for (row of stocksRows(); track row.id) {
-                                    <app-product-stock-batches [productId]="p.id" [clinicId]="row.clinicId" [clinicName]="row.clinicName" [reloadKey]="batchesReloadKey()" />
-                                }
-                            </div>
-                        </div>
-                    }
+                    <app-product-clinic-stocks
+                        [productId]="p.id"
+                        [rows]="stocksRows()"
+                        [loading]="stocksLoading()"
+                        [error]="stocksError()"
+                        [reloadKey]="batchesReloadKey()"
+                        [canOperate]="canOpenStockOperation()"
+                        (retry)="reloadStocks()"
+                        (operate)="openStockOperationDialog($event)"
+                    />
                 }
             </div>
         }
 
-        <p-dialog header="Stok işlemi" [modal]="true" [visible]="stockOperationDialogOpen()" (visibleChange)="onStockOperationDialogVisibleChange($event)" [style]="{ width: 'min(36rem, 95vw)' }" [draggable]="false">
-            <form [formGroup]="stockOperationForm" (ngSubmit)="onStockOperationSubmit()" class="flex flex-col gap-4">
-                @if (showStockClinicPicker()) {
-                    <div class="flex flex-col gap-1">
-                        <label for="soClinicPick" class="block text-sm font-medium text-muted-color">Klinik *</label>
-                        <p-select
-                            inputId="soClinicPick"
-                            formControlName="clinicStockRowId"
-                            [options]="stockRowPickOptions()"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Klinik seçin…"
-                            [filter]="true"
-                            filterPlaceholder="Ara…"
-                            filterBy="label"
-                            [showClear]="true"
-                            class="w-full"
-                        />
-                        @if (stockOperationForm.controls.clinicStockRowId.invalid && stockOperationForm.controls.clinicStockRowId.touched) {
-                            <small class="text-red-500">Stok işlemi için klinik seçimi gereklidir.</small>
-                        }
-                    </div>
-                }
-
-                @if (shouldShowStockOperationBody()) {
-                    @if (editingStockRow(); as stock) {
-                        <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900/40 p-4 space-y-3" role="region" aria-label="Klinik stok özeti">
-                            <div class="flex flex-col gap-1">
-                                <span class="block text-sm font-medium text-muted-color">Klinik</span>
-                                <span class="text-base font-medium text-surface-900 dark:text-surface-0 leading-snug">{{ stock.clinicName }}</span>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div class="flex flex-col gap-1">
-                                    <span class="block text-sm font-medium text-muted-color">Kullanılabilir stok</span>
-                                    <span class="text-base tabular-nums text-surface-900 dark:text-surface-0">{{ stock.availableText }}</span>
-                                    @if (stock.hasExpired) {
-                                        <span class="text-sm tabular-nums text-red-600 dark:text-red-400">+ {{ stock.expiredText }} süresi geçmiş</span>
-                                    }
-                                </div>
-                                <div class="flex flex-col gap-1">
-                                    <span class="block text-sm font-medium text-muted-color">Minimum stok</span>
-                                    <span class="text-base tabular-nums text-surface-900 dark:text-surface-0">{{ stock.minimumStockLevelText }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    } @else if (stockOperationActiveClinicFallback()) {
-                        <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900/40 p-4 space-y-3" role="region" aria-label="Aktif klinik stok özeti">
-                            <div class="flex flex-col gap-1">
-                                <span class="block text-sm font-medium text-muted-color">Klinik</span>
-                                <span class="text-base font-medium text-surface-900 dark:text-surface-0 leading-snug">{{ headerActiveClinicDisplayName() }}</span>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div class="flex flex-col gap-1">
-                                    <span class="block text-sm font-medium text-muted-color">Mevcut stok</span>
-                                    <span class="text-base tabular-nums text-muted-color">—</span>
-                                </div>
-                                <div class="flex flex-col gap-1">
-                                    <span class="block text-sm font-medium text-muted-color">Minimum stok</span>
-                                    <span class="text-base tabular-nums text-muted-color">—</span>
-                                </div>
-                            </div>
-                            <p class="text-sm text-muted-color m-0 leading-relaxed">Bu ürün için seçili klinikte henüz stok kaydı yok; stok girişi veya çıkışı ile hareket oluşturabilirsiniz.</p>
-                        </div>
-                    }
-
-                    <div class="flex flex-col gap-2">
-                        <label class="block text-sm font-medium text-muted-color">İşlem tipi</label>
-                        <p-selectbutton formControlName="operationType" [options]="stockOperationTypeSelectOptions()" optionLabel="label" optionValue="value" [allowEmpty]="false" styleClass="flex-wrap w-full" aria-label="İşlem tipi" />
-                    </div>
-
-                    @if (stockOperationForm.controls.operationType.value === 'in') {
-                        <div class="flex flex-col gap-4">
-                            <div class="flex flex-col gap-1">
-                                <label for="soAmountIn" class="block text-sm font-medium text-muted-color">Giriş miktarı *</label>
-                                <input id="soAmountIn" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="amount" inputmode="decimal" />
-                                @if (stockOperationForm.controls.amount.invalid && stockOperationForm.controls.amount.touched) {
-                                    <small class="text-red-500">Miktar 0’dan büyük olmalıdır.</small>
-                                }
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <label for="soUnitCost" class="block text-sm font-medium text-muted-color">Birim maliyet</label>
-                                <input id="soUnitCost" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="unitCost" placeholder="İsteğe bağlı" inputmode="decimal" />
-                                @if (stockOperationForm.controls.unitCost.invalid && stockOperationForm.controls.unitCost.touched) {
-                                    <small class="text-red-500">Birim maliyet 0’dan küçük olamaz.</small>
-                                }
-                            </div>
-                            <app-stock-batch-fields [group]="stockOperationForm.controls.batch" [required]="product()?.requiresLotAndExpiry === true" idPrefix="soBatch" />
-                            <div class="flex flex-col gap-1">
-                                <label for="soNotesIn" class="block text-sm font-medium text-muted-color">Açıklama</label>
-                                <textarea id="soNotesIn" pTextarea rows="3" class="w-full min-h-[4.5rem]" formControlName="notes" placeholder="İsteğe bağlı"></textarea>
-                                @if (stockOperationForm.controls.notes.invalid && stockOperationForm.controls.notes.touched) {
-                                    <small class="text-red-500">En fazla 2000 karakter.</small>
-                                }
-                            </div>
-                        </div>
-                    }
-                    @if (stockOperationForm.controls.operationType.value === 'out') {
-                        <div class="flex flex-col gap-4">
-                            <div class="flex flex-col gap-1">
-                                <label for="soAmountOut" class="block text-sm font-medium text-muted-color">Çıkış miktarı *</label>
-                                <input id="soAmountOut" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="amount" inputmode="decimal" />
-                                @if (stockOperationForm.controls.amount.invalid && stockOperationForm.controls.amount.touched) {
-                                    <small class="text-red-500">Miktar 0’dan büyük olmalıdır.</small>
-                                }
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <label for="soNotesOut" class="block text-sm font-medium text-muted-color">Açıklama</label>
-                                <textarea id="soNotesOut" pTextarea rows="3" class="w-full min-h-[4.5rem]" formControlName="notes" placeholder="İsteğe bağlı"></textarea>
-                                @if (stockOperationForm.controls.notes.invalid && stockOperationForm.controls.notes.touched) {
-                                    <small class="text-red-500">En fazla 2000 karakter.</small>
-                                }
-                            </div>
-                        </div>
-                    }
-                    @if (stockOperationForm.controls.operationType.value === 'minimum') {
-                        <div class="flex flex-col gap-1">
-                            <label for="soMinLevel" class="block text-sm font-medium text-muted-color">Yeni minimum stok *</label>
-                            <input id="soMinLevel" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="minimumStockLevel" inputmode="decimal" />
-                            @if (stockOperationForm.controls.minimumStockLevel.invalid && stockOperationForm.controls.minimumStockLevel.touched) {
-                                <small class="text-red-500">Minimum stok 0’dan küçük olamaz.</small>
-                            }
-                        </div>
-                    }
-                }
-
-                @if (stockOperationSubmitError()) {
-                    <p class="text-red-500 m-0 text-sm leading-relaxed" role="alert">{{ stockOperationSubmitError() }}</p>
-                }
-                <div class="flex flex-wrap justify-end gap-2 pt-3 mt-1 border-t border-surface-200 dark:border-surface-700">
-                    <button pButton type="button" severity="secondary" (click)="closeStockOperationDialog()" [disabled]="stockOperationSubmitting()">{{ copy.buttonCancel }}</button>
-                    <button
-                        pButton
-                        type="submit"
-                        [disabled]="stockOperationForm.invalid || stockOperationSubmitting() || ro.mutationBlocked() || stockOperationPickIncomplete()"
-                    ><i class="p-button-icon" [class]="stockOperationSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
-                </div>
-            </form>
-        </p-dialog>
+        <app-product-stock-operation-dialog [product]="product()" [stocks]="stocksRows()" (saved)="reloadStocks()" />
 
         <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
     `
 })
 export class ProductDetailPageComponent implements OnInit {
-    readonly copy = PANEL_COPY;
-
     private readonly route = inject(ActivatedRoute);
-    private readonly fb = inject(FormBuilder);
     private readonly productService = inject(ProductService);
-    private readonly stockMovementService = inject(StockMovementService);
     private readonly confirmationService = inject(ConfirmationService);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly canUpdateProduct = this.auth.hasOperationClaim(PRODUCTS_UPDATE_CLAIM);
     readonly canDeactivateProduct = this.auth.hasOperationClaim(PRODUCTS_DEACTIVATE_CLAIM);
-    readonly canReadStockMovements = this.auth.hasOperationClaim(STOCK_MOVEMENTS_READ_CLAIM);
     readonly canCreateStockMovement = this.auth.hasOperationClaim(STOCK_MOVEMENTS_CREATE_CLAIM);
 
     readonly emptyMark = '—';
@@ -504,79 +174,14 @@ export class ProductDetailPageComponent implements OnInit {
     readonly stocksRows = signal<ProductStockVm[]>([]);
     /** Stok yeniden yüklenince parti listeleri de yenilensin. */
     readonly batchesReloadKey = signal(0);
-    readonly stocksRowsView = computed(() => sliceDetailRelatedList(this.stocksRows()));
 
-    readonly stockOperationDialogOpen = signal(false);
-    readonly editingStockRow = signal<ProductStockVm | null>(null);
-    readonly stockOperationSubmitting = signal(false);
-    readonly stockOperationSubmitError = signal<string | null>(null);
-    /** Üst aksiyondan açıldı ve birden fazla klinik satırı var — önce klinik seçimi */
-    readonly stockOperationHeaderNeedsRowPick = signal(false);
-    /** Ürün için stok satırı yok; aktif klinik üzerinden giriş/çıkış */
-    readonly stockOperationActiveClinicFallback = signal(false);
-
-    readonly stockOperationForm = this.fb.nonNullable.group({
-        clinicStockRowId: [null as string | null],
-        operationType: this.fb.nonNullable.control<StockOperationKind>('in'),
-        amount: [null as number | null],
-        unitCost: [null as number | null],
-        notes: ['', Validators.maxLength(2000)],
-        minimumStockLevel: [null as number | null],
-        batch: createStockBatchFormGroup(this.fb)
-    });
-
-    /** Form başına bir kez üretilir; hata sonrası yeniden denemede aynı kalır, diyalog kapanınca yenilenir. */
-    private requestId = crypto.randomUUID();
+    private readonly stockOperationDialog = viewChild.required(ProductStockOperationDialogComponent);
 
     private lastId: string | null = null;
 
     /** Salt okunur değil ve en az bir işlem hakkı (stok hareketi veya ürün güncelleme). */
     canOpenStockOperation(): boolean {
         return !this.ro.mutationBlocked() && (this.canCreateStockMovement || this.canUpdateProduct);
-    }
-
-    stockOperationTypeSelectOptions(): { label: string; value: StockOperationKind }[] {
-        const o: { label: string; value: StockOperationKind }[] = [];
-
-        if (this.canCreateStockMovement) {
-            o.push({ label: 'Stok girişi', value: 'in' });
-            o.push({ label: 'Stok çıkışı', value: 'out' });
-        }
-
-        const row = this.editingStockRow();
-
-        if (this.canUpdateProduct && row) {
-            o.push({ label: 'Minimum stok ayarla', value: 'minimum' });
-        }
-
-        return o;
-    }
-
-    showStockClinicPicker(): boolean {
-        return this.stockOperationHeaderNeedsRowPick();
-    }
-
-    shouldShowStockOperationBody(): boolean {
-        return this.editingStockRow() !== null || this.stockOperationActiveClinicFallback();
-    }
-
-    stockOperationPickIncomplete(): boolean {
-        return this.stockOperationHeaderNeedsRowPick() && this.editingStockRow() === null;
-    }
-
-    headerActiveClinicDisplayName(): string {
-        const name = this.auth.getClinicName()?.trim();
-        const id = this.auth.getClinicId()?.trim();
-
-        if (name) {
-            return name;
-        }
-
-        if (id) {
-            return id;
-        }
-
-        return '—';
     }
 
     /** Üst başlık Stok işlemi — stok listesi ve aktif klinik durumuna göre */
@@ -604,10 +209,6 @@ export class ProductDetailPageComponent implements OnInit {
         return false;
     }
 
-    stockRowPickOptions(): { label: string; value: string }[] {
-        return this.stocksRows().map((r) => ({ label: r.clinicName, value: r.id }));
-    }
-
     headerStockOperationTitle(): string {
         if (this.isHeaderStockOperationDisabled() && this.stocksRows().length === 0 && !this.auth.getClinicId()?.trim()) {
             return 'Bu ürün için henüz klinik stok kaydı yok. İlk stok kaydı oluşturmak için klinik bilgisi gereklidir.';
@@ -625,157 +226,18 @@ export class ProductDetailPageComponent implements OnInit {
             return;
         }
 
-        const rows = this.stocksRows();
+        this.stockOperationDialog().openFromHeader();
+    }
 
-        if (rows.length === 1) {
-            this.openStockOperationDialog(rows[0]);
-
+    openStockOperationDialog(row: ProductStockVm): void {
+        if (!this.canOpenStockOperation()) {
             return;
         }
 
-        if (rows.length === 0) {
-            const cid = this.auth.getClinicId()?.trim();
-
-            if (!cid || !this.canCreateStockMovement) {
-                return;
-            }
-
-            this.stockOperationHeaderNeedsRowPick.set(false);
-            this.stockOperationActiveClinicFallback.set(true);
-            this.editingStockRow.set(null);
-            this.stockOperationSubmitError.set(null);
-            this.clearClinicStockRowControl();
-            const defaultOp = this.pickDefaultOperationType();
-
-            this.stockOperationForm.reset(
-                {
-                    clinicStockRowId: null,
-                    operationType: defaultOp,
-                    amount: null,
-                    unitCost: null,
-                    notes: '',
-                    minimumStockLevel: null
-                },
-                { emitEvent: false }
-            );
-            this.applyOperationTypeValidators(defaultOp);
-            this.stockOperationDialogOpen.set(true);
-
-            return;
-        }
-
-        this.stockOperationHeaderNeedsRowPick.set(true);
-        this.stockOperationActiveClinicFallback.set(false);
-        this.editingStockRow.set(null);
-        this.stockOperationSubmitError.set(null);
-        this.stockOperationForm.controls.clinicStockRowId.setValidators([Validators.required]);
-        this.stockOperationForm.reset(
-            {
-                clinicStockRowId: null,
-                operationType: 'in',
-                amount: null,
-                unitCost: null,
-                notes: '',
-                minimumStockLevel: null
-            },
-            { emitEvent: false }
-        );
-        this.stockOperationForm.controls.amount.clearValidators();
-        this.stockOperationForm.controls.unitCost.clearValidators();
-        this.stockOperationForm.controls.minimumStockLevel.clearValidators();
-        this.stockOperationForm.controls.amount.updateValueAndValidity({ emitEvent: false });
-        this.stockOperationForm.controls.unitCost.updateValueAndValidity({ emitEvent: false });
-        this.stockOperationForm.controls.minimumStockLevel.updateValueAndValidity({ emitEvent: false });
-        this.stockOperationForm.controls.clinicStockRowId.updateValueAndValidity({ emitEvent: false });
-        this.stockOperationDialogOpen.set(true);
-    }
-
-    private clearClinicStockRowControl(): void {
-        this.stockOperationForm.controls.clinicStockRowId.clearValidators();
-        this.stockOperationForm.controls.clinicStockRowId.setValue(null, { emitEvent: false });
-        this.stockOperationForm.controls.clinicStockRowId.updateValueAndValidity({ emitEvent: false });
-    }
-
-    private pickDefaultOperationType(): StockOperationKind {
-        if (this.canCreateStockMovement) {
-            return 'in';
-        }
-
-        return 'minimum';
-    }
-
-    private applyOperationTypeValidators(op: StockOperationKind): void {
-        const amountCtrl = this.stockOperationForm.controls.amount;
-        const unitCostCtrl = this.stockOperationForm.controls.unitCost;
-        const minCtrl = this.stockOperationForm.controls.minimumStockLevel;
-
-        if (op === 'minimum') {
-            amountCtrl.clearValidators();
-            unitCostCtrl.clearValidators();
-            amountCtrl.setValue(null, { emitEvent: false });
-            unitCostCtrl.setValue(null, { emitEvent: false });
-            minCtrl.setValidators([Validators.required, Validators.min(0)]);
-            const stock = this.editingStockRow();
-
-            if (stock) {
-                minCtrl.setValue(stock.minimumStockLevel, { emitEvent: false });
-            }
-        } else {
-            minCtrl.clearValidators();
-            minCtrl.setValue(null, { emitEvent: false });
-            amountCtrl.setValidators([stockMovementAmountPositiveValidator()]);
-            unitCostCtrl.setValidators([optionalNonNegativeNumberValidator()]);
-
-            if (op === 'out') {
-                unitCostCtrl.setValue(null, { emitEvent: false });
-            }
-        }
-
-        amountCtrl.updateValueAndValidity({ emitEvent: false });
-        unitCostCtrl.updateValueAndValidity({ emitEvent: false });
-        minCtrl.updateValueAndValidity({ emitEvent: false });
-        syncStockBatchGroup(this.stockOperationForm.controls.batch, {
-            active: op === 'in',
-            required: this.product()?.requiresLotAndExpiry === true
-        });
+        this.stockOperationDialog().openForRow(row);
     }
 
     ngOnInit(): void {
-        this.stockOperationForm.controls.operationType.valueChanges.subscribe((op) => {
-            if (!op) {
-                return;
-            }
-
-            if (this.stockOperationHeaderNeedsRowPick() && !this.editingStockRow()) {
-                return;
-            }
-
-            this.applyOperationTypeValidators(op);
-        });
-
-        this.stockOperationForm.controls.clinicStockRowId.valueChanges.subscribe((id) => {
-            if (!this.stockOperationHeaderNeedsRowPick()) {
-                return;
-            }
-
-            const row = id ? (this.stocksRows().find((r) => r.id === id) ?? null) : null;
-
-            this.editingStockRow.set(row);
-
-            if (row) {
-                const op = this.stockOperationForm.controls.operationType.value;
-
-                this.applyOperationTypeValidators(op);
-            } else {
-                this.stockOperationForm.controls.amount.clearValidators();
-                this.stockOperationForm.controls.unitCost.clearValidators();
-                this.stockOperationForm.controls.minimumStockLevel.clearValidators();
-                this.stockOperationForm.controls.amount.updateValueAndValidity({ emitEvent: false });
-                this.stockOperationForm.controls.unitCost.updateValueAndValidity({ emitEvent: false });
-                this.stockOperationForm.controls.minimumStockLevel.updateValueAndValidity({ emitEvent: false });
-            }
-        });
-
         this.route.paramMap
             .pipe(
                 switchMap((params) => {
@@ -854,240 +316,6 @@ export class ProductDetailPageComponent implements OnInit {
                 this.stocksLoading.set(false);
             }
         });
-    }
-
-    openStockOperationDialog(row: ProductStockVm): void {
-        if (!this.canOpenStockOperation()) {
-            return;
-        }
-
-        this.stockOperationHeaderNeedsRowPick.set(false);
-        this.stockOperationActiveClinicFallback.set(false);
-        this.clearClinicStockRowControl();
-        this.editingStockRow.set(row);
-        this.stockOperationSubmitError.set(null);
-        const defaultOp = this.pickDefaultOperationType();
-
-        this.stockOperationForm.reset(
-            {
-                clinicStockRowId: null,
-                operationType: defaultOp,
-                amount: null,
-                unitCost: null,
-                notes: '',
-                minimumStockLevel: null
-            },
-            { emitEvent: false }
-        );
-        this.applyOperationTypeValidators(defaultOp);
-        this.stockOperationDialogOpen.set(true);
-    }
-
-    closeStockOperationDialog(): void {
-        this.stockOperationDialogOpen.set(false);
-        this.stockOperationHeaderNeedsRowPick.set(false);
-        this.stockOperationActiveClinicFallback.set(false);
-        this.editingStockRow.set(null);
-        this.stockOperationSubmitError.set(null);
-        this.clearClinicStockRowControl();
-        this.stockOperationForm.reset(
-            {
-                clinicStockRowId: null,
-                operationType: 'in',
-                amount: null,
-                unitCost: null,
-                notes: '',
-                minimumStockLevel: null
-            },
-            { emitEvent: false }
-        );
-        this.applyOperationTypeValidators('in');
-        this.stockOperationForm.markAsUntouched();
-        this.requestId = crypto.randomUUID();
-    }
-
-    onStockOperationDialogVisibleChange(visible: boolean): void {
-        if (!visible) {
-            this.closeStockOperationDialog();
-        }
-    }
-
-    private parsePositiveQuantity(raw: number | string | null | undefined): number | null {
-        if (raw === null || raw === undefined || raw === '') {
-            return null;
-        }
-
-        const n = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'));
-
-        if (!Number.isFinite(n) || n <= 0) {
-            return null;
-        }
-
-        return n;
-    }
-
-    private parseOptionalNonNegativeUnitCost(raw: number | string | null | undefined): number | null {
-        if (raw === null || raw === undefined || raw === '') {
-            return null;
-        }
-
-        const n = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'));
-
-        if (!Number.isFinite(n) || n < 0) {
-            return null;
-        }
-
-        return n;
-    }
-
-    onStockOperationSubmit(): void {
-        const productId = this.lastId;
-        const op = this.stockOperationForm.getRawValue().operationType;
-
-        if (!productId || this.stockOperationSubmitting() || this.ro.mutationBlocked()) {
-            this.stockOperationForm.markAllAsTouched();
-
-            return;
-        }
-
-        if (this.stockOperationPickIncomplete()) {
-            this.stockOperationSubmitError.set('Stok işlemi için klinik seçimi gereklidir.');
-            this.stockOperationForm.controls.clinicStockRowId.markAllAsTouched();
-
-            return;
-        }
-
-        const stock = this.editingStockRow();
-        const activeFallback = this.stockOperationActiveClinicFallback();
-
-        if (!stock && !activeFallback) {
-            this.stockOperationForm.markAllAsTouched();
-
-            return;
-        }
-
-        if (op === 'in' || op === 'out') {
-            if (!this.canCreateStockMovement) {
-                this.stockOperationSubmitError.set('Bu işlem için yetkiniz yok.');
-
-                return;
-            }
-        } else if (op === 'minimum') {
-            if (!this.canUpdateProduct) {
-                this.stockOperationSubmitError.set('Bu işlem için yetkiniz yok.');
-
-                return;
-            }
-
-            if (!stock) {
-                this.stockOperationSubmitError.set('Minimum stok için ilgili klinikte ürün stok kaydı gerekir.');
-
-                return;
-            }
-        }
-
-        if (this.stockOperationForm.invalid) {
-            this.stockOperationForm.markAllAsTouched();
-
-            return;
-        }
-
-        const raw = this.stockOperationForm.getRawValue();
-
-        if (op === 'in' || op === 'out') {
-            const amount = this.parsePositiveQuantity(raw.amount);
-
-            if (amount == null) {
-                this.stockOperationForm.markAllAsTouched();
-
-                return;
-            }
-
-            const notesTrimmed = raw.notes?.trim() ?? '';
-            const defaultReason = op === 'in' ? 'Stok girişi' : 'Stok çıkışı';
-            const unitCost = op === 'in' ? this.parseOptionalNonNegativeUnitCost(raw.unitCost as number | string | null | undefined) : null;
-
-            let clinicId: string | null = null;
-
-            if (activeFallback) {
-                clinicId = this.auth.getClinicId()?.trim() ?? null;
-
-                if (!clinicId) {
-                    this.stockOperationSubmitError.set('Stok işlemi için klinik bilgisi gerekli.');
-
-                    return;
-                }
-            } else if (stock) {
-                clinicId = stock.clinicId;
-            }
-
-            if (!clinicId) {
-                this.stockOperationSubmitError.set('Stok işlemi için klinik bilgisi gerekli.');
-
-                return;
-            }
-
-            this.stockOperationSubmitting.set(true);
-            this.stockOperationSubmitError.set(null);
-            this.stockMovementService
-                .create({
-                    clinicId,
-                    productId,
-                    movementType: op === 'in' ? 1 : 2,
-                    quantity: amount,
-                    unitCost,
-                    reason: notesTrimmed || defaultReason,
-                    referenceType: null,
-                    referenceId: null,
-                    occurredAtUtc: new Date().toISOString(),
-                    notes: notesTrimmed === '' ? null : notesTrimmed,
-                    requestId: this.requestId,
-                    ...this.batchRequestFor(op)
-                })
-                .subscribe({
-                    next: () => {
-                        this.stockOperationSubmitting.set(false);
-                        this.closeStockOperationDialog();
-                        this.loadStocks(productId);
-                    },
-                    error: (e: Error) => {
-                        this.stockOperationSubmitting.set(false);
-                        this.stockOperationSubmitError.set(e.message ?? 'Stok hareketi kaydedilemedi.');
-                    }
-                });
-
-            return;
-        }
-
-        const newMin = raw.minimumStockLevel;
-
-        if (newMin == null || !stock) {
-            this.stockOperationForm.markAllAsTouched();
-
-            return;
-        }
-
-        this.stockOperationSubmitting.set(true);
-        this.stockOperationSubmitError.set(null);
-        this.productService.updateProductStockMinimumLevel(stock.id, newMin).subscribe({
-            next: () => {
-                this.stockOperationSubmitting.set(false);
-                this.closeStockOperationDialog();
-                this.loadStocks(productId);
-            },
-            error: (e: Error) => {
-                this.stockOperationSubmitting.set(false);
-                this.stockOperationSubmitError.set(e.message ?? 'Minimum stok güncellenemedi.');
-            }
-        });
-    }
-
-    /** Parti bloğu yalnız stok girişinde ve en az bir alan doluyken gönderilir. */
-    private batchRequestFor(op: StockOperationKind): { batch?: NonNullable<ReturnType<typeof getStockBatchRequest>>; acknowledgeExpired?: true } {
-        const group = this.stockOperationForm.controls.batch;
-        const batch = op === 'in' ? getStockBatchRequest(group) : null;
-
-        return batch ? { batch, ...getAcknowledgeExpiredRequest(group) } : {};
     }
 
     onDeactivateClick(): void {
