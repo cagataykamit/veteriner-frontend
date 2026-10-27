@@ -20,10 +20,11 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { EMPTY, switchMap } from 'rxjs';
+import { switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { APPOINTMENTS_NOSHOW_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM, EXAMINATIONS_CREATE_CLAIM, VISITS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
 @Component({
     selector: 'app-appointment-detail-page',
@@ -216,9 +217,18 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly emptyMark = '—';
     readonly showSavedBanner = signal(false);
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
-    readonly appt = signal<AppointmentDetailVm | null>(null);
+    private readonly loader = new RouteEntityLoader<AppointmentDetailVm>({
+        fetch: (id) => this.appointmentsService.getAppointmentById(id),
+        invalidIdMessage: 'Geçersiz randevu.',
+        onLoaded: (x) => {
+            this.now.set(new Date());
+            this.loadLinkedExaminations(x);
+        }
+    });
+
+    readonly loading = this.loader.loading;
+    readonly error = this.loader.error;
+    readonly appt = this.loader.value;
 
     readonly linkedExamLoading = signal(false);
     readonly linkedExamError = signal<string | null>(null);
@@ -227,8 +237,6 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly returnUrl = signal<string | null>(null);
     readonly backLabel = signal('Randevu listesine dön');
     readonly backLink = computed(() => this.router.parseUrl(this.returnUrl() ?? '/panel/appointments'));
-
-    private lastId: string | null = null;
 
     readonly statusLabel = appointmentStatusLabel;
     readonly statusSeverity = appointmentStatusSeverity;
@@ -268,36 +276,7 @@ export class AppointmentDetailPageComponent implements OnInit {
             });
         }
 
-        this.route.paramMap
-            .pipe(
-                switchMap((params) => {
-                    const id = params.get('id');
-
-                    if (!id) {
-                        this.error.set('Geçersiz randevu.');
-                        this.loading.set(false);
-
-                        return EMPTY;
-                    }
-
-                    this.lastId = id;
-                    this.loading.set(true);
-                    this.error.set(null);
-
-                    return this.appointmentsService.getAppointmentById(id);
-                })
-            )
-            .subscribe({
-                next: (x) => {
-                    this.appt.set(x);
-                    this.loading.set(false);
-                    this.loadLinkedExaminations(x);
-                },
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
-                    this.loading.set(false);
-                }
-            });
+        this.loader.init();
     }
 
     /** Randevunun gelişini açar (açık geliş varsa o döner) ve muayeneyi `visitId` ile açar; Bugün'ün "Muayene aç" akışıyla aynı yol. */
@@ -338,24 +317,7 @@ export class AppointmentDetailPageComponent implements OnInit {
     }
 
     reload(): void {
-        if (!this.lastId) {
-            return;
-        }
-
-        this.loading.set(true);
-        this.error.set(null);
-        this.appointmentsService.getAppointmentById(this.lastId).subscribe({
-            next: (x) => {
-                this.appt.set(x);
-                this.now.set(new Date());
-                this.loading.set(false);
-                this.loadLinkedExaminations(x);
-            },
-            error: (e: Error) => {
-                this.error.set(e.message ?? 'Yükleme hatası');
-                this.loading.set(false);
-            }
-        });
+        this.loader.reload();
     }
 
     returnContextQueryParams(): Record<string, string> | null {

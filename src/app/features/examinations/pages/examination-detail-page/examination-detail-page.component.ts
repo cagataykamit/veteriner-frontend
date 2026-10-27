@@ -27,7 +27,6 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { EMPTY, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
     ADMINISTRATIONS_CREATE_CLAIM,
@@ -44,6 +43,7 @@ import type { ExaminationTemplateApplyResultDto, ExaminationTemplateDto } from '
 import { templateApplySummary } from '@/app/entities/examination-template/utils/examination-template.utils';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
 /** Kayıt metin bölümleri sırası; vital satırı `findings` ile `assessment` arasına girer. */
 const RECORD_TEXT_SECTIONS: readonly {
@@ -314,9 +314,18 @@ export class ExaminationDetailPageComponent implements OnInit {
     /** Mapper boş metin için kullandığı EM ile aynı. */
     readonly emptyMark = '—';
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
-    readonly exam = signal<ExaminationDetailVm | null>(null);
+    private readonly loader = new RouteEntityLoader<ExaminationDetailVm>({
+        fetch: (id) => this.examinationsService.getExaminationById(id),
+        invalidIdMessage: 'Geçersiz muayene.',
+        onRouteChange: () => this.resetRelatedSummary(),
+        onReload: () => this.resetRelatedSummary(),
+        onLoaded: (x) => this.loadRelatedBlocks(x),
+        onError: () => this.resetRelatedSummary()
+    });
+
+    readonly loading = this.loader.loading;
+    readonly error = this.loader.error;
+    readonly exam = this.loader.value;
 
     readonly relatedSummaryLoading = signal(false);
     readonly relatedSummaryError = signal<string | null>(null);
@@ -391,8 +400,6 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly apptError = signal<string | null>(null);
     readonly apptItems = signal<AppointmentListItemVm[]>([]);
 
-    private lastId: string | null = null;
-
     readonly typeDisplay = appointmentTypeDisplayLabel;
     readonly money = (amount: number | null, currency: string | null | undefined) => formatMoney(amount, currency?.trim() ? currency.trim() : 'TRY');
     readonly payMethodLabel = paymentMethodLabel;
@@ -460,85 +467,35 @@ export class ExaminationDetailPageComponent implements OnInit {
             });
         }
 
-        this.route.paramMap
-            .pipe(
-                switchMap((params) => {
-                    const id = params.get('id');
-
-                    if (!id) {
-                        this.error.set('Geçersiz muayene.');
-                        this.loading.set(false);
-                        this.resetRelatedSummary();
-
-                        return EMPTY;
-                    }
-
-                    this.lastId = id;
-                    this.loading.set(true);
-                    this.error.set(null);
-                    this.resetRelatedSummary();
-
-                    return this.examinationsService.getExaminationById(id);
-                })
-            )
-            .subscribe({
-                next: (x) => {
-                    this.exam.set(x);
-                    this.loading.set(false);
-                    this.loadRelatedBlocks(x);
-                },
-                error: (e: Error) => {
-                    this.error.set(e.message ?? 'Yükleme hatası');
-                    this.loading.set(false);
-                    this.resetRelatedSummary();
-                }
-            });
+        this.loader.init();
     }
 
     reload(): void {
-        if (!this.lastId) {
-            return;
-        }
-
-        this.loading.set(true);
-        this.error.set(null);
-        this.resetRelatedSummary();
-        this.examinationsService.getExaminationById(this.lastId).subscribe({
-            next: (x) => {
-                this.exam.set(x);
-                this.loading.set(false);
-                this.loadRelatedBlocks(x);
-            },
-            error: (e: Error) => {
-                this.error.set(e.message ?? 'Yükleme hatası');
-                this.loading.set(false);
-                this.resetRelatedSummary();
-            }
-        });
+        this.loader.reload();
     }
 
     /** İşlem yan panelinden kayıt eklendi: aynı muayenede kalınır, yalnız ilgili kayıt özeti yenilenir. */
     onProcedureAdded(): void {
-        if (this.lastId) {
-            this.loadRelatedSummary(this.lastId);
+        if (this.loader.id) {
+            this.loadRelatedSummary(this.loader.id);
         }
     }
 
     retryRelatedSummary(): void {
-        if (!this.lastId) {
+        if (!this.loader.id) {
             return;
         }
 
-        this.loadRelatedSummary(this.lastId);
+        this.loadRelatedSummary(this.loader.id);
     }
 
     /** Şablon sonrası: muayene metni/sürümü, ilgili kayıt özeti ve uygulama listesi yeniden okunur (sayfa yükleme durumuna girmeden). */
     private refreshAfterTemplate(): void {
-        if (!this.lastId) {
+        if (!this.loader.id) {
             return;
         }
 
-        const id = this.lastId;
+        const id = this.loader.id;
 
         this.examinationsService.getExaminationById(id).subscribe({ next: (x) => this.exam.set(x), error: () => undefined });
         this.loadRelatedSummary(id);

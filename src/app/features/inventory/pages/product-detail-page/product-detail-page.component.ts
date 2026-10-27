@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ProductClinicStocksComponent } from '@/app/features/inventory/components/product-clinic-stocks/product-clinic-stocks.component';
@@ -18,7 +18,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { EMPTY, switchMap } from 'rxjs';
+import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { ConfirmationService } from 'primeng/api';
 
 @Component({
@@ -148,7 +148,6 @@ import { ConfirmationService } from 'primeng/api';
     `
 })
 export class ProductDetailPageComponent implements OnInit {
-    private readonly route = inject(ActivatedRoute);
     private readonly productService = inject(ProductService);
     private readonly confirmationService = inject(ConfirmationService);
     private readonly auth = inject(AuthService);
@@ -162,9 +161,23 @@ export class ProductDetailPageComponent implements OnInit {
     /** Hizmetin stoğu, partisi ve stok işlemi yoktur (ADR-018). */
     readonly isStockTracked = (p: Pick<ProductDetailVm, 'kind'>) => isStockTrackedKind(p.kind);
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
-    readonly product = signal<ProductDetailVm | null>(null);
+    private readonly loader = new RouteEntityLoader<ProductDetailVm>({
+        fetch: (id) => this.productService.getById(id),
+        invalidIdMessage: 'Geçersiz ürün.',
+        errorMessage: (e) => panelHttpFailureMessage(e, 'Ürün yüklenemedi.'),
+        onRouteChange: (id) => {
+            if (id) {
+                this.mutationError.set(null);
+                this.stocksRows.set([]);
+                this.stocksError.set(null);
+            }
+        },
+        onLoaded: (_, id) => this.loadStocks(id)
+    });
+
+    readonly loading = this.loader.loading;
+    readonly error = this.loader.error;
+    readonly product = this.loader.value;
 
     readonly mutationBusy = signal(false);
     readonly mutationError = signal<string | null>(null);
@@ -176,8 +189,6 @@ export class ProductDetailPageComponent implements OnInit {
     readonly batchesReloadKey = signal(0);
 
     private readonly stockOperationDialog = viewChild.required(ProductStockOperationDialogComponent);
-
-    private lastId: string | null = null;
 
     /** Salt okunur değil ve en az bir işlem hakkı (stok hareketi veya ürün güncelleme). */
     canOpenStockOperation(): boolean {
@@ -238,67 +249,16 @@ export class ProductDetailPageComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.route.paramMap
-            .pipe(
-                switchMap((params) => {
-                    const id = params.get('id');
-
-                    if (!id) {
-                        this.error.set('Geçersiz ürün.');
-                        this.loading.set(false);
-
-                        return EMPTY;
-                    }
-
-                    this.lastId = id;
-                    this.loading.set(true);
-                    this.error.set(null);
-                    this.mutationError.set(null);
-                    this.stocksRows.set([]);
-                    this.stocksError.set(null);
-
-                    return this.productService.getById(id);
-                })
-            )
-            .subscribe({
-                next: (x) => {
-                    this.product.set(x);
-                    this.loading.set(false);
-
-                    if (this.lastId) {
-                        this.loadStocks(this.lastId);
-                    }
-                },
-                error: (e: unknown) => {
-                    this.error.set(panelHttpFailureMessage(e, 'Ürün yüklenemedi.'));
-                    this.loading.set(false);
-                }
-            });
+        this.loader.init();
     }
 
     reload(): void {
-        if (!this.lastId) {
-            return;
-        }
-
-        this.loading.set(true);
-        this.error.set(null);
-        this.productService.getById(this.lastId).subscribe({
-            next: (x) => {
-                this.product.set(x);
-                this.loading.set(false);
-                this.loadStocks(this.lastId!);
-            },
-            error: (e: unknown) => {
-                this.error.set(panelHttpFailureMessage(e, 'Ürün yüklenemedi.'));
-                this.loading.set(false);
-            }
-        });
+        this.loader.reload();
     }
 
     reloadStocks(): void {
-        if (this.lastId) {
-            this.loadStocks(this.lastId);
+        if (this.loader.id) {
+            this.loadStocks(this.loader.id);
         }
     }
 
@@ -319,7 +279,7 @@ export class ProductDetailPageComponent implements OnInit {
     }
 
     onDeactivateClick(): void {
-        const id = this.lastId;
+        const id = this.loader.id;
         const p = this.product();
 
         if (!id || !p?.isActive || this.ro.mutationBlocked() || !this.canDeactivateProduct) {
@@ -352,7 +312,7 @@ export class ProductDetailPageComponent implements OnInit {
     }
 
     onActivateClick(): void {
-        const id = this.lastId;
+        const id = this.loader.id;
         const p = this.product();
 
         if (!id || !p || p.isActive || this.ro.mutationBlocked() || !this.canUpdateProduct) {
