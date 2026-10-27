@@ -17,7 +17,7 @@ import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-ch
 import type { PetListItemVm } from '@/app/features/pets/models/pet-vm.model';
 import { PET_LIFE_STATUS_FILTER_OPTIONS, PET_LIST_DEFAULT_STATUS, parsePetListStatusFilter, type PetListStatusFilter } from '@/app/features/pets/utils/pet-status.utils';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { SpeciesService } from '@/app/features/species/services/species.service';
+import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';

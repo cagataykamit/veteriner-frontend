@@ -18,14 +18,14 @@ import { PetAlertFieldsComponent } from '@/app/features/pets/components/pet-aler
 import { mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.mapper';
 import { PetColorsService } from '@/app/features/pets/services/pet-colors.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { SpeciesService } from '@/app/features/species/services/species.service';
+import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { type PetCreateFieldErrors, type PetCreateFormFieldKey, parsePetCreateHttpError } from '@/app/features/pets/utils/pet-create-validation-parse.utils';
 import { petMicrochipFormatWarning } from '@/app/features/pets/utils/pet-microchip.utils';
 import { PET_GENDER_FORM_OPTIONS } from '@/app/features/pets/utils/pet-status.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick-breed-dialog.component';
-import { QuickSpeciesDialogComponent } from '@/app/features/species/components/quick-species-dialog.component';
+import { QuickSpeciesDialogComponent } from '@/app/entities/species/components/quick-species-dialog.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { DATE_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';

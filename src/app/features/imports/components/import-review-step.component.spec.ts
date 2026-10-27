@@ -6,7 +6,7 @@ import { ImportReviewStepComponent } from '@/app/features/imports/components/imp
 import type { ImportBatchDto, ImportPreviewDto, ImportRowDto, ImportRowPageDto, ImportTableSummaryDto } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { PetColorsService } from '@/app/features/pets/services/pet-colors.service';
-import { SpeciesService } from '@/app/features/species/services/species.service';
+import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { VaccineDefinitionsService } from '@/app/features/vaccine-definitions/services/vaccine-definitions.service';
 
 const zero: ImportTableSummaryDto = { total: 0, valid: 0, warning: 0, error: 0, willCreate: 0, willMatch: 0, willSkip: 0, created: 0, matched: 0, skipped: 0, failed: 0 };

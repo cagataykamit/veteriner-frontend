@@ -4,7 +4,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/features/clients/services/clients.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { SpeciesService } from '@/app/features/species/services/species.service';
+import { SpeciesService } from '@/app/entities/species/services/species.service';
 import type { PetSuggestion } from '@/app/features/visits/models/visit-vm.model';
 import { VisitsService } from '@/app/features/visits/services/visits.service';
 import { VisitArrivalDialogComponent } from './visit-arrival-dialog.component';

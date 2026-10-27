@@ -3,9 +3,9 @@ import type {
     SpeciesDetailDto,
     SpeciesListItemDto,
     SpeciesUpsertRequestDto
-} from '@/app/features/species/models/species-api.model';
-import type { SpeciesUpsertRequest } from '@/app/features/species/models/species-upsert.model';
-import type { SpeciesDetailVm, SpeciesListItemVm } from '@/app/features/species/models/species-vm.model';
+} from '@/app/entities/species/models/species-api.model';
+import type { SpeciesUpsertRequest } from '@/app/entities/species/models/species-upsert.model';
+import type { SpeciesDetailVm, SpeciesListItemVm } from '@/app/entities/species/models/species-vm.model';
 
 const EM = '—';
 

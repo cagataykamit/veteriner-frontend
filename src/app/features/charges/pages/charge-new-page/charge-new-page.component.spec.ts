@@ -7,7 +7,7 @@ import type { ChargeCreateResultVm, ChargeVm } from '@/app/features/charges/mode
 import { ChargesService } from '@/app/features/charges/services/charges.service';
 import { ClientSearchService } from '@/app/features/clients/services/client-search.service';
 import { ExaminationsService } from '@/app/features/examinations/services/examinations.service';
-import { SpeciesService } from '@/app/features/species/services/species.service';
+import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { BreedsService } from '@/app/entities/breed/services/breeds.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';

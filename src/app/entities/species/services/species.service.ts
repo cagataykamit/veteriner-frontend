@@ -10,10 +10,10 @@ import {
     mapSpeciesUpsertToApiBody,
     SPECIES_PANEL_LIST_PAGE_SIZE,
     speciesListQueryToHttpParams
-} from '@/app/features/species/data/species.mapper';
-import type { SpeciesDetailDto } from '@/app/features/species/models/species-api.model';
-import type { SpeciesUpsertRequest } from '@/app/features/species/models/species-upsert.model';
-import type { SpeciesDetailVm, SpeciesListItemVm } from '@/app/features/species/models/species-vm.model';
+} from '@/app/entities/species/data/species.mapper';
+import type { SpeciesDetailDto } from '@/app/entities/species/models/species-api.model';
+import type { SpeciesUpsertRequest } from '@/app/entities/species/models/species-upsert.model';
+import type { SpeciesDetailVm, SpeciesListItemVm } from '@/app/entities/species/models/species-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })

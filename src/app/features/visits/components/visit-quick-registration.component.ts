@@ -14,7 +14,7 @@ import { mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.ma
 import { createPetUpsertFormGroup, getPetUpsertFormValue } from '@/app/features/pets/forms/pet-upsert-form.factory';
 import { PetsService } from '@/app/features/pets/services/pets.service';
 import { parsePetCreateHttpError } from '@/app/features/pets/utils/pet-create-validation-parse.utils';
-import { SpeciesService } from '@/app/features/species/services/species.service';
+import { SpeciesService } from '@/app/entities/species/services/species.service';
 import type { PetSuggestion } from '@/app/features/visits/models/visit-vm.model';
 import { splitSearchTermForRegistration } from '@/app/features/visits/utils/visit-registration.utils';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';

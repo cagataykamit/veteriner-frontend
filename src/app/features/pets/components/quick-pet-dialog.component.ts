@@ -7,7 +7,7 @@ import { mapPetUpsertFormToCreateRequest } from '@/app/features/pets/data/pet.ma
 import { createPetUpsertFormGroup, getPetUpsertFormValue, type PetUpsertFormGroup } from '@/app/features/pets/forms/pet-upsert-form.factory';
 import { BreedsService } from '@/app/entities/breed/services/breeds.service';
 import { PetsService } from '@/app/features/pets/services/pets.service';
-import { SpeciesService } from '@/app/features/species/services/species.service';
+import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { type PetCreateFieldErrors, type PetCreateFormFieldKey, parsePetCreateHttpError } from '@/app/features/pets/utils/pet-create-validation-parse.utils';
 import { PET_GENDER_FORM_OPTIONS } from '@/app/features/pets/utils/pet-status.utils';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
