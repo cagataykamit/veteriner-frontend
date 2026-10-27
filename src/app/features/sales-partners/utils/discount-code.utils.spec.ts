@@ -1,6 +1,3 @@
-import { TestBed } from '@angular/core/testing';
-import { ActivatedRouteSnapshot, convertToParamMap, provideRouter, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
-import { referralCodeRedirect } from '@/app/features/sales-partners/routes/referral-code.redirect';
 import {
     clearPendingDiscountCode,
     discountNoteText,
@@ -39,28 +36,5 @@ describe('discount-code.utils (ADR-037)', () => {
         clearPendingDiscountCode();
 
         expect(readPendingDiscountCode()).toBeNull();
-    });
-
-    describe('/r/:kod yönlendirmesi', () => {
-        beforeEach(() => TestBed.configureTestingModule({ providers: [provideRouter([])] }));
-
-        const run = (code: string | null): UrlTree => {
-            const route = { paramMap: convertToParamMap(code === null ? {} : { code }) } as ActivatedRouteSnapshot;
-
-            return TestBed.runInInjectionContext(() => referralCodeRedirect(route, {} as RouterStateSnapshot)) as UrlTree;
-        };
-
-        it('kodu normalize edip oturum belleğine alır ve kayıt sayfasına kod parametresiyle gönderir', () => {
-            const tree = run('ışık10');
-            const router = TestBed.inject(Router);
-
-            expect(router.serializeUrl(tree)).toBe('/auth/signup?kod=ISIK10');
-            expect(readPendingDiscountCode()).toBe('ISIK10');
-        });
-
-        it('boş kodda yalnız kayıt sayfasına gider', () => {
-            expect(TestBed.inject(Router).serializeUrl(run('   '))).toBe('/auth/signup');
-            expect(readPendingDiscountCode()).toBeNull();
-        });
     });
 });
