@@ -58,7 +58,7 @@ import { OrganizationBillingProfileSectionComponent } from '@/app/features/organ
                                         <small class="text-red-500">Kurum adı en az bir karakter içermelidir.</small>
                                     }
                                 </div>
-                                <p-button type="submit" label="Kaydet" icon="pi pi-save" styleClass="shrink-0 w-full sm:w-auto" [loading]="saving()" [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty" />
+                                <button pButton type="submit" class="shrink-0 w-full sm:w-auto" [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
                             </div>
                         </form>
 

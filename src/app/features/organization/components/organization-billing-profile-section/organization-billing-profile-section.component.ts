@@ -137,7 +137,7 @@ const BILLING_PROFILE_HIDDEN_UI_FIELDS = new Set<OrganizationBillingProfileFormF
                     </div>
 
                     <div class="flex justify-end mt-5 pt-4 mb-0 border-t border-surface-200 dark:border-surface-700">
-                        <p-button type="submit" label="Kaydet" icon="pi pi-save" [loading]="saving()" [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty" />
+                        <button pButton type="submit" [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
                     </div>
                 </form>
             }
