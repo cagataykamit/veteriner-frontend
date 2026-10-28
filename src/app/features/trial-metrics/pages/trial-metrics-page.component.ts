@@ -25,7 +25,7 @@ interface MetricCard {
     selector: 'app-trial-metrics-page',
     standalone: true,
     imports: [ButtonModule, TableModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Deneme ölçümleri" description="Dönemde deneme başlatan kliniklerin aktivasyonu ve dönüşümü. Yalnız Vetinity platform yöneticisi görür.">
             <div actions class="flex gap-1" role="group" aria-label="Dönem">
