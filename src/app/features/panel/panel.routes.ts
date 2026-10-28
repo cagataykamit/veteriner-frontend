@@ -26,6 +26,7 @@ export default [
     { path: 'reports', loadChildren: () => import('../reports/reports.routes') },
     { path: 'sales-partners', loadChildren: () => import('../sales-partners/routes/sales-partners.routes') },
     { path: 'trial-metrics', loadChildren: () => import('../trial-metrics/routes/trial-metrics.routes') },
+    { path: 'duplicate-payments', loadChildren: () => import('../duplicate-payments/routes/duplicate-payments.routes') },
     {
         path: 'settings',
         pathMatch: 'full',
