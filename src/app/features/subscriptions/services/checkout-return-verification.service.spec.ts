@@ -115,6 +115,21 @@ describe('CheckoutReturnVerificationService — ödeme dönüşü doğrulama tur
         expect(service.returnBanner()).toEqual({ severity: 'secondary', title: 'Ödeme işlemi iptal edilmiş veya sonlandırılmış görünüyor.', showRefreshCta: true });
     });
 
+    it('çift ödeme iadeye alındıysa bilgi bandı; yoklama durur', () => {
+        fetchSnapshot.mockReturnValue(snapshot(session({ status: 'cancelled', duplicatePaymentRefund: true }), summary()));
+
+        service.verify('cs-9', host);
+        vi.advanceTimersByTime(10_000);
+
+        expect(fetchSnapshot).toHaveBeenCalledTimes(1);
+        expect(service.returnBanner()).toEqual({
+            severity: 'info',
+            title: 'Bu ödeme paketinize işlenmedi; iade ediliyor.',
+            detail: 'Aynı ödeme işleminde önceki ödemeniz paketinizi zaten açtı. Bu ikinci ödeme kartınıza otomatik olarak iade edilir.',
+            showRefreshCta: false
+        });
+    });
+
     describe('45 tur sonunda zaman aşımı', () => {
         const runAllRounds = () => {
             service.verify('cs-9', host);

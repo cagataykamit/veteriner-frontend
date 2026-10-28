@@ -117,15 +117,17 @@ describe('panel-navigation', () => {
         expect(labels(groups)).not.toContain('Kategoriler');
     });
 
-    it('Satış ortakları ve Deneme ölçümleri yalnız platform yöneticisine, Yönetim bölümünde görünür (ADR-037, TRIAL-008)', () => {
+    it('Satış ortakları, Deneme ölçümleri ve Çift ödemeler yalnız platform yöneticisine, Yönetim bölümünde görünür (ADR-037, TRIAL-008)', () => {
         const clinic = visibleGroups(MENU_GROUPS, (c) => allClaims.has(c));
         const platform = visibleGroups(MENU_GROUPS, (c) => allClaims.has(c) || c === PLATFORM_ADMIN_CLAIM);
 
         expect(labels(clinic)).not.toContain('Satış ortakları');
         expect(labels(clinic)).not.toContain('Deneme ölçümleri');
-        expect(platform.find((g) => g.heading === 'Yönetim')!.entries.map((e) => e.label)).toEqual(['Raporlar', 'Özet', 'Satış ortakları', 'Deneme ölçümleri', 'Ayarlar']);
+        expect(labels(clinic)).not.toContain('Çift ödemeler');
+        expect(platform.find((g) => g.heading === 'Yönetim')!.entries.map((e) => e.label)).toEqual(['Raporlar', 'Özet', 'Satış ortakları', 'Deneme ölçümleri', 'Çift ödemeler', 'Ayarlar']);
         expect(entryForUrl(MENU_GROUPS, '/panel/sales-partners/p1')?.label).toBe('Satış ortakları');
         expect(entryForUrl(MENU_GROUPS, '/panel/trial-metrics')?.label).toBe('Deneme ölçümleri');
+        expect(entryForUrl(MENU_GROUPS, '/panel/duplicate-payments')?.label).toBe('Çift ödemeler');
     });
 
     it('izin yoksa yalnız Ayarlar kalır; Özet yalnız yönetici düzeyi izniyle görünür', () => {

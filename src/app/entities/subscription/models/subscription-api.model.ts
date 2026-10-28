@@ -55,6 +55,8 @@ export interface SubscriptionCheckoutSessionDto {
     prorationRatio?: number | null;
     /** BILL-001: oturumun ödeme dönemi. */
     billingPeriod?: string | null;
+    /** BILL-005: çift ödeme iadesi (`Pending` | `Refunded` | `ManualRequired`); olağan oturumda `null`. */
+    refundStatus?: string | null;
 }
 
 export interface StartSubscriptionCheckoutRequestDto {

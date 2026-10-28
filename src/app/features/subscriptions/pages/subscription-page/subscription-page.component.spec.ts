@@ -56,6 +56,7 @@ const session = (over: Partial<SubscriptionCheckoutSessionVm> = {}): Subscriptio
     chargeCurrencyCode: null,
     prorationRatio: null,
     billingPeriod: 'Monthly',
+    duplicatePaymentRefund: false,
     ...over
 });
 
@@ -291,6 +292,17 @@ describe('SubscriptionPageComponent', () => {
             expect(text()).toContain('Güvenli ödeme sayfasına yönlendirileceksiniz.');
             expect(buttonLabels()).toContain('Ödemeye devam et');
             expect(buttonLabels()).toContain('Durumu yenile');
+        });
+
+        it('açık ödeme oturumunda önceki ödeme sayfasını kapatma ve otomatik iade bilgisi gösterilir', () => {
+            service.startCheckout.mockReturnValue(of(session()));
+            render();
+
+            click('Hemen yükselt');
+
+            expect(el().querySelector('[data-testid="checkout-duplicate-payment-note"]')?.textContent?.trim()).toBe(
+                'Paket ya da dönem değiştirecekseniz önceki ödeme sayfasını kapatın. Aynı anda iki ödeme alınırsa ikincisi otomatik iade edilir.'
+            );
         });
 
         it('Ödemeye devam et saklı sayfaya doğrudan gitmez; backend aynı hedefle yeniden sorulur', () => {

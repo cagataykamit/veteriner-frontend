@@ -113,6 +113,7 @@ export const SUBSCRIPTION_ROUTE = '/panel/settings/subscription';
 export const REPORTS_ROUTE = '/panel/reports';
 export const SALES_PARTNERS_ROUTE = '/panel/sales-partners';
 export const TRIAL_METRICS_ROUTE = '/panel/trial-metrics';
+export const DUPLICATE_PAYMENTS_ROUTE = '/panel/duplicate-payments';
 
 /** Rapor Merkezi kartları; menüde tek "Raporlar" girişi vardır (ADR-003). Yeni rapor buraya kart olarak eklenir. */
 export const REPORT_SECTIONS: readonly CardSection[] = [
@@ -331,6 +332,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
             // Yalnız Vetinity platform yöneticisi (ADR-037); klinik kullanıcılarında hiç görünmez.
             { label: 'Satış ortakları', icon: 'fa-solid fa-fw fa-handshake', route: SALES_PARTNERS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
             { label: 'Deneme ölçümleri', icon: 'fa-solid fa-fw fa-chart-simple', route: TRIAL_METRICS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
+            { label: 'Çift ödemeler', icon: 'fa-solid fa-fw fa-money-bill-transfer', route: DUPLICATE_PAYMENTS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
             { label: 'Ayarlar', icon: 'fa-solid fa-fw fa-gear', route: SETTINGS_ROUTE }
         ]
     }

@@ -97,6 +97,19 @@ export class CheckoutReturnVerificationService {
                 host.setCheckoutSession(session);
                 host.applySummary(summary);
 
+                // BILL-005: eski sekmede ikinci ödeme yapıldı; önceki ödeme paketi açtığı için bu ödeme iade ediliyor.
+                if (session.duplicatePaymentRefund) {
+                    this.postCheckoutSyncing.set(false);
+                    this.returnBanner.set({
+                        severity: 'info',
+                        title: 'Bu ödeme paketinize işlenmedi; iade ediliyor.',
+                        detail: 'Aynı ödeme işleminde önceki ödemeniz paketinizi zaten açtı. Bu ikinci ödeme kartınıza otomatik olarak iade edilir.',
+                        showRefreshCta: false
+                    });
+
+                    return;
+                }
+
                 const planMatchesTarget = this.planCodeMatchesTarget(summary.planCode, session.targetPlanCode);
 
                 const terminalFailed = session.status === 'failed' || session.status === 'cancelled' || session.status === 'expired';
