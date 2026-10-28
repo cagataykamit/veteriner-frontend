@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -34,6 +34,9 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
         <div class="flex justify-center w-full">
             <div class="w-full max-w-4xl">
                 <app-page-header title="Hesabım" description="Hesap bilgilerinizi görüntüleyin ve giriş şifrenizi yönetin." />
+                @if (showPasswordChangedBanner()) {
+                    <p class="mb-4 m-0 text-sm font-medium">Şifreniz güncellendi.</p>
+                }
 
                 <div class="w-full bg-surface-0 dark:bg-surface-900 rounded-2xl shadow-md border border-surface-200 dark:border-surface-700 overflow-hidden">
                     <div class="border-b border-surface-200 dark:border-surface-700 bg-surface-50/60 dark:bg-surface-800/40 px-6 py-5 md:px-12 md:py-6">
@@ -139,7 +142,11 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 export class AccountSummaryPageComponent implements OnInit {
     private readonly account = inject(AccountService);
     private readonly messages = inject(MessageService);
+    private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
 
+    /** Şifre değiştirme sonrası kısa onay (query `passwordChanged=1`). */
+    readonly showPasswordChangedBanner = signal(false);
     readonly summaryLoading = signal(true);
     readonly summaryError = signal<string | null>(null);
     readonly summary = signal<AccountSummary | null>(null);
@@ -159,6 +166,16 @@ export class AccountSummaryPageComponent implements OnInit {
     readonly scopeLabel = resolveAccountScopeLabel;
 
     ngOnInit(): void {
+        if (this.route.snapshot.queryParamMap.get('passwordChanged') === '1') {
+            this.showPasswordChangedBanner.set(true);
+            void this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { passwordChanged: null },
+                queryParamsHandling: '',
+                replaceUrl: true
+            });
+        }
+
         this.loadAccountSummary();
     }
 

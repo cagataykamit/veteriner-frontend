@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { PasswordModule } from 'primeng/password';
@@ -20,7 +21,8 @@ const CHANGE_PASSWORD_FIELD_MAP: Record<string, ChangePasswordFieldKey> = {
     confirmpassword: 'confirmPassword'
 };
 
-const CHANGE_PASSWORD_FALLBACK = 'Şifre değiştirilemedi. Lütfen bilgileri kontrol edin.';
+const ACCOUNT_ROUTE = '/panel/settings/account';
+const CHANGE_PASSWORD_FALLBACK ='Şifre değiştirilemedi. Lütfen bilgileri kontrol edin.';
 const SAME_PASSWORD_MESSAGE = 'Yeni şifre mevcut şifre ile aynı olamaz.';
 
 function resolveChangePasswordErrorMessage(err: unknown): string {
@@ -125,6 +127,7 @@ export class ChangePasswordPageComponent {
     private readonly fb = inject(FormBuilder);
     private readonly account = inject(AccountService);
     private readonly messages = inject(MessageService);
+    private readonly router = inject(Router);
 
     readonly saving = signal(false);
     readonly passwordPolicyRequirement = PASSWORD_POLICY_REQUIREMENT;
@@ -165,12 +168,7 @@ export class ChangePasswordPageComponent {
             .pipe(finalize(() => this.saving.set(false)))
             .subscribe({
                 next: () => {
-                    this.form.reset();
-                    this.messages.add({
-                        severity: 'success',
-                        summary: 'Başarılı',
-                        detail: 'Şifreniz güncellendi.'
-                    });
+                    void this.router.navigate([ACCOUNT_ROUTE], { queryParams: { passwordChanged: '1' } });
                 },
                 error: (err: unknown) => {
                     this.messages.add({

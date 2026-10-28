@@ -2,7 +2,7 @@ import type { Mock } from 'vitest';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AccountSummaryPageComponent } from './account-summary-page.component';
@@ -78,5 +78,32 @@ describe('AccountSummaryPageComponent (görünen ad)', () => {
 
         expect(cmp.displayNameSaving()).toBe(false);
         expect(cmp.displayNameError()).toBe('Ad geçersiz.');
+    });
+
+    it('onay parametresi yoksa şifre mesajı görünmez', () => {
+        expect(cmp.showPasswordChangedBanner()).toBe(false);
+    });
+});
+
+describe('AccountSummaryPageComponent (şifre değiştirme dönüşü)', () => {
+    it('passwordChanged=1 ile gelince onay gösterilir ve parametre temizlenir', async () => {
+        await TestBed.configureTestingModule({
+            imports: [AccountSummaryPageComponent],
+            providers: [provideRouter([]), provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
+        }).compileComponents();
+        const router = TestBed.inject(Router);
+
+        await router.navigateByUrl('/?passwordChanged=1');
+        const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+        const fixture = TestBed.createComponent(AccountSummaryPageComponent);
+
+        vi.spyOn(fixture.debugElement.injector.get(MessageService), 'add').mockReturnValue(undefined);
+        fixture.detectChanges();
+        TestBed.inject(HttpTestingController).expectOne('http://api.test/api/v1/me/account-summary').flush(summary);
+        fixture.detectChanges();
+
+        expect(fixture.componentInstance.showPasswordChangedBanner()).toBe(true);
+        expect((fixture.nativeElement as HTMLElement).textContent).toContain('Şifreniz güncellendi.');
+        expect(navigate).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { passwordChanged: null }, replaceUrl: true }));
     });
 });
