@@ -33,7 +33,7 @@ const RESET_PASSWORD_FIELD_MAP: Record<string, ResetPasswordFieldKey> = {
     selector: 'app-reset-password-page',
     standalone: true,
     imports: [FormsModule, ButtonModule, PasswordModule, RippleModule, RouterLink, PublicLegalLinksComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="public-page public-auth-page">
             <div class="public-auth-shell">

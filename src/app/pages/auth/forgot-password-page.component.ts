@@ -30,7 +30,7 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
     selector: 'app-forgot-password-page',
     standalone: true,
     imports: [FormsModule, ButtonModule, InputTextModule, RippleModule, RouterLink, PublicLegalLinksComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="public-page public-auth-page">
             <div class="public-auth-shell">
