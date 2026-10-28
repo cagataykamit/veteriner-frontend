@@ -25,7 +25,7 @@ function addendumText(c: { value: unknown }): { addendumText: true } | null {
     selector: 'app-examination-addendum-dialog',
     standalone: true,
     imports: [ReactiveFormsModule, DialogModule, ButtonModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Ek not ekle" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(620px, 95vw)' }" [(visible)]="visible">
             <p class="mt-0 text-muted-color">Ek not kalıcıdır; eklendikten sonra düzenlenemez veya silinemez. İlk muayene metni değişmez.</p>

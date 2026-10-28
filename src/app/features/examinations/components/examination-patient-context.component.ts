@@ -35,7 +35,7 @@ interface OverdueVaccinations {
     selector: 'app-examination-patient-context',
     standalone: true,
     imports: [RouterLink, TrDatePipe],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="card mb-0 p-4" aria-label="Hasta bağlamı" data-testid="patient-context">
             <button

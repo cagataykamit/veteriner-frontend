@@ -16,7 +16,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     selector: 'app-examination-addenda-section',
     standalone: true,
     imports: [ButtonModule, AppEmptyStateComponent, AppErrorStateComponent, ExaminationAddendumDialogComponent, TrDateTimePipe],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card" data-testid="addenda-section">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-4">

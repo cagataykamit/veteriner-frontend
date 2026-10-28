@@ -62,7 +62,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
         TrDatePipe,
         TrDateTimePipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (contextPetId() || contextClientId()) {
             <app-context-filter-chip [label]="contextFilterLabel()" (clear)="clearContextFilter()" />

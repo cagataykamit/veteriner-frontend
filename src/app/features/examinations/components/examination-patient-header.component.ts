@@ -22,7 +22,7 @@ const EM = '—';
     standalone: true,
     host: { class: 'card block' },
     imports: [RouterLink, PetAlertBadgesComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section aria-label="Hasta bilgileri">
             <dl class="m-0 grid grid-cols-12 gap-x-4 gap-y-3">
