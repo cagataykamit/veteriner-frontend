@@ -23,7 +23,7 @@ import { setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils'
     selector: 'app-legal-document-page',
     standalone: true,
     imports: [RouterLink, LegalDraftNoticeComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="mx-auto max-w-3xl px-4 pb-10 pt-8 md:px-6 md:pb-14 md:pt-12">
                 <article class="public-card p-5 md:p-8">
