@@ -45,7 +45,7 @@ const PAGE_SIZE = 50;
         AppRowActionButtonComponent
     ],
     providers: [ConfirmationService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header
             [categoryLink]="definitionsRoute"

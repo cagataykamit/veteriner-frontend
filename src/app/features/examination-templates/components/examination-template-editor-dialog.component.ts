@@ -61,7 +61,7 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
     selector: 'app-examination-template-editor-dialog',
     standalone: true,
     imports: [ReactiveFormsModule, ButtonModule, DialogModule, InputTextModule, MessageModule, SelectModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="header()" [modal]="true" [visible]="visible()" (visibleChange)="visible.set($event)" [closable]="!submitting()" [style]="{ width: 'min(48rem, 95vw)' }" [draggable]="false">
             <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
