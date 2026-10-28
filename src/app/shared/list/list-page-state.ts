@@ -1,5 +1,5 @@
 import { signal, type WritableSignal } from '@angular/core';
-import type { Observable } from 'rxjs';
+import type { Observable, Subscription } from 'rxjs';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -67,6 +67,7 @@ export class ListPageState<T> {
     /** Tablo ilk sonuçla kurulurken yaydığı tembel yükleme olayı ve mobil sayfalayıcı sonrası tablonun olayı yutulur. */
     private suppressNextLazy = false;
     private lastLoadKey = '';
+    private request: Subscription | null = null;
 
     constructor(private readonly config: ListPageConfig<T>) {
         this.pageSize = signal(config.pageSize ?? 10);
@@ -204,6 +205,7 @@ export class ListPageState<T> {
         this.load(page, rows);
     }
 
+    /** Yeni yükleme öncekini iptal eder: geç dönen eski yanıt (ör. süzgeç ya da rota değişimi) yeni listenin üstüne yazmaz. */
     private load(page: number, pageSize: number, force = false): void {
         const key = this.config.loadKey(page, pageSize);
 
@@ -214,7 +216,8 @@ export class ListPageState<T> {
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
-        this.config.fetch(page, pageSize).subscribe({
+        this.request?.unsubscribe();
+        this.request = this.config.fetch(page, pageSize).subscribe({
             next: (r) => {
                 this.items.set(r.items);
                 this.totalItems.set(r.totalItems);

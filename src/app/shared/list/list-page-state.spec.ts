@@ -1,4 +1,4 @@
-import { type Observable, of, throwError } from 'rxjs';
+import { type Observable, of, Subject, throwError } from 'rxjs';
 import type { Mock } from 'vitest';
 import { ListPageState, type ListPageConfig, type ListPageResult } from './list-page-state';
 
@@ -158,6 +158,22 @@ describe('ListPageState', () => {
         list.startInitialLoad();
         expect(onLoaded).toHaveBeenCalledWith(result(1, 20));
         expect(create().rowsPerPageOptions).toEqual([10, 20, 25, 50]);
+    });
+
+    it('yeni yükleme önceki isteği iptal eder; geç gelen eski yanıt uygulanmaz', () => {
+        const first = new Subject<ListPageResult<string>>();
+
+        fetch.mockReturnValueOnce(first);
+        const list = create();
+
+        list.startInitialLoad();
+        search = 'yeni';
+        list.loadFirstPage();
+
+        expect(first.observed).toBe(false);
+        expect(list.items()).toEqual(['s1']);
+        first.next({ items: ['eski'], totalItems: 1, page: 1, pageSize: 10 });
+        expect(list.items()).toEqual(['s1']);
     });
 
     it('suppressNextTableLoad sonraki tablo olayını yutar', () => {
