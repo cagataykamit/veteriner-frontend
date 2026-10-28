@@ -8,6 +8,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { ExampleClinicService } from '@/app/entities/example-clinic/services/example-clinic.service';
 import { DiscountCodesService } from '@/app/entities/sales-partner/services/discount-codes.service';
 import type { PendingPlanChangeVm, SubscriptionCheckoutSessionVm, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
+import { CheckoutAlreadyPaidError } from '@/app/entities/subscription/services/subscription-checkout.errors';
 import { SubscriptionsService } from '@/app/entities/subscription/services/subscriptions.service';
 import { SubscriptionPageComponent } from './subscription-page.component';
 
@@ -303,16 +304,39 @@ describe('SubscriptionPageComponent', () => {
             expect(service.startCheckout).toHaveBeenLastCalledWith('premium', 'Monthly');
         });
 
-        it('ödeme alınmışsa (backend 409) yeni ödeme başlatılmaz, bilgi gösterilir', () => {
+        it('önceki ödeme işlenmişse (backend 409) hata değil bilgi gösterilir, oturum bırakılır ve özet yenilenir', () => {
             service.startCheckout
                 .mockReturnValueOnce(of(session()))
-                .mockReturnValueOnce(throwError(() => new Error('Bu ödeme alındı; onay birkaç dakika içinde aboneliğinize yansır.')));
+                .mockReturnValueOnce(throwError(() => new CheckoutAlreadyPaidError('Önceki ödemeniz alınmış ve aboneliğinize işlendi. Sayfayı yenileyin.')));
             render();
             click('Hemen yükselt');
+            const summaryCalls = service.getSubscriptionSummary.mock.calls.length;
 
             click('Ödemeye devam et');
 
-            expect(text()).toContain('Bu ödeme alındı; onay birkaç dakika içinde aboneliğinize yansır.');
+            expect(text()).toContain('Önceki ödemeniz alınmış ve aboneliğinize işlendi.');
+            expect(service.getSubscriptionSummary.mock.calls.length).toBe(summaryCalls + 1);
+            expect(service.getSubscriptionSummary).toHaveBeenLastCalledWith({ bustCache: true });
+            expect(sessionStorage.getItem(STORED_SESSION_KEY)).toBeNull();
+            expect(buttonLabels()).not.toContain('Ödemeye devam et');
+        });
+
+        it('geri tuşuyla dönüşte saklanan açık oturum gösterilir; kapanmışsa bırakılır', () => {
+            sessionStorage.setItem(STORED_SESSION_KEY, 'cs-7');
+            service.getCheckout.mockReturnValue(of(session({ checkoutSessionId: 'cs-7' })));
+            render();
+
+            expect(service.getCheckout).toHaveBeenCalledWith('cs-7');
+            expect(buttonLabels()).toContain('Ödemeye devam et');
+        });
+
+        it('geri tuşuyla dönüşte saklanan oturum kapanmışsa gösterilmez ve bırakılır', () => {
+            sessionStorage.setItem(STORED_SESSION_KEY, 'cs-8');
+            service.getCheckout.mockReturnValue(of(session({ checkoutSessionId: 'cs-8', canContinue: false, status: 'expired' })));
+            render();
+
+            expect(sessionStorage.getItem(STORED_SESSION_KEY)).toBeNull();
+            expect(buttonLabels()).not.toContain('Ödemeye devam et');
         });
 
         it('yıllık seçiliyken yükseltme yıllık dönemle başlatılır', () => {

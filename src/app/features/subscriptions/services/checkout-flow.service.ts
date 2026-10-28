@@ -6,6 +6,7 @@ import { SUBSCRIPTIONS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.con
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { PendingPlanChangeVm, SubscriptionBillingPeriod, SubscriptionCheckoutSessionVm, SubscriptionPlanVm, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
 import type { SubscriptionSummaryRequestOptions } from '@/app/entities/subscription/services/subscriptions.service';
+import { CheckoutAlreadyPaidError } from '@/app/entities/subscription/services/subscription-checkout.errors';
 import { SubscriptionsService } from '@/app/entities/subscription/services/subscriptions.service';
 import { CheckoutReturnVerificationService, type CheckoutReturnVerificationHost } from '@/app/features/subscriptions/services/checkout-return-verification.service';
 import { isActiveTrialingSubscription, isExpiredReadOnlySubscription } from '@/app/features/subscriptions/utils/subscription-access.utils';
@@ -132,10 +133,29 @@ export class CheckoutFlowService {
             () => {
                 if (hostedCheckoutEntry) {
                     this.handleCheckoutReturn(parsedReturn);
+                } else if (storedId) {
+                    this.restoreOpenCheckout(storedId);
                 }
             },
             { bustSummaryCache: hostedCheckoutEntry }
         );
+    }
+
+    /**
+     * Ödeme sayfasından dönüş işareti olmadan (ör. tarayıcının geri tuşu) gelindiyse saklanan oturum gösterilir; kapanmışsa
+     * bırakılır. Ödemesi alınmışsa backend bunu sonraki başlatmada ya da arka plan uzlaştırmasında işler.
+     */
+    private restoreOpenCheckout(sessionId: string): void {
+        this.subscriptions.getCheckout(sessionId).subscribe({
+            next: (session) => {
+                if (session.canContinue) {
+                    this.checkoutSession.set(session);
+                } else {
+                    clearStoredCheckoutSessionId();
+                }
+            },
+            error: () => clearStoredCheckoutSessionId()
+        });
     }
 
     reload(onComplete?: () => void, options?: { readonly bustSummaryCache?: boolean }): void {
@@ -391,6 +411,16 @@ export class CheckoutFlowService {
             error: (e: unknown) => {
                 this.planActionLoadingCode.set(null);
                 this.checkoutLoading.set(false);
+
+                // Önceki ödeme sağlayıcıda alınmış ve backend onu aboneliğe işledi: hata değil; oturum bırakılır, özet yenilenir.
+                if (e instanceof CheckoutAlreadyPaidError) {
+                    clearStoredCheckoutSessionId();
+                    this.checkoutSession.set(null);
+                    this.reload(() => this.planActionInfo.set(e.message), { bustSummaryCache: true });
+
+                    return;
+                }
+
                 const message = e instanceof Error ? e.message : 'Ödeme işlemi başlatılamadı.';
 
                 this.checkoutError.set(message);
