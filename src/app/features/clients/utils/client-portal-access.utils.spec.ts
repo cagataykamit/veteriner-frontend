@@ -1,5 +1,5 @@
 import type { ClientPortalAccessDto, ClientPortalInviteDto, ClientPortalLinkDto } from '@/app/entities/client/models/client-portal-access-api.model';
-import { clientPortalLastInviteNote, clientPortalState } from '@/app/features/clients/utils/client-portal-access.utils';
+import { clientPortalClosedLabels, clientPortalLastInviteNote, clientPortalState } from '@/app/features/clients/utils/client-portal-access.utils';
 
 const link = (status: ClientPortalLinkDto['status'], closedAtUtc: string | null = null, linkId = 'l1'): ClientPortalLinkDto => ({
     linkId,
@@ -8,7 +8,8 @@ const link = (status: ClientPortalLinkDto['status'], closedAtUtc: string | null 
     status,
     accountEmail: 'a@b.com',
     linkedAtUtc: '2026-10-01T10:00:00Z',
-    closedAtUtc
+    closedAtUtc,
+    closeReason: status === 'Closed' ? 'ClinicClosed' : null
 });
 
 const invite = (status: ClientPortalInviteDto['status'], inviteId = 'i1'): ClientPortalInviteDto => ({
@@ -49,5 +50,15 @@ describe('clientPortalState', () => {
         expect(s.kind === 'none' && clientPortalLastInviteNote(s.lastInvite)).toContain('süresi doldu');
         expect(clientPortalLastInviteNote(invite('Revoked'))).toBe('Son davet iptal edildi.');
         expect(clientPortalLastInviteNote(null)).toBeNull();
+    });
+});
+
+describe('clientPortalClosedLabels', () => {
+    it('personel kapatması ve hasta sahibinin hesap silmesi ayrı yazılır', () => {
+        expect(clientPortalClosedLabels(link('Closed', '2026-10-01T00:00:00Z')).title).toBe('Portal erişimi kapalı');
+        expect(clientPortalClosedLabels({ ...link('Closed', '2026-10-01T00:00:00Z'), closeReason: 'OwnerAccountDeleted' })).toEqual({
+            title: 'Hasta sahibi portal hesabını sildi',
+            dateLabel: 'silinme'
+        });
     });
 });

@@ -39,6 +39,13 @@ function latestClosedLink(links: ClientPortalLinkDto[]): ClientPortalLinkDto | n
         .reduce<ClientPortalLinkDto | null>((latest, l) => (!latest || (l.closedAtUtc ?? '') > (latest.closedAtUtc ?? '') ? l : latest), null);
 }
 
+/** Kapalı bağın başlığı ve tarih etiketi; hasta sahibi hesabını sildiyse bunu söyler (ADR-041 K7). */
+export function clientPortalClosedLabels(link: ClientPortalLinkDto): { readonly title: string; readonly dateLabel: string } {
+    return link.closeReason === 'OwnerAccountDeleted'
+        ? { title: 'Hasta sahibi portal hesabını sildi', dateLabel: 'silinme' }
+        : { title: 'Portal erişimi kapalı', dateLabel: 'kapatılma' };
+}
+
 /** Davet yok durumundaki son davet notu; bekleyen/kabul edilmiş davet için not yok. */
 export function clientPortalLastInviteNote(invite: ClientPortalInviteDto | null): string | null {
     switch (invite?.status) {
