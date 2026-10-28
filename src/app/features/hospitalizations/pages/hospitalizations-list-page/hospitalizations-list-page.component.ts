@@ -62,7 +62,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
         AppRowActionButtonComponent,
         TrDateTimePipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (contextPetId()) {
             <app-context-filter-chip label="Seçili hastanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />
