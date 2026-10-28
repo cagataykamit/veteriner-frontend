@@ -233,7 +233,7 @@ export class ReminderLogsPageComponent implements OnInit {
     ];
 
     readonly displayedRows = computed(() => this.rows());
-    readonly hasActiveFilters = computed(() => !!this.activeReminderType().trim() || !!this.activeStatus().trim() || !!this.activeClinicId().trim() || !!this.fromDateInput.trim() || !!this.toDateInput.trim());
+    readonly hasActiveFilters = computed(() => !!this.activeReminderType().trim() || !!this.activeStatus().trim() || !!this.activeClinicId().trim() || !!this.activeFromUtc() || !!this.activeToUtc());
 
     private suppressNextLazy = false;
     private lastLoadKey = '';
