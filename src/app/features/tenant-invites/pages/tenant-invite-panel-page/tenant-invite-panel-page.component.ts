@@ -24,7 +24,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
     selector: 'app-tenant-invite-panel-page',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, AppPageHeaderComponent, AppLoadingStateComponent, DateInputComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Kullanıcı daveti" description="Kuruma katılım için e-posta daveti oluşturun; davet edilen kullanıcı paket seçmez.">
             <a actions routerLink="/panel/settings/invites/list" pButton type="button" class="p-button-secondary"><i class="pi pi-list"></i>Davet listesi</a>

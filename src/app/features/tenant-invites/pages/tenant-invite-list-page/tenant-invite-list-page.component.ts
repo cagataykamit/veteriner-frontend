@@ -44,7 +44,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         AppRowActionButtonComponent,
         TrDateTimePipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Davetler" description="Kurum davetlerinin listesi. Yeni davet için oluşturma ekranını kullanın.">
             @if (canManageTenantAccess()) {
