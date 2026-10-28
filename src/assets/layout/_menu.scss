@@ -24,6 +24,17 @@ app-menu {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
+    min-height: 0;
+}
+
+// Kısa pencerede yalnız üstteki liste kayar; sabit bölüm altında kalır ve listenin üstüne binmez. İnce çubuk kaydırılabileceğini gösterir.
+.layout-menu.layout-menu-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
 }
 
 .layout-menu {
@@ -189,10 +200,9 @@ app-menu {
     }
 }
 
-// Ayarlar gibi sabit öğeler: menü kısa kalınca da en altta, uzayınca kaydırmada görünür kalır.
+// Ayarlar gibi sabit öğeler: menü kısa kalınca da en altta, uzayınca kayan listenin altında görünür kalır.
 .layout-menu.layout-menu-pinned {
-    position: sticky;
-    bottom: -0.5rem;
+    flex: 0 0 auto;
     margin-top: auto;
     padding: 0.25rem 0 0.5rem;
     border-top: 1px solid var(--surface-border);
@@ -236,7 +246,7 @@ app-menu {
 // Masaüstü (static kip): tek kenar çubuğu, yüzen kart görünümünde (üstte/altta boşluk) ama sol kenara dayalı. Simge sütunu sabit genişliktedir;
 // açıkken etiketler simgenin sağına doğru açılır, kapalıyken kenar çubuğu yalnız simge sütununa daralır (simge x konumu ve boyutu değişmez).
 // Satır yüksekliği (--menu-row) pencereye göre ayarlanır; bölüm başlıkları ve aralıkları satırla orantılıdır, tüm menü kaydırmasız sığar
-// (çok kısa pencerede, ~405 px altında, 22 px alt sınırda kalıp kaydırılır). Menüye satır veya bölüm eklenirse $menu-row-units güncellenir.
+// (çok kısa pencerede, ~405 px altında, 22 px alt sınırda kalır ve üstteki liste kaydırılır). Menüye satır veya bölüm eklenirse $menu-row-units güncellenir.
 $menu-icon-column: 64px;
 $menu-open-width: 17rem;
 $menu-item-count: 9; // en geniş izinle görünen satır sayısı
@@ -343,7 +353,6 @@ $menu-fixed-height: calc(6rem + 1px + 2 * #{$menu-edge-padding} + #{$menu-roundi
         }
 
         .layout-menu.layout-menu-pinned {
-            bottom: 0;
             padding: 0 0 $menu-edge-padding;
         }
 

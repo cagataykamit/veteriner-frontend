@@ -30,7 +30,7 @@ interface MenuSection {
     providers: [MenuFlyoutService],
     changeDetection: ChangeDetectionStrategy.Eager,
     template: `
-        <ul class="layout-menu">
+        <ul class="layout-menu layout-menu-scroll">
             @for (section of scrollingSections(); track section.label ?? section.heading) {
                 @if (section.label && rail()) {
                     <li class="layout-menu-divider" role="separator"></li>
