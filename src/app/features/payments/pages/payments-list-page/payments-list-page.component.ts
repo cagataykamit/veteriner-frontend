@@ -345,7 +345,6 @@ export class PaymentsListPageComponent implements OnInit {
 
     readonly formatPaidAtUtc = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly methodLabel = paymentMethodLabel;
-    readonly hasActiveFilters = computed(() => !!this.activeSearch().trim() || !!this.methodFilter.trim() || !!this.activeFromDate().trim() || !!this.activeToDate().trim());
 
     ngOnInit(): void {
         if (!this.list.restore()) {

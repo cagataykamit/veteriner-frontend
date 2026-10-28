@@ -355,7 +355,6 @@ export class AppointmentsListPageComponent implements OnInit {
     /** İptal diyaloğunun açık olduğu satır. */
     readonly cancelTarget = signal<AppointmentListItemVm | null>(null);
     readonly cancelVisible = signal(false);
-    readonly hasActiveFilters = computed(() => !!this.activeSearch().trim() || !!this.statusFilter.trim() || !!this.activeFromDate().trim() || !!this.activeToDate().trim());
 
     ngOnInit(): void {
         const restored = this.list.restore();

@@ -370,9 +370,6 @@ export class VaccinationsListPageComponent implements OnInit {
 
     readonly statusLabel = vaccinationStatusLabel;
     readonly statusSeverity = vaccinationStatusSeverity;
-    readonly hasActiveFilters = computed(
-        () => this.activeOverdueOnly() || !!this.activeSearch().trim() || !!this.statusFilter.trim() || !!this.receivingCareFilter || !!this.hbsStatusFilter || !!this.activeFromDate().trim() || !!this.activeToDate().trim()
-    );
 
     ngOnInit(): void {
         const overdueFromUrl = this.route.snapshot.queryParamMap.get('overdue')?.toLowerCase() === 'true';

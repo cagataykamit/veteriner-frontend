@@ -290,7 +290,6 @@ export class ExaminationsListPageComponent implements OnInit {
 
     readonly statusLabel = examinationStatusLabel;
     readonly statusSeverity = examinationStatusSeverity;
-    readonly hasActiveFilters = computed(() => !!this.activeSearch().trim() || !!this.activeFromDate().trim() || !!this.activeToDate().trim());
 
     ngOnInit(): void {
         const restored = this.list.restore();
