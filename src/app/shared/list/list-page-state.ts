@@ -14,8 +14,8 @@ export interface ListPageResult<T> {
 
 /** Süzgeç ve sayfa konumunun `sessionStorage`'da saklanması (sayfadan çıkıp dönünce korunur). */
 export interface ListPagePersistConfig {
-    /** `sessionStorage` anahtarı. */
-    readonly key: string;
+    /** `sessionStorage` anahtarı; rota parametresine bağlı listelerde (ör. ürün kimliği) işlev olarak verilir. */
+    readonly key: string | (() => string);
     /** Sayfaya özgü süzgeç alanları; `page` ve `pageSize` iskelet tarafından eklenir. */
     readonly save: () => Record<string, unknown>;
     /** Geçerli kayıttan süzgeçleri geri yükler; `page` / `pageSize` iskelet tarafından uygulanır. */
@@ -45,6 +45,8 @@ export interface ListPageConfig<T> {
 const DEFAULT_ROWS_PER_PAGE_OPTIONS = [10, 20, 25, 50];
 
 const defaultErrorMessage = (e: unknown) => panelHttpFailureMessage(e, 'Yükleme hatası');
+
+const persistKey = (persist: ListPagePersistConfig): string => (typeof persist.key === 'function' ? persist.key() : persist.key);
 
 /**
  * Panel liste sayfalarının ortak iskeleti: sayfalama sinyalleri, tablo (tembel yükleme) ve mobil sayfalayıcı olayları,
@@ -135,7 +137,8 @@ export class ListPageState<T> {
             return false;
         }
 
-        const raw = sessionStorage.getItem(persist.key);
+        const key = persistKey(persist);
+        const raw = sessionStorage.getItem(key);
 
         if (!raw) {
             return false;
@@ -147,7 +150,7 @@ export class ListPageState<T> {
             const pageSize = Number(parsed['pageSize']);
 
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
-                sessionStorage.removeItem(persist.key);
+                sessionStorage.removeItem(key);
 
                 return false;
             }
@@ -159,7 +162,7 @@ export class ListPageState<T> {
 
             return true;
         } catch {
-            sessionStorage.removeItem(persist.key);
+            sessionStorage.removeItem(key);
 
             return false;
         }
@@ -169,13 +172,13 @@ export class ListPageState<T> {
         const persist = this.config.persist;
 
         if (persist) {
-            sessionStorage.setItem(persist.key, JSON.stringify({ ...persist.save(), page, pageSize }));
+            sessionStorage.setItem(persistKey(persist), JSON.stringify({ ...persist.save(), page, pageSize }));
         }
     }
 
     clearPersisted(): void {
         if (this.config.persist) {
-            sessionStorage.removeItem(this.config.persist.key);
+            sessionStorage.removeItem(persistKey(this.config.persist));
         }
     }
 
