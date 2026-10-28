@@ -1,5 +1,5 @@
 import { signal, type WritableSignal } from '@angular/core';
-import type { Observable } from 'rxjs';
+import type { Observable, Subscription } from 'rxjs';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -14,8 +14,8 @@ export interface ListPageResult<T> {
 
 /** Süzgeç ve sayfa konumunun `sessionStorage`'da saklanması (sayfadan çıkıp dönünce korunur). */
 export interface ListPagePersistConfig {
-    /** `sessionStorage` anahtarı. */
-    readonly key: string;
+    /** `sessionStorage` anahtarı; rota parametresine bağlı listelerde (ör. ürün kimliği) işlev olarak verilir. */
+    readonly key: string | (() => string);
     /** Sayfaya özgü süzgeç alanları; `page` ve `pageSize` iskelet tarafından eklenir. */
     readonly save: () => Record<string, unknown>;
     /** Geçerli kayıttan süzgeçleri geri yükler; `page` / `pageSize` iskelet tarafından uygulanır. */
@@ -46,6 +46,8 @@ const DEFAULT_ROWS_PER_PAGE_OPTIONS = [10, 20, 25, 50];
 
 const defaultErrorMessage = (e: unknown) => panelHttpFailureMessage(e, 'Yükleme hatası');
 
+const persistKey = (persist: ListPagePersistConfig): string => (typeof persist.key === 'function' ? persist.key() : persist.key);
+
 /**
  * Panel liste sayfalarının ortak iskeleti: sayfalama sinyalleri, tablo (tembel yükleme) ve mobil sayfalayıcı olayları,
  * aynı istek tekrarını önleme ve isteğe bağlı oturumda saklama. Süzgeç alanları ve sorgu sayfadadır (`fetch`, `loadKey`).
@@ -65,6 +67,7 @@ export class ListPageState<T> {
     /** Tablo ilk sonuçla kurulurken yaydığı tembel yükleme olayı ve mobil sayfalayıcı sonrası tablonun olayı yutulur. */
     private suppressNextLazy = false;
     private lastLoadKey = '';
+    private request: Subscription | null = null;
 
     constructor(private readonly config: ListPageConfig<T>) {
         this.pageSize = signal(config.pageSize ?? 10);
@@ -135,7 +138,8 @@ export class ListPageState<T> {
             return false;
         }
 
-        const raw = sessionStorage.getItem(persist.key);
+        const key = persistKey(persist);
+        const raw = sessionStorage.getItem(key);
 
         if (!raw) {
             return false;
@@ -147,7 +151,7 @@ export class ListPageState<T> {
             const pageSize = Number(parsed['pageSize']);
 
             if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
-                sessionStorage.removeItem(persist.key);
+                sessionStorage.removeItem(key);
 
                 return false;
             }
@@ -159,7 +163,7 @@ export class ListPageState<T> {
 
             return true;
         } catch {
-            sessionStorage.removeItem(persist.key);
+            sessionStorage.removeItem(key);
 
             return false;
         }
@@ -169,13 +173,13 @@ export class ListPageState<T> {
         const persist = this.config.persist;
 
         if (persist) {
-            sessionStorage.setItem(persist.key, JSON.stringify({ ...persist.save(), page, pageSize }));
+            sessionStorage.setItem(persistKey(persist), JSON.stringify({ ...persist.save(), page, pageSize }));
         }
     }
 
     clearPersisted(): void {
         if (this.config.persist) {
-            sessionStorage.removeItem(this.config.persist.key);
+            sessionStorage.removeItem(persistKey(this.config.persist));
         }
     }
 
@@ -201,6 +205,7 @@ export class ListPageState<T> {
         this.load(page, rows);
     }
 
+    /** Yeni yükleme öncekini iptal eder: geç dönen eski yanıt (ör. süzgeç ya da rota değişimi) yeni listenin üstüne yazmaz. */
     private load(page: number, pageSize: number, force = false): void {
         const key = this.config.loadKey(page, pageSize);
 
@@ -211,7 +216,8 @@ export class ListPageState<T> {
         this.lastLoadKey = key;
         this.loading.set(true);
         this.error.set(null);
-        this.config.fetch(page, pageSize).subscribe({
+        this.request?.unsubscribe();
+        this.request = this.config.fetch(page, pageSize).subscribe({
             next: (r) => {
                 this.items.set(r.items);
                 this.totalItems.set(r.totalItems);

@@ -8,13 +8,12 @@ import { ActivatedRoute } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { Paginator } from 'primeng/paginator';
-import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
-import type { TableLazyLoadEvent } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import type { StockMovementVm } from '@/app/features/inventory/models/stock-movement-vm.model';
 import { StockMovementCreateDialogComponent } from '@/app/features/inventory/components/stock-movement-create-dialog/stock-movement-create-dialog.component';
+import { ListPageState } from '@/app/shared/list/list-page-state';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -32,7 +31,6 @@ import { triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
 import { STOCK_MOVEMENT_CSV_HEADERS, stockMovementVmToCsvRow } from '@/app/features/inventory/utils/stock-movement-export.utils';
 import { fetchAllInventoryCsvExportPages$, InventoryCsvExportRowLimitError } from '@/app/features/inventory/utils/inventory-csv-export-pagination.utils';
 import { EMPTY, catchError, of, switchMap, tap, type Observable } from 'rxjs';
-import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 type ProductStockMovementsListState = {
     movementType: string;
@@ -142,7 +140,7 @@ type ProductStockMovementsListState = {
                                 [totalRecords]="totalItems()"
                                 [lazy]="true"
                                 [first]="first()"
-                                (onLazyLoad)="onTableLazyLoad($event)"
+                                (onLazyLoad)="list.onTableLazyLoad($event)"
                                 [tableStyle]="{ 'min-width': '72rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
@@ -204,7 +202,7 @@ type ProductStockMovementsListState = {
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                                 [rowsPerPageOptions]="rowsPerPageOptions"
-                                (onPageChange)="onMobilePageChange($event)"
+                                (onPageChange)="list.onMobilePageChange($event)"
                             />
                         </div>
                     }
@@ -233,18 +231,48 @@ export class ProductStockMovementsPageComponent implements OnInit {
     readonly productId = signal<string | null>(null);
     readonly productLabel = signal<string | null>(null);
 
+    readonly list = new ListPageState<StockMovementVm>({
+        fetch: (page, pageSize) =>
+            this.stockMovementService.listByProductId(this.productId() ?? '', {
+                page,
+                pageSize,
+                movementType: this.activeMovementType().trim() || undefined,
+                dateFromUtc: this.activeDateFrom().trim() || undefined,
+                dateToUtc: this.activeDateTo().trim() || undefined
+            }),
+        loadKey: (page, pageSize) => `${this.productId()}|${page}|${pageSize}|${this.activeMovementType()}|${this.activeDateFrom()}|${this.activeDateTo()}`,
+        persist: {
+            key: () => `panel:inventory:product-stock-movements:${this.productId()}:listState`,
+            save: (): Omit<ProductStockMovementsListState, 'page' | 'pageSize'> => ({
+                movementType: this.activeMovementType(),
+                dateFrom: this.dateFromInput.trim(),
+                dateTo: this.dateToInput.trim()
+            }),
+            restore: (state) => {
+                const parsed = state as Partial<ProductStockMovementsListState>;
+
+                this.movementTypeFilter = typeof parsed.movementType === 'string' && ['', 'Initial', 'In', 'Out', 'Adjustment', 'Reversal'].includes(parsed.movementType) ? parsed.movementType : '';
+                this.activeMovementType.set(this.movementTypeFilter);
+                this.dateFromInput = typeof parsed.dateFrom === 'string' ? parsed.dateFrom : '';
+                this.dateToInput = typeof parsed.dateTo === 'string' ? parsed.dateTo : '';
+                this.activeDateFrom.set(this.dateFromInput.trim());
+                this.activeDateTo.set(this.dateToInput.trim());
+            }
+        }
+    });
+
     readonly routeError = signal<string | null>(null);
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
+    readonly loading = this.list.loading;
+    readonly error = this.list.error;
     readonly exporting = signal(false);
     readonly exportError = signal<string | null>(null);
 
-    readonly rawItems = signal<StockMovementVm[]>([]);
-    readonly totalItems = signal(0);
-    readonly rowsPerPageOptions = [10, 20, 25, 50];
-    readonly pageSize = signal(10);
-    readonly first = signal(0);
-    readonly currentPage = signal(1);
+    readonly rawItems = this.list.items;
+    readonly totalItems = this.list.totalItems;
+    readonly rowsPerPageOptions = this.list.rowsPerPageOptions;
+    readonly pageSize = this.list.pageSize;
+    readonly first = this.list.first;
+    readonly currentPage = this.list.currentPage;
 
     readonly activeMovementType = signal('');
     readonly activeDateFrom = signal('');
@@ -264,20 +292,11 @@ export class ProductStockMovementsPageComponent implements OnInit {
 
     readonly displayedRows = computed(() => this.rawItems());
 
-    private suppressNextLazy = false;
-    private lastLoadKey = '';
-
     readonly productDetailLink = () => {
         const id = this.productId();
 
         return id ? ['/panel/products', id] : ['/panel/products'];
     };
-
-    private sessionKey(): string {
-        const id = this.productId();
-
-        return id ? `panel:inventory:product-stock-movements:${id}:listState` : '';
-    }
 
     ngOnInit(): void {
         this.route.paramMap
@@ -296,63 +315,24 @@ export class ProductStockMovementsPageComponent implements OnInit {
                     this.productId.set(id);
                     this.productLabel.set(null);
                     this.error.set(null);
-                    this.suppressNextLazy = true;
-                    const restored = this.restoreStateFromSessionStorage(id);
 
-                    if (!restored) {
-                        this.currentPage.set(1);
-                        this.first.set(0);
+                    if (!this.list.restore()) {
+                        this.list.goToFirstPage();
                     }
 
                     this.loading.set(true);
 
                     return this.productService.getById(id).pipe(
-                        tap({
-                            next: (p) => this.productLabel.set(`${p.name} (${p.sku})`),
-                            error: () => this.productLabel.set(null)
-                        }),
+                        tap((p) => this.productLabel.set(`${p.name} (${p.sku})`)),
                         catchError(() => {
                             this.productLabel.set(null);
 
                             return of(undefined);
-                        }),
-                        switchMap(() => this.stockMovementService.listByProductId(id, this.buildQueryFromSignals()))
+                        })
                     );
                 })
             )
-            .subscribe({
-                next: (r) => {
-                    this.rawItems.set(r.items);
-                    this.totalItems.set(r.totalItems);
-                    this.pageSize.set(r.pageSize);
-                    this.currentPage.set(r.page);
-                    this.first.set((r.page - 1) * r.pageSize);
-                    this.persistStateToSessionStorage(r.page, r.pageSize);
-                    const pid = this.productId();
-
-                    if (pid) {
-                        this.lastLoadKey = `${pid}|${r.page}|${r.pageSize}|${this.activeMovementType()}|${this.activeDateFrom()}|${this.activeDateTo()}`;
-                    }
-
-                    this.loading.set(false);
-                    this.suppressNextLazy = true;
-                },
-                error: (e: Error) => {
-                    this.error.set(panelHttpFailureMessage(e, 'Yükleme hatası'));
-                    this.loading.set(false);
-                    this.suppressNextLazy = true;
-                }
-            });
-    }
-
-    private buildQueryFromSignals(): Parameters<StockMovementService['listByProductId']>[1] {
-        return {
-            page: this.currentPage(),
-            pageSize: this.pageSize(),
-            movementType: this.activeMovementType().trim() || undefined,
-            dateFromUtc: this.activeDateFrom().trim() || undefined,
-            dateToUtc: this.activeDateTo().trim() || undefined
-        };
+            .subscribe(() => this.list.startInitialLoad());
     }
 
     applyFilters(): void {
@@ -372,10 +352,10 @@ export class ProductStockMovementsPageComponent implements OnInit {
         this.activeMovementType.set(String(this.movementTypeFilter ?? '').trim());
         this.activeDateFrom.set(from);
         this.activeDateTo.set(to);
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.persistStateToSessionStorage(1, this.pageSize());
-        this.reloadWithCurrentFilters();
+
+        if (this.canLoad()) {
+            this.list.loadFirstPage();
+        }
     }
 
     resetFilters(): void {
@@ -386,119 +366,18 @@ export class ProductStockMovementsPageComponent implements OnInit {
         this.activeMovementType.set('');
         this.activeDateFrom.set('');
         this.activeDateTo.set('');
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.clearStateFromSessionStorage();
-        this.reloadWithCurrentFilters();
+
+        if (this.canLoad()) {
+            this.list.resetToFirstPage();
+        }
     }
 
     reload(): void {
         this.exportError.set(null);
-        this.reloadWithCurrentFilters(true);
-    }
 
-    private reloadWithCurrentFilters(force = false): void {
-        const id = this.productId();
-
-        if (!id || this.routeError()) {
-            return;
+        if (this.canLoad()) {
+            this.list.reload();
         }
-
-        const key = `${id}|${this.currentPage()}|${this.pageSize()}|${this.activeMovementType()}|${this.activeDateFrom()}|${this.activeDateTo()}`;
-
-        if (!force && key === this.lastLoadKey) {
-            return;
-        }
-
-        this.lastLoadKey = key;
-        this.loading.set(true);
-        this.error.set(null);
-        this.stockMovementService
-            .listByProductId(id, {
-                page: this.currentPage(),
-                pageSize: this.pageSize(),
-                movementType: this.activeMovementType().trim() || undefined,
-                dateFromUtc: this.activeDateFrom().trim() || undefined,
-                dateToUtc: this.activeDateTo().trim() || undefined
-            })
-            .subscribe({
-                next: (r) => {
-                    this.rawItems.set(r.items);
-                    this.totalItems.set(r.totalItems);
-                    this.pageSize.set(r.pageSize);
-                    this.currentPage.set(r.page);
-                    this.first.set((r.page - 1) * r.pageSize);
-                    this.persistStateToSessionStorage(r.page, r.pageSize);
-                    const pid = this.productId();
-
-                    if (pid) {
-                        this.lastLoadKey = `${pid}|${r.page}|${r.pageSize}|${this.activeMovementType()}|${this.activeDateFrom()}|${this.activeDateTo()}`;
-                    }
-
-                    this.loading.set(false);
-                    this.suppressNextLazy = true;
-                },
-                error: (e: Error) => {
-                    this.error.set(panelHttpFailureMessage(e, 'Yükleme hatası'));
-                    this.loading.set(false);
-                }
-            });
-    }
-
-    onTableLazyLoad(event: TableLazyLoadEvent): void {
-        if (this.suppressNextLazy) {
-            this.suppressNextLazy = false;
-
-            return;
-        }
-
-        const rows = event.rows ?? this.pageSize();
-        const eventFirst = event.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.pageSize.set(rows);
-            this.persistStateToSessionStorage(1, rows);
-            this.reloadWithCurrentFilters(true);
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.currentPage.set(page);
-        this.pageSize.set(rows);
-        this.first.set(eventFirst);
-        this.reloadWithCurrentFilters(true);
-    }
-
-    onMobilePageChange(state: PaginatorState): void {
-        const rows = state.rows ?? this.pageSize();
-        const eventFirst = state.first ?? 0;
-        const rowsChanged = rows !== this.pageSize();
-
-        this.suppressNextLazy = true;
-
-        if (rowsChanged) {
-            this.first.set(0);
-            this.currentPage.set(1);
-            this.pageSize.set(rows);
-            this.persistStateToSessionStorage(1, rows);
-            this.reloadWithCurrentFilters(true);
-
-            return;
-        }
-
-        const page = Math.floor(eventFirst / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.currentPage.set(page);
-        this.pageSize.set(rows);
-        this.first.set(eventFirst);
-        this.reloadWithCurrentFilters(true);
     }
 
     movementTypeActive(): boolean {
@@ -513,66 +392,9 @@ export class ProductStockMovementsPageComponent implements OnInit {
         return !!this.activeDateTo().trim();
     }
 
-    private restoreStateFromSessionStorage(productId: string): boolean {
-        const raw = sessionStorage.getItem(`panel:inventory:product-stock-movements:${productId}:listState`);
-
-        if (!raw) {
-            return false;
-        }
-
-        try {
-            const parsed = JSON.parse(raw) as Partial<ProductStockMovementsListState>;
-            const page = Number(parsed.page);
-            const pageSize = Number(parsed.pageSize);
-
-            if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
-                sessionStorage.removeItem(`panel:inventory:product-stock-movements:${productId}:listState`);
-
-                return false;
-            }
-
-            this.movementTypeFilter = typeof parsed.movementType === 'string' && ['', 'Initial', 'In', 'Out', 'Adjustment', 'Reversal'].includes(parsed.movementType) ? parsed.movementType : '';
-            this.activeMovementType.set(this.movementTypeFilter);
-            this.dateFromInput = typeof parsed.dateFrom === 'string' ? parsed.dateFrom : '';
-            this.dateToInput = typeof parsed.dateTo === 'string' ? parsed.dateTo : '';
-            this.activeDateFrom.set(this.dateFromInput.trim());
-            this.activeDateTo.set(this.dateToInput.trim());
-            this.pageSize.set(pageSize);
-            this.currentPage.set(page);
-            this.first.set((page - 1) * pageSize);
-
-            return true;
-        } catch {
-            sessionStorage.removeItem(`panel:inventory:product-stock-movements:${productId}:listState`);
-
-            return false;
-        }
-    }
-
-    private persistStateToSessionStorage(page: number, pageSize: number): void {
-        const key = this.sessionKey();
-
-        if (!key) {
-            return;
-        }
-
-        const state: ProductStockMovementsListState = {
-            movementType: this.activeMovementType(),
-            dateFrom: this.dateFromInput.trim(),
-            dateTo: this.dateToInput.trim(),
-            page,
-            pageSize
-        };
-
-        sessionStorage.setItem(key, JSON.stringify(state));
-    }
-
-    private clearStateFromSessionStorage(): void {
-        const key = this.sessionKey();
-
-        if (key) {
-            sessionStorage.removeItem(key);
-        }
+    /** Liste yalnız geçerli ürün rotasında yüklenir. */
+    private canLoad(): boolean {
+        return !!this.productId() && !this.routeError();
     }
 
     onStockMovementCreated(): void {
@@ -581,7 +403,10 @@ export class ProductStockMovementsPageComponent implements OnInit {
             summary: 'Kaydedildi',
             detail: 'Stok hareketi oluşturuldu.'
         });
-        this.reloadWithCurrentFilters(true);
+
+        if (this.canLoad()) {
+            this.list.reload();
+        }
     }
 
     exportCsv(): void {

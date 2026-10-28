@@ -52,4 +52,24 @@ describe('ReminderLogsPageComponent — boş liste mesajı', () => {
 
         expect(text()).toContain(NO_RECORDS);
     });
+
+    it('saklanan süzgeç ve sayfayla yükler', () => {
+        sessionStorage.setItem(STATE_KEY, JSON.stringify({ reminderType: 'Vaccination', status: 'Failed', clinicId: '', fromDateInput: '', toDateInput: '', fromUtc: null, toUtc: null, page: 3, pageSize: 50 }));
+
+        const { getLogs, cmp } = create();
+
+        expect(getLogs).toHaveBeenCalledTimes(1);
+        expect(vi.mocked(getLogs).mock.lastCall![0]).toEqual({ page: 3, pageSize: 50, reminderType: 'Vaccination', status: 'Failed', clinicId: undefined, fromUtc: undefined, toUtc: undefined });
+        expect(cmp.statusFilter).toBe('Failed');
+    });
+
+    it('süzgeç yokken "Temizle" listeyi yeniden getirir ve kaydı ilk sayfaya alır', () => {
+        const { getLogs, cmp } = create();
+
+        cmp.clearFilters();
+
+        expect(getLogs).toHaveBeenCalledTimes(2);
+        expect(vi.mocked(getLogs).mock.lastCall![0].page).toBe(1);
+        expect(JSON.parse(sessionStorage.getItem(STATE_KEY)!)).toMatchObject({ reminderType: '', page: 1, pageSize: 20 });
+    });
 });
