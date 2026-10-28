@@ -13,6 +13,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
 @Component({
     selector: 'app-treatment-detail-page',
@@ -136,9 +137,16 @@ export class TreatmentDetailPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
-    readonly row = signal<TreatmentDetailVm | null>(null);
+    private readonly loader = new RouteEntityLoader<TreatmentDetailVm>({
+        fetch: (id) => this.treatmentsService.getTreatmentById(id),
+        invalidIdMessage: 'Geçersiz tedavi.',
+        errorMessage: (e) => (e instanceof Error ? e.message : 'Tedavi yüklenemedi.'),
+        onRouteChange: (id) => this.showSavedBanner.set(!!id && this.route.snapshot.queryParamMap.get('saved') === '1')
+    });
+
+    readonly loading = this.loader.loading;
+    readonly error = this.loader.error;
+    readonly row = this.loader.value;
     readonly showSavedBanner = signal(false);
     readonly canUpdateTreatment = this.auth.hasOperationClaim(TREATMENTS_UPDATE_CLAIM);
 
@@ -164,35 +172,11 @@ export class TreatmentDetailPageComponent implements OnInit {
         return q;
     }
 
-    private treatmentId = '';
-
     ngOnInit(): void {
-        const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
-
-        if (!id) {
-            this.error.set('Geçersiz tedavi.');
-            this.loading.set(false);
-
-            return;
-        }
-
-        this.treatmentId = id;
-        this.showSavedBanner.set(this.route.snapshot.queryParamMap.get('saved') === '1');
-        this.reload();
+        this.loader.init();
     }
 
     reload(): void {
-        this.loading.set(true);
-        this.error.set(null);
-        this.treatmentsService.getTreatmentById(this.treatmentId).subscribe({
-            next: (x) => {
-                this.row.set(x);
-                this.loading.set(false);
-            },
-            error: (e: unknown) => {
-                this.error.set(e instanceof Error ? e.message : 'Tedavi yüklenemedi.');
-                this.loading.set(false);
-            }
-        });
+        this.loader.reload();
     }
 }
