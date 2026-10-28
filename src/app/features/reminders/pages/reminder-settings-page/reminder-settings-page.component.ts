@@ -25,7 +25,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputNumberModule, ToggleSwitchModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent],
     providers: [MessageService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
         <app-page-header title="Hatırlatmalar" description="Randevu ve aşı hatırlatma ayarlarını yönetin." />
