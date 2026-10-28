@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import type { SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
-import { subscriptionPlanLabel } from '@/app/entities/subscription/utils/subscription-plan.utils';
+import { SUBSCRIPTION_BILLING_PERIOD_LABELS, subscriptionPlanLabel } from '@/app/entities/subscription/utils/subscription-plan.utils';
 import { subscriptionStatusLabel, subscriptionStatusSeverity } from '@/app/entities/subscription/utils/subscription-status.utils';
 import {
     isActiveTrialingSubscription,
@@ -9,7 +9,6 @@ import {
     nextRenewalWaitingText,
     shouldShowMisleadingNextRenewal
 } from '@/app/features/subscriptions/utils/subscription-access.utils';
-import { SUBSCRIPTION_BILLING_PERIOD_LABELS } from '@/app/features/subscriptions/utils/subscription-billing-period.utils';
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 

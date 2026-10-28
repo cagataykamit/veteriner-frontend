@@ -4,9 +4,9 @@ import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import type { SubscriptionBillingPeriod, SubscriptionCheckoutSessionVm, SubscriptionPlanVm, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
 import { defByPlanKey, planPriceView } from '@/app/entities/subscription/utils/pricing-plan.utils';
-import { subscriptionPlanLabel, subscriptionPlanLimitLabels } from '@/app/entities/subscription/utils/subscription-plan.utils';
+import { SUBSCRIPTION_BILLING_PERIOD_LABELS, subscriptionPlanLabel, subscriptionPlanLimitLabels } from '@/app/entities/subscription/utils/subscription-plan.utils';
 import { isActiveTrialingSubscription, isExpiredReadOnlySubscription } from '@/app/features/subscriptions/utils/subscription-access.utils';
-import { canChooseBillingPeriod, isSwitchToYearly, SUBSCRIPTION_BILLING_PERIOD_LABELS } from '@/app/features/subscriptions/utils/subscription-billing-period.utils';
+import { canChooseBillingPeriod, isSwitchToYearly } from '@/app/features/subscriptions/utils/subscription-billing-period.utils';
 import { hasOpenCheckoutForPlan, isCurrentPlan, isDowngradePlan, isUpgradePlan } from '@/app/features/subscriptions/utils/subscription-plan-change.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 

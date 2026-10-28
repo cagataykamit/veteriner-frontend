@@ -1,12 +1,6 @@
 import type { SubscriptionBillingPeriod, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
 import { isActivePaidSubscription, isActiveTrialingSubscription, isExpiredReadOnlySubscription } from '@/app/features/subscriptions/utils/subscription-access.utils';
 
-/** Ödeme dönemi etiketleri (BILL-001). */
-export const SUBSCRIPTION_BILLING_PERIOD_LABELS: Readonly<Record<SubscriptionBillingPeriod, string>> = {
-    Monthly: 'Aylık',
-    Yearly: 'Yıllık'
-};
-
 /**
  * Dönem seçilebilir mi (BILL-001, backend `StartSubscriptionCheckout` kuralı): deneme sürerken seçilmez (ilk ödemede seçilir);
  * etkin yıllık dönemde aylığa dönülmez (dönem bitince yenilemede seçilir). Süresi dolmuşsa ya da aylıktaysa seçilir.

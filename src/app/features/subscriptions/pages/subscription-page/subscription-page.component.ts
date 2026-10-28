@@ -11,10 +11,9 @@ import { SubscriptionDiscountCardComponent } from '@/app/entities/sales-partner/
 import { ExampleClinicLoadCardComponent } from '@/app/entities/example-clinic/components/example-clinic-load-card.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import type { PendingPlanChangeStatusKey, PendingPlanChangeTypeKey, PendingPlanChangeVm, SubscriptionCheckoutSessionVm, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
-import { SUBSCRIPTION_BILLING_PERIOD_LABELS } from '@/app/features/subscriptions/utils/subscription-billing-period.utils';
 import { shouldOfferManualCheckoutFinalize } from '@/app/entities/subscription/utils/subscription-checkout-provider.utils';
 import { subscriptionCheckoutStatusLabel, subscriptionCheckoutStatusSeverity } from '@/app/entities/subscription/utils/subscription-checkout-status.utils';
-import { subscriptionPlanLabel } from '@/app/entities/subscription/utils/subscription-plan.utils';
+import { SUBSCRIPTION_BILLING_PERIOD_LABELS, subscriptionPlanLabel } from '@/app/entities/subscription/utils/subscription-plan.utils';
 import {
     expiredReadOnlyBannerMessage,
     isActiveTrialingSubscription,

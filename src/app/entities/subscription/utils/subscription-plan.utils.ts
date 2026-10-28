@@ -1,7 +1,14 @@
+import type { SubscriptionBillingPeriod } from '@/app/entities/subscription/models/subscription-vm.model';
 import { defByPlanKey, formatPlanLimit, PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
 
 /** Paket adları tek kaynaktan (ADR-035): `basic` → "Temel", `pro` → "Profesyonel", `premium` → "Kurumsal". */
 const PLAN_LABELS: Record<string, string> = Object.fromEntries(PRICING_PLAN_DEFS.map((d) => [d.slug, d.title]));
+
+/** Ödeme dönemi etiketleri (BILL-001). */
+export const SUBSCRIPTION_BILLING_PERIOD_LABELS: Readonly<Record<SubscriptionBillingPeriod, string>> = {
+    Monthly: 'Aylık',
+    Yearly: 'Yıllık'
+};
 
 /** Backend plan sırası: Basic = 0, Pro = 1, Premium = 2 */
 const PLAN_RANK: Record<string, number> = {
