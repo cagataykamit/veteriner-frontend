@@ -130,6 +130,11 @@ export class PortalSessionService {
         return this.authApi.logoutAll().pipe(map(() => this.endLocalSession()));
     }
 
+    /** Hesap silme (§5.10): sunucu tüm oturumları sildiği için başarıda yerel oturum da biter; hata döner, oturum korunur. */
+    deleteAccount(oneTimeCode: string): Observable<void> {
+        return this.authApi.deleteAccount(oneTimeCode).pipe(map(() => this.endLocalSession()));
+    }
+
     endLocalSession(): void {
         this.tokens.clear();
         this.meSignal.set(null);

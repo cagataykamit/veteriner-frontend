@@ -16,6 +16,7 @@ export const PORTAL_ENDPOINTS = {
     logout: 'auth/logout',
     logoutAll: 'auth/logout-all',
     me: 'me',
+    meDeletionCode: 'me/deletion-code',
     myLegalAcceptances: 'me/legal-acceptances',
     clinicDisclosure: (linkId: string) => `${link(linkId)}/clinic-disclosure`,
     acknowledgeClinicDisclosure: (linkId: string) => `${link(linkId)}/clinic-disclosure/acknowledge`,

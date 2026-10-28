@@ -106,6 +106,31 @@ describe('PortalSessionService', () => {
         expect(session.status()).toBe('anonymous');
     });
 
+    it('hesap silmede kodu DELETE /me ile gönderir ve yerel oturumu siler; hata oturumu korur', async () => {
+        store.save(tokens(1));
+        let error: unknown = null;
+
+        session.deleteAccount('000000').subscribe({ error: (err: unknown) => (error = err) });
+        http.expectOne((r) => r.method === 'DELETE' && r.url === BASE + '/me').flush({ status: 400 }, { status: 400, statusText: 'Bad Request' });
+
+        expect(error).not.toBeNull();
+        expect(store.accessToken()).toBe('access-1');
+
+        let done = false;
+
+        session.deleteAccount('123456').subscribe(() => (done = true));
+        const req = http.expectOne((r) => r.method === 'DELETE' && r.url === BASE + '/me');
+
+        expect(req.request.body).toEqual({ oneTimeCode: '123456' });
+        expect(req.request.headers.get('Authorization')).toBe('Bearer access-1');
+        req.flush(null, { status: 204, statusText: 'No Content' });
+
+        expect(done).toBe(true);
+        expect(store.accessToken()).toBeNull();
+        expect(localStorage.getItem(PORTAL_STORAGE_KEYS.refreshToken)).toBeNull();
+        expect(session.status()).toBe('anonymous');
+    });
+
     it('çok klinikte seçim yoksa klinik seçimi ister; seçim cihazda hatırlanır', async () => {
         store.save(tokens(1));
         const twoLinks: PortalMe = { ...ME, links: [...ME.links, { linkId: 'link-2', clinicId: 'clinic-2', clinicName: 'Şube', clientFullName: 'Ayşe Yılmaz' }] };

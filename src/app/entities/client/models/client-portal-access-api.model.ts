@@ -4,6 +4,9 @@
  */
 export type ClientPortalLinkStatus = 'Active' | 'Closed';
 
+/** Kapalı bağın gerekçesi (ADR-041): personel kapattı ya da hasta sahibi hesabını sildi; aktif bağda `null`. */
+export type ClientPortalLinkCloseReason = 'ClinicClosed' | 'OwnerAccountDeleted';
+
 /** `Expired`: bekleyen ama süresi geçmiş davet (sunucu hesaplar). */
 export type ClientPortalInviteStatus = 'Pending' | 'Accepted' | 'Revoked' | 'Expired';
 
@@ -15,9 +18,11 @@ export interface ClientPortalLinkDto {
     clinicId: string;
     clinicName: string | null;
     status: ClientPortalLinkStatus;
+    /** Hasta sahibi hesabını sildiyse `null`. */
     accountEmail: string | null;
     linkedAtUtc: string;
     closedAtUtc: string | null;
+    closeReason: ClientPortalLinkCloseReason | null;
 }
 
 export interface ClientPortalInviteDto {

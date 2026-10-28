@@ -7,6 +7,9 @@
         @if (expiredMessage(); as message) {
             <p-message severity="warn">{{ message }}</p-message>
         }
+        @if (deletedMessage(); as message) {
+            <p-message severity="success" role="status">{{ message }}</p-message>
+        }
 
         <div class="portal-segmented" role="group" aria-label="Giriş yöntemi">
             <button type="button" [class.is-active]="method() === 'code'" [attr.aria-pressed]="method() === 'code'" (click)="selectMethod('code')">

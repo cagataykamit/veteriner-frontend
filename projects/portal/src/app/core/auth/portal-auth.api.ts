@@ -4,7 +4,7 @@ import { PortalApiClient } from '@portal/app/core/api/portal-api.client';
 import { PORTAL_ENDPOINTS } from '@portal/app/core/api/portal-endpoints';
 import type { PortalAuthTokens, PortalMe } from './portal-auth.models';
 
-/** Portal kimlik uçları (sözleşme §5.4–5.8). Yalnız HTTP; oturum durumu `PortalSessionService`'te. */
+/** Portal kimlik ve hesap uçları (sözleşme §5.4–5.8, §5.10). Yalnız HTTP; oturum durumu `PortalSessionService`'te. */
 @Injectable({ providedIn: 'root' })
 export class PortalAuthApi {
     private readonly api = inject(PortalApiClient);
@@ -43,5 +43,13 @@ export class PortalAuthApi {
 
     me(): Observable<PortalMe> {
         return this.api.get<PortalMe>(PORTAL_ENDPOINTS.me);
+    }
+
+    requestDeletionCode(): Observable<void> {
+        return this.api.post<void>(PORTAL_ENDPOINTS.meDeletionCode);
+    }
+
+    deleteAccount(oneTimeCode: string): Observable<void> {
+        return this.api.delete<void>(PORTAL_ENDPOINTS.me, { oneTimeCode });
     }
 }

@@ -7,7 +7,7 @@ import type { Observable } from 'rxjs';
 import type { ClientPortalAccessDto } from '@/app/entities/client/models/client-portal-access-api.model';
 import type { ClientDetailVm } from '@/app/entities/client/models/client-vm.model';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
-import { clientPortalLastInviteNote, clientPortalState } from '@/app/features/clients/utils/client-portal-access.utils';
+import { clientPortalClosedLabels, clientPortalLastInviteNote, clientPortalState } from '@/app/features/clients/utils/client-portal-access.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -60,9 +60,9 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                     }
                     @case ('closed') {
                         <p class="m-0 text-sm flex flex-wrap items-center gap-x-2 gap-y-1" data-testid="client-portal-status">
-                            <span class="font-medium"><i class="pi pi-ban mr-1" aria-hidden="true"></i>Portal erişimi kapalı</span>
+                            <span class="font-medium"><i class="pi pi-ban mr-1" aria-hidden="true"></i>{{ closedLabels()!.title }}</span>
                             @if (closed()!.closedAtUtc; as at) {
-                                <span class="text-muted-color">· kapatılma: {{ at | trDateTime }}</span>
+                                <span class="text-muted-color">· {{ closedLabels()!.dateLabel }}: {{ at | trDateTime }}</span>
                             }
                             <span class="text-muted-color">· müşteri yeniden davet edilebilir</span>
                         </p>
@@ -150,6 +150,11 @@ export class ClientPortalAccessPanelComponent {
         const s = this.state();
 
         return s?.kind === 'closed' ? s.link : null;
+    });
+    readonly closedLabels = computed(() => {
+        const link = this.closed();
+
+        return link ? clientPortalClosedLabels(link) : null;
     });
     readonly lastInviteNote = computed(() => {
         const s = this.state();

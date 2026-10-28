@@ -37,4 +37,8 @@ export class PortalApiClient {
     post<T>(path: string, body: unknown = {}): Observable<T> {
         return this.http.post<T>(portalApiUrl(this.baseUrl, path), body);
     }
+
+    delete<T>(path: string, body?: unknown): Observable<T> {
+        return this.http.delete<T>(portalApiUrl(this.baseUrl, path), { body });
+    }
 }

@@ -32,7 +32,8 @@ const activeLink: ClientPortalLinkDto = {
     status: 'Active',
     accountEmail: 'ali@ornek.com',
     linkedAtUtc: '2026-10-01T10:00:00Z',
-    closedAtUtc: null
+    closedAtUtc: null,
+    closeReason: null
 };
 
 const pendingInvite: ClientPortalInviteDto = {
@@ -125,11 +126,20 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
     });
 
     it('bağ kapalı: kapatılma tarihi ve yeniden davet', () => {
-        access = { ...none, links: [{ ...activeLink, status: 'Closed', closedAtUtc: '2026-10-12T10:00:00Z' }] };
+        access = { ...none, links: [{ ...activeLink, status: 'Closed', closedAtUtc: '2026-10-12T10:00:00Z', closeReason: 'ClinicClosed' }] };
         create();
 
         expect(status()).toContain('Portal erişimi kapalı');
         expect(status()).toContain('kapatılma: 12.10.2026');
+        expect(q('client-portal-invite')?.disabled).toBe(false);
+    });
+
+    it('hasta sahibi hesabını sildi: gerekçe, silinme tarihi ve yeniden davet', () => {
+        access = { ...none, links: [{ ...activeLink, status: 'Closed', accountEmail: null, closedAtUtc: '2026-10-28T10:00:00Z', closeReason: 'OwnerAccountDeleted' }] };
+        create();
+
+        expect(status()).toContain('Hasta sahibi portal hesabını sildi');
+        expect(status()).toContain('silinme: 28.10.2026');
         expect(q('client-portal-invite')?.disabled).toBe(false);
     });
 

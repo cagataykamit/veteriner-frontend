@@ -13,7 +13,7 @@ import {
     VACCINATIONS_READ_CLAIM,
     VISITS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
-import { REPORT_SECTIONS } from '@/app/core/routing/panel-navigation';
+import { MANAGER_LEVEL_CLAIM, REPORT_SECTIONS } from '@/app/core/routing/panel-navigation';
 
 /** İzinlerden herhangi biri varsa geçer; yoksa `/notfound`. */
 function requireAnyClaim(claims: readonly string[]): CanActivateFn {
@@ -44,6 +44,12 @@ export default [
         canActivate: [requireAnyClaim(REPORT_SECTIONS.flatMap((s) => s.entries.flatMap((e) => e.claims ?? [])))],
         loadComponent: () =>
             import('@/app/features/reports/pages/reports-hub-page/reports-hub-page.component').then((m) => m.ReportsHubPageComponent)
+    },
+    {
+        path: 'performance',
+        canActivate: [requireAnyClaim([MANAGER_LEVEL_CLAIM])],
+        loadComponent: () =>
+            import('@/app/features/reports/performance/pages/performance-page/performance-page.component').then((m) => m.PerformancePageComponent)
     },
     {
         path: 'payments',

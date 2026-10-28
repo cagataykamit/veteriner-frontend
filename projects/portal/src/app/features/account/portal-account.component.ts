@@ -5,7 +5,7 @@ import { MessageModule } from 'primeng/message';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { portalErrorMessage } from '@portal/app/core/errors/portal-errors';
 
-/** Hesabım: oturum bilgisi, klinik değiştirme, çıkış ve tüm cihazlardan çıkış (sözleşme §5.7). */
+/** Hesabım: oturum bilgisi, klinik değiştirme, çıkış, tüm cihazlardan çıkış (sözleşme §5.7) ve hesap silmeye geçiş (§5.10). */
 @Component({
     selector: 'portal-account',
     standalone: true,
@@ -43,6 +43,12 @@ import { portalErrorMessage } from '@portal/app/core/errors/portal-errors';
                         <button pButton type="button" severity="danger" [outlined]="true" (click)="confirmAll.set(true)">Tüm cihazlardan çıkış yap</button>
                     </div>
                 }
+            </section>
+
+            <section class="portal-card portal-stack" aria-labelledby="account-delete-title">
+                <h2 id="account-delete-title" class="portal-subtitle">Hesabı sil</h2>
+                <p class="portal-muted">Portal hesabınızı kalıcı olarak silebilirsiniz. Klinikteki kayıtlarınız silinmez.</p>
+                <a class="portal-link-button" routerLink="/account/delete">Hesabımı silmek istiyorum</a>
             </section>
         </div>
     `

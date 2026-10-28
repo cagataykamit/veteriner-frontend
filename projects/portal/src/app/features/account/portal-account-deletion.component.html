@@ -1,0 +1,94 @@
+<div class="portal-stack">
+    <a class="portal-action-link" routerLink="/account"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Hesabım</a>
+    <h1 class="portal-title">Hesabı sil</h1>
+
+    <section class="portal-card portal-stack" aria-labelledby="deletion-what-title">
+        <h2 id="deletion-what-title" class="portal-subtitle">Silinecekler</h2>
+        <ul class="portal-bullets">
+            <li>E-posta adresiniz, parolanız ve adınız</li>
+            <li>Bu hesabın tüm oturumları; tüm cihazlarda çıkış yapılır</li>
+            <li>Kliniklerle portal bağlantılarınız; portaldan hiçbir kliniğin bilgilerini göremezsiniz</li>
+        </ul>
+        <h2 class="portal-subtitle">Kalanlar</h2>
+        <ul class="portal-bullets">
+            <li>Klinikteki hayvan, muayene, aşı ve ödeme kayıtları. Bunlar kliniğin sorumluluğundadır ve bu işlemle silinmez.</li>
+            <li>Kabul ettiğiniz belgelerin kaydı; kimlik bilgisi taşımaz, ispat için saklanır.</li>
+        </ul>
+        <p class="portal-muted">Bu işlem geri alınamaz. Portalı yeniden kullanmak isterseniz kliniğinizden yeni davet isteyebilirsiniz.</p>
+    </section>
+
+    @if (clinics().length > 0) {
+        <section class="portal-card portal-stack" aria-labelledby="deletion-clinics-title">
+            <h2 id="deletion-clinics-title" class="portal-subtitle">Klinikteki verileriniz için</h2>
+            <p class="portal-muted">Klinikteki kayıtlarınızla ilgili talepleriniz için kliniğinize başvurun.</p>
+            @for (clinic of clinics(); track clinic.linkId) {
+                <div class="portal-stack" data-testid="deletion-clinic">
+                    <p class="portal-row-title">{{ clinic.name }}</p>
+                    @if (clinic.phoneHref; as href) {
+                        <a class="portal-link-button" [href]="href">{{ clinic.phone }}</a>
+                    }
+                    @if (clinic.email; as email) {
+                        <a class="portal-link-button" [href]="'mailto:' + email">{{ email }}</a>
+                    }
+                </div>
+            }
+        </section>
+    }
+
+    <section class="portal-card portal-stack" aria-labelledby="deletion-confirm-title">
+        <h2 id="deletion-confirm-title" class="portal-subtitle">Onay</h2>
+        @if (error(); as message) {
+            <p-message severity="error" role="alert">{{ message }}</p-message>
+        }
+
+        @switch (step()) {
+            @case ('info') {
+                <p class="portal-muted">Silmeyi onaylamak için e-posta adresinize 6 haneli kod göndereceğiz.</p>
+                <div class="portal-actions">
+                    <button pButton type="button" severity="danger" [outlined]="true" [disabled]="busy()" (click)="requestCode()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Onay kodu gönder</button>
+                    <a class="portal-link-button" routerLink="/account">Vazgeç</a>
+                </div>
+            }
+            @case ('confirm') {
+                <p-message severity="info" role="status">{{ codeSentMessage }}</p-message>
+                <form class="portal-stack" [formGroup]="form" (ngSubmit)="deleteAccount()" novalidate>
+                    <div class="portal-field">
+                        <label for="deletion-code">Onay kodu</label>
+                        <input
+                            pInputText
+                            id="deletion-code"
+                            type="text"
+                            formControlName="code"
+                            inputmode="numeric"
+                            autocomplete="one-time-code"
+                            maxlength="7"
+                            [attr.aria-invalid]="!!codeError()"
+                            [attr.aria-describedby]="codeError() ? 'deletion-code-error' : null"
+                        />
+                        @if (codeError(); as message) {
+                            <p id="deletion-code-error" class="portal-field-error">{{ message }}</p>
+                        }
+                    </div>
+                    <label class="portal-check">
+                        <input type="checkbox" formControlName="understood" [attr.aria-invalid]="understoodError()" />
+                        <span>Hesabımın silineceğini ve bu işlemin geri alınamayacağını anlıyorum.</span>
+                    </label>
+                    @if (understoodError()) {
+                        <p class="portal-field-error">Devam etmek için onay kutusunu işaretleyin.</p>
+                    }
+                    <div class="portal-actions">
+                        <button pButton type="submit" severity="danger" [disabled]="busy()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Hesabımı kalıcı olarak sil</button>
+                        <button type="button" class="portal-link-button" [disabled]="!resend.canSend() || busy()" (click)="requestCode()">
+                            @if (resend.canSend()) {
+                                Kodu tekrar gönder
+                            } @else {
+                                Kodu tekrar gönder ({{ resend.remaining() }} sn)
+                            }
+                        </button>
+                        <a class="portal-link-button" routerLink="/account">Vazgeç</a>
+                    </div>
+                </form>
+            }
+        }
+    </section>
+</div>

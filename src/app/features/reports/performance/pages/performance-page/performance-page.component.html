@@ -1,0 +1,139 @@
+<app-page-header title="İşletme performansı" description="Dönemin cirosu, tahsilatı ve iş hacmi; önceki dönemle karşılaştırma." [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" />
+
+<div class="card mb-4">
+    <p class="text-sm text-muted-color m-0 mb-4">Sayılar panelde seçili klinik için, ilgili raporlarla aynı hesapla gelir. Bir karta tıklayarak ayrıntı raporunu açabilirsiniz.</p>
+    <div class="flex flex-wrap items-end gap-3">
+        <app-filter-field label="Dönem" labelId="perfPresetLabel" width="select">
+            <p-select ariaLabelledBy="perfPresetLabel" inputId="perfPreset" [options]="presetOptions" optionLabel="label" optionValue="value" [ngModel]="preset()" (ngModelChange)="selectPreset($event)" class="w-full" />
+        </app-filter-field>
+        <app-filter-field label="Başlangıç" labelFor="perfFrom" width="date">
+            <app-date-input inputId="perfFrom" type="date" min="1900-01-01" [ngModel]="from()" (ngModelChange)="setFrom($event)" />
+        </app-filter-field>
+        <app-filter-field label="Bitiş" labelFor="perfTo" width="date">
+            <app-date-input inputId="perfTo" type="date" min="1900-01-01" [ngModel]="to()" (ngModelChange)="setTo($event)" />
+        </app-filter-field>
+        <label class="flex items-center gap-2 text-sm pb-2" for="perfCompare">
+            <p-toggleswitch inputId="perfCompare" [ngModel]="compare()" (ngModelChange)="setCompare($event)" />
+            Önceki dönemle karşılaştır
+        </label>
+    </div>
+</div>
+
+@if (error(); as message) {
+    <div class="card mb-4">
+        <p class="text-red-500 m-0" role="alert">{{ message }}</p>
+        <button pButton type="button" class="mt-3" size="small" severity="secondary" (click)="load()"><i class="p-button-icon pi pi-refresh"></i>Tekrar dene</button>
+    </div>
+} @else if (loading() && !data()) {
+    <div class="card mb-4"><p class="text-muted-color m-0" role="status">Yükleniyor…</p></div>
+} @else if (data(); as d) {
+    @if (d.previous; as prev) {
+        <p class="text-sm text-muted-color mt-0 mb-3" data-testid="perf-previous-period">Karşılaştırılan dönem: {{ displayDate(prev.from) }} – {{ displayDate(prev.to) }}</p>
+    }
+
+    @if (isEmpty()) {
+        <div class="card mb-4" data-testid="perf-empty">
+            <p class="m-0">Bu dönemde ücret, tahsilat, muayene ya da tamamlanan randevu yok.</p>
+            <p class="text-muted-color text-sm mt-2 mb-0">Ücretler muayeneden ve satıştan oluşur; dönemi değiştirerek önceki aylara bakabilirsiniz.</p>
+        </div>
+    }
+
+    <div class="grid grid-cols-12 gap-4 mb-4" [class.opacity-60]="loading()">
+        @for (kpi of kpis(); track kpi.key) {
+            <a class="col-span-12 sm:col-span-6 xl:col-span-4 no-underline" [routerLink]="kpi.route" [attr.data-testid]="'perf-kpi-' + kpi.key">
+                <div class="card mb-0 h-full hover:border-primary transition-colors">
+                    <span class="block text-muted-color font-medium mb-3">{{ kpi.label }} <i class="pi pi-info-circle text-xs ml-1" [attr.title]="kpi.hint" [attr.aria-label]="kpi.hint"></i></span>
+                    <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ kpi.value }}</div>
+                    @if (kpi.deltaText) {
+                        <div
+                            class="text-sm mt-2"
+                            [class.text-green-600]="kpi.delta?.direction === 'up'"
+                            [class.text-red-500]="kpi.delta?.direction === 'down'"
+                            [class.text-muted-color]="!kpi.delta || kpi.delta.direction === 'flat'"
+                        >
+                            @if (kpi.delta?.direction === 'up') {
+                                <i class="pi pi-arrow-up text-xs" aria-hidden="true"></i>
+                            } @else if (kpi.delta?.direction === 'down') {
+                                <i class="pi pi-arrow-down text-xs" aria-hidden="true"></i>
+                            }
+                            {{ kpi.deltaText }}
+                        </div>
+                    }
+                </div>
+            </a>
+        }
+    </div>
+
+    @if (collectionRatio(); as ratio) {
+        <p class="text-sm text-muted-color mt-0 mb-4" data-testid="perf-collection-ratio">
+            Tahsilat / ciro: <span class="font-medium text-color">{{ ratio }}</span>
+            <i class="pi pi-info-circle text-xs ml-1" title="Önceki dönemin ücretlerine yapılan ödemeler de tahsilata girer; bu yüzden %100'ü geçebilir." aria-label="Önceki dönemin ücretlerine yapılan ödemeler de tahsilata girer; bu yüzden %100'ü geçebilir."></i>
+        </p>
+    }
+
+    <div class="grid grid-cols-12 gap-4">
+        @if (d.current.cash) {
+            <div class="col-span-12 xl:col-span-8">
+                <div class="card mb-0 h-full" data-testid="perf-trend">
+                    <h5 class="mt-0 mb-4">Günlük net tahsilat</h5>
+                    <div class="flex items-end gap-px h-40" role="img" aria-label="Günlük net tahsilat sütun grafiği">
+                        @for (day of trend(); track day.date) {
+                            <div class="flex-1 h-full flex items-end" [attr.title]="day.title">
+                                <div class="w-full rounded-t bg-primary" [style.height.%]="day.height" [style.min-height.px]="day.height > 0 ? 2 : 0"></div>
+                            </div>
+                        }
+                    </div>
+                    <div class="flex justify-between text-xs text-muted-color mt-2"><span>{{ displayDate(d.current.from) }}</span><span>{{ displayDate(d.current.to) }}</span></div>
+                </div>
+            </div>
+            <div class="col-span-12 xl:col-span-4">
+                <div class="card mb-0 h-full" data-testid="perf-methods">
+                    <h5 class="mt-0 mb-4">Ödeme türüne göre</h5>
+                    @for (m of methods(); track m.label) {
+                        <div class="mb-3">
+                            <div class="flex justify-between text-sm mb-1"><span>{{ m.label }}</span><span class="font-medium">{{ m.value }}</span></div>
+                            <div class="h-2 rounded bg-surface-200 dark:bg-surface-700"><div class="h-2 rounded bg-primary" [style.width.%]="m.width"></div></div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (appointments(); as a) {
+            <div class="col-span-12 lg:col-span-6">
+                <div class="card mb-0 h-full" data-testid="perf-appointments">
+                    <h5 class="mt-0 mb-4">Randevular</h5>
+                    <dl class="grid grid-cols-2 gap-x-4 gap-y-2 m-0 text-sm">
+                        <dt class="text-muted-color">Toplam</dt><dd class="m-0 font-medium">{{ a.total }}</dd>
+                        <dt class="text-muted-color">Tamamlandı</dt><dd class="m-0">{{ a.counts.completed }}</dd>
+                        <dt class="text-muted-color">Planlı</dt><dd class="m-0">{{ a.counts.scheduled }}</dd>
+                        <dt class="text-muted-color">İptal</dt><dd class="m-0">{{ a.counts.cancelled }} ({{ formatPercent(a.cancelRate) }})</dd>
+                        <dt class="text-muted-color">Gelmedi</dt><dd class="m-0">{{ a.counts.noShow }} ({{ formatPercent(a.noShowRate) }})</dd>
+                    </dl>
+                </div>
+            </div>
+        }
+
+        @if (d.current.cash) {
+            <div class="col-span-12 lg:col-span-6">
+                <div class="card mb-0 h-full" data-testid="perf-users">
+                    <h5 class="mt-0 mb-4">Kullanıcıya göre tahsilat</h5>
+                    @if (users().length === 0) {
+                        <p class="text-muted-color text-sm m-0">Bu dönemde tahsilat yok.</p>
+                    } @else {
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-muted-color"><th class="font-medium pb-2">Kullanıcı</th><th class="font-medium pb-2 text-right">Tahsilat</th><th class="font-medium pb-2 text-right">Net tutar</th></tr>
+                            </thead>
+                            <tbody>
+                                @for (u of users(); track $index) {
+                                    <tr class="border-t border-surface-200 dark:border-surface-700"><td class="py-2">{{ u.name }}</td><td class="py-2 text-right">{{ u.count }}</td><td class="py-2 text-right">{{ u.value }}</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}

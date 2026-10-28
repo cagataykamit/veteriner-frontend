@@ -16,6 +16,7 @@ export const PORTAL_ERROR_CODES = {
     legalVersionOutdated: 'LegalAcceptances.VersionOutdated',
     linkNotFound: 'Portal.Links.NotFound',
     petNotFound: 'Portal.Pets.NotFound',
+    deletionCodeInvalid: 'Portal.Account.DeletionCodeInvalid',
     validation: 'Validation.FluentValidation'
 } as const;
 
@@ -33,6 +34,7 @@ export const PORTAL_ERROR_MESSAGES: Readonly<Record<string, string>> = {
     [C.legalVersionOutdated]: 'Belgelerin yeni bir sürümü yayımlandı. Güncel sürümü okuyup yeniden onaylayın.',
     [C.linkNotFound]: 'Bu kliniğe erişiminiz kapatılmış ya da bulunamadı.',
     [C.petNotFound]: 'Hayvan kaydı bulunamadı.',
+    [C.deletionCodeInvalid]: 'Onay kodu doğrulanamadı. Kod yanlış ya da süresi dolmuş olabilir; yeni kod isteyip tekrar deneyin.',
     [C.validation]: 'Girdiğiniz bilgileri kontrol edin.'
 };
 
