@@ -131,6 +131,7 @@ describe('SubscriptionPageComponent', () => {
             startCheckout: vi.fn().mockName('SubscriptionsService.startCheckout'),
             getCheckout: vi.fn().mockName('SubscriptionsService.getCheckout'),
             finalizeCheckout: vi.fn().mockName('SubscriptionsService.finalizeCheckout'),
+            cancelCheckout: vi.fn().mockName('SubscriptionsService.cancelCheckout'),
             scheduleDowngrade: vi.fn().mockName('SubscriptionsService.scheduleDowngrade'),
             cancelPendingPlanChange: vi.fn().mockName('SubscriptionsService.cancelPendingPlanChange')
         } as unknown as MockedObject<SubscriptionsService>;
@@ -171,6 +172,12 @@ describe('SubscriptionPageComponent', () => {
             render();
 
             expect(text()).toContain('Plan listesi bulunamadı.');
+        });
+
+        it('fiyatı talep üzerine olan plan "İletişime geçin" gösterir', () => {
+            render();
+
+            expect(text()).toContain('İletişime geçin');
         });
 
         it('ilk yüklemede özet önbelleği atlanmaz ve salt okunur bağlamına uygulanır', () => {
@@ -403,14 +410,25 @@ describe('SubscriptionPageComponent', () => {
             expect(buttonLabels().filter((l) => l === 'Durumu yenile').length).toBeGreaterThan(0);
         });
 
-        it('iptal dönüşünde uyarı bandı ve oturum yeniden yüklenir', () => {
+        it('iptal dönüşünde oturum kapatılır; eski ödeme sayfasına devam önerilmez', () => {
             queryParams = { session_id: 'cs-9', status: 'cancel' };
-            service.getCheckout.mockReturnValue(of(session({ checkoutSessionId: 'cs-9' })));
+            service.cancelCheckout.mockReturnValue(of(undefined));
             render();
 
             expect(text()).toContain('Ödeme sayfasından ayrıldınız veya işlemi iptal ettiniz.');
-            expect(service.getCheckout).toHaveBeenCalledWith('cs-9');
-            expect(buttonLabels()).toContain('Ödemeye devam et');
+            expect(text()).toContain('Ödeme alınmadı. Ödemeyi yeniden başlatabilirsiniz.');
+            expect(service.cancelCheckout).toHaveBeenCalledWith('cs-9');
+            expect(service.getCheckout).not.toHaveBeenCalled();
+            expect(buttonLabels()).not.toContain('Ödemeye devam et');
+        });
+
+        it('iptal dönüşünde oturum kapatılamasa da eski sayfaya devam önerilmez', () => {
+            queryParams = { session_id: 'cs-9', status: 'cancel' };
+            service.cancelCheckout.mockReturnValue(throwError(() => new Error('ağ')));
+            render();
+
+            expect(service.cancelCheckout).toHaveBeenCalledWith('cs-9');
+            expect(buttonLabels()).not.toContain('Ödemeye devam et');
         });
     });
 });

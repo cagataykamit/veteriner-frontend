@@ -105,6 +105,20 @@ export class SubscriptionsService {
             );
     }
 
+    /** Sağlayıcı sayfasında vazgeçilen oturumu kapatır; sonraki başlatma yeni ödeme sayfası alır. Kapalı oturumda da başarılıdır. */
+    cancelCheckout(checkoutSessionId: string): Observable<void> {
+        const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
+        if (!tenantId) {
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+        }
+
+        return this.api.post<unknown>(ApiEndpoints.tenants.cancelSubscriptionCheckout(tenantId, checkoutSessionId), {}).pipe(
+            map(() => undefined),
+            catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Ödeme oturumu kapatılamadı.'))))
+        );
+    }
+
     scheduleDowngrade(targetPlanCode: string, reason?: string | null): Observable<SubscriptionSummaryVm> {
         const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
 
