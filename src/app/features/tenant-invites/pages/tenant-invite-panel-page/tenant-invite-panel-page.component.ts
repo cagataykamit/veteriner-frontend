@@ -94,7 +94,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             @if (form.controls.expiresAtLocal.hasError('dateYearInvalid') && form.controls.expiresAtLocal.touched) {
                                 <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                             }
-                            <small class="text-muted-color">Boş bırakılırsa backend varsayılanını kullanır.</small>
+                            <small class="text-muted-color">Boş bırakılırsa varsayılan süre uygulanır; son geçerlilik davet oluşunca gösterilir.</small>
                         </div>
                     </div>
 
@@ -131,10 +131,12 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         }
                     </div>
                     <dl class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4 mb-0 text-sm">
-                        <div><span class="text-muted-color">Davet ID:</span> {{ created.inviteId }}</div>
                         <div><span class="text-muted-color">E-posta:</span> {{ created.email }}</div>
-                        <div><span class="text-muted-color">Klinik ID:</span> {{ created.clinicId }}</div>
+                        <div><span class="text-muted-color">Klinik:</span> {{ lastCreatedClinicName() }}</div>
                     </dl>
+                    <p class="text-sm text-muted-color mt-3 mb-0">
+                        Daveti iptal etmek veya yeniden göndermek için <a [routerLink]="['/panel/settings/invites', created.inviteId]" class="text-primary">davet ayrıntısını</a> açın.
+                    </p>
                 </div>
             }
 
@@ -152,11 +154,6 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     </ul>
                 </div>
             }
-
-            <div class="card">
-                <h5 class="mt-0 mb-2">İptal / yeniden gönderim</h5>
-                <p class="text-sm text-muted-color m-0">Daveti geri çekme veya e-postayı yeniden gönderme bu sürümde yok; ileri fazda backend uçları eklendiğinde buraya bağlanabilir.</p>
-            </div>
         }
     `
 })
@@ -190,6 +187,12 @@ export class TenantInvitePanelPageComponent implements OnInit {
         const t = this.lastCreated()?.token?.trim();
 
         return t ? buildPublicJoinInviteUrl(t) : '';
+    });
+
+    readonly lastCreatedClinicName = computed(() => {
+        const id = this.lastCreated()?.clinicId;
+
+        return this.clinics().find((c) => c.id === id)?.name ?? '—';
     });
 
     readonly form = this.fb.nonNullable.group({
