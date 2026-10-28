@@ -56,6 +56,7 @@ const session = (over: Partial<SubscriptionCheckoutSessionVm> = {}): Subscriptio
     chargeCurrencyCode: null,
     prorationRatio: null,
     billingPeriod: 'Monthly',
+    duplicatePaymentRefund: false,
     ...over
 });
 

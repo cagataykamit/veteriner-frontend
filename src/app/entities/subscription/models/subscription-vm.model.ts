@@ -74,4 +74,6 @@ export interface SubscriptionCheckoutSessionVm {
     chargeCurrencyCode: string | null;
     prorationRatio: number | null;
     billingPeriod: SubscriptionBillingPeriod;
+    /** BILL-005: ödeme aynı denemede ikinci ödeme sayıldı; paket açılmadı, iade ediliyor ya da edildi. */
+    duplicatePaymentRefund: boolean;
 }

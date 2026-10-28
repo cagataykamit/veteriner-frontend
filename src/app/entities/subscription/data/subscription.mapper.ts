@@ -234,6 +234,7 @@ export function mapSubscriptionCheckoutSessionDtoToVm(dto: SubscriptionCheckoutS
         proratedChargeMinor: toNullableNumber(dto.proratedChargeMinor),
         chargeCurrencyCode: trimOrNull(dto.chargeCurrencyCode),
         prorationRatio: toNullableDecimal(dto.prorationRatio),
-        billingPeriod: parseBillingPeriod(dto.billingPeriod)
+        billingPeriod: parseBillingPeriod(dto.billingPeriod),
+        duplicatePaymentRefund: trimOrNull(dto.refundStatus) !== null
     };
 }
