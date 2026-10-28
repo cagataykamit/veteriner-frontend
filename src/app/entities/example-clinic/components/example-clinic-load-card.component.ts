@@ -21,7 +21,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     imports: [ButtonModule, DialogModule, RouterLink, ExampleClinicSummaryComponent],
     // Gösterilecek bir şey yoksa ızgarada boş satır (aralık) bırakmasın.
     host: { '[class.hidden]': '!visible()' },
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (visible()) {
             <div class="card mb-0" data-testid="example-clinic-load-card">
