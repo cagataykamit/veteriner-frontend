@@ -13,7 +13,7 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
     selector: 'app-administration-void-dialog',
     standalone: true,
     imports: [FormsModule, RadioButtonModule, ReasonConfirmDialogComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-reason-confirm-dialog
             [(visible)]="visible"
