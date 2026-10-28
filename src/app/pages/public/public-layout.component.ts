@@ -14,7 +14,7 @@ export const PUBLIC_SITE_ROOT_CLASS = 'public-site-root';
     selector: 'app-public-layout',
     standalone: true,
     imports: [RouterOutlet, PublicTopbarComponent, PublicFooterComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="public-page flex min-h-screen flex-col overflow-x-hidden bg-surface-0 dark:bg-surface-950">
             <app-public-topbar />

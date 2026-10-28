@@ -15,7 +15,7 @@ import { LegalAcceptanceGateComponent } from '@/app/features/legal-acceptance/co
     selector: 'app-layout',
     standalone: true,
     imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter, AppReadOnlyBannerComponent, AppSectionTabsComponent, LegalAcceptanceGateComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `<div class="layout-wrapper" [ngClass]="containerClass()">
         <div #primePanelOverlayHost class="layout-prime-panel-overlay-host"></div>
         <app-topbar></app-topbar>
