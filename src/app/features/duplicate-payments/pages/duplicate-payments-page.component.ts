@@ -11,7 +11,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { AppStatusTagComponent, type StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
@@ -75,7 +75,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
                                     <td>{{ planText(row) }}</td>
                                     <td class="text-right whitespace-nowrap">{{ amountText(row) }}</td>
                                     <td class="whitespace-nowrap">{{ dateTime(row.detectedAtUtc) }}</td>
-                                    <td><app-status-tag [label]="statusLabels[row.refundStatus] ?? row.refundStatus" [severity]="statusSeverities[row.refundStatus] ?? 'secondary'" /></td>
+                                    <td><app-status-tag [label]="statusLabel(row)" [severity]="statusSeverity(row)" /></td>
                                     <td class="text-right">{{ row.refundAttemptCount }}</td>
                                     <td>{{ row.refundFailureReason || '—' }}</td>
                                     <td class="text-right whitespace-nowrap">
@@ -105,8 +105,6 @@ export class DuplicatePaymentsPageComponent implements OnInit {
     private readonly confirmation = inject(ConfirmationService);
     private readonly messages = inject(MessageService);
 
-    readonly statusLabels = REFUND_STATUS_LABELS;
-    readonly statusSeverities = REFUND_STATUS_SEVERITIES;
     readonly rows = signal<DuplicatePaymentDto[]>([]);
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -148,6 +146,14 @@ export class DuplicatePaymentsPageComponent implements OnInit {
 
     planText(row: DuplicatePaymentDto): string {
         return `${subscriptionPlanLabel(row.targetPlanCode, null)} · ${SUBSCRIPTION_BILLING_PERIOD_LABELS[row.billingPeriod] ?? row.billingPeriod}`;
+    }
+
+    statusLabel(row: DuplicatePaymentDto): string {
+        return REFUND_STATUS_LABELS[row.refundStatus] ?? row.refundStatus;
+    }
+
+    statusSeverity(row: DuplicatePaymentDto): StatusTagSeverity {
+        return REFUND_STATUS_SEVERITIES[row.refundStatus] ?? 'secondary';
     }
 
     amountText(row: DuplicatePaymentDto): string {
