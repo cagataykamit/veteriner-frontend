@@ -16,7 +16,7 @@ export const SEARCH_DEBOUNCE_MS = 350;
     selector: 'app-search-input',
     standalone: true,
     imports: [FormsModule, InputTextModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="relative w-full">
             <input
