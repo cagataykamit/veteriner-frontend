@@ -66,7 +66,7 @@ interface ConvertedRow {
         MoneyPipe,
         TrDateTimePipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (hasCreateClaim && ro.mutationBlocked()) {
             <p class="text-sm text-muted-color mt-0 mb-4" role="note">Abonelik salt okunur olduğu için kalemler yalnız görüntülenir.</p>
