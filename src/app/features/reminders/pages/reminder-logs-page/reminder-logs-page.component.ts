@@ -8,10 +8,8 @@ import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Paginator } from 'primeng/paginator';
-import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
-import type { TableLazyLoadEvent } from 'primeng/table';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { RemindersService } from '@/app/features/reminders/services/reminders.service';
 import type { ReminderLogItemVm } from '@/app/features/reminders/models/reminder-log-vm.model';
@@ -23,6 +21,8 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { dateOnlyInputToIstanbulStartUtcIso, dateOnlyInputToIstanbulEndUtcIso } from '@/app/shared/utils/date.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { ListPageState } from '@/app/shared/list/list-page-state';
+import { map } from 'rxjs';
 
 type ClinicSelectOption = { label: string; value: string };
 type ReminderLogsListState = {
@@ -115,7 +115,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                         }
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
-                            <p-table [value]="displayedRows()" [paginator]="true" [rows]="pageSize()" [totalRecords]="totalItems()" [lazy]="true" [first]="first()" (onLazyLoad)="onTableLazyLoad($event)" [tableStyle]="{ 'min-width': '78rem' }">
+                            <p-table [value]="displayedRows()" [paginator]="true" [rows]="pageSize()" [totalRecords]="totalItems()" [lazy]="true" [first]="first()" (onLazyLoad)="list.onTableLazyLoad($event)" [tableStyle]="{ 'min-width': '78rem' }">
                                 <ng-template #header>
                                     <tr>
                                         <th>Tarih</th>
@@ -181,7 +181,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                         </div>
 
                         <div class="lg:hidden mt-4">
-                            <p-paginator [rows]="pageSize()" [totalRecords]="totalItems()" [first]="first()" [rowsPerPageOptions]="[20, 50]" (onPageChange)="onMobilePageChange($event)" />
+                            <p-paginator [rows]="pageSize()" [totalRecords]="totalItems()" [first]="first()" [rowsPerPageOptions]="rowsPerPageOptions" (onPageChange)="list.onMobilePageChange($event)" />
                         </div>
                     }
                 </div>
@@ -194,13 +194,60 @@ export class ReminderLogsPageComponent implements OnInit {
     private readonly reminders = inject(RemindersService);
     private readonly clinics = inject(ClinicsService);
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
-    readonly rows = signal<ReminderLogItemVm[]>([]);
-    readonly totalItems = signal(0);
-    readonly pageSize = signal(20);
-    readonly first = signal(0);
-    readonly currentPage = signal(1);
+    readonly list = new ListPageState<ReminderLogItemVm>({
+        fetch: (page, pageSize) =>
+            this.reminders
+                .getLogs({
+                    page,
+                    pageSize,
+                    reminderType: this.activeReminderType() || undefined,
+                    status: this.activeStatus() || undefined,
+                    clinicId: this.activeClinicId().trim() || undefined,
+                    fromUtc: this.activeFromUtc(),
+                    toUtc: this.activeToUtc()
+                })
+                .pipe(map((res) => ({ ...res, items: this.enrichRowsWithClinicDisplay(res.items) }))),
+        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeReminderType()}|${this.activeStatus()}|${this.activeClinicId().trim()}|${this.activeFromUtc() ?? ''}|${this.activeToUtc() ?? ''}`,
+        errorMessage: (e) => panelHttpFailureMessage(e, 'Hatırlatma geçmişi yüklenemedi.'),
+        pageSize: 20,
+        rowsPerPageOptions: [20, 50],
+        persist: {
+            key: REMINDER_LOGS_LIST_STATE_KEY,
+            save: (): Omit<ReminderLogsListState, 'page' | 'pageSize'> => ({
+                reminderType: this.activeReminderType(),
+                status: this.activeStatus(),
+                clinicId: this.activeClinicId(),
+                fromDateInput: this.fromDateInput,
+                toDateInput: this.toDateInput,
+                fromUtc: this.activeFromUtc() ?? null,
+                toUtc: this.activeToUtc() ?? null
+            }),
+            restore: (state) => {
+                const parsed = state as Partial<ReminderLogsListState>;
+
+                this.reminderTypeFilter = typeof parsed.reminderType === 'string' ? parsed.reminderType : '';
+                this.statusFilter = typeof parsed.status === 'string' ? parsed.status : '';
+                this.clinicFilter = typeof parsed.clinicId === 'string' ? parsed.clinicId : '';
+                this.fromDateInput = typeof parsed.fromDateInput === 'string' ? parsed.fromDateInput : '';
+                this.toDateInput = typeof parsed.toDateInput === 'string' ? parsed.toDateInput : '';
+
+                this.activeReminderType.set(this.reminderTypeFilter);
+                this.activeStatus.set(this.statusFilter);
+                this.activeClinicId.set(this.clinicFilter);
+                this.activeFromUtc.set(typeof parsed.fromUtc === 'string' && parsed.fromUtc.trim() ? parsed.fromUtc : undefined);
+                this.activeToUtc.set(typeof parsed.toUtc === 'string' && parsed.toUtc.trim() ? parsed.toUtc : undefined);
+            }
+        }
+    });
+
+    readonly loading = this.list.loading;
+    readonly error = this.list.error;
+    readonly rows = this.list.items;
+    readonly totalItems = this.list.totalItems;
+    readonly pageSize = this.list.pageSize;
+    readonly first = this.list.first;
+    readonly currentPage = this.list.currentPage;
+    readonly rowsPerPageOptions = this.list.rowsPerPageOptions;
 
     reminderTypeFilter = '';
     statusFilter = '';
@@ -235,16 +282,9 @@ export class ReminderLogsPageComponent implements OnInit {
     readonly displayedRows = computed(() => this.rows());
     readonly hasActiveFilters = computed(() => !!this.activeReminderType().trim() || !!this.activeStatus().trim() || !!this.activeClinicId().trim() || !!this.activeFromUtc() || !!this.activeToUtc());
 
-    private suppressNextLazy = false;
-    private lastLoadKey = '';
-
     ngOnInit(): void {
-        this.suppressNextLazy = true;
-        const restored = this.restoreStateFromSessionStorage();
-
-        this.loadClinicOptions(() => {
-            this.loadFromServer(restored?.page ?? 1, restored?.pageSize ?? this.pageSize(), this.activeReminderType(), this.activeStatus(), this.activeClinicId(), this.activeFromUtc(), this.activeToUtc());
-        });
+        this.list.restore();
+        this.loadClinicOptions(() => this.list.startInitialLoad());
     }
 
     private loadClinicOptions(onLoaded: () => void): void {
@@ -259,7 +299,7 @@ export class ReminderLogsPageComponent implements OnInit {
                 if (activeClinicId && !list.some((c) => c.id === activeClinicId)) {
                     this.clinicFilter = '';
                     this.activeClinicId.set('');
-                    this.persistStateToSessionStorage(this.currentPage(), this.pageSize());
+                    this.list.persist(this.currentPage(), this.pageSize());
                 }
 
                 this.clinicsLoading.set(false);
@@ -294,12 +334,10 @@ export class ReminderLogsPageComponent implements OnInit {
         this.activeClinicId.set(this.clinicFilter?.trim() || '');
         this.activeFromUtc.set(fromUtc || undefined);
         this.activeToUtc.set(toUtc || undefined);
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.persistStateToSessionStorage(1, this.pageSize());
-        this.loadFromServer(1, this.pageSize(), this.activeReminderType(), this.activeStatus(), this.activeClinicId(), this.activeFromUtc(), this.activeToUtc());
+        this.list.loadFirstPage();
     }
 
+    /** "Temizle" süzgeç değişmemiş olsa da listeyi yeniden getirir. */
     clearFilters(): void {
         this.reminderTypeFilter = '';
         this.statusFilter = '';
@@ -311,40 +349,13 @@ export class ReminderLogsPageComponent implements OnInit {
         this.activeClinicId.set('');
         this.activeFromUtc.set(undefined);
         this.activeToUtc.set(undefined);
-        this.first.set(0);
-        this.currentPage.set(1);
-        this.clearStateFromSessionStorage();
-        this.lastLoadKey = '';
-        this.loadFromServer(1, this.pageSize(), '', '', '', undefined, undefined, true);
+        this.list.goToFirstPage();
+        this.list.clearPersisted();
+        this.list.reload();
     }
 
     reload(): void {
-        this.loadFromServer(this.currentPage(), this.pageSize(), this.activeReminderType(), this.activeStatus(), this.activeClinicId(), this.activeFromUtc(), this.activeToUtc(), true);
-    }
-
-    onTableLazyLoad(event: TableLazyLoadEvent): void {
-        if (this.suppressNextLazy) {
-            this.suppressNextLazy = false;
-
-            return;
-        }
-
-        const rows = event.rows ?? 20;
-        const first = event.first ?? 0;
-        const page = Math.floor(first / rows) + 1;
-
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeReminderType(), this.activeStatus(), this.activeClinicId(), this.activeFromUtc(), this.activeToUtc());
-    }
-
-    onMobilePageChange(state: PaginatorState): void {
-        const rows = state.rows ?? this.pageSize();
-        const first = state.first ?? 0;
-        const page = Math.floor(first / rows) + 1;
-
-        this.suppressNextLazy = true;
-        this.persistStateToSessionStorage(page, rows);
-        this.loadFromServer(page, rows, this.activeReminderType(), this.activeStatus(), this.activeClinicId(), this.activeFromUtc(), this.activeToUtc());
+        this.list.reload();
     }
 
     /** API `clinicName` veya `clinicId` → `ClinicsService` listesi ile gösterim adı; GUID gösterilmez. */
@@ -372,106 +383,6 @@ export class ReminderLogsPageComponent implements OnInit {
         const label = hit?.label?.trim();
 
         return label && label !== 'Tüm klinikler' ? label : '—';
-    }
-
-    private loadFromServer(page: number, pageSize: number, reminderType: string, status: string, clinicId: string, fromUtc: string | undefined, toUtc: string | undefined, force = false): void {
-        const cid = clinicId.trim();
-        const key = `${page}|${pageSize}|${reminderType}|${status}|${cid}|${fromUtc ?? ''}|${toUtc ?? ''}`;
-
-        if (!force && key === this.lastLoadKey) {
-            return;
-        }
-
-        this.lastLoadKey = key;
-        this.loading.set(true);
-        this.error.set(null);
-        this.reminders
-            .getLogs({
-                page,
-                pageSize,
-                reminderType: reminderType || undefined,
-                status: status || undefined,
-                clinicId: cid || undefined,
-                fromUtc,
-                toUtc
-            })
-            .subscribe({
-                next: (res) => {
-                    this.rows.set(this.enrichRowsWithClinicDisplay(res.items));
-                    this.totalItems.set(res.totalItems);
-                    this.pageSize.set(res.pageSize);
-                    this.currentPage.set(res.page);
-                    this.first.set((res.page - 1) * res.pageSize);
-                    this.persistStateToSessionStorage(res.page, res.pageSize);
-                    this.loading.set(false);
-                },
-                error: (e: Error) => {
-                    this.error.set(panelHttpFailureMessage(e, 'Hatırlatma geçmişi yüklenemedi.'));
-                    this.loading.set(false);
-                }
-            });
-    }
-
-    private restoreStateFromSessionStorage(): { page: number; pageSize: number } | null {
-        const raw = sessionStorage.getItem(REMINDER_LOGS_LIST_STATE_KEY);
-
-        if (!raw) {
-            return null;
-        }
-
-        try {
-            const parsed = JSON.parse(raw) as Partial<ReminderLogsListState>;
-            const page = Number(parsed.page);
-            const pageSize = Number(parsed.pageSize);
-
-            if (!Number.isFinite(page) || page < 1 || !Number.isFinite(pageSize) || pageSize < 1) {
-                sessionStorage.removeItem(REMINDER_LOGS_LIST_STATE_KEY);
-
-                return null;
-            }
-
-            this.reminderTypeFilter = typeof parsed.reminderType === 'string' ? parsed.reminderType : '';
-            this.statusFilter = typeof parsed.status === 'string' ? parsed.status : '';
-            this.clinicFilter = typeof parsed.clinicId === 'string' ? parsed.clinicId : '';
-            this.fromDateInput = typeof parsed.fromDateInput === 'string' ? parsed.fromDateInput : '';
-            this.toDateInput = typeof parsed.toDateInput === 'string' ? parsed.toDateInput : '';
-
-            this.activeReminderType.set(this.reminderTypeFilter);
-            this.activeStatus.set(this.statusFilter);
-            this.activeClinicId.set(this.clinicFilter);
-            this.activeFromUtc.set(typeof parsed.fromUtc === 'string' && parsed.fromUtc.trim() ? parsed.fromUtc : undefined);
-            this.activeToUtc.set(typeof parsed.toUtc === 'string' && parsed.toUtc.trim() ? parsed.toUtc : undefined);
-
-            this.pageSize.set(pageSize);
-            this.currentPage.set(page);
-            this.first.set((page - 1) * pageSize);
-
-            return { page, pageSize };
-        } catch {
-            sessionStorage.removeItem(REMINDER_LOGS_LIST_STATE_KEY);
-
-            return null;
-        }
-    }
-
-    private persistStateToSessionStorage(page: number, pageSize: number): void {
-        const state: ReminderLogsListState = {
-            reminderType: this.activeReminderType(),
-            status: this.activeStatus(),
-            clinicId: this.activeClinicId(),
-            fromDateInput: this.fromDateInput,
-            toDateInput: this.toDateInput,
-            fromUtc: this.activeFromUtc() ?? null,
-            toUtc: this.activeToUtc() ?? null,
-            page,
-            pageSize
-        };
-
-        sessionStorage.setItem(REMINDER_LOGS_LIST_STATE_KEY, JSON.stringify(state));
-    }
-
-    private clearStateFromSessionStorage(): void {
-        sessionStorage.removeItem(REMINDER_LOGS_LIST_STATE_KEY);
     }
 
     isReminderTypeActive(): boolean {
