@@ -24,7 +24,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
     selector: 'app-appointments-calendar-page',
     standalone: true,
     imports: [CommonModule, ButtonModule, AppListHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, AppStatusTagComponent, AppRowActionButtonComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card">
             <app-list-header class="mb-4" [title]="pageTitle()">
