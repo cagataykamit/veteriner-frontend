@@ -31,7 +31,7 @@ import { EMPTY, map, switchMap } from 'rxjs';
     selector: 'app-product-edit-page',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, ProductClassificationFieldsComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [categoryLink]="productId() ? ['/panel/products', productId()!] : ['/panel/products']" categoryLinkLabel="Ürün detayına dön" title="Ürünü düzenle" description="Ürün kartını güncelleyin." />
 

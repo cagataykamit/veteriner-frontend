@@ -33,7 +33,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
     selector: 'app-payment-edit-page',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (loading()) {
             <app-loading-state message="Ödeme düzenleme bilgileri yükleniyor…" />

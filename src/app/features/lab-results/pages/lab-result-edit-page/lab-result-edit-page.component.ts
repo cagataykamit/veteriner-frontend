@@ -50,7 +50,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         PetSearchComponent,
         DateInputComponent
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (loading()) {
             <app-loading-state message="Düzenleme bilgileri yükleniyor…" />

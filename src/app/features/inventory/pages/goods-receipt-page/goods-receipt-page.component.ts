@@ -34,7 +34,7 @@ const MONEY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximum
     selector: 'app-goods-receipt-page',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, AutoCompleteModule, DateInputComponent, AppListHeaderComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card">
             <app-list-header class="mb-4" title="Mal kabul" />

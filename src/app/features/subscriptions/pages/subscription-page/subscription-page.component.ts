@@ -49,7 +49,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         TrDateTimePipe
     ],
     providers: [MessageService, CheckoutFlowService, CheckoutReturnVerificationService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
         <app-page-header title="Abonelik" [description]="subscriptionHeaderDescription" />

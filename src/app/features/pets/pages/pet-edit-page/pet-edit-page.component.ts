@@ -53,7 +53,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         ClientSearchComponent,
         DateInputComponent
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (loading()) {
             <app-loading-state message="Hasta düzenleme bilgileri yükleniyor…" />

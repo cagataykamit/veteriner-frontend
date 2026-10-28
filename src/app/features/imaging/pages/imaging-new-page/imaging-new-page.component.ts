@@ -8,7 +8,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     selector: 'app-imaging-new-page',
     standalone: true,
     imports: [AppPageHeaderComponent, ImagingRecordFormComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/imaging" categoryLinkLabel="Listeye dön" title="Yeni görüntüleme" description="Röntgen, ultrason, klinik fotoğraf veya PDF raporu hastaya bağlayın." />
         <app-imaging-record-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />

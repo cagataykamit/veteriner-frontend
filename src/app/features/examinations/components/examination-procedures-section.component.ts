@@ -59,7 +59,7 @@ const ADD_ICON: Record<ProcedureKind, string> = {
         HospitalizationFormComponent,
         TrDateTimePipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card" data-testid="procedures-section">
             <h4 class="mt-0 mb-4 text-xl font-semibold">İşlemler</h4>

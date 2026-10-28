@@ -29,7 +29,7 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
     selector: 'app-patients-home-page',
     standalone: true,
     imports: [CommonModule, RouterLink, ButtonModule, AppListHeaderComponent, SearchInputComponent, VisitArrivalDialogComponent, VisitQuickRegistrationComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card">
             <app-list-header class="mb-4" title="Hastalar" />

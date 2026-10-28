@@ -51,7 +51,7 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
         TrDateTimePipe,
         TrTimePipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './dashboard-page.component.html'
 })
 export class DashboardPageComponent implements OnInit, AfterViewInit {

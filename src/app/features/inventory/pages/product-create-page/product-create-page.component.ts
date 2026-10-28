@@ -25,7 +25,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
     selector: 'app-product-create-page',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, ProductClassificationFieldsComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/products" categoryLinkLabel="Ürün listesine dön" title="Yeni ürün" description="Ürün kartı oluşturun." />
 

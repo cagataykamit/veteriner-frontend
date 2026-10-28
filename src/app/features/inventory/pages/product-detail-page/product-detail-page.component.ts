@@ -38,7 +38,7 @@ import { ConfirmationService } from 'primeng/api';
         ProductStockOperationDialogComponent
     ],
     providers: [ConfirmationService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (loading()) {
             <app-loading-state message="Ürün yükleniyor…" />

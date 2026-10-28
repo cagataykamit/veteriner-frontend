@@ -25,7 +25,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     standalone: true,
     imports: [CommonModule, RouterLink, ButtonModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppStatusTagComponent, TrDateTimePipe],
     providers: [MessageService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
         <app-page-header title="Davet detayı" description="Davet bilgileri (salt okunur).">

@@ -46,7 +46,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         ClinicTaxpayerSettingsSectionComponent
     ],
     providers: [MessageService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
         @if (loading()) {

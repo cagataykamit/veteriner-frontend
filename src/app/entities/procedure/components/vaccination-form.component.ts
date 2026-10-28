@@ -71,7 +71,7 @@ export interface VaccinationSavedEvent {
     selector: 'app-vaccination-form',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AdministrationBatchFieldComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-pet-alert-banner [petId]="form.controls.petId.value" />
 

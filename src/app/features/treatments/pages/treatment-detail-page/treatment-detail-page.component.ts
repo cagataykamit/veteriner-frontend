@@ -19,7 +19,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
     selector: 'app-treatment-detail-page',
     standalone: true,
     imports: [CommonModule, RouterLink, ButtonModule, AdministrationsSectionComponent, AppPageHeaderComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppErrorStateComponent, TrDatePipe, TrDateTimePipe],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Tedavi kaydedildi.</p>

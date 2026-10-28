@@ -8,7 +8,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     selector: 'app-prescription-new-page',
     standalone: true,
     imports: [AppPageHeaderComponent, PrescriptionFormComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/prescriptions" categoryLinkLabel="Reçete listesine dön" title="Yeni Reçete" description="Reçete kaydı oluşturun." />
         <app-prescription-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />

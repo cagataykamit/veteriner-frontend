@@ -50,7 +50,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         DateInputComponent,
         AppStatusTagComponent
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (loading()) {
             <app-loading-state message="Randevu düzenleme bilgileri yükleniyor…" />

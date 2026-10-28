@@ -16,7 +16,7 @@ import { buildPatientActions } from './patient-actions.utils';
     selector: 'app-patient-action-bar',
     standalone: true,
     imports: [CommonModule, RouterLink, ButtonModule, VisitArrivalDialogComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (actions().length > 0) {
             <div class="card mb-4 flex flex-wrap gap-2 items-center" [class]="sticky() ? 'sticky top-16 z-10 !py-3 shadow-sm' : ''" role="toolbar" aria-label="Hızlı eylemler" data-testid="patient-action-bar">

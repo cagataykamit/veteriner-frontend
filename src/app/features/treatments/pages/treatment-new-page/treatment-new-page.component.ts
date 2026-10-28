@@ -8,7 +8,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     selector: 'app-treatment-new-page',
     standalone: true,
     imports: [AppPageHeaderComponent, TreatmentFormComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/treatments" categoryLinkLabel="Tedavi listesine dön" title="Yeni Tedavi" description="Tedavi kaydı oluşturun." />
         <app-treatment-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />

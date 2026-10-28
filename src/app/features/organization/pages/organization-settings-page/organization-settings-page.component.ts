@@ -27,7 +27,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, OrganizationBillingProfileSectionComponent],
     providers: [MessageService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
 

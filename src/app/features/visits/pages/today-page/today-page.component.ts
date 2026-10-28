@@ -102,7 +102,7 @@ type TodayScope = 'mine' | 'all';
         PetAlertBadgesComponent
     ],
     providers: [MessageService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './today-page.component.html'
 })
 export class TodayPageComponent implements OnInit {

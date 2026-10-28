@@ -55,7 +55,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         DateInputComponent,
         PrescriptionItemsEditorComponent
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (loading()) {
             <app-loading-state message="Reçete düzenleme bilgileri yükleniyor…" />

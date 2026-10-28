@@ -34,7 +34,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     selector: 'app-product-stock-operation-dialog',
     standalone: true,
     imports: [ReactiveFormsModule, ButtonModule, DialogModule, SelectModule, SelectButtonModule, TextareaModule, StockBatchFieldsComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Stok işlemi" [modal]="true" [visible]="stockOperationDialogOpen()" (visibleChange)="onStockOperationDialogVisibleChange($event)" [style]="{ width: 'min(36rem, 95vw)' }" [draggable]="false">
             <form [formGroup]="stockOperationForm" (ngSubmit)="onStockOperationSubmit()" class="flex flex-col gap-4">

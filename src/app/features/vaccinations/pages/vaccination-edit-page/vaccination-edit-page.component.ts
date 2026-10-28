@@ -56,7 +56,7 @@ import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTime
         PetSearchComponent,
         DateInputComponent
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (loading()) {
             <app-loading-state message="Aşı düzenleme bilgileri yükleniyor…" />

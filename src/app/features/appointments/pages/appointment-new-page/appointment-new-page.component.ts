@@ -43,7 +43,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
     selector: 'app-appointment-new-page',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/appointments" categoryLinkLabel="Randevu listesine dön" title="Yeni Randevu" description="Randevu kaydı oluşturun." />
 

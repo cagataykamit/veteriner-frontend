@@ -8,7 +8,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     selector: 'app-hospitalization-new-page',
     standalone: true,
     imports: [AppPageHeaderComponent, HospitalizationFormComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/hospitalizations" categoryLinkLabel="Listeye dön" title="Yeni yatış" description="Yatış kaydı oluşturun." />
         <app-hospitalization-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />

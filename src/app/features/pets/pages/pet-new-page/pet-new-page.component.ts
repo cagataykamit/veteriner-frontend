@@ -48,7 +48,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         ClientSearchComponent,
         DateInputComponent
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hasta listesine dön" title="Yeni Hasta" description="Hasta kaydı oluşturun." />
 

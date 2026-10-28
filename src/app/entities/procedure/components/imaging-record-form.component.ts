@@ -33,7 +33,7 @@ import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-valida
     selector: 'app-imaging-record-form',
     standalone: true,
     imports: [ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, StoredFileUploadComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-pet-alert-banner [petId]="form.controls.petId.value" />
 

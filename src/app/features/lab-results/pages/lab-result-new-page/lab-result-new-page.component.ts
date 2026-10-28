@@ -8,7 +8,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     selector: 'app-lab-result-new-page',
     standalone: true,
     imports: [AppPageHeaderComponent, LabResultFormComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/lab-results" categoryLinkLabel="Listeye dön" title="Yeni lab istemi" description="Lab istemi oluşturun; sonuç henüz yoksa sonuç alanlarını boş bırakın, sonra girebilirsiniz." />
         <app-lab-result-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />

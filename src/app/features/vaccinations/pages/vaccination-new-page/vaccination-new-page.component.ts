@@ -8,7 +8,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     selector: 'app-vaccination-new-page',
     standalone: true,
     imports: [AppPageHeaderComponent, VaccinationFormComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/vaccinations" categoryLinkLabel="Aşı listesine dön" title="Yeni Aşı" description="Aşı kaydı oluşturun." />
         <app-vaccination-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />
