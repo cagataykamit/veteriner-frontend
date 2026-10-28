@@ -28,7 +28,7 @@ interface MenuSection {
     standalone: true,
     imports: [CommonModule, AppMenuitem, RouterModule],
     providers: [MenuFlyoutService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <ul class="layout-menu layout-menu-scroll">
             @for (section of scrollingSections(); track section.label ?? section.heading) {

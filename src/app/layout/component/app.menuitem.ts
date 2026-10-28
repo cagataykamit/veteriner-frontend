@@ -87,7 +87,7 @@ import { filter } from 'rxjs/operators';
         '(pointerenter)': 'onPointer($event, true)',
         '(pointerleave)': 'onPointer($event, false)'
     },
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     styles: [
         `
             .p-submenu-enter {
