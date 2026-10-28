@@ -16,7 +16,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     selector: 'app-product-stock-batches',
     standalone: true,
     imports: [TableModule, AppStatusTagComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="mb-6 last:mb-0" [attr.aria-label]="'Partiler: ' + clinicName()" data-testid="product-stock-batches">
             <h6 class="mt-0 mb-2 text-base font-semibold">{{ clinicName() }}</h6>

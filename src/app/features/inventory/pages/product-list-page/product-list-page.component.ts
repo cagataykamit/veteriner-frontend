@@ -59,7 +59,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
         AppRowActionButtonComponent
     ],
     providers: [ConfirmationService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card">
             <div class="flex flex-col gap-4">

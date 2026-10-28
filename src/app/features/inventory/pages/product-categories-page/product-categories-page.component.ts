@@ -66,7 +66,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
         AppRowActionButtonComponent
     ],
     providers: [ConfirmationService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Ürün kategorileri" description="Kategori oluşturun veya düzenleyin.">
             @if (canCreateCategories && !ro.mutationBlocked()) {

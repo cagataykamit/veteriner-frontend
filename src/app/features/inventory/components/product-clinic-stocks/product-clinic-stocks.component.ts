@@ -32,7 +32,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
             }
         `
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="col-span-12">
             <div class="card">
