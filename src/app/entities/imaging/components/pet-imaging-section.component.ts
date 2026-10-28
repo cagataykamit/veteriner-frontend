@@ -13,7 +13,7 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
     selector: 'app-pet-imaging-section',
     standalone: true,
     imports: [RouterLink, TrDatePipe],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="card mb-0" aria-labelledby="pet-imaging-title" data-testid="pet-imaging-section">
             <div class="flex items-center justify-between gap-2 mb-3">
