@@ -16,7 +16,7 @@ const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
     selector: 'app-sales-partner-form-dialog',
     standalone: true,
     imports: [ReactiveFormsModule, ButtonModule, CheckboxModule, DialogModule, InputTextModule, MessageModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="partner() ? 'Satış ortağını düzenle' : 'Yeni satış ortağı'" [modal]="true" [(visible)]="visible" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
             <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">

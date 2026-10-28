@@ -19,7 +19,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
     selector: 'app-sales-partners-list-page',
     standalone: true,
     imports: [ButtonModule, TableModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, AppStatusTagComponent, AppRowActionButtonComponent, SalesPartnerFormDialogComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Satış ortakları" description="Ortak kodlarıyla gelen kurumlar, ciro ve komisyon. Yalnız Vetinity platform yöneticisi görür.">
             <button actions pButton type="button" severity="secondary" [disabled]="exporting()" (click)="exportCsv()" data-testid="sp-export"><i [class]="exporting() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>CSV indir</button>
