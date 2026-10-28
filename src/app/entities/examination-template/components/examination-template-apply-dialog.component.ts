@@ -28,7 +28,7 @@ const TEXT_PREVIEW: readonly { field: 'visitReason' | 'findings' | 'plan'; label
     selector: 'app-examination-template-apply-dialog',
     standalone: true,
     imports: [DialogModule, ButtonModule, SearchInputComponent, AppStatusTagComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Şablon uygula" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(44rem, 95vw)' }" [(visible)]="visible">
             @if (selected(); as t) {
@@ -90,7 +90,7 @@ const TEXT_PREVIEW: readonly { field: 'visitReason' | 'findings' | 'plan'; label
                     <p class="text-muted-color text-sm m-0">Şablonlar yükleniyor…</p>
                 } @else if (templates().length === 0) {
                     <p class="text-muted-color text-sm m-0" data-testid="template-empty">
-                        {{ searchInput.trim() ? 'Aramaya uyan şablon yok.' : 'Tanımlı şablon yok. Ayarlar → Tanımlar → Muayene şablonları altından ekleyebilirsiniz.' }}
+                        {{ searchInput().trim() ? 'Aramaya uyan şablon yok.' : 'Tanımlı şablon yok. Ayarlar → Tanımlar → Muayene şablonları altından ekleyebilirsiniz.' }}
                     </p>
                 } @else {
                     <ul class="list-none m-0 p-0" data-testid="template-list">
@@ -134,7 +134,7 @@ export class ExaminationTemplateApplyDialogComponent {
 
     private readonly templatesService = inject(ExaminationTemplatesService);
 
-    searchInput = '';
+    readonly searchInput = signal('');
     readonly templates = signal<ExaminationTemplateDto[]>([]);
     readonly totalItems = signal(0);
     readonly loading = signal(false);
@@ -168,7 +168,7 @@ export class ExaminationTemplateApplyDialogComponent {
                 untracked(() => {
                     this.selected.set(null);
                     this.submitError.set(null);
-                    this.searchInput = '';
+                    this.searchInput.set('');
                     this.load();
                 });
             }
@@ -183,7 +183,7 @@ export class ExaminationTemplateApplyDialogComponent {
     load(): void {
         this.loading.set(true);
         this.listError.set(null);
-        this.templatesService.list({ search: this.searchInput, page: 1, pageSize: PICKER_PAGE_SIZE }).subscribe({
+        this.templatesService.list({ search: this.searchInput(), page: 1, pageSize: PICKER_PAGE_SIZE }).subscribe({
             next: (r) => {
                 this.templates.set(r.items);
                 this.totalItems.set(r.totalItems);
