@@ -1,7 +1,7 @@
 import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { BehaviorSubject, of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { mapSaleDtoToDetailVm } from '@/app/features/sales/data/sale.mapper';
 import type { SaleDto } from '@/app/features/sales/models/sale-api.model';
@@ -58,7 +58,7 @@ describe('SaleDetailPageComponent', () => {
                 { provide: SalesService, useValue: { getSaleById, voidSale } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'c1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
-                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 's1' } } } }
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 's1' })) } }
             ]
         }).compileComponents();
         fixture = TestBed.createComponent(SaleDetailPageComponent);
@@ -131,11 +131,40 @@ describe('SaleDetailPageComponent', () => {
                 { provide: SalesService, useValue: { getSaleById } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => false } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
-                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'x' } } } }
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'x' })) } }
             ]
         }).compileComponents();
         fixture = TestBed.createComponent(SaleDetailPageComponent);
         fixture.detectChanges();
         expect(text()).toContain('Satış bulunamadı.');
+    });
+});
+
+describe('SaleDetailPageComponent — rota kimliği değişimi', () => {
+    it('aynı bileşende başka satışa geçince yeni satışı yükler; açık iptal diyaloğu kalmaz', async () => {
+        const paramMap = new BehaviorSubject(convertToParamMap({ id: 's1' }));
+        const getSaleById = vi.fn((id: string) => of(mapSaleDtoToDetailVm(dto({ id, clientName: id === 's1' ? 'Ali Veli' : 'Ayşe Kaya' }))));
+
+        await TestBed.configureTestingModule({
+            imports: [SaleDetailPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: SalesService, useValue: { getSaleById } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => true, getClinicId: () => 'c1' } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: ActivatedRoute, useValue: { paramMap } }
+            ]
+        }).compileComponents();
+        const fixture = TestBed.createComponent(SaleDetailPageComponent);
+
+        fixture.detectChanges();
+        fixture.componentInstance.voidVisible.set(true);
+
+        paramMap.next(convertToParamMap({ id: 's2' }));
+        fixture.detectChanges();
+
+        expect(getSaleById).toHaveBeenLastCalledWith('s2');
+        expect((fixture.nativeElement as HTMLElement).textContent).toContain('Ayşe Kaya');
+        expect(fixture.componentInstance.voidVisible()).toBe(false);
     });
 });

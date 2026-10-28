@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { SALES_CORRECT_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -15,6 +15,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
 @Component({
     selector: 'app-sale-detail-page',
@@ -102,34 +103,27 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 export class SaleDetailPageComponent implements OnInit {
     readonly ro = inject(TenantReadOnlyContextService);
     private readonly salesService = inject(SalesService);
-    private readonly route = inject(ActivatedRoute);
 
     readonly canVoid = inject(AuthService).hasOperationClaim(SALES_CORRECT_CLAIM);
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
-    readonly sale = signal<SaleDetailVm | null>(null);
+    private readonly loader = new RouteEntityLoader<SaleDetailVm>({
+        fetch: (id) => this.salesService.getSaleById(id),
+        invalidIdMessage: 'Geçersiz satış.',
+        errorMessage: (e) => panelHttpFailureMessage(e, 'Satış yüklenemedi.'),
+        onRouteChange: () => this.voidVisible.set(false)
+    });
+
+    readonly loading = this.loader.loading;
+    readonly error = this.loader.error;
+    readonly sale = this.loader.value;
     readonly voidVisible = signal(false);
 
     ngOnInit(): void {
-        this.load();
+        this.loader.init();
     }
 
     load(): void {
-        const id = this.route.snapshot.paramMap.get('id') ?? '';
-
-        this.loading.set(true);
-        this.error.set(null);
-        this.salesService.getSaleById(id).subscribe({
-            next: (s) => {
-                this.sale.set(s);
-                this.loading.set(false);
-            },
-            error: (e: Error) => {
-                this.error.set(panelHttpFailureMessage(e, 'Satış yüklenemedi.'));
-                this.loading.set(false);
-            }
-        });
+        this.loader.reload();
     }
 
     print(): void {
