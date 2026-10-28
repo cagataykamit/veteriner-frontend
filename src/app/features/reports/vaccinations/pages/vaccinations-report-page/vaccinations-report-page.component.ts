@@ -22,7 +22,7 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
     selector: 'app-vaccinations-report-page',
     standalone: true,
     imports: [CommonModule, RouterLink, TableModule, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, AppStatusTagComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" [title]="copy.vaccinationsReportTitle" [description]="copy.vaccinationsReportDescription" />
 

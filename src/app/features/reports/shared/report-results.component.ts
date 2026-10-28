@@ -16,7 +16,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
     selector: 'app-report-results',
     standalone: true,
     imports: [NgTemplateOutlet, Paginator, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @let s = state();
         @if (s.loading() && !s.report()) {

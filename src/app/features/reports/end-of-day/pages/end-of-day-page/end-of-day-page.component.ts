@@ -47,7 +47,7 @@ interface OpenItemRow {
     imports: [RouterLink, FormsModule, ButtonModule, SelectModule, TableModule, FilterFieldComponent, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, MoneyPipe],
     styleUrl: './end-of-day-page.component.scss',
     encapsulation: ViewEncapsulation.None,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="end-of-day-page">
             <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" class="eod-screen-only" title="Gün sonu" description="Günün ücret, tahsilat ve açık işlerini tek yerde görün. Kasa sayımı ve günü kilitleme yoktur." />
