@@ -16,7 +16,7 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
     imports: [ButtonModule, DiscountCodeFieldComponent, TrDatePipe],
     // Gösterilecek bir şey yoksa ızgarada boş satır (aralık) bırakmasın.
     host: { '[class.hidden]': '!visible()' },
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (state(); as s) {
             @if (s.applied) {
