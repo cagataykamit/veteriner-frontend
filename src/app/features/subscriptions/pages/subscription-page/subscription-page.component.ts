@@ -259,7 +259,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 }
                                 <div class="flex flex-wrap gap-2">
                                     @if (session.checkoutUrl) {
-                                        <button pButton type="button" (click)="flow.goToHostedCheckout(session.checkoutUrl)" [disabled]="flow.planActionsBusy()"><i class="p-button-icon pi pi-external-link"></i>Ödemeye devam et</button>
+                                        <button pButton type="button" (click)="flow.continueCheckout()" [disabled]="flow.planActionsBusy()"><i class="p-button-icon pi pi-external-link"></i>Ödemeye devam et</button>
                                     }
                                     <button
                                         pButton

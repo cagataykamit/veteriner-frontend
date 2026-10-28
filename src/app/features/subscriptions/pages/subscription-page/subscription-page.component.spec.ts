@@ -292,6 +292,29 @@ describe('SubscriptionPageComponent', () => {
             expect(buttonLabels()).toContain('Durumu yenile');
         });
 
+        it('Ödemeye devam et saklı sayfaya doğrudan gitmez; backend aynı hedefle yeniden sorulur', () => {
+            service.startCheckout.mockReturnValueOnce(of(session())).mockReturnValueOnce(NEVER);
+            render();
+            click('Hemen yükselt');
+
+            click('Ödemeye devam et');
+
+            expect(service.startCheckout).toHaveBeenCalledTimes(2);
+            expect(service.startCheckout).toHaveBeenLastCalledWith('premium', 'Monthly');
+        });
+
+        it('ödeme alınmışsa (backend 409) yeni ödeme başlatılmaz, bilgi gösterilir', () => {
+            service.startCheckout
+                .mockReturnValueOnce(of(session()))
+                .mockReturnValueOnce(throwError(() => new Error('Bu ödeme alındı; onay birkaç dakika içinde aboneliğinize yansır.')));
+            render();
+            click('Hemen yükselt');
+
+            click('Ödemeye devam et');
+
+            expect(text()).toContain('Bu ödeme alındı; onay birkaç dakika içinde aboneliğinize yansır.');
+        });
+
         it('yıllık seçiliyken yükseltme yıllık dönemle başlatılır', () => {
             service.startCheckout.mockReturnValue(of(session({ billingPeriod: 'Yearly' })));
             render();

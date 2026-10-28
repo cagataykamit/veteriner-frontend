@@ -214,10 +214,8 @@ export class CheckoutFlowService {
         this.planActionInfo.set(null);
 
         if (hasOpenCheckoutForPlan(plan, this.checkoutSession(), this.selectedBillingPeriod())) {
-            const url = this.checkoutSession()?.checkoutUrl?.trim();
-
-            if (url) {
-                this.goToHostedCheckout(url);
+            if (this.checkoutSession()?.checkoutUrl?.trim()) {
+                this.continueCheckout();
 
                 return;
             }
@@ -242,7 +240,23 @@ export class CheckoutFlowService {
         this.startCheckout(plan.code);
     }
 
-    goToHostedCheckout(checkoutUrl: string): void {
+    /**
+     * Açık oturumun ödeme sayfasına doğrudan gidilmez: sağlayıcı sayfayı (iyzico'da vazgeçme ya da başarısız deneme sonrası)
+     * bildirmeden geçersiz kılmış olabilir. Backend'e aynı hedefle yeniden başlatma sorulur; sayfa hâlâ ödenebiliyorsa aynı
+     * oturumu, değilse yenisini döner ve oraya gidilir.
+     */
+    continueCheckout(): void {
+        const session = this.checkoutSession();
+        const target = session?.targetPlanCode?.trim();
+
+        if (!session || !target) {
+            return;
+        }
+
+        this.startCheckout(target, { billingPeriod: session.billingPeriod, continueToProvider: true });
+    }
+
+    private goToHostedCheckout(checkoutUrl: string): void {
         const id = this.checkoutSession()?.checkoutSessionId?.trim();
 
         if (id) {
@@ -342,7 +356,7 @@ export class CheckoutFlowService {
         });
     }
 
-    private startCheckout(targetPlanCode: string): void {
+    private startCheckout(targetPlanCode: string, options: { billingPeriod?: SubscriptionBillingPeriod; continueToProvider?: boolean } = {}): void {
         const sum = this.summary();
 
         if (!sum || !this.canManageSubscriptionOperations(sum)) {
@@ -355,19 +369,24 @@ export class CheckoutFlowService {
         this.finalizeError.set(null);
         this.planActionError.set(null);
         this.planActionInfo.set(null);
-        // Dönem seçilemiyorsa (deneme, etkin yıllık dönem) backend mevcut dönemi kullanır.
-        const billingPeriod = canChooseBillingPeriod(sum) ? this.selectedBillingPeriod() : undefined;
+        // Dönem seçilemiyorsa (deneme, etkin yıllık dönem) backend mevcut dönemi kullanır; açık oturuma devamda oturumun dönemi.
+        const billingPeriod = options.billingPeriod ?? (canChooseBillingPeriod(sum) ? this.selectedBillingPeriod() : undefined);
 
         this.subscriptions.startCheckout(targetPlanCode, billingPeriod).subscribe({
             next: (session) => {
                 this.checkoutSession.set(session);
+                const url = session.checkoutUrl?.trim();
 
-                if (session.checkoutUrl?.trim()) {
+                if (url) {
                     writeStoredCheckoutSessionId(session.checkoutSessionId);
                 }
 
                 this.planActionLoadingCode.set(null);
                 this.checkoutLoading.set(false);
+
+                if (url && options.continueToProvider) {
+                    this.goToHostedCheckout(url);
+                }
             },
             error: (e: unknown) => {
                 this.planActionLoadingCode.set(null);
