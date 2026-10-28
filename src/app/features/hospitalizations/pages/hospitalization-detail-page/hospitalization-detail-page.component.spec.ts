@@ -42,7 +42,7 @@ describe('HospitalizationDetailPageComponent — rota kimliği değişimi', () =
         expect(page.row()?.id).toBe('h2');
         expect(page.savedMessage()).toBeNull();
         expect(page.showDischargedBanner()).toBe(false);
-        expect(page.dischargeDialogVisible).toBe(false);
+        expect(page.dischargeDialogVisible()).toBe(false);
 
         page.dischargeForm.setValue({ dischargedAtLocal: '2026-10-20T10:00', dischargeNote: '' });
         page.onDischargeSubmit();

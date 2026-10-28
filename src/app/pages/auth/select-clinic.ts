@@ -16,7 +16,7 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
     selector: 'app-select-clinic-page',
     standalone: true,
     imports: [CommonModule, FormsModule, ButtonModule, SelectModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden">
             <div class="flex flex-col items-center justify-center w-full max-w-3xl px-4">

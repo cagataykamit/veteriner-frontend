@@ -42,7 +42,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         CareInstructionsSectionComponent,
         TrDateTimePipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (savedMessage(); as message) {
             <p class="mb-4 m-0 text-sm font-medium">{{ message }}</p>
@@ -211,7 +211,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                     <p class="text-red-500 mt-4 mb-0" role="alert">{{ dischargeSubmitError() }}</p>
                 }
                 <div class="flex flex-wrap justify-end gap-2 mt-4">
-                    <button pButton type="button" severity="secondary" (click)="dischargeDialogVisible = false" [disabled]="dischargeSubmitting()">Vazgeç</button>
+                    <button pButton type="button" severity="secondary" (click)="dischargeDialogVisible.set(false)" [disabled]="dischargeSubmitting()">Vazgeç</button>
                     <button pButton type="submit" [disabled]="ro.mutationBlocked() || dischargeSubmitting()"><i class="p-button-icon" [class]="dischargeSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Taburcu et</button>
                 </div>
             </form>
@@ -244,7 +244,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
     readonly savedMessage = signal<string | null>(null);
     readonly showDischargedBanner = signal(false);
 
-    dischargeDialogVisible = false;
+    readonly dischargeDialogVisible = signal(false);
     readonly dischargeSubmitting = signal(false);
     readonly dischargeSubmitError = signal<string | null>(null);
     readonly dischargeFieldErrors = signal<HospitalizationDischargeFieldErrors>({});
@@ -272,7 +272,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
         this.dischargeSubmitError.set(null);
         this.dischargeFieldErrors.set({});
         this.dischargeConflict.set(false);
-        this.dischargeDialogVisible = true;
+        this.dischargeDialogVisible.set(true);
     }
 
     onDischargeDialogHide(): void {
@@ -283,7 +283,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
 
     /** Çakışmada yazılanlar atılır; kayıt (yeni `rowVersion` ile) yeniden yüklenir. */
     discardDischargeAndReload(): void {
-        this.dischargeDialogVisible = false;
+        this.dischargeDialogVisible.set(false);
         this.reload();
     }
 
@@ -329,7 +329,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
                         return;
                     }
 
-                    this.dischargeDialogVisible = false;
+                    this.dischargeDialogVisible.set(false);
                     this.showDischargedBanner.set(true);
                     this.reload();
                 },
@@ -359,7 +359,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
     private resetForRoute(id: string | null): void {
         this.savedMessage.set(id ? (SAVED_MESSAGES[this.route.snapshot.queryParamMap.get('saved') ?? ''] ?? null) : null);
         this.showDischargedBanner.set(false);
-        this.dischargeDialogVisible = false;
+        this.dischargeDialogVisible.set(false);
         this.onDischargeDialogHide();
     }
 }

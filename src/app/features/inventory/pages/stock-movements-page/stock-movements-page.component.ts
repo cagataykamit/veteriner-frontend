@@ -68,7 +68,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
         FilterFieldComponent,
         SearchInputComponent
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
 

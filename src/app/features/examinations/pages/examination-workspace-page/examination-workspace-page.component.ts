@@ -87,7 +87,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
         DateInputComponent,
         ClinicalTermPickerComponent
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './examination-workspace-page.component.html'
 })
 export class ExaminationWorkspacePageComponent implements OnInit {

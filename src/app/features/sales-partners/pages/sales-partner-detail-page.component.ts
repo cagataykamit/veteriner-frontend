@@ -47,7 +47,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
         SalesPartnerFormDialogComponent,
         DiscountCodeFormDialogComponent
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (loading() && !partner()) {
             <app-loading-state message="Satış ortağı yükleniyor…" />

@@ -42,7 +42,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         StoredFileUploadComponent,
         TrDateTimePipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (savedMessage(); as message) {
             <p class="mb-4 m-0 text-sm font-medium">{{ message }}</p>
@@ -69,7 +69,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                                
                                 [class]="row()!.status === 'Requested' ? 'p-button-primary' : 'p-button-secondary'"
                             ><i [class]="row()!.status === 'Requested' ? 'pi pi-check-square' : 'pi pi-pencil'"></i>{{ editLabel(row()!.status) }}</a>
-                            <button pButton type="button" class="p-button-danger p-button-outlined" (click)="cancelVisible = true"><i class="pi pi-ban"></i>İptal et</button>
+                            <button pButton type="button" class="p-button-danger p-button-outlined" (click)="cancelVisible.set(true)"><i class="pi pi-ban"></i>İptal et</button>
                         }
                     }
                 </div>
@@ -190,7 +190,7 @@ export class LabResultDetailPageComponent implements OnInit {
     readonly error = this.loader.error;
     readonly row = this.loader.value;
     readonly savedMessage = signal<string | null>(null);
-    cancelVisible = false;
+    readonly cancelVisible = signal(false);
     readonly canUpdateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM);
     private readonly filesService = inject(StoredFilesService);
     readonly files = signal<StoredFileVm[]>([]);
@@ -217,7 +217,7 @@ export class LabResultDetailPageComponent implements OnInit {
     /** Aynı bileşende başka kayda geçişte önceki kaydın dosyaları, iptal diyaloğu ve onay mesajı kalmaz. */
     private resetForRoute(id: string | null): void {
         this.savedMessage.set(id ? (SAVED_MESSAGES[this.route.snapshot.queryParamMap.get('saved') ?? ''] ?? null) : null);
-        this.cancelVisible = false;
+        this.cancelVisible.set(false);
         this.files.set([]);
         this.filesError.set(null);
     }

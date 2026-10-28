@@ -83,7 +83,7 @@ const RECORD_TEXT_SECTIONS: readonly {
         TrDateTimePipe
     ],
     providers: [MessageService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
         @if (exam(); as e) {

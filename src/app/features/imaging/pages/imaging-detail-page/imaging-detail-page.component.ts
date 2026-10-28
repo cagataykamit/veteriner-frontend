@@ -41,7 +41,7 @@ const SAVED_MESSAGES: Record<string, string> = { created: 'Görüntüleme kayded
         ImagingCancelDialogComponent,
         TrDateTimePipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (savedMessage(); as message) {
             <p class="mb-4 m-0 text-sm font-medium" role="status">{{ message }}</p>
@@ -60,7 +60,7 @@ const SAVED_MESSAGES: Record<string, string> = { created: 'Görüntüleme kayded
                         @if (ro.mutationBlocked()) {
                             <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>İptal et (salt okunur)</button>
                         } @else {
-                            <button pButton type="button" class="p-button-danger p-button-outlined" (click)="cancelVisible = true" data-testid="imaging-cancel"><i class="pi pi-ban"></i>İptal et</button>
+                            <button pButton type="button" class="p-button-danger p-button-outlined" (click)="cancelVisible.set(true)" data-testid="imaging-cancel"><i class="pi pi-ban"></i>İptal et</button>
                         }
                     }
                 </div>
@@ -153,7 +153,7 @@ export class ImagingDetailPageComponent implements OnInit {
     readonly error = this.loader.error;
     readonly row = this.loader.value;
     readonly savedMessage = signal<string | null>(null);
-    cancelVisible = false;
+    readonly cancelVisible = signal(false);
 
     readonly canCancel = this.auth.hasOperationClaim(IMAGING_CANCEL_CLAIM);
     readonly canUpload = this.auth.hasOperationClaim(IMAGING_CREATE_CLAIM);
@@ -186,6 +186,6 @@ export class ImagingDetailPageComponent implements OnInit {
     /** Aynı bileşende başka kayda geçişte önceki kaydın iptal diyaloğu ve onay mesajı kalmaz. */
     private resetForRoute(id: string | null): void {
         this.savedMessage.set(id ? (SAVED_MESSAGES[this.route.snapshot.queryParamMap.get('saved') ?? ''] ?? null) : null);
-        this.cancelVisible = false;
+        this.cancelVisible.set(false);
     }
 }

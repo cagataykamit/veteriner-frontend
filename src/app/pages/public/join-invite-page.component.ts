@@ -37,7 +37,7 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
         PublicLegalLinksComponent,
         LegalConsentCheckboxComponent
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-floating-configurator />
         <div class="public-page bg-surface-50 dark:bg-surface-950 min-h-screen min-w-screen py-10 px-4">

@@ -63,7 +63,7 @@ type ProductStockMovementsListState = {
         AppStatusTagComponent,
         DateInputComponent
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
 

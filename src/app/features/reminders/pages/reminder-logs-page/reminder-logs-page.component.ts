@@ -60,7 +60,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
         DateInputComponent,
         TrDateTimePipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Hatırlatma Geçmişi" description="Gönderilen veya kuyruğa alınan hatırlatmaları takip edin." />
 
