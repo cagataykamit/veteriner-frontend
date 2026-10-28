@@ -27,6 +27,7 @@ import {
 import { SubscriptionPlanCardsComponent } from '@/app/features/subscriptions/components/subscription-plan-cards.component';
 import { SubscriptionSummaryCardsComponent } from '@/app/features/subscriptions/components/subscription-summary-cards.component';
 import { CheckoutFlowService } from '@/app/features/subscriptions/services/checkout-flow.service';
+import { CheckoutReturnVerificationService } from '@/app/features/subscriptions/services/checkout-return-verification.service';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 @Component({
@@ -48,7 +49,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         TrDatePipe,
         TrDateTimePipe
     ],
-    providers: [MessageService, CheckoutFlowService],
+    providers: [MessageService, CheckoutFlowService, CheckoutReturnVerificationService],
     changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <p-toast position="bottom-right" />
