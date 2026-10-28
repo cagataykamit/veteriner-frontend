@@ -23,7 +23,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
     selector: 'app-charge-correction-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, ChargeTaxFieldsComponent, MoneyPipe],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Ücreti düzelt" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
             @if (charge(); as c) {

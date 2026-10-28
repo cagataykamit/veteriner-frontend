@@ -18,7 +18,7 @@ type MatrixRowView = TenantRolePermissionMatrixRowVm & { groups: PermissionGroup
     selector: 'app-tenant-role-permission-matrix-page',
     standalone: true,
     imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [title]="copy.tenantRoleMatrixTitle" [description]="copy.tenantRoleMatrixDescription">
             <a actions routerLink="/panel/settings/members" pButton type="button" class="p-button-secondary"><i class="pi pi-arrow-left"></i>{{ copy.tenantRoleMatrixBackMembers }}</a>

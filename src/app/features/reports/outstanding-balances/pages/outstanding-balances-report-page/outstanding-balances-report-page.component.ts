@@ -20,7 +20,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
     selector: 'app-outstanding-balances-report-page',
     standalone: true,
     imports: [CommonModule, RouterLink, TableModule, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, MoneyPipe],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" [title]="copy.outstandingBalancesReportTitle" [description]="copy.outstandingBalancesReportDescription" />
 

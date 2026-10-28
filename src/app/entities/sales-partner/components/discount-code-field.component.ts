@@ -21,7 +21,7 @@ const DEBOUNCE_MS = 600;
     selector: 'app-discount-code-field',
     standalone: true,
     imports: [FormsModule, InputTextModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="flex flex-col gap-1">
             <label [for]="inputId()" class="block text-surface-900 dark:text-surface-0 font-medium mb-1">Ortak kodu <span class="text-muted-color font-normal">(isteğe bağlı)</span></label>

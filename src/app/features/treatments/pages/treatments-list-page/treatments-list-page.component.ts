@@ -47,7 +47,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         TrDatePipe,
         TrDateTimePipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (contextPetId()) {
             <app-context-filter-chip label="Seçili hastanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />

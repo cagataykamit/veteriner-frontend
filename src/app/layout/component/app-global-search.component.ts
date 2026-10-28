@@ -27,7 +27,7 @@ const EDITABLE_TARGET = 'input, textarea, select, [contenteditable=""], [content
     standalone: true,
     imports: [CommonModule, RouterModule, DialogModule, InputTextModule],
     host: { '(document:keydown)': 'onDocumentKeydown($event)' },
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (enabled) {
             <button type="button" class="layout-topbar-action layout-topbar-search-trigger" aria-label="Ara" aria-keyshortcuts="Control+K /" title="Ara (Ctrl+K veya /)" (click)="open()">

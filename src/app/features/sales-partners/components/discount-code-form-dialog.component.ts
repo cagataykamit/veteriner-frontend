@@ -24,7 +24,7 @@ function istanbulDayStartUtc(date: string): string | null {
     selector: 'app-discount-code-form-dialog',
     standalone: true,
     imports: [ReactiveFormsModule, ButtonModule, DialogModule, InputNumberModule, InputTextModule, MessageModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="code() ? 'Kodu düzenle' : 'Yeni kod'" [modal]="true" [(visible)]="visible" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
             <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">

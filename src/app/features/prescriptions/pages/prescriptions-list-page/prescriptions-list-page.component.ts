@@ -66,7 +66,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
         TrDatePipe,
         TrDateTimePipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (contextPetId()) {
             <app-context-filter-chip label="Seçili hastanın kayıtları gösteriliyor" (clear)="clearContextFilter()" />

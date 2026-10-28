@@ -25,7 +25,7 @@ export interface ReportExtraFilter {
     selector: 'app-report-filter-bar',
     standalone: true,
     imports: [FormsModule, ButtonModule, SelectModule, InputNumberModule, FilterFieldComponent, DateInputComponent, SearchInputComponent, AppTrialLimitNoticeComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @let s = state();
         @if (s.exportError(); as exportError) {

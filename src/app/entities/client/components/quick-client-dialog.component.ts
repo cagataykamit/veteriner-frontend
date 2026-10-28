@@ -20,7 +20,7 @@ import { InputTextModule } from 'primeng/inputtext';
     selector: 'app-quick-client-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Yeni müşteri ekle" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible" (onShow)="onShow()">
             <form [formGroup]="form" (ngSubmit)="onSubmit()" id="quick-client-form">

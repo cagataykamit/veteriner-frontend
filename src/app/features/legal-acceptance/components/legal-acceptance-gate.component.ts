@@ -21,7 +21,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
     selector: 'app-legal-acceptance-gate',
     standalone: true,
     imports: [DialogModule, ButtonModule, LegalConsentCheckboxComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog
             header="Hukuki metinler güncellendi"

@@ -10,7 +10,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
     selector: 'app-dashboard-mini-trend-chart',
     standalone: true,
     imports: [ChartModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="flex flex-col h-full min-h-[10rem]">
             <span class="block text-muted-color font-medium mb-2 text-sm">{{ title() }}</span>

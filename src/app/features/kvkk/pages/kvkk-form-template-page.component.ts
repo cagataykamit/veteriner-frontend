@@ -34,7 +34,7 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
     standalone: true,
     imports: [ReactiveFormsModule, ButtonModule, ConfirmDialogModule, TextareaModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, KvkkFormDocumentComponent, TrDateTimePipe],
     providers: [MessageService, ConfirmationService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
         <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />

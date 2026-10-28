@@ -8,7 +8,7 @@ import { LayoutService } from '@/app/layout/service/layout.service';
     selector: 'app-sidebar',
     standalone: true,
     imports: [AppMenu, RouterModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="layout-sidebar">
             <app-menu></app-menu>

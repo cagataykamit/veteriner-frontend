@@ -21,7 +21,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     selector: 'app-clinics-list-page',
     standalone: true,
     imports: [CommonModule, RouterLink, TableModule, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Klinikler" description="Kurumunuza kayıtlı kliniklerin listesi ve ayarları.">
             @if (canCreateClinic() && !ro.mutationBlocked()) {

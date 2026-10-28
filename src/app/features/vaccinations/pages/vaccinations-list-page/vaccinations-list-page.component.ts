@@ -70,7 +70,7 @@ const RECEIVING_CARE_ONLY = 'true';
         HbsStatusBadgeComponent,
         TrDateTimePipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card">
             @if (activeOverdueOnly()) {

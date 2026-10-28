@@ -23,7 +23,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
     selector: 'app-payments-report-page',
     standalone: true,
     imports: [CommonModule, RouterLink, TableModule, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, MoneyPipe],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" [title]="copy.paymentsReportTitle" [description]="copy.paymentsReportDescription" />
 

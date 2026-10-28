@@ -27,7 +27,7 @@ const ROW_PAGE_SIZE = 25;
     selector: 'app-import-review-step',
     standalone: true,
     imports: [FormsModule, ButtonModule, MessageModule, Paginator, SelectModule, AppEmptyStateComponent, AppStatusTagComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (preview(); as p) {
             @if (p.status === 'ValidationFailed' && p.blockers.length === 0) {

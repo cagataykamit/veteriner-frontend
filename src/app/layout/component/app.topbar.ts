@@ -22,7 +22,7 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS = '.p-menu-overlay, .p-connect
     standalone: true,
     imports: [RouterModule, CommonModule, AppClinicSwitcher, AppGlobalSearch, MenuModule, ButtonModule, ConfirmDialogModule],
     providers: [ConfirmationService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: ` <div class="layout-topbar">
             <div class="layout-topbar-logo-container">
                 <button type="button" class="layout-menu-button layout-topbar-action" [attr.aria-label]="layoutService.isMenuRail() ? 'Menüyü genişlet' : 'Menü'" (click)="layoutService.onMenuToggle()">

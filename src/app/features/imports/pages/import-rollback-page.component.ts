@@ -58,7 +58,7 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
         AppStatusTagComponent,
         ImportJobProgressComponent
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [title]="'Geri al · ' + (batch()?.name || 'Veri içe aktarma')" description="Bu içe aktarmanın oluşturduğu kayıtları siler. Sistemde önceden var olan ve eşleşen kayıtlara hiçbir zaman dokunulmaz.">
             <div actions class="flex flex-wrap gap-2 items-center">

@@ -47,7 +47,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         AppRowActionButtonComponent,
         TrDateTimePipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card">
             <app-list-header class="mb-4" title="Uygulamalar" [count]="totalItems()" />

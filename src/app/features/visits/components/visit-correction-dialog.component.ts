@@ -20,7 +20,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     selector: 'app-visit-correction-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog
             [header]="restoring() ? 'Yanlış gelişi geri al' : 'Geliş düzeltmesi'"

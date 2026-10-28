@@ -26,7 +26,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
     selector: 'app-imports-list-page',
     standalone: true,
     imports: [FormsModule, RouterLink, ButtonModule, MessageModule, Paginator, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, AppStatusTagComponent, AppRowActionButtonComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Veri içe aktarma" description="Eski sistemdeki müşteri, hasta ve aşı geçmişini Excel veya CSV dosyasıyla aktarın. Her adım onayınızla ilerler; aktarmadan önce sonucu görürsünüz.">
             <div actions class="flex flex-wrap gap-2">

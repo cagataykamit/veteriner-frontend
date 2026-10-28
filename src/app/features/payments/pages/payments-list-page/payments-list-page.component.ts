@@ -65,7 +65,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
         AppRowActionButtonComponent,
         MoneyPipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (contextPetId() || contextClientId()) {
             <app-context-filter-chip [label]="contextFilterLabel()" (clear)="clearContextFilter()" />

@@ -27,7 +27,7 @@ const KIND_TITLE: Readonly<Record<HbsRecordKind, string>> = {
     selector: 'app-hbs-data-dialog',
     standalone: true,
     imports: [ReactiveFormsModule, DialogModule, ButtonModule, TooltipModule, HbsStatusBadgeComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="title()" [modal]="true" [dismissableMask]="!saving()" [closable]="!saving()" [style]="{ width: 'min(720px, 95vw)' }" [(visible)]="visible">
             @if (loading()) {

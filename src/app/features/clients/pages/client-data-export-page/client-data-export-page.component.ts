@@ -21,7 +21,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     selector: 'app-client-data-export-page',
     standalone: true,
     imports: [ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (loading()) {
             <app-loading-state message="Veri kopyası hazırlanıyor…" />

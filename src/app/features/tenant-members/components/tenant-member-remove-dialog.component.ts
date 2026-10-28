@@ -15,7 +15,7 @@ const REMOVE_FAILED = 'Üye çıkarılamadı. Lütfen tekrar deneyin.';
     selector: 'app-tenant-member-remove-dialog',
     standalone: true,
     imports: [ButtonModule, DialogModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Üyeyi kurumdan çıkar" [modal]="true" [draggable]="false" [dismissableMask]="!busy()" [closable]="!busy()" [style]="{ width: 'min(32rem, 95vw)' }" [(visible)]="visible">
             @if (member(); as m) {

@@ -46,7 +46,7 @@ let openInstance: DateInputComponent | null = null;
         { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => DateInputComponent), multi: true },
         { provide: NG_VALIDATORS, useExisting: forwardRef(() => DateInputComponent), multi: true }
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-datepicker
             [inputId]="inputId()"

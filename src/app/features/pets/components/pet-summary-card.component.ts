@@ -21,7 +21,7 @@ const FOLLOW_UP_LIMIT = 3;
     selector: 'app-pet-summary-card',
     standalone: true,
     imports: [NgTemplateOutlet, RouterLink, ButtonModule, AppLoadingStateComponent, TrDatePipe, TrDateTimePipe],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <ng-template #notOk let-state let-label="label">
             @switch (state) {

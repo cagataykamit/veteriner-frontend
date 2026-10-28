@@ -23,7 +23,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     selector: 'app-species-form-page',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium" role="status">Tür kaydı oluşturuldu.</p>

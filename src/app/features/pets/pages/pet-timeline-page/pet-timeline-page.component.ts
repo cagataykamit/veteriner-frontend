@@ -27,7 +27,7 @@ const PAGE_SIZE = 20;
     selector: 'app-pet-timeline-page',
     standalone: true,
     imports: [FormsModule, ButtonModule, CheckboxModule, DateInputComponent, FilterFieldComponent, PetTimelineItemComponent, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [categoryLink]="['/panel/pets', petId()]" categoryLinkLabel="Hasta kartına dön" title="Zaman çizelgesi" [description]="petName() ?? ''" />
 

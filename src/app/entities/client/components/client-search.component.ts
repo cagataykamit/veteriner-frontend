@@ -26,7 +26,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     standalone: true,
     imports: [CommonModule, FormsModule, AutoCompleteModule, ButtonModule, QuickClientDialogComponent],
     providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ClientSearchComponent), multi: true }],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-autocomplete
             [inputId]="inputId()"

@@ -20,7 +20,7 @@ import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
     selector: 'app-client-kvkk-consent-dialog',
     standalone: true,
     imports: [ReactiveFormsModule, DialogModule, ButtonModule, SelectButtonModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="KVKK rıza durumunu işaretle" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">
             @if (client(); as c) {

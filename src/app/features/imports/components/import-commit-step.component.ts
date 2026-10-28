@@ -21,7 +21,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
     selector: 'app-import-commit-step',
     standalone: true,
     imports: [NgTemplateOutlet, FormsModule, ButtonModule, CheckboxModule, MessageModule, SelectModule, ImportJobProgressComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @switch (batch().status) {
             @case ('Validated') {

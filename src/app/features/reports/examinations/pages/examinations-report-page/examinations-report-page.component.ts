@@ -20,7 +20,7 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
     selector: 'app-examinations-report-page',
     standalone: true,
     imports: [CommonModule, RouterLink, TableModule, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" [title]="copy.examinationsReportTitle" [description]="copy.examinationsReportDescription" />
 

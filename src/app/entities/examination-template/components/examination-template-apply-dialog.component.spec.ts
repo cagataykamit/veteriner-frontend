@@ -58,7 +58,7 @@ describe('ExaminationTemplateApplyDialogComponent', () => {
     it('açılınca yalnız aktif şablonları ister; arama ile yeniden ister', () => {
         expect(service.list).toHaveBeenCalledWith({ search: '', page: 1, pageSize: 20 });
         expect(body().querySelectorAll('[data-testid="template-option"]').length).toBe(1);
-        cmp.searchInput = 'kulak';
+        cmp.searchInput.set('kulak');
         cmp.load();
         expect(service.list).toHaveBeenCalledWith({ search: 'kulak', page: 1, pageSize: 20 });
     });

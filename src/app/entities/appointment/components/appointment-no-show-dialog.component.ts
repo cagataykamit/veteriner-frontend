@@ -15,7 +15,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     selector: 'app-appointment-no-show-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="reverting() ? 'Gelmedi işaretini geri al' : 'Gelmedi olarak işaretle'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">
             @if (subject()) {

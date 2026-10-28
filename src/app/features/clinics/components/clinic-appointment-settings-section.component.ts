@@ -25,7 +25,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     selector: 'app-clinic-appointment-settings-section',
     standalone: true,
     imports: [ReactiveFormsModule, ButtonModule, CheckboxModule, AppLoadingStateComponent, AppErrorStateComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card mb-4" [formGroup]="apSettingsForm">
             <h5 class="mt-0 mb-2">Randevu Varsayılanları</h5>

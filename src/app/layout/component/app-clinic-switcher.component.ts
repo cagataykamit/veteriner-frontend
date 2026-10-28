@@ -32,7 +32,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     imports: [CommonModule, MenuModule, ToastModule],
     providers: [MessageService],
     host: { class: 'app-clinic-switcher' },
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
 

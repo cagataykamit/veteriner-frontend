@@ -70,7 +70,7 @@ function resolveChangePasswordErrorMessage(err: unknown): string {
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, PasswordModule, ToastModule],
     providers: [MessageService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
 

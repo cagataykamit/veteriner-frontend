@@ -23,7 +23,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     selector: 'app-client-kvkk-form-page',
     standalone: true,
     imports: [RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, KvkkFormDocumentComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (loading()) {
             <app-loading-state [message]="info.documentTitle + ' hazırlanıyor…'" />

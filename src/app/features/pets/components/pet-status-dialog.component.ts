@@ -38,7 +38,7 @@ interface AppointmentCancelFailure {
     selector: 'app-pet-status-dialog',
     standalone: true,
     imports: [ReactiveFormsModule, RouterLink, DialogModule, ButtonModule, CheckboxModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="cancelOutcome() || markingDeceased() ? 'Vefat olarak işaretle' : 'Aktife al'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">
             @if (cancelOutcome(); as o) {

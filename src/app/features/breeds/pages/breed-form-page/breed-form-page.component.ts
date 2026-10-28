@@ -26,7 +26,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
     selector: 'app-breed-form-page',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, QuickSpeciesDialogComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (editing() && loading()) {
             <app-loading-state message="Irk bilgileri yükleniyor…" />

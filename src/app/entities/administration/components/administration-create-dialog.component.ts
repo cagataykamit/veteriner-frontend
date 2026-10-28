@@ -30,7 +30,7 @@ const NOTES_MAX_LENGTH = 2000;
     selector: 'app-administration-create-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent, AdministrationBatchFieldComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="lateEntry() ? 'Uygulama kaydet (sonradan ekleme)' : 'Uygulama kaydet'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
             @if (petName()) {

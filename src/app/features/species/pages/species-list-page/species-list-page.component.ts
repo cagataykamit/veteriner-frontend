@@ -22,7 +22,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     selector: 'app-species-list-page',
     standalone: true,
     imports: [CommonModule, RouterLink, TableModule, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppRowActionButtonComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Türler" description="Tür kayıtlarını yönetin.">
             @if (canCreateSpecies() && !ro.mutationBlocked()) {

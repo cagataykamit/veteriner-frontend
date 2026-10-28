@@ -59,7 +59,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         SearchInputComponent,
         AppRowActionButtonComponent
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (activeClientId()) {
             <app-context-filter-chip label="Seçili müşterinin hastaları gösteriliyor" (clear)="clearClientContext()" />

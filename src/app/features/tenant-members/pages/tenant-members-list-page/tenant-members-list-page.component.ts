@@ -47,7 +47,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         TrDateTimePipe
     ],
     providers: [MessageService],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
         <app-page-header title="Kurum üyeleri" description="Bu kuruma bağlı kullanıcıların salt okunur listesi.">

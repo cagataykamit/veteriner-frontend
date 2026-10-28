@@ -19,7 +19,7 @@ import { InputTextModule } from 'primeng/inputtext';
     selector: 'app-quick-breed-dialog',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Yeni ırk" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(440px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onShow()">
             @if (ro.mutationBlocked()) {

@@ -38,7 +38,7 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
     selector: 'app-login',
     standalone: true,
     imports: [ButtonModule, CheckboxModule, InputTextModule, PasswordModule, FormsModule, RippleModule, RouterLink, PublicLegalLinksComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="public-page public-auth-page">
             <div class="public-auth-shell">

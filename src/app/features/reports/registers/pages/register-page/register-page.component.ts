@@ -39,7 +39,7 @@ type RegisterRow = { readonly rowNumber: number };
     imports: [FormsModule, ButtonModule, CheckboxModule, SelectModule, FilterFieldComponent, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, RegisterTableComponent],
     styleUrl: './register-page.component.scss',
     encapsulation: ViewEncapsulation.None,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="register-page">
             <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" class="register-screen-only" [title]="definition.title" [description]="definition.description" />

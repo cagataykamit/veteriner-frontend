@@ -26,7 +26,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
     selector: 'app-vaccination-detail-page',
     standalone: true,
     imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, HbsSectionComponent, TrDateTimePipe],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Aşı kaydı kaydedildi.</p>
