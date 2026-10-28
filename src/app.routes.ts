@@ -1,8 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '@/app/core/auth/auth.guard';
-import { AppLayout } from './app/layout/component/app.layout';
 import { panelHomeRedirect } from '@/app/core/routing/panel-home.redirect';
-import { Notfound } from './app/pages/notfound/notfound';
 import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { referralCodeRedirect } from '@/app/features/sales-partners/routes/referral-code.redirect';
 
@@ -68,14 +66,15 @@ export const appRoutes: Routes = [
     },
     {
         path: 'panel',
-        component: AppLayout,
+        // Panel iskeleti (üst çubuk, menü, genel arama) yalnız panelde gerekir; ilk pakete girmez.
+        loadComponent: () => import('./app/layout/component/app.layout').then((m) => m.AppLayout),
         canActivate: [authGuard],
         children: [
             { path: '', pathMatch: 'full', redirectTo: panelHomeRedirect },
             { path: '', loadChildren: () => import('./app/features/panel/panel.routes') }
         ]
     },
-    { path: 'notfound', component: Notfound },
+    { path: 'notfound', loadComponent: () => import('./app/pages/notfound/notfound').then((m) => m.Notfound) },
     {
         path: 'join/:token',
         loadComponent: () => import('./app/pages/public/join-invite-page.component').then((m) => m.JoinInvitePageComponent)
