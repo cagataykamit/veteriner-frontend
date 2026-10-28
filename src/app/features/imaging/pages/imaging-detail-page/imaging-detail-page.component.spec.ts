@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { IMAGING_CANCEL_CLAIM, IMAGING_CREATE_CLAIM, IMAGING_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { ImagingRecordDetailVm, ImagingRecordStatus } from '@/app/entities/imaging/models/imaging.model';
@@ -40,7 +40,7 @@ describe('ImagingDetailPageComponent — izin görünürlüğü ve önizleme', (
             imports: [ImagingDetailPageComponent],
             providers: [
                 provideRouter([]),
-                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'r1' }), queryParamMap: convertToParamMap({}) } } },
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'r1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
                 { provide: ImagingRecordsService, useValue: { getById: () => of(vm(status)), filesOwner: (id: string) => `/api/v1/imaging-records/${id}` } },
                 { provide: StoredFilesService, useValue: { accessUrl: () => of('https://api/signed/f1') } },
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
@@ -85,5 +85,39 @@ describe('ImagingDetailPageComponent — izin görünürlüğü ve önizleme', (
 
         expect(el.textContent).toContain('İptal et (salt okunur)');
         expect(el.querySelector('[data-testid="file-dropzone"]')).toBeNull();
+    });
+});
+
+describe('ImagingDetailPageComponent — rota kimliği değişimi', () => {
+    it('aynı bileşende başka kayda geçince yeni kaydı yükler; eski kaydın onay mesajı kalmaz', () => {
+        const paramMap = new BehaviorSubject(convertToParamMap({ id: 'r1' }));
+        const route = { paramMap, snapshot: { queryParamMap: convertToParamMap({ saved: 'created' }) } };
+        const getById = vi.fn((id: string) => of({ ...vm('Active'), id, description: id === 'r1' ? 'Toraks LL' : 'Abdomen VD' }));
+
+        TestBed.configureTestingModule({
+            imports: [ImagingDetailPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: route },
+                { provide: ImagingRecordsService, useValue: { getById, filesOwner: (id: string) => `/api/v1/imaging-records/${id}` } },
+                { provide: StoredFilesService, useValue: { accessUrl: () => of('https://api/signed/f1') } },
+                { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        });
+        const fixture = TestBed.createComponent(ImagingDetailPageComponent);
+
+        fixture.detectChanges();
+        expect(fixture.componentInstance.savedMessage()).toBe('Görüntüleme kaydedildi.');
+
+        route.snapshot = { queryParamMap: convertToParamMap({}) };
+        paramMap.next(convertToParamMap({ id: 'r2' }));
+        fixture.detectChanges();
+
+        expect(getById).toHaveBeenLastCalledWith('r2');
+        expect(fixture.componentInstance.row()?.description).toBe('Abdomen VD');
+        expect(fixture.componentInstance.ownerPath()).toBe('/api/v1/imaging-records/r2');
+        expect(fixture.componentInstance.savedMessage()).toBeNull();
     });
 });

@@ -17,6 +17,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
 const SAVED_MESSAGES: Record<string, string> = { created: 'Görüntüleme kaydedildi.' };
 
@@ -141,9 +142,16 @@ export class ImagingDetailPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
-    readonly row = signal<ImagingRecordDetailVm | null>(null);
+    private readonly loader = new RouteEntityLoader<ImagingRecordDetailVm>({
+        fetch: (id) => this.imagingService.getById(id),
+        invalidIdMessage: 'Geçersiz kayıt.',
+        errorMessage: (e) => (e instanceof Error ? e.message : 'Kayıt yüklenemedi.'),
+        onRouteChange: (id) => this.resetForRoute(id)
+    });
+
+    readonly loading = this.loader.loading;
+    readonly error = this.loader.error;
+    readonly row = this.loader.value;
     readonly savedMessage = signal<string | null>(null);
     cancelVisible = false;
 
@@ -154,7 +162,7 @@ export class ImagingDetailPageComponent implements OnInit {
     readonly statusLabel = imagingStatusLabel;
     readonly statusSeverity = imagingStatusSeverity;
 
-    readonly ownerPath = computed(() => this.imagingService.filesOwner(this.row()?.id ?? this.recordId));
+    readonly ownerPath = computed(() => this.imagingService.filesOwner(this.row()?.id ?? this.loader.id ?? ''));
     readonly altBase = computed(() => {
         const r = this.row();
 
@@ -162,39 +170,22 @@ export class ImagingDetailPageComponent implements OnInit {
     });
     readonly canAddFiles = computed(() => this.row()?.status === 'Active' && this.canUpload && !this.ro.mutationBlocked());
 
-    private recordId = '';
-
     ngOnInit(): void {
-        this.recordId = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
-
-        if (!this.recordId) {
-            this.error.set('Geçersiz kayıt.');
-            this.loading.set(false);
-
-            return;
-        }
-
-        this.savedMessage.set(SAVED_MESSAGES[this.route.snapshot.queryParamMap.get('saved') ?? ''] ?? null);
-        this.reload();
+        this.loader.init();
     }
 
     reload(): void {
-        this.loading.set(true);
-        this.error.set(null);
-        this.imagingService.getById(this.recordId).subscribe({
-            next: (r) => {
-                this.row.set(r);
-                this.loading.set(false);
-            },
-            error: (e: unknown) => {
-                this.error.set(e instanceof Error ? e.message : 'Kayıt yüklenemedi.');
-                this.loading.set(false);
-            }
-        });
+        this.loader.reload();
     }
 
     /** Yeni dosya galeriye eklenir; sayfa yeniden yüklenmez (kuyruktaki diğer yüklemeler sürer). */
     onUploaded(file: StoredFileVm): void {
         this.row.update((r) => (r ? { ...r, files: [...r.files, file] } : r));
+    }
+
+    /** Aynı bileşende başka kayda geçişte önceki kaydın iptal diyaloğu ve onay mesajı kalmaz. */
+    private resetForRoute(id: string | null): void {
+        this.savedMessage.set(id ? (SAVED_MESSAGES[this.route.snapshot.queryParamMap.get('saved') ?? ''] ?? null) : null);
+        this.cancelVisible = false;
     }
 }
