@@ -13,7 +13,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
     selector: 'app-hbs-section',
     standalone: true,
     imports: [ButtonModule, HbsStatusBadgeComponent, HbsDataDialogComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (entry(); as e) {
             @if (e.isTracked) {
