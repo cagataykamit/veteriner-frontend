@@ -29,7 +29,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     providers: [ConfirmationService],
     /** `.card:last-child` alt boşluğu sıfırladığından boşluk ana öğede (bölüm bileşenin son çocuğu). */
     host: { class: 'block mb-4' },
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-confirmdialog key="client-portal" [style]="{ width: 'min(450px, 95vw)' }" />
         <section class="card mb-0" aria-labelledby="client-portal-title" data-testid="client-portal">

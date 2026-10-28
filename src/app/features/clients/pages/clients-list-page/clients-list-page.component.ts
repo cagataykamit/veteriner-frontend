@@ -51,7 +51,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
         AppRowActionButtonComponent,
         TrDatePipe
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card">
             <div class="flex flex-col gap-4">
