@@ -3,7 +3,7 @@ import { localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
 
 export type PerformancePreset = 'thisMonth' | 'lastMonth' | 'last30' | 'thisYear' | 'custom';
 
-export const PERFORMANCE_PRESET_OPTIONS: readonly { label: string; value: PerformancePreset }[] = [
+export const PERFORMANCE_PRESET_OPTIONS: { label: string; value: PerformancePreset }[] = [
     { label: 'Bu ay', value: 'thisMonth' },
     { label: 'Geçen ay', value: 'lastMonth' },
     { label: 'Son 30 gün', value: 'last30' },
@@ -77,4 +77,9 @@ export function appointmentRates(counts: PerformanceAppointmentCountsDto): { tot
 /** Yüzde gösterimi: tek ondalık, Türkçe ayraç. */
 export function formatPercent(value: number | null | undefined): string {
     return value == null ? '—' : `%${value.toLocaleString('tr-TR', { maximumFractionDigits: 1 })}`;
+}
+
+/** `yyyy-MM-dd` → `dd.MM.yyyy` (dönem etiketleri). */
+export function ymdToDisplay(ymd: string): string {
+    return `${ymd.slice(8, 10)}.${ymd.slice(5, 7)}.${ymd.slice(0, 4)}`;
 }

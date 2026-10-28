@@ -85,7 +85,7 @@ describe('PerformancePageComponent', () => {
         expect(el.querySelector('[data-testid="perf-kpi-charges"]')?.getAttribute('href')).toBe('/panel/reports/end-of-day');
         expect(text('perf-kpi-outstanding')).toContain('3 müşteri');
         expect(text('perf-collection-ratio')).toContain('%40');
-        expect(text('perf-previous-period')).toContain('2026-09-03 – 2026-09-30');
+        expect(text('perf-previous-period')).toContain('03.09.2026 – 30.09.2026');
         expect(text('perf-appointments')).toContain('Gelmedi');
         expect(text('perf-appointments')).toContain('1 (%10)');
         expect(text('perf-users')).toContain('Ayşe Hekim');

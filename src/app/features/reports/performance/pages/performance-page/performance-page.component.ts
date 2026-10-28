@@ -15,6 +15,7 @@ import {
     appointmentRates,
     collectionToChargeRatio,
     formatPercent,
+    ymdToDisplay,
     PERFORMANCE_PRESET_OPTIONS,
     performanceDelta,
     performancePresetRange,
@@ -178,6 +179,7 @@ export class PerformancePageComponent {
     });
 
     readonly formatPercent = formatPercent;
+    readonly displayDate = ymdToDisplay;
 
     constructor() {
         this.load();
