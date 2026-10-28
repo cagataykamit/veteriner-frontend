@@ -450,6 +450,13 @@ export const ApiEndpoints = {
     trialMetrics: {
         summary: () => `/api/v1/admin/trial-metrics`
     },
+    /** Platform yöneticisi: aynı ödeme denemesinde gelen ikinci ödemeler ve iadeleri; en yeni tespit önce, en fazla 200 satır. */
+    duplicatePayments: {
+        list: () => `/api/v1/admin/billing/duplicate-payments`,
+        /** POST `{}` → 204; yalnız `ManualRequired` satırda anlamlı, `Pending` için 409. */
+        markRefunded: (checkoutSessionId: string) =>
+            `/api/v1/admin/billing/duplicate-payments/${encodeURIComponent(checkoutSessionId)}/mark-refunded`
+    },
     public: {
         ownerSignup: () => `/api/v1/public/owner-signup`,
         /** Anonim, hız sınırlı: satış ortağı kodu doğrulama; geçersizde tek tip yanıt. */
