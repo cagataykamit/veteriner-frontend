@@ -26,7 +26,7 @@ type UploadMode = 'xlsx' | 'csv';
     selector: 'app-import-upload-page',
     standalone: true,
     imports: [FormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, SelectModule, SelectButtonModule, ImportDropZoneComponent, AppPageHeaderComponent, AppTrialLimitNoticeComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Yeni içe aktarma" description="Adım 1 / 4 · Şablonu indirin, kayıtlarınızı doldurun ve dosyayı yükleyin. Bu adımda hiçbir kayıt oluşmaz.">
             <div actions>

@@ -47,7 +47,7 @@ const STEPS: readonly { n: number; label: string }[] = [
         ImportCommitStepComponent,
         ImportJobProgressComponent
     ],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [title]="batch()?.name || 'Veri içe aktarma'" description="Her adımda geri dönebilir, sonucu görmeden hiçbir kayıt oluşturmazsınız.">
             <div actions class="flex flex-wrap gap-2 items-center">
