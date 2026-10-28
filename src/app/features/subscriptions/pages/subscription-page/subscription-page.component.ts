@@ -223,6 +223,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                         <div class="text-muted-color mb-1">Ödeme</div>
                                         @if (session.checkoutUrl) {
                                             <p class="m-0 text-sm text-color">Güvenli ödeme sayfasına yönlendirileceksiniz. Ödemeniz iyzico altyapısı üzerinden tamamlanır ve işlem sonrası bu sayfaya döneceksiniz.</p>
+                                            <p class="m-0 mt-2 text-xs text-muted-color" data-testid="checkout-duplicate-payment-note">Paket ya da dönem değiştirecekseniz önceki ödeme sayfasını kapatın. Aynı anda iki ödeme alınırsa ikincisi otomatik iade edilir.</p>
                                         } @else {
                                             <span class="text-muted-color text-sm">Ödeme bağlantısı henüz hazır değil. Durumu yenileyerek tekrar deneyin.</span>
                                         }
