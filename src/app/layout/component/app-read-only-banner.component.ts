@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Component, computed, DestroyRef, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { filter } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
@@ -38,10 +40,20 @@ export class AppReadOnlyBannerComponent {
     readonly ctx = inject(TenantReadOnlyContextService);
     private readonly router = inject(Router);
 
-    readonly showBannerSubscriptionLinks = computed(() => this.ctx.showReadOnlyBannerSubscriptionActions() && !this.isOnSubscriptionPage());
+    /** Bant layout'ta kalır; `router.url` sinyal olmadığı için adres gezinmede ayrıca izlenir. */
+    private readonly url = signal(this.router.url);
 
-    private isOnSubscriptionPage(): boolean {
-        return this.router.url.includes('/panel/settings/subscription');
+    readonly showBannerSubscriptionLinks = computed(
+        () => this.ctx.showReadOnlyBannerSubscriptionActions() && !this.url().includes('/panel/settings/subscription')
+    );
+
+    constructor() {
+        this.router.events
+            .pipe(
+                filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+                takeUntilDestroyed(inject(DestroyRef))
+            )
+            .subscribe((event) => this.url.set(event.urlAfterRedirects));
     }
 
     /** Öncelik: backend `message`; yoksa rol bazlı sabit metin. */
