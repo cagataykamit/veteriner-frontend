@@ -130,9 +130,9 @@ describe('panel-navigation', () => {
         expect(entryForUrl(MENU_GROUPS, '/panel/duplicate-payments')?.label).toBe('Çift ödemeler');
     });
 
-    it('izin yoksa yalnız Ayarlar kalır; Özet yalnız yönetici düzeyi izniyle görünür', () => {
+    it('izin yoksa yalnız Ayarlar kalır; Özet ve İşletme performansı (Raporlar) yalnız yönetici düzeyi izniyle görünür', () => {
         expect(labels(visibleGroups(MENU_GROUPS, () => false))).toEqual(['Ayarlar']);
-        expect(labels(visibleGroups(MENU_GROUPS, only(MANAGER_LEVEL_CLAIM)))).toEqual(['Özet', 'Ayarlar']);
+        expect(labels(visibleGroups(MENU_GROUPS, only(MANAGER_LEVEL_CLAIM)))).toEqual(['Raporlar', 'Özet', 'Ayarlar']);
     });
 
     it('Bugün yalnız Visits.Read ile görünür; birleşik öğe en az bir sekmesi yetkiliyse görünür', () => {
@@ -200,7 +200,8 @@ describe('panel-navigation', () => {
         expect(firstAccessibleRoute(MENU_GROUPS, () => true)).toBe('/panel/today');
         expect(firstAccessibleRoute(MENU_GROUPS, only('Clients.Read', 'Pets.Read'))).toBe('/panel/patients');
         expect(firstAccessibleRoute(MENU_GROUPS, only(MANAGER_LEVEL_CLAIM, 'Pets.Read'))).toBe('/panel/patients');
-        expect(firstAccessibleRoute(MENU_GROUPS, only(MANAGER_LEVEL_CLAIM))).toBe('/panel/dashboard');
+        // Yönetici yine Özet'te açılır (panelHomeRoute); bu yalnız menü sırasıdır.
+        expect(firstAccessibleRoute(MENU_GROUPS, only(MANAGER_LEVEL_CLAIM))).toBe('/panel/reports');
         expect(firstAccessibleRoute(MENU_GROUPS, () => false)).toBe('/panel/settings');
     });
 
@@ -327,8 +328,9 @@ describe('panel-navigation', () => {
     it('Rapor Merkezi kartları izne göre süzülür ve gruplanır', () => {
         const all = visibleGroups(REPORT_SECTIONS, () => true);
 
-        expect(all.map((g) => g.label)).toEqual(['Randevu ve ziyaret', 'Klinik', 'Para', 'Kayıt defterleri', 'HBS takibi']);
+        expect(all.map((g) => g.label)).toEqual(['Yönetim', 'Randevu ve ziyaret', 'Klinik', 'Para', 'Kayıt defterleri', 'HBS takibi']);
         expect(labels(all)).toEqual([
+            'İşletme performansı',
             'Randevu Raporu',
             'Muayene Raporu',
             'Aşı Raporu',

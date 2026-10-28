@@ -118,6 +118,19 @@ export const DUPLICATE_PAYMENTS_ROUTE = '/panel/duplicate-payments';
 /** Rapor Merkezi kartları; menüde tek "Raporlar" girişi vardır (ADR-003). Yeni rapor buraya kart olarak eklenir. */
 export const REPORT_SECTIONS: readonly CardSection[] = [
     {
+        label: 'Yönetim',
+        entries: [
+            {
+                label: 'İşletme performansı',
+                icon: 'pi pi-fw pi-chart-line',
+                route: `${REPORTS_ROUTE}/performance`,
+                // Yönetici düzeyi, Özet ile aynı koşul (MANAGER_LEVEL_CLAIM); sabit aşağıda tanımlı olduğu için izin doğrudan yazılır.
+                claims: [VISITS_CORRECT_CLAIM],
+                description: 'Dönemin cirosu, tahsilatı ve iş hacmi; önceki dönemle karşılaştırma.'
+            }
+        ]
+    },
+    {
         label: 'Randevu ve ziyaret',
         entries: [
             {

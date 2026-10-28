@@ -240,7 +240,9 @@ export const ApiEndpoints = {
         /** Tahsilat/kasa özeti (`Payments.Read`); `from`, `to`, `clinicId`. */
         cashSummary: () => `/api/v1/reports/cash-summary`,
         /** Gün sonu açık işler (`Visits.Read`); `from`, `to`, tek klinik zorunlu. */
-        endOfDayOpenItems: () => `/api/v1/reports/end-of-day/open-items`
+        endOfDayOpenItems: () => `/api/v1/reports/end-of-day/open-items`,
+        /** İşletme performansı özeti (REPORT-008). */
+        performanceSummary: () => `/api/v1/reports/performance-summary`
     },
     treatments: {
         /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `Sort`, `Order` (+ `clinicId`, `PetId`). */
