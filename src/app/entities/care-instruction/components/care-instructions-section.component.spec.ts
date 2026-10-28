@@ -92,7 +92,7 @@ describe('CareInstructionsSectionComponent', () => {
         await typeAndSubmit('Dinlendirin');
         expect(service.createCareInstruction).toHaveBeenCalledWith({ petId: 'p1', hospitalizationId: 'h1', text: 'Dinlendirin' });
         expect(service.getCareInstructions).toHaveBeenCalledTimes(2);
-        expect(fixture.componentInstance.dialogVisible).toBe(false);
+        expect(fixture.componentInstance.dialogVisible()).toBe(false);
     });
 
     it('düzenleme: kayıtlı rowVersion ile gider', async () => {
@@ -117,7 +117,7 @@ describe('CareInstructionsSectionComponent', () => {
 
         fixture.componentInstance.discardAndReload();
         expect(service.getCareInstructions).toHaveBeenCalledTimes(2);
-        expect(fixture.componentInstance.dialogVisible).toBe(false);
+        expect(fixture.componentInstance.dialogVisible()).toBe(false);
     });
 
     it('boş / yalnız boşluk metin kaydedilmez', async () => {

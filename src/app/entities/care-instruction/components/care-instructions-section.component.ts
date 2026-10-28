@@ -26,7 +26,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
     selector: 'app-care-instructions-section',
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, DialogModule, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent, TrDateTimePipe],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (canRead) {
             <div class="card" data-testid="care-instructions-section">
@@ -91,7 +91,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
                     }
 
                     <div class="flex flex-wrap justify-end gap-2 mt-4">
-                        <button pButton type="button" severity="secondary" (click)="dialogVisible = false" [disabled]="submitting()">Vazgeç</button>
+                        <button pButton type="button" severity="secondary" (click)="dialogVisible.set(false)" [disabled]="submitting()">Vazgeç</button>
                         <button pButton type="submit" [disabled]="form.invalid || ro.mutationBlocked() || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
                     </div>
                 </form>
@@ -120,7 +120,7 @@ export class CareInstructionsSectionComponent {
     readonly error = signal<string | null>(null);
     readonly rows = signal<CareInstructionVm[]>([]);
 
-    dialogVisible = false;
+    readonly dialogVisible = signal(false);
     readonly editing = signal<CareInstructionVm | null>(null);
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -185,7 +185,7 @@ export class CareInstructionsSectionComponent {
         request$.subscribe({
             next: () => {
                 this.submitting.set(false);
-                this.dialogVisible = false;
+                this.dialogVisible.set(false);
                 this.reload();
             },
             error: (e: unknown) => {
@@ -205,7 +205,7 @@ export class CareInstructionsSectionComponent {
 
     /** Çakışmada yazılan metin atılır, güncel kayıtlar yüklenir. */
     discardAndReload(): void {
-        this.dialogVisible = false;
+        this.dialogVisible.set(false);
         this.reload();
     }
 
@@ -214,6 +214,6 @@ export class CareInstructionsSectionComponent {
         this.form.reset({ text: row?.text ?? '' });
         this.submitError.set(null);
         this.conflict.set(false);
-        this.dialogVisible = true;
+        this.dialogVisible.set(true);
     }
 }
