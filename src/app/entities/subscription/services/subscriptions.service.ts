@@ -18,7 +18,8 @@ import type {
     SubscriptionSummaryDto
 } from '@/app/entities/subscription/models/subscription-api.model';
 import type { PendingPlanChangeVm, SubscriptionBillingPeriod, SubscriptionCheckoutSessionVm, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { CHECKOUT_ALREADY_PAID_CODE, CheckoutAlreadyPaidError } from '@/app/entities/subscription/services/subscription-checkout.errors';
+import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { resolveTenantIdFromJwt } from '@/app/core/auth/jwt-tenant.utils';
 
 /** Ödeme sonrası polling gibi senaryolarda GET önbelleğini bypass etmek için (backend genelde yok sayar). */
@@ -61,9 +62,11 @@ export class SubscriptionsService {
 
         return this.api.post<SubscriptionCheckoutSessionDto>(ApiEndpoints.tenants.subscriptionCheckout(tenantId), body).pipe(
             map(mapSubscriptionCheckoutSessionDtoToVm),
-            catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Checkout oturumu başlatılamadı.')))
-            )
+            catchError((err: HttpErrorResponse) => {
+                const message = messageFromHttpError(err, 'Checkout oturumu başlatılamadı.');
+
+                return throwError(() => (problemCodeFromHttpError(err) === CHECKOUT_ALREADY_PAID_CODE ? new CheckoutAlreadyPaidError(message) : new Error(message)));
+            })
         );
     }
 
@@ -103,6 +106,20 @@ export class SubscriptionsService {
                     throwError(() => new Error(messageFromHttpError(err, 'Checkout aktivasyonu tamamlanamadı.')))
                 )
             );
+    }
+
+    /** Sağlayıcı sayfasında vazgeçilen oturumu kapatır; sonraki başlatma yeni ödeme sayfası alır. Kapalı oturumda da başarılıdır. */
+    cancelCheckout(checkoutSessionId: string): Observable<void> {
+        const tenantId = resolveTenantIdFromJwt(this.auth.getAccessToken());
+
+        if (!tenantId) {
+            return throwError(() => new Error('Kurum bilgisi okunamadı. Lütfen yeniden giriş yapın.'));
+        }
+
+        return this.api.post<unknown>(ApiEndpoints.tenants.cancelSubscriptionCheckout(tenantId, checkoutSessionId), {}).pipe(
+            map(() => undefined),
+            catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Ödeme oturumu kapatılamadı.'))))
+        );
     }
 
     scheduleDowngrade(targetPlanCode: string, reason?: string | null): Observable<SubscriptionSummaryVm> {

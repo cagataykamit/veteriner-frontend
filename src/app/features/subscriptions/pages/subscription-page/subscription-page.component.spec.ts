@@ -8,6 +8,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { ExampleClinicService } from '@/app/entities/example-clinic/services/example-clinic.service';
 import { DiscountCodesService } from '@/app/entities/sales-partner/services/discount-codes.service';
 import type { PendingPlanChangeVm, SubscriptionCheckoutSessionVm, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
+import { CheckoutAlreadyPaidError } from '@/app/entities/subscription/services/subscription-checkout.errors';
 import { SubscriptionsService } from '@/app/entities/subscription/services/subscriptions.service';
 import { SubscriptionPageComponent } from './subscription-page.component';
 
@@ -131,6 +132,7 @@ describe('SubscriptionPageComponent', () => {
             startCheckout: vi.fn().mockName('SubscriptionsService.startCheckout'),
             getCheckout: vi.fn().mockName('SubscriptionsService.getCheckout'),
             finalizeCheckout: vi.fn().mockName('SubscriptionsService.finalizeCheckout'),
+            cancelCheckout: vi.fn().mockName('SubscriptionsService.cancelCheckout'),
             scheduleDowngrade: vi.fn().mockName('SubscriptionsService.scheduleDowngrade'),
             cancelPendingPlanChange: vi.fn().mockName('SubscriptionsService.cancelPendingPlanChange')
         } as unknown as MockedObject<SubscriptionsService>;
@@ -171,6 +173,12 @@ describe('SubscriptionPageComponent', () => {
             render();
 
             expect(text()).toContain('Plan listesi bulunamadı.');
+        });
+
+        it('fiyatı talep üzerine olan plan "İletişime geçin" gösterir', () => {
+            render();
+
+            expect(text()).toContain('İletişime geçin');
         });
 
         it('ilk yüklemede özet önbelleği atlanmaz ve salt okunur bağlamına uygulanır', () => {
@@ -283,6 +291,52 @@ describe('SubscriptionPageComponent', () => {
             expect(text()).toContain('Güvenli ödeme sayfasına yönlendirileceksiniz.');
             expect(buttonLabels()).toContain('Ödemeye devam et');
             expect(buttonLabels()).toContain('Durumu yenile');
+        });
+
+        it('Ödemeye devam et saklı sayfaya doğrudan gitmez; backend aynı hedefle yeniden sorulur', () => {
+            service.startCheckout.mockReturnValueOnce(of(session())).mockReturnValueOnce(NEVER);
+            render();
+            click('Hemen yükselt');
+
+            click('Ödemeye devam et');
+
+            expect(service.startCheckout).toHaveBeenCalledTimes(2);
+            expect(service.startCheckout).toHaveBeenLastCalledWith('premium', 'Monthly');
+        });
+
+        it('önceki ödeme işlenmişse (backend 409) hata değil bilgi gösterilir, oturum bırakılır ve özet yenilenir', () => {
+            service.startCheckout
+                .mockReturnValueOnce(of(session()))
+                .mockReturnValueOnce(throwError(() => new CheckoutAlreadyPaidError('Önceki ödemeniz alınmış ve aboneliğinize işlendi. Sayfayı yenileyin.')));
+            render();
+            click('Hemen yükselt');
+            const summaryCalls = service.getSubscriptionSummary.mock.calls.length;
+
+            click('Ödemeye devam et');
+
+            expect(text()).toContain('Önceki ödemeniz alınmış ve aboneliğinize işlendi.');
+            expect(service.getSubscriptionSummary.mock.calls.length).toBe(summaryCalls + 1);
+            expect(service.getSubscriptionSummary).toHaveBeenLastCalledWith({ bustCache: true });
+            expect(sessionStorage.getItem(STORED_SESSION_KEY)).toBeNull();
+            expect(buttonLabels()).not.toContain('Ödemeye devam et');
+        });
+
+        it('geri tuşuyla dönüşte saklanan açık oturum gösterilir; kapanmışsa bırakılır', () => {
+            sessionStorage.setItem(STORED_SESSION_KEY, 'cs-7');
+            service.getCheckout.mockReturnValue(of(session({ checkoutSessionId: 'cs-7' })));
+            render();
+
+            expect(service.getCheckout).toHaveBeenCalledWith('cs-7');
+            expect(buttonLabels()).toContain('Ödemeye devam et');
+        });
+
+        it('geri tuşuyla dönüşte saklanan oturum kapanmışsa gösterilmez ve bırakılır', () => {
+            sessionStorage.setItem(STORED_SESSION_KEY, 'cs-8');
+            service.getCheckout.mockReturnValue(of(session({ checkoutSessionId: 'cs-8', canContinue: false, status: 'expired' })));
+            render();
+
+            expect(sessionStorage.getItem(STORED_SESSION_KEY)).toBeNull();
+            expect(buttonLabels()).not.toContain('Ödemeye devam et');
         });
 
         it('yıllık seçiliyken yükseltme yıllık dönemle başlatılır', () => {
@@ -403,14 +457,25 @@ describe('SubscriptionPageComponent', () => {
             expect(buttonLabels().filter((l) => l === 'Durumu yenile').length).toBeGreaterThan(0);
         });
 
-        it('iptal dönüşünde uyarı bandı ve oturum yeniden yüklenir', () => {
+        it('iptal dönüşünde oturum kapatılır; eski ödeme sayfasına devam önerilmez', () => {
             queryParams = { session_id: 'cs-9', status: 'cancel' };
-            service.getCheckout.mockReturnValue(of(session({ checkoutSessionId: 'cs-9' })));
+            service.cancelCheckout.mockReturnValue(of(undefined));
             render();
 
             expect(text()).toContain('Ödeme sayfasından ayrıldınız veya işlemi iptal ettiniz.');
-            expect(service.getCheckout).toHaveBeenCalledWith('cs-9');
-            expect(buttonLabels()).toContain('Ödemeye devam et');
+            expect(text()).toContain('Ödeme alınmadı. Ödemeyi yeniden başlatabilirsiniz.');
+            expect(service.cancelCheckout).toHaveBeenCalledWith('cs-9');
+            expect(service.getCheckout).not.toHaveBeenCalled();
+            expect(buttonLabels()).not.toContain('Ödemeye devam et');
+        });
+
+        it('iptal dönüşünde oturum kapatılamasa da eski sayfaya devam önerilmez', () => {
+            queryParams = { session_id: 'cs-9', status: 'cancel' };
+            service.cancelCheckout.mockReturnValue(throwError(() => new Error('ağ')));
+            render();
+
+            expect(service.cancelCheckout).toHaveBeenCalledWith('cs-9');
+            expect(buttonLabels()).not.toContain('Ödemeye devam et');
         });
     });
 });

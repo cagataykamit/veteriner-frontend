@@ -43,8 +43,8 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
             } @else {
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     @for (plan of s.availablePlans; track plan.code) {
-                        <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3 min-w-0">
-                            <div class="flex items-center justify-between gap-2">
+                        <div class="flex flex-col rounded-lg border border-surface-200 dark:border-surface-700 p-3 min-w-0">
+                            <div class="flex items-center justify-between gap-2 min-h-7">
                                 <div class="font-medium break-words">{{ planLabel(plan) }}</div>
                                 @if (isCurrentPlan(plan, s)) {
                                     <span class="text-xs px-2 py-1 rounded-md bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">Mevcut</span>
@@ -69,7 +69,8 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
                                 </div>
                             }
                             @if (canManage() && shouldShowPlanAction(plan, s)) {
-                                <div class="mt-3">
+                                <!-- Düğmeler kart altına hizalı: fiyatı/açıklaması kısa kart da aynı hizada kalır. -->
+                                <div class="mt-auto pt-3">
                                     <button pButton type="button" [disabled]="busy()" (click)="planAction.emit(plan)"><i class="p-button-icon" [class]="busyPlanCodes().includes(plan.code) ? 'pi pi-spin pi-spinner' : 'pi pi-arrow-right'"></i>{{ planActionLabel(plan, s) }}</button>
                                 </div>
                             }
@@ -155,6 +156,11 @@ export class SubscriptionPlanCardsComponent {
         const period = canChooseBillingPeriod(summary) ? this.billingPeriod() : summary.billingPeriod;
         const view = def ? planPriceView(def, period === 'Yearly' ? 'yearly' : 'monthly') : null;
 
-        return view?.unit ? `${view.amount} ${view.unit}` : null;
+        if (!view) {
+            return null;
+        }
+
+        // Fiyatı talep üzerine olan plan (Kurumsal) birimsiz "İletişime geçin" gösterir.
+        return view.unit ? `${view.amount} ${view.unit}` : view.amount;
     }
 }

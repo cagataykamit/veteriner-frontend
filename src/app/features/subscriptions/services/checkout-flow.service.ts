@@ -1,11 +1,12 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin, map, Observable, of } from 'rxjs';
+import { finalize, forkJoin, map, Observable, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { SUBSCRIPTIONS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { PendingPlanChangeVm, SubscriptionBillingPeriod, SubscriptionCheckoutSessionVm, SubscriptionPlanVm, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
 import type { SubscriptionSummaryRequestOptions } from '@/app/entities/subscription/services/subscriptions.service';
+import { CheckoutAlreadyPaidError } from '@/app/entities/subscription/services/subscription-checkout.errors';
 import { SubscriptionsService } from '@/app/entities/subscription/services/subscriptions.service';
 import { CheckoutReturnVerificationService, type CheckoutReturnVerificationHost } from '@/app/features/subscriptions/services/checkout-return-verification.service';
 import { isActiveTrialingSubscription, isExpiredReadOnlySubscription } from '@/app/features/subscriptions/utils/subscription-access.utils';
@@ -132,10 +133,29 @@ export class CheckoutFlowService {
             () => {
                 if (hostedCheckoutEntry) {
                     this.handleCheckoutReturn(parsedReturn);
+                } else if (storedId) {
+                    this.restoreOpenCheckout(storedId);
                 }
             },
             { bustSummaryCache: hostedCheckoutEntry }
         );
+    }
+
+    /**
+     * Ödeme sayfasından dönüş işareti olmadan (ör. tarayıcının geri tuşu) gelindiyse saklanan oturum gösterilir; kapanmışsa
+     * bırakılır. Ödemesi alınmışsa backend bunu sonraki başlatmada ya da arka plan uzlaştırmasında işler.
+     */
+    private restoreOpenCheckout(sessionId: string): void {
+        this.subscriptions.getCheckout(sessionId).subscribe({
+            next: (session) => {
+                if (session.canContinue) {
+                    this.checkoutSession.set(session);
+                } else {
+                    clearStoredCheckoutSessionId();
+                }
+            },
+            error: () => clearStoredCheckoutSessionId()
+        });
     }
 
     reload(onComplete?: () => void, options?: { readonly bustSummaryCache?: boolean }): void {
@@ -214,10 +234,8 @@ export class CheckoutFlowService {
         this.planActionInfo.set(null);
 
         if (hasOpenCheckoutForPlan(plan, this.checkoutSession(), this.selectedBillingPeriod())) {
-            const url = this.checkoutSession()?.checkoutUrl?.trim();
-
-            if (url) {
-                this.goToHostedCheckout(url);
+            if (this.checkoutSession()?.checkoutUrl?.trim()) {
+                this.continueCheckout();
 
                 return;
             }
@@ -242,7 +260,23 @@ export class CheckoutFlowService {
         this.startCheckout(plan.code);
     }
 
-    goToHostedCheckout(checkoutUrl: string): void {
+    /**
+     * Açık oturumun ödeme sayfasına doğrudan gidilmez: sağlayıcı sayfayı (iyzico'da vazgeçme ya da başarısız deneme sonrası)
+     * bildirmeden geçersiz kılmış olabilir. Backend'e aynı hedefle yeniden başlatma sorulur; sayfa hâlâ ödenebiliyorsa aynı
+     * oturumu, değilse yenisini döner ve oraya gidilir.
+     */
+    continueCheckout(): void {
+        const session = this.checkoutSession();
+        const target = session?.targetPlanCode?.trim();
+
+        if (!session || !target) {
+            return;
+        }
+
+        this.startCheckout(target, { billingPeriod: session.billingPeriod, continueToProvider: true });
+    }
+
+    private goToHostedCheckout(checkoutUrl: string): void {
         const id = this.checkoutSession()?.checkoutSessionId?.trim();
 
         if (id) {
@@ -342,7 +376,7 @@ export class CheckoutFlowService {
         });
     }
 
-    private startCheckout(targetPlanCode: string): void {
+    private startCheckout(targetPlanCode: string, options: { billingPeriod?: SubscriptionBillingPeriod; continueToProvider?: boolean } = {}): void {
         const sum = this.summary();
 
         if (!sum || !this.canManageSubscriptionOperations(sum)) {
@@ -355,23 +389,38 @@ export class CheckoutFlowService {
         this.finalizeError.set(null);
         this.planActionError.set(null);
         this.planActionInfo.set(null);
-        // Dönem seçilemiyorsa (deneme, etkin yıllık dönem) backend mevcut dönemi kullanır.
-        const billingPeriod = canChooseBillingPeriod(sum) ? this.selectedBillingPeriod() : undefined;
+        // Dönem seçilemiyorsa (deneme, etkin yıllık dönem) backend mevcut dönemi kullanır; açık oturuma devamda oturumun dönemi.
+        const billingPeriod = options.billingPeriod ?? (canChooseBillingPeriod(sum) ? this.selectedBillingPeriod() : undefined);
 
         this.subscriptions.startCheckout(targetPlanCode, billingPeriod).subscribe({
             next: (session) => {
                 this.checkoutSession.set(session);
+                const url = session.checkoutUrl?.trim();
 
-                if (session.checkoutUrl?.trim()) {
+                if (url) {
                     writeStoredCheckoutSessionId(session.checkoutSessionId);
                 }
 
                 this.planActionLoadingCode.set(null);
                 this.checkoutLoading.set(false);
+
+                if (url && options.continueToProvider) {
+                    this.goToHostedCheckout(url);
+                }
             },
             error: (e: unknown) => {
                 this.planActionLoadingCode.set(null);
                 this.checkoutLoading.set(false);
+
+                // Önceki ödeme sağlayıcıda alınmış ve backend onu aboneliğe işledi: hata değil; oturum bırakılır, özet yenilenir.
+                if (e instanceof CheckoutAlreadyPaidError) {
+                    clearStoredCheckoutSessionId();
+                    this.checkoutSession.set(null);
+                    this.reload(() => this.planActionInfo.set(e.message), { bustSummaryCache: true });
+
+                    return;
+                }
+
                 const message = e instanceof Error ? e.message : 'Ödeme işlemi başlatılamadı.';
 
                 this.checkoutError.set(message);
@@ -410,12 +459,12 @@ export class CheckoutFlowService {
             this.returnBanner.set({
                 severity: 'warn',
                 title: 'Ödeme sayfasından ayrıldınız veya işlemi iptal ettiniz.',
-                detail: 'Aynı ödeme işlemine devam edebilir veya plan değişikliğini yeniden başlatabilirsiniz.'
+                detail: 'Ödeme alınmadı. Ödemeyi yeniden başlatabilirsiniz.'
             });
             const sessionId = parsed.sessionId ?? readStoredCheckoutSessionId();
 
             if (sessionId) {
-                this.hydrateCheckoutSession(sessionId);
+                this.closeCancelledCheckout(sessionId);
             }
 
             return;
@@ -439,20 +488,21 @@ export class CheckoutFlowService {
         }
     }
 
-    private hydrateCheckoutSession(sessionId: string): void {
+    /**
+     * Sağlayıcı vazgeçilen ödeme sayfasının token'ını geçersiz kılar; oturum açık kalırsa sonraki başlatma aynı ölü sayfaya
+     * gider. Oturum backend'de kapatılır, sayfadaki ve saklanan oturum bırakılır; kapatma başarısız olsa da bırakılır
+     * (backend süre dolunca kendisi kapatır).
+     */
+    private closeCancelledCheckout(sessionId: string): void {
         this.checkoutLoading.set(true);
-        this.checkoutError.set(null);
-        this.subscriptions.getCheckout(sessionId).subscribe({
-            next: (session) => {
-                this.checkoutSession.set(session);
-                this.checkoutLoading.set(false);
-            },
-            error: (e: unknown) => {
-                this.checkoutError.set(e instanceof Error ? e.message : 'Ödeme durumu yüklenemedi.');
-                this.checkoutLoading.set(false);
-            }
-        });
+        this.subscriptions
+            .cancelCheckout(sessionId)
+            .pipe(finalize(() => this.checkoutLoading.set(false)))
+            .subscribe({ error: () => undefined });
+        clearStoredCheckoutSessionId();
+        this.checkoutSession.set(null);
     }
+
 
     private pendingPlanChangeObservable(options?: SubscriptionSummaryRequestOptions): Observable<PendingPlanChangeVm | null> {
         return this.auth.hasOperationClaim(SUBSCRIPTIONS_MANAGE_CLAIM) ? this.subscriptions.getPendingPlanChange(options) : of(null);

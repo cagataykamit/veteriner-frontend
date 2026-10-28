@@ -378,6 +378,8 @@ export const ApiEndpoints = {
             `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-checkout/${encodeURIComponent(checkoutSessionId)}`,
         finalizeSubscriptionCheckout: (tenantId: string, checkoutSessionId: string) =>
             `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-checkout/${encodeURIComponent(checkoutSessionId)}/finalize`,
+        cancelSubscriptionCheckout: (tenantId: string, checkoutSessionId: string) =>
+            `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-checkout/${encodeURIComponent(checkoutSessionId)}/cancel`,
         scheduleSubscriptionDowngrade: (tenantId: string) =>
             `/api/v1/tenants/${encodeURIComponent(tenantId)}/subscription-plan-change/downgrade`,
         pendingSubscriptionPlanChange: (tenantId: string) =>
