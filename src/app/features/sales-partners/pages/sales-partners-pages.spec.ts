@@ -1,7 +1,7 @@
 import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter, Router, UrlTree } from '@angular/router';
-import { of } from 'rxjs';
+import { ActivatedRoute, convertToParamMap, type ParamMap, provideRouter, Router, UrlTree } from '@angular/router';
+import { BehaviorSubject, of, Subject } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { platformAdminGuard } from '@/app/core/auth/platform-admin.guard';
 import type { DiscountRedemptionRowDto, SalesPartnerDetailDto, SalesPartnerDto, SalesPartnerSummaryDto } from '@/app/entities/sales-partner/models/sales-partner.model';
@@ -147,11 +147,13 @@ describe('Satış ortakları ekranları (ADR-037)', () => {
     describe('detay', () => {
         let fixture: ComponentFixture<SalesPartnerDetailPageComponent>;
         let cmp: SalesPartnerDetailPageComponent;
+        let paramMap: BehaviorSubject<ParamMap>;
 
         beforeEach(async () => {
+            paramMap = new BehaviorSubject(convertToParamMap({ id: 'p1' }));
             await TestBed.configureTestingModule({
                 imports: [SalesPartnerDetailPageComponent],
-                providers: [provideRouter([]), { provide: SalesPartnersService, useValue: service }, { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'p1' }) } } }]
+                providers: [provideRouter([]), { provide: SalesPartnersService, useValue: service }, { provide: ActivatedRoute, useValue: { paramMap } }]
             }).compileComponents();
             fixture = TestBed.createComponent(SalesPartnerDetailPageComponent);
             cmp = fixture.componentInstance;
@@ -182,6 +184,32 @@ describe('Satış ortakları ekranları (ADR-037)', () => {
             expect(paidAtUtc).toBe('2026-11-30T09:00:00.000Z');
             expect(note).toBe('Havale');
             expect(service.get).toHaveBeenCalledTimes(2);
+        });
+
+        it('aynı bileşende başka ortağa geçince yükleniyor gösterir, yeni ortağı yükler; seçim ve açık diyalog eski ortakta kalır', () => {
+            const next = new Subject<SalesPartnerDetailDto>();
+
+            cmp.toggle('x1', true);
+            cmp.openMarkPaid();
+            service.get.mockReturnValue(next);
+            paramMap.next(convertToParamMap({ id: 'p2' }));
+            fixture.detectChanges();
+
+            expect(service.get).toHaveBeenLastCalledWith('p2');
+            expect(service.redemptions).toHaveBeenLastCalledWith('p2');
+            expect(cmp.partner(), 'eski ortak yükleme sırasında gösterilmez').toBeNull();
+            expect(cmp.selectedIds()).toEqual([]);
+            expect(cmp.markPaidVisible()).toBe(false);
+
+            next.next({ ...DETAIL, partner: { ...PARTNER, id: 'p2', name: 'Veli Ortak' } });
+            next.complete();
+            fixture.detectChanges();
+
+            expect(cmp.partner()?.name).toBe('Veli Ortak');
+            cmp.toggle('x1', true);
+            cmp.openMarkPaid();
+            cmp.markPaid();
+            expect(vi.mocked(service.markPaid).mock.lastCall![0]).toBe('p2');
         });
     });
 });

@@ -20,6 +20,7 @@ import { StoredFileGalleryComponent } from '@/app/shared/files/stored-file-galle
 import { StoredFileUploadComponent } from '@/app/shared/files/stored-file-upload.component';
 import { StoredFilesService } from '@/app/shared/files/stored-files.service';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
 /** Düzenleme/oluşturma sonrası dönülen sayfada gösterilen kısa onay (query `saved`). */
 const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', created: 'Kayıt oluşturuldu.' };
@@ -177,65 +178,66 @@ export class LabResultDetailPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
-    readonly row = signal<LabResultDetailVm | null>(null);
+    private readonly loader = new RouteEntityLoader<LabResultDetailVm>({
+        fetch: (id) => this.labResultsService.getLabResultById(id),
+        invalidIdMessage: 'Geçersiz kayıt.',
+        errorMessage: (e) => (e instanceof Error ? e.message : 'Kayıt yüklenemedi.'),
+        onRouteChange: (id) => this.resetForRoute(id),
+        onLoaded: () => this.loadFiles()
+    });
+
+    readonly loading = this.loader.loading;
+    readonly error = this.loader.error;
+    readonly row = this.loader.value;
     readonly savedMessage = signal<string | null>(null);
     cancelVisible = false;
     readonly canUpdateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM);
     private readonly filesService = inject(StoredFilesService);
     readonly files = signal<StoredFileVm[]>([]);
     readonly filesError = signal<string | null>(null);
-    readonly filesOwner = computed(() => ApiEndpoints.labResults.filesOwner(this.row()?.id ?? this.labResultId));
+    readonly filesOwner = computed(() => ApiEndpoints.labResults.filesOwner(this.row()?.id ?? this.loader.id ?? ''));
     /** Dosya ekleme `LabResults.Update` ister; iptal edilmiş kayda eklenmez (kesinleşmiş muayene engel değildir). */
     readonly canAddFiles = computed(() => this.canUpdateLabResult && this.row()?.status !== 'Cancelled' && !this.ro.mutationBlocked());
 
     readonly isEditable = isLabResultEditable;
     readonly editLabel = labResultEditLabel;
 
-    private labResultId = '';
-
     ngOnInit(): void {
-        const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
-
-        if (!id) {
-            this.error.set('Geçersiz kayıt.');
-            this.loading.set(false);
-
-            return;
-        }
-
-        this.labResultId = id;
-        this.savedMessage.set(SAVED_MESSAGES[this.route.snapshot.queryParamMap.get('saved') ?? ''] ?? null);
-        this.reload();
+        this.loader.init();
     }
 
     reload(): void {
-        this.loading.set(true);
-        this.error.set(null);
-        this.labResultsService.getLabResultById(this.labResultId).subscribe({
-            next: (x) => {
-                this.row.set(x);
-                this.loading.set(false);
-                this.loadFiles();
-            },
-            error: (e: unknown) => {
-                this.error.set(e instanceof Error ? e.message : 'Kayıt yüklenemedi.');
-                this.loading.set(false);
-            }
-        });
+        this.loader.reload();
     }
 
     onFileUploaded(file: StoredFileVm): void {
         this.files.update((list) => [...list, file]);
     }
 
-    /** Lab dosyaları ayrı uçtan (sözleşme §5); lab detay gövdesi değişmez. */
+    /** Aynı bileşende başka kayda geçişte önceki kaydın dosyaları, iptal diyaloğu ve onay mesajı kalmaz. */
+    private resetForRoute(id: string | null): void {
+        this.savedMessage.set(id ? (SAVED_MESSAGES[this.route.snapshot.queryParamMap.get('saved') ?? ''] ?? null) : null);
+        this.cancelVisible = false;
+        this.files.set([]);
+        this.filesError.set(null);
+    }
+
+    /** Lab dosyaları ayrı uçtan (sözleşme §5); lab detay gövdesi değişmez. Geç gelen önceki kaydın listesi yazılmaz. */
     private loadFiles(): void {
+        const id = this.loader.id;
+
         this.filesError.set(null);
         this.filesService.list(this.filesOwner()).subscribe({
-            next: (files) => this.files.set(files),
-            error: (e: Error) => this.filesError.set(e.message)
+            next: (files) => {
+                if (id === this.loader.id) {
+                    this.files.set(files);
+                }
+            },
+            error: (e: Error) => {
+                if (id === this.loader.id) {
+                    this.filesError.set(e.message);
+                }
+            }
         });
     }
 }

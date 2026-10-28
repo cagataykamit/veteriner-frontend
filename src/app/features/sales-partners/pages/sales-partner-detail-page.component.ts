@@ -1,6 +1,5 @@
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
@@ -23,6 +22,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 import { AppStatusTagComponent, type StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateDisplay, fromIstanbulDateAndTimeToUtcIso, localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
 const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = { Accrued: 'warn', Paid: 'success', Cancelled: 'secondary' };
 
@@ -248,15 +248,29 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
 export class SalesPartnerDetailPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
-    private readonly route = inject(ActivatedRoute);
     private readonly partners = inject(SalesPartnersService);
-    private readonly partnerId = this.route.snapshot.paramMap.get('id') ?? '';
+    private readonly loader = new RouteEntityLoader({
+        fetch: (id) => forkJoin({ detail: this.partners.get(id), redemptions: this.partners.redemptions(id) }),
+        invalidIdMessage: 'Geçersiz satış ortağı.',
+        errorMessage: (e) => (e instanceof Error ? e.message : 'Satış ortağı yüklenemedi.'),
+        onRouteChange: () => this.resetForRoute(),
+        onLoaded: ({ detail, redemptions }) => {
+            this.partner.set(detail.partner);
+            this.codes.set(detail.codes);
+            this.redemptions.set(redemptions);
+            this.selectedIds.set([]);
+        }
+    });
+
+    private get partnerId(): string {
+        return this.loader.id ?? '';
+    }
 
     readonly partner = signal<SalesPartnerDto | null>(null);
     readonly codes = signal<DiscountCodeDto[]>([]);
     readonly redemptions = signal<DiscountRedemptionRowDto[]>([]);
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
+    readonly loading = this.loader.loading;
+    readonly error = this.loader.error;
     readonly actionError = signal<string | null>(null);
     readonly exporting = signal(false);
     readonly mutatingId = signal<string | null>(null);
@@ -290,25 +304,11 @@ export class SalesPartnerDetailPageComponent implements OnInit {
     readonly cancelExecute = (reason: string): Observable<unknown> => this.partners.cancelCollection(this.partnerId, this.cancelling()?.id ?? '', reason);
 
     ngOnInit(): void {
-        this.load();
+        this.loader.init();
     }
 
     load(): void {
-        this.loading.set(true);
-        this.error.set(null);
-        forkJoin({ detail: this.partners.get(this.partnerId), redemptions: this.partners.redemptions(this.partnerId) }).subscribe({
-            next: ({ detail, redemptions }) => {
-                this.partner.set(detail.partner);
-                this.codes.set(detail.codes);
-                this.redemptions.set(redemptions);
-                this.selectedIds.set([]);
-                this.loading.set(false);
-            },
-            error: (e: unknown) => {
-                this.error.set(e instanceof Error ? e.message : 'Satış ortağı yüklenemedi.');
-                this.loading.set(false);
-            }
-        });
+        this.loader.reload();
     }
 
     openCode(code: DiscountCodeDto | null): void {
@@ -387,6 +387,19 @@ export class SalesPartnerDetailPageComponent implements OnInit {
                 this.actionError.set(message);
             }
         });
+    }
+
+    /** Aynı bileşende başka ortağa geçişte önceki ortağın verisi, seçimi ve diyalogları kalmaz (yükleniyor durumu görünür). */
+    private resetForRoute(): void {
+        this.partner.set(null);
+        this.codes.set([]);
+        this.redemptions.set([]);
+        this.selectedIds.set([]);
+        this.actionError.set(null);
+        this.partnerDialogVisible.set(false);
+        this.codeDialogVisible.set(false);
+        this.markPaidVisible.set(false);
+        this.cancelVisible.set(false);
     }
 
     contactLine(p: SalesPartnerDto): string {

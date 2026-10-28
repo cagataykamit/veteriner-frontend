@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { LabResultDetailVm, LabResultStatus } from '@/app/entities/lab-result/models/lab-result-vm.model';
@@ -41,7 +41,7 @@ describe('LabResultDetailPageComponent — başlık eylemleri', () => {
                 provideRouter([]),
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: StoredFilesService, useValue: { list: () => of([]) } },
-                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'l1' }), queryParamMap: convertToParamMap({}) } } },
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'l1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
                 { provide: LabResultsService, useValue: { getLabResultById: () => of(vm(status)) } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => canUpdate } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => blocked } }
@@ -95,7 +95,7 @@ describe('LabResultDetailPageComponent — İptal et', () => {
                 provideRouter([]),
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: StoredFilesService, useValue: { list: () => of([]) } },
-                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'l1' }), queryParamMap: convertToParamMap({}) } } },
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'l1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
                 { provide: LabResultsService, useValue: service },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
@@ -139,7 +139,7 @@ describe('LabResultDetailPageComponent — dosyalar', () => {
                 provideRouter([]),
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: StoredFilesService, useValue: { list } },
-                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'l1' }), queryParamMap: convertToParamMap({}) } } },
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'l1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
                 { provide: LabResultsService, useValue: { getLabResultById: () => of(vm(status)) } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => canUpdate } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
@@ -175,7 +175,7 @@ describe('LabResultDetailPageComponent — kayıt sonrası onay', () => {
                 provideRouter([]),
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: StoredFilesService, useValue: { list: () => of([]) } },
-                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'l1' }), queryParamMap: convertToParamMap(saved ? { saved } : {}) } } },
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'l1' })), snapshot: { queryParamMap: convertToParamMap(saved ? { saved } : {}) } } },
                 { provide: LabResultsService, useValue: { getLabResultById: () => of(vm('Requested')) } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
@@ -194,5 +194,42 @@ describe('LabResultDetailPageComponent — kayıt sonrası onay', () => {
         expect(bannerFor('1')).toBe('Kayıt güncellendi.');
         TestBed.resetTestingModule();
         expect(bannerFor(null)).toBeNull();
+    });
+});
+
+describe('LabResultDetailPageComponent — rota kimliği değişimi', () => {
+    it('aynı bileşende başka kayda geçince yeni kaydı ve dosyalarını yükler; eski kaydın onay mesajı kalmaz', () => {
+        const paramMap = new BehaviorSubject(convertToParamMap({ id: 'l1' }));
+        const route = { paramMap, snapshot: { queryParamMap: convertToParamMap({ saved: '1' }) } };
+        const getLabResultById = vi.fn((id: string) => of({ ...vm('Requested'), id, testName: id === 'l1' ? 'Kan sayımı' : 'Biyokimya' }));
+        const list = vi.fn((owner: string) => of(owner.endsWith('/l1') ? [{ id: 'f1', fileName: 'eski.pdf', contentType: 'application/pdf', kind: 'Pdf', sizeBytes: 10, uploadedAtUtc: '' }] : []));
+
+        TestBed.configureTestingModule({
+            imports: [LabResultDetailPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
+                { provide: StoredFilesService, useValue: { list } },
+                { provide: ActivatedRoute, useValue: route },
+                { provide: LabResultsService, useValue: { getLabResultById } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        });
+        const fixture = TestBed.createComponent(LabResultDetailPageComponent);
+
+        fixture.detectChanges();
+        expect(fixture.componentInstance.savedMessage()).toBe('Kayıt güncellendi.');
+        expect(fixture.componentInstance.files().length).toBe(1);
+
+        route.snapshot = { queryParamMap: convertToParamMap({}) };
+        paramMap.next(convertToParamMap({ id: 'l2' }));
+        fixture.detectChanges();
+
+        expect(getLabResultById).toHaveBeenLastCalledWith('l2');
+        expect(fixture.componentInstance.row()?.testName).toBe('Biyokimya');
+        expect(list).toHaveBeenLastCalledWith('/api/v1/lab-results/l2');
+        expect(fixture.componentInstance.files()).toEqual([]);
+        expect(fixture.componentInstance.savedMessage()).toBeNull();
     });
 });

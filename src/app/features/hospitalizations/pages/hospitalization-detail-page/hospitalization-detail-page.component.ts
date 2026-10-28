@@ -20,6 +20,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { AuthService } from '@/app/core/auth/auth.service';
 import { HOSPITALIZATIONS_DISCHARGE_CLAIM, HOSPITALIZATIONS_UPDATE_CLAIM, PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
 /** Düzenleme/oluşturma sonrası dönülen sayfada gösterilen kısa onay (query `saved`). */
 const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', created: 'Kayıt oluşturuldu.' };
@@ -230,9 +231,16 @@ export class HospitalizationDetailPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
-    readonly row = signal<HospitalizationDetailVm | null>(null);
+    private readonly loader = new RouteEntityLoader<HospitalizationDetailVm>({
+        fetch: (id) => this.hospitalizationsService.getHospitalizationById(id),
+        invalidIdMessage: 'Geçersiz kayıt.',
+        errorMessage: (e) => (e instanceof Error ? e.message : 'Kayıt yüklenemedi.'),
+        onRouteChange: (id) => this.resetForRoute(id)
+    });
+
+    readonly loading = this.loader.loading;
+    readonly error = this.loader.error;
+    readonly row = this.loader.value;
     readonly savedMessage = signal<string | null>(null);
     readonly showDischargedBanner = signal(false);
 
@@ -251,21 +259,8 @@ export class HospitalizationDetailPageComponent implements OnInit {
     readonly canDischargeHospitalization = this.auth.hasOperationClaim(HOSPITALIZATIONS_DISCHARGE_CLAIM);
     readonly canCreatePayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
 
-    private hospitalizationId = '';
-
     ngOnInit(): void {
-        const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
-
-        if (!id) {
-            this.error.set('Geçersiz kayıt.');
-            this.loading.set(false);
-
-            return;
-        }
-
-        this.hospitalizationId = id;
-        this.savedMessage.set(SAVED_MESSAGES[this.route.snapshot.queryParamMap.get('saved') ?? ''] ?? null);
-        this.reload();
+        this.loader.init();
     }
 
     openDischargeDialog(): void {
@@ -293,7 +288,9 @@ export class HospitalizationDetailPageComponent implements OnInit {
     }
 
     onDischargeSubmit(): void {
-        if (this.ro.mutationBlocked() || !this.canDischargeHospitalization) {
+        const id = this.loader.id;
+
+        if (!id || this.ro.mutationBlocked() || !this.canDischargeHospitalization) {
             return;
         }
 
@@ -318,7 +315,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
 
         this.dischargeSubmitting.set(true);
         this.hospitalizationsService
-            .dischargeHospitalization(this.hospitalizationId, {
+            .dischargeHospitalization(id, {
                 dischargedAtUtc,
                 dischargeNote: v.dischargeNote,
                 rowVersion: this.row()?.rowVersion
@@ -326,6 +323,12 @@ export class HospitalizationDetailPageComponent implements OnInit {
             .subscribe({
                 next: () => {
                     this.dischargeSubmitting.set(false);
+
+                    // Bu arada başka yatışa geçildiyse önceki kaydın sonucu yeni kayıtta gösterilmez.
+                    if (id !== this.loader.id) {
+                        return;
+                    }
+
                     this.dischargeDialogVisible = false;
                     this.showDischargedBanner.set(true);
                     this.reload();
@@ -349,17 +352,14 @@ export class HospitalizationDetailPageComponent implements OnInit {
     }
 
     reload(): void {
-        this.loading.set(true);
-        this.error.set(null);
-        this.hospitalizationsService.getHospitalizationById(this.hospitalizationId).subscribe({
-            next: (x) => {
-                this.row.set(x);
-                this.loading.set(false);
-            },
-            error: (e: unknown) => {
-                this.error.set(e instanceof Error ? e.message : 'Kayıt yüklenemedi.');
-                this.loading.set(false);
-            }
-        });
+        this.loader.reload();
+    }
+
+    /** Aynı bileşende başka yatışa geçişte önceki kaydın mesajları ve taburcu diyaloğu kalmaz. */
+    private resetForRoute(id: string | null): void {
+        this.savedMessage.set(id ? (SAVED_MESSAGES[this.route.snapshot.queryParamMap.get('saved') ?? ''] ?? null) : null);
+        this.showDischargedBanner.set(false);
+        this.dischargeDialogVisible = false;
+        this.onDischargeDialogHide();
     }
 }
