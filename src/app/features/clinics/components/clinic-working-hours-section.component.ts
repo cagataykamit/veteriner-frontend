@@ -28,7 +28,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     selector: 'app-clinic-working-hours-section',
     standalone: true,
     imports: [ReactiveFormsModule, DateInputComponent, ButtonModule, CheckboxModule, AppLoadingStateComponent, AppErrorStateComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card mb-4" [formGroup]="whForm">
             <h5 class="mt-0 mb-2">Çalışma Saatleri</h5>

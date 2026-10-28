@@ -22,7 +22,7 @@ import { TAX_IDENTITY_MSG_TAXPAYER, TAX_RATE_MSG_INVALID, taxpayerIdentityValida
     selector: 'app-clinic-taxpayer-settings-section',
     standalone: true,
     imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppLoadingStateComponent, AppErrorStateComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card mb-4" [formGroup]="form" data-testid="clinic-taxpayer-settings">
             <h5 class="mt-0 mb-2">Mükellef bilgileri</h5>
