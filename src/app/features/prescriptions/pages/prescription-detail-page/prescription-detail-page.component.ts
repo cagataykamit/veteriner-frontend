@@ -14,6 +14,7 @@ import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.con
 import { HbsSectionComponent } from '@/app/entities/hbs/components/hbs-section.component';
 import type { HbsEntryVm } from '@/app/entities/hbs/models/hbs.model';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
 @Component({
     selector: 'app-prescription-detail-page',
@@ -163,27 +164,21 @@ export class PrescriptionDetailPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
-    readonly loading = signal(true);
-    readonly error = signal<string | null>(null);
-    readonly row = signal<PrescriptionDetailVm | null>(null);
+    private readonly loader = new RouteEntityLoader<PrescriptionDetailVm>({
+        fetch: (id) => this.prescriptionsService.getPrescriptionById(id),
+        invalidIdMessage: 'Geçersiz reçete.',
+        errorMessage: (e) => (e instanceof Error ? e.message : 'Reçete yüklenemedi.'),
+        onRouteChange: (id) => this.showSavedBanner.set(!!id && this.route.snapshot.queryParamMap.get('saved') === '1')
+    });
+
+    readonly loading = this.loader.loading;
+    readonly error = this.loader.error;
+    readonly row = this.loader.value;
     readonly showSavedBanner = signal(false);
     readonly canUpdatePrescription = this.auth.hasOperationClaim(PRESCRIPTIONS_UPDATE_CLAIM);
 
-    private prescriptionId = '';
-
     ngOnInit(): void {
-        const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
-
-        if (!id) {
-            this.error.set('Geçersiz reçete.');
-            this.loading.set(false);
-
-            return;
-        }
-
-        this.prescriptionId = id;
-        this.showSavedBanner.set(this.route.snapshot.queryParamMap.get('saved') === '1');
-        this.reload();
+        this.loader.init();
     }
 
     /** HBS geri kaydı klinik içeriği değiştirmez; yalnız HBS alanı güncellenir (sayfa yeniden yüklenmez). */
@@ -192,17 +187,6 @@ export class PrescriptionDetailPageComponent implements OnInit {
     }
 
     reload(): void {
-        this.loading.set(true);
-        this.error.set(null);
-        this.prescriptionsService.getPrescriptionById(this.prescriptionId).subscribe({
-            next: (x) => {
-                this.row.set(x);
-                this.loading.set(false);
-            },
-            error: (e: unknown) => {
-                this.error.set(e instanceof Error ? e.message : 'Reçete yüklenemedi.');
-                this.loading.set(false);
-            }
-        });
+        this.loader.reload();
     }
 }
