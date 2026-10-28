@@ -4,9 +4,11 @@ import { NavigationEnd, Router } from '@angular/router';
 import { filter, map, merge, Observable, Subscription, throttleTime, timer } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { LAB_RESULTS_READ_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
 import type { MenuBadgeKey } from '@/app/core/routing/panel-navigation';
 import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
+import { countWaitingVisits } from '@/app/entities/visit/utils/visit-today.utils';
 
 /** Sayaçlar bu aralıkla ve sayfa geçişlerinde yenilenir; iki yenileme arası en az `MIN_GAP_MS` geçer. */
 const REFRESH_INTERVAL_MS = 60_000;
@@ -25,6 +27,7 @@ export function menuBadgeLabel(count: number | null | undefined): string | null 
 /**
  * Menü sayaçları: Bugün'de bekleyen hasta ve lab'da sonuç bekleyen istem sayısı.
  * İzni olmayan kullanıcı için sorgu yapılmaz ve sayaç gösterilmez. Hata olursa son değer korunur.
+ * Açık sayfa aynı veriyi `MenuBadgeFeed` ile bildiriyorsa o değer gösterilir ve sorgu atlanır.
  */
 @Injectable({ providedIn: 'root' })
 export class MenuBadgeService {
@@ -32,6 +35,7 @@ export class MenuBadgeService {
     private readonly router = inject(Router);
     private readonly visits = inject(VisitsService);
     private readonly labResults = inject(LabResultsService);
+    private readonly feed = inject(MenuBadgeFeed);
 
     private readonly counts = signal<Readonly<Record<MenuBadgeKey, number | null>>>({ waitingVisits: null, requestedLabResults: null });
     private readonly inflight = new Map<MenuBadgeKey, Subscription>();
@@ -39,7 +43,7 @@ export class MenuBadgeService {
 
     /** Sayaç değeri; izin yoksa veya henüz yüklenmediyse `null`. */
     count(key: MenuBadgeKey): number | null {
-        return this.counts()[key];
+        return this.feed.value(key) ?? this.counts()[key];
     }
 
     /** Aralıklı ve sayfa geçişlerinde yenilemeyi başlatır; sekme gizliyken aralık tetiklemesi atlanır. */
@@ -64,7 +68,7 @@ export class MenuBadgeService {
         this.track(
             'waitingVisits',
             VISITS_READ_CLAIM,
-            () => this.visits.getToday().pipe(map((today) => today.items.filter((item) => item.careStatus === 'Waiting').length))
+            () => this.visits.getToday().pipe(map(countWaitingVisits))
         );
         this.track(
             'requestedLabResults',
@@ -75,6 +79,15 @@ export class MenuBadgeService {
 
     private track(key: MenuBadgeKey, claim: string, load: () => Observable<number>): void {
         this.inflight.get(key)?.unsubscribe();
+
+        const fed = this.feed.value(key);
+
+        // Sayfa bildiriyorsa sorgu atlanır; değer saklanır ki sayfa kapanınca sayaç boşalmasın.
+        if (fed !== undefined) {
+            this.set(key, fed);
+
+            return;
+        }
 
         if (!this.auth.hasOperationClaim(claim)) {
             this.set(key, null);

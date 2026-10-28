@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { LAB_RESULTS_READ_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
 import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';
 import type { TodayVm } from '@/app/entities/visit/models/visit-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
@@ -82,6 +83,22 @@ describe('MenuBadgeService', () => {
         service.refresh();
         expect(service.count('waitingVisits')).toBeNull();
         expect(service.count('requestedLabResults')).toBe(7);
+    });
+
+    it('sayfa bildiriyorsa o değer gösterilir ve Bugün sorgusu atlanır; bırakınca sorgu döner', () => {
+        const feed = TestBed.inject(MenuBadgeFeed);
+
+        feed.report('waitingVisits', 5);
+        service.refresh();
+        expect(getToday).not.toHaveBeenCalled();
+        expect(getLabResults).toHaveBeenCalledTimes(1);
+        expect(service.count('waitingVisits')).toBe(5);
+
+        feed.release('waitingVisits');
+        expect(service.count('waitingVisits')).toBe(5);
+        service.refresh();
+        expect(getToday).toHaveBeenCalledTimes(1);
+        expect(service.count('waitingVisits')).toBe(2);
     });
 
     it('hata olursa son değer korunur', () => {

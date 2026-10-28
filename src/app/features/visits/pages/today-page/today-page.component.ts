@@ -25,6 +25,7 @@ import {
     VISITS_CREATE_CLAIM,
     VISITS_UPDATE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
+import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TodayMoneyComponent } from '@/app/features/visits/components/today-money.component';
 import { TodayOpenItemsComponent } from '@/app/features/visits/components/today-open-items.component';
@@ -32,6 +33,7 @@ import { VisitArrivalDialogComponent } from '@/app/entities/visit/components/vis
 import { VisitCorrectionDialogComponent } from '@/app/features/visits/components/visit-correction-dialog.component';
 import type { TodayItemVm, TodayQuery, TodayVm, VisitCreateResultVm } from '@/app/entities/visit/models/visit-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
+import { countWaitingVisits } from '@/app/entities/visit/utils/visit-today.utils';
 import {
     careStatusLabel,
     careStatusSeverity,
@@ -111,6 +113,7 @@ export class TodayPageComponent implements OnInit {
     private readonly messages = inject(MessageService);
     private readonly visitsService = inject(VisitsService);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly menuBadgeFeed = inject(MenuBadgeFeed);
     readonly ro = inject(TenantReadOnlyContextService);
 
     /** Dar ekranda (<= 40rem) satırlar tablo yerine kart olarak gösterilir. */
@@ -216,6 +219,7 @@ export class TodayPageComponent implements OnInit {
         timer(REFRESH_INTERVAL_MS, REFRESH_INTERVAL_MS)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(() => this.refresh('silent'));
+        this.destroyRef.onDestroy(() => this.menuBadgeFeed.release('waitingVisits'));
         this.startWithScope();
     }
 
@@ -505,10 +509,22 @@ export class TodayPageComponent implements OnInit {
             this.today.set(result.today);
             this.loadError.set(null);
             this.refreshError.set(null);
+            this.feedMenuBadge(result.today);
         }
 
         this.now.set(new Date());
         this.loading.set(false);
+    }
+
+    /** Filtresiz kuyruk menüdeki bekleyen sayacıyla aynı veridir; menü ikinci kez sorgulamasın diye sayı bildirilir. */
+    private feedMenuBadge(today: TodayVm): void {
+        const query = this.todayQuery();
+
+        if (!query.voided && !query.responsibleVeterinarianUserId) {
+            this.menuBadgeFeed.report('waitingVisits', countWaitingVisits(today));
+        } else {
+            this.menuBadgeFeed.release('waitingVisits');
+        }
     }
 
     private setBusy(key: string, busy: boolean): void {

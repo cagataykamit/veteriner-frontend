@@ -4,6 +4,7 @@ import { provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
@@ -901,6 +902,25 @@ describe('TodayPageComponent — Benim hastalarım', () => {
 
         expect(visits.getToday).toHaveBeenCalledWith({ voided: false });
         expect((f.nativeElement as HTMLElement).textContent).not.toContain('Benim hastalarım');
+    });
+
+    it('menü sayacı: filtresiz listede bekleyen sayısı bildirilir, Benim hastalarım ve sayfa kapanınca bırakılır', async () => {
+        const waiting = { key: 'w', careStatus: 'Waiting' } as TodayItemVm;
+        const f = await create(['Visits.Read', 'Visits.Create'], 'u1');
+        const feed = TestBed.inject(MenuBadgeFeed);
+
+        expect(feed.value('waitingVisits')).toBeUndefined();
+
+        visits.getToday.mockReturnValue(of({ ...today, items: [waiting, waiting] }));
+        f.componentInstance.setScope('all');
+        expect(feed.value('waitingVisits')).toBe(2);
+
+        f.componentInstance.setScope('mine');
+        expect(feed.value('waitingVisits')).toBeUndefined();
+
+        f.componentInstance.setScope('all');
+        f.destroy();
+        expect(feed.value('waitingVisits')).toBeUndefined();
     });
 
     it('Visits.Create yoksa hekim sorgusu yapılmaz ve süzgeç yok', async () => {
