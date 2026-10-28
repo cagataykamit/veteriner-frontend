@@ -11,7 +11,7 @@ import { NO_PET_ALERTS, type PetAlertsVm } from '@/app/shared/pet-alerts/pet-ale
     selector: 'app-pet-alert-banner',
     standalone: true,
     imports: [PetAlertBadgesComponent],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (alerts().flags.length > 0) {
             <div class="card mb-4" role="region" aria-label="Hasta uyarıları">
