@@ -21,6 +21,7 @@ export const LOGIN_CODE_INVALID_MESSAGE =
     'Kod doğrulanamadı. Kod yanlış, süresi dolmuş ya da hesap geçici olarak kilitli olabilir; yeni kod isteyip tekrar deneyin.';
 export const LOGIN_PASSWORD_INVALID_MESSAGE =
     'E-posta veya parola hatalı. Çok sayıda hatalı denemeden sonra giriş geçici olarak kilitlenir; kodla giriş yapabilir ya da parolanızı sıfırlayabilirsiniz.';
+export const PORTAL_ACCOUNT_DELETED_MESSAGE = 'Hesabınız silindi. Silme onayı e-posta adresinize gönderildi.';
 export const LOGIN_CODE_SENT_MESSAGE = 'Bu e-posta adresiyle bir hesap varsa 6 haneli giriş kodu gönderildi. Kod 10 dakika geçerlidir.';
 
 /**
@@ -40,7 +41,7 @@ export class PortalLoginComponent {
     private readonly router = inject(Router);
 
     readonly returnUrl = input<string | undefined>();
-    /** `?reason=expired`: oturum süresi dolduğu için yönlendirildi. */
+    /** `?reason=expired`: oturum süresi dolduğu için yönlendirildi; `?reason=deleted`: hesap silindi (§5.10). */
     readonly reason = input<string | undefined>();
 
     readonly method = signal<LoginMethod>('code');
@@ -52,6 +53,7 @@ export class PortalLoginComponent {
     readonly resend = new PortalResendTimer(inject(DestroyRef));
 
     readonly expiredMessage = computed(() => (this.reason() === 'expired' ? PORTAL_ERROR_MESSAGES[PORTAL_ERROR_CODES.invalidRefreshToken] : null));
+    readonly deletedMessage = computed(() => (this.reason() === 'deleted' ? PORTAL_ACCOUNT_DELETED_MESSAGE : null));
 
     readonly form = new FormGroup({
         email: new FormControl('', { nonNullable: true, validators: portalEmailValidators }),

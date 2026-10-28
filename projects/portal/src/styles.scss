@@ -106,6 +106,16 @@ a {
     margin: 0;
 }
 
+/* Madde listesi (ör. hesap silmede silinenler ve kalanlar). */
+.portal-bullets {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0;
+    padding-left: 1.25rem;
+    list-style: disc;
+    font-size: 0.9375rem;
+}
+
 /* Form: tam genişlik, büyük dokunma alanı. 16 px yazı iOS'ta odakta yakınlaştırmayı önler. */
 .portal-field {
     display: flex;
