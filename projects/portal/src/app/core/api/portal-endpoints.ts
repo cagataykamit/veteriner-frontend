@@ -20,6 +20,7 @@ export const PORTAL_ENDPOINTS = {
     myLegalAcceptances: 'me/legal-acceptances',
     clinicDisclosure: (linkId: string) => `${link(linkId)}/clinic-disclosure`,
     acknowledgeClinicDisclosure: (linkId: string) => `${link(linkId)}/clinic-disclosure/acknowledge`,
+    reminderPreferences: (linkId: string) => `${link(linkId)}/reminder-preferences`,
     // Dilim B, salt okunur (§6)
     clinic: (linkId: string) => `${link(linkId)}/clinic`,
     pets: (linkId: string) => `${link(linkId)}/pets`,
