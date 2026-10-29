@@ -10,6 +10,7 @@ import { ClientSearchService } from '@/app/entities/client/services/client-searc
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PaymentsService } from '@/app/entities/payment/services/payments.service';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
+import { parseDateInputValue } from '@/app/shared/forms/date-input/date-input-value.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { PaymentNewPageComponent } from './payment-new-page.component';
@@ -307,7 +308,10 @@ describe('PaymentNewPageComponent', () => {
 
         it('ileri saat girilince yalnız aralık mesajı görünür; "Zorunlu alan" eklenmez', async () => {
             await setup();
-            dateInput().onPickerChange(new Date(Date.now() + 2 * 60 * 60 * 1000));
+            // Seçici değeri İstanbul duvar saatidir (üst sınır gibi); tarayıcının saat diliminden bağımsız olsun diye öyle kurulur.
+            const inTwoHours = toIstanbulDateTimeLocalInputValue(new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString());
+
+            dateInput().onPickerChange(parseDateInputValue('datetime-local', inTwoHours));
             cmp.form.controls.paidAtLocal.markAsTouched();
             fixture.detectChanges();
 
