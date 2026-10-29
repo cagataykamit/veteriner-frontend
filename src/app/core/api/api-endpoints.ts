@@ -250,7 +250,10 @@ export const ApiEndpoints = {
         performanceSummary: () => `/api/v1/reports/performance-summary`,
         /** Rapor favorileri (REPORT-003): GET liste; PUT/DELETE `{reportKey}` idempotent. Kullanıcı + kiracı kapsamı. */
         favorites: () => `/api/v1/reports/favorites`,
-        favorite: (reportKey: string) => `/api/v1/reports/favorites/${encodeURIComponent(reportKey)}`
+        favorite: (reportKey: string) => `/api/v1/reports/favorites/${encodeURIComponent(reportKey)}`,
+        /** Kayıtlı filtreler (REPORT-004): GET `?reportKey=`, POST `{ reportKey, name, filters }`, DELETE `{id}`. */
+        savedFilters: () => `/api/v1/reports/saved-filters`,
+        savedFilter: (id: string) => `/api/v1/reports/saved-filters/${encodeURIComponent(id)}`
     },
     treatments: {
         /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `Sort`, `Order` (+ `clinicId`, `PetId`). */

@@ -1,4 +1,5 @@
 import type { MockedObject } from 'vitest';
+import { HttpParams } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
@@ -54,5 +55,21 @@ describe('ReportPreferencesService', () => {
         expect(keys).toEqual(['payments', 'registers.vaccines']);
         expect(api.put).toHaveBeenCalledWith('/api/v1/reports/favorites/registers.vaccines', null);
         expect(api.delete).toHaveBeenCalledWith('/api/v1/reports/favorites/payments');
+    });
+
+    it('kayıtlı filtreleri rapor anahtarıyla listeler, oluşturur ve siler', () => {
+        api.get.mockReturnValue(of([]));
+        api.post.mockReturnValue(of({ id: 'f1' }));
+
+        service.listSavedFilters('payments').subscribe();
+        service.createSavedFilter('payments', 'Nakit', { method: 'Cash' }).subscribe();
+        service.deleteSavedFilter('f1').subscribe();
+
+        const [path, params] = vi.mocked(api.get).mock.lastCall as [string, HttpParams];
+
+        expect(path).toBe('/api/v1/reports/saved-filters');
+        expect(params.get('reportKey')).toBe('payments');
+        expect(api.post).toHaveBeenCalledWith('/api/v1/reports/saved-filters', { reportKey: 'payments', name: 'Nakit', filters: { method: 'Cash' } });
+        expect(api.delete).toHaveBeenCalledWith('/api/v1/reports/saved-filters/f1');
     });
 });

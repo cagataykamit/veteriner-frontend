@@ -1,3 +1,4 @@
+import { HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, type Observable } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
@@ -7,6 +8,15 @@ import { REPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
 /** `GET /reports/favorites` satırı (REPORT_PREFERENCES_API_CONTRACT.md §2). */
 export interface ReportFavoriteDto {
     readonly reportKey: string;
+    readonly createdAtUtc: string;
+}
+
+/** Kayıtlı filtre (§3): değerler raporun sorgu alanlarıdır; tarih aralığı kaydedilmez. */
+export interface ReportSavedFilterDto {
+    readonly id: string;
+    readonly reportKey: string;
+    readonly name: string;
+    readonly filters: Readonly<Record<string, string>>;
     readonly createdAtUtc: string;
 }
 
@@ -27,7 +37,7 @@ export function reportKeyFromRoute(route: string): string | null {
     return /^[a-z0-9]+(?:[-.][a-z0-9]+)*$/.test(key) ? key : null;
 }
 
-/** Kullanıcıya özel rapor tercihleri: favoriler (kiracı + kullanıcı kapsamı backend'de). */
+/** Kullanıcıya özel rapor tercihleri: favoriler ve kayıtlı filtreler (kiracı + kullanıcı kapsamı backend'de). */
 @Injectable({ providedIn: 'root' })
 export class ReportPreferencesService {
     private readonly api = inject(ApiClient);
@@ -42,5 +52,17 @@ export class ReportPreferencesService {
 
     removeFavorite(reportKey: string): Observable<void> {
         return this.api.delete<void>(ApiEndpoints.reports.favorite(reportKey));
+    }
+
+    listSavedFilters(reportKey: string): Observable<ReportSavedFilterDto[]> {
+        return this.api.get<ReportSavedFilterDto[]>(ApiEndpoints.reports.savedFilters(), new HttpParams().set('reportKey', reportKey));
+    }
+
+    createSavedFilter(reportKey: string, name: string, filters: Readonly<Record<string, string>>): Observable<ReportSavedFilterDto> {
+        return this.api.post<ReportSavedFilterDto>(ApiEndpoints.reports.savedFilters(), { reportKey, name, filters });
+    }
+
+    deleteSavedFilter(id: string): Observable<void> {
+        return this.api.delete<void>(ApiEndpoints.reports.savedFilter(id));
     }
 }

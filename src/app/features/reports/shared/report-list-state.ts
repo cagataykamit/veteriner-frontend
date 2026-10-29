@@ -84,7 +84,7 @@ const safeTrim = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
 /**
  * Rapor listesi sayfalarının ortak durumu ve akışı: tarih aralığı, klinik süzgeci, sayfalama, önbellek anahtarı, yarış koruması,
- * oturumda saklama ve CSV/XLSX/PDF dışa aktarma. Liste ve dışa aktarma aynı sorgu nesnesinden (`buildQuery`) üretilir.
+ * oturumda saklama, CSV/XLSX/PDF dışa aktarma ve kayıtlı filtre (REPORT-004) uygulama. Liste ve dışa aktarma aynı sorgu nesnesinden (`buildQuery`) üretilir.
  * Enjeksiyon bağlamında (bileşen alan başlatıcısı) oluşturulmalıdır.
  */
 export class ReportListState<Q extends ReportListQueryBase, R extends ReportListResultBase> {
@@ -260,6 +260,33 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
 
     exportPdf(): void {
         this.export('pdf');
+    }
+
+    /**
+     * Kayıtlı filtre için uygulanmış filtre seti (REPORT-004): klinik, arama ve rapora özgü filtreler; boş değerler ve tarih
+     * aralığı girmez (kayıtlı filtre her dönemde yeniden kullanılır). Anahtarlar raporun sorgu alanlarıdır.
+     */
+    savedFilterValues(): Record<string, string> {
+        const extraKey = this.config.extraFilterKey;
+        const values: Record<string, string> = {
+            clinicId: this.activeClinicId().trim(),
+            search: this.activeSearch().trim(),
+            ...(extraKey ? { [extraKey]: this.activeExtra().trim() } : {}),
+            ...this.activeExtras()
+        };
+
+        return Object.fromEntries(Object.entries(values).filter(([, v]) => !!v));
+    }
+
+    /** Kayıtlı filtreyi uygular: bu rapora ait alanlar değişir, bilinmeyenler yok sayılır, ekrandaki tarih aralığı korunur. */
+    applySavedFilterValues(values: Readonly<Record<string, string>>): void {
+        const extraKey = this.config.extraFilterKey;
+
+        this.clinicIdFilter = safeTrim(values['clinicId']);
+        this.searchInput = safeTrim(values['search']);
+        this.extraFilter = extraKey ? safeTrim(values[extraKey]) : '';
+        this.extraInputs = Object.fromEntries((this.config.extraKeys ?? []).map((key) => [key, safeTrim(values[key])]));
+        this.applyFilters();
     }
 
     isSearchActive(): boolean {

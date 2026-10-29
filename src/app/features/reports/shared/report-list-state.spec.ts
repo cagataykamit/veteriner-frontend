@@ -303,6 +303,53 @@ describe('ReportListState', () => {
         expect(state.exportKind()).toBeNull();
     });
 
+    it('kayıtlı filtre: uygulanmış klinik/arama/rapora özgü filtreler alınır, boşlar ve tarih girmez', () => {
+        const state = create('status');
+
+        state.init();
+        state.clinicIdFilter = 'c1';
+        state.searchInput = '  pamuk ';
+        state.extraFilter = 'Completed';
+        state.applyFilters();
+
+        expect(state.savedFilterValues()).toEqual({ clinicId: 'c1', search: 'pamuk', status: 'Completed' });
+
+        state.resetFilters();
+        expect(state.savedFilterValues()).toEqual({});
+    });
+
+    it('kayıtlı filtre uygulanınca alanlar değişir, tarih aralığı korunur, bilinmeyen alan yok sayılır', () => {
+        const make = () =>
+            TestBed.runInInjectionContext(
+                () =>
+                    new ReportListState<Query, Result>({
+                        source,
+                        stateKey: KEY,
+                        readClaim: 'Test.Read',
+                        exportFilePrefix: 'defter',
+                        dateRangeOnly: true,
+                        extraKeys: ['includeVoided', 'productId']
+                    })
+            );
+        const state = make();
+
+        state.init();
+        state.fromDateInput = '2026-10-01';
+        state.toDateInput = '2026-10-15';
+        state.applyFilters();
+
+        state.applySavedFilterValues({ clinicId: 'c1', includeVoided: 'true', unknownKey: 'x' });
+        const q = vi.mocked(source.loadReport).mock.lastCall![0];
+
+        expect(q.clinicId).toBe('c1');
+        expect(q.includeVoided).toBe('true');
+        expect(q.productId).toBeUndefined();
+        expect(q.from).toBe('2026-10-01');
+        expect(q.to).toBe('2026-10-15');
+        expect(q).not.toHaveProperty('unknownKey');
+        expect(state.savedFilterValues()).toEqual({ clinicId: 'c1', includeVoided: 'true' });
+    });
+
     it('okuma izni yoksa dışa aktarma çalışmaz', () => {
         claims.clear();
         const state = create();
