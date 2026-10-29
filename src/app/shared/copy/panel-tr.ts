@@ -55,6 +55,11 @@ export const PANEL_COPY = {
     reportsExportCsv: 'CSV indir',
     reportsExportXlsx: 'Excel indir',
     reportsExportPdf: 'PDF indir',
+    /** Rapor Merkezi favorileri (REPORT-003) */
+    reportsFavoritesSection: 'Favoriler',
+    reportsFavoriteAdd: 'Favorilere ekle',
+    reportsFavoriteRemove: 'Favorilerden çıkar',
+    reportsFavoriteSaveFailed: 'Favori kaydedilemedi; tekrar deneyin.',
     reportsExportResponseEmpty: 'İndirilecek dosya oluşturulamadı.',
     reportsExportFailedFallback: 'Dışa aktarma işlemi tamamlanamadı.',
     reportsTotalRecords: 'Toplam kayıt',
