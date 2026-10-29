@@ -95,7 +95,7 @@
                             <app-date-input inputId="examinationDate" type="date" formControlName="examinationDate" [min]="dateInputMin" limit="past" />
                             @if (form.controls.examinationDate.hasError('dateYearInvalid') && form.controls.examinationDate.touched) {
                                 <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
-                            } @else if (form.controls.examinationDate.invalid && form.controls.examinationDate.touched) {
+                            } @else if (form.controls.examinationDate.hasError('required') && form.controls.examinationDate.touched) {
                                 <small class="text-red-500">Muayene tarihi seçilmelidir.</small>
                             } @else if (apiFieldErrors().examinationDate) {
                                 <small class="text-red-500">{{ apiFieldErrors().examinationDate }}</small>

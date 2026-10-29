@@ -142,7 +142,7 @@ const DUPLICATE_MISMATCH_MESSAGE = 'Bu form için ödeme daha önce kaydedilmiş
                             <small class="text-red-500 block">{{ paymentDateTooFarPastMessage }}</small>
                         } @else if (apiFieldErrors().paidAtLocal) {
                             <small class="text-red-500 block">{{ apiFieldErrors().paidAtLocal }}</small>
-                        } @else if (form.controls.paidAtLocal.invalid && form.controls.paidAtLocal.touched) {
+                        } @else if (form.controls.paidAtLocal.hasError('required') && form.controls.paidAtLocal.touched) {
                             <small class="text-red-500 block">Zorunlu alan.</small>
                         }
                     </div>

@@ -86,7 +86,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             <small class="text-red-500">En fazla 7 gün öncesine kadar randevu açılabilir.</small>
                         } @else if (form.controls.scheduledDate.hasError('tooFarFuture') && form.controls.scheduledDate.touched) {
                             <small class="text-red-500">En fazla 2 yıl ileriye randevu açılabilir.</small>
-                        } @else if (form.controls.scheduledDate.invalid && form.controls.scheduledDate.touched) {
+                        } @else if (form.controls.scheduledDate.hasError('required') && form.controls.scheduledDate.touched) {
                             <small class="text-red-500">Randevu tarihi seçilmelidir.</small>
                         }
                     </div>

@@ -75,7 +75,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             <small class="text-red-500 block">{{ treatmentDateTooFarPastMessage }}</small>
                         } @else if (apiFieldErrors().treatmentDateLocal) {
                             <small class="text-red-500 block">{{ apiFieldErrors().treatmentDateLocal }}</small>
-                        } @else if (form.controls.treatmentDateLocal.invalid && form.controls.treatmentDateLocal.touched) {
+                        } @else if (form.controls.treatmentDateLocal.hasError('required') && form.controls.treatmentDateLocal.touched) {
                             <small class="text-red-500 block">Zorunlu alan.</small>
                         }
                     </div>
