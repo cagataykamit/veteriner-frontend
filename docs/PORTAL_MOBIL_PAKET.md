@@ -8,7 +8,7 @@ Durum: **hazırlık (Dilim 3)**. Kod ve yapılandırma hazır; mağaza hesaplar�
 
 | Konu | Ne yapıldı | Yer |
 |---|---|---|
-| Paketler (sabit sürüm) | `@capacitor/core` 8.5.3, `@capacitor/android` 8.5.3, `@capacitor/ios` 8.5.3, `@capacitor/app` 8.1.2, `@capacitor/splash-screen` 8.0.2; geliştirme: `@capacitor/cli` 8.5.3 | `package.json` |
+| Paketler (sabit sürüm) | `@capacitor/core` 8.6.0, `@capacitor/android` 8.6.0, `@capacitor/ios` 8.6.0, `@capacitor/app` 8.1.2, `@capacitor/splash-screen` 8.0.2; geliştirme: `@capacitor/cli` 8.6.0 | `package.json` |
 | Yapılandırma | `appId` `com.vetinity.portal` (**öneri, onay bekler**), `appName` "Vetinity" (geçici), `webDir` `dist/portal/browser`, Android `https` şeması, izinli gezinme yalnız portal ve portal API alan adı (ortam dosyasından türetilir) | `capacitor.config.ts` |
 | Ortamlar | Portal ortamına `portalBaseUrl` eklendi; `staging` derleme yapılandırması (`portal-staging` + `api-staging`) | `projects/portal/src/environments/`, `angular.json` |
 | Platform klasörleri | `android/` ve `ios/` kaynak olarak depoda; derleme çıktıları (`build`, `.gradle`, `local.properties`, `Pods`, `DerivedData`, kopyalanan `public/`, üretilen `capacitor.config.json`) platformların kendi `.gitignore`'unda | `android/`, `ios/` |
