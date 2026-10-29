@@ -104,7 +104,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                 <small class="text-red-500 block">{{ prescriptionDateTooFarPastMessage }}</small>
                             } @else if (apiFieldErrors().prescribedAtLocal) {
                                 <small class="text-red-500 block">{{ apiFieldErrors().prescribedAtLocal }}</small>
-                            } @else if (form.controls.prescribedAtLocal.invalid && form.controls.prescribedAtLocal.touched) {
+                            } @else if (form.controls.prescribedAtLocal.hasError('required') && form.controls.prescribedAtLocal.touched) {
                                 <small class="text-red-500 block">Reçete tarihi zorunludur.</small>
                             }
                         </div>

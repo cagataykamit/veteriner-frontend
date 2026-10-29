@@ -301,4 +301,27 @@ describe('PaymentNewPageComponent', () => {
             expect(minOf()).toBe('2026-10-12T13:28');
         });
     });
+
+    describe('ödeme zamanı hata mesajı', () => {
+        const dateInput = () => fixture.debugElement.query(By.css('app-date-input[inputId="paidAtLocal"]')).injector.get(DateInputComponent);
+
+        it('ileri saat girilince yalnız aralık mesajı görünür; "Zorunlu alan" eklenmez', async () => {
+            await setup();
+            dateInput().onPickerChange(new Date(Date.now() + 2 * 60 * 60 * 1000));
+            cmp.form.controls.paidAtLocal.markAsTouched();
+            fixture.detectChanges();
+
+            expect(cmp.form.controls.paidAtLocal.hasError('dateOutOfRange')).toBe(true);
+            expect(fixture.nativeElement.textContent).toContain('arasında olmalıdır');
+            expect(fixture.nativeElement.textContent).not.toContain('Zorunlu alan');
+        });
+
+        it('boş bırakılınca "Zorunlu alan" görünür', async () => {
+            await setup();
+            cmp.form.controls.paidAtLocal.markAsTouched();
+            fixture.detectChanges();
+
+            expect(fixture.nativeElement.textContent).toContain('Zorunlu alan');
+        });
+    });
 });

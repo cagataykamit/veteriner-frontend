@@ -131,7 +131,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                 <small class="text-red-500 block">{{ hospitalizationDateTooFarPastMessage }}</small>
                             } @else if (apiFieldErrors().admittedAtLocal) {
                                 <small class="text-red-500 block">{{ apiFieldErrors().admittedAtLocal }}</small>
-                            } @else if (form.controls.admittedAtLocal.invalid && form.controls.admittedAtLocal.touched) {
+                            } @else if (form.controls.admittedAtLocal.hasError('required') && form.controls.admittedAtLocal.touched) {
                                 <small class="text-red-500 block">Zorunlu.</small>
                             }
                         </div>

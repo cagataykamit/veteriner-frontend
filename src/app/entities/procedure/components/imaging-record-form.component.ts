@@ -73,7 +73,7 @@ import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-valida
                     <div class="col-span-12 md:col-span-6">
                         <label for="imgPerformedAt" class="block text-sm font-medium text-muted-color mb-2">Tarih / saat *</label>
                         <app-date-input inputId="imgPerformedAt" type="datetime-local" formControlName="performedAtLocal" min="1900-01-01T00:00" limit="past" />
-                        @if (form.controls.performedAtLocal.invalid && form.controls.performedAtLocal.touched) {
+                        @if ((form.controls.performedAtLocal.hasError('required') || form.controls.performedAtLocal.hasError('dateYearInvalid')) && form.controls.performedAtLocal.touched) {
                             <small class="text-red-500">Geçerli bir tarih ve saat girin.</small>
                         }
                     </div>

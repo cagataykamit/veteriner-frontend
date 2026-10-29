@@ -96,7 +96,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                 <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (apiFieldErrors().scheduledAtLocal) {
                                 <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
-                            } @else if (form.controls.scheduledDate.invalid && form.controls.scheduledDate.touched) {
+                            } @else if (form.controls.scheduledDate.hasError('required') && form.controls.scheduledDate.touched) {
                                 <small class="text-red-500">Randevu tarihi seçilmelidir.</small>
                             }
                         </div>
