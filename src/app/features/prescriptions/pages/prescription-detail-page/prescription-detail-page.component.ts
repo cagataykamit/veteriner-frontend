@@ -6,6 +6,7 @@ import type { PrescriptionDetailVm } from '@/app/entities/prescription/models/pr
 import { PrescriptionsService } from '@/app/entities/prescription/services/prescriptions.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
+import { RecordHistoryButtonComponent } from '@/app/entities/record-history/components/record-history-button.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -19,7 +20,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 @Component({
     selector: 'app-prescription-detail-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppErrorStateComponent, HbsSectionComponent, TrDatePipe, TrDateTimePipe],
+    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, RecordHistoryButtonComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppErrorStateComponent, HbsSectionComponent, TrDatePipe, TrDateTimePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
@@ -59,6 +60,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                         }
                     }
                 </div>
+                <app-record-history-button actions resource="prescriptions" [recordId]="row()!.id" />
             </app-page-header>
             <app-pet-alert-banner [petId]="row()!.petId" />
 

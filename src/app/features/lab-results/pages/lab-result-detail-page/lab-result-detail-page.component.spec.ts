@@ -1,3 +1,4 @@
+import { RecordHistoryService } from '@/app/entities/record-history/services/record-history.service';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { BehaviorSubject, of } from 'rxjs';
@@ -39,6 +40,7 @@ describe('LabResultDetailPageComponent — başlık eylemleri', () => {
             imports: [LabResultDetailPageComponent],
             providers: [
                 provideRouter([]),
+                { provide: RecordHistoryService, useValue: { getHistory: () => of([]) } },
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: StoredFilesService, useValue: { list: () => of([]) } },
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'l1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
@@ -56,23 +58,23 @@ describe('LabResultDetailPageComponent — başlık eylemleri', () => {
     };
 
     it('Requested: "Sonuç gir" ve "İptal et" görünür', () => {
-        expect(render('Requested')).toEqual(['Sonuç gir', 'İptal et']);
+        expect(render('Requested')).toEqual(['Sonuç gir', 'İptal et', 'Değişiklikleri gör']);
     });
 
     it('Resulted: "Düzenle" ve "İptal et" görünür (muayene durumundan bağımsız)', () => {
-        expect(render('Resulted')).toEqual(['Düzenle', 'İptal et']);
+        expect(render('Resulted')).toEqual(['Düzenle', 'İptal et', 'Değişiklikleri gör']);
     });
 
-    it('Cancelled: eylem yok', () => {
-        expect(render('Cancelled')).toEqual([]);
+    it('Cancelled: yalnız değişiklik geçmişi', () => {
+        expect(render('Cancelled')).toEqual(['Değişiklikleri gör']);
     });
 
-    it('izin yoksa eylem yok', () => {
-        expect(render('Requested', false)).toEqual([]);
+    it('izin yoksa yalnız değişiklik geçmişi', () => {
+        expect(render('Requested', false)).toEqual(['Değişiklikleri gör']);
     });
 
     it('salt okunur kiracıda yalnız kilitli düğme', () => {
-        expect(render('Requested', true, true)).toEqual(['Düzenle (salt okunur)']);
+        expect(render('Requested', true, true)).toEqual(['Düzenle (salt okunur)', 'Değişiklikleri gör']);
     });
 });
 
@@ -93,6 +95,7 @@ describe('LabResultDetailPageComponent — İptal et', () => {
             imports: [LabResultDetailPageComponent],
             providers: [
                 provideRouter([]),
+                { provide: RecordHistoryService, useValue: { getHistory: () => of([]) } },
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: StoredFilesService, useValue: { list: () => of([]) } },
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'l1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
@@ -137,6 +140,7 @@ describe('LabResultDetailPageComponent — dosyalar', () => {
             imports: [LabResultDetailPageComponent],
             providers: [
                 provideRouter([]),
+                { provide: RecordHistoryService, useValue: { getHistory: () => of([]) } },
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: StoredFilesService, useValue: { list } },
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'l1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
@@ -173,6 +177,7 @@ describe('LabResultDetailPageComponent — kayıt sonrası onay', () => {
             imports: [LabResultDetailPageComponent],
             providers: [
                 provideRouter([]),
+                { provide: RecordHistoryService, useValue: { getHistory: () => of([]) } },
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: StoredFilesService, useValue: { list: () => of([]) } },
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'l1' })), snapshot: { queryParamMap: convertToParamMap(saved ? { saved } : {}) } } },
@@ -208,6 +213,7 @@ describe('LabResultDetailPageComponent — rota kimliği değişimi', () => {
             imports: [LabResultDetailPageComponent],
             providers: [
                 provideRouter([]),
+                { provide: RecordHistoryService, useValue: { getHistory: () => of([]) } },
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: StoredFilesService, useValue: { list } },
                 { provide: ActivatedRoute, useValue: route },

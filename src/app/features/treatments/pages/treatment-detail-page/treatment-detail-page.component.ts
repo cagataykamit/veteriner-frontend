@@ -7,6 +7,7 @@ import type { TreatmentDetailVm } from '@/app/entities/treatment/models/treatmen
 import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
+import { RecordHistoryButtonComponent } from '@/app/entities/record-history/components/record-history-button.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -18,7 +19,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 @Component({
     selector: 'app-treatment-detail-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, ButtonModule, AdministrationsSectionComponent, AppPageHeaderComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppErrorStateComponent, TrDatePipe, TrDateTimePipe],
+    imports: [CommonModule, RouterLink, ButtonModule, AdministrationsSectionComponent, AppPageHeaderComponent, RecordHistoryButtonComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppErrorStateComponent, TrDatePipe, TrDateTimePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
@@ -64,6 +65,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                         }
                     }
                 </div>
+                <app-record-history-button actions resource="treatments" [recordId]="row()!.id" />
             </app-page-header>
             <app-pet-alert-banner [petId]="row()!.petId" />
 

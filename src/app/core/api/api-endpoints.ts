@@ -244,6 +244,8 @@ export const ApiEndpoints = {
         /** İşletme performansı özeti (REPORT-008). */
         performanceSummary: () => `/api/v1/reports/performance-summary`
     },
+    /** GET kayıt değişiklik geçmişi (RECORD-002; yetki türün okuma izni; `RECORD_HISTORY_API_CONTRACT.md`). */
+    recordHistory: (resource: string, id: string) => `/api/v1/${resource}/${encodeURIComponent(id)}/history`,
     treatments: {
         /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/treatments`,
