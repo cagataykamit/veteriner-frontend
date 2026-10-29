@@ -27,6 +27,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/patient/services/recently-viewed.service';
 
 /**
  * Hasta (hayvan) kartı — okuma öncelikli 360 görünüm (ADR-020 karar 1-3): başlık ve hesap durumu, her zaman görünür eylem çubuğu,
@@ -156,6 +157,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     private readonly petsService = inject(PetsService);
     private readonly cardData = inject(PetCardDataService);
     private readonly auth = inject(AuthService);
+    private readonly recentlyViewed = inject(RecentlyViewedService);
     readonly ro = inject(TenantReadOnlyContextService);
     readonly canReadImaging = this.auth.hasOperationClaim(IMAGING_READ_CLAIM);
 
@@ -297,6 +299,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     }
 
     private onPetLoaded(p: PetDetailVm): void {
+        this.recentlyViewed.record({ kind: 'pet', id: p.id, title: p.name, subtitle: recentlyViewedSubtitle(p.speciesName, p.clientName) });
         this.loadHistory(p.id);
         this.loadSummary(p.id);
         this.loadOpenItems(p.id);

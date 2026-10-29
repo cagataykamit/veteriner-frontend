@@ -15,7 +15,10 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
 import { DetailRelatedSummariesService } from '@/app/entities/patient/services/detail-related-summaries.service';
+import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
 import { ExaminationDetailPageComponent } from './examination-detail-page.component';
+
+const recentlyViewed = { record: vi.fn() };
 
 const detailVm: ExaminationDetailVm = {
     id: 'e1',
@@ -96,6 +99,7 @@ describe('ExaminationDetailPageComponent — kayıt sonrası toast', () => {
                 { provide: VaccinationsService, useValue: { getVaccinations: () => EMPTY } },
                 { provide: TreatmentsService, useValue: { getTreatments: () => EMPTY } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                { provide: RecentlyViewedService, useValue: recentlyViewed },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
         }).compileComponents();
@@ -108,6 +112,13 @@ describe('ExaminationDetailPageComponent — kayıt sonrası toast', () => {
 
         expect(toastAdd).toHaveBeenCalledWith(expect.objectContaining({ severity: 'success', detail: 'Muayene kaydedildi.' }));
         expect(navigate).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { saved: null }, replaceUrl: true }));
+    });
+
+    it('yüklenen muayene son görüntülenenlere hasta adı, neden ve İstanbul tarihiyle eklenir', () => {
+        recentlyViewed.record.mockClear();
+        create({});
+
+        expect(recentlyViewed.record).toHaveBeenCalledWith({ kind: 'examination', id: 'e1', title: 'Pamuk', subtitle: 'İştahsızlık · 08.10.2026' });
     });
 
     it('işaret yokken toast gösterilmez', () => {
@@ -163,6 +174,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
                 { provide: VaccinationsService, useValue: { getVaccinations: () => EMPTY } },
                 { provide: TreatmentsService, useValue: { getTreatments: () => EMPTY } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
+                { provide: RecentlyViewedService, useValue: recentlyViewed },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => readOnly } }
             ]
         }).compileComponents();

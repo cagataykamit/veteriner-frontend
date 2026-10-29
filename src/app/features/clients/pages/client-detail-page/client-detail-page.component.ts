@@ -39,6 +39,7 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } f
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
 
 /**
  * Müşteri kartı — okuma öncelikli 360 görünüm (ADR-020 karar 6, hasta kartıyla aynı ilke): iletişim ve hesap durumu,
@@ -300,6 +301,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     private readonly clientsService = inject(ClientsService);
     private readonly cardData = inject(PetCardDataService);
     private readonly auth = inject(AuthService);
+    private readonly recentlyViewed = inject(RecentlyViewedService);
     private readonly messages = inject(MessageService);
     readonly ro = inject(TenantReadOnlyContextService);
 
@@ -476,6 +478,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     }
 
     private onClientLoaded(c: ClientDetailVm): void {
+        this.recentlyViewed.record({ kind: 'client', id: c.id, title: c.fullName, subtitle: '' });
         this.loadRecentSummary(c.id);
         this.loadPaymentSummary(c.id);
         this.cardSubscriptions.add(this.cardData.ownerBalance(c.id).subscribe((s) => this.balance.set(s)));

@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { GlobalSearchResultVm, GlobalSearchService } from '@/app/features/patients/services/global-search.service';
+import { type RecentlyViewedEntry, RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
 import { AppGlobalSearch } from './app-global-search.component';
 
 const result: GlobalSearchResultVm = {
@@ -15,6 +16,9 @@ describe('AppGlobalSearch', () => {
     let fixture: ComponentFixture<AppGlobalSearch>;
     let search: MockedObject<GlobalSearchService>;
     let router: Router;
+    let recent: RecentlyViewedEntry[];
+
+    beforeEach(() => (recent = []));
 
     const create = (canSearch = true) => {
         search = {
@@ -25,7 +29,7 @@ describe('AppGlobalSearch', () => {
         search.search.mockReturnValue(of(result));
         TestBed.configureTestingModule({
             imports: [AppGlobalSearch],
-            providers: [provideRouter([]), { provide: GlobalSearchService, useValue: search }]
+            providers: [provideRouter([]), { provide: GlobalSearchService, useValue: search }, { provide: RecentlyViewedService, useValue: { list: () => recent } }]
         });
         router = TestBed.inject(Router);
         fixture = TestBed.createComponent(AppGlobalSearch);
@@ -114,6 +118,47 @@ describe('AppGlobalSearch', () => {
         expect(text).toContain('Sahip: Ali Veli');
         expect(text).toContain('Mikroçip: 985112345678901');
         expect(document.querySelectorAll('[role="option"]').length).toBe(2);
+    });
+
+    it('sorgu boşken son görüntülenenler listelenir; klavyeyle seçilip detaya gidilir; yazınca sonuçlar yerini alır', async () => {
+        recent = [
+            { kind: 'pet', id: 'p1', title: 'Pamuk', subtitle: 'Kedi · Ali Veli' },
+            { kind: 'examination', id: 'e1', title: 'Pamuk', subtitle: 'Kontrol · 10.10.2026' },
+            { kind: 'client', id: 'c1', title: 'Ali Veli', subtitle: '' }
+        ];
+        create();
+        const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+        key({ key: 'k', ctrlKey: true });
+        const list = document.querySelector('[data-testid="recently-viewed"]')!;
+
+        expect(list.textContent).toContain('Son görüntülenenler');
+        expect(list.textContent).toContain('Hasta · Kedi · Ali Veli');
+        expect(list.textContent).toContain('Muayene · Kontrol · 10.10.2026');
+        expect(Array.from(list.querySelectorAll('[role="option"]')).map((a) => a.getAttribute('href'))).toEqual(['/panel/pets/p1', '/panel/examinations/e1', '/panel/clients/c1']);
+
+        await typeQuery('a');
+        expect(document.querySelector('[data-testid="recently-viewed"]')).toBeNull();
+        await typeQuery('pamuk');
+        expect(document.querySelector('[data-testid="recently-viewed"]')).toBeNull();
+        expect(document.querySelectorAll('[role="option"]').length).toBe(2);
+        await typeQuery('');
+        expect(document.querySelector('[data-testid="recently-viewed"]')).not.toBeNull();
+
+        const input = document.querySelector<HTMLInputElement>('.p-dialog input')!;
+
+        key({ key: 'ArrowUp' }, input);
+        key({ key: 'Enter' }, input);
+        expect(navigate).toHaveBeenCalledWith(['/panel/clients', 'c1']);
+        expect(isVisible()).toBe(false);
+    });
+
+    it('son görüntülenen yoksa yalnız yazma ipucu gösterilir', () => {
+        create();
+        key({ key: '/' });
+
+        expect(document.querySelector('[data-testid="recently-viewed"]')).toBeNull();
+        expect(document.querySelector('.p-dialog')!.textContent).toContain('En az 2 karakter yazın.');
     });
 
     it('ok tuşları seçimi gezdirir, Enter seçili kaydın detayına gider', async () => {
