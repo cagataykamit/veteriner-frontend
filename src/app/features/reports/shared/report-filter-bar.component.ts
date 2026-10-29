@@ -4,6 +4,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import type { AnyReportListState } from '@/app/features/reports/shared/report-list-state';
+import { ReportSavedFiltersComponent } from '@/app/features/reports/shared/report-saved-filters.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import type { DateInputLimit } from '@/app/shared/forms/date-input/date-input-limits.utils';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
@@ -18,13 +19,14 @@ export interface ReportExtraFilter {
 }
 
 /**
- * Rapor sayfalarının ortak süzgeç kartı: tarih aralığı, klinik, rapora özgü süzgeç, arama ve dışa aktarma (anlık görüntü raporlarında tarih yok).
+ * Rapor sayfalarının ortak filtre kartı: kayıtlı filtreler, tarih aralığı, klinik, rapora özgü filtre, arama ve dışa aktarma
+ * (CSV, Excel, PDF; anlık görüntü raporlarında tarih yok).
  * Müşteri/hasta seçicisi yoktur: arama müşteri ve hasta adında da arar, sonuç tablosu müşteriyi gösterir.
  */
 @Component({
     selector: 'app-report-filter-bar',
     standalone: true,
-    imports: [FormsModule, ButtonModule, SelectModule, InputNumberModule, FilterFieldComponent, DateInputComponent, SearchInputComponent, AppTrialLimitNoticeComponent],
+    imports: [FormsModule, ButtonModule, SelectModule, InputNumberModule, FilterFieldComponent, DateInputComponent, SearchInputComponent, AppTrialLimitNoticeComponent, ReportSavedFiltersComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @let s = state();
@@ -43,6 +45,9 @@ export interface ReportExtraFilter {
                 <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mb-3" role="status">{{ s.dateFilterError() }}</p>
             }
             <p class="text-sm text-muted-color m-0 mb-4">{{ periodHint() }}</p>
+            <div class="mb-4">
+                <app-report-saved-filters [state]="s" />
+            </div>
             <div class="flex flex-wrap items-end gap-3">
                 @if (!s.snapshot) {
                     <app-filter-field [label]="copy.reportsFilterDateFrom" [labelFor]="idPrefix() + 'From'" [active]="activeBadges() && s.isFromDateActive()" width="date">
@@ -110,6 +115,7 @@ export interface ReportExtraFilter {
                         <button pButton type="button" (click)="s.applyFilters()" [disabled]="s.loading()"><i class="p-button-icon pi pi-filter"></i>{{ copy.reportsApplyFilter }}</button>
                     }
                     @if (s.canExport()) {
+                        <button pButton type="button" severity="secondary" [outlined]="true" (click)="s.exportPdf()" [disabled]="s.exporting() || !s.hasExportableRows() || s.isExporting('pdf')"><i class="p-button-icon" [class]="s.isExporting('pdf') ? 'pi pi-spin pi-spinner' : 'pi pi-file-pdf'"></i>{{ copy.reportsExportPdf }}</button>
                         <button pButton type="button" severity="secondary" [outlined]="true" (click)="s.exportXlsx()" [disabled]="s.exporting() || !s.hasExportableRows() || s.isExporting('xlsx')"><i class="p-button-icon" [class]="s.isExporting('xlsx') ? 'pi pi-spin pi-spinner' : 'pi pi-file-excel'"></i>{{ copy.reportsExportXlsx }}</button>
                         <button pButton type="button" severity="secondary" [outlined]="true" (click)="s.exportCsv()" [disabled]="s.exporting() || !s.hasExportableRows() || s.isExporting('csv')"><i class="p-button-icon" [class]="s.isExporting('csv') ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>{{ copy.reportsExportCsv }}</button>
                     }

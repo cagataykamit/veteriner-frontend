@@ -26,7 +26,8 @@ describe('VaccinationsReportPageComponent — sade filtre alanı', () => {
         source = {
             loadReport: vi.fn().mockName('VaccinationsReportService.loadReport'),
             exportCsvBlob: vi.fn().mockName('VaccinationsReportService.exportCsvBlob'),
-            exportXlsxBlob: vi.fn().mockName('VaccinationsReportService.exportXlsxBlob')
+            exportXlsxBlob: vi.fn().mockName('VaccinationsReportService.exportXlsxBlob'),
+            exportPdfBlob: vi.fn().mockName('VaccinationsReportService.exportPdfBlob')
         } as unknown as MockedObject<VaccinationsReportService>;
         source.loadReport.mockImplementation(((q: { page?: number; pageSize?: number }) =>
             of({

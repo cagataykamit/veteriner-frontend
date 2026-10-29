@@ -49,10 +49,14 @@ describe('RegisterReportSource', () => {
         source.exportXlsxBlob(query).subscribe();
         const [xlsxPath, xlsxParams] = vi.mocked(api.getBlob).mock.lastCall as [string, HttpParams];
 
+        source.exportPdfBlob(query).subscribe();
+        const [pdfPath, pdfParams] = vi.mocked(api.getBlob).mock.lastCall as [string, HttpParams];
+
         expect(csvPath).toBe('/api/v1/reports/registers/examinations/export');
         expect(xlsxPath).toBe('/api/v1/reports/registers/examinations/export-xlsx');
+        expect(pdfPath).toBe('/api/v1/reports/registers/examinations/export-pdf');
 
-        for (const p of [csvParams, xlsxParams]) {
+        for (const p of [csvParams, xlsxParams, pdfParams]) {
             expect(keys(p)).toEqual(keys(listParams).filter((k) => k !== 'page' && k !== 'pageSize'));
 
             for (const k of p.keys()) {

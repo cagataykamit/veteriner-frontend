@@ -34,7 +34,8 @@ describe('ReportListState', () => {
         source = {
             loadReport: vi.fn().mockName('source.loadReport'),
             exportCsvBlob: vi.fn().mockName('source.exportCsvBlob'),
-            exportXlsxBlob: vi.fn().mockName('source.exportXlsxBlob')
+            exportXlsxBlob: vi.fn().mockName('source.exportXlsxBlob'),
+            exportPdfBlob: vi.fn().mockName('source.exportPdfBlob')
         };
         source.loadReport.mockImplementation((q) => of(result(q.page ?? 1, q.pageSize ?? 25)));
         TestBed.configureTestingModule({
@@ -277,6 +278,76 @@ describe('ReportListState', () => {
 
         expect(exportQ).toEqual({ ...listQ, page: 1 });
         expect(state.exportKind()).toBeNull();
+    });
+
+    it('PDF dışa aktarma liste sorgusunu kullanır; deneme kısıtında PDF de abonelik eylemini gösterir', () => {
+        const state = create('status');
+
+        state.init();
+        state.extraFilter = 'Completed';
+        state.applyFilters();
+        const listQ = vi.mocked(source.loadReport).mock.lastCall![0];
+
+        source.exportPdfBlob.mockReturnValue(of(new HttpResponse({ body: new Blob(['%PDF']), headers: new HttpHeaders() })));
+        const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockReturnValue(undefined);
+
+        state.exportPdf();
+        expect(click).toHaveBeenCalled();
+        expect(vi.mocked(source.exportPdfBlob).mock.lastCall![0]).toEqual({ ...listQ, page: 1 });
+        expect(source.exportCsvBlob).not.toHaveBeenCalled();
+        expect(source.exportXlsxBlob).not.toHaveBeenCalled();
+
+        source.exportPdfBlob.mockReturnValue(throwError(() => new TrialLimitError('Deneme sınırı', 'Trial.ExportLimitExceeded')));
+        state.exportPdf();
+        expect(state.exportTrialLimited()).toBe(true);
+        expect(state.exportKind()).toBeNull();
+    });
+
+    it('kayıtlı filtre: uygulanmış klinik/arama/rapora özgü filtreler alınır, boşlar ve tarih girmez', () => {
+        const state = create('status');
+
+        state.init();
+        state.clinicIdFilter = 'c1';
+        state.searchInput = '  pamuk ';
+        state.extraFilter = 'Completed';
+        state.applyFilters();
+
+        expect(state.savedFilterValues()).toEqual({ clinicId: 'c1', search: 'pamuk', status: 'Completed' });
+
+        state.resetFilters();
+        expect(state.savedFilterValues()).toEqual({});
+    });
+
+    it('kayıtlı filtre uygulanınca alanlar değişir, tarih aralığı korunur, bilinmeyen alan yok sayılır', () => {
+        const make = () =>
+            TestBed.runInInjectionContext(
+                () =>
+                    new ReportListState<Query, Result>({
+                        source,
+                        stateKey: KEY,
+                        readClaim: 'Test.Read',
+                        exportFilePrefix: 'defter',
+                        dateRangeOnly: true,
+                        extraKeys: ['includeVoided', 'productId']
+                    })
+            );
+        const state = make();
+
+        state.init();
+        state.fromDateInput = '2026-10-01';
+        state.toDateInput = '2026-10-15';
+        state.applyFilters();
+
+        state.applySavedFilterValues({ clinicId: 'c1', includeVoided: 'true', unknownKey: 'x' });
+        const q = vi.mocked(source.loadReport).mock.lastCall![0];
+
+        expect(q.clinicId).toBe('c1');
+        expect(q.includeVoided).toBe('true');
+        expect(q.productId).toBeUndefined();
+        expect(q.from).toBe('2026-10-01');
+        expect(q.to).toBe('2026-10-15');
+        expect(q).not.toHaveProperty('unknownKey');
+        expect(state.savedFilterValues()).toEqual({ clinicId: 'c1', includeVoided: 'true' });
     });
 
     it('okuma izni yoksa dışa aktarma çalışmaz', () => {

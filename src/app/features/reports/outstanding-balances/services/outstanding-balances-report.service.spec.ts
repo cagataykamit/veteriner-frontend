@@ -43,7 +43,7 @@ describe('OutstandingBalancesReportService', () => {
         expect(keys(params)).toEqual(['clinicId', 'minAmount', 'page', 'pageSize', 'search']);
     });
 
-    it('CSV ve XLSX dışa aktarma, sayfalama dışında listeyle aynı süzgeç kümesini gönderir', () => {
+    it('CSV, XLSX ve PDF dışa aktarma, sayfalama dışında listeyle aynı süzgeç kümesini gönderir', () => {
         const q = { minAmount: '100', search: 'ali', clinicId: 'c1', page: 3, pageSize: 10 };
 
         service.loadReport(q).subscribe();
@@ -55,10 +55,14 @@ describe('OutstandingBalancesReportService', () => {
         service.exportXlsxBlob(q).subscribe();
         const [xlsxPath, xlsxParams] = vi.mocked(api.getBlob).mock.lastCall as [string, HttpParams];
 
+        service.exportPdfBlob(q).subscribe();
+        const [pdfPath, pdfParams] = vi.mocked(api.getBlob).mock.lastCall as [string, HttpParams];
+
         expect(csvPath).toBe('/api/v1/reports/outstanding-balances/export');
         expect(xlsxPath).toBe('/api/v1/reports/outstanding-balances/export-xlsx');
+        expect(pdfPath).toBe('/api/v1/reports/outstanding-balances/export-pdf');
 
-        for (const p of [csvParams, xlsxParams]) {
+        for (const p of [csvParams, xlsxParams, pdfParams]) {
             expect(p.has('page')).toBe(false);
             expect(p.has('pageSize')).toBe(false);
             expect(keys(p)).toEqual(keys(listParams).filter((k) => k !== 'page' && k !== 'pageSize'));

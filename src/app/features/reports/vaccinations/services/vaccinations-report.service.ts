@@ -56,6 +56,18 @@ export class VaccinationsReportService {
         );
     }
 
+    /** GET `/api/v1/reports/vaccinations/export-pdf` — aynı filtreler, sayfalama yok. */
+    exportPdfBlob(query: VaccinationsReportQuery) {
+        const merged = this.mergeClinicContext(query);
+        const params = vaccinationsReportQueryToHttpParams(merged, { omitPaging: true });
+
+        return this.api.getBlob(ApiEndpoints.reports.vaccinationsExportPdf(), params).pipe(
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => userErrorFromHttp(err, PANEL_COPY.reportsExportFailedFallback))
+            )
+        );
+    }
+
     private mergeClinicContext(query: VaccinationsReportQuery): VaccinationsReportQuery {
         const clinicFromAuth = this.auth.getClinicId()?.trim() ?? '';
 

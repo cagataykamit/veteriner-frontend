@@ -51,6 +51,7 @@ export interface ReportListSource<Q, R> {
     loadReport(query: Q): Observable<R>;
     exportCsvBlob(query: Q): Observable<HttpResponse<Blob>>;
     exportXlsxBlob(query: Q): Observable<HttpResponse<Blob>>;
+    exportPdfBlob(query: Q): Observable<HttpResponse<Blob>>;
 }
 
 export interface ReportListConfig<Q, R> {
@@ -59,7 +60,7 @@ export interface ReportListConfig<Q, R> {
     stateKey: string;
     /** Dışa aktarma bu izne bağlıdır (rapor erişimiyle aynı); dizi verilirse hepsi birlikte gerekir. */
     readClaim: string | readonly string[];
-    /** Content-Disposition yoksa dosya adı: `<önek>-<tarih>.csv|xlsx`. */
+    /** Content-Disposition yoksa dosya adı: `<önek>-<tarih>.csv|xlsx|pdf`. */
     exportFilePrefix: string;
     /** Rapora özgü tek süzgeç (ödeme: `method`, randevu ve aşı: `status`, borç: `minAmount`). */
     extraFilterKey?: 'method' | 'status' | 'minAmount';
@@ -75,7 +76,7 @@ export interface ReportListConfig<Q, R> {
     rowsPerPageOptions?: number[];
 }
 
-type ExportKind = 'csv' | 'xlsx';
+type ExportKind = 'csv' | 'xlsx' | 'pdf';
 
 const DEFAULT_ROWS_PER_PAGE_OPTIONS = [10, 20, 25, 50];
 
@@ -83,7 +84,7 @@ const safeTrim = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
 /**
  * Rapor listesi sayfalarının ortak durumu ve akışı: tarih aralığı, klinik süzgeci, sayfalama, önbellek anahtarı, yarış koruması,
- * oturumda saklama ve CSV/XLSX dışa aktarma. Liste ve dışa aktarma aynı sorgu nesnesinden (`buildQuery`) üretilir.
+ * oturumda saklama, CSV/XLSX/PDF dışa aktarma ve kayıtlı filtre (REPORT-004) uygulama. Liste ve dışa aktarma aynı sorgu nesnesinden (`buildQuery`) üretilir.
  * Enjeksiyon bağlamında (bileşen alan başlatıcısı) oluşturulmalıdır.
  */
 export class ReportListState<Q extends ReportListQueryBase, R extends ReportListResultBase> {
@@ -257,6 +258,37 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         this.export('xlsx');
     }
 
+    exportPdf(): void {
+        this.export('pdf');
+    }
+
+    /**
+     * Kayıtlı filtre için uygulanmış filtre seti (REPORT-004): klinik, arama ve rapora özgü filtreler; boş değerler ve tarih
+     * aralığı girmez (kayıtlı filtre her dönemde yeniden kullanılır). Anahtarlar raporun sorgu alanlarıdır.
+     */
+    savedFilterValues(): Record<string, string> {
+        const extraKey = this.config.extraFilterKey;
+        const values: Record<string, string> = {
+            clinicId: this.activeClinicId().trim(),
+            search: this.activeSearch().trim(),
+            ...(extraKey ? { [extraKey]: this.activeExtra().trim() } : {}),
+            ...this.activeExtras()
+        };
+
+        return Object.fromEntries(Object.entries(values).filter(([, v]) => !!v));
+    }
+
+    /** Kayıtlı filtreyi uygular: bu rapora ait alanlar değişir, bilinmeyenler yok sayılır, ekrandaki tarih aralığı korunur. */
+    applySavedFilterValues(values: Readonly<Record<string, string>>): void {
+        const extraKey = this.config.extraFilterKey;
+
+        this.clinicIdFilter = safeTrim(values['clinicId']);
+        this.searchInput = safeTrim(values['search']);
+        this.extraFilter = extraKey ? safeTrim(values[extraKey]) : '';
+        this.extraInputs = Object.fromEntries((this.config.extraKeys ?? []).map((key) => [key, safeTrim(values[key])]));
+        this.applyFilters();
+    }
+
     isSearchActive(): boolean {
         return !!this.activeSearch().trim();
     }
@@ -309,7 +341,7 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         this.exportKind.set(kind);
         this.sanitizeExportClinicFilterIfStale();
         const q = this.buildQuery(1, this.pageSize());
-        const req$ = kind === 'xlsx' ? source.exportXlsxBlob(q) : source.exportCsvBlob(q);
+        const req$ = kind === 'xlsx' ? source.exportXlsxBlob(q) : kind === 'pdf' ? source.exportPdfBlob(q) : source.exportCsvBlob(q);
 
         req$.subscribe({
             next: (res) => {

@@ -17,7 +17,8 @@ let pending: Subject<Result>;
 const source: ReportListSource<ReportListQueryBase, Result> = {
     loadReport: () => pending,
     exportCsvBlob: () => EMPTY,
-    exportXlsxBlob: () => EMPTY
+    exportXlsxBlob: () => EMPTY,
+    exportPdfBlob: () => EMPTY
 };
 
 @Component({

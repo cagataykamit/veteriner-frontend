@@ -56,6 +56,18 @@ export class ExaminationsReportService {
         );
     }
 
+    /** GET `/api/v1/reports/examinations/export-pdf` — aynı filtreler, sayfalama yok. */
+    exportPdfBlob(query: ExaminationsReportQuery) {
+        const merged = this.mergeClinicContext(query);
+        const params = examinationsReportQueryToHttpParams(merged, { omitPaging: true });
+
+        return this.api.getBlob(ApiEndpoints.reports.examinationsExportPdf(), params).pipe(
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => userErrorFromHttp(err, PANEL_COPY.reportsExportFailedFallback))
+            )
+        );
+    }
+
     private mergeClinicContext(query: ExaminationsReportQuery): ExaminationsReportQuery {
         const clinicFromAuth = this.auth.getClinicId()?.trim() ?? '';
 

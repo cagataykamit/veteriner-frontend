@@ -48,6 +48,15 @@ export class OutstandingBalancesReportService {
         );
     }
 
+    /** GET `/api/v1/reports/outstanding-balances/export-pdf` — aynı filtreler, sayfalama yok. */
+    exportPdfBlob(query: OutstandingBalancesReportQuery) {
+        const params = outstandingBalancesReportQueryToHttpParams(this.mergeClinicContext(query), { omitPaging: true });
+
+        return this.api.getBlob(ApiEndpoints.reports.outstandingBalancesExportPdf(), params).pipe(
+            catchError((err) => throwError(() => userErrorFromHttp(err, PANEL_COPY.reportsExportFailedFallback)))
+        );
+    }
+
     private mergeClinicContext(query: OutstandingBalancesReportQuery): OutstandingBalancesReportQuery {
         const clinicFromAuth = this.auth.getClinicId()?.trim() ?? '';
 
