@@ -82,6 +82,28 @@ describe('ExaminationProceduresSectionComponent', () => {
         expect(document.body.querySelector('app-treatment-form')).not.toBeNull();
     });
 
+    it('lab istemi ve reçete ekleme izinle görünür; aynı muayene bağlamıyla ilgili form yan panelde açılır (EXAM-010)', () => {
+        const el = create(exam, ['LabResults.Create', 'Prescriptions.Create']);
+
+        expect(el.querySelector('[data-testid="procedure-add-lab"]')).not.toBeNull();
+        expect(el.querySelector('[data-testid="procedure-add-prescription"]')).not.toBeNull();
+        expect(el.querySelector('[data-testid="procedure-add-treatment"]')).toBeNull();
+
+        (el.querySelector('[data-testid="procedure-add-lab"]') as HTMLButtonElement).click();
+        fixture.detectChanges();
+
+        expect(cmp.drawerTitle()).toBe('Lab istemi ekle');
+        expect(document.body.querySelector('app-lab-result-form')).not.toBeNull();
+        expect(cmp.contextParams().get('examinationId')).toBe('e1');
+
+        cmp.close();
+        (el.querySelector('[data-testid="procedure-add-prescription"]') as HTMLButtonElement).click();
+        fixture.detectChanges();
+
+        expect(cmp.drawerTitle()).toBe('Reçete ekle');
+        expect(document.body.querySelector('app-prescription-form')).not.toBeNull();
+    });
+
     it('kayıttan sonra panel kapanır, aynı muayenede kalınır ve liste yenileme istenir', () => {
         create();
         cmp.open('treatment');
