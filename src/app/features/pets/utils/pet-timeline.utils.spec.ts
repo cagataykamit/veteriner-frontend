@@ -3,10 +3,12 @@ import { mapPetTimelinePageDtoToVm } from '@/app/entities/pet/data/pet-timeline.
 import {
     mergePetTimelineItems,
     paymentToPetTimelineItem,
+    petTimelineAppointmentLink,
     petTimelineEventLink,
     petTimelineExaminationLink,
     petTimelineOmittedTypesLabel,
     petTimelineStatusLabel,
+    petTimelineTreatmentLink,
     petTimelineTypeIcon,
     petTimelineTypeLabel
 } from './pet-timeline.utils';
@@ -26,6 +28,8 @@ describe('pet-timeline.utils görüntüleme', () => {
             linkType: 'Imaging',
             linkId: 'i1',
             relatedExaminationId: 'e1',
+            relatedAppointmentId: null,
+            relatedTreatmentId: null,
             addedAfterFinalization: true
         };
 
@@ -49,6 +53,8 @@ const event = (id: string, eventAtUtc: string): PetTimelineItemVm => ({
     linkType: 'Examination',
     linkId: id,
     relatedExaminationId: null,
+    relatedAppointmentId: null,
+    relatedTreatmentId: null,
     addedAfterFinalization: false
 });
 
@@ -115,6 +121,25 @@ describe('pet timeline yardımcıları', () => {
     it('geliş satırı: relatedExaminationId doluysa bağlı muayene rotası, null ise bağlantı yok', () => {
         expect(petTimelineExaminationLink(base[4])).toEqual(['/panel/examinations', 'e9']);
         expect(petTimelineExaminationLink(base[0])).toBeNull();
+    });
+
+    it('bağlı tedavi (reçete, uygulama) ve randevu (yalnız geliş) bağlantıları; kimlik yoksa bağlantı yok', () => {
+        const rows = mapPetTimelinePageDtoToVm({
+            items: [
+                { type: 'Prescription', sourceId: 'rx1', title: 'Antibiyotik', relatedTreatmentId: 't1' },
+                { type: 'Administration', sourceId: 'a1', title: 'Serum', relatedTreatmentId: 't2' },
+                { type: 'Administration', sourceId: 'a2', title: 'Serum' },
+                { type: 'Visit', sourceId: 'vi1', title: 'Geliş', relatedAppointmentId: 'ap1' },
+                { type: 'Examination', sourceId: 'e1', title: 'Kontrol', relatedAppointmentId: 'ap2' }
+            ]
+        }).items;
+
+        expect(petTimelineTreatmentLink(rows[0])).toEqual(['/panel/treatments', 't1']);
+        expect(petTimelineTreatmentLink(rows[1])).toEqual(['/panel/treatments', 't2']);
+        expect(petTimelineTreatmentLink(rows[2])).toBeNull();
+        expect(petTimelineAppointmentLink(rows[3])).toEqual(['/panel/appointments', 'ap1']);
+        expect(petTimelineAppointmentLink(rows[4])).toBeNull();
+        expect(petTimelineAppointmentLink(base[0])).toBeNull();
     });
 
     it('durum etiketi Türkçe; bilinmeyen durum etiketsiz; bilinmeyen tür genel simge', () => {

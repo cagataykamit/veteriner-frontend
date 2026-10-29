@@ -20,6 +20,8 @@ const event = (type: string, id: string, eventAtUtc: string) => ({
     linkType: type,
     linkId: id,
     relatedExaminationId: null,
+    relatedAppointmentId: null,
+    relatedTreatmentId: null,
     addedAfterFinalization: false
 });
 

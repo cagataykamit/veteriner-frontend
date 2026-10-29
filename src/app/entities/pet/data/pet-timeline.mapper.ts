@@ -63,6 +63,8 @@ function mapItem(dto: PetTimelineItemDto): PetTimelineItemVm | null {
         linkType: trimOrNull(dto.linkRef?.type) ?? type,
         linkId: trimOrNull(dto.linkRef?.id) ?? sourceId,
         relatedExaminationId: trimOrNull(dto.relatedExaminationId),
+        relatedAppointmentId: trimOrNull(dto.relatedAppointmentId),
+        relatedTreatmentId: trimOrNull(dto.relatedTreatmentId),
         addedAfterFinalization: dto.addedAfterFinalization === true
     };
 }

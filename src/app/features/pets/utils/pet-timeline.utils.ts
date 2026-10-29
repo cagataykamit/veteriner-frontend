@@ -57,6 +57,16 @@ export function petTimelineExaminationLink(item: PetTimelineItemVm): string[] | 
     return item.type !== 'Examination' && item.relatedExaminationId ? ['/panel/examinations', item.relatedExaminationId] : null;
 }
 
+/** Reçete veya uygulama bir tedaviye bağlıysa o tedavinin rotası (muayenesiz tedavide tek kaynak bağı budur). */
+export function petTimelineTreatmentLink(item: PetTimelineItemVm): string[] | null {
+    return item.relatedTreatmentId ? ['/panel/treatments', item.relatedTreatmentId] : null;
+}
+
+/** Randevulu geliş: randevu ayrı satır olmadığından randevuya bu bağlantıyla gidilir. */
+export function petTimelineAppointmentLink(item: PetTimelineItemVm): string[] | null {
+    return item.type === 'Visit' && item.relatedAppointmentId ? ['/panel/appointments', item.relatedAppointmentId] : null;
+}
+
 const STATUS_LABELS: Record<string, string> = {
     Active: 'Yatışta',
     Discharged: 'Taburcu',
@@ -126,6 +136,8 @@ export function paymentToPetTimelineItem(
         linkType: PET_TIMELINE_PAYMENT_TYPE,
         linkId: p.id,
         relatedExaminationId: null,
+        relatedAppointmentId: null,
+        relatedTreatmentId: null,
         addedAfterFinalization: false
     };
 }
