@@ -1,8 +1,13 @@
+import { provideHttpClient, withXhr } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import type { PetTimelinePageVm, PetTimelineQuery } from '@/app/entities/pet/models/pet-timeline-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
+import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
+import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { PetTimelinePageComponent } from './pet-timeline-page.component';
 
 const item = (type: string, id: string, over: Record<string, unknown> = {}) => ({
@@ -146,7 +151,7 @@ describe('PetTimelinePageComponent', () => {
         expect(fixture.componentInstance.items().length).toBe(1);
     });
 
-    it('tarih aralığı süzgeci listeyi baştan ve aynı aralıkla yükler; ters aralık yer değiştirir; değişmeyen aralık istek atmaz', () => {
+    it('tarih aralığı filtresi listeyi baştan ve aynı aralıkla yükler; ters aralık yer değiştirir; değişmeyen aralık istek atmaz', () => {
         create();
 
         fixture.componentInstance.setDateRange('2026-10-12', '2026-10-10');
@@ -186,5 +191,97 @@ describe('PetTimelinePageComponent', () => {
 
         expect(el().textContent).toContain('Zaman çizelgesi yüklenemedi.');
         expect(el().querySelector('[data-testid="timeline-list"]')).toBeNull();
+    });
+});
+
+describe('PetTimelinePageComponent — tarih aralığı filtresi (gerçek tarih alanı, servis ve HTTP)', () => {
+    let fixture: ComponentFixture<PetTimelinePageComponent>;
+    let http: HttpTestingController;
+
+    /** Filtre değişince uçuştaki istek iptal edilir; yalnız açık (iptal edilmemiş) istekler döner. */
+    const timelineRequests = () => http.match((r) => r.url === 'http://api.test/api/v1/pets/p1/timeline').filter((r) => !r.cancelled);
+    const flushTimeline = () => timelineRequests().forEach((r) => r.flush({ items: [], nextCursor: null, omittedTypes: [] }));
+    const dateInputs = () => fixture.debugElement.queryAll(By.directive(DateInputComponent)).map((d) => d.componentInstance as DateInputComponent);
+
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            imports: [PetTimelinePageComponent],
+            providers: [
+                provideRouter([]),
+                provideHttpClient(withXhr()),
+                provideHttpClientTesting(),
+                { provide: API_BASE_URL, useValue: 'http://api.test' },
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'p1' })) } }
+            ]
+        }).compileComponents();
+        http = TestBed.inject(HttpTestingController);
+        fixture = TestBed.createComponent(PetTimelinePageComponent);
+        fixture.detectChanges();
+        http.match('http://api.test/api/v1/pets/p1').forEach((r) => r.flush({ id: 'p1', name: 'Pamuk' }));
+        flushTimeline();
+    });
+
+    afterEach(() => http.verify());
+
+    it('takvimden seçilen günler İstanbul gün sınırıyla yarı açık fromUtc/toUtc olarak gider; bitiş günü dahildir', () => {
+        const [from, to] = dateInputs();
+
+        from.onPickerChange(new Date(2026, 9, 10));
+        flushTimeline();
+        to.onPickerChange(new Date(2026, 9, 12));
+        fixture.detectChanges();
+
+        const [req] = timelineRequests();
+
+        expect(req.request.params.get('fromUtc')).toBe('2026-10-09T21:00:00.000Z');
+        expect(req.request.params.get('toUtc')).toBe('2026-10-12T21:00:00.000Z');
+        expect(req.request.params.has('cursor')).toBe(false);
+        req.flush({ items: [], nextCursor: null, omittedTypes: [] });
+        fixture.detectChanges();
+
+        expect((fixture.nativeElement as HTMLElement).textContent).toContain('Seçili filtrelere uyan kayıt yok.');
+    });
+
+    it('sonraki sayfa aynı tarih aralığıyla ve imleçle istenir', () => {
+        dateInputs()[0].onPickerChange(new Date(2026, 9, 10));
+        timelineRequests()[0].flush({
+            items: [{ type: 'Visit', sourceId: 'v1', eventAtUtc: '2026-10-11T08:00:00Z', clinicId: 'c1', clinicName: 'Merkez', title: 'Geliş', linkRef: { type: 'Visit', id: 'v1' } }],
+            nextCursor: 'CUR1',
+            omittedTypes: []
+        });
+        fixture.detectChanges();
+
+        fixture.componentInstance.loadMore();
+        const [req] = timelineRequests();
+
+        expect(req.request.params.get('fromUtc')).toBe('2026-10-09T21:00:00.000Z');
+        expect(req.request.params.get('cursor')).toBe('CUR1');
+        req.flush({ items: [], nextCursor: null, omittedTypes: [] });
+    });
+
+    it('takvimdeki temizleme tarihi kaldırır; "Filtreleri temizle" tüm filtreleri sıfırlayıp parametresiz ister', () => {
+        const [from] = dateInputs();
+
+        from.onPickerChange(new Date(2026, 9, 10));
+        flushTimeline();
+        from.onPickerChange(null);
+
+        expect(timelineRequests()[0].request.params.has('fromUtc')).toBe(false);
+        flushTimeline();
+
+        fixture.componentInstance.setIncludeVoided(true);
+        fixture.componentInstance.setDateRange('2026-10-01', '');
+        flushTimeline();
+        fixture.detectChanges();
+        (fixture.nativeElement.querySelector('[data-testid="clear-filters"]') as HTMLButtonElement).click();
+        fixture.detectChanges();
+
+        const [req] = timelineRequests();
+
+        expect(req.request.params.keys()).toEqual(['limit']);
+        req.flush({ items: [], nextCursor: null, omittedTypes: [] });
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement.querySelector('[data-testid="clear-filters"]')).toBeNull();
     });
 });

@@ -21,7 +21,7 @@ const PAGE_SIZE = 20;
 
 /**
  * Hasta zaman çizelgesi (`GET /pets/{id}/timeline`): tür bazlı simgeler, opak imleçle "daha fazla yükle".
- * İptal/yanlış işaretli kayıtlar varsayılan gizlidir; süzgeç değişince liste baştan yüklenir.
+ * İptal/yanlış işaretli kayıtlar varsayılan gizlidir; filtre değişince liste baştan yüklenir.
  */
 @Component({
     selector: 'app-pet-timeline-page',
@@ -32,7 +32,7 @@ const PAGE_SIZE = 20;
         <app-page-header [categoryLink]="['/panel/pets', petId()]" categoryLinkLabel="Hasta kartına dön" title="Zaman çizelgesi" [description]="petName() ?? ''" />
 
         <div class="card mb-4">
-            <div class="flex flex-wrap items-center gap-x-6 gap-y-3" role="group" aria-label="Süzgeçler">
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-3" role="group" aria-label="Filtreler">
                 @for (t of typeOptions; track t.value) {
                     <div class="flex items-center gap-2">
                         <p-checkbox [ngModel]="isTypeSelected(t.value)" (ngModelChange)="toggleType(t.value, $event)" [binary]="true" [inputId]="'tl-type-' + t.value" />
@@ -54,6 +54,9 @@ const PAGE_SIZE = 20;
                 <app-filter-field label="Bitiş" labelFor="tl-to" [active]="toDate() !== ''" width="date">
                     <app-date-input inputId="tl-to" type="date" min="1900-01-01" limit="past" [ngModel]="toDate()" (ngModelChange)="setDateRange(fromDate(), $event)" />
                 </app-filter-field>
+                @if (hasActiveFilters()) {
+                    <button pButton type="button" severity="secondary" data-testid="clear-filters" (click)="clearFilters()"><i class="pi pi-times"></i>Filtreleri temizle</button>
+                }
             </div>
         </div>
 
@@ -117,8 +120,9 @@ export class PetTimelinePageComponent implements OnInit {
     readonly loadMoreError = signal<string | null>(null);
 
     readonly omittedLabel = computed(() => petTimelineOmittedTypesLabel(this.omittedTypes()));
+    readonly hasActiveFilters = computed(() => this.includeVoided() || this.selectedTypes().length > 0 || this.fromDate() !== '' || this.toDate() !== '');
     readonly emptyMessage = computed(() =>
-        this.includeVoided() || this.selectedTypes().length > 0 || this.fromDate() || this.toDate() ? 'Seçili süzgeçlere uyan kayıt yok.' : 'Henüz kayıt yok. İptal / yanlış işaretli kayıtlar varsayılan olarak gizlidir.'
+        this.hasActiveFilters() ? 'Seçili filtrelere uyan kayıt yok.' : 'Henüz kayıt yok. İptal / yanlış işaretli kayıtlar varsayılan olarak gizlidir.'
     );
 
     private request: Subscription | null = null;
@@ -174,6 +178,15 @@ export class PetTimelinePageComponent implements OnInit {
 
         this.fromDate.set(nextFrom);
         this.toDate.set(nextTo);
+        this.reload();
+    }
+
+    /** Tür, tarih ve iptal filtrelerini varsayılana döndürür; liste baştan yüklenir. */
+    clearFilters(): void {
+        this.selectedTypes.set([]);
+        this.fromDate.set('');
+        this.toDate.set('');
+        this.includeVoided.set(false);
         this.reload();
     }
 
