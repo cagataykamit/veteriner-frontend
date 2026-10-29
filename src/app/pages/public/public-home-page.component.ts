@@ -20,7 +20,7 @@ import {
     PUBLIC_RECORD_SAFETY_ITEMS,
     PUBLIC_REGISTERS
 } from '@/app/features/public/utils/public-registers-content.utils';
-import { PUBLIC_HOME_PAGE_META, publicFaqPageJsonLd, removePublicJsonLd, setPublicJsonLd, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
+import { PUBLIC_HOME_PAGE_META, publicFaqPageJsonLd, publicOrganizationJsonLd, removePublicJsonLd, setPublicJsonLd, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { pricingTermsText } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicPlanCardsComponent } from './components/public-plan-cards.component';
@@ -28,6 +28,7 @@ import { PublicFaqListComponent } from './components/public-faq-list.component';
 import { PublicScreenshotComponent } from './components/public-screenshot.component';
 
 const HOME_FAQ_JSON_LD_ID = 'home-faq';
+const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
 
 /** Ana sayfa omurgası (tasarım belgesi 5.1, ADR-035): kahraman, kime göre, bir günün akışı, Türkiye'ye özgü, kayıt güvenliği, geçiş, paketler, SSS, çağrı. */
 @Component({
@@ -259,7 +260,11 @@ export class PublicHomePageComponent implements OnInit {
 
     ngOnInit(): void {
         setPublicPageMeta(this.title, this.meta, PUBLIC_HOME_PAGE_META, this.document);
+        setPublicJsonLd(this.document, HOME_ORGANIZATION_JSON_LD_ID, publicOrganizationJsonLd());
         setPublicJsonLd(this.document, HOME_FAQ_JSON_LD_ID, publicFaqPageJsonLd(this.faqs));
-        this.destroyRef.onDestroy(() => removePublicJsonLd(this.document, HOME_FAQ_JSON_LD_ID));
+        this.destroyRef.onDestroy(() => {
+            removePublicJsonLd(this.document, HOME_ORGANIZATION_JSON_LD_ID);
+            removePublicJsonLd(this.document, HOME_FAQ_JSON_LD_ID);
+        });
     }
 }

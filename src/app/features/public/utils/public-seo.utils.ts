@@ -1,5 +1,6 @@
 import { Meta, Title } from '@angular/platform-browser';
 import { environment } from '@/environments/environment';
+import { PUBLIC_CONTACT_EMAIL, PUBLIC_CONTACT_PHONE } from './public-contact-content.utils';
 import type { PublicFaqDef } from './public-faq-content.utils';
 import { PUBLIC_PATHS } from './public-navigation.utils';
 import { PRICING_PLAN_DEFS, PRICING_VAT_NOTE, pricingSummaryText, type PricingPlanDef } from '@/app/entities/subscription/utils/pricing-plan.utils';
@@ -9,6 +10,9 @@ export const PUBLIC_SITE_ORIGIN = 'https://www.vetinity.com';
 
 /** OG/Twitter görseli (1200×630, JPEG): gerçek Bugün ekranıyla marka kartı (WEB-005). */
 export const PUBLIC_OG_IMAGE_PATH = '/marketing/og-image.jpg';
+
+/** Organization verisindeki logo (arama motorları raster ister; SVG değil). */
+export const PUBLIC_LOGO_PATH = '/assets/brand/vetinity/vetinity-logo.png';
 
 export interface PublicPageMetaOptions {
     readonly title: string;
@@ -154,7 +158,24 @@ export function removePublicJsonLd(document: Document, id: string): void {
     document.head.querySelector(`script[${JSON_LD_ATTR}="${id}"]`)?.remove();
 }
 
-/** schema.org `FAQPage` — ana sayfa SSS'si (öneri belgesi 6.3). */
+/**
+ * schema.org `Organization` — ana sayfa (öneri belgesi 6.3: ad, logo, iletişim). İletişim kanalları iletişim içeriğinden gelir;
+ * değeri olmayan kanal yazılmaz, hiç kanal yoksa `contactPoint` eklenmez.
+ */
+export function publicOrganizationJsonLd(email: string | null = PUBLIC_CONTACT_EMAIL, phone: string | null = PUBLIC_CONTACT_PHONE): Record<string, unknown> {
+    const contact = { ...(email ? { email } : {}), ...(phone ? { telephone: phone } : {}) };
+
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'Vetinity',
+        url: publicSiteUrl(PUBLIC_PATHS.home),
+        logo: publicSiteUrl(PUBLIC_LOGO_PATH),
+        ...(Object.keys(contact).length > 0 ? { contactPoint: [{ '@type': 'ContactPoint', contactType: 'customer support', availableLanguage: 'Turkish', ...contact }] } : {})
+    };
+}
+
+/** schema.org `FAQPage` — ana sayfa, paketler ve SSS sayfası (öneri belgesi 6.3). */
 export function publicFaqPageJsonLd(faqs: readonly PublicFaqDef[]): Record<string, unknown> {
     return {
         '@context': 'https://schema.org',

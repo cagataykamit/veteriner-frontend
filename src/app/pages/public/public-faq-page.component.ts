@@ -1,11 +1,13 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import { PUBLIC_FAQ_CATEGORIES } from '@/app/features/public/utils/public-faq-content.utils';
-import { PUBLIC_FAQ_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
+import { PUBLIC_FAQ_CATEGORIES, PUBLIC_FAQ_PAGE_STRUCTURED_FAQS } from '@/app/features/public/utils/public-faq-content.utils';
+import { PUBLIC_FAQ_PAGE_META, publicFaqPageJsonLd, removePublicJsonLd, setPublicJsonLd, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicFaqListComponent } from './components/public-faq-list.component';
 import { PublicPageHeaderComponent } from './components/public-page-header.component';
+
+const FAQ_PAGE_JSON_LD_ID = 'faq-page';
 
 /** SSS (tasarım belgesi 5.6): masaüstünde sol dikey kategori sekmeleri, mobilde alt alta sarılan çipler (hepsi görünür). */
 @Component({
@@ -54,6 +56,7 @@ export class PublicFaqPageComponent implements OnInit {
     private readonly title = inject(Title);
     private readonly meta = inject(Meta);
     private readonly document = inject(DOCUMENT);
+    private readonly destroyRef = inject(DestroyRef);
 
     readonly categories = PUBLIC_FAQ_CATEGORIES;
     readonly activeId = signal(PUBLIC_FAQ_CATEGORIES[0].id);
@@ -61,5 +64,7 @@ export class PublicFaqPageComponent implements OnInit {
 
     ngOnInit(): void {
         setPublicPageMeta(this.title, this.meta, PUBLIC_FAQ_PAGE_META, this.document);
+        setPublicJsonLd(this.document, FAQ_PAGE_JSON_LD_ID, publicFaqPageJsonLd(PUBLIC_FAQ_PAGE_STRUCTURED_FAQS));
+        this.destroyRef.onDestroy(() => removePublicJsonLd(this.document, FAQ_PAGE_JSON_LD_ID));
     }
 }

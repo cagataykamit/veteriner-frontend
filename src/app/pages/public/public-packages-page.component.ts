@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import { publicFaqsOf } from '@/app/features/public/utils/public-faq-content.utils';
+import { PUBLIC_PACKAGES_FAQ_CATEGORY_ID, publicFaqsOf } from '@/app/features/public/utils/public-faq-content.utils';
 import { PRICING_NOT_AVAILABLE, PRICING_PLAN_DEFS, pricingTermsText } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import {
     PUBLIC_PACKAGES_PAGE_META,
@@ -80,7 +80,7 @@ export class PublicPackagesPageComponent implements OnInit {
     readonly plans = PRICING_PLAN_DEFS;
     readonly pricingTerms = pricingTermsText();
     readonly notAvailable = PRICING_NOT_AVAILABLE;
-    readonly faqs = publicFaqsOf('fiyat');
+    readonly faqs = publicFaqsOf(PUBLIC_PACKAGES_FAQ_CATEGORY_ID);
 
     ngOnInit(): void {
         setPublicPageMeta(this.title, this.meta, PUBLIC_PACKAGES_PAGE_META, this.document);

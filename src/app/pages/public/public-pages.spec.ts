@@ -7,14 +7,14 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { appRoutes } from '@/app.routes';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { PUBLIC_CONTACT_CARD_ROWS, PUBLIC_CONTACT_EMAIL } from '@/app/features/public/utils/public-contact-content.utils';
-import { PUBLIC_FAQ_CATEGORIES, PUBLIC_HOME_FAQS } from '@/app/features/public/utils/public-faq-content.utils';
+import { PUBLIC_FAQ_CATEGORIES, PUBLIC_HOME_FAQS, PUBLIC_PACKAGES_FAQ_CATEGORY_ID, publicFaqsOf } from '@/app/features/public/utils/public-faq-content.utils';
 import { PUBLIC_FEATURE_SECTIONS } from '@/app/features/public/utils/public-features-content.utils';
 import { PUBLIC_HOME_AUDIENCE, PUBLIC_HOME_DAY_FLOW } from '@/app/features/public/utils/public-home-content.utils';
 import { PUBLIC_NAV_LINKS, PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { PUBLIC_REGISTERS } from '@/app/features/public/utils/public-registers-content.utils';
 import { PUBLIC_SCREENSHOTS } from '@/app/features/public/utils/public-screenshots.utils';
 import { formatPlanPrice, PRICING_FEATURE_ROWS, PRICING_NOT_AVAILABLE, PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
-import { PUBLIC_ABOUT_PAGE_META, PUBLIC_CONTACT_PAGE_META, PUBLIC_FAQ_PAGE_META, PUBLIC_FEATURES_PAGE_META, PUBLIC_HOME_PAGE_META, PUBLIC_MIGRATION_PAGE_META, PUBLIC_OG_IMAGE_PATH, PUBLIC_PACKAGES_PAGE_META, PUBLIC_REGISTERS_PAGE_META, PUBLIC_SITE_ORIGIN } from '@/app/features/public/utils/public-seo.utils';
+import { PUBLIC_ABOUT_PAGE_META, PUBLIC_CONTACT_PAGE_META, PUBLIC_FAQ_PAGE_META, PUBLIC_FEATURES_PAGE_META, PUBLIC_HOME_PAGE_META, PUBLIC_LOGO_PATH, PUBLIC_MIGRATION_PAGE_META, PUBLIC_OG_IMAGE_PATH, PUBLIC_PACKAGES_PAGE_META, PUBLIC_REGISTERS_PAGE_META, PUBLIC_SITE_ORIGIN, publicOrganizationJsonLd } from '@/app/features/public/utils/public-seo.utils';
 
 /** Tanıtım sayfaları: ortak iskelet, rota, başlık ve içerik sabitleri. */
 describe('Tanıtım sayfaları (PublicLayout)', () => {
@@ -339,6 +339,46 @@ describe('Tanıtım SEO (WEB-003)', () => {
         await harness.navigateByUrl(PUBLIC_PATHS.about);
 
         expect(head().querySelector('script[data-public-json-ld="home-faq"]')).toBeNull();
+    });
+
+    it('ana sayfa Organization JSON-LD yazar (ad, sabit canlı kök, PNG logo, iletişim e-postası), sayfadan ayrılınca kaldırır', async () => {
+        await harness.navigateByUrl(PUBLIC_PATHS.home);
+
+        const data = JSON.parse(head().querySelector('script[type="application/ld+json"][data-public-json-ld="home-organization"]')?.textContent ?? '{}');
+
+        expect(data['@type']).toBe('Organization');
+        expect(data.name).toBe('Vetinity');
+        expect(data.url).toBe(`${PUBLIC_SITE_ORIGIN}/`);
+        expect(data.logo).toBe(`${PUBLIC_SITE_ORIGIN}${PUBLIC_LOGO_PATH}`);
+        expect(data.logo).toMatch(/\.png$/);
+        expect(data.contactPoint).toEqual([{ '@type': 'ContactPoint', contactType: 'customer support', availableLanguage: 'Turkish', email: PUBLIC_CONTACT_EMAIL }]);
+
+        await harness.navigateByUrl(PUBLIC_PATHS.faq);
+
+        expect(head().querySelector('script[data-public-json-ld="home-organization"]')).toBeNull();
+    });
+
+    it('Organization verisinde değeri olmayan iletişim kanalı yazılmaz; hiç kanal yoksa contactPoint yok', () => {
+        expect(publicOrganizationJsonLd(null, '+90 212 000 00 00')['contactPoint']).toEqual([{ '@type': 'ContactPoint', contactType: 'customer support', availableLanguage: 'Turkish', telephone: '+90 212 000 00 00' }]);
+        expect(publicOrganizationJsonLd(null, null)).not.toHaveProperty('contactPoint');
+    });
+
+    it('SSS sayfası FAQPage JSON-LD yazar; ana sayfa ve paketler sayfasında işaretlenen sorular tekrarlanmaz', async () => {
+        await harness.navigateByUrl(PUBLIC_PATHS.faq);
+
+        const data = JSON.parse(head().querySelector('script[type="application/ld+json"][data-public-json-ld="faq-page"]')?.textContent ?? '{}');
+        const names: string[] = data.mainEntity.map((q: { name: string }) => q.name);
+        const markedElsewhere = new Set([...PUBLIC_HOME_FAQS, ...publicFaqsOf(PUBLIC_PACKAGES_FAQ_CATEGORY_ID)].map((f) => f.question));
+        const all = PUBLIC_FAQ_CATEGORIES.flatMap((c) => c.items.map((i) => i.question));
+
+        expect(data['@type']).toBe('FAQPage');
+        expect(names.length).toBeGreaterThan(0);
+        expect(names.filter((n) => markedElsewhere.has(n))).toEqual([]);
+        expect(names).toEqual(all.filter((q) => !markedElsewhere.has(q)));
+
+        await harness.navigateByUrl(PUBLIC_PATHS.home);
+
+        expect(head().querySelector('script[data-public-json-ld="faq-page"]')).toBeNull();
     });
 
     it('tanıtım sayfaları robots noindex taşımaz (staging bayrağı kapalı)', async () => {
