@@ -144,3 +144,14 @@ export const PUBLIC_HOME_FAQS: readonly PublicFaqDef[] = PUBLIC_FAQ_CATEGORIES.f
 export function publicFaqsOf(categoryId: string): readonly PublicFaqDef[] {
     return PUBLIC_FAQ_CATEGORIES.find((c) => c.id === categoryId)?.items ?? [];
 }
+
+/** Paketler sayfasının kısa SSS'si (sayfada ve FAQPage verisinde) bu kategoridir. */
+export const PUBLIC_PACKAGES_FAQ_CATEGORY_ID = 'fiyat';
+
+/**
+ * SSS sayfasının FAQPage verisi: ana sayfa ve paketler sayfası kendi sorularını zaten işaretler; aynı soru sitede bir kez
+ * işaretlensin diye (arama motoru kuralı) bu sayfada yalnız başka yerde işaretlenmeyenler yer alır. Sayfada yine tüm sorular görünür.
+ */
+export const PUBLIC_FAQ_PAGE_STRUCTURED_FAQS: readonly PublicFaqDef[] = PUBLIC_FAQ_CATEGORIES.filter((c) => c.id !== PUBLIC_PACKAGES_FAQ_CATEGORY_ID).flatMap((c) =>
+    c.items.filter((i) => !i.homepage)
+);

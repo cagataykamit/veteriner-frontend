@@ -83,6 +83,22 @@
                                 }
                             ],
                             "outputHashing": "all",
+                            "assets": [
+                                {
+                                    "glob": "**/*",
+                                    "input": "public",
+                                    "ignore": ["robots.txt", "sitemap.xml"]
+                                },
+                                {
+                                    "glob": "**/*",
+                                    "input": "src/assets/brand",
+                                    "output": "assets/brand"
+                                },
+                                {
+                                    "glob": "robots.txt",
+                                    "input": "public-staging"
+                                }
+                            ],
                             "fileReplacements": [
                                 {
                                     "replace": "src/environments/environment.ts",
