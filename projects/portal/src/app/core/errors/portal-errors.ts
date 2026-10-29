@@ -17,6 +17,8 @@ export const PORTAL_ERROR_CODES = {
     linkNotFound: 'Portal.Links.NotFound',
     petNotFound: 'Portal.Pets.NotFound',
     deletionCodeInvalid: 'Portal.Account.DeletionCodeInvalid',
+    remindersKvkkDeclined: 'Clients.RemindersKvkkDeclined',
+    clientConcurrencyConflict: 'Clients.ConcurrencyConflict',
     validation: 'Validation.FluentValidation'
 } as const;
 
@@ -35,6 +37,8 @@ export const PORTAL_ERROR_MESSAGES: Readonly<Record<string, string>> = {
     [C.linkNotFound]: 'Bu kliniğe erişiminiz kapatılmış ya da bulunamadı.',
     [C.petNotFound]: 'Hayvan kaydı bulunamadı.',
     [C.deletionCodeInvalid]: 'Onay kodu doğrulanamadı. Kod yanlış ya da süresi dolmuş olabilir; yeni kod isteyip tekrar deneyin.',
+    [C.remindersKvkkDeclined]: 'Klinikteki KVKK açık rıza kaydınız "Ret" olduğu için hatırlatmalar açılamıyor. Açmak için kliniğinizle görüşün.',
+    [C.clientConcurrencyConflict]: 'Kaydınız bu sırada klinik tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.',
     [C.validation]: 'Girdiğiniz bilgileri kontrol edin.'
 };
 
