@@ -13,6 +13,8 @@ import { PetsService } from '@/app/entities/pet/services/pets.service';
 import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';
+import type { Mock } from 'vitest';
+import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
 import { PetDetailPageComponent } from './pet-detail-page.component';
 
 const pet: PetDetailVm = {
@@ -90,6 +92,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
     let petValue: PetDetailVm;
     let openItemsSource: () => Observable<PetCardSection<PetOpenItemsVm>>;
     let openItemsCalls: number;
+    let recordRecent: Mock;
 
     const el = () => fixture.nativeElement as HTMLElement;
 
@@ -100,6 +103,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
                 provideRouter([]),
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'p1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'k1' } },
+                { provide: RecentlyViewedService, useValue: { record: recordRecent } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: AppointmentsService, useValue: { getAppointments: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } },
                 {
@@ -135,6 +139,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
         petValue = pet;
         openItemsSource = () => of({ state: 'ok', data: openItems() });
         openItemsCalls = 0;
+        recordRecent = vi.fn().mockName('RecentlyViewedService.record');
     });
 
     it('vefat eden hayvanda soluk rozet ve tarih görünür; yeni bakım eylemleri yok, durum eylemi "Aktife al"', () => {
@@ -177,6 +182,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
         expect(el().textContent).toContain('Zaman çizelgesi');
         expect(el().querySelector('[data-testid="pet-notes"]')?.textContent).toContain('Mama alerjisi');
         expect(el().textContent).not.toContain('Son randevular');
+        expect(recordRecent).toHaveBeenCalledWith({ kind: 'pet', id: 'p1', title: 'Pamuk', subtitle: 'Kedi · Ali Veli' });
     });
 
     it("hekim (muayene açabilen) klinik özeti, yalnız ödeme alan resepsiyon Yapılacaklar'ı öne alır", () => {

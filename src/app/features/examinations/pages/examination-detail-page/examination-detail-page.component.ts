@@ -45,6 +45,8 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
+import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/patient/services/recently-viewed.service';
 
 /** Kayıt metin bölümleri sırası; vital satırı `findings` ile `assessment` arasına girer. */
 const RECORD_TEXT_SECTIONS: readonly {
@@ -307,6 +309,7 @@ export class ExaminationDetailPageComponent implements OnInit {
     private readonly examinationsService = inject(ExaminationsService);
     private readonly related = inject(DetailRelatedSummariesService);
     private readonly auth = inject(AuthService);
+    private readonly recentlyViewed = inject(RecentlyViewedService);
     private readonly messages = inject(MessageService);
     readonly ro = inject(TenantReadOnlyContextService);
 
@@ -525,6 +528,7 @@ export class ExaminationDetailPageComponent implements OnInit {
     }
 
     private loadRelatedBlocks(x: ExaminationDetailVm): void {
+        this.recentlyViewed.record({ kind: 'examination', id: x.id, title: x.petName, subtitle: recentlyViewedSubtitle(x.visitReason, formatUtcIsoAsLocalDateDisplay(x.examinedAtUtc)) });
         this.loadRelatedSummary(x.id);
 
         if (!x.petId?.trim()) {

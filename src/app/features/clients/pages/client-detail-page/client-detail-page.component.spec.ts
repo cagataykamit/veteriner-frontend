@@ -15,6 +15,7 @@ import { PetsService } from '@/app/entities/pet/services/pets.service';
 import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
+import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
 import { ClientDetailPageComponent } from './client-detail-page.component';
 
 const client: ClientDetailVm = {
@@ -59,6 +60,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
     let claims: Set<string>;
     let pets: PetCardSection<PetListItemVm[]>;
     let pendingChargesSpy: Mock;
+    let recordRecent: Mock;
 
     const el = () => fixture.nativeElement as HTMLElement;
 
@@ -69,6 +71,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
                 provideRouter([]),
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'c1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'k1', getUserId: () => 'u1' } },
+                { provide: RecentlyViewedService, useValue: { record: recordRecent } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 {
                     provide: ClientsService,
@@ -103,6 +106,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
     beforeEach(() => {
         claims = new Set(['Clients.Update', 'Examinations.Create', 'Charges.Read', 'Charges.Create', 'Visits.Create', 'Appointments.Create']);
         pets = { state: 'ok', data: [pet('p1', 'Pamuk'), pet('p2', 'Karabaş')] };
+        recordRecent = vi.fn().mockName('RecentlyViewedService.record');
         pendingChargesSpy = vi
             .fn()
             .mockName('clientPendingCharges')
@@ -134,6 +138,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         expect(pendingChargesSpy).toHaveBeenCalledWith('c1');
         expect(el().querySelector('[data-testid="account-pending-charges"]')?.textContent).toContain('1 işlem');
         expect(el().querySelector('[data-testid="pending-amount"]')?.textContent).toContain('100');
+        expect(recordRecent).toHaveBeenCalledWith({ kind: 'client', id: 'c1', title: 'Ali Veli', subtitle: '' });
     });
 
     it('KVKK: formu yazdır herkese; rıza işaretleme Clients.Update ile, yanıt (durum + rowVersion) karta birleşir', () => {

@@ -7,6 +7,14 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { CLIENT_SEARCH_MIN_LENGTH } from '@/app/entities/client/services/client-search.service';
 import { GlobalSearchResultVm, GlobalSearchService } from '@/app/features/patients/services/global-search.service';
+import {
+    RecentlyViewedEntry,
+    RecentlyViewedService,
+    recentlyViewedKindIcon,
+    recentlyViewedKindLabel,
+    recentlyViewedRoute,
+    recentlyViewedSubtitle
+} from '@/app/entities/patient/services/recently-viewed.service';
 
 type SearchStatus = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -19,7 +27,8 @@ const LISTBOX_ID = 'global-search-listbox';
 const EDITABLE_TARGET = 'input, textarea, select, [contenteditable=""], [contenteditable="true"]';
 
 /**
- * Üst çubuk global arama: müşteri ve hayvanları gruplu listeler, seçilen kaydın detay sayfasına gider.
+ * Üst çubuk global arama: müşteri ve hayvanları gruplu listeler, seçilen kaydın detay sayfasına gider. Sorgu boşken
+ * son görüntülenen kayıtlar ({@link RecentlyViewedService}) aynı klavye gezintisiyle listelenir.
  * Ctrl/Cmd+K veya `/` ile açılır, Esc kapatır (PrimeNG Dialog). Okuma izni olmayan sonuç türü sorgulanmaz.
  */
 @Component({
@@ -57,7 +66,30 @@ const EDITABLE_TARGET = 'input, textarea, select, [contenteditable=""], [content
                 <div class="mt-3" aria-live="polite">
                     @switch (status()) {
                         @case ('idle') {
-                            <p class="m-0 text-sm text-muted-color">En az {{ minLength }} karakter yazın.</p>
+                            @if (showRecent()) {
+                                <div [id]="listboxId" role="listbox" aria-labelledby="global-search-recent" class="flex flex-col" data-testid="recently-viewed">
+                                    <div id="global-search-recent" class="text-xs font-bold uppercase text-muted-color mb-1">Son görüntülenenler</div>
+                                    @for (e of recent(); track e.kind + ':' + e.id; let i = $index) {
+                                        <a
+                                            role="option"
+                                            tabindex="-1"
+                                            class="global-search-option"
+                                            [id]="optionId(i)"
+                                            [attr.aria-selected]="activeIndex() === i"
+                                            [class.is-active]="activeIndex() === i"
+                                            [routerLink]="recentRoute(e)"
+                                            (click)="close()"
+                                            (mousemove)="activeIndex.set(i)"
+                                        >
+                                            <span class="font-medium"><i class="pi {{ recentIcon(e.kind) }} mr-2 text-muted-color" aria-hidden="true"></i>{{ e.title }}</span>
+                                            <span class="text-sm text-muted-color">{{ recentDetail(e) }}</span>
+                                        </a>
+                                    }
+                                </div>
+                                <p class="m-0 mt-3 text-sm text-muted-color">Aramak için en az {{ minLength }} karakter yazın.</p>
+                            } @else {
+                                <p class="m-0 text-sm text-muted-color">En az {{ minLength }} karakter yazın.</p>
+                            }
                         }
                         @case ('loading') {
                             <p class="m-0 text-sm text-muted-color"><i class="pi pi-spin pi-spinner mr-2" aria-hidden="true"></i>Aranıyor…</p>
@@ -154,6 +186,7 @@ export class AppGlobalSearch {
     protected readonly minLength = CLIENT_SEARCH_MIN_LENGTH;
 
     private readonly search = inject(GlobalSearchService);
+    private readonly recentlyViewed = inject(RecentlyViewedService);
     private readonly router = inject(Router);
     private readonly injector = inject(Injector);
     private readonly searchInput = viewChild<ElementRef<HTMLInputElement>>('searchInput');
@@ -165,8 +198,19 @@ export class AppGlobalSearch {
     protected readonly result = signal<GlobalSearchResultVm | null>(null);
     protected readonly activeIndex = signal(0);
 
-    /** Klavye gezintisi için müşteriler ve hayvanlar tek sırada. */
+    /** Pencere açılınca okunur; sorgu boşken sonuç yerine gösterilir. */
+    protected readonly recent = signal<RecentlyViewedEntry[]>([]);
+    protected readonly showRecent = computed(() => this.status() === 'idle' && this.query().trim() === '' && this.recent().length > 0);
+    protected readonly recentRoute = recentlyViewedRoute;
+    protected readonly recentIcon = recentlyViewedKindIcon;
+    protected readonly recentDetail = (e: RecentlyViewedEntry) => recentlyViewedSubtitle(recentlyViewedKindLabel(e.kind), e.subtitle);
+
+    /** Klavye gezintisi için müşteriler ve hayvanlar (sorgu boşken son görüntülenenler) tek sırada. */
     protected readonly options = computed<SearchOption[]>(() => {
+        if (this.showRecent()) {
+            return this.recent().map((e, i) => ({ id: this.optionId(i), route: recentlyViewedRoute(e) }));
+        }
+
         const r = this.result();
 
         return r ? [...r.clients.map((c, i) => ({ id: this.optionId(i), route: ['/panel/clients', c.id] })), ...r.pets.map((p, i) => ({ id: this.optionId(r.clients.length + i), route: ['/panel/pets', p.id] }))] : [];
@@ -199,6 +243,8 @@ export class AppGlobalSearch {
     }
 
     protected open(): void {
+        this.recent.set(this.recentlyViewed.list());
+        this.activeIndex.set(0);
         this.visible.set(true);
         // Açılış animasyonu (onShow) bitmeden yazılan ilk karakterler kaybolmasın diye hemen odaklanır.
         afterNextRender(() => this.focusInput(), { injector: this.injector });
@@ -227,6 +273,7 @@ export class AppGlobalSearch {
         if (term.length < this.minLength) {
             this.result.set(null);
             this.status.set('idle');
+            this.activeIndex.set(0);
             this.term$.next('');
 
             return;
