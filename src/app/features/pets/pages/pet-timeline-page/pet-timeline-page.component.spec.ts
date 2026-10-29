@@ -23,6 +23,8 @@ const item = (type: string, id: string, over: Record<string, unknown> = {}) => (
     linkType: type,
     linkId: id,
     relatedExaminationId: null,
+    relatedAppointmentId: null,
+    relatedTreatmentId: null,
     addedAfterFinalization: false,
     ...over
 });
@@ -101,6 +103,26 @@ describe('PetTimelinePageComponent', () => {
 
         expect(links.length).toBe(1);
         expect(links[0].getAttribute('href')).toContain('/panel/examinations/e7');
+    });
+
+    it('derin bağlantılar: görüntüleme ve aşı kaynağına, randevulu geliş randevuya, tedaviye bağlı reçete/uygulama tedaviye gider', () => {
+        responder = () =>
+            of(
+                page([
+                    item('Visit', 'v1', { relatedAppointmentId: 'ap1' }),
+                    item('Prescription', 'rx1', { relatedTreatmentId: 't1' }),
+                    item('Administration', 'a1', { relatedTreatmentId: 't1' }),
+                    item('Imaging', 'i1'),
+                    item('Vaccination', 'va1')
+                ])
+            );
+        create();
+
+        const hrefs = (testId: string) => Array.from(el().querySelectorAll(`[data-testid="${testId}"]`)).map((a) => a.getAttribute('href'));
+
+        expect(hrefs('appointment-link')).toEqual(['/panel/appointments/ap1']);
+        expect(hrefs('treatment-link')).toEqual(['/panel/treatments/t1', '/panel/treatments/t1']);
+        expect(hrefs('event-link')).toEqual(['/panel/prescriptions/rx1', '/panel/imaging/i1', '/panel/vaccinations/va1']);
     });
 
     it('"Daha fazla yükle" aynı süzgeçle son imleci gönderir, sonucu ekler ve imleç bitince düğme kalkar', () => {

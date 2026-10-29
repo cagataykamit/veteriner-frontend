@@ -29,6 +29,7 @@ describe('mapPetTimelinePageDtoToVm', () => {
         const page = mapPetTimelinePageDtoToVm({
             items: [
                 { type: 'Treatment', sourceId: 't1', eventAtUtc: '2026-10-10T10:00:00Z', title: 'Serum', relatedExaminationId: 'e1', isVoided: false },
+                { type: 'Prescription', sourceId: 'rx1', title: 'Antibiyotik', relatedTreatmentId: ' t1 ' },
                 { type: 'Visit', title: 'Geliş' },
                 { type: 'Vaccination', sourceId: 'v1', title: 'Kuduz', status: 'Cancelled', isVoided: true, linkRef: { type: 'Vaccination', id: 'v1' } }
             ],
@@ -36,9 +37,11 @@ describe('mapPetTimelinePageDtoToVm', () => {
             omittedTypes: ['LabResult']
         });
 
-        expect(page.items.length).toBe(2);
+        expect(page.items.length).toBe(3);
         expect(page.items[0]).toEqual(expect.objectContaining({ key: 'Treatment:t1', linkType: 'Treatment', linkId: 't1', relatedExaminationId: 'e1' }));
-        expect(page.items[1].isVoided).toBe(true);
+        expect(page.items[0].relatedTreatmentId).toBeNull();
+        expect(page.items[1].relatedTreatmentId).toBe('t1');
+        expect(page.items[2].isVoided).toBe(true);
         expect(page.nextCursor).toBe('abc');
         expect(page.omittedTypes).toEqual(['LabResult']);
     });

@@ -17,6 +17,10 @@ export interface PetTimelineItemVm {
     linkType: string;
     linkId: string;
     relatedExaminationId: string | null;
+    /** Yalnız `Visit`: randevulu gelişin randevusu. */
+    relatedAppointmentId: string | null;
+    /** `Prescription` ve `Administration`: bağlı tedavi. */
+    relatedTreatmentId: string | null;
     /** `Administration` ve `Imaging`: bağlı muayene kayıt anında kesinleşmişti (ek kayıt). */
     addedAfterFinalization: boolean;
 }

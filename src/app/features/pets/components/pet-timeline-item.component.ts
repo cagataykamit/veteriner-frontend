@@ -2,7 +2,16 @@ import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ADMINISTRATION_LATE_ENTRY_LABEL } from '@/app/entities/administration/utils/administration-labels';
 import type { PetTimelineItemVm } from '@/app/entities/pet/models/pet-timeline-vm.model';
-import { PET_TIMELINE_VOIDED_LABEL, petTimelineEventLink, petTimelineExaminationLink, petTimelineStatusLabel, petTimelineTypeIcon, petTimelineTypeLabel } from '@/app/features/pets/utils/pet-timeline.utils';
+import {
+    PET_TIMELINE_VOIDED_LABEL,
+    petTimelineAppointmentLink,
+    petTimelineEventLink,
+    petTimelineExaminationLink,
+    petTimelineStatusLabel,
+    petTimelineTreatmentLink,
+    petTimelineTypeIcon,
+    petTimelineTypeLabel
+} from '@/app/features/pets/utils/pet-timeline.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /** Zaman çizelgesinin tek satırı: tam sayfa ve hasta kartı aynı görünümü kullanır. */
@@ -45,8 +54,14 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                 @if (item().clinicName) {
                     <span>{{ item().clinicName }}</span>
                 }
+                @if (appointmentLink(item()); as appointment) {
+                    <a [routerLink]="appointment" class="text-primary no-underline" data-testid="appointment-link">Randevu →</a>
+                }
                 @if (examinationLink(item()); as exam) {
                     <a [routerLink]="exam" class="text-primary no-underline" data-testid="examination-link">Bağlı muayene →</a>
+                }
+                @if (treatmentLink(item()); as treatment) {
+                    <a [routerLink]="treatment" class="text-primary no-underline" data-testid="treatment-link">Bağlı tedavi →</a>
                 }
             </div>
         </div>
@@ -62,4 +77,6 @@ export class PetTimelineItemComponent {
     readonly statusLabel = petTimelineStatusLabel;
     readonly eventLink = petTimelineEventLink;
     readonly examinationLink = petTimelineExaminationLink;
+    readonly treatmentLink = petTimelineTreatmentLink;
+    readonly appointmentLink = petTimelineAppointmentLink;
 }
