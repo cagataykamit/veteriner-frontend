@@ -18,7 +18,8 @@ export interface ReportExtraFilter {
 }
 
 /**
- * Rapor sayfalarının ortak süzgeç kartı: tarih aralığı, klinik, rapora özgü süzgeç, arama ve dışa aktarma (anlık görüntü raporlarında tarih yok).
+ * Rapor sayfalarının ortak filtre kartı: tarih aralığı, klinik, rapora özgü filtre, arama ve dışa aktarma
+ * (CSV, Excel, PDF; anlık görüntü raporlarında tarih yok).
  * Müşteri/hasta seçicisi yoktur: arama müşteri ve hasta adında da arar, sonuç tablosu müşteriyi gösterir.
  */
 @Component({
@@ -110,6 +111,7 @@ export interface ReportExtraFilter {
                         <button pButton type="button" (click)="s.applyFilters()" [disabled]="s.loading()"><i class="p-button-icon pi pi-filter"></i>{{ copy.reportsApplyFilter }}</button>
                     }
                     @if (s.canExport()) {
+                        <button pButton type="button" severity="secondary" [outlined]="true" (click)="s.exportPdf()" [disabled]="s.exporting() || !s.hasExportableRows() || s.isExporting('pdf')"><i class="p-button-icon" [class]="s.isExporting('pdf') ? 'pi pi-spin pi-spinner' : 'pi pi-file-pdf'"></i>{{ copy.reportsExportPdf }}</button>
                         <button pButton type="button" severity="secondary" [outlined]="true" (click)="s.exportXlsx()" [disabled]="s.exporting() || !s.hasExportableRows() || s.isExporting('xlsx')"><i class="p-button-icon" [class]="s.isExporting('xlsx') ? 'pi pi-spin pi-spinner' : 'pi pi-file-excel'"></i>{{ copy.reportsExportXlsx }}</button>
                         <button pButton type="button" severity="secondary" [outlined]="true" (click)="s.exportCsv()" [disabled]="s.exporting() || !s.hasExportableRows() || s.isExporting('csv')"><i class="p-button-icon" [class]="s.isExporting('csv') ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>{{ copy.reportsExportCsv }}</button>
                     }

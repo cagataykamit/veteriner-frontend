@@ -69,6 +69,10 @@ export class DailyTransactionsSource implements ReportListSource<ReportListQuery
         return this.exportBlob(`${ApiEndpoints.reports.dailyTransactions()}/export-xlsx`, query);
     }
 
+    exportPdfBlob(query: ReportListQueryBase) {
+        return this.exportBlob(`${ApiEndpoints.reports.dailyTransactions()}/export-pdf`, query);
+    }
+
     private exportBlob(path: string, query: ReportListQueryBase) {
         const params = endOfDayQueryToHttpParams(withActiveClinic(this.auth, query), { omitPaging: true, listFilters: true });
 

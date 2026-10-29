@@ -65,6 +65,10 @@ export class RegisterReportSource<T> implements ReportListSource<ReportListQuery
         return this.exportBlob(`${this.path}/export-xlsx`, query);
     }
 
+    exportPdfBlob(query: ReportListQueryBase) {
+        return this.exportBlob(`${this.path}/export-pdf`, query);
+    }
+
     private exportBlob(path: string, query: ReportListQueryBase) {
         const params = registerQueryToHttpParams(this.mergeClinicContext(query), { omitPaging: true });
 

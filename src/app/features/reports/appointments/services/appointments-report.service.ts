@@ -56,6 +56,18 @@ export class AppointmentsReportService {
         );
     }
 
+    /** GET `/api/v1/reports/appointments/export-pdf` — aynı filtreler, sayfalama yok. */
+    exportPdfBlob(query: AppointmentsReportQuery) {
+        const merged = this.mergeClinicContext(query);
+        const params = appointmentsReportQueryToHttpParams(merged, { omitPaging: true });
+
+        return this.api.getBlob(ApiEndpoints.reports.appointmentsExportPdf(), params).pipe(
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => userErrorFromHttp(err, PANEL_COPY.reportsExportFailedFallback))
+            )
+        );
+    }
+
     private mergeClinicContext(query: AppointmentsReportQuery): AppointmentsReportQuery {
         const clinicFromAuth = this.auth.getClinicId()?.trim() ?? '';
 

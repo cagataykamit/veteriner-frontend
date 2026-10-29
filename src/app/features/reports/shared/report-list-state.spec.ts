@@ -34,7 +34,8 @@ describe('ReportListState', () => {
         source = {
             loadReport: vi.fn().mockName('source.loadReport'),
             exportCsvBlob: vi.fn().mockName('source.exportCsvBlob'),
-            exportXlsxBlob: vi.fn().mockName('source.exportXlsxBlob')
+            exportXlsxBlob: vi.fn().mockName('source.exportXlsxBlob'),
+            exportPdfBlob: vi.fn().mockName('source.exportPdfBlob')
         };
         source.loadReport.mockImplementation((q) => of(result(q.page ?? 1, q.pageSize ?? 25)));
         TestBed.configureTestingModule({
@@ -276,6 +277,29 @@ describe('ReportListState', () => {
         const exportQ = vi.mocked(source.exportCsvBlob).mock.lastCall![0];
 
         expect(exportQ).toEqual({ ...listQ, page: 1 });
+        expect(state.exportKind()).toBeNull();
+    });
+
+    it('PDF dışa aktarma liste sorgusunu kullanır; deneme kısıtında PDF de abonelik eylemini gösterir', () => {
+        const state = create('status');
+
+        state.init();
+        state.extraFilter = 'Completed';
+        state.applyFilters();
+        const listQ = vi.mocked(source.loadReport).mock.lastCall![0];
+
+        source.exportPdfBlob.mockReturnValue(of(new HttpResponse({ body: new Blob(['%PDF']), headers: new HttpHeaders() })));
+        const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockReturnValue(undefined);
+
+        state.exportPdf();
+        expect(click).toHaveBeenCalled();
+        expect(vi.mocked(source.exportPdfBlob).mock.lastCall![0]).toEqual({ ...listQ, page: 1 });
+        expect(source.exportCsvBlob).not.toHaveBeenCalled();
+        expect(source.exportXlsxBlob).not.toHaveBeenCalled();
+
+        source.exportPdfBlob.mockReturnValue(throwError(() => new TrialLimitError('Deneme sınırı', 'Trial.ExportLimitExceeded')));
+        state.exportPdf();
+        expect(state.exportTrialLimited()).toBe(true);
         expect(state.exportKind()).toBeNull();
     });
 

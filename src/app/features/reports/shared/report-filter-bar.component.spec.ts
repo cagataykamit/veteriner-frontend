@@ -40,7 +40,8 @@ describe('ReportFilterBarComponent — müşteri/hasta seçicisi yok, yalnız ar
         source = {
             loadReport: vi.fn().mockName('source.loadReport'),
             exportCsvBlob: vi.fn().mockName('source.exportCsvBlob'),
-            exportXlsxBlob: vi.fn().mockName('source.exportXlsxBlob')
+            exportXlsxBlob: vi.fn().mockName('source.exportXlsxBlob'),
+            exportPdfBlob: vi.fn().mockName('source.exportPdfBlob')
         };
         source.loadReport.mockImplementation((q) => of({ page: q.page ?? 1, pageSize: q.pageSize ?? 25, totalCount: 0, items: [] }));
         TestBed.configureTestingModule({

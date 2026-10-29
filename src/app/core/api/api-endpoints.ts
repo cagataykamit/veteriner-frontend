@@ -217,23 +217,28 @@ export const ApiEndpoints = {
         payments: () => `/api/v1/reports/payments`,
         paymentsExport: () => `/api/v1/reports/payments/export`,
         paymentsExportXlsx: () => `/api/v1/reports/payments/export-xlsx`,
+        paymentsExportPdf: () => `/api/v1/reports/payments/export-pdf`,
         /** Faz 6C.2 — Appointments reporting (`from`, `to`, `clinicId`, `status`, `clientId`, `petId`, `search`, `page`, `pageSize`). */
         appointments: () => `/api/v1/reports/appointments`,
         appointmentsExport: () => `/api/v1/reports/appointments/export`,
         appointmentsExportXlsx: () => `/api/v1/reports/appointments/export-xlsx`,
+        appointmentsExportPdf: () => `/api/v1/reports/appointments/export-pdf`,
         /** Faz 6C.3 — Examinations reporting (`from`, `to`, `clinicId`, `search`, `clientId`, `petId`, `appointmentId`, `page`, `pageSize`). */
         examinations: () => `/api/v1/reports/examinations`,
         examinationsExport: () => `/api/v1/reports/examinations/export`,
         examinationsExportXlsx: () => `/api/v1/reports/examinations/export-xlsx`,
+        examinationsExportPdf: () => `/api/v1/reports/examinations/export-pdf`,
         /** Faz 6C.4 — Vaccinations reporting (`from`, `to`, `clinicId`, `status`, `search`, `clientId`, `petId`, `page`, `pageSize`). */
         vaccinations: () => `/api/v1/reports/vaccinations`,
         vaccinationsExport: () => `/api/v1/reports/vaccinations/export`,
         vaccinationsExportXlsx: () => `/api/v1/reports/vaccinations/export-xlsx`,
+        vaccinationsExportPdf: () => `/api/v1/reports/vaccinations/export-pdf`,
         /** Borç raporu — şu anki kalan (`clinicId`, `minAmount`, `search`, `page`, `pageSize`); izin `Charges.Read`. */
         outstandingBalances: () => `/api/v1/reports/outstanding-balances`,
         outstandingBalancesExport: () => `/api/v1/reports/outstanding-balances/export`,
         outstandingBalancesExportXlsx: () => `/api/v1/reports/outstanding-balances/export-xlsx`,
-        /** Kayıt defterleri (`examinations` | `prescriptions`): liste, `/export` (CSV), `/export-xlsx`; `from`, `to` (yyyy-MM-dd), `clinicId`, `page`, `pageSize`. */
+        outstandingBalancesExportPdf: () => `/api/v1/reports/outstanding-balances/export-pdf`,
+        /** Kayıt defterleri (`examinations` | `prescriptions`…): liste, `/export` (CSV), `/export-xlsx`, `/export-pdf`; `from`, `to` (yyyy-MM-dd), `clinicId`, `page`, `pageSize`. */
         register: (book: string) => `/api/v1/reports/registers/${book}`,
         /** Gün sonu (D6): günlük işlem dökümü (`Payments.Read` + `Charges.Read`), liste, `/export`, `/export-xlsx`; `from`, `to` (yyyy-MM-dd), `clinicId`, `kind`, `paymentMethod`, `performedByUserId`, `page`, `pageSize`. */
         dailyTransactions: () => `/api/v1/reports/daily-transactions`,

@@ -57,6 +57,18 @@ export class PaymentsReportService {
         );
     }
 
+    /** GET `/api/v1/reports/payments/export-pdf` — aynı filtreler, sayfalama yok. */
+    exportPdfBlob(query: PaymentsReportQuery) {
+        const merged = this.mergeClinicContext(query);
+        const params = paymentsReportQueryToHttpParams(merged, { omitPaging: true });
+
+        return this.api.getBlob(ApiEndpoints.reports.paymentsExportPdf(), params).pipe(
+            catchError((err: HttpErrorResponse) =>
+                throwError(() => userErrorFromHttp(err, PANEL_COPY.reportsExportFailedFallback))
+            )
+        );
+    }
+
     private mergeClinicContext(query: PaymentsReportQuery): PaymentsReportQuery {
         const clinicFromAuth = this.auth.getClinicId()?.trim() ?? '';
 

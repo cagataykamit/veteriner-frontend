@@ -54,6 +54,7 @@ export const PANEL_COPY = {
     reportsApplyFilter: 'Filtrele',
     reportsExportCsv: 'CSV indir',
     reportsExportXlsx: 'Excel indir',
+    reportsExportPdf: 'PDF indir',
     reportsExportResponseEmpty: 'İndirilecek dosya oluşturulamadı.',
     reportsExportFailedFallback: 'Dışa aktarma işlemi tamamlanamadı.',
     reportsTotalRecords: 'Toplam kayıt',
