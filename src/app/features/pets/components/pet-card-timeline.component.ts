@@ -37,7 +37,7 @@ export const PET_CARD_TIMELINE_LIMIT = 10;
                 }
             </div>
 
-            <p-selectbutton styleClass="mb-3 flex-wrap" [options]="filters" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Olay türü filtresi" [ngModel]="filter()" (ngModelChange)="filter.set($event)" />
+            <p-selectbutton class="mb-3 flex-wrap" [options]="filters" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Olay türü filtresi" [ngModel]="filter()" (ngModelChange)="filter.set($event)" />
 
             @if (filter() === 'payment' && payments() === null) {
                 <p class="m-0 text-muted-color" data-testid="payments-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Ödemeleri görme yetkiniz yok</p>
