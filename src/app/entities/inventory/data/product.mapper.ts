@@ -78,7 +78,8 @@ export function mapProductUpsertFormValueToCreateRequest(value: ProductUpsertFor
         controlledClass: service ? 'None' : value.controlledClass,
         pharmacologicalForm: service ? null : optionalTrimmedOrNull(value.pharmacologicalForm),
         presentationForm: service ? null : optionalTrimmedOrNull(value.presentationForm),
-        packaging: service ? null : optionalTrimmedOrNull(value.packaging)
+        packaging: service ? null : optionalTrimmedOrNull(value.packaging),
+        manufacturer: service ? null : optionalTrimmedOrNull(value.manufacturer)
     };
 }
 
@@ -90,7 +91,8 @@ export function mapProductUpsertFormValueToUpdateRequest(value: ProductUpsertFor
         ...mapProductUpsertFormValueToCreateRequest(value),
         pharmacologicalForm: service ? '' : value.pharmacologicalForm.trim(),
         presentationForm: service ? '' : value.presentationForm.trim(),
-        packaging: service ? '' : value.packaging.trim()
+        packaging: service ? '' : value.packaging.trim(),
+        manufacturer: service ? '' : value.manufacturer.trim()
     };
 }
 
@@ -110,7 +112,8 @@ export function mapProductDtoToUpsertFormValue(dto: ProductDto): ProductUpsertFo
         controlledClass: productControlledClassFromApi(dto.controlledClass),
         pharmacologicalForm: dto.pharmacologicalForm?.trim() ?? '',
         presentationForm: dto.presentationForm?.trim() ?? '',
-        packaging: dto.packaging?.trim() ?? ''
+        packaging: dto.packaging?.trim() ?? '',
+        manufacturer: dto.manufacturer?.trim() ?? ''
     };
 }
 
@@ -185,6 +188,7 @@ export function mapProductDtoToDetailVm(dto: ProductDto): ProductDetailVm {
         pharmacologicalForm: str(dto.pharmacologicalForm),
         presentationForm: str(dto.presentationForm),
         packaging: str(dto.packaging),
+        manufacturer: str(dto.manufacturer),
         categoryName: str(dto.productCategoryName),
         unit: str(dto.unit),
         unitPriceText: formatMoney(unitPrice, currency),

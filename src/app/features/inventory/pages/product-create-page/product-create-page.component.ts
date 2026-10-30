@@ -194,7 +194,8 @@ export class ProductCreatePageComponent implements OnInit {
             controlledClass: raw.controlledClass,
             pharmacologicalForm: raw.pharmacologicalForm,
             presentationForm: raw.presentationForm,
-            packaging: raw.packaging
+            packaging: raw.packaging,
+            manufacturer: raw.manufacturer
         };
 
         this.submitting.set(true);

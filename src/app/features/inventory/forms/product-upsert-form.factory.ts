@@ -2,6 +2,8 @@ import { FormBuilder, Validators } from '@angular/forms';
 import type { ProductControlledClassApi, ProductKindApi } from '@/app/entities/inventory/models/product-api.model';
 
 export const PRODUCT_CLASSIFICATION_TEXT_MAX = 100;
+/** Sözleşme: `Product.ManufacturerMaxLength`. */
+export const PRODUCT_MANUFACTURER_MAX = 200;
 
 export function createProductUpsertFormGroup(fb: FormBuilder) {
     return fb.nonNullable.group({
@@ -17,7 +19,8 @@ export function createProductUpsertFormGroup(fb: FormBuilder) {
         controlledClass: fb.nonNullable.control<ProductControlledClassApi>('None'),
         pharmacologicalForm: ['', Validators.maxLength(PRODUCT_CLASSIFICATION_TEXT_MAX)],
         presentationForm: ['', Validators.maxLength(PRODUCT_CLASSIFICATION_TEXT_MAX)],
-        packaging: ['', Validators.maxLength(PRODUCT_CLASSIFICATION_TEXT_MAX)]
+        packaging: ['', Validators.maxLength(PRODUCT_CLASSIFICATION_TEXT_MAX)],
+        manufacturer: ['', Validators.maxLength(PRODUCT_MANUFACTURER_MAX)]
     });
 }
 

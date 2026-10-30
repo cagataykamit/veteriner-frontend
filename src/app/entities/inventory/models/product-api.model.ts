@@ -24,6 +24,8 @@ export interface ProductDto {
     pharmacologicalForm?: string | null;
     presentationForm?: string | null;
     packaging?: string | null;
+    /** Üretici firma (RECORD-005); tedarikçiden ayrıdır. */
+    manufacturer?: string | null;
 }
 
 export interface ProductDtoPagedResult {
@@ -50,6 +52,7 @@ export interface CreateProductRequest {
     pharmacologicalForm: string | null;
     presentationForm: string | null;
     packaging: string | null;
+    manufacturer: string | null;
 }
 
 /**

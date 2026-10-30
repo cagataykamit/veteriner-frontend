@@ -106,7 +106,8 @@ describe('ürün isteği (sınıf alanları)', () => {
         controlledClass: 'None',
         pharmacologicalForm: '  Süspansiyon ',
         presentationForm: '',
-        packaging: ''
+        packaging: '',
+        manufacturer: ''
     };
 
     it('oluşturmada boş metin null, sınıf alanları string enum olarak gider', () => {
