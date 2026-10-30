@@ -1,3 +1,5 @@
+import type { AdministrationRouteApi } from '@/app/entities/administration/utils/administration-route.utils';
+
 /**
  * Yeni aşı kaydı — UI / servis isteği.
  * `appliedAtUtc` / `nextDueAtUtc` ISO UTC (formda `date.utils` ile üretilir).
@@ -21,6 +23,9 @@ export interface CreateVaccinationRequest {
     batchId?: string | null;
     /** Form başına bir kez üretilen anahtar; aynı anahtarla tekrar istek ikinci düşüm üretmez. */
     requestId?: string | null;
+    /** RECORD-005; aşı kaydında tutulur. */
+    route?: AdministrationRouteApi | null;
+    site?: string | null;
 }
 
 export interface UpdateVaccinationRequest {
@@ -33,4 +38,7 @@ export interface UpdateVaccinationRequest {
     appliedAtUtc?: string | null;
     dueAtUtc?: string | null;
     notes?: string | null;
+    /** Tam değiştirme (PUT): formdaki mevcut değer geri gönderilir. */
+    route?: AdministrationRouteApi | null;
+    site?: string | null;
 }

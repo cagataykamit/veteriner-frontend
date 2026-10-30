@@ -10,6 +10,8 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
+import { AdministrationRouteSiteFieldsComponent } from '@/app/entities/administration/components/administration-route-site-fields.component';
+import { ADMINISTRATION_SITE_MAX, type AdministrationRouteApi } from '@/app/entities/administration/utils/administration-route.utils';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import type { UpdateVaccinationRequest } from '@/app/entities/vaccination/models/vaccination-create.model';
 import type { VaccinationEditVm } from '@/app/entities/vaccination/models/vaccination-vm.model';
@@ -48,6 +50,7 @@ import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTime
         RouterLink,
         ButtonModule,
         SelectModule,
+        AdministrationRouteSiteFieldsComponent,
         AppPageHeaderComponent,
         PetAlertBannerComponent,
         AppLoadingStateComponent,
@@ -201,6 +204,7 @@ import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTime
                                 }
                             </div>
                         }
+                        <app-administration-route-site-fields idPrefix="vac-edit" [routeControl]="form.controls.route" [siteControl]="form.controls.site" />
                         <div class="col-span-12">
                             <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                             <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
@@ -270,7 +274,9 @@ export class VaccinationEditPageComponent implements OnInit {
             status: [0 as number | null, Validators.required],
             appliedAtLocal: [''],
             nextDueDate: [''],
-            notes: ['']
+            notes: [''],
+            route: this.fb.control<AdministrationRouteApi | null>(null),
+            site: ['', Validators.maxLength(ADMINISTRATION_SITE_MAX)]
         },
         { validators: [vaccinationNextDueAfterAppliedGroupValidator()] }
     );
@@ -379,6 +385,8 @@ export class VaccinationEditPageComponent implements OnInit {
                         vaccineDefinitionId: (x.vaccineDefinitionId ?? '').trim(),
                         status: x.status ?? 0,
                         notes: x.notes,
+                        route: x.route,
+                        site: x.site,
                         appliedAtLocal: appliedForm,
                         nextDueDate: toIstanbulDateTimeLocalInputValue(x.dueAtUtc)
                     },
@@ -456,7 +464,9 @@ export class VaccinationEditPageComponent implements OnInit {
             appliedAtUtc: dates.appliedAtUtc,
             dueAtUtc: dates.dueAtUtc,
             status,
-            notes: v.notes.trim() || null
+            notes: v.notes.trim() || null,
+            route: v.route,
+            site: v.site
         };
 
         this.submitting.set(true);

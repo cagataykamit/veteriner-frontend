@@ -18,7 +18,8 @@ const linked = {
     quantity: 1,
     unit: 'doz',
     lotNumber: 'LOT-77',
-    expiryDate: '2027-03-31'
+    expiryDate: '2027-03-31',
+    productManufacturer: 'MSD'
 };
 
 const vm = (examinationId: string | null, linkedAdministration: VaccinationDetailVm['linkedAdministration'] = null): VaccinationDetailVm => ({
@@ -36,7 +37,9 @@ const vm = (examinationId: string | null, linkedAdministration: VaccinationDetai
     createdAtUtc: null,
     updatedAtUtc: null,
     linkedAdministration,
-    hbs: { status: 'NotEntered', referenceNumber: null, notRequiredReason: null, markedAtUtc: null, markedByName: null, isTracked: true }
+    hbs: { status: 'NotEntered', referenceNumber: null, notRequiredReason: null, markedAtUtc: null, markedByName: null, isTracked: true },
+    route: 'Subcutaneous',
+    site: 'Boyun arkası'
 });
 
 describe('VaccinationDetailPageComponent — muayene bağlantısı', () => {
@@ -76,6 +79,8 @@ describe('VaccinationDetailPageComponent — muayene bağlantısı', () => {
 
         expect(card?.textContent).toContain('Nobivac DHPPi');
         expect(card?.textContent).toContain('LOT-77');
+        expect(card?.textContent).toContain('MSD');
+        expect(el.querySelector('[data-testid="route-site"]')?.textContent).toContain('Deri altı (SC) · Boyun arkası');
         expect(card?.textContent).toContain('2027');
         expect(el.querySelector('[data-testid="linked-administration-link"]')?.getAttribute('href')).toContain('/panel/administrations');
     });

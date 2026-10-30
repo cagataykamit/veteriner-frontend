@@ -11,6 +11,8 @@ import { convertToParamMap, type ParamMap } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { AdministrationBatchFieldComponent } from '@/app/entities/administration/components/administration-batch-field.component';
+import { AdministrationRouteSiteFieldsComponent } from '@/app/entities/administration/components/administration-route-site-fields.component';
+import { ADMINISTRATION_SITE_MAX, type AdministrationRouteApi } from '@/app/entities/administration/utils/administration-route.utils';
 import { administrationSavedNotice } from '@/app/entities/administration/utils/administration-labels';
 import { createAdministrationBatchPicker } from '@/app/entities/administration/utils/administration-batch-picker';
 import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/entities/charge/utils/charge-amount.utils';
@@ -70,7 +72,7 @@ export interface VaccinationSavedEvent {
 @Component({
     selector: 'app-vaccination-form',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AdministrationBatchFieldComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-pet-alert-banner [petId]="form.controls.petId.value" />
@@ -247,6 +249,7 @@ export interface VaccinationSavedEvent {
                             <p class="col-span-12 text-sm text-muted-color m-0" data-testid="no-stock-note">Ürün seçilmezse yalnız aşı kaydı yazılır; stoktan düşmez.</p>
                         }
                     }
+                    <app-administration-route-site-fields idPrefix="vac" [routeControl]="form.controls.route" [siteControl]="form.controls.site" />
                     <div class="col-span-12">
                         <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
@@ -343,7 +346,9 @@ export class VaccinationFormComponent implements OnInit {
             productId: [''],
             /** Boş = otomatik (sunucu FEFO ile seçer). */
             batchId: [''],
-            quantity: [null as number | null]
+            quantity: [null as number | null],
+            route: this.fb.control<AdministrationRouteApi | null>(null),
+            site: ['', Validators.maxLength(ADMINISTRATION_SITE_MAX)]
         },
         { validators: [vaccinationNextDueAfterAppliedGroupValidator()] }
     );
@@ -560,6 +565,8 @@ export class VaccinationFormComponent implements OnInit {
             dueAtUtc: dates.dueAtUtc,
             status,
             notes: v.notes.trim() || null,
+            route: v.route,
+            site: v.site,
             ...(productId && status === 1 ? { productId, quantity: v.quantity, batchId: v.batchId || null, requestId: this.requestId } : {})
         };
 

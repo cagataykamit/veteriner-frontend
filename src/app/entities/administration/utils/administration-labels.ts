@@ -9,9 +9,13 @@ const STOCK_OUTCOME_LABELS: Record<AdministrationStockOutcome, string> = {
     WrittenOff: 'Zarar / imha olarak yazıldı'
 };
 
-/** Satırda düşülen parti: "Seri: X · SKT: gg.aa.yyyy"; partisiz bakiyeden düşülmüşse `null`. */
-export function administrationBatchText(row: Pick<AdministrationVm, 'lotNumber' | 'expiryDate'>): string | null {
+/** Satırda izlenebilirlik: "Üretici: X · Seri: Y · SKT: gg.aa.yyyy" (RECORD-005); hiçbiri yoksa `null`. */
+export function administrationBatchText(row: Pick<AdministrationVm, 'lotNumber' | 'expiryDate'> & { productManufacturer?: string | null }): string | null {
     const parts: string[] = [];
+
+    if (row.productManufacturer) {
+        parts.push(`Üretici: ${row.productManufacturer}`);
+    }
 
     if (row.lotNumber) {
         parts.push(`Seri: ${row.lotNumber}`);

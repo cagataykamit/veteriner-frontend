@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { VaccinationDetailVm } from '@/app/entities/vaccination/models/vaccination-vm.model';
+import { administrationRouteSiteText } from '@/app/entities/administration/utils/administration-route.utils';
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
 import { vaccinationStatusLabel, vaccinationStatusSeverity } from '@/app/entities/vaccination/utils/vaccination-status.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -77,6 +78,8 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                             <dl class="m-0 grid grid-cols-12 gap-3">
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Ürün</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">{{ adm.productName }}</dd>
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Üretici</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ adm.productManufacturer ?? '—' }}</dd>
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Miktar</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">{{ adm.quantity ?? '—' }} {{ adm.unit }}</dd>
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Seri no</dt>
@@ -132,6 +135,8 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Sonraki</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.dueAtUtc | trDateTime }}</dd>
                             }
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Uygulama yolu / bölgesi</dt>
+                            <dd class="col-span-12 sm:col-span-8 m-0" data-testid="route-site">{{ routeSiteText() ?? '—' }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -192,6 +197,11 @@ export class VaccinationDetailPageComponent implements OnInit {
     readonly loading = this.loader.loading;
     readonly error = this.loader.error;
     readonly vac = this.loader.value;
+    readonly routeSiteText = computed(() => {
+        const v = this.vac();
+
+        return v ? administrationRouteSiteText(v) : null;
+    });
 
     readonly formatDateTime = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     /** Düzenleme rotasının yetki koşuluyla aynı (aşı kataloğu okuma dahil). */

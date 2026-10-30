@@ -3,7 +3,9 @@ import { mapAdministrationCreateResultDtoToVm } from '@/app/entities/administrat
 import type { AdministrationCreateResultDto } from '@/app/entities/administration/models/administration-api.model';
 import { mapHbsEntryDtoToVm, parseHbsStatus } from '@/app/entities/hbs/utils/hbs-status.utils';
 import { toYmdOrNull } from '@/app/entities/inventory/utils/stock-batch-expiry.utils';
+import { administrationRouteFromApi } from '@/app/entities/administration/utils/administration-route.utils';
 import type {
+    VaccinationAdministrationDto,
     VaccinationCreateRequestDto,
     VaccinationDetailDto,
     VaccinationListItemDto,
@@ -129,20 +131,34 @@ export function mapVaccinationListItemDtoToVm(dto: VaccinationListItemDto): Vacc
     };
 }
 
-function mapLinkedAdministration(dto: VaccinationDetailDto): VaccinationLinkedAdministrationVm | null {
+/** Sunucu bağlı uygulamayı iç içe `administration` nesnesinde döndürür; eski düz alanlar yedek olarak okunur. */
+function linkedAdministrationSource(dto: VaccinationDetailDto): VaccinationAdministrationDto | null {
+    if (dto.administration?.administrationId?.trim()) {
+        return dto.administration;
+    }
+
     const id = firstTrimmed(dto.administrationId);
 
-    if (!id) {
+    return id
+        ? { administrationId: id, productName: dto.productName, quantity: dto.quantity, unit: dto.unit, lotNumber: dto.lotNumber, expiryDate: dto.expiryDate }
+        : null;
+}
+
+function mapLinkedAdministration(dto: VaccinationDetailDto): VaccinationLinkedAdministrationVm | null {
+    const a = linkedAdministrationSource(dto);
+
+    if (!a) {
         return null;
     }
 
     return {
-        id,
-        productName: str(dto.productName),
-        quantity: dto.quantity ?? null,
-        unit: dto.unit?.trim() ?? '',
-        lotNumber: firstTrimmed(dto.lotNumber),
-        expiryDate: toYmdOrNull(dto.expiryDate)
+        id: a.administrationId.trim(),
+        productName: str(a.productName),
+        quantity: a.quantity ?? null,
+        unit: a.unit?.trim() ?? '',
+        lotNumber: firstTrimmed(a.lotNumber),
+        expiryDate: toYmdOrNull(a.expiryDate),
+        productManufacturer: firstTrimmed(a.productManufacturer)
     };
 }
 
@@ -170,7 +186,9 @@ export function mapVaccinationDetailDtoToVm(dto: VaccinationDetailDto): Vaccinat
         createdAtUtc: canonicalCreatedAt(dto),
         updatedAtUtc: canonicalUpdatedAt(dto),
         linkedAdministration: mapLinkedAdministration(dto),
-        hbs: mapHbsEntryDtoToVm(dto.hbs)
+        hbs: mapHbsEntryDtoToVm(dto.hbs),
+        route: administrationRouteFromApi(dto.route),
+        site: firstTrimmed(dto.site)
     };
 }
 
@@ -192,7 +210,9 @@ export function mapVaccinationDetailDtoToEditVm(dto: VaccinationDetailDto): Vacc
         dueAtUtc: canonicalDueAt(dto),
         status,
         notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes'])) ?? '',
-        administrationId: firstTrimmed(dto.administrationId)
+        administrationId: linkedAdministrationSource(dto)?.administrationId.trim() ?? null,
+        route: administrationRouteFromApi(dto.route),
+        site: firstTrimmed(dto.site) ?? ''
     };
 }
 
@@ -225,6 +245,8 @@ export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): Va
         appliedAtUtc,
         dueAtUtc,
         notes,
+        route: req.route ?? null,
+        site: req.site?.trim() ? req.site.trim() : null,
         ...(productId
             ? {
                   productId,
@@ -259,7 +281,9 @@ export function mapUpdateVaccinationToApiBody(routeId: string, req: UpdateVaccin
         status,
         appliedAtUtc: req.appliedAtUtc?.trim() ? req.appliedAtUtc.trim() : null,
         dueAtUtc: req.dueAtUtc?.trim() ? req.dueAtUtc.trim() : null,
-        notes: req.notes?.trim() ? req.notes.trim() : null
+        notes: req.notes?.trim() ? req.notes.trim() : null,
+        route: req.route ?? null,
+        site: req.site?.trim() ? req.site.trim() : null
     };
 }
 

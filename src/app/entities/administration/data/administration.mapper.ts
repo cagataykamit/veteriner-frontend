@@ -13,6 +13,7 @@ import type {
     AdministrationVm,
     CreateAdministrationRequest
 } from '@/app/entities/administration/models/administration-vm.model';
+import { administrationRouteFromApi } from '@/app/entities/administration/utils/administration-route.utils';
 import { toYmdOrNull } from '@/app/entities/inventory/utils/stock-batch-expiry.utils';
 
 function trimmedOrNull(v: string | null | undefined): string | null {
@@ -48,7 +49,10 @@ export function mapAdministrationDtoToVm(dto: AdministrationDto): Administration
         batchId: trimmedOrNull(dto.batchId),
         lotNumber: trimmedOrNull(dto.lotNumber),
         expiryDate: toYmdOrNull(dto.expiryDate),
-        vaccinationId: trimmedOrNull(dto.vaccinationId)
+        vaccinationId: trimmedOrNull(dto.vaccinationId),
+        route: administrationRouteFromApi(dto.route),
+        site: trimmedOrNull(dto.site),
+        productManufacturer: trimmedOrNull(dto.productManufacturer)
     };
 }
 
@@ -106,6 +110,8 @@ export function mapCreateAdministrationToApiBody(clinicId: string, req: CreateAd
         notes: trimmedOrNull(req.notes),
         lateEntryReason: trimmedOrNull(req.lateEntryReason),
         requestId: trimmedOrNull(req.requestId),
-        ...(trimmedOrNull(req.batchId) ? { batchId: req.batchId!.trim() } : {})
+        ...(trimmedOrNull(req.batchId) ? { batchId: req.batchId!.trim() } : {}),
+        ...(req.route ? { route: req.route } : {}),
+        ...(trimmedOrNull(req.site) ? { site: req.site!.trim() } : {})
     };
 }
