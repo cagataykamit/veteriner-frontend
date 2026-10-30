@@ -29,6 +29,7 @@ export class AdministrationRouteSiteFieldsComponent {
     readonly siteControl = input.required<FormControl<string>>();
     readonly idPrefix = input('route-site');
 
-    protected readonly routeOptions = ADMINISTRATION_ROUTE_OPTIONS;
+    // p-select [options] değiştirilebilir dizi bekler (TS4104).
+    protected readonly routeOptions = [...ADMINISTRATION_ROUTE_OPTIONS];
     protected readonly siteMax = ADMINISTRATION_SITE_MAX;
 }
