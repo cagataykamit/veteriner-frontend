@@ -1,0 +1,143 @@
+<div class="portal-stack">
+    <a class="portal-back" routerLink="/appointments/requests"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Randevu taleplerim</a>
+    <h1 class="portal-title">Randevu talebi</h1>
+
+    @if (session.activeLink()) {
+        @switch (state()) {
+            @case ('loading') {
+                <portal-skeleton [rows]="3" message="Talep sayfası yükleniyor…" />
+            }
+            @case ('closed') {
+                <portal-empty-state
+                    title="Kliniğiniz online randevu talebi almıyor"
+                    message="Randevu için kliniğinizi telefonla arayabilirsiniz."
+                    icon="fa-calendar-xmark"
+                />
+            }
+            @case ('error') {
+                <portal-error-state [message]="loadError()" (retry)="load()" />
+            }
+            @case ('done') {
+                <section class="portal-card portal-stack" role="status" data-testid="request-done">
+                    <h2 class="portal-subtitle">Talebiniz gönderildi</h2>
+                    <p><strong>{{ slotText() }}</strong> · {{ selectedReason()?.name }}</p>
+                    <p>Bu bir <strong>randevu talebidir, kesin randevu değildir.</strong> Klinik onayladığında ya da farklı bir saat önerdiğinde e-posta ile bilgilendirilirsiniz.</p>
+                    <a class="portal-action-link portal-action-link--primary" routerLink="/appointments/requests">Taleplerimi gör</a>
+                </section>
+            }
+            @case ('ready') {
+                @if (page(); as p) {
+                    <section class="portal-card portal-stack" aria-labelledby="request-reason-title">
+                        <h2 id="request-reason-title" class="portal-subtitle">1. Randevu nedeni</h2>
+                        @if (p.reasons.length) {
+                            <fieldset class="portal-choice">
+                                <legend class="sr-only">Randevu nedeni</legend>
+                                @for (reason of p.reasons; track reason.id) {
+                                    <label class="portal-check">
+                                        <input type="radio" name="request-reason" [value]="reason.id" [checked]="reasonId() === reason.id" (change)="selectReason(reason.id)" />
+                                        <span>
+                                            {{ reason.name }}
+                                            <span class="portal-field-hint">Yaklaşık {{ reason.durationMinutes }} dk</span>
+                                        </span>
+                                    </label>
+                                }
+                            </fieldset>
+                        } @else {
+                            <p class="portal-muted" data-testid="no-reasons">Klinik online talep için randevu nedeni tanımlamamış. Lütfen kliniği arayın.</p>
+                        }
+                    </section>
+
+                    @if (reasonId()) {
+                        <section class="portal-card portal-stack" aria-labelledby="request-slot-title">
+                            <h2 id="request-slot-title" class="portal-subtitle">2. Gün ve saat</h2>
+                            @if (slotMessage(); as message) {
+                                <p-message severity="warn" role="alert">{{ message }}</p-message>
+                            }
+                            @switch (availabilityState()) {
+                                @case ('loading') {
+                                    <portal-loading-state message="Uygun saatler yükleniyor…" />
+                                }
+                                @case ('error') {
+                                    <button pButton type="button" severity="secondary" [outlined]="true" class="portal-button-block" (click)="loadAvailability()">Tekrar dene</button>
+                                }
+                                @case ('ready') {
+                                    <portal-slot-picker [days]="days()" [selected]="selectedSlot()" (selectedChange)="selectSlot($event)" />
+                                }
+                            }
+                        </section>
+                    }
+
+                    @if (selectedSlot()) {
+                        <form class="portal-card portal-stack" [formGroup]="form" (ngSubmit)="submit()" novalidate aria-labelledby="request-form-title">
+                            <h2 id="request-form-title" class="portal-subtitle">3. Hayvan ve not</h2>
+                            <p class="portal-muted">Seçilen saat: <strong>{{ slotText() }}</strong></p>
+
+                            <fieldset class="portal-choice">
+                                <legend class="portal-field-label">Talep hangi hayvan için?</legend>
+                                @for (pet of activePets(); track pet.petId) {
+                                    <label class="portal-check">
+                                        <input type="radio" formControlName="pet" [value]="pet.petId" />
+                                        <span>
+                                            {{ pet.name }}
+                                            @if (pet.speciesName) {
+                                                <span class="portal-field-hint">{{ pet.speciesName }}</span>
+                                            }
+                                        </span>
+                                    </label>
+                                }
+                                <label class="portal-check">
+                                    <input type="radio" formControlName="pet" [value]="newPetOption" />
+                                    <span>
+                                        Listede yok
+                                        <span class="portal-field-hint">Klinik kaydı randevu onaylanınca oluşturur.</span>
+                                    </span>
+                                </label>
+                            </fieldset>
+                            @if (fieldError('pet'); as message) {
+                                <p class="portal-field-error">{{ message }}</p>
+                            }
+
+                            @if (isNewPet()) {
+                                <div class="portal-field">
+                                    <label for="request-pet-name">Hayvanınızın adı</label>
+                                    <input pInputText id="request-pet-name" type="text" formControlName="petName" [attr.maxlength]="limits.petName" [attr.aria-invalid]="!!fieldError('petName')" />
+                                    @if (fieldError('petName'); as message) {
+                                        <p class="portal-field-error">{{ message }}</p>
+                                    }
+                                </div>
+                                <div class="portal-field">
+                                    <label for="request-pet-species">Türü (isteğe bağlı)</label>
+                                    <input pInputText id="request-pet-species" type="text" formControlName="petSpecies" placeholder="Kedi, köpek…" [attr.maxlength]="limits.petSpecies" />
+                                </div>
+                                <div class="portal-field">
+                                    <label for="request-pet-breed">Irkı (isteğe bağlı)</label>
+                                    <input pInputText id="request-pet-breed" type="text" formControlName="petBreed" [attr.maxlength]="limits.petBreed" />
+                                </div>
+                            }
+
+                            <div class="portal-field">
+                                <label for="request-phone">Telefon (isteğe bağlı)</label>
+                                <input pInputText id="request-phone" type="text" inputmode="tel" formControlName="phone" autocomplete="tel" [attr.maxlength]="limits.phone" />
+                                <p class="portal-field-hint">Boş bırakırsanız klinikteki kayıtlı telefonunuz kullanılır.</p>
+                            </div>
+                            <div class="portal-field">
+                                <label for="request-note">Not (isteğe bağlı)</label>
+                                <textarea pTextarea id="request-note" rows="3" formControlName="note" [attr.maxlength]="limits.note"></textarea>
+                            </div>
+
+                            @if (submitError(); as message) {
+                                <p-message severity="error" role="alert">{{ message }}</p-message>
+                            }
+
+                            <div class="portal-actions">
+                                <button pButton type="submit" [disabled]="submitting()">@if (submitting()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Talebi gönder</button>
+                            </div>
+                        </form>
+                    }
+                }
+            }
+        }
+    } @else {
+        <portal-empty-state title="Bağlı klinik yok" message="Kliniğinizden yeni bir portal daveti isteyebilirsiniz." icon="fa-hospital" />
+    }
+</div>

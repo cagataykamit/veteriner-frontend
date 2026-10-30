@@ -2,6 +2,10 @@
     <h1 class="portal-title">Randevularım</h1>
 
     @if (session.activeLink()) {
+        <a class="portal-action-link" routerLink="/appointments/requests" data-testid="requests-link">
+            <i class="fa-solid fa-calendar-plus" aria-hidden="true"></i> Randevu talepleri
+        </a>
+
         <div class="portal-segmented" role="tablist" aria-label="Randevu dönemi">
             @for (tab of tabs; track tab.scope) {
                 <button
