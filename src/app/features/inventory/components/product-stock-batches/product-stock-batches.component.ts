@@ -32,7 +32,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     </div>
                     <div class="flex gap-1">
                         <dt class="text-muted-color">Süresi geçmiş:</dt>
-                        <dd class="m-0 tabular-nums" [class.text-red-600]="d.expiredQuantity > 0" data-testid="expired-quantity">{{ d.expiredText }} {{ d.unit }}</dd>
+                        <dd class="m-0 tabular-nums" [class]="d.expiredQuantity > 0 ? 'text-red-600 dark:text-red-400' : ''" data-testid="expired-quantity">{{ d.expiredText }} {{ d.unit }}</dd>
                     </div>
                     <div class="flex gap-1">
                         <dt class="text-muted-color">Toplam:</dt>
