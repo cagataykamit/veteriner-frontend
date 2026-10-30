@@ -10,6 +10,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 import { AppClinicSwitcher } from './app-clinic-switcher.component';
 import { AppGlobalSearch } from './app-global-search.component';
+import { AppNotificationBell } from './app-notification-bell.component';
 import { LayoutService } from '@/app/layout/service/layout.service';
 
 /** Topbar user `p-menu` body overlay — clinic switcher menüsünden ayrı hedeflenir. */
@@ -20,7 +21,7 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS = '.p-menu-overlay, .p-connect
 @Component({
     selector: 'app-topbar',
     standalone: true,
-    imports: [RouterModule, CommonModule, AppClinicSwitcher, AppGlobalSearch, MenuModule, ButtonModule, ConfirmDialogModule],
+    imports: [RouterModule, CommonModule, AppClinicSwitcher, AppGlobalSearch, AppNotificationBell, MenuModule, ButtonModule, ConfirmDialogModule],
     providers: [ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: ` <div class="layout-topbar">
@@ -36,6 +37,7 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS = '.p-menu-overlay, .p-connect
             <div class="layout-topbar-actions">
                 <app-global-search />
                 <app-clinic-switcher />
+                <app-notification-bell />
 
                 <div class="layout-config-menu">
                     <button type="button" class="layout-topbar-action" (click)="toggleDarkMode()" [attr.aria-label]="layoutService.themeToggleLabel()">
