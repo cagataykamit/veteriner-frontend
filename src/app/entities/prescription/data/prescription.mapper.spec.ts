@@ -1,4 +1,5 @@
-import { prescriptionsQueryToHttpParams } from '@/app/entities/prescription/data/prescription.mapper';
+import { mapCreatePrescriptionToApiBody, mapPrescriptionDetailDtoToEditVm, mapPrescriptionDetailDtoToVm, prescriptionsQueryToHttpParams } from '@/app/entities/prescription/data/prescription.mapper';
+import { createPrescriptionItemsArray, prescriptionItemsFormToInputs } from '@/app/entities/prescription/utils/prescription-items-form.utils';
 
 describe('prescription mapper — liste tarih parametreleri', () => {
     it('İstanbul gününü iki ucu dahil [dateFromUtc, dateToUtc] olarak gönderir', () => {
@@ -47,5 +48,30 @@ describe('prescription mapper — liste tarih parametreleri', () => {
 
         expect(invalid.has('dateFromUtc')).toBe(false);
         expect(invalid.has('dateToUtc')).toBe(false);
+    });
+});
+
+describe('prescription mapper — iptal, sonradan ekleme, kararlı satır kimliği (RECORD-008)', () => {
+    const base = { clinicId: 'c1', petId: 'p1', prescribedAtUtc: '2026-10-30T07:00:00Z', title: 'Reçete', content: 'İçerik' };
+
+    it('detayda iptal ve sonradan ekleme alanları taşınır; düzenleme modeli iptali bilir', () => {
+        const dto = { id: 'r1', status: 'Cancelled', cancelReason: ' Yanlış hasta ', cancelledByName: 'Dr. Ayşe', addedAfterFinalization: true, lateEntryReason: 'Sonra yazıldı' };
+        const vm = mapPrescriptionDetailDtoToVm(dto);
+
+        expect(vm.isCancelled).toBe(true);
+        expect(vm.cancelReason).toBe('Yanlış hasta');
+        expect(vm.addedAfterFinalization).toBe(true);
+        expect(mapPrescriptionDetailDtoToEditVm(dto).isCancelled).toBe(true);
+        expect(mapPrescriptionDetailDtoToVm({ id: 'r2', status: 'Active' }).isCancelled).toBe(false);
+    });
+
+    it('düzenlemede mevcut satır kimliği gönderilir, yeni satırda gönderilmez; gerekçe yalnız doluysa gider', () => {
+        const items = createPrescriptionItemsArray([{ id: 'i1', name: 'Amoksisilin', productId: null, instructions: '', quantity: 2, dose: '', unit: '', lotNumber: '' }]);
+        const body = mapCreatePrescriptionToApiBody({ ...base, items: [...prescriptionItemsFormToInputs(items), { name: 'Yeni' }] });
+
+        expect(body.items?.[0].id).toBe('i1');
+        expect(body.items?.[1]).not.toHaveProperty('id');
+        expect(body).not.toHaveProperty('lateEntryReason');
+        expect(mapCreatePrescriptionToApiBody({ ...base, lateEntryReason: ' Sonra yazıldı ' }).lateEntryReason).toBe('Sonra yazıldı');
     });
 });

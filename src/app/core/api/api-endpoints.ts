@@ -267,7 +267,9 @@ export const ApiEndpoints = {
         /** GET HBS e-Reçete hazır verisi (`Prescriptions.Read`; `HBS_ASSISTANT_API_CONTRACT.md` §4). */
         hbsData: (id: string) => `/api/v1/prescriptions/${encodeURIComponent(id)}/hbs-data`,
         /** PATCH e-Reçete geri kaydı `{ status, referenceNumber, notRequiredReason }` (`Prescriptions.Update`; §5). */
-        hbs: (id: string) => `/api/v1/prescriptions/${encodeURIComponent(id)}/hbs`
+        hbs: (id: string) => `/api/v1/prescriptions/${encodeURIComponent(id)}/hbs`,
+        /** POST gerekçeli iptal `{ reason }` (`Prescriptions.Update`; RECORD-008, `PRESCRIPTION_ITEMS_API_CONTRACT.md` §8). */
+        cancel: (id: string) => `/api/v1/prescriptions/${encodeURIComponent(id)}/cancel`
     },
     administrations: {
         /** GET (`Administrations.Read`; query: `Page`, `PageSize`, `clinicId`, `petId`, `examinationId`, `treatmentId`, `productId`, `includeVoided`), POST (`Administrations.Create`). */

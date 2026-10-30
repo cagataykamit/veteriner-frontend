@@ -163,6 +163,14 @@ export class PrescriptionsService {
             })
         );
     }
+
+    /** Gerekçeli iptal (RECORD-008): reçete silinmez; iptal edilen reçete değiştirilemez. */
+    cancelPrescription(id: string, reason: string): Observable<void> {
+        return this.api.post<void>(ApiEndpoints.prescriptions.cancel(id), { reason: reason.trim() }).pipe(
+            map(() => undefined),
+            catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Reçete iptal edilemedi.'))))
+        );
+    }
 }
 
 function extractCreatedPrescriptionIdFromPostResponse(body: unknown): string | null {

@@ -363,6 +363,14 @@ export class PrescriptionEditPageComponent implements OnInit {
         this.loadError.set(null);
         this.prescriptionsService.getPrescriptionForEditById(this.prescriptionId).subscribe({
             next: (x) => {
+                if (x.isCancelled) {
+                    // Sunucu da reddeder (Prescriptions.AlreadyCancelled); form hiç açılmaz.
+                    this.loadError.set('İptal edilmiş reçete düzenlenemez. Düzeltmek için yeni reçete yazın.');
+                    this.loading.set(false);
+
+                    return;
+                }
+
                 this.editVmCache = x;
                 this.form.controls.items.clear({ emitEvent: false });
 

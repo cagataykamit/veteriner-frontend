@@ -32,6 +32,7 @@ import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtc
 import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import { PRESCRIPTION_DATE_TOO_FAR_PAST_MESSAGE, prescriptionDateNotTooFarPastValidator, prescriptionDateTimeLocalMinAllowed } from '@/app/entities/prescription/utils/prescription-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
 
 @Component({
     selector: 'app-prescription-form',
@@ -164,6 +165,17 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
                         }
                     </div>
+                    @if (isLateEntry()) {
+                        <div class="col-span-12" data-testid="prescription-late-entry">
+                            <label for="lateEntryReason" class="block text-sm font-medium text-muted-color mb-2">Sonradan ekleme gerekçesi *</label>
+                            <textarea id="lateEntryReason" rows="2" class="w-full p-inputtext p-component" formControlName="lateEntryReason"></textarea>
+                            @if (lateEntryReasonInvalid()) {
+                                <small class="text-red-500">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
+                            } @else {
+                                <small class="text-muted-color">Bağlı muayene kesinleşmiş; reçete "kesinleştirmeden sonra eklendi" olarak kaydedilir, muayene metni değişmez.</small>
+                            }
+                        </div>
+                    }
                 </div>
 
                 @if (submitError()) {
@@ -214,8 +226,12 @@ export class PrescriptionFormComponent implements OnInit {
     readonly treatmentOptions = signal<SelectOption[]>([]);
     readonly apiFieldErrors = signal<PrescriptionUpsertFieldErrors>({});
 
+    /** Seçilebilir muayenelerden kesinleşmiş olanlar: seçilirse reçete gerekçeli "sonradan ekleme" olur (RECORD-008). */
+    private readonly finalizedExaminationIds = signal<ReadonlySet<string>>(new Set());
     private allTreatmentsForPet: TreatmentListItemVm[] = [];
     private relationLoadSeq = 0;
+    protected readonly reasonMin = REASON_MIN;
+    protected readonly reasonMax = REASON_MAX;
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
@@ -227,8 +243,16 @@ export class PrescriptionFormComponent implements OnInit {
         title: ['', Validators.required],
         content: ['', Validators.required],
         notes: [''],
+        lateEntryReason: [''],
         items: createPrescriptionItemsArray()
     });
+
+    /** Bağlı muayene kesinleşmiş mi (kilitli muayene alanı da değer taşır). */
+    isLateEntry(): boolean {
+        const examinationId = this.form.controls.examinationId.value.trim();
+
+        return !!examinationId && this.finalizedExaminationIds().has(examinationId);
+    }
 
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
@@ -346,6 +370,12 @@ export class PrescriptionFormComponent implements OnInit {
     }
 
     /** Muayene veya tedavi detayından gelen kilitli bağlam. */
+    lateEntryReasonInvalid(): boolean {
+        const c = this.form.controls.lateEntryReason;
+
+        return c.touched && reasonLength(c) !== null;
+    }
+
     prescriptionContextLocked(): boolean {
         return this.contextFromExamination() || this.contextFromTreatment();
     }
@@ -354,7 +384,7 @@ export class PrescriptionFormComponent implements OnInit {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
 
-        if (this.form.invalid) {
+        if (this.form.invalid || (this.isLateEntry() && reasonLength(this.form.controls.lateEntryReason) !== null)) {
             this.form.markAllAsTouched();
 
             return;
@@ -403,7 +433,8 @@ export class PrescriptionFormComponent implements OnInit {
             content: v.content,
             notes: v.notes,
             items: prescriptionItemsFormToInputs(this.form.controls.items),
-            followUpDateUtc
+            followUpDateUtc,
+            lateEntryReason: this.isLateEntry() ? v.lateEntryReason : null
         });
 
         this.submitting.set(true);
@@ -458,6 +489,13 @@ export class PrescriptionFormComponent implements OnInit {
                 }
 
                 let examItems = [...ex.items];
+                const finalized = new Set(examItems.filter((e) => e.status === 'Finalized').map((e) => e.id));
+
+                if (lockExamination?.status === 'Finalized') {
+                    finalized.add(lockExamination.id.trim());
+                }
+
+                this.finalizedExaminationIds.set(finalized);
 
                 if (lockExamination) {
                     const lid = lockExamination.id.trim();

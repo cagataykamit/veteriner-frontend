@@ -19,6 +19,9 @@ import {
 
 const EM = '—';
 
+/** Sunucu durum metni (`PRESCRIPTION_ITEMS_API_CONTRACT.md` §8). */
+const PRESCRIPTION_CANCELLED_STATUS = 'Cancelled';
+
 function str(v: string | null | undefined): string {
     return v?.trim() ? v : EM;
 }
@@ -123,6 +126,7 @@ export function mapPrescriptionItemDtosToVm(items: PrescriptionItemDto[] | null 
 
 function mapPrescriptionItemInputsToApi(items: PrescriptionItemInput[]): PrescriptionItemWriteDto[] {
     return items.map((i) => ({
+        ...(firstTrimmed(i.id) ? { id: i.id!.trim() } : {}),
         name: i.name.trim(),
         productId: firstTrimmed(i.productId),
         instructions: firstTrimmed(i.instructions),
@@ -146,7 +150,9 @@ export function mapPrescriptionListItemDtoToVm(dto: PrescriptionListItemDto): Pr
         examinationId: canonicalExaminationId(dto),
         treatmentId: canonicalTreatmentId(dto),
         followUpDateUtc: canonicalFollowUp(dto),
-        hbsStatus: parseHbsStatus(dto.hbsStatus)
+        hbsStatus: parseHbsStatus(dto.hbsStatus),
+        isCancelled: dto.status === PRESCRIPTION_CANCELLED_STATUS,
+        addedAfterFinalization: dto.addedAfterFinalization === true
     };
 }
 
@@ -168,7 +174,13 @@ export function mapPrescriptionDetailDtoToVm(dto: PrescriptionDetailDto): Prescr
         createdAtUtc: canonicalCreatedAt(dto),
         updatedAtUtc: canonicalUpdatedAt(dto),
         items: mapPrescriptionItemDtosToVm(dto.items),
-        hbs: mapHbsEntryDtoToVm(dto.hbs)
+        hbs: mapHbsEntryDtoToVm(dto.hbs),
+        isCancelled: dto.status === PRESCRIPTION_CANCELLED_STATUS,
+        cancelledAtUtc: firstTrimmed(dto.cancelledAtUtc),
+        cancelledByName: firstTrimmed(dto.cancelledByName),
+        cancelReason: firstTrimmed(dto.cancelReason),
+        addedAfterFinalization: dto.addedAfterFinalization === true,
+        lateEntryReason: firstTrimmed(dto.lateEntryReason)
     };
 }
 
@@ -191,7 +203,8 @@ export function mapPrescriptionDetailDtoToEditVm(dto: PrescriptionDetailDto): Pr
         content: firstTrimmed(dto.content, readDtoString(dto, ['Content'])) ?? '',
         notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes', 'Note'])) ?? '',
         followUpDateInput: followUpDateToInput(canonicalFollowUp(dto)),
-        items: mapPrescriptionItemDtosToVm(dto.items)
+        items: mapPrescriptionItemDtosToVm(dto.items),
+        isCancelled: dto.status === PRESCRIPTION_CANCELLED_STATUS
     };
 }
 
@@ -318,6 +331,10 @@ export function mapCreatePrescriptionToApiBody(req: CreatePrescriptionRequest): 
         dto.items = mapPrescriptionItemInputsToApi(req.items);
     }
 
+    if (firstTrimmed(req.lateEntryReason)) {
+        dto.lateEntryReason = req.lateEntryReason!.trim();
+    }
+
     return dto;
 }
 
@@ -332,10 +349,12 @@ export interface PrescriptionUpsertFormAdapterInput {
     notes?: string | null;
     followUpDateUtc?: string | null;
     items?: PrescriptionItemInput[];
+    lateEntryReason?: string | null;
 }
 
 export function mapPrescriptionUpsertFormToCreateRequest(input: PrescriptionUpsertFormAdapterInput): CreatePrescriptionRequest {
     return {
+        lateEntryReason: input.lateEntryReason?.trim() ? input.lateEntryReason.trim() : null,
         items: input.items,
         clinicId: input.clinicId.trim(),
         petId: input.petId.trim(),

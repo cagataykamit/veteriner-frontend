@@ -24,7 +24,9 @@ describe('PrescriptionsListPageComponent — satırda Düzenle', () => {
         examinationId: null,
         treatmentId: null,
         followUpDateUtc: null,
-        hbsStatus: 'NotEntered'
+        hbsStatus: 'NotEntered',
+        isCancelled: false,
+        addedAfterFinalization: false
     };
 
     let getPrescriptions: Mock;
@@ -90,7 +92,9 @@ describe('PrescriptionsListPageComponent — HBS durumu', () => {
         examinationId: null,
         treatmentId: null,
         followUpDateUtc: null,
-        hbsStatus: 'NotEntered'
+        hbsStatus: 'NotEntered',
+        isCancelled: false,
+        addedAfterFinalization: false
     };
 
     const create = (query: Record<string, string> = {}) => {

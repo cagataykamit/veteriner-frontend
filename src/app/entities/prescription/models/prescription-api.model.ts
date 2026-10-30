@@ -21,6 +21,9 @@ export interface PrescriptionListItemDto {
     treatmentId?: string | null;
     followUpDateUtc?: string | null;
     hbsStatus?: HbsEntryStatus | null;
+    /** `Active` | `Cancelled` (RECORD-008). */
+    status?: string | null;
+    addedAfterFinalization?: boolean | null;
 }
 
 export interface PrescriptionListItemDtoPagedResult {
@@ -44,8 +47,9 @@ export interface PrescriptionItemDto {
     lotNumber?: string | null;
 }
 
-/** İstek satırı: `id` ve `sortOrder` sunucuda atanır; `unit` boşsa ve ürün seçiliyse ürünün stok birimi kopyalanır. */
+/** İstek satırı: `sortOrder` sunucuda atanır; `id` yalnız PUT'ta mevcut satırı yerinde günceller (kimlik korunur, RECORD-008); `unit` boşsa ve ürün seçiliyse ürünün stok birimi kopyalanır. */
 export interface PrescriptionItemWriteDto {
+    id?: string | null;
     name: string;
     productId?: string | null;
     instructions?: string | null;
@@ -75,6 +79,13 @@ export interface PrescriptionDetailDto {
     items?: PrescriptionItemDto[] | null;
     /** e-Reçete geri kaydı (ADR-036 Dilim 2). */
     hbs?: HbsEntryDto | null;
+    /** RECORD-008: `Active` | `Cancelled`; iptal alanları yalnız iptalde dolu. */
+    status?: string | null;
+    cancelledAtUtc?: string | null;
+    cancelledByName?: string | null;
+    cancelReason?: string | null;
+    addedAfterFinalization?: boolean | null;
+    lateEntryReason?: string | null;
 }
 
 /** POST / PUT body — alan adları API ile uyumlu. */
@@ -90,4 +101,6 @@ export interface PrescriptionWriteRequestDto {
     followUpDateUtc?: string | null;
     /** Alan yok/`null`: mevcut satırlara dokunulmaz (PUT); `[]`: tüm satırlar silinir; dolu: tümü değiştirilir. */
     items?: PrescriptionItemWriteDto[] | null;
+    /** Bağlı muayene kesinleşmişse zorunlu (5–500, sonradan ekleme); yalnız POST. */
+    lateEntryReason?: string | null;
 }
