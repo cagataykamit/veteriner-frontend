@@ -3,7 +3,7 @@ import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectio
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TENANT_MANAGEMENT_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
@@ -23,14 +23,12 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-tenant-invite-detail-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, ButtonModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppStatusTagComponent, TrDateTimePipe],
+    imports: [CommonModule, ButtonModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppStatusTagComponent, TrDateTimePipe],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
-        <app-page-header title="Davet detayı" description="Davet bilgileri (salt okunur).">
-            <a actions routerLink="/panel/settings/invites/list" pButton type="button" class="p-button-secondary"><i class="pi pi-arrow-left"></i>Listeye dön</a>
-        </app-page-header>
+        <app-page-header categoryLink="/panel/settings/invites/list" categoryLinkLabel="Davet listesine dön" title="Davet detayı" description="Davet bilgileri (salt okunur)." />
 
         @if (loading()) {
             <app-loading-state message="Davet yükleniyor…" />

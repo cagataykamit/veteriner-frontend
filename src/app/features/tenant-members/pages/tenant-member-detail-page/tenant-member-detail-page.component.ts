@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -34,14 +34,12 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-tenant-member-detail-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink, ButtonModule, DialogModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, TenantMemberRemoveDialogComponent, TrDateTimePipe],
+    imports: [CommonModule, FormsModule, ButtonModule, DialogModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, TenantMemberRemoveDialogComponent, TrDateTimePipe],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
-        <app-page-header title="Üye detayı" description="Kurum üyeliği bilgileri. Salt okunur kurumda rol değişikliği yapılamaz.">
-            <a actions routerLink="/panel/settings/members" pButton type="button" class="p-button-secondary"><i class="pi pi-arrow-left"></i>Listeye dön</a>
-        </app-page-header>
+        <app-page-header categoryLink="/panel/settings/members" categoryLinkLabel="Üye listesine dön" title="Üye detayı" description="Kurum üyeliği bilgileri. Salt okunur kurumda rol değişikliği yapılamaz." />
 
         @if (loading()) {
             <app-loading-state message="Üye bilgileri yükleniyor…" />
