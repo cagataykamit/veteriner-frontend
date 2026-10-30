@@ -46,7 +46,8 @@ interface OverdueVaccinations {
                 (click)="expanded.set(!expanded())"
             >
                 <h5 class="m-0">Hasta bağlamı</h5>
-                <i class="pi xl:hidden text-muted-color" [class.pi-chevron-down]="!expanded()" [class.pi-chevron-up]="expanded()" aria-hidden="true"></i>
+                <!-- .pi display kuralı xl:hidden sınıfını ezer; gizleme sarmalayıcıda. -->
+                <span class="xl:hidden text-muted-color" aria-hidden="true"><i class="pi" [class.pi-chevron-down]="!expanded()" [class.pi-chevron-up]="expanded()"></i></span>
             </button>
 
             <dl class="m-0 mt-3 xl:block space-y-3 text-sm" [class.hidden]="!expanded()" data-testid="patient-context-body">
