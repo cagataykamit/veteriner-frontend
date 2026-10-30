@@ -20,7 +20,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     template: `
         <div class="card" data-testid="addenda-section">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                <h4 class="mt-0 mb-0 text-xl font-semibold">Kesinleşme sonrası ek notlar</h4>
+                <h4 class="mt-0 mb-0">Kesinleşme sonrası ek notlar</h4>
                 @if (canAdd()) {
                     <button pButton type="button" class="p-button-secondary" data-testid="addendum-open" (click)="dialogVisible.set(true)"><i class="pi pi-plus"></i>Ek not ekle</button>
                 }

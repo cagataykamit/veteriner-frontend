@@ -37,7 +37,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         <div class="col-span-12">
             <div class="card">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                    <h5 class="mt-0 mb-0 text-base font-semibold text-surface-900 dark:text-surface-0">Klinik stokları</h5>
+                    <h5 class="mt-0 mb-0">Klinik stokları</h5>
                     <div class="flex flex-wrap gap-3 items-center text-sm">
                         @if (canReadStockMovements) {
                             <a [routerLink]="['/panel/products', productId(), 'stock-movements']" class="text-primary font-medium no-underline whitespace-nowrap">Stok hareketleri →</a>
@@ -158,7 +158,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         @if (canReadStockMovements && rows().length > 0) {
             <div class="col-span-12">
                 <div class="card" data-testid="product-batches-card">
-                    <h5 class="mt-0 mb-4 text-base font-semibold text-surface-900 dark:text-surface-0">Partiler</h5>
+                    <h5 class="mt-0 mb-4">Partiler</h5>
                     @for (row of rows(); track row.id) {
                         <app-product-stock-batches [productId]="productId()" [clinicId]="row.clinicId" [clinicName]="row.clinicName" [reloadKey]="reloadKey()" />
                     }

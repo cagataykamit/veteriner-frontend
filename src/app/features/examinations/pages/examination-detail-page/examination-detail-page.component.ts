@@ -146,7 +146,7 @@ const RECORD_TEXT_SECTIONS: readonly {
                 <div class="col-span-12 xl:col-span-6 min-w-0">
                     <div class="card" data-testid="exam-record">
                         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mb-4">
-                            <h4 class="m-0 text-xl font-semibold mr-auto">Muayene kaydı</h4>
+                            <h4 class="m-0 mr-auto">Muayene kaydı</h4>
                             <span data-testid="exam-status">
                                 <app-status-tag [label]="statusLabel(exam()!.status)" [severity]="statusSeverity(exam()!.status)" />
                                 @if (exam()!.status === 'Finalized') {
@@ -214,7 +214,7 @@ const RECORD_TEXT_SECTIONS: readonly {
 
             <div class="grid grid-cols-12 gap-4 mt-8">
                 <div class="col-span-12">
-                    <h4 class="mt-0 mb-4 text-xl font-semibold">İlgili kayıtlar</h4>
+                    <h4 class="mt-0 mb-4">İlgili kayıtlar</h4>
                 </div>
                 @if (relatedSummaryLoading()) {
                     <div class="col-span-12">

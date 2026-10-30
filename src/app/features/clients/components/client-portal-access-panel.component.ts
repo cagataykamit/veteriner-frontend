@@ -33,7 +33,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     template: `
         <p-confirmdialog key="client-portal" [style]="{ width: 'min(450px, 95vw)' }" />
         <section class="card mb-0" aria-labelledby="client-portal-title" data-testid="client-portal">
-            <h5 id="client-portal-title" class="mt-0 mb-3 text-base">Portal erişimi</h5>
+            <h5 id="client-portal-title" class="mt-0 mb-3">Portal erişimi</h5>
             @if (loadError(); as err) {
                 <app-error-state [detail]="err" (retry)="load()" />
             } @else if (access(); as a) {

@@ -131,7 +131,7 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
                 <div class="col-span-12 lg:col-span-6" [class.order-first]="emphasis === 'frontDesk'" data-testid="payments-column">
                     <div class="card">
                         <div class="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-x-3 gap-y-1 items-center pb-2 mb-3 border-b border-surface-200 dark:border-surface-700">
-                            <h5 class="mt-0 mb-0 min-w-0 text-base">Ödeme özeti</h5>
+                            <h5 class="mt-0 mb-0 min-w-0">Ödeme özeti</h5>
                             @if (canReadCharges) {
                                 <a routerLink="/panel/charges" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm shrink-0 whitespace-nowrap">Ücretler →</a>
                             }

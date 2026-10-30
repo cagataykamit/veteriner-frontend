@@ -62,7 +62,7 @@ const ADD_ICON: Record<ProcedureKind, string> = {
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card" data-testid="procedures-section">
-            <h4 class="mt-0 mb-4 text-xl font-semibold">İşlemler</h4>
+            <h4 class="mt-0 mb-4">İşlemler</h4>
 
             @if (canAddAny()) {
                 <div class="flex flex-wrap items-center gap-2 mb-2" data-testid="procedure-add-bar">
