@@ -23,6 +23,7 @@ import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.u
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
+import { RecordHistoryButtonComponent } from '@/app/entities/record-history/components/record-history-button.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
@@ -70,6 +71,7 @@ const RECORD_TEXT_SECTIONS: readonly {
         RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
+        RecordHistoryButtonComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
@@ -131,6 +133,7 @@ const RECORD_TEXT_SECTIONS: readonly {
                         }
                     }
                 </div>
+                <app-record-history-button actions resource="examinations" [recordId]="exam()!.id" />
             </app-page-header>
 
             <app-examination-patient-header [petId]="exam()!.petId" [clientId]="exam()!.clientId" />

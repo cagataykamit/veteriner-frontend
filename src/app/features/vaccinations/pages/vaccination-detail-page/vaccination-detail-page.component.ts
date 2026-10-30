@@ -8,6 +8,7 @@ import { vaccinationStatusLabel, vaccinationStatusSeverity } from '@/app/entitie
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
+import { RecordHistoryButtonComponent } from '@/app/entities/record-history/components/record-history-button.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
@@ -25,7 +26,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 @Component({
     selector: 'app-vaccination-detail-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, HbsSectionComponent, TrDateTimePipe],
+    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, RecordHistoryButtonComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, HbsSectionComponent, TrDateTimePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
@@ -48,6 +49,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                 } @else if (canUpdateVaccination && ro.mutationBlocked()) {
                     <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                 }
+                <app-record-history-button actions resource="vaccinations" [recordId]="vac()!.id" />
             </app-page-header>
             <app-pet-alert-banner [petId]="vac()!.petId" />
 

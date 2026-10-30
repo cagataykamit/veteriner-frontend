@@ -12,6 +12,7 @@ import { HospitalizationsService } from '@/app/entities/hospitalization/services
 import { type HospitalizationDischargeFieldErrors, parseHospitalizationDischargeHttpError } from '@/app/entities/hospitalization/utils/hospitalization-upsert-validation-parse.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
+import { RecordHistoryButtonComponent } from '@/app/entities/record-history/components/record-history-button.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
@@ -35,6 +36,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         ButtonModule,
         DialogModule,
         AppPageHeaderComponent,
+        RecordHistoryButtonComponent,
         PetAlertBannerComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
@@ -95,6 +97,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                         }
                     </div>
                 }
+                <app-record-history-button actions resource="hospitalizations" [recordId]="row()!.id" />
             </app-page-header>
             <app-pet-alert-banner [petId]="row()!.petId" />
 

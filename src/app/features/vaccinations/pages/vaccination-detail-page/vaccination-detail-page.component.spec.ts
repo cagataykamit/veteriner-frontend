@@ -1,3 +1,4 @@
+import { RecordHistoryService } from '@/app/entities/record-history/services/record-history.service';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -45,6 +46,7 @@ describe('VaccinationDetailPageComponent — muayene bağlantısı', () => {
             imports: [VaccinationDetailPageComponent],
             providers: [
                 provideRouter([]),
+                { provide: RecordHistoryService, useValue: { getHistory: () => of([]) } },
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) }, paramMap: of(convertToParamMap({ id: 'v1' })) } },
                 { provide: VaccinationsService, useValue: { getVaccinationById: () => of(vm(examinationId, linkedAdministration)) } },
@@ -92,6 +94,7 @@ describe('VaccinationDetailPageComponent — Düzenle', () => {
             imports: [VaccinationDetailPageComponent],
             providers: [
                 provideRouter([]),
+                { provide: RecordHistoryService, useValue: { getHistory: () => of([]) } },
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) }, paramMap: of(convertToParamMap({ id: 'v1' })) } },
                 { provide: VaccinationsService, useValue: { getVaccinationById: () => of(vm(null)) } },
@@ -126,6 +129,7 @@ describe('VaccinationDetailPageComponent — HBS', () => {
             imports: [VaccinationDetailPageComponent],
             providers: [
                 provideRouter([]),
+                { provide: RecordHistoryService, useValue: { getHistory: () => of([]) } },
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) }, paramMap: of(convertToParamMap({ id: 'v1' })) } },
                 { provide: VaccinationsService, useValue: { getVaccinationById: () => of(vm('finalized-exam')) } },

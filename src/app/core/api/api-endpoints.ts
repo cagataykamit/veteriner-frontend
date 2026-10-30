@@ -255,6 +255,8 @@ export const ApiEndpoints = {
         savedFilters: () => `/api/v1/reports/saved-filters`,
         savedFilter: (id: string) => `/api/v1/reports/saved-filters/${encodeURIComponent(id)}`
     },
+    /** GET kayıt değişiklik geçmişi (RECORD-002; yetki türün okuma izni; `RECORD_HISTORY_API_CONTRACT.md`). */
+    recordHistory: (resource: string, id: string) => `/api/v1/${resource}/${encodeURIComponent(id)}/history`,
     treatments: {
         /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/treatments`,
