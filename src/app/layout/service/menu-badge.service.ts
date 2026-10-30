@@ -3,10 +3,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, map, merge, Observable, Subscription, throttleTime, timer } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { LAB_RESULTS_READ_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { APPOINTMENT_REQUESTS_MANAGE_CLAIM, LAB_RESULTS_READ_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
 import type { MenuBadgeKey } from '@/app/core/routing/panel-navigation';
 import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';
+import { AppointmentRequestStatus } from '@/app/entities/online-booking/models/online-booking.model';
+import { AppointmentRequestsService } from '@/app/entities/online-booking/services/online-booking.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { countWaitingVisits } from '@/app/entities/visit/utils/visit-today.utils';
 
@@ -25,7 +27,7 @@ export function menuBadgeLabel(count: number | null | undefined): string | null 
 }
 
 /**
- * Menü sayaçları: Bugün'de bekleyen hasta ve lab'da sonuç bekleyen istem sayısı.
+ * Menü sayaçları: Bugün'de bekleyen hasta, lab'da sonuç bekleyen istem ve bekleyen online randevu talebi sayısı.
  * İzni olmayan kullanıcı için sorgu yapılmaz ve sayaç gösterilmez. Hata olursa son değer korunur.
  * Açık sayfa aynı veriyi `MenuBadgeFeed` ile bildiriyorsa o değer gösterilir ve sorgu atlanır.
  */
@@ -35,9 +37,10 @@ export class MenuBadgeService {
     private readonly router = inject(Router);
     private readonly visits = inject(VisitsService);
     private readonly labResults = inject(LabResultsService);
+    private readonly appointmentRequests = inject(AppointmentRequestsService);
     private readonly feed = inject(MenuBadgeFeed);
 
-    private readonly counts = signal<Readonly<Record<MenuBadgeKey, number | null>>>({ waitingVisits: null, requestedLabResults: null });
+    private readonly counts = signal<Readonly<Record<MenuBadgeKey, number | null>>>({ waitingVisits: null, requestedLabResults: null, pendingAppointmentRequests: null });
     private readonly inflight = new Map<MenuBadgeKey, Subscription>();
     private clinicId: string | null = null;
 
@@ -62,7 +65,7 @@ export class MenuBadgeService {
 
         if (clinicId !== this.clinicId) {
             this.clinicId = clinicId;
-            this.counts.set({ waitingVisits: null, requestedLabResults: null });
+            this.counts.set({ waitingVisits: null, requestedLabResults: null, pendingAppointmentRequests: null });
         }
 
         this.track(
@@ -74,6 +77,11 @@ export class MenuBadgeService {
             'requestedLabResults',
             LAB_RESULTS_READ_CLAIM,
             () => this.labResults.getLabResults({ page: 1, pageSize: 1, status: 'Requested' }).pipe(map((page) => page.totalItems))
+        );
+        this.track(
+            'pendingAppointmentRequests',
+            APPOINTMENT_REQUESTS_MANAGE_CLAIM,
+            () => this.appointmentRequests.list({ status: AppointmentRequestStatus.Pending, page: 1, pageSize: 1 }).pipe(map((page) => page.totalCount))
         );
     }
 

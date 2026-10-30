@@ -75,16 +75,16 @@ describe('panel-navigation', () => {
         expect(new Set(icons).size).toBe(icons.length);
     });
 
-    it('sayaç yalnız Bugün ve Kayıtlar öğelerinde, Kayıtlar altında Lab sekmesinde tanımlıdır', () => {
+    it('sayaç Bugün, Randevular ve Kayıtlar öğelerinde; Randevular altında Talepler, Kayıtlar altında Lab sekmesinde tanımlıdır', () => {
         const badged = MENU_GROUPS.flatMap((g) => g.entries).filter((e) => e.badge);
 
         expect(badged.map((e) => [e.label, e.badge])).toEqual([
             ['Bugün', 'waitingVisits'],
+            ['Randevular', 'pendingAppointmentRequests'],
             ['Kayıtlar', 'requestedLabResults']
         ]);
-        const tabBadges = entry('Kayıtlar').tabs!.filter((t) => t.badge);
-
-        expect(tabBadges.map((t) => [t.label, t.badge])).toEqual([['Lab sonuçları', 'requestedLabResults']]);
+        expect(entry('Kayıtlar').tabs!.filter((t) => t.badge).map((t) => [t.label, t.badge])).toEqual([['Lab sonuçları', 'requestedLabResults']]);
+        expect(entry('Randevular').tabs!.filter((t) => t.badge).map((t) => [t.label, t.badge])).toEqual([['Talepler', 'pendingAppointmentRequests']]);
     });
 
     it('birleşik öğelerin sekmeleri mevcut liste rotalarıdır', () => {
@@ -97,7 +97,8 @@ describe('panel-navigation', () => {
         ]);
         expect(tabs('Randevular')).toEqual([
             ['Liste', '/panel/appointments'],
-            ['Takvim', '/panel/appointments/calendar']
+            ['Takvim', '/panel/appointments/calendar'],
+            ['Talepler', '/panel/appointments/requests']
         ]);
         expect(tabs('Para')).toEqual([
             ['Ücretler', '/panel/charges'],

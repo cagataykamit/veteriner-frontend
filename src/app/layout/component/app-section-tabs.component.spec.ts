@@ -35,8 +35,8 @@ describe('AppSectionTabsComponent', () => {
     it('liste adresinde sekmeleri gösterir ve etkin sekmeyi işaretler', async () => {
         const fixture = await create('/panel/appointments/calendar');
 
-        expect(tabs(fixture).map((a) => a.getAttribute('href'))).toEqual(['/panel/appointments', '/panel/appointments/calendar']);
-        expect(tabs(fixture).map((a) => a.getAttribute('aria-current'))).toEqual([null, 'page']);
+        expect(tabs(fixture).map((a) => a.getAttribute('href'))).toEqual(['/panel/appointments', '/panel/appointments/calendar', '/panel/appointments/requests']);
+        expect(tabs(fixture).map((a) => a.getAttribute('aria-current'))).toEqual([null, 'page', null]);
     });
 
     it('detay sayfasında ve tek sekme yetkiliyken çubuk çıkmaz', async () => {
