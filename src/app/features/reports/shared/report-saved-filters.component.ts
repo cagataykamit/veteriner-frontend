@@ -110,7 +110,7 @@ export class ReportSavedFiltersComponent implements OnInit {
     /** Sayfa adresinden türeyen rapor anahtarı; Rapor Merkezi dışında `null` (bileşen görünmez). */
     readonly reportKey = reportKeyFromRoute(inject(Router).url);
 
-    readonly savedFilters = signal<readonly ReportSavedFilterDto[]>([]);
+    readonly savedFilters = signal<ReportSavedFilterDto[]>([]);
     readonly selectedId = signal<string | null>(null);
     readonly selected = computed(() => this.savedFilters().find((f) => f.id === this.selectedId()) ?? null);
     readonly busy = signal(false);
