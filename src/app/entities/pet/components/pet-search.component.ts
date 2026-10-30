@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, effect, forwardRef, inject, input, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, DestroyRef, effect, forwardRef, inject, input, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { catchError, map, of, Subject, switchMap } from 'rxjs';
@@ -69,7 +69,7 @@ const PAGE_SIZE = 20;
         </p-autocomplete>
         @if (canCreate() && clientId()) {
             <button pButton type="button" [text]="true" size="small" class="p-0 mt-2" (click)="quickPetOpen.set(true)"><i class="p-button-icon pi pi-plus"></i>{{ 'Bu müşteri için yeni hasta' }}</button>
-            <app-quick-pet-dialog [(visible)]="quickPetOpen" [ownerClientId]="clientId()" (petCreated)="onPetCreated($event)" />
+            <app-quick-pet-dialog [(visible)]="quickPetOpen" [ownerClientId]="clientId()" [initialName]="typedText()" (petCreated)="onPetCreated($event)" />
         }
     `
 })
@@ -93,6 +93,12 @@ export class PetSearchComponent implements ControlValueAccessor {
     readonly searchError = signal<string | null>(null);
     readonly disabled = signal(false);
     readonly quickPetOpen = signal(false);
+    /** Listeden seçilmemiş yazı; hızlı hasta formunun ad alanına taşınır. */
+    readonly typedText = computed(() => {
+        const m = this.model();
+
+        return typeof m === 'string' ? m : '';
+    });
     readonly canCreate = () => !!this.clientId() && canShowQuickPetCreateButton(this.auth, this.ro, false);
 
     private readonly term$ = new Subject<string>();

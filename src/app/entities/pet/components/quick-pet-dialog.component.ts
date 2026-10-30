@@ -109,6 +109,8 @@ import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick
 export class QuickPetDialogComponent {
     /** Dialog açıldığında seçili müşteri kimliği (boşsa kayıt engellenir). */
     readonly ownerClientId = input<string>('');
+    /** Aramada bulunamayan hasta adı; açılışta ad alanına yazılır (APPT-018/019). */
+    readonly initialName = input('');
 
     readonly visible = model(false);
     readonly petCreated = output<string>();
@@ -179,7 +181,7 @@ export class QuickPetDialogComponent {
         this.apiFieldErrors.set({});
         this.form.reset({
             clientId: this.ownerClientId().trim(),
-            name: '',
+            name: this.initialName().trim(),
             speciesId: '',
             breedId: '',
             gender: '',

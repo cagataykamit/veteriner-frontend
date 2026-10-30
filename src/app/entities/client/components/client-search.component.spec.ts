@@ -150,4 +150,12 @@ describe('ClientSearchComponent', () => {
         host.control.disable();
         expect(cmp.disabled()).toBe(true);
     });
+
+    it('listeden seçilmeyen yazı hızlı müşteri diyaloğuna taşınır; seçim yapılınca boşalır (APPT-017/019)', () => {
+        cmp.onModelChange('0532 111 22 33');
+        expect(cmp.typedText()).toBe('0532 111 22 33');
+
+        cmp.onModelChange(ali);
+        expect(cmp.typedText()).toBe('');
+    });
 });
