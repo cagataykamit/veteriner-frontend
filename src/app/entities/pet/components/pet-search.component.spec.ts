@@ -151,4 +151,12 @@ describe('PetSearchComponent', () => {
         expect(cmp.suggestions()).toEqual([]);
         expect(cmp.searchError()).toBe('Hasta listesi yüklenemedi.');
     });
+
+    it('listeden seçilmeyen yazı hızlı hasta formunun ad alanına taşınır (APPT-018/019)', () => {
+        cmp.onModelChange('Boncuk');
+        expect(cmp.typedText()).toBe('Boncuk');
+
+        cmp.onModelChange({ id: 'p1', label: 'Pamuk — Kedi' });
+        expect(cmp.typedText()).toBe('');
+    });
 });
