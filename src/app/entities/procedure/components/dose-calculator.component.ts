@@ -66,7 +66,8 @@ export class DoseCalculatorComponent {
 
     private readonly fb = inject(FormBuilder);
 
-    protected readonly unitOptions = DOSE_UNIT_OPTIONS;
+    // p-select [options] değiştirilebilir dizi bekler (TS4104).
+    protected readonly unitOptions = [...DOSE_UNIT_OPTIONS];
     protected readonly limits = DOSE_LIMITS;
 
     readonly visible = signal(false);
