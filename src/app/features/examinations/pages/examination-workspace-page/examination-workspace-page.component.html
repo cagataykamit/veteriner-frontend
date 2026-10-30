@@ -209,7 +209,10 @@
                 </div>
 
                 <div class="card">
-                    <h5 class="mt-0 mb-4">Plan / tedavi planı</h5>
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <h5 class="m-0">Plan / tedavi planı</h5>
+                        <app-dose-calculator [weightKg]="form.controls.weightKg.value" />
+                    </div>
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12">
                             <label for="plan" class="block text-sm font-medium text-muted-color mb-2">Plan / tedavi planı</label>
