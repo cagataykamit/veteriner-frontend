@@ -2,8 +2,11 @@
     display: none;
 }
 
+// Dört sütunlu özet tablosu: tam genişliğe yayılınca tutarlar satır adından çok uzaklaşıyordu; içerik kadar geniş,
+// dar ekranda kapsayıcı yatay kayar.
 .eod-table {
-    width: 100%;
+    width: auto;
+    min-width: min(100%, 36rem);
     border-collapse: collapse;
 
     th,
@@ -16,6 +19,8 @@
     th.text-right,
     td.text-right {
         text-align: right;
+        padding-left: 2rem;
+        white-space: nowrap;
     }
 }
 
