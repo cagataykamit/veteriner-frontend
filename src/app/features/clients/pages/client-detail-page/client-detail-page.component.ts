@@ -29,7 +29,6 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { PatientActionBarComponent } from '@/app/entities/patient/components/patient-action-bar/patient-action-bar.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -82,19 +81,14 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (client(); as c) {
-            <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" [title]="c.fullName" [description]="registrationLine()">
-                <ng-container actions>
-                    @if (canUpdateClient && !ro.mutationBlocked()) {
-                        <a [routerLink]="['/panel/clients', c.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
-                    } @else if (canUpdateClient && ro.mutationBlocked()) {
-                        <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
-                    }
-                </ng-container>
-            </app-page-header>
-
-            <app-patient-action-bar [sticky]="true" [clientId]="c.id" [clientName]="c.fullName" [arrivalPet]="arrivalPet()" />
+            <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" />
 
             <app-client-card-header [client]="c" [balance]="balance()" [pendingCharges]="pendingCharges()" [lastExamination]="lastExamination()" [nextAppointment]="nextAppointment()">
+                @if (canUpdateClient && !ro.mutationBlocked()) {
+                    <a editAction [routerLink]="['/panel/clients', c.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
+                } @else if (canUpdateClient && ro.mutationBlocked()) {
+                    <button editAction pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                }
                 @if (canUpdateClient) {
                     <button
                         kvkkAction
@@ -112,12 +106,19 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
             @if (canUpdateClient && !ro.mutationBlocked()) {
                 <app-client-kvkk-consent-dialog [(visible)]="kvkkDialogOpen" [client]="c" (changed)="onKvkkChanged($event)" (stale)="refreshClient()" />
             }
-            <!-- Ana sütun (hastalar, geçmiş) ve yan sütun (para Yapılacakları, ödeme, portal, belgeler); rol vurgusu sütun sırasını belirler. -->
+
+            <app-patient-action-bar [sticky]="true" [clientId]="c.id" [clientName]="c.fullName" [arrivalPet]="arrivalPet()" />
+
+            <!--
+                Ana sütun (hastalar, geçmiş) ve yan sütun (para Yapılacakları, ödeme, portal, belgeler); rol vurgusu sütun sırasını belirler.
+                Kırılımlar görünüm değil içerik alanına göredir (container sorgusu): menü açıkken dar kalan alanda sütunlar alt alta iner.
+            -->
+            <div class="@container">
             <div class="grid grid-cols-12 gap-4">
-                <div class="col-span-12 lg:col-span-8 flex flex-col gap-4 min-w-0" [class.order-first]="emphasis === 'clinical'" data-testid="pets-column">
+                <div class="col-span-12 @4xl:col-span-8 flex flex-col gap-4 min-w-0 @container" [class.order-first]="emphasis === 'clinical'" data-testid="pets-column">
                     <app-client-pets-panel [rows]="petRows()" [clientId]="c.id" [currency]="currency()" />
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" data-testid="history-column">
+                    <div class="grid grid-cols-1 @2xl:grid-cols-2 gap-4" data-testid="history-column">
                         <div class="card mb-0 min-w-0">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-3">
                                 <h5 class="mt-0 mb-0">Son muayeneler</h5>
@@ -178,7 +179,7 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
                     </div>
                 </div>
 
-                <div class="col-span-12 lg:col-span-4 flex flex-col gap-4 min-w-0" [class.order-first]="emphasis === 'frontDesk'" data-testid="todo-column">
+                <div class="col-span-12 @4xl:col-span-4 flex flex-col gap-4 min-w-0" [class.order-first]="emphasis === 'frontDesk'" data-testid="todo-column">
                     <app-pet-todo-panel [view]="todo()" />
 
                     <div class="card mb-0 min-w-0" data-testid="payments-column">
@@ -268,6 +269,7 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
                     </div>
                 </div>
             </div>
+            </div>
         }
     `
 })
@@ -321,7 +323,6 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     readonly examListView = computed(() => sliceDetailRelatedList(this.examItems()));
     readonly paymentRecentView = computed(() => sliceDetailRelatedList(this.paymentSummary()?.recentPayments));
 
-    readonly formatDt = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly money = (amount: number | null, currency: string | null | undefined) => formatMoney(amount, currency?.trim() ? currency.trim() : 'TRY');
     readonly statusLabel = appointmentStatusLabel;
     readonly payMethodLabel = paymentMethodLabel;
@@ -330,16 +331,6 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     /** Portal erişimi bölümü (ADR-031): izin yoksa bölüm hiç çizilmez. */
     readonly canManagePortal = this.auth.hasOperationClaim(OWNER_PORTAL_MANAGE_CLAIM);
     readonly emphasis = petCardEmphasis((claim) => this.auth.hasOperationClaim(claim));
-
-    readonly registrationLine = computed(() => {
-        const c = this.client();
-
-        if (!c) {
-            return '';
-        }
-
-        return c.updatedAtUtc ? `Kayıt: ${this.formatDt(c.createdAtUtc)} · Güncellenme: ${this.formatDt(c.updatedAtUtc)}` : `Kayıt: ${this.formatDt(c.createdAtUtc)}`;
-    });
 
     readonly lastExamination = computed(() => this.recentSection((s) => s.examinations[0] ?? null));
     readonly nextAppointment = computed(() => this.recentSection((s) => nextScheduledAppointment(s.appointments)));

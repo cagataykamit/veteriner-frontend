@@ -54,29 +54,32 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                     @if (visibleRows().length > 0) {
                         <ul class="list-none m-0 p-0">
                             @for (row of visibleRows(); track row.pet.id) {
-                                <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 min-w-0" [class.opacity-70]="row.pet.status === 'Deceased'" data-testid="client-pet-row">
-                                    <div class="flex flex-wrap items-baseline gap-x-2">
-                                        <a [routerLink]="['/panel/pets', row.pet.id]" class="text-primary font-medium no-underline break-words">{{ row.pet.name }}</a>
-                                        @if (row.pet.status === 'Deceased') {
-                                            <span class="text-xs font-medium text-muted-color border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5" data-testid="pet-deceased">Vefat</span>
-                                        }
-                                        <span class="text-muted-color text-sm break-words">{{ identity(row) }}</span>
-                                    </div>
-                                    @if (hasHints(row)) {
-                                        <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm">
-                                            @if (row.outstandingAmount) {
-                                                <span class="font-medium text-red-600 dark:text-red-400 tabular-nums" data-testid="pet-outstanding">Borç {{ money(row.outstandingAmount) }}</span>
+                                <li class="py-2.5 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0 flex items-center gap-3" [class.opacity-70]="row.pet.status === 'Deceased'" data-testid="client-pet-row">
+                                    <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-border text-base font-semibold bg-surface-100 text-muted-color dark:bg-surface-800" aria-hidden="true">{{ initial(row.pet.name) }}</span>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex flex-wrap items-baseline gap-x-2">
+                                            <a [routerLink]="['/panel/pets', row.pet.id]" class="text-primary font-semibold no-underline break-words">{{ row.pet.name }}</a>
+                                            @if (row.pet.status === 'Deceased') {
+                                                <span class="text-xs font-medium text-muted-color border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5" data-testid="pet-deceased">Vefat</span>
                                             }
-                                            @if (row.pendingChargeCount) {
-                                                <span class="font-medium text-amber-700 dark:text-amber-400" data-testid="pet-pending">{{ row.pendingChargeCount }} işlem ücret bekliyor</span>
-                                            }
-                                            @if (row.nextAppointment; as a) {
-                                                <a [routerLink]="['/panel/appointments', a.id]" class="text-primary no-underline" data-testid="pet-next-appointment"
-                                                    ><i class="pi pi-calendar text-xs mr-1" aria-hidden="true"></i>{{ a.scheduledAtUtc | trDateTime }}</a
-                                                >
-                                            }
+                                            <span class="text-muted-color text-sm break-words">{{ identity(row) }}</span>
                                         </div>
-                                    }
+                                        @if (hasHints(row)) {
+                                            <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm">
+                                                @if (row.outstandingAmount) {
+                                                    <span class="font-medium text-red-600 dark:text-red-400 tabular-nums" data-testid="pet-outstanding">Borç {{ money(row.outstandingAmount) }}</span>
+                                                }
+                                                @if (row.pendingChargeCount) {
+                                                    <span class="font-medium text-amber-700 dark:text-amber-400" data-testid="pet-pending">{{ row.pendingChargeCount }} işlem ücret bekliyor</span>
+                                                }
+                                                @if (row.nextAppointment; as a) {
+                                                    <a [routerLink]="['/panel/appointments', a.id]" class="text-primary no-underline" data-testid="pet-next-appointment"
+                                                        ><i class="pi pi-calendar text-xs mr-1" aria-hidden="true"></i>{{ a.scheduledAtUtc | trDateTime }}</a
+                                                    >
+                                                }
+                                            </div>
+                                        }
+                                    </div>
                                 </li>
                             }
                         </ul>
@@ -116,6 +119,11 @@ export class ClientPetsPanelComponent {
     readonly visibleRows = computed(() => (this.showAll() ? this.okRows() : this.okRows().filter((r) => r.pet.status !== 'Deceased')));
 
     readonly money = (amount: number) => formatMoney(amount, this.currency());
+
+    /** Satır başındaki kutu: hayvan adının ilk harfi (tür simgesi yok). */
+    initial(name: string): string {
+        return (name.trim()[0] ?? '').toLocaleUpperCase('tr-TR');
+    }
 
     identity(row: ClientPetRow): string {
         const filled = (v: string | null | undefined): v is string => !!v && !!v.trim() && v.trim() !== '—';

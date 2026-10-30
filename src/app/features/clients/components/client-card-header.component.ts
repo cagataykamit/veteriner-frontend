@@ -12,6 +12,7 @@ import type { ExaminationListItemVm } from '@/app/entities/examination/models/ex
 import { kvkkTextVersionLabel } from '@/app/entities/kvkk/utils/kvkk-form.utils';
 import { CardAccountStatusComponent } from '@/app/entities/patient/components/card-account-status.component';
 import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
@@ -24,8 +25,9 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
 };
 
 /**
- * Müşteri kimlik kartı (ADR-020 karar 6): iletişim (aranabilir telefon öne çıkar, e-posta, adres, tercih edilen kanal; hatırlatma istemiyorsa belirgin not),
- * durum rozetleri ve gösterge şeridi (açık borç, ücret bekleyen işlem, son muayene, sonraki randevu). Ad ve "Düzenle" sayfa başlığındadır.
+ * Müşteri kimlik kartı (ADR-020 karar 6): baş harf avatarı, ad, kayıt/güncellenme satırı, "Düzenle" (`[editAction]`, yetki sayfada),
+ * iletişim (aranabilir telefon öne çıkar, e-posta, adres, tercih edilen kanal; hatırlatma istemiyorsa belirgin not),
+ * durum rozetleri ve gösterge şeridi (açık borç, ücret bekleyen işlem, son muayene, sonraki randevu).
  * KVKK açık rıza (ADR-021) rozet + ayrıntı: durum, form tarihi, işaretleyen ve işaretleme anındaki metin sürümü (ADR-032); işaretleme eylemi `[kvkkAction]` ile sayfadan yansıtılır (yetki sayfada).
  * "Fatura bilgileri" satırı (ADR-036): kişi türü, unvan, TCKN/VKN yalnız maskeli, vergi dairesi ve fatura adresi.
  */
@@ -37,8 +39,21 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
     host: { class: 'block mb-4' },
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <section class="card mb-0" aria-label="İletişim ve hesap durumu" data-testid="client-card-header">
-            <p class="m-0 flex flex-wrap items-center gap-x-6 gap-y-2" aria-label="İletişim">
+        <section class="card mb-0 @container" aria-label="Müşteri kimliği ve hesap durumu" data-testid="client-card-header">
+            <div class="flex flex-wrap items-start gap-x-5 gap-y-3">
+                <div class="shrink-0 flex items-center justify-center w-14 h-14 rounded-full text-lg font-semibold tracking-tight bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-200" aria-hidden="true">
+                    {{ initials() }}
+                </div>
+                <div class="min-w-0 flex-1 basis-56">
+                    <h1 class="m-0 text-2xl font-semibold leading-tight text-surface-900 dark:text-surface-0 break-words" data-testid="client-name">{{ client().fullName }}</h1>
+                    <p class="m-0 mt-1 text-sm text-muted-color" data-testid="client-registration">{{ registrationLine() }}</p>
+                </div>
+                <div class="flex flex-wrap gap-2 items-center w-full @md:w-auto @md:ml-auto">
+                    <ng-content select="[editAction]" />
+                </div>
+            </div>
+
+            <p class="m-0 mt-4 flex flex-wrap items-center gap-x-6 gap-y-2" aria-label="İletişim">
                 @if (phoneHref(); as href) {
                     <a [href]="href" class="text-primary no-underline whitespace-nowrap text-base font-semibold tabular-nums" data-testid="client-phone"><i class="pi pi-phone text-sm mr-1.5" aria-hidden="true"></i>{{ phone() }}</a>
                 } @else {
@@ -166,6 +181,18 @@ export class ClientCardHeaderComponent {
 
     readonly hasText = (v: string | null | undefined) => !!v && !!v.trim() && v.trim() !== '—';
 
+    /** Avatar: adın ilk iki sözcüğünün baş harfleri (tek sözcükte ilk harf). */
+    readonly initials = computed(() => {
+        const parts = this.client().fullName.trim().split(/\s+/).filter(Boolean);
+
+        return (parts.length >= 2 ? `${parts[0][0]}${parts[1][0]}` : (parts[0]?.[0] ?? '')).toLocaleUpperCase('tr-TR');
+    });
+    readonly registrationLine = computed(() => {
+        const c = this.client();
+        const created = `Kayıt: ${formatUtcIsoAsLocalDateTimeDisplay(c.createdAtUtc)}`;
+
+        return c.updatedAtUtc ? `${created} · Güncellenme: ${formatUtcIsoAsLocalDateTimeDisplay(c.updatedAtUtc)}` : created;
+    });
     readonly phone = computed(() => formatClientPhoneForDisplay(this.client().phone));
     readonly phoneHref = computed(() => clientPhoneTelHref(this.client().phone));
     readonly channelLabel = computed(() => clientContactChannelLabel(this.client().preferredContactChannel));

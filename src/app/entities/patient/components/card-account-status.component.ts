@@ -7,9 +7,9 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /** Sarılan satır (hasta kartı). */
 const INLINE_CLASS = 'm-0 mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex flex-wrap gap-x-8 gap-y-2';
-/** Gösterge şeridi (müşteri kartı): eşit sütunlar, geniş ekranda ayırıcı çizgi, değer bir boy büyük. */
+/** Gösterge şeridi (müşteri kartı): eşit sütunlar, geniş kartta (`@container`, ≥42rem) ayırıcı çizgi, değer bir boy büyük. */
 const GRID_CLASS =
-    'm-0 mt-4 pt-4 border-t border-surface-200 dark:border-surface-700 grid grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-3 [&>div]:min-w-0 [&_dd]:text-base lg:[&>div+div]:pl-5 lg:[&>div+div]:border-l lg:[&>div+div]:border-surface-200 lg:dark:[&>div+div]:border-surface-700';
+    'm-0 mt-4 pt-4 border-t border-surface-200 dark:border-surface-700 grid grid-cols-2 @2xl:grid-cols-4 gap-x-5 gap-y-3 [&>div]:min-w-0 [&_dd]:text-base @2xl:[&>div+div]:pl-5 @2xl:[&>div+div]:border-l @2xl:[&>div+div]:border-surface-200 @2xl:dark:[&>div+div]:border-surface-700';
 
 /**
  * Hasta ve müşteri kartı başlığındaki hesap durumu satırı (ADR-020 karar 2a, 6): açık borç, [kart özgü alanlar], sonraki randevu.

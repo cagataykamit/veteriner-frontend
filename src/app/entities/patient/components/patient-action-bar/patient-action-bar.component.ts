@@ -11,6 +11,7 @@ import { buildPatientActions } from './patient-actions.utils';
 /**
  * Hayvan ve müşteri detayında "şimdi ne yapılır" eylem çubuğu. Eylemler yetki claim'ine göre görünür;
  * her biri müşteri ve hayvan bağlamını sorgu parametresiyle hedef forma taşır (forma önceden doldurulur).
+ * Salt okunur kiracıda düğmeler kilitli (devre dışı) kalır ve yanında kısa bilgi yazılır; şerit kart çerçevesi taşımaz.
  */
 @Component({
     selector: 'app-patient-action-bar',
@@ -19,17 +20,19 @@ import { buildPatientActions } from './patient-actions.utils';
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (actions().length > 0) {
-            <div class="card mb-4 flex flex-wrap gap-2 items-center" [class]="sticky() ? 'sticky top-16 z-10 !py-3 shadow-sm' : ''" role="toolbar" aria-label="Hızlı eylemler" data-testid="patient-action-bar">
-                @if (ro.mutationBlocked()) {
-                    <span class="text-amber-700 dark:text-amber-300 text-sm" role="status">İşletme salt okunur moddadır; eylemler kapalı.</span>
-                } @else {
-                    @for (action of actions(); track action.key; let first = $first) {
-                        @if (action.route) {
-                            <a [routerLink]="action.route" [queryParams]="action.queryParams" pButton type="button" [class]="first ? 'p-button-primary' : 'p-button-outlined p-button-secondary'"><i [class]="action.icon"></i>{{ action.label }}</a>
-                        } @else {
-                            <button pButton type="button" [class]="first ? 'p-button-primary' : 'p-button-outlined p-button-secondary'" (click)="arrivalOpen.set(true)"><i [class]="action.icon"></i>{{ action.label }}</button>
-                        }
+            <!-- Dar ekranda tek satır, yana kaydırılır (yapışkan şerit ekranı kaplamasın). -->
+            <div class="mb-4 py-2 flex flex-wrap gap-2 items-center max-sm:flex-nowrap max-sm:overflow-x-auto" [class]="sticky() ? 'sticky top-16 z-10 bg-[var(--surface-ground)]' : ''" role="toolbar" aria-label="Hızlı eylemler" data-testid="patient-action-bar">
+                @for (action of actions(); track action.key; let first = $first) {
+                    @if (ro.mutationBlocked()) {
+                        <button pButton type="button" [disabled]="true" class="shrink-0" [class]="first ? 'p-button-primary' : 'p-button-outlined p-button-secondary'"><i class="pi pi-lock"></i>{{ action.label }}</button>
+                    } @else if (action.route) {
+                        <a [routerLink]="action.route" [queryParams]="action.queryParams" pButton type="button" class="shrink-0" [class]="first ? 'p-button-primary' : 'p-button-outlined p-button-secondary'"><i [class]="action.icon"></i>{{ action.label }}</a>
+                    } @else {
+                        <button pButton type="button" class="shrink-0" [class]="first ? 'p-button-primary' : 'p-button-outlined p-button-secondary'" (click)="arrivalOpen.set(true)"><i [class]="action.icon"></i>{{ action.label }}</button>
                     }
+                }
+                @if (ro.mutationBlocked()) {
+                    <span class="text-amber-700 dark:text-amber-300 text-sm shrink-0 max-sm:whitespace-nowrap" role="status">İşletme salt okunur moddadır; eylemler kapalı.</span>
                 }
             </div>
             @if (canArrive()) {

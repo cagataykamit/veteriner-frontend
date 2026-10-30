@@ -86,7 +86,7 @@ describe('PatientActionBarComponent', () => {
         expect(fixture.componentInstance.petSuggestion()).toEqual(pet);
     });
 
-    it('hiç yetki yoksa çubuk görünmez; salt okunur kiracıda eylemler yerine bilgi gösterilir', () => {
+    it('hiç yetki yoksa çubuk görünmez; salt okunur kiracıda eylemler kilitli kalır ve bilgi gösterilir', () => {
         claims = new Set();
         let el: HTMLElement = create({ clientId: 'cl1', petId: 'p1' }).nativeElement;
 
@@ -97,20 +97,24 @@ describe('PatientActionBarComponent', () => {
         el = create({ clientId: 'cl1', petId: 'p1' }).nativeElement;
         expect(el.textContent).toContain('salt okunur');
         expect(el.querySelector('a[href^="/panel/examinations/new"]')).toBeNull();
+        const locked = el.querySelector('[role="toolbar"] button') as HTMLButtonElement;
+
+        expect(locked.textContent).toContain('Muayene başlat');
+        expect(locked.disabled).toBe(true);
     });
 
-    it('sticky açıkken çubuk üst çubuğun altında sabitlenir; varsayılan sabit değildir', () => {
+    it('sticky açıkken çubuk üst çubuğun altında sabitlenir; varsayılan sabit değildir; şerit kart değildir', () => {
         const fixture = create({ clientId: 'cl1', petId: 'p1' });
         const bar = () => fixture.nativeElement.querySelector('[data-testid="patient-action-bar"]') as HTMLElement;
 
         expect(bar().classList).not.toContain('sticky');
-        expect(bar().classList).toContain('card');
+        expect(bar().classList).not.toContain('card');
 
         fixture.componentRef.setInput('sticky', true);
         fixture.detectChanges();
 
         expect(bar().classList).toContain('sticky');
         expect(bar().classList).toContain('top-16');
-        expect(bar().classList).toContain('card');
+        expect(bar().classList).not.toContain('card');
     });
 });
