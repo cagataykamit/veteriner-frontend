@@ -5,7 +5,7 @@ import { ADMINISTRATION_LATE_ENTRY_LABEL, administrationBatchText, administratio
 import { administrationRouteSiteText } from '@/app/entities/administration/utils/administration-route.utils';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
-/** Uygulama satırının işaretleri: düşülen parti (üretici, seri no, SKT), uygulama yolu/bölgesi, "Kesinleştirmeden sonra eklendi" (+ gerekçe) ve iptal (+ stok sonucu, gerekçe). */
+/** Uygulama satırının işaretleri: düşülen parti (üretici, seri no, SKT), uygulama yolu/bölgesi, ücret durumu (RECORD-001), "Kesinleştirmeden sonra eklendi" (+ gerekçe) ve iptal (+ stok sonucu, gerekçe). */
 @Component({
     selector: 'app-administration-row-marks',
     standalone: true,
@@ -17,6 +17,9 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         }
         @if (routeSiteText(); as text) {
             <div class="text-xs text-muted-color" data-testid="route-site">{{ text }}</div>
+        }
+        @if (row().billing; as billing) {
+            <div class="text-xs" [class.text-muted-color]="!billing.pending" [class.text-amber-700]="billing.pending" data-testid="billing-info">{{ billing.text }}</div>
         }
         @if (row().vaccinationId) {
             <div class="text-xs" data-testid="vaccination-link">

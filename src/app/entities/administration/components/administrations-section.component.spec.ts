@@ -35,7 +35,8 @@ const row: AdministrationVm = {
     vaccinationId: null,
     route: null,
     site: null,
-    productManufacturer: null
+    productManufacturer: null,
+    billing: null
 };
 
 const page = (items: AdministrationVm[]): AdministrationsPagedVm => ({ items, page: 1, pageSize: 50, totalItems: items.length, totalPages: 1 });

@@ -43,7 +43,8 @@ const stockResult = (over: Partial<AdministrationCreateResultVm['stock']> = {}, 
         vaccinationId: 'v1',
         route: null,
         site: null,
-        productManufacturer: null
+        productManufacturer: null,
+        billing: null
     },
     stock: { quantityOnHand: 9, availableQuantity: 8, minimumStockLevel: 2, isBelowMinimum: false, ...over }
 });

@@ -14,6 +14,7 @@ import type {
     CreateAdministrationRequest
 } from '@/app/entities/administration/models/administration-vm.model';
 import { administrationRouteFromApi } from '@/app/entities/administration/utils/administration-route.utils';
+import { administrationBillingVm } from '@/app/entities/administration/utils/administration-labels';
 import { toYmdOrNull } from '@/app/entities/inventory/utils/stock-batch-expiry.utils';
 
 function trimmedOrNull(v: string | null | undefined): string | null {
@@ -52,7 +53,8 @@ export function mapAdministrationDtoToVm(dto: AdministrationDto): Administration
         vaccinationId: trimmedOrNull(dto.vaccinationId),
         route: administrationRouteFromApi(dto.route),
         site: trimmedOrNull(dto.site),
-        productManufacturer: trimmedOrNull(dto.productManufacturer)
+        productManufacturer: trimmedOrNull(dto.productManufacturer),
+        billing: administrationBillingVm(dto.billing)
     };
 }
 

@@ -34,6 +34,14 @@ export interface AdministrationVm {
     route: AdministrationRouteApi | null;
     site: string | null;
     productManufacturer: string | null;
+    /** Ücret satırı metni (RECORD-001); finans izni yoksa veya kalem doğmadıysa `null`. */
+    billing: AdministrationBillingVm | null;
+}
+
+export interface AdministrationBillingVm {
+    text: string;
+    /** Ücret bekliyor: kesilmemiş; uyarı rengi. */
+    pending: boolean;
 }
 
 export interface AdministrationStockVm {

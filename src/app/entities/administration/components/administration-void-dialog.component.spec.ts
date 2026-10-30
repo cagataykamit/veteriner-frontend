@@ -31,7 +31,8 @@ const target: AdministrationVm = {
     vaccinationId: null,
     route: null,
     site: null,
-    productManufacturer: null
+    productManufacturer: null,
+    billing: null
 };
 
 describe('AdministrationVoidDialogComponent', () => {

@@ -72,7 +72,8 @@ const result = (created: boolean): AdministrationCreateResultVm => ({
         vaccinationId: null,
         route: null,
         site: null,
-        productManufacturer: null
+        productManufacturer: null,
+        billing: null
     },
     stock: { quantityOnHand: 4.5, availableQuantity: 4.5, minimumStockLevel: 2, isBelowMinimum: false }
 });
