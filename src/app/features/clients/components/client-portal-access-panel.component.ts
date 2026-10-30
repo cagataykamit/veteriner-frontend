@@ -27,8 +27,8 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     standalone: true,
     imports: [ButtonModule, ConfirmDialogModule, AppErrorStateComponent, TrDateTimePipe],
     providers: [ConfirmationService],
-    /** `.card:last-child` alt boşluğu sıfırladığından boşluk ana öğede (bölüm bileşenin son çocuğu). */
-    host: { class: 'block mb-4' },
+    /** Boşluğu sayfadaki sütun (`gap`) verir; kart kendi kenar boşluğu taşımaz. */
+    host: { class: 'block' },
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-confirmdialog key="client-portal" [style]="{ width: 'min(450px, 95vw)' }" />

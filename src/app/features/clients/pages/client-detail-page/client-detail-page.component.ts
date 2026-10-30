@@ -42,9 +42,10 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
 
 /**
- * Müşteri kartı — okuma öncelikli 360 görünüm (ADR-020 karar 6, hasta kartıyla aynı ilke): iletişim ve hesap durumu,
- * her zaman görünür eylem çubuğu, para Yapılacakları, hayvanlar, ödeme özeti ve son randevu/muayeneler; düzenleme formu "Düzenle" arkasında.
- * Rol vurgusu yalnız sıralamadır (hasta kartıyla aynı kural): muayene açabilen hayvanları ve geçmişi, ücret/ödeme alan parayı öne alır.
+ * Müşteri kartı — okuma öncelikli 360 görünüm (ADR-020 karar 6, hasta kartıyla aynı ilke): kimlik kartı (iletişim, rıza rozeti, gösterge şeridi),
+ * her zaman görünür eylem çubuğu; ana sütunda hayvanlar ve son muayene/randevular, yan sütunda para Yapılacakları, ödeme özeti, portal erişimi
+ * ve belgeler (KVKK formu, aydınlatma metni, veri kopyası); düzenleme formu "Düzenle" arkasında.
+ * Rol vurgusu yalnız sütun sırasıdır (hasta kartıyla aynı kural): muayene açabilen hayvanları ve geçmişi, ücret/ödeme alan parayı öne alır.
  */
 @Component({
     selector: 'app-client-detail-page',
@@ -83,9 +84,6 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
         } @else if (client(); as c) {
             <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" [title]="c.fullName" [description]="registrationLine()">
                 <ng-container actions>
-                    <a [routerLink]="['/panel/clients', c.id, 'kvkk-form']" pButton type="button" class="p-button-text p-button-secondary" data-testid="kvkk-print-action"><i class="pi pi-print"></i>KVKK formu yazdır</a>
-                    <a [routerLink]="['/panel/clients', c.id, 'kvkk-disclosure']" pButton type="button" class="p-button-text p-button-secondary" data-testid="kvkk-disclosure-print-action"><i class="pi pi-print"></i>Aydınlatma metni yazdır</a>
-                    <a [routerLink]="['/panel/clients', c.id, 'data-export']" pButton type="button" class="p-button-text p-button-secondary" data-testid="client-data-export-action"><i class="pi pi-file-export"></i>Veri kopyası</a>
                     @if (canUpdateClient && !ro.mutationBlocked()) {
                         <a [routerLink]="['/panel/clients', c.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                     } @else if (canUpdateClient && ro.mutationBlocked()) {
@@ -114,181 +112,159 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
             @if (canUpdateClient && !ro.mutationBlocked()) {
                 <app-client-kvkk-consent-dialog [(visible)]="kvkkDialogOpen" [client]="c" (changed)="onKvkkChanged($event)" (stale)="refreshClient()" />
             }
-            @if (canManagePortal) {
-                <app-client-portal-access-panel [client]="c" />
-            }
-
-            <div class="grid grid-cols-12 gap-4 mb-4">
-                <div class="col-span-12 lg:col-span-5" [class.order-first]="emphasis === 'frontDesk'" data-testid="todo-column">
-                    <app-pet-todo-panel [view]="todo()" />
-                </div>
-                <div class="col-span-12 lg:col-span-7" [class.order-first]="emphasis === 'clinical'" data-testid="pets-column">
-                    <app-client-pets-panel [rows]="petRows()" [clientId]="c.id" [currency]="currency()" />
-                </div>
-            </div>
-
+            <!-- Ana sütun (hastalar, geçmiş) ve yan sütun (para Yapılacakları, ödeme, portal, belgeler); rol vurgusu sütun sırasını belirler. -->
             <div class="grid grid-cols-12 gap-4">
-                <div class="col-span-12 lg:col-span-6" [class.order-first]="emphasis === 'frontDesk'" data-testid="payments-column">
-                    <div class="card">
-                        <div class="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-x-3 gap-y-1 items-center pb-2 mb-3 border-b border-surface-200 dark:border-surface-700">
-                            <h5 class="mt-0 mb-0 min-w-0">Ödeme özeti</h5>
-                            @if (canReadCharges) {
-                                <a routerLink="/panel/charges" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm shrink-0 whitespace-nowrap">Ücretler →</a>
+                <div class="col-span-12 lg:col-span-8 flex flex-col gap-4 min-w-0" [class.order-first]="emphasis === 'clinical'" data-testid="pets-column">
+                    <app-client-pets-panel [rows]="petRows()" [clientId]="c.id" [currency]="currency()" />
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" data-testid="history-column">
+                        <div class="card mb-0 min-w-0">
+                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-3">
+                                <h5 class="mt-0 mb-0">Son muayeneler</h5>
+                                <a routerLink="/panel/examinations" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            </div>
+                            @if (recentSummaryLoading()) {
+                                <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
+                            } @else if (recentSummaryError()) {
+                                <p class="text-muted-color m-0">{{ recentSummaryError() }}</p>
+                            } @else if (examListView().total === 0) {
+                                <app-empty-state message="Bu müşteriye ait muayene kaydı yok." />
+                            } @else {
+                                <ul class="list-none m-0 p-0">
+                                    @for (row of examListView().displayed; track row.id) {
+                                        <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0">
+                                            <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                                <span class="text-muted-color text-sm min-w-0">{{ row.examinedAtUtc | trDateTime }}</span>
+                                                <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                            </div>
+                                            <div class="font-medium min-w-0 break-words">{{ row.petName }}</div>
+                                            <div class="text-sm text-muted-color min-w-0 break-words">{{ row.visitReason }}</div>
+                                        </li>
+                                    }
+                                </ul>
                             }
-                            <a routerLink="/panel/payments" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm shrink-0 whitespace-nowrap">Ödemeler →</a>
+                        </div>
+                        <div class="card mb-0 min-w-0">
+                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-3">
+                                <h5 class="mt-0 mb-0">Son randevular</h5>
+                                <a routerLink="/panel/appointments" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            </div>
+                            @if (recentSummaryLoading()) {
+                                <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
+                            } @else if (recentSummaryError()) {
+                                <p class="text-muted-color m-0">{{ recentSummaryError() }}</p>
+                            } @else if (apptListView().total === 0) {
+                                <app-empty-state message="Bu müşteriye ait randevu kaydı yok." />
+                            } @else {
+                                <ul class="list-none m-0 p-0">
+                                    @for (row of apptListView().displayed; track row.id) {
+                                        <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0">
+                                            <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                                <span class="text-muted-color text-sm min-w-0">{{ row.scheduledAtUtc | trDateTime }}</span>
+                                                <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                            </div>
+                                            <div class="font-medium min-w-0 break-words">{{ row.petName }}</div>
+                                            <div class="text-sm text-muted-color min-w-0 break-words">
+                                                {{ statusLabel(row.status) }}
+                                                @if (row.notes?.trim()) {
+                                                    <span> · {{ row.notes }}</span>
+                                                }
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-span-12 lg:col-span-4 flex flex-col gap-4 min-w-0" [class.order-first]="emphasis === 'frontDesk'" data-testid="todo-column">
+                    <app-pet-todo-panel [view]="todo()" />
+
+                    <div class="card mb-0 min-w-0" data-testid="payments-column">
+                        <div class="flex flex-wrap gap-x-3 gap-y-1 items-center mb-3">
+                            <h5 class="mt-0 mb-0 min-w-0">Ödeme özeti</h5>
+                            <span class="ml-auto flex flex-wrap gap-x-3">
+                                @if (canReadCharges) {
+                                    <a routerLink="/panel/charges" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm whitespace-nowrap">Ücretler →</a>
+                                }
+                                <a routerLink="/panel/payments" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm whitespace-nowrap">Ödemeler →</a>
+                            </span>
                         </div>
                         @if (paymentSummaryLoading()) {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (paymentSummaryError()) {
                             <app-error-state [detail]="paymentSummaryError()!" (retry)="retryPaymentSummary()" />
                         } @else if (paymentSummary()) {
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-3 text-sm">
-                                <div class="min-w-0 text-left">
+                            <div class="grid grid-cols-3 gap-3 text-sm">
+                                <div class="min-w-0">
                                     <p class="text-muted-color text-xs m-0 mb-0.5">Toplam ödeme</p>
                                     <p class="m-0 font-semibold text-surface-900 dark:text-surface-0">{{ paymentSummary()!.totalPaymentsCount }}</p>
                                 </div>
-                                <div class="min-w-0 text-left md:text-center">
+                                <div class="min-w-0">
                                     <p class="text-muted-color text-xs m-0 mb-0.5">Son ödeme</p>
                                     <p class="m-0 font-semibold text-surface-900 dark:text-surface-0 break-words" [title]="paymentSummary()!.lastPaymentAtUtc ? (paymentSummary()!.lastPaymentAtUtc | trDateTime) : ''">
                                         {{ paymentSummary()!.lastPaymentAtUtc ? (paymentSummary()!.lastPaymentAtUtc | trDateTime) : '—' }}
                                     </p>
                                 </div>
-                                <div class="min-w-0 text-left md:text-right">
+                                <div class="min-w-0">
                                     <p class="text-muted-color text-xs m-0 mb-0.5">Para birimi toplamları</p>
                                     @if (paymentSummary()!.currencyTotals.length > 0) {
-                                        <ul class="list-none m-0 p-0 space-y-0.5 md:text-right">
+                                        <ul class="list-none m-0 p-0 space-y-0.5">
                                             @for (ct of paymentSummary()!.currencyTotals; track ct.currency) {
-                                                <li class="font-semibold text-sm text-surface-900 dark:text-surface-0 leading-tight">{{ money(ct.totalAmount, ct.currency) }}</li>
+                                                <li class="font-semibold text-sm text-surface-900 dark:text-surface-0 leading-tight tabular-nums">{{ money(ct.totalAmount, ct.currency) }}</li>
                                             }
                                         </ul>
                                     } @else if (paymentSummary()!.totalPaidAmount != null && paymentSummary()!.totalPaidAmount !== 0) {
-                                        <p class="m-0 font-semibold text-sm text-surface-900 dark:text-surface-0">{{ money(paymentSummary()!.totalPaidAmount, 'TRY') }}</p>
-                                        <p class="text-muted-color text-[10px] m-0 mt-0.5 leading-tight md:text-right">Genel toplam (rapor)</p>
+                                        <p class="m-0 font-semibold text-sm text-surface-900 dark:text-surface-0 tabular-nums">{{ money(paymentSummary()!.totalPaidAmount, 'TRY') }}</p>
+                                        <p class="text-muted-color text-[10px] m-0 mt-0.5 leading-tight">Genel toplam (rapor)</p>
                                     } @else if (paymentSummary()!.totalPaidAmount === 0 && paymentSummary()!.totalPaymentsCount > 0) {
-                                        <p class="text-muted-color text-xs m-0 leading-snug md:text-right">Çoklu para biriminde tek tutar özetlenmez; doğruluk para birimi kırılımıyla backend’de tutulur.</p>
+                                        <p class="text-muted-color text-xs m-0 leading-snug">Çoklu para biriminde tek tutar özetlenmez; doğruluk para birimi kırılımıyla backend’de tutulur.</p>
                                     } @else {
                                         <p class="m-0 font-semibold text-surface-900 dark:text-surface-0">—</p>
                                     }
                                 </div>
                             </div>
-                            <div class="pt-2 border-t border-surface-200 dark:border-surface-700">
-                                <h6 class="mt-0 mb-2 text-surface-900 dark:text-surface-0 font-semibold text-sm">Son ödemeler</h6>
+                            <div class="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700">
+                                <h6 class="mt-0 mb-1 text-surface-900 dark:text-surface-0 font-semibold text-sm">Son ödemeler</h6>
                                 @if (paymentRecentView().total === 0) {
                                     <app-empty-state [message]="copy.listEmptyMessage" />
                                 } @else {
-                                    <div class="max-lg:overflow-visible max-lg:mx-0 max-lg:px-0 overflow-x-auto -mx-1 px-1 lg:mx-0 lg:px-0">
-                                        <div class="w-full min-w-0 lg:min-w-[18rem]">
-                                            <div class="hidden lg:grid grid-cols-[5.5rem_minmax(0,1fr)_4.5rem_auto] gap-x-2 px-0.5 pb-2 text-xs font-medium text-muted-color border-b border-surface-200 dark:border-surface-700">
-                                                <span>Tarih</span>
-                                                <span>Hasta / Klinik / Yöntem</span>
-                                                <span class="text-right">Tutar</span>
-                                                <span class="text-right">İşlem</span>
-                                            </div>
-                                            <ul class="list-none m-0 p-0">
-                                                @for (row of paymentRecentView().displayed; track row.id) {
-                                                    <li
-                                                        class="min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:mb-3 max-lg:last:mb-0 max-lg:shadow-sm lg:border-b lg:border-surface-200 lg:dark:border-surface-700 lg:last:border-0"
-                                                    >
-                                                        <div class="lg:hidden space-y-2 min-w-0">
-                                                            <div class="text-muted-color text-sm">{{ row.paidAtUtc | trDateTime }}</div>
-                                                            <div class="font-semibold text-base tabular-nums text-surface-900 dark:text-surface-0 min-w-0 break-words">
-                                                                {{ money(row.amount, row.currency) }}
-                                                            </div>
-                                                            @if (row.petName?.trim()) {
-                                                                <div class="text-surface-900 dark:text-surface-0 font-medium text-sm min-w-0 break-words">{{ row.petName }}</div>
-                                                            }
-                                                            @if (row.clinicName?.trim()) {
-                                                                <div class="text-muted-color text-sm min-w-0 break-words">{{ row.clinicName }}</div>
-                                                            }
-                                                            <div class="text-muted-color text-sm min-w-0 break-words">{{ payMethodLabel(row.method) }}</div>
-                                                            <div class="flex justify-end pt-2 mt-1 border-t border-surface-200 dark:border-surface-700">
-                                                                <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm py-1">Detay →</a>
-                                                            </div>
-                                                        </div>
-                                                        <div class="hidden lg:grid lg:grid-cols-[5.5rem_minmax(0,1fr)_4.5rem_auto] gap-x-2 items-center py-1.5 text-sm">
-                                                            <div class="text-muted-color">{{ row.paidAtUtc | trDateTime }}</div>
-                                                            <div class="min-w-0 space-y-0.5">
-                                                                @if (row.petName?.trim()) {
-                                                                    <div class="text-surface-900 dark:text-surface-0 leading-tight">{{ row.petName }}</div>
-                                                                }
-                                                                @if (row.clinicName?.trim()) {
-                                                                    <div class="text-muted-color text-xs leading-tight">{{ row.clinicName }}</div>
-                                                                }
-                                                                <div class="text-muted-color text-xs leading-tight">{{ payMethodLabel(row.method) }}</div>
-                                                            </div>
-                                                            <div class="text-right font-semibold tabular-nums">{{ money(row.amount, row.currency) }}</div>
-                                                            <div class="text-right">
-                                                                <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm whitespace-nowrap">Detay →</a>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                }
-                                            </ul>
-                                        </div>
-                                    </div>
+                                    <ul class="list-none m-0 p-0">
+                                        @for (row of paymentRecentView().displayed; track row.id) {
+                                            <li class="flex gap-3 items-start py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0 text-sm">
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="text-surface-900 dark:text-surface-0 font-medium break-words">{{ row.petName?.trim() || '—' }}</div>
+                                                    <div class="text-muted-color text-xs leading-snug break-words">
+                                                        {{ row.paidAtUtc | trDateTime }} · {{ payMethodLabel(row.method) }}
+                                                        @if (row.clinicName?.trim()) {
+                                                            <span> · {{ row.clinicName }}</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="text-right shrink-0">
+                                                    <div class="font-semibold tabular-nums text-surface-900 dark:text-surface-0">{{ money(row.amount, row.currency) }}</div>
+                                                    <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-xs whitespace-nowrap">Detay →</a>
+                                                </div>
+                                            </li>
+                                        }
+                                    </ul>
                                 }
                             </div>
                         }
                     </div>
-                </div>
 
-                <div class="col-span-12 lg:col-span-6 flex flex-col gap-4" [class.order-first]="emphasis === 'clinical'" data-testid="history-column">
-                    <div class="card mb-0">
-                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
-                            <h5 class="mt-0 mb-0">Son muayeneler</h5>
-                            <a routerLink="/panel/examinations" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                        </div>
-                        @if (recentSummaryLoading()) {
-                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
-                        } @else if (recentSummaryError()) {
-                            <p class="text-muted-color m-0">{{ recentSummaryError() }}</p>
-                        } @else if (examListView().total === 0) {
-                            <app-empty-state message="Bu müşteriye ait muayene kaydı yok." />
-                        } @else {
-                            <ul class="list-none m-0 p-0">
-                                @for (row of examListView().displayed; track row.id) {
-                                    <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 min-w-0">
-                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
-                                            <span class="text-muted-color text-sm min-w-0">{{ row.examinedAtUtc | trDateTime }}</span>
-                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
-                                        </div>
-                                        <div class="font-medium min-w-0 break-words">{{ row.petName }}</div>
-                                        <div class="text-sm text-muted-color min-w-0 break-words">{{ row.visitReason }}</div>
-                                    </li>
-                                }
-                            </ul>
-                        }
-                    </div>
-                    <div class="card mb-0">
-                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
-                            <h5 class="mt-0 mb-0">Son randevular</h5>
-                            <a routerLink="/panel/appointments" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                        </div>
-                        @if (recentSummaryLoading()) {
-                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
-                        } @else if (recentSummaryError()) {
-                            <p class="text-muted-color m-0">{{ recentSummaryError() }}</p>
-                        } @else if (apptListView().total === 0) {
-                            <app-empty-state message="Bu müşteriye ait randevu kaydı yok." />
-                        } @else {
-                            <ul class="list-none m-0 p-0">
-                                @for (row of apptListView().displayed; track row.id) {
-                                    <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 min-w-0">
-                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
-                                            <span class="text-muted-color text-sm min-w-0">{{ row.scheduledAtUtc | trDateTime }}</span>
-                                            <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
-                                        </div>
-                                        <div class="font-medium min-w-0 break-words">{{ row.petName }}</div>
-                                        <div class="text-sm text-muted-color min-w-0 break-words">
-                                            {{ statusLabel(row.status) }}
-                                            @if (row.notes?.trim()) {
-                                                <span> · {{ row.notes }}</span>
-                                            }
-                                        </div>
-                                    </li>
-                                }
-                            </ul>
-                        }
+                    @if (canManagePortal) {
+                        <app-client-portal-access-panel [client]="c" />
+                    }
+
+                    <div class="card mb-0 min-w-0" aria-labelledby="client-documents-title" data-testid="client-documents">
+                        <h5 id="client-documents-title" class="mt-0 mb-2">Belgeler</h5>
+                        <ul class="list-none m-0 p-0 flex flex-col">
+                            <li><a [routerLink]="['/panel/clients', c.id, 'kvkk-form']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline" data-testid="kvkk-print-action"><i class="pi pi-print text-sm" aria-hidden="true"></i>KVKK formu yazdır</a></li>
+                            <li><a [routerLink]="['/panel/clients', c.id, 'kvkk-disclosure']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline" data-testid="kvkk-disclosure-print-action"><i class="pi pi-print text-sm" aria-hidden="true"></i>Aydınlatma metni yazdır</a></li>
+                            <li><a [routerLink]="['/panel/clients', c.id, 'data-export']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline" data-testid="client-data-export-action"><i class="pi pi-file-export text-sm" aria-hidden="true"></i>Veri kopyası</a></li>
+                        </ul>
                     </div>
                 </div>
             </div>

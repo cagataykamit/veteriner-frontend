@@ -177,15 +177,16 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
 
     it('rol vurgusu hasta kartıyla aynı: muayene açabilen hayvanları ve geçmişi, yalnız ücret/ödeme alan parayı öne alır', () => {
         create();
+        // Ana sütun hayvanları ve geçmişi, yan sütun Yapılacakları ve ödeme özetini taşır; vurgu hangi sütunun önde olduğunu seçer.
         expect(el().querySelector('[data-testid="pets-column"]')?.classList).toContain('order-first');
-        expect(el().querySelector('[data-testid="history-column"]')?.classList).toContain('order-first');
+        expect(el().querySelector('[data-testid="pets-column"] [data-testid="history-column"]')).not.toBeNull();
         expect(el().querySelector('[data-testid="todo-column"]')?.classList).not.toContain('order-first');
 
         TestBed.resetTestingModule();
         claims = new Set(['Payments.Create', 'Charges.Read']);
         create();
         expect(el().querySelector('[data-testid="todo-column"]')?.classList).toContain('order-first');
-        expect(el().querySelector('[data-testid="payments-column"]')?.classList).toContain('order-first');
+        expect(el().querySelector('[data-testid="todo-column"] [data-testid="payments-column"]')).not.toBeNull();
         expect(el().querySelector('[data-testid="pets-column"]')?.classList).not.toContain('order-first');
     });
 
