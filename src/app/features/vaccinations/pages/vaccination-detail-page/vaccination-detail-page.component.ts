@@ -34,7 +34,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
             <p class="mb-4 m-0 text-sm font-medium">Aşı kaydı kaydedildi.</p>
         }
         @if (stockNotice(); as notice) {
-            <p class="mb-4 m-0 text-sm" [class.text-amber-700]="notice.warn" role="status" data-testid="stock-notice">{{ notice.text }}</p>
+            <p class="mb-4 m-0 text-sm" [class]="notice.warn ? 'text-amber-700 dark:text-amber-300' : ''" role="status" data-testid="stock-notice">{{ notice.text }}</p>
         }
 
         @if (loading()) {

@@ -80,7 +80,7 @@ const ADD_ICON: Record<ProcedureKind, string> = {
             }
 
             @if (notice()) {
-                <p class="text-sm mt-2 mb-0" [class.text-amber-700]="noticeIsWarning()" role="status" data-testid="procedure-notice">{{ notice() }}</p>
+                <p class="text-sm mt-2 mb-0" [class]="noticeIsWarning() ? 'text-amber-700 dark:text-amber-300' : ''" role="status" data-testid="procedure-notice">{{ notice() }}</p>
             }
 
             <div class="mt-4">

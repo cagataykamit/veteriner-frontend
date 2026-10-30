@@ -65,7 +65,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     <p class="text-sm text-muted-color mt-0 mb-3" role="note" data-testid="administrations-locked">Muayene kesinleştirildi. Unutulan uygulama gerekçe yazılarak sonradan eklenebilir; yanlış kayıt iptal edilebilir.</p>
                 }
                 @if (notice()) {
-                    <p class="text-sm mt-0 mb-3" [class.text-amber-700]="noticeIsWarning()" role="status" data-testid="administration-notice">{{ notice() }}</p>
+                    <p class="text-sm mt-0 mb-3" [class]="noticeIsWarning() ? 'text-amber-700 dark:text-amber-300' : ''" role="status" data-testid="administration-notice">{{ notice() }}</p>
                 }
 
                 @if (error()) {

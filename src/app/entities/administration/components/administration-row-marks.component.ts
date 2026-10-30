@@ -19,7 +19,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
             <div class="text-xs text-muted-color" data-testid="route-site">{{ text }}</div>
         }
         @if (row().billing; as billing) {
-            <div class="text-xs" [class.text-muted-color]="!billing.pending" [class.text-amber-700]="billing.pending" data-testid="billing-info">{{ billing.text }}</div>
+            <div class="text-xs" [class]="billing.pending ? 'text-amber-700 dark:text-amber-300' : 'text-muted-color'" data-testid="billing-info">{{ billing.text }}</div>
         }
         @if (row().includedInPackage) {
             <div class="text-xs text-muted-color" data-testid="included-in-package">Pakete dahil · ücreti paket kalemindedir</div>
