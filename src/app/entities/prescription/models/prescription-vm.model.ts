@@ -17,6 +17,9 @@ export interface PrescriptionListItemVm {
     treatmentId: string | null;
     followUpDateUtc: string | null;
     hbsStatus: HbsEntryStatus | null;
+    /** RECORD-008. */
+    isCancelled: boolean;
+    addedAfterFinalization: boolean;
 }
 
 export interface PrescriptionDetailVm {
@@ -37,6 +40,14 @@ export interface PrescriptionDetailVm {
     updatedAtUtc: string | null;
     items: PrescriptionItemVm[];
     hbs: HbsEntryVm | null;
+    /** İptal (RECORD-008): silinmez, değiştirilemez. */
+    isCancelled: boolean;
+    cancelledAtUtc: string | null;
+    cancelledByName: string | null;
+    cancelReason: string | null;
+    /** Kesinleşmiş muayeneye sonradan eklendi; gerekçesi `lateEntryReason`. */
+    addedAfterFinalization: boolean;
+    lateEntryReason: string | null;
 }
 
 export interface PrescriptionEditVm {
@@ -54,6 +65,8 @@ export interface PrescriptionEditVm {
     notes: string;
     followUpDateInput: string;
     items: PrescriptionItemVm[];
+    /** İptal edilmiş reçete düzenlenemez (RECORD-008). */
+    isCancelled: boolean;
 }
 
 export interface PrescriptionItemVm {

@@ -108,6 +108,12 @@ type RegisterRow = { readonly rowNumber: number };
                                 <label for="registerRepVoided" class="text-sm">{{ extra.includeVoidedLabel }}</label>
                             </div>
                         }
+                        @if (extra.hideCancelledLabel) {
+                            <div class="flex items-center gap-2 pb-2">
+                                <p-checkbox inputId="registerRepHideCancelled" [binary]="true" [ngModel]="state.extraInputs['hideCancelled'] === 'true'" (ngModelChange)="setExtra('hideCancelled', $event ? 'true' : '')" />
+                                <label for="registerRepHideCancelled" class="text-sm">{{ extra.hideCancelledLabel }}</label>
+                            </div>
+                        }
                     </ng-container>
                 }
                 <button pButton type="button" barActions severity="secondary" [outlined]="true" (click)="print()" [disabled]="state.loading() || !state.report()?.items?.length"><i class="p-button-icon pi pi-print"></i>{{ copy.registerPrint }}</button>
@@ -181,7 +187,7 @@ export class RegisterPageComponent implements OnInit, OnDestroy {
     private extraKeys(): ReportExtraKey[] {
         const f = this.definition.extraFilters;
 
-        return [f?.includeVoidedLabel && 'includeVoided', f?.product && 'productId', f?.veterinarian && 'veterinarianId', f?.hbsStatus && 'hbsStatus'].filter(Boolean) as ReportExtraKey[];
+        return [f?.includeVoidedLabel && 'includeVoided', f?.hideCancelledLabel && 'hideCancelled', f?.product && 'productId', f?.veterinarian && 'veterinarianId', f?.hbsStatus && 'hbsStatus'].filter(Boolean) as ReportExtraKey[];
     }
 
     /** Tablo üstbilgisi: kayıt sayısı, tarih aralığı, klinik ve yazdırma zamanı. */

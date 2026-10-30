@@ -87,6 +87,13 @@ describe('RegisterReportSource', () => {
         expect(xlsxParams.get('productId')).toBe('pr1');
     });
 
+    it('reçete defteri: hideCancelled yalnız işaretliyken gider (varsayılan iptal edilenler görünür, RECORD-008)', () => {
+        source.loadReport({ ...query, hideCancelled: 'true' }).subscribe();
+        expect((vi.mocked(api.get).mock.lastCall![1] as HttpParams).get('hideCancelled')).toBe('true');
+        source.loadReport({ ...query, hideCancelled: '' }).subscribe();
+        expect((vi.mocked(api.get).mock.lastCall![1] as HttpParams).has('hideCancelled')).toBe(false);
+    });
+
     it('reçete defteri kendi ucunu kullanır', () => {
         new RegisterReportSource(api, { getClinicId: () => null } as unknown as AuthService, 'prescriptions').loadReport(query).subscribe();
         expect(vi.mocked(api.get).mock.lastCall![0]).toBe('/api/v1/reports/registers/prescriptions');

@@ -15,6 +15,8 @@ export const PRESCRIPTION_ITEM_UNIT_MAX = 30;
 export const PRESCRIPTION_ITEM_LOT_MAX = 100;
 
 export type PrescriptionItemFormGroup = FormGroup<{
+    /** Mevcut satırın kimliği (düzenlemede, RECORD-008); yeni satırda boş. Görünmez. */
+    id: FormControl<string>;
     name: FormControl<string>;
     productId: FormControl<string>;
     instructions: FormControl<string>;
@@ -34,6 +36,7 @@ function nameOrProductValidator(group: AbstractControl): ValidationErrors | null
 export function createPrescriptionItemGroup(value?: Partial<PrescriptionItemVm>): PrescriptionItemFormGroup {
     return new FormGroup(
         {
+            id: new FormControl(value?.id ?? '', { nonNullable: true }),
             name: new FormControl(value?.name ?? '', { nonNullable: true, validators: Validators.maxLength(PRESCRIPTION_ITEM_NAME_MAX) }),
             productId: new FormControl(value?.productId ?? '', { nonNullable: true }),
             instructions: new FormControl(value?.instructions ?? '', { nonNullable: true, validators: Validators.maxLength(PRESCRIPTION_ITEM_INSTRUCTIONS_MAX) }),
@@ -55,6 +58,7 @@ export function prescriptionItemsFormToInputs(array: FormArray<PrescriptionItemF
     return array
         .getRawValue()
         .map((r) => ({
+            id: r.id || null,
             name: r.name.trim(),
             productId: r.productId.trim() || null,
             instructions: r.instructions.trim() || null,

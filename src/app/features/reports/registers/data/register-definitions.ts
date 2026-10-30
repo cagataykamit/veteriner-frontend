@@ -34,7 +34,7 @@ const quantityText = (q: number | null | undefined) => (q == null ? '' : q.toLoc
 const prescriptionText = (p: RegisterPrescriptionDto) => {
     const items = p.items.map((i) => (i.quantity == null ? i.name : `${i.name} ×${quantityText(i.quantity)}`)).join(', ');
 
-    return items ? `${p.title}: ${items}` : p.title;
+    return (items ? `${p.title}: ${items}` : p.title) + (p.isCancelled ? ' (iptal)' : '');
 };
 
 const administrationText = (a: RegisterAdministrationDto) =>
@@ -49,6 +49,9 @@ const prescribedItemText = (i: PrescriptionRegisterItemDto) => {
 const strong = (text: string): RegisterCellLine => ({ text, tone: 'strong' });
 const muted = (text: string): RegisterCellLine => ({ text, tone: 'muted' });
 const plain = (text: string | null | undefined): RegisterCellLine => ({ text: text ?? '' });
+
+/** İptal edilen reçete (RECORD-008): durum ve varsa gerekçe ipucu; boş satır çizilmez. */
+const cancelledLines = (r: PrescriptionRegisterRowDto): RegisterCellLine[] => (r.isCancelled ? [strong('İptal'), muted(r.cancelReason ? `Gerekçe: ${r.cancelReason}` : '')] : []);
 
 /** Dolu parçalar yan yana; boş alan hiç görünmez. */
 const items = (parts: readonly (string | null | undefined | false)[], tone?: RegisterCellLine['tone']): RegisterCellLine => ({ items: parts.filter(Boolean) as string[], tone });
@@ -127,11 +130,13 @@ export const PRESCRIPTION_REGISTER: RegisterDefinition<PrescriptionRegisterRowDt
     readClaims: [PRESCRIPTIONS_READ_CLAIM],
     exportFilePrefix: 'recete-defteri',
     stateKey: 'panel:reports:registers:prescriptions:listState',
+    extraFilters: { hideCancelledLabel: 'İptal edilen reçeteleri gizle' },
     columns: [
         { header: 'Sıra No', cell: (r) => String(r.rowNumber) },
         { group: 'REÇETENİN', header: 'Tarihi', cell: (r) => formatDateDisplay(r.prescribedAtUtc) },
         { group: 'REÇETENİN', header: 'Sınıfı', cell: (r) => r.prescriptionClass ?? '' },
         { group: 'REÇETENİN', header: 'Cilt/Sıra No', cell: (r) => r.volumeSequenceNumber ?? '' },
+        { group: 'REÇETENİN', header: 'Durumu', cell: (r) => (r.isCancelled ? 'İptal' : 'Geçerli') },
         { group: 'VETERİNER HEKİMİN', header: 'Adı Soyadı', cell: (r) => r.veterinarianName ?? '' },
         { group: 'VETERİNER HEKİMİN', header: 'Adresi', cell: (r) => r.veterinarianAddress ?? '' },
         { group: 'HAYVAN SAHİBİNİN', header: 'Adı Soyadı', cell: (r) => r.ownerName },
@@ -146,7 +151,7 @@ export const PRESCRIPTION_REGISTER: RegisterDefinition<PrescriptionRegisterRowDt
         {
             header: 'Reçete',
             minWidth: '8rem',
-            lines: (r) => [strong(formatDateDisplay(r.prescribedAtUtc)), items([r.prescriptionClass && `Sınıf: ${r.prescriptionClass}`, r.volumeSequenceNumber && `Cilt/Sıra: ${r.volumeSequenceNumber}`], 'muted')]
+            lines: (r) => [strong(formatDateDisplay(r.prescribedAtUtc)), items([r.prescriptionClass && `Sınıf: ${r.prescriptionClass}`, r.volumeSequenceNumber && `Cilt/Sıra: ${r.volumeSequenceNumber}`], 'muted'), ...cancelledLines(r)]
         },
         { header: 'Veteriner Hekim', minWidth: '12rem', lines: (r) => [strong(r.veterinarianName ?? ''), muted(r.veterinarianAddress ?? '')] },
         { header: 'Hasta Sahibi', minWidth: '12rem', lines: (r) => [strong(r.ownerName), muted(r.ownerAddress ?? '')] },

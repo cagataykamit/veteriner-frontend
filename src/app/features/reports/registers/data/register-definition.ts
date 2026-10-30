@@ -37,6 +37,8 @@ export interface RegisterDefinition<T> {
     /** Tarih aralığı ve klinik dışındaki süzgeçler; `includeVoided` için onay kutusunun etiketi verilir. */
     readonly extraFilters?: {
         readonly includeVoidedLabel?: string;
+        /** `hideCancelled` onay kutusunun etiketi (işaretlenmezse iptal edilenler durumuyla görünür). */
+        readonly hideCancelledLabel?: string;
         readonly product?: boolean;
         readonly veterinarian?: boolean;
         /** HBS durumu seçimi (`hbsStatus`); boşsa sunucu "HBS'e girilmedi" listesini döner. */

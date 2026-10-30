@@ -4,6 +4,8 @@
 
 /** Reçete satırı (istek): `name` yoksa `productId` zorunlu; ürün adı sunucuda kopyalanır. */
 export interface PrescriptionItemInput {
+    /** Mevcut satırın kimliği (düzenlemede); yeni satırda yok. */
+    id?: string | null;
     name: string;
     productId?: string | null;
     instructions?: string | null;
@@ -25,4 +27,6 @@ export interface CreatePrescriptionRequest {
     followUpDateUtc?: string | null;
     /** `undefined`: satırlara dokunma (PUT); dizi (boş dâhil): sunucudaki satırları bu liste ile değiştir. */
     items?: PrescriptionItemInput[];
+    /** Bağlı muayene kesinleşmişse zorunlu gerekçe (sonradan ekleme, RECORD-008); yalnız oluşturmada. */
+    lateEntryReason?: string | null;
 }

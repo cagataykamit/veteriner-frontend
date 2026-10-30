@@ -16,11 +16,14 @@ import { HbsSectionComponent } from '@/app/entities/hbs/components/hbs-section.c
 import type { HbsEntryVm } from '@/app/entities/hbs/models/hbs.model';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
+import { ADMINISTRATION_LATE_ENTRY_LABEL } from '@/app/entities/administration/utils/administration-labels';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 
 @Component({
     selector: 'app-prescription-detail-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, RecordHistoryButtonComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppErrorStateComponent, HbsSectionComponent, TrDatePipe, TrDateTimePipe],
+    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, RecordHistoryButtonComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppErrorStateComponent, HbsSectionComponent, AppStatusTagComponent, ReasonConfirmDialogComponent, TrDatePipe, TrDateTimePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
@@ -36,7 +39,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
         } @else if (row()) {
             <app-page-header categoryLink="/panel/prescriptions" categoryLinkLabel="Reçete listesine dön" title="Reçete" [description]="row()!.title">
                 <div actions class="flex flex-wrap gap-2">
-                    @if (canUpdatePrescription && !ro.mutationBlocked()) {
+                    @if (canUpdatePrescription && !ro.mutationBlocked() && !row()!.isCancelled) {
                         <a [routerLink]="['/panel/prescriptions', row()!.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                         @if (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim()) {
                             <a
@@ -53,7 +56,8 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                                 class="p-button-secondary"
                             ><i class="pi pi-wallet"></i>Ödeme Oluştur</a>
                         }
-                    } @else if (canUpdatePrescription && ro.mutationBlocked()) {
+                        <button pButton type="button" class="p-button-danger p-button-outlined" data-testid="prescription-cancel-open" (click)="cancelVisible.set(true)"><i class="pi pi-ban"></i>İptal et</button>
+                    } @else if (canUpdatePrescription && ro.mutationBlocked() && !row()!.isCancelled) {
                         <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                         @if (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim()) {
                             <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Ödeme Oluştur (salt okunur)</button>
@@ -77,6 +81,23 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.createdAtUtc | trDateTime }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.updatedAtUtc | trDateTime }}</dd>
+                            @if (row()!.isCancelled) {
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Durum</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0" data-testid="prescription-cancelled"><app-status-tag label="İptal" severity="danger" /></dd>
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">İptal</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.cancelledAtUtc | trDateTime }}@if (row()!.cancelledByName) { · {{ row()!.cancelledByName }} }</dd>
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">İptal gerekçesi</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0 whitespace-pre-wrap">{{ row()!.cancelReason ?? '—' }}</dd>
+                            }
+                            @if (row()!.addedAfterFinalization) {
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Kayıt</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0" data-testid="prescription-late-entry">
+                                    <app-status-tag [label]="lateEntryLabel" severity="warn" />
+                                    @if (row()!.lateEntryReason) {
+                                        <div class="text-sm text-muted-color mt-1">Gerekçe: {{ row()!.lateEntryReason }}</div>
+                                    }
+                                </dd>
+                            }
                             @if (row()!.examinationId) {
                                 <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
                                 <dd class="col-span-12 sm:col-span-8 m-0">
@@ -157,6 +178,16 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                     <app-hbs-section kind="prescription" [recordId]="row()!.id" [entry]="row()!.hbs" [canEdit]="canUpdatePrescription && !ro.mutationBlocked()" (entryChange)="onHbsChange($event)" />
                 </div>
             </div>
+            <app-reason-confirm-dialog
+                [(visible)]="cancelVisible"
+                header="Reçeteyi iptal et"
+                [summary]="row()!.title"
+                description="Reçete silinmez; iptal edildi olarak işaretlenir, gerekçe kayda geçer ve geri alınamaz. Düzeltmek için yeni reçete yazın."
+                confirmLabel="İptal et"
+                failureFallback="Reçete iptal edilemedi."
+                [execute]="cancelPrescription"
+                (confirmed)="reload()"
+            />
         }
     `
 })
@@ -178,6 +209,11 @@ export class PrescriptionDetailPageComponent implements OnInit {
     readonly row = this.loader.value;
     readonly showSavedBanner = signal(false);
     readonly canUpdatePrescription = this.auth.hasOperationClaim(PRESCRIPTIONS_UPDATE_CLAIM);
+    readonly cancelVisible = signal(false);
+    protected readonly lateEntryLabel = ADMINISTRATION_LATE_ENTRY_LABEL;
+
+    /** Gerekçeli iptal (RECORD-008); diyalog her açılışta güncel kaydın kimliğini kullanır. */
+    readonly cancelPrescription = (reason: string) => this.prescriptionsService.cancelPrescription(this.row()!.id, reason);
 
     ngOnInit(): void {
         this.loader.init();

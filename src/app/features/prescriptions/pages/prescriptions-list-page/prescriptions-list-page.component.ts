@@ -29,6 +29,7 @@ import { HbsStatusBadgeComponent } from '@/app/entities/hbs/components/hbs-statu
 import type { HbsEntryStatus } from '@/app/entities/hbs/models/hbs.model';
 import { HBS_STATUS_FILTER_OPTIONS, parseHbsStatus } from '@/app/entities/hbs/utils/hbs-status.utils';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
 type PrescriptionsListState = {
     search: string;
@@ -60,6 +61,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
         DateInputComponent,
         FilterFieldComponent,
         SearchInputComponent,
+        AppStatusTagComponent,
         AppRowActionButtonComponent,
         SelectModule,
         HbsStatusBadgeComponent,
@@ -156,7 +158,12 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                                 {{ row.petName }}
                                             }
                                         </td>
-                                        <td>{{ row.title }}</td>
+                                        <td>
+                                            {{ row.title }}
+                                            @if (row.isCancelled) {
+                                                <app-status-tag label="İptal" severity="danger" />
+                                            }
+                                        </td>
                                         <td>{{ row.followUpDateUtc | trDate }}</td>
                                         <td><app-hbs-status-badge [status]="row.hbsStatus" /></td>
                                         <td>
@@ -199,7 +206,12 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
                                         </div>
                                     </div>
                                     <div class="mb-3 min-w-0">
-                                        <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words">{{ row.title }}</div>
+                                        <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words">
+                                            {{ row.title }}
+                                            @if (row.isCancelled) {
+                                                <app-status-tag label="İptal" severity="danger" />
+                                            }
+                                        </div>
                                         @if (row.followUpDateUtc) {
                                             <div class="text-xs text-muted-color mt-1 line-clamp-2">Takip: {{ row.followUpDateUtc | trDate }}</div>
                                         }
