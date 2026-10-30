@@ -73,7 +73,11 @@ const FIELD_LABELS: Record<string, string> = {
     VoidReason: 'İptal gerekçesi',
     VoidStockOutcome: 'İptal stok sonucu',
     AddedAfterFinalization: 'Kesinleştirmeden sonra eklendi',
-    LateEntryReason: 'Sonradan ekleme gerekçesi'
+    LateEntryReason: 'Sonradan ekleme gerekçesi',
+    // RECORD-005 (uygulama yolu/bölgesi). Yol değeri sunucu enum adıyla görünür; RECORD-005 dalı birleşince
+    // `administrationRouteLabel` ile Türkçe etikete bağlanmalı (etiket orada tek yerde).
+    Route: 'Uygulama yolu',
+    Site: 'Uygulama bölgesi'
 };
 
 /** Enum adları; aynı ad farklı türlerde aynı anlamdadır. */
