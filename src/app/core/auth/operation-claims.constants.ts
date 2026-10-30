@@ -59,6 +59,9 @@ export const APPOINTMENTS_NOSHOW_CLAIM = 'Appointments.NoShow' as const;
 export const APPOINTMENTS_COMPLETE_CLAIM = 'Appointments.Complete' as const;
 export const APPOINTMENTS_RESCHEDULE_CLAIM = 'Appointments.Reschedule' as const;
 
+/** Online randevu talep kuyruğu: görme, onay, red (ADR-042 K4). */
+export const APPOINTMENT_REQUESTS_MANAGE_CLAIM = 'AppointmentRequests.Manage' as const;
+
 export const VISITS_READ_CLAIM = 'Visits.Read' as const;
 export const VISITS_CREATE_CLAIM = 'Visits.Create' as const;
 export const VISITS_UPDATE_CLAIM = 'Visits.Update' as const;

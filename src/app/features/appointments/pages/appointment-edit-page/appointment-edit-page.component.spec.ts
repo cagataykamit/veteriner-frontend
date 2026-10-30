@@ -22,7 +22,9 @@ const APPT: AppointmentEditVm = {
     durationMinutes: 30,
     appointmentType: 0,
     status: 3,
-    notes: 'Kontrol'
+    notes: 'Kontrol',
+    reasonId: 'r1',
+    veterinarianUserId: 'v1'
 };
 
 describe('AppointmentEditPageComponent - durum salt okunur', () => {
@@ -72,5 +74,16 @@ describe('AppointmentEditPageComponent - durum salt okunur', () => {
         expect(payload.status).toBe(0);
         expect(payload.petId).toBe('p1');
         expect(payload.durationMinutes).toBe(30);
+    });
+
+    it('kaydette mevcut neden ve hekim korunur (PUT tam güncelleme; boş gönderilirse sunucuda silinir)', () => {
+        const fixture = create();
+
+        fixture.componentInstance.onSubmit();
+
+        const [, payload] = vi.mocked(updateAppointment).mock.lastCall!;
+
+        expect(payload.reasonId).toBe('r1');
+        expect(payload.veterinarianUserId).toBe('v1');
     });
 });

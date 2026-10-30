@@ -46,6 +46,8 @@ export interface AppointmentDetailVm {
     notes: string;
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
+    reasonId: string | null;
+    veterinarianUserId: string | null;
 }
 
 export interface AppointmentEditVm {
@@ -61,4 +63,6 @@ export interface AppointmentEditVm {
     /** Salt okunur gösterim (GET); yazma isteğine dahil edilmez. */
     status: number | null;
     notes: string;
+    reasonId: string | null;
+    veterinarianUserId: string | null;
 }

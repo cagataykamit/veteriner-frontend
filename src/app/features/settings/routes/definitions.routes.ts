@@ -24,5 +24,6 @@ export default [
     { path: 'product-categories', loadChildren: () => import('../../inventory/routes/product-categories.routes') },
     { path: 'clinical-terms', loadChildren: () => import('../../clinical-terms/routes/clinical-terms.routes') },
     { path: 'examination-templates', loadChildren: () => import('../../examination-templates/routes/examination-templates.routes') },
-    { path: 'hospitalization-wards', loadChildren: () => import('../../hospitalization-wards/routes/hospitalization-wards.routes') }
+    { path: 'hospitalization-wards', loadChildren: () => import('../../hospitalization-wards/routes/hospitalization-wards.routes') },
+    { path: 'appointment-reasons', loadChildren: () => import('../../appointment-reasons/routes/appointment-reasons.routes') }
 ] as Routes;

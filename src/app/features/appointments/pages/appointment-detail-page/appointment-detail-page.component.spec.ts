@@ -27,7 +27,9 @@ const APPT: AppointmentDetailVm = {
     lifecycleStatus: 0,
     notes: '—',
     createdAtUtc: null,
-    updatedAtUtc: null
+    updatedAtUtc: null,
+    reasonId: null,
+    veterinarianUserId: null
 };
 
 describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () => {
