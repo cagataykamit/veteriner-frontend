@@ -7,6 +7,7 @@ import type { PrescriptionDetailVm } from '@/app/entities/prescription/models/pr
 import { PrescriptionsService } from '@/app/entities/prescription/services/prescriptions.service';
 import { HbsService } from '@/app/entities/hbs/services/hbs.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
+import { RecordHistoryService } from '@/app/entities/record-history/services/record-history.service';
 import { PrescriptionDetailPageComponent } from './prescription-detail-page.component';
 
 describe('PrescriptionDetailPageComponent — rota kimliği değişimi', () => {
@@ -59,6 +60,7 @@ describe('PrescriptionDetailPageComponent — iptal', () => {
                 { provide: PrescriptionsService, useValue: { getPrescriptionById: () => of(vm), cancelPrescription } },
                 { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
                 { provide: HbsService, useValue: { getHbsData: () => of(null), updateHbsEntry: () => of(null) } },
+                { provide: RecordHistoryService, useValue: { getHistory: () => of([]) } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]

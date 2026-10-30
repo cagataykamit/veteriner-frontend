@@ -1,4 +1,5 @@
 import type { RecordChangeDto, RecordChangeKind, RecordChangeVm, RecordFieldChangeDto, RecordFieldChangeVm } from '@/app/entities/record-history/models/record-history.model';
+import { administrationRouteFromApi, administrationRouteLabel } from '@/app/entities/administration/utils/administration-route.utils';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
 const KIND_LABELS: Record<RecordChangeKind, string> = {
@@ -74,8 +75,7 @@ const FIELD_LABELS: Record<string, string> = {
     VoidStockOutcome: 'İptal stok sonucu',
     AddedAfterFinalization: 'Kesinleştirmeden sonra eklendi',
     LateEntryReason: 'Sonradan ekleme gerekçesi',
-    // RECORD-005 (uygulama yolu/bölgesi). Yol değeri sunucu enum adıyla görünür; RECORD-005 dalı birleşince
-    // `administrationRouteLabel` ile Türkçe etikete bağlanmalı (etiket orada tek yerde).
+    // RECORD-005; yol değerinin etiketi `administrationRouteLabel`da (bkz. fieldValueText).
     Route: 'Uygulama yolu',
     Site: 'Uygulama bölgesi'
 };
@@ -135,9 +135,14 @@ export function recordValueText(value: string | null): string {
     return VALUE_LABELS[value] ?? value;
 }
 
+/** Alanına göre değer metni: uygulama yolu kendi etiketinden, diğerleri genel kuraldan. */
+function fieldValueText(field: string, value: string | null): string {
+    return (field === 'Route' && administrationRouteLabel(administrationRouteFromApi(value))) || recordValueText(value);
+}
+
 function mapField(c: RecordFieldChangeDto): RecordFieldChangeVm {
-    const oldText = recordValueText(c.oldValue);
-    let newText = recordValueText(c.newValue);
+    const oldText = fieldValueText(c.field, c.oldValue);
+    let newText = fieldValueText(c.field, c.newValue);
 
     // İki guid de "Bağlı kayıt" görünür; bağlantının değiştiği ayrıca söylenir.
     if (c.oldValue && c.newValue && GUID.test(c.oldValue) && GUID.test(c.newValue)) {

@@ -41,4 +41,18 @@ describe('record-history.mapper', () => {
             { label: 'Bağlı muayene', oldText: 'Bağlı kayıt', newText: 'Başka bir kayda bağlandı' }
         ]);
     });
+
+    it('uygulama yolunu Türkçe etiketle gösterir; bilinmeyen değer olduğu gibi kalır', () => {
+        const vm = mapRecordChangeDtoToVm({
+            id: 'c2',
+            kind: 'Updated',
+            occurredAtUtc: '2026-10-30T09:15:00Z',
+            actorUserId: 'u1',
+            actorName: 'Dr. Test',
+            changes: [{ field: 'Route', oldValue: null, newValue: 'Intramuscular' }, { field: 'Route', oldValue: 'Bilinmeyen', newValue: null }]
+        });
+
+        expect(vm.changes[0]).toEqual({ label: 'Uygulama yolu', oldText: '—', newText: expect.stringContaining('(IM)') });
+        expect(vm.changes[1]).toEqual({ label: 'Uygulama yolu', oldText: 'Bilinmeyen', newText: '—' });
+    });
 });
