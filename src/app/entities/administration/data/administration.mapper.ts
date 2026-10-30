@@ -54,7 +54,8 @@ export function mapAdministrationDtoToVm(dto: AdministrationDto): Administration
         route: administrationRouteFromApi(dto.route),
         site: trimmedOrNull(dto.site),
         productManufacturer: trimmedOrNull(dto.productManufacturer),
-        billing: administrationBillingVm(dto.billing)
+        billing: administrationBillingVm(dto.billing),
+        includedInPackage: !!trimmedOrNull(dto.packageChargeSuggestionId)
     };
 }
 

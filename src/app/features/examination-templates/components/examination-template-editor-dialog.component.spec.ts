@@ -92,9 +92,30 @@ describe('ExaminationTemplateEditorDialogComponent', () => {
         cmp.removeLine(1);
         cmp.submit();
         expect(templates.update).toHaveBeenCalledTimes(1);
-        expect(templates.update).toHaveBeenCalledWith('t1', { name: 'Otitis paketi', visitReason: 'Kulak kaşıntısı', findings: null, plan: 'Kontrol: 7 gün', lines: [{ productId: 'p1', quantity: 2 }] }, 'R1');
+        expect(templates.update).toHaveBeenCalledWith('t1', { name: 'Otitis paketi', visitReason: 'Kulak kaşıntısı', findings: null, plan: 'Kontrol: 7 gün', lines: [{ productId: 'p1', quantity: 2 }], packagePrice: null }, 'R1');
         expect(saved).toEqual([own]);
         expect(cmp.visible()).toBe(false);
+    });
+
+    it('paket fiyatı kaydedilir ve düzenlemede geri gelir; geçersiz fiyat reddedilir (EXAM-007)', async () => {
+        templates.update.mockReturnValue(of(own));
+        await open('edit', { ...own, packagePrice: 450 });
+        expect(cmp.form.controls.packagePrice.value).toBe(450);
+        cmp.form.controls.packagePrice.setValue(500.5);
+        cmp.submit();
+        expect(templates.update).toHaveBeenCalledWith('t1', expect.objectContaining({ packagePrice: 500.5 }), 'R1');
+
+        cmp.form.controls.packagePrice.setValue(-1);
+        expect(cmp.form.controls.packagePrice.invalid).toBe(true);
+    });
+
+    it('satırsız şablonda paket fiyatı gönderilmez (EXAM-007)', async () => {
+        templates.create.mockReturnValue(of(own));
+        await open('create', null);
+        cmp.form.patchValue({ name: 'Yalnız metin', plan: 'Kontrol' });
+        cmp.form.controls.packagePrice.setValue(100);
+        cmp.submit();
+        expect(templates.create).toHaveBeenCalledWith(expect.objectContaining({ packagePrice: null }));
     });
 
     it('kopyala ve düzenle içeriği yeni adla POST eder', async () => {

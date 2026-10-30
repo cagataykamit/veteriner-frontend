@@ -36,7 +36,8 @@ const row: AdministrationVm = {
     route: null,
     site: null,
     productManufacturer: null,
-    billing: null
+    billing: null,
+    includedInPackage: false
 };
 
 const page = (items: AdministrationVm[]): AdministrationsPagedVm => ({ items, page: 1, pageSize: 50, totalItems: items.length, totalPages: 1 });

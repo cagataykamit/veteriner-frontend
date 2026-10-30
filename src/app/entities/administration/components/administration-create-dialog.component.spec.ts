@@ -73,7 +73,8 @@ const result = (created: boolean): AdministrationCreateResultVm => ({
         route: null,
         site: null,
         productManufacturer: null,
-        billing: null
+        billing: null,
+        includedInPackage: false
     },
     stock: { quantityOnHand: 4.5, availableQuantity: 4.5, minimumStockLevel: 2, isBelowMinimum: false }
 });

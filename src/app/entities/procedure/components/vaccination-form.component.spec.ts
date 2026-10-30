@@ -44,7 +44,8 @@ const stockResult = (over: Partial<AdministrationCreateResultVm['stock']> = {}, 
         route: null,
         site: null,
         productManufacturer: null,
-        billing: null
+        billing: null,
+        includedInPackage: false
     },
     stock: { quantityOnHand: 9, availableQuantity: 8, minimumStockLevel: 2, isBelowMinimum: false, ...over }
 });

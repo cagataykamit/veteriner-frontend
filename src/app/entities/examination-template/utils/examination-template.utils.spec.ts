@@ -1,5 +1,5 @@
 import type { ExaminationTemplateDto } from '@/app/entities/examination-template/models/examination-template.model';
-import { templateApplySummary, templateContentSummary, templateHasText, templateInactiveLineNames } from './examination-template.utils';
+import { templateApplySummary, templateChargePreview, templateContentSummary, templateHasText, templateInactiveLineNames } from './examination-template.utils';
 
 const line = (productId: string, over: Partial<ExaminationTemplateDto['lines'][number]> = {}): ExaminationTemplateDto['lines'][number] => ({
     productId,
@@ -56,5 +56,19 @@ describe('examination-template.utils', () => {
         ).toBe('"Otitis paketi" uygulandı: metin eklendi, 1 ürün stoktan düştü, 2 hizmet yazıldı, 1 hizmet ücret bekliyor.');
         expect(templateApplySummary(withText, result() as never)).toBe('"Otitis paketi" uygulandı: metin muayenede zaten vardı.');
         expect(templateApplySummary(template(), result() as never)).toBe('"Otitis paketi" uygulandı.');
+    });
+
+    it('önizleme toplamı: paket fiyatı doluysa tahsil edilen paket fiyatı, değilse satır toplamı (EXAM-007)', () => {
+        const lines = [line('a', { quantity: 2, currentUnitPrice: 90 }), line('b', { currentUnitPrice: 200 })];
+
+        expect(templateChargePreview(template({ lines }))).toEqual({ total: 380, linesTotal: 380, isPackage: false });
+        expect(templateChargePreview(template({ lines, packagePrice: 300 }))).toEqual({ total: 300, linesTotal: 380, isPackage: true });
+    });
+
+    it('paket uygulama özeti paket ücretini söyler', () => {
+        const summary = templateApplySummary(template({ packagePrice: 300 }), result({ packageChargeSuggestionId: 's1', administrations: [{}] }) as never);
+
+        expect(summary).toContain('paket ücreti');
+        expect(summary).toContain('satırlar pakete dahil');
     });
 });

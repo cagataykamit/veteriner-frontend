@@ -78,6 +78,23 @@ describe('ExaminationTemplateApplyDialogComponent', () => {
         expect(body().querySelector('[data-testid="template-reapply-warning"]')).toBeNull();
     });
 
+    it('önizleme toplamı: kalem kalem ücrette satırların toplamı, fiyatlı pakette paket fiyatı ve "Pakete dahil" (EXAM-007)', () => {
+        const total = () => body().querySelector('[data-testid="template-preview-total"]')?.textContent?.replace(/\s+/g, ' ') ?? '';
+
+        cmp.select(otitis);
+        fixture.detectChanges();
+        expect(total()).toContain('Toplam');
+        expect(total()).toContain('240');
+
+        cmp.select({ ...otitis, packagePrice: 200 });
+        fixture.detectChanges();
+        expect(total()).toContain('Paket fiyatı');
+        expect(total()).toContain('200');
+        const lines = Array.from(body().querySelectorAll('[data-testid="template-preview-line"]')).map((l) => l.textContent ?? '');
+
+        expect(lines.every((l) => l.includes('Pakete dahil'))).toBe(true);
+    });
+
     it('muayene sürümüyle uygular; başarıda kapanır, sonuç bildirilir; aynı şablon ikinci kez seçilince uyarı çıkar', () => {
         service.apply.mockReturnValue(of(result));
         cmp.select(otitis);

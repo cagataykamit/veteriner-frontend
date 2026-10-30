@@ -54,7 +54,8 @@ export function administrationStockOutcomeLabel(outcome: AdministrationStockOutc
 
 /**
  * Satırın ücret metni (RECORD-001, `ADMINISTRATIONS_API_CONTRACT.md` §12). Kalem doğmadıysa (`None`), uygulama iptaliyle düştüyse
- * (`Cancelled`; iptal zaten satırda görünür) veya finans izni yoksa (`billing: null`) `null`.
+ * (`Cancelled`; iptal zaten satırda görünür), pakete dahilse (`IncludedInPackage`; satırdaki paket işareti gösterir) veya finans izni
+ * yoksa (`billing: null`) `null`.
  */
 export function administrationBillingVm(dto: AdministrationBillingDto | null | undefined): AdministrationBillingVm | null {
     switch (dto?.status) {

@@ -29,7 +29,8 @@ const result = (created: boolean, isBelowMinimum: boolean): AdministrationCreate
         route: null,
         site: null,
         productManufacturer: null,
-        billing: null
+        billing: null,
+        includedInPackage: false
     },
     stock: { quantityOnHand: 3, availableQuantity: 2, minimumStockLevel: 5, isBelowMinimum }
 });

@@ -32,7 +32,8 @@ const target: AdministrationVm = {
     route: null,
     site: null,
     productManufacturer: null,
-    billing: null
+    billing: null,
+    includedInPackage: false
 };
 
 describe('AdministrationVoidDialogComponent', () => {

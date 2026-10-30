@@ -40,10 +40,12 @@ export interface AdministrationDto {
     productManufacturer?: string | null;
     /** Satır ücret durumu (RECORD-001, §12); yalnız `Charges.Read` ile dolu, aksi hâlde `null`. */
     billing?: AdministrationBillingDto | null;
+    /** Fiyatlı tedavi paketine dahil uygulamada paketin ücret kalemi (EXAM-007); ücret paket kalemindedir. */
+    packageChargeSuggestionId?: string | null;
 }
 
 export interface AdministrationBillingDto {
-    /** `None` | `Pending` | `Charged` | `ChargeVoided` | `Waived` | `Cancelled`. */
+    /** `None` | `Pending` | `Charged` | `ChargeVoided` | `Waived` | `Cancelled` | `IncludedInPackage`. */
     status: string;
     suggestedUnitPrice?: number | null;
     suggestedAmount?: number | null;

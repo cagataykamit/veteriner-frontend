@@ -31,6 +31,8 @@ export interface ExaminationTemplateDto {
     isSystem: boolean;
     lines: ExaminationTemplateLineDto[];
     rowVersion: string;
+    /** Paket fiyatı (EXAM-007): doluysa uygulanınca tek ücret kalemi doğar, satırlar pakete dahildir. */
+    packagePrice?: number | null;
 }
 
 export interface ExaminationTemplatePagedResultDto {
@@ -55,6 +57,8 @@ export interface ExaminationTemplateUpsertRequest {
     findings: string | null;
     plan: string | null;
     lines: { productId: string; quantity: number }[];
+    /** Boş = kalem kalem ücretlenir; PUT tam güncellemedir (gönderilmezse kaldırılır). */
+    packagePrice: number | null;
 }
 
 /** `POST /examinations/{id}/apply-template` yanıtı; `rowVersion` muayenenin yeni sürümüdür. */
@@ -63,5 +67,7 @@ export interface ExaminationTemplateApplyResultDto {
     rowVersion: string;
     updatedFields: ('visitReason' | 'findings' | 'plan')[];
     administrations: AdministrationDto[];
-    services: { productId: string; productName: string; unit: string; quantity: number; chargeSuggestionId: string | null }[];
+    services: { productId: string; productName: string; unit: string; quantity: number; chargeSuggestionId: string | null; includedInPackage?: boolean }[];
+    /** Fiyatlı paketin tek "ücret bekliyor" kalemi; fiyatsız şablonda `null`. */
+    packageChargeSuggestionId?: string | null;
 }

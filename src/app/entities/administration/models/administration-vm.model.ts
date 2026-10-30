@@ -36,6 +36,8 @@ export interface AdministrationVm {
     productManufacturer: string | null;
     /** Ücret satırı metni (RECORD-001); finans izni yoksa veya kalem doğmadıysa `null`. */
     billing: AdministrationBillingVm | null;
+    /** Fiyatlı tedavi paketine dahil (EXAM-007): kendi ücret kalemi yok, ücret paket kalemindedir. */
+    includedInPackage: boolean;
 }
 
 export interface AdministrationBillingVm {
