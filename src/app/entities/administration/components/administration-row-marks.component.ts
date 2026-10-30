@@ -4,7 +4,7 @@ import type { AdministrationVm } from '@/app/entities/administration/models/admi
 import { ADMINISTRATION_LATE_ENTRY_LABEL, administrationBatchText, administrationStockOutcomeLabel } from '@/app/entities/administration/utils/administration-labels';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
-/** Uygulama satırının işaretleri: düşülen parti (seri no, SKT), "Kesinleştirmeden sonra eklendi" (+ gerekçe) ve iptal (+ stok sonucu, gerekçe). */
+/** Uygulama satırının işaretleri: düşülen parti (seri no, SKT), ücret durumu (RECORD-001), "Kesinleştirmeden sonra eklendi" (+ gerekçe) ve iptal (+ stok sonucu, gerekçe). */
 @Component({
     selector: 'app-administration-row-marks',
     standalone: true,
@@ -13,6 +13,9 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
     template: `
         @if (batchText(); as text) {
             <div class="text-xs text-muted-color" data-testid="batch-info">{{ text }}</div>
+        }
+        @if (row().billing; as billing) {
+            <div class="text-xs" [class.text-muted-color]="!billing.pending" [class.text-amber-700]="billing.pending" data-testid="billing-info">{{ billing.text }}</div>
         }
         @if (row().vaccinationId) {
             <div class="text-xs" data-testid="vaccination-link">

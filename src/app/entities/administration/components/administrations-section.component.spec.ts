@@ -32,7 +32,8 @@ const row: AdministrationVm = {
     batchId: null,
     lotNumber: null,
     expiryDate: null,
-    vaccinationId: null
+    vaccinationId: null,
+    billing: null
 };
 
 const page = (items: AdministrationVm[]): AdministrationsPagedVm => ({ items, page: 1, pageSize: 50, totalItems: items.length, totalPages: 1 });

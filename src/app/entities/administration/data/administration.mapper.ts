@@ -13,6 +13,7 @@ import type {
     AdministrationVm,
     CreateAdministrationRequest
 } from '@/app/entities/administration/models/administration-vm.model';
+import { administrationBillingVm } from '@/app/entities/administration/utils/administration-labels';
 import { toYmdOrNull } from '@/app/entities/inventory/utils/stock-batch-expiry.utils';
 
 function trimmedOrNull(v: string | null | undefined): string | null {
@@ -48,7 +49,8 @@ export function mapAdministrationDtoToVm(dto: AdministrationDto): Administration
         batchId: trimmedOrNull(dto.batchId),
         lotNumber: trimmedOrNull(dto.lotNumber),
         expiryDate: toYmdOrNull(dto.expiryDate),
-        vaccinationId: trimmedOrNull(dto.vaccinationId)
+        vaccinationId: trimmedOrNull(dto.vaccinationId),
+        billing: administrationBillingVm(dto.billing)
     };
 }
 

@@ -33,6 +33,18 @@ export interface AdministrationDto {
     expiryDate?: string | null;
     /** Uygulama bir aşı kaydıyla birlikte yazıldıysa o aşı kaydı (`ADMINISTRATIONS_API_CONTRACT.md` §9). */
     vaccinationId?: string | null;
+    /** Satır ücret durumu (RECORD-001, §12); yalnız `Charges.Read` ile dolu, aksi hâlde `null`. */
+    billing?: AdministrationBillingDto | null;
+}
+
+export interface AdministrationBillingDto {
+    /** `None` | `Pending` | `Charged` | `ChargeVoided` | `Waived` | `Cancelled`. */
+    status: string;
+    suggestedUnitPrice?: number | null;
+    suggestedAmount?: number | null;
+    chargeId?: string | null;
+    chargeAmount?: number | null;
+    waiveReason?: string | null;
 }
 
 /** Yalnız oluşturma yanıtında; düşümden sonraki stok. */

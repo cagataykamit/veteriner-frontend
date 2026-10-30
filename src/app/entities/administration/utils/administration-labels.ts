@@ -1,5 +1,7 @@
-import type { AdministrationCreateResultVm, AdministrationStockOutcome, AdministrationVm } from '@/app/entities/administration/models/administration-vm.model';
+import type { AdministrationBillingDto } from '@/app/entities/administration/models/administration-api.model';
+import type { AdministrationBillingVm, AdministrationCreateResultVm, AdministrationStockOutcome, AdministrationVm } from '@/app/entities/administration/models/administration-vm.model';
 import { formatDateDisplay } from '@/app/shared/utils/date.utils';
+import { formatMoney } from '@/app/shared/utils/money.utils';
 
 /** Satır, muayene özeti ve timeline'da aynı rozet metni (ADR-013). */
 export const ADMINISTRATION_LATE_ENTRY_LABEL = 'Kesinleştirmeden sonra eklendi';
@@ -44,4 +46,23 @@ export function administrationSavedNotice(result: AdministrationCreateResultVm, 
 
 export function administrationStockOutcomeLabel(outcome: AdministrationStockOutcome): string {
     return STOCK_OUTCOME_LABELS[outcome];
+}
+
+/**
+ * Satırın ücret metni (RECORD-001, `ADMINISTRATIONS_API_CONTRACT.md` §12). Kalem doğmadıysa (`None`), uygulama iptaliyle düştüyse
+ * (`Cancelled`; iptal zaten satırda görünür) veya finans izni yoksa (`billing: null`) `null`.
+ */
+export function administrationBillingVm(dto: AdministrationBillingDto | null | undefined): AdministrationBillingVm | null {
+    switch (dto?.status) {
+        case 'Pending':
+            return { text: dto.suggestedAmount != null ? `Ücret bekliyor: ${formatMoney(dto.suggestedAmount)}` : 'Ücret bekliyor', pending: true };
+        case 'Charged':
+            return { text: `Ücret kesildi: ${formatMoney(dto.chargeAmount)}`, pending: false };
+        case 'ChargeVoided':
+            return { text: `Ücret kaydı iptal edildi (${formatMoney(dto.chargeAmount)})`, pending: false };
+        case 'Waived':
+            return { text: dto.waiveReason ? `Ücretsiz sayıldı: ${dto.waiveReason}` : 'Ücretsiz sayıldı', pending: false };
+        default:
+            return null;
+    }
 }

@@ -29,6 +29,14 @@ export interface AdministrationVm {
     expiryDate: string | null;
     /** Bağlı aşı kaydı; iptali aşı kaydını da iptal eder. */
     vaccinationId: string | null;
+    /** Ücret satırı metni (RECORD-001); finans izni yoksa veya kalem doğmadıysa `null`. */
+    billing: AdministrationBillingVm | null;
+}
+
+export interface AdministrationBillingVm {
+    text: string;
+    /** Ücret bekliyor: kesilmemiş; uyarı rengi. */
+    pending: boolean;
 }
 
 export interface AdministrationStockVm {
