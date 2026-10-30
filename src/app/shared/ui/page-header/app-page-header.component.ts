@@ -23,7 +23,7 @@ import { categoryForUrl, listLabelForUrl, MENU_GROUPS } from '@/app/core/routing
                 >
             }
             <div class="flex flex-wrap gap-4 items-center justify-between">
-                <div>
+                <div class="min-w-0 break-words">
                     <div class="text-surface-900 dark:text-surface-0 text-xl font-medium">{{ title() }}</div>
                     @if (description()) {
                         <p class="text-muted-color mt-2 mb-0">{{ description() }}</p>

@@ -147,7 +147,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
                         <div class="border border-surface-200 dark:border-surface-700 rounded-lg p-4 mb-4" data-testid="sp-redemption">
                             <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3">
                                 <span class="font-medium">{{ r.tenantName || r.tenantId }}</span>
-                                <span class="text-sm text-muted-color">Kod {{ r.code }} · %{{ percent(r.discountPercent) }} indirim · %{{ percent(r.commissionPercent) }} komisyon</span>
+                                <span class="text-sm text-muted-color min-w-0 break-words">Kod {{ r.code }} · %{{ percent(r.discountPercent) }} indirim · %{{ percent(r.commissionPercent) }} komisyon</span>
                                 <span class="text-sm text-muted-color">Kullanım: {{ date(r.redeemedAtUtc) }}</span>
                                 @if (r.windowEndsAtUtc) {
                                     <span class="text-sm text-muted-color">Pencere: {{ date(r.windowStartsAtUtc) }} – {{ date(r.windowEndsAtUtc) }}</span>
