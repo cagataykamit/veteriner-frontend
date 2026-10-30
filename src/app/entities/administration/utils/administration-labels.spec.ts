@@ -25,7 +25,8 @@ const result = (created: boolean, isBelowMinimum: boolean): AdministrationCreate
         batchId: null,
         lotNumber: null,
         expiryDate: null,
-        vaccinationId: null
+        vaccinationId: null,
+        includedInPackage: false
     },
     stock: { quantityOnHand: 3, availableQuantity: 2, minimumStockLevel: 5, isBelowMinimum }
 });

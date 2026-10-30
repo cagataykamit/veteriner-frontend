@@ -3,7 +3,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import type { ExaminationTemplateApplyResultDto, ExaminationTemplateDto, ExaminationTemplateLineDto } from '@/app/entities/examination-template/models/examination-template.model';
 import { EXAMINATION_CONCURRENCY_CONFLICT_CODE, EXAMINATION_FINALIZED_CODE, ExaminationTemplateError, ExaminationTemplatesService } from '@/app/entities/examination-template/services/examination-templates.service';
-import { templateContentSummary, templateInactiveLineNames } from '@/app/entities/examination-template/utils/examination-template.utils';
+import { templateChargePreview, templateContentSummary, templateInactiveLineNames, templateLineAmount } from '@/app/entities/examination-template/utils/examination-template.utils';
 import { isStockTrackedKind } from '@/app/entities/inventory/utils/product-classification.utils';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
@@ -68,7 +68,17 @@ const TEXT_PREVIEW: readonly { field: 'visitReason' | 'findings' | 'plan'; label
                                 </li>
                             }
                         </ul>
-                        <p class="text-xs text-muted-color mt-0 mb-3">Fiyatlar ürün kartının bugünkü fiyatıdır; ücret bekleyen kalem olarak eklenir.</p>
+                        @if (chargePreview(); as p) {
+                            <div class="flex flex-wrap items-baseline justify-between gap-2 mb-1" data-testid="template-preview-total">
+                                <span class="text-sm font-medium">{{ p.isPackage ? 'Paket fiyatı' : 'Toplam' }}</span>
+                                <span class="font-semibold tabular-nums">{{ money(p.total) }}</span>
+                            </div>
+                            @if (p.isPackage) {
+                                <p class="text-xs text-muted-color mt-0 mb-3">Tek ücret bekleyen kalem olarak eklenir; satırlar pakete dahildir (stoklu ürünler stoktan düşer, ayrı ücretlenmez). Satırların bugünkü fiyat toplamı: {{ money(p.linesTotal) }}.</p>
+                            } @else {
+                                <p class="text-xs text-muted-color mt-0 mb-3">Fiyatlar ürün kartının bugünkü fiyatıdır; her fiyatlı satır ayrı ücret bekleyen kalem olarak eklenir.</p>
+                            }
+                        }
                     }
 
                     @if (inactiveLineNames().length > 0) {
@@ -217,8 +227,21 @@ export class ExaminationTemplateApplyDialogComponent {
     }
 
     lineTotal(line: ExaminationTemplateLineDto): string {
-        return line.currentUnitPrice > 0 ? formatMoney(line.currentUnitPrice * line.quantity, line.currency || 'TRY') : 'Bedelsiz';
+        if (this.selected()?.packagePrice != null) {
+            return 'Pakete dahil';
+        }
+
+        return line.currentUnitPrice > 0 ? formatMoney(templateLineAmount(line), line.currency || 'TRY') : 'Bedelsiz';
     }
+
+    /** Önizleme toplamı (EXAM-007): paket fiyatı veya satırların toplamı. */
+    readonly chargePreview = computed(() => {
+        const t = this.selected();
+
+        return t ? templateChargePreview(t) : null;
+    });
+
+    readonly money = (amount: number) => formatMoney(amount);
 
     onSubmit(): void {
         const template = this.selected();

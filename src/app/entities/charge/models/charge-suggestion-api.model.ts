@@ -17,7 +17,8 @@ export interface ChargeSuggestionDto {
     petName: string;
     examinationId?: string | null;
     visitId?: string | null;
-    productId: string;
+    /** Paket kaleminde (`sourceType = ExaminationPackage`, EXAM-007) `null`. */
+    productId: string | null;
     /** Ürün/hizmet adı. */
     description: string;
     quantity: number;

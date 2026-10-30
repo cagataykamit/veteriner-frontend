@@ -29,6 +29,8 @@ export interface AdministrationVm {
     expiryDate: string | null;
     /** Bağlı aşı kaydı; iptali aşı kaydını da iptal eder. */
     vaccinationId: string | null;
+    /** Fiyatlı tedavi paketine dahil (EXAM-007): kendi ücret kalemi yok, ücret paket kalemindedir. */
+    includedInPackage: boolean;
 }
 
 export interface AdministrationStockVm {

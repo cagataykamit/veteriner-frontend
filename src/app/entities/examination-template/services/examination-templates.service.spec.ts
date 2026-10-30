@@ -39,7 +39,7 @@ describe('ExaminationTemplatesService', () => {
     });
 
     it('ekle POST, düzenle PUT + rowVersion, aktiflik ayrı uçlar', () => {
-        const body = { name: 'Otitis paketi', visitReason: 'Kulak kaşıntısı', findings: null, plan: null, lines: [{ productId: 'p1', quantity: 1 }] };
+        const body = { name: 'Otitis paketi', visitReason: 'Kulak kaşıntısı', findings: null, plan: null, lines: [{ productId: 'p1', quantity: 1 }], packagePrice: 450 };
 
         service.create(body).subscribe();
         const post = http.expectOne(BASE);
@@ -88,7 +88,7 @@ describe('ExaminationTemplatesService', () => {
 
         let vaccine: ExaminationTemplateError | undefined;
 
-        service.create({ name: 'X', visitReason: null, findings: null, plan: null, lines: [] }).subscribe({
+        service.create({ name: 'X', visitReason: null, findings: null, plan: null, lines: [], packagePrice: null }).subscribe({
             error: (e: ExaminationTemplateError) => (vaccine = e)
         });
         http.expectOne(BASE).flush({ status: 400, extensions: { code: 'ExaminationTemplates.VaccineNotAllowed', productId: 'v1' } }, { status: 400, statusText: 'Bad Request' });

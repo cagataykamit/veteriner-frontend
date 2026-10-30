@@ -48,7 +48,8 @@ export function mapAdministrationDtoToVm(dto: AdministrationDto): Administration
         batchId: trimmedOrNull(dto.batchId),
         lotNumber: trimmedOrNull(dto.lotNumber),
         expiryDate: toYmdOrNull(dto.expiryDate),
-        vaccinationId: trimmedOrNull(dto.vaccinationId)
+        vaccinationId: trimmedOrNull(dto.vaccinationId),
+        includedInPackage: !!trimmedOrNull(dto.packageChargeSuggestionId)
     };
 }
 

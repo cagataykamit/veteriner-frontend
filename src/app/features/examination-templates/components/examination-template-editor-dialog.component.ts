@@ -9,7 +9,7 @@ import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PRODUCTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/entities/charge/utils/charge-amount.utils';
+import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, CHARGE_UNIT_PRICE_MAX, CHARGE_UNIT_PRICE_MAX_DECIMALS, chargeNumberValidator } from '@/app/entities/charge/utils/charge-amount.utils';
 import {
     EXAMINATION_TEMPLATE_LINES_MAX,
     EXAMINATION_TEMPLATE_NAME_MAX,
@@ -152,6 +152,17 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
                         <small class="text-red-500 block" role="alert">Aynı ürün bir kez yer alır; miktarı artırın.</small>
                     }
                 </div>
+                @if (lines.length > 0) {
+                    <div class="flex flex-col gap-1" data-testid="template-package-price">
+                        <label for="tplPackagePrice" class="block text-sm font-medium text-muted-color">Paket fiyatı (TL)</label>
+                        <input id="tplPackagePrice" type="number" step="0.01" min="0" class="w-full md:w-60 p-inputtext p-component" [formControl]="form.controls.packagePrice" placeholder="Boş: kalem kalem" />
+                        @if (form.controls.packagePrice.invalid) {
+                            <small class="text-red-500">0'dan büyük, en fazla {{ priceDecimals }} ondalıklı, en çok {{ priceMax }}.</small>
+                        } @else {
+                            <small class="text-muted-color">Doluysa paket uygulanınca tek ücret bekleyen kalem bu fiyatla eklenir; satırlar pakete dahildir (stoklu ürün stoktan düşer, ayrıca ücretlenmez). Boşsa her fiyatlı satır ayrı ücretlenir.</small>
+                        }
+                    </div>
+                }
                 @if (form.hasError('contentRequired') && form.touched) {
                     <small class="text-red-500" role="alert">Şikâyet, bulgu, plan veya en az bir satır girin.</small>
                 }
@@ -185,6 +196,8 @@ export class ExaminationTemplateEditorDialogComponent {
     protected readonly linesMax = EXAMINATION_TEMPLATE_LINES_MAX;
     protected readonly quantityMax = CHARGE_QUANTITY_MAX;
     protected readonly quantityDecimals = CHARGE_QUANTITY_MAX_DECIMALS;
+    protected readonly priceMax = CHARGE_UNIT_PRICE_MAX;
+    protected readonly priceDecimals = CHARGE_UNIT_PRICE_MAX_DECIMALS;
 
     readonly canPickProduct = this.auth.hasOperationClaim(PRODUCTS_READ_CLAIM);
     readonly header = computed(() => MODE_HEADER[this.mode()]);
@@ -203,6 +216,7 @@ export class ExaminationTemplateEditorDialogComponent {
             visitReason: ['', Validators.maxLength(EXAMINATION_TEMPLATE_VISIT_REASON_MAX)],
             findings: ['', Validators.maxLength(EXAMINATION_TEMPLATE_TEXT_MAX)],
             plan: ['', Validators.maxLength(EXAMINATION_TEMPLATE_TEXT_MAX)],
+            packagePrice: this.fb.control<number | null>(null, chargeNumberValidator(CHARGE_UNIT_PRICE_MAX, CHARGE_UNIT_PRICE_MAX_DECIMALS)),
             lines: this.fb.array<LineGroup>([])
         },
         { validators: templateContentValidator }
@@ -325,7 +339,9 @@ export class ExaminationTemplateEditorDialogComponent {
             visitReason: text(v.visitReason),
             findings: text(v.findings),
             plan: text(v.plan),
-            lines: v.lines.map((l) => ({ productId: l.productId, quantity: Number(l.quantity) }))
+            lines: v.lines.map((l) => ({ productId: l.productId, quantity: Number(l.quantity) })),
+            // Satırsız şablonda paket fiyatı olmaz (sunucu da reddeder).
+            packagePrice: v.lines.length > 0 && v.packagePrice != null ? Number(v.packagePrice) : null
         };
     }
 
@@ -346,6 +362,7 @@ export class ExaminationTemplateEditorDialogComponent {
             visitReason: source?.visitReason ?? '',
             findings: source?.findings ?? '',
             plan: source?.plan ?? '',
+            packagePrice: source?.packagePrice ?? null,
             lines: (source?.lines ?? []).map((l) => ({ productId: l.productId, quantity: l.quantity }))
         });
         this.loadProducts();

@@ -1,7 +1,9 @@
 import type {
     ExaminationTemplateApplyResultDto,
-    ExaminationTemplateDto
+    ExaminationTemplateDto,
+    ExaminationTemplateLineDto
 } from '@/app/entities/examination-template/models/examination-template.model';
+import { formatMoney } from '@/app/shared/utils/money.utils';
 
 /** Şablonda muayeneye eklenecek metin var mı (şikâyet, bulgu, plan). */
 export function templateHasText(t: Pick<ExaminationTemplateDto, 'visitReason' | 'findings' | 'plan'>): boolean {
@@ -21,13 +23,30 @@ export function templateContentSummary(t: ExaminationTemplateDto): string {
 /** Uygulama sonucunun tek cümlelik özeti (sayfa bildirimi). */
 export function templateApplySummary(template: ExaminationTemplateDto, result: ExaminationTemplateApplyResultDto): string {
     const charged = result.services.filter((s) => !!s.chargeSuggestionId).length;
+    const packagePart = result.packageChargeSuggestionId ? `paket ücreti (${formatMoney(template.packagePrice ?? 0)}) ücret bekliyor, satırlar pakete dahil` : '';
     const textPart = !templateHasText(template) ? '' : result.updatedFields.length > 0 ? 'metin eklendi' : 'metin muayenede zaten vardı';
     const parts = [
         textPart,
         result.administrations.length > 0 ? `${result.administrations.length} ürün stoktan düştü` : '',
         result.services.length > 0 ? `${result.services.length} hizmet yazıldı` : '',
-        charged > 0 ? `${charged} hizmet ücret bekliyor` : ''
+        charged > 0 ? `${charged} hizmet ücret bekliyor` : '',
+        packagePart
     ].filter(Boolean);
 
     return parts.length > 0 ? `"${template.name}" uygulandı: ${parts.join(', ')}.` : `"${template.name}" uygulandı.`;
+}
+
+/** Satırın bugünkü katalog tutarı (fiyat × miktar). */
+export function templateLineAmount(line: ExaminationTemplateLineDto): number {
+    return line.currentUnitPrice * line.quantity;
+}
+
+/**
+ * Uygulama önizlemesinin toplamı (EXAM-007): paket fiyatı doluysa tahsil edilecek tutar paket fiyatıdır, satır toplamı bilgi olarak
+ * gösterilir; değilse satırlar kalem kalem ücretlenir ve toplam satırların toplamıdır.
+ */
+export function templateChargePreview(t: ExaminationTemplateDto): { total: number; linesTotal: number; isPackage: boolean } {
+    const linesTotal = t.lines.reduce((sum, l) => sum + templateLineAmount(l), 0);
+
+    return t.packagePrice != null ? { total: t.packagePrice, linesTotal, isPackage: true } : { total: linesTotal, linesTotal, isPackage: false };
 }

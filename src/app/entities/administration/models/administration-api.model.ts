@@ -33,6 +33,8 @@ export interface AdministrationDto {
     expiryDate?: string | null;
     /** Uygulama bir aşı kaydıyla birlikte yazıldıysa o aşı kaydı (`ADMINISTRATIONS_API_CONTRACT.md` §9). */
     vaccinationId?: string | null;
+    /** Fiyatlı tedavi paketine dahil uygulamada paketin ücret kalemi (EXAM-007); ücret paket kalemindedir. */
+    packageChargeSuggestionId?: string | null;
 }
 
 /** Yalnız oluşturma yanıtında; düşümden sonraki stok. */

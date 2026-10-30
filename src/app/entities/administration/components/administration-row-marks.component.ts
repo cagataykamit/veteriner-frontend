@@ -14,6 +14,9 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         @if (batchText(); as text) {
             <div class="text-xs text-muted-color" data-testid="batch-info">{{ text }}</div>
         }
+        @if (row().includedInPackage) {
+            <div class="text-xs text-muted-color" data-testid="included-in-package">Pakete dahil · ücreti paket kalemindedir</div>
+        }
         @if (row().vaccinationId) {
             <div class="text-xs" data-testid="vaccination-link">
                 <span class="text-muted-color">Aşı kaydına bağlı · </span>
