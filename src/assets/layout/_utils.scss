@@ -18,6 +18,18 @@
     }
 }
 
+/* PrimeNG tablo hücreleri katmansız `text-align: start` taşır ve hücredeki `text-right`/`text-center` sınıfını ezer;
+   tutar sütunları sola yaslanıyordu. Hizalama sınıfı burada daha özgül seçiciyle geri verilir. */
+.p-datatable :is(th, td) {
+    &.text-right {
+        text-align: right;
+    }
+
+    &.text-center {
+        text-align: center;
+    }
+}
+
 .p-toast {
     &.p-toast-top-right,
     &.p-toast-top-left,
