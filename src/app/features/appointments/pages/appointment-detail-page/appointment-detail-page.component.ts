@@ -86,12 +86,13 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                         }
                     }
                 </div>
-                @if (isCancelledForExam(appt()!.status) || isNoShow(appt()!.status)) {
-                    <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mt-2" role="status">
-                        {{ isNoShow(appt()!.status) ? copy.noShowAppointmentExamCreateBlocked : copy.cancelledAppointmentExamCreateBlocked }}
-                    </p>
-                }
             </app-page-header>
+            <!-- Başlık yalnız [actions] içeriğini yansıtır; uyarı başlığın altında durur. -->
+            @if (isCancelledForExam(appt()!.status) || isNoShow(appt()!.status)) {
+                <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">
+                    {{ isNoShow(appt()!.status) ? copy.noShowAppointmentExamCreateBlocked : copy.cancelledAppointmentExamCreateBlocked }}
+                </p>
+            }
             @if (startExamError(); as startError) {
                 <p class="text-red-500 text-sm mt-0 mb-4" role="alert">{{ startError }}</p>
             }

@@ -35,6 +35,7 @@ const APPT: AppointmentDetailVm = {
 describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () => {
     let claims: Set<string>;
     let createVisit: Mock;
+    let appt: AppointmentDetailVm;
 
     const create = (query: Record<string, string> = {}) => {
         TestBed.configureTestingModule({
@@ -44,7 +45,7 @@ describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () =>
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'a1' })), snapshot: { queryParamMap: convertToParamMap(query) } } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
-                { provide: AppointmentsService, useValue: { getAppointmentById: () => of(APPT) } },
+                { provide: AppointmentsService, useValue: { getAppointmentById: () => of(appt) } },
                 { provide: DetailRelatedSummariesService, useValue: { loadExaminationsLinkedToAppointment: () => of([]) } },
                 { provide: VisitsService, useValue: { getCurrentVeterinarianUserId: () => of('vet1'), createVisit } }
             ]
@@ -59,6 +60,7 @@ describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () =>
     const examButton = (el: HTMLElement) => Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Muayene Oluştur'));
 
     beforeEach(() => {
+        appt = APPT;
         claims = new Set(['Examinations.Create', 'Visits.Create']);
         createVisit = vi
             .fn()
@@ -102,6 +104,15 @@ describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () =>
 
         expect(link.getAttribute('href')).toContain('appointmentId=a1');
         expect(createVisit).not.toHaveBeenCalled();
+    });
+
+    it('iptal edilmiş randevuda muayene engeli uyarısı görünür ve düğme kapalıdır', () => {
+        appt = { ...APPT, status: 2 };
+        const fixture = create();
+        const warning = fixture.nativeElement.querySelector('[role="status"]') as HTMLElement | null;
+
+        expect(warning?.textContent?.trim()).toBeTruthy();
+        expect(examButton(fixture.nativeElement)!.disabled).toBe(true);
     });
 
     it('kategori bağlantısı varsayılan olarak randevu listesine gider', () => {
