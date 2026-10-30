@@ -5,6 +5,12 @@ import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
+/** Sarılan satır (hasta kartı). */
+const INLINE_CLASS = 'm-0 mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex flex-wrap gap-x-8 gap-y-2';
+/** Gösterge şeridi (müşteri kartı): eşit sütunlar, geniş ekranda ayırıcı çizgi, değer bir boy büyük. */
+const GRID_CLASS =
+    'm-0 mt-4 pt-4 border-t border-surface-200 dark:border-surface-700 grid grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-3 [&>div]:min-w-0 [&_dd]:text-base lg:[&>div+div]:pl-5 lg:[&>div+div]:border-l lg:[&>div+div]:border-surface-200 lg:dark:[&>div+div]:border-surface-700';
+
 /**
  * Hasta ve müşteri kartı başlığındaki hesap durumu satırı (ADR-020 karar 2a, 6): açık borç, [kart özgü alanlar], sonraki randevu.
  * Kart özgü alanlar (son geliş, ücret bekleyen vb.) `<div>` + `dt`/`dd` olarak içerik yansıtmasıyla araya girer.
@@ -15,7 +21,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     imports: [RouterLink, TrDateTimePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <dl class="m-0 mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex flex-wrap gap-x-8 gap-y-2" aria-label="Hesap durumu">
+        <dl [class]="variant() === 'grid' ? gridClass : inlineClass" aria-label="Hesap durumu">
             @if (balance(); as b) {
                 <div data-testid="account-balance">
                     <dt class="text-muted-color text-sm">Açık borç</dt>
@@ -72,6 +78,11 @@ export class CardAccountStatusComponent {
     readonly balance = input<PetCardSection<Pick<ClientBalanceVm, 'outstandingAmount' | 'currency'>>>(null);
     /** `null` = randevu okuma yetkisi yok (alan gösterilmez); `ok` + `null` veri = planlı randevu yok. Hayvan adı müşteri kartında verilir. */
     readonly nextAppointment = input<PetCardSection<{ id: string; scheduledAtUtc: string | null; petName?: string } | null>>(null);
+    /** `inline`: sarılan satır (hasta kartı); `grid`: gösterge şeridi (müşteri kartı). */
+    readonly variant = input<'inline' | 'grid'>('inline');
+
+    protected readonly inlineClass = INLINE_CLASS;
+    protected readonly gridClass = GRID_CLASS;
 
     readonly outstanding = computed(() => {
         const b = this.balance();
