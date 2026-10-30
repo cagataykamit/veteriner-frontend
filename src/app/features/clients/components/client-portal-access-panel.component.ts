@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -7,7 +7,7 @@ import type { Observable } from 'rxjs';
 import type { ClientPortalAccessDto } from '@/app/entities/client/models/client-portal-access-api.model';
 import type { ClientDetailVm } from '@/app/entities/client/models/client-vm.model';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
-import { clientPortalClosedLabels, clientPortalLastInviteNote, clientPortalState } from '@/app/features/clients/utils/client-portal-access.utils';
+import { clientPortalChipLabel, clientPortalClosedLabels, clientPortalLastInviteNote, clientPortalState } from '@/app/features/clients/utils/client-portal-access.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -120,6 +120,8 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 })
 export class ClientPortalAccessPanelComponent {
     readonly client = input.required<ClientDetailVm>();
+    /** Kimlik kartı rozeti için kısa durum etiketi; durum okunamadıysa `null`. */
+    readonly chipLabelChange = output<string | null>();
 
     private readonly clientsService = inject(ClientsService);
     private readonly confirmation = inject(ConfirmationService);
@@ -186,6 +188,11 @@ export class ClientPortalAccessPanelComponent {
         effect(() => {
             this.reloadKey();
             untracked(() => this.load());
+        });
+        effect(() => {
+            const s = this.state();
+
+            this.chipLabelChange.emit(s ? clientPortalChipLabel(s.kind) : null);
         });
     }
 

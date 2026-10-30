@@ -83,24 +83,11 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
         } @else if (client(); as c) {
             <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" />
 
-            <app-client-card-header [client]="c" [balance]="balance()" [pendingCharges]="pendingCharges()" [lastExamination]="lastExamination()" [nextAppointment]="nextAppointment()">
+            <app-client-card-header [client]="c" [balance]="balance()" [pendingCharges]="pendingCharges()" [lastExamination]="lastExamination()" [nextAppointment]="nextAppointment()" [portalChip]="portalChip()">
                 @if (canUpdateClient && !ro.mutationBlocked()) {
                     <a editAction [routerLink]="['/panel/clients', c.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                 } @else if (canUpdateClient && ro.mutationBlocked()) {
                     <button editAction pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
-                }
-                @if (canUpdateClient) {
-                    <button
-                        kvkkAction
-                        pButton
-                        type="button"
-                       
-                       
-                        class="p-button-text p-button-sm"
-                        [disabled]="ro.mutationBlocked()"
-                        data-testid="kvkk-mark-action"
-                        (click)="kvkkDialogOpen.set(true)"
-                    ><i [class]="ro.mutationBlocked() ? 'pi pi-lock' : 'pi pi-pencil'"></i>{{ ro.mutationBlocked() ? 'Rıza durumunu işaretle (salt okunur)' : 'Rıza durumunu işaretle' }}</button>
                 }
             </app-client-card-header>
             @if (canUpdateClient && !ro.mutationBlocked()) {
@@ -233,20 +220,24 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
                                 } @else {
                                     <ul class="list-none m-0 p-0">
                                         @for (row of paymentRecentView().displayed; track row.id) {
-                                            <li class="flex gap-3 items-start py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0 text-sm">
-                                                <div class="min-w-0 flex-1">
-                                                    <div class="text-surface-900 dark:text-surface-0 font-medium break-words">{{ row.petName?.trim() || '—' }}</div>
-                                                    <div class="text-muted-color text-xs leading-snug break-words">
-                                                        {{ row.paidAtUtc | trDateTime }} · {{ payMethodLabel(row.method) }}
-                                                        @if (row.clinicName?.trim()) {
-                                                            <span> · {{ row.clinicName }}</span>
-                                                        }
-                                                    </div>
+                                            <!-- Tutar ödeme detayına bağlantıdır. -->
+                                            <li class="flex gap-3 items-baseline justify-between py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0 text-sm">
+                                                <div class="min-w-0 break-words">
+                                                    <span class="text-muted-color">{{ row.paidAtUtc | trDateTime }}</span>
+                                                    @if (row.petName?.trim()) {
+                                                        <span> · {{ row.petName }}</span>
+                                                    }
+                                                    <span> · {{ payMethodLabel(row.method) }}</span>
+                                                    @if (row.clinicName?.trim()) {
+                                                        <span class="text-muted-color"> · {{ row.clinicName }}</span>
+                                                    }
                                                 </div>
-                                                <div class="text-right shrink-0">
-                                                    <div class="font-semibold tabular-nums text-surface-900 dark:text-surface-0">{{ money(row.amount, row.currency) }}</div>
-                                                    <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-xs whitespace-nowrap">Detay →</a>
-                                                </div>
+                                                <a
+                                                    [routerLink]="['/panel/payments', row.id]"
+                                                    class="shrink-0 font-semibold tabular-nums no-underline text-surface-900 dark:text-surface-0 hover:text-primary"
+                                                    [attr.aria-label]="'Ödeme detayı: ' + money(row.amount, row.currency)"
+                                                    >{{ money(row.amount, row.currency) }}</a
+                                                >
                                             </li>
                                         }
                                     </ul>
@@ -256,15 +247,26 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
                     </div>
 
                     @if (canManagePortal) {
-                        <app-client-portal-access-panel [client]="c" />
+                        <app-client-portal-access-panel [client]="c" (chipLabelChange)="portalChip.set($event)" />
                     }
 
                     <div class="card mb-0 min-w-0" aria-labelledby="client-documents-title" data-testid="client-documents">
-                        <h5 id="client-documents-title" class="mt-0 mb-2">Belgeler</h5>
+                        <h5 id="client-documents-title" class="mt-0 mb-2">Belgeler ve rıza</h5>
                         <ul class="list-none m-0 p-0 flex flex-col">
                             <li><a [routerLink]="['/panel/clients', c.id, 'kvkk-form']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline" data-testid="kvkk-print-action"><i class="pi pi-print text-sm" aria-hidden="true"></i>KVKK formu yazdır</a></li>
                             <li><a [routerLink]="['/panel/clients', c.id, 'kvkk-disclosure']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline" data-testid="kvkk-disclosure-print-action"><i class="pi pi-print text-sm" aria-hidden="true"></i>Aydınlatma metni yazdır</a></li>
                             <li><a [routerLink]="['/panel/clients', c.id, 'data-export']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline" data-testid="client-data-export-action"><i class="pi pi-file-export text-sm" aria-hidden="true"></i>Veri kopyası</a></li>
+                            @if (canUpdateClient) {
+                                <li>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center gap-2 py-1.5 p-0 border-0 bg-transparent text-primary font-medium cursor-pointer disabled:text-muted-color disabled:cursor-not-allowed"
+                                        [disabled]="ro.mutationBlocked()"
+                                        data-testid="kvkk-mark-action"
+                                        (click)="kvkkDialogOpen.set(true)"
+                                    ><i class="text-sm" [class]="ro.mutationBlocked() ? 'pi pi-lock' : 'pi pi-pencil'" aria-hidden="true"></i>{{ ro.mutationBlocked() ? 'Rıza durumunu işaretle (salt okunur)' : 'Rıza durumunu işaretle' }}</button>
+                                </li>
+                            }
                         </ul>
                     </div>
                 </div>
@@ -299,6 +301,8 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     /** Yeni oluşturma sonrası kısa onay (query `saved=1`). */
     readonly showSavedBanner = signal(false);
     readonly kvkkDialogOpen = signal(false);
+    /** Kimlik kartı portal rozeti; etiketi "Portal erişimi" paneli verir (yetki yoksa panel çizilmez, rozet de yok). */
+    readonly portalChip = signal<string | null>(null);
 
     readonly pets = signal<PetCardSection<PetListItemVm[]>>(null);
     readonly balance = signal<PetCardSection<ClientBalanceVm>>(null);

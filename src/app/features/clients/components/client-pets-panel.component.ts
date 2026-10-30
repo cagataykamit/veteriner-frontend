@@ -80,6 +80,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                             </div>
                                         }
                                     </div>
+                                    <a [routerLink]="['/panel/pets', row.pet.id]" class="shrink-0 text-muted-color hover:text-primary no-underline max-sm:hidden" [attr.aria-label]="row.pet.name + ' hasta kartı'"><i class="pi pi-angle-right" aria-hidden="true"></i></a>
                                 </li>
                             }
                         </ul>

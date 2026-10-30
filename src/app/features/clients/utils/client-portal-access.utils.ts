@@ -57,3 +57,17 @@ export function clientPortalLastInviteNote(invite: ClientPortalInviteDto | null)
             return null;
     }
 }
+
+/** Kimlik kartındaki portal rozeti (tek bakışta durum; ayrıntı ve eylemler "Portal erişimi" kartında). */
+export function clientPortalChipLabel(kind: ClientPortalState['kind']): string {
+    switch (kind) {
+        case 'linked':
+            return 'Portal: erişim açık';
+        case 'pending':
+            return 'Portal: davet bekliyor';
+        case 'closed':
+            return 'Portal: erişim kapalı';
+        default:
+            return 'Portal: davet gönderilmedi';
+    }
+}
