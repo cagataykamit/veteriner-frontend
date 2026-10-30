@@ -103,6 +103,8 @@ import { ConfirmationService } from 'primeng/api';
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ p.presentationForm }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Ambalaj</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ p.packaging }}</dd>
+                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Üretici</dt>
+                            <dd class="col-span-12 sm:col-span-8 m-0">{{ p.manufacturer }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Birim</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ p.unit }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Birim fiyat</dt>

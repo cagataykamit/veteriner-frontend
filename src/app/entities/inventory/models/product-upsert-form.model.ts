@@ -15,4 +15,5 @@ export interface ProductUpsertFormValue {
     pharmacologicalForm: string;
     presentationForm: string;
     packaging: string;
+    manufacturer: string;
 }

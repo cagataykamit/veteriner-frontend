@@ -8,6 +8,8 @@ import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
 import { AdministrationBatchFieldComponent } from '@/app/entities/administration/components/administration-batch-field.component';
 import { createAdministrationBatchPicker } from '@/app/entities/administration/utils/administration-batch-picker';
+import { AdministrationRouteSiteFieldsComponent } from '@/app/entities/administration/components/administration-route-site-fields.component';
+import { ADMINISTRATION_SITE_MAX, type AdministrationRouteApi } from '@/app/entities/administration/utils/administration-route.utils';
 import { AdministrationsService } from '@/app/entities/administration/services/administrations.service';
 import type { AdministrationCreateResultVm } from '@/app/entities/administration/models/administration-vm.model';
 import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/entities/charge/utils/charge-amount.utils';
@@ -29,7 +31,7 @@ const NOTES_MAX_LENGTH = 2000;
 @Component({
     selector: 'app-administration-create-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent, AdministrationBatchFieldComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="lateEntry() ? 'Uygulama kaydet (sonradan ekleme)' : 'Uygulama kaydet'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
@@ -95,6 +97,7 @@ const NOTES_MAX_LENGTH = 2000;
                             <small class="text-muted-color">Boş bırakılırsa şimdi kaydedilir (en fazla 7 gün geriye).</small>
                         }
                     </div>
+                    <app-administration-route-site-fields idPrefix="ad" [routeControl]="form.controls.route" [siteControl]="form.controls.site" />
                     @if (lateEntry()) {
                         <div class="col-span-12">
                             <label for="ad-late-reason" class="block text-sm font-medium text-muted-color mb-2">Sonradan ekleme gerekçesi *</label>
@@ -157,7 +160,9 @@ export class AdministrationCreateDialogComponent {
         quantity: this.fb.control<number | null>(null, [Validators.required, chargeNumberValidator(CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS)]),
         administeredAtLocal: this.fb.nonNullable.control('', dateTimeYearRangeValidator()),
         notes: this.fb.nonNullable.control('', Validators.maxLength(NOTES_MAX_LENGTH)),
-        lateEntryReason: this.fb.nonNullable.control('')
+        lateEntryReason: this.fb.nonNullable.control(''),
+        route: this.fb.control<AdministrationRouteApi | null>(null),
+        site: this.fb.nonNullable.control('', Validators.maxLength(ADMINISTRATION_SITE_MAX))
     });
 
     private readonly formValue = toSignal(this.form.valueChanges.pipe(startWith(null)), { initialValue: null });
@@ -186,7 +191,7 @@ export class AdministrationCreateDialogComponent {
             if (this.visible()) {
                 untracked(() => {
                     this.submitError.set(null);
-                    this.form.reset({ productId: '', batchId: '', quantity: null, administeredAtLocal: '', notes: '', lateEntryReason: '' });
+                    this.form.reset({ productId: '', batchId: '', quantity: null, administeredAtLocal: '', notes: '', lateEntryReason: '', route: null, site: '' });
                     this.form.controls.lateEntryReason.setValidators(this.lateEntry() ? reasonLength : null);
                     this.form.controls.lateEntryReason.updateValueAndValidity();
                     this.loadProducts();
@@ -233,7 +238,9 @@ export class AdministrationCreateDialogComponent {
                 notes: v.notes,
                 lateEntryReason: this.lateEntry() ? v.lateEntryReason : null,
                 requestId: this.requestId,
-                batchId: v.batchId || null
+                batchId: v.batchId || null,
+                route: v.route,
+                site: v.site
             })
             .subscribe({
                 next: (result) => {

@@ -1,5 +1,5 @@
 import type { VaccinationDetailDto } from '@/app/entities/vaccination/models/vaccination-api.model';
-import { mapCreateVaccinationToApiBody, mapVaccinationCreateResponse, mapVaccinationDetailDtoToVm, vaccinationsQueryToHttpParams } from '@/app/entities/vaccination/data/vaccination.mapper';
+import { mapCreateVaccinationToApiBody, mapVaccinationCreateResponse, mapVaccinationDetailDtoToEditVm, mapVaccinationDetailDtoToVm, vaccinationsQueryToHttpParams } from '@/app/entities/vaccination/data/vaccination.mapper';
 
 const base = { clinicId: 'c1', petId: 'p1', vaccineDefinitionId: 'd1', status: 1, appliedAtUtc: '2026-10-14T08:00:00Z' };
 
@@ -70,7 +70,25 @@ describe('vaccination.mapper — aşı + stok düşümü', () => {
         it('bağlıysa ürün, miktar, seri no ve SKT taşınır', () => {
             const vm = mapVaccinationDetailDtoToVm({ ...dto, administrationId: 'a1', productName: 'Nobivac', quantity: 1, unit: 'doz', lotNumber: 'L1', expiryDate: '2027-03-31T00:00:00' });
 
-            expect(vm.linkedAdministration).toEqual({ id: 'a1', productName: 'Nobivac', quantity: 1, unit: 'doz', lotNumber: 'L1', expiryDate: '2027-03-31' });
+            expect(vm.linkedAdministration).toEqual({ id: 'a1', productName: 'Nobivac', quantity: 1, unit: 'doz', lotNumber: 'L1', expiryDate: '2027-03-31', productManufacturer: null });
+        });
+
+        it('sunucunun iç içe `administration` biçimini okur; düzenleme kilidi aynı kimliği görür', () => {
+            const nested: VaccinationDetailDto = {
+                ...dto,
+                administration: { administrationId: 'a2', productName: 'Nobivac', quantity: 1, unit: 'doz', lotNumber: 'L2', expiryDate: '2027-03-31', productManufacturer: 'MSD' }
+            };
+
+            expect(mapVaccinationDetailDtoToVm(nested).linkedAdministration).toEqual({ id: 'a2', productName: 'Nobivac', quantity: 1, unit: 'doz', lotNumber: 'L2', expiryDate: '2027-03-31', productManufacturer: 'MSD' });
+            expect(mapVaccinationDetailDtoToEditVm(nested).administrationId).toBe('a2');
+        });
+
+        it('uygulama yolu ve bölgesini taşır; bilinmeyen yol null', () => {
+            const vm = mapVaccinationDetailDtoToVm({ ...dto, route: 'Subcutaneous', site: ' Boyun arkası ' });
+
+            expect(vm.route).toBe('Subcutaneous');
+            expect(vm.site).toBe('Boyun arkası');
+            expect(mapVaccinationDetailDtoToVm({ ...dto, route: 'Telepati' }).route).toBeNull();
         });
     });
 });

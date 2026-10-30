@@ -30,6 +30,7 @@ const product = (over: Partial<ProductDetailVm> = {}): ProductDetailVm => ({
     pharmacologicalForm: 'Tablet',
     presentationForm: 'Kutu',
     packaging: '20 tablet',
+    manufacturer: 'Vetaş',
     categoryName: 'Antibiyotik',
     unit: 'Adet',
     unitPriceText: '₺120,00',

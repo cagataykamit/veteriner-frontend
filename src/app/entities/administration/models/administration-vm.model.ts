@@ -1,3 +1,5 @@
+import type { AdministrationRouteApi } from '@/app/entities/administration/utils/administration-route.utils';
+
 /** İptalde stok sonucu: iade (stok artar) veya zarar/imha (stok artmaz). */
 export type AdministrationStockOutcome = 'StockReturned' | 'WrittenOff';
 
@@ -29,6 +31,9 @@ export interface AdministrationVm {
     expiryDate: string | null;
     /** Bağlı aşı kaydı; iptali aşı kaydını da iptal eder. */
     vaccinationId: string | null;
+    route: AdministrationRouteApi | null;
+    site: string | null;
+    productManufacturer: string | null;
 }
 
 export interface AdministrationStockVm {
@@ -73,6 +78,8 @@ export interface CreateAdministrationRequest {
     requestId: string;
     /** Boşsa sunucu FEFO ile seçer. */
     batchId?: string | null;
+    route?: AdministrationRouteApi | null;
+    site?: string | null;
 }
 
 export interface AdministrationCreateResultVm {

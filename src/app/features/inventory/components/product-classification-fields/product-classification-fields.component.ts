@@ -2,11 +2,11 @@ import { Component, computed, input, ChangeDetectionStrategy } from '@angular/co
 import { ReactiveFormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { PRODUCT_CLASSIFICATION_TEXT_MAX, type ProductUpsertFormGroup } from '@/app/features/inventory/forms/product-upsert-form.factory';
+import { PRODUCT_CLASSIFICATION_TEXT_MAX, PRODUCT_MANUFACTURER_MAX, type ProductUpsertFormGroup } from '@/app/features/inventory/forms/product-upsert-form.factory';
 import type { ProductKindApi } from '@/app/entities/inventory/models/product-api.model';
 import { PRODUCT_CONTROLLED_CLASS_OPTIONS, productKindOptionsFor, productRequiresLotAndExpiry } from '@/app/entities/inventory/utils/product-classification.utils';
 
-/** Ürün create/edit formunun sınıflandırma alanları: tür, kontrollü sınıf, farmakolojik/takdim şekli, ambalaj (`BATCH_STOCK_API_CONTRACT.md` §2). */
+/** Ürün create/edit formunun sınıflandırma alanları: tür, kontrollü sınıf, farmakolojik/takdim şekli, ambalaj (`BATCH_STOCK_API_CONTRACT.md` §2), üretici (RECORD-005). */
 @Component({
     selector: 'app-product-classification-fields',
     standalone: true,
@@ -45,6 +45,11 @@ import { PRODUCT_CONTROLLED_CLASS_OPTIONS, productKindOptionsFor, productRequire
                     <label [for]="idPrefix() + 'Packaging'" class="block text-sm font-medium text-muted-color">Ambalaj</label>
                     <input [id]="idPrefix() + 'Packaging'" pInputText class="w-full" type="text" formControlName="packaging" autocomplete="off" placeholder="örn. 10 ml flakon" [attr.maxlength]="textMax" />
                 </div>
+                <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
+                    <label [for]="idPrefix() + 'Manufacturer'" class="block text-sm font-medium text-muted-color">Üretici</label>
+                    <input [id]="idPrefix() + 'Manufacturer'" pInputText class="w-full" type="text" formControlName="manufacturer" autocomplete="off" placeholder="İlacı/aşıyı üreten firma" [attr.maxlength]="manufacturerMax" />
+                    <small class="text-muted-color">Tedarikçi (satın alınan firma) stok girişinde ayrıca yazılır.</small>
+                </div>
             }
         </div>
     `
@@ -60,6 +65,7 @@ export class ProductClassificationFieldsComponent {
     protected readonly kindOptions = computed(() => [...productKindOptionsFor(this.originalKind())]);
     protected readonly controlledClassOptions = [...PRODUCT_CONTROLLED_CLASS_OPTIONS];
     protected readonly textMax = PRODUCT_CLASSIFICATION_TEXT_MAX;
+    protected readonly manufacturerMax = PRODUCT_MANUFACTURER_MAX;
 
     protected isService(): boolean {
         return this.form().getRawValue().kind === 'Service';

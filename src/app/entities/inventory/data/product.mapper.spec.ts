@@ -15,6 +15,7 @@ const form = (over: Partial<ProductUpsertFormValue> = {}): ProductUpsertFormValu
     pharmacologicalForm: '',
     presentationForm: '',
     packaging: '',
+    manufacturer: '',
     ...over
 });
 
@@ -41,9 +42,22 @@ describe('product.mapper hizmet türü', () => {
 
         expect(req.controlledClass).toBe('Narcotic');
         expect(req.packaging).toBe('10 ml');
+        expect(req.manufacturer).toBeNull();
     });
 
     it('fiyat zorunludur', () => {
         expect(() => mapProductUpsertFormValueToCreateRequest(form({ unitPrice: null }))).toThrowError('PRODUCT_UPSERT_UNIT_PRICE_REQUIRED');
+    });
+});
+
+describe('product.mapper üretici (RECORD-005)', () => {
+    it('oluşturmada kırpılır, boşsa null; güncellemede boşaltma "" ile temizler', () => {
+        expect(mapProductUpsertFormValueToCreateRequest(form({ kind: 'Vaccine', manufacturer: ' Vetaş ' })).manufacturer).toBe('Vetaş');
+        expect(mapProductUpsertFormValueToCreateRequest(form({ kind: 'Vaccine' })).manufacturer).toBeNull();
+        expect(mapProductUpsertFormValueToUpdateRequest(form({ kind: 'Vaccine' })).manufacturer).toBe('');
+    });
+
+    it('hizmette üretici gönderilmez', () => {
+        expect(mapProductUpsertFormValueToCreateRequest(form({ manufacturer: 'X' })).manufacturer).toBeNull();
     });
 });

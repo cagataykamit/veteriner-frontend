@@ -73,6 +73,11 @@ export interface VaccinationDetailDto {
     expiryDate?: string | null;
     /** ATS geri kaydı (ADR-036 Dilim 2). */
     hbs?: HbsEntryDto | null;
+    /** Sunucunun gerçek biçimi: bağlı uygulama iç içe nesne (bağlı değilse `null`); düz alanlar eski biçimdir. */
+    administration?: VaccinationAdministrationDto | null;
+    /** Uygulama yolu/bölgesi (RECORD-005). */
+    route?: string | null;
+    site?: string | null;
 }
 
 /**
@@ -93,6 +98,9 @@ export interface VaccinationCreateRequestDto {
     quantity?: number;
     batchId?: string;
     requestId?: string;
+    /** RECORD-005; aşı kaydında tutulur (bağlı uygulamada değil). */
+    route?: string | null;
+    site?: string | null;
 }
 
 export interface VaccinationUpdateRequestDto {
@@ -105,4 +113,20 @@ export interface VaccinationUpdateRequestDto {
     appliedAtUtc?: string | null;
     dueAtUtc?: string | null;
     notes?: string | null;
+    /** Tam değiştirme: gönderilmezse sunucu temizler. */
+    route?: string | null;
+    site?: string | null;
+}
+
+/** GET /vaccinations/{id} → `administration` (`ADMINISTRATIONS_API_CONTRACT.md` §9.4). */
+export interface VaccinationAdministrationDto {
+    administrationId: string;
+    productId?: string | null;
+    productName?: string | null;
+    quantity?: number | null;
+    unit?: string | null;
+    batchId?: string | null;
+    lotNumber?: string | null;
+    expiryDate?: string | null;
+    productManufacturer?: string | null;
 }

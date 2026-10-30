@@ -2,9 +2,10 @@ import { Component, computed, input, ChangeDetectionStrategy } from '@angular/co
 import { RouterLink } from '@angular/router';
 import type { AdministrationVm } from '@/app/entities/administration/models/administration-vm.model';
 import { ADMINISTRATION_LATE_ENTRY_LABEL, administrationBatchText, administrationStockOutcomeLabel } from '@/app/entities/administration/utils/administration-labels';
+import { administrationRouteSiteText } from '@/app/entities/administration/utils/administration-route.utils';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
-/** Uygulama satırının işaretleri: düşülen parti (seri no, SKT), "Kesinleştirmeden sonra eklendi" (+ gerekçe) ve iptal (+ stok sonucu, gerekçe). */
+/** Uygulama satırının işaretleri: düşülen parti (üretici, seri no, SKT), uygulama yolu/bölgesi, "Kesinleştirmeden sonra eklendi" (+ gerekçe) ve iptal (+ stok sonucu, gerekçe). */
 @Component({
     selector: 'app-administration-row-marks',
     standalone: true,
@@ -13,6 +14,9 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
     template: `
         @if (batchText(); as text) {
             <div class="text-xs text-muted-color" data-testid="batch-info">{{ text }}</div>
+        }
+        @if (routeSiteText(); as text) {
+            <div class="text-xs text-muted-color" data-testid="route-site">{{ text }}</div>
         }
         @if (row().vaccinationId) {
             <div class="text-xs" data-testid="vaccination-link">
@@ -47,4 +51,5 @@ export class AdministrationRowMarksComponent {
     protected readonly lateEntryLabel = ADMINISTRATION_LATE_ENTRY_LABEL;
     protected readonly outcomeLabel = administrationStockOutcomeLabel;
     protected readonly batchText = computed(() => administrationBatchText(this.row()));
+    protected readonly routeSiteText = computed(() => administrationRouteSiteText(this.row()));
 }

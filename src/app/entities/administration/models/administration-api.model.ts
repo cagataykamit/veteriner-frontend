@@ -33,6 +33,11 @@ export interface AdministrationDto {
     expiryDate?: string | null;
     /** Uygulama bir aşı kaydıyla birlikte yazıldıysa o aşı kaydı (`ADMINISTRATIONS_API_CONTRACT.md` §9). */
     vaccinationId?: string | null;
+    /** Uygulama yolu/bölgesi (RECORD-005); aşıya bağlı uygulamada `null` (aşı kaydında). */
+    route?: string | null;
+    site?: string | null;
+    /** Ürünün güncel üreticisi. */
+    productManufacturer?: string | null;
 }
 
 /** Yalnız oluşturma yanıtında; düşümden sonraki stok. */
@@ -71,4 +76,6 @@ export interface AdministrationCreateRequestDto {
     requestId?: string | null;
     /** Verilmezse sunucu FEFO ile seçer. */
     batchId?: string | null;
+    route?: string | null;
+    site?: string | null;
 }

@@ -1,3 +1,4 @@
+import type { AdministrationRouteApi } from '@/app/entities/administration/utils/administration-route.utils';
 import type { AdministrationCreateResultVm } from '@/app/entities/administration/models/administration-vm.model';
 import type { HbsEntryStatus, HbsEntryVm } from '@/app/entities/hbs/models/hbs.model';
 
@@ -31,6 +32,7 @@ export interface VaccinationLinkedAdministrationVm {
     lotNumber: string | null;
     /** `yyyy-MM-dd`. */
     expiryDate: string | null;
+    productManufacturer: string | null;
 }
 
 /** Detay — liste VM’sine ek olarak audit alanları. */
@@ -50,6 +52,9 @@ export interface VaccinationDetailVm {
     updatedAtUtc: string | null;
     linkedAdministration: VaccinationLinkedAdministrationVm | null;
     hbs: HbsEntryVm | null;
+    /** Uygulama yolu/bölgesi (RECORD-005). */
+    route: AdministrationRouteApi | null;
+    site: string | null;
 }
 
 /** POST /vaccinations sonucu: ürünlü kayıtta uygulama ve kalan stok da döner (`stockResult`), ürünsüzde `null`. */
@@ -79,4 +84,6 @@ export interface VaccinationEditVm {
     notes: string;
     /** Bağlıysa yalnız not ve sonraki doz tarihi değişebilir (`Vaccinations.LinkedToAdministration`). */
     administrationId: string | null;
+    route: AdministrationRouteApi | null;
+    site: string;
 }

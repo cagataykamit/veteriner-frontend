@@ -42,6 +42,7 @@ export interface ProductDetailVm {
     pharmacologicalForm: string;
     presentationForm: string;
     packaging: string;
+    manufacturer: string;
     categoryName: string;
     unit: string;
     unitPriceText: string;

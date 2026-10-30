@@ -28,7 +28,10 @@ const target: AdministrationVm = {
     batchId: null,
     lotNumber: null,
     expiryDate: null,
-    vaccinationId: null
+    vaccinationId: null,
+    route: null,
+    site: null,
+    productManufacturer: null
 };
 
 describe('AdministrationVoidDialogComponent', () => {
