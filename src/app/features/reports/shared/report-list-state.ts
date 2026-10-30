@@ -27,6 +27,8 @@ export interface ReportListQueryBase {
     clinicId?: string;
     /** Kayıt defterlerine özgü süzgeçler (`extraKeys`); değerler metin olarak gider (`includeVoided`: `true`). */
     includeVoided?: string;
+    /** Reçete defteri: iptal edilenleri gizle (`true`); varsayılan gösterilir (RECORD-008). */
+    hideCancelled?: string;
     productId?: string;
     veterinarianId?: string;
     /** HBS takip listelerine özgü (`NotEntered` | `Entered` | `NotRequired`; boş = Girilmedi). */
@@ -38,7 +40,7 @@ export interface ReportListQueryBase {
 }
 
 /** `ReportListConfig.extraKeys` ile yönetilen rapora özgü ek süzgeçlerin adları (kayıt defterleri, gün sonu dökümü). */
-export type ReportExtraKey = 'includeVoided' | 'productId' | 'veterinarianId' | 'hbsStatus' | 'kind' | 'paymentMethod' | 'performedByUserId';
+export type ReportExtraKey = 'includeVoided' | 'hideCancelled' | 'productId' | 'veterinarianId' | 'hbsStatus' | 'kind' | 'paymentMethod' | 'performedByUserId';
 
 export interface ReportListResultBase {
     readonly page: number;

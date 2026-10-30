@@ -86,13 +86,13 @@ describe('kayıt defteri tanımları', () => {
 
         expect(layout.top.map((c) => [c.label, c.colSpan, c.rowSpan])).toEqual([
             ['Sıra No', 1, 2],
-            ['REÇETENİN', 3, 1],
+            ['REÇETENİN', 4, 1],
             ['VETERİNER HEKİMİN', 2, 1],
             ['HAYVAN SAHİBİNİN', 2, 1],
             ['HAYVANIN', 3, 1],
             ['İlacın Adı, Farmakolojik Şekli, Ambalajı, Adedi', 1, 2]
         ]);
-        expect(layout.sub).toEqual(['Tarihi', 'Sınıfı', 'Cilt/Sıra No', 'Adı Soyadı', 'Adresi', 'Adı Soyadı', 'Adresi', 'Türü', 'Kulak/İşletme No', 'Sayısı']);
+        expect(layout.sub).toEqual(['Tarihi', 'Sınıfı', 'Cilt/Sıra No', 'Durumu', 'Adı Soyadı', 'Adresi', 'Adı Soyadı', 'Adresi', 'Türü', 'Kulak/İşletme No', 'Sayısı']);
     });
 
     it('yazdırma telefon sütunu ekrandakiyle aynı biçimde (+90 532 111 00 01), ham biçimler normalleşir, boşsa boş kalır', () => {
@@ -146,7 +146,26 @@ describe('kayıt defteri tanımları', () => {
         };
         const cells = PRESCRIPTION_REGISTER.columns.map((c) => c.cell(row));
 
-        expect(cells).toEqual(['1', '05.10.2026', '', '', '', '', 'Ali', '', 'İnek', '', '1', 'Dectomax ×1; Serum (Enjeksiyonluk, 100 ml) ×2']);
+        expect(cells).toEqual(['1', '05.10.2026', '', '', 'Geçerli', '', '', 'Ali', '', 'İnek', '', '1', 'Dectomax ×1; Serum (Enjeksiyonluk, 100 ml) ×2']);
+    });
+
+    it('iptal edilen reçete defterde kalır: durum sütunu İptal, ekranda durum ve gerekçe ipucu; muayene hücresinde (iptal) eki (RECORD-008)', () => {
+        const row: PrescriptionRegisterRowDto = {
+            rowNumber: 2, prescriptionId: 'p2', prescribedAtUtc: '2026-10-05T09:00:00Z', ownerName: 'Ali', species: 'Kedi', animalCount: 1,
+            items: [{ name: 'Amoksilin', quantity: 2 }], isCancelled: true, cancelReason: 'Yanlış hasta'
+        };
+        const status = PRESCRIPTION_REGISTER.columns.find((c) => c.header === 'Durumu')!;
+        const screen = PRESCRIPTION_REGISTER.screenColumns.find((c) => c.header === 'Reçete')!.lines(row).map((l) => l.text);
+
+        expect(status.cell(row)).toBe('İptal');
+        expect(screen).toContain('İptal');
+        expect(screen).toContain('Gerekçe: Yanlış hasta');
+        expect(PRESCRIPTION_REGISTER.extraFilters?.hideCancelledLabel).toBe('İptal edilen reçeteleri gizle');
+
+        const treatmentsCell = EXAMINATION_REGISTER.columns.find((c) => c.header === 'Reçete Bilgileri')!;
+        const examRow = { prescriptions: [{ title: 'Reçete 1', items: [{ name: 'Amoksilin', quantity: 2 }], isCancelled: true }] } as unknown as ExaminationRegisterRowDto;
+
+        expect(treatmentsCell.cell(examRow)).toBe('Reçete 1: Amoksilin ×2 (iptal)');
     });
 
     it('her defter ilgili okuma iznine bağlıdır', () => {

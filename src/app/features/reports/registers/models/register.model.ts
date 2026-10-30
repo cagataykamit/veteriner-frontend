@@ -14,6 +14,8 @@ export interface RegisterResultVm<T> extends RegisterDto<T> {
 export interface RegisterPrescriptionDto {
     readonly title: string;
     readonly items: readonly { name: string; quantity?: number | null; instructions?: string | null }[];
+    /** İptal edilen reçete (RECORD-008): defterden çıkmaz, hücrede " (iptal)" ekiyle. */
+    readonly isCancelled?: boolean;
 }
 
 export interface RegisterAdministrationDto {
@@ -72,6 +74,9 @@ export interface PrescriptionRegisterRowDto {
     readonly earTagNumber?: string | null;
     readonly animalCount: number;
     readonly items: readonly PrescriptionRegisterItemDto[];
+    /** İptal edilen reçete defterde durumuyla kalır (RECORD-008); gerekçe yalnız ekranda ipucu. */
+    readonly isCancelled?: boolean;
+    readonly cancelReason?: string | null;
 }
 
 /** GET `/api/v1/reports/registers/vaccines` satırı (REGISTERS_API_CONTRACT bölüm 13). Tarihler takvim günüdür (`yyyy-MM-dd`). */
