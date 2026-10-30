@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { Router, Routes } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import {
+    APPOINTMENT_REQUESTS_MANAGE_CLAIM,
     APPOINTMENTS_CREATE_CLAIM,
     APPOINTMENTS_READ_CLAIM,
     APPOINTMENTS_RESCHEDULE_CLAIM
@@ -32,6 +33,16 @@ export default [
             return auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: AppointmentsCalendarPageComponent
+    },
+    {
+        path: 'requests',
+        canActivate: [() => {
+            const auth = inject(AuthService);
+            const router = inject(Router);
+
+            return auth.hasOperationClaim(APPOINTMENT_REQUESTS_MANAGE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+        }],
+        loadComponent: () => import('@/app/features/appointment-requests/pages/appointment-requests-page.component').then((m) => m.AppointmentRequestsPageComponent)
     },
     {
         path: 'new',

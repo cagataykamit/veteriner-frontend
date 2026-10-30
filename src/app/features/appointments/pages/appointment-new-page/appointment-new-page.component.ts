@@ -38,11 +38,12 @@ import { messageFromClinicResolutionHttpError } from '@/app/features/appointment
 import { APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/entities/appointment/utils/appointment-type.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments/components/appointment-reason-vet-fields.component';
 
 @Component({
     selector: 'app-appointment-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AppointmentReasonVetFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/appointments" categoryLinkLabel="Randevu listesine dön" title="Yeni Randevu" description="Randevu kaydı oluşturun." />
@@ -133,6 +134,9 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         }
                     </div>
                     <div class="col-span-12">
+                        <app-appointment-reason-vet-fields [clinicId]="activeClinicId" [reasonControl]="form.controls.reasonId" [vetControl]="form.controls.veterinarianUserId" (durationSuggested)="form.controls.durationMinutes.setValue($event)" />
+                    </div>
+                    <div class="col-span-12">
                         <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
                         @if (apiFieldErrors().notes) {
@@ -183,6 +187,9 @@ export class AppointmentNewPageComponent implements OnInit {
     readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
     readonly notesMaxLength = APPOINTMENT_NOTES_MAX_LENGTH;
 
+    /** Neden ve hekim seçenekleri aktif klinikten. */
+    readonly activeClinicId = this.auth.getClinicId()?.trim() ?? '';
+
     readonly form = this.fb.group({
         clientId: this.fb.nonNullable.control('', Validators.required),
         petId: this.fb.nonNullable.control({ value: '', disabled: true }, Validators.required),
@@ -190,7 +197,9 @@ export class AppointmentNewPageComponent implements OnInit {
         scheduledTime: this.fb.nonNullable.control('', Validators.required),
         durationMinutes: this.fb.nonNullable.control<number | string>(30, [Validators.required, Validators.min(5), Validators.max(240), Validators.pattern(/^[0-9]+$/)]),
         appointmentType: this.fb.control<number | null>(null, Validators.required),
-        notes: this.fb.nonNullable.control('', Validators.maxLength(APPOINTMENT_NOTES_MAX_LENGTH))
+        notes: this.fb.nonNullable.control('', Validators.maxLength(APPOINTMENT_NOTES_MAX_LENGTH)),
+        reasonId: this.fb.control<string | null>(null),
+        veterinarianUserId: this.fb.control<string | null>(null)
     });
 
     constructor() {
@@ -337,7 +346,9 @@ export class AppointmentNewPageComponent implements OnInit {
             scheduledAtUtc,
             durationMinutes,
             appointmentType,
-            notes: v.notes
+            notes: v.notes,
+            reasonId: v.reasonId,
+            veterinarianUserId: v.veterinarianUserId
         });
 
         this.submitting.set(true);

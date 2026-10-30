@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, untracked } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { portalPagedLoad } from '@portal/app/shared/data/portal-load';
@@ -20,7 +20,7 @@ const TABS: readonly { readonly scope: PortalAppointmentScope; readonly label: s
 @Component({
     selector: 'portal-appointments',
     standalone: true,
-    imports: [ButtonModule, PortalEmptyState, PortalErrorState, PortalSkeleton],
+    imports: [RouterLink, ButtonModule, PortalEmptyState, PortalErrorState, PortalSkeleton],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './portal-appointments.component.html'
 })

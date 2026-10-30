@@ -1,4 +1,5 @@
 const link = (linkId: string) => `links/${encodeURIComponent(linkId)}`;
+const booking = (code: string) => `booking/${encodeURIComponent(code)}`;
 
 /**
  * Portal API yolları (`PORTAL_API_CONTRACT.md` §5, §6, §7). Kökten göreli; kök `PORTAL_API_BASE_URL`.
@@ -28,7 +29,16 @@ export const PORTAL_ENDPOINTS = {
     petVaccinations: (linkId: string, petId: string) => `${link(linkId)}/pets/${encodeURIComponent(petId)}/vaccinations`,
     appointments: (linkId: string) => `${link(linkId)}/appointments`,
     balance: (linkId: string) => `${link(linkId)}/balance`,
-    payments: (linkId: string) => `${link(linkId)}/payments`
+    payments: (linkId: string) => `${link(linkId)}/payments`,
+    // Online randevu talebi (ONLINE_APPOINTMENT_API_CONTRACT.md §5 kimliksiz bağlantı, §6 oturumlu)
+    publicBooking: (code: string) => booking(code),
+    publicBookingAvailability: (code: string) => `${booking(code)}/availability`,
+    publicBookingCode: (code: string) => `${booking(code)}/verification-code`,
+    publicBookingRequests: (code: string) => `${booking(code)}/requests`,
+    linkBooking: (linkId: string) => `${link(linkId)}/booking`,
+    linkBookingAvailability: (linkId: string) => `${link(linkId)}/booking/availability`,
+    appointmentRequests: (linkId: string) => `${link(linkId)}/appointment-requests`,
+    cancelAppointmentRequest: (linkId: string, requestId: string) => `${link(linkId)}/appointment-requests/${encodeURIComponent(requestId)}/cancel`
 } as const;
 
 /** Anonim uçlar (sözleşme §7 "Anonim"): Bearer eklenmez, 401'de yenileme denenmez. */
@@ -43,5 +53,5 @@ const ANONYMOUS_EXACT = new Set<string>([
 ]);
 
 export function isAnonymousPortalPath(relativePath: string): boolean {
-    return ANONYMOUS_EXACT.has(relativePath) || relativePath.startsWith('invites/');
+    return ANONYMOUS_EXACT.has(relativePath) || relativePath.startsWith('invites/') || relativePath.startsWith('booking/');
 }

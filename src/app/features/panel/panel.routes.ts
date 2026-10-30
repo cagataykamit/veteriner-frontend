@@ -46,6 +46,8 @@ export default [
     { path: 'settings/imports', loadChildren: () => import('../imports/routes/imports.routes') },
     { path: 'settings/clinics', loadChildren: () => import('../clinics/routes/clinics.routes') },
     { path: 'settings/kvkk-form', loadChildren: () => import('../kvkk/routes/kvkk-form-template.routes') },
+    { path: 'settings/online-booking', loadChildren: () => import('../online-booking/routes/online-booking.routes') },
+    { path: 'notifications', loadChildren: () => import('../notifications/routes/notifications.routes') },
     { path: 'settings/reminders', loadChildren: () => import('../reminders/routes/reminders.routes') },
     { path: 'settings/account', loadChildren: () => import('../account/routes/account.routes') },
     {

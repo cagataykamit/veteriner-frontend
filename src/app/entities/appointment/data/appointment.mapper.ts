@@ -353,7 +353,9 @@ export function mapAppointmentDetailDtoToVm(dto: AppointmentDetailDto): Appointm
         lifecycleStatus: readAppointmentLifecycleEnumFromDto(dto),
         notes: notes.trim() ? notes : EM,
         createdAtUtc: dto.createdAtUtc ?? null,
-        updatedAtUtc: dto.updatedAtUtc ?? null
+        updatedAtUtc: dto.updatedAtUtc ?? null,
+        reasonId: dto.reasonId?.trim() || null,
+        veterinarianUserId: dto.veterinarianUserId?.trim() || null
     };
 }
 
@@ -375,7 +377,9 @@ export function mapAppointmentDetailDtoToEditVm(dto: AppointmentDetailDto): Appo
         durationMinutes,
         appointmentType: resolveAppointmentWriteTypeFormValue(typeNum, typeName),
         status: readAppointmentStatusEnumFromDto(dto),
-        notes: canonicalNotesDetail(dto)
+        notes: canonicalNotesDetail(dto),
+        reasonId: dto.reasonId?.trim() || null,
+        veterinarianUserId: dto.veterinarianUserId?.trim() || null
     };
 }
 
@@ -387,6 +391,8 @@ export interface AppointmentUpsertFormAdapterInput {
     appointmentType: number;
     status?: number | null;
     notes?: string;
+    reasonId?: string | null;
+    veterinarianUserId?: string | null;
 }
 
 export function mapAppointmentUpsertFormToCreateRequest(input: AppointmentUpsertFormAdapterInput): CreateAppointmentRequest {
@@ -397,7 +403,9 @@ export function mapAppointmentUpsertFormToCreateRequest(input: AppointmentUpsert
         durationMinutes: Math.trunc(input.durationMinutes),
         appointmentType: input.appointmentType,
         status: input.status ?? undefined,
-        notes: input.notes?.trim() || undefined
+        notes: input.notes?.trim() || undefined,
+        reasonId: input.reasonId?.trim() || null,
+        veterinarianUserId: input.veterinarianUserId?.trim() || null
     };
 }
 
@@ -411,7 +419,9 @@ export function mapCreateAppointmentToApiBody(req: CreateAppointmentRequest): Ap
         appointmentType: req.appointmentType,
         durationMinutes: Math.trunc(req.durationMinutes),
         ...(statusParsed === null ? {} : { status: statusParsed }),
-        notes: req.notes?.trim() ? req.notes.trim() : null
+        notes: req.notes?.trim() ? req.notes.trim() : null,
+        reasonId: req.reasonId?.trim() || null,
+        veterinarianUserId: req.veterinarianUserId?.trim() || null
     };
 
     return clinicId ? { ...base, clinicId } : base;
@@ -432,7 +442,9 @@ export function mapAppointmentUpsertFormToUpdateRequest(id: string, input: Appoi
         durationMinutes: Math.trunc(input.durationMinutes),
         appointmentType: input.appointmentType,
         status: statusParsed,
-        notes: input.notes?.trim() || undefined
+        notes: input.notes?.trim() || undefined,
+        reasonId: input.reasonId?.trim() || null,
+        veterinarianUserId: input.veterinarianUserId?.trim() || null
     };
 }
 
@@ -451,7 +463,9 @@ export function mapUpdateAppointmentToApiBody(req: UpdateAppointmentRequest): Ap
         appointmentType: req.appointmentType,
         durationMinutes: Math.trunc(req.durationMinutes),
         status: statusParsed,
-        notes: req.notes?.trim() ? req.notes.trim() : null
+        notes: req.notes?.trim() ? req.notes.trim() : null,
+        reasonId: req.reasonId?.trim() || null,
+        veterinarianUserId: req.veterinarianUserId?.trim() || null
     };
 
     return clinicId ? { ...base, clinicId } : base;

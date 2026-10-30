@@ -1,5 +1,8 @@
 import {
     ADMINISTRATIONS_READ_CLAIM,
+    APPOINTMENT_REQUESTS_MANAGE_CLAIM,
+    APPOINTMENTS_CREATE_CLAIM,
+    APPOINTMENTS_RESCHEDULE_CLAIM,
     APPOINTMENTS_READ_CLAIM,
     BREEDS_CREATE_CLAIM,
     BREEDS_UPDATE_CLAIM,
@@ -53,7 +56,7 @@ export interface NavigationEntry {
 }
 
 /** Menüde öğenin yanında bekleyen iş sayısı gösterilen sayaçlar; değerlerini `MenuBadgeService` sağlar. */
-export type MenuBadgeKey = 'waitingVisits' | 'requestedLabResults';
+export type MenuBadgeKey = 'waitingVisits' | 'requestedLabResults' | 'pendingAppointmentRequests';
 
 /** Birleşik menü öğesinin sekmesi: mevcut liste sayfasının rotası; yetkisi olmayan sekme görünmez. */
 export interface MenuTab extends NavigationEntry {
@@ -108,6 +111,10 @@ export const PRODUCT_CATEGORIES_ROUTE = `${DEFINITIONS_ROUTE}/product-categories
 export const CLINICAL_TERMS_ROUTE = `${DEFINITIONS_ROUTE}/clinical-terms`;
 export const EXAMINATION_TEMPLATES_ROUTE = `${DEFINITIONS_ROUTE}/examination-templates`;
 export const HOSPITALIZATION_WARDS_ROUTE = `${DEFINITIONS_ROUTE}/hospitalization-wards`;
+export const APPOINTMENT_REASONS_ROUTE = `${DEFINITIONS_ROUTE}/appointment-reasons`;
+export const ONLINE_BOOKING_SETTINGS_ROUTE = '/panel/settings/online-booking';
+export const APPOINTMENT_REQUESTS_ROUTE = '/panel/appointments/requests';
+export const NOTIFICATIONS_ROUTE = '/panel/notifications';
 export const IMPORTS_ROUTE = '/panel/settings/imports';
 export const SUBSCRIPTION_ROUTE = '/panel/settings/subscription';
 export const REPORTS_ROUTE = '/panel/reports';
@@ -275,10 +282,23 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
         category: 'Panel',
         entries: [
             { label: 'Bugün', icon: 'fa-solid fa-fw fa-calendar-day', route: TODAY_ROUTE, claims: [VISITS_READ_CLAIM], badge: 'waitingVisits' },
-            tabbedEntry('Randevular', 'fa-solid fa-fw fa-calendar-check', [
-                { label: 'Liste', listLabel: 'Randevular', route: '/panel/appointments', claims: [APPOINTMENTS_READ_CLAIM] },
-                { label: 'Takvim', listLabel: 'Randevu takvimi', route: '/panel/appointments/calendar', claims: [APPOINTMENTS_READ_CLAIM] }
-            ])
+            tabbedEntry(
+                'Randevular',
+                'fa-solid fa-fw fa-calendar-check',
+                [
+                    { label: 'Liste', listLabel: 'Randevular', route: '/panel/appointments', claims: [APPOINTMENTS_READ_CLAIM] },
+                    { label: 'Takvim', listLabel: 'Randevu takvimi', route: '/panel/appointments/calendar', claims: [APPOINTMENTS_READ_CLAIM] },
+                    // Online talep kuyruğu (ADR-042 K4): yeni menü öğesi değil, Randevular'ın sekmesi (ADR-004).
+                    {
+                        label: 'Talepler',
+                        listLabel: 'Randevu talepleri',
+                        route: APPOINTMENT_REQUESTS_ROUTE,
+                        claims: [APPOINTMENT_REQUESTS_MANAGE_CLAIM],
+                        badge: 'pendingAppointmentRequests'
+                    }
+                ],
+                { badge: 'pendingAppointmentRequests', badgeText: 'bekleyen online randevu talebi' }
+            )
         ]
     },
     {
@@ -396,6 +416,14 @@ export const DEFINITION_ENTRIES: readonly CardEntry[] = [
         // Okuma policy'si sözleşme §10.2 ile aynı (herhangi biri yeter); düzenleme sayfa içinde `Clinics.Update`'e bağlıdır.
         claims: [CLINICS_UPDATE_CLAIM, CLINICS_READ_CLAIM, HOSPITALIZATIONS_READ_CLAIM],
         description: 'Yatış formunda seçilen bölüm ve oda/kafes tanımları; klinik bazlıdır, silinmez, pasife alınır.'
+    },
+    {
+        label: 'Randevu nedenleri',
+        icon: 'pi pi-fw pi-tags',
+        route: APPOINTMENT_REASONS_ROUTE,
+        // Okuma randevu planlama yetkisiyle (sözleşme §2); düzenleme sayfa içinde `Clinics.Update`'e bağlıdır.
+        claims: [CLINICS_UPDATE_CLAIM, CLINICS_READ_CLAIM, APPOINTMENTS_CREATE_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM],
+        description: 'Randevu formunda ve online talepte seçilen nedenler; süre önerisi ve uygun hekimler.'
     }
 ];
 
@@ -423,6 +451,13 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 route: '/panel/settings/kvkk-form',
                 claims: [CLINICS_UPDATE_CLAIM],
                 description: 'Müşteriye verilen açık rıza formu ve aydınlatma metninin aktif klinikteki metinleri.'
+            },
+            {
+                label: 'Online randevu',
+                icon: 'pi pi-fw pi-globe',
+                route: ONLINE_BOOKING_SETTINGS_ROUTE,
+                claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
+                description: 'Online talebi açıp kapatma, kliniğe özel bağlantı ve sahibe giden e-posta şablonları.'
             },
             { label: 'Organizasyon Ayarları', icon: 'pi pi-fw pi-building', route: '/panel/settings/organization', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Kurum ve fatura bilgileri.' },
             { label: 'Kurum üyeleri', icon: 'pi pi-fw pi-users', route: '/panel/settings/members', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Üyeler ve rolleri.' },

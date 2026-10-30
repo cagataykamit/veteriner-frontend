@@ -12,6 +12,8 @@ export interface CreateAppointmentRequest {
     /** Create için opsiyonel; yoksa backend Scheduled (=0). */
     status?: number | null;
     notes?: string;
+    reasonId?: string | null;
+    veterinarianUserId?: string | null;
 }
 
 export interface UpdateAppointmentRequest {
@@ -25,4 +27,6 @@ export interface UpdateAppointmentRequest {
     /** Update için zorunlu: mevcut durum aynen gönderilir (durum değişimi `PUT` ile yapılmaz; `Appointments.InvalidStatusTransition`). */
     status: number;
     notes?: string;
+    reasonId?: string | null;
+    veterinarianUserId?: string | null;
 }

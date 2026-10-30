@@ -1,0 +1,70 @@
+<div class="portal-stack">
+    <a class="portal-back" routerLink="/appointments"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Randevularım</a>
+    <h1 class="portal-title">Randevu taleplerim</h1>
+
+    @if (session.activeLink()) {
+        @switch (view.state()) {
+            @case ('loading') {
+                <portal-skeleton [rows]="3" message="Talepleriniz yükleniyor…" />
+            }
+            @case ('error') {
+                <portal-error-state [message]="view.error()" (retry)="load()" />
+            }
+            @default {
+                @if (view.data()?.bookingOpen) {
+                    <a class="portal-action-link portal-action-link--primary" routerLink="/appointments/requests/new" data-testid="new-request">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i> Yeni randevu talebi
+                    </a>
+                    <p class="portal-muted">Talep klinik onayladığında kesin randevuya dönüşür ve Randevularım'da görünür.</p>
+                } @else {
+                    <p class="portal-muted" data-testid="booking-closed">Kliniğiniz şu an online randevu talebi almıyor.</p>
+                }
+
+                @if (cancelError(); as message) {
+                    <p class="portal-field-error" role="alert">{{ message }}</p>
+                }
+
+                @if (requests().length) {
+                    <ul class="portal-list" data-testid="request-list">
+                        @for (r of requests(); track r.id) {
+                            <li class="portal-row">
+                                <div class="portal-row-head">
+                                    <p class="portal-row-title">{{ when(r.approvedStartUtc ?? r.requestedStartUtc) }}</p>
+                                    <span class="portal-badge" [class]="'portal-badge--' + status(r).tone">{{ status(r).label }}</span>
+                                </div>
+                                <p class="portal-muted">{{ detail(r) }}</p>
+                                @if (r.approvedStartUtc && r.wasRescheduled) {
+                                    <p class="portal-muted" data-testid="rescheduled">
+                                        <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Klinik saati değiştirdi; istediğiniz saat {{ when(r.requestedStartUtc) }} idi.
+                                    </p>
+                                }
+                                @if (r.rejectionReason) {
+                                    <p class="portal-muted">Klinik açıklaması: {{ r.rejectionReason }}</p>
+                                }
+                                @if (r.canCancel) {
+                                    @if (confirmingId() === r.id) {
+                                        <div class="portal-stack" role="group" aria-label="İptal onayı">
+                                            <p>Bu talebi iptal etmek istediğinize emin misiniz?</p>
+                                            <div class="portal-actions">
+                                                <button pButton type="button" severity="danger" [disabled]="cancellingId() === r.id" (click)="cancel(r)">
+                                                    @if (cancellingId() === r.id) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Evet, iptal et
+                                                </button>
+                                                <button pButton type="button" severity="secondary" [outlined]="true" (click)="keep()">Vazgeç</button>
+                                            </div>
+                                        </div>
+                                    } @else {
+                                        <button pButton type="button" severity="secondary" [outlined]="true" class="portal-button-block" (click)="askCancel(r)">Talebi iptal et</button>
+                                    }
+                                }
+                            </li>
+                        }
+                    </ul>
+                } @else {
+                    <portal-empty-state title="Talep yok" message="Henüz online randevu talebiniz yok." icon="fa-calendar-plus" />
+                }
+            }
+        }
+    } @else {
+        <portal-empty-state title="Bağlı klinik yok" message="Kliniğinizden yeni bir portal daveti isteyebilirsiniz." icon="fa-hospital" />
+    }
+</div>

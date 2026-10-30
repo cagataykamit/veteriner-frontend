@@ -1,5 +1,6 @@
 import type { PortalAppointmentStatus, PortalAppointmentType } from '@portal/app/features/appointments/portal-appointments.api';
 import type { PortalPaymentMethod } from '@portal/app/features/balance/portal-balance.api';
+import type { PortalAppointmentRequestStatus } from '@portal/app/features/booking/portal-booking.api';
 import type { PortalDayOfWeek } from '@portal/app/features/clinic/portal-clinic.api';
 import type { PortalPetGender } from '@portal/app/features/pets/portal-pets.api';
 
@@ -26,6 +27,21 @@ export const APPOINTMENT_STATUS_LABELS: Readonly<Record<PortalAppointmentStatus,
     Cancelled: { label: 'İptal edildi', tone: 'neutral' },
     NoShow: { label: 'Gelinmedi', tone: 'warning' }
 };
+
+/** Randevu talebi durumu (ADR-042 K4); backend sayı döner, ad da kabul edilir. */
+const APPOINTMENT_REQUEST_STATUSES: readonly { readonly name: string; readonly label: string; readonly tone: PortalBadgeTone }[] = [
+    { name: 'Pending', label: 'Bekliyor', tone: 'warning' },
+    { name: 'Approved', label: 'Onaylandı', tone: 'success' },
+    { name: 'Rejected', label: 'Reddedildi', tone: 'neutral' },
+    { name: 'Cancelled', label: 'İptal edildi', tone: 'neutral' },
+    { name: 'Expired', label: 'Süresi doldu', tone: 'neutral' }
+];
+
+export function appointmentRequestStatus(status: PortalAppointmentRequestStatus | string | number): { readonly name: string; readonly label: string; readonly tone: PortalBadgeTone } {
+    const found = typeof status === 'number' ? APPOINTMENT_REQUEST_STATUSES[status] : APPOINTMENT_REQUEST_STATUSES.find((s) => s.name === status);
+
+    return found ?? { name: 'Unknown', label: 'Bilinmiyor', tone: 'neutral' };
+}
 
 export const PAYMENT_METHOD_LABELS: Readonly<Record<PortalPaymentMethod, string>> = {
     Cash: 'Nakit',

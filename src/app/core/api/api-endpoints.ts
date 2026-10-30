@@ -310,6 +310,45 @@ export const ApiEndpoints = {
         discharge: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/discharge`
     },
     /** Klinik tanımlı yatış bölümleri ve altındaki oda/kafesler (HOSPITALIZATION_MODEL_API_CONTRACT.md §10.2). */
+    /** Randevu nedenleri (ADR-042 K2; Veteriner `docs/ONLINE_APPOINTMENT_API_CONTRACT.md` §2): GET randevu planlama yetkisi, yazma `Clinics.Update`. */
+    appointmentReasons: {
+        list: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/appointment-reasons`,
+        byId: (clinicId: string, reasonId: string) =>
+            `/api/v1/clinics/${encodeURIComponent(clinicId)}/appointment-reasons/${encodeURIComponent(reasonId)}`,
+        activate: (clinicId: string, reasonId: string) =>
+            `/api/v1/clinics/${encodeURIComponent(clinicId)}/appointment-reasons/${encodeURIComponent(reasonId)}/activate`,
+        deactivate: (clinicId: string, reasonId: string) =>
+            `/api/v1/clinics/${encodeURIComponent(clinicId)}/appointment-reasons/${encodeURIComponent(reasonId)}/deactivate`
+    },
+    /** Online randevu ayarları, bağlantı kodu, personel müsaitliği ve talep e-posta şablonları (sözleşme §3, §7). */
+    onlineBooking: {
+        settings: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/online-booking`,
+        regenerateCode: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/online-booking/regenerate-code`,
+        /** GET `reasonId`, `from` (yyyy-MM-dd), `days` (1–14). */
+        availability: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/online-booking/availability`,
+        emailTemplates: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/appointment-request-email-templates`,
+        /** PUT `{ subject, body }`, DELETE varsayılana döner. */
+        emailTemplate: (clinicId: string, kind: string) =>
+            `/api/v1/clinics/${encodeURIComponent(clinicId)}/appointment-request-email-templates/${encodeURIComponent(kind)}`,
+        emailTemplatePreview: (clinicId: string, kind: string) =>
+            `/api/v1/clinics/${encodeURIComponent(clinicId)}/appointment-request-email-templates/${encodeURIComponent(kind)}/preview`
+    },
+    /** Online randevu talep kuyruğu (sözleşme §4); `AppointmentRequests.Manage`. */
+    appointmentRequests: {
+        list: () => `/api/v1/appointment-requests`,
+        byId: (id: string) => `/api/v1/appointment-requests/${encodeURIComponent(id)}`,
+        approve: (id: string) => `/api/v1/appointment-requests/${encodeURIComponent(id)}/approve`,
+        reject: (id: string) => `/api/v1/appointment-requests/${encodeURIComponent(id)}/reject`,
+        /** GET `kind`, `scheduledAtUtc`, `rejectionReason`. */
+        emailPreview: (id: string) => `/api/v1/appointment-requests/${encodeURIComponent(id)}/email-preview`
+    },
+    /** Oturumdaki kullanıcının bildirim merkezi (sözleşme §8). */
+    notifications: {
+        list: () => `/api/v1/notifications`,
+        unreadCount: () => `/api/v1/notifications/unread-count`,
+        read: (id: string) => `/api/v1/notifications/${encodeURIComponent(id)}/read`,
+        readAll: () => `/api/v1/notifications/read-all`
+    },
     hospitalizationWards: {
         /** GET: aktif/pasif tüm bölümler odalarıyla (`Clinics_HospitalizationWardsRead`); POST `{ name, sortOrder }` (`Clinics.Update`). */
         list: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/hospitalization-wards`,

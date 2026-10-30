@@ -13,7 +13,8 @@ import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-hea
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatDateDisplay, localDateYyyyMmDd, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { APPOINTMENTS_CREATE_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { APPOINTMENT_REQUESTS_MANAGE_CLAIM, APPOINTMENTS_CREATE_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { AppointmentRequestsCalendarLayerComponent } from '@/app/entities/online-booking/components/appointment-requests-calendar-layer.component';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
@@ -23,7 +24,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
 @Component({
     selector: 'app-appointments-calendar-page',
     standalone: true,
-    imports: [CommonModule, ButtonModule, AppListHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, AppStatusTagComponent, AppRowActionButtonComponent],
+    imports: [CommonModule, ButtonModule, AppointmentRequestsCalendarLayerComponent, AppListHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, AppStatusTagComponent, AppRowActionButtonComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card">
@@ -51,6 +52,9 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
 
             @if (!isPresetDateGroupedMode()) {
                 <p class="text-sm text-muted-color mt-0 mb-4">{{ rangeLabel() }}</p>
+                @if (canManageRequests) {
+                    <app-appointment-requests-calendar-layer [fromUtc]="requestLayerRange().fromUtc" [toUtc]="requestLayerRange().toUtc" />
+                }
             }
             @if (activePreset(); as preset) {
                 <div class="flex flex-wrap items-center gap-2 mb-4">
@@ -338,6 +342,9 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
 
     readonly viewMode = signal<CalendarViewMode>('day');
+    /** Online talep katmanı (APPT-016) yalnız kuyruk yetkisiyle. */
+    readonly canManageRequests = this.auth.hasOperationClaim(APPOINTMENT_REQUESTS_MANAGE_CLAIM);
+    readonly requestLayerRange = signal<{ fromUtc: string | null; toUtc: string | null }>({ fromUtc: null, toUtc: null });
     readonly selectedDate = signal(new Date());
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -439,6 +446,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         const start = presetQuery?.start ?? this.getDateRange().start;
         const endExclusive = presetQuery?.endExclusive ?? this.getDateRange().endExclusive;
 
+        this.requestLayerRange.set({ fromUtc: start.toISOString(), toUtc: endExclusive.toISOString() });
         this.loading.set(true);
         this.error.set(null);
         this.appointments

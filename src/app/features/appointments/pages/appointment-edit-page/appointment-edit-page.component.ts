@@ -32,6 +32,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments/components/appointment-reason-vet-fields.component';
 
 @Component({
     selector: 'app-appointment-edit-page',
@@ -48,7 +49,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         ClientSearchComponent,
         PetSearchComponent,
         DateInputComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        AppointmentReasonVetFieldsComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -154,6 +156,9 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             }
                         </div>
                         <div class="col-span-12">
+                            <app-appointment-reason-vet-fields [clinicId]="activeClinicId" [reasonControl]="form.controls.reasonId" [vetControl]="form.controls.veterinarianUserId" [keepReasonId]="loadedReasonId()" (durationSuggested)="form.controls.durationMinutes.setValue($event)" />
+                        </div>
+                        <div class="col-span-12">
                             <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                             <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
                             @if (apiFieldErrors().notes) {
@@ -196,6 +201,8 @@ export class AppointmentEditPageComponent implements OnInit {
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
+    /** Yüklenen randevunun nedeni (pasif olsa da seçenekte kalır). */
+    readonly loadedReasonId = signal<string | null>(null);
 
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
@@ -222,6 +229,9 @@ export class AppointmentEditPageComponent implements OnInit {
     readonly statusLabel = appointmentStatusLabel;
     readonly statusSeverity = appointmentStatusSeverity;
 
+    /** Neden ve hekim seçenekleri aktif klinikten. */
+    readonly activeClinicId = this.auth.getClinicId()?.trim() ?? '';
+
     readonly form = this.fb.group({
         clientId: this.fb.nonNullable.control('', Validators.required),
         petId: this.fb.nonNullable.control({ value: '', disabled: true }, Validators.required),
@@ -231,7 +241,9 @@ export class AppointmentEditPageComponent implements OnInit {
         appointmentType: this.fb.control<number | null>(null, Validators.required),
         /** Yüklenen mevcut durum; `PUT` gövdesinde aynen geri gönderilir. */
         status: this.fb.control<number | null>(null, Validators.required),
-        notes: this.fb.nonNullable.control('', Validators.maxLength(APPOINTMENT_NOTES_MAX_LENGTH))
+        notes: this.fb.nonNullable.control('', Validators.maxLength(APPOINTMENT_NOTES_MAX_LENGTH)),
+        reasonId: this.fb.control<string | null>(null),
+        veterinarianUserId: this.fb.control<string | null>(null)
     });
 
     constructor() {
@@ -310,10 +322,13 @@ export class AppointmentEditPageComponent implements OnInit {
                         durationMinutes: x.durationMinutes,
                         appointmentType: x.appointmentType,
                         status: x.status,
-                        notes: x.notes
+                        notes: x.notes,
+                        reasonId: x.reasonId,
+                        veterinarianUserId: x.veterinarianUserId
                     },
                     { emitEvent: false }
                 );
+                this.loadedReasonId.set(x.reasonId);
 
                 if (x.clientId) {
                     this.form.controls.petId.enable({ emitEvent: false });
@@ -393,7 +408,9 @@ export class AppointmentEditPageComponent implements OnInit {
             durationMinutes,
             appointmentType,
             status: statusNum,
-            notes: v.notes
+            notes: v.notes,
+            reasonId: v.reasonId,
+            veterinarianUserId: v.veterinarianUserId
         });
 
         this.submitting.set(true);

@@ -19,6 +19,12 @@ export const PORTAL_ERROR_CODES = {
     deletionCodeInvalid: 'Portal.Account.DeletionCodeInvalid',
     remindersKvkkDeclined: 'Clients.RemindersKvkkDeclined',
     clientConcurrencyConflict: 'Clients.ConcurrencyConflict',
+    onlineBookingNotFound: 'OnlineBooking.NotFound',
+    onlineBookingInvalidCode: 'OnlineBooking.InvalidCode',
+    reasonNotFound: 'AppointmentReasons.NotFound',
+    slotUnavailable: 'AppointmentRequests.SlotUnavailable',
+    pendingLimitReached: 'AppointmentRequests.PendingLimitReached',
+    requestNotPending: 'AppointmentRequests.NotPending',
     validation: 'Validation.FluentValidation'
 } as const;
 
@@ -39,6 +45,12 @@ export const PORTAL_ERROR_MESSAGES: Readonly<Record<string, string>> = {
     [C.deletionCodeInvalid]: 'Onay kodu doğrulanamadı. Kod yanlış ya da süresi dolmuş olabilir; yeni kod isteyip tekrar deneyin.',
     [C.remindersKvkkDeclined]: 'Klinikteki KVKK açık rıza kaydınız "Ret" olduğu için hatırlatmalar açılamıyor. Açmak için kliniğinizle görüşün.',
     [C.clientConcurrencyConflict]: 'Kaydınız bu sırada klinik tarafından güncellendi. Sayfayı yenileyip tekrar deneyin.',
+    [C.onlineBookingNotFound]: 'Bu online randevu sayfası kapalı ya da bağlantı geçersiz.',
+    [C.onlineBookingInvalidCode]: 'Doğrulama kodu hatalı ya da süresi dolmuş. Kodu kontrol edin ya da yeni kod isteyin.',
+    [C.reasonNotFound]: 'Seçtiğiniz randevu nedeni artık online alınmıyor. Başka bir neden seçin.',
+    [C.slotUnavailable]: 'Seçtiğiniz saat artık müsait değil. Lütfen başka bir saat seçin.',
+    [C.pendingLimitReached]: 'Bu klinikte bekleyen talep sınırına ulaştınız. Klinik mevcut taleplerinizi yanıtladıktan sonra yeni talep oluşturabilirsiniz.',
+    [C.requestNotPending]: 'Bu talep artık beklemede değil; sayfayı yenileyin.',
     [C.validation]: 'Girdiğiniz bilgileri kontrol edin.'
 };
 

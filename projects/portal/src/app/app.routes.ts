@@ -15,6 +15,12 @@ export const portalRoutes: Routes = [
         loadComponent: () => import('./features/invite/portal-invite.component').then((m) => m.PortalInviteComponent)
     },
     {
+        // Kliniğe özel online randevu bağlantısı (ADR-042 K1): kimliksiz, kabuk dışında.
+        path: 'randevu/:bookingCode',
+        title: title('Online randevu'),
+        loadComponent: () => import('./features/booking/portal-public-booking.component').then((m) => m.PortalPublicBookingComponent)
+    },
+    {
         path: 'login',
         title: title('Giriş'),
         canActivate: [portalGuestGuard],
@@ -79,6 +85,16 @@ export const portalRoutes: Routes = [
                 path: 'appointments',
                 title: title('Randevularım'),
                 loadComponent: () => import('./features/appointments/portal-appointments.component').then((m) => m.PortalAppointmentsComponent)
+            },
+            {
+                path: 'appointments/requests',
+                title: title('Randevu taleplerim'),
+                loadComponent: () => import('./features/booking/portal-appointment-requests.component').then((m) => m.PortalAppointmentRequestsComponent)
+            },
+            {
+                path: 'appointments/requests/new',
+                title: title('Randevu talebi'),
+                loadComponent: () => import('./features/booking/portal-appointment-request.component').then((m) => m.PortalAppointmentRequestComponent)
             },
             {
                 path: 'balance',

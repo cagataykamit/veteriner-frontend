@@ -73,6 +73,9 @@ export interface AppointmentDetailDto {
     updatedAtUtc?: string | null;
     durationMinutes?: number | string | null;
     scheduledEndUtc?: string | null;
+    /** Randevu nedeni ve hekimi (ADR-042 K2/K3). */
+    reasonId?: string | null;
+    veterinarianUserId?: string | null;
 }
 
 /** POST/PUT /appointments body — durum backend’de ayrı iş akışlarıyla yönetilir; gövdede yok. */
@@ -88,6 +91,8 @@ export interface AppointmentCreateRequestDto {
     status?: number | null;
     notes?: string | null;
     durationMinutes?: number | null;
+    reasonId?: string | null;
+    veterinarianUserId?: string | null;
 }
 
 /** PUT /appointments body (güncelleme) — id + status zorunlu. */
@@ -101,4 +106,7 @@ export interface AppointmentUpdateRequestDto {
     status: number;
     notes?: string | null;
     durationMinutes?: number | null;
+    /** PUT tam günceller: gönderilmezse sunucuda boşalır; düzenleme formu mevcut değeri geri gönderir. */
+    reasonId?: string | null;
+    veterinarianUserId?: string | null;
 }
