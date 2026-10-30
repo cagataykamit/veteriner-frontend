@@ -67,7 +67,7 @@ const SAVED_MESSAGES: Record<string, string> = { created: 'Görüntüleme kayded
             </app-page-header>
             <app-pet-alert-banner [petId]="r.petId" />
 
-            <div class="grid grid-cols-12 gap-4">
+            <div class="grid grid-cols-12 gap-8">
                 <div class="col-span-12 lg:col-span-6">
                     <div class="card">
                         <h5 class="mt-0 mb-4">Genel</h5>
