@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, forwardRef, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, DestroyRef, forwardRef, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { catchError, of, Subject, switchMap } from 'rxjs';
@@ -71,7 +71,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             </ng-template>
         </p-autocomplete>
         @if (canCreate()) {
-            <app-quick-client-dialog [(visible)]="quickClientOpen" (clientCreated)="onClientCreated($event)" />
+            <app-quick-client-dialog [(visible)]="quickClientOpen" [initialText]="typedText()" (clientCreated)="onClientCreated($event)" />
         }
     `
 })
@@ -91,6 +91,12 @@ export class ClientSearchComponent implements ControlValueAccessor {
     readonly searchError = signal<string | null>(null);
     readonly disabled = signal(false);
     readonly quickClientOpen = signal(false);
+    /** Listeden seçilmemiş yazı; hızlı müşteri formuna taşınır (aynı bilgi ikinci kez yazılmaz). */
+    readonly typedText = computed(() => {
+        const m = this.model();
+
+        return typeof m === 'string' ? m : '';
+    });
     readonly canCreate = () => canShowQuickClientCreateButton(this.auth, this.ro, false);
 
     private readonly term$ = new Subject<string>();

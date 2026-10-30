@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, output, signal, model, ChangeDetectionStrategy } from '@angular/core';
+import { Component, DestroyRef, inject, input, output, signal, model, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { mapClientUpsertFormValueToCreateRequest } from '@/app/entities/client/data/client.mapper';
@@ -9,6 +9,7 @@ import { CLIENT_UPSERT_FORM_FIELDS } from '@/app/entities/client/forms/client-up
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { type ClientCreateFieldErrors, type ClientCreateFormFieldKey, parseClientCreateHttpError } from '@/app/entities/client/utils/client-create-validation-parse.utils';
 import { clientUpsertFieldErrorMessage } from '@/app/entities/client/utils/client-upsert.validation.utils';
+import { quickClientPrefill } from '@/app/entities/client/utils/quick-client-prefill.utils';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
@@ -67,6 +68,8 @@ import { InputTextModule } from 'primeng/inputtext';
 })
 export class QuickClientDialogComponent {
     readonly visible = model(false);
+    /** Aramada bulunamayan metin; açılışta ad veya telefon alanına yazılır (APPT-017/019). */
+    readonly initialText = input('');
     readonly clientCreated = output<string>();
 
     private readonly fb = inject(FormBuilder);
@@ -114,8 +117,7 @@ export class QuickClientDialogComponent {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
         this.form.reset({
-            fullName: '',
-            phone: '',
+            ...quickClientPrefill(this.initialText()),
             email: '',
             address: ''
         });
