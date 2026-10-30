@@ -76,7 +76,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     <p class="text-muted-color text-sm m-0" data-testid="administrations-empty">Bu kayıtta uygulanan ürün yok.</p>
                 } @else {
                     <div class="overflow-x-auto" [class.opacity-60]="loading()" [attr.aria-busy]="loading()">
-                        <p-table [value]="rows()" [tableStyle]="{ 'min-width': '34rem' }">
+                        <p-table [value]="rows()" [tableStyle]="{ 'min-width': '34rem' }" tableStyleClass="table-fixed">
                             <ng-template #header>
                                 <tr>
                                     <th>Zaman</th>

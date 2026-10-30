@@ -54,7 +54,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     <app-empty-state message="Kalanı olan parti yok." />
                 } @else {
                     <div class="overflow-x-auto" [class.opacity-60]="loading()" [attr.aria-busy]="loading()">
-                        <p-table [value]="d.batches" [tableStyle]="{ 'min-width': '40rem' }">
+                        <p-table [value]="d.batches" [tableStyle]="{ 'min-width': '40rem' }" tableStyleClass="table-fixed">
                             <ng-template #header>
                                 <tr>
                                     <th>Seri / lot no</th>

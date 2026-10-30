@@ -98,7 +98,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
                     <app-empty-state message="Bu ortağın kodu yok." />
                 } @else {
                     <div class="overflow-x-auto">
-                        <p-table [value]="codes()" [tableStyle]="{ 'min-width': '48rem' }">
+                        <p-table [value]="codes()" [tableStyle]="{ 'min-width': '48rem' }" tableStyleClass="table-fixed">
                             <ng-template #header>
                                 <tr>
                                     <th>Kod</th>
@@ -158,7 +158,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
                                 <p class="text-sm text-muted-color m-0">Henüz tahsilat yok.</p>
                             } @else {
                                 <div class="overflow-x-auto">
-                                    <p-table [value]="r.collections" [tableStyle]="{ 'min-width': '56rem' }" size="small">
+                                    <p-table [value]="r.collections" [tableStyle]="{ 'min-width': '56rem' }" tableStyleClass="table-fixed" size="small">
                                         <ng-template #header>
                                             <tr>
                                                 <th style="width: 3rem"><span class="sr-only">Seç</span></th>
