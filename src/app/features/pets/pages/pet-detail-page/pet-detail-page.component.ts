@@ -19,6 +19,7 @@ import { PetCardDataService } from '@/app/entities/patient/services/pet-card-dat
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { buildPetGeneralFields } from '@/app/features/pets/utils/pet-general-fields.utils';
 import { buildPetTodo, openItemsSection, ownerOutstandingSection, type PetCardSection, petCardEmphasis } from '@/app/entities/patient/utils/pet-card.utils';
+import { DETAIL_FIELD_LIST_CLASS } from '@/app/shared/ui/detail.classes';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import { PatientActionBarComponent } from '@/app/entities/patient/components/patient-action-bar/patient-action-bar.component';
@@ -118,7 +119,7 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
                     <section class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-4" aria-labelledby="pet-record-title">
                         <h5 id="pet-record-title" class="mt-0 mb-2">Kayıt bilgileri</h5>
                         <!-- Klinik özetle aynı etiket/değer deseni: etiket üstte küçük/büyük harf, değer altında; satırlar ince çizgiyle ayrılır. -->
-                        <dl class="m-0 divide-y divide-surface-200 dark:divide-surface-700 [&>div]:py-2 [&_dt]:field-label [&_dt]:mb-0.5 [&_dd]:m-0 [&_dd]:break-words">
+                        <dl [class]="fieldListClass">
                             @for (field of generalFields().filled; track field.label) {
                                 <div>
                                     <dt>{{ field.label }}</dt>
@@ -203,6 +204,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
 
     readonly canUpdatePet = this.auth.hasOperationClaim(PETS_UPDATE_CLAIM);
     readonly emphasis = petCardEmphasis((claim) => this.auth.hasOperationClaim(claim));
+    protected readonly fieldListClass = DETAIL_FIELD_LIST_CLASS;
 
     readonly payments = computed(() => this.historyBlock('Payments', (h) => h.recentPayments));
     readonly ownerOutstanding = computed(() => ownerOutstandingSection(this.openItems()));

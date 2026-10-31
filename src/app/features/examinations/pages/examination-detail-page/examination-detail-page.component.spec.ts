@@ -203,11 +203,12 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const button = card.querySelector('[data-testid="finalize-open"]')!;
 
         expect(el.querySelectorAll('[data-testid="finalize-open"]').length).toBe(1);
-        expect(el.querySelector('app-page-header [data-testid="finalize-open"]')).toBeNull();
+        expect(el.querySelector('[data-testid="exam-identity-card"] [data-testid="finalize-open"]')).toBeNull();
+        expect(el.querySelector('[data-testid="detail-action-bar"] [data-testid="finalize-open"]')).toBeNull();
         expect(button).not.toBeNull();
         expect(card.lastElementChild).toBe(button);
         expect(button.previousElementSibling?.tagName).toBe('UL');
-        expect(el.querySelector('app-page-header')?.textContent).toContain('Düzenle');
+        expect(el.querySelector('[data-testid="exam-identity-card"]')?.textContent).toContain('Düzenle');
     });
 
     it('kart içindeki Kesinleştir onay diyaloğunu açar', async () => {
@@ -229,8 +230,9 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const { el } = await setup(detailVm, ['Examinations.Read']);
         const aside = el.querySelector('[data-testid="finalize-aside"]')!;
 
-        expect(aside.classList).toContain('xl:sticky');
-        expect(aside.classList).toContain('xl:top-20');
+        // Kırılım içerik alanına göre (container sorgusu): geniş alanda sabit, dar alanda akışta.
+        expect(aside.classList).toContain('@5xl:sticky');
+        expect(aside.classList).toContain('@5xl:top-20');
         expect(aside.classList).not.toContain('sticky');
         expect(aside.querySelector('[data-testid="finalize-checklist"]')).not.toBeNull();
     });
@@ -293,14 +295,14 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(el.querySelector('app-examination-patient-header')).not.toBeNull();
     });
 
-    it('hasta bandı kartı alttaki çalışma alanından standart kart boşluğuyla ayrılır', async () => {
+    it('hasta satırı kimlik kartının içindedir; kendi kartı yoktur', async () => {
         const { el } = await setup(detailVm, ['Examinations.Read']);
-        const header = el.querySelector('app-examination-patient-header')!;
+        const header = el.querySelector('[data-testid="exam-identity-card"] app-examination-patient-header')!;
 
-        // `.card` host'ta ve kardeşi var: `.card:last-child` alt boşluğu sıfırlamaz.
-        expect(header.classList).toContain('card');
+        expect(header).not.toBeNull();
+        expect(header.classList).not.toContain('card');
         expect(header.querySelector('.card')).toBeNull();
-        expect(header.nextElementSibling?.getAttribute('data-testid')).toBe('exam-workspace');
+        expect(el.querySelector('[data-testid="exam-workspace"]')).not.toBeNull();
     });
 
     it('Ödeme Oluştur yalnız Payments.Create izniyle görünür (Update tek başına yetmez)', async () => {
@@ -391,7 +393,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const record = el.querySelector('[data-testid="exam-record"]')!;
 
         expect(record.querySelector('[data-testid="record-empty-sections"]')?.textContent).toContain('Anamnez, Klinik bulgular, Değerlendirme / tanı, Plan / tedavi planı, Ek notlar');
-        expect(Array.from(record.querySelectorAll('h5')).map((h) => h.textContent?.trim())).toEqual(['Şikâyet / ziyaret sebebi', 'Vital']);
+        expect(Array.from(record.querySelectorAll('h6')).map((h) => h.textContent?.trim())).toEqual(['Şikâyet / ziyaret sebebi', 'Vital']);
         expect(record.querySelector('[data-testid="vital-row"]')?.textContent).toContain('Ölçülmemiş');
         expect(record.querySelector('app-empty-state')).toBeNull();
     });

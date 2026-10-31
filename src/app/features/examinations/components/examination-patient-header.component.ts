@@ -5,6 +5,7 @@ import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { formatPetAgeTr } from '@/app/features/examinations/utils/pet-age.utils';
 import type { PetDetailVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
+import { speciesEmoji } from '@/app/entities/species/utils/species-icon.utils';
 import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
@@ -12,60 +13,43 @@ import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.ut
 const EM = '—';
 
 /**
- * Hasta başlığı: hasta, sahip, tür/ırk, yaş, iletişim.
- * Veri `GET /pets/{id}` ve `GET /clients/{id}` ile alınır; yüklenemeyen/olmayan alan `—` gösterilir.
- * `card` sınıfı host'tadır: iç öğede olsaydı tek çocuk olduğu için `.card:last-child` alt boşluğu sıfırlar,
- * kart alttaki alana yapışırdı. Host'ta kartlar arası standart `.card` boşluğu sayfadaki kardeşine uygulanır.
+ * Hasta satırı (muayene kimlik kartının içinde; müşteri/hasta kartıyla aynı dil): hasta (tür simgesi, tür · ırk · yaş, uyarı rozetleri)
+ * ve sahip (telefon, e-posta). Veri `GET /pets/{id}` ve `GET /clients/{id}` ile alınır; yüklenemeyen/olmayan alan `—` gösterilir.
  */
 @Component({
     selector: 'app-examination-patient-header',
     standalone: true,
-    host: { class: 'card block' },
+    host: { class: 'block' },
     imports: [RouterLink, PetAlertBadgesComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <section aria-label="Hasta bilgileri">
-            <dl class="m-0 grid grid-cols-12 gap-x-4 gap-y-3">
-                <div class="col-span-12 sm:col-span-6 lg:col-span-3">
-                    <dt class="text-sm text-muted-color">Hasta</dt>
-                    <dd class="m-0 font-medium">
-                        @if (petId()) {
-                            <a [routerLink]="['/panel/pets', petId()]" class="text-primary no-underline">{{ petName() }}</a>
-                        } @else {
-                            {{ petName() }}
-                        }
-                        <app-pet-alert-badges class="block mt-1" [alerts]="petAlerts()" />
-                    </dd>
-                </div>
-                <div class="col-span-12 sm:col-span-6 lg:col-span-3">
-                    <dt class="text-sm text-muted-color">Tür / ırk</dt>
-                    <dd class="m-0">{{ speciesBreed() }}</dd>
-                </div>
-                <div class="col-span-12 sm:col-span-6 lg:col-span-3">
-                    <dt class="text-sm text-muted-color">Yaş</dt>
-                    <dd class="m-0">{{ age() }}</dd>
-                </div>
-                <div class="col-span-12 sm:col-span-6 lg:col-span-3">
-                    <dt class="text-sm text-muted-color">Sahip</dt>
-                    <dd class="m-0 font-medium">
-                        @if (clientId()) {
-                            <a [routerLink]="['/panel/clients', clientId()]" class="text-primary no-underline">{{ clientName() }}</a>
-                        } @else {
-                            {{ clientName() }}
-                        }
-                    </dd>
-                </div>
-                <div class="col-span-12 sm:col-span-6 lg:col-span-3">
-                    <dt class="text-sm text-muted-color">Telefon</dt>
-                    <dd class="m-0">{{ phone() }}</dd>
-                </div>
-                <div class="col-span-12 sm:col-span-6 lg:col-span-3">
-                    <dt class="text-sm text-muted-color">E-posta</dt>
-                    <dd class="m-0 break-all">{{ email() }}</dd>
-                </div>
-            </dl>
+        <section aria-label="Hasta bilgileri" class="mt-3">
+            <p class="m-0 flex flex-wrap items-center gap-x-6 gap-y-2">
+                <span class="min-w-0">
+                    <span class="text-muted-color">Hasta:</span>
+                    <span class="ml-1" [title]="speciesBreed()" aria-hidden="true">{{ speciesIcon() }}</span>
+                    @if (petId()) {
+                        <a [routerLink]="['/panel/pets', petId()]" class="text-primary font-semibold no-underline ml-1">{{ petName() }}</a>
+                    } @else {
+                        <span class="ml-1 font-medium">{{ petName() }}</span>
+                    }
+                    <span class="text-muted-color text-sm"> · {{ speciesBreed() }} · {{ age() }}</span>
+                </span>
+                <span class="min-w-0">
+                    <span class="text-muted-color">Sahip:</span>
+                    @if (clientId()) {
+                        <a [routerLink]="['/panel/clients', clientId()]" class="text-primary font-medium no-underline ml-1">{{ clientName() }}</a>
+                    } @else {
+                        <span class="ml-1">{{ clientName() }}</span>
+                    }
+                    <span class="text-muted-color text-sm"> · {{ phone() }} · {{ email() }}</span>
+                </span>
+            </p>
+            @if (petAlerts().flags.length > 0) {
+                <app-pet-alert-badges class="block mt-2" [alerts]="petAlerts()" />
+            }
             @if (loadError()) {
-                <p class="text-sm text-muted-color mt-3 mb-0" role="status">{{ loadError() }}</p>
+                <p class="field-empty mt-2 mb-0" role="status">{{ loadError() }}</p>
             }
         </section>
     `
@@ -89,6 +73,7 @@ export class ExaminationPatientHeaderComponent {
 
     readonly petName = computed(() => this.pet()?.name ?? (this.fallbackPetName()?.trim() || EM));
     readonly petAlerts = computed(() => this.pet()?.petAlerts ?? NO_PET_ALERTS);
+    readonly speciesIcon = computed(() => speciesEmoji(this.pet()?.speciesName));
     readonly clientName = computed(() => this.client()?.fullName ?? (this.fallbackClientName()?.trim() || EM));
     readonly speciesBreed = computed(() => {
         const p = this.pet();

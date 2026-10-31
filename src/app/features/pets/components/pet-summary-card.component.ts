@@ -8,6 +8,7 @@ import { examinationAssessmentText, examinationVitalsLine, type PetCardSection }
 import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { DETAIL_TILE_GRID_CLASS } from '@/app/shared/ui/detail.classes';
 
 /** Kartta gösterilen takipli tedavi sayısı. */
 const FOLLOW_UP_LIMIT = 3;
@@ -49,7 +50,7 @@ const FOLLOW_UP_LIMIT = 3;
                     <button pButton type="button" size="small" class="p-button-secondary" (click)="retry.emit()"><i class="pi pi-refresh"></i>Tekrar dene</button>
                 </div>
             } @else if (summary(); as s) {
-                <dl class="m-0 grid grid-cols-1 @xl:grid-cols-2 gap-3 [&>div]:min-w-0 [&>div]:rounded-border [&>div]:bg-surface-50 [&>div]:p-3 dark:[&>div]:bg-surface-800 [&_dt]:field-label [&_dt]:mb-1.5 [&_dd]:m-0 [&_dd]:text-surface-900 dark:[&_dd]:text-surface-0">
+                <dl [class]="tileGridClass">
                     <div data-testid="section-weight">
                         <dt>Son kilo (muayeneden)</dt>
                         <dd>
@@ -219,6 +220,7 @@ export class PetSummaryCardComponent {
     /** Takip tarihi gelmemiş tedaviler (sıralı); `null` = tedavi okuma yetkisi yok. */
     readonly followUps = input<PetCardSection<TreatmentListItemVm[]>>(null);
     readonly retry = output<void>();
+    protected readonly tileGridClass = DETAIL_TILE_GRID_CLASS;
 
     private readonly exam = computed(() => {
         const e = this.lastExamination();
