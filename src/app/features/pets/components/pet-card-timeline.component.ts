@@ -27,7 +27,7 @@ export const PET_CARD_TIMELINE_LIMIT = 10;
     imports: [FormsModule, RouterLink, ButtonModule, SelectButtonModule, PetTimelineItemComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <section class="card mb-0" aria-labelledby="pet-card-timeline-title">
+        <section class="card mb-0 h-full" aria-labelledby="pet-card-timeline-title">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                 <h5 id="pet-card-timeline-title" class="m-0">Zaman çizelgesi</h5>
                 @if (filter() === 'payment') {
