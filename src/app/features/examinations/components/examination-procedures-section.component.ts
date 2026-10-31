@@ -5,7 +5,7 @@ import { DrawerModule } from 'primeng/drawer';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { HOSPITALIZATIONS_CREATE_CLAIM, IMAGING_CREATE_CLAIM, LAB_RESULTS_CREATE_CLAIM, PRESCRIPTIONS_CREATE_CLAIM, TREATMENTS_CREATE_CLAIM, VACCINATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { ExaminationDetailVm, ExaminationRelatedSummaryVm } from '@/app/entities/examination/models/examination-vm.model';
-import { buildProcedureRows, PROCEDURE_KINDS, PROCEDURE_LABEL, PROCEDURE_ROUTE_SEGMENT, procedureAddState, type ProcedureKind } from '@/app/features/examinations/utils/examination-procedures.utils';
+import { buildProcedureRows, FINALIZED_LOCK_MESSAGE, PROCEDURE_KINDS, PROCEDURE_LABEL, PROCEDURE_ROUTE_SEGMENT, procedureAddState, type ProcedureKind } from '@/app/features/examinations/utils/examination-procedures.utils';
 import { HospitalizationFormComponent } from '@/app/entities/procedure/components/hospitalization-form.component';
 import { ImagingRecordFormComponent } from '@/app/entities/procedure/components/imaging-record-form.component';
 import { IMAGING_ADDED_AFTER_FINALIZATION_LABEL } from '@/app/entities/imaging/utils/imaging.utils';
@@ -61,22 +61,25 @@ const ADD_ICON: Record<ProcedureKind, string> = {
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="card" data-testid="procedures-section">
-            <h4 class="mt-0 mb-4">İşlemler</h4>
-
-            @if (canAddAny()) {
-                <div class="flex flex-wrap items-center gap-2 mb-2" data-testid="procedure-add-bar">
-                    <span class="text-sm text-muted-color">+ Ekle:</span>
-                    @for (kind of visibleKinds(); track kind) {
-                        <button pButton type="button" size="small" severity="secondary" [outlined]="true" [disabled]="state(kind).disabled" [attr.data-testid]="'procedure-add-' + kind" (click)="open(kind)"><i class="p-button-icon" [class]="icon(kind)"></i>{{ label(kind) }}</button>
+        <div class="card mb-0" data-testid="procedures-section">
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-2">
+                <h5 class="mt-0 mb-0">İşlemler</h5>
+                @if (canAddAny()) {
+                    <!-- Kesinleşince eklenemeyen türlerin düğmesi çizilmez; neden tek not satırında. -->
+                    <div class="flex flex-wrap items-center gap-2" data-testid="procedure-add-bar">
+                        @for (kind of shownKinds(); track kind) {
+                            <button pButton type="button" size="small" severity="secondary" [outlined]="true" [disabled]="state(kind).disabled" [attr.data-testid]="'procedure-add-' + kind" (click)="open(kind)"><i class="p-button-icon" [class]="icon(kind)"></i>{{ label(kind) }}</button>
+                        }
+                    </div>
+                }
+            </div>
+            @if (canAddAny() && addHint(); as hint) {
+                <p class="text-sm text-muted-color mt-0 mb-1" role="note" [attr.data-testid]="lockReasons().length > 0 ? 'procedure-lock-reason' : 'procedure-add-note'">
+                    @if (lockReasons().length > 0) {
+                        <i class="pi pi-lock text-xs mr-1"></i>
                     }
-                </div>
-                @for (reason of lockReasons(); track reason) {
-                    <p class="text-sm text-muted-color mt-0 mb-1" role="note" data-testid="procedure-lock-reason"><i class="pi pi-lock text-xs mr-1"></i>{{ reason }}</p>
-                }
-                @for (note of addNotes(); track note) {
-                    <p class="text-sm text-muted-color mt-0 mb-1" role="note">{{ note }}</p>
-                }
+                    {{ hint }}
+                </p>
             }
 
             @if (notice()) {
@@ -183,6 +186,10 @@ export class ExaminationProceduresSectionComponent {
 
         return [...new Set(notes.filter((n): n is string => !!n))];
     });
+    /** Kilit nedeni ve ek notlar tek satırda; ayrı paragraflar bölümü kalabalıklaştırıyordu. */
+    readonly addHint = computed(() => [...this.lockReasons(), ...this.addNotes()].join(' '));
+    /** Kesinleşme kalıcıdır: o yüzden kapalı kalan türlerin düğmesi çizilmez (salt okunur geçicidir, düğme kilitli kalır). */
+    readonly shownKinds = computed(() => this.visibleKinds().filter((k) => this.state(k).reason !== FINALIZED_LOCK_MESSAGE));
 
     readonly lateEntryLabel = IMAGING_ADDED_AFTER_FINALIZATION_LABEL;
     readonly label = (kind: ProcedureKind) => PROCEDURE_LABEL[kind];

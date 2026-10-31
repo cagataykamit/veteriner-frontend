@@ -45,20 +45,12 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (canRead) {
-            <div class="card" data-testid="administrations-section">
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div class="card mb-0" data-testid="administrations-section">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                     <h5 class="mt-0 mb-0">Uygulanan ürünler</h5>
-                    <!-- Süzgeç başlık satırında: kayıt yokken bölüm ayrı bir satır kaplamaz. -->
-                    <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-                        <div class="flex items-center gap-2">
-                            <p-checkbox inputId="administrationsShowVoided" [binary]="true" [ngModel]="showVoided()" (ngModelChange)="setShowVoided($event)" data-testid="administrations-show-voided" />
-                            <label for="administrationsShowVoided" class="text-sm cursor-pointer">İptal edilenleri göster</label>
-                        </div>
-                        <a routerLink="/panel/administrations" [queryParams]="{ petId: petId() }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                        @if (canAdd()) {
-                            <button pButton type="button" size="small" data-testid="administration-add" (click)="createVisible = true"><i class="p-button-icon pi pi-plus"></i>Uygulama ekle</button>
-                        }
-                    </div>
+                    @if (canAdd()) {
+                        <button pButton type="button" size="small" data-testid="administration-add" (click)="createVisible = true"><i class="p-button-icon pi pi-plus"></i>Uygulama ekle</button>
+                    }
                 </div>
 
                 @if (canCreate && locked()) {
@@ -109,6 +101,15 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         </p-table>
                     </div>
                 }
+
+                <!-- Filtre ve liste bağlantısı altta: başlık satırı düğmeyle sıkışmaz. -->
+                <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mt-3">
+                    <div class="flex items-center gap-2">
+                        <p-checkbox inputId="administrationsShowVoided" [binary]="true" [ngModel]="showVoided()" (ngModelChange)="setShowVoided($event)" data-testid="administrations-show-voided" />
+                        <label for="administrationsShowVoided" class="text-sm cursor-pointer">İptal edilenleri göster</label>
+                    </div>
+                    <a routerLink="/panel/administrations" [queryParams]="{ petId: petId() }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                </div>
             </div>
 
             <app-administration-create-dialog [(visible)]="createVisible" [petId]="petId()" [petName]="petName()" [examinationId]="examinationId()" [treatmentId]="treatmentId()" [lateEntry]="locked()" (saved)="onSaved($event)" />
