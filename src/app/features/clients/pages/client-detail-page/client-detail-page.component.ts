@@ -97,16 +97,25 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
             <app-patient-action-bar [sticky]="true" [clientId]="c.id" [clientName]="c.fullName" [arrivalPet]="arrivalPet()" />
 
             <!--
-                Ana sütun (hastalar, geçmiş) ve yan sütun (para Yapılacakları, ödeme, portal, belgeler); rol vurgusu sütun sırasını belirler.
-                Kırılımlar görünüm değil içerik alanına göredir (container sorgusu): menü açıkken dar kalan alanda sütunlar alt alta iner.
+                Satır ızgarası (8/4): hastalar | Yapılacaklar; son muayene/randevu | ödeme özeti; portal | belgeler — satırdaki kartlar eşit yükseklikte.
+                Rol vurgusu her satırda sırayı belirler (klinik → hasta/geçmiş solda, ön büro → para solda).
+                Kırılımlar görünüm değil içerik alanına göredir (container sorgusu): menü açıkken dar kalan alanda kartlar alt alta iner.
             -->
-            <div class="@container">
-            <div class="grid grid-cols-12 gap-4">
-                <div class="col-span-12 @4xl:col-span-8 flex flex-col gap-4 min-w-0 @container" [class.order-first]="emphasis === 'clinical'" data-testid="pets-column">
-                    <app-client-pets-panel [rows]="petRows()" [clientId]="c.id" [currency]="currency()" />
+            <div class="@container flex flex-col gap-4">
+                <!-- 1. satır: hastalar | Yapılacaklar (eşit yükseklik) -->
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="col-span-12 @4xl:col-span-8 min-w-0" [class.order-first]="emphasis === 'clinical'" data-testid="pets-column">
+                        <app-client-pets-panel [rows]="petRows()" [clientId]="c.id" [currency]="currency()" />
+                    </div>
+                    <div class="col-span-12 @4xl:col-span-4 min-w-0" [class.order-first]="emphasis === 'frontDesk'" data-testid="todo-column">
+                        <app-pet-todo-panel [view]="todo()" />
+                    </div>
+                </div>
 
-                    <div class="grid grid-cols-1 @2xl:grid-cols-2 gap-4" data-testid="history-column">
-                        <div class="card mb-0 min-w-0">
+                <!-- 2. satır: son muayeneler | son randevular | ödeme özeti (eşit yükseklik) -->
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="col-span-12 @4xl:col-span-8 grid grid-cols-1 @2xl:grid-cols-2 gap-4 min-w-0" [class.order-first]="emphasis === 'clinical'" data-testid="history-column">
+                        <div class="card mb-0 min-w-0 h-full">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-3">
                                 <h5 class="mt-0 mb-0">Son muayeneler</h5>
                                 <a routerLink="/panel/examinations" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
@@ -132,7 +141,7 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
                                 </ul>
                             }
                         </div>
-                        <div class="card mb-0 min-w-0">
+                        <div class="card mb-0 min-w-0 h-full">
                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-3">
                                 <h5 class="mt-0 mb-0">Son randevular</h5>
                                 <a routerLink="/panel/appointments" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
@@ -164,12 +173,9 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
                             }
                         </div>
                     </div>
-                </div>
 
-                <div class="col-span-12 @4xl:col-span-4 flex flex-col gap-4 min-w-0" [class.order-first]="emphasis === 'frontDesk'" data-testid="todo-column">
-                    <app-pet-todo-panel [view]="todo()" />
-
-                    <div class="card mb-0 min-w-0" data-testid="payments-column">
+                    <div class="col-span-12 @4xl:col-span-4 min-w-0" [class.order-first]="emphasis === 'frontDesk'" data-testid="payments-column">
+                    <div class="card mb-0 min-w-0 h-full">
                         <div class="flex flex-wrap gap-x-3 gap-y-1 items-center mb-3">
                             <h5 class="mt-0 mb-0 min-w-0">Ödeme özeti</h5>
                             <span class="ml-auto flex flex-wrap gap-x-3">
@@ -245,12 +251,16 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
                             </div>
                         }
                     </div>
+                    </div>
+                </div>
 
+                <!-- 3. satır: portal erişimi | belgeler ve rıza (eşit yükseklik) -->
+                <div class="grid grid-cols-12 gap-4">
                     @if (canManagePortal) {
-                        <app-client-portal-access-panel [client]="c" (chipLabelChange)="portalChip.set($event)" />
+                        <app-client-portal-access-panel class="col-span-12 @4xl:col-span-8 min-w-0" [client]="c" (chipLabelChange)="portalChip.set($event)" />
                     }
 
-                    <div class="card mb-0 min-w-0" aria-labelledby="client-documents-title" data-testid="client-documents">
+                    <div class="card mb-0 min-w-0 h-full col-span-12 @4xl:col-span-4 @4xl:col-start-9" aria-labelledby="client-documents-title" data-testid="client-documents">
                         <h5 id="client-documents-title" class="mt-0 mb-2">Belgeler ve rıza</h5>
                         <ul class="list-none m-0 p-0 flex flex-col">
                             <li><a [routerLink]="['/panel/clients', c.id, 'kvkk-form']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline" data-testid="kvkk-print-action"><i class="pi pi-print text-sm" aria-hidden="true"></i>KVKK formu yazdır</a></li>
@@ -270,7 +280,6 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
                         </ul>
                     </div>
                 </div>
-            </div>
             </div>
         }
     `

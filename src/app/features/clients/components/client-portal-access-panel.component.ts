@@ -27,12 +27,12 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     standalone: true,
     imports: [ButtonModule, ConfirmDialogModule, AppErrorStateComponent, TrDateTimePipe],
     providers: [ConfirmationService],
-    /** Boşluğu sayfadaki sütun (`gap`) verir; kart kendi kenar boşluğu taşımaz. */
+    /** Boşluğu ve genişliği sayfadaki ızgara verir (öğeye `col-span-*` yazılır); kart kendi kenar boşluğu taşımaz, satırla eşit yüksekliktedir. */
     host: { class: 'block' },
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-confirmdialog key="client-portal" [style]="{ width: 'min(450px, 95vw)' }" />
-        <section class="card mb-0" aria-labelledby="client-portal-title" data-testid="client-portal">
+        <section class="card mb-0 h-full" aria-labelledby="client-portal-title" data-testid="client-portal">
             <h5 id="client-portal-title" class="mt-0 mb-3">Portal erişimi</h5>
             @if (loadError(); as err) {
                 <app-error-state [detail]="err" (retry)="load()" />
