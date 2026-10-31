@@ -42,7 +42,7 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
     template: `
         <section class="card mb-0 @container" aria-label="Müşteri kimliği ve hesap durumu" data-testid="client-card-header">
             <div class="flex flex-wrap items-start gap-x-5 gap-y-3">
-                <div class="shrink-0 flex items-center justify-center w-14 h-14 rounded-full text-xl font-bold tracking-tight bg-primary-50 text-primary-700 dark:bg-primary-900/40 dark:text-primary-200" aria-hidden="true">
+                <div class="shrink-0 flex items-center justify-center w-11 h-11 text-base @md:w-14 @md:h-14 @md:text-xl rounded-full font-bold tracking-tight bg-primary-50 text-primary-700 dark:bg-primary-900/40 dark:text-primary-200" aria-hidden="true">
                     {{ initials() }}
                 </div>
                 <!-- Ad sütunu: ad, kayıt satırı, iletişim, durum rozetleri ve fatura satırı avatarın sağında hizalı. -->
@@ -74,14 +74,15 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
                     <!-- Durum rozetleri: KVKK rıza (+ ayrıntı), portal, hatırlatma; işaretleme eylemi "Belgeler ve rıza" kartındadır. -->
                     <div class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-sm">
                         <p class="m-0 inline-flex flex-wrap items-center gap-x-2 gap-y-1.5" aria-label="KVKK açık rıza" data-testid="client-kvkk">
-                            <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-medium" [class]="kvkkChipClass()">
+                            <!-- Rozet tek satır (kırılmaz); ayrıntı yanına düz yazı, dar ekranda alt satıra iner. -->
+                            <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-medium whitespace-nowrap" [class]="kvkkChipClass()">
                                 <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0" aria-hidden="true"></span>
                                 <span class="font-normal">KVKK rıza:</span>
                                 <span data-testid="client-kvkk-status">{{ kvkkLabel() }}</span>
-                                @if (client().kvkkConsent.status === 'None') {
-                                    <span class="font-normal">· imzalı form alınmadı</span>
-                                }
                             </span>
+                            @if (client().kvkkConsent.status === 'None') {
+                                <span class="text-muted-color">imzalı form alınmadı</span>
+                            }
                             @if (client().kvkkConsent.recordedOn; as on) {
                                 <span class="text-muted-color" data-testid="client-kvkk-date">{{ on | trDate }}</span>
                             }
@@ -93,13 +94,13 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
                             }
                         </p>
                         @if (portalChip(); as label) {
-                            <span class="inline-flex items-center gap-1.5 rounded-full border border-surface-300 bg-surface-50 px-2.5 py-0.5 font-medium dark:border-surface-600 dark:bg-surface-800" data-testid="client-portal-chip">
+                            <span class="inline-flex items-center gap-1.5 rounded-full border border-surface-300 bg-surface-50 px-2.5 py-0.5 font-medium whitespace-nowrap dark:border-surface-600 dark:bg-surface-800" data-testid="client-portal-chip">
                                 <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0" aria-hidden="true"></span>{{ label }}
                             </span>
                         }
                         @if (client().remindersOptedOut) {
                             <span
-                                class="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 font-medium text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300"
+                                class="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 font-medium whitespace-nowrap text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300"
                                 role="note"
                                 title="Aşı ve randevu hatırlatma e-postaları gönderilmez."
                                 data-testid="client-reminders-opted-out"
@@ -107,7 +108,7 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
                             >
                         } @else {
                             <span
-                                class="inline-flex items-center gap-1.5 rounded-full border border-surface-300 bg-surface-50 px-2.5 py-0.5 font-medium dark:border-surface-600 dark:bg-surface-800"
+                                class="inline-flex items-center gap-1.5 rounded-full border border-surface-300 bg-surface-50 px-2.5 py-0.5 font-medium whitespace-nowrap dark:border-surface-600 dark:bg-surface-800"
                                 title="Aşı ve randevu hatırlatma e-postaları gönderilir."
                                 data-testid="client-reminders-on"
                                 ><i class="pi pi-bell text-xs" aria-hidden="true"></i>Hatırlatmalar açık</span

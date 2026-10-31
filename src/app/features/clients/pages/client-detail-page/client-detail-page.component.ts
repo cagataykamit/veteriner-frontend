@@ -97,7 +97,7 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
             <app-patient-action-bar [sticky]="true" [clientId]="c.id" [clientName]="c.fullName" [arrivalPet]="arrivalPet()" />
 
             <!--
-                Satır ızgarası (8/4): hastalar | Yapılacaklar; son muayene/randevu | ödeme özeti; portal | belgeler — satırdaki kartlar eşit yükseklikte.
+                Satır ızgarası: hastalar | Yapılacaklar (8/4); son muayene/randevu | ödeme özeti (8/4); portal | belgeler (6/6) — satırdaki kartlar eşit yükseklikte.
                 Rol vurgusu her satırda sırayı belirler (klinik → hasta/geçmiş solda, ön büro → para solda).
                 Kırılımlar görünüm değil içerik alanına göredir (container sorgusu): menü açıkken dar kalan alanda kartlar alt alta iner.
             -->
@@ -254,13 +254,13 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
                     </div>
                 </div>
 
-                <!-- 3. satır: portal erişimi | belgeler ve rıza (eşit yükseklik) -->
+                <!-- 3. satır: portal erişimi | belgeler ve rıza (yarım genişlik, eşit yükseklik) -->
                 <div class="grid grid-cols-12 gap-4">
                     @if (canManagePortal) {
-                        <app-client-portal-access-panel class="col-span-12 @4xl:col-span-8 min-w-0" [client]="c" (chipLabelChange)="portalChip.set($event)" />
+                        <app-client-portal-access-panel class="col-span-12 @4xl:col-span-6 min-w-0" [client]="c" (chipLabelChange)="portalChip.set($event)" />
                     }
 
-                    <div class="card mb-0 min-w-0 h-full col-span-12 @4xl:col-span-4 @4xl:col-start-9" aria-labelledby="client-documents-title" data-testid="client-documents">
+                    <div class="card mb-0 min-w-0 h-full col-span-12 @4xl:col-span-6" aria-labelledby="client-documents-title" data-testid="client-documents">
                         <h5 id="client-documents-title" class="mt-0 mb-2">Belgeler ve rıza</h5>
                         <ul class="list-none m-0 p-0 flex flex-col">
                             <li><a [routerLink]="['/panel/clients', c.id, 'kvkk-form']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline" data-testid="kvkk-print-action"><i class="pi pi-print text-sm" aria-hidden="true"></i>KVKK formu yazdır</a></li>
