@@ -12,6 +12,9 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppDetailActionBarComponent } from '@/app/shared/ui/detail-action-bar/app-detail-action-bar.component';
+import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
+import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-line/app-detail-subject-line.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -25,6 +28,9 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
         RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
+        AppDetailIdentityCardComponent,
+        AppDetailActionBarComponent,
+        AppDetailSubjectLineComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
@@ -37,60 +43,64 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
         } @else if (error()) {
             <div class="card"><app-error-state [detail]="error()!" (retry)="load()" /></div>
         } @else if (sale(); as s) {
-            <app-page-header categoryLink="/panel/sales" categoryLinkLabel="Satış listesine dön" title="Satış" [description]="soldAt(s)">
-                <div actions class="flex flex-wrap gap-2">
-                    <button pButton type="button" severity="secondary" (click)="print()"><i class="p-button-icon pi pi-print"></i>Fişi yazdır</button>
-                    @if (canVoid && !s.isVoided && !ro.mutationBlocked()) {
-                        <button pButton type="button" severity="danger" [outlined]="true" (click)="voidVisible.set(true)"><i class="p-button-icon pi pi-ban"></i>İptal et</button>
-                    }
-                </div>
-            </app-page-header>
+            <app-page-header categoryLink="/panel/sales" categoryLinkLabel="Satış listesine dön" />
 
-            <div class="grid grid-cols-12 gap-8">
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Özet</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (s.isWalkIn) {
-                                    {{ s.clientName }}
-                                } @else {
-                                    <a [routerLink]="['/panel/clients', s.clientId]" class="text-primary font-medium no-underline">{{ s.clientName }}</a>
-                                }
-                            </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Durum</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0"><app-status-tag [label]="s.statusLabel" [severity]="s.statusSeverity" /></dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Toplam</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0 font-medium">{{ s.totalText }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Ödenen</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ s.paidText }}</dd>
-                            @if (s.hasOutstanding) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Kalan borç</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ s.outstandingText }}</dd>
-                            }
-                            @if (s.notes) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Not</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ s.notes }}</dd>
-                            }
-                        </dl>
+            <!-- Kimlik kartı: toplam tutar + durum rozeti, satış zamanı, müşteri, iptal bilgisi; sağda Fişi yazdır; gösterge şeridi (toplam, ödenen, kalan). -->
+            <app-detail-identity-card icon="pi pi-shopping-cart" [title]="s.totalText" [subtitle]="soldAt(s)" [meta]="s.isWalkIn ? 'Kayıtsız (walk-in) müşteri' : ''" ariaLabel="Satış kimliği" testId="sale-identity-card">
+                <app-status-tag badges [label]="s.statusLabel" [severity]="s.statusSeverity" />
+                <app-detail-subject-line [clientId]="s.isWalkIn ? null : s.clientId" [clientName]="s.clientName" />
+                @if (s.isVoided) {
+                    <p class="m-0 mt-3 inline-flex items-start gap-2 rounded-border border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="status" data-testid="sale-void-info">
+                        <i class="pi pi-ban text-xs mt-1" aria-hidden="true"></i>
+                        <span>
+                            <span class="font-medium">İptal edildi</span> · {{ voidedAt(s) }}
+                            <span class="block">Gerekçe: {{ s.voidReason }}</span>
+                            <span class="block">Stok: {{ s.voidStockOutcomeLabel }}</span>
+                        </span>
+                    </p>
+                }
+                <ng-container actions>
+                    <button pButton type="button" class="p-button-outlined p-button-secondary" (click)="print()"><i class="p-button-icon pi pi-print"></i>Fişi yazdır</button>
+                </ng-container>
+                <div stat>
+                    <dt>Toplam</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ s.totalText }}</dd>
+                </div>
+                <div stat>
+                    <dt>Ödenen</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ s.paidText }}</dd>
+                </div>
+                <div stat>
+                    <dt>Kalan borç</dt>
+                    <dd>
+                        @if (s.hasOutstanding) {
+                            <span class="font-semibold text-red-600 dark:text-red-400 tabular-nums">{{ s.outstandingText }}</span>
+                        } @else {
+                            <span class="field-empty">Yok</span>
+                        }
+                    </dd>
+                </div>
+            </app-detail-identity-card>
+
+            <!-- Eylem şeridi: gerekçeli iptal (salt okunurda gösterilmez; mevcut davranış). -->
+            @if (canVoid && !s.isVoided && !ro.mutationBlocked()) {
+                <app-detail-action-bar ariaLabel="Satış eylemleri">
+                    <button pButton type="button" severity="danger" [outlined]="true" (click)="voidVisible.set(true)"><i class="p-button-icon pi pi-ban"></i>İptal et</button>
+                </app-detail-action-bar>
+            }
+
+            <!-- Satır ızgarası: fiş | not (8/4, eşit yükseklik). -->
+            <div class="@container">
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="min-w-0 col-span-12 [&>.card]:mb-0 [&>.card]:h-full" [class.@4xl:col-span-8]="!!s.notes">
+                        <app-sale-receipt [sale]="s" />
                     </div>
-                    @if (s.isVoided) {
-                        <div class="card" data-testid="sale-void-info">
-                            <h5 class="mt-0 mb-4">İptal bilgisi</h5>
-                            <dl class="m-0 grid grid-cols-12 gap-3">
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Gerekçe</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ s.voidReason }}</dd>
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Stok</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ s.voidStockOutcomeLabel }}</dd>
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">İptal zamanı</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ voidedAt(s) }}</dd>
-                            </dl>
+                    @if (s.notes) {
+                        <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-4">
+                            <h5 class="mt-0 mb-3">Not</h5>
+                            <p class="m-0 whitespace-pre-wrap">{{ s.notes }}</p>
                         </div>
                     }
-                </div>
-                <div class="col-span-12 lg:col-span-6">
-                    <app-sale-receipt [sale]="s" />
                 </div>
             </div>
 
