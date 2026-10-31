@@ -19,6 +19,7 @@ import { PetCardDataService } from '@/app/entities/patient/services/pet-card-dat
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { buildPetGeneralFields } from '@/app/features/pets/utils/pet-general-fields.utils';
 import { buildPetTodo, openItemsSection, ownerOutstandingSection, type PetCardSection, petCardEmphasis, petIdentityParts } from '@/app/entities/patient/utils/pet-card.utils';
+import { speciesEmoji } from '@/app/entities/species/utils/species-icon.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import { PatientActionBarComponent } from '@/app/entities/patient/components/patient-action-bar/patient-action-bar.component';
@@ -65,7 +66,7 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (pet(); as p) {
-            <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hasta listesine dön" [title]="p.name" [description]="identity()">
+            <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hasta listesine dön" [title]="speciesIcon(p.speciesName) + ' ' + p.name" [description]="identity()">
                 @if (canUpdatePet && !ro.mutationBlocked()) {
                     <!-- İki eylem tek kökte: denetim akışı bloğunda birden çok kök [actions] yuvasına yansıtılmaz. -->
                     <ng-container actions>
@@ -195,6 +196,8 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
 
     readonly canUpdatePet = this.auth.hasOperationClaim(PETS_UPDATE_CLAIM);
     readonly emphasis = petCardEmphasis((claim) => this.auth.hasOperationClaim(claim));
+    /** Sayfa başlığında adın önünde tür simgesi (müşteri kartı hasta satırıyla aynı). */
+    readonly speciesIcon = speciesEmoji;
 
     readonly identity = computed(() => {
         const p = this.pet();
