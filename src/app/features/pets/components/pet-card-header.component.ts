@@ -6,7 +6,7 @@ import type { PetSummaryVm } from '@/app/entities/pet/models/pet-summary-vm.mode
 import type { PetNextAppointmentVm } from '@/app/entities/pet/models/pet-open-items-vm.model';
 import type { PetDetailVm } from '@/app/entities/pet/models/pet-vm.model';
 import { type PetCardSection, petIdentityParts } from '@/app/entities/patient/utils/pet-card.utils';
-import { speciesEmoji } from '@/app/entities/species/utils/species-icon.utils';
+import { speciesEmoji } from '@/app/shared/utils/species-icon.utils';
 import { careStatusLabel } from '@/app/entities/visit/utils/visit-status.utils';
 import type { VisitCareStatus } from '@/app/entities/visit/models/visit-vm.model';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';

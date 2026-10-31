@@ -17,7 +17,7 @@ import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PET_LIFE_STATUS_FILTER_OPTIONS, PET_LIST_DEFAULT_STATUS, parsePetListStatusFilter, type PetListStatusFilter } from '@/app/entities/pet/utils/pet-status.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
-import { speciesEmoji } from '@/app/entities/species/utils/species-icon.utils';
+import { speciesEmoji } from '@/app/shared/utils/species-icon.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';

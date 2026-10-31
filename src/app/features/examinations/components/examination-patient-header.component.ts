@@ -5,7 +5,7 @@ import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { formatPetAgeTr } from '@/app/features/examinations/utils/pet-age.utils';
 import type { PetDetailVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
-import { speciesEmoji } from '@/app/entities/species/utils/species-icon.utils';
+import { speciesEmoji } from '@/app/shared/utils/species-icon.utils';
 import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';

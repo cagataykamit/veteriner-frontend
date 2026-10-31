@@ -11,7 +11,7 @@ import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.u
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { appointmentStatusLabel, appointmentStatusSeverity, canMarkAppointmentNoShow, canRevertAppointmentNoShow, isAppointmentNoShowStatus, isAppointmentCancelledStatus } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { appointmentTypeDisplayLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
-import { speciesEmoji } from '@/app/entities/species/utils/species-icon.utils';
+import { speciesEmoji } from '@/app/shared/utils/species-icon.utils';
 import { DETAIL_STATS_GRID_CLASS } from '@/app/shared/ui/detail.classes';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
