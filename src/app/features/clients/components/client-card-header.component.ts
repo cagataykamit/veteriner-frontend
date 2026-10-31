@@ -26,7 +26,7 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
 
 /**
  * Müşteri kimlik kartı (ADR-020 karar 6): baş harf avatarı, ad, kayıt/güncellenme satırı, "Düzenle" (`[editAction]`, yetki sayfada),
- * iletişim (aranabilir telefon öne çıkar, e-posta, adres, tercih edilen kanal; hatırlatma istemiyorsa belirgin not),
+ * iletişim (aranabilir telefon öne çıkar, e-posta, adres ve tercih edilen kanal — boşsa "yok" yazılır; hatırlatma açık/kapalı rozeti),
  * durum rozetleri ve gösterge şeridi (açık borç, ücret bekleyen işlem, son muayene, sonraki randevu).
  * KVKK açık rıza (ADR-021) rozet + ayrıntı: durum, form tarihi, işaretleyen ve işaretleme anındaki metin sürümü (ADR-032); işaretleme eylemi sayfanın "Belgeler ve rıza" kartındadır.
  * Portal rozeti etiketi sayfadan gelir (`portalChip`, durum "Portal erişimi" panelinde okunur).
@@ -58,15 +58,17 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
                         }
                         @if (hasText(client().email)) {
                             <a [href]="'mailto:' + client().email.trim()" class="text-primary no-underline break-all" data-testid="client-email"><i class="pi pi-envelope text-sm mr-1.5" aria-hidden="true"></i>{{ client().email }}</a>
+                        } @else {
+                            <span class="text-muted-color" data-testid="client-email-missing"><i class="pi pi-envelope text-sm mr-1.5" aria-hidden="true"></i>E-posta yok</span>
                         }
                         @if (hasText(client().address)) {
                             <span class="break-words" data-testid="client-address"><i class="pi pi-map-marker text-sm mr-1.5 text-muted-color" aria-hidden="true"></i>{{ client().address }}</span>
+                        } @else {
+                            <span class="text-muted-color" data-testid="client-address-missing"><i class="pi pi-map-marker text-sm mr-1.5" aria-hidden="true"></i>Adres yok</span>
                         }
-                        @if (client().preferredContactChannel !== 'None') {
-                            <span class="text-muted-color" data-testid="client-preferred-channel"
-                                >Tercih: <span class="font-medium text-color">{{ channelLabel() }}</span></span
-                            >
-                        }
+                        <span class="text-muted-color" data-testid="client-preferred-channel"
+                            >Tercih: <span class="font-medium text-color">{{ channelLabel() }}</span></span
+                        >
                     </p>
 
                     <!-- Durum rozetleri: KVKK rıza (+ ayrıntı), portal, hatırlatma; işaretleme eylemi "Belgeler ve rıza" kartındadır. -->
@@ -102,6 +104,13 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
                                 title="Aşı ve randevu hatırlatma e-postaları gönderilmez."
                                 data-testid="client-reminders-opted-out"
                                 ><i class="pi pi-bell-slash text-xs" aria-hidden="true"></i>Otomatik hatırlatma istemiyor</span
+                            >
+                        } @else {
+                            <span
+                                class="inline-flex items-center gap-1.5 rounded-full border border-surface-300 bg-surface-50 px-2.5 py-0.5 font-medium dark:border-surface-600 dark:bg-surface-800"
+                                title="Aşı ve randevu hatırlatma e-postaları gönderilir."
+                                data-testid="client-reminders-on"
+                                ><i class="pi pi-bell text-xs" aria-hidden="true"></i>Hatırlatmalar açık</span
                             >
                         }
                     </div>
