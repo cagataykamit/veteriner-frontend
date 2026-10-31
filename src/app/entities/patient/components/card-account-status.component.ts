@@ -29,7 +29,7 @@ const INLINE_CLASS = 'm-0 mt-3 pt-3 border-t border-surface-200 dark:border-surf
                                 @if (outstanding() > 0) {
                                     <span class="font-semibold text-red-600 dark:text-red-400 tabular-nums">{{ outstandingLabel() }}</span>
                                 } @else {
-                                    <span class="text-muted-color">Yok</span>
+                                    <span class="field-empty">Yok</span>
                                 }
                             }
                             @case ('error') {
@@ -55,7 +55,7 @@ const INLINE_CLASS = 'm-0 mt-3 pt-3 border-t border-surface-200 dark:border-surf
                                         <span class="text-muted-color text-sm"> · {{ a.petName }}</span>
                                     }
                                 } @else {
-                                    <span class="text-muted-color">Yok</span>
+                                    <span class="field-empty">Yok</span>
                                 }
                             }
                             @case ('error') {

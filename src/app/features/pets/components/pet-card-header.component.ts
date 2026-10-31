@@ -93,7 +93,7 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
                                     <span class="text-muted-color text-sm"> · {{ label }}</span>
                                 }
                             } @else if (v.state === 'Empty') {
-                                <span class="text-muted-color">Yok</span>
+                                <span class="field-empty">Yok</span>
                             } @else if (v.state === 'Forbidden') {
                                 <span class="text-muted-color text-sm"><i class="pi pi-lock mr-1" aria-hidden="true"></i>yetki yok</span>
                             } @else {

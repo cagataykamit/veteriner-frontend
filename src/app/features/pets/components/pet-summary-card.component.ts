@@ -26,10 +26,10 @@ const FOLLOW_UP_LIMIT = 3;
         <ng-template #notOk let-state let-label="label">
             @switch (state) {
                 @case ('Empty') {
-                    <p class="m-0 text-muted-color text-sm" data-testid="state-empty">Kayıt yok</p>
+                    <p class="m-0 field-empty" data-testid="state-empty">Kayıt yok</p>
                 }
                 @case ('Forbidden') {
-                    <p class="m-0 text-muted-color text-sm" data-testid="state-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
+                    <p class="m-0 field-empty" data-testid="state-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
                 }
                 @default {
                     <p class="m-0 text-orange-600 dark:text-orange-400 text-sm" data-testid="state-unavailable"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>{{ label }} alınamadı</p>
@@ -60,7 +60,7 @@ const FOLLOW_UP_LIMIT = 3;
                                     <a [routerLink]="['/panel/examinations', w.examinationId]" class="text-primary no-underline text-sm ml-2">Muayene →</a>
                                 }
                             } @else if (s.latestWeight.state === 'Empty') {
-                                <p class="m-0 text-muted-color text-sm" data-testid="state-empty">Muayenede kilo ölçülmemiş</p>
+                                <p class="m-0 field-empty" data-testid="state-empty">Muayenede kilo ölçülmemiş</p>
                             } @else {
                                 <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.latestWeight.state, label: 'Kilo bilgisi' }" />
                             }
@@ -81,7 +81,7 @@ const FOLLOW_UP_LIMIT = 3;
                                         @if (vitals(); as v) {
                                             <span class="font-semibold">{{ v }}</span>
                                         } @else {
-                                            <p class="m-0 text-muted-color text-sm" data-testid="state-empty">Son muayenede vital ölçülmemiş</p>
+                                            <p class="m-0 field-empty" data-testid="state-empty">Son muayenede vital ölçülmemiş</p>
                                         }
                                     }
                                     @case ('error') {
@@ -106,7 +106,7 @@ const FOLLOW_UP_LIMIT = 3;
                                         @if (assessment(); as a) {
                                             <span class="whitespace-pre-wrap line-clamp-3 font-medium">{{ a }}</span>
                                         } @else {
-                                            <p class="m-0 text-muted-color text-sm" data-testid="state-empty">Son muayenede değerlendirme yazılmamış</p>
+                                            <p class="m-0 field-empty" data-testid="state-empty">Son muayenede değerlendirme yazılmamış</p>
                                         }
                                     }
                                     @case ('error') {
@@ -150,7 +150,7 @@ const FOLLOW_UP_LIMIT = 3;
                                 }
                             }
                             @if (noActiveCare()) {
-                                <p class="m-0 text-muted-color text-sm" data-testid="state-empty">Aktif yatış veya takip tarihi gelmemiş tedavi yok</p>
+                                <p class="m-0 field-empty" data-testid="state-empty">Aktif yatış veya takip tarihi gelmemiş tedavi yok</p>
                             }
                         </dd>
                     </div>
@@ -165,7 +165,7 @@ const FOLLOW_UP_LIMIT = 3;
                                         <a [routerLink]="['/panel/vaccinations', a.id]" class="text-primary font-semibold no-underline">{{ a.vaccineName }}</a>
                                         <span class="text-muted-color text-sm"> · {{ a.appliedAtUtc | trDate }}</span>
                                     } @else {
-                                        <span class="text-muted-color text-sm">yok</span>
+                                        <span class="field-empty">yok</span>
                                     }
                                 </div>
                                 <div>
@@ -177,11 +177,11 @@ const FOLLOW_UP_LIMIT = 3;
                                             <span class="text-red-600 dark:text-red-400 font-medium text-sm" data-testid="vaccine-overdue"> · Gecikmiş</span>
                                         }
                                     } @else {
-                                        <span class="text-muted-color text-sm">planlanmış aşı yok</span>
+                                        <span class="field-empty">planlanmış aşı yok</span>
                                     }
                                 </div>
                             } @else if (s.vaccinations.state === 'Empty') {
-                                <p class="m-0 text-muted-color text-sm" data-testid="state-empty">Aşı kaydı yok</p>
+                                <p class="m-0 field-empty" data-testid="state-empty">Aşı kaydı yok</p>
                             } @else {
                                 <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.vaccinations.state, label: 'Aşı bilgisi' }" />
                             }
@@ -198,7 +198,7 @@ const FOLLOW_UP_LIMIT = 3;
                                     <div class="text-muted-color text-sm">{{ e.clinicName }}</div>
                                 }
                             } @else if (s.lastExamination.state === 'Empty') {
-                                <p class="m-0 text-muted-color text-sm" data-testid="state-empty">Muayene kaydı yok</p>
+                                <p class="m-0 field-empty" data-testid="state-empty">Muayene kaydı yok</p>
                             } @else {
                                 <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.lastExamination.state, label: 'Muayene bilgisi' }" />
                             }

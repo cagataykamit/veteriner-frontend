@@ -129,7 +129,7 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
                                 @for (field of generalFields().empty; track field.label) {
                                     <div>
                                         <dt>{{ field.label }}</dt>
-                                        <dd class="text-muted-color text-sm">{{ field.value }}</dd>
+                                        <dd class="field-empty">{{ field.value }}</dd>
                                     </div>
                                 }
                             }

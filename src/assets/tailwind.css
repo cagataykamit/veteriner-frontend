@@ -31,7 +31,15 @@
   }
 }
 
-/* Kart içi alan etiketi (klinik özet, kayıt bilgileri, gösterge şeridi): küçük, büyük harf, soluk; değer altında ve belirgin. */
+/*
+ * Kart içi etiket/değer deseni (klinik özet, kayıt bilgileri, gösterge şeridi; müşteri/hasta/randevu kimlik kartları):
+ * - field-label: küçük, büyük harf, birincil koyu yeşil — değerden renkle ayrışır (açık: primary-700 ≈ 5.5:1, koyu: primary-300).
+ * - field-empty: boş durum metni ("Yok", "Kayıt yok" …) soluk ve italik; dolu değer koyu/kalın kalır.
+ */
 @utility field-label {
-    @apply text-xs font-semibold uppercase tracking-wide text-muted-color;
+    @apply text-xs font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300;
+}
+
+@utility field-empty {
+    @apply text-sm italic text-muted-color;
 }

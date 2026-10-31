@@ -144,7 +144,7 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
                                                 <span class="block text-muted-color text-sm" data-testid="pending-unpriced">{{ s.unpricedCount }} kalem fiyat bekliyor</span>
                                             }
                                         } @else {
-                                            <span class="text-muted-color">Yok</span>
+                                            <span class="field-empty">Yok</span>
                                         }
                                     }
                                 }
@@ -170,7 +170,7 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
                                             <span class="text-muted-color text-sm"> · {{ exam.petName }}</span>
                                         }
                                     } @else {
-                                        <span class="text-muted-color">Yok</span>
+                                        <span class="field-empty">Yok</span>
                                     }
                                 }
                                 @case ('error') {
