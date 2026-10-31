@@ -2,6 +2,7 @@ import { Component, computed, input, signal, ChangeDetectionStrategy } from '@an
 import { RouterLink } from '@angular/router';
 import type { ClientPetRow } from '@/app/features/clients/utils/client-card.utils';
 import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
+import { speciesEmoji } from '@/app/entities/species/utils/species-icon.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
@@ -55,7 +56,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                         <ul class="list-none m-0 p-0">
                             @for (row of visibleRows(); track row.pet.id) {
                                 <li class="py-2.5 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0 flex items-center gap-3" [class.opacity-70]="row.pet.status === 'Deceased'" data-testid="client-pet-row">
-                                    <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-border text-base font-semibold bg-surface-100 text-muted-color dark:bg-surface-800" aria-hidden="true">{{ initial(row.pet.name) }}</span>
+                                    <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-border text-lg bg-surface-100 dark:bg-surface-800" [title]="row.pet.speciesName" aria-hidden="true" data-testid="pet-species-icon">{{ speciesIcon(row.pet.speciesName) }}</span>
                                     <div class="min-w-0 flex-1">
                                         <div class="flex flex-wrap items-baseline gap-x-2">
                                             <a [routerLink]="['/panel/pets', row.pet.id]" class="text-primary font-semibold no-underline break-words">{{ row.pet.name }}</a>
@@ -121,10 +122,8 @@ export class ClientPetsPanelComponent {
 
     readonly money = (amount: number) => formatMoney(amount, this.currency());
 
-    /** Satır başındaki kutu: hayvan adının ilk harfi (tür simgesi yok). */
-    initial(name: string): string {
-        return (name.trim()[0] ?? '').toLocaleUpperCase('tr-TR');
-    }
+    /** Satır başındaki kutu: tür simgesi (`speciesEmoji`). */
+    readonly speciesIcon = speciesEmoji;
 
     identity(row: ClientPetRow): string {
         const filled = (v: string | null | undefined): v is string => !!v && !!v.trim() && v.trim() !== '—';
