@@ -109,7 +109,7 @@ const RECORD_TEXT_SECTIONS: readonly {
         } @else if (exam(); as e) {
             <app-page-header categoryLink="/panel/examinations" categoryLinkLabel="Muayene listesine dön" />
 
-            <!-- Kimlik kartı (müşteri/hasta kartıyla aynı dil): durum rozeti, muayene tarihi, kayıt satırı, hasta/sahip satırı; sağda Düzenle, şablon, geçmiş. -->
+            <!-- Kimlik kartı (müşteri/hasta kartıyla aynı dil): durum rozeti, muayene tarihi (alt başlık), kayıt satırı, hasta/sahip satırı; sağda Düzenle, şablon, geçmiş. Tarih ve durum tek yerde; gösterge şeridi tekrar etmez. -->
             <app-detail-identity-card icon="pi pi-clipboard" title="Muayene" [subtitle]="e.examinedAtUtc | trDateTime" [meta]="'Oluşturulma: ' + (e.createdAtUtc | trDateTime) + ' · Güncellenme: ' + (e.updatedAtUtc | trDateTime)" ariaLabel="Muayene kimliği" testId="exam-identity-card">
                 <span badges data-testid="exam-status">
                     <app-status-tag [label]="statusLabel(e.status)" [severity]="statusSeverity(e.status)" />
@@ -129,14 +129,6 @@ const RECORD_TEXT_SECTIONS: readonly {
                     <app-record-history-button resource="examinations" [recordId]="e.id" />
                 </ng-container>
                 <div stat>
-                    <dt>Muayene tarihi</dt>
-                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ e.examinedAtUtc | trDateTime }}</dd>
-                </div>
-                <div stat>
-                    <dt>Durum</dt>
-                    <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ statusLabel(e.status) }}</dd>
-                </div>
-                <div stat>
                     <dt>Kesinleştirme</dt>
                     <dd>
                         @if (e.status === 'Finalized') {
@@ -148,6 +140,26 @@ const RECORD_TEXT_SECTIONS: readonly {
                             </span>
                         } @else {
                             <span class="field-empty">Kesinleştirilmedi</span>
+                        }
+                    </dd>
+                </div>
+                <div stat>
+                    <dt>Klinik</dt>
+                    <dd>
+                        @if (e.clinicName?.trim()) {
+                            <span class="font-semibold text-surface-900 dark:text-surface-0 break-words">{{ e.clinicName }}</span>
+                        } @else {
+                            <span class="field-empty">Belirtilmemiş</span>
+                        }
+                    </dd>
+                </div>
+                <div stat>
+                    <dt>Randevu</dt>
+                    <dd>
+                        @if (e.appointmentId?.trim()) {
+                            <a [routerLink]="['/panel/appointments', e.appointmentId]" class="font-semibold text-primary no-underline" data-testid="appointment-link">Bağlı randevu →</a>
+                        } @else {
+                            <span class="field-empty">Bağlı randevu yok</span>
                         }
                     </dd>
                 </div>
@@ -174,135 +186,126 @@ const RECORD_TEXT_SECTIONS: readonly {
                 </app-detail-action-bar>
             }
 
-            <!-- Çalışma alanı: hasta bağlamı | kayıt | kesinleştirme; kırılım içerik alanına göre (≥64rem üç sütun). -->
+            <!-- Çalışma alanı: ana sütun (kayıt, ek notlar, işlemler, uygulamalar) | yan sütun (kesinleştirme kontrolü, hasta bağlamı); kırılım içerik alanına göre (≥56rem iki sütun). -->
             <div class="@container">
-            <div class="grid grid-cols-12 gap-4 items-start" data-testid="exam-workspace">
-                <aside class="col-span-12 @5xl:col-span-3 min-w-0">
-                    <app-examination-patient-context [petId]="e.petId" [excludeExaminationId]="e.id" />
-                </aside>
-
-                <div class="col-span-12 @5xl:col-span-6 min-w-0">
-                    <div class="card" data-testid="exam-record">
-                        <h5 class="mt-0 mb-4">Muayene kaydı</h5>
-                        @for (s of recordSectionsBeforeVitals(); track s.label) {
-                            <div class="mb-4">
-                                <h6 class="m-0 mb-1 field-label">{{ s.label }}</h6>
-                                <p class="m-0 whitespace-pre-wrap">{{ s.text }}</p>
-                            </div>
-                        }
-                        <div class="mb-4" data-testid="vital-row">
-                            <h6 class="m-0 mb-1 field-label">Vital</h6>
-                            @if (vitals().length === 0) {
-                                <p class="m-0 field-empty">Ölçülmemiş.</p>
-                            } @else {
-                                <div class="flex flex-wrap gap-x-5 gap-y-1">
-                                    @for (v of vitals(); track v.label) {
-                                        <span data-testid="vital"
-                                            ><span class="text-muted-color text-sm mr-1">{{ v.label }}</span
-                                            ><span class="font-medium">{{ v.value }}</span></span
-                                        >
-                                    }
-                                    @if (e.vitalsMeasuredAtUtc) {
-                                        <span class="text-muted-color text-sm self-center">Ölçüm: {{ e.vitalsMeasuredAtUtc | trDateTime }}</span>
-                                    }
+                <div class="grid grid-cols-12 gap-4 items-start" data-testid="exam-workspace">
+                    <div class="col-span-12 @4xl:col-span-8 min-w-0 flex flex-col gap-4">
+                        <div class="card mb-0" data-testid="exam-record">
+                            <h5 class="mt-0 mb-4">Muayene kaydı</h5>
+                            @for (s of recordSectionsBeforeVitals(); track s.label) {
+                                <div class="mb-4">
+                                    <h6 class="m-0 mb-1 field-label">{{ s.label }}</h6>
+                                    <p class="m-0 whitespace-pre-wrap">{{ s.text }}</p>
                                 </div>
                             }
-                        </div>
-                        @for (s of recordSectionsAfterVitals(); track s.label) {
-                            <div class="mb-4">
-                                <h6 class="m-0 mb-1 field-label">{{ s.label }}</h6>
-                                <p class="m-0 whitespace-pre-wrap">{{ s.text }}</p>
-                            </div>
-                        }
-                        @if (emptySectionLabels().length > 0) {
-                            <p class="field-empty m-0" data-testid="record-empty-sections">Girilmemiş: {{ emptySectionLabels().join(', ') }}</p>
-                        }
-                    </div>
-
-                    @if (e.status === 'Finalized') {
-                        <app-examination-addenda-section [examinationId]="e.id" [canAdd]="canAddAddendum()" />
-                    }
-
-                    <app-examination-procedures-section [exam]="e" [summary]="relatedSummary()" [loading]="relatedSummaryLoading()" [error]="relatedSummaryError()" (changed)="onProcedureAdded()" (retry)="retryRelatedSummary()" />
-
-                    @if (e.petId?.trim()) {
-                        <app-administrations-section [petId]="e.petId!" [petName]="e.petName" [examinationId]="e.id" [locked]="e.status === 'Finalized'" />
-                    }
-                </div>
-
-                <!-- Geniş alanda sabit: üst çubuk (4rem) + 1rem, soldaki menünün üst hizası (_menu.scss top: 5rem). -->
-                <aside class="col-span-12 @5xl:col-span-3 @5xl:sticky @5xl:top-20 min-w-0" data-testid="finalize-aside">
-                    <app-examination-finalize-checklist [exam]="e" [items]="finalizeChecklist()" [canFinalize]="canFinalizeNow()" (finalizeRequested)="finalizeDialogVisible.set(true)" />
-                </aside>
-            </div>
-
-            <!-- İlgili kayıtlar: bağlı ödemeler | randevular (6/6, eşit yükseklik). -->
-            <h4 class="mt-8 mb-4">İlgili kayıtlar</h4>
-            <div class="grid grid-cols-12 gap-4">
-                @if (relatedSummaryLoading()) {
-                    <div class="col-span-12">
-                        <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
-                    </div>
-                } @else if (relatedSummaryError()) {
-                    <div class="col-span-12">
-                        <div class="card mb-0">
-                            <app-error-state [detail]="relatedSummaryError()!" (retry)="retryRelatedSummary()" />
-                        </div>
-                    </div>
-                } @else if (relatedSummary()) {
-                    <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-6">
-                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-3">
-                            <h5 class="mt-0 mb-0">Bağlı ödemeler</h5>
-                            <a routerLink="/panel/payments" [queryParams]="{ petId: e.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                        </div>
-                        @if (relatedPaymentsView().total === 0) {
-                            <p class="field-empty m-0">{{ copy.listEmptyMessage }}</p>
-                        } @else {
-                            <ul class="list-none m-0 p-0">
-                                @for (row of relatedPaymentsView().displayed; track row.id) {
-                                    <li class="flex gap-3 items-baseline justify-between py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0 text-sm">
-                                        <div class="min-w-0 break-words">
-                                            <span class="text-muted-color">{{ row.paidAtUtc | trDateTime }}</span>
-                                            <span> · {{ payMethodLabel(row.method) }}</span>
-                                            @if (row.clinicName) {
-                                                <span class="text-muted-color"> · {{ row.clinicName }}</span>
-                                            }
-                                        </div>
-                                        <a [routerLink]="['/panel/payments', row.id]" class="shrink-0 font-semibold tabular-nums no-underline text-surface-900 dark:text-surface-0 hover:text-primary" [attr.aria-label]="'Ödeme detayı: ' + money(row.amount, row.currency)">{{ money(row.amount, row.currency) }}</a>
-                                    </li>
-                                }
-                            </ul>
-                        }
-                    </div>
-                }
-                <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-6">
-                    <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-3">
-                        <h5 class="mt-0 mb-0">Randevular (aynı hasta)</h5>
-                        <a routerLink="/panel/appointments" [queryParams]="{ petId: e.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                    </div>
-                    @if (!e.petId) {
-                        <p class="field-empty m-0">Hasta bilgisi yok; liste gösterilemiyor.</p>
-                    } @else if (apptLoading()) {
-                        <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
-                    } @else if (apptError()) {
-                        <p class="text-muted-color m-0">{{ apptError() }}</p>
-                    } @else if (apptItemsView().total === 0) {
-                        <p class="field-empty m-0">Kayıt bulunamadı.</p>
-                    } @else {
-                        <ul class="list-none m-0 p-0">
-                            @for (row of apptItemsView().displayed; track row.id) {
-                                <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0">
-                                    <div class="flex flex-wrap gap-2 justify-between items-baseline">
-                                        <span class="text-muted-color text-sm min-w-0">{{ row.scheduledAtUtc | trDateTime }}</span>
-                                        <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                            <div class="mb-4" data-testid="vital-row">
+                                <h6 class="m-0 mb-1 field-label">Vital</h6>
+                                @if (vitals().length === 0) {
+                                    <p class="m-0 field-empty">Ölçülmemiş.</p>
+                                } @else {
+                                    <div class="flex flex-wrap gap-x-5 gap-y-1">
+                                        @for (v of vitals(); track v.label) {
+                                            <span data-testid="vital"
+                                                ><span class="text-muted-color text-sm mr-1">{{ v.label }}</span
+                                                ><span class="font-medium">{{ v.value }}</span></span
+                                            >
+                                        }
+                                        @if (e.vitalsMeasuredAtUtc) {
+                                            <span class="text-muted-color text-sm self-center">Ölçüm: {{ e.vitalsMeasuredAtUtc | trDateTime }}</span>
+                                        }
                                     </div>
-                                    <div class="font-medium min-w-0 break-words">{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
-                                </li>
+                                }
+                            </div>
+                            @for (s of recordSectionsAfterVitals(); track s.label) {
+                                <div class="mb-4">
+                                    <h6 class="m-0 mb-1 field-label">{{ s.label }}</h6>
+                                    <p class="m-0 whitespace-pre-wrap">{{ s.text }}</p>
+                                </div>
                             }
-                        </ul>
-                    }
+                            @if (emptySectionLabels().length > 0) {
+                                <p class="field-empty m-0" data-testid="record-empty-sections">Girilmemiş: {{ emptySectionLabels().join(', ') }}</p>
+                            }
+                        </div>
+
+                        @if (e.status === 'Finalized') {
+                            <app-examination-addenda-section [examinationId]="e.id" [canAdd]="canAddAddendum()" />
+                        }
+
+                        <app-examination-procedures-section [exam]="e" [summary]="relatedSummary()" [loading]="relatedSummaryLoading()" [error]="relatedSummaryError()" (changed)="onProcedureAdded()" (retry)="retryRelatedSummary()" />
+
+                        @if (e.petId?.trim()) {
+                            <app-administrations-section [petId]="e.petId!" [petName]="e.petName" [examinationId]="e.id" [locked]="e.status === 'Finalized'" />
+                        }
+                    </div>
+
+                    <!-- Geniş alanda sabit: üst çubuk (4rem) + 1rem, soldaki menünün üst hizası (_menu.scss top: 5rem). -->
+                    <aside class="col-span-12 @4xl:col-span-4 @4xl:sticky @4xl:top-20 min-w-0 flex flex-col gap-4" data-testid="finalize-aside">
+                        <app-examination-finalize-checklist [exam]="e" [items]="finalizeChecklist()" [canFinalize]="canFinalizeNow()" (finalizeRequested)="finalizeDialogVisible.set(true)" />
+                        <app-examination-patient-context [petId]="e.petId" [excludeExaminationId]="e.id" />
+                    </aside>
                 </div>
-            </div>
+
+                <!-- İlgili kayıtlar: tek kart, iki sütun (bağlı ödemeler | aynı hastanın randevuları); boşken yalnız birer satır. -->
+                <section class="card mt-4 mb-0" aria-labelledby="exam-related-title" data-testid="exam-related">
+                    <h5 id="exam-related-title" class="mt-0 mb-3">İlgili kayıtlar</h5>
+                    <div class="grid grid-cols-1 @2xl:grid-cols-2 gap-x-8 gap-y-4">
+                        <div class="min-w-0" data-testid="related-payments">
+                            <div class="flex items-baseline justify-between gap-3 mb-1">
+                                <h6 class="m-0 field-label">Bağlı ödemeler</h6>
+                                <a routerLink="/panel/payments" [queryParams]="{ petId: e.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            </div>
+                            @if (relatedSummaryLoading()) {
+                                <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
+                            } @else if (relatedSummaryError()) {
+                                <app-error-state [detail]="relatedSummaryError()!" (retry)="retryRelatedSummary()" />
+                            } @else if (relatedPaymentsView().total === 0) {
+                                <p class="field-empty m-0">{{ copy.listEmptyMessage }}</p>
+                            } @else {
+                                <ul class="list-none m-0 p-0">
+                                    @for (row of relatedPaymentsView().displayed; track row.id) {
+                                        <li class="flex gap-3 items-baseline justify-between py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0 text-sm">
+                                            <div class="min-w-0 break-words">
+                                                <span class="text-muted-color">{{ row.paidAtUtc | trDateTime }}</span>
+                                                <span> · {{ payMethodLabel(row.method) }}</span>
+                                                @if (row.clinicName) {
+                                                    <span class="text-muted-color"> · {{ row.clinicName }}</span>
+                                                }
+                                            </div>
+                                            <a [routerLink]="['/panel/payments', row.id]" class="shrink-0 font-semibold tabular-nums no-underline text-surface-900 dark:text-surface-0 hover:text-primary" [attr.aria-label]="'Ödeme detayı: ' + money(row.amount, row.currency)">{{ money(row.amount, row.currency) }}</a>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                        <div class="min-w-0" data-testid="related-appointments">
+                            <div class="flex items-baseline justify-between gap-3 mb-1">
+                                <h6 class="m-0 field-label">Randevular (aynı hasta)</h6>
+                                <a routerLink="/panel/appointments" [queryParams]="{ petId: e.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
+                            </div>
+                            @if (!e.petId) {
+                                <p class="field-empty m-0">Hasta bilgisi yok; liste gösterilemiyor.</p>
+                            } @else if (apptLoading()) {
+                                <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
+                            } @else if (apptError()) {
+                                <p class="text-muted-color m-0">{{ apptError() }}</p>
+                            } @else if (apptItemsView().total === 0) {
+                                <p class="field-empty m-0">Kayıt bulunamadı.</p>
+                            } @else {
+                                <ul class="list-none m-0 p-0">
+                                    @for (row of apptItemsView().displayed; track row.id) {
+                                        <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0 text-sm">
+                                            <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                                <span class="text-muted-color min-w-0">{{ row.scheduledAtUtc | trDateTime }}</span>
+                                                <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline shrink-0">Detay →</a>
+                                            </div>
+                                            <div class="font-medium min-w-0 break-words">{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                </section>
             </div>
         }
     `

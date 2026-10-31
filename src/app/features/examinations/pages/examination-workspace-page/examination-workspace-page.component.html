@@ -81,13 +81,14 @@
             }
         }
 
-        <div class="grid grid-cols-12 gap-4 items-start">
+        <!-- Hasta bağlamı | form: kırılım içerik alanına göre (detay sayfasıyla aynı: ≥56rem iki sütun). -->
+        <div class="@container grid grid-cols-12 gap-4 items-start">
             @if (contextPetId(); as pid) {
-                <aside class="col-span-12 xl:col-span-3">
+                <aside class="col-span-12 @4xl:col-span-4">
                     <app-examination-patient-context [petId]="pid" [excludeExaminationId]="isEdit ? examinationId : null" />
                 </aside>
             }
-            <form class="col-span-12 min-w-0" [ngClass]="{ 'xl:col-span-9': !!contextPetId() }" [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form class="col-span-12 min-w-0" [ngClass]="{ '@4xl:col-span-8': !!contextPetId() }" [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="card mb-4">
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">

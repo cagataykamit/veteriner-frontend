@@ -59,12 +59,22 @@ describe('ExaminationFinalizeChecklistComponent', () => {
         expect(el.querySelector('[data-testid="check-plan"]')?.textContent).toContain('Plan / takip bilgisi girilmemiş.');
     });
 
-    it('kesinleşince yalnız kilit nedeni ve hâlâ bekleyen ücret maddesi kalır', async () => {
+    it('kesinleşince yalnız hâlâ bekleyen ücret maddesi kalır; tarih ve kilit nedeni burada tekrar etmez', async () => {
         const el = await render(exam({ status: 'Finalized', finalizedAtUtc: '2026-10-11T09:30:00Z', finalizedByName: 'Dr. Ayşe' }));
 
-        expect(el.textContent).toContain('Dr. Ayşe');
-        expect(el.textContent).toContain('yalnız gerekçeli uygulama ve ek not eklenebilir');
+        expect(el.textContent).toContain('Bekleyen iş');
+        expect(el.textContent).not.toContain('Dr. Ayşe');
+        expect(el.textContent).not.toContain('yalnız gerekçeli uygulama ve ek not eklenebilir');
         expect(Array.from(el.querySelectorAll('li')).map((li) => li.getAttribute('data-testid'))).toEqual(['check-pendingCharges']);
         expect(el.querySelector('[data-testid="pending-charges-link"]')).not.toBeNull();
+    });
+
+    it('kesinleşmiş ve ücret bekleyen madde yoksa kart hiç çizilmez', async () => {
+        const fixture = await setup(exam({ status: 'Finalized', finalizedAtUtc: '2026-10-11T09:30:00Z' }));
+
+        fixture.componentRef.setInput('items', []);
+        fixture.detectChanges();
+
+        expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="finalize-checklist"]')).toBeNull();
     });
 });
