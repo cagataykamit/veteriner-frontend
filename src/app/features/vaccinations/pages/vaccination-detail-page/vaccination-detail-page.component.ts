@@ -6,8 +6,10 @@ import type { VaccinationDetailVm } from '@/app/entities/vaccination/models/vacc
 import { administrationRouteSiteText } from '@/app/entities/administration/utils/administration-route.utils';
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
 import { vaccinationStatusLabel, vaccinationStatusSeverity } from '@/app/entities/vaccination/utils/vaccination-status.utils';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
+import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
+import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-line/app-detail-subject-line.component';
+import { DETAIL_TILE_GRID_CLASS } from '@/app/shared/ui/detail.classes';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { RecordHistoryButtonComponent } from '@/app/entities/record-history/components/record-history-button.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -27,7 +29,21 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 @Component({
     selector: 'app-vaccination-detail-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, RecordHistoryButtonComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, HbsSectionComponent, TrDateTimePipe],
+    imports: [
+        CommonModule,
+        RouterLink,
+        ButtonModule,
+        AppPageHeaderComponent,
+        AppDetailIdentityCardComponent,
+        AppDetailSubjectLineComponent,
+        RecordHistoryButtonComponent,
+        PetAlertBannerComponent,
+        AppLoadingStateComponent,
+        AppErrorStateComponent,
+        AppStatusTagComponent,
+        HbsSectionComponent,
+        TrDateTimePipe
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
@@ -43,135 +59,113 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
-        } @else if (vac()) {
-            <app-page-header categoryLink="/panel/vaccinations" categoryLinkLabel="Aşı listesine dön" title="Aşı kaydı" [description]="headerDescription(vac()!)">
-                @if (canUpdateVaccination && !ro.mutationBlocked()) {
-                    <a actions [routerLink]="['/panel/vaccinations', vac()!.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
-                } @else if (canUpdateVaccination && ro.mutationBlocked()) {
-                    <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
-                }
-                <app-record-history-button actions resource="vaccinations" [recordId]="vac()!.id" />
-            </app-page-header>
-            <app-pet-alert-banner [petId]="vac()!.petId" />
+        } @else if (vac(); as v) {
+            <app-page-header categoryLink="/panel/vaccinations" categoryLinkLabel="Aşı listesine dön" />
 
-            <div class="grid grid-cols-12 gap-8">
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Genel bilgiler</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Aşı</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.vaccineName }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Durum</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                <app-status-tag [label]="statusLabel(vac()!.status)" [severity]="statusSeverity(vac()!.status)" />
-                            </dd>
-                        </dl>
-                    </div>
+            <!-- Kimlik kartı: aşı adı + durum rozeti, tarih, kayıt satırı, hasta/sahip; sağda Düzenle ve geçmiş; gösterge şeridi (tarihler, yol/bölge, muayene). -->
+            <app-detail-identity-card icon="pi pi-shield" [title]="v.vaccineName" [subtitle]="headerDate(v)" [meta]="'Oluşturulma: ' + (v.createdAtUtc | trDateTime) + ' · Güncellenme: ' + (v.updatedAtUtc | trDateTime)" ariaLabel="Aşı kimliği" testId="vaccination-identity-card">
+                <app-status-tag badges [label]="statusLabel(v.status)" [severity]="statusSeverity(v.status)" />
+                <app-detail-subject-line [petId]="v.petId" [petName]="v.petName" [clientId]="v.clientId" [clientName]="v.clientName" />
+                <ng-container actions>
+                    @if (canUpdateVaccination && !ro.mutationBlocked()) {
+                        <a [routerLink]="['/panel/vaccinations', v.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
+                    } @else if (canUpdateVaccination && ro.mutationBlocked()) {
+                        <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                    }
+                    <app-record-history-button resource="vaccinations" [recordId]="v.id" />
+                </ng-container>
+                <!-- Her if bloğunda tek kök öğe: çok köklü blok [stat] yuvasına değil varsayılan yuvaya yansır. -->
+                <div stat>
+                    <dt>{{ v.status === 0 ? 'Planlanan uygulama' : v.status === 2 ? 'Planlı / sonraki tarih' : 'Uygulama' }}</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ (v.status === 0 || v.status === 2 ? v.dueAtUtc : v.appliedAtUtc) | trDateTime }}</dd>
                 </div>
-                @if (vac()!.linkedAdministration; as adm) {
-                    <div class="col-span-12">
-                        <div class="card" data-testid="linked-administration">
-                            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                @if (v.status !== 0 && v.status !== 2) {
+                    <div stat>
+                        <dt>Sonraki uygulama</dt>
+                        <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ v.dueAtUtc | trDateTime }}</dd>
+                    </div>
+                }
+                <div stat>
+                    <dt>Uygulama yolu / bölgesi</dt>
+                    <dd data-testid="route-site">
+                        @if (routeSiteText(); as rs) {
+                            <span class="font-semibold text-surface-900 dark:text-surface-0">{{ rs }}</span>
+                        } @else {
+                            <span class="field-empty">—</span>
+                        }
+                    </dd>
+                </div>
+                <div stat>
+                    <dt>Muayene</dt>
+                    <dd>
+                        @if (v.examinationId) {
+                            <a data-testid="linked-examination" [routerLink]="['/panel/examinations', v.examinationId]" class="text-primary font-semibold no-underline">Muayene kaydına git →</a>
+                        } @else {
+                            <span class="field-empty">Bağlı muayene yok</span>
+                        }
+                    </dd>
+                </div>
+            </app-detail-identity-card>
+            <app-pet-alert-banner [petId]="v.petId" />
+
+            <!-- Satır ızgarası: stoktan düşen uygulama | notlar (8/4, eşit yükseklik); HBS tam genişlik. -->
+            <div class="@container flex flex-col gap-4">
+                <div class="grid grid-cols-12 gap-4">
+                    @if (v.linkedAdministration; as adm) {
+                        <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-8" data-testid="linked-administration">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                                 <h5 class="mt-0 mb-0">Stoktan düşen uygulama</h5>
-                                @if (canReadAdministrations && vac()!.petId) {
-                                    <a routerLink="/panel/administrations" [queryParams]="{ petId: vac()!.petId }" class="text-primary font-medium no-underline text-sm" data-testid="linked-administration-link">Uygulama kaydına git →</a>
+                                @if (canReadAdministrations && v.petId) {
+                                    <a routerLink="/panel/administrations" [queryParams]="{ petId: v.petId }" class="text-primary font-medium no-underline text-sm" data-testid="linked-administration-link">Uygulama kaydına git →</a>
                                 }
                             </div>
-                            <dl class="m-0 grid grid-cols-12 gap-3">
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Ürün</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ adm.productName }}</dd>
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Üretici</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ adm.productManufacturer ?? '—' }}</dd>
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Miktar</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ adm.quantity ?? '—' }} {{ adm.unit }}</dd>
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Seri no</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ adm.lotNumber ?? '—' }}</dd>
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">SKT</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ formatDay(adm.expiryDate) }}</dd>
+                            <dl [class]="tileGridClass">
+                                <div>
+                                    <dt>Ürün</dt>
+                                    <dd class="font-semibold break-words">{{ adm.productName }}</dd>
+                                </div>
+                                <div>
+                                    <dt>Üretici</dt>
+                                    <dd>
+                                        @if (adm.productManufacturer) {
+                                            <span class="font-semibold">{{ adm.productManufacturer }}</span>
+                                        } @else {
+                                            <span class="field-empty">—</span>
+                                        }
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>Miktar</dt>
+                                    <dd class="font-semibold tabular-nums">{{ adm.quantity ?? '—' }} {{ adm.unit }}</dd>
+                                </div>
+                                <div>
+                                    <dt>Seri no</dt>
+                                    <dd>
+                                        @if (adm.lotNumber) {
+                                            <span class="font-semibold break-all">{{ adm.lotNumber }}</span>
+                                        } @else {
+                                            <span class="field-empty">—</span>
+                                        }
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>SKT</dt>
+                                    <dd class="font-semibold tabular-nums">{{ formatDay(adm.expiryDate) }}</dd>
+                                </div>
                             </dl>
-                            <p class="text-sm text-muted-color mt-4 mb-0">Aşıyı iptal etmek için bu uygulamayı iptal edin; aşı kaydı da iptal olur. İptalde ürün stoğa iade edilir veya zarar/imha olarak yazılır (iptal eden seçer).</p>
+                            <p class="text-sm text-muted-color mt-3 mb-0">Aşıyı iptal etmek için bu uygulamayı iptal edin; aşı kaydı da iptal olur. İptalde ürün stoğa iade edilir veya zarar/imha olarak yazılır (iptal eden seçer).</p>
                         </div>
-                    </div>
-                }
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Müşteri / hasta bilgileri</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (vac()!.clientId) {
-                                    <a [routerLink]="['/panel/clients', vac()!.clientId]" class="text-primary font-medium no-underline">{{ vac()!.clientName }}</a>
-                                } @else {
-                                    {{ vac()!.clientName }}
-                                }
-                            </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Hasta</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (vac()!.petId) {
-                                    <a [routerLink]="['/panel/pets', vac()!.petId]" class="text-primary font-medium no-underline">{{ vac()!.petName }}</a>
-                                } @else {
-                                    {{ vac()!.petName }}
-                                }
-                            </dd>
-                        </dl>
-                    </div>
-                </div>
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Tarihler</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            @if (vac()!.status === 0) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Planlanan uygulama tarihi ve saati</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.dueAtUtc | trDateTime }}</dd>
-                            } @else if (vac()!.status === 1) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Uygulama</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.appliedAtUtc | trDateTime }}</dd>
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Sonraki uygulama</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.dueAtUtc | trDateTime }}</dd>
-                            } @else if (vac()!.status === 2) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Planlı / sonraki tarih</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.dueAtUtc | trDateTime }}</dd>
-                            } @else {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Uygulama</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.appliedAtUtc | trDateTime }}</dd>
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Sonraki</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.dueAtUtc | trDateTime }}</dd>
-                            }
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Uygulama yolu / bölgesi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0" data-testid="route-site">{{ routeSiteText() ?? '—' }}</dd>
-                        </dl>
-                    </div>
-                </div>
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Kayıt bilgileri</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.createdAtUtc | trDateTime }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ vac()!.updatedAtUtc | trDateTime }}</dd>
-                            @if (vac()!.examinationId) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a data-testid="linked-examination" [routerLink]="['/panel/examinations', vac()!.examinationId]" class="text-primary font-medium no-underline">Muayene kaydına git →</a>
-                                </dd>
-                            }
-                        </dl>
-                    </div>
-                </div>
-                <div class="col-span-12">
-                    <app-hbs-section kind="vaccination" [recordId]="vac()!.id" [entry]="vac()!.hbs" [canEdit]="canUpdateHbs && !ro.mutationBlocked()" (entryChange)="onHbsChange($event)" />
-                </div>
-                <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Notlar</h5>
-                        @if (vac()!.notes === emptyMark) {
-                            <app-empty-state message="Not yok." />
+                    }
+                    <div class="card mb-0 h-full min-w-0 col-span-12" [class.@4xl:col-span-4]="!!v.linkedAdministration">
+                        <h5 class="mt-0 mb-3">Notlar</h5>
+                        @if (v.notes === emptyMark) {
+                            <p class="m-0 field-empty">Not yok</p>
                         } @else {
-                            <p class="m-0 whitespace-pre-wrap">{{ vac()!.notes }}</p>
+                            <p class="m-0 whitespace-pre-wrap">{{ v.notes }}</p>
                         }
                     </div>
                 </div>
+                <app-hbs-section kind="vaccination" [recordId]="v.id" [entry]="v.hbs" [canEdit]="canUpdateHbs && !ro.mutationBlocked()" (entryChange)="onHbsChange($event)" />
             </div>
         }
     `
@@ -189,6 +183,7 @@ export class VaccinationDetailPageComponent implements OnInit {
     readonly stockNotice = signal<{ text: string; warn: boolean } | null>((this.router.getCurrentNavigation()?.extras.state?.['stockNotice'] as { text: string; warn: boolean } | undefined) ?? null);
     readonly canReadAdministrations = this.auth.hasOperationClaim(ADMINISTRATIONS_READ_CLAIM);
     readonly formatDay = (v: string | null) => (v ? formatDateDisplay(v) : '—');
+    protected readonly tileGridClass = DETAIL_TILE_GRID_CLASS;
 
     private readonly loader = new RouteEntityLoader<VaccinationDetailVm>({
         fetch: (id) => this.vaccinationsService.getVaccinationById(id),
@@ -218,20 +213,13 @@ export class VaccinationDetailPageComponent implements OnInit {
         this.vac.update((v) => (v ? { ...v, hbs } : v));
     }
 
-    headerDescription(v: VaccinationDetailVm): string {
-        const st = v.status;
-        const parts: string[] = [];
-
-        if (st === 0) {
-            parts.push(v.dueAtUtc ? `${this.formatDateTime(v.dueAtUtc)} (planlanan uygulama)` : 'Planlanmış');
-        } else if (st === 1) {
-            parts.push(this.formatDateTime(v.appliedAtUtc));
+    /** Kimlik kartı alt başlığı: planlıda planlanan tarih, uygulanmışta uygulama tarihi; diğer durumlarda boş. */
+    headerDate(v: VaccinationDetailVm): string {
+        if (v.status === 0) {
+            return v.dueAtUtc ? `${this.formatDateTime(v.dueAtUtc)} (planlanan uygulama)` : 'Planlanmış';
         }
 
-        parts.push(this.statusLabel(v.status));
-        parts.push(v.vaccineName);
-
-        return parts.join(' · ');
+        return v.status === 1 ? this.formatDateTime(v.appliedAtUtc) : '';
     }
 
     ngOnInit(): void {
