@@ -30,3 +30,8 @@
     border-color: var(--color-gray-200, currentcolor);
   }
 }
+
+/* Kart içi alan etiketi (klinik özet, kayıt bilgileri, gösterge şeridi): küçük, büyük harf, soluk; değer altında ve belirgin. */
+@utility field-label {
+    @apply text-xs font-semibold uppercase tracking-wide text-muted-color;
+}

@@ -116,21 +116,28 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
                         <app-pet-card-timeline class="block flex-1 min-h-0" [petId]="p.id" [payments]="payments()" />
                     </div>
                     <section class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-4" aria-labelledby="pet-record-title">
-                        <h5 id="pet-record-title" class="mt-0 mb-4">Kayıt bilgileri</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-2">
+                        <h5 id="pet-record-title" class="mt-0 mb-2">Kayıt bilgileri</h5>
+                        <!-- Klinik özetle aynı etiket/değer deseni: etiket üstte küçük/büyük harf, değer altında; satırlar ince çizgiyle ayrılır. -->
+                        <dl class="m-0 divide-y divide-surface-200 dark:divide-surface-700 [&>div]:py-2 [&_dt]:field-label [&_dt]:mb-0.5 [&_dd]:m-0 [&_dd]:break-words">
                             @for (field of generalFields().filled; track field.label) {
-                                <dt class="col-span-5 text-muted-color text-sm">{{ field.label }}</dt>
-                                <dd class="col-span-7 m-0 break-words">{{ field.value }}</dd>
+                                <div>
+                                    <dt>{{ field.label }}</dt>
+                                    <dd class="font-medium text-surface-900 dark:text-surface-0">{{ field.value }}</dd>
+                                </div>
                             }
                             @if (showEmptyFields()) {
                                 @for (field of generalFields().empty; track field.label) {
-                                    <dt class="col-span-5 text-muted-color text-sm">{{ field.label }}</dt>
-                                    <dd class="col-span-7 m-0 text-muted-color">{{ field.value }}</dd>
+                                    <div>
+                                        <dt>{{ field.label }}</dt>
+                                        <dd class="text-muted-color text-sm">{{ field.value }}</dd>
+                                    </div>
                                 }
                             }
                             @if (hasText(p.clientEmail)) {
-                                <dt class="col-span-5 text-muted-color text-sm">Sahip e-posta</dt>
-                                <dd class="col-span-7 m-0 break-words">{{ p.clientEmail }}</dd>
+                                <div>
+                                    <dt>Sahip e-posta</dt>
+                                    <dd class="font-medium text-surface-900 dark:text-surface-0">{{ p.clientEmail }}</dd>
+                                </div>
                             }
                         </dl>
                         @if (generalFields().empty.length > 0) {

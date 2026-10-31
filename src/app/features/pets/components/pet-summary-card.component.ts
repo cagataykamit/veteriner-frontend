@@ -26,19 +26,20 @@ const FOLLOW_UP_LIMIT = 3;
         <ng-template #notOk let-state let-label="label">
             @switch (state) {
                 @case ('Empty') {
-                    <p class="m-0 text-muted-color" data-testid="state-empty">Kayıt yok</p>
+                    <p class="m-0 text-muted-color text-sm" data-testid="state-empty">Kayıt yok</p>
                 }
                 @case ('Forbidden') {
-                    <p class="m-0 text-muted-color" data-testid="state-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
+                    <p class="m-0 text-muted-color text-sm" data-testid="state-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
                 }
                 @default {
-                    <p class="m-0 text-orange-600 dark:text-orange-400" data-testid="state-unavailable"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>{{ label }} alınamadı</p>
+                    <p class="m-0 text-orange-600 dark:text-orange-400 text-sm" data-testid="state-unavailable"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>{{ label }} alınamadı</p>
                 }
             }
         </ng-template>
 
-        <section class="card mb-0 h-full" aria-labelledby="pet-clinical-summary-title">
-            <h5 id="pet-clinical-summary-title" class="mt-0 mb-4">Klinik özet</h5>
+        <!-- Her madde kendi kutucuğunda: etiket küçük/büyük harf, dolu değer koyu ve kalın, boş durum soluk ve küçük. -->
+        <section class="card mb-0 h-full @container" aria-labelledby="pet-clinical-summary-title">
+            <h5 id="pet-clinical-summary-title" class="mt-0 mb-3">Klinik özet</h5>
 
             @if (loading()) {
                 <app-loading-state message="Klinik özet yükleniyor…" />
@@ -48,18 +49,18 @@ const FOLLOW_UP_LIMIT = 3;
                     <button pButton type="button" size="small" class="p-button-secondary" (click)="retry.emit()"><i class="pi pi-refresh"></i>Tekrar dene</button>
                 </div>
             } @else if (summary(); as s) {
-                <dl class="m-0 grid grid-cols-12 gap-x-4 gap-y-4">
-                    <div class="col-span-12 md:col-span-6" data-testid="section-weight">
-                        <dt class="text-muted-color text-sm mb-1">Son kilo (muayeneden)</dt>
-                        <dd class="m-0">
+                <dl class="m-0 grid grid-cols-1 @xl:grid-cols-2 gap-3 [&>div]:min-w-0 [&>div]:rounded-border [&>div]:bg-surface-50 [&>div]:p-3 dark:[&>div]:bg-surface-800 [&_dt]:field-label [&_dt]:mb-1.5 [&_dd]:m-0 [&_dd]:text-surface-900 dark:[&_dd]:text-surface-0">
+                    <div data-testid="section-weight">
+                        <dt>Son kilo (muayeneden)</dt>
+                        <dd>
                             @if (s.latestWeight.data; as w) {
-                                <span class="font-medium">{{ w.weightKg }} kg</span>
+                                <span class="font-semibold">{{ w.weightKg }} kg</span>
                                 <span class="text-muted-color text-sm"> · {{ w.measuredAtUtc | trDateTime }}</span>
                                 @if (w.examinationId) {
                                     <a [routerLink]="['/panel/examinations', w.examinationId]" class="text-primary no-underline text-sm ml-2">Muayene →</a>
                                 }
                             } @else if (s.latestWeight.state === 'Empty') {
-                                <p class="m-0 text-muted-color" data-testid="state-empty">Muayenede kilo ölçülmemiş</p>
+                                <p class="m-0 text-muted-color text-sm" data-testid="state-empty">Muayenede kilo ölçülmemiş</p>
                             } @else {
                                 <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.latestWeight.state, label: 'Kilo bilgisi' }" />
                             }
@@ -69,18 +70,18 @@ const FOLLOW_UP_LIMIT = 3;
                         </dd>
                     </div>
 
-                    <div class="col-span-12 md:col-span-6" data-testid="section-vitals">
-                        <dt class="text-muted-color text-sm mb-1">Vital (son muayene)</dt>
-                        <dd class="m-0">
+                    <div data-testid="section-vitals">
+                        <dt>Vital (son muayene)</dt>
+                        <dd>
                             @if (s.lastExamination.state !== 'Ok') {
                                 <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.lastExamination.state, label: 'Vital bilgisi' }" />
                             } @else {
                                 @switch (lastExamination()?.state) {
                                     @case ('ok') {
                                         @if (vitals(); as v) {
-                                            <span class="font-medium">{{ v }}</span>
+                                            <span class="font-semibold">{{ v }}</span>
                                         } @else {
-                                            <p class="m-0 text-muted-color" data-testid="state-empty">Son muayenede vital ölçülmemiş</p>
+                                            <p class="m-0 text-muted-color text-sm" data-testid="state-empty">Son muayenede vital ölçülmemiş</p>
                                         }
                                     }
                                     @case ('error') {
@@ -94,18 +95,18 @@ const FOLLOW_UP_LIMIT = 3;
                         </dd>
                     </div>
 
-                    <div class="col-span-12 md:col-span-6" data-testid="section-assessment">
-                        <dt class="text-muted-color text-sm mb-1">Son tanı / değerlendirme</dt>
-                        <dd class="m-0">
+                    <div data-testid="section-assessment">
+                        <dt>Son tanı / değerlendirme</dt>
+                        <dd>
                             @if (s.lastExamination.state !== 'Ok') {
                                 <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.lastExamination.state, label: 'Değerlendirme' }" />
                             } @else {
                                 @switch (lastExamination()?.state) {
                                     @case ('ok') {
                                         @if (assessment(); as a) {
-                                            <span class="whitespace-pre-wrap line-clamp-3">{{ a }}</span>
+                                            <span class="whitespace-pre-wrap line-clamp-3 font-medium">{{ a }}</span>
                                         } @else {
-                                            <p class="m-0 text-muted-color" data-testid="state-empty">Son muayenede değerlendirme yazılmamış</p>
+                                            <p class="m-0 text-muted-color text-sm" data-testid="state-empty">Son muayenede değerlendirme yazılmamış</p>
                                         }
                                     }
                                     @case ('error') {
@@ -119,13 +120,13 @@ const FOLLOW_UP_LIMIT = 3;
                         </dd>
                     </div>
 
-                    <div class="col-span-12 md:col-span-6" data-testid="section-active-care">
-                        <dt class="text-muted-color text-sm mb-1">Aktif yatış ve takipli tedavi</dt>
-                        <dd class="m-0">
+                    <div data-testid="section-active-care">
+                        <dt>Aktif yatış ve takipli tedavi</dt>
+                        <dd>
                             @if (s.activeHospitalization.data; as h) {
                                 <div>
                                     <i class="pi pi-building text-sm mr-1" aria-hidden="true"></i>
-                                    <a [routerLink]="['/panel/hospitalizations', h.id]" class="text-primary font-medium no-underline">{{ h.reason ?? 'Yatış' }}</a>
+                                    <a [routerLink]="['/panel/hospitalizations', h.id]" class="text-primary font-semibold no-underline">{{ h.reason ?? 'Yatış' }}</a>
                                     <span class="text-muted-color text-sm"> · yatış {{ h.admittedAtUtc | trDateTime }}</span>
                                 </div>
                             } @else if (s.activeHospitalization.state !== 'Empty') {
@@ -149,55 +150,55 @@ const FOLLOW_UP_LIMIT = 3;
                                 }
                             }
                             @if (noActiveCare()) {
-                                <p class="m-0 text-muted-color" data-testid="state-empty">Aktif yatış veya takip tarihi gelmemiş tedavi yok</p>
+                                <p class="m-0 text-muted-color text-sm" data-testid="state-empty">Aktif yatış veya takip tarihi gelmemiş tedavi yok</p>
                             }
                         </dd>
                     </div>
 
-                    <div class="col-span-12 md:col-span-6" data-testid="section-vaccinations">
-                        <dt class="text-muted-color text-sm mb-1">Aşılar</dt>
-                        <dd class="m-0">
+                    <div data-testid="section-vaccinations">
+                        <dt>Aşılar</dt>
+                        <dd>
                             @if (s.vaccinations.data; as v) {
                                 <div>
-                                    Son uygulanan:
+                                    <span class="text-muted-color text-sm">Son uygulanan:</span>
                                     @if (v.lastApplied; as a) {
-                                        <a [routerLink]="['/panel/vaccinations', a.id]" class="text-primary font-medium no-underline">{{ a.vaccineName }}</a>
+                                        <a [routerLink]="['/panel/vaccinations', a.id]" class="text-primary font-semibold no-underline">{{ a.vaccineName }}</a>
                                         <span class="text-muted-color text-sm"> · {{ a.appliedAtUtc | trDate }}</span>
                                     } @else {
-                                        <span class="text-muted-color">yok</span>
+                                        <span class="text-muted-color text-sm">yok</span>
                                     }
                                 </div>
                                 <div>
-                                    Sıradaki:
+                                    <span class="text-muted-color text-sm">Sıradaki:</span>
                                     @if (v.nextDue; as d) {
-                                        <a [routerLink]="['/panel/vaccinations', d.id]" class="text-primary font-medium no-underline">{{ d.vaccineName }}</a>
+                                        <a [routerLink]="['/panel/vaccinations', d.id]" class="text-primary font-semibold no-underline">{{ d.vaccineName }}</a>
                                         <span class="text-muted-color text-sm"> · {{ d.dueAtUtc | trDate }}</span>
                                         @if (d.isOverdue) {
                                             <span class="text-red-600 dark:text-red-400 font-medium text-sm" data-testid="vaccine-overdue"> · Gecikmiş</span>
                                         }
                                     } @else {
-                                        <span class="text-muted-color">planlanmış aşı yok</span>
+                                        <span class="text-muted-color text-sm">planlanmış aşı yok</span>
                                     }
                                 </div>
                             } @else if (s.vaccinations.state === 'Empty') {
-                                <p class="m-0 text-muted-color" data-testid="state-empty">Aşı kaydı yok</p>
+                                <p class="m-0 text-muted-color text-sm" data-testid="state-empty">Aşı kaydı yok</p>
                             } @else {
                                 <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.vaccinations.state, label: 'Aşı bilgisi' }" />
                             }
                         </dd>
                     </div>
 
-                    <div class="col-span-12 md:col-span-6" data-testid="section-examination">
-                        <dt class="text-muted-color text-sm mb-1">Son muayene</dt>
-                        <dd class="m-0">
+                    <div data-testid="section-examination">
+                        <dt>Son muayene</dt>
+                        <dd>
                             @if (s.lastExamination.data; as e) {
-                                <a [routerLink]="['/panel/examinations', e.id]" class="text-primary font-medium no-underline">{{ e.visitReason ?? 'Muayene' }}</a>
+                                <a [routerLink]="['/panel/examinations', e.id]" class="text-primary font-semibold no-underline">{{ e.visitReason ?? 'Muayene' }}</a>
                                 <div class="text-muted-color text-sm">{{ e.examinedAtUtc | trDateTime }}</div>
                                 @if (e.clinicName) {
                                     <div class="text-muted-color text-sm">{{ e.clinicName }}</div>
                                 }
                             } @else if (s.lastExamination.state === 'Empty') {
-                                <p class="m-0 text-muted-color" data-testid="state-empty">Muayene kaydı yok</p>
+                                <p class="m-0 text-muted-color text-sm" data-testid="state-empty">Muayene kaydı yok</p>
                             } @else {
                                 <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.lastExamination.state, label: 'Muayene bilgisi' }" />
                             }
