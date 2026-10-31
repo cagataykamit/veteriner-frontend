@@ -52,7 +52,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             </div>
         } @else if (member(); as m) {
             <!-- Kimlik kartı: ad + "Siz" / e-posta onayı rozetleri, e-posta, üyelik tarihi; gösterge şeridi (onay, üyelik, rol ve klinik sayısı). -->
-            <app-detail-identity-card icon="pi pi-user" [title]="m.name" [subtitle]="m.email" [meta]="'Kurum üyeliği: ' + (m.tenantMembershipCreatedAtUtc | trDateTime)" ariaLabel="Üye kimliği" testId="tenant-member-identity-card">
+            <app-detail-identity-card icon="pi pi-user" [title]="m.name || m.email" [subtitle]="m.name ? m.email : ''" [meta]="'Kurum üyeliği: ' + (m.tenantMembershipCreatedAtUtc | trDateTime)" ariaLabel="Üye kimliği" testId="tenant-member-identity-card">
                 <ng-container badges>
                     @if (m.isCurrentUser) {
                         <app-status-tag label="Siz" severity="info" />
@@ -72,7 +72,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 </div>
                 <div stat>
                     <dt>Roller</dt>
-                    <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ m.roles.length }}</dd>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ m.claims.length }}</dd>
                 </div>
                 <div stat>
                     <dt>Klinik üyelikleri</dt>
