@@ -14,6 +14,10 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { RecordHistoryButtonComponent } from '@/app/entities/record-history/components/record-history-button.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppDetailActionBarComponent } from '@/app/shared/ui/detail-action-bar/app-detail-action-bar.component';
+import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
+import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-line/app-detail-subject-line.component';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
@@ -36,6 +40,10 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         ButtonModule,
         DialogModule,
         AppPageHeaderComponent,
+        AppDetailIdentityCardComponent,
+        AppDetailActionBarComponent,
+        AppDetailSubjectLineComponent,
+        AppStatusTagComponent,
         RecordHistoryButtonComponent,
         PetAlertBannerComponent,
         AppLoadingStateComponent,
@@ -59,122 +67,104 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
-        } @else if (row()) {
-            <app-page-header categoryLink="/panel/hospitalizations" categoryLinkLabel="Listeye dön" title="Yatış" [description]="row()!.reason">
-                @if (row()!.isActive || (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim())) {
-                    <div actions class="flex flex-wrap gap-2">
-                        @if (row()!.isActive) {
-                            @if (canUpdateHospitalization && !ro.mutationBlocked()) {
-                                <a [routerLink]="['/panel/hospitalizations', row()!.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
-                                @if (canDischargeHospitalization) {
-                                    <button pButton type="button" severity="warn" (click)="openDischargeDialog()"><i class="p-button-icon pi pi-sign-out"></i>Taburcu et</button>
-                                }
-                            } @else if (canUpdateHospitalization && ro.mutationBlocked()) {
-                                <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
-                                @if (canDischargeHospitalization) {
-                                    <button pButton type="button" severity="secondary" [disabled]="true"><i class="p-button-icon pi pi-lock"></i>Taburcu et (salt okunur)</button>
-                                }
-                            }
-                        }
-                        @if (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim()) {
-                            @if (canCreatePayment && !ro.mutationBlocked()) {
-                                <a
-                                    [routerLink]="['/panel/payments/new']"
-                                    [queryParams]="{
-                                        clientId: row()!.clientId,
-                                        petId: row()!.petId,
-                                        examinationId: row()!.examinationId
-                                    }"
-                                    pButton
-                                    type="button"
-                                   
-                                   
-                                    class="p-button-secondary"
-                                ><i class="pi pi-wallet"></i>Ödeme Oluştur</a>
-                            } @else if (canCreatePayment && ro.mutationBlocked()) {
-                                <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Ödeme Oluştur (salt okunur)</button>
-                            }
-                        }
-                    </div>
-                }
-                <app-record-history-button actions resource="hospitalizations" [recordId]="row()!.id" />
-            </app-page-header>
-            <app-pet-alert-banner [petId]="row()!.petId" />
+        } @else if (row(); as r) {
+            <app-page-header categoryLink="/panel/hospitalizations" categoryLinkLabel="Listeye dön" />
 
-            <div class="grid grid-cols-12 gap-8">
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Genel</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Durum</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (row()!.isActive) {
-                                    <span class="font-medium">Aktif yatış</span>
-                                } @else {
-                                    Taburcu
-                                }
-                            </dd>
-                            @if (row()!.locationLabel) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Konum</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0" data-testid="hospitalization-location">{{ row()!.locationLabel }}</dd>
-                            }
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Yatış</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.admittedAtUtc | trDateTime }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Planlı taburcu</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.plannedDischargeAtUtc | trDateTime }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Taburcu</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.dischargedAtUtc | trDateTime }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.createdAtUtc | trDateTime }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.updatedAtUtc | trDateTime }}</dd>
-                            @if (row()!.examinationId) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a [routerLink]="['/panel/examinations', row()!.examinationId]" class="text-primary font-medium no-underline">Muayene kaydına git →</a>
-                                </dd>
-                            }
-                        </dl>
-                    </div>
+            <!-- Kimlik kartı: yatış nedeni + durum rozeti, yatış tarihi, kayıt satırı, hasta/sahip ve konum; sağda Düzenle ve geçmiş; gösterge şeridi. -->
+            <app-detail-identity-card icon="pi pi-building" [title]="r.reason" [subtitle]="r.admittedAtUtc | trDateTime" [meta]="'Oluşturulma: ' + (r.createdAtUtc | trDateTime) + ' · Güncellenme: ' + (r.updatedAtUtc | trDateTime)" ariaLabel="Yatış kimliği" testId="hospitalization-identity-card">
+                <app-status-tag badges [label]="r.isActive ? 'Aktif yatış' : 'Taburcu'" [severity]="r.isActive ? 'warn' : 'secondary'" />
+                <app-detail-subject-line [petId]="r.petId" [petName]="r.petName" [clientId]="r.clientId" [clientName]="r.clientName">
+                    @if (r.locationLabel) {
+                        <span class="min-w-0"><span class="text-muted-color">Konum:</span> <span class="font-medium" data-testid="hospitalization-location">{{ r.locationLabel }}</span></span>
+                    }
+                </app-detail-subject-line>
+                <ng-container actions>
+                    @if (r.isActive && canUpdateHospitalization) {
+                        @if (!ro.mutationBlocked()) {
+                            <a [routerLink]="['/panel/hospitalizations', r.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
+                        } @else {
+                            <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                        }
+                    }
+                    <app-record-history-button resource="hospitalizations" [recordId]="r.id" />
+                </ng-container>
+                <div stat>
+                    <dt>Yatış</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ r.admittedAtUtc | trDateTime }}</dd>
                 </div>
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Müşteri / hasta</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (row()!.clientId) {
-                                    <a [routerLink]="['/panel/clients', row()!.clientId]" class="text-primary font-medium no-underline">{{ row()!.clientName }}</a>
-                                } @else {
-                                    {{ row()!.clientName }}
-                                }
-                            </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Hasta</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (row()!.petId) {
-                                    <a [routerLink]="['/panel/pets', row()!.petId]" class="text-primary font-medium no-underline">{{ row()!.petName }}</a>
-                                } @else {
-                                    {{ row()!.petName }}
-                                }
-                            </dd>
-                        </dl>
-                    </div>
+                <div stat>
+                    <dt>Planlı taburcu</dt>
+                    <dd>
+                        @if (r.plannedDischargeAtUtc) {
+                            <span class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ r.plannedDischargeAtUtc | trDateTime }}</span>
+                        } @else {
+                            <span class="field-empty">Belirsiz</span>
+                        }
+                    </dd>
                 </div>
-                <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Notlar</h5>
-                        <h6 class="mt-0 mb-2 text-muted-color text-sm">Yatış notları</h6>
-                        <p class="mt-0 mb-0 whitespace-pre-wrap">{{ row()!.notes }}</p>
-                        @if (row()!.dischargeNote) {
-                            <h6 class="mt-4 mb-2 text-muted-color text-sm">Taburcu notu</h6>
-                            <p class="mt-0 mb-0 whitespace-pre-wrap" data-testid="discharge-note">{{ row()!.dischargeNote }}</p>
+                <div stat>
+                    <dt>Taburcu</dt>
+                    <dd>
+                        @if (r.dischargedAtUtc) {
+                            <span class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ r.dischargedAtUtc | trDateTime }}</span>
+                        } @else {
+                            <span class="field-empty">Henüz taburcu değil</span>
+                        }
+                    </dd>
+                </div>
+                <div stat>
+                    <dt>Muayene</dt>
+                    <dd>
+                        @if (r.examinationId) {
+                            <a [routerLink]="['/panel/examinations', r.examinationId]" class="text-primary font-semibold no-underline">Muayene kaydına git →</a>
+                        } @else {
+                            <span class="field-empty">Bağlı muayene yok</span>
+                        }
+                    </dd>
+                </div>
+            </app-detail-identity-card>
+            <app-pet-alert-banner [petId]="r.petId" />
+
+            <!-- Eylem şeridi: taburcu ve ödeme; salt okunurda kilitli. -->
+            @if ((r.isActive && canUpdateHospitalization && canDischargeHospitalization) || (canCreatePayment && r.examinationId?.trim() && r.clientId?.trim() && r.petId?.trim())) {
+                <app-detail-action-bar ariaLabel="Yatış eylemleri">
+                    @if (r.isActive && canUpdateHospitalization && canDischargeHospitalization) {
+                        @if (!ro.mutationBlocked()) {
+                            <button pButton type="button" severity="warn" (click)="openDischargeDialog()"><i class="p-button-icon pi pi-sign-out"></i>Taburcu et</button>
+                        } @else {
+                            <button pButton type="button" severity="secondary" [disabled]="true"><i class="p-button-icon pi pi-lock"></i>Taburcu et (salt okunur)</button>
+                        }
+                    }
+                    @if (canCreatePayment && r.examinationId?.trim() && r.clientId?.trim() && r.petId?.trim()) {
+                        @if (!ro.mutationBlocked()) {
+                            <a [routerLink]="['/panel/payments/new']" [queryParams]="{ clientId: r.clientId, petId: r.petId, examinationId: r.examinationId }" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-wallet"></i>Ödeme Oluştur</a>
+                        } @else {
+                            <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Ödeme Oluştur (salt okunur)</button>
+                        }
+                    }
+                </app-detail-action-bar>
+            }
+
+            <!-- Satır ızgarası: yatış notları | taburcu notu (8/4, eşit yükseklik); bakım talimatları tam genişlik. -->
+            <div class="@container flex flex-col gap-4">
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="card mb-0 h-full min-w-0 col-span-12" [class.@4xl:col-span-8]="!!r.dischargeNote">
+                        <h5 class="mt-0 mb-3">Yatış notları</h5>
+                        @if (r.notes === emptyMark) {
+                            <p class="m-0 field-empty">Not yok</p>
+                        } @else {
+                            <p class="m-0 whitespace-pre-wrap">{{ r.notes }}</p>
                         }
                     </div>
+                    @if (r.dischargeNote) {
+                        <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-4">
+                            <h5 class="mt-0 mb-3">Taburcu notu</h5>
+                            <p class="m-0 whitespace-pre-wrap" data-testid="discharge-note">{{ r.dischargeNote }}</p>
+                        </div>
+                    }
                 </div>
-                @if (row()!.petId) {
-                    <div class="col-span-12">
-                        <app-care-instructions-section [hospitalizationId]="row()!.id" [petId]="row()!.petId!" />
-                    </div>
+                @if (r.petId) {
+                    <app-care-instructions-section [hospitalizationId]="r.id" [petId]="r.petId!" />
                 }
             </div>
         }
@@ -261,6 +251,8 @@ export class HospitalizationDetailPageComponent implements OnInit {
     readonly canUpdateHospitalization = this.auth.hasOperationClaim(HOSPITALIZATIONS_UPDATE_CLAIM);
     readonly canDischargeHospitalization = this.auth.hasOperationClaim(HOSPITALIZATIONS_DISCHARGE_CLAIM);
     readonly canCreatePayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
+    /** Mapper boş metin için kullandığı EM ile aynı. */
+    readonly emptyMark = '—';
 
     ngOnInit(): void {
         this.loader.init();

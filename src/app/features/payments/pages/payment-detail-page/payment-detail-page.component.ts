@@ -15,6 +15,9 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppDetailActionBarComponent } from '@/app/shared/ui/detail-action-bar/app-detail-action-bar.component';
+import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
+import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-line/app-detail-subject-line.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -28,7 +31,20 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-payment-detail-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, ReasonConfirmDialogComponent, TrDateTimePipe],
+    imports: [
+        CommonModule,
+        RouterLink,
+        ButtonModule,
+        AppPageHeaderComponent,
+        AppDetailIdentityCardComponent,
+        AppDetailActionBarComponent,
+        AppDetailSubjectLineComponent,
+        AppLoadingStateComponent,
+        AppEmptyStateComponent,
+        AppErrorStateComponent,
+        ReasonConfirmDialogComponent,
+        TrDateTimePipe
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
@@ -41,74 +57,65 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
-        } @else if (payment()) {
-            <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Ödeme" [description]="headerDescription(payment()!)">
-                @if (canUpdatePayment && !ro.mutationBlocked()) {
-                    <a actions [routerLink]="['/panel/payments', payment()!.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
-                } @else if (canUpdatePayment && ro.mutationBlocked()) {
-                    <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
-                }
-                @if (canVoidPayment && !ro.mutationBlocked()) {
-                    <button actions pButton type="button" class="p-button-danger p-button-outlined" (click)="voidVisible = true"><i class="pi pi-ban"></i>İptal et</button>
-                }
-            </app-page-header>
+        } @else if (payment(); as p) {
+            <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" />
 
-            <div class="grid grid-cols-12 gap-8">
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Müşteri / hasta</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (payment()!.clientId) {
-                                    <a [routerLink]="['/panel/clients', payment()!.clientId]" class="text-primary font-medium no-underline">{{ payment()!.clientName }}</a>
-                                } @else {
-                                    {{ payment()!.clientName }}
-                                }
-                            </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Hasta</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (payment()!.petId) {
-                                    <a [routerLink]="['/panel/pets', payment()!.petId]" class="text-primary font-medium no-underline">{{ payment()!.petName }}</a>
-                                } @else {
-                                    {{ payment()!.petName }}
-                                }
-                            </dd>
-                        </dl>
-                    </div>
+            <!-- Kimlik kartı: tutar başlık, ödeme zamanı, kanal, müşteri/hasta; sağda Düzenle; gösterge şeridi (tutar, kanal, zaman, randevu, muayene). -->
+            <app-detail-identity-card icon="pi pi-wallet" [title]="moneyLine(p)" [subtitle]="formatPaidAtUtc(p.paidAtUtc)" [meta]="'Kanal: ' + methodLabel(p.method) + ' · Para birimi: ' + p.currency" ariaLabel="Ödeme kimliği" testId="payment-identity-card">
+                <app-detail-subject-line [petId]="p.petId" [petName]="p.petName" [clientId]="p.clientId" [clientName]="p.clientName" />
+                <ng-container actions>
+                    @if (canUpdatePayment && !ro.mutationBlocked()) {
+                        <a [routerLink]="['/panel/payments', p.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
+                    } @else if (canUpdatePayment && ro.mutationBlocked()) {
+                        <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                    }
+                </ng-container>
+                <div stat>
+                    <dt>Tutar</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ moneyLine(p) }}</dd>
                 </div>
-
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Tutar ve ödeme</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Tutar</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0 font-medium">{{ moneyLine(payment()!) }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Para birimi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ payment()!.currency }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Kanal</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ methodLabel(payment()!.method) }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Ödeme zamanı</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ formatPaidAtUtc(payment()!.paidAtUtc) }}</dd>
-                            @if (payment()!.appointmentId) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Randevu</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a [routerLink]="['/panel/appointments', payment()!.appointmentId]" class="text-primary font-medium no-underline">Randevu kaydına git →</a>
-                                </dd>
-                            }
-                            @if (payment()!.examinationId) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a [routerLink]="['/panel/examinations', payment()!.examinationId]" class="text-primary font-medium no-underline">Muayene kaydına git →</a>
-                                </dd>
-                            }
-                        </dl>
-                    </div>
+                <div stat>
+                    <dt>Kanal</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ methodLabel(p.method) }}</dd>
                 </div>
+                <div stat>
+                    <dt>Ödeme zamanı</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ formatPaidAtUtc(p.paidAtUtc) }}</dd>
+                </div>
+                <div stat>
+                    <dt>Randevu</dt>
+                    <dd>
+                        @if (p.appointmentId) {
+                            <a [routerLink]="['/panel/appointments', p.appointmentId]" class="text-primary font-semibold no-underline">Randevu kaydına git →</a>
+                        } @else {
+                            <span class="field-empty">Bağlı randevu yok</span>
+                        }
+                    </dd>
+                </div>
+                <div stat>
+                    <dt>Muayene</dt>
+                    <dd>
+                        @if (p.examinationId) {
+                            <a [routerLink]="['/panel/examinations', p.examinationId]" class="text-primary font-semibold no-underline">Muayene kaydına git →</a>
+                        } @else {
+                            <span class="field-empty">Bağlı muayene yok</span>
+                        }
+                    </dd>
+                </div>
+            </app-detail-identity-card>
 
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
+            <!-- Eylem şeridi: gerekçeli iptal (salt okunurda gösterilmez; mevcut davranış). -->
+            @if (canVoidPayment && !ro.mutationBlocked()) {
+                <app-detail-action-bar ariaLabel="Ödeme eylemleri">
+                    <button pButton type="button" class="p-button-danger p-button-outlined" (click)="voidVisible = true"><i class="pi pi-ban"></i>İptal et</button>
+                </app-detail-action-bar>
+            }
+
+            <!-- Satır ızgarası: ilgili muayeneler | son randevular (6/6, eşit yükseklik); notlar tam genişlik. -->
+            <div class="@container flex flex-col gap-4">
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-6">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-3">
                             <h5 class="mt-0 mb-0">İlgili muayeneler</h5>
                             <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
@@ -121,26 +128,24 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         } @else {
                             <ul class="list-none m-0 p-0">
                                 @for (row of exItemsView().displayed; track row.id) {
-                                    <li class="mb-3 last:mb-0">
+                                    <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0">
                                         <div class="flex flex-wrap gap-2 justify-between items-baseline">
                                             <span class="text-muted-color text-sm">{{ row.examinedAtUtc | trDateTime }}</span>
                                             <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                         </div>
-                                        <div class="font-medium">{{ row.visitReason }}</div>
+                                        <div class="font-medium break-words">{{ row.visitReason }}</div>
                                     </li>
                                 }
                             </ul>
                         }
                     </div>
-                </div>
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
+                    <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-6">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-3">
                             <h5 class="mt-0 mb-0">Son randevular (hasta)</h5>
                             <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                         </div>
-                        @if (!payment()!.petId) {
-                            <app-empty-state [message]="payment()!.hasMultiplePets ? 'Ödeme birden fazla hastaya ait; randevu özeti gösterilemiyor.' : 'Hasta bilgisi yok; randevu özeti gösterilemiyor.'" />
+                        @if (!p.petId) {
+                            <app-empty-state [message]="p.hasMultiplePets ? 'Ödeme birden fazla hastaya ait; randevu özeti gösterilemiyor.' : 'Hasta bilgisi yok; randevu özeti gösterilemiyor.'" />
                         } @else if (apptLoading()) {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (apptError()) {
@@ -150,28 +155,25 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         } @else {
                             <ul class="list-none m-0 p-0">
                                 @for (row of apptItemsView().displayed; track row.id) {
-                                    <li class="mb-3 last:mb-0">
+                                    <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0">
                                         <div class="flex flex-wrap gap-2 justify-between items-baseline">
                                             <span class="text-muted-color text-sm">{{ row.scheduledAtUtc | trDateTime }}</span>
                                             <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
                                         </div>
-                                        <div class="font-medium">{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
+                                        <div class="font-medium break-words">{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
                                     </li>
                                 }
                             </ul>
                         }
                     </div>
                 </div>
-
-                <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Notlar</h5>
-                        @if (payment()!.note === emptyMark) {
-                            <app-empty-state message="Not bulunmuyor." />
-                        } @else {
-                            <p class="m-0 whitespace-pre-wrap">{{ payment()!.note }}</p>
-                        }
-                    </div>
+                <div class="card mb-0">
+                    <h5 class="mt-0 mb-3">Notlar</h5>
+                    @if (p.note === emptyMark) {
+                        <p class="m-0 field-empty">Not bulunmuyor</p>
+                    } @else {
+                        <p class="m-0 whitespace-pre-wrap">{{ p.note }}</p>
+                    }
                 </div>
             </div>
         }
