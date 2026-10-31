@@ -209,7 +209,7 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
         await render();
         const t = text();
 
-        for (const s of ['Klinik ayarları', 'Özet', 'Aktif', 'merkez@ornek.com', 'Bağdat Cad. 1', 'Ana şube', 'Düzenle', 'Klinik adı *', 'Çalışma Saatleri', 'Randevu Varsayılanları', 'Durum']) {
+        for (const s of ['Klinik ayarları', 'Aktif', 'merkez@ornek.com', 'Bağdat Cad. 1', 'Ana şube', 'Klinik adı *', 'Çalışma Saatleri', 'Randevu Varsayılanları', 'Durum']) {
             expect(t).toContain(s);
         }
 
@@ -233,8 +233,8 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
         await render();
         const t = text();
 
-        expect(t).toContain('Düzenle');
-        expect(t).not.toContain('Özet');
+        expect(t).toContain('Klinik ayarları');
+        expect(el().querySelector('[data-testid="clinic-identity-card"]')).toBeNull();
         expect(t).not.toContain('Çalışma Saatleri');
         expect(t).not.toContain('Randevu Varsayılanları');
         expect(t).not.toContain('Pasife al');
@@ -293,7 +293,7 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
         await render();
 
         expect(text()).toContain('Bu işletme salt okunur moddadır; klinik bilgileri güncellenemez.');
-        expect(text()).toContain('Salt okunur modda pasif/aktif işlemi yapılamaz.');
+        expect(text()).toContain('İşletme salt okunur moddadır; eylemler kapalı.');
         expect(button('Çalışma saatlerini kaydet').disabled).toBe(true);
     });
 });
