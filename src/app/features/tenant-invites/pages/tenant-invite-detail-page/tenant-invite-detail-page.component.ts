@@ -14,6 +14,8 @@ import { buildPublicJoinInviteUrl } from '@/app/features/tenant-invites/utils/jo
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppDetailActionBarComponent } from '@/app/shared/ui/detail-action-bar/app-detail-action-bar.component';
+import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { tenantInviteDisplayStatusSeverity } from '@/app/entities/tenant-invite/utils/tenant-invite-status.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
@@ -23,12 +25,12 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-tenant-invite-detail-page',
     standalone: true,
-    imports: [CommonModule, ButtonModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppStatusTagComponent, TrDateTimePipe],
+    imports: [CommonModule, ButtonModule, ToastModule, AppPageHeaderComponent, AppDetailIdentityCardComponent, AppDetailActionBarComponent, AppLoadingStateComponent, AppErrorStateComponent, AppStatusTagComponent, TrDateTimePipe],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
-        <app-page-header categoryLink="/panel/settings/invites/list" categoryLinkLabel="Davet listesine dön" title="Davet detayı" description="Davet bilgileri (salt okunur)." />
+        <app-page-header categoryLink="/panel/settings/invites/list" categoryLinkLabel="Davet listesine dön" />
 
         @if (loading()) {
             <app-loading-state message="Davet yükleniyor…" />
@@ -37,52 +39,45 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 <app-error-state [detail]="err" (retry)="reload()" />
             </div>
         } @else if (item(); as d) {
-            <div class="card mb-4">
-                <div class="flex flex-wrap gap-2 mb-4">
-                    @if (d.canCancel && canManageTenantAccess()) {
-                        <button pButton type="button" severity="danger" [disabled]="resendBusy() || cancelBusy()" (click)="onCancel(d.id)"><i class="p-button-icon" [class]="cancelBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-times'"></i>Daveti iptal et</button>
-                    }
+            <!-- Kimlik kartı: e-posta + durum rozeti, rol, klinik satırı; gösterge şeridi (klinik, rol, son geçerlilik, oluşturulma). Davet salt okunur; eylemler şeritte. -->
+            <app-detail-identity-card icon="pi pi-envelope" [title]="d.email" [subtitle]="roleLine(d)" [meta]="'Klinik: ' + clinicLine(d)" ariaLabel="Davet kimliği" testId="tenant-invite-identity-card">
+                <app-status-tag badges [label]="d.statusLabel" [severity]="inviteStatusSeverity(d)" />
+                <div stat>
+                    <dt>Klinik</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 break-words">{{ clinicLine(d) }}</dd>
+                </div>
+                <div stat>
+                    <dt>Rol / yetki</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 break-words">{{ roleLine(d) }}</dd>
+                </div>
+                <div stat>
+                    <dt>Son geçerlilik</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ d.expiresAtUtc | trDateTime }}</dd>
+                </div>
+                <div stat>
+                    <dt>Oluşturulma</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ d.createdAtUtc | trDateTime }}</dd>
+                </div>
+            </app-detail-identity-card>
+
+            @if (actionError()) {
+                <p class="text-red-500 text-sm mt-0 mb-4" role="alert">{{ actionError() }}</p>
+            }
+
+            <!-- Eylem şeridi: yeniden gönder ve iptal (yetki + salt okunur değilken); salt okunur notu şeritten gelir. -->
+            @if ((d.canCancel || d.canResend) && (canManageTenantAccess() || ro.mutationBlocked())) {
+                <app-detail-action-bar ariaLabel="Davet eylemleri">
                     @if (d.canResend && canManageTenantAccess()) {
                         <button pButton type="button" [disabled]="cancelBusy() || resendBusy()" (click)="onResend(d.id)"><i class="p-button-icon" [class]="resendBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-send'"></i>Yeniden gönder</button>
                     }
-                    @if (ro.mutationBlocked()) {
-                        <p class="text-sm text-muted-color m-0 self-center">Salt okunur kurumda iptal ve yeniden gönder kullanılamaz.</p>
+                    @if (d.canCancel && canManageTenantAccess()) {
+                        <button pButton type="button" severity="danger" [outlined]="true" [disabled]="resendBusy() || cancelBusy()" (click)="onCancel(d.id)"><i class="p-button-icon" [class]="cancelBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-times'"></i>Daveti iptal et</button>
                     }
-                </div>
-                @if (actionError()) {
-                    <p class="text-red-500 text-sm mt-0 mb-4" role="alert">{{ actionError() }}</p>
-                }
-                <dl class="grid grid-cols-1 md:grid-cols-2 gap-3 m-0 text-sm">
-                    <div>
-                        <dt class="text-muted-color font-medium m-0 mb-1">E-posta</dt>
-                        <dd class="m-0 break-all">{{ d.email }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-muted-color font-medium m-0 mb-1">Durum</dt>
-                        <dd class="m-0">
-                            <app-status-tag [label]="d.statusLabel" [severity]="inviteStatusSeverity(d)" />
-                        </dd>
-                    </div>
-                    <div>
-                        <dt class="text-muted-color font-medium m-0 mb-1">Klinik</dt>
-                        <dd class="m-0 break-words">{{ clinicLine(d) }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-muted-color font-medium m-0 mb-1">Rol / yetki</dt>
-                        <dd class="m-0 break-words">{{ roleLine(d) }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-muted-color font-medium m-0 mb-1">Son geçerlilik</dt>
-                        <dd class="m-0">{{ d.expiresAtUtc | trDateTime }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-muted-color font-medium m-0 mb-1">Oluşturulma</dt>
-                        <dd class="m-0">{{ d.createdAtUtc | trDateTime }}</dd>
-                    </div>
-                </dl>
-            </div>
+                </app-detail-action-bar>
+            }
+
             @if (joinUrl()) {
-                <div class="card">
+                <div class="card mb-0">
                     <h5 class="mt-0 mb-2">Katılım bağlantısı</h5>
                     <p class="text-sm text-muted-color mt-0 mb-2">Davet hâlâ geçerliyse bu bağlantı kullanılabilir.</p>
                     <div class="p-3 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 break-all text-sm font-mono">

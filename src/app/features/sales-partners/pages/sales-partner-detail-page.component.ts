@@ -17,6 +17,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { AppStatusTagComponent, type StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
@@ -38,6 +39,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
         InputTextModule,
         TableModule,
         AppPageHeaderComponent,
+        AppDetailIdentityCardComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
         AppEmptyStateComponent,
@@ -54,40 +56,45 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
         } @else if (error()) {
             <div class="card"><app-error-state [detail]="error()!" (retry)="load()" /></div>
         } @else if (partner(); as p) {
-            <app-page-header categoryLink="/panel/sales-partners" categoryLinkLabel="Satış ortakları" [title]="p.name" [description]="contactLine(p)">
-                <button actions pButton type="button" severity="secondary" [disabled]="exporting()" (click)="exportCsv()"><i [class]="exporting() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>CSV indir</button>
-                <button actions pButton type="button" severity="secondary" (click)="partnerDialogVisible.set(true)"><i class="fa-solid fa-pen-to-square"></i>Düzenle</button>
-            </app-page-header>
+            <app-page-header categoryLink="/panel/sales-partners" categoryLinkLabel="Satış ortakları" />
+
+            <!-- Kimlik kartı: ortak adı + durum rozeti, iletişim satırı; sağda CSV ve Düzenle; gösterge şeridi (kullanım, ciro, komisyon, bekleyen). -->
+            <app-detail-identity-card icon="pi pi-briefcase" [title]="p.name" [subtitle]="contactLine(p)" [meta]="'Kayıt: ' + date(p.createdAtUtc) + ' · ' + p.codeCount + ' kod'" ariaLabel="Satış ortağı kimliği" testId="sp-identity-card">
+                <app-status-tag badges [label]="p.isActive ? 'Aktif' : 'Pasif'" [severity]="p.isActive ? 'success' : 'secondary'" />
+                <ng-container actions>
+                    <button pButton type="button" class="p-button-outlined p-button-secondary" [disabled]="exporting()" (click)="exportCsv()"><i [class]="exporting() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>CSV indir</button>
+                    <button pButton type="button" class="p-button-outlined p-button-secondary" (click)="partnerDialogVisible.set(true)"><i class="fa-solid fa-pen-to-square"></i>Düzenle</button>
+                </ng-container>
+                <div stat data-testid="sp-summary">
+                    <dt>Kullanım (deneme / ücretli)</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">
+                        {{ p.summary.redemptionCount }} <span class="text-sm font-normal text-muted-color">({{ p.summary.trialCustomerCount }} / {{ p.summary.paidCustomerCount }})</span>
+                    </dd>
+                </div>
+                <div stat>
+                    <dt>Ciro (net, KDV hariç)</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ money(p.summary.revenueNetMinor) }}</dd>
+                </div>
+                <div stat>
+                    <dt>Komisyon hak edilen / ödenen</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">
+                        {{ money(p.summary.commissionEarnedMinor) }} <span class="text-sm font-normal text-muted-color">/ {{ money(p.summary.commissionPaidMinor) }}</span>
+                    </dd>
+                </div>
+                <div stat>
+                    <dt>Bekleyen komisyon</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">
+                        {{ money(p.summary.commissionPendingMinor) }}
+                        @if (p.summary.commissionClawbackMinor > 0) {
+                            <span class="block text-sm font-normal text-red-600 dark:text-red-400">Geri alınacak: {{ money(p.summary.commissionClawbackMinor) }}</span>
+                        }
+                    </dd>
+                </div>
+            </app-detail-identity-card>
 
             @if (actionError()) {
                 <p class="text-red-500 text-sm mt-0 mb-3" role="alert">{{ actionError() }}</p>
             }
-
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" data-testid="sp-summary">
-                <div class="card mb-0">
-                    <div class="text-muted-color text-sm mb-1">Kullanım (deneme / ücretli)</div>
-                    <div class="text-xl font-semibold">
-                        {{ p.summary.redemptionCount }} <span class="text-base font-normal text-muted-color">({{ p.summary.trialCustomerCount }} / {{ p.summary.paidCustomerCount }})</span>
-                    </div>
-                </div>
-                <div class="card mb-0">
-                    <div class="text-muted-color text-sm mb-1">Ciro (net, KDV hariç)</div>
-                    <div class="text-xl font-semibold">{{ money(p.summary.revenueNetMinor) }}</div>
-                </div>
-                <div class="card mb-0">
-                    <div class="text-muted-color text-sm mb-1">Komisyon hak edilen / ödenen</div>
-                    <div class="text-xl font-semibold">
-                        {{ money(p.summary.commissionEarnedMinor) }} <span class="text-base font-normal text-muted-color">/ {{ money(p.summary.commissionPaidMinor) }}</span>
-                    </div>
-                </div>
-                <div class="card mb-0">
-                    <div class="text-muted-color text-sm mb-1">Bekleyen komisyon</div>
-                    <div class="text-xl font-semibold">{{ money(p.summary.commissionPendingMinor) }}</div>
-                    @if (p.summary.commissionClawbackMinor > 0) {
-                        <div class="text-sm text-red-600 dark:text-red-400 mt-1">Geri alınacak: {{ money(p.summary.commissionClawbackMinor) }}</div>
-                    }
-                </div>
-            </div>
 
             <div class="card">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
