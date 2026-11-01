@@ -345,15 +345,14 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(label(el)).toContain('Ödeme (salt okunur)');
     });
 
-    it('"Tümü →" bağlantıları hayvan bağlamını (petId) taşır', async () => {
-        const { el } = await setup(detailVm, ['Examinations.Read']);
+    it('"Tümünü gör" yalnız kayıt varken listenin altında çizilir ve hayvan bağlamını (petId) taşır', async () => {
+        const payment = { id: 'p1', paidAtUtc: '2026-10-10T10:00:00Z', clinicId: null, clinicName: null, amount: 250, currency: 'TRY', method: 'Cash' };
+        const { el } = await setup(detailVm, ['Examinations.Read'], { examinationId: 'e1', payments: [payment] });
+        const links = Array.from(el.querySelectorAll('[data-testid="see-all-link"]')).map((a) => a.getAttribute('href'));
 
-        for (const path of ['payments', 'examinations', 'appointments']) {
-            const a = Array.from(el.querySelectorAll(`a[href^="/panel/${path}?"]`));
-
-            expect(a.length, path).toBeGreaterThan(0);
-            expect(a[0].getAttribute('href'), path).toContain('petId=pet-1');
-        }
+        // Bağlı ödeme var → bağlantı var; aynı hastanın randevuları ve son muayeneler boş → bağlantı yok.
+        expect(links).toEqual(['/panel/payments?petId=pet-1']);
+        expect(el.querySelector('[data-testid="related-payments"] ul + app-detail-see-all-link')).not.toBeNull();
     });
 
     it('kesinleşmiş muayenede tedavi/reçete/aşı düğmeleri kilitli ve neden görünür; lab ve yatış açık kalır', async () => {

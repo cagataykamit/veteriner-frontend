@@ -39,6 +39,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
+import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
 
 /**
  * Müşteri kartı — okuma öncelikli 360 görünüm (ADR-020 karar 6, hasta kartıyla aynı ilke): kimlik kartı (iletişim, rıza rozeti, gösterge şeridi),
@@ -50,7 +51,7 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
     selector: 'app-client-detail-page',
     standalone: true,
     imports: [
-        CommonModule,
+        AppDetailSeeAllLinkComponent, CommonModule,
         RouterLink,
         ButtonModule,
         ToastModule,
@@ -116,10 +117,7 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 @4xl:col-span-8 grid grid-cols-1 @2xl:grid-cols-2 gap-4 min-w-0" [class.order-first]="emphasis === 'clinical'" data-testid="history-column">
                         <div class="card mb-0 min-w-0 h-full">
-                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-3">
-                                <h5 class="mt-0 mb-0">Son muayeneler</h5>
-                                <a routerLink="/panel/examinations" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                            </div>
+                            <h5 class="mt-0 mb-3">Son muayeneler</h5>
                             @if (recentSummaryLoading()) {
                                 <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                             } @else if (recentSummaryError()) {
@@ -139,13 +137,11 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
                                         </li>
                                     }
                                 </ul>
+                                <app-detail-see-all-link link="/panel/examinations" [queryParams]="{ clientId: c.id }" [itemCount]="examListView().displayed.length" />
                             }
                         </div>
                         <div class="card mb-0 min-w-0 h-full">
-                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-3">
-                                <h5 class="mt-0 mb-0">Son randevular</h5>
-                                <a routerLink="/panel/appointments" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                            </div>
+                            <h5 class="mt-0 mb-3">Son randevular</h5>
                             @if (recentSummaryLoading()) {
                                 <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                             } @else if (recentSummaryError()) {
@@ -170,6 +166,7 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
                                         </li>
                                     }
                                 </ul>
+                                <app-detail-see-all-link link="/panel/appointments" [queryParams]="{ clientId: c.id }" [itemCount]="apptListView().displayed.length" />
                             }
                         </div>
                     </div>

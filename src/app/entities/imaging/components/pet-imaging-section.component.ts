@@ -7,12 +7,13 @@ import { ImagingRecordsService } from '@/app/entities/imaging/services/imaging-r
 import { imagingModalityLabel } from '@/app/entities/imaging/utils/imaging.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
 
 /** Hasta kartında son görüntülemeler (yalnız başlık; küçük resim yüklenmez). Okuma yetkisi denetimi çağırandadır. */
 @Component({
     selector: 'app-pet-imaging-section',
     standalone: true,
-    imports: [RouterLink, TrDatePipe],
+    imports: [AppDetailSeeAllLinkComponent, RouterLink, TrDatePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="card mb-0" aria-labelledby="pet-imaging-title" data-testid="pet-imaging-section">
@@ -40,9 +41,7 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
                         </li>
                     }
                 </ul>
-                @if (total() > items().length) {
-                    <a routerLink="/panel/imaging" [queryParams]="{ petId: petId() }" class="text-primary text-sm no-underline inline-block mt-2">Tümünü gör ({{ total() }})</a>
-                }
+                <app-detail-see-all-link link="/panel/imaging" [queryParams]="{ petId: petId() }" [itemCount]="items().length" [total]="total()" />
             }
         </section>
     `

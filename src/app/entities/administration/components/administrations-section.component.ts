@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, input, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -19,6 +18,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
 
 /**
  * Muayene veya tedavi bağlamında uygulama kayıtları: liste, "Uygulama ekle" ve gerekçeli iptal.
@@ -28,9 +28,8 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     selector: 'app-administrations-section',
     standalone: true,
     imports: [
-        CommonModule,
+        AppDetailSeeAllLinkComponent, CommonModule,
         FormsModule,
-        RouterLink,
         CheckboxModule,
         ButtonModule,
         TableModule,
@@ -46,11 +45,18 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     template: `
         @if (canRead) {
             <div class="card mb-0" data-testid="administrations-section">
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <!-- Başlık satırı: filtre ve ekleme sağda; "Tümünü gör" listenin altında (ortak parça). -->
+                <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-3">
                     <h5 class="mt-0 mb-0">Uygulanan ürünler</h5>
-                    @if (canAdd()) {
-                        <button pButton type="button" size="small" data-testid="administration-add" (click)="createVisible = true"><i class="p-button-icon pi pi-plus"></i>Uygulama ekle</button>
-                    }
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                        <div class="flex items-center gap-2">
+                            <p-checkbox inputId="administrationsShowVoided" [binary]="true" [ngModel]="showVoided()" (ngModelChange)="setShowVoided($event)" data-testid="administrations-show-voided" />
+                            <label for="administrationsShowVoided" class="text-sm cursor-pointer">İptal edilenleri göster</label>
+                        </div>
+                        @if (canAdd()) {
+                            <button pButton type="button" size="small" data-testid="administration-add" (click)="createVisible = true"><i class="p-button-icon pi pi-plus"></i>Uygulama ekle</button>
+                        }
+                    </div>
                 </div>
 
                 @if (canCreate && locked()) {
@@ -100,16 +106,8 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                             </ng-template>
                         </p-table>
                     </div>
+                    <app-detail-see-all-link link="/panel/administrations" [queryParams]="{ petId: petId() }" [itemCount]="rows().length" [total]="total()" />
                 }
-
-                <!-- Filtre ve liste bağlantısı altta: başlık satırı düğmeyle sıkışmaz. -->
-                <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mt-3">
-                    <div class="flex items-center gap-2">
-                        <p-checkbox inputId="administrationsShowVoided" [binary]="true" [ngModel]="showVoided()" (ngModelChange)="setShowVoided($event)" data-testid="administrations-show-voided" />
-                        <label for="administrationsShowVoided" class="text-sm cursor-pointer">İptal edilenleri göster</label>
-                    </div>
-                    <a routerLink="/panel/administrations" [queryParams]="{ petId: petId() }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                </div>
             </div>
 
             <app-administration-create-dialog [(visible)]="createVisible" [petId]="petId()" [petName]="petName()" [examinationId]="examinationId()" [treatmentId]="treatmentId()" [lateEntry]="locked()" (saved)="onSaved($event)" />
@@ -140,6 +138,8 @@ export class AdministrationsSectionComponent {
     readonly loaded = signal(false);
     readonly error = signal<string | null>(null);
     readonly rows = signal<AdministrationVm[]>([]);
+    /** Sunucu toplamı ("Tümünü gör (n)"); liste 50 ile sınırlı. */
+    readonly total = signal<number | null>(null);
     /** İptal edilen uygulamalar varsayılan gizli (ADR-013); açıkça istenince listelenir. */
     readonly showVoided = signal(false);
     readonly notice = signal<string | null>(null);
@@ -174,6 +174,7 @@ export class AdministrationsSectionComponent {
             .subscribe({
                 next: (r) => {
                     this.rows.set(r.items);
+                    this.total.set(r.totalItems);
                     this.loaded.set(true);
                     this.loading.set(false);
                 },

@@ -50,6 +50,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
 import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/patient/services/recently-viewed.service';
+import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
 
 /** Kayıt metin bölümleri sırası; vital satırı `findings` ile `assessment` arasına girer. */
 const RECORD_TEXT_SECTIONS: readonly {
@@ -69,7 +70,7 @@ const RECORD_TEXT_SECTIONS: readonly {
     selector: 'app-examination-detail-page',
     standalone: true,
     imports: [
-        CommonModule,
+        AppDetailSeeAllLinkComponent, CommonModule,
         RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
@@ -250,10 +251,7 @@ const RECORD_TEXT_SECTIONS: readonly {
                     <h5 id="exam-related-title" class="mt-0 mb-3">İlgili kayıtlar</h5>
                     <div class="grid grid-cols-1 @2xl:grid-cols-2 gap-x-8 gap-y-4">
                         <div class="min-w-0" data-testid="related-payments">
-                            <div class="flex items-baseline justify-between gap-3 mb-1">
-                                <h6 class="m-0 field-label">Bağlı ödemeler</h6>
-                                <a routerLink="/panel/payments" [queryParams]="{ petId: e.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                            </div>
+                            <h6 class="m-0 mb-1 field-label">Bağlı ödemeler</h6>
                             @if (relatedSummaryLoading()) {
                                 <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                             } @else if (relatedSummaryError()) {
@@ -275,13 +273,11 @@ const RECORD_TEXT_SECTIONS: readonly {
                                         </li>
                                     }
                                 </ul>
+                                <app-detail-see-all-link link="/panel/payments" [queryParams]="{ petId: e.petId }" [itemCount]="relatedPaymentsView().displayed.length" />
                             }
                         </div>
                         <div class="min-w-0" data-testid="related-appointments">
-                            <div class="flex items-baseline justify-between gap-3 mb-1">
-                                <h6 class="m-0 field-label">Randevular (aynı hasta)</h6>
-                                <a routerLink="/panel/appointments" [queryParams]="{ petId: e.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                            </div>
+                            <h6 class="m-0 mb-1 field-label">Randevular (aynı hasta)</h6>
                             @if (!e.petId) {
                                 <p class="field-empty m-0">Hasta bilgisi yok; liste gösterilemiyor.</p>
                             } @else if (apptLoading()) {
@@ -302,6 +298,7 @@ const RECORD_TEXT_SECTIONS: readonly {
                                         </li>
                                     }
                                 </ul>
+                                <app-detail-see-all-link link="/panel/appointments" [queryParams]="{ petId: e.petId }" [itemCount]="apptItemsView().displayed.length" />
                             }
                         </div>
                     </div>

@@ -27,12 +27,13 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
 
 @Component({
     selector: 'app-payment-detail-page',
     standalone: true,
     imports: [
-        CommonModule,
+        AppDetailSeeAllLinkComponent, CommonModule,
         RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
@@ -115,10 +116,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             <div class="@container flex flex-col gap-4">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-6">
-                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-3">
-                            <h5 class="mt-0 mb-0">İlgili muayeneler</h5>
-                            <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                        </div>
+                        <h5 class="mt-0 mb-3">İlgili muayeneler</h5>
                         @if (exLoading()) {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
                         } @else if (exError()) {
@@ -137,13 +135,11 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                     </li>
                                 }
                             </ul>
+                            <app-detail-see-all-link link="/panel/examinations" [queryParams]="examinationsLinkQuery(p)" [itemCount]="exItemsView().displayed.length" />
                         }
                     </div>
                     <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-6">
-                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-3">
-                            <h5 class="mt-0 mb-0">Son randevular (hasta)</h5>
-                            <a routerLink="/panel/appointments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                        </div>
+                        <h5 class="mt-0 mb-3">Son randevular (hasta)</h5>
                         @if (!p.petId) {
                             <app-empty-state [message]="p.hasMultiplePets ? 'Ödeme birden fazla hastaya ait; randevu özeti gösterilemiyor.' : 'Hasta bilgisi yok; randevu özeti gösterilemiyor.'" />
                         } @else if (apptLoading()) {
@@ -164,6 +160,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                     </li>
                                 }
                             </ul>
+                            <app-detail-see-all-link link="/panel/appointments" [queryParams]="{ petId: p.petId }" [itemCount]="apptItemsView().displayed.length" />
                         }
                     </div>
                 </div>
@@ -231,6 +228,10 @@ export class PaymentDetailPageComponent implements OnInit {
     readonly formatPaidAtUtc = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly methodLabel = paymentMethodLabel;
     readonly typeDisplay = appointmentTypeDisplayLabel;
+    /** İlgili muayene listesiyle aynı bağlam: hasta biliniyorsa petId, yoksa müşteri. */
+    examinationsLinkQuery(p: PaymentDetailVm): Record<string, string> | null {
+        return p.petId ? { petId: p.petId } : p.clientId ? { clientId: p.clientId } : null;
+    }
 
     moneyLine(p: PaymentDetailVm): string {
         return formatMoney(p.amount, p.currency || 'TRY');

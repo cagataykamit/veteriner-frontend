@@ -13,6 +13,7 @@ import type { VaccinationListItemVm } from '@/app/entities/vaccination/models/va
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
 import { DetailRelatedSummariesService } from '@/app/entities/patient/services/detail-related-summaries.service';
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
 
 /** Bölüm yükleme durumu; `null` = bölüm bu kullanıcıya gösterilmez (okuma izni yok). */
 type Section<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error' } | null;
@@ -34,7 +35,7 @@ interface OverdueVaccinations {
 @Component({
     selector: 'app-examination-patient-context',
     standalone: true,
-    imports: [RouterLink, TrDatePipe],
+    imports: [AppDetailSeeAllLinkComponent, RouterLink, TrDatePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="card mb-0" aria-label="Hasta bağlamı" data-testid="patient-context">
@@ -141,10 +142,7 @@ interface OverdueVaccinations {
 
                 @if (recentExams(); as s) {
                     <div data-testid="ctx-recent-exams">
-                        <dt class="flex items-baseline justify-between gap-2">
-                            <span class="field-label">Son muayeneler</span>
-                            <a routerLink="/panel/examinations" [queryParams]="{ petId: petId() }" class="text-primary no-underline">Tümü →</a>
-                        </dt>
+                        <dt class="field-label">Son muayeneler</dt>
                         <dd>
                             @switch (s.state) {
                                 @case ('ok') {
@@ -159,6 +157,7 @@ interface OverdueVaccinations {
                                                 </li>
                                             }
                                         </ul>
+                                        <app-detail-see-all-link link="/panel/examinations" [queryParams]="{ petId: petId() }" [itemCount]="recentExamItems().length" />
                                     }
                                 }
                                 @case ('error') {

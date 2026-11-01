@@ -5,6 +5,7 @@ import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils
 import { speciesEmoji } from '@/app/shared/utils/species-icon.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
 
 /**
  * Müşteri kartındaki hayvanlar (ADR-020 karar 6): her satırda hasta kartına bağlantı, kimlik ve hayvana düşen borç,
@@ -14,7 +15,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 @Component({
     selector: 'app-client-pets-panel',
     standalone: true,
-    imports: [RouterLink, TrDateTimePipe],
+    imports: [AppDetailSeeAllLinkComponent, RouterLink, TrDateTimePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="card mb-0 h-full" aria-labelledby="client-pets-title" data-testid="client-pets">
@@ -47,7 +48,6 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                         </div>
                     }
                 }
-                <a routerLink="/panel/pets" [queryParams]="{ clientId: clientId() }" class="ml-auto text-primary font-medium no-underline text-sm">Tümü →</a>
             </div>
 
             @switch (rows()?.state) {
@@ -90,6 +90,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                     } @else {
                         <p class="m-0 text-muted-color" data-testid="pets-empty">Bu müşteriye kayıtlı hasta yok.</p>
                     }
+                    <app-detail-see-all-link link="/panel/pets" [queryParams]="{ clientId: clientId() }" [itemCount]="okRows().length" />
                 }
                 @case ('error') {
                     <p class="m-0 text-orange-600 dark:text-orange-400 text-sm" data-testid="pets-failed"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Hasta listesi alınamadı.</p>
