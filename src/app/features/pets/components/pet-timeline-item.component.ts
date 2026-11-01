@@ -55,13 +55,13 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                     <span>{{ item().clinicName }}</span>
                 }
                 @if (appointmentLink(item()); as appointment) {
-                    <a [routerLink]="appointment" class="text-primary no-underline" data-testid="appointment-link">Randevu →</a>
+                    <a [routerLink]="appointment" class="text-primary no-underline max-sm:touch-hit" data-testid="appointment-link">Randevu →</a>
                 }
                 @if (examinationLink(item()); as exam) {
-                    <a [routerLink]="exam" class="text-primary no-underline" data-testid="examination-link">Bağlı muayene →</a>
+                    <a [routerLink]="exam" class="text-primary no-underline max-sm:touch-hit" data-testid="examination-link">Bağlı muayene →</a>
                 }
                 @if (treatmentLink(item()); as treatment) {
-                    <a [routerLink]="treatment" class="text-primary no-underline" data-testid="treatment-link">Bağlı tedavi →</a>
+                    <a [routerLink]="treatment" class="text-primary no-underline max-sm:touch-hit" data-testid="treatment-link">Bağlı tedavi →</a>
                 }
             </div>
         </div>

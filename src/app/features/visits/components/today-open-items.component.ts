@@ -33,7 +33,7 @@ const TONE_MUTED = 'text-muted-color border-surface-300 dark:border-surface-700'
             <span class="text-sm font-medium">Açık işler</span>
             @for (e of entries(); track e.key) {
                 @if (e.link; as link) {
-                    <a [routerLink]="link" [queryParams]="e.queryParams ?? null" [attr.title]="e.title" class="inline-flex items-center gap-1 rounded-border border px-2 py-0.5 text-sm no-underline" [class]="e.tone">
+                    <a [routerLink]="link" [queryParams]="e.queryParams ?? null" [attr.title]="e.title" class="inline-flex items-center gap-1 rounded-border border px-2 py-0.5 text-sm no-underline max-sm:min-h-(--touch-target)" [class]="e.tone">
                         <i [class]="e.icon" aria-hidden="true"></i>{{ e.text }}
                     </a>
                 } @else {

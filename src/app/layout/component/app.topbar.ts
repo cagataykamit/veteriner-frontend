@@ -30,7 +30,11 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS = '.p-menu-overlay, .p-connect
                     <i class="pi pi-bars"></i>
                 </button>
                 <a class="layout-topbar-logo" routerLink="/panel">
-                    <img [src]="logoSrc()" [alt]="logoAlt" class="layout-topbar-logo-img" width="168" height="40" />
+                    <!-- Telefonda (≤ 575 px, MOBILE-004) yalnız simge: üst çubuktaki düğmelere yer kalsın -->
+                    <picture>
+                        <source media="(max-width: 575px)" [attr.srcset]="iconSrc()" />
+                        <img [src]="logoSrc()" [alt]="logoAlt" class="layout-topbar-logo-img" width="168" height="40" />
+                    </picture>
                 </a>
             </div>
 
@@ -60,6 +64,8 @@ export class AppTopbar implements OnInit, OnDestroy {
     readonly layoutService = inject(LayoutService);
 
     readonly logoSrc = computed(() => (this.layoutService.layoutConfig().darkTheme ? VETINITY_BRAND_LOGOS.compactLockupDark : VETINITY_BRAND_LOGOS.compactLockup));
+
+    readonly iconSrc = computed(() => (this.layoutService.layoutConfig().darkTheme ? VETINITY_BRAND_LOGOS.iconDark : VETINITY_BRAND_LOGOS.icon));
 
     readonly auth = inject(AuthService);
     private readonly router = inject(Router);

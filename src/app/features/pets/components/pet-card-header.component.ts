@@ -49,7 +49,7 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
                             }
                         </span>
                         @if (phoneHref(); as href) {
-                            <a [href]="href" class="text-primary no-underline whitespace-nowrap text-base font-semibold tabular-nums" data-testid="owner-phone"><i class="pi pi-phone text-sm mr-1.5" aria-hidden="true"></i>{{ phone() }}</a>
+                            <a [href]="href" class="text-primary no-underline whitespace-nowrap text-base font-semibold tabular-nums max-sm:inline-flex max-sm:items-center max-sm:min-h-(--touch-target)" data-testid="owner-phone"><i class="pi pi-phone text-sm mr-1.5" aria-hidden="true"></i>{{ phone() }}</a>
                         }
                     </p>
 

@@ -36,7 +36,7 @@ import { type FinalizeCheckItem } from '@/app/features/examinations/utils/examin
                                 <span class="min-w-0">
                                     {{ item.warning }}
                                     @if (item.key === 'pendingCharges') {
-                                        <a routerLink="/panel/charges/pending" [queryParams]="{ examinationId: exam().id }" class="text-primary font-medium no-underline block" data-testid="pending-charges-link">Ücretlendir →</a>
+                                        <a routerLink="/panel/charges/pending" [queryParams]="{ examinationId: exam().id }" class="text-primary font-medium no-underline block max-sm:touch-hit" data-testid="pending-charges-link">Ücretlendir →</a>
                                     }
                                 </span>
                             }

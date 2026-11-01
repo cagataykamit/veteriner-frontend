@@ -117,7 +117,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                                 </button>
                             }
                         } @else {
-                            <div class="overflow-x-auto">
+                            <div class="overflow-x-auto table-stack-phone">
                                 <p-table [value]="openCharges()" dataKey="chargeId" size="small" [tableStyle]="{ 'min-width': '44rem' }">
                                     <ng-template #header>
                                         <tr>
@@ -130,15 +130,15 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                                     <ng-template #body let-row>
                                         <tr>
                                             <td>
-                                                <div class="break-words">{{ row.description }}</div>
+                                                <div class="break-words max-sm:font-medium">{{ row.description }}</div>
                                                 @if (row.petName) {
                                                     <div class="text-sm text-muted-color">{{ row.petName }}</div>
                                                 }
                                             </td>
-                                            <td class="whitespace-nowrap">{{ row.createdAtUtc | trDateTime }}</td>
-                                            <td class="text-right whitespace-nowrap">{{ money(row.outstandingAmount) }}</td>
-                                            <td class="text-right">
-                                                <div class="flex items-center justify-end gap-2">
+                                            <td class="whitespace-nowrap" data-label="Tarih">{{ row.createdAtUtc | trDateTime }}</td>
+                                            <td class="text-right whitespace-nowrap" data-label="Kalan">{{ money(row.outstandingAmount) }}</td>
+                                            <td class="text-right" data-label="Bu ödemeden">
+                                                <div class="flex items-center justify-end max-sm:justify-start gap-2">
                                                     <input
                                                         type="number"
                                                         step="0.01"

@@ -98,7 +98,7 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
                     <dt>Randevu</dt>
                     <dd>
                         @if (p.appointmentId) {
-                            <a [routerLink]="['/panel/appointments', p.appointmentId]" class="text-primary font-semibold no-underline">Randevu kaydına git →</a>
+                            <a [routerLink]="['/panel/appointments', p.appointmentId]" class="text-primary font-semibold no-underline max-sm:touch-hit">Randevu kaydına git →</a>
                         } @else {
                             <span class="field-empty">Bağlı randevu yok</span>
                         }
@@ -108,7 +108,7 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
                     <dt>Muayene</dt>
                     <dd>
                         @if (p.examinationId) {
-                            <a [routerLink]="['/panel/examinations', p.examinationId]" class="text-primary font-semibold no-underline">Muayene kaydına git →</a>
+                            <a [routerLink]="['/panel/examinations', p.examinationId]" class="text-primary font-semibold no-underline max-sm:touch-hit">Muayene kaydına git →</a>
                         } @else {
                             <span class="field-empty">Bağlı muayene yok</span>
                         }

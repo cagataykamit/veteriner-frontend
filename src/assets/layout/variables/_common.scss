@@ -17,4 +17,6 @@
     --focus-ring-color: var(--p-focus-ring-color);
     --focus-ring-offset: var(--p-focus-ring-offset);
     --focus-ring-shadow: var(--p-focus-ring-shadow);
+    /* Telefonda en küçük dokunma hedefi (MOBILE-004); şablonlarda `min-h-(--touch-target)`. */
+    --touch-target: 44px;
 }

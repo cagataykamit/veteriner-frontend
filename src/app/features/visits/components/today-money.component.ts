@@ -17,11 +17,11 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
     template: `
         @for (chip of chips(); track chip.key) {
             @if (chip.reviewable) {
-                <button type="button" class="p-0 border-0 bg-transparent cursor-pointer rounded-border" [attr.title]="chip.title + ' — Ücretlendir'" [attr.aria-label]="chip.label + ', Ücretlendir'" (click)="review.emit()">
+                <button type="button" class="p-0 border-0 bg-transparent cursor-pointer rounded-border max-sm:touch-hit" [attr.title]="chip.title + ' — Ücretlendir'" [attr.aria-label]="chip.label + ', Ücretlendir'" (click)="review.emit()">
                     <p-tag [value]="chip.label" [severity]="chip.severity" [icon]="chip.icon" />
                 </button>
             } @else if (chip.payable && canPay()) {
-                <button type="button" class="p-0 border-0 bg-transparent cursor-pointer rounded-border" [attr.title]="chip.title + ' — ödeme al'" [attr.aria-label]="chip.label + ', ödeme al'" (click)="pay.emit()">
+                <button type="button" class="p-0 border-0 bg-transparent cursor-pointer rounded-border max-sm:touch-hit" [attr.title]="chip.title + ' — ödeme al'" [attr.aria-label]="chip.label + ', ödeme al'" (click)="pay.emit()">
                     <p-tag [value]="chip.label" [severity]="chip.severity" [icon]="chip.icon" />
                 </button>
             } @else {

@@ -20,8 +20,8 @@ import { buildPatientActions } from './patient-actions.utils';
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (actions().length > 0) {
-            <!-- Dar ekranda tek satır, yana kaydırılır (yapışkan şerit ekranı kaplamasın). -->
-            <div class="mb-4 py-2 flex flex-wrap gap-2 items-center max-sm:flex-nowrap max-sm:overflow-x-auto" [class]="sticky() ? 'sticky top-16 z-10 bg-[var(--surface-ground)]' : ''" role="toolbar" aria-label="Hızlı eylemler" data-testid="patient-action-bar">
+            <!-- Telefonda da satır kırar (MOBILE-004: yatay kaydırma yok); yapışkan şerit yalnız geniş ekranda. -->
+            <div class="mb-4 py-2 flex flex-wrap gap-2 items-center" [class]="sticky() ? 'sm:sticky top-16 z-10 bg-[var(--surface-ground)]' : ''" role="toolbar" aria-label="Hızlı eylemler" data-testid="patient-action-bar">
                 @for (action of actions(); track action.key; let first = $first) {
                     @if (ro.mutationBlocked()) {
                         <button pButton type="button" [disabled]="true" class="shrink-0" [class]="first ? 'p-button-primary' : 'p-button-outlined p-button-secondary'"><i class="pi pi-lock"></i>{{ action.label }}</button>
@@ -32,7 +32,7 @@ import { buildPatientActions } from './patient-actions.utils';
                     }
                 }
                 @if (ro.mutationBlocked()) {
-                    <span class="text-amber-700 dark:text-amber-300 text-sm shrink-0 max-sm:whitespace-nowrap" role="status">İşletme salt okunur moddadır; eylemler kapalı.</span>
+                    <span class="text-amber-700 dark:text-amber-300 text-sm shrink-0" role="status">İşletme salt okunur moddadır; eylemler kapalı.</span>
                 }
             </div>
             @if (canArrive()) {

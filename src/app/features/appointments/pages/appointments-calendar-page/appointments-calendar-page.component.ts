@@ -81,7 +81,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                             <div class="flex flex-col gap-2">
                                 @for (item of day.items; track item.id) {
                                     <article class="rounded-md border border-surface-200 dark:border-surface-700 px-2 py-2">
-                                        <div class="grid items-center gap-2 w-full min-h-9" style="grid-template-columns: 52px minmax(120px, 1.4fr) minmax(140px, 1.6fr) 88px 112px 30px 30px;">
+                                        <div class="hidden lg:grid items-center gap-2 w-full min-h-9" style="grid-template-columns: 52px minmax(120px, 1.4fr) minmax(140px, 1.6fr) 88px 112px auto auto;">
                                             <span class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap" [title]="calendarRowHint(item)">{{
                                                 item.timeRangeLabel
                                             }}</span>
@@ -108,6 +108,24 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                                 <app-row-action-button action="edit" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (pressed)="openEdit(item.id)" />
                                             </div>
                                         </div>
+                                        <div class="lg:hidden flex flex-wrap items-center gap-2">
+                                            <div class="shrink-0 rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold" [title]="calendarRowHint(item)">
+                                                {{ item.timeRangeLabel }}
+                                            </div>
+                                            <div class="min-w-0 flex-1 text-sm">
+                                                <p class="m-0 font-semibold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+                                                    {{ item.petName }} <span class="text-muted-color font-normal">· {{ item.clientName }}</span>
+                                                </p>
+                                            </div>
+                                            <div class="flex flex-wrap items-center gap-1 min-w-0">
+                                                <app-status-tag class="shrink-0" [label]="item.statusLabel" [severity]="item.statusSeverity" />
+                                                <app-status-tag class="shrink-0" [label]="item.appointmentTypeLabel" severity="secondary" />
+                                            </div>
+                                            <div class="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
+                                                <app-row-action-button action="detail" (pressed)="openDetail(item.id)" />
+                                                <app-row-action-button action="edit" [disabled]="!canRescheduleAppointment || ro.mutationBlocked()" (pressed)="openEdit(item.id)" />
+                                            </div>
+                                        </div>
                                     </article>
                                 }
                             </div>
@@ -125,7 +143,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                 <div class="flex flex-col gap-2 max-h-[28rem] overflow-y-auto pr-1">
                                     @for (item of dayMorningItems(); track item.id) {
                                         <article class="rounded-md border border-surface-200 dark:border-surface-700 px-2 py-2">
-                                            <div class="grid items-center gap-2 w-full min-h-9" style="grid-template-columns: 52px minmax(120px, 1.4fr) minmax(140px, 1.6fr) 88px 112px 30px 30px;">
+                                            <div class="grid items-center gap-2 w-full min-h-9" style="grid-template-columns: 52px minmax(120px, 1.4fr) minmax(140px, 1.6fr) 88px 112px auto auto;">
                                                 <span class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap" [title]="calendarRowHint(item)">{{
                                                     item.timeRangeLabel
                                                 }}</span>
@@ -165,7 +183,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
                                 <div class="flex flex-col gap-2 max-h-[28rem] overflow-y-auto pr-1">
                                     @for (item of dayAfternoonItems(); track item.id) {
                                         <article class="rounded-md border border-surface-200 dark:border-surface-700 px-2 py-2">
-                                            <div class="grid items-center gap-2 w-full min-h-9" style="grid-template-columns: 52px minmax(120px, 1.4fr) minmax(140px, 1.6fr) 88px 112px 30px 30px;">
+                                            <div class="grid items-center gap-2 w-full min-h-9" style="grid-template-columns: 52px minmax(120px, 1.4fr) minmax(140px, 1.6fr) 88px 112px auto auto;">
                                                 <span class="inline-flex items-center justify-center rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs font-semibold whitespace-nowrap" [title]="calendarRowHint(item)">{{
                                                     item.timeRangeLabel
                                                 }}</span>

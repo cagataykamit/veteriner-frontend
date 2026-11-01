@@ -97,7 +97,7 @@ interface ConvertedRow {
                 </app-filter-field>
                 <div>
                     <label for="pendingPeriodFilter" class="block text-xs font-medium text-muted-color mb-1">Tarih</label>
-                    <select id="pendingPeriodFilter" class="p-inputtext p-component" [ngModel]="period()" (ngModelChange)="period.set($event)">
+                    <select id="pendingPeriodFilter" class="p-inputtext p-component max-sm:w-full" [ngModel]="period()" (ngModelChange)="period.set($event)">
                         @for (o of periodOptions; track o.value) {
                             <option [value]="o.value">{{ o.label }}</option>
                         }
@@ -122,7 +122,7 @@ interface ConvertedRow {
                 @if (totalItems() > rows().length) {
                     <p class="text-sm text-muted-color mt-0 mb-3" role="note">İlk {{ rows().length }} kalem gösteriliyor (toplam {{ totalItems() }}); çevirdikçe kalanlar listeye gelir.</p>
                 }
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto table-stack-phone">
                     <p-table [value]="visibleRows()" dataKey="id" [paginator]="visibleRows().length > 20" [rows]="20" [tableStyle]="{ 'min-width': '64rem' }">
                         <ng-template #header>
                             <tr class="whitespace-nowrap">
@@ -140,15 +140,15 @@ interface ConvertedRow {
                         </ng-template>
                         <ng-template #body let-row>
                             <tr>
-                                <td class="whitespace-nowrap">{{ row.occurredAtUtc | trDateTime }}</td>
-                                <td>
-                                    <a [routerLink]="['/panel/clients', row.clientId]" class="block max-w-[9rem] truncate text-primary font-medium no-underline" [title]="row.clientName">{{ row.clientName }}</a>
+                                <td class="whitespace-nowrap" data-label="Tarih">{{ row.occurredAtUtc | trDateTime }}</td>
+                                <td data-label="Müşteri">
+                                    <a [routerLink]="['/panel/clients', row.clientId]" class="block max-w-[9rem] truncate max-sm:max-w-none max-sm:whitespace-normal max-sm:break-words text-primary font-medium no-underline" [title]="row.clientName">{{ row.clientName }}</a>
                                 </td>
-                                <td>
-                                    <a [routerLink]="['/panel/pets', row.petId]" class="block max-w-[7rem] truncate text-primary font-medium no-underline" [title]="row.petName">{{ row.petName }}</a>
+                                <td data-label="Hasta">
+                                    <a [routerLink]="['/panel/pets', row.petId]" class="block max-w-[7rem] truncate max-sm:max-w-none max-sm:whitespace-normal max-sm:break-words text-primary font-medium no-underline" [title]="row.petName">{{ row.petName }}</a>
                                 </td>
-                                <td>
-                                    <div class="max-w-[10rem] truncate" [title]="row.description">{{ row.description }}</div>
+                                <td data-label="Kalem">
+                                    <div class="max-w-[10rem] max-sm:max-w-none max-sm:whitespace-normal max-sm:break-words truncate" [title]="row.description">{{ row.description }}</div>
                                     <div class="text-sm whitespace-nowrap">
                                         @if (row.examinationId) {
                                             <a [routerLink]="['/panel/examinations', row.examinationId]" class="text-primary no-underline">Muayeneyi aç</a>
@@ -157,18 +157,18 @@ interface ConvertedRow {
                                         }
                                     </div>
                                 </td>
-                                <td class="text-right whitespace-nowrap">{{ row.quantity }} {{ row.unit }}</td>
-                                <td class="text-right whitespace-nowrap">
+                                <td class="text-right whitespace-nowrap" data-label="Miktar">{{ row.quantity }} {{ row.unit }}</td>
+                                <td class="text-right whitespace-nowrap" data-label="Birim fiyat">
                                     @if (row.suggestedUnitPrice === null) {
                                         <span class="text-amber-700 dark:text-amber-300 font-medium">Fiyat yok</span>
                                     } @else {
                                         {{ row.suggestedUnitPrice | money: row.currency || 'TRY' }}
                                     }
                                 </td>
-                                <td class="text-right whitespace-nowrap font-medium">{{ rowAmount(row) }}</td>
+                                <td class="text-right whitespace-nowrap font-medium" data-label="Tutar">{{ rowAmount(row) }}</td>
                                 @if (canConvert()) {
                                     <td class="whitespace-nowrap">
-                                        <div class="flex items-center gap-1">
+                                        <div class="flex flex-wrap items-center gap-1 max-sm:pt-2">
                                             @if (row.suggestedUnitPrice === null) {
                                                 <button pButton type="button" size="small" class="mr-1" [disabled]="busy(row.id)" (click)="openEdit(row)"><i class="p-button-icon pi pi-pencil"></i>Fiyat gir ve çevir</button>
                                             } @else {

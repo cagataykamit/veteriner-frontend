@@ -14,14 +14,14 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
     styles: [':host { display: block; } [role="toolbar"]:not(:has(> :not([data-ro-note]))) { display: none; }'],
     template: `
         <div
-            class="mb-4 py-2 flex flex-wrap gap-2 items-center max-sm:flex-nowrap max-sm:overflow-x-auto [&>*]:shrink-0"
+            class="mb-4 py-2 flex flex-wrap gap-2 items-center [&>*]:shrink-0"
             role="toolbar"
             [attr.aria-label]="ariaLabel()"
             data-testid="detail-action-bar"
         >
             <ng-content />
             @if (ro.mutationBlocked()) {
-                <span class="text-amber-700 dark:text-amber-300 text-sm max-sm:whitespace-nowrap" role="status" data-ro-note>İşletme salt okunur moddadır; eylemler kapalı.</span>
+                <span class="text-amber-700 dark:text-amber-300 text-sm" role="status" data-ro-note>İşletme salt okunur moddadır; eylemler kapalı.</span>
             }
         </div>
     `

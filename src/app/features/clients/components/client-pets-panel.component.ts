@@ -59,7 +59,7 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
                                     <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-border text-lg bg-surface-100 dark:bg-surface-800" [title]="row.pet.speciesName" aria-hidden="true" data-testid="pet-species-icon">{{ speciesIcon(row.pet.speciesName) }}</span>
                                     <div class="min-w-0 flex-1">
                                         <div class="flex flex-wrap items-baseline gap-x-2">
-                                            <a [routerLink]="['/panel/pets', row.pet.id]" class="text-primary font-semibold no-underline break-words">{{ row.pet.name }}</a>
+                                            <a [routerLink]="['/panel/pets', row.pet.id]" class="text-primary font-semibold no-underline break-words max-sm:touch-hit">{{ row.pet.name }}</a>
                                             @if (row.pet.status === 'Deceased') {
                                                 <span class="text-xs font-medium text-muted-color border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5" data-testid="pet-deceased">Vefat</span>
                                             }
@@ -74,7 +74,7 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
                                                     <span class="font-medium text-amber-700 dark:text-amber-400" data-testid="pet-pending">{{ row.pendingChargeCount }} işlem ücret bekliyor</span>
                                                 }
                                                 @if (row.nextAppointment; as a) {
-                                                    <a [routerLink]="['/panel/appointments', a.id]" class="text-primary no-underline" data-testid="pet-next-appointment"
+                                                    <a [routerLink]="['/panel/appointments', a.id]" class="text-primary no-underline max-sm:touch-hit" data-testid="pet-next-appointment"
                                                         ><i class="pi pi-calendar text-xs mr-1" aria-hidden="true"></i>{{ a.scheduledAtUtc | trDateTime }}</a
                                                     >
                                                 }

@@ -14,7 +14,7 @@ const EM = '—';
     imports: [RouterLink],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p class="m-0 mt-3 flex flex-wrap items-center gap-x-6 gap-y-2" aria-label="Hasta ve sahip" data-testid="detail-subject-line">
+        <p class="m-0 mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 wrap-anywhere [&>*]:min-w-0" aria-label="Hasta ve sahip" data-testid="detail-subject-line">
             @if (showPet()) {
                 <span class="min-w-0">
                     <span class="text-muted-color">Hasta:</span>

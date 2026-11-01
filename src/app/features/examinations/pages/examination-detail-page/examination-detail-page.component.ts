@@ -171,7 +171,7 @@ const RECORD_TEXT_SECTIONS: readonly {
                     <dt>Randevu</dt>
                     <dd>
                         @if (e.appointmentId?.trim()) {
-                            <a [routerLink]="['/panel/appointments', e.appointmentId]" class="font-semibold text-primary no-underline" data-testid="appointment-link">Bağlı randevu →</a>
+                            <a [routerLink]="['/panel/appointments', e.appointmentId]" class="font-semibold text-primary no-underline max-sm:touch-hit" data-testid="appointment-link">Bağlı randevu →</a>
                         } @else {
                             <span class="field-empty">Bağlı randevu yok</span>
                         }
@@ -291,7 +291,7 @@ const RECORD_TEXT_SECTIONS: readonly {
                                                     <span class="text-muted-color"> · {{ row.clinicName }}</span>
                                                 }
                                             </div>
-                                            <a [routerLink]="['/panel/payments', row.id]" class="shrink-0 font-semibold tabular-nums no-underline text-surface-900 dark:text-surface-0 hover:text-primary" [attr.aria-label]="'Ödeme detayı: ' + money(row.amount, row.currency)">{{ money(row.amount, row.currency) }}</a>
+                                            <a [routerLink]="['/panel/payments', row.id]" class="shrink-0 font-semibold tabular-nums no-underline text-surface-900 dark:text-surface-0 hover:text-primary max-sm:touch-hit" [attr.aria-label]="'Ödeme detayı: ' + money(row.amount, row.currency)">{{ money(row.amount, row.currency) }}</a>
                                         </li>
                                     }
                                 </ul>

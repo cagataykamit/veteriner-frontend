@@ -31,9 +31,9 @@ export const PET_CARD_TIMELINE_LIMIT = 10;
             <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                 <h5 id="pet-card-timeline-title" class="m-0">Zaman çizelgesi</h5>
                 @if (filter() === 'payment') {
-                    <a routerLink="/panel/payments" [queryParams]="{ petId: petId() }" class="text-primary font-medium no-underline text-sm">Tüm ödemeler →</a>
+                    <a routerLink="/panel/payments" [queryParams]="{ petId: petId() }" class="text-primary font-medium no-underline text-sm max-sm:touch-hit">Tüm ödemeler →</a>
                 } @else {
-                    <a [routerLink]="['/panel/pets', petId(), 'timeline']" class="text-primary font-medium no-underline text-sm" data-testid="full-timeline-link"> Tarih filtreli tam liste → </a>
+                    <a [routerLink]="['/panel/pets', petId(), 'timeline']" class="text-primary font-medium no-underline text-sm max-sm:touch-hit" data-testid="full-timeline-link"> Tarih filtreli tam liste → </a>
                 }
             </div>
 

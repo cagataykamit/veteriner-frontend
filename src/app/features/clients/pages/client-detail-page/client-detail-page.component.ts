@@ -180,9 +180,9 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
                             <h5 class="mt-0 mb-0 min-w-0">Ödeme özeti</h5>
                             <span class="ml-auto flex flex-wrap gap-x-3">
                                 @if (canReadCharges) {
-                                    <a routerLink="/panel/charges" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm whitespace-nowrap">Ücretler →</a>
+                                    <a routerLink="/panel/charges" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm whitespace-nowrap max-sm:touch-hit">Ücretler →</a>
                                 }
-                                <a routerLink="/panel/payments" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm whitespace-nowrap">Ödemeler →</a>
+                                <a routerLink="/panel/payments" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm whitespace-nowrap max-sm:touch-hit">Ödemeler →</a>
                             </span>
                         </div>
                         @if (paymentSummaryLoading()) {
@@ -240,7 +240,7 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
                                                 </div>
                                                 <a
                                                     [routerLink]="['/panel/payments', row.id]"
-                                                    class="shrink-0 font-semibold tabular-nums no-underline text-surface-900 dark:text-surface-0 hover:text-primary"
+                                                    class="shrink-0 font-semibold tabular-nums no-underline text-surface-900 dark:text-surface-0 hover:text-primary max-sm:touch-hit"
                                                     [attr.aria-label]="'Ödeme detayı: ' + money(row.amount, row.currency)"
                                                     >{{ money(row.amount, row.currency) }}</a
                                                 >
@@ -266,14 +266,14 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
                     <div class="card mb-0 min-w-0 h-full col-span-12 @4xl:col-span-6" aria-labelledby="client-documents-title" data-testid="client-documents">
                         <h5 id="client-documents-title" class="mt-0 mb-2">Belgeler ve rıza</h5>
                         <ul class="list-none m-0 p-0 flex flex-col">
-                            <li><a [routerLink]="['/panel/clients', c.id, 'kvkk-form']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline" data-testid="kvkk-print-action"><i class="pi pi-print text-sm" aria-hidden="true"></i>KVKK formu yazdır</a></li>
-                            <li><a [routerLink]="['/panel/clients', c.id, 'kvkk-disclosure']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline" data-testid="kvkk-disclosure-print-action"><i class="pi pi-print text-sm" aria-hidden="true"></i>Aydınlatma metni yazdır</a></li>
-                            <li><a [routerLink]="['/panel/clients', c.id, 'data-export']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline" data-testid="client-data-export-action"><i class="pi pi-file-export text-sm" aria-hidden="true"></i>Veri kopyası</a></li>
+                            <li><a [routerLink]="['/panel/clients', c.id, 'kvkk-form']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline max-sm:min-h-(--touch-target)" data-testid="kvkk-print-action"><i class="pi pi-print text-sm" aria-hidden="true"></i>KVKK formu yazdır</a></li>
+                            <li><a [routerLink]="['/panel/clients', c.id, 'kvkk-disclosure']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline max-sm:min-h-(--touch-target)" data-testid="kvkk-disclosure-print-action"><i class="pi pi-print text-sm" aria-hidden="true"></i>Aydınlatma metni yazdır</a></li>
+                            <li><a [routerLink]="['/panel/clients', c.id, 'data-export']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline max-sm:min-h-(--touch-target)" data-testid="client-data-export-action"><i class="pi pi-file-export text-sm" aria-hidden="true"></i>Veri kopyası</a></li>
                             @if (canUpdateClient) {
                                 <li>
                                     <button
                                         type="button"
-                                        class="inline-flex items-center gap-2 py-1.5 p-0 border-0 bg-transparent text-primary font-medium cursor-pointer disabled:text-muted-color disabled:cursor-not-allowed"
+                                        class="inline-flex items-center gap-2 py-1.5 p-0 border-0 bg-transparent text-primary font-medium cursor-pointer disabled:text-muted-color disabled:cursor-not-allowed max-sm:min-h-(--touch-target)"
                                         [disabled]="ro.mutationBlocked()"
                                         data-testid="kvkk-mark-action"
                                         (click)="kvkkDialogOpen.set(true)"

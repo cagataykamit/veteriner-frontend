@@ -68,7 +68,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             } @else if (!loading() && rows().length === 0) {
                 <app-empty-state message="Ücret kaydı yok." hint="Filtreyi temizleyin veya yeni ücret ekleyin." />
             } @else {
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto table-stack-phone">
                     <p-table
                         size="small"
                         [value]="rows()"
@@ -103,25 +103,25 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         </ng-template>
                         <ng-template #body let-row>
                             <tr>
-                                <td class="whitespace-nowrap">{{ row.createdAtUtc | trDateTime }}</td>
-                                <td>
-                                    <a [routerLink]="['/panel/clients', row.clientId]" class="block max-w-[9rem] truncate text-primary font-medium no-underline" [title]="row.clientName">{{ row.clientName }}</a>
+                                <td class="whitespace-nowrap" data-label="Tarih">{{ row.createdAtUtc | trDateTime }}</td>
+                                <td data-label="Müşteri">
+                                    <a [routerLink]="['/panel/clients', row.clientId]" class="block max-w-[9rem] truncate max-sm:max-w-none max-sm:whitespace-normal max-sm:break-words text-primary font-medium no-underline" [title]="row.clientName">{{ row.clientName }}</a>
                                 </td>
-                                <td>
+                                <td data-label="Hasta">
                                     @if (row.petId) {
-                                        <a [routerLink]="['/panel/pets', row.petId]" class="block max-w-[7rem] truncate text-primary font-medium no-underline" [title]="row.petName">{{ row.petName }}</a>
+                                        <a [routerLink]="['/panel/pets', row.petId]" class="block max-w-[7rem] truncate max-sm:max-w-none max-sm:whitespace-normal max-sm:break-words text-primary font-medium no-underline" [title]="row.petName">{{ row.petName }}</a>
                                     } @else {
                                         —
                                     }
                                 </td>
-                                <td>
-                                    <div class="max-w-[10rem] truncate" [title]="row.description">{{ row.description }}</div>
+                                <td data-label="Açıklama">
+                                    <div class="max-w-[10rem] max-sm:max-w-none max-sm:whitespace-normal max-sm:break-words truncate" [title]="row.description">{{ row.description }}</div>
                                 </td>
-                                <td class="text-right">{{ row.quantity }}</td>
-                                <td class="text-right whitespace-nowrap">{{ row.unitPrice | money: row.currency || 'TRY' }}</td>
-                                <td class="text-right whitespace-nowrap font-medium">{{ row.amount | money: row.currency || 'TRY' }}</td>
-                                <td class="text-right whitespace-nowrap">{{ row.allocatedAmount | money: row.currency || 'TRY' }}</td>
-                                <td class="text-right whitespace-nowrap">
+                                <td class="text-right table-stack-phone-hide">{{ row.quantity }}</td>
+                                <td class="text-right whitespace-nowrap table-stack-phone-hide">{{ row.unitPrice | money: row.currency || 'TRY' }}</td>
+                                <td class="text-right whitespace-nowrap font-medium" data-label="Tutar">{{ row.amount | money: row.currency || 'TRY' }}</td>
+                                <td class="text-right whitespace-nowrap" data-label="Ödenen">{{ row.allocatedAmount | money: row.currency || 'TRY' }}</td>
+                                <td class="text-right whitespace-nowrap" data-label="Kalan">
                                     @if (row.outstandingAmount === 0) {
                                         <app-status-tag label="Ödendi" severity="success" />
                                     } @else {
@@ -130,7 +130,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                 </td>
                                 @if (hasRowActions) {
                                     <td class="whitespace-nowrap">
-                                        <div class="flex items-center justify-end gap-1">
+                                        <div class="flex items-center justify-end gap-1 max-sm:pt-2">
                                             @if (ro.mutationBlocked()) {
                                                 <span class="text-muted-color text-sm">Salt okunur</span>
                                             } @else {

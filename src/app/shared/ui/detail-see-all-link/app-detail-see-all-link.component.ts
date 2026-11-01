@@ -16,7 +16,7 @@ import { type Params, RouterLink } from '@angular/router';
             <a
                 [routerLink]="link()"
                 [queryParams]="queryParams()"
-                class="flex items-center justify-center gap-2 mt-3 px-3 py-2 rounded-border text-sm font-semibold no-underline text-color bg-surface-50 hover:bg-primary-50 hover:text-primary-700 dark:bg-surface-800 dark:hover:bg-primary-900/40 dark:hover:text-primary-200 transition-colors"
+                class="flex items-center justify-center gap-2 mt-3 px-3 py-2 rounded-border text-sm font-semibold no-underline text-color bg-surface-50 hover:bg-primary-50 hover:text-primary-700 dark:bg-surface-800 dark:hover:bg-primary-900/40 dark:hover:text-primary-200 transition-colors max-sm:min-h-(--touch-target)"
                 data-testid="see-all-link"
             >
                 <span>
