@@ -1,7 +1,8 @@
 /** Gün sonu uçlarının yanıtları (`DAILY_TRANSACTIONS_REPORT_API_CONTRACT.md`); enum değerleri metin gelir. */
 import type { TodayOpenItemsDto } from '@/app/entities/visit/models/visit-api.model';
 
-export type DailyTransactionKind = 'Charge' | 'ChargeVoid' | 'ChargeCorrection' | 'Payment' | 'PaymentVoid' | 'PaymentCorrection';
+/** `CreditRefund`: müşteri kredisinin iadesi, kasadan çıkış (FIN-005, `CLIENT_CREDIT_API_CONTRACT.md` §9). */
+export type DailyTransactionKind = 'Charge' | 'ChargeVoid' | 'ChargeCorrection' | 'Payment' | 'PaymentVoid' | 'PaymentCorrection' | 'CreditRefund';
 export type CashPaymentMethod = 'Cash' | 'Card' | 'Transfer';
 
 export interface DailyTransactionTotalsDto {
@@ -16,8 +17,12 @@ export interface DailyTransactionTotalsDto {
     salesCollectedAmount: number;
     voidedCollectionAmount: number;
     voidedCollectionCount: number;
+    /** Alınan − iptal − kredi iadesi. */
     netCollectedAmount: number;
     correctionCount: number;
+    /** FIN-005 kredi iadesi; eski yanıtta yoksa 0 sayılır. */
+    refundedCreditAmount?: number;
+    refundedCreditCount?: number;
 }
 
 export interface DailyTransactionItemDto {
@@ -60,8 +65,12 @@ export interface CashSummaryAmountsDto {
     collectedCount: number;
     voidedAmount: number;
     voidedCount: number;
+    /** Tahsilat − iptal − kredi iadesi. */
     netAmount: number;
     salesCollectedAmount: number;
+    /** FIN-005 kredi iadesi (kasadan çıkış); eski yanıtta yoksa 0 sayılır. Kullanıcı kırılımında iadeyi yapana yazılır. */
+    refundedCreditAmount?: number;
+    refundedCreditCount?: number;
 }
 
 export interface CashSummaryMethodDto extends CashSummaryAmountsDto {

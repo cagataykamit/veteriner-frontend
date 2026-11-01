@@ -10,7 +10,15 @@ import { CHARGES_READ_CLAIM, LAB_RESULTS_READ_CLAIM, PAYMENTS_READ_CLAIM, VISITS
 import { REPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
 import type { CashSummaryDto, DailyTransactionItemDto, DailyTransactionsResultVm } from '@/app/features/reports/end-of-day/models/end-of-day.model';
 import { DailyTransactionsSource, EndOfDayService } from '@/app/features/reports/end-of-day/services/end-of-day.service';
-import { DAILY_TRANSACTION_KIND_OPTIONS, DAILY_TRANSACTION_METHOD_OPTIONS, dailyTransactionKindFlag, dailyTransactionKindLabel, dailyTransactionSign, fillEmptyDays } from '@/app/features/reports/end-of-day/utils/end-of-day.utils';
+import {
+    DAILY_TRANSACTION_KIND_OPTIONS,
+    DAILY_TRANSACTION_METHOD_OPTIONS,
+    dailyTransactionKindFlag,
+    dailyTransactionKindLabel,
+    dailyTransactionSign,
+    fillEmptyDays,
+    hasRefundedCredit
+} from '@/app/features/reports/end-of-day/utils/end-of-day.utils';
 import { dayText } from '@/app/features/reports/registers/data/register-definition';
 import { ReportFilterBarComponent } from '@/app/features/reports/shared/report-filter-bar.component';
 import { ReportListState, type ReportExtraKey, type ReportListQueryBase } from '@/app/features/reports/shared/report-list-state';
@@ -138,7 +146,7 @@ interface OpenItemRow {
                         </div>
                     </div>
                     @if (filtersActive()) {
-                        <p class="text-xs text-muted-color mt-3 mb-0">Ücret toplamları döküm süzgeçlerine (tür, ödeme türü, işlemi yapan) göre hesaplanır.</p>
+                        <p class="text-xs text-muted-color mt-3 mb-0">Ücret toplamları döküm filtrelerine (tür, ödeme türü, işlemi yapan) göre hesaplanır.</p>
                     }
                 </section>
             }
@@ -158,9 +166,19 @@ interface OpenItemRow {
                                 <span class="block text-muted-color text-sm mb-1">İptal edilen tahsilat</span>
                                 <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ c.totals.voidedAmount | money }}</div>
                             </div>
+                            @if (showCreditRefund()) {
+                                <div class="col-span-12 sm:col-span-6 lg:col-span-3" data-testid="eod-credit-refund">
+                                    <span class="block text-muted-color text-sm mb-1">Kredi iadesi</span>
+                                    <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ c.totals.refundedCreditAmount ?? 0 | money }}</div>
+                                    <span class="text-xs text-muted-color">Müşteriye geri verilen kredi; kasadan çıkış.</span>
+                                </div>
+                            }
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                                 <span class="block text-muted-color text-sm mb-1">Net tahsilat</span>
                                 <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">{{ c.totals.netAmount | money }}</div>
+                                @if (showCreditRefund()) {
+                                    <span class="text-xs text-muted-color">İptal ve kredi iadesi düşülmüştür.</span>
+                                }
                             </div>
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                                 <span class="block text-muted-color text-sm mb-1">Doğrudan satış tahsilatı</span>
@@ -175,6 +193,9 @@ interface OpenItemRow {
                                         <th>Ödeme türü</th>
                                         <th class="text-right">Tahsilat</th>
                                         <th class="text-right">İptal</th>
+                                        @if (showCreditRefund()) {
+                                            <th class="text-right">Kredi iadesi</th>
+                                        }
                                         <th class="text-right">Net</th>
                                     </tr>
                                 </thead>
@@ -184,6 +205,9 @@ interface OpenItemRow {
                                             <td>{{ methodLabel(m.paymentMethod) }}</td>
                                             <td class="text-right">{{ m.collectedAmount | money }}</td>
                                             <td class="text-right">{{ m.voidedAmount | money }}</td>
+                                            @if (showCreditRefund()) {
+                                                <td class="text-right">{{ m.refundedCreditAmount ?? 0 | money }}</td>
+                                            }
                                             <td class="text-right font-medium">{{ m.netAmount | money }}</td>
                                         </tr>
                                     }
@@ -198,6 +222,9 @@ interface OpenItemRow {
                                             <th>Gün</th>
                                             <th class="text-right">Tahsilat</th>
                                             <th class="text-right">İptal</th>
+                                            @if (showCreditRefund()) {
+                                                <th class="text-right">Kredi iadesi</th>
+                                            }
                                             <th class="text-right">Net</th>
                                         </tr>
                                     </thead>
@@ -207,6 +234,9 @@ interface OpenItemRow {
                                                 <td>{{ dayLabel(d.date) }}</td>
                                                 <td class="text-right">{{ d.collectedAmount | money }}</td>
                                                 <td class="text-right">{{ d.voidedAmount | money }}</td>
+                                                @if (showCreditRefund()) {
+                                                    <td class="text-right">{{ d.refundedCreditAmount ?? 0 | money }}</td>
+                                                }
                                                 <td class="text-right font-medium">{{ d.netAmount | money }}</td>
                                             </tr>
                                         }
@@ -229,7 +259,7 @@ interface OpenItemRow {
                     @if (openError()) {
                         <p class="text-red-500 text-sm m-0" role="alert">{{ openError() }}</p>
                     } @else if (openItemsNeedClinic()) {
-                        <p class="text-sm text-muted-color m-0">Açık işler tek klinik için hesaplanır. Klinik süzgecinden bir klinik seçin.</p>
+                        <p class="text-sm text-muted-color m-0">Açık işler tek klinik için hesaplanır. Klinik filtresinden bir klinik seçin.</p>
                     } @else {
                         <ul class="list-none p-0 m-0 grid grid-cols-12 gap-3">
                             @for (row of openItemRows(); track row.label) {
@@ -247,7 +277,7 @@ interface OpenItemRow {
             }
 
             @if (canDaily) {
-                <app-report-results [state]="state" [showSummary]="false" [summaryLine]="true" emptyMessage="Bu aralıkta mali hareket yok." emptyHint="Tarih aralığını veya süzgeçleri değiştirip tekrar deneyin.">
+                <app-report-results [state]="state" [showSummary]="false" [summaryLine]="true" emptyMessage="Bu aralıkta mali hareket yok." emptyHint="Tarih aralığını veya filtreleri değiştirip tekrar deneyin.">
                     <ng-template #rows>
                         <div class="overflow-x-auto">
                             <p-table
@@ -358,6 +388,12 @@ export class EndOfDayPageComponent implements OnInit, OnDestroy {
         const c = this.cash();
 
         return c ? fillEmptyDays(this.state.activeFromDate(), this.state.activeToDate(), c.byDay) : [];
+    });
+    /** Kredi iadesi kutusu ve sütunları yalnız aralıkta iade varsa (FIN-005). */
+    readonly showCreditRefund = computed(() => {
+        const c = this.cash();
+
+        return !!c && hasRefundedCredit(c.totals);
     });
 
     /** İşlemi yapan süzgeci: tahsilatı veya iptali olan kullanıcılar (kasa özetinden); bilinmeyen kullanıcı satırı seçilemez. */

@@ -1,4 +1,4 @@
-import type { CashSummaryDayDto, DailyTransactionKind } from '@/app/features/reports/end-of-day/models/end-of-day.model';
+import type { CashSummaryAmountsDto, CashSummaryDayDto, DailyTransactionKind } from '@/app/features/reports/end-of-day/models/end-of-day.model';
 import { addGregorianDaysToYmd } from '@/app/shared/utils/date.utils';
 
 const KIND_LABELS: Record<DailyTransactionKind, string> = {
@@ -7,7 +7,8 @@ const KIND_LABELS: Record<DailyTransactionKind, string> = {
     ChargeCorrection: 'Ücret düzeltmesi',
     Payment: 'Tahsilat',
     PaymentVoid: 'Tahsilat iptali',
-    PaymentCorrection: 'Tahsilat düzeltmesi'
+    PaymentCorrection: 'Tahsilat düzeltmesi',
+    CreditRefund: 'Kredi iadesi'
 };
 
 export const DAILY_TRANSACTION_KIND_OPTIONS = (Object.keys(KIND_LABELS) as DailyTransactionKind[]).map((value) => ({ label: KIND_LABELS[value], value }));
@@ -27,9 +28,14 @@ export function dailyTransactionKindFlag(kind: DailyTransactionKind): 'void' | '
     return kind.endsWith('Void') ? 'void' : kind.endsWith('Correction') ? 'correction' : null;
 }
 
-/** Tahsilat/ücret azalışı olan olaylar tabloda eksi işaretiyle yazılır (tutar pozitif gelir, yönü tür belirler). */
+/** Tahsilat/ücret azalışı olan olaylar (iptaller, kredi iadesi) tabloda eksi işaretiyle yazılır (tutar pozitif gelir, yönü tür belirler). */
 export function dailyTransactionSign(kind: DailyTransactionKind): '-' | '' {
-    return kind === 'ChargeVoid' || kind === 'PaymentVoid' ? '-' : '';
+    return kind === 'ChargeVoid' || kind === 'PaymentVoid' || kind === 'CreditRefund' ? '-' : '';
+}
+
+/** Kasa özetinde kredi iadesi sütunu yalnız aralıkta iade varsa gösterilir. */
+export function hasRefundedCredit(amounts: Pick<CashSummaryAmountsDto, 'refundedCreditAmount' | 'refundedCreditCount'>): boolean {
+    return (amounts.refundedCreditCount ?? 0) > 0 || (amounts.refundedCreditAmount ?? 0) > 0;
 }
 
 /**
@@ -50,6 +56,8 @@ export function fillEmptyDays(from: string, to: string, byDay: readonly CashSumm
                 voidedCount: 0,
                 netAmount: 0,
                 salesCollectedAmount: 0,
+                refundedCreditAmount: 0,
+                refundedCreditCount: 0,
                 cashNetAmount: 0,
                 cardNetAmount: 0,
                 transferNetAmount: 0

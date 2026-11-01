@@ -1,5 +1,5 @@
 import type { CashSummaryDayDto } from '@/app/features/reports/end-of-day/models/end-of-day.model';
-import { dailyTransactionKindFlag, dailyTransactionKindLabel, dailyTransactionSign, fillEmptyDays } from './end-of-day.utils';
+import { DAILY_TRANSACTION_KIND_OPTIONS, dailyTransactionKindFlag, dailyTransactionKindLabel, dailyTransactionSign, fillEmptyDays, hasRefundedCredit } from './end-of-day.utils';
 
 describe('end-of-day.utils', () => {
     const day = (date: string, net: number): CashSummaryDayDto => ({
@@ -38,5 +38,15 @@ describe('end-of-day.utils', () => {
         expect(dailyTransactionKindFlag('Payment')).toBeNull();
         expect(dailyTransactionSign('PaymentVoid')).toBe('-');
         expect(dailyTransactionSign('Charge')).toBe('');
+    });
+
+    it('kredi iadesi: etiket, eksi işareti, tür filtresi seçeneği; iade sütunu yalnız iade varsa', () => {
+        expect(dailyTransactionKindLabel('CreditRefund')).toBe('Kredi iadesi');
+        expect(dailyTransactionSign('CreditRefund')).toBe('-');
+        expect(dailyTransactionKindFlag('CreditRefund')).toBeNull();
+        expect(DAILY_TRANSACTION_KIND_OPTIONS).toContainEqual({ label: 'Kredi iadesi', value: 'CreditRefund' });
+        expect(hasRefundedCredit({ refundedCreditAmount: 150, refundedCreditCount: 1 })).toBe(true);
+        expect(hasRefundedCredit({})).toBe(false);
+        expect(fillEmptyDays('2026-10-01', '2026-10-01', [])[0].refundedCreditAmount).toBe(0);
     });
 });
