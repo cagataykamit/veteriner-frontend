@@ -1,3 +1,5 @@
+@use 'mixins' as *;
+
 @media screen and (min-width: 1960px) {
     .layout-main,
     .landing-wrapper {
@@ -63,6 +65,11 @@
         overflow: hidden;
     }
 
+    // Belgeyi kaydıran kök öğedir (bkz. _core.scss diyalog kilidi); menü açıkken arka plan kaymasın.
+    html:has(body.blocked-scroll) {
+        overflow: hidden;
+    }
+
     .layout-wrapper {
         .layout-main-container {
             margin-left: 0;
@@ -82,7 +89,9 @@
                 transform 0.4s cubic-bezier(0.05, 0.74, 0.2, 0.99),
                 left 0.4s cubic-bezier(0.05, 0.74, 0.2, 0.99);
 
+            // Çekmece dokunmatik cihazda açılır: satırlar parmakla seçilebilir yükseklikte (MOBILE-004).
             .layout-menu a {
+                min-height: var(--touch-target);
                 padding-top: 0.4rem;
                 padding-bottom: 0.4rem;
             }
@@ -107,6 +116,24 @@
             .layout-mask {
                 display: block;
             }
+        }
+    }
+}
+
+// Telefon: kenar boşlukları daralır, içerik ekranın tamamını kullanır; çekmecenin yanında kapatmak için maske şeridi kalır.
+@include phone {
+    .layout-wrapper {
+        .layout-main-container {
+            padding: 4.5rem 0.75rem 0;
+        }
+
+        .layout-main {
+            padding-bottom: 1rem;
+        }
+
+        .layout-sidebar {
+            max-width: calc(100vw - 3rem);
+            padding: 0.5rem 0.75rem;
         }
     }
 }

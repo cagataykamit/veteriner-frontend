@@ -21,7 +21,7 @@ import { MenuBadgeService, menuBadgeLabel } from '@/app/layout/service/menu-badg
                 @for (tab of v.tabs; track tab.route) {
                     <a
                         [routerLink]="tab.route"
-                        class="px-4 py-2 -mb-px border-b-2 font-medium no-underline"
+                        class="px-4 py-2 -mb-px border-b-2 font-medium no-underline max-sm:flex max-sm:items-center max-sm:min-h-(--touch-target)"
                         [class.border-primary]="tab === v.active"
                         [class.text-primary]="tab === v.active"
                         [class.border-transparent]="tab !== v.active"

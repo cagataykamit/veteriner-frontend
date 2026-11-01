@@ -368,6 +368,50 @@
     }
 }
 
+// Telefon (MOBILE-004): logo simgeye iner (şablondaki <picture>), klinik seçici yalnız simge olur (ad ipucunda ve menüde),
+// tek klinikte salt okunur ad gizlenir; düğmeler 44 px ve aralar daralır. 360 px'te üst çubuk yatay taşmaz.
+@include phone {
+    .layout-topbar {
+        padding: 0 0.5rem;
+
+        .layout-menu-button {
+            margin-right: 0.25rem;
+        }
+
+        .layout-topbar-action,
+        .layout-topbar-clinic-trigger {
+            width: var(--touch-target);
+            height: var(--touch-target);
+        }
+
+        .layout-topbar-actions,
+        .layout-config-menu {
+            gap: 0.25rem;
+        }
+
+        .layout-topbar-clinic {
+            max-width: none;
+        }
+
+        .layout-topbar-clinic-trigger {
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+            border-radius: 50%;
+
+            .pi {
+                font-size: 1.25rem;
+            }
+        }
+
+        .layout-topbar-clinic-text,
+        .layout-topbar-clinic .layout-topbar-clinic__caret,
+        .layout-topbar-clinic-trigger--readonly {
+            display: none;
+        }
+    }
+}
+
 .config-panel {
     .config-panel-label {
         font-size: 0.875rem;

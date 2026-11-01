@@ -1,0 +1,106 @@
+@use 'mixins' as *;
+
+/*
+ * Telefon genişliği (MOBILE-004, ≤ 575 px): panelin her ekranında geçerli ortak kurallar. Sayfa sayfa kopya kural yazılmaz;
+ * sayfaya özgü düzen (kart satırı, öncelikli sütun) şablonda `max-sm:` / `lg:hidden` ile yapılır.
+ * - Dokunma hedefi en az `--touch-target` (44 px): düğme, giriş alanı, seçenek, sayfalama, onay kutusu.
+ * - Giriş alanları 16 px yazı: iOS Safari daha küçük yazıda odaklanınca sayfayı yakınlaştırıyor.
+ * - Diyalog ve çekmeceler tam ekran; onay penceresi (ConfirmDialog) kısa metin olduğundan ekran genişliğinde ortada kalır.
+ * PrimeNG biçemleri çalışma anında sonradan eklendiği için çakışan özelliklerde seçici bir sınıf daha özgüldür ya da satır içi
+ * stili (diyalog genişliği) ezmek için `!important` kullanılır.
+ */
+@include phone {
+    .p-button,
+    .p-togglebutton,
+    .p-paginator .p-paginator-page,
+    .p-paginator .p-paginator-first,
+    .p-paginator .p-paginator-prev,
+    .p-paginator .p-paginator-next,
+    .p-paginator .p-paginator-last {
+        min-height: var(--touch-target);
+    }
+
+    .p-button.p-button-icon-only,
+    .p-paginator .p-paginator-page,
+    .p-paginator .p-paginator-first,
+    .p-paginator .p-paginator-prev,
+    .p-paginator .p-paginator-next,
+    .p-paginator .p-paginator-last {
+        min-width: var(--touch-target);
+    }
+
+    .p-inputtext,
+    .p-select,
+    .p-multiselect,
+    .p-inputnumber-input,
+    textarea {
+        min-height: var(--touch-target);
+        font-size: 16px;
+    }
+
+    .p-select .p-select-label,
+    .p-multiselect .p-multiselect-label {
+        display: flex;
+        align-items: center;
+        font-size: 16px;
+    }
+
+    .p-select-overlay .p-select-option,
+    .p-multiselect-overlay .p-multiselect-option,
+    .p-autocomplete-overlay .p-autocomplete-option,
+    .p-listbox .p-listbox-option,
+    .p-menu .p-menu-item-link,
+    .p-tabs .p-tab {
+        min-height: var(--touch-target);
+    }
+
+    // Kutu görünümü değişmez; görünmez giriş alanı kutunun çevresine taşarak dokunma alanını büyütür.
+    .p-checkbox .p-checkbox-input,
+    .p-radiobutton .p-radiobutton-input,
+    .p-toggleswitch .p-toggleswitch-input {
+        top: 50%;
+        left: 50%;
+        inset-inline-start: 50%;
+        inset-block-start: 50%;
+        width: max(100%, var(--touch-target));
+        height: max(100%, var(--touch-target));
+        transform: translate(-50%, -50%);
+    }
+
+    .p-dialog-mask .p-dialog:not(.p-confirmdialog) {
+        width: 100vw !important;
+        max-width: 100vw;
+        height: 100dvh;
+        max-height: 100dvh;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+
+        // Kısa diyaloglar (`overflow: visible` satır içi) de tam ekranda içeriği kaydırabilmeli; açılır listeler gövdeye eklenir.
+        .p-dialog-content {
+            overflow-y: auto !important;
+        }
+    }
+
+    .p-dialog-mask .p-confirmdialog {
+        width: calc(100vw - 1.5rem) !important;
+    }
+
+    .p-drawer-left .p-drawer,
+    .p-drawer-right .p-drawer {
+        width: 100vw !important;
+    }
+
+    .p-toast.p-toast {
+        width: auto;
+        left: 0.75rem;
+        right: 0.75rem;
+        inset-inline-start: 0.75rem;
+        inset-inline-end: 0.75rem;
+        transform: none;
+    }
+
+    .p-datepicker-panel {
+        max-width: calc(100vw - 1rem);
+    }
+}
