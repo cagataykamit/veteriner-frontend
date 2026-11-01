@@ -11,12 +11,7 @@ describe('ClientCreditsService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [
-                provideHttpClient(withXhr()),
-                provideHttpClientTesting(),
-                { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: AuthService, useValue: { getClinicId: () => 'k1' } }
-            ]
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }, { provide: AuthService, useValue: { getClinicId: () => 'k1' } }]
         });
         http = TestBed.inject(HttpTestingController);
         service = TestBed.inject(ClientCreditsService);

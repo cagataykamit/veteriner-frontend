@@ -8,6 +8,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import type { ClientBalanceVm, ClientOpenChargeVm } from '@/app/entities/client/models/client-balance-vm.model';
 import { ClientSearchService } from '@/app/entities/client/services/client-search.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
+import { ClientCreditsService } from '@/app/entities/client-credit/services/client-credits.service';
 import { PaymentsService } from '@/app/entities/payment/services/payments.service';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { parseDateInputValue } from '@/app/shared/forms/date-input/date-input-value.utils';
@@ -31,13 +32,15 @@ const openCharge = (chargeId: string, over: Partial<ClientOpenChargeVm> = {}): C
     ...over
 });
 
-const balance = (openCharges: ClientOpenChargeVm[]): ClientBalanceVm => ({
+const balance = (openCharges: ClientOpenChargeVm[], creditBalance = 0): ClientBalanceVm => ({
     clientId: 'cl1',
     clientName: 'Ali Veli',
     currency: 'TRY',
     chargedAmount: 1000,
     allocatedAmount: 400,
     outstandingAmount: 600,
+    creditBalance,
+    openCreditCount: creditBalance > 0 ? 1 : 0,
     openCharges
 });
 
@@ -51,6 +54,7 @@ describe('PaymentNewPageComponent', () => {
     let cmp: PaymentNewPageComponent;
     let payments: MockedObject<PaymentsService>;
     let clients: MockedObject<ClientsService>;
+    let credits: MockedObject<ClientCreditsService>;
     let router: Router;
     let mutationBlocked: boolean;
     let query: Record<string, string>;
@@ -62,6 +66,7 @@ describe('PaymentNewPageComponent', () => {
                 provideRouter([]),
                 { provide: PaymentsService, useValue: payments },
                 { provide: ClientsService, useValue: clients },
+                { provide: ClientCreditsService, useValue: credits },
                 { provide: ClientSearchService, useValue: { search: () => of([]), getById: () => of({ id: 'cl1', fullName: 'Ali Veli', phone: '—', petNames: [], label: 'Ali Veli' }) } },
                 { provide: AuthService, useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez', hasOperationClaim: () => true } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } },
@@ -88,6 +93,9 @@ describe('PaymentNewPageComponent', () => {
             getClientBalance: vi.fn().mockName('ClientsService.getClientBalance')
         } as unknown as MockedObject<ClientsService>;
         clients.getClientBalance.mockReturnValue(of(balance([openCharge('ch1'), openCharge('ch2', { outstandingAmount: 300 })])));
+        credits = {
+            applyCredit: vi.fn().mockName('ClientCreditsService.applyCredit')
+        } as unknown as MockedObject<ClientCreditsService>;
         mutationBlocked = false;
         query = {};
     });
@@ -100,14 +108,136 @@ describe('PaymentNewPageComponent', () => {
         expect(cmp.openCharges().map((c) => c.chargeId)).toEqual(['ch1']);
     });
 
-    it('tutar alanı yoktur; ödeme tutarı tahsis toplamıdır', async () => {
+    it('alınan tutar boşsa ödeme tutarı tahsis toplamıdır; para birimi alanı yoktur', async () => {
         await setup();
         selectClient();
         cmp.onAmountInput(cmp.openCharges()[0], '400');
         cmp.onAmountInput(cmp.openCharges()[1], '150,50');
         expect(cmp.total()).toBe(550.5);
-        expect(fixture.nativeElement.querySelector('#amount')).toBeNull();
+        expect(cmp.creditAmount()).toBe(0);
+        expect(fixture.nativeElement.querySelector('#receivedAmount')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('#currency')).toBeNull();
+    });
+
+    it('alınan tutar toplamdan büyükse fark krediye yazılır; istek creditAmount taşır', async () => {
+        payments.createPayment.mockReturnValue(of({ id: 'pay1' }));
+        await setup();
+        selectClient();
+        cmp.onAmountInput(cmp.openCharges()[0], '600');
+        cmp.onReceivedInput('1000');
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('[data-testid="payment-overpayment"]').textContent).toContain('müşteri kredisine yazılır');
+        expect(fixture.nativeElement.querySelector('[data-testid="payment-overpayment"]').textContent.replace(/\s/g, '')).toContain('400,00');
+        cmp.onSubmit();
+        const req = vi.mocked(payments.createPayment).mock.lastCall![0];
+
+        expect(req.amount).toBe(1000);
+        expect(req.allocations).toEqual([{ chargeId: 'ch1', amount: 600 }]);
+        expect(req.creditAmount).toBe(400);
+    });
+
+    it('alınan tutar toplamdan küçükse hata gösterir ve gönderilmez', async () => {
+        await setup();
+        selectClient();
+        cmp.onAmountInput(cmp.openCharges()[0], '600');
+        cmp.onReceivedInput('500');
+        fixture.detectChanges();
+        expect(cmp.receivedError()).toBe('Alınan tutar seçilen ücretlerin toplamından az olamaz.');
+        expect(cmp.canSubmit()).toBe(false);
+        cmp.onSubmit();
+        expect(payments.createPayment).not.toHaveBeenCalled();
+    });
+
+    it('açık ücret yoksa avans olarak kaydedilir: tahsis boş, tutarın tamamı kredi', async () => {
+        clients.getClientBalance.mockReturnValue(of(balance([])));
+        payments.createPayment.mockReturnValue(of({ id: 'pay1' }));
+        await setup();
+        selectClient();
+        expect(cmp.canSubmit()).toBe(false);
+        (fixture.nativeElement.querySelector('[data-testid="payment-prepayment-start"]') as HTMLButtonElement).click();
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('[data-testid="payment-prepayment"]')).not.toBeNull();
+        expect(cmp.canSubmit()).toBe(false);
+        cmp.onReceivedInput('500');
+        expect(cmp.canSubmit()).toBe(true);
+        cmp.onSubmit();
+        const req = vi.mocked(payments.createPayment).mock.lastCall![0];
+
+        expect(req.amount).toBe(500);
+        expect(req.allocations).toEqual([]);
+        expect(req.creditAmount).toBe(500);
+    });
+
+    describe('müşteri kredisi', () => {
+        it('kredi yoksa bilgi ve "Krediden öde" görünmez', async () => {
+            await setup();
+            selectClient();
+            expect(fixture.nativeElement.querySelector('[data-testid="payment-credit"]')).toBeNull();
+        });
+
+        it('kredi varsa belirgin bilgi; seçilen tutarlar requestId ile mahsup edilir ve müşteri kartına dönülür', async () => {
+            clients.getClientBalance.mockReturnValue(of(balance([openCharge('ch1'), openCharge('ch2', { outstandingAmount: 300 })], 500)));
+            credits.applyCredit.mockReturnValue(of({ clientId: 'cl1', clinicId: 'c1', appliedAmount: 400, remainingCreditBalance: 100, applications: [] }));
+            await setup();
+            selectClient();
+            const box = fixture.nativeElement.querySelector('[data-testid="payment-credit"]') as HTMLElement;
+
+            expect(box.textContent).toContain('Kullanılabilir kredi');
+            expect(box.textContent!.replace(/\s/g, '')).toContain('500,00');
+            cmp.onAmountInput(cmp.openCharges()[0], '400');
+            cmp.applyCredit();
+            const [clientId, requestId, allocations] = vi.mocked(credits.applyCredit).mock.lastCall!;
+
+            expect(clientId).toBe('cl1');
+            expect(requestId).toMatch(/^[0-9a-f-]{36}$/);
+            expect(allocations).toEqual([{ chargeId: 'ch1', amount: 400 }]);
+            expect(payments.createPayment).not.toHaveBeenCalled();
+            expect(router.navigate).toHaveBeenCalledWith(['/panel/clients', 'cl1'], { queryParams: { creditApplied: '1' } });
+        });
+
+        it('seçilen toplam krediyi aşarsa hata gösterir ve mahsup yapılmaz', async () => {
+            clients.getClientBalance.mockReturnValue(of(balance([openCharge('ch1')], 150)));
+            await setup();
+            selectClient();
+            cmp.onAmountInput(cmp.openCharges()[0], '200');
+            fixture.detectChanges();
+            expect(cmp.creditLimitError()).toBe('Seçilen tutar kullanılabilir krediyi aşamaz.');
+            expect(cmp.canApplyCredit()).toBe(false);
+            cmp.applyCredit();
+            expect(credits.applyCredit).not.toHaveBeenCalled();
+        });
+
+        it('kredi yetmedi (409): bakiye yeniden okunur, girilen tutar korunur, aynı requestId ile tekrar denenir', async () => {
+            clients.getClientBalance.mockReturnValue(of(balance([openCharge('ch1')], 500)));
+            credits.applyCredit
+                .mockReturnValueOnce(throwError(() => problem(409, 'ClientCredits.InsufficientBalance')))
+                .mockReturnValueOnce(of({ clientId: 'cl1', clinicId: 'c1', appliedAmount: 300, remainingCreditBalance: 0, applications: [] }));
+            await setup();
+            selectClient();
+            cmp.onAmountInput(cmp.openCharges()[0], '300');
+            clients.getClientBalance.mockClear();
+            clients.getClientBalance.mockReturnValue(of(balance([openCharge('ch1')], 300)));
+            cmp.applyCredit();
+            expect(cmp.creditError()).toContain('güncel tutarlar yüklendi');
+            expect(clients.getClientBalance).toHaveBeenCalledTimes(1);
+            expect(cmp.creditBalance()).toBe(300);
+            expect(cmp.allocations()).toEqual([{ chargeId: 'ch1', amount: 300 }]);
+            cmp.applyCredit();
+            const [first, second] = vi.mocked(credits.applyCredit).mock.calls.map((a) => a[1]);
+
+            expect(second).toBe(first);
+        });
+
+        it('diğer hatalar Türkçe mesajla gösterilir', async () => {
+            clients.getClientBalance.mockReturnValue(of(balance([openCharge('ch1')], 500)));
+            credits.applyCredit.mockReturnValue(throwError(() => problem(400, 'ClientCredits.ChargeClientMismatch')));
+            await setup();
+            selectClient();
+            cmp.onAmountInput(cmp.openCharges()[0], '100');
+            cmp.applyCredit();
+            expect(cmp.creditError()).toBe('Ücret bu müşteriye ait değil.');
+            expect(cmp.applyingCredit()).toBe(false);
+        });
     });
 
     it('kalan tutarı aşan satırda hata gösterir ve gönderimi engeller (601 / 600)', async () => {

@@ -25,6 +25,8 @@ export interface PaymentDetailVm {
     /** Birden fazla hayvana yayılan ödemede true (petName etiket olur, petId null). */
     hasMultiplePets: boolean;
     amount: number | null;
+    /** Ödemenin müşteri kredisine yazılan kısmı (fazla ödeme ya da avans); yoksa 0. */
+    creditedAmount: number;
     currency: string;
     method: string | null;
     note: string;

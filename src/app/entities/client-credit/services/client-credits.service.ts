@@ -17,9 +17,7 @@ export class ClientCreditsService {
 
     /** `Charges.Read` — oluşturma zamanı azalan; varsayılan yalnız açık krediler. */
     getCredits(clientId: string, includeClosed = false): Observable<ClientCreditDto[]> {
-        return this.api
-            .get<ClientCreditDto[]>(ApiEndpoints.clients.credits(clientId), clientCreditsQueryToHttpParams(includeClosed))
-            .pipe(toUserError('Müşteri kredileri yüklenemedi.', CLIENT_CREDIT_PROBLEM_MESSAGES));
+        return this.api.get<ClientCreditDto[]>(ApiEndpoints.clients.credits(clientId), clientCreditsQueryToHttpParams(includeClosed)).pipe(toUserError('Müşteri kredileri yüklenemedi.', CLIENT_CREDIT_PROBLEM_MESSAGES));
     }
 
     /**
@@ -27,10 +25,7 @@ export class ClientCreditsService {
      * HTTP hatası ham iletilir: çağıran `PaymentAllocations.ExceedsOutstanding` / `ClientCredits.*` koduna göre bakiyeyi yeniden okur.
      */
     applyCredit(clientId: string, requestId: string, allocations: readonly ClientCreditApplyLine[]): Observable<ClientCreditApplyResultDto> {
-        return this.api.post<ClientCreditApplyResultDto>(
-            ApiEndpoints.clients.creditsApply(clientId),
-            mapClientCreditApplyToApiBody(this.auth.getClinicId(), requestId, allocations)
-        );
+        return this.api.post<ClientCreditApplyResultDto>(ApiEndpoints.clients.creditsApply(clientId), mapClientCreditApplyToApiBody(this.auth.getClinicId(), requestId, allocations));
     }
 
     /** `Payments.Correct` — mahsubu geri alır; kredi kalanı ve ücretin açık tutarı geri gelir. 204. */
@@ -43,8 +38,6 @@ export class ClientCreditsService {
 
     /** `Payments.Correct` — kalan kredinin tamamı iade edilir (kasadan çıkış); kredi kapanır. */
     refundCredit(clientId: string, creditId: string, reason: string, method: CanonicalPaymentMethod): Observable<ClientCreditDto> {
-        return this.api
-            .post<ClientCreditDto>(ApiEndpoints.clients.creditRefund(clientId, creditId), mapClientCreditRefundToApiBody(reason, method))
-            .pipe(toUserError('Kredi iade edilemedi.', CLIENT_CREDIT_PROBLEM_MESSAGES));
+        return this.api.post<ClientCreditDto>(ApiEndpoints.clients.creditRefund(clientId, creditId), mapClientCreditRefundToApiBody(reason, method)).pipe(toUserError('Kredi iade edilemedi.', CLIENT_CREDIT_PROBLEM_MESSAGES));
     }
 }

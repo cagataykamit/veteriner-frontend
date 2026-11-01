@@ -42,4 +42,15 @@ describe('PaymentsService.voidPayment', () => {
             });
             http.expectOne('http://api.test/api/v1/payments/p1/void').flush({ title: 'Conflict', extensions: { code: 'Payments.AlreadyVoided' } }, { status: 409, statusText: 'Conflict' });
         }));
+
+    it('409 kredisi kullanılmış ödeme: önce mahsupları geri alma yönlendirmesi', () =>
+        new Promise<void>((done) => {
+            service.voidPayment('p1', 'Yanlış tutar').subscribe({
+                error: (e: Error) => {
+                    expect(e.message).toContain('önce mahsupları müşteri kartından geri alın');
+                    done();
+                }
+            });
+            http.expectOne('http://api.test/api/v1/payments/p1/void').flush({ title: 'Conflict', extensions: { code: 'Payments.VoidBlockedByCredit' } }, { status: 409, statusText: 'Conflict' });
+        }));
 });

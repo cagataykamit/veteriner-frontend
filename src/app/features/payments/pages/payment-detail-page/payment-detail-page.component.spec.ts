@@ -17,6 +17,7 @@ const payment: PaymentDetailVm = {
     petName: '',
     hasMultiplePets: false,
     amount: 600,
+    creditedAmount: 0,
     currency: 'TRY',
     method: 'cash',
     note: '—',
@@ -78,5 +79,16 @@ describe('PaymentDetailPageComponent — iptal', () => {
 
         fixture.componentInstance.afterVoid();
         expect(nav).toHaveBeenCalledWith(['/panel/payments']);
+    });
+
+    it('krediye yazılan tutar varsa ayrı satırda gösterilir; yoksa satır yok', async () => {
+        await setup();
+        expect(fixture.nativeElement.querySelector('[data-testid="payment-credited"]')).toBeNull();
+
+        TestBed.resetTestingModule();
+        payments.getPaymentById.mockReturnValue(of({ ...payment, amount: 1000, creditedAmount: 400 }));
+        await setup();
+        expect(fixture.nativeElement.textContent).toContain('Krediye yazılan');
+        expect(fixture.nativeElement.querySelector('[data-testid="payment-credited"]').textContent.replace(/\s/g, '')).toContain('400,00');
     });
 });

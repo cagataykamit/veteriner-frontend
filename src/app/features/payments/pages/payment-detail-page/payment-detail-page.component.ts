@@ -84,6 +84,12 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <dl class="m-0 grid grid-cols-12 gap-3">
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Tutar</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0 font-medium">{{ moneyLine(payment()!) }}</dd>
+                            @if (payment()!.creditedAmount > 0) {
+                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Krediye yazılan</dt>
+                                <dd class="col-span-12 sm:col-span-8 m-0" data-testid="payment-credited">
+                                    {{ creditedLine(payment()!) }} <span class="text-sm text-muted-color">· ücretlere bağlanmayan kısım müşteri kredisinde</span>
+                                </dd>
+                            }
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Para birimi</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ payment()!.currency }}</dd>
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Kanal</dt>
@@ -180,7 +186,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             [(visible)]="voidVisible"
             header="Ödemeyi iptal et"
             [summary]="payment() ? payment()!.clientName + ' · ' + headerDescription(payment()!) : null"
-            description="Ödeme hiç alınmamış sayılır: bağlı olduğu ücretlerin açık tutarı artar, listelerden ve bakiyeden düşer. Geri alınamaz; yanlışsa doğrusu yeni ödeme olarak girilir."
+            description="Ödeme hiç alınmamış sayılır: bağlı olduğu ücretlerin açık tutarı artar, listelerden ve bakiyeden düşer; ödemeden doğan kullanılmamış kredi de iptal olur. Geri alınamaz; yanlışsa doğrusu yeni ödeme olarak girilir."
             confirmLabel="Ödemeyi iptal et"
             failureFallback="Ödeme iptal edilemedi."
             [execute]="voidPayment"
@@ -232,6 +238,10 @@ export class PaymentDetailPageComponent implements OnInit {
 
     moneyLine(p: PaymentDetailVm): string {
         return formatMoney(p.amount, p.currency || 'TRY');
+    }
+
+    creditedLine(p: PaymentDetailVm): string {
+        return formatMoney(p.creditedAmount, p.currency || 'TRY');
     }
 
     headerDescription(p: PaymentDetailVm): string {
