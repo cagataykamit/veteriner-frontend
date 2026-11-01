@@ -11,16 +11,23 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 
 const PICKER_PAGE_SIZE = 20;
 
-/** Ön izlemede metin bölümleri; sıra muayene formuyla aynı. */
-const TEXT_PREVIEW: readonly { field: 'visitReason' | 'findings' | 'plan'; label: string }[] = [
-    { field: 'visitReason', label: 'Şikâyete eklenecek' },
+/** Ön izlemede uzun metin bölümleri; sıra muayene formuyla aynı. Şikâyet ayrı ele alınır (boşsa yazılır, doluysa eklenmez). */
+const LINE_PREVIEW: readonly { field: 'findings' | 'plan'; label: string }[] = [
     { field: 'findings', label: 'Bulguya eklenecek' },
     { field: 'plan', label: 'Plana eklenecek' }
 ];
 
+interface TextPreviewSection {
+    label: string;
+    text: string;
+    /** Muayenenin şikâyeti dolu: şablonun şikâyeti gösterilir ama eklenmeyecek (sözleşme §7). */
+    skipped: boolean;
+}
+
 /**
  * Muayeneye şablon uygulama (ADR-020 S4): aramalı liste → ön izleme (eklenecek metin + işlem/ürün satırları) → onay.
- * Metin sunucuda birleşir (mevcut içerik silinmez, zaten varsa tekrar eklenmez); satırlar her uygulamada yeniden yazılır.
+ * Metin sunucuda birleşir: şikâyet yalnız boşsa yazılır; bulgu ve plan satır satır sona eklenir, muayenede zaten olan satır
+ * tekrar eklenmez. Satırlar her uygulamada yeniden yazılır.
  * Yetki ve durum (taslak, salt okunur kiracı) denetimi çağıran sayfadadır. Muayene sürümü çakışırsa veya muayene
  * kesinleşmişse `stale` ile sayfa muayeneyi yeniden okur; yeni `rowVersion` girdi olarak geri gelir.
  */
@@ -45,12 +52,15 @@ const TEXT_PREVIEW: readonly { field: 'visitReason' | 'findings' | 'plan'; label
 
                     @if (textPreview().length > 0) {
                         @for (s of textPreview(); track s.label) {
-                            <div class="mb-3">
+                            <div class="mb-3" data-testid="template-preview-text">
                                 <h6 class="mt-0 mb-1 text-sm text-muted-color">{{ s.label }}</h6>
-                                <p class="m-0 whitespace-pre-wrap rounded-border border border-surface-200 dark:border-surface-700 p-2">{{ s.text }}</p>
+                                <p class="m-0 whitespace-pre-wrap rounded-border border border-surface-200 dark:border-surface-700 p-2" [class.text-muted-color]="s.skipped" [class.line-through]="s.skipped">{{ s.text }}</p>
+                                @if (s.skipped) {
+                                    <p class="text-xs text-muted-color mt-1 mb-0" data-testid="template-preview-visit-reason-skipped">Muayenenin şikâyeti dolu olduğu için eklenmeyecek.</p>
+                                }
                             </div>
                         }
-                        <p class="text-xs text-muted-color mt-0 mb-3">Mevcut metin silinmez; şablon metni sona eklenir, muayenede zaten varsa tekrar eklenmez.</p>
+                        <p class="text-xs text-muted-color mt-0 mb-3">Mevcut metin silinmez; bulgu ve plan satır satır sona eklenir, muayenede zaten olan satırlar tekrar eklenmez.</p>
                     }
 
                     @if (t.lines.length > 0) {
@@ -138,6 +148,8 @@ export class ExaminationTemplateApplyDialogComponent {
     readonly examinationId = input.required<string>();
     /** Muayenenin güncel sürümü (`GET /examinations/{id}`); yoksa uygulanamaz. */
     readonly rowVersion = input<string | null>(null);
+    /** Muayenenin mevcut şikâyeti; doluysa şablonun şikâyeti eklenmez ve ön izlemede böyle gösterilir. */
+    readonly examinationVisitReason = input<string | null>(null);
     readonly applied = output<{ template: ExaminationTemplateDto; result: ExaminationTemplateApplyResultDto }>();
     /** Muayene sürümü eskidi veya muayene kesinleşti: sayfa muayeneyi yeniden okumalı. */
     readonly stale = output<string>();
@@ -155,10 +167,18 @@ export class ExaminationTemplateApplyDialogComponent {
     /** Bu sayfa oturumunda bu muayeneye uygulanan şablonlar (sunucuda muayeneye iz yok; sözleşme §10). */
     private readonly appliedTemplateIds = signal<ReadonlySet<string>>(new Set());
 
-    readonly textPreview = computed(() => {
+    readonly textPreview = computed<TextPreviewSection[]>(() => {
         const t = this.selected();
 
-        return t ? TEXT_PREVIEW.map((s) => ({ label: s.label, text: t[s.field]?.trim() ?? '' })).filter((s) => !!s.text) : [];
+        if (!t) {
+            return [];
+        }
+
+        const skipped = !!this.examinationVisitReason()?.trim();
+        const visitReason: TextPreviewSection = { label: skipped ? 'Şablonun şikâyeti' : 'Şikâyete yazılacak', text: t.visitReason?.trim() ?? '', skipped };
+        const lines = LINE_PREVIEW.map((s) => ({ label: s.label, text: t[s.field]?.trim() ?? '', skipped: false }));
+
+        return [visitReason, ...lines].filter((s) => !!s.text);
     });
     readonly inactiveLineNames = computed(() => {
         const t = this.selected();

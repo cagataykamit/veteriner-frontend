@@ -19,7 +19,15 @@ const otitis: ExaminationTemplateDto = {
     ],
     rowVersion: 'T1'
 };
-const result: ExaminationTemplateApplyResultDto = { examinationId: 'e1', rowVersion: 'V2', updatedFields: ['visitReason'], administrations: [], services: [] };
+const result: ExaminationTemplateApplyResultDto = {
+    examinationId: 'e1',
+    rowVersion: 'V2',
+    updatedFields: ['findings'],
+    text: { visitReason: 'SkippedExisting', findingsLinesAdded: 1, planLinesAdded: 0 },
+    pendingChargeCount: 2,
+    administrations: [],
+    services: []
+};
 const paged = (items: ExaminationTemplateDto[]) => of({ items, page: 1, pageSize: 20, totalItems: items.length, totalPages: 1 });
 
 describe('ExaminationTemplateApplyDialogComponent', () => {
@@ -68,14 +76,28 @@ describe('ExaminationTemplateApplyDialogComponent', () => {
         fixture.detectChanges();
         const preview = body().querySelector('[data-testid="template-preview"]')?.textContent ?? '';
 
-        expect(preview).toContain('Şikâyete eklenecek');
+        expect(preview).toContain('Şikâyete yazılacak');
         expect(preview).toContain('Kulak kaşıntısı');
+        expect(preview).toContain('Bulguya eklenecek');
         expect(preview).not.toContain('Plana eklenecek');
+        expect(body().querySelector('[data-testid="template-preview-visit-reason-skipped"]')).toBeNull();
         const lines = Array.from(body().querySelectorAll('[data-testid="template-preview-line"]')).map((l) => l.textContent ?? '');
 
         expect(lines[0]).toContain('Hizmet');
         expect(lines[1]).toContain('Stoktan düşer');
         expect(body().querySelector('[data-testid="template-reapply-warning"]')).toBeNull();
+    });
+
+    it('muayenenin şikâyeti doluysa şablonun şikâyeti "eklenmeyecek" olarak gösterilir', () => {
+        fixture.componentRef.setInput('examinationVisitReason', 'İki gündür iştahsızlık');
+        cmp.select(otitis);
+        fixture.detectChanges();
+        const preview = body().querySelector('[data-testid="template-preview"]')?.textContent ?? '';
+
+        expect(preview).toContain('Şablonun şikâyeti');
+        expect(preview).toContain('Kulak kaşıntısı');
+        expect(preview).not.toContain('Şikâyete yazılacak');
+        expect(body().querySelector('[data-testid="template-preview-visit-reason-skipped"]')?.textContent).toContain('dolu olduğu için eklenmeyecek');
     });
 
     it('önizleme toplamı: kalem kalem ücrette satırların toplamı, fiyatlı pakette paket fiyatı ve "Pakete dahil" (EXAM-007)', () => {

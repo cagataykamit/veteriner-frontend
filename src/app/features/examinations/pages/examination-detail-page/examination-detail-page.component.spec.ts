@@ -498,7 +498,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
 
         fixture.componentInstance.onTemplateApplied({
             template: { id: 't1', name: 'Otitis paketi', visitReason: 'Kulak kaşıntısı', findings: null, plan: null, isActive: true, isSystem: false, lines: [], rowVersion: 'T1' },
-            result: { examinationId: 'e1', rowVersion: 'V2', updatedFields: ['visitReason'], administrations: [], services: [] }
+            result: { examinationId: 'e1', rowVersion: 'V2', updatedFields: ['visitReason'], text: { visitReason: 'Filled', findingsLinesAdded: 0, planLinesAdded: 0 }, pendingChargeCount: 0, administrations: [], services: [] }
         });
 
         expect(fixture.componentInstance.exam()?.rowVersion).toBe('V2');
