@@ -11,7 +11,13 @@ export type ClientPortalLinkCloseReason = 'ClinicClosed' | 'OwnerAccountDeleted'
 export type ClientPortalInviteStatus = 'Pending' | 'Accepted' | 'Revoked' | 'Expired';
 
 /** `canInvite: false` iken neden; metni `ownerPortalProblemUserMessage` üretir. */
-export type ClientPortalInviteBlockedCode = 'OwnerPortal.ClientEmailMissing' | 'OwnerPortal.ClientOptedOut' | 'OwnerPortal.ClientNotInvitable' | 'OwnerPortal.AlreadyLinked';
+export type ClientPortalInviteBlockedCode =
+    | 'OwnerPortal.ClientEmailMissing'
+    | 'OwnerPortal.ClientOptedOut'
+    | 'OwnerPortal.ClientNotInvitable'
+    | 'OwnerPortal.AlreadyLinked'
+    /** Aktif klinikte portal kapalı (§12). */
+    | 'OwnerPortal.ClinicPortalDisabled';
 
 export interface ClientPortalLinkDto {
     linkId: string;
@@ -44,4 +50,13 @@ export interface ClientPortalAccessDto {
     links: ClientPortalLinkDto[];
     /** Son 20 davet, en yeni önce. */
     invites: ClientPortalInviteDto[];
+}
+
+/** `GET clients/{id}/whatsapp-link?kind=` (§13.2): hazır metinli `wa.me` bağlantısı; gönderimi personel yapar. */
+export type ClientWhatsAppLinkKind = 'PortalInvite' | 'AppointmentReminder' | 'VaccinationReminder';
+
+export interface ClientWhatsAppLinkDto {
+    phoneE164: string;
+    url: string;
+    text: string;
 }

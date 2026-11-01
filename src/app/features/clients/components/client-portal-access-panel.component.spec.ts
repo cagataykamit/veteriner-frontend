@@ -80,7 +80,8 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
             getPortalAccess: vi.fn().mockName('ClientsService.getPortalAccess'),
             sendPortalInvite: vi.fn().mockName('ClientsService.sendPortalInvite'),
             revokePortalInvite: vi.fn().mockName('ClientsService.revokePortalInvite'),
-            closePortalLink: vi.fn().mockName('ClientsService.closePortalLink')
+            closePortalLink: vi.fn().mockName('ClientsService.closePortalLink'),
+            getWhatsAppLink: vi.fn().mockName('ClientsService.getWhatsAppLink')
         } as unknown as MockedObject<ClientsService>;
         service.getPortalAccess.mockImplementation(() => of(access));
         service.sendPortalInvite.mockReturnValue(of(pendingInvite));
@@ -151,12 +152,51 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
         expect(q('client-portal-invite-blocked')?.textContent).toContain('müşteri kaydında e-posta yok');
     });
 
-    it('KVKK Ret / hatırlatma istemiyor: davet pasif, neden yazılı', () => {
+    it('KVKK Ret: davet pasif, neden yazılı', () => {
         access = { ...none, canInvite: false, inviteBlockedCode: 'OwnerPortal.ClientOptedOut' };
         create();
 
         expect(q('client-portal-invite')?.disabled).toBe(true);
-        expect(q('client-portal-invite-blocked')?.textContent).toContain('KVKK açık rızayı reddetmiş ya da hatırlatma istemiyor');
+        expect(q('client-portal-invite-blocked')?.textContent).toContain('müşteri KVKK açık rızayı reddetmiş.');
+        expect(q('client-portal-invite-blocked')?.textContent).not.toContain('hatırlatma');
+    });
+
+    it('klinikte portal kapalı: davet pasif, ayar ekranına yönlendiren neden yazılı', () => {
+        access = { ...none, canInvite: false, inviteBlockedCode: 'OwnerPortal.ClinicPortalDisabled' };
+        create();
+
+        expect(q('client-portal-invite')?.disabled).toBe(true);
+        expect(q('client-portal-invite-blocked')?.textContent).toContain('hasta sahibi portalı bu klinikte kapalı');
+    });
+
+    it("bekleyen davette davet bilgisi WhatsApp'ta açılır (sistem göndermez); davet yokken düğme yok", () => {
+        create();
+        expect(q('client-portal-whatsapp')).toBeNull();
+
+        fixture.destroy();
+        TestBed.resetTestingModule();
+        access = { ...none, invites: [pendingInvite] };
+        service.getWhatsAppLink.mockReturnValue(of({ phoneE164: '+905321234567', url: 'https://wa.me/905321234567?text=x', text: 'x' }));
+        const open = vi.spyOn(window, 'open').mockReturnValue(null);
+
+        create();
+        q('client-portal-whatsapp')!.click();
+
+        expect(q('client-portal-whatsapp')?.textContent).toContain("WhatsApp'ta aç");
+        expect(service.getWhatsAppLink).toHaveBeenCalledWith('c1', 'PortalInvite');
+        expect(open).toHaveBeenCalledWith('https://wa.me/905321234567?text=x', '_blank', 'noopener');
+    });
+
+    it("WhatsApp bağlantısı hatasında toast'ta sunucu mesajı", () => {
+        access = { ...none, invites: [pendingInvite] };
+        service.getWhatsAppLink.mockReturnValue(throwError(() => new Error('WhatsApp bağlantısı oluşturulamadı: müşteri kaydında geçerli bir Türkiye cep telefonu yok.')));
+        const open = vi.spyOn(window, 'open').mockReturnValue(null);
+
+        create();
+        q('client-portal-whatsapp')!.click();
+
+        expect(open).not.toHaveBeenCalled();
+        expect(messages.add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error', detail: expect.stringContaining('cep telefonu') }));
     });
 
     it('salt okunur kiracı: davet pasif (salt okunur); iptal sunucuda da açık olduğundan etkin kalır', () => {
@@ -184,7 +224,7 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
     });
 
     it("davet 409: hata toast'ında sunucu mesajı", () => {
-        service.sendPortalInvite.mockReturnValue(throwError(() => new Error('Portal daveti bu müşteriye gönderilemez: müşteri KVKK açık rızayı reddetmiş ya da hatırlatma istemiyor.')));
+        service.sendPortalInvite.mockReturnValue(throwError(() => new Error('Portal daveti bu müşteriye gönderilemez: müşteri KVKK açık rızayı reddetmiş.')));
         create();
         q('client-portal-invite')!.click();
 

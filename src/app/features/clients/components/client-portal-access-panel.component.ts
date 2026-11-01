@@ -21,6 +21,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
  * Yetki (`OwnerPortal.Manage`) sayfada denetlenir; bölüm yetkisiz kullanıcıya hiç çizilmez.
  * Salt okunur kiracıda yalnız davet gönderme kapalıdır; iptal ve erişimi kapatma sunucuda da açıktır (KVKK güvenli taraf, §4.3–4.4).
  * Müşteri kaydı değişince (ör. KVKK Ret) durum yeniden okunur; davet uygunluğu sunucudadır (`canInvite`).
+ * Bekleyen davette davet bilgisi WhatsApp'ta açılabilir (§13.2); gönderimi personel yapar.
  */
 @Component({
     selector: 'app-client-portal-access-panel',
@@ -97,6 +98,15 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                             data-testid="client-portal-revoke"
                             (click)="confirmRevoke()"
                         ><i [class]="busy() === 'revoke' ? 'pi pi-spin pi-spinner' : 'pi pi-times'"></i>Daveti iptal et</button>
+                        <button
+                            pButton
+                            type="button"
+                            class="p-button-text p-button-sm"
+                            [disabled]="!!busy()"
+                            data-testid="client-portal-whatsapp"
+                            title="Davet bilgisi metni WhatsApp'ta açılır; mesajı siz gönderirsiniz. Davet bağlantısı yalnız e-postayla gider."
+                            (click)="openWhatsAppInvite()"
+                        ><i [class]="busy() === 'whatsapp' ? 'pi pi-spin pi-spinner' : 'pi pi-whatsapp'"></i>Davet bilgisini WhatsApp'ta aç</button>
                     }
                     @if (linked()) {
                         <button
@@ -129,7 +139,7 @@ export class ClientPortalAccessPanelComponent {
 
     readonly access = signal<ClientPortalAccessDto | null>(null);
     readonly loadError = signal<string | null>(null);
-    readonly busy = signal<'invite' | 'revoke' | 'close' | null>(null);
+    readonly busy = signal<'invite' | 'revoke' | 'close' | 'whatsapp' | null>(null);
 
     readonly state = computed(() => {
         const a = this.access();
@@ -211,6 +221,33 @@ export class ClientPortalAccessPanelComponent {
             summary: 'Portal daveti gönderildi.',
             detail: `${invite.email} adresine gitti; bağlantı ${this.formatDt(invite.expiresAtUtc)} tarihine kadar geçerli.`
         }));
+    }
+
+    /**
+     * Bekleyen davet için hazır metinli WhatsApp sohbeti (§13.2). Sistem göndermez; personel kendi WhatsApp'ından gönderir.
+     * Metin ham davet bağlantısını içermez (bağlantı yalnız e-postayla gider).
+     */
+    openWhatsAppInvite(): void {
+        if (!this.pending() || this.busy()) {
+            return;
+        }
+
+        this.busy.set('whatsapp');
+        this.clientsService.getWhatsAppLink(this.client().id, 'PortalInvite').subscribe({
+            next: (link) => {
+                this.busy.set(null);
+                window.open(link.url, '_blank', 'noopener');
+            },
+            error: (e: unknown) => {
+                this.busy.set(null);
+                addTracedToast(this.messages, 'ClientPortalAccessPanel', this.router.url, {
+                    severity: 'error',
+                    summary: 'WhatsApp açılamadı',
+                    detail: panelHttpFailureMessage(e, 'WhatsApp bağlantısı oluşturulamadı.'),
+                    life: 7000
+                });
+            }
+        });
     }
 
     confirmRevoke(): void {

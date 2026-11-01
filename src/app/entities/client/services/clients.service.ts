@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
@@ -39,7 +39,7 @@ import { mapClientBalanceDtoToVm } from '@/app/entities/client/data/client-balan
 import type { ClientBalanceDto } from '@/app/entities/client/models/client-balance-api.model';
 import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
 import type { ClientDataExportDto } from '@/app/entities/client/models/client-data-export-api.model';
-import type { ClientPortalAccessDto, ClientPortalInviteDto } from '@/app/entities/client/models/client-portal-access-api.model';
+import type { ClientPortalAccessDto, ClientPortalInviteDto, ClientWhatsAppLinkDto, ClientWhatsAppLinkKind } from '@/app/entities/client/models/client-portal-access-api.model';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { messageFromHttpError, toUserError } from '@/app/shared/utils/api-error.utils';
 
@@ -132,6 +132,20 @@ export class ClientsService {
             map(() => void 0),
             toUserError('Davet iptal edilemedi.')
         );
+    }
+
+    /**
+     * `Clients.Read` — müşterinin WhatsApp sohbetini hazır metinle açan `wa.me` bağlantısı (§13.2). Sistem göndermez; personel
+     * kendi WhatsApp'ından gönderir. Hatırlatma türlerinde `targetId` randevu ya da planlı aşı kimliğidir.
+     */
+    getWhatsAppLink(clientId: string, kind: ClientWhatsAppLinkKind, targetId?: string): Observable<ClientWhatsAppLinkDto> {
+        let params = new HttpParams().set('kind', kind);
+
+        if (targetId) {
+            params = params.set('targetId', targetId);
+        }
+
+        return this.api.get<ClientWhatsAppLinkDto>(ApiEndpoints.clients.whatsappLink(clientId), params).pipe(toUserError('WhatsApp bağlantısı oluşturulamadı.'));
     }
 
     /** Bu kliniğin portal bağını kapatır (silinmez); 204 (§4.4). Abonelik salt okunurken de çalışır. */
