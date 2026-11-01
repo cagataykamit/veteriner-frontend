@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -290,14 +290,18 @@ export class AppointmentRequestDetailDialogComponent {
     readonly canReject = computed(() => this.rejectReason().trim().length >= REJECTION_REASON_MIN);
 
     constructor() {
+        // Yalnız requestId izlenir: open() içindeki senkron akış (sahte servis, eşzamanlı of()) clientId/detail okur ve yazar; izlense
+        // efekt kendini sonsuz tetikler (tarayıcı kilitlenir, spec VITEST_BROWSER_CONNECTION_CLOSED verir).
         effect(() => {
             const id = this.requestId();
 
-            if (id) {
-                this.open(id);
-            } else {
-                this.visible.set(false);
-            }
+            untracked(() => {
+                if (id) {
+                    this.open(id);
+                } else {
+                    this.visible.set(false);
+                }
+            });
         });
     }
 
