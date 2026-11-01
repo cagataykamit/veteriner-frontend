@@ -172,6 +172,12 @@ describe('panel-navigation', () => {
         expect(labels(visibleGroups(SETTINGS_SECTIONS, only('ExaminationTemplates.Deactivate')))).toContain('Tanımlar');
     });
 
+    it('metin parçaları kartı Tanımlar altında yönetim izniyle görünür; yalnız okuma izni kart açmaz', () => {
+        expect(visibleEntries(DEFINITION_ENTRIES, only('ClinicalSnippets.Read'))).toEqual([]);
+        expect(visibleEntries(DEFINITION_ENTRIES, only('ClinicalSnippets.Create')).map((e) => e.route)).toEqual(['/panel/settings/definitions/clinical-snippets']);
+        expect(labels(visibleGroups(SETTINGS_SECTIONS, only('ClinicalSnippets.Deactivate')))).toContain('Tanımlar');
+    });
+
     it('Veri içe aktarma kartı Ayarlar altında yalnız Imports.Read ile görünür; menüye öğe eklenmez', () => {
         expect(labels(visibleGroups(SETTINGS_SECTIONS, () => false))).not.toContain('Veri içe aktarma');
         expect(labels(visibleGroups(SETTINGS_SECTIONS, only('Imports.Read')))).toContain('Veri içe aktarma');
