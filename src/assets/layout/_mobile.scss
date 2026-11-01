@@ -20,7 +20,8 @@
         min-height: var(--touch-target);
     }
 
-    .p-button.p-button-icon-only,
+    .p-button,
+    .p-autocomplete .p-autocomplete-dropdown,
     .p-paginator .p-paginator-page,
     .p-paginator .p-paginator-first,
     .p-paginator .p-paginator-prev,
@@ -102,5 +103,53 @@
 
     .p-datepicker-panel {
         max-width: calc(100vw - 1rem);
+    }
+
+    /*
+     * Ayrı kart görünümü olmayan tablolar telefonda kart satırına döner: tablonun kapsayıcısına `table-stack-phone` sınıfı.
+     * Başlık satırı gizlenir; `data-label` taşıyan hücre "etiket | değer" satırı olur (hücredeki öğeler değer sütununda
+     * alt alta), etiketsiz hücre (birincil bilgi, eylemler) tam genişlikte kalır; `table-stack-phone-hide` hücresi telefonda
+     * gösterilmez (öncelikli olmayan sütun). Tablonun satır içi `min-width`'i yok sayılır.
+     */
+    .table-stack-phone .p-datatable {
+        .p-datatable-table {
+            min-width: 0 !important;
+        }
+
+        .p-datatable-thead {
+            display: none;
+        }
+
+        .p-datatable-tbody > tr {
+            display: block;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--surface-border);
+        }
+
+        .p-datatable-tbody > tr > td {
+            display: block;
+            padding: 0.125rem 0;
+            border: 0;
+            text-align: start !important;
+            white-space: normal;
+        }
+
+        .p-datatable-tbody > tr > td[data-label] {
+            display: grid;
+            grid-template-columns: minmax(6.5rem, 40%) minmax(0, 1fr);
+            column-gap: 0.75rem;
+            align-items: baseline;
+
+            &::before {
+                content: attr(data-label);
+                grid-row: 1 / span 4;
+                font-size: 0.875rem;
+                color: var(--text-color-secondary);
+            }
+        }
+
+        .p-datatable-tbody > tr > td.table-stack-phone-hide {
+            display: none;
+        }
     }
 }

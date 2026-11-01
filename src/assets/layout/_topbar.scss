@@ -378,6 +378,12 @@
             margin-right: 0.25rem;
         }
 
+        .layout-topbar-logo {
+            min-height: var(--touch-target);
+            min-width: var(--touch-target);
+            justify-content: center;
+        }
+
         .layout-topbar-action,
         .layout-topbar-clinic-trigger {
             width: var(--touch-target);

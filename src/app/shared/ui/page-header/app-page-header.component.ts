@@ -14,7 +14,7 @@ import { categoryForUrl, listLabelForUrl, MENU_GROUPS } from '@/app/core/routing
             @if (categoryLink() && categoryText()) {
                 <a
                     [routerLink]="categoryLink()"
-                    class="block w-fit text-muted-color hover:text-primary font-medium no-underline"
+                    class="block w-fit text-muted-color hover:text-primary font-medium no-underline max-sm:flex max-sm:items-center max-sm:min-h-(--touch-target)"
                     [class.mb-2]="title()"
                     [pTooltip]="categoryLinkLabel()"
                     tooltipPosition="bottom"
