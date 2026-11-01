@@ -52,8 +52,8 @@ describe('LabResultDetailPageComponent — başlık eylemleri', () => {
         const fixture = TestBed.createComponent(LabResultDetailPageComponent);
 
         fixture.detectChanges();
-        // Düzenle/Sonuç gir ve geçmiş kimlik kartında, İptal et eylem şeridinde (müşteri/hasta kartıyla aynı dil).
-        const actions = (fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="lab-result-identity-card"] [class*="ml-auto"], [data-testid="detail-action-bar"]');
+        // Düzenle/Sonuç gir, geçmiş ve İptal et kimlik kartının sağında; ayrı eylem şeridi yok (tek düğme için şerit açılmaz).
+        const actions = (fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="lab-result-identity-card"] [class*="ml-auto"]');
 
         return Array.from(actions).flatMap((c) => Array.from(c.querySelectorAll('a, button')).map((e) => e.textContent?.trim() ?? ''));
     };
@@ -108,7 +108,7 @@ describe('LabResultDetailPageComponent — İptal et', () => {
         const fixture = TestBed.createComponent(LabResultDetailPageComponent);
 
         fixture.detectChanges();
-        const cancelButton = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="detail-action-bar"] button')).find((b) => b.textContent?.trim() === 'İptal et') as HTMLElement;
+        const cancelButton = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="lab-result-identity-card"] button')).find((b) => b.textContent?.trim() === 'İptal et') as HTMLElement;
 
         cancelButton.click();
         fixture.detectChanges();

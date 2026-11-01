@@ -11,7 +11,6 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { RecordHistoryButtonComponent } from '@/app/entities/record-history/components/record-history-button.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { AppDetailActionBarComponent } from '@/app/shared/ui/detail-action-bar/app-detail-action-bar.component';
 import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
 import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-line/app-detail-subject-line.component';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
@@ -38,7 +37,6 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         ButtonModule,
         AppPageHeaderComponent,
         AppDetailIdentityCardComponent,
-        AppDetailActionBarComponent,
         AppDetailSubjectLineComponent,
         RecordHistoryButtonComponent,
         PetAlertBannerComponent,
@@ -65,7 +63,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         } @else if (row(); as r) {
             <app-page-header categoryLink="/panel/lab-results" categoryLinkLabel="Listeye dön" />
 
-            <!-- Kimlik kartı: test adı + durum rozetleri, sonuç tarihi, kayıt satırı, hasta/sahip, iptal notu; sağda Düzenle/Sonuç gir ve geçmiş; gösterge şeridi. -->
+            <!-- Kimlik kartı: test adı + durum rozetleri, sonuç tarihi, kayıt satırı, hasta/sahip, iptal notu; sağda Düzenle/Sonuç gir, geçmiş ve İptal et (tek eylem şeridi gerekmez); gösterge şeridi. -->
             <app-detail-identity-card icon="pi pi-chart-bar" [title]="r.testName" [subtitle]="r.resultDateUtc ? (r.resultDateUtc | trDateTime) : ''" [meta]="'Oluşturulma: ' + (r.createdAtUtc | trDateTime) + ' · Güncellenme: ' + (r.updatedAtUtc | trDateTime)" ariaLabel="Lab sonucu kimliği" testId="lab-result-identity-card">
                 <app-lab-result-status-badges badges [status]="r.status" [awaitingInterpretation]="r.awaitingInterpretation" />
                 <app-detail-subject-line [petId]="r.petId" [petName]="r.petName" [clientId]="r.clientId" [clientName]="r.clientName" />
@@ -86,6 +84,9 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                         }
                     }
                     <app-record-history-button resource="lab-results" [recordId]="r.id" />
+                    @if (canUpdateLabResult && isEditable(r.status) && !ro.mutationBlocked()) {
+                        <button pButton type="button" class="p-button-danger p-button-outlined" (click)="cancelVisible.set(true)"><i class="pi pi-ban"></i>İptal et</button>
+                    }
                 </ng-container>
                 <div stat>
                     <dt>İstem tarihi</dt>
@@ -114,12 +115,6 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
             </app-detail-identity-card>
             <app-pet-alert-banner [petId]="r.petId" />
 
-            <!-- Eylem şeridi: iptal (yalnız düzenlenebilir kayıt, salt okunur değilken). -->
-            @if (canUpdateLabResult && isEditable(r.status) && !ro.mutationBlocked()) {
-                <app-detail-action-bar ariaLabel="Lab sonucu eylemleri">
-                    <button pButton type="button" class="p-button-danger p-button-outlined" (click)="cancelVisible.set(true)"><i class="pi pi-ban"></i>İptal et</button>
-                </app-detail-action-bar>
-            }
 
             <!-- Satır ızgarası: sonuç + yorum | notlar (8/4, eşit yükseklik); dosyalar tam genişlik. -->
             <div class="@container flex flex-col gap-4">

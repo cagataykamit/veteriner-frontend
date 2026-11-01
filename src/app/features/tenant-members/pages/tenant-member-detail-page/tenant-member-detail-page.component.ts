@@ -25,7 +25,6 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { AppDetailActionBarComponent } from '@/app/shared/ui/detail-action-bar/app-detail-action-bar.component';
 import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -37,7 +36,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-tenant-member-detail-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, ButtonModule, DialogModule, ToastModule, AppPageHeaderComponent, AppDetailIdentityCardComponent, AppDetailActionBarComponent, AppStatusTagComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, TenantMemberRemoveDialogComponent, TrDateTimePipe],
+    imports: [CommonModule, FormsModule, ButtonModule, DialogModule, ToastModule, AppPageHeaderComponent, AppDetailIdentityCardComponent, AppStatusTagComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, TenantMemberRemoveDialogComponent, TrDateTimePipe],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -62,6 +61,12 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 @if (m.isCurrentUser) {
                     <p class="m-0 mt-3 text-sm text-surface-700 dark:text-surface-200">{{ copy.tenantMemberSelfProfileHint }}</p>
                 }
+                <!-- Yıkıcı işlem kartın sağında (yalnız yetkiyle ve kendi üyeliği değilken); tek eylem için şerit açılmaz. -->
+                @if (canManageTenantAccess() && !m.isCurrentUser) {
+                    <ng-container actions>
+                        <button pButton type="button" severity="danger" [outlined]="true" [disabled]="busyAdd() || busyAddClinic()" (click)="openRemoveMemberConfirm()"><i class="p-button-icon pi pi-user-minus"></i>Üyeyi kurumdan çıkar</button>
+                    </ng-container>
+                }
                 <div stat>
                     <dt>E-posta onayı</dt>
                     <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ formatConfirmed(m.emailConfirmed) }}</dd>
@@ -80,12 +85,6 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 </div>
             </app-detail-identity-card>
 
-            <!-- Eylem şeridi: yıkıcı işlem (yalnız yetkiyle ve kendi üyeliği değilken). -->
-            @if (canManageTenantAccess() && !m.isCurrentUser) {
-                <app-detail-action-bar ariaLabel="Üye eylemleri">
-                    <button pButton type="button" severity="danger" [outlined]="true" [disabled]="busyAdd() || busyAddClinic()" (click)="openRemoveMemberConfirm()"><i class="p-button-icon pi pi-user-minus"></i>Üyeyi kurumdan çıkar</button>
-                </app-detail-action-bar>
-            }
 
             @if (m.claimsSectionPresent) {
                 <div class="card mb-4">

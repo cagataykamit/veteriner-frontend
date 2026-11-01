@@ -15,7 +15,6 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { AppDetailActionBarComponent } from '@/app/shared/ui/detail-action-bar/app-detail-action-bar.component';
 import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
 import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-line/app-detail-subject-line.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
@@ -39,7 +38,6 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
         ButtonModule,
         AppPageHeaderComponent,
         AppDetailIdentityCardComponent,
-        AppDetailActionBarComponent,
         AppDetailSubjectLineComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -62,7 +60,7 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
         } @else if (payment(); as p) {
             <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" />
 
-            <!-- Kimlik kartı: tutar başlık, ödeme zamanı, kanal, müşteri/hasta; sağda Düzenle; gösterge şeridi (tutar, kanal, zaman, randevu, muayene). -->
+            <!-- Kimlik kartı: tutar başlık, ödeme zamanı, kanal, müşteri/hasta; sağda Düzenle ve gerekçeli İptal et (salt okunurda gösterilmez; tek eylem için şerit açılmaz); gösterge şeridi (tutar, kanal, zaman, randevu, muayene). -->
             <app-detail-identity-card icon="pi pi-wallet" [title]="moneyLine(p)" [subtitle]="formatPaidAtUtc(p.paidAtUtc)" [meta]="'Kanal: ' + methodLabel(p.method) + ' · Para birimi: ' + p.currency" ariaLabel="Ödeme kimliği" testId="payment-identity-card">
                 <app-detail-subject-line [petId]="p.petId" [petName]="p.petName" [clientId]="p.clientId" [clientName]="p.clientName" />
                 <ng-container actions>
@@ -70,6 +68,9 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
                         <a [routerLink]="['/panel/payments', p.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                     } @else if (canUpdatePayment && ro.mutationBlocked()) {
                         <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                    }
+                    @if (canVoidPayment && !ro.mutationBlocked()) {
+                        <button pButton type="button" class="p-button-danger p-button-outlined" (click)="voidVisible = true"><i class="pi pi-ban"></i>İptal et</button>
                     }
                 </ng-container>
                 <div stat>
@@ -106,12 +107,6 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
                 </div>
             </app-detail-identity-card>
 
-            <!-- Eylem şeridi: gerekçeli iptal (salt okunurda gösterilmez; mevcut davranış). -->
-            @if (canVoidPayment && !ro.mutationBlocked()) {
-                <app-detail-action-bar ariaLabel="Ödeme eylemleri">
-                    <button pButton type="button" class="p-button-danger p-button-outlined" (click)="voidVisible = true"><i class="pi pi-ban"></i>İptal et</button>
-                </app-detail-action-bar>
-            }
 
             <!-- Satır ızgarası: ilgili muayeneler | son randevular (6/6, eşit yükseklik); notlar tam genişlik. -->
             <div class="@container flex flex-col gap-4">

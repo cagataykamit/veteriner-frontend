@@ -11,7 +11,6 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
-import { AppDetailActionBarComponent } from '@/app/shared/ui/detail-action-bar/app-detail-action-bar.component';
 import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
 import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-line/app-detail-subject-line.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
@@ -27,7 +26,6 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
         ButtonModule,
         AppPageHeaderComponent,
         AppDetailIdentityCardComponent,
-        AppDetailActionBarComponent,
         AppDetailSubjectLineComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
@@ -43,7 +41,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
         } @else if (sale(); as s) {
             <app-page-header categoryLink="/panel/sales" categoryLinkLabel="Satış listesine dön" />
 
-            <!-- Kimlik kartı: toplam tutar + durum rozeti, satış zamanı, müşteri, iptal bilgisi; sağda Fişi yazdır; gösterge şeridi (toplam, ödenen, kalan). -->
+            <!-- Kimlik kartı: toplam tutar + durum rozeti, satış zamanı, müşteri, iptal bilgisi; sağda Fişi yazdır ve gerekçeli İptal et (tek eylem için şerit açılmaz); gösterge şeridi (toplam, ödenen, kalan). -->
             <app-detail-identity-card icon="pi pi-shopping-cart" [title]="s.totalText" [subtitle]="soldAt(s)" [meta]="s.isWalkIn ? 'Kayıtsız (walk-in) müşteri' : ''" ariaLabel="Satış kimliği" testId="sale-identity-card">
                 <app-status-tag badges [label]="s.statusLabel" [severity]="s.statusSeverity" />
                 <app-detail-subject-line [clientId]="s.isWalkIn ? null : s.clientId" [clientName]="s.clientName" />
@@ -59,6 +57,9 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                 }
                 <ng-container actions>
                     <button pButton type="button" class="p-button-outlined p-button-secondary" (click)="print()"><i class="p-button-icon pi pi-print"></i>Fişi yazdır</button>
+                    @if (canVoid && !s.isVoided && !ro.mutationBlocked()) {
+                        <button pButton type="button" severity="danger" [outlined]="true" (click)="voidVisible.set(true)"><i class="p-button-icon pi pi-ban"></i>İptal et</button>
+                    }
                 </ng-container>
                 <div stat>
                     <dt>Toplam</dt>
@@ -80,12 +81,6 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                 </div>
             </app-detail-identity-card>
 
-            <!-- Eylem şeridi: gerekçeli iptal (salt okunurda gösterilmez; mevcut davranış). -->
-            @if (canVoid && !s.isVoided && !ro.mutationBlocked()) {
-                <app-detail-action-bar ariaLabel="Satış eylemleri">
-                    <button pButton type="button" severity="danger" [outlined]="true" (click)="voidVisible.set(true)"><i class="p-button-icon pi pi-ban"></i>İptal et</button>
-                </app-detail-action-bar>
-            }
 
             <!-- Satır ızgarası: fiş | not (8/4, eşit yükseklik). -->
             <div class="@container">
