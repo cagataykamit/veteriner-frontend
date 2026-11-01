@@ -14,6 +14,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { isAppointmentCancelledStatus } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
+import { ClinicalSnippetTriggerDirective } from '@/app/entities/clinical-snippet/components/clinical-snippet-trigger.directive';
 import { ClinicalTermPickerComponent } from '@/app/entities/clinical-term/components/clinical-term-picker.component';
 import { DoseCalculatorComponent } from '@/app/entities/procedure/components/dose-calculator.component';
 import { ExaminationPatientContextComponent } from '@/app/features/examinations/components/examination-patient-context.component';
@@ -87,6 +88,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
         PetSearchComponent,
         DateInputComponent,
         ClinicalTermPickerComponent,
+        ClinicalSnippetTriggerDirective,
         DoseCalculatorComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,

@@ -138,7 +138,7 @@
                         </div>
                         <div class="col-span-12">
                             <label for="anamnesis" class="block text-sm font-medium text-muted-color mb-2">Anamnez</label>
-                            <textarea id="anamnesis" rows="6" class="w-full p-inputtext p-component" formControlName="anamnesis"></textarea>
+                            <textarea id="anamnesis" rows="6" class="w-full p-inputtext p-component" formControlName="anamnesis" appClinicalSnippetTrigger></textarea>
                             @if (apiFieldErrors().anamnesis) {
                                 <small class="text-red-500">{{ apiFieldErrors().anamnesis }}</small>
                             }
@@ -151,7 +151,7 @@
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12">
                             <label for="findings" class="block text-sm font-medium text-muted-color mb-2">Klinik bulgular</label>
-                            <textarea id="findings" rows="6" class="w-full p-inputtext p-component" formControlName="findings"></textarea>
+                            <textarea id="findings" rows="6" class="w-full p-inputtext p-component" formControlName="findings" appClinicalSnippetTrigger></textarea>
                             @if (apiFieldErrors().findings) {
                                 <small class="text-red-500">{{ apiFieldErrors().findings }}</small>
                             }
@@ -201,7 +201,7 @@
                 <div class="card mb-4">
                     <h5 class="mt-0 mb-4">Değerlendirme / tanı</h5>
                     <label for="assessment" class="block text-sm font-medium text-muted-color mb-2">Değerlendirme / tanı</label>
-                    <textarea id="assessment" rows="5" class="w-full p-inputtext p-component" formControlName="assessment"></textarea>
+                    <textarea id="assessment" rows="5" class="w-full p-inputtext p-component" formControlName="assessment" appClinicalSnippetTrigger></textarea>
                     <app-clinical-term-picker kind="Diagnosis" inputId="assessmentTerm" [control]="form.controls.assessment" />
                     @if (apiFieldErrors().assessment) {
                         <small class="text-red-500">{{ apiFieldErrors().assessment }}</small>
@@ -216,14 +216,14 @@
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12">
                             <label for="plan" class="block text-sm font-medium text-muted-color mb-2">Plan / tedavi planı</label>
-                            <textarea id="plan" rows="5" class="w-full p-inputtext p-component" formControlName="plan"></textarea>
+                            <textarea id="plan" rows="5" class="w-full p-inputtext p-component" formControlName="plan" appClinicalSnippetTrigger></textarea>
                             @if (apiFieldErrors().plan) {
                                 <small class="text-red-500">{{ apiFieldErrors().plan }}</small>
                             }
                         </div>
                         <div class="col-span-12">
                             <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Ek notlar</label>
-                            <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
+                            <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes" appClinicalSnippetTrigger></textarea>
                             @if (apiFieldErrors().notes) {
                                 <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
                             }
