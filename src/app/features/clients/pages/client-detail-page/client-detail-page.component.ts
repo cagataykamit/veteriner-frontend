@@ -11,6 +11,7 @@ import { ClientCardHeaderComponent } from '@/app/features/clients/components/cli
 import { ClientKvkkConsentDialogComponent } from '@/app/features/clients/components/client-kvkk-consent-dialog.component';
 import { ClientPetsPanelComponent } from '@/app/features/clients/components/client-pets-panel.component';
 import { ClientPortalAccessPanelComponent } from '@/app/features/clients/components/client-portal-access-panel.component';
+import { ClientCreditsPanelComponent } from '@/app/features/clients/components/client-credits-panel.component';
 import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
 import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import type { ClientDetailVm, ClientKvkkConsentUpdateResult, ClientPaymentSummaryVm } from '@/app/entities/client/models/client-vm.model';
@@ -60,6 +61,7 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
         ClientKvkkConsentDialogComponent,
         ClientPetsPanelComponent,
         ClientPortalAccessPanelComponent,
+        ClientCreditsPanelComponent,
         PetTodoPanelComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -117,6 +119,7 @@ import { RecentlyViewedService } from '@/app/entities/patient/services/recently-
             @if (canManagePortal) {
                 <app-client-portal-access-panel [client]="c" />
             }
+            <app-client-credits-panel [clientId]="c.id" />
 
             <div class="grid grid-cols-12 gap-4 mb-4">
                 <div class="col-span-12 lg:col-span-5" [class.order-first]="emphasis === 'frontDesk'" data-testid="todo-column">
