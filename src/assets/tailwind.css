@@ -43,3 +43,21 @@
 @utility field-empty {
     @apply text-sm italic text-muted-color;
 }
+
+/*
+ * Görünümü küçük kalan bağlantı/düğmenin (hap, satır içi düğme) dokunma alanını en az `--touch-target` (44 px) yapar;
+ * görünmez katman öğeyi ortalar, düzeni değiştirmez. Telefonda kullanılır: `max-sm:touch-hit` (MOBILE-004).
+ */
+@utility touch-hit {
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: max(100%, var(--touch-target));
+        height: max(100%, var(--touch-target));
+        transform: translate(-50%, -50%);
+    }
+}

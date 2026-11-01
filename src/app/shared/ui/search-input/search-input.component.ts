@@ -23,7 +23,7 @@ export const SEARCH_DEBOUNCE_MS = 350;
                 #field
                 pInputText
                 type="text"
-                class="w-full pr-8"
+                class="w-full pr-8 max-sm:pr-(--touch-target)"
                 autocomplete="off"
                 [attr.id]="inputId() || null"
                 [attr.aria-label]="ariaLabel() || null"
@@ -35,7 +35,7 @@ export const SEARCH_DEBOUNCE_MS = 350;
             @if (value()) {
                 <button
                     type="button"
-                    class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 text-muted-color hover:text-color bg-transparent border-0 cursor-pointer p-0"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 max-sm:right-0 max-sm:w-(--touch-target) max-sm:h-(--touch-target) text-muted-color hover:text-color bg-transparent border-0 cursor-pointer p-0"
                     aria-label="Aramayı temizle"
                     (click)="clear()"
                 >

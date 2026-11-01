@@ -83,9 +83,10 @@ export const ROW_ACTIONS: Readonly<Record<RowActionKind, { readonly icon: string
                 cursor: default;
             }
 
-            @media (pointer: coarse) {
-                width: 40px; // dokunmatik
-                height: 40px;
+            // Dokunmatik ve telefon genişliği (MOBILE-004): en az 44 px dokunma hedefi (`--touch-target`); 575 px = `phone` karışımı
+            @media (pointer: coarse), (max-width: 575px) {
+                width: var(--touch-target);
+                height: var(--touch-target);
             }
         }
 
