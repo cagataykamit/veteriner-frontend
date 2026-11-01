@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -9,12 +10,13 @@ import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
 import { catchError, forkJoin, map, Observable, of, Subject, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { CLIENTS_CREATE_CLAIM, PETS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { CHARGES_CREATE_CLAIM, CLIENTS_CREATE_CLAIM, PETS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
+import { VisitPreparationFieldsComponent } from '@/app/entities/visit/components/visit-preparation-fields.component';
 import { VisitQuickRegistrationComponent, type RegistrationOwner } from '@/app/entities/visit/components/visit-quick-registration.component';
-import type { CreateVisitRequest, PetSuggestion, TodayItemVm, VisitCreateResultVm } from '@/app/entities/visit/models/visit-vm.model';
+import type { CreateVisitRequest, PetSuggestion, TodayItemVm, VisitCreateResultVm, VisitVm } from '@/app/entities/visit/models/visit-vm.model';
 import { findVeterinarianUserId } from '@/app/entities/visit/data/visit.mapper';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
@@ -31,13 +33,14 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
 
 /**
  * Hasta kabulü. `appointment` verilirse randevudan "Geldi" (hasta kilitli); verilmezse randevusuz hızlı geliş
- * (tek alanda hasta araması). Sorumlu hekim iki akışta da opsiyoneldir.
+ * (tek alanda hasta araması). Sorumlu hekim iki akışta da opsiyoneldir. Geliş hazırlığı (neden, şablon / paket) ve "sonra ücret ekle"
+ * isteğe bağlıdır; boş bırakılınca geliş yine iki tıkla biter. Mevcut açık geliş dönerse (`created: false`) sunucu hazırlığı değiştirmez.
  * Çift tıklama: gönderim sürerken düğme kilitli, `onSubmit` ikinci çağrıyı yok sayar; sunucu da mevcut Visit'i döndürür.
  */
 @Component({
     selector: 'app-visit-arrival-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, AutoCompleteModule, CheckboxModule, VisitQuickRegistrationComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, AutoCompleteModule, CheckboxModule, VisitQuickRegistrationComponent, VisitPreparationFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="appointment() ? 'Hasta geldi' : 'Randevusuz geliş'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
@@ -90,6 +93,12 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                             </div>
                         }
                     }
+                    <!-- Diyalog açıkken oluşur: şablon listesi her açılışta bir kez okunur, kapalı diyalog istek atmaz. -->
+                    @if (visible()) {
+                        <div class="col-span-12">
+                            <app-visit-preparation-fields [(reason)]="arrivalReason" [(templateId)]="preparedTemplateId" />
+                        </div>
+                    }
                     <div class="col-span-12">
                         <label for="va-vet" class="block text-sm font-medium text-muted-color mb-2">Sorumlu hekim (opsiyonel)</label>
                         <p-select
@@ -109,6 +118,12 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                         <p-checkbox inputId="va-urgent" formControlName="isUrgent" [binary]="true" />
                         <label for="va-urgent" class="font-medium">Acil</label>
                     </div>
+                    @if (canCreateCharge) {
+                        <div class="col-span-12 flex items-center gap-2 -mt-2">
+                            <p-checkbox inputId="va-charge" formControlName="addChargeAfter" [binary]="true" />
+                            <label for="va-charge">Kaydettikten sonra ücret ekle</label>
+                        </div>
+                    }
                 </div>
                 @if (submitError()) {
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
@@ -131,6 +146,7 @@ export class VisitArrivalDialogComponent {
     readonly arrived = output<VisitCreateResultVm>();
 
     private readonly fb = inject(FormBuilder);
+    private readonly router = inject(Router);
     private readonly auth = inject(AuthService);
     private readonly visitsService = inject(VisitsService);
     private readonly clientsService = inject(ClientsService);
@@ -148,6 +164,11 @@ export class VisitArrivalDialogComponent {
     /** Yeni müşteri + hasta için ikisi de, mevcut sahibe hayvan için yalnızca `Pets.Create` gerekir. */
     readonly canAddPet = this.auth.hasOperationClaim(PETS_CREATE_CLAIM);
     readonly canRegisterNewOwner = this.canAddPet && this.auth.hasOperationClaim(CLIENTS_CREATE_CLAIM);
+    /** "Kaydettikten sonra ücret ekle": mevcut ücret formuna geliş bağlamıyla gidilir (fatura/teklif belgesi yok). */
+    readonly canCreateCharge = this.auth.hasOperationClaim(CHARGES_CREATE_CLAIM);
+    /** Geliş hazırlığı (isteğe bağlı); randevulu gelişte neden randevu nedeniyle önerilir. */
+    readonly arrivalReason = signal('');
+    readonly preparedTemplateId = signal<string | null>(null);
     /** Hızlı kayıtla az önce oluşturulan hasta; Visit adımı hata verirse mesajda belirtilir. */
     private registeredPetId: string | null = null;
     readonly veterinarianOptions = signal<SelectOption[]>([]);
@@ -155,7 +176,8 @@ export class VisitArrivalDialogComponent {
     readonly form = this.fb.group({
         pet: this.fb.control<PetSuggestion | string | null>(null, petSelected),
         veterinarianId: this.fb.nonNullable.control(''),
-        isUrgent: this.fb.nonNullable.control(false)
+        isUrgent: this.fb.nonNullable.control(false),
+        addChargeAfter: this.fb.nonNullable.control(false)
     });
 
     /** Sahip adı çözümlemesi aramalar arasında paylaşılır (aynı sahip için tekrar istek yok). */
@@ -211,7 +233,9 @@ export class VisitArrivalDialogComponent {
         this.submitError.set(null);
         this.loadError.set(null);
         this.petSuggestions.set([]);
-        this.form.reset({ pet: this.appointment() ? null : this.presetPet(), veterinarianId: '', isUrgent: false });
+        this.form.reset({ pet: this.appointment() ? null : this.presetPet(), veterinarianId: '', isUrgent: false, addChargeAfter: false });
+        this.arrivalReason.set(this.appointment()?.appointmentReasonName ?? '');
+        this.preparedTemplateId.set(null);
         this.registration.set(null);
         this.registeredPetId = null;
         this.lastSearchTerm.set('');
@@ -268,6 +292,8 @@ export class VisitArrivalDialogComponent {
             return;
         }
 
+        const addCharge = this.canCreateCharge && this.form.controls.addChargeAfter.value;
+
         this.submitError.set(null);
         this.submitting.set(true);
         this.visitsService.createVisit(request).subscribe({
@@ -275,6 +301,11 @@ export class VisitArrivalDialogComponent {
                 this.submitting.set(false);
                 this.visible.set(false);
                 this.arrived.emit(result);
+
+                // Üst bileşenin kendi yönlendirmesinden sonra: son gezinme kazanır, kullanıcı ücret formuna düşer.
+                if (addCharge) {
+                    this.openCharge(result.visit, request);
+                }
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
@@ -288,9 +319,10 @@ export class VisitArrivalDialogComponent {
     private buildRequest(): CreateVisitRequest | null {
         const { pet, veterinarianId, isUrgent } = this.form.getRawValue();
         const appointmentId = this.appointment()?.appointmentId;
+        const preparation = this.preparation();
 
         if (appointmentId) {
-            return { appointmentId, responsibleVeterinarianUserId: veterinarianId, isUrgent };
+            return { appointmentId, responsibleVeterinarianUserId: veterinarianId, isUrgent, ...preparation };
         }
 
         const clinicId = this.auth.getClinicId()?.trim();
@@ -299,7 +331,23 @@ export class VisitArrivalDialogComponent {
             return null;
         }
 
-        return { clinicId, petId: pet.id, responsibleVeterinarianUserId: veterinarianId, isUrgent };
+        return { clinicId, petId: pet.id, responsibleVeterinarianUserId: veterinarianId, isUrgent, ...preparation };
+    }
+
+    /** Yalnız dolu hazırlık alanları isteğe girer (boş form eski istekle aynıdır). */
+    private preparation(): Pick<CreateVisitRequest, 'arrivalReason' | 'preparedExaminationTemplateId'> {
+        const reason = this.arrivalReason().trim();
+        const templateId = this.preparedTemplateId();
+
+        return { ...(reason ? { arrivalReason: reason } : {}), ...(templateId ? { preparedExaminationTemplateId: templateId } : {}) };
+    }
+
+    /** Mevcut "Ücret ekle" formu: müşteri, hasta ve geliş bağlamıyla (hasta tekrar seçilmez). Mevcut geliş dönmüşse o gelişe bağlanır. */
+    private openCharge(visit: VisitVm, request: CreateVisitRequest): void {
+        const pet = this.form.controls.pet.value;
+        const clientId = this.appointment()?.clientId ?? (pet && typeof pet === 'object' && request.petId === pet.id ? pet.clientId : null);
+
+        void this.router.navigate(['/panel/charges/new'], { queryParams: { clientId, petId: visit.petId, visitId: visit.id } });
     }
 
     /** Aynı ada sahip hastaları ayırt etmek için sonuçlara sahip adı eklenir (liste DTO'sunda sahip adı yok). */

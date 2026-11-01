@@ -157,6 +157,8 @@ export interface TodayItemActions {
     canRestore: boolean;
     /** Acil işareti yalnızca açık (bekleyen / devam eden) kayıtta değiştirilir. */
     canToggleUrgency: boolean;
+    /** Geliş hazırlığı (neden, şablon) yalnızca açık, yanlış işaretli olmayan Visit'te düzenlenir (sözleşme §4.5). */
+    canEditPreparation: boolean;
     /** Planlı satırdan "Gelmedi": Visit'siz, saati geçmiş `Scheduled` randevu (yetki ayrıca denetlenir). */
     canMarkNoShow: boolean;
     /** "Gelmedi" grubundaki Visit'siz randevu satırından geri alma (yetki ayrıca denetlenir). */
@@ -167,7 +169,7 @@ export function todayItemActions(item: TodayItemVm, now: Date = new Date()): Tod
     const noShowRow = !item.visitId && !!item.appointmentId;
 
     if (item.isVoided) {
-        return { canMarkArrived: false, canStartCare: false, canOpenExamination: false, canCompleteCare: false, canCorrect: false, canRestore: !!item.visitId, canToggleUrgency: false, canMarkNoShow: false, canRevertNoShow: false };
+        return { canMarkArrived: false, canStartCare: false, canOpenExamination: false, canCompleteCare: false, canCorrect: false, canRestore: !!item.visitId, canToggleUrgency: false, canEditPreparation: false, canMarkNoShow: false, canRevertNoShow: false };
     }
 
     const open = item.careStatus === 'Waiting' || item.careStatus === 'InProgress';
@@ -180,6 +182,7 @@ export function todayItemActions(item: TodayItemVm, now: Date = new Date()): Tod
         canCorrect: !!item.visitId,
         canRestore: false,
         canToggleUrgency: open && !!item.visitId,
+        canEditPreparation: open && !!item.visitId,
         canMarkNoShow: noShowRow && canMarkAppointmentNoShow(item.appointmentStatus, item.scheduledAtUtc, now),
         canRevertNoShow: noShowRow && canRevertAppointmentNoShow(item.appointmentStatus)
     };
@@ -265,7 +268,12 @@ export function waitAlertTitle(level: WaitAlertLevel): string | null {
     return level === 'none' ? null : WAIT_ALERT_TITLE[level];
 }
 
-export type TodaySecondaryActionKey = 'markNoShow' | 'revertNoShow' | 'correct' | 'restore' | 'collectPayment' | 'addCharge';
+/** Satırdaki kısa neden: gelişte yazılan neden, yoksa randevu nedeni (planlı satırda geliş nedeni hiç yoktur). */
+export function todayReasonText(item: Pick<TodayItemVm, 'arrivalReason' | 'appointmentReasonName'>): string | null {
+    return item.arrivalReason ?? item.appointmentReasonName;
+}
+
+export type TodaySecondaryActionKey = 'markNoShow' | 'revertNoShow' | 'correct' | 'restore' | 'collectPayment' | 'addCharge' | 'editPreparation';
 
 export interface TodaySecondaryAction {
     key: TodaySecondaryActionKey;
@@ -294,6 +302,10 @@ export function todaySecondaryActions(item: TodayItemVm, actions: TodayItemActio
 
     if (perms.canCollectPayment && !item.isVoided) {
         out.push({ key: 'collectPayment', label: 'Ödeme al', icon: 'pi pi-wallet' });
+    }
+
+    if (perms.canUpdateVisit && actions.canEditPreparation) {
+        out.push({ key: 'editPreparation', label: 'Hazırlığı düzenle', icon: 'pi pi-clipboard' });
     }
 
     if (perms.canNoShow && actions.canMarkNoShow) {
