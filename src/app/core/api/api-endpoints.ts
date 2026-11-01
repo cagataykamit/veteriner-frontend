@@ -383,6 +383,14 @@ export const ApiEndpoints = {
         activate: (id: string) => `/api/v1/clinical-terms/${encodeURIComponent(id)}/activate`,
         deactivate: (id: string) => `/api/v1/clinical-terms/${encodeURIComponent(id)}/deactivate`
     },
+    clinicalSnippets: {
+        /** GET (Query: `search`, `includeInactive`, `page`, `pageSize` ≤ 200) ve POST `{ shortcut, title, body }`. */
+        list: () => `/api/v1/clinical-snippets`,
+        /** GET; PUT = tam güncelleme (`rowVersion` zorunlu). */
+        byId: (id: string) => `/api/v1/clinical-snippets/${encodeURIComponent(id)}`,
+        activate: (id: string) => `/api/v1/clinical-snippets/${encodeURIComponent(id)}/activate`,
+        deactivate: (id: string) => `/api/v1/clinical-snippets/${encodeURIComponent(id)}/deactivate`
+    },
     examinationTemplates: {
         /** GET (Query: `search`, `includeInactive`, `page`, `pageSize`) ve POST. */
         list: () => `/api/v1/examination-templates`,
