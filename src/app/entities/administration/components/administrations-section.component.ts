@@ -73,7 +73,7 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
                 } @else if (rows().length === 0) {
                     <p class="text-muted-color text-sm m-0" data-testid="administrations-empty">Bu kayıtta uygulanan ürün yok.</p>
                 } @else {
-                    <div class="overflow-x-auto" [class.opacity-60]="loading()" [attr.aria-busy]="loading()">
+                    <div class="overflow-x-auto table-stack-phone" [class.opacity-60]="loading()" [attr.aria-busy]="loading()">
                         <p-table [value]="rows()" [tableStyle]="{ 'min-width': '34rem' }" tableStyleClass="table-fixed">
                             <ng-template #header>
                                 <tr>
@@ -88,13 +88,13 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
                             </ng-template>
                             <ng-template #body let-row>
                                 <tr [class.opacity-60]="row.isVoided">
-                                    <td>{{ row.administeredAtUtc | trDateTime }}</td>
-                                    <td class="break-words">
+                                    <td data-label="Zaman">{{ row.administeredAtUtc | trDateTime }}</td>
+                                    <td class="break-words" data-label="Ürün">
                                         {{ row.productName }}
                                         <app-administration-row-marks [row]="row" />
                                     </td>
-                                    <td class="text-right whitespace-nowrap">{{ row.quantity }} {{ row.unit }}</td>
-                                    <td class="break-words">{{ row.notes || '—' }}</td>
+                                    <td class="text-right whitespace-nowrap" data-label="Miktar">{{ row.quantity }} {{ row.unit }}</td>
+                                    <td class="break-words" data-label="Not">{{ row.notes || '—' }}</td>
                                     @if (canCorrect) {
                                         <td class="whitespace-nowrap">
                                             @if (!row.isVoided && !ro.mutationBlocked()) {

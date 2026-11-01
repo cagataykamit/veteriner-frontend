@@ -41,7 +41,7 @@ interface OverdueVaccinations {
         <section class="card mb-0" aria-label="Hasta bağlamı" data-testid="patient-context">
             <button
                 type="button"
-                class="w-full flex items-center justify-between gap-2 bg-transparent border-0 p-0 text-left cursor-pointer @4xl:cursor-default text-color"
+                class="w-full flex items-center justify-between gap-2 bg-transparent border-0 p-0 text-left cursor-pointer @4xl:cursor-default text-color max-sm:min-h-(--touch-target)"
                 [attr.aria-expanded]="expanded()"
                 data-testid="patient-context-toggle"
                 (click)="expanded.set(!expanded())"

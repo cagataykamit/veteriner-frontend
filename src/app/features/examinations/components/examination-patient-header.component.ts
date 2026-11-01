@@ -24,7 +24,7 @@ const EM = '—';
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section aria-label="Hasta bilgileri" class="mt-3">
-            <p class="m-0 flex flex-wrap items-center gap-x-6 gap-y-2">
+            <p class="m-0 flex flex-wrap items-center gap-x-6 gap-y-2 wrap-anywhere">
                 <span class="min-w-0">
                     <span class="text-muted-color">Hasta:</span>
                     <span class="ml-1" [title]="speciesBreed()" aria-hidden="true">{{ speciesIcon() }}</span>
