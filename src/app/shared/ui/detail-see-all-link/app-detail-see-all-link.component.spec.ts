@@ -32,11 +32,12 @@ describe('AppDetailSeeAllLinkComponent', () => {
     it('kayıt varsa listenin altında bağlam parametresiyle "Tümünü gör →" yazar; sayı yoksa parantez yok', async () => {
         const a = await render(3);
 
-        expect(a?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Tümünü gör →');
+        expect(a?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Tümünü gör');
         expect(a?.getAttribute('href')).toBe('/panel/payments?petId=pet-1');
+        expect(a?.querySelector('i.pi-arrow-right')).not.toBeNull();
     });
 
     it('sunucu toplamı biliniyorsa sayı parantezde', async () => {
-        expect((await render(5, 12))?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Tümünü gör (12) →');
+        expect((await render(5, 12))?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Tümünü gör (12)');
     });
 });

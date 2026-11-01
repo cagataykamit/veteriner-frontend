@@ -1,5 +1,5 @@
 import { Component, computed, HostListener, inject, input, output, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
-import { RouterLink, convertToParamMap } from '@angular/router';
+import { convertToParamMap } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -21,6 +21,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { closeWithUnsavedChangesCheck, HAS_UNSAVED_CHANGES } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-detail-row-link.component';
 
 const CREATE_CLAIM: Record<ProcedureKind, string> = {
     treatment: TREATMENTS_CREATE_CLAIM,
@@ -51,7 +52,7 @@ const ADD_ICON: Record<ProcedureKind, string> = {
     standalone: true,
     providers: [ConfirmationService],
     imports: [
-        RouterLink,
+        AppDetailRowLinkComponent,
         ButtonModule,
         DrawerModule,
         ConfirmDialogModule,
@@ -115,7 +116,7 @@ const ADD_ICON: Record<ProcedureKind, string> = {
                                     <span class="text-sm text-muted-color">{{ row.detail }}</span>
                                 }
                                 <span class="text-sm text-muted-color">{{ row.atUtc | trDateTime }}</span>
-                                <a [routerLink]="['/panel', routeSegment(row.kind), row.id]" class="text-primary font-medium no-underline text-sm">Detay →</a>
+                                <app-detail-row-link [link]="['/panel', routeSegment(row.kind), row.id]" [ariaLabel]="label(row.kind) + ' detayı: ' + row.title" />
                             </li>
                         }
                     </ul>

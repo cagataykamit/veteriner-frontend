@@ -51,6 +51,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
 import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/patient/services/recently-viewed.service';
 import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
+import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-detail-row-link.component';
 
 /** Kayıt metin bölümleri sırası; vital satırı `findings` ile `assessment` arasına girer. */
 const RECORD_TEXT_SECTIONS: readonly {
@@ -70,7 +71,7 @@ const RECORD_TEXT_SECTIONS: readonly {
     selector: 'app-examination-detail-page',
     standalone: true,
     imports: [
-        AppDetailSeeAllLinkComponent, CommonModule,
+        AppDetailRowLinkComponent, AppDetailSeeAllLinkComponent, CommonModule,
         RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
@@ -290,9 +291,9 @@ const RECORD_TEXT_SECTIONS: readonly {
                                 <ul class="list-none m-0 p-0">
                                     @for (row of apptItemsView().displayed; track row.id) {
                                         <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0 text-sm">
-                                            <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                            <div class="flex flex-wrap gap-2 justify-between items-center">
                                                 <span class="text-muted-color min-w-0">{{ row.scheduledAtUtc | trDateTime }}</span>
-                                                <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline shrink-0">Detay →</a>
+                                                <app-detail-row-link [link]="['/panel/appointments', row.id]" [ariaLabel]="'Randevu detayı: ' + (row.scheduledAtUtc | trDateTime)" />
                                             </div>
                                             <div class="font-medium min-w-0 break-words">{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
                                         </li>

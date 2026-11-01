@@ -28,12 +28,13 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
+import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-detail-row-link.component';
 
 @Component({
     selector: 'app-payment-detail-page',
     standalone: true,
     imports: [
-        AppDetailSeeAllLinkComponent, CommonModule,
+        AppDetailRowLinkComponent, AppDetailSeeAllLinkComponent, CommonModule,
         RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
@@ -127,9 +128,9 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
                             <ul class="list-none m-0 p-0">
                                 @for (row of exItemsView().displayed; track row.id) {
                                     <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0">
-                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                        <div class="flex flex-wrap gap-2 justify-between items-center">
                                             <span class="text-muted-color text-sm">{{ row.examinedAtUtc | trDateTime }}</span>
-                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                            <app-detail-row-link [link]="['/panel/examinations', row.id]" [ariaLabel]="'Muayene detayı: ' + (row.examinedAtUtc | trDateTime)" />
                                         </div>
                                         <div class="font-medium break-words">{{ row.visitReason }}</div>
                                     </li>
@@ -152,9 +153,9 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
                             <ul class="list-none m-0 p-0">
                                 @for (row of apptItemsView().displayed; track row.id) {
                                     <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0">
-                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
+                                        <div class="flex flex-wrap gap-2 justify-between items-center">
                                             <span class="text-muted-color text-sm">{{ row.scheduledAtUtc | trDateTime }}</span>
-                                            <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
+                                            <app-detail-row-link [link]="['/panel/appointments', row.id]" [ariaLabel]="'Randevu detayı: ' + (row.scheduledAtUtc | trDateTime)" />
                                         </div>
                                         <div class="font-medium break-words">{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
                                     </li>
