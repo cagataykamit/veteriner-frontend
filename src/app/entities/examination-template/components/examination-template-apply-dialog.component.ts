@@ -138,6 +138,8 @@ export class ExaminationTemplateApplyDialogComponent {
     readonly examinationId = input.required<string>();
     /** Muayenenin güncel sürümü (`GET /examinations/{id}`); yoksa uygulanamaz. */
     readonly rowVersion = input<string | null>(null);
+    /** Gelişte hazırlanan şablon (CHECKIN-003): diyalog bu şablonun ön izlemesinde açılır; pasif/bulunamazsa liste gösterilir. */
+    readonly preselectedTemplateId = input<string | null>(null);
     readonly applied = output<{ template: ExaminationTemplateDto; result: ExaminationTemplateApplyResultDto }>();
     /** Muayene sürümü eskidi veya muayene kesinleşti: sayfa muayeneyi yeniden okumalı. */
     readonly stale = output<string>();
@@ -180,6 +182,7 @@ export class ExaminationTemplateApplyDialogComponent {
                     this.submitError.set(null);
                     this.searchInput.set('');
                     this.load();
+                    this.loadPreselected();
                 });
             }
         });
@@ -203,6 +206,24 @@ export class ExaminationTemplateApplyDialogComponent {
                 this.listError.set(e instanceof Error ? e.message : 'Şablonlar yüklenemedi.');
                 this.loading.set(false);
             }
+        });
+    }
+
+    /** Ön seçili şablon ayrıca okunur (listenin ilk sayfasında olmayabilir); kullanıcı bu arada seçim yaptıysa ezilmez. */
+    private loadPreselected(): void {
+        const id = this.preselectedTemplateId();
+
+        if (!id) {
+            return;
+        }
+
+        this.templatesService.getById(id).subscribe({
+            next: (t) => {
+                if (t.isActive && !this.selected() && this.visible()) {
+                    this.select(t);
+                }
+            },
+            error: () => undefined
         });
     }
 

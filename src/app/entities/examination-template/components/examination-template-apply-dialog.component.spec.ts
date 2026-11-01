@@ -63,6 +63,39 @@ describe('ExaminationTemplateApplyDialogComponent', () => {
         expect(service.list).toHaveBeenCalledWith({ search: 'kulak', page: 1, pageSize: 20 });
     });
 
+    describe('ön seçili şablon (gelişte hazırlanan)', () => {
+        const reopen = (id: string) => {
+            cmp.visible.set(false);
+            fixture.detectChanges();
+            fixture.componentRef.setInput('preselectedTemplateId', id);
+            cmp.visible.set(true);
+            fixture.detectChanges();
+        };
+
+        it('aktifse doğrudan ön izlemede açılır; "Başka şablon" listeye döner', () => {
+            service.getById = vi.fn().mockReturnValue(of(otitis));
+            reopen('t1');
+
+            expect(service.getById).toHaveBeenCalledWith('t1');
+            expect(cmp.selected()?.id).toBe('t1');
+            expect(body().querySelector('[data-testid="template-preview"]')?.textContent).toContain('Otitis paketi');
+            cmp.clearSelection();
+            fixture.detectChanges();
+            expect(body().querySelectorAll('[data-testid="template-option"]').length).toBe(1);
+        });
+
+        it('pasif veya bulunamayan şablonda liste gösterilir', () => {
+            service.getById = vi.fn().mockReturnValue(of({ ...otitis, isActive: false }));
+            reopen('t1');
+            expect(cmp.selected()).toBeNull();
+
+            service.getById = vi.fn().mockReturnValue(throwError(() => new ExaminationTemplateError('Şablon bulunamadı.', 'ExaminationTemplates.NotFound')));
+            reopen('t2');
+            expect(cmp.selected()).toBeNull();
+            expect(body().querySelectorAll('[data-testid="template-option"]').length).toBe(1);
+        });
+    });
+
     it('seçilince ön izleme eklenecek metni ve satırları gösterir', () => {
         cmp.select(otitis);
         fixture.detectChanges();

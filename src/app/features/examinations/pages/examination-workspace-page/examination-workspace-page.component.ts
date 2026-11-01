@@ -540,6 +540,7 @@ export class ExaminationWorkspacePageComponent implements OnInit {
                 this.visitContextId.set(ctx.visitId);
                 this.selectedClientId.set(ctx.clientId);
                 this.selectedPetId.set(ctx.petId);
+                this.suggestVisitReason(visit.arrivalReason);
                 // Seçim formu kullanılmaz; devre dışı kontroller geçerliliği etkilemez.
                 this.selectionForm.controls.clientId.disable({ emitEvent: false });
                 this.selectionForm.controls.petId.disable({ emitEvent: false });
@@ -547,6 +548,15 @@ export class ExaminationWorkspacePageComponent implements OnInit {
             },
             error: (e: unknown) => this.rejectVisitContext(panelHttpFailureMessage(e, 'Geliş kaydı yüklenemedi.'))
         });
+    }
+
+    /** Gelişte yazılan neden, şikâyet alanı boşsa öneri olarak girer; hekim değiştirebilir (sunucu kopyalamaz, sözleşme §4.5). */
+    private suggestVisitReason(arrivalReason: string | null): void {
+        const control = this.form.controls.visitReason;
+
+        if (arrivalReason && !control.value.trim()) {
+            control.setValue(arrivalReason);
+        }
     }
 
     private rejectVisitContext(message: string): void {

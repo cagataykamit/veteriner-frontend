@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
+import { catchError, EMPTY, switchMap } from 'rxjs';
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import { appointmentTypeDisplayLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
 import type { ExaminationDetailVm, ExaminationFinalizeResultVm, ExaminationRelatedSummaryVm } from '@/app/entities/examination/models/examination-vm.model';
@@ -37,10 +38,13 @@ import {
     EXAMINATIONS_ADDENDUM_CLAIM,
     EXAMINATIONS_FINALIZE_CLAIM,
     EXAMINATIONS_UPDATE_CLAIM,
-    PAYMENTS_CREATE_CLAIM
+    PAYMENTS_CREATE_CLAIM,
+    VISITS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import { ExaminationTemplateApplyDialogComponent } from '@/app/entities/examination-template/components/examination-template-apply-dialog.component';
 import type { ExaminationTemplateApplyResultDto, ExaminationTemplateDto } from '@/app/entities/examination-template/models/examination-template.model';
+import { ExaminationTemplatesService } from '@/app/entities/examination-template/services/examination-templates.service';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { templateApplySummary } from '@/app/entities/examination-template/utils/examination-template.utils';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
@@ -93,7 +97,14 @@ const RECORD_TEXT_SECTIONS: readonly {
         @if (exam(); as e) {
             <app-examination-finalize-dialog [examinationId]="e.id" [rowVersion]="e.rowVersion" [warnings]="finalizeWarnings()" [(visible)]="finalizeDialogVisible" (finalized)="onFinalized($event)" />
             @if (canApplyTemplate) {
-                <app-examination-template-apply-dialog [examinationId]="e.id" [rowVersion]="e.rowVersion" [(visible)]="templateDialogVisible" (applied)="onTemplateApplied($event)" (stale)="onTemplateStale($event)" />
+                <app-examination-template-apply-dialog
+                    [examinationId]="e.id"
+                    [rowVersion]="e.rowVersion"
+                    [preselectedTemplateId]="templateDialogPreselect()"
+                    [(visible)]="templateDialogVisible"
+                    (applied)="onTemplateApplied($event)"
+                    (stale)="onTemplateStale($event)"
+                />
             }
         }
         @if (loading()) {
@@ -106,7 +117,7 @@ const RECORD_TEXT_SECTIONS: readonly {
             <app-page-header categoryLink="/panel/examinations" categoryLinkLabel="Muayene listesine dön" title="Muayene" [description]="exam()!.examinedAtUtc | trDateTime">
                 <div actions class="flex flex-wrap gap-2">
                     @if (canApplyTemplateNow()) {
-                        <button pButton type="button" class="p-button-secondary" data-testid="template-apply-open" (click)="templateDialogVisible.set(true)"><i class="pi pi-clone"></i>Şablon uygula</button>
+                        <button pButton type="button" class="p-button-secondary" data-testid="template-apply-open" (click)="openTemplateDialog(null)"><i class="pi pi-clone"></i>Şablon uygula</button>
                     }
                     @if (canUpdateExamination && isEditable(exam()!.status)) {
                         @if (!ro.mutationBlocked()) {
@@ -137,6 +148,14 @@ const RECORD_TEXT_SECTIONS: readonly {
             </app-page-header>
 
             <app-examination-patient-header [petId]="exam()!.petId" [clientId]="exam()!.clientId" />
+
+            @if (preparedSuggestion(); as prepared) {
+                <div class="card flex flex-wrap items-center gap-x-3 gap-y-2 py-3" role="status" data-testid="prepared-template-strip">
+                    <i class="pi pi-clipboard text-primary" aria-hidden="true"></i>
+                    <span class="mr-auto min-w-0 break-words">Gelişte hazırlanan: <strong>{{ prepared.name }}</strong></span>
+                    <button pButton type="button" size="small" data-testid="prepared-template-apply" (click)="openTemplateDialog(prepared.id)"><i class="p-button-icon pi pi-clone"></i>Uygula</button>
+                </div>
+            }
 
             <div class="grid grid-cols-12 gap-4 items-start" data-testid="exam-workspace">
                 <aside class="col-span-12 xl:col-span-3">
@@ -314,6 +333,8 @@ export class ExaminationDetailPageComponent implements OnInit {
     private readonly auth = inject(AuthService);
     private readonly recentlyViewed = inject(RecentlyViewedService);
     private readonly messages = inject(MessageService);
+    private readonly visitsService = inject(VisitsService);
+    private readonly templatesService = inject(ExaminationTemplatesService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
@@ -350,6 +371,19 @@ export class ExaminationDetailPageComponent implements OnInit {
     /** Şablon uygulama metin + uygulama kaydı + ücret kalemi yazar: üç yazma izni (ve listeyi okuma) birlikte gerekir. */
     readonly canApplyTemplate = [EXAMINATION_TEMPLATES_READ_CLAIM, EXAMINATION_TEMPLATES_APPLY_CLAIM, EXAMINATIONS_UPDATE_CLAIM, ADMINISTRATIONS_CREATE_CLAIM].every((c) => this.auth.hasOperationClaim(c));
     readonly templateDialogVisible = signal(false);
+    /** Diyalog bu şablonun ön izlemesinde açılır (öneri şeridi); "Şablon uygula" düğmesi listeyle açar. */
+    readonly templateDialogPreselect = signal<string | null>(null);
+    /** Gelişte hazırlanan aktif şablon (CHECKIN-003); öneri yalnız taslakta ve uygulama yetkisiyle gösterilir. */
+    private readonly preparedTemplate = signal<{ examinationId: string; id: string; name: string } | null>(null);
+    /** Bu sayfa oturumunda uygulanan öneriler (`muayene:şablon`); yeniden yüklemede şerit geri gelmez. */
+    private readonly appliedPreparedKeys = signal<ReadonlySet<string>>(new Set());
+    readonly preparedSuggestion = computed(() => {
+        const p = this.preparedTemplate();
+        const e = this.exam();
+
+        return p && e && p.examinationId === e.id && this.canApplyTemplateNow() && !this.appliedPreparedKeys().has(`${p.examinationId}:${p.id}`) ? p : null;
+    });
+    private readonly canReadVisit = this.auth.hasOperationClaim(VISITS_READ_CLAIM);
 
     private readonly procedures = viewChild(ExaminationProceduresSectionComponent);
     private readonly administrations = viewChild(AdministrationsSectionComponent);
@@ -421,7 +455,18 @@ export class ExaminationDetailPageComponent implements OnInit {
         return this.canApplyTemplate && this.exam()?.status === 'Draft' && !this.ro.mutationBlocked();
     }
 
+    openTemplateDialog(preselectedTemplateId: string | null): void {
+        this.templateDialogPreselect.set(preselectedTemplateId);
+        this.templateDialogVisible.set(true);
+    }
+
     onTemplateApplied(event: { template: ExaminationTemplateDto; result: ExaminationTemplateApplyResultDto }): void {
+        const prepared = this.preparedTemplate();
+
+        if (prepared && prepared.id === event.template.id) {
+            this.appliedPreparedKeys.update((keys) => new Set([...keys, `${prepared.examinationId}:${prepared.id}`]));
+        }
+
         addTracedToast(this.messages, 'ExaminationDetailPage', this.router.url, {
             severity: 'success',
             summary: 'Tamam',
@@ -530,7 +575,32 @@ export class ExaminationDetailPageComponent implements OnInit {
         });
     }
 
+    /**
+     * Muayene bir gelişe bağlıysa gelişte hazırlanan şablon okunur; yalnız aktif şablon önerilir (pasif/bulunamayan sessizce atlanır).
+     * Taslak ve uygulama yetkisi yoksa istek atılmaz.
+     */
+    private loadPreparedTemplate(x: ExaminationDetailVm): void {
+        this.preparedTemplate.set(null);
+
+        if (!x.visitId || !this.canReadVisit || !this.canApplyTemplate || x.status !== 'Draft') {
+            return;
+        }
+
+        this.visitsService
+            .getVisitById(x.visitId)
+            .pipe(
+                switchMap((visit) => (visit.preparedExaminationTemplateId ? this.templatesService.getById(visit.preparedExaminationTemplateId) : EMPTY)),
+                catchError(() => EMPTY)
+            )
+            .subscribe((t) => {
+                if (t.isActive && this.exam()?.id === x.id) {
+                    this.preparedTemplate.set({ examinationId: x.id, id: t.id, name: t.name });
+                }
+            });
+    }
+
     private loadRelatedBlocks(x: ExaminationDetailVm): void {
+        this.loadPreparedTemplate(x);
         this.recentlyViewed.record({ kind: 'examination', id: x.id, title: x.petName, subtitle: recentlyViewedSubtitle(x.visitReason, formatUtcIsoAsLocalDateDisplay(x.examinedAtUtc)) });
         this.loadRelatedSummary(x.id);
 

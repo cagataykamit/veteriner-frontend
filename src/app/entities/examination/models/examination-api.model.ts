@@ -157,6 +157,8 @@ export interface ExaminationDetailDto {
     petName?: string | null;
     animalName?: string | null;
     appointmentId?: string | null;
+    /** Bağlı geliş (Visit); Bugün dışından açılan muayenede `null`. */
+    visitId?: string | null;
     visitReason?: string | null;
     notes?: string | null;
     note?: string | null;
