@@ -645,7 +645,7 @@ describe('TodayPageComponent', () => {
             const reasons = Array.from(el.querySelectorAll('[data-testid="today-reason"]')).map((r) => r.textContent?.trim());
 
             expect(reasons).toEqual(['Kulak kaşıntısı, 3 gündür', 'Aşı']);
-            expect(el.querySelector('[data-testid="today-prepared-template"]')?.textContent).toContain('Paket: Karma aşı');
+            expect(el.querySelector('[data-testid="today-prepared-template"]')?.textContent).toContain('Hazırlık: Karma aşı');
             expect(el.querySelector('[data-testid="today-reason"]')?.getAttribute('title')).toBe('Kulak kaşıntısı, 3 gündür');
         });
 
