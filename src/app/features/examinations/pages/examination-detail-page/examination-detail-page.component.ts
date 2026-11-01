@@ -93,7 +93,7 @@ const RECORD_TEXT_SECTIONS: readonly {
         @if (exam(); as e) {
             <app-examination-finalize-dialog [examinationId]="e.id" [rowVersion]="e.rowVersion" [warnings]="finalizeWarnings()" [(visible)]="finalizeDialogVisible" (finalized)="onFinalized($event)" />
             @if (canApplyTemplate) {
-                <app-examination-template-apply-dialog [examinationId]="e.id" [rowVersion]="e.rowVersion" [(visible)]="templateDialogVisible" (applied)="onTemplateApplied($event)" (stale)="onTemplateStale($event)" />
+                <app-examination-template-apply-dialog [examinationId]="e.id" [rowVersion]="e.rowVersion" [examinationVisitReason]="e.visitReason" [(visible)]="templateDialogVisible" (applied)="onTemplateApplied($event)" (stale)="onTemplateStale($event)" />
             }
         }
         @if (loading()) {

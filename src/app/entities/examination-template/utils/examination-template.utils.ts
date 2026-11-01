@@ -20,17 +20,31 @@ export function templateContentSummary(t: ExaminationTemplateDto): string {
     return [templateHasText(t) ? 'Metin' : '', t.lines.length > 0 ? `${t.lines.length} satır` : ''].filter(Boolean).join(' + ') || '—';
 }
 
-/** Uygulama sonucunun tek cümlelik özeti (sayfa bildirimi). */
+/** Uzun alanın (bulgu/plan) özet adları: yönelme hâli ("bulguya") ve yalın hâl ("bulgu"). */
+const LINE_FIELDS = { findings: ['bulguya', 'bulgu'], plan: ['plana', 'plan'] } as const;
+
+/** Uzun alan için özet parçası: şablonda metin yoksa boş, eklendiyse satır sayısı, eklenmediyse "zaten vardı". */
+function linesPart(field: keyof typeof LINE_FIELDS, templateText: string | null | undefined, added: number): string {
+    if (!templateText?.trim()) {
+        return '';
+    }
+
+    const [to, name] = LINE_FIELDS[field];
+
+    return added > 0 ? `${to} ${added} satır eklendi` : `${name} metni muayenede zaten vardı`;
+}
+
+/** Uygulama sonucunun bölüm bazında tek cümlelik özeti (sayfa bildirimi): neyin eklendiği, neyin atlandığı, kaç kalem doğduğu. */
 export function templateApplySummary(template: ExaminationTemplateDto, result: ExaminationTemplateApplyResultDto): string {
-    const charged = result.services.filter((s) => !!s.chargeSuggestionId).length;
+    const visitReasonPart = result.text.visitReason === 'Filled' ? 'şikâyet dolduruldu' : result.text.visitReason === 'SkippedExisting' ? 'şikâyet dolu olduğu için şablonun şikâyeti eklenmedi' : '';
     const packagePart = result.packageChargeSuggestionId ? `paket ücreti (${formatMoney(template.packagePrice ?? 0)}) ücret bekliyor, satırlar pakete dahil` : '';
-    const textPart = !templateHasText(template) ? '' : result.updatedFields.length > 0 ? 'metin eklendi' : 'metin muayenede zaten vardı';
     const parts = [
-        textPart,
+        visitReasonPart,
+        linesPart('findings', template.findings, result.text.findingsLinesAdded),
+        linesPart('plan', template.plan, result.text.planLinesAdded),
         result.administrations.length > 0 ? `${result.administrations.length} ürün stoktan düştü` : '',
         result.services.length > 0 ? `${result.services.length} hizmet yazıldı` : '',
-        charged > 0 ? `${charged} hizmet ücret bekliyor` : '',
-        packagePart
+        packagePart || (result.pendingChargeCount > 0 ? `${result.pendingChargeCount} ücret bekleyen kalem` : '')
     ].filter(Boolean);
 
     return parts.length > 0 ? `"${template.name}" uygulandı: ${parts.join(', ')}.` : `"${template.name}" uygulandı.`;

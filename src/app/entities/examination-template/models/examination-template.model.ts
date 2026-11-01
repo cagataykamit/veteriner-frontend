@@ -66,6 +66,16 @@ export interface ExaminationTemplateApplyResultDto {
     examinationId: string;
     rowVersion: string;
     updatedFields: ('visitReason' | 'findings' | 'plan')[];
+    /** Metnin bölüm bazında ne kattığı; başarı mesajı bundan kurulur (sözleşme §7). */
+    text: {
+        /** `Filled`: şikâyet boştu, dolduruldu; `SkippedExisting`: şikâyet doluydu, şablon metni eklenmedi. */
+        visitReason: 'NotInTemplate' | 'Filled' | 'SkippedExisting';
+        /** Alanın sonuna eklenen satır sayısı; muayenede zaten olan satırlar sayılmaz. */
+        findingsLinesAdded: number;
+        planLinesAdded: number;
+    };
+    /** Bu uygulamada doğan "ücret bekliyor" kalemi sayısı (paket kalemi, ücretli uygulama ve hizmet kalemleri). */
+    pendingChargeCount: number;
     administrations: AdministrationDto[];
     services: { productId: string; productName: string; unit: string; quantity: number; chargeSuggestionId: string | null; includedInPackage?: boolean }[];
     /** Fiyatlı paketin tek "ücret bekliyor" kalemi; fiyatsız şablonda `null`. */

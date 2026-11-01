@@ -24,7 +24,16 @@ const template = (over: Partial<ExaminationTemplateDto> = {}): ExaminationTempla
     rowVersion: 'V1',
     ...over
 });
-const result = (over: object = {}) => ({ examinationId: 'e1', rowVersion: 'V2', updatedFields: [], administrations: [], services: [], ...over });
+const result = (over: object = {}) => ({
+    examinationId: 'e1',
+    rowVersion: 'V2',
+    updatedFields: [],
+    text: { visitReason: 'NotInTemplate', findingsLinesAdded: 0, planLinesAdded: 0 },
+    pendingChargeCount: 0,
+    administrations: [],
+    services: [],
+    ...over
+});
 
 describe('examination-template.utils', () => {
     it('metin: boşluktan ibaret metin yok sayılır', () => {
@@ -38,14 +47,16 @@ describe('examination-template.utils', () => {
         expect(templateInactiveLineNames(template({ lines: [line('a'), line('Damla', { productIsActive: false })] }))).toEqual(['Damla']);
     });
 
-    it('uygulama özeti metin, stok ve hizmet sonucunu söyler', () => {
-        const withText = template({ visitReason: 'Kaşıntı', lines: [line('a')] });
+    it('uygulama özeti bölüm bazında neyin eklendiğini, atlandığını ve kaç kalem doğduğunu söyler', () => {
+        const withText = template({ visitReason: 'Kaşıntı', findings: 'Otoskopi:\nTimpan:', plan: 'Damla 7 gün', lines: [line('a')] });
 
         expect(
             templateApplySummary(
                 withText,
                 result({
-                    updatedFields: ['visitReason'],
+                    updatedFields: ['findings', 'plan'],
+                    text: { visitReason: 'SkippedExisting', findingsLinesAdded: 2, planLinesAdded: 1 },
+                    pendingChargeCount: 2,
                     administrations: [{}],
                     services: [
                         { productId: 's1', productName: 'Kulak temizliği', unit: 'Adet', quantity: 1, chargeSuggestionId: 'c1' },
@@ -53,8 +64,12 @@ describe('examination-template.utils', () => {
                     ]
                 }) as never
             )
-        ).toBe('"Otitis paketi" uygulandı: metin eklendi, 1 ürün stoktan düştü, 2 hizmet yazıldı, 1 hizmet ücret bekliyor.');
-        expect(templateApplySummary(withText, result() as never)).toBe('"Otitis paketi" uygulandı: metin muayenede zaten vardı.');
+        ).toBe(
+            '"Otitis paketi" uygulandı: şikâyet dolu olduğu için şablonun şikâyeti eklenmedi, bulguya 2 satır eklendi, plana 1 satır eklendi, 1 ürün stoktan düştü, 2 hizmet yazıldı, 2 ücret bekleyen kalem.'
+        );
+        expect(templateApplySummary(withText, result({ updatedFields: ['visitReason'], text: { visitReason: 'Filled', findingsLinesAdded: 0, planLinesAdded: 0 } }) as never)).toBe(
+            '"Otitis paketi" uygulandı: şikâyet dolduruldu, bulgu metni muayenede zaten vardı, plan metni muayenede zaten vardı.'
+        );
         expect(templateApplySummary(template(), result() as never)).toBe('"Otitis paketi" uygulandı.');
     });
 
