@@ -1,0 +1,18 @@
+{
+    "id": "/panel",
+    "name": "Vetinity Klinik Paneli",
+    "short_name": "Vetinity",
+    "description": "Veteriner kliniğinin günü: Bugün, randevu, hasta, muayene ve ödeme.",
+    "lang": "tr",
+    "dir": "ltr",
+    "start_url": "/panel",
+    "scope": "/",
+    "display": "standalone",
+    "theme_color": "#0fa39a",
+    "background_color": "#ffffff",
+    "icons": [
+        { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ]
+}
