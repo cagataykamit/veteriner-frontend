@@ -117,6 +117,7 @@ export const ONLINE_BOOKING_SETTINGS_ROUTE = '/panel/settings/online-booking';
 export const APPOINTMENT_REQUESTS_ROUTE = '/panel/appointments/requests';
 export const NOTIFICATIONS_ROUTE = '/panel/notifications';
 export const PORTAL_INBOX_ROUTE = '/panel/portal-inbox';
+export const CLINIC_PORTAL_SETTINGS_ROUTE = '/panel/settings/owner-portal';
 export const IMPORTS_ROUTE = '/panel/settings/imports';
 export const SUBSCRIPTION_ROUTE = '/panel/settings/subscription';
 export const REPORTS_ROUTE = '/panel/reports';
@@ -467,6 +468,13 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 route: ONLINE_BOOKING_SETTINGS_ROUTE,
                 claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
                 description: 'Online talebi açıp kapatma, kliniğe özel bağlantı ve sahibe giden e-posta şablonları.'
+            },
+            {
+                label: 'Hasta sahibi portalı',
+                icon: 'pi pi-mobile',
+                route: CLINIC_PORTAL_SETTINGS_ROUTE,
+                claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
+                description: 'Portalı klinik için açıp kapatma ve hasta sahibine giden bildirimlerin kanalları.'
             },
             { label: 'Organizasyon Ayarları', icon: 'pi pi-fw pi-building', route: '/panel/settings/organization', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Kurum ve fatura bilgileri.' },
             { label: 'Kurum üyeleri', icon: 'pi pi-fw pi-users', route: '/panel/settings/members', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Üyeler ve rolleri.' },
