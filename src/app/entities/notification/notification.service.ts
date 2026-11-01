@@ -3,7 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { map, Observable, tap } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
-import { APPOINTMENT_REQUESTS_ROUTE } from '@/app/core/routing/panel-navigation';
+import { APPOINTMENT_REQUESTS_ROUTE, PORTAL_INBOX_ROUTE } from '@/app/core/routing/panel-navigation';
 import type { PagedVm } from '@/app/entities/online-booking/models/online-booking.model';
 import { toOnlineBookingError } from '@/app/entities/online-booking/utils/online-booking-error.utils';
 
@@ -11,13 +11,16 @@ import { toOnlineBookingError } from '@/app/entities/online-booking/utils/online
 export enum UserNotificationType {
     AppointmentRequestCreated = 0,
     AppointmentRequestCancelled = 1,
-    AppointmentAssigned = 2
+    AppointmentAssigned = 2,
+    /** Portaldan KVKK veri talebi (PORTAL-009; `PORTAL_API_CONTRACT.md` §11). */
+    PortalDataRequestCreated = 3
 }
 
 export const USER_NOTIFICATION_TYPE_LABELS: Record<UserNotificationType, string> = {
     [UserNotificationType.AppointmentRequestCreated]: 'Yeni randevu talebi',
     [UserNotificationType.AppointmentRequestCancelled]: 'Talep iptali',
-    [UserNotificationType.AppointmentAssigned]: 'Size atanan randevu'
+    [UserNotificationType.AppointmentAssigned]: 'Size atanan randevu',
+    [UserNotificationType.PortalDataRequestCreated]: 'Portal veri talebi'
 };
 
 export interface UserNotificationVm {
@@ -32,7 +35,7 @@ export interface UserNotificationVm {
     readAtUtc: string | null;
 }
 
-/** Bildirimin açtığı panel adresi; bilinmeyen hedefte yok. Talep kuyruğu `?requestId=` ile talebi doğrudan açar. */
+/** Bildirimin açtığı panel adresi; bilinmeyen hedefte yok. Talep kuyruğu ve portal gelen kutusu `?requestId=` ile talebi doğrudan açar. */
 export function notificationTargetUrl(
     n: Pick<UserNotificationVm, 'targetType' | 'targetId'>
 ): { commands: string[]; queryParams?: Record<string, string> } | null {
@@ -45,6 +48,8 @@ export function notificationTargetUrl(
             return { commands: [APPOINTMENT_REQUESTS_ROUTE], queryParams: { requestId: n.targetId } };
         case 'Appointment':
             return { commands: ['/panel/appointments', n.targetId] };
+        case 'PortalDataRequest':
+            return { commands: [PORTAL_INBOX_ROUTE], queryParams: { requestId: n.targetId } };
         default:
             return null;
     }

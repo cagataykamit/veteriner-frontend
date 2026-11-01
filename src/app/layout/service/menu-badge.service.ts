@@ -3,12 +3,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, map, merge, Observable, Subscription, throttleTime, timer } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { APPOINTMENT_REQUESTS_MANAGE_CLAIM, LAB_RESULTS_READ_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { APPOINTMENT_REQUESTS_MANAGE_CLAIM, LAB_RESULTS_READ_CLAIM, OWNER_PORTAL_MANAGE_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
 import type { MenuBadgeKey } from '@/app/core/routing/panel-navigation';
 import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';
 import { AppointmentRequestStatus } from '@/app/entities/online-booking/models/online-booking.model';
 import { AppointmentRequestsService } from '@/app/entities/online-booking/services/online-booking.service';
+import { PortalInboxService } from '@/app/entities/owner-portal/services/owner-portal.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { countWaitingVisits } from '@/app/entities/visit/utils/visit-today.utils';
 
@@ -16,6 +17,7 @@ import { countWaitingVisits } from '@/app/entities/visit/utils/visit-today.utils
 const REFRESH_INTERVAL_MS = 60_000;
 const MIN_GAP_MS = 15_000;
 const MAX_BADGE_COUNT = 99;
+const EMPTY_COUNTS: Readonly<Record<MenuBadgeKey, number | null>> = { waitingVisits: null, requestedLabResults: null, pendingAppointmentRequests: null, openPortalDataRequests: null };
 
 /** Menü sayaç metni: 0 veya bilinmiyorsa `null` (gizli), 99'dan büyükse `99+`. */
 export function menuBadgeLabel(count: number | null | undefined): string | null {
@@ -27,7 +29,7 @@ export function menuBadgeLabel(count: number | null | undefined): string | null 
 }
 
 /**
- * Menü sayaçları: Bugün'de bekleyen hasta, lab'da sonuç bekleyen istem ve bekleyen online randevu talebi sayısı.
+ * Menü sayaçları: Bugün'de bekleyen hasta, lab'da sonuç bekleyen istem, bekleyen online randevu talebi ve açık portal veri talebi sayısı.
  * İzni olmayan kullanıcı için sorgu yapılmaz ve sayaç gösterilmez. Hata olursa son değer korunur.
  * Açık sayfa aynı veriyi `MenuBadgeFeed` ile bildiriyorsa o değer gösterilir ve sorgu atlanır.
  */
@@ -38,9 +40,10 @@ export class MenuBadgeService {
     private readonly visits = inject(VisitsService);
     private readonly labResults = inject(LabResultsService);
     private readonly appointmentRequests = inject(AppointmentRequestsService);
+    private readonly portalInbox = inject(PortalInboxService);
     private readonly feed = inject(MenuBadgeFeed);
 
-    private readonly counts = signal<Readonly<Record<MenuBadgeKey, number | null>>>({ waitingVisits: null, requestedLabResults: null, pendingAppointmentRequests: null });
+    private readonly counts = signal<Readonly<Record<MenuBadgeKey, number | null>>>(EMPTY_COUNTS);
     private readonly inflight = new Map<MenuBadgeKey, Subscription>();
     private clinicId: string | null = null;
 
@@ -65,7 +68,7 @@ export class MenuBadgeService {
 
         if (clinicId !== this.clinicId) {
             this.clinicId = clinicId;
-            this.counts.set({ waitingVisits: null, requestedLabResults: null, pendingAppointmentRequests: null });
+            this.counts.set(EMPTY_COUNTS);
         }
 
         this.track(
@@ -83,6 +86,7 @@ export class MenuBadgeService {
             APPOINTMENT_REQUESTS_MANAGE_CLAIM,
             () => this.appointmentRequests.list({ status: AppointmentRequestStatus.Pending, page: 1, pageSize: 1 }).pipe(map((page) => page.totalCount))
         );
+        this.track('openPortalDataRequests', OWNER_PORTAL_MANAGE_CLAIM, () => this.portalInbox.summary().pipe(map((s) => s.openDataRequestCount)));
     }
 
     private track(key: MenuBadgeKey, claim: string, load: () => Observable<number>): void {

@@ -29,7 +29,7 @@ const PAGE_SIZE = 20;
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [FormsModule, ButtonModule, CheckboxModule, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent],
     template: `
-        <app-page-header title="Bildirimler" description="Size yönelik olaylar: yeni online randevu talepleri, talep iptalleri ve size atanan randevular.">
+        <app-page-header title="Bildirimler" description="Size yönelik olaylar: yeni online randevu talepleri, talep iptalleri, size atanan randevular ve portaldan gelen veri talepleri.">
             <button actions pButton type="button" severity="secondary" [disabled]="busy() || unread() === 0" (click)="markAllRead()" data-testid="notifications-read-all"><i class="pi pi-check-square"></i>Tümünü okundu say</button>
         </app-page-header>
 

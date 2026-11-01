@@ -62,6 +62,16 @@ describe('NotificationsPageComponent', () => {
         expect(service.list).toHaveBeenLastCalledWith(UserNotificationType.AppointmentRequestCancelled, false, 1, 20);
     });
 
+    it('portal veri talebi bildirimi etiketlenir ve gelen kutusunda ilgili talebi açar', () => {
+        const cmp = fixture.componentInstance;
+        const n = item('n3', { type: UserNotificationType.PortalDataRequestCreated, targetType: 'PortalDataRequest', targetId: 'dr1', readAtUtc: '2026-10-30T10:00:00Z' });
+
+        expect(cmp.typeLabel(n.type)).toBe('Portal veri talebi');
+        expect(cmp.typeOptions.map((o) => o.label)).toContain('Portal veri talebi');
+        cmp.open(n);
+        expect(navigate).toHaveBeenCalledWith(['/panel/portal-inbox'], { queryParams: { requestId: 'dr1' } });
+    });
+
     it('tümünü okundu say sayacı yeniler', () => {
         fixture.componentInstance.markAllRead();
 
