@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/entities/client/components/client-s
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, forwardRef, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { convertToParamMap, type ParamMap } from '@angular/router';
@@ -26,10 +26,12 @@ import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtc
 import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import { TREATMENT_DATE_TOO_FAR_PAST_MESSAGE, treatmentDateNotTooFarPastValidator, treatmentDateTimeLocalMinAllowed } from '@/app/entities/treatment/utils/treatment-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-treatment-form',
     standalone: true,
+    providers: [{ provide: HAS_UNSAVED_CHANGES, useExisting: forwardRef(() => TreatmentFormComponent) }],
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -147,7 +149,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         </div>
     `
 })
-export class TreatmentFormComponent implements OnInit {
+export class TreatmentFormComponent implements OnInit, HasUnsavedChanges {
     /** Bağlam (müşteri, hayvan, muayene...) query biçiminde; sayfada adres çubuğundan, yan panelde muayeneden gelir. */
     readonly contextParams = input<ParamMap>(convertToParamMap({}));
     /** Yan panelde kart çerçevesi çizilmez. */
@@ -256,6 +258,11 @@ export class TreatmentFormComponent implements OnInit {
         } else {
             this.form.controls.examinationId.enable({ emitEvent: false });
         }
+    }
+
+    /** Kullanıcının dokunduğu alan varsa kapanış onay ister (yan panel kuralı); bağlamdan gelen ön doldurma değişiklik sayılmaz. */
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
     }
 
     cancel(): void {

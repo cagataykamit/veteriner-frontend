@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, DestroyRef, inject, input, OnInit, output, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, forwardRef, computed, DestroyRef, inject, input, OnInit, output, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { convertToParamMap, type ParamMap, RouterLink } from '@angular/router';
@@ -23,6 +23,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
+import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 /**
  * Yeni görüntüleme kaydı (ADR-007; IMAGING_API_CONTRACT.md §4/§5). Sıra (L6): önce kayıt (JSON), sonra dosyalar tek tek yüklenir.
@@ -32,6 +33,7 @@ import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-valida
 @Component({
     selector: 'app-imaging-record-form',
     standalone: true,
+    providers: [{ provide: HAS_UNSAVED_CHANGES, useExisting: forwardRef(() => ImagingRecordFormComponent) }],
     imports: [ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, StoredFileUploadComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -128,7 +130,7 @@ import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-valida
         </div>
     `
 })
-export class ImagingRecordFormComponent implements OnInit {
+export class ImagingRecordFormComponent implements OnInit, HasUnsavedChanges {
     /** Bağlam (müşteri, hasta, muayene) query biçiminde; sayfada adres çubuğundan, yan panelde muayeneden gelir. */
     readonly contextParams = input<ParamMap>(convertToParamMap({}));
     /** Yan panelde kart çerçevesi çizilmez. */
@@ -175,6 +177,11 @@ export class ImagingRecordFormComponent implements OnInit {
     });
 
     private examLoadSeq = 0;
+
+    /** Kullanıcının dokunduğu alan ya da yüklenmeyi bekleyen dosya varsa kapanış onay ister (yan panel kuralı). */
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty || this.uploader().pendingCount() > 0;
+    }
 
     ngOnInit(): void {
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {

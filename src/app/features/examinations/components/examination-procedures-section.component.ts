@@ -1,7 +1,10 @@
-import { Component, computed, inject, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, HostListener, inject, input, output, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink, convertToParamMap } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { DrawerModule } from 'primeng/drawer';
+import { ConfirmationService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { Drawer, DrawerModule } from 'primeng/drawer';
+import { ZIndexUtils } from 'primeng/utils';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { HOSPITALIZATIONS_CREATE_CLAIM, IMAGING_CREATE_CLAIM, LAB_RESULTS_CREATE_CLAIM, PRESCRIPTIONS_CREATE_CLAIM, TREATMENTS_CREATE_CLAIM, VACCINATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { ExaminationDetailVm, ExaminationRelatedSummaryVm } from '@/app/entities/examination/models/examination-vm.model';
@@ -17,6 +20,7 @@ import { VaccinationFormComponent, type VaccinationSavedEvent } from '@/app/enti
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { closeWithUnsavedChangesCheck, HAS_UNSAVED_CHANGES } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 const CREATE_CLAIM: Record<ProcedureKind, string> = {
     treatment: TREATMENTS_CREATE_CLAIM,
@@ -45,10 +49,12 @@ const ADD_ICON: Record<ProcedureKind, string> = {
 @Component({
     selector: 'app-examination-procedures-section',
     standalone: true,
+    providers: [ConfirmationService],
     imports: [
         RouterLink,
         ButtonModule,
         DrawerModule,
+        ConfirmDialogModule,
         AppErrorStateComponent,
         AppStatusTagComponent,
         TreatmentFormComponent,
@@ -117,31 +123,37 @@ const ADD_ICON: Record<ProcedureKind, string> = {
             </div>
         </div>
 
-        <p-drawer [(visible)]="drawerVisible" position="right" [header]="drawerTitle()" [style]="{ width: 'min(44rem, 100vw)' }" [dismissible]="false">
+        <!-- Panelin kendi kapatıcıları kapalı: dışarı tıklama, Esc, çarpı ve İptal hepsi requestClose() üzerinden tek kurala (kaydedilmemiş değişiklik onayı) bağlanır. -->
+        <p-drawer [(visible)]="drawerVisible" position="right" [style]="{ width: 'min(44rem, 100vw)' }" [dismissible]="false" [closeOnEscape]="false" [showCloseIcon]="false">
+            <ng-template #header>
+                <span class="p-drawer-title">{{ drawerTitle() }}</span>
+                <button pButton type="button" class="p-button-text p-button-secondary p-button-rounded" aria-label="Kapat" data-testid="procedure-drawer-close" (click)="requestClose()"><i class="pi pi-times"></i></button>
+            </ng-template>
             @if (activeKind(); as kind) {
                 <p class="text-sm text-muted-color mt-0 mb-4" data-testid="procedure-drawer-context">{{ exam().petName }} · {{ exam().clientName }} — müşteri, hasta ve muayene bu kayda otomatik bağlanır.</p>
                 @switch (kind) {
                     @case ('treatment') {
-                        <app-treatment-form [embedded]="true" [contextParams]="contextParams()" (saved)="onSaved(kind)" (cancelled)="close()" />
+                        <app-treatment-form [embedded]="true" [contextParams]="contextParams()" (saved)="onSaved(kind)" (cancelled)="requestClose()" />
                     }
                     @case ('prescription') {
-                        <app-prescription-form [embedded]="true" [contextParams]="contextParams()" (saved)="onSaved(kind)" (cancelled)="close()" />
+                        <app-prescription-form [embedded]="true" [contextParams]="contextParams()" (saved)="onSaved(kind)" (cancelled)="requestClose()" />
                     }
                     @case ('vaccination') {
-                        <app-vaccination-form [embedded]="true" [contextParams]="contextParams()" (saved)="onVaccinationSaved($event)" (cancelled)="close()" />
+                        <app-vaccination-form [embedded]="true" [contextParams]="contextParams()" (saved)="onVaccinationSaved($event)" (cancelled)="requestClose()" />
                     }
                     @case ('lab') {
-                        <app-lab-result-form [embedded]="true" [contextParams]="contextParams()" (saved)="onSaved(kind)" (cancelled)="close()" />
+                        <app-lab-result-form [embedded]="true" [contextParams]="contextParams()" (saved)="onSaved(kind)" (cancelled)="requestClose()" />
                     }
                     @case ('imaging') {
-                        <app-imaging-record-form [embedded]="true" [contextParams]="contextParams()" (saved)="onSaved(kind)" (cancelled)="close()" />
+                        <app-imaging-record-form [embedded]="true" [contextParams]="contextParams()" (saved)="onSaved(kind)" (cancelled)="requestClose()" />
                     }
                     @case ('hospitalization') {
-                        <app-hospitalization-form [embedded]="true" [contextParams]="contextParams()" (saved)="onSaved(kind)" (cancelled)="close()" />
+                        <app-hospitalization-form [embedded]="true" [contextParams]="contextParams()" (saved)="onSaved(kind)" (cancelled)="requestClose()" />
                     }
                 }
             }
         </p-drawer>
+        <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
     `
 })
 export class ExaminationProceduresSectionComponent {
@@ -155,6 +167,11 @@ export class ExaminationProceduresSectionComponent {
 
     private readonly auth = inject(AuthService);
     private readonly ro = inject(TenantReadOnlyContextService);
+    private readonly confirmation = inject(ConfirmationService);
+
+    private readonly drawer = viewChild(Drawer);
+    /** Panelde açık olan gömülü form; "kirli mi" bilgisini ortak token üzerinden verir. */
+    private readonly activeForm = viewChild(HAS_UNSAVED_CHANGES);
 
     readonly drawerVisible = signal(false);
     readonly activeKind = signal<ProcedureKind | null>(null);
@@ -211,6 +228,40 @@ export class ExaminationProceduresSectionComponent {
         this.drawerVisible.set(true);
     }
 
+    /** Kapanış isteği (dışarı tıklama, Esc, çarpı, İptal): değişiklik yoksa kapanır, varsa onay sorulur; "Vazgeç" paneli ve bilgiyi korur. */
+    requestClose(): void {
+        if (!this.drawerVisible()) {
+            return;
+        }
+
+        closeWithUnsavedChangesCheck(this.confirmation, this.activeForm()?.hasUnsavedChanges() ?? false, () => this.close());
+    }
+
+    /** Dışarı tıklama: panel maskesi gövdeye eklenir, o yüzden belge düzeyinde yakalanır. */
+    @HostListener('document:click', ['$event'])
+    onDocumentClick(event: Event): void {
+        if (this.drawerVisible() && event.target instanceof HTMLElement && event.target.classList.contains('p-drawer-mask')) {
+            this.requestClose();
+        }
+    }
+
+    /** Esc yalnız panel en üstteki katmansa kapatır; açık liste kutusu ya da onay diyaloğu varsa onlara bırakılır. */
+    @HostListener('document:keydown.escape')
+    onDocumentEscape(): void {
+        if (!this.drawerVisible()) {
+            return;
+        }
+
+        const container = this.drawer()?.container;
+
+        if (container && ZIndexUtils.get(container) !== ZIndexUtils.getCurrent()) {
+            return;
+        }
+
+        this.requestClose();
+    }
+
+    /** Doğrudan kapatma (kayıt sonrası ya da onaydan geçmiş istek). */
     close(): void {
         this.drawerVisible.set(false);
         this.activeKind.set(null);

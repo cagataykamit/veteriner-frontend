@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/entities/client/components/client-s
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, forwardRef, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { convertToParamMap, type ParamMap } from '@angular/router';
@@ -28,10 +28,12 @@ import { dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/ap
 import { LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE, labResultDateNotTooFarPastValidator, labResultDateTimeLocalMinAllowed } from '@/app/entities/lab-result/utils/lab-result-date-validation.utils';
 import { LAB_RESULT_INCOMPLETE_MESSAGE, LAB_RESULT_INTERPRETATION_WITHOUT_RESULT_MESSAGE, labResultResultFieldsValidator } from '@/app/entities/lab-result/utils/lab-result-form.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-lab-result-form',
     standalone: true,
+    providers: [{ provide: HAS_UNSAVED_CHANGES, useExisting: forwardRef(() => LabResultFormComponent) }],
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -147,7 +149,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         </div>
     `
 })
-export class LabResultFormComponent implements OnInit {
+export class LabResultFormComponent implements OnInit, HasUnsavedChanges {
     /** Bağlam (müşteri, hayvan, muayene...) query biçiminde; sayfada adres çubuğundan, yan panelde muayeneden gelir. */
     readonly contextParams = input<ParamMap>(convertToParamMap({}));
     /** Yan panelde kart çerçevesi çizilmez. */
@@ -265,6 +267,11 @@ export class LabResultFormComponent implements OnInit {
 
     labResultDateMinAllowed(): string {
         return effectiveDateTimeLocalInputMin(labResultDateTimeLocalMinAllowed());
+    }
+
+    /** Kullanıcının dokunduğu alan varsa kapanış onay ister (yan panel kuralı); bağlamdan gelen ön doldurma değişiklik sayılmaz. */
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
     }
 
     cancel(): void {

@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/entities/client/components/client-s
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, forwardRef, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { convertToParamMap, type ParamMap } from '@angular/router';
@@ -33,10 +33,12 @@ import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, eff
 import { PRESCRIPTION_DATE_TOO_FAR_PAST_MESSAGE, prescriptionDateNotTooFarPastValidator, prescriptionDateTimeLocalMinAllowed } from '@/app/entities/prescription/utils/prescription-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
+import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-prescription-form',
     standalone: true,
+    providers: [{ provide: HAS_UNSAVED_CHANGES, useExisting: forwardRef(() => PrescriptionFormComponent) }],
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, PrescriptionItemsEditorComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -190,7 +192,7 @@ import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-
         </div>
     `
 })
-export class PrescriptionFormComponent implements OnInit {
+export class PrescriptionFormComponent implements OnInit, HasUnsavedChanges {
     /** Bağlam (müşteri, hayvan, muayene...) query biçiminde; sayfada adres çubuğundan, yan panelde muayeneden gelir. */
     readonly contextParams = input<ParamMap>(convertToParamMap({}));
     /** Yan panelde kart çerçevesi çizilmez. */
@@ -363,6 +365,11 @@ export class PrescriptionFormComponent implements OnInit {
 
     prescriptionDateMinAllowed(): string {
         return effectiveDateTimeLocalInputMin(prescriptionDateTimeLocalMinAllowed());
+    }
+
+    /** Kullanıcının dokunduğu alan varsa kapanış onay ister (yan panel kuralı); bağlamdan gelen ön doldurma değişiklik sayılmaz. */
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
     }
 
     cancel(): void {

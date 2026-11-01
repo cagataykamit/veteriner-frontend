@@ -4,7 +4,7 @@ import { ClientSearchComponent } from '@/app/entities/client/components/client-s
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, forwardRef, computed, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { convertToParamMap, type ParamMap } from '@angular/router';
@@ -44,6 +44,7 @@ import {
     vaccinationStatusDateFieldsAfterTransition
 } from '@/app/entities/vaccination/utils/vaccination-upsert-date-submit.utils';
 import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
+import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 const LAST_VACCINE_PRODUCT_KEY = 'vetinity.vaccine.lastProductId';
 
@@ -72,6 +73,7 @@ export interface VaccinationSavedEvent {
 @Component({
     selector: 'app-vaccination-form',
     standalone: true,
+    providers: [{ provide: HAS_UNSAVED_CHANGES, useExisting: forwardRef(() => VaccinationFormComponent) }],
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -271,7 +273,7 @@ export interface VaccinationSavedEvent {
         </div>
     `
 })
-export class VaccinationFormComponent implements OnInit {
+export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
     /** Bağlam (müşteri, hayvan, muayene...) query biçiminde; sayfada adres çubuğundan, yan panelde muayeneden gelir. */
     readonly contextParams = input<ParamMap>(convertToParamMap({}));
     /** Yan panelde kart çerçevesi çizilmez. */
@@ -514,6 +516,11 @@ export class VaccinationFormComponent implements OnInit {
             },
             error: (e: unknown) => this.selectionError.set(this.mapLoadError(e, 'Hasta bilgisi yüklenemedi.'))
         });
+    }
+
+    /** Kullanıcının dokunduğu alan varsa kapanış onay ister (yan panel kuralı); bağlamdan gelen ön doldurma değişiklik sayılmaz. */
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
     }
 
     cancel(): void {

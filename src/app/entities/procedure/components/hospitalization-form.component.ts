@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/entities/client/components/client-s
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, forwardRef, computed, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { convertToParamMap, type ParamMap } from '@angular/router';
@@ -42,10 +42,12 @@ import {
 } from '@/app/entities/hospitalization/utils/hospitalization-date-validation.utils';
 import { parseExaminationCreateRouteContext, parseVisitExaminationRouteContext, prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-hospitalization-form',
     standalone: true,
+    providers: [{ provide: HAS_UNSAVED_CHANGES, useExisting: forwardRef(() => HospitalizationFormComponent) }],
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -202,7 +204,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         </div>
     `
 })
-export class HospitalizationFormComponent implements OnInit {
+export class HospitalizationFormComponent implements OnInit, HasUnsavedChanges {
     /** Bağlam (müşteri, hayvan, muayene...) query biçiminde; sayfada adres çubuğundan, yan panelde muayeneden gelir. */
     readonly contextParams = input<ParamMap>(convertToParamMap({}));
     /** Yan panelde kart çerçevesi çizilmez. */
@@ -363,6 +365,11 @@ export class HospitalizationFormComponent implements OnInit {
 
     // Bir kez hesaplanir: her degisiklik turunda yeniden uretilen dakika degeri dev modda NG0100 veriyordu.
     readonly hospitalizationDateMin = effectiveDateTimeLocalInputMin(hospitalizationDateTimeLocalMinAllowed());
+
+    /** Kullanıcının dokunduğu alan varsa kapanış onay ister (yan panel kuralı); bağlamdan gelen ön doldurma değişiklik sayılmaz. */
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
 
     cancel(): void {
         this.cancelled.emit();
