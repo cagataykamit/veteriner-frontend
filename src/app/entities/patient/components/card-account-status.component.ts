@@ -2,8 +2,12 @@ import { Component, computed, input, ChangeDetectionStrategy } from '@angular/co
 import { RouterLink } from '@angular/router';
 import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
 import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
+import { DETAIL_STATS_GRID_CLASS } from '@/app/shared/ui/detail.classes';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+
+/** Sarılan satır (hasta kartı). */
+const INLINE_CLASS = 'm-0 mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex flex-wrap gap-x-8 gap-y-2';
 
 /**
  * Hasta ve müşteri kartı başlığındaki hesap durumu satırı (ADR-020 karar 2a, 6): açık borç, [kart özgü alanlar], sonraki randevu.
@@ -15,7 +19,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     imports: [RouterLink, TrDateTimePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <dl class="m-0 mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex flex-wrap gap-x-8 gap-y-2" aria-label="Hesap durumu">
+        <dl [class]="variant() === 'grid' ? gridClass : inlineClass" aria-label="Hesap durumu">
             @if (balance(); as b) {
                 <div data-testid="account-balance">
                     <dt class="text-muted-color text-sm">Açık borç</dt>
@@ -25,7 +29,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 @if (outstanding() > 0) {
                                     <span class="font-semibold text-red-600 dark:text-red-400 tabular-nums">{{ outstandingLabel() }}</span>
                                 } @else {
-                                    <span class="text-muted-color">Yok</span>
+                                    <span class="field-empty">Yok</span>
                                 }
                             }
                             @case ('error') {
@@ -51,7 +55,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                         <span class="text-muted-color text-sm"> · {{ a.petName }}</span>
                                     }
                                 } @else {
-                                    <span class="text-muted-color">Yok</span>
+                                    <span class="field-empty">Yok</span>
                                 }
                             }
                             @case ('error') {
@@ -72,6 +76,11 @@ export class CardAccountStatusComponent {
     readonly balance = input<PetCardSection<Pick<ClientBalanceVm, 'outstandingAmount' | 'currency'>>>(null);
     /** `null` = randevu okuma yetkisi yok (alan gösterilmez); `ok` + `null` veri = planlı randevu yok. Hayvan adı müşteri kartında verilir. */
     readonly nextAppointment = input<PetCardSection<{ id: string; scheduledAtUtc: string | null; petName?: string } | null>>(null);
+    /** `inline`: sarılan satır (hasta kartı); `grid`: gösterge şeridi (müşteri kartı). */
+    readonly variant = input<'inline' | 'grid'>('inline');
+
+    protected readonly inlineClass = INLINE_CLASS;
+    protected readonly gridClass = DETAIL_STATS_GRID_CLASS;
 
     readonly outstanding = computed(() => {
         const b = this.balance();

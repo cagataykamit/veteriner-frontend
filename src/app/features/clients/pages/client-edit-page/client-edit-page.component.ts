@@ -18,6 +18,7 @@ import { type ClientCreateFieldErrors, type ClientCreateFormFieldKey, parseClien
 import { clientUpsertFieldErrorMessage } from '@/app/entities/client/utils/client-upsert.validation.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -176,7 +177,8 @@ export class ClientEditPageComponent implements OnInit {
             next: (client) => {
                 this.form.patchValue({
                     fullName: client.fullName === '—' ? '' : client.fullName,
-                    phone: client.phone === '—' ? '' : client.phone,
+                    // Sunucu rakam dizisi saklar (905…); formda okunur biçim gösterilir, gönderimde sunucu yeniden normalize eder.
+                    phone: client.phone === '—' ? '' : formatClientPhoneForDisplay(client.phone),
                     email: client.email === '—' ? '' : client.email,
                     address: client.address === '—' ? '' : client.address,
                     preferredContactChannel: client.preferredContactChannel,

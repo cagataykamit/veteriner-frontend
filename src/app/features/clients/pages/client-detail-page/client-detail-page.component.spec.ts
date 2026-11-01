@@ -177,6 +177,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
 
     it('rol vurgusu hasta kartıyla aynı: muayene açabilen hayvanları ve geçmişi, yalnız ücret/ödeme alan parayı öne alır', () => {
         create();
+        // Satır ızgarası: 1. satır hastalar | Yapılacaklar, 2. satır geçmiş | ödeme özeti; vurgu her satırda solda kalanı seçer.
         expect(el().querySelector('[data-testid="pets-column"]')?.classList).toContain('order-first');
         expect(el().querySelector('[data-testid="history-column"]')?.classList).toContain('order-first');
         expect(el().querySelector('[data-testid="todo-column"]')?.classList).not.toContain('order-first');

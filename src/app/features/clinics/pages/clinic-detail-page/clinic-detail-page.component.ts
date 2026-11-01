@@ -24,6 +24,9 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppDetailActionBarComponent } from '@/app/shared/ui/detail-action-bar/app-detail-action-bar.component';
+import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatClinicPhoneForDisplay, formatClinicPhoneForInput } from '@/app/entities/clinic/utils/clinic-phone-format.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -39,6 +42,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         TextareaModule,
         ToastModule,
         AppPageHeaderComponent,
+        AppDetailIdentityCardComponent,
+        AppDetailActionBarComponent,
+        AppStatusTagComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
         ClinicWorkingHoursSectionComponent,
@@ -56,51 +62,87 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 <app-error-state [detail]="loadError()!" (retry)="reload()" />
             </div>
         } @else if (detail(); as d) {
-            <app-page-header
-                categoryLink="/panel/settings/clinics"
-                categoryLinkLabel="Klinik listesine dön"
-                title="Klinik ayarları"
-                description="Klinik bilgileri, iletişim ve profil alanlarını güncelleyebilir; kliniği pasife alabilir veya yeniden aktifleştirebilirsiniz."
-            />
+            <app-page-header categoryLink="/panel/settings/clinics" categoryLinkLabel="Klinik listesine dön" />
 
+            <!-- Kimlik kartı (yalnız güncelleme yetkisiyle, eski "Özet" gibi): klinik adı + durum rozeti, şehir, iletişim satırı, adres/açıklama; gösterge şeridi. -->
             @if (canUpdateClinic) {
-                <div class="card mb-4">
-                    <h5 class="mt-0 mb-3">Özet</h5>
-                    <dl class="grid grid-cols-1 md:grid-cols-2 gap-3 m-0 text-sm">
-                        <div>
-                            <dt class="text-muted-color font-medium m-0 mb-1">Durum</dt>
-                            <dd class="m-0">
-                                @if (d.isActive === true) {
-                                    <span class="text-green-700 dark:text-green-400">Aktif</span>
-                                } @else if (d.isActive === false) {
-                                    <span class="text-muted-color">Pasif</span>
-                                } @else {
-                                    <span class="text-muted-color">—</span>
-                                }
-                            </dd>
-                        </div>
-                        <div>
-                            <dt class="text-muted-color font-medium m-0 mb-1">Telefon</dt>
-                            <dd class="m-0 break-all">{{ formatClinicPhoneForDisplay(d.phone) }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-muted-color font-medium m-0 mb-1">E-posta</dt>
-                            <dd class="m-0 break-all">{{ d.email || '—' }}</dd>
-                        </div>
-                        <div class="md:col-span-2">
-                            <dt class="text-muted-color font-medium m-0 mb-1">Adres</dt>
-                            <dd class="m-0 whitespace-pre-wrap break-words">{{ d.address || '—' }}</dd>
-                        </div>
-                        <div class="md:col-span-2">
-                            <dt class="text-muted-color font-medium m-0 mb-1">Açıklama</dt>
-                            <dd class="m-0 whitespace-pre-wrap break-words">{{ d.description || '—' }}</dd>
-                        </div>
-                    </dl>
-                </div>
+                <app-detail-identity-card icon="pi pi-building" [title]="d.name" [subtitle]="d.city" ariaLabel="Klinik kimliği" testId="clinic-identity-card">
+                    @if (d.isActive !== null) {
+                        <app-status-tag badges [label]="d.isActive ? 'Aktif' : 'Pasif'" [severity]="d.isActive ? 'success' : 'secondary'" />
+                    }
+                    <p class="m-0 mt-3 flex flex-wrap items-center gap-x-6 gap-y-2" aria-label="İletişim">
+                        @if (d.phone) {
+                            <span class="whitespace-nowrap font-medium"><i class="pi pi-phone text-sm mr-1.5 text-muted-color" aria-hidden="true"></i>{{ formatClinicPhoneForDisplay(d.phone) }}</span>
+                        } @else {
+                            <span class="text-muted-color"><i class="pi pi-phone text-sm mr-1.5" aria-hidden="true"></i>Telefon yok</span>
+                        }
+                        @if (d.email) {
+                            <span class="break-all"><i class="pi pi-envelope text-sm mr-1.5 text-muted-color" aria-hidden="true"></i>{{ d.email }}</span>
+                        } @else {
+                            <span class="text-muted-color"><i class="pi pi-envelope text-sm mr-1.5" aria-hidden="true"></i>E-posta yok</span>
+                        }
+                        @if (d.address) {
+                            <span class="break-words"><i class="pi pi-map-marker text-sm mr-1.5 text-muted-color" aria-hidden="true"></i>{{ d.address }}</span>
+                        } @else {
+                            <span class="text-muted-color"><i class="pi pi-map-marker text-sm mr-1.5" aria-hidden="true"></i>Adres yok</span>
+                        }
+                    </p>
+                    @if (d.description) {
+                        <p class="m-0 mt-2 text-sm text-muted-color whitespace-pre-wrap break-words">{{ d.description }}</p>
+                    }
+                    <div stat>
+                        <dt>Durum</dt>
+                        <dd>
+                            @if (d.isActive === true) {
+                                <span class="font-semibold text-green-700 dark:text-green-400">Aktif</span>
+                            } @else if (d.isActive === false) {
+                                <span class="font-semibold text-surface-900 dark:text-surface-0">Pasif</span>
+                            } @else {
+                                <span class="field-empty">—</span>
+                            }
+                        </dd>
+                    </div>
+                    <div stat>
+                        <dt>Şehir</dt>
+                        <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ d.city }}</dd>
+                    </div>
+                    <div stat>
+                        <dt>Telefon</dt>
+                        <dd>
+                            @if (d.phone) {
+                                <span class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ formatClinicPhoneForDisplay(d.phone) }}</span>
+                            } @else {
+                                <span class="field-empty">Yok</span>
+                            }
+                        </dd>
+                    </div>
+                    <div stat>
+                        <dt>E-posta</dt>
+                        <dd>
+                            @if (d.email) {
+                                <span class="font-semibold text-surface-900 dark:text-surface-0 break-all">{{ d.email }}</span>
+                            } @else {
+                                <span class="field-empty">Yok</span>
+                            }
+                        </dd>
+                    </div>
+                </app-detail-identity-card>
+
+                <!-- Eylem şeridi: pasife al / aktifleştir; salt okunurda yalnız not (mevcut davranış). -->
+                <app-detail-action-bar ariaLabel="Klinik eylemleri">
+                    @if (!ro.mutationBlocked()) {
+                        @if (d.isActive === true) {
+                            <button pButton type="button" severity="danger" [outlined]="true" [disabled]="busyActivate() || saving() || busyDeactivate()" (click)="onDeactivate()"><i class="p-button-icon" [class]="busyDeactivate() ? 'pi pi-spin pi-spinner' : 'pi pi-ban'"></i>Pasife al</button>
+                        } @else {
+                            <button pButton type="button" [disabled]="busyDeactivate() || saving() || busyActivate()" (click)="onActivate()"><i class="p-button-icon" [class]="busyActivate() ? 'pi pi-spin pi-spinner' : 'pi pi-check-circle'"></i>Aktifleştir</button>
+                        }
+                    }
+                </app-detail-action-bar>
             }
 
             <div class="card mb-4">
-                <h5 class="mt-0 mb-4">Düzenle</h5>
+                <h5 class="mt-0 mb-1">Klinik ayarları</h5>
+                <p class="text-sm text-muted-color mt-0 mb-4">Klinik bilgileri, iletişim ve profil alanlarını güncelleyebilirsiniz.</p>
                 @if (ro.mutationBlocked()) {
                     <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">Bu işletme salt okunur moddadır; klinik bilgileri güncellenemez.</p>
                 }
@@ -182,23 +224,6 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
             @if (canUpdateClinic) {
                 <app-clinic-taxpayer-settings-section [clinicId]="d.id" />
-            }
-
-            @if (canUpdateClinic) {
-                <div class="card">
-                    <h5 class="mt-0 mb-3">Durum</h5>
-                    @if (ro.mutationBlocked()) {
-                        <p class="text-sm text-muted-color m-0">Salt okunur modda pasif/aktif işlemi yapılamaz.</p>
-                    } @else {
-                        <div class="flex flex-wrap gap-2">
-                            @if (d.isActive === true) {
-                                <button pButton type="button" severity="danger" [disabled]="busyActivate() || saving() || busyDeactivate()" (click)="onDeactivate()"><i class="p-button-icon" [class]="busyDeactivate() ? 'pi pi-spin pi-spinner' : 'pi pi-ban'"></i>Pasife al</button>
-                            } @else {
-                                <button pButton type="button" [disabled]="busyDeactivate() || saving() || busyActivate()" (click)="onActivate()"><i class="p-button-icon" [class]="busyActivate() ? 'pi pi-spin pi-spinner' : 'pi pi-check-circle'"></i>Aktifleştir</button>
-                            }
-                        </div>
-                    }
-                </div>
             }
         }
     `

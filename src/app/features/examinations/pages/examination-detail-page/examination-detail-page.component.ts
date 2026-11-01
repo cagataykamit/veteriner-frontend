@@ -25,6 +25,8 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { RecordHistoryButtonComponent } from '@/app/entities/record-history/components/record-history-button.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppDetailActionBarComponent } from '@/app/shared/ui/detail-action-bar/app-detail-action-bar.component';
+import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -48,6 +50,8 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
 import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/patient/services/recently-viewed.service';
+import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
+import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-detail-row-link.component';
 
 /** Kayıt metin bölümleri sırası; vital satırı `findings` ile `assessment` arasına girer. */
 const RECORD_TEXT_SECTIONS: readonly {
@@ -67,10 +71,12 @@ const RECORD_TEXT_SECTIONS: readonly {
     selector: 'app-examination-detail-page',
     standalone: true,
     imports: [
-        CommonModule,
+        AppDetailRowLinkComponent, AppDetailSeeAllLinkComponent, CommonModule,
         RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
+        AppDetailIdentityCardComponent,
+        AppDetailActionBarComponent,
         RecordHistoryButtonComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
@@ -102,206 +108,202 @@ const RECORD_TEXT_SECTIONS: readonly {
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
-        } @else if (exam()) {
-            <app-page-header categoryLink="/panel/examinations" categoryLinkLabel="Muayene listesine dön" title="Muayene" [description]="exam()!.examinedAtUtc | trDateTime">
-                <div actions class="flex flex-wrap gap-2">
+        } @else if (exam(); as e) {
+            <app-page-header categoryLink="/panel/examinations" categoryLinkLabel="Muayene listesine dön" />
+
+            <!-- Kimlik kartı (müşteri/hasta kartıyla aynı dil): durum rozeti, muayene tarihi (alt başlık), kayıt satırı, hasta/sahip satırı; sağda Düzenle, şablon, geçmiş. Tarih ve durum tek yerde; gösterge şeridi tekrar etmez. -->
+            <app-detail-identity-card icon="pi pi-clipboard" title="Muayene" [subtitle]="e.examinedAtUtc | trDateTime" [meta]="'Oluşturulma: ' + (e.createdAtUtc | trDateTime) + ' · Güncellenme: ' + (e.updatedAtUtc | trDateTime)" ariaLabel="Muayene kimliği" testId="exam-identity-card">
+                <span badges data-testid="exam-status">
+                    <app-status-tag [label]="statusLabel(e.status)" [severity]="statusSeverity(e.status)" />
+                </span>
+                <app-examination-patient-header [petId]="e.petId" [clientId]="e.clientId" />
+                <ng-container actions>
                     @if (canApplyTemplateNow()) {
-                        <button pButton type="button" class="p-button-secondary" data-testid="template-apply-open" (click)="templateDialogVisible.set(true)"><i class="pi pi-clone"></i>Şablon uygula</button>
+                        <button pButton type="button" class="p-button-text p-button-secondary" data-testid="template-apply-open" (click)="templateDialogVisible.set(true)"><i class="pi pi-clone"></i>Şablon uygula</button>
                     }
-                    @if (canUpdateExamination && isEditable(exam()!.status)) {
+                    @if (canUpdateExamination && isEditable(e.status)) {
                         @if (!ro.mutationBlocked()) {
-                            <a [routerLink]="['/panel/examinations', exam()!.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
+                            <a [routerLink]="['/panel/examinations', e.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                         } @else {
-                            <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                            <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                         }
                     }
-                    @if (exam()!.clientId?.trim() && exam()!.petId?.trim()) {
-                        @let moneyContext = { clientId: exam()!.clientId, petId: exam()!.petId, examinationId: exam()!.id };
-                        @if (canCreateCharge) {
-                            @if (!ro.mutationBlocked()) {
-                                <a [routerLink]="['/panel/charges/new']" [queryParams]="moneyContext" pButton type="button" class="p-button-secondary" data-testid="charge-new-link"><i class="pi pi-plus"></i>Ücret ekle</a>
-                            } @else {
-                                <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Ücret ekle (salt okunur)</button>
-                            }
-                        }
-                        @if (canCreatePayment) {
-                            @if (!ro.mutationBlocked()) {
-                                <a [routerLink]="['/panel/payments/new']" [queryParams]="moneyContext" pButton type="button" class="p-button-secondary"><i class="pi pi-wallet"></i>Ödeme Oluştur</a>
-                            } @else {
-                                <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Ödeme (salt okunur)</button>
-                            }
-                        }
-                    }
-                </div>
-                <app-record-history-button actions resource="examinations" [recordId]="exam()!.id" />
-            </app-page-header>
-
-            <app-examination-patient-header [petId]="exam()!.petId" [clientId]="exam()!.clientId" />
-
-            <div class="grid grid-cols-12 gap-4 items-start" data-testid="exam-workspace">
-                <aside class="col-span-12 xl:col-span-3">
-                    <app-examination-patient-context [petId]="exam()!.petId" [excludeExaminationId]="exam()!.id" />
-                </aside>
-
-                <div class="col-span-12 xl:col-span-6 min-w-0">
-                    <div class="card" data-testid="exam-record">
-                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mb-4">
-                            <h4 class="m-0 text-xl font-semibold mr-auto">Muayene kaydı</h4>
-                            <span data-testid="exam-status">
-                                <app-status-tag [label]="statusLabel(exam()!.status)" [severity]="statusSeverity(exam()!.status)" />
-                                @if (exam()!.status === 'Finalized') {
-                                    <span class="text-muted-color text-sm ml-2" data-testid="finalized-info">
-                                        {{ exam()!.finalizedAtUtc | trDateTime }}
-                                        @if (exam()!.finalizedByName) {
-                                            · {{ exam()!.finalizedByName }}
-                                        }
-                                    </span>
+                    <app-record-history-button resource="examinations" [recordId]="e.id" />
+                </ng-container>
+                <div stat>
+                    <dt>Kesinleştirme</dt>
+                    <dd>
+                        @if (e.status === 'Finalized') {
+                            <span class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums" data-testid="finalized-info">
+                                {{ e.finalizedAtUtc | trDateTime }}
+                                @if (e.finalizedByName) {
+                                    <span class="text-muted-color text-sm font-normal"> · {{ e.finalizedByName }}</span>
                                 }
                             </span>
-                        </div>
-                        @for (s of recordSectionsBeforeVitals(); track s.label) {
-                            <div class="mb-4">
-                                <h5 class="mt-0 mb-1">{{ s.label }}</h5>
-                                <p class="m-0 whitespace-pre-wrap">{{ s.text }}</p>
-                            </div>
+                        } @else {
+                            <span class="field-empty">Kesinleştirilmedi</span>
                         }
-                        <div class="mb-4" data-testid="vital-row">
-                            <h5 class="mt-0 mb-1">Vital</h5>
-                            @if (vitals().length === 0) {
-                                <p class="m-0 text-sm text-muted-color">Ölçülmemiş.</p>
-                            } @else {
-                                <div class="flex flex-wrap gap-x-5 gap-y-1">
-                                    @for (v of vitals(); track v.label) {
-                                        <span data-testid="vital"
-                                            ><span class="text-muted-color text-sm mr-1">{{ v.label }}</span
-                                            ><span class="font-medium">{{ v.value }}</span></span
-                                        >
-                                    }
-                                    @if (exam()!.vitalsMeasuredAtUtc) {
-                                        <span class="text-muted-color text-sm self-center">Ölçüm: {{ exam()!.vitalsMeasuredAtUtc | trDateTime }}</span>
-                                    }
+                    </dd>
+                </div>
+                <div stat>
+                    <dt>Klinik</dt>
+                    <dd>
+                        @if (e.clinicName?.trim()) {
+                            <span class="font-semibold text-surface-900 dark:text-surface-0 break-words">{{ e.clinicName }}</span>
+                        } @else {
+                            <span class="field-empty">Belirtilmemiş</span>
+                        }
+                    </dd>
+                </div>
+                <div stat>
+                    <dt>Randevu</dt>
+                    <dd>
+                        @if (e.appointmentId?.trim()) {
+                            <a [routerLink]="['/panel/appointments', e.appointmentId]" class="font-semibold text-primary no-underline" data-testid="appointment-link">Bağlı randevu →</a>
+                        } @else {
+                            <span class="field-empty">Bağlı randevu yok</span>
+                        }
+                    </dd>
+                </div>
+            </app-detail-identity-card>
+
+            <!-- Eylem şeridi: para işlemleri; kesinleştirme sağdaki kontrol listesinde kalır. -->
+            @if (e.clientId?.trim() && e.petId?.trim() && (canCreateCharge || canCreatePayment)) {
+                @let moneyContext = { clientId: e.clientId, petId: e.petId, examinationId: e.id };
+                <app-detail-action-bar ariaLabel="Muayene eylemleri">
+                    @if (canCreateCharge) {
+                        @if (!ro.mutationBlocked()) {
+                            <a [routerLink]="['/panel/charges/new']" [queryParams]="moneyContext" pButton type="button" class="p-button-primary" data-testid="charge-new-link"><i class="pi pi-plus"></i>Ücret ekle</a>
+                        } @else {
+                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-lock"></i>Ücret ekle (salt okunur)</button>
+                        }
+                    }
+                    @if (canCreatePayment) {
+                        @if (!ro.mutationBlocked()) {
+                            <a [routerLink]="['/panel/payments/new']" [queryParams]="moneyContext" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-wallet"></i>Ödeme Oluştur</a>
+                        } @else {
+                            <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Ödeme (salt okunur)</button>
+                        }
+                    }
+                </app-detail-action-bar>
+            }
+
+            <!-- Çalışma alanı: ana sütun (kayıt, ek notlar, işlemler, uygulamalar) | yan sütun (kesinleştirme kontrolü, hasta bağlamı); kırılım içerik alanına göre (≥56rem iki sütun). -->
+            <div class="@container">
+                <div class="grid grid-cols-12 gap-4 items-start" data-testid="exam-workspace">
+                    <div class="col-span-12 @4xl:col-span-8 min-w-0 flex flex-col gap-4">
+                        <div class="card mb-0" data-testid="exam-record">
+                            <h5 class="mt-0 mb-4">Muayene kaydı</h5>
+                            @for (s of recordSectionsBeforeVitals(); track s.label) {
+                                <div class="mb-4">
+                                    <h6 class="m-0 mb-1 field-label">{{ s.label }}</h6>
+                                    <p class="m-0 whitespace-pre-wrap">{{ s.text }}</p>
                                 </div>
                             }
-                        </div>
-                        @for (s of recordSectionsAfterVitals(); track s.label) {
-                            <div class="mb-4">
-                                <h5 class="mt-0 mb-1">{{ s.label }}</h5>
-                                <p class="m-0 whitespace-pre-wrap">{{ s.text }}</p>
+                            <div class="mb-4" data-testid="vital-row">
+                                <h6 class="m-0 mb-1 field-label">Vital</h6>
+                                @if (vitals().length === 0) {
+                                    <p class="m-0 field-empty">Ölçülmemiş.</p>
+                                } @else {
+                                    <div class="flex flex-wrap gap-x-5 gap-y-1">
+                                        @for (v of vitals(); track v.label) {
+                                            <span data-testid="vital"
+                                                ><span class="text-muted-color text-sm mr-1">{{ v.label }}</span
+                                                ><span class="font-medium">{{ v.value }}</span></span
+                                            >
+                                        }
+                                        @if (e.vitalsMeasuredAtUtc) {
+                                            <span class="text-muted-color text-sm self-center">Ölçüm: {{ e.vitalsMeasuredAtUtc | trDateTime }}</span>
+                                        }
+                                    </div>
+                                }
                             </div>
+                            @for (s of recordSectionsAfterVitals(); track s.label) {
+                                <div class="mb-4">
+                                    <h6 class="m-0 mb-1 field-label">{{ s.label }}</h6>
+                                    <p class="m-0 whitespace-pre-wrap">{{ s.text }}</p>
+                                </div>
+                            }
+                            @if (emptySectionLabels().length > 0) {
+                                <p class="field-empty m-0" data-testid="record-empty-sections">Girilmemiş: {{ emptySectionLabels().join(', ') }}</p>
+                            }
+                        </div>
+
+                        @if (e.status === 'Finalized') {
+                            <app-examination-addenda-section [examinationId]="e.id" [canAdd]="canAddAddendum()" />
                         }
-                        @if (emptySectionLabels().length > 0) {
-                            <p class="text-sm text-muted-color m-0" data-testid="record-empty-sections">Girilmemiş: {{ emptySectionLabels().join(', ') }}</p>
+
+                        <app-examination-procedures-section [exam]="e" [summary]="relatedSummary()" [loading]="relatedSummaryLoading()" [error]="relatedSummaryError()" (changed)="onProcedureAdded()" (retry)="retryRelatedSummary()" />
+
+                        @if (e.petId?.trim()) {
+                            <app-administrations-section [petId]="e.petId!" [petName]="e.petName" [examinationId]="e.id" [locked]="e.status === 'Finalized'" />
                         }
-                        <p class="text-xs text-muted-color mt-3 mb-0">Oluşturulma {{ exam()!.createdAtUtc | trDateTime }} · Güncellenme {{ exam()!.updatedAtUtc | trDateTime }}</p>
                     </div>
 
-                    @if (exam()!.status === 'Finalized') {
-                        <app-examination-addenda-section [examinationId]="exam()!.id" [canAdd]="canAddAddendum()" />
-                    }
-
-                    <app-examination-procedures-section [exam]="exam()!" [summary]="relatedSummary()" [loading]="relatedSummaryLoading()" [error]="relatedSummaryError()" (changed)="onProcedureAdded()" (retry)="retryRelatedSummary()" />
-
-                    @if (exam()!.petId?.trim()) {
-                        <app-administrations-section [petId]="exam()!.petId!" [petName]="exam()!.petName" [examinationId]="exam()!.id" [locked]="exam()!.status === 'Finalized'" />
-                    }
+                    <!-- Geniş alanda sabit: üst çubuk (4rem) + 1rem, soldaki menünün üst hizası (_menu.scss top: 5rem). -->
+                    <aside class="col-span-12 @4xl:col-span-4 @4xl:sticky @4xl:top-20 min-w-0 flex flex-col gap-4" data-testid="finalize-aside">
+                        <app-examination-finalize-checklist [exam]="e" [items]="finalizeChecklist()" [canFinalize]="canFinalizeNow()" (finalizeRequested)="finalizeDialogVisible.set(true)" />
+                        <app-examination-patient-context [petId]="e.petId" [excludeExaminationId]="e.id" />
+                    </aside>
                 </div>
 
-                <!-- Geniş ekranda sabit: üst çubuk (4rem) + 1rem, soldaki menünün üst hizası (_menu.scss top: 5rem). -->
-                <aside class="col-span-12 xl:col-span-3 xl:sticky xl:top-20" data-testid="finalize-aside">
-                    <app-examination-finalize-checklist [exam]="exam()!" [items]="finalizeChecklist()" [canFinalize]="canFinalizeNow()" (finalizeRequested)="finalizeDialogVisible.set(true)" />
-                </aside>
-            </div>
-
-            <div class="grid grid-cols-12 gap-4 mt-8">
-                <div class="col-span-12">
-                    <h4 class="mt-0 mb-4 text-xl font-semibold">İlgili kayıtlar</h4>
-                </div>
-                @if (relatedSummaryLoading()) {
-                    <div class="col-span-12">
-                        <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
-                    </div>
-                } @else if (relatedSummaryError()) {
-                    <div class="col-span-12">
-                        <div class="card">
-                            <app-error-state [detail]="relatedSummaryError()!" (retry)="retryRelatedSummary()" />
-                        </div>
-                    </div>
-                } @else if (relatedSummary()) {
-                    <div class="col-span-12 lg:col-span-6">
-                        <div class="card">
-                            <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
-                                <h5 class="mt-0 mb-0">Bağlı ödemeler</h5>
-                                <a routerLink="/panel/payments" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                            </div>
-                            @if (relatedPaymentsView().total === 0) {
-                                <p class="text-muted-color text-sm m-0">{{ copy.listEmptyMessage }}</p>
+                <!-- İlgili kayıtlar: tek kart, iki sütun (bağlı ödemeler | aynı hastanın randevuları); boşken yalnız birer satır. -->
+                <section class="card mt-4 mb-0" aria-labelledby="exam-related-title" data-testid="exam-related">
+                    <h5 id="exam-related-title" class="mt-0 mb-3">İlgili kayıtlar</h5>
+                    <div class="grid grid-cols-1 @2xl:grid-cols-2 gap-x-8 gap-y-4">
+                        <div class="min-w-0" data-testid="related-payments">
+                            <h6 class="m-0 mb-1 field-label">Bağlı ödemeler</h6>
+                            @if (relatedSummaryLoading()) {
+                                <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
+                            } @else if (relatedSummaryError()) {
+                                <app-error-state [detail]="relatedSummaryError()!" (retry)="retryRelatedSummary()" />
+                            } @else if (relatedPaymentsView().total === 0) {
+                                <p class="field-empty m-0">{{ copy.listEmptyMessage }}</p>
                             } @else {
                                 <ul class="list-none m-0 p-0">
                                     @for (row of relatedPaymentsView().displayed; track row.id) {
-                                        <li class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm">
-                                            <div class="lg:hidden space-y-2 min-w-0">
-                                                <div class="text-muted-color text-sm">{{ row.paidAtUtc | trDateTime }}</div>
-                                                <div class="font-semibold text-base tabular-nums text-surface-900 dark:text-surface-0 min-w-0 break-words">
-                                                    {{ money(row.amount, row.currency) }}
-                                                </div>
-                                                <div class="text-sm text-muted-color min-w-0 break-words">{{ payMethodLabel(row.method) }}</div>
+                                        <li class="flex gap-3 items-baseline justify-between py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0 text-sm">
+                                            <div class="min-w-0 break-words">
+                                                <span class="text-muted-color">{{ row.paidAtUtc | trDateTime }}</span>
+                                                <span> · {{ payMethodLabel(row.method) }}</span>
                                                 @if (row.clinicName) {
-                                                    <div class="text-muted-color text-sm min-w-0 break-words">{{ row.clinicName }}</div>
-                                                }
-                                                <div class="flex justify-end pt-2 mt-1 border-t border-surface-200 dark:border-surface-700">
-                                                    <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm py-1">Detay →</a>
-                                                </div>
-                                            </div>
-                                            <div class="hidden lg:block space-y-1 min-w-0">
-                                                <div class="flex flex-wrap gap-2 justify-between items-baseline">
-                                                    <span class="text-muted-color text-sm min-w-0">{{ row.paidAtUtc | trDateTime }}</span>
-                                                    <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
-                                                </div>
-                                                <div class="font-medium min-w-0 break-words">{{ money(row.amount, row.currency) }} · {{ payMethodLabel(row.method) }}</div>
-                                                @if (row.clinicName) {
-                                                    <div class="text-muted-color text-sm min-w-0 break-words">{{ row.clinicName }}</div>
+                                                    <span class="text-muted-color"> · {{ row.clinicName }}</span>
                                                 }
                                             </div>
+                                            <a [routerLink]="['/panel/payments', row.id]" class="shrink-0 font-semibold tabular-nums no-underline text-surface-900 dark:text-surface-0 hover:text-primary" [attr.aria-label]="'Ödeme detayı: ' + money(row.amount, row.currency)">{{ money(row.amount, row.currency) }}</a>
                                         </li>
                                     }
                                 </ul>
+                                <app-detail-see-all-link link="/panel/payments" [queryParams]="{ petId: e.petId }" [itemCount]="relatedPaymentsView().displayed.length" />
+                            }
+                        </div>
+                        <div class="min-w-0" data-testid="related-appointments">
+                            <h6 class="m-0 mb-1 field-label">Randevular (aynı hasta)</h6>
+                            @if (!e.petId) {
+                                <p class="field-empty m-0">Hasta bilgisi yok; liste gösterilemiyor.</p>
+                            } @else if (apptLoading()) {
+                                <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
+                            } @else if (apptError()) {
+                                <p class="text-muted-color m-0">{{ apptError() }}</p>
+                            } @else if (apptItemsView().total === 0) {
+                                <p class="field-empty m-0">Kayıt bulunamadı.</p>
+                            } @else {
+                                <ul class="list-none m-0 p-0">
+                                    @for (row of apptItemsView().displayed; track row.id) {
+                                        <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0 text-sm">
+                                            <div class="flex flex-wrap gap-2 justify-between items-center">
+                                                <span class="text-muted-color min-w-0">{{ row.scheduledAtUtc | trDateTime }}</span>
+                                                <app-detail-row-link [link]="['/panel/appointments', row.id]" [ariaLabel]="'Randevu detayı: ' + (row.scheduledAtUtc | trDateTime)" />
+                                            </div>
+                                            <div class="font-medium min-w-0 break-words">{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
+                                        </li>
+                                    }
+                                </ul>
+                                <app-detail-see-all-link link="/panel/appointments" [queryParams]="{ petId: e.petId }" [itemCount]="apptItemsView().displayed.length" />
                             }
                         </div>
                     </div>
-                }
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
-                            <h5 class="mt-0 mb-0">Randevular (aynı hasta)</h5>
-                            <a routerLink="/panel/appointments" [queryParams]="{ petId: exam()!.petId }" class="text-primary font-medium no-underline text-sm">Tümü →</a>
-                        </div>
-                        @if (!exam()!.petId) {
-                            <p class="text-muted-color text-sm m-0">Hasta bilgisi yok; liste gösterilemiyor.</p>
-                        } @else if (apptLoading()) {
-                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
-                        } @else if (apptError()) {
-                            <p class="text-muted-color m-0">{{ apptError() }}</p>
-                        } @else if (apptItemsView().total === 0) {
-                            <p class="text-muted-color text-sm m-0">Kayıt bulunamadı.</p>
-                        } @else {
-                            <ul class="list-none m-0 p-0">
-                                @for (row of apptItemsView().displayed; track row.id) {
-                                    <li class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm">
-                                        <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ row.scheduledAtUtc | trDateTime }}</div>
-                                        <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
-                                            <span class="text-muted-color text-sm min-w-0">{{ row.scheduledAtUtc | trDateTime }}</span>
-                                            <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Detay →</a>
-                                        </div>
-                                        <div class="font-medium min-w-0 break-words">{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
-                                        <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
-                                            <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm py-1">Detay →</a>
-                                        </div>
-                                    </li>
-                                }
-                            </ul>
-                        }
-                    </div>
-                </div>
+                </section>
             </div>
         }
     `

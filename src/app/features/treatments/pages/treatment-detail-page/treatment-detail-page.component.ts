@@ -9,6 +9,9 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { RecordHistoryButtonComponent } from '@/app/entities/record-history/components/record-history-button.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppDetailActionBarComponent } from '@/app/shared/ui/detail-action-bar/app-detail-action-bar.component';
+import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
+import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-line/app-detail-subject-line.component';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -19,7 +22,22 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 @Component({
     selector: 'app-treatment-detail-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, ButtonModule, AdministrationsSectionComponent, AppPageHeaderComponent, RecordHistoryButtonComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppErrorStateComponent, TrDatePipe, TrDateTimePipe],
+    imports: [
+        CommonModule,
+        RouterLink,
+        ButtonModule,
+        AdministrationsSectionComponent,
+        AppPageHeaderComponent,
+        AppDetailIdentityCardComponent,
+        AppDetailActionBarComponent,
+        AppDetailSubjectLineComponent,
+        RecordHistoryButtonComponent,
+        PetAlertBannerComponent,
+        AppLoadingStateComponent,
+        AppErrorStateComponent,
+        TrDatePipe,
+        TrDateTimePipe
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
@@ -32,102 +50,86 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
-        } @else if (row()) {
-            <app-page-header categoryLink="/panel/treatments" categoryLinkLabel="Tedavi listesine dön" title="Tedavi" [description]="row()!.title">
-                <div actions class="flex flex-wrap gap-2">
+        } @else if (row(); as r) {
+            <app-page-header categoryLink="/panel/treatments" categoryLinkLabel="Tedavi listesine dön" />
+
+            <!-- Kimlik kartı (müşteri/hasta kartıyla aynı dil): başlık, tedavi tarihi, kayıt satırı, hasta/sahip; sağda Düzenle ve geçmiş; gösterge şeridi. -->
+            <app-detail-identity-card icon="pi pi-heart" [title]="r.title" [subtitle]="r.treatmentDateUtc | trDateTime" [meta]="'Oluşturulma: ' + (r.createdAtUtc | trDateTime) + ' · Güncellenme: ' + (r.updatedAtUtc | trDateTime)" ariaLabel="Tedavi kimliği" testId="treatment-identity-card">
+                <app-detail-subject-line [petId]="r.petId" [petName]="r.petName" [clientId]="r.clientId" [clientName]="r.clientName" />
+                <ng-container actions>
                     @if (canUpdateTreatment && !ro.mutationBlocked()) {
-                        <a [routerLink]="['/panel/treatments', row()!.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
-                        @if (row()!.clientId?.trim() && row()!.petId?.trim()) {
-                            <a [routerLink]="['/panel/prescriptions/new']" [queryParams]="prescriptionCreateQueryParams()" pButton type="button" class="p-button-secondary"><i class="pi pi-file-edit"></i>Reçete Oluştur</a>
-                            @if (row()!.examinationId?.trim()) {
-                                <a
-                                    [routerLink]="['/panel/payments/new']"
-                                    [queryParams]="{
-                                        clientId: row()!.clientId,
-                                        petId: row()!.petId,
-                                        examinationId: row()!.examinationId
-                                    }"
-                                    pButton
-                                    type="button"
-                                   
-                                   
-                                    class="p-button-secondary"
-                                ><i class="pi pi-wallet"></i>Ödeme Oluştur</a>
-                            }
-                        }
+                        <a [routerLink]="['/panel/treatments', r.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                     } @else if (canUpdateTreatment && ro.mutationBlocked()) {
-                        <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
-                        @if (row()!.clientId?.trim() && row()!.petId?.trim()) {
-                            <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Reçete Oluştur (salt okunur)</button>
-                            @if (row()!.examinationId?.trim()) {
-                                <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Ödeme Oluştur (salt okunur)</button>
-                            }
+                        <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                    }
+                    <app-record-history-button resource="treatments" [recordId]="r.id" />
+                </ng-container>
+                <div stat>
+                    <dt>Tedavi tarihi</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ r.treatmentDateUtc | trDateTime }}</dd>
+                </div>
+                <div stat>
+                    <dt>Takip tarihi</dt>
+                    <dd>
+                        @if (r.followUpDateUtc) {
+                            <span class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ r.followUpDateUtc | trDate }}</span>
+                        } @else {
+                            <span class="field-empty">Yok</span>
+                        }
+                    </dd>
+                </div>
+                <div stat>
+                    <dt>Muayene</dt>
+                    <dd>
+                        @if (r.examinationId) {
+                            <a [routerLink]="['/panel/examinations', r.examinationId]" class="text-primary font-semibold no-underline">Muayene kaydına git →</a>
+                        } @else {
+                            <span class="field-empty">Bağlı muayene yok</span>
+                        }
+                    </dd>
+                </div>
+            </app-detail-identity-card>
+            <app-pet-alert-banner [petId]="r.petId" />
+
+            <!-- Eylem şeridi: reçete ve ödeme; salt okunurda kilitli. -->
+            @if (canUpdateTreatment && r.clientId?.trim() && r.petId?.trim()) {
+                <app-detail-action-bar ariaLabel="Tedavi eylemleri">
+                    @if (!ro.mutationBlocked()) {
+                        <a [routerLink]="['/panel/prescriptions/new']" [queryParams]="prescriptionCreateQueryParams()" pButton type="button" class="p-button-primary"><i class="pi pi-file-edit"></i>Reçete Oluştur</a>
+                        @if (r.examinationId?.trim()) {
+                            <a [routerLink]="['/panel/payments/new']" [queryParams]="{ clientId: r.clientId, petId: r.petId, examinationId: r.examinationId }" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-wallet"></i>Ödeme Oluştur</a>
+                        }
+                    } @else {
+                        <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-lock"></i>Reçete Oluştur (salt okunur)</button>
+                        @if (r.examinationId?.trim()) {
+                            <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Ödeme Oluştur (salt okunur)</button>
                         }
                     }
-                </div>
-                <app-record-history-button actions resource="treatments" [recordId]="row()!.id" />
-            </app-page-header>
-            <app-pet-alert-banner [petId]="row()!.petId" />
+                </app-detail-action-bar>
+            }
 
-            <div class="grid grid-cols-12 gap-8">
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Genel</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Tedavi tarihi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.treatmentDateUtc | trDateTime }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Takip tarihi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.followUpDateUtc | trDate }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.createdAtUtc | trDateTime }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.updatedAtUtc | trDateTime }}</dd>
-                            @if (row()!.examinationId) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a [routerLink]="['/panel/examinations', row()!.examinationId]" class="text-primary font-medium no-underline">Muayene kaydına git →</a>
-                                </dd>
-                            }
-                        </dl>
+            <!-- Satır ızgarası: açıklama | notlar (8/4, eşit yükseklik); uygulamalar tam genişlik. -->
+            <div class="@container flex flex-col gap-4">
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-8">
+                        <h5 class="mt-0 mb-3">Açıklama</h5>
+                        @if (r.description === emptyMark) {
+                            <p class="m-0 field-empty">Açıklama yok</p>
+                        } @else {
+                            <p class="m-0 whitespace-pre-wrap">{{ r.description }}</p>
+                        }
+                    </div>
+                    <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-4">
+                        <h5 class="mt-0 mb-3">Notlar</h5>
+                        @if (r.notes === emptyMark) {
+                            <p class="m-0 field-empty">Not yok</p>
+                        } @else {
+                            <p class="m-0 whitespace-pre-wrap">{{ r.notes }}</p>
+                        }
                     </div>
                 </div>
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Müşteri / hasta</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (row()!.clientId) {
-                                    <a [routerLink]="['/panel/clients', row()!.clientId]" class="text-primary font-medium no-underline">{{ row()!.clientName }}</a>
-                                } @else {
-                                    {{ row()!.clientName }}
-                                }
-                            </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Hasta</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (row()!.petId) {
-                                    <a [routerLink]="['/panel/pets', row()!.petId]" class="text-primary font-medium no-underline">{{ row()!.petName }}</a>
-                                } @else {
-                                    {{ row()!.petName }}
-                                }
-                            </dd>
-                        </dl>
-                    </div>
-                </div>
-                <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">İçerik</h5>
-                        <p class="mt-0 mb-3 font-medium">{{ row()!.title }}</p>
-                        <h6 class="mt-0 mb-2 text-muted-color text-sm">Açıklama</h6>
-                        <p class="mt-0 mb-4 whitespace-pre-wrap">{{ row()!.description }}</p>
-                        <h6 class="mt-0 mb-2 text-muted-color text-sm">Notlar</h6>
-                        <p class="mt-0 mb-0 whitespace-pre-wrap">{{ row()!.notes }}</p>
-                    </div>
-                </div>
-                @if (row()!.petId?.trim()) {
-                    <div class="col-span-12">
-                        <app-administrations-section [petId]="row()!.petId!" [petName]="row()!.petName" [examinationId]="row()!.examinationId" [treatmentId]="row()!.id" />
-                    </div>
+                @if (r.petId?.trim()) {
+                    <app-administrations-section [petId]="r.petId!" [petName]="r.petName" [examinationId]="r.examinationId" [treatmentId]="r.id" />
                 }
             </div>
         }
@@ -151,6 +153,8 @@ export class TreatmentDetailPageComponent implements OnInit {
     readonly row = this.loader.value;
     readonly showSavedBanner = signal(false);
     readonly canUpdateTreatment = this.auth.hasOperationClaim(TREATMENTS_UPDATE_CLAIM);
+    /** Mapper boş metin için kullandığı EM ile aynı. */
+    readonly emptyMark = '—';
 
     /** Reçete oluştur sayfasına taşınan tedavi bağlamı (treatmentId öncelikli parse). */
     prescriptionCreateQueryParams(): Record<string, string> {

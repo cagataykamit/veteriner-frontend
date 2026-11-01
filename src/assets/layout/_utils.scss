@@ -5,14 +5,28 @@
     clear: both;
 }
 
-.card {
-    background: var(--surface-card);
-    padding: 2rem;
-    margin-bottom: 2rem;
-    border-radius: var(--content-border-radius);
+@layer sakai {
+    .card {
+        background: var(--surface-card);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-radius: var(--content-border-radius);
 
-    &:last-child {
-        margin-bottom: 0;
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+}
+
+/* PrimeNG tablo hücreleri katmansız `text-align: start` taşır ve hücredeki `text-right`/`text-center` sınıfını ezer;
+   tutar sütunları sola yaslanıyordu. Hizalama sınıfı burada daha özgül seçiciyle geri verilir. */
+.p-datatable :is(th, td) {
+    &.text-right {
+        text-align: right;
+    }
+
+    &.text-center {
+        text-align: center;
     }
 }
 

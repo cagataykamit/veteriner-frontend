@@ -18,7 +18,8 @@ import type { PetDetailVm, PetHistoryBlockKey, PetHistorySummaryVm, PetStatusUpd
 import { PetCardDataService } from '@/app/entities/patient/services/pet-card-data.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { buildPetGeneralFields } from '@/app/features/pets/utils/pet-general-fields.utils';
-import { buildPetTodo, openItemsSection, ownerOutstandingSection, type PetCardSection, petCardEmphasis, petIdentityParts } from '@/app/entities/patient/utils/pet-card.utils';
+import { buildPetTodo, openItemsSection, ownerOutstandingSection, type PetCardSection, petCardEmphasis } from '@/app/entities/patient/utils/pet-card.utils';
+import { DETAIL_FIELD_LIST_CLASS } from '@/app/shared/ui/detail.classes';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import { PatientActionBarComponent } from '@/app/entities/patient/components/patient-action-bar/patient-action-bar.component';
@@ -65,70 +66,79 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (pet(); as p) {
-            <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hasta listesine dön" [title]="p.name" [description]="identity()">
+            <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hasta listesine dön" />
+
+            <app-pet-card-header [pet]="p" [summary]="summary()" [balance]="ownerOutstanding()" [nextAppointment]="nextAppointment()">
                 @if (canUpdatePet && !ro.mutationBlocked()) {
-                    <!-- İki eylem tek kökte: denetim akışı bloğunda birden çok kök [actions] yuvasına yansıtılmaz. -->
-                    <ng-container actions>
+                    <!-- İki eylem tek kökte: denetim akışı bloğunda birden çok kök [editAction] yuvasına yansıtılmaz. -->
+                    <ng-container editAction>
                         <button
                             pButton
                             type="button"
-                           
-                           
                             class="p-button-text p-button-secondary"
                             data-testid="pet-status-action"
                             (click)="statusDialogOpen.set(true)"
                         ><i [class]="p.status === 'Deceased' ? 'pi pi-undo' : 'pi pi-minus-circle'"></i>{{ p.status === 'Deceased' ? 'Aktife al' : 'Vefat olarak işaretle' }}</button>
-                        <a [routerLink]="['/panel/pets', p.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
+                        <a [routerLink]="['/panel/pets', p.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                     </ng-container>
                 } @else if (canUpdatePet && ro.mutationBlocked()) {
-                    <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                    <button editAction pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                 }
-            </app-page-header>
-
-            @if (p.ownerId) {
-                <app-patient-action-bar [sticky]="true" [clientId]="p.ownerId" [petId]="p.id" [petLabel]="p.name + ' — ' + p.speciesName" [clientName]="p.clientName" [petDeceased]="p.status === 'Deceased'" />
-            }
+            </app-pet-card-header>
             @if (canUpdatePet && !ro.mutationBlocked()) {
                 <app-pet-status-dialog [(visible)]="statusDialogOpen" [pet]="p" (changed)="onStatusChanged($event)" (stale)="refreshPet()" (appointmentsCancelled)="reloadOpenItems()" />
             }
 
-            <app-pet-card-header [pet]="p" [summary]="summary()" [balance]="ownerOutstanding()" [nextAppointment]="nextAppointment()" />
+            @if (p.ownerId) {
+                <app-patient-action-bar [sticky]="true" [clientId]="p.ownerId" [petId]="p.id" [petLabel]="p.name + ' — ' + p.speciesName" [clientName]="p.clientName" [petDeceased]="p.status === 'Deceased'" />
+            }
 
-            <div class="grid grid-cols-12 gap-4 mb-4">
-                <div class="col-span-12 lg:col-span-5" [class.order-first]="emphasis === 'frontDesk'" data-testid="todo-column">
-                    <app-pet-todo-panel [view]="todo()" [retryable]="true" (retry)="reloadOpenItems()" />
+            <!--
+                Satır ızgarası (müşteri kartıyla aynı dil): klinik özet | Yapılacaklar (8/4); zaman çizelgesi | kayıt bilgileri (8/4); görüntüleme (12) —
+                satırdaki kartlar eşit yükseklikte. Rol vurgusu 1. satırda sırayı belirler. Kırılımlar içerik alanına göredir (container sorgusu).
+            -->
+            <div class="@container flex flex-col gap-4">
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="col-span-12 @4xl:col-span-8 min-w-0" [class.order-first]="emphasis === 'clinical'" data-testid="clinical-column">
+                        <app-pet-summary-card [summary]="summary()" [loading]="summaryLoading()" [error]="summaryError()" [lastExamination]="lastExamination()" [followUps]="followUps()" (retry)="retrySummary()" />
+                    </div>
+                    <div class="col-span-12 @4xl:col-span-4 min-w-0" [class.order-first]="emphasis === 'frontDesk'" data-testid="todo-column">
+                        <app-pet-todo-panel [view]="todo()" [retryable]="true" (retry)="reloadOpenItems()" />
+                    </div>
                 </div>
-                <div class="col-span-12 lg:col-span-7" [class.order-first]="emphasis === 'clinical'" data-testid="clinical-column">
-                    <app-pet-summary-card [summary]="summary()" [loading]="summaryLoading()" [error]="summaryError()" [lastExamination]="lastExamination()" [followUps]="followUps()" (retry)="retrySummary()" />
-                </div>
-            </div>
 
-            <div class="grid grid-cols-12 gap-4">
-                <div class="col-span-12 lg:col-span-8">
-                    @if (historyError()) {
-                        <div class="card mb-0">
-                            <app-error-state [detail]="historyError()!" (retry)="retryHistory()" />
-                        </div>
-                    }
-                    <app-pet-card-timeline [petId]="p.id" [payments]="payments()" />
-                </div>
-                <div class="col-span-12 lg:col-span-4">
-                    <section class="card mb-0" aria-labelledby="pet-record-title">
-                        <h5 id="pet-record-title" class="mt-0 mb-4">Kayıt bilgileri</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-2">
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="col-span-12 @4xl:col-span-8 min-w-0 flex flex-col gap-4">
+                        @if (historyError()) {
+                            <div class="card mb-0">
+                                <app-error-state [detail]="historyError()!" (retry)="retryHistory()" />
+                            </div>
+                        }
+                        <app-pet-card-timeline class="block flex-1 min-h-0" [petId]="p.id" [payments]="payments()" />
+                    </div>
+                    <section class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-4" aria-labelledby="pet-record-title">
+                        <h5 id="pet-record-title" class="mt-0 mb-2">Kayıt bilgileri</h5>
+                        <!-- Klinik özetle aynı etiket/değer deseni: etiket üstte küçük/büyük harf, değer altında; satırlar ince çizgiyle ayrılır. -->
+                        <dl [class]="fieldListClass">
                             @for (field of generalFields().filled; track field.label) {
-                                <dt class="col-span-5 text-muted-color text-sm">{{ field.label }}</dt>
-                                <dd class="col-span-7 m-0 break-words">{{ field.value }}</dd>
+                                <div>
+                                    <dt>{{ field.label }}</dt>
+                                    <dd class="font-medium text-surface-900 dark:text-surface-0">{{ field.value }}</dd>
+                                </div>
                             }
                             @if (showEmptyFields()) {
                                 @for (field of generalFields().empty; track field.label) {
-                                    <dt class="col-span-5 text-muted-color text-sm">{{ field.label }}</dt>
-                                    <dd class="col-span-7 m-0 text-muted-color">{{ field.value }}</dd>
+                                    <div>
+                                        <dt>{{ field.label }}</dt>
+                                        <dd class="field-empty">{{ field.value }}</dd>
+                                    </div>
                                 }
                             }
                             @if (hasText(p.clientEmail)) {
-                                <dt class="col-span-5 text-muted-color text-sm">Sahip e-posta</dt>
-                                <dd class="col-span-7 m-0 break-words">{{ p.clientEmail }}</dd>
+                                <div>
+                                    <dt>Sahip e-posta</dt>
+                                    <dd class="font-medium text-surface-900 dark:text-surface-0">{{ p.clientEmail }}</dd>
+                                </div>
                             }
                         </dl>
                         @if (generalFields().empty.length > 0) {
@@ -141,12 +151,11 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
                             <p class="m-0 whitespace-pre-wrap" data-testid="pet-notes">{{ p.notes }}</p>
                         }
                     </section>
-                    @if (canReadImaging && p.ownerId) {
-                        <div class="mt-4">
-                            <app-pet-imaging-section [petId]="p.id" [clientId]="p.ownerId" />
-                        </div>
-                    }
                 </div>
+
+                @if (canReadImaging && p.ownerId) {
+                    <app-pet-imaging-section [petId]="p.id" [clientId]="p.ownerId" />
+                }
             </div>
         }
     `
@@ -195,12 +204,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
 
     readonly canUpdatePet = this.auth.hasOperationClaim(PETS_UPDATE_CLAIM);
     readonly emphasis = petCardEmphasis((claim) => this.auth.hasOperationClaim(claim));
-
-    readonly identity = computed(() => {
-        const p = this.pet();
-
-        return p ? petIdentityParts(p, this.summary()?.latestWeight.data?.weightKg ?? null).join(' · ') : '';
-    });
+    protected readonly fieldListClass = DETAIL_FIELD_LIST_CLASS;
 
     readonly payments = computed(() => this.historyBlock('Payments', (h) => h.recentPayments));
     readonly ownerOutstanding = computed(() => ownerOutstandingSection(this.openItems()));

@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -25,6 +25,8 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { catchError, forkJoin, of } from 'rxjs';
@@ -34,14 +36,12 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-tenant-member-detail-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink, ButtonModule, DialogModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, TenantMemberRemoveDialogComponent, TrDateTimePipe],
+    imports: [CommonModule, FormsModule, ButtonModule, DialogModule, ToastModule, AppPageHeaderComponent, AppDetailIdentityCardComponent, AppStatusTagComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, TenantMemberRemoveDialogComponent, TrDateTimePipe],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="bottom-right" />
-        <app-page-header title="Üye detayı" description="Kurum üyeliği bilgileri. Salt okunur kurumda rol değişikliği yapılamaz.">
-            <a actions routerLink="/panel/settings/members" pButton type="button" class="p-button-secondary"><i class="pi pi-arrow-left"></i>Listeye dön</a>
-        </app-page-header>
+        <app-page-header categoryLink="/panel/settings/members" categoryLinkLabel="Üye listesine dön" />
 
         @if (loading()) {
             <app-loading-state message="Üye bilgileri yükleniyor…" />
@@ -50,37 +50,41 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 <app-error-state [detail]="err" (retry)="reload()" />
             </div>
         } @else if (member(); as m) {
-            @if (m.isCurrentUser) {
-                <div class="card mb-4 border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/20">
-                    <p class="text-sm m-0 text-surface-700 dark:text-surface-200">{{ copy.tenantMemberSelfProfileHint }}</p>
+            <!-- Kimlik kartı: ad + "Siz" / e-posta onayı rozetleri, e-posta, üyelik tarihi; gösterge şeridi (onay, üyelik, rol ve klinik sayısı). -->
+            <app-detail-identity-card icon="pi pi-user" [title]="m.name || m.email" [subtitle]="m.name ? m.email : ''" [meta]="'Kurum üyeliği: ' + (m.tenantMembershipCreatedAtUtc | trDateTime)" ariaLabel="Üye kimliği" testId="tenant-member-identity-card">
+                <ng-container badges>
+                    @if (m.isCurrentUser) {
+                        <app-status-tag label="Siz" severity="info" />
+                    }
+                    <app-status-tag [label]="m.emailConfirmed ? 'E-posta onaylı' : 'E-posta onaysız'" [severity]="m.emailConfirmed ? 'success' : 'warn'" />
+                </ng-container>
+                @if (m.isCurrentUser) {
+                    <p class="m-0 mt-3 text-sm text-surface-700 dark:text-surface-200">{{ copy.tenantMemberSelfProfileHint }}</p>
+                }
+                <!-- Yıkıcı işlem kartın sağında (yalnız yetkiyle ve kendi üyeliği değilken); tek eylem için şerit açılmaz. -->
+                @if (canManageTenantAccess() && !m.isCurrentUser) {
+                    <ng-container actions>
+                        <button pButton type="button" severity="danger" [outlined]="true" [disabled]="busyAdd() || busyAddClinic()" (click)="openRemoveMemberConfirm()"><i class="p-button-icon pi pi-user-minus"></i>Üyeyi kurumdan çıkar</button>
+                    </ng-container>
+                }
+                <div stat>
+                    <dt>E-posta onayı</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ formatConfirmed(m.emailConfirmed) }}</dd>
                 </div>
-            }
-            <div class="card mb-4">
-                <h5 class="mt-0 mb-4">Genel</h5>
-                <dl class="grid grid-cols-1 md:grid-cols-2 gap-3 m-0 text-sm">
-                    <div>
-                        <dt class="text-muted-color font-medium m-0 mb-1">E-posta</dt>
-                        <dd class="m-0 break-all">{{ m.email }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-muted-color font-medium m-0 mb-1">E-posta onayı</dt>
-                        <dd class="m-0">{{ formatConfirmed(m.emailConfirmed) }}</dd>
-                    </div>
-                    <div class="md:col-span-2">
-                        <dt class="text-muted-color font-medium m-0 mb-1">Kurum üyeliği oluşturulma</dt>
-                        <dd class="m-0">{{ m.tenantMembershipCreatedAtUtc | trDateTime }}</dd>
-                    </div>
-                </dl>
-            </div>
+                <div stat>
+                    <dt>Kurum üyeliği oluşturulma</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ m.tenantMembershipCreatedAtUtc | trDateTime }}</dd>
+                </div>
+                <div stat>
+                    <dt>Roller</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ m.claims.length }}</dd>
+                </div>
+                <div stat>
+                    <dt>Klinik üyelikleri</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ m.clinics.length }}</dd>
+                </div>
+            </app-detail-identity-card>
 
-            @if (canManageTenantAccess() && !m.isCurrentUser) {
-                <div class="card mb-4 border-red-200 dark:border-red-800 bg-red-50/30 dark:bg-red-950/20">
-                    <h5 class="mt-0 mb-3 text-red-700 dark:text-red-300">Yıkıcı işlem</h5>
-                    <div class="flex flex-wrap gap-2">
-                        <button pButton type="button" severity="danger" [disabled]="busyAdd() || busyAddClinic()" (click)="openRemoveMemberConfirm()"><i class="p-button-icon pi pi-user-minus"></i>Üyeyi kurumdan çıkar</button>
-                    </div>
-                </div>
-            }
 
             @if (m.claimsSectionPresent) {
                 <div class="card mb-4">

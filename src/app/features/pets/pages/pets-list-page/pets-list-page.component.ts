@@ -17,6 +17,7 @@ import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PET_LIFE_STATUS_FILTER_OPTIONS, PET_LIST_DEFAULT_STATUS, parsePetListStatusFilter, type PetListStatusFilter } from '@/app/entities/pet/utils/pet-status.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
+import { speciesEmoji } from '@/app/shared/utils/species-icon.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -141,7 +142,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                                 <span class="ml-2 text-xs font-medium border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5" data-testid="pet-row-deceased">Vefat</span>
                                             }
                                         </td>
-                                        <td>{{ row.speciesName }}</td>
+                                        <td><span class="mr-1.5" aria-hidden="true">{{ speciesIcon(row.speciesName) }}</span>{{ row.speciesName }}</td>
                                         <td>{{ row.breed }}</td>
                                         <td>{{ row.colorName }}</td>
                                         <td>{{ row.weight }}</td>
@@ -178,7 +179,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                         }
                                         <div>
                                             <span class="text-muted-color font-medium">Tür: </span>
-                                            <span class="break-words">{{ row.speciesName }}</span>
+                                            <span class="break-words"><span class="mr-1" aria-hidden="true">{{ speciesIcon(row.speciesName) }}</span>{{ row.speciesName }}</span>
                                         </div>
                                         <div>
                                             <span class="text-muted-color font-medium">Irk: </span>
@@ -301,6 +302,8 @@ export class PetsListPageComponent implements OnInit {
     readonly speciesOptions = signal<{ label: string; value: string }[]>([]);
     readonly canCreatePet = this.auth.hasOperationClaim(PETS_CREATE_CLAIM);
     readonly canUpdatePet = this.auth.hasOperationClaim(PETS_UPDATE_CLAIM);
+    /** Tür sütunu/satırında tür simgesi. */
+    readonly speciesIcon = speciesEmoji;
 
     readonly displayedRows = computed(() => this.rawItems());
 

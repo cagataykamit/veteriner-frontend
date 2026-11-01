@@ -12,14 +12,24 @@ import type { ExaminationListItemVm } from '@/app/entities/examination/models/ex
 import { kvkkTextVersionLabel } from '@/app/entities/kvkk/utils/kvkk-form.utils';
 import { CardAccountStatusComponent } from '@/app/entities/patient/components/card-account-status.component';
 import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { clientPhoneTelHref, formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
+/** KVKK rıza rozeti: durum rengi (kabul yeşil, ret amber, yok nötr). */
+const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
+    Accepted: 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-400',
+    Declined: 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+    None: 'border-surface-300 bg-surface-50 text-color dark:border-surface-600 dark:bg-surface-800'
+};
+
 /**
- * Müşteri kartı başlığı (ADR-020 karar 6): iletişim (aranabilir telefon, e-posta, adres, tercih edilen kanal; hatırlatma istemiyorsa belirgin not)
- * ve hesap durumu (açık borç, ücret bekleyen işlem, son muayene, sonraki randevu). Ad ve "Düzenle" sayfa başlığındadır.
- * KVKK açık rıza satırı (ADR-021): durum, form tarihi, işaretleyen ve işaretleme anındaki metin sürümü (ADR-032); işaretleme eylemi `[kvkkAction]` ile sayfadan yansıtılır (yetki sayfada).
+ * Müşteri kimlik kartı (ADR-020 karar 6): baş harf avatarı, ad, kayıt/güncellenme satırı, "Düzenle" (`[editAction]`, yetki sayfada),
+ * iletişim (aranabilir telefon öne çıkar, e-posta, adres ve tercih edilen kanal — boşsa "yok" yazılır; hatırlatma açık/kapalı rozeti),
+ * durum rozetleri ve gösterge şeridi (açık borç, ücret bekleyen işlem, son muayene, sonraki randevu).
+ * KVKK açık rıza (ADR-021) rozet + ayrıntı: durum, form tarihi, işaretleyen ve işaretleme anındaki metin sürümü (ADR-032); işaretleme eylemi sayfanın "Belgeler ve rıza" kartındadır.
+ * Portal rozeti etiketi sayfadan gelir (`portalChip`, durum "Portal erişimi" panelinde okunur).
  * "Fatura bilgileri" satırı (ADR-036): kişi türü, unvan, TCKN/VKN yalnız maskeli, vergi dairesi ve fatura adresi.
  */
 @Component({
@@ -30,63 +40,94 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     host: { class: 'block mb-4' },
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <section class="card mb-0" aria-label="İletişim ve hesap durumu" data-testid="client-card-header">
-            <p class="m-0 flex flex-wrap gap-x-6 gap-y-1" aria-label="İletişim">
-                @if (phoneHref(); as href) {
-                    <a [href]="href" class="text-primary no-underline whitespace-nowrap" data-testid="client-phone"><i class="pi pi-phone text-sm mr-1" aria-hidden="true"></i>{{ phone() }}</a>
-                } @else {
-                    <span class="text-muted-color" data-testid="client-phone-missing"><i class="pi pi-phone text-sm mr-1" aria-hidden="true"></i>Telefon yok</span>
-                }
-                @if (hasText(client().email)) {
-                    <a [href]="'mailto:' + client().email.trim()" class="text-primary no-underline break-all" data-testid="client-email"><i class="pi pi-envelope text-sm mr-1" aria-hidden="true"></i>{{ client().email }}</a>
-                }
-                @if (hasText(client().address)) {
-                    <span class="break-words" data-testid="client-address"><i class="pi pi-map-marker text-sm mr-1 text-muted-color" aria-hidden="true"></i>{{ client().address }}</span>
-                }
-                @if (client().preferredContactChannel !== 'None') {
-                    <span class="text-muted-color" data-testid="client-preferred-channel"
-                        >Tercih: <span class="font-medium text-color">{{ channelLabel() }}</span></span
-                    >
-                }
-            </p>
-            @if (client().remindersOptedOut) {
-                <p class="m-0 mt-2 inline-flex items-center gap-2 rounded-border border border-amber-300 dark:border-amber-700 px-2 py-1 text-sm font-medium text-amber-800 dark:text-amber-300" role="note" data-testid="client-reminders-opted-out">
-                    <i class="pi pi-bell-slash" aria-hidden="true"></i>Otomatik hatırlatma istemiyor: aşı ve randevu hatırlatma e-postaları gönderilmez.
-                </p>
-            }
-            <p class="m-0 mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" aria-label="KVKK açık rıza" data-testid="client-kvkk">
-                <span class="text-muted-color"><i class="pi pi-file-check mr-1" aria-hidden="true"></i>KVKK açık rıza:</span>
-                @switch (client().kvkkConsent.status) {
-                    @case ('Accepted') {
-                        <span class="font-medium text-green-700 dark:text-green-400" data-testid="client-kvkk-status">{{ kvkkLabel() }}</span>
-                    }
-                    @case ('Declined') {
-                        <span class="font-medium text-amber-800 dark:text-amber-300" data-testid="client-kvkk-status">{{ kvkkLabel() }}</span>
-                    }
-                    @default {
-                        <span class="font-medium" data-testid="client-kvkk-status">{{ kvkkLabel() }}</span>
-                        <span class="text-muted-color">· imzalı form alınmadı</span>
-                    }
-                }
-                @if (client().kvkkConsent.recordedOn; as on) {
-                    <span class="text-muted-color" data-testid="client-kvkk-date">· {{ on | trDate }}</span>
-                }
-                @if (client().kvkkConsent.recordedByName; as by) {
-                    <span class="text-muted-color" data-testid="client-kvkk-by">· işaretleyen: {{ by }}</span>
-                }
-                @if (client().kvkkConsent.status !== 'None') {
-                    <span class="text-muted-color" data-testid="client-kvkk-text-version" [attr.title]="kvkkTextHashTitle()">· metin sürümü: {{ kvkkTextVersion() }}</span>
-                }
-                <ng-content select="[kvkkAction]" />
-            </p>
-            @if (invoicingSummary(); as summary) {
-                <p class="m-0 mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" aria-label="Fatura bilgileri" data-testid="client-invoicing">
-                    <span class="text-muted-color"><i class="pi pi-id-card mr-1" aria-hidden="true"></i>Fatura bilgileri:</span>
-                    <span class="font-medium break-words" data-testid="client-invoicing-summary">{{ summary }}</span>
-                </p>
-            }
+        <section class="card mb-0 @container" aria-label="Müşteri kimliği ve hesap durumu" data-testid="client-card-header">
+            <div class="flex flex-wrap items-start gap-x-5 gap-y-3">
+                <div class="shrink-0 flex items-center justify-center w-11 h-11 text-base @md:w-14 @md:h-14 @md:text-xl rounded-full font-bold tracking-tight bg-primary-50 text-primary-700 dark:bg-primary-900/40 dark:text-primary-200" aria-hidden="true">
+                    {{ initials() }}
+                </div>
+                <!-- Ad sütunu: ad, kayıt satırı, iletişim, durum rozetleri ve fatura satırı avatarın sağında hizalı. -->
+                <div class="min-w-0 flex-1 basis-56">
+                    <h1 class="m-0 text-2xl font-semibold leading-tight text-surface-900 dark:text-surface-0 break-words" data-testid="client-name">{{ client().fullName }}</h1>
+                    <p class="m-0 mt-1 text-sm text-muted-color" data-testid="client-registration">{{ registrationLine() }}</p>
 
-            <app-card-account-status [balance]="balance()" [nextAppointment]="nextAppointment()">
+                    <p class="m-0 mt-3 flex flex-wrap items-center gap-x-6 gap-y-2" aria-label="İletişim">
+                        @if (phoneHref(); as href) {
+                            <a [href]="href" class="text-primary no-underline whitespace-nowrap text-base font-semibold tabular-nums" data-testid="client-phone"><i class="pi pi-phone text-sm mr-1.5" aria-hidden="true"></i>{{ phone() }}</a>
+                        } @else {
+                            <span class="text-muted-color text-base" data-testid="client-phone-missing"><i class="pi pi-phone text-sm mr-1.5" aria-hidden="true"></i>Telefon yok</span>
+                        }
+                        @if (hasText(client().email)) {
+                            <a [href]="'mailto:' + client().email.trim()" class="text-primary no-underline break-all" data-testid="client-email"><i class="pi pi-envelope text-sm mr-1.5" aria-hidden="true"></i>{{ client().email }}</a>
+                        } @else {
+                            <span class="text-muted-color" data-testid="client-email-missing"><i class="pi pi-envelope text-sm mr-1.5" aria-hidden="true"></i>E-posta yok</span>
+                        }
+                        @if (hasText(client().address)) {
+                            <span class="break-words" data-testid="client-address"><i class="pi pi-map-marker text-sm mr-1.5 text-muted-color" aria-hidden="true"></i>{{ client().address }}</span>
+                        } @else {
+                            <span class="text-muted-color" data-testid="client-address-missing"><i class="pi pi-map-marker text-sm mr-1.5" aria-hidden="true"></i>Adres yok</span>
+                        }
+                        <span class="text-muted-color" data-testid="client-preferred-channel"
+                            >Tercih: <span class="font-medium text-color">{{ channelLabel() }}</span></span
+                        >
+                    </p>
+
+                    <!-- Durum rozetleri: KVKK rıza (+ ayrıntı), portal, hatırlatma; işaretleme eylemi "Belgeler ve rıza" kartındadır. -->
+                    <div class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-sm">
+                        <p class="m-0 inline-flex flex-wrap items-center gap-x-2 gap-y-1.5" aria-label="KVKK açık rıza" data-testid="client-kvkk">
+                            <!-- Rozet tek satır (kırılmaz); ayrıntı yanına düz yazı, dar ekranda alt satıra iner. -->
+                            <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-medium whitespace-nowrap" [class]="kvkkChipClass()">
+                                <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0" aria-hidden="true"></span>
+                                <span class="font-normal">KVKK rıza:</span>
+                                <span data-testid="client-kvkk-status">{{ kvkkLabel() }}</span>
+                            </span>
+                            @if (client().kvkkConsent.status === 'None') {
+                                <span class="text-muted-color">imzalı form alınmadı</span>
+                            }
+                            @if (client().kvkkConsent.recordedOn; as on) {
+                                <span class="text-muted-color" data-testid="client-kvkk-date">{{ on | trDate }}</span>
+                            }
+                            @if (client().kvkkConsent.recordedByName; as by) {
+                                <span class="text-muted-color" data-testid="client-kvkk-by">· işaretleyen: {{ by }}</span>
+                            }
+                            @if (client().kvkkConsent.status !== 'None') {
+                                <span class="text-muted-color" data-testid="client-kvkk-text-version" [attr.title]="kvkkTextHashTitle()">· metin sürümü: {{ kvkkTextVersion() }}</span>
+                            }
+                        </p>
+                        @if (portalChip(); as label) {
+                            <span class="inline-flex items-center gap-1.5 rounded-full border border-surface-300 bg-surface-50 px-2.5 py-0.5 font-medium whitespace-nowrap dark:border-surface-600 dark:bg-surface-800" data-testid="client-portal-chip">
+                                <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0" aria-hidden="true"></span>{{ label }}
+                            </span>
+                        }
+                        @if (client().remindersOptedOut) {
+                            <span
+                                class="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 font-medium whitespace-nowrap text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300"
+                                role="note"
+                                title="Aşı ve randevu hatırlatma e-postaları gönderilmez."
+                                data-testid="client-reminders-opted-out"
+                                ><i class="pi pi-bell-slash text-xs" aria-hidden="true"></i>Otomatik hatırlatma istemiyor</span
+                            >
+                        } @else {
+                            <span
+                                class="inline-flex items-center gap-1.5 rounded-full border border-surface-300 bg-surface-50 px-2.5 py-0.5 font-medium whitespace-nowrap dark:border-surface-600 dark:bg-surface-800"
+                                title="Aşı ve randevu hatırlatma e-postaları gönderilir."
+                                data-testid="client-reminders-on"
+                                ><i class="pi pi-bell text-xs" aria-hidden="true"></i>Hatırlatmalar açık</span
+                            >
+                        }
+                    </div>
+                    @if (invoicingSummary(); as summary) {
+                        <p class="m-0 mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" aria-label="Fatura bilgileri" data-testid="client-invoicing">
+                            <span class="text-muted-color"><i class="pi pi-id-card mr-1" aria-hidden="true"></i>Fatura bilgileri:</span>
+                            <span class="font-medium break-words" data-testid="client-invoicing-summary">{{ summary }}</span>
+                        </p>
+                    }
+                </div>
+                <div class="flex flex-wrap gap-2 items-center w-full @md:w-auto @md:ml-auto">
+                    <ng-content select="[editAction]" />
+                </div>
+            </div>
+
+            <app-card-account-status variant="grid" [balance]="balance()" [nextAppointment]="nextAppointment()">
                 @if (pendingCharges(); as p) {
                     <div data-testid="account-pending-charges">
                         <dt class="text-muted-color text-sm">Ücret bekleyen</dt>
@@ -103,7 +144,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                                 <span class="block text-muted-color text-sm" data-testid="pending-unpriced">{{ s.unpricedCount }} kalem fiyat bekliyor</span>
                                             }
                                         } @else {
-                                            <span class="text-muted-color">Yok</span>
+                                            <span class="field-empty">Yok</span>
                                         }
                                     }
                                 }
@@ -129,7 +170,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                             <span class="text-muted-color text-sm"> · {{ exam.petName }}</span>
                                         }
                                     } @else {
-                                        <span class="text-muted-color">Yok</span>
+                                        <span class="field-empty">Yok</span>
                                     }
                                 }
                                 @case ('error') {
@@ -160,13 +201,29 @@ export class ClientCardHeaderComponent {
     /** Müşteri son özetinden; `ok` + `null` = kayıt yok. */
     readonly lastExamination = input<PetCardSection<ExaminationListItemVm | null>>(null);
     readonly nextAppointment = input<PetCardSection<AppointmentListItemVm | null>>(null);
+    /** Portal rozeti etiketi (`clientPortalChipLabel`); yetki yoksa veya durum okunamadıysa `null` (rozet çizilmez). */
+    readonly portalChip = input<string | null>(null);
 
     readonly hasText = (v: string | null | undefined) => !!v && !!v.trim() && v.trim() !== '—';
 
+    /** Avatar: adın ilk iki sözcüğünün baş harfleri (tek sözcükte ilk harf). */
+    readonly initials = computed(() => {
+        const parts = this.client().fullName.trim().split(/\s+/).filter(Boolean);
+
+        return (parts.length >= 2 ? `${parts[0][0]}${parts[1][0]}` : (parts[0]?.[0] ?? '')).toLocaleUpperCase('tr-TR');
+    });
+    /** Her iki tarih de yazılır; hiç güncellenmemiş kayıtta "—". */
+    readonly registrationLine = computed(() => {
+        const c = this.client();
+        const updated = c.updatedAtUtc ? formatUtcIsoAsLocalDateTimeDisplay(c.updatedAtUtc) : '—';
+
+        return `Kayıt: ${formatUtcIsoAsLocalDateTimeDisplay(c.createdAtUtc)} · Güncellenme: ${updated}`;
+    });
     readonly phone = computed(() => formatClientPhoneForDisplay(this.client().phone));
     readonly phoneHref = computed(() => clientPhoneTelHref(this.client().phone));
     readonly channelLabel = computed(() => clientContactChannelLabel(this.client().preferredContactChannel));
     readonly kvkkLabel = computed(() => kvkkConsentStatusLabel(this.client().kvkkConsent.status));
+    readonly kvkkChipClass = computed(() => KVKK_CHIP_CLASS[this.client().kvkkConsent.status]);
     readonly kvkkTextVersion = computed(() => kvkkTextVersionLabel(this.client().kvkkConsent.templateVersion));
     /** Tam özet ipucu olarak (ispat için karşılaştırılır); bilinmiyorsa ipucu yok. */
     readonly kvkkTextHashTitle = computed(() => {

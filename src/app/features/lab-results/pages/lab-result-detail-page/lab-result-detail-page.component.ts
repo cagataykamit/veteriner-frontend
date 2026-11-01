@@ -11,6 +11,8 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { RecordHistoryButtonComponent } from '@/app/entities/record-history/components/record-history-button.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
+import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-line/app-detail-subject-line.component';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -34,6 +36,8 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
+        AppDetailIdentityCardComponent,
+        AppDetailSubjectLineComponent,
         RecordHistoryButtonComponent,
         PetAlertBannerComponent,
         AppLoadingStateComponent,
@@ -56,119 +60,107 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
-        } @else if (row()) {
-            <app-page-header categoryLink="/panel/lab-results" categoryLinkLabel="Listeye dön" title="Lab sonucu" [description]="row()!.testName">
-                <div actions class="flex flex-wrap gap-2">
-                    @if (canUpdateLabResult && isEditable(row()!.status)) {
+        } @else if (row(); as r) {
+            <app-page-header categoryLink="/panel/lab-results" categoryLinkLabel="Listeye dön" />
+
+            <!-- Kimlik kartı: test adı + durum rozetleri, sonuç tarihi, kayıt satırı, hasta/sahip, iptal notu; sağda Düzenle/Sonuç gir, geçmiş ve İptal et (tek eylem şeridi gerekmez); gösterge şeridi. -->
+            <app-detail-identity-card icon="pi pi-chart-bar" [title]="r.testName" [subtitle]="r.resultDateUtc ? (r.resultDateUtc | trDateTime) : ''" [meta]="'Oluşturulma: ' + (r.createdAtUtc | trDateTime) + ' · Güncellenme: ' + (r.updatedAtUtc | trDateTime)" ariaLabel="Lab sonucu kimliği" testId="lab-result-identity-card">
+                <app-lab-result-status-badges badges [status]="r.status" [awaitingInterpretation]="r.awaitingInterpretation" />
+                <app-detail-subject-line [petId]="r.petId" [petName]="r.petName" [clientId]="r.clientId" [clientName]="r.clientName" />
+                @if (r.status === 'Cancelled') {
+                    <p class="m-0 mt-3 inline-flex items-start gap-2 rounded-border border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="status">
+                        <i class="pi pi-ban text-xs mt-1" aria-hidden="true"></i>
+                        <span><span class="font-medium">İptal edildi</span> · {{ r.cancelledAtUtc | trDateTime }}<span class="block whitespace-pre-wrap">Gerekçe: {{ r.cancelReason ?? '—' }}</span></span>
+                    </p>
+                }
+                <ng-container actions>
+                    @if (canUpdateLabResult && isEditable(r.status)) {
                         @if (ro.mutationBlocked()) {
-                            <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                            <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                         } @else {
-                            <a
-                                [routerLink]="['/panel/lab-results', row()!.id, 'edit']"
-                                pButton
-                                type="button"
-                               
-                               
-                                [class]="row()!.status === 'Requested' ? 'p-button-primary' : 'p-button-secondary'"
-                            ><i [class]="row()!.status === 'Requested' ? 'pi pi-check-square' : 'pi pi-pencil'"></i>{{ editLabel(row()!.status) }}</a>
-                            <button pButton type="button" class="p-button-danger p-button-outlined" (click)="cancelVisible.set(true)"><i class="pi pi-ban"></i>İptal et</button>
+                            <a [routerLink]="['/panel/lab-results', r.id, 'edit']" pButton type="button" [class]="r.status === 'Requested' ? 'p-button-primary' : 'p-button-outlined p-button-secondary'"
+                                ><i [class]="r.status === 'Requested' ? 'pi pi-check-square' : 'pi pi-pencil'"></i>{{ editLabel(r.status) }}</a
+                            >
                         }
                     }
+                    <app-record-history-button resource="lab-results" [recordId]="r.id" />
+                    @if (canUpdateLabResult && isEditable(r.status) && !ro.mutationBlocked()) {
+                        <button pButton type="button" class="p-button-danger p-button-outlined" (click)="cancelVisible.set(true)"><i class="pi pi-ban"></i>İptal et</button>
+                    }
+                </ng-container>
+                <div stat>
+                    <dt>İstem tarihi</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ r.requestedAtUtc | trDateTime }}</dd>
                 </div>
-                <app-record-history-button actions resource="lab-results" [recordId]="row()!.id" />
-            </app-page-header>
-            <app-pet-alert-banner [petId]="row()!.petId" />
+                <div stat>
+                    <dt>Sonuç tarihi</dt>
+                    <dd>
+                        @if (r.resultDateUtc) {
+                            <span class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ r.resultDateUtc | trDateTime }}</span>
+                        } @else {
+                            <span class="field-empty">Sonuç bekleniyor</span>
+                        }
+                    </dd>
+                </div>
+                <div stat>
+                    <dt>Muayene</dt>
+                    <dd>
+                        @if (r.examinationId) {
+                            <a [routerLink]="['/panel/examinations', r.examinationId]" class="text-primary font-semibold no-underline">Muayene kaydına git →</a>
+                        } @else {
+                            <span class="field-empty">Bağlı muayene yok</span>
+                        }
+                    </dd>
+                </div>
+            </app-detail-identity-card>
+            <app-pet-alert-banner [petId]="r.petId" />
 
-            <div class="grid grid-cols-12 gap-8">
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Genel</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Durum</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                <app-lab-result-status-badges [status]="row()!.status" [awaitingInterpretation]="row()!.awaitingInterpretation" />
-                            </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">İstem tarihi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.requestedAtUtc | trDateTime }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Sonuç tarihi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.resultDateUtc | trDateTime }}</dd>
-                            @if (row()!.status === 'Cancelled') {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">İptal tarihi</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.cancelledAtUtc | trDateTime }}</dd>
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">İptal gerekçesi</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0 whitespace-pre-wrap">{{ row()!.cancelReason ?? '—' }}</dd>
-                            }
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.createdAtUtc | trDateTime }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.updatedAtUtc | trDateTime }}</dd>
-                            @if (row()!.examinationId) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a [routerLink]="['/panel/examinations', row()!.examinationId]" class="text-primary font-medium no-underline">Muayene kaydına git →</a>
-                                </dd>
-                            }
-                        </dl>
-                    </div>
-                </div>
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Müşteri / hasta</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (row()!.clientId) {
-                                    <a [routerLink]="['/panel/clients', row()!.clientId]" class="text-primary font-medium no-underline">{{ row()!.clientName }}</a>
-                                } @else {
-                                    {{ row()!.clientName }}
-                                }
-                            </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Hasta</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (row()!.petId) {
-                                    <a [routerLink]="['/panel/pets', row()!.petId]" class="text-primary font-medium no-underline">{{ row()!.petName }}</a>
-                                } @else {
-                                    {{ row()!.petName }}
-                                }
-                            </dd>
-                        </dl>
-                    </div>
-                </div>
-                <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Sonuç</h5>
-                        <h6 class="mt-0 mb-2 text-muted-color text-sm">Sonuç metni</h6>
-                        @if (row()!.resultText) {
-                            <p class="mt-0 mb-4 whitespace-pre-wrap">{{ row()!.resultText }}</p>
+
+            <!-- Satır ızgarası: sonuç + yorum | notlar (8/4, eşit yükseklik); dosyalar tam genişlik. -->
+            <div class="@container flex flex-col gap-4">
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-8">
+                        <h5 class="mt-0 mb-3">Sonuç</h5>
+                        <h6 class="m-0 mb-1 field-label">Sonuç metni</h6>
+                        @if (r.resultText) {
+                            <p class="mt-0 mb-4 whitespace-pre-wrap">{{ r.resultText }}</p>
                         } @else {
-                            <p class="mt-0 mb-4 text-muted-color">Sonuç henüz girilmedi.</p>
+                            <p class="mt-0 mb-4 field-empty">Sonuç henüz girilmedi.</p>
                         }
-                        <h6 class="mt-0 mb-2 text-muted-color text-sm">Yorum</h6>
-                        <p class="mt-0 mb-4 whitespace-pre-wrap">{{ row()!.interpretation }}</p>
-                        <h6 class="mt-0 mb-2 text-muted-color text-sm">Notlar</h6>
-                        <p class="mt-0 mb-0 whitespace-pre-wrap">{{ row()!.notes }}</p>
+                        <h6 class="m-0 mb-1 field-label">Yorum</h6>
+                        @if (r.interpretation === emptyMark) {
+                            <p class="m-0 field-empty">Yorum yok</p>
+                        } @else {
+                            <p class="m-0 whitespace-pre-wrap">{{ r.interpretation }}</p>
+                        }
+                    </div>
+                    <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-4">
+                        <h5 class="mt-0 mb-3">Notlar</h5>
+                        @if (r.notes === emptyMark) {
+                            <p class="m-0 field-empty">Not yok</p>
+                        } @else {
+                            <p class="m-0 whitespace-pre-wrap">{{ r.notes }}</p>
+                        }
                     </div>
                 </div>
-                <div class="col-span-12">
-                    <section class="card" aria-labelledby="lab-files-title" data-testid="lab-files">
-                        <h5 id="lab-files-title" class="mt-0 mb-4">Dosyalar</h5>
-                        @if (filesError()) {
-                            <p class="text-red-500 text-sm m-0" role="alert">{{ filesError() }}</p>
-                        } @else {
-                            <app-stored-file-gallery
-                                [ownerPath]="filesOwner()"
-                                [files]="files()"
-                                [altBase]="'Lab sonucu: ' + row()!.testName"
-                                [emptyText]="row()!.status === 'Cancelled' ? 'Kayıt iptal edildi; dosyalara erişim kapalı.' : 'Henüz dosya yok (sonuç PDF’i veya fotoğrafı eklenebilir).'"
-                            />
-                        }
-                        @if (canAddFiles()) {
-                            <div class="mt-4">
-                                <app-stored-file-upload [ownerPath]="filesOwner()" [autoUpload]="true" (uploaded)="onFileUploaded($event)" />
-                            </div>
-                        }
-                    </section>
-                </div>
+                <section class="card mb-0" aria-labelledby="lab-files-title" data-testid="lab-files">
+                    <h5 id="lab-files-title" class="mt-0 mb-3">Dosyalar</h5>
+                    @if (filesError()) {
+                        <p class="text-red-500 text-sm m-0" role="alert">{{ filesError() }}</p>
+                    } @else {
+                        <app-stored-file-gallery
+                            [ownerPath]="filesOwner()"
+                            [files]="files()"
+                            [altBase]="'Lab sonucu: ' + r.testName"
+                            [emptyText]="r.status === 'Cancelled' ? 'Kayıt iptal edildi; dosyalara erişim kapalı.' : 'Henüz dosya yok (sonuç PDF’i veya fotoğrafı eklenebilir).'"
+                        />
+                    }
+                    @if (canAddFiles()) {
+                        <div class="mt-4">
+                            <app-stored-file-upload [ownerPath]="filesOwner()" [autoUpload]="true" (uploaded)="onFileUploaded($event)" />
+                        </div>
+                    }
+                </section>
             </div>
         }
 
@@ -195,6 +187,8 @@ export class LabResultDetailPageComponent implements OnInit {
     readonly savedMessage = signal<string | null>(null);
     readonly cancelVisible = signal(false);
     readonly canUpdateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM);
+    /** Mapper boş metin için kullandığı EM ile aynı. */
+    readonly emptyMark = '—';
     private readonly filesService = inject(StoredFilesService);
     readonly files = signal<StoredFileVm[]>([]);
     readonly filesError = signal<string | null>(null);

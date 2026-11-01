@@ -72,7 +72,9 @@ describe('PrescriptionDetailPageComponent — iptal', () => {
         return fixture;
     };
 
-    const buttons = (el: HTMLElement) => Array.from(el.querySelectorAll('[actions] a, [actions] button')).map((b) => b.textContent?.trim());
+    // Düzenle kimlik kartında, İptal et / Ödeme eylem şeridinde (müşteri/hasta kartıyla aynı dil).
+    const buttons = (el: HTMLElement) =>
+        Array.from(el.querySelectorAll('[data-testid="prescription-identity-card"] a, [data-testid="prescription-identity-card"] button, [data-testid="detail-action-bar"] a, [data-testid="detail-action-bar"] button')).map((b) => b.textContent?.trim());
 
     it('etkin reçetede Düzenle ve İptal et görünür; iptal servis çağrısı gerekçeyle yapılır', () => {
         const cancelPrescription = vi.fn(() => of(undefined));

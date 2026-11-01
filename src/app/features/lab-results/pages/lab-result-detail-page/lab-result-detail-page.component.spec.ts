@@ -52,17 +52,18 @@ describe('LabResultDetailPageComponent — başlık eylemleri', () => {
         const fixture = TestBed.createComponent(LabResultDetailPageComponent);
 
         fixture.detectChanges();
-        const actions = (fixture.nativeElement as HTMLElement).querySelectorAll('[actions]');
+        // Düzenle/Sonuç gir, geçmiş ve İptal et kimlik kartının sağında; ayrı eylem şeridi yok (tek düğme için şerit açılmaz).
+        const actions = (fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="lab-result-identity-card"] [class*="ml-auto"]');
 
         return Array.from(actions).flatMap((c) => Array.from(c.querySelectorAll('a, button')).map((e) => e.textContent?.trim() ?? ''));
     };
 
     it('Requested: "Sonuç gir" ve "İptal et" görünür', () => {
-        expect(render('Requested')).toEqual(['Sonuç gir', 'İptal et', 'Değişiklikleri gör']);
+        expect(render('Requested')).toEqual(['Sonuç gir', 'Değişiklikleri gör', 'İptal et']);
     });
 
     it('Resulted: "Düzenle" ve "İptal et" görünür (muayene durumundan bağımsız)', () => {
-        expect(render('Resulted')).toEqual(['Düzenle', 'İptal et', 'Değişiklikleri gör']);
+        expect(render('Resulted')).toEqual(['Düzenle', 'Değişiklikleri gör', 'İptal et']);
     });
 
     it('Cancelled: yalnız değişiklik geçmişi', () => {
@@ -107,7 +108,7 @@ describe('LabResultDetailPageComponent — İptal et', () => {
         const fixture = TestBed.createComponent(LabResultDetailPageComponent);
 
         fixture.detectChanges();
-        const cancelButton = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('[actions] button')).find((b) => b.textContent?.trim() === 'İptal et') as HTMLElement;
+        const cancelButton = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="lab-result-identity-card"] button')).find((b) => b.textContent?.trim() === 'İptal et') as HTMLElement;
 
         cancelButton.click();
         fixture.detectChanges();

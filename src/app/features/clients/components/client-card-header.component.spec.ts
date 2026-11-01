@@ -102,16 +102,18 @@ describe('ClientCardHeaderComponent', () => {
         expect(el.querySelector('[data-testid="account-next-appointment"]')?.textContent).toContain('Karabaş');
     });
 
-    it('iletişim tercihi: kanal varsa gösterilir; hatırlatma istemiyorsa belirgin not; varsayılanda ikisi de yok', () => {
+    it('iletişim tercihi her zaman yazılır (yoksa "Yok"); hatırlatma açık/kapalı rozeti', () => {
         let el = render({});
 
-        expect(el.querySelector('[data-testid="client-preferred-channel"]')).toBeNull();
+        expect(el.querySelector('[data-testid="client-preferred-channel"]')?.textContent).toContain('Yok');
         expect(el.querySelector('[data-testid="client-reminders-opted-out"]')).toBeNull();
+        expect(el.querySelector('[data-testid="client-reminders-on"]')?.textContent).toContain('Hatırlatmalar açık');
 
         TestBed.resetTestingModule();
         el = render({ client: { ...client, preferredContactChannel: 'WhatsApp', remindersOptedOut: true } });
         expect(el.querySelector('[data-testid="client-preferred-channel"]')?.textContent).toContain('WhatsApp');
         expect(el.querySelector('[data-testid="client-reminders-opted-out"]')?.textContent).toContain('hatırlatma istemiyor');
+        expect(el.querySelector('[data-testid="client-reminders-on"]')).toBeNull();
     });
 
     it('KVKK açık rıza: Yok iken "form alınmadı"; işaretliyken durum, tarih ve işaretleyen', () => {

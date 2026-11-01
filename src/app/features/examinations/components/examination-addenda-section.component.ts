@@ -3,7 +3,6 @@ import { ButtonModule } from 'primeng/button';
 import { ExaminationAddendumDialogComponent } from '@/app/features/examinations/components/examination-addendum-dialog.component';
 import type { ExaminationAddendumVm } from '@/app/entities/examination/models/examination-vm.model';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -15,12 +14,12 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-examination-addenda-section',
     standalone: true,
-    imports: [ButtonModule, AppEmptyStateComponent, AppErrorStateComponent, ExaminationAddendumDialogComponent, TrDateTimePipe],
+    imports: [ButtonModule, AppErrorStateComponent, ExaminationAddendumDialogComponent, TrDateTimePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="card" data-testid="addenda-section">
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                <h4 class="mt-0 mb-0 text-xl font-semibold">Kesinleşme sonrası ek notlar</h4>
+        <div class="card mb-0" data-testid="addenda-section">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <h5 class="mt-0 mb-0">Kesinleşme sonrası ek notlar</h5>
                 @if (canAdd()) {
                     <button pButton type="button" class="p-button-secondary" data-testid="addendum-open" (click)="dialogVisible.set(true)"><i class="pi pi-plus"></i>Ek not ekle</button>
                 }
@@ -30,7 +29,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             } @else if (error()) {
                 <app-error-state [detail]="error()!" (retry)="load()" />
             } @else if (addenda().length === 0) {
-                <app-empty-state message="Ek not yok." />
+                <p class="m-0 field-empty">Ek not yok.</p>
             } @else {
                 <ul class="list-none m-0 p-0" [class.opacity-60]="loading()" [attr.aria-busy]="loading()">
                     @for (a of addenda(); track a.id) {

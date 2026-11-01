@@ -2,30 +2,24 @@ import { Component, computed, input, output, ChangeDetectionStrategy } from '@an
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
-import { FINALIZED_LOCK_MESSAGE, type FinalizeCheckItem } from '@/app/features/examinations/utils/examination-procedures.utils';
-import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { type FinalizeCheckItem } from '@/app/features/examinations/utils/examination-procedures.utils';
 
 /**
  * Muayene çalışma alanının sağ paneli: kesinleştirme kontrol listesi (ADR-020 karar 4). Maddeler uyarıdır, engel değildir;
- * kesinleştirme onayı aynı kuralı (`finalizeChecklist`) kullanır. Kesinleşmiş muayenede kilit nedeni gösterilir (ADR-013).
+ * kesinleştirme onayı aynı kuralı (`finalizeChecklist`) kullanır. Kesinleşmiş muayenede yalnız ücret bekleyen madde kalır; kilit nedeni İşlemler bölümünde (ADR-013).
  * "Kesinleştir" düğmesi listenin altındadır: karar uyarıların okunduğu yerde verilir (ADR-027).
  */
 @Component({
     selector: 'app-examination-finalize-checklist',
     standalone: true,
-    imports: [RouterLink, ButtonModule, TrDateTimePipe],
+    imports: [RouterLink, ButtonModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <section class="card mb-0 p-4" aria-label="Kesinleştirme kontrolü" data-testid="finalize-checklist">
+        <!-- Kesinleşince tarih/kişi kimlik kartında, kilit notu İşlemler'de; burada yalnız hâlâ iş doğuran madde (ücret bekleyen) kalır, yoksa kart çizilmez. -->
+        @if (visible()) {
+        <section class="card mb-0" aria-label="Kesinleştirme kontrolü" data-testid="finalize-checklist">
             @if (exam().status === 'Finalized') {
-                <h5 class="mt-0 mb-2">Kesinleşti</h5>
-                <p class="text-sm text-muted-color m-0">
-                    {{ exam().finalizedAtUtc | trDateTime }}
-                    @if (exam().finalizedByName) {
-                        · {{ exam().finalizedByName }}
-                    }
-                </p>
-                <p class="text-sm text-muted-color mt-2 mb-0" role="note"><i class="pi pi-lock text-xs mr-1"></i>{{ lockMessage }}</p>
+                <h5 class="mt-0 mb-1">Bekleyen iş</h5>
             } @else {
                 <h5 class="mt-0 mb-1">Kesinleştirme kontrolü</h5>
                 <p class="text-sm text-muted-color mt-0 mb-0">Uyarılar kesinleştirmeyi engellemez.</p>
@@ -54,7 +48,9 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                 <button pButton type="button" class="w-full mt-3" data-testid="finalize-open" (click)="finalizeRequested.emit()"><i class="pi pi-lock"></i>Kesinleştir</button>
             }
         </section>
-    `
+        }
+    `,
+    host: { class: 'contents' }
 })
 export class ExaminationFinalizeChecklistComponent {
     readonly exam = input.required<ExaminationDetailVm>();
@@ -65,6 +61,5 @@ export class ExaminationFinalizeChecklistComponent {
 
     /** Kesinleşince yalnız hâlâ iş doğuran madde (ücret bekleyen) kalır; diğerleri artık değiştirilemez. */
     readonly visibleItems = computed(() => (this.exam().status === 'Finalized' ? this.items().filter((i) => i.key === 'pendingCharges' && !i.ok) : this.items()));
-
-    readonly lockMessage = FINALIZED_LOCK_MESSAGE;
+    readonly visible = computed(() => this.exam().status !== 'Finalized' || this.visibleItems().length > 0);
 }

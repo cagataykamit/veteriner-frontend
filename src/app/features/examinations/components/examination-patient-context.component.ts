@@ -13,6 +13,7 @@ import type { VaccinationListItemVm } from '@/app/entities/vaccination/models/va
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
 import { DetailRelatedSummariesService } from '@/app/entities/patient/services/detail-related-summaries.service';
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
 
 /** Bölüm yükleme durumu; `null` = bölüm bu kullanıcıya gösterilmez (okuma izni yok). */
 type Section<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error' } | null;
@@ -34,26 +35,25 @@ interface OverdueVaccinations {
 @Component({
     selector: 'app-examination-patient-context',
     standalone: true,
-    imports: [RouterLink, TrDatePipe],
+    imports: [AppDetailSeeAllLinkComponent, RouterLink, TrDatePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <section class="card mb-0 p-4" aria-label="Hasta bağlamı" data-testid="patient-context">
+        <section class="card mb-0" aria-label="Hasta bağlamı" data-testid="patient-context">
             <button
                 type="button"
-                class="w-full flex items-center justify-between gap-2 bg-transparent border-0 p-0 text-left cursor-pointer xl:cursor-default text-color"
+                class="w-full flex items-center justify-between gap-2 bg-transparent border-0 p-0 text-left cursor-pointer @4xl:cursor-default text-color"
                 [attr.aria-expanded]="expanded()"
                 data-testid="patient-context-toggle"
                 (click)="expanded.set(!expanded())"
             >
                 <h5 class="m-0">Hasta bağlamı</h5>
-                <!-- .pi display kuralı xl:hidden sınıfını ezer; gizleme sarmalayıcıda. -->
-                <span class="xl:hidden text-muted-color" aria-hidden="true"><i class="pi" [class.pi-chevron-down]="!expanded()" [class.pi-chevron-up]="expanded()"></i></span>
+                <i class="pi @4xl:hidden text-muted-color" [class.pi-chevron-down]="!expanded()" [class.pi-chevron-up]="expanded()" aria-hidden="true"></i>
             </button>
 
-            <dl class="m-0 mt-3 xl:block space-y-3 text-sm" [class.hidden]="!expanded()" data-testid="patient-context-body">
+            <dl class="m-0 mt-3 @4xl:block space-y-3 text-sm [&_dt]:mb-1 [&_dd]:m-0" [class.hidden]="!expanded()" data-testid="patient-context-body">
                 <div data-testid="ctx-weight">
-                    <dt class="text-muted-color">Kilo</dt>
-                    <dd class="m-0">
+                    <dt class="field-label">Kilo</dt>
+                    <dd>
                         @switch (summary()?.state) {
                             @case ('ok') {
                                 @if (weight(); as w) {
@@ -66,7 +66,7 @@ interface OverdueVaccinations {
                                         }
                                     </span>
                                 } @else {
-                                    <span class="text-muted-color">Kayıt yok</span>
+                                    <span class="field-empty">Kayıt yok</span>
                                 }
                             }
                             @case ('error') {
@@ -81,13 +81,13 @@ interface OverdueVaccinations {
 
                 @if (overdue(); as s) {
                     <div data-testid="ctx-overdue">
-                        <dt class="text-muted-color">Gecikmiş aşı</dt>
-                        <dd class="m-0">
+                        <dt class="field-label">Gecikmiş aşı</dt>
+                        <dd>
                             @switch (s.state) {
                                 @case ('ok') {
                                     @if (overdueData(); as o) {
                                         @if (o.total === 0) {
-                                            <span class="text-muted-color">Yok</span>
+                                            <span class="field-empty">Yok</span>
                                         } @else {
                                             <ul class="list-none m-0 p-0">
                                                 @for (v of o.items; track v.id) {
@@ -115,8 +115,8 @@ interface OverdueVaccinations {
                 }
 
                 <div data-testid="ctx-active">
-                    <dt class="text-muted-color">Aktif tedavi / yatış</dt>
-                    <dd class="m-0">
+                    <dt class="field-label">Aktif tedavi / yatış</dt>
+                    <dd>
                         @if (activeHospitalization(); as h) {
                             <a [routerLink]="['/panel/hospitalizations', h.id]" class="text-primary no-underline font-medium block" data-testid="ctx-hospitalization"> Yatışta: {{ h.reason ?? 'Yatış' }} </a>
                         }
@@ -135,22 +135,19 @@ interface OverdueVaccinations {
                             }
                         }
                         @if (noActiveCare()) {
-                            <span class="text-muted-color">Yok</span>
+                            <span class="field-empty">Yok</span>
                         }
                     </dd>
                 </div>
 
                 @if (recentExams(); as s) {
                     <div data-testid="ctx-recent-exams">
-                        <dt class="flex items-baseline justify-between gap-2">
-                            <span class="text-muted-color">Son muayeneler</span>
-                            <a routerLink="/panel/examinations" [queryParams]="{ petId: petId() }" class="text-primary no-underline">Tümü →</a>
-                        </dt>
-                        <dd class="m-0">
+                        <dt class="field-label">Son muayeneler</dt>
+                        <dd>
                             @switch (s.state) {
                                 @case ('ok') {
                                     @if (recentExamItems().length === 0) {
-                                        <span class="text-muted-color">Önceki muayene yok</span>
+                                        <span class="field-empty">Önceki muayene yok</span>
                                     } @else {
                                         <ul class="list-none m-0 p-0 space-y-1">
                                             @for (e of recentExamItems(); track e.id) {
@@ -160,6 +157,7 @@ interface OverdueVaccinations {
                                                 </li>
                                             }
                                         </ul>
+                                        <app-detail-see-all-link link="/panel/examinations" [queryParams]="{ petId: petId() }" [itemCount]="recentExamItems().length" />
                                     }
                                 }
                                 @case ('error') {
@@ -187,7 +185,7 @@ export class ExaminationPatientContextComponent {
     /** Son muayeneler listesinden çıkarılacak açık muayene. */
     readonly excludeExaminationId = input<string | null>(null);
 
-    /** Dar ekranda bölüm gövdesi; geniş ekranda CSS ile hep açık. */
+    /** Dar alanda bölüm gövdesi; geniş alanda (içerik ≥56rem) CSS ile hep açık. */
     readonly expanded = signal(false);
 
     readonly summary = signal<Section<PetSummaryVm>>(null);

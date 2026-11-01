@@ -188,7 +188,7 @@ describe('ProductDetailPageComponent', () => {
 
             expect(products.getById).toHaveBeenCalledTimes(2);
             expect(products.getStocksByProductId).toHaveBeenCalledWith('p1');
-            expect(text()).toContain('Genel bilgiler');
+            expect(text()).toContain('Ürün bilgileri');
         });
 
         it('stok kaydı yoksa boş durum; parti kartı çıkmaz', () => {
@@ -211,7 +211,7 @@ describe('ProductDetailPageComponent', () => {
             render();
 
             expect(text()).toContain('Stoklar alınamadı.');
-            expect(text()).toContain('Genel bilgiler');
+            expect(text()).toContain('Ürün bilgileri');
         });
     });
 
@@ -220,7 +220,7 @@ describe('ProductDetailPageComponent', () => {
             render();
             const t = text();
 
-            for (const s of ['Ürün detayı', 'Amoksisilin 250 mg · AMX-250', 'Genel bilgiler', 'Barkod', '8690000000001', 'Antibiyotik', 'İlaç', 'Tablet', '₺120,00', 'Aktif', 'Açıklama', 'Açıklama yok.']) {
+            for (const s of ['Amoksisilin 250 mg', 'SKU: AMX-250', 'Ürün bilgileri', 'Barkod', '8690000000001', 'Antibiyotik', 'İlaç', 'Tablet', '₺120,00', 'Aktif', 'Açıklama', 'Açıklama yok']) {
                 expect(t).toContain(s);
             }
 
@@ -353,7 +353,7 @@ describe('ProductDetailPageComponent', () => {
             products.getStocksByProductId.mockReturnValue(of([stock(), stock({ id: 's2', clinicId: 'c2', clinicName: 'Şube Klinik' })]));
             render();
 
-            click(el().querySelector('app-page-header')!, 'Stok işlemi');
+            click(el().querySelector('[data-testid="detail-action-bar"]')!, 'Stok işlemi');
 
             expect(dialogText()).toContain('Klinik *');
             expect(dialogText()).not.toContain('Giriş miktarı *');
@@ -365,7 +365,7 @@ describe('ProductDetailPageComponent', () => {
             movements.create.mockReturnValue(of(undefined));
             render();
 
-            click(el().querySelector('app-page-header')!, 'Stok işlemi');
+            click(el().querySelector('[data-testid="detail-action-bar"]')!, 'Stok işlemi');
 
             expect(dialogText()).toContain('Aktif Klinik');
             expect(dialogText()).toContain('Bu ürün için seçili klinikte henüz stok kaydı yok');
@@ -382,7 +382,7 @@ describe('ProductDetailPageComponent', () => {
             clinicId = null;
             render();
 
-            const header = findButton(el().querySelector('app-page-header')!, 'Stok işlemi');
+            const header = findButton(el().querySelector('[data-testid="detail-action-bar"]')!, 'Stok işlemi');
 
             expect(header.disabled).toBe(true);
             expect(header.title).toBe('Bu ürün için henüz klinik stok kaydı yok. İlk stok kaydı oluşturmak için klinik bilgisi gereklidir.');

@@ -8,6 +8,9 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { RecordHistoryButtonComponent } from '@/app/entities/record-history/components/record-history-button.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppDetailActionBarComponent } from '@/app/shared/ui/detail-action-bar/app-detail-action-bar.component';
+import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
+import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-line/app-detail-subject-line.component';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -23,7 +26,24 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
 @Component({
     selector: 'app-prescription-detail-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, RecordHistoryButtonComponent, PetAlertBannerComponent, AppLoadingStateComponent, AppErrorStateComponent, HbsSectionComponent, AppStatusTagComponent, ReasonConfirmDialogComponent, TrDatePipe, TrDateTimePipe],
+    imports: [
+        CommonModule,
+        RouterLink,
+        ButtonModule,
+        AppPageHeaderComponent,
+        AppDetailIdentityCardComponent,
+        AppDetailActionBarComponent,
+        AppDetailSubjectLineComponent,
+        RecordHistoryButtonComponent,
+        PetAlertBannerComponent,
+        AppLoadingStateComponent,
+        AppErrorStateComponent,
+        HbsSectionComponent,
+        AppStatusTagComponent,
+        ReasonConfirmDialogComponent,
+        TrDatePipe,
+        TrDateTimePipe
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
@@ -36,152 +56,145 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
-        } @else if (row()) {
-            <app-page-header categoryLink="/panel/prescriptions" categoryLinkLabel="Reçete listesine dön" title="Reçete" [description]="row()!.title">
-                <div actions class="flex flex-wrap gap-2">
-                    @if (canUpdatePrescription && !ro.mutationBlocked() && !row()!.isCancelled) {
-                        <a [routerLink]="['/panel/prescriptions', row()!.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
-                        @if (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim()) {
-                            <a
-                                [routerLink]="['/panel/payments/new']"
-                                [queryParams]="{
-                                    clientId: row()!.clientId,
-                                    petId: row()!.petId,
-                                    examinationId: row()!.examinationId
-                                }"
-                                pButton
-                                type="button"
-                               
-                               
-                                class="p-button-secondary"
-                            ><i class="pi pi-wallet"></i>Ödeme Oluştur</a>
-                        }
-                        <button pButton type="button" class="p-button-danger p-button-outlined" data-testid="prescription-cancel-open" (click)="cancelVisible.set(true)"><i class="pi pi-ban"></i>İptal et</button>
-                    } @else if (canUpdatePrescription && ro.mutationBlocked() && !row()!.isCancelled) {
-                        <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
-                        @if (row()!.examinationId?.trim() && row()!.clientId?.trim() && row()!.petId?.trim()) {
-                            <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Ödeme Oluştur (salt okunur)</button>
+        } @else if (row(); as r) {
+            <app-page-header categoryLink="/panel/prescriptions" categoryLinkLabel="Reçete listesine dön" />
+
+            <!-- Kimlik kartı: başlık + iptal/geç kayıt rozetleri, reçete tarihi, kayıt satırı, hasta/sahip, iptal notu; sağda Düzenle ve geçmiş; gösterge şeridi. -->
+            <app-detail-identity-card icon="pi pi-file-edit" [title]="r.title" [subtitle]="r.prescribedAtUtc | trDateTime" [meta]="'Oluşturulma: ' + (r.createdAtUtc | trDateTime) + ' · Güncellenme: ' + (r.updatedAtUtc | trDateTime)" ariaLabel="Reçete kimliği" testId="prescription-identity-card">
+                <ng-container badges>
+                    @if (r.isCancelled) {
+                        <span data-testid="prescription-cancelled"><app-status-tag label="İptal" severity="danger" /></span>
+                    }
+                    @if (r.addedAfterFinalization) {
+                        <span data-testid="prescription-late-entry" [title]="r.lateEntryReason ? 'Gerekçe: ' + r.lateEntryReason : null"><app-status-tag [label]="lateEntryLabel" severity="warn" /></span>
+                    }
+                </ng-container>
+                <app-detail-subject-line [petId]="r.petId" [petName]="r.petName" [clientId]="r.clientId" [clientName]="r.clientName" />
+                @if (r.isCancelled) {
+                    <p class="m-0 mt-3 inline-flex items-start gap-2 rounded-border border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="status">
+                        <i class="pi pi-ban text-xs mt-1" aria-hidden="true"></i>
+                        <span><span class="font-medium">İptal edildi</span> · {{ r.cancelledAtUtc | trDateTime }}@if (r.cancelledByName) { · {{ r.cancelledByName }} }<span class="block whitespace-pre-wrap">Gerekçe: {{ r.cancelReason ?? '—' }}</span></span>
+                    </p>
+                }
+                @if (r.addedAfterFinalization && r.lateEntryReason) {
+                    <p class="m-0 mt-2 text-sm text-muted-color">Geç kayıt gerekçesi: {{ r.lateEntryReason }}</p>
+                }
+                <ng-container actions>
+                    @if (canUpdatePrescription && !r.isCancelled) {
+                        @if (!ro.mutationBlocked()) {
+                            <a [routerLink]="['/panel/prescriptions', r.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
+                        } @else {
+                            <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                         }
                     }
+                    <app-record-history-button resource="prescriptions" [recordId]="r.id" />
+                </ng-container>
+                <div stat>
+                    <dt>Reçete tarihi</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ r.prescribedAtUtc | trDateTime }}</dd>
                 </div>
-                <app-record-history-button actions resource="prescriptions" [recordId]="row()!.id" />
-            </app-page-header>
-            <app-pet-alert-banner [petId]="row()!.petId" />
+                <div stat>
+                    <dt>Takip tarihi</dt>
+                    <dd>
+                        @if (r.followUpDateUtc) {
+                            <span class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ r.followUpDateUtc | trDate }}</span>
+                        } @else {
+                            <span class="field-empty">Yok</span>
+                        }
+                    </dd>
+                </div>
+                <div stat>
+                    <dt>Muayene</dt>
+                    <dd>
+                        @if (r.examinationId) {
+                            <a [routerLink]="['/panel/examinations', r.examinationId]" class="text-primary font-semibold no-underline">Muayene kaydına git →</a>
+                        } @else {
+                            <span class="field-empty">Bağlı muayene yok</span>
+                        }
+                    </dd>
+                </div>
+                <div stat>
+                    <dt>Tedavi</dt>
+                    <dd>
+                        @if (r.treatmentId) {
+                            <a [routerLink]="['/panel/treatments', r.treatmentId]" class="text-primary font-semibold no-underline">Tedavi kaydına git →</a>
+                        } @else {
+                            <span class="field-empty">Bağlı tedavi yok</span>
+                        }
+                    </dd>
+                </div>
+            </app-detail-identity-card>
+            <app-pet-alert-banner [petId]="r.petId" />
 
-            <div class="grid grid-cols-12 gap-8">
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Genel</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Reçete tarihi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.prescribedAtUtc | trDateTime }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Takip tarihi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.followUpDateUtc | trDate }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.createdAtUtc | trDateTime }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.updatedAtUtc | trDateTime }}</dd>
-                            @if (row()!.isCancelled) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Durum</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0" data-testid="prescription-cancelled"><app-status-tag label="İptal" severity="danger" /></dd>
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">İptal</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ row()!.cancelledAtUtc | trDateTime }}@if (row()!.cancelledByName) { · {{ row()!.cancelledByName }} }</dd>
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">İptal gerekçesi</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0 whitespace-pre-wrap">{{ row()!.cancelReason ?? '—' }}</dd>
-                            }
-                            @if (row()!.addedAfterFinalization) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Kayıt</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0" data-testid="prescription-late-entry">
-                                    <app-status-tag [label]="lateEntryLabel" severity="warn" />
-                                    @if (row()!.lateEntryReason) {
-                                        <div class="text-sm text-muted-color mt-1">Gerekçe: {{ row()!.lateEntryReason }}</div>
-                                    }
-                                </dd>
-                            }
-                            @if (row()!.examinationId) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Muayene</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a [routerLink]="['/panel/examinations', row()!.examinationId]" class="text-primary font-medium no-underline">Muayene kaydına git →</a>
-                                </dd>
-                            }
-                            @if (row()!.treatmentId) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Tedavi</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">
-                                    <a [routerLink]="['/panel/treatments', row()!.treatmentId]" class="text-primary font-medium no-underline">Tedavi kaydına git →</a>
-                                </dd>
-                            }
-                        </dl>
+            <!-- Eylem şeridi: ödeme ve iptal; salt okunurda kilitli. -->
+            @if (canUpdatePrescription && !r.isCancelled) {
+                <app-detail-action-bar ariaLabel="Reçete eylemleri">
+                    @if (!ro.mutationBlocked()) {
+                        @if (r.examinationId?.trim() && r.clientId?.trim() && r.petId?.trim()) {
+                            <a [routerLink]="['/panel/payments/new']" [queryParams]="{ clientId: r.clientId, petId: r.petId, examinationId: r.examinationId }" pButton type="button" class="p-button-primary"><i class="pi pi-wallet"></i>Ödeme Oluştur</a>
+                        }
+                        <button pButton type="button" class="p-button-danger p-button-outlined" data-testid="prescription-cancel-open" (click)="cancelVisible.set(true)"><i class="pi pi-ban"></i>İptal et</button>
+                    } @else if (r.examinationId?.trim() && r.clientId?.trim() && r.petId?.trim()) {
+                        <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-lock"></i>Ödeme Oluştur (salt okunur)</button>
+                    }
+                </app-detail-action-bar>
+            }
+
+            <!-- Satır ızgarası: içerik | notlar (8/4, eşit yükseklik); ilaç satırları ve HBS tam genişlik. -->
+            <div class="@container flex flex-col gap-4">
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-8">
+                        <h5 class="mt-0 mb-3">İçerik</h5>
+                        @if (r.content === emptyMark) {
+                            <p class="m-0 field-empty">İçerik yok</p>
+                        } @else {
+                            <p class="m-0 whitespace-pre-wrap">{{ r.content }}</p>
+                        }
+                    </div>
+                    <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-4">
+                        <h5 class="mt-0 mb-3">Notlar</h5>
+                        @if (r.notes === emptyMark) {
+                            <p class="m-0 field-empty">Not yok</p>
+                        } @else {
+                            <p class="m-0 whitespace-pre-wrap">{{ r.notes }}</p>
+                        }
                     </div>
                 </div>
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Müşteri / hasta</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (row()!.clientId) {
-                                    <a [routerLink]="['/panel/clients', row()!.clientId]" class="text-primary font-medium no-underline">{{ row()!.clientName }}</a>
-                                } @else {
-                                    {{ row()!.clientName }}
-                                }
-                            </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Hasta</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (row()!.petId) {
-                                    <a [routerLink]="['/panel/pets', row()!.petId]" class="text-primary font-medium no-underline">{{ row()!.petName }}</a>
-                                } @else {
-                                    {{ row()!.petName }}
-                                }
-                            </dd>
-                        </dl>
-                    </div>
-                </div>
-                <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">İçerik</h5>
-                        <p class="mt-0 mb-3 font-medium">{{ row()!.title }}</p>
-                        <h6 class="mt-0 mb-2 text-muted-color text-sm">İçerik</h6>
-                        <p class="mt-0 mb-4 whitespace-pre-wrap">{{ row()!.content }}</p>
-                        <h6 class="mt-0 mb-2 text-muted-color text-sm">Notlar</h6>
-                        <p class="mt-0 mb-0 whitespace-pre-wrap">{{ row()!.notes }}</p>
-                    </div>
-                </div>
-                @if (row()!.items.length > 0) {
-                    <div class="col-span-12">
-                        <div class="card" data-testid="prescription-items">
-                            <h5 class="mt-0 mb-4">İlaç / ürün satırları</h5>
-                            <ul class="list-none m-0 p-0">
-                                @for (item of row()!.items; track item.id) {
-                                    <li class="mb-3 last:mb-0 min-w-0">
-                                        <div class="font-medium break-words">
-                                            {{ item.name }}
-                                            @if (item.quantity !== null) {
-                                                <span class="text-muted-color font-normal"> · Miktar: {{ item.quantity }} {{ item.unit }}</span>
-                                            }
-                                            @if (item.dose) {
-                                                <span class="text-muted-color font-normal"> · Doz: {{ item.dose }}</span>
-                                            }
-                                        </div>
-                                        @if (item.instructions) {
-                                            <div class="text-sm text-muted-color break-words">{{ item.instructions }}</div>
-                                        }
-                                        @if (item.lotNumber) {
-                                            <div class="text-sm text-muted-color break-words">Parti/seri no: {{ item.lotNumber }}</div>
-                                        }
-                                    </li>
-                                }
-                            </ul>
+                @if (r.items.length > 0) {
+                    <div class="card mb-0" data-testid="prescription-items">
+                        <div class="flex items-center gap-2 mb-3">
+                            <h5 class="m-0">İlaç / ürün satırları</h5>
+                            <span class="text-sm font-medium text-muted-color">({{ r.items.length }})</span>
                         </div>
+                        <ul class="list-none m-0 p-0">
+                            @for (item of r.items; track item.id) {
+                                <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0">
+                                    <div class="font-semibold text-surface-900 dark:text-surface-0 break-words">
+                                        {{ item.name }}
+                                        @if (item.quantity !== null) {
+                                            <span class="text-muted-color font-normal text-sm"> · Miktar: {{ item.quantity }} {{ item.unit }}</span>
+                                        }
+                                        @if (item.dose) {
+                                            <span class="text-muted-color font-normal text-sm"> · Doz: {{ item.dose }}</span>
+                                        }
+                                    </div>
+                                    @if (item.instructions) {
+                                        <div class="text-sm break-words">{{ item.instructions }}</div>
+                                    }
+                                    @if (item.lotNumber) {
+                                        <div class="text-sm text-muted-color break-words">Parti/seri no: {{ item.lotNumber }}</div>
+                                    }
+                                </li>
+                            }
+                        </ul>
                     </div>
                 }
-                <div class="col-span-12">
-                    <app-hbs-section kind="prescription" [recordId]="row()!.id" [entry]="row()!.hbs" [canEdit]="canUpdatePrescription && !ro.mutationBlocked()" (entryChange)="onHbsChange($event)" />
-                </div>
+                <app-hbs-section kind="prescription" [recordId]="r.id" [entry]="r.hbs" [canEdit]="canUpdatePrescription && !ro.mutationBlocked()" (entryChange)="onHbsChange($event)" />
             </div>
             <app-reason-confirm-dialog
                 [(visible)]="cancelVisible"
                 header="Reçeteyi iptal et"
-                [summary]="row()!.title"
+                [summary]="r.title"
                 description="Reçete silinmez; iptal edildi olarak işaretlenir, gerekçe kayda geçer ve geri alınamaz. Düzeltmek için yeni reçete yazın."
                 confirmLabel="İptal et"
                 failureFallback="Reçete iptal edilemedi."
@@ -211,6 +224,8 @@ export class PrescriptionDetailPageComponent implements OnInit {
     readonly canUpdatePrescription = this.auth.hasOperationClaim(PRESCRIPTIONS_UPDATE_CLAIM);
     readonly cancelVisible = signal(false);
     protected readonly lateEntryLabel = ADMINISTRATION_LATE_ENTRY_LABEL;
+    /** Mapper boş metin için kullandığı EM ile aynı. */
+    readonly emptyMark = '—';
 
     /** Gerekçeli iptal (RECORD-008); diyalog her açılışta güncel kaydın kimliğini kullanır. */
     readonly cancelPrescription = (reason: string) => this.prescriptionsService.cancelPrescription(this.row()!.id, reason);

@@ -10,7 +10,8 @@ import { DetailRelatedSummariesService } from '@/app/entities/patient/services/d
 import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { appointmentStatusLabel, appointmentStatusSeverity, canMarkAppointmentNoShow, canRevertAppointmentNoShow, isAppointmentNoShowStatus, isAppointmentCancelledStatus } from '@/app/entities/appointment/utils/appointment-status.utils';
-import { appointmentTypeDisplayLabel, appointmentTypeDisplaySeverity } from '@/app/entities/appointment/utils/appointment-type.utils';
+import { appointmentTypeDisplayLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
+import { DETAIL_STATS_GRID_CLASS } from '@/app/shared/ui/detail.classes';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -25,11 +26,12 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { APPOINTMENTS_NOSHOW_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM, EXAMINATIONS_CREATE_CLAIM, VISITS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
+import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-line/app-detail-subject-line.component';
 
 @Component({
     selector: 'app-appointment-detail-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppointmentNoShowDialogComponent, TrDateTimePipe],
+    imports: [AppDetailSubjectLineComponent, CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppointmentNoShowDialogComponent, TrDateTimePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
@@ -42,115 +44,98 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
             <div class="card">
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
-        } @else if (appt()) {
-            <app-page-header
-                [categoryLink]="backLink()"
-                [categoryLinkLabel]="backLabel()"
-                title="Randevu"
-                [description]="(appt()!.scheduledAtUtc | trDateTime) + ' · ' + statusLabel(appt()!.status) + ' · ' + typeDisplay(appt()!.appointmentType, appt()!.appointmentTypeName)"
-            >
-                <div actions class="flex flex-wrap gap-2">
-                    @if (canRescheduleAppointment && !ro.mutationBlocked()) {
-                        <a [routerLink]="['/panel/appointments', appt()!.id, 'edit']" [queryParams]="returnContextQueryParams() ?? undefined" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
-                    } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
-                        <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
-                    }
-                    @if (canNoShow && !ro.mutationBlocked()) {
-                        @if (canMarkNoShow(appt()!.status, appt()!.scheduledAtUtc, now())) {
-                            <button pButton type="button" class="p-button-secondary" (click)="openNoShow('mark')"><i class="pi pi-user-minus"></i>Gelmedi işaretle</button>
-                        } @else if (canRevertNoShow(appt()!.status)) {
-                            <button pButton type="button" class="p-button-secondary" (click)="openNoShow('revert')"><i class="pi pi-undo"></i>Gelmedi işaretini geri al</button>
+        } @else if (appt(); as a) {
+            <app-page-header [categoryLink]="backLink()" [categoryLinkLabel]="backLabel()" />
+
+            <!--
+                Kimlik kartı (müşteri/hasta kartıyla aynı dil): tür + durum rozeti, tarih-saat, kayıt satırı, hasta/sahip bağlantıları,
+                iptal/gelmedi uyarısı; sağda Düzenle; altta gösterge şeridi (başlangıç, bitiş, süre).
+            -->
+            <section class="card mb-4 @container" aria-label="Randevu kimliği" data-testid="appointment-card-header">
+                <div class="flex flex-wrap items-start gap-x-5 gap-y-3">
+                    <div class="shrink-0 flex items-center justify-center w-11 h-11 text-lg @md:w-14 @md:h-14 @md:text-2xl rounded-full bg-primary-50 text-primary-700 dark:bg-primary-900/40 dark:text-primary-200" aria-hidden="true">
+                        <i class="pi pi-calendar"></i>
+                    </div>
+                    <div class="min-w-0 flex-1 basis-56">
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                            <h1 class="m-0 text-2xl font-semibold leading-tight text-surface-900 dark:text-surface-0 break-words">{{ typeDisplay(a.appointmentType, a.appointmentTypeName) }}</h1>
+                            <app-status-tag [label]="statusLabel(a.status)" [severity]="statusSeverity(a.status)" />
+                        </div>
+                        <p class="m-0 mt-1 text-base font-medium text-surface-900 dark:text-surface-0 tabular-nums">{{ a.scheduledAtUtc | trDateTime }}</p>
+                        <p class="m-0 mt-1 text-sm text-muted-color">Oluşturulma: {{ a.createdAtUtc | trDateTime }} · Güncellenme: {{ a.updatedAtUtc | trDateTime }}</p>
+
+                        <app-detail-subject-line [petId]="a.petId" [petName]="a.petName" [speciesName]="a.speciesName" [clientId]="a.clientId" [clientName]="a.clientName" />
+
+                        @if (isCancelledForExam(a.status) || isNoShow(a.status)) {
+                            <p class="m-0 mt-3 inline-flex items-start gap-2 rounded-border border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-sm font-medium text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-300" role="status">
+                                <i class="pi pi-exclamation-triangle text-xs mt-1" aria-hidden="true"></i>{{ isNoShow(a.status) ? copy.noShowAppointmentExamCreateBlocked : copy.cancelledAppointmentExamCreateBlocked }}
+                            </p>
                         }
-                    }
-                    @if (canCreateExamination && appt()!.clientId?.trim() && appt()!.petId?.trim()) {
-                        @if (isCancelledForExam(appt()!.status) || isNoShow(appt()!.status)) {
-                            <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-ban"></i>Muayene Oluştur</button>
-                        } @else if (ro.mutationBlocked()) {
-                            <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Muayene Oluştur (salt okunur)</button>
-                        } @else if (canOpenVisit) {
-                            <button pButton type="button" class="p-button-secondary" [disabled]="startingExam()" (click)="startExamination()"><i [class]="startingExam() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>Muayene Oluştur</button>
-                        } @else {
-                            <a
-                                [routerLink]="['/panel/examinations/new']"
-                                [queryParams]="{
-                                    clientId: appt()!.clientId,
-                                    petId: appt()!.petId,
-                                    appointmentId: appt()!.id
-                                }"
-                                pButton
-                                type="button"
-                               
-                               
-                                class="p-button-secondary"
-                            ><i class="pi pi-plus"></i>Muayene Oluştur</a>
+                    </div>
+                    <div class="flex flex-wrap gap-2 items-center w-full @md:w-auto @md:ml-auto">
+                        @if (canRescheduleAppointment && !ro.mutationBlocked()) {
+                            <a [routerLink]="['/panel/appointments', a.id, 'edit']" [queryParams]="returnContextQueryParams() ?? undefined" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
+                        } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
+                            <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                         }
-                    }
+                    </div>
                 </div>
-                @if (isCancelledForExam(appt()!.status) || isNoShow(appt()!.status)) {
-                    <p class="text-amber-700 dark:text-amber-300 text-sm m-0 mt-2" role="status">
-                        {{ isNoShow(appt()!.status) ? copy.noShowAppointmentExamCreateBlocked : copy.cancelledAppointmentExamCreateBlocked }}
-                    </p>
-                }
-            </app-page-header>
+
+                <dl [class]="statsClass" aria-label="Zaman">
+                    <div>
+                        <dt>Başlangıç</dt>
+                        <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ a.scheduledAtUtc | trDateTime }}</dd>
+                    </div>
+                    <div>
+                        <dt>Bitiş</dt>
+                        <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ a.scheduledEndUtc | trDateTime }}</dd>
+                    </div>
+                    <div>
+                        <dt>Süre</dt>
+                        <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ a.durationLabel }}</dd>
+                    </div>
+                </dl>
+            </section>
+
             @if (startExamError(); as startError) {
                 <p class="text-red-500 text-sm mt-0 mb-4" role="alert">{{ startError }}</p>
             }
             @if (canNoShow) {
-                <app-appointment-no-show-dialog [(visible)]="noShowOpen" [appointmentId]="appt()!.id" [mode]="noShowMode()" [subject]="noShowSubject()" (done)="onNoShowDone()" />
+                <app-appointment-no-show-dialog [(visible)]="noShowOpen" [appointmentId]="a.id" [mode]="noShowMode()" [subject]="noShowSubject()" (done)="onNoShowDone()" />
             }
 
-            <div class="grid grid-cols-12 gap-8">
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Genel bilgiler</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Durum</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                <app-status-tag [label]="statusLabel(appt()!.status)" [severity]="statusSeverity(appt()!.status)" />
-                            </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Randevu Türü</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                <app-status-tag [label]="typeDisplay(appt()!.appointmentType, appt()!.appointmentTypeName)" [severity]="typeSeverity(appt()!.appointmentType)" />
-                            </dd>
-                            @if (appt()!.speciesName) {
-                                <dt class="col-span-12 sm:col-span-4 text-muted-color">Hayvan Türü</dt>
-                                <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.speciesName }}</dd>
-                            }
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Başlangıç</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.scheduledAtUtc | trDateTime }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Bitiş saati</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.scheduledEndUtc | trDateTime }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Randevu süresi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.durationLabel }}</dd>
-                        </dl>
-                    </div>
+            <!-- Eylem şeridi (müşteri/hasta kartıyla aynı): muayene aç ve gelmedi; kapalı durumda kilitli görünür. -->
+            @if (canCreateExamination || canNoShow) {
+                <div class="mb-4 py-2 flex flex-wrap gap-2 items-center" role="toolbar" aria-label="Randevu eylemleri" data-testid="appointment-action-bar">
+                    @if (canCreateExamination && a.clientId?.trim() && a.petId?.trim()) {
+                        @if (isCancelledForExam(a.status) || isNoShow(a.status)) {
+                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-ban"></i>Muayene Oluştur</button>
+                        } @else if (ro.mutationBlocked()) {
+                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-lock"></i>Muayene Oluştur (salt okunur)</button>
+                        } @else if (canOpenVisit) {
+                            <button pButton type="button" class="p-button-primary" [disabled]="startingExam()" (click)="startExamination()"><i [class]="startingExam() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>Muayene Oluştur</button>
+                        } @else {
+                            <a [routerLink]="['/panel/examinations/new']" [queryParams]="{ clientId: a.clientId, petId: a.petId, appointmentId: a.id }" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Muayene Oluştur</a>
+                        }
+                    }
+                    @if (canNoShow && !ro.mutationBlocked()) {
+                        @if (canMarkNoShow(a.status, a.scheduledAtUtc, now())) {
+                            <button pButton type="button" class="p-button-outlined p-button-secondary" (click)="openNoShow('mark')"><i class="pi pi-user-minus"></i>Gelmedi işaretle</button>
+                        } @else if (canRevertNoShow(a.status)) {
+                            <button pButton type="button" class="p-button-outlined p-button-secondary" (click)="openNoShow('revert')"><i class="pi pi-undo"></i>Gelmedi işaretini geri al</button>
+                        }
+                    }
+                    @if (ro.mutationBlocked()) {
+                        <span class="text-amber-700 dark:text-amber-300 text-sm" role="status">İşletme salt okunur moddadır; eylemler kapalı.</span>
+                    }
                 </div>
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Müşteri / hasta bilgileri</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Müşteri</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (appt()!.clientId) {
-                                    <a [routerLink]="['/panel/clients', appt()!.clientId]" class="text-primary font-medium no-underline">{{ appt()!.clientName }}</a>
-                                } @else {
-                                    {{ appt()!.clientName }}
-                                }
-                            </dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Hasta</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                @if (appt()!.petId) {
-                                    <a [routerLink]="['/panel/pets', appt()!.petId]" class="text-primary font-medium no-underline">{{ appt()!.petName }}</a>
-                                } @else {
-                                    {{ appt()!.petName }}
-                                }
-                            </dd>
-                        </dl>
-                    </div>
-                </div>
-                <div class="col-span-12">
-                    <div class="card">
-                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-4">
+            }
+
+            <!-- Satır ızgarası: bağlı muayene | notlar (8/4), eşit yükseklik; kırılım içerik alanına göre. -->
+            <div class="@container">
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-8">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-3">
                             <h5 class="mt-0 mb-0">Bağlı muayene</h5>
                             <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Muayene listesi →</a>
                         </div>
@@ -163,41 +148,24 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                         } @else {
                             <ul class="list-none m-0 p-0">
                                 @for (row of linkedExamsView().displayed; track row.id) {
-                                    <li class="mb-3 last:mb-0 min-w-0 max-lg:rounded-border max-lg:border max-lg:border-surface-200 max-lg:dark:border-surface-700 max-lg:p-3 max-lg:shadow-sm">
-                                        <div class="text-muted-color text-sm mb-1.5 lg:hidden">{{ row.examinedAtUtc | trDateTime }}</div>
-                                        <div class="hidden lg:flex lg:flex-wrap lg:gap-2 lg:justify-between lg:items-baseline">
+                                    <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0">
+                                        <div class="flex flex-wrap gap-2 justify-between items-baseline">
                                             <span class="text-muted-color text-sm min-w-0">{{ row.examinedAtUtc | trDateTime }}</span>
                                             <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Muayene detayı →</a>
                                         </div>
                                         <div class="font-medium min-w-0 break-words">{{ row.visitReason }}</div>
-                                        <div class="flex justify-end mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 lg:hidden">
-                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm py-1">Muayene detayı →</a>
-                                        </div>
                                     </li>
                                 }
                             </ul>
                         }
                     </div>
-                </div>
-                <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Notlar</h5>
-                        @if (appt()!.notes === emptyMark) {
+                    <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-4">
+                        <h5 class="mt-0 mb-3">Notlar</h5>
+                        @if (a.notes === emptyMark) {
                             <app-empty-state message="Not yok." />
                         } @else {
-                            <p class="m-0 whitespace-pre-wrap">{{ appt()!.notes }}</p>
+                            <p class="m-0 whitespace-pre-wrap">{{ a.notes }}</p>
                         }
-                    </div>
-                </div>
-                <div class="col-span-12">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Kayıt bilgileri</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Oluşturulma</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.createdAtUtc | trDateTime }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Güncellenme</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ appt()!.updatedAtUtc | trDateTime }}</dd>
-                        </dl>
                     </div>
                 </div>
             </div>
@@ -241,7 +209,7 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly statusLabel = appointmentStatusLabel;
     readonly statusSeverity = appointmentStatusSeverity;
     readonly typeDisplay = appointmentTypeDisplayLabel;
-    readonly typeSeverity = appointmentTypeDisplaySeverity;
+    readonly statsClass = DETAIL_STATS_GRID_CLASS;
     readonly canRescheduleAppointment = this.auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM);
     readonly canCreateExamination = this.auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM);
     /** Geliş açma yetkisi varsa muayene önce geliş (Visit) üzerinden açılır (ADR-017 K7); yoksa randevu bağlamlı eski yol. */

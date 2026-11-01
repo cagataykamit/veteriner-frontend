@@ -32,7 +32,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     </div>
                     <div class="flex gap-1">
                         <dt class="text-muted-color">Süresi geçmiş:</dt>
-                        <dd class="m-0 tabular-nums" [class.text-red-600]="d.expiredQuantity > 0" data-testid="expired-quantity">{{ d.expiredText }} {{ d.unit }}</dd>
+                        <dd class="m-0 tabular-nums" [class]="d.expiredQuantity > 0 ? 'text-red-600 dark:text-red-400' : ''" data-testid="expired-quantity">{{ d.expiredText }} {{ d.unit }}</dd>
                     </div>
                     <div class="flex gap-1">
                         <dt class="text-muted-color">Toplam:</dt>
@@ -54,7 +54,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     <app-empty-state message="Kalanı olan parti yok." />
                 } @else {
                     <div class="overflow-x-auto" [class.opacity-60]="loading()" [attr.aria-busy]="loading()">
-                        <p-table [value]="d.batches" [tableStyle]="{ 'min-width': '40rem' }">
+                        <p-table [value]="d.batches" [tableStyle]="{ 'min-width': '40rem' }" tableStyleClass="table-fixed">
                             <ng-template #header>
                                 <tr>
                                     <th>Seri / lot no</th>

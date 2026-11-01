@@ -19,11 +19,13 @@ import { CLIENT_CONTACT_CHANNEL_OPTIONS } from '@/app/entities/client/utils/clie
                 <p-select inputId="preferredContactChannel" [formControl]="form().controls.preferredContactChannel" [options]="channelOptions" optionLabel="label" optionValue="value" class="w-full" />
                 <small class="text-muted-color">Bilgi amaçlıdır; otomatik hatırlatmaların gönderim kanalını değiştirmez.</small>
             </div>
-            <div class="col-span-12 md:col-span-6 flex flex-col justify-center">
-                <div class="flex items-center gap-2">
+            <!-- Sol alanla aynı iskelet: etiket satırı, seçim yüksekliğinde denetim satırı, açıklama; böylece kutu ve açıklama hizalı kalır. -->
+            <div class="col-span-12 md:col-span-6">
+                <span class="block text-sm font-medium text-muted-color mb-2">Otomatik hatırlatmalar</span>
+                <label for="remindersOptedOut" class="flex items-center gap-2 min-h-[2.3rem] cursor-pointer mb-0">
                     <p-checkbox inputId="remindersOptedOut" [binary]="true" [formControl]="form().controls.remindersOptedOut" />
-                    <label for="remindersOptedOut" class="text-sm cursor-pointer mb-0">Otomatik hatırlatma istemiyor</label>
-                </div>
+                    <span class="text-color">Otomatik hatırlatma istemiyor</span>
+                </label>
                 <small class="text-muted-color">İşaretliyse otomatik aşı ve randevu hatırlatma e-postaları bu müşteriye gönderilmez.</small>
             </div>
         </fieldset>

@@ -2,8 +2,10 @@ import { Component, computed, input, signal, ChangeDetectionStrategy } from '@an
 import { RouterLink } from '@angular/router';
 import type { ClientPetRow } from '@/app/features/clients/utils/client-card.utils';
 import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
+import { speciesEmoji } from '@/app/shared/utils/species-icon.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
 
 /**
  * Müşteri kartındaki hayvanlar (ADR-020 karar 6): her satırda hasta kartına bağlantı, kimlik ve hayvana düşen borç,
@@ -13,7 +15,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 @Component({
     selector: 'app-client-pets-panel',
     standalone: true,
-    imports: [RouterLink, TrDateTimePipe],
+    imports: [AppDetailSeeAllLinkComponent, RouterLink, TrDateTimePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="card mb-0 h-full" aria-labelledby="client-pets-title" data-testid="client-pets">
@@ -46,7 +48,6 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                         </div>
                     }
                 }
-                <a routerLink="/panel/pets" [queryParams]="{ clientId: clientId() }" class="ml-auto text-primary font-medium no-underline text-sm">Tümü →</a>
             </div>
 
             @switch (rows()?.state) {
@@ -54,29 +55,33 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                     @if (visibleRows().length > 0) {
                         <ul class="list-none m-0 p-0">
                             @for (row of visibleRows(); track row.pet.id) {
-                                <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 min-w-0" [class.opacity-70]="row.pet.status === 'Deceased'" data-testid="client-pet-row">
-                                    <div class="flex flex-wrap items-baseline gap-x-2">
-                                        <a [routerLink]="['/panel/pets', row.pet.id]" class="text-primary font-medium no-underline break-words">{{ row.pet.name }}</a>
-                                        @if (row.pet.status === 'Deceased') {
-                                            <span class="text-xs font-medium text-muted-color border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5" data-testid="pet-deceased">Vefat</span>
-                                        }
-                                        <span class="text-muted-color text-sm break-words">{{ identity(row) }}</span>
-                                    </div>
-                                    @if (hasHints(row)) {
-                                        <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm">
-                                            @if (row.outstandingAmount) {
-                                                <span class="font-medium text-red-600 dark:text-red-400 tabular-nums" data-testid="pet-outstanding">Borç {{ money(row.outstandingAmount) }}</span>
+                                <li class="py-2.5 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0 flex items-center gap-3" [class.opacity-70]="row.pet.status === 'Deceased'" data-testid="client-pet-row">
+                                    <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-border text-lg bg-surface-100 dark:bg-surface-800" [title]="row.pet.speciesName" aria-hidden="true" data-testid="pet-species-icon">{{ speciesIcon(row.pet.speciesName) }}</span>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex flex-wrap items-baseline gap-x-2">
+                                            <a [routerLink]="['/panel/pets', row.pet.id]" class="text-primary font-semibold no-underline break-words">{{ row.pet.name }}</a>
+                                            @if (row.pet.status === 'Deceased') {
+                                                <span class="text-xs font-medium text-muted-color border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5" data-testid="pet-deceased">Vefat</span>
                                             }
-                                            @if (row.pendingChargeCount) {
-                                                <span class="font-medium text-amber-700 dark:text-amber-400" data-testid="pet-pending">{{ row.pendingChargeCount }} işlem ücret bekliyor</span>
-                                            }
-                                            @if (row.nextAppointment; as a) {
-                                                <a [routerLink]="['/panel/appointments', a.id]" class="text-primary no-underline" data-testid="pet-next-appointment"
-                                                    ><i class="pi pi-calendar text-xs mr-1" aria-hidden="true"></i>{{ a.scheduledAtUtc | trDateTime }}</a
-                                                >
-                                            }
+                                            <span class="text-muted-color text-sm break-words">{{ identity(row) }}</span>
                                         </div>
-                                    }
+                                        @if (hasHints(row)) {
+                                            <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm">
+                                                @if (row.outstandingAmount) {
+                                                    <span class="font-medium text-red-600 dark:text-red-400 tabular-nums" data-testid="pet-outstanding">Borç {{ money(row.outstandingAmount) }}</span>
+                                                }
+                                                @if (row.pendingChargeCount) {
+                                                    <span class="font-medium text-amber-700 dark:text-amber-400" data-testid="pet-pending">{{ row.pendingChargeCount }} işlem ücret bekliyor</span>
+                                                }
+                                                @if (row.nextAppointment; as a) {
+                                                    <a [routerLink]="['/panel/appointments', a.id]" class="text-primary no-underline" data-testid="pet-next-appointment"
+                                                        ><i class="pi pi-calendar text-xs mr-1" aria-hidden="true"></i>{{ a.scheduledAtUtc | trDateTime }}</a
+                                                    >
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                    <a [routerLink]="['/panel/pets', row.pet.id]" class="shrink-0 text-muted-color hover:text-primary no-underline max-sm:hidden" [attr.aria-label]="row.pet.name + ' hasta kartı'"><i class="pi pi-angle-right" aria-hidden="true"></i></a>
                                 </li>
                             }
                         </ul>
@@ -85,6 +90,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                     } @else {
                         <p class="m-0 text-muted-color" data-testid="pets-empty">Bu müşteriye kayıtlı hasta yok.</p>
                     }
+                    <app-detail-see-all-link link="/panel/pets" [queryParams]="{ clientId: clientId() }" [itemCount]="okRows().length" />
                 }
                 @case ('error') {
                     <p class="m-0 text-orange-600 dark:text-orange-400 text-sm" data-testid="pets-failed"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Hasta listesi alınamadı.</p>
@@ -116,6 +122,9 @@ export class ClientPetsPanelComponent {
     readonly visibleRows = computed(() => (this.showAll() ? this.okRows() : this.okRows().filter((r) => r.pet.status !== 'Deceased')));
 
     readonly money = (amount: number) => formatMoney(amount, this.currency());
+
+    /** Satır başındaki kutu: tür simgesi (`speciesEmoji`). */
+    readonly speciesIcon = speciesEmoji;
 
     identity(row: ClientPetRow): string {
         const filled = (v: string | null | undefined): v is string => !!v && !!v.trim() && v.trim() !== '—';

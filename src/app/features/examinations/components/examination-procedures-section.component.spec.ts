@@ -1,7 +1,10 @@
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
+import { type Confirmation, ConfirmationService } from 'primeng/api';
+import { TreatmentFormComponent } from '@/app/entities/procedure/components/treatment-form.component';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { ExaminationDetailVm, ExaminationRelatedSummaryVm } from '@/app/entities/examination/models/examination-vm.model';
@@ -193,5 +196,112 @@ describe('ExaminationProceduresSectionComponent', () => {
 
         expect(cmp.state('treatment').disabled).toBe(true);
         expect(cmp.state('treatment').reason).toContain('hasta');
+    });
+
+    describe('yan panel kapanışı (tek kural: kaydedilmemiş değişiklik onayı)', () => {
+        const confirmSpy = () => {
+            let captured: Confirmation | null = null;
+            const spy = vi.spyOn(fixture.debugElement.injector.get(ConfirmationService), 'confirm').mockImplementation((c: Confirmation) => {
+                captured = c;
+
+                return fixture.debugElement.injector.get(ConfirmationService);
+            });
+
+            return { spy, captured: () => captured as Confirmation | null };
+        };
+
+        const treatmentForm = () => fixture.debugElement.query(By.directive(TreatmentFormComponent)).componentInstance as TreatmentFormComponent;
+        const pressEscape = () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+        const clickMask = () => {
+            const mask = document.createElement('div');
+
+            mask.className = 'p-drawer-mask';
+            document.body.appendChild(mask);
+            mask.click();
+            mask.remove();
+        };
+
+        it('temiz formda İptal, Esc ve dışarı tıklama sorusuz kapatır', () => {
+            create();
+            const { spy } = confirmSpy();
+
+            for (const closeBy of [() => treatmentForm().cancel(), pressEscape, clickMask]) {
+                cmp.open('treatment');
+                fixture.detectChanges();
+                expect(cmp.drawerVisible()).toBe(true);
+                closeBy();
+                fixture.detectChanges();
+                expect(cmp.drawerVisible()).toBe(false);
+            }
+
+            expect(spy).not.toHaveBeenCalled();
+        });
+
+        it('çarpı düğmesi panelin kendi kapatıcısı değil, aynı kuraldan geçer', () => {
+            create();
+            cmp.open('treatment');
+            fixture.detectChanges();
+
+            (document.body.querySelector('[data-testid="procedure-drawer-close"]') as HTMLButtonElement).click();
+            fixture.detectChanges();
+
+            expect(cmp.drawerVisible()).toBe(false);
+        });
+
+        it('kirli formda onay sorulur; Kapat kapatır', () => {
+            create();
+            const { spy, captured } = confirmSpy();
+
+            cmp.open('treatment');
+            fixture.detectChanges();
+            treatmentForm().form.controls.title.setValue('Serum');
+            treatmentForm().form.controls.title.markAsDirty();
+
+            pressEscape();
+            fixture.detectChanges();
+
+            expect(spy).toHaveBeenCalledTimes(1);
+            expect(captured()?.header).toBe('Kaydedilmemiş değişiklik');
+            expect(captured()?.message).toBe('Girdiğiniz bilgiler kaydedilmedi, kapatılsın mı?');
+            expect(cmp.drawerVisible()).toBe(true);
+
+            captured()!.accept!();
+            fixture.detectChanges();
+
+            expect(cmp.drawerVisible()).toBe(false);
+        });
+
+        it('Vazgeç paneli açık bırakır ve girilen bilgi korunur', () => {
+            create();
+            const { captured } = confirmSpy();
+
+            cmp.open('treatment');
+            fixture.detectChanges();
+            treatmentForm().form.controls.title.setValue('Serum');
+            treatmentForm().form.controls.title.markAsDirty();
+
+            treatmentForm().cancel();
+            fixture.detectChanges();
+            captured()!.reject?.();
+            fixture.detectChanges();
+
+            expect(cmp.drawerVisible()).toBe(true);
+            expect(treatmentForm().form.controls.title.value).toBe('Serum');
+        });
+
+        it('kayıt başarılıysa onay sorulmaz', () => {
+            create();
+            const { spy } = confirmSpy();
+
+            cmp.open('treatment');
+            fixture.detectChanges();
+            treatmentForm().form.controls.title.setValue('Serum');
+            treatmentForm().form.controls.title.markAsDirty();
+            cmp.onSaved('treatment');
+
+            expect(cmp.drawerVisible()).toBe(false);
+            expect(spy).not.toHaveBeenCalled();
+        });
     });
 });

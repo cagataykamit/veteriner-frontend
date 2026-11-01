@@ -143,7 +143,7 @@ describe('AdministrationsSectionComponent', () => {
         expect(text()).toContain('Serum');
     });
 
-    it('kayıt yokken boş durum tek satır; süzgeç ve Uygulama ekle başlık satırında kalır', async () => {
+    it('kayıt yokken boş durum tek satır; filtre ve Uygulama ekle başlıkta, "Tümünü gör" çizilmez', async () => {
         claims.add('Administrations.Create');
         service.getAdministrations.mockReturnValue(of(page([])));
         await setup();
@@ -153,8 +153,9 @@ describe('AdministrationsSectionComponent', () => {
         expect(el.querySelector('app-empty-state')).toBeNull();
         const header = el.querySelector('h5')!.parentElement!;
 
-        expect(header.querySelector('[data-testid="administrations-show-voided"]')).not.toBeNull();
         expect(header.querySelector('[data-testid="administration-add"]')).not.toBeNull();
+        expect(header.querySelector('[data-testid="administrations-show-voided"]')).not.toBeNull();
+        expect(el.querySelector('[data-testid="see-all-link"]')).toBeNull();
     });
 
     it('Create izniyle Uygulama ekle görünür; Correct izniyle İptal et görünür', async () => {

@@ -1,0 +1,11 @@
+@use 'sass:meta';
+
+/* Tailwind v4 yardımcıları `@layer utilities` içindedir; katmansız bir kural aynı özelliği her zaman ezer
+   (`.pi` display'i `xl:hidden`'ı, başlık margin'i `mb-0`'ı, `.card` margin'i `mb-4`'ü). Şablon ve ikon
+   kuralları bu yüzden utilities'in altındaki `sakai` katmanında durur. Bu dosya ilk yüklenmeli: katman
+   sırası ilk bildirimle belirlenir. */
+@layer properties, theme, base, components, sakai, utilities;
+
+@layer sakai {
+    @include meta.load-css('primeicons/primeicons.css');
+}

@@ -10,11 +10,12 @@ import { categoryForUrl, listLabelForUrl, MENU_GROUPS } from '@/app/core/routing
     imports: [CommonModule, RouterLink, TooltipModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="mb-6">
+        <div [class]="title() ? 'mb-6' : 'mb-2'">
             @if (categoryLink() && categoryText()) {
                 <a
                     [routerLink]="categoryLink()"
-                    class="block w-fit text-muted-color hover:text-primary font-medium no-underline mb-2"
+                    class="block w-fit text-muted-color hover:text-primary font-medium no-underline"
+                    [class.mb-2]="title()"
                     [pTooltip]="categoryLinkLabel()"
                     tooltipPosition="bottom"
                     [attr.aria-label]="categoryLinkAriaLabel()"
@@ -22,22 +23,25 @@ import { categoryForUrl, listLabelForUrl, MENU_GROUPS } from '@/app/core/routing
                     >{{ categoryText() }}</a
                 >
             }
-            <div class="flex flex-wrap gap-4 items-center justify-between">
-                <div>
-                    <div class="text-surface-900 dark:text-surface-0 text-xl font-medium">{{ title() }}</div>
-                    @if (description()) {
-                        <p class="text-muted-color mt-2 mb-0">{{ description() }}</p>
-                    }
+            @if (title(); as title) {
+                <div class="flex flex-wrap gap-4 items-center justify-between">
+                    <div class="min-w-0 break-words">
+                        <div class="text-surface-900 dark:text-surface-0 text-xl font-medium">{{ title }}</div>
+                        @if (description()) {
+                            <p class="text-muted-color mt-2 mb-0">{{ description() }}</p>
+                        }
+                    </div>
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <ng-content select="[actions]" />
+                    </div>
                 </div>
-                <div class="flex flex-wrap gap-2 items-center">
-                    <ng-content select="[actions]" />
-                </div>
-            </div>
+            }
         </div>
     `
 })
 export class AppPageHeaderComponent {
-    readonly title = input.required<string>();
+    /** Boş bırakılırsa yalnız kategori satırı çizilir; başlık ve eylemler sayfanın kendi kimlik kartındadır (müşteri kartı). */
+    readonly title = input<string>();
     readonly description = input<string>();
     /**
      * Başlık üstündeki kategori satırı yalnız bu bağlantı verilince çizilir; bağlantısız düz kategori menüdeki adı

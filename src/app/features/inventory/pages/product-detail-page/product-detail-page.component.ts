@@ -12,8 +12,10 @@ import { ProductService } from '@/app/entities/inventory/services/product.servic
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PRODUCTS_DEACTIVATE_CLAIM, PRODUCTS_UPDATE_CLAIM, STOCK_MOVEMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
+import { AppDetailActionBarComponent } from '@/app/shared/ui/detail-action-bar/app-detail-action-bar.component';
+import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
+import { DETAIL_TILE_GRID_CLASS } from '@/app/shared/ui/detail.classes';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
@@ -30,8 +32,9 @@ import { ConfirmationService } from 'primeng/api';
         ButtonModule,
         ConfirmDialogModule,
         AppPageHeaderComponent,
+        AppDetailIdentityCardComponent,
+        AppDetailActionBarComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
         ProductClinicStocksComponent,
@@ -47,82 +50,91 @@ import { ConfirmationService } from 'primeng/api';
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (product(); as p) {
-            <app-page-header categoryLink="/panel/products" categoryLinkLabel="Ürün listesine dön" title="Ürün detayı" [description]="p.name + ' · ' + p.sku">
-                <div actions class="flex flex-wrap items-center gap-2 justify-end">
+            <app-page-header categoryLink="/panel/products" categoryLinkLabel="Ürün listesine dön" />
+
+            <!-- Kimlik kartı: ürün adı + durum rozeti, SKU, kategori/üretici satırı; sağda Düzenle; gösterge şeridi (fiyat, birim, tür, kontrollü sınıf). -->
+            <app-detail-identity-card icon="pi pi-box" [title]="p.name" [subtitle]="'SKU: ' + p.sku" [meta]="'Kategori: ' + p.categoryName + ' · Üretici: ' + p.manufacturer + ' · Barkod: ' + p.barcode" ariaLabel="Ürün kimliği" testId="product-identity-card">
+                <app-status-tag badges [label]="p.statusLabel" [severity]="p.statusSeverity" />
+                <ng-container actions>
                     @if (canUpdateProduct && !ro.mutationBlocked()) {
-                        <a [routerLink]="['/panel/products', p.id, 'edit']" pButton type="button" class="p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
+                        <a [routerLink]="['/panel/products', p.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                     } @else if (canUpdateProduct && ro.mutationBlocked()) {
-                        <button pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                        <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                     }
-                    @if (canOpenStockOperation() && isStockTracked(p)) {
-                        <button
-                            pButton
-                            type="button"
-                           
-                           
-                            severity="primary"
-                            class="whitespace-nowrap"
-                            [disabled]="isHeaderStockOperationDisabled()"
-                            [title]="headerStockOperationTitle()"
-                            (click)="openStockOperationFromHeader()"
-                        ><i class="pi pi-sync"></i>Stok işlemi</button>
-                    }
-                    @if (canDeactivateProduct && !ro.mutationBlocked() && p.isActive) {
-                        <button pButton type="button" severity="danger" class="p-button-secondary" [disabled]="mutationBusy()" (click)="onDeactivateClick()"><i [class]="mutationBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-ban'"></i>Pasifleştir</button>
-                    }
-                    @if (canUpdateProduct && !ro.mutationBlocked() && !p.isActive) {
-                        <button pButton type="button" class="p-button-secondary" [disabled]="mutationBusy()" (click)="onActivateClick()"><i [class]="mutationBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Aktifleştir</button>
-                    }
+                </ng-container>
+                <div stat>
+                    <dt>Birim fiyat</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ p.unitPriceText }} <span class="text-muted-color text-sm font-normal">{{ p.currency }}</span></dd>
                 </div>
-            </app-page-header>
+                <div stat>
+                    <dt>Birim</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ p.unit }}</dd>
+                </div>
+                <div stat>
+                    <dt>Ürün türü</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ p.kindLabel }}</dd>
+                </div>
+                <div stat>
+                    <dt>Kontrollü sınıf</dt>
+                    <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ p.controlledClassLabel }}</dd>
+                </div>
+            </app-detail-identity-card>
 
             @if (mutationError()) {
                 <p class="text-red-500 text-sm mb-4 m-0" role="alert">{{ mutationError() }}</p>
             }
 
-            <div class="grid grid-cols-12 gap-8">
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Genel bilgiler</h5>
-                        <dl class="m-0 grid grid-cols-12 gap-3">
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Ürün adı</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ p.name }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">SKU</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ p.sku }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Barkod</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ p.barcode }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Kategori</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ p.categoryName }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Ürün türü</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ p.kindLabel }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Kontrollü sınıf</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ p.controlledClassLabel }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Farmakolojik şekil</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ p.pharmacologicalForm }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Takdim şekli</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ p.presentationForm }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Ambalaj</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ p.packaging }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Üretici</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ p.manufacturer }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Birim</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ p.unit }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Birim fiyat</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ p.unitPriceText }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Para birimi</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">{{ p.currency }}</dd>
-                            <dt class="col-span-12 sm:col-span-4 text-muted-color">Durum</dt>
-                            <dd class="col-span-12 sm:col-span-8 m-0">
-                                <app-status-tag [label]="p.statusLabel" [severity]="p.statusSeverity" />
-                            </dd>
+            <!-- Eylem şeridi: stok işlemi, pasifleştir/aktifleştir (salt okunurda gösterilmez; mevcut davranış). -->
+            @if ((canOpenStockOperation() && isStockTracked(p)) || (canDeactivateProduct && !ro.mutationBlocked() && p.isActive) || (canUpdateProduct && !ro.mutationBlocked() && !p.isActive)) {
+                <app-detail-action-bar ariaLabel="Ürün eylemleri">
+                    @if (canOpenStockOperation() && isStockTracked(p)) {
+                        <button pButton type="button" severity="primary" class="whitespace-nowrap" [disabled]="isHeaderStockOperationDisabled()" [title]="headerStockOperationTitle()" (click)="openStockOperationFromHeader()"><i class="pi pi-sync"></i>Stok işlemi</button>
+                    }
+                    @if (canDeactivateProduct && !ro.mutationBlocked() && p.isActive) {
+                        <button pButton type="button" severity="danger" [outlined]="true" [disabled]="mutationBusy()" (click)="onDeactivateClick()"><i [class]="mutationBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-ban'"></i>Pasifleştir</button>
+                    }
+                    @if (canUpdateProduct && !ro.mutationBlocked() && !p.isActive) {
+                        <button pButton type="button" class="p-button-outlined p-button-secondary" [disabled]="mutationBusy()" (click)="onActivateClick()"><i [class]="mutationBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Aktifleştir</button>
+                    }
+                </app-detail-action-bar>
+            }
+
+            <!-- Satır ızgarası: ürün bilgileri kutucukları | açıklama (8/4, eşit yükseklik); klinik stokları tam genişlik. -->
+            <div class="@container flex flex-col gap-4">
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-8 @container">
+                        <h5 class="mt-0 mb-3">Ürün bilgileri</h5>
+                        <dl [class]="tileGridClass">
+                            <div>
+                                <dt>Farmakolojik şekil</dt>
+                                <dd [class]="p.pharmacologicalForm === emptyMark ? 'field-empty' : 'font-medium'">{{ p.pharmacologicalForm }}</dd>
+                            </div>
+                            <div>
+                                <dt>Takdim şekli</dt>
+                                <dd [class]="p.presentationForm === emptyMark ? 'field-empty' : 'font-medium'">{{ p.presentationForm }}</dd>
+                            </div>
+                            <div>
+                                <dt>Ambalaj</dt>
+                                <dd [class]="p.packaging === emptyMark ? 'field-empty' : 'font-medium'">{{ p.packaging }}</dd>
+                            </div>
+                            <div>
+                                <dt>Üretici</dt>
+                                <dd [class]="p.manufacturer === emptyMark ? 'field-empty' : 'font-medium'">{{ p.manufacturer }}</dd>
+                            </div>
+                            <div>
+                                <dt>Barkod</dt>
+                                <dd [class]="p.barcode === emptyMark ? 'field-empty' : 'font-medium tabular-nums'">{{ p.barcode }}</dd>
+                            </div>
+                            <div>
+                                <dt>Kategori</dt>
+                                <dd [class]="p.categoryName === emptyMark ? 'field-empty' : 'font-medium'">{{ p.categoryName }}</dd>
+                            </div>
                         </dl>
                     </div>
-                </div>
-                <div class="col-span-12 lg:col-span-6">
-                    <div class="card">
-                        <h5 class="mt-0 mb-4">Açıklama</h5>
+                    <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-4">
+                        <h5 class="mt-0 mb-3">Açıklama</h5>
                         @if (p.description === emptyMark) {
-                            <app-empty-state message="Açıklama yok." />
+                            <p class="m-0 field-empty">Açıklama yok</p>
                         } @else {
                             <p class="m-0 whitespace-pre-wrap">{{ p.description }}</p>
                         }
@@ -160,6 +172,7 @@ export class ProductDetailPageComponent implements OnInit {
     readonly canCreateStockMovement = this.auth.hasOperationClaim(STOCK_MOVEMENTS_CREATE_CLAIM);
 
     readonly emptyMark = '—';
+    protected readonly tileGridClass = DETAIL_TILE_GRID_CLASS;
     /** Hizmetin stoğu, partisi ve stok işlemi yoktur (ADR-018). */
     readonly isStockTracked = (p: Pick<ProductDetailVm, 'kind'>) => isStockTrackedKind(p.kind);
 
