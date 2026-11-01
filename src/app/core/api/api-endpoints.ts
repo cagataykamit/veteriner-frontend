@@ -55,7 +55,8 @@ export const ApiEndpoints = {
         complete: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/complete`,
         corrections: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/corrections`,
         restore: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/restore`,
-        urgency: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/urgency`
+        urgency: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/urgency`,
+        preparation: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/preparation`
     },
     charges: {
         /** GET (Query: `page`, `pageSize`, `clinicId`, `clientId`, `petId`, `visitId`, `examinationId`) ve POST. */

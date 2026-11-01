@@ -28,3 +28,12 @@ export const VISIT_PANEL_PROBLEM_MESSAGES: ProblemMessages = {
     /** Rıza işareti ve tam müşteri güncellemesi (`KVKK_CONSENT_API_CONTRACT.md` §1). */
     'Clients.ConcurrencyConflict': 'Müşteri kaydı aynı anda başka biri tarafından değiştirildi. Güncel bilgiyi yükleyip tekrar deneyin.'
 };
+
+/**
+ * Geliş hazırlığı yazan uçlar (`POST /visits` hazırlıkla, `PUT /visits/{id}/preparation`; sözleşme §4.5): genel tablodaki
+ * `Visits.NotOpen` metni muayene içindir, burada hazırlığa özgü metin öncelikli gösterilir. Pasif şablon `Visits.Validation` (sunucu `detail`).
+ */
+export const VISIT_PREPARATION_PROBLEM_MESSAGES: ProblemMessages = {
+    'Visits.NotOpen': 'Bu geliş tamamlanmış; hazırlık artık değiştirilemez. Listeyi yenileyin.',
+    'ExaminationTemplates.NotFound': 'Seçilen şablon / paket bulunamadı. Listeden başka birini seçin veya alanı boş bırakın.'
+};

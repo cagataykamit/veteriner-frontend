@@ -109,6 +109,11 @@ export class ExaminationTemplatesService {
             .pipe(toExaminationTemplateError('Şablonlar yüklenemedi.'));
     }
 
+    /** Tek şablon (pasif dahil); başka kiracınınki `ExaminationTemplates.NotFound`. Gelişte hazırlanan şablonun önerisi için. */
+    getById(id: string): Observable<ExaminationTemplateDto> {
+        return this.api.get<ExaminationTemplateDto>(ApiEndpoints.examinationTemplates.byId(id)).pipe(toExaminationTemplateError('Şablon yüklenemedi.'));
+    }
+
     create(request: ExaminationTemplateUpsertRequest): Observable<ExaminationTemplateDto> {
         return this.api
             .post<ExaminationTemplateDto>(ApiEndpoints.examinationTemplates.list(), request)

@@ -217,6 +217,61 @@ describe('VisitsService — acil işareti', () => {
     });
 });
 
+describe('VisitsService — geliş hazırlığı', () => {
+    let service: VisitsService;
+    let http: HttpTestingController;
+
+    beforeEach(() => {
+        TestBed.configureTestingModule({
+            providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }, { provide: AuthService, useValue: { getClinicId: () => 'c1' } }]
+        });
+        service = TestBed.inject(VisitsService);
+        http = TestBed.inject(HttpTestingController);
+    });
+
+    afterEach(() => http.verify());
+
+    it('PUT preparation tam yazım: iki alan her zaman gider, boş alan null; yanıt VM hazırlığı taşır', () =>
+        new Promise<void>((done) => {
+            service.setPreparation('v1', { arrivalReason: '  Kulak kaşıntısı ', preparedExaminationTemplateId: '' }).subscribe((vm) => {
+                expect(vm.arrivalReason).toBe('Kulak kaşıntısı');
+                expect(vm.preparedExaminationTemplateId).toBeNull();
+                done();
+            });
+            const req = http.expectOne('http://api.test/api/v1/visits/v1/preparation');
+
+            expect(req.request.method).toBe('PUT');
+            expect(req.request.body).toEqual({ arrivalReason: 'Kulak kaşıntısı', preparedExaminationTemplateId: null });
+            req.flush({ ...visit, arrivalReason: 'Kulak kaşıntısı', preparedExaminationTemplateId: null });
+        }));
+
+    it('tamamlanmış gelişte 409 Visits.NotOpen hazırlığa özgü mesaja çevrilir (muayene metni değil)', () =>
+        new Promise<void>((done) => {
+            service.setPreparation('v1', { arrivalReason: 'x', preparedExaminationTemplateId: null }).subscribe({
+                error: (e: Error) => {
+                    expect(e.message).toContain('hazırlık artık değiştirilemez');
+                    expect(e.message).not.toContain('muayene');
+                    done();
+                }
+            });
+            http.expectOne('http://api.test/api/v1/visits/v1/preparation').flush({ status: 409, extensions: { code: 'Visits.NotOpen' } }, { status: 409, statusText: 'Conflict' });
+        }));
+
+    it('geliş isteğinde hazırlık alanları yalnız doluysa gider; şablon bulunamazsa Türkçe mesaj', () =>
+        new Promise<void>((done) => {
+            service.createVisit({ appointmentId: 'a1', arrivalReason: ' Aşı ', preparedExaminationTemplateId: 't1' }).subscribe({
+                error: (e: Error) => {
+                    expect(e.message).toContain('şablon / paket bulunamadı');
+                    done();
+                }
+            });
+            const req = http.expectOne('http://api.test/api/v1/visits');
+
+            expect(req.request.body).toEqual({ appointmentId: 'a1', arrivalReason: 'Aşı', preparedExaminationTemplateId: 't1' });
+            req.flush({ status: 404, extensions: { code: 'ExaminationTemplates.NotFound' } }, { status: 404, statusText: 'Not Found' });
+        }));
+});
+
 describe('VisitsService — hekim tespiti ve Benim hastalarım', () => {
     let http: HttpTestingController;
 

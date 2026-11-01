@@ -22,6 +22,10 @@ export interface VisitDto {
     isVoided: boolean;
     isUrgent?: boolean;
     voidReason?: string | null;
+    /** Geliş hazırlığı (madde 4.5): resepsiyonun yazdığı geliş nedeni. */
+    arrivalReason?: string | null;
+    /** Gelişte seçilen şablon / paket; uygulanmaz, hekim muayenede onaylar. */
+    preparedExaminationTemplateId?: string | null;
 }
 
 export interface VisitCreateResultDto {
@@ -66,6 +70,13 @@ export interface TodayItemDto {
     isVoided?: boolean | null;
     isUrgent?: boolean | null;
     voidReason?: string | null;
+    /** Randevu nedeni (APPT-005); randevusuz satırda veya nedensiz randevuda `null`. */
+    appointmentReasonName?: string | null;
+    /** Geliş hazırlığı (madde 4.5); planlı satırda `null`. */
+    arrivalReason?: string | null;
+    preparedExaminationTemplateId?: string | null;
+    /** Şablon sonradan pasifleşse de döner. */
+    preparedExaminationTemplateName?: string | null;
 }
 
 /** `TodayHospitalizationDto`: kliniğin tarihten bağımsız aktif yatışları (`VISITS_API_CONTRACT.md`). */
@@ -110,6 +121,14 @@ export interface CreateVisitRequestDto {
     appointmentId?: string;
     responsibleVeterinarianUserId?: string;
     isUrgent?: boolean;
+    arrivalReason?: string;
+    preparedExaminationTemplateId?: string;
+}
+
+/** `PUT /visits/{id}/preparation`: tam yazım; `null` alan temizler. */
+export interface UpdateVisitPreparationRequestDto {
+    arrivalReason: string | null;
+    preparedExaminationTemplateId: string | null;
 }
 
 export interface CorrectVisitRequestDto {

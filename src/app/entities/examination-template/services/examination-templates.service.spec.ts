@@ -21,6 +21,21 @@ describe('ExaminationTemplatesService', () => {
 
     afterEach(() => http.verify());
 
+    it('tek şablon GET byId; bulunamazsa kodlu hata', () =>
+        new Promise<void>((done) => {
+            service.getById('t1').subscribe();
+            http.expectOne(`${BASE}/t1`).flush({ id: 't1' });
+
+            service.getById('t2').subscribe({
+                error: (e: ExaminationTemplateError) => {
+                    expect(e.code).toBe('ExaminationTemplates.NotFound');
+                    expect(e.message).toBe('Şablon bulunamadı.');
+                    done();
+                }
+            });
+            http.expectOne(`${BASE}/t2`).flush({ status: 404, extensions: { code: 'ExaminationTemplates.NotFound' } }, { status: 404, statusText: 'Not Found' });
+        }));
+
     it('liste sorgusu yalnız dolu parametreleri gönderir', () => {
         service.list({ search: ' kulak ', includeInactive: true, page: 2, pageSize: 50 }).subscribe();
         const req = http.expectOne((r) => r.url === BASE);

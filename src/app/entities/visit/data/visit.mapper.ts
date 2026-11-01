@@ -4,6 +4,7 @@ import type {
     CorrectVisitRequestDto,
     CreateVisitRequestDto,
     RestoreVisitRequestDto,
+    UpdateVisitPreparationRequestDto,
     UpdateVisitUrgencyRequestDto,
     TodayDto,
     TodayHospitalizationDto,
@@ -23,6 +24,7 @@ import type {
     TodayVm,
     VeterinarianVm,
     VisitCreateResultVm,
+    VisitPreparationRequest,
     VisitVm
 } from '@/app/entities/visit/models/visit-vm.model';
 
@@ -45,7 +47,9 @@ export function mapVisitDtoToVm(dto: VisitDto): VisitVm {
         arrivedAtUtc: dto.arrivedAtUtc,
         careStatus: dto.careStatus,
         isVoided: dto.isVoided,
-        isUrgent: dto.isUrgent === true
+        isUrgent: dto.isUrgent === true,
+        arrivalReason: trimmedOrNull(dto.arrivalReason),
+        preparedExaminationTemplateId: trimmedOrNull(dto.preparedExaminationTemplateId)
     };
 }
 
@@ -85,7 +89,11 @@ export function mapTodayItemDtoToVm(dto: TodayItemDto): TodayItemVm {
         isVoided: dto.isVoided === true,
         voidReason: trimmedOrNull(dto.voidReason),
         petAlerts: mapPetAlertsDtoToVm(dto.petAlerts),
-        isUrgent: dto.isUrgent === true
+        isUrgent: dto.isUrgent === true,
+        appointmentReasonName: trimmedOrNull(dto.appointmentReasonName),
+        arrivalReason: trimmedOrNull(dto.arrivalReason),
+        preparedExaminationTemplateId: trimmedOrNull(dto.preparedExaminationTemplateId),
+        preparedExaminationTemplateName: trimmedOrNull(dto.preparedExaminationTemplateName)
     };
 }
 
@@ -168,7 +176,26 @@ export function mapCreateVisitToApiBody(req: CreateVisitRequest): CreateVisitReq
         body.isUrgent = true;
     }
 
+    const arrivalReason = trimmedOrNull(req.arrivalReason);
+    const templateId = trimmedOrNull(req.preparedExaminationTemplateId);
+
+    if (arrivalReason) {
+        body.arrivalReason = arrivalReason;
+    }
+
+    if (templateId) {
+        body.preparedExaminationTemplateId = templateId;
+    }
+
     return body;
+}
+
+/** Tam yazım: iki alan da her zaman gider; boş metin/seçim `null` (sunucuda temizler). */
+export function mapPreparationToApiBody(req: VisitPreparationRequest): UpdateVisitPreparationRequestDto {
+    return {
+        arrivalReason: trimmedOrNull(req.arrivalReason),
+        preparedExaminationTemplateId: trimmedOrNull(req.preparedExaminationTemplateId)
+    };
 }
 
 /** Sözleşme: `targetCareStatus` ve `markAsMistaken` tam olarak biri verilir. */
