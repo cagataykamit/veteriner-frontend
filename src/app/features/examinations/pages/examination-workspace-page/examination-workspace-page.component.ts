@@ -22,7 +22,7 @@ import { mapExaminationFormToCreateRequest, isPartialVitalClear, mapExaminationF
 import type { ExaminationWorkspaceFormValue } from '@/app/entities/examination/models/examination-form.model';
 import type { ExaminationEditVm } from '@/app/entities/examination/models/examination-vm.model';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
-import { EXAMINATION_TIME_SELECT_OPTIONS, examinationTimeSelectOptionsWithLegacy } from '@/app/features/examinations/utils/examination-time-options.utils';
+import { defaultExaminationDateTimeParts, EXAMINATION_TIME_SELECT_OPTIONS, examinationTimeSelectOptionsWithLegacy } from '@/app/features/examinations/utils/examination-time-options.utils';
 import { type ExaminationUpsertFieldErrors, type ExaminationUpsertFormFieldKey, parseExaminationUpsertHttpError } from '@/app/features/examinations/utils/examination-upsert-validation-parse.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -420,6 +420,11 @@ export class ExaminationWorkspacePageComponent implements OnInit {
     // ---- Oluşturma: müşteri/hayvan seçimi ve randevu bağlamı ----
 
     private initCreateMode(): void {
+        // Tarih/saat boş gelmesin: bugün ve şimdi (15 dk dilimine aşağı yuvarlanmış); her oluşturma bağlamında aynı, kullanıcı değiştirebilir.
+        const { date, time } = defaultExaminationDateTimeParts();
+
+        this.form.patchValue({ examinationDate: date, examinationTime: time }, { emitEvent: false });
+
         const visitCtx = parseVisitExaminationRouteContext(this.route.snapshot.queryParamMap);
 
         if (visitCtx) {

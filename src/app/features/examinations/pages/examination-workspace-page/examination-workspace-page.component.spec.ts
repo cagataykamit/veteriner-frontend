@@ -308,6 +308,29 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         expect(navigate).toHaveBeenCalledWith(['/panel/examinations', 'n1'], { queryParams: { saved: '1' } });
     });
 
+    it('yeni muayenede tarih bugün, saat şimdinin 15 dk dilimi olarak dolu gelir; düzenlemede kayıttaki değer kalır', () => {
+        const route = TestBed.inject(ActivatedRoute) as unknown as { snapshot: { paramMap: unknown; routeConfig: { path: string } } };
+
+        route.snapshot.paramMap = convertToParamMap({});
+        route.snapshot.routeConfig = { path: 'new' };
+        vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-10-08T06:14:00Z') });
+
+        try {
+            const created = TestBed.createComponent(ExaminationWorkspacePageComponent);
+
+            created.detectChanges();
+
+            expect(created.componentInstance.form.controls.examinationDate.value).toBe('2026-10-08');
+            expect(created.componentInstance.form.controls.examinationTime.value).toBe('09:00');
+            expect(created.componentInstance.form.controls.examinationDate.dirty).toBe(false);
+        } finally {
+            vi.useRealTimers();
+        }
+
+        // Düzenleme (beforeEach): kayıttaki saat (10:30Z → 13:30 İstanbul) kalır, şimdiye çekilmez.
+        expect(cmp.form.controls.examinationTime.value).toBe('13:30');
+    });
+
     it('findings boş olsa da form geçerlidir; tek zorunlu klinik alan visitReason dır', () => {
         expect(cmp.form.valid).toBe(true);
         cmp.form.controls.visitReason.setValue('   ');
