@@ -21,5 +21,8 @@ export interface ClientBalanceVm {
     chargedAmount: number;
     allocatedAmount: number;
     outstandingAmount: number;
+    /** Kullanılabilir müşteri kredisi; açık borçtan düşülmez, ayrı gösterilir. */
+    creditBalance: number;
+    openCreditCount: number;
     openCharges: ClientOpenChargeVm[];
 }

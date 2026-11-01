@@ -17,6 +17,8 @@ const balance = (openCharges: ClientOpenChargeVm[]): ClientBalanceVm => ({
     chargedAmount: 0,
     allocatedAmount: 0,
     outstandingAmount: openCharges.reduce((s, c) => s + c.outstandingAmount, 0),
+    creditBalance: 0,
+    openCreditCount: 0,
     openCharges
 });
 
