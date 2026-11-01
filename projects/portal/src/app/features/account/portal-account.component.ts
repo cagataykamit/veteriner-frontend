@@ -2,11 +2,12 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
+import { isClinicPortalClosed, type PortalLink } from '@portal/app/core/auth/portal-auth.models';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { portalErrorMessage } from '@portal/app/core/errors/portal-errors';
 import { PortalNotificationPreferencesComponent } from '@portal/app/features/notifications/portal-notification-preferences.component';
 
-/** Hesabım: oturum bilgisi, klinik değiştirme, bildirim tercihleri (§10), çıkış, tüm cihazlardan çıkış (sözleşme §5.7) ve hesap silmeye geçiş (§5.10). */
+/** Hesabım: oturum bilgisi, klinik değiştirme, bildirim tercihleri (§10), veri talebine geçiş (§11), çıkış, tüm cihazlardan çıkış (sözleşme §5.7) ve hesap silmeye geçiş (§5.10). */
 @Component({
     selector: 'portal-account',
     standalone: true,
@@ -28,6 +29,16 @@ import { PortalNotificationPreferencesComponent } from '@portal/app/features/not
             }
 
             <portal-notification-preferences />
+
+            @if (session.activeLink(); as link) {
+                @if (!isClosed(link)) {
+                    <section class="portal-card portal-stack" aria-labelledby="account-data-requests-title">
+                        <h2 id="account-data-requests-title" class="portal-subtitle">Verilerimle ilgili talep</h2>
+                        <p class="portal-muted">{{ link.clinicName }} kliniğindeki kayıtlarınıza erişmek, düzeltilmesini ya da silinmesini istemek için KVKK başvurusu yapın.</p>
+                        <a class="portal-link-button" routerLink="/account/data-requests" data-testid="account-data-requests">Talep oluştur ve taleplerimi gör</a>
+                    </section>
+                }
+            }
 
             <section class="portal-card portal-stack" aria-labelledby="account-session-title">
                 <h2 id="account-session-title" class="portal-subtitle">Oturum</h2>
@@ -63,6 +74,10 @@ export class PortalAccountComponent {
     readonly busy = signal(false);
     readonly confirmAll = signal(false);
     readonly error = signal<string | null>(null);
+
+    isClosed(link: PortalLink): boolean {
+        return isClinicPortalClosed(link);
+    }
 
     logout(): void {
         this.busy.set(true);

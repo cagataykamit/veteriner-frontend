@@ -2,6 +2,7 @@ import type { PortalAppointmentStatus, PortalAppointmentType } from '@portal/app
 import type { PortalPaymentMethod } from '@portal/app/features/balance/portal-balance.api';
 import type { PortalAppointmentRequestStatus } from '@portal/app/features/booking/portal-booking.api';
 import type { PortalDayOfWeek } from '@portal/app/features/clinic/portal-clinic.api';
+import type { PortalDataRequestStatus, PortalDataRequestType } from '@portal/app/features/data-requests/portal-data-requests.api';
 import type { PortalPetGender } from '@portal/app/features/pets/portal-pets.api';
 
 /**
@@ -41,6 +42,31 @@ export function appointmentRequestStatus(status: PortalAppointmentRequestStatus 
     const found = typeof status === 'number' ? APPOINTMENT_REQUEST_STATUSES[status] : APPOINTMENT_REQUEST_STATUSES.find((s) => s.name === status);
 
     return found ?? { name: 'Unknown', label: 'Bilinmiyor', tone: 'neutral' };
+}
+
+/** KVKK veri talebi türü (sözleşme §11): seçimde ad ve kısa açıklama. */
+export const DATA_REQUEST_TYPES: readonly { readonly type: PortalDataRequestType; readonly label: string; readonly hint: string }[] = [
+    { type: 'Access', label: 'Erişim', hint: 'Klinikte hakkımda hangi kayıtların tutulduğunu öğrenmek ve bir kopyasını almak istiyorum.' },
+    { type: 'Rectification', label: 'Düzeltme', hint: 'Yanlış ya da eksik bilgilerimin düzeltilmesini istiyorum.' },
+    { type: 'Erasure', label: 'Silme', hint: 'Kayıtlarımın silinmesini ya da anonimleştirilmesini istiyorum. Yasal saklama süresi olan kayıtlar süre bitene dek saklanabilir.' },
+    { type: 'Objection', label: 'İtiraz', hint: 'Verilerimin işlenmesine itiraz ediyorum.' },
+    { type: 'Other', label: 'Diğer', hint: 'Verilerimle ilgili başka bir talebim var.' }
+];
+
+const DATA_REQUEST_STATUS_LABELS: Readonly<Record<PortalDataRequestStatus, { readonly label: string; readonly tone: PortalBadgeTone }>> = {
+    Open: { label: 'Kliniğe iletildi', tone: 'warning' },
+    InProgress: { label: 'İnceleniyor', tone: 'info' },
+    Completed: { label: 'Yanıtlandı', tone: 'success' },
+    Rejected: { label: 'Reddedildi', tone: 'neutral' },
+    Cancelled: { label: 'Geri çekildi', tone: 'neutral' }
+};
+
+export function dataRequestTypeLabel(type: string): string {
+    return DATA_REQUEST_TYPES.find((t) => t.type === type)?.label ?? 'Diğer';
+}
+
+export function dataRequestStatus(status: string): { readonly label: string; readonly tone: PortalBadgeTone } {
+    return DATA_REQUEST_STATUS_LABELS[status as PortalDataRequestStatus] ?? { label: 'Bilinmiyor', tone: 'neutral' };
 }
 
 export const PAYMENT_METHOD_LABELS: Readonly<Record<PortalPaymentMethod, string>> = {

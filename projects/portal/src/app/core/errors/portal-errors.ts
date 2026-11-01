@@ -25,6 +25,9 @@ export const PORTAL_ERROR_CODES = {
     slotUnavailable: 'AppointmentRequests.SlotUnavailable',
     pendingLimitReached: 'AppointmentRequests.PendingLimitReached',
     requestNotPending: 'AppointmentRequests.NotPending',
+    dataRequestsTooManyOpen: 'Portal.DataRequests.TooManyOpen',
+    dataRequestNotOpen: 'Portal.DataRequests.NotOpen',
+    dataRequestNotFound: 'Portal.DataRequests.NotFound',
     validation: 'Validation.FluentValidation'
 } as const;
 
@@ -52,6 +55,9 @@ export const PORTAL_ERROR_MESSAGES: Readonly<Record<string, string>> = {
     [C.slotUnavailable]: 'Seçtiğiniz saat artık müsait değil. Lütfen başka bir saat seçin.',
     [C.pendingLimitReached]: 'Bu klinikte bekleyen talep sınırına ulaştınız. Klinik mevcut taleplerinizi yanıtladıktan sonra yeni talep oluşturabilirsiniz.',
     [C.requestNotPending]: 'Bu talep artık beklemede değil; sayfayı yenileyin.',
+    [C.dataRequestsTooManyOpen]: 'Bu klinikte yanıt bekleyen 3 talebiniz var. Klinik bunlardan birini yanıtladıktan sonra yeni talep oluşturabilirsiniz.',
+    [C.dataRequestNotOpen]: 'Bu talep artık geri çekilemez: klinik incelemeye almış ya da yanıtlamış olabilir. Liste yenilendi.',
+    [C.dataRequestNotFound]: 'Talep bulunamadı; liste yenilendi.',
     [C.validation]: 'Girdiğiniz bilgileri kontrol edin.'
 };
 
