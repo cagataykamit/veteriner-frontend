@@ -16,8 +16,8 @@ describe('PortalAppointmentRequestsComponent (randevu taleplerim)', () => {
     let api: MockedObject<PortalBookingApi>;
 
     const pending = bookingRequest();
-    const approvedMoved = bookingRequest({ id: 'req-2', status: 1, approvedStartUtc: SLOT_TUE_1400, requestedStartUtc: SLOT_MON_0930, wasRescheduled: true, canCancel: false });
-    const rejected = bookingRequest({ id: 'req-3', status: 2, rejectionReason: 'Hekim izinli', canCancel: false });
+    const approvedMoved = bookingRequest({ id: 'req-2', status: 'Approved', approvedStartUtc: SLOT_TUE_1400, requestedStartUtc: SLOT_MON_0930, wasRescheduled: true, canCancel: false });
+    const rejected = bookingRequest({ id: 'req-3', status: 'Rejected', rejectionReason: 'Hekim izinli', canCancel: false });
 
     async function settle(): Promise<void> {
         fixture.detectChanges();
@@ -68,7 +68,7 @@ describe('PortalAppointmentRequestsComponent (randevu taleplerim)', () => {
     });
 
     it('iptal onay sorusuyla yapılır; vazgeçilebilir', async () => {
-        api.cancelRequest.mockReturnValue(of(bookingRequest({ status: 3, canCancel: false, petName: null })));
+        api.cancelRequest.mockReturnValue(of(bookingRequest({ status: 'Cancelled', canCancel: false, petName: null })));
         await create();
 
         buttonByText(rows()[0], 'Talebi iptal et')!.click();

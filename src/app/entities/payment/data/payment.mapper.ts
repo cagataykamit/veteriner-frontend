@@ -188,6 +188,7 @@ export function mapPaymentDetailDtoToVm(dto: PaymentDetailDto): PaymentDetailVm 
         petName: hasMultiplePets(dto.petCount) ? MULTIPLE_PETS_LABEL : detailPetName(dto),
         hasMultiplePets: hasMultiplePets(dto.petCount),
         amount: detailAmount(dto),
+        creditedAmount: num(dto.creditedAmount) ?? 0,
         currency: detailCurrency(dto),
         method: resolvePaymentMethodFormValue(readRawMethodFromUnknown(dto)),
         note: detailNotes(dto),
@@ -327,7 +328,8 @@ export function mapCreatePaymentToApiBody(req: CreatePaymentRequest): PaymentCre
     return {
         ...mapUpdatePaymentToApiBody(req),
         requestId: req.requestId.trim(),
-        allocations: req.allocations.map((a) => ({ chargeId: a.chargeId.trim(), amount: a.amount }))
+        allocations: req.allocations.map((a) => ({ chargeId: a.chargeId.trim(), amount: a.amount })),
+        ...(req.creditAmount && req.creditAmount > 0 ? { creditAmount: req.creditAmount } : {})
     };
 }
 

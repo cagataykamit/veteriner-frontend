@@ -3,10 +3,11 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { APPOINTMENT_REQUESTS_MANAGE_CLAIM, LAB_RESULTS_READ_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { APPOINTMENT_REQUESTS_MANAGE_CLAIM, LAB_RESULTS_READ_CLAIM, OWNER_PORTAL_MANAGE_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
 import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';
 import { AppointmentRequestsService } from '@/app/entities/online-booking/services/online-booking.service';
+import { PortalInboxService } from '@/app/entities/owner-portal/services/owner-portal.service';
 import type { TodayVm } from '@/app/entities/visit/models/visit-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { MenuBadgeService, menuBadgeLabel } from './menu-badge.service';
@@ -34,6 +35,7 @@ describe('MenuBadgeService', () => {
     let getToday: Mock;
     let getLabResults: Mock;
     let getPendingRequests: Mock;
+    let getInboxSummary: Mock;
     let service: MenuBadgeService;
 
     beforeEach(() => {
@@ -47,6 +49,7 @@ describe('MenuBadgeService', () => {
             .fn()
             .mockName('getPendingRequests')
             .mockReturnValue(of({ items: [], totalCount: 3, page: 1, pageSize: 1 }));
+        getInboxSummary = vi.fn().mockName('getInboxSummary').mockReturnValue(of({ openDataRequestCount: 4, overdueDataRequestCount: 1 }));
         getLabResults = vi
             .fn()
             .mockName('getLabResults')
@@ -57,6 +60,7 @@ describe('MenuBadgeService', () => {
                 { provide: VisitsService, useValue: { getToday } },
                 { provide: LabResultsService, useValue: { getLabResults } },
                 { provide: AppointmentRequestsService, useValue: { list: getPendingRequests } },
+                { provide: PortalInboxService, useValue: { summary: getInboxSummary } },
                 { provide: Router, useValue: { events: new Subject() } }
             ]
         });
@@ -72,6 +76,16 @@ describe('MenuBadgeService', () => {
         service.refresh();
         expect(getPendingRequests).toHaveBeenCalledWith({ status: 0, page: 1, pageSize: 1 });
         expect(service.count('pendingAppointmentRequests')).toBe(3);
+    });
+
+    it('açık portal veri talebi sayacı yalnız OwnerPortal.Manage izniyle gelen kutusu özetinden alınır', () => {
+        service.refresh();
+        expect(getInboxSummary).not.toHaveBeenCalled();
+        expect(service.count('openPortalDataRequests')).toBeNull();
+
+        claims.add(OWNER_PORTAL_MANAGE_CLAIM);
+        service.refresh();
+        expect(service.count('openPortalDataRequests')).toBe(4);
     });
 
     it('Bugün sayacı yalnız bekleyen hastaları sayar', () => {

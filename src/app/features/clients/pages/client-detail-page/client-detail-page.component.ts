@@ -11,6 +11,7 @@ import { ClientCardHeaderComponent } from '@/app/features/clients/components/cli
 import { ClientKvkkConsentDialogComponent } from '@/app/features/clients/components/client-kvkk-consent-dialog.component';
 import { ClientPetsPanelComponent } from '@/app/features/clients/components/client-pets-panel.component';
 import { ClientPortalAccessPanelComponent } from '@/app/features/clients/components/client-portal-access-panel.component';
+import { ClientCreditsPanelComponent } from '@/app/features/clients/components/client-credits-panel.component';
 import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
 import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import type { ClientDetailVm, ClientKvkkConsentUpdateResult, ClientPaymentSummaryVm } from '@/app/entities/client/models/client-vm.model';
@@ -62,6 +63,7 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
         ClientKvkkConsentDialogComponent,
         ClientPetsPanelComponent,
         ClientPortalAccessPanelComponent,
+        ClientCreditsPanelComponent,
         PetTodoPanelComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -251,6 +253,9 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
                     </div>
                     </div>
                 </div>
+
+                <!-- Müşteri kredisi (FIN-005): tam genişlik; kredi yoksa panel kendini gizler. -->
+                <app-client-credits-panel class="empty:hidden" [clientId]="c.id" />
 
                 <!-- 3. satır: portal erişimi | belgeler ve rıza (yarım genişlik, eşit yükseklik) -->
                 <div class="grid grid-cols-12 gap-4">

@@ -1,6 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, ViewEncapsulation } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, inject, ViewEncapsulation } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter, map } from 'rxjs';
+import { isClinicPortalClosed } from '@portal/app/core/auth/portal-auth.models';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
+import { PORTAL_CLINIC_CLOSED_MESSAGE } from '@portal/app/core/errors/portal-errors';
+import { PortalEmptyState } from '@portal/app/shared/ui/portal-states.component';
 import { PortalBrandHeader, PortalFooter } from './portal-brand.component';
 
 interface PortalNavItem {
@@ -22,10 +27,13 @@ const NAV_ITEMS: readonly PortalNavItem[] = [
     { label: 'Hesabım', icon: 'fa-user', path: '/account', exact: false }
 ];
 
+/** Klinik portalı kapattığında (§12) yalnız hesap düzeyi sayfalar açılır; bağ kapsamlı sayfaların yerine durum notu çıkar. */
+const ACCOUNT_LEVEL_PATHS: readonly string[] = ['/account', '/account/delete'];
+
 @Component({
     selector: 'portal-shell',
     standalone: true,
-    imports: [RouterOutlet, RouterLink, RouterLinkActive, PortalBrandHeader, PortalFooter],
+    imports: [RouterOutlet, RouterLink, RouterLinkActive, PortalBrandHeader, PortalFooter, PortalEmptyState],
     changeDetection: ChangeDetectionStrategy.OnPush,
     // İçerik sayfalarının ortak stilleri kabukla bir kez yüklenir (bkz. dosya başı).
     encapsulation: ViewEncapsulation.None,
@@ -43,7 +51,18 @@ const NAV_ITEMS: readonly PortalNavItem[] = [
             </portal-brand-header>
         </div>
         <main id="portal-main" class="portal-page portal-page--with-nav" tabindex="-1">
-            <router-outlet />
+            @if (showClosedNotice()) {
+                <portal-empty-state title="Portal geçici olarak kapalı" [message]="closedMessage" icon="fa-door-closed" data-testid="clinic-portal-closed">
+                    <div class="portal-actions">
+                        <a class="portal-link-button" routerLink="/account">Hesabım</a>
+                        @if (session.links().length > 1) {
+                            <a class="portal-link-button" routerLink="/clinics">Başka klinik seç</a>
+                        }
+                    </div>
+                </portal-empty-state>
+            } @else {
+                <router-outlet />
+            }
             <portal-footer />
         </main>
         <nav class="portal-bottom-nav" aria-label="Ana gezinme">
@@ -63,5 +82,17 @@ const NAV_ITEMS: readonly PortalNavItem[] = [
 })
 export class PortalShell {
     protected readonly session = inject(PortalSessionService);
+    private readonly router = inject(Router);
     protected readonly navItems = NAV_ITEMS;
+    protected readonly closedMessage = PORTAL_CLINIC_CLOSED_MESSAGE;
+
+    private readonly path = toSignal(
+        this.router.events.pipe(
+            filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+            map((event) => event.urlAfterRedirects)
+        ),
+        { initialValue: this.router.url }
+    );
+
+    protected readonly showClosedNotice = computed(() => isClinicPortalClosed(this.session.activeLink()) && !ACCOUNT_LEVEL_PATHS.includes(this.path().split(/[?#]/)[0]));
 }

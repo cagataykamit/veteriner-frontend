@@ -1,4 +1,4 @@
-import { allocationAmountError, allocationTotal, buildAllocations } from './payment-allocation.utils';
+import { allocationAmountError, allocationTotal, buildAllocations, creditApplyError, receivedAmountError, receivedCreditAmount } from './payment-allocation.utils';
 
 describe('payment-allocation.utils', () => {
     describe('allocationAmountError', () => {
@@ -32,6 +32,40 @@ describe('payment-allocation.utils', () => {
                     { chargeId: 'b', amount: 0.2 }
                 ])
             ).toBe(0.3);
+        });
+    });
+
+    describe('alınan tutar ve kredi', () => {
+        it('boş alınan tutar hata değildir ve kredi doğurmaz', () => {
+            expect(receivedAmountError(null, 600)).toBeNull();
+            expect(receivedCreditAmount(null, 600)).toBe(0);
+        });
+
+        it('toplamın altı reddedilir; eşit ya da fazlası geçerlidir', () => {
+            expect(receivedAmountError(599.99, 600)).toBe('Alınan tutar seçilen ücretlerin toplamından az olamaz.');
+            expect(receivedAmountError(600, 600)).toBeNull();
+            expect(receivedAmountError(1000, 600)).toBeNull();
+        });
+
+        it('sıfır, negatif ve 2 ondalıktan fazla reddedilir', () => {
+            expect(receivedAmountError(0, 0)).toBe('Geçerli bir tutar girin.');
+            expect(receivedAmountError(-5, 0)).toBe('Geçerli bir tutar girin.');
+            expect(receivedAmountError(10.123, 0)).toBe('En fazla 2 ondalık girin.');
+        });
+
+        it('fazlası kuruş hatasız krediye yazılır; avansta tamamı kredidir', () => {
+            expect(receivedCreditAmount(1000, 600)).toBe(400);
+            expect(receivedCreditAmount(0.3, 0.1)).toBe(0.2);
+            expect(receivedCreditAmount(500, 0)).toBe(500);
+            expect(receivedCreditAmount(500, 600)).toBe(0);
+        });
+    });
+
+    describe('creditApplyError', () => {
+        it('kullanılabilir krediye eşit ya da altı geçerli, fazlası reddedilir', () => {
+            expect(creditApplyError(150, 150)).toBeNull();
+            expect(creditApplyError(0.3, 0.3)).toBeNull();
+            expect(creditApplyError(150.01, 150)).toBe('Seçilen tutar kullanılabilir krediyi aşamaz.');
         });
     });
 

@@ -37,5 +37,8 @@ export interface ClientBalanceDto {
     allocatedAmount: number;
     outstandingAmount: number;
     openChargeCount: number;
+    /** FIN-005: kapsamdaki açık kredilerin kalan toplamı; açık borçtan düşülmez (`CLIENT_CREDIT_API_CONTRACT.md` §7, K9). */
+    creditBalance?: number | null;
+    openCreditCount?: number | null;
     pets?: ClientBalancePetDto[] | null;
 }

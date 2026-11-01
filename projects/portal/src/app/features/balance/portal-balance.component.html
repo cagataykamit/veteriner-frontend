@@ -39,6 +39,12 @@
                                     <dd>{{ day(b.lastPaymentAtUtc) }}</dd>
                                 </div>
                             }
+                            @if (hasCredit(b)) {
+                                <div data-testid="balance-credit">
+                                    <dt>Kullanılabilir krediniz</dt>
+                                    <dd>{{ money(b.creditBalance ?? 0, b.currency) }}</dd>
+                                </div>
+                            }
                         </dl>
                         @if (b.unallocatedPaymentsAmount > 0) {
                             <div class="portal-note" data-testid="balance-unallocated">

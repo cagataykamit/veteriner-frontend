@@ -39,6 +39,8 @@ export function mapClientBalanceDtoToVm(dto: ClientBalanceDto): ClientBalanceVm 
         chargedAmount: dto.chargedAmount,
         allocatedAmount: dto.allocatedAmount,
         outstandingAmount: dto.outstandingAmount,
+        creditBalance: dto.creditBalance ?? 0,
+        openCreditCount: dto.openCreditCount ?? 0,
         openCharges
     };
 }

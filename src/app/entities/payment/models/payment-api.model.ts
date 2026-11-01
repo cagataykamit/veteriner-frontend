@@ -62,6 +62,8 @@ export interface PaymentDetailDto {
     method?: string | number | null;
     paidAtUtc?: string | null;
     notes?: string | null;
+    /** FIN-005: ödemenin müşteri kredisine yazılan kısmı (`CLIENT_CREDIT_API_CONTRACT.md` §3). */
+    creditedAmount?: number | string | null;
 }
 
 export interface PaymentCreateRequestDto {
@@ -81,4 +83,6 @@ export interface PaymentCreateRequestDto {
 export interface PaymentCreateWithAllocationsRequestDto extends PaymentCreateRequestDto {
     requestId: string;
     allocations: Array<{ chargeId: string; amount: number }>;
+    /** `CLIENT_CREDIT_API_CONTRACT.md` §3: yalnız > 0 iken gönderilir. */
+    creditAmount?: number;
 }

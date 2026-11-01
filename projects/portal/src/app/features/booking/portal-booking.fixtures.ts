@@ -37,7 +37,7 @@ export const BOOKING_DAYS: PortalBookingDay[] = [
 export function bookingRequest(overrides: Partial<PortalAppointmentRequest> = {}): PortalAppointmentRequest {
     return {
         id: 'req-1',
-        status: 0,
+        status: 'Pending',
         reasonName: 'Aşı',
         requestedStartUtc: SLOT_MON_0900,
         durationMinutes: 15,

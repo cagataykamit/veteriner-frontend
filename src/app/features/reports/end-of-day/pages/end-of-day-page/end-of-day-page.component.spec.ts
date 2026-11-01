@@ -2,7 +2,7 @@ import type { MockedObject } from 'vitest';
 import { HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { map, of } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
@@ -194,7 +194,7 @@ describe('EndOfDayPageComponent', () => {
         expect(calls('/end-of-day/open-items').length).toBe(0);
     });
 
-    it('Excel/CSV indirme aynı süzgeçlerle döküm uçlarını çağırır, sayfalama göndermez', () => {
+    it('Excel/CSV indirme aynı filtrelerle döküm uçlarını çağırır, sayfalama göndermez', () => {
         const fixture = create();
 
         fixture.componentInstance.state.exportCsv();
@@ -205,6 +205,66 @@ describe('EndOfDayPageComponent', () => {
         expect(vi.mocked(api.getBlob).mock.calls[1][0]).toBe('/api/v1/reports/daily-transactions/export-xlsx');
         expect(csvParams.has('page')).toBe(false);
         expect(csvParams.get('from')).toBe(localDateYyyyMmDd());
+    });
+
+    it('kredi iadesi yoksa kasa özetinde kutu ve sütun yoktur', () => {
+        const el = create().nativeElement as HTMLElement;
+
+        expect(el.querySelector('[data-testid="eod-credit-refund"]')).toBeNull();
+        expect(el.querySelector('table[aria-label="Ödeme türüne göre tahsilat"]')?.textContent).not.toContain('Kredi iadesi');
+    });
+
+    it('kredi iadesi: dökümde eksi tutarlı "Kredi iadesi" satırı; kasa özetinde tutar kutusu ve ödeme türü sütunu', () => {
+        const base = api.get.getMockImplementation()!;
+        const refund = { refundedCreditAmount: 150, refundedCreditCount: 1 };
+
+        api.get.mockImplementation(((path: string, params?: HttpParams) => {
+            if (path.endsWith('/cash-summary')) {
+                return of({
+                    currency: 'TRY',
+                    from: '2026-10-14',
+                    to: '2026-10-14',
+                    totals: { ...zeroAmounts, collectedAmount: 600, netAmount: 450, ...refund },
+                    byMethod: [{ paymentMethod: 'Cash', ...zeroAmounts, collectedAmount: 600, netAmount: 450, ...refund }],
+                    byDay: [],
+                    byUser: []
+                });
+            }
+
+            if (path.endsWith('/daily-transactions')) {
+                return (base(path, params) as ReturnType<typeof of>).pipe(
+                    map((r) => ({
+                        ...(r as object),
+                        items: [
+                            {
+                                occurredAtUtc: '2026-10-14T15:00:00Z',
+                                kind: 'CreditRefund',
+                                referenceId: 'cr1',
+                                clientId: 'c1',
+                                clientName: 'Ayşe Demir',
+                                amount: 150,
+                                paymentMethod: 'Cash',
+                                isDirectSale: false,
+                                isVoided: false,
+                                reason: 'Müşteri istedi',
+                                performedByName: 'Yönetici',
+                                clinicId: 'k1'
+                            }
+                        ]
+                    }))
+                );
+            }
+
+            return base(path, params);
+        }) as never);
+        const el = create().nativeElement as HTMLElement;
+        const strip = (s: string | null | undefined) => (s ?? '').replace(/\s/g, '');
+
+        expect(strip(el.querySelector('[data-testid="eod-credit-refund"]')?.textContent)).toContain('Krediiadesi₺150,00');
+        expect(el.querySelector('table[aria-label="Ödeme türüne göre tahsilat"]')?.textContent).toContain('Kredi iadesi');
+        expect(el.textContent).toContain('İptal ve kredi iadesi düşülmüştür.');
+        expect(el.textContent).toContain('Gerekçe: Müşteri istedi');
+        expect(strip(el.textContent)).toContain('-₺150,00');
     });
 
     it('yazdırma sınıfını ekler ve sayfadan çıkınca kaldırır', () => {

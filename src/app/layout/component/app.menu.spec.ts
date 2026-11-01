@@ -424,7 +424,7 @@ describe('AppMenu', () => {
 
             hover(fixture, 'Müşteri ve Hasta');
             expect(panel().querySelector('.layout-menu-flyout-heading')?.textContent?.trim()).toBe('Müşteri ve Hasta');
-            expect(itemLabels()).toEqual(['Ara', 'Müşteriler', 'Hastalar']);
+            expect(itemLabels()).toEqual(['Ara', 'Müşteriler', 'Hastalar', 'Portal gelen kutusu']);
             expect(link(fixture, 'Müşteri ve Hasta').getAttribute('aria-haspopup')).toBe('menu');
         });
 

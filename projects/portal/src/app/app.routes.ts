@@ -112,6 +112,11 @@ export const portalRoutes: Routes = [
                 loadComponent: () => import('./features/account/portal-account.component').then((m) => m.PortalAccountComponent)
             },
             {
+                path: 'account/data-requests',
+                title: title('Verilerimle ilgili talep'),
+                loadComponent: () => import('./features/data-requests/portal-data-requests.component').then((m) => m.PortalDataRequestsComponent)
+            },
+            {
                 path: 'account/delete',
                 title: title('Hesabı sil'),
                 loadComponent: () => import('./features/account/portal-account-deletion.component').then((m) => m.PortalAccountDeletionComponent)

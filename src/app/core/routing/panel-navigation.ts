@@ -24,6 +24,7 @@ import {
     IMAGING_READ_CLAIM,
     IMPORTS_READ_CLAIM,
     LAB_RESULTS_READ_CLAIM,
+    OWNER_PORTAL_MANAGE_CLAIM,
     PAYMENTS_READ_CLAIM,
     PETS_READ_CLAIM,
     PLATFORM_ADMIN_CLAIM,
@@ -59,7 +60,7 @@ export interface NavigationEntry {
 }
 
 /** Menüde öğenin yanında bekleyen iş sayısı gösterilen sayaçlar; değerlerini `MenuBadgeService` sağlar. */
-export type MenuBadgeKey = 'waitingVisits' | 'requestedLabResults' | 'pendingAppointmentRequests';
+export type MenuBadgeKey = 'waitingVisits' | 'requestedLabResults' | 'pendingAppointmentRequests' | 'openPortalDataRequests';
 
 /** Birleşik menü öğesinin sekmesi: mevcut liste sayfasının rotası; yetkisi olmayan sekme görünmez. */
 export interface MenuTab extends NavigationEntry {
@@ -119,6 +120,8 @@ export const APPOINTMENT_REASONS_ROUTE = `${DEFINITIONS_ROUTE}/appointment-reaso
 export const ONLINE_BOOKING_SETTINGS_ROUTE = '/panel/settings/online-booking';
 export const APPOINTMENT_REQUESTS_ROUTE = '/panel/appointments/requests';
 export const NOTIFICATIONS_ROUTE = '/panel/notifications';
+export const PORTAL_INBOX_ROUTE = '/panel/portal-inbox';
+export const CLINIC_PORTAL_SETTINGS_ROUTE = '/panel/settings/owner-portal';
 export const IMPORTS_ROUTE = '/panel/settings/imports';
 export const SUBSCRIPTION_ROUTE = '/panel/settings/subscription';
 export const REPORTS_ROUTE = '/panel/reports';
@@ -308,11 +311,18 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
     {
         heading: 'Müşteri ve hasta',
         entries: [
-            tabbedEntry('Müşteri ve Hasta', 'fa-solid fa-fw fa-paw', [
-                { label: 'Ara', listLabel: 'Hastalar', route: '/panel/patients', claims: [CLIENTS_READ_CLAIM, PETS_READ_CLAIM] },
-                { label: 'Müşteriler', route: '/panel/clients', claims: [CLIENTS_READ_CLAIM] },
-                { label: 'Hastalar', route: '/panel/pets', claims: [PETS_READ_CLAIM] }
-            ])
+            tabbedEntry(
+                'Müşteri ve Hasta',
+                'fa-solid fa-fw fa-paw',
+                [
+                    { label: 'Ara', listLabel: 'Hastalar', route: '/panel/patients', claims: [CLIENTS_READ_CLAIM, PETS_READ_CLAIM] },
+                    { label: 'Müşteriler', route: '/panel/clients', claims: [CLIENTS_READ_CLAIM] },
+                    { label: 'Hastalar', route: '/panel/pets', claims: [PETS_READ_CLAIM] },
+                    // Hasta sahiplerinin portaldan gönderdiği KVKK veri talepleri (PORTAL-009): müşteri işinin sekmesi (ADR-004).
+                    { label: 'Portal gelen kutusu', route: PORTAL_INBOX_ROUTE, claims: [OWNER_PORTAL_MANAGE_CLAIM], badge: 'openPortalDataRequests' }
+                ],
+                { badge: 'openPortalDataRequests', badgeText: 'açık portal veri talebi' }
+            )
         ]
     },
     {
@@ -470,6 +480,13 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 route: ONLINE_BOOKING_SETTINGS_ROUTE,
                 claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
                 description: 'Online talebi açıp kapatma, kliniğe özel bağlantı ve sahibe giden e-posta şablonları.'
+            },
+            {
+                label: 'Hasta sahibi portalı',
+                icon: 'pi pi-mobile',
+                route: CLINIC_PORTAL_SETTINGS_ROUTE,
+                claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
+                description: 'Portalı klinik için açıp kapatma ve hasta sahibine giden bildirimlerin kanalları.'
             },
             { label: 'Organizasyon Ayarları', icon: 'pi pi-fw pi-building', route: '/panel/settings/organization', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Kurum ve fatura bilgileri.' },
             { label: 'Kurum üyeleri', icon: 'pi pi-fw pi-users', route: '/panel/settings/members', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Üyeler ve rolleri.' },

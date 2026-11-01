@@ -13,7 +13,7 @@ import { configurePortalHttp, TEST_ME } from './portal-testing';
  * Yalnız spec'ler: `PORTAL_API_CONTRACT.md` §6 örnek yanıtları (kimlikler kısaltıldı, tarihler `Z`'siz UTC).
  */
 export const LINK_MERKEZ: PortalLink = TEST_ME.links[0];
-export const LINK_SAHIL: PortalLink = { linkId: 'link-2', clinicId: 'clinic-2', clinicName: 'Sahil', clientFullName: 'Ayşe Yılmaz' };
+export const LINK_SAHIL: PortalLink = { linkId: 'link-2', clinicId: 'clinic-2', clinicName: 'Sahil', clientFullName: 'Ayşe Yılmaz', isClinicPortalEnabled: true };
 
 export const PET_PAMUK: PortalPet = {
     petId: 'pet-1',

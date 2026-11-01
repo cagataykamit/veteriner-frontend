@@ -1,4 +1,4 @@
-import { mapPaymentDetailDtoToVm, mapPaymentListItemDtoToVm, MULTIPLE_PETS_LABEL, paymentsQueryToHttpParams } from '@/app/entities/payment/data/payment.mapper';
+import { mapCreatePaymentToApiBody, mapPaymentDetailDtoToVm, mapPaymentListItemDtoToVm, MULTIPLE_PETS_LABEL, paymentsQueryToHttpParams } from '@/app/entities/payment/data/payment.mapper';
 
 describe('payment mapper — liste tarih parametreleri', () => {
     it('İstanbul gününü iki ucu dahil [paidFromUtc, paidToUtc] olarak gönderir', () => {
@@ -70,5 +70,31 @@ describe('payment.mapper petCount', () => {
         expect(vm.petName).toBe(MULTIPLE_PETS_LABEL);
         expect(vm.hasMultiplePets).toBe(true);
         expect(mapPaymentDetailDtoToVm({ id: 'p1', petName: 'Mavis', petCount: 1 }).hasMultiplePets).toBe(false);
+    });
+});
+
+describe('payment mapper — müşteri kredisi (FIN-005)', () => {
+    const create = (creditAmount?: number) =>
+        mapCreatePaymentToApiBody({
+            clinicId: 'k1',
+            clientId: 'c1',
+            amount: 1000,
+            currency: 'TRY',
+            method: 'cash',
+            paidAtUtc: '2026-10-30T10:00:00Z',
+            requestId: 'r1',
+            allocations: [{ chargeId: 'ch1', amount: 600 }],
+            creditAmount
+        });
+
+    it('creditAmount yalnız > 0 iken gövdeye girer', () => {
+        expect(create(400).creditAmount).toBe(400);
+        expect('creditAmount' in create()).toBe(false);
+        expect('creditAmount' in create(0)).toBe(false);
+    });
+
+    it('detay: creditedAmount okunur, yoksa 0', () => {
+        expect(mapPaymentDetailDtoToVm({ id: 'p1', creditedAmount: 400 }).creditedAmount).toBe(400);
+        expect(mapPaymentDetailDtoToVm({ id: 'p1' }).creditedAmount).toBe(0);
     });
 });

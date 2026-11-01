@@ -53,7 +53,7 @@ describe('PortalAppointmentRequestComponent (oturumlu talep)', () => {
         pets = { pets: vi.fn().mockName('pets') } as unknown as MockedObject<PortalPetsApi>;
         api.linkPage.mockReturnValue(of(BOOKING_PAGE));
         api.linkAvailability.mockReturnValue(of(BOOKING_DAYS));
-        api.createLinkRequest.mockReturnValue(of({ id: 'req-1', status: 0, requestedStartUtc: SLOT_MON_0900 }));
+        api.createLinkRequest.mockReturnValue(of({ id: 'req-1', status: 'Pending', requestedStartUtc: SLOT_MON_0900 }));
         pets.pets.mockReturnValue(of([PET_PAMUK, PET_BONCUK]));
         await TestBed.configureTestingModule({
             imports: [PortalAppointmentRequestComponent],

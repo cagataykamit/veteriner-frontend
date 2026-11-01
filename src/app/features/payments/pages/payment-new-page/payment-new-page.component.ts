@@ -13,12 +13,22 @@ import { ClientsService } from '@/app/entities/client/services/clients.service';
 import type { ClientOpenChargeVm } from '@/app/entities/client/models/client-balance-vm.model';
 import { mapPaymentUpsertFormToWriteRequest } from '@/app/entities/payment/data/payment.mapper';
 import { PaymentsService } from '@/app/entities/payment/services/payments.service';
-import { allocationAmountError, allocationTotal, buildAllocations, PAYMENT_CURRENCY } from '@/app/features/payments/utils/payment-allocation.utils';
+import {
+    allocationAmountError,
+    allocationTotal,
+    buildAllocations,
+    creditApplyError,
+    PAYMENT_CURRENCY,
+    receivedAmountError,
+    receivedCreditAmount
+} from '@/app/features/payments/utils/payment-allocation.utils';
+import { ClientCreditsService } from '@/app/entities/client-credit/services/client-credits.service';
+import { CLIENT_CREDIT_PROBLEM_MESSAGES } from '@/app/entities/client-credit/utils/client-credit-error.utils';
 import { PAYMENT_WRITE_METHOD_OPTIONS } from '@/app/entities/payment/utils/payment-method.utils';
 import { type PaymentUpsertFieldErrors, parsePaymentUpsertHttpError } from '@/app/features/payments/utils/payment-upsert-validation-parse.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
-import { panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
 import { dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import { PAYMENT_DATE_TOO_FAR_PAST_MESSAGE, paymentDateNotTooFarPastValidator, paymentDateTimeLocalMinAllowed } from '@/app/features/payments/utils/payment-date-validation.utils';
@@ -32,7 +42,10 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 /** Açık tutar bu arada değişti: güncel bakiye yeniden okunur, aynı `requestId` ile tekrar denemek güvenlidir. */
 const STALE_BALANCE_CODES = new Set(['PaymentAllocations.ExceedsOutstanding', 'Payments.ConcurrencyConflict']);
 const STALE_BALANCE_MESSAGE = 'Açık tutarlar değişti; güncel tutarlar yüklendi. Kontrol edip tekrar kaydedin.';
-const DUPLICATE_MISMATCH_MESSAGE = 'Bu form için ödeme daha önce kaydedilmiş olabilir. Ödeme listesini kontrol edin; gerekirse sayfayı yenileyip yeni bir ödeme girin.';
+/** Krediden mahsupta kredi ya da açık tutar bu arada değişti: bakiye yeniden okunur, aynı `requestId` ile tekrar denemek güvenlidir. */
+const STALE_CREDIT_CODES = new Set(['PaymentAllocations.ExceedsOutstanding', 'ClientCredits.ConcurrencyConflict', 'ClientCredits.InsufficientBalance']);
+const STALE_CREDIT_MESSAGE = 'Kredi ya da açık tutarlar değişti; güncel tutarlar yüklendi. Kontrol edip tekrar deneyin.';
+const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş olabilir. Ödeme listesini kontrol edin; gerekirse sayfayı yenileyip yeni bir ödeme girin.';
 
 @Component({
     selector: 'app-payment-new-page',
@@ -59,8 +72,28 @@ const DUPLICATE_MISMATCH_MESSAGE = 'Bu form için ödeme daha önce kaydedilmiş
                         }
                     </div>
 
+                    @if (clientSelected() && !balanceLoading() && !balanceError() && creditBalance() > 0) {
+                        <div class="col-span-12" data-testid="payment-credit">
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 p-3 rounded-lg bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800" role="status">
+                                <span class="font-medium"><i class="pi pi-wallet mr-2" aria-hidden="true"></i>Kullanılabilir kredi: {{ money(creditBalance()) }}</span>
+                                @if (openCharges().length > 0) {
+                                    <span class="text-sm text-muted-color">Ücretlere tutar girip krediden kapatabilirsiniz; ödeme kaydı oluşmaz.</span>
+                                    <button pButton type="button" size="small" class="ml-auto" [disabled]="!canApplyCredit() || busy() || ro.mutationBlocked()" (click)="applyCredit()">
+                                        <i class="p-button-icon" [class]="applyingCredit() ? 'pi pi-spin pi-spinner' : 'pi pi-wallet'"></i>Krediden öde
+                                    </button>
+                                }
+                            </div>
+                            @if (creditLimitError(); as err) {
+                                <small class="text-red-500 block mt-1">{{ err }}</small>
+                            }
+                            @if (creditError()) {
+                                <p class="text-red-500 mt-2 mb-0" role="alert">{{ creditError() }}</p>
+                            }
+                        </div>
+                    }
+
                     <div class="col-span-12">
-                        <span class="block text-sm font-medium text-muted-color mb-2">Hangi ücrete? *</span>
+                        <span class="block text-sm font-medium text-muted-color mb-2">Hangi ücrete?{{ prepayment() ? '' : ' *' }}</span>
                         @if (!clientSelected()) {
                             <p class="text-sm text-muted-color m-0">Önce müşteriyi seçin.</p>
                         } @else if (balanceLoading()) {
@@ -68,10 +101,21 @@ const DUPLICATE_MISMATCH_MESSAGE = 'Bu form için ödeme daha önce kaydedilmiş
                         } @else if (balanceError()) {
                             <p class="text-red-500 m-0" role="alert">{{ balanceError() }}</p>
                         } @else if (openCharges().length === 0) {
-                            <p class="text-sm m-0" role="status">
-                                Bu müşterinin açık ücreti yok. Ödeme alabilmek için önce
-                                <a [routerLink]="['/panel/charges/new']" [queryParams]="chargeNewQueryParams()" class="text-primary font-medium no-underline">ücret ekleyin</a>.
-                            </p>
+                            @if (prepayment()) {
+                                <p class="text-sm m-0" role="status" data-testid="payment-prepayment">
+                                    Avans (peşin ödeme): alınan tutarın tamamı müşteri kredisine yazılır; sonraki ücretler krediden kapatılabilir.
+                                    <button pButton type="button" size="small" severity="secondary" [text]="true" (click)="setPrepayment(false)">Vazgeç</button>
+                                </p>
+                            } @else {
+                                <p class="text-sm m-0" role="status">
+                                    Bu müşterinin açık ücreti yok. Ödemeyi bir ücrete bağlamak için önce
+                                    <a [routerLink]="['/panel/charges/new']" [queryParams]="chargeNewQueryParams()" class="text-primary font-medium no-underline">ücret ekleyin</a>
+                                    ya da peşin alınan tutarı avans olarak kaydedin.
+                                </p>
+                                <button pButton type="button" size="small" severity="secondary" [outlined]="true" class="mt-2" (click)="setPrepayment(true)" data-testid="payment-prepayment-start">
+                                    <i class="p-button-icon pi pi-wallet"></i>Avans/peşin ödeme olarak kaydet
+                                </button>
+                            }
                         } @else {
                             <div class="overflow-x-auto">
                                 <p-table [value]="openCharges()" dataKey="chargeId" size="small" [tableStyle]="{ 'min-width': '44rem' }">
@@ -118,22 +162,43 @@ const DUPLICATE_MISMATCH_MESSAGE = 'Bu form için ödeme daha önce kaydedilmiş
                         }
                     </div>
 
-                    <div class="col-span-12 md:col-span-4">
-                        <span class="block text-sm font-medium text-muted-color mb-2">Ödeme tutarı</span>
-                        <div class="p-inputtext p-component w-full font-semibold" aria-live="polite">{{ money(total()) }}</div>
-                        <small class="text-muted-color">Seçilen ücretlerin toplamıdır; yalnız TRY.</small>
-                        @if (apiFieldErrors().amount) {
+                    @if (!prepayment()) {
+                        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                            <span class="block text-sm font-medium text-muted-color mb-2">Seçilen ücretlerin toplamı</span>
+                            <div class="p-inputtext p-component w-full font-semibold" aria-live="polite">{{ money(total()) }}</div>
+                        </div>
+                    }
+                    <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                        <label for="receivedAmount" class="block text-sm font-medium text-muted-color mb-2">Alınan tutar{{ prepayment() ? ' *' : '' }}</label>
+                        <input
+                            id="receivedAmount"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            inputmode="decimal"
+                            class="p-inputtext p-component w-full text-right"
+                            [placeholder]="prepayment() ? '' : money(total())"
+                            [value]="receivedInput() ?? ''"
+                            (input)="onReceivedInput($any($event.target).value)"
+                        />
+                        @if (receivedError(); as err) {
+                            <small class="text-red-500 block">{{ err }}</small>
+                        } @else if (apiFieldErrors().amount) {
                             <small class="text-red-500 block">{{ apiFieldErrors().amount }}</small>
+                        } @else if (creditAmount() > 0 && !prepayment()) {
+                            <small class="block font-medium" data-testid="payment-overpayment" aria-live="polite">Fazlası ({{ money(creditAmount()) }}) müşteri kredisine yazılır.</small>
+                        } @else {
+                            <small class="text-muted-color block">{{ prepayment() ? 'Tamamı müşteri kredisine yazılır; yalnız TRY.' : 'Boş bırakılırsa seçilen ücretlerin toplamı alınır; yalnız TRY.' }}</small>
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-4">
+                    <div class="col-span-12 md:col-span-6 lg:col-span-3">
                         <label for="method" class="block text-sm font-medium text-muted-color mb-2">Yöntem *</label>
                         <p-select inputId="method" [options]="methodOptions" formControlName="method" optionLabel="label" optionValue="value" class="w-full" />
                         @if (apiFieldErrors().method) {
                             <small class="text-red-500">{{ apiFieldErrors().method }}</small>
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-4">
+                    <div class="col-span-12 md:col-span-6 lg:col-span-3">
                         <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati *</label>
                         <app-date-input inputId="paidAtLocal" type="datetime-local" formControlName="paidAtLocal" [min]="paymentDateMinAllowed" limit="past" />
                         @if (form.controls.paidAtLocal.hasError('dateYearInvalid') && form.controls.paidAtLocal.touched) {
@@ -160,8 +225,8 @@ const DUPLICATE_MISMATCH_MESSAGE = 'Bu form için ödeme daha önce kaydedilmiş
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <button pButton type="submit" [disabled]="!canSubmit() || submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
-                    <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
+                    <button pButton type="submit" [disabled]="!canSubmit() || busy() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                    <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="busy()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>
         </div>
@@ -174,6 +239,7 @@ export class PaymentNewPageComponent implements OnInit {
     private readonly fb = inject(FormBuilder);
     private readonly paymentsService = inject(PaymentsService);
     private readonly clientsService = inject(ClientsService);
+    private readonly clientCreditsService = inject(ClientCreditsService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
@@ -182,6 +248,8 @@ export class PaymentNewPageComponent implements OnInit {
 
     /** Form başına bir kez üretilir; hata sonrası yeniden denemede de aynı kalır (ikinci ödeme oluşmaz). */
     private readonly requestId = crypto.randomUUID();
+    /** Krediden mahsup için ayrı anahtar (ayrı uç); aynı kuralla form başına bir. */
+    private readonly creditRequestId = crypto.randomUUID();
 
     /** Muayene/geliş bağlamı yalnız bağlamın müşterisi seçiliyken geçerlidir. */
     private context: { clientId: string; examinationId: string | null; visitId: string | null; chargeId: string | null } | null = null;
@@ -208,7 +276,30 @@ export class PaymentNewPageComponent implements OnInit {
     readonly total = computed(() => allocationTotal(this.allocations()));
     private readonly hasRowErrors = computed(() => this.openCharges().some((c) => this.rowError(c) !== null));
     private readonly formValid = signal(false);
-    readonly canSubmit = computed(() => this.formValid() && this.total() > 0 && !this.hasRowErrors() && !this.balanceLoading());
+
+    /** Açık ücreti olmayan müşteride tutarın tamamı avans (kredi) olarak kaydedilir. */
+    readonly prepayment = signal(false);
+    /** "Alınan tutar"; boşsa (`null`) seçilen ücretlerin toplamı alınmış sayılır. */
+    readonly receivedInput = signal<number | null>(null);
+    readonly receivedError = computed(() => receivedAmountError(this.receivedInput(), this.total()));
+    private readonly received = computed(() => this.receivedInput() ?? this.total());
+    readonly creditAmount = computed(() => receivedCreditAmount(this.received(), this.total()));
+    readonly canSubmit = computed(
+        () =>
+            this.formValid() &&
+            !this.hasRowErrors() &&
+            !this.balanceLoading() &&
+            !this.receivedError() &&
+            (this.prepayment() ? this.openCharges().length === 0 && this.received() > 0 : this.total() > 0)
+    );
+
+    /** Aktif klinikteki kullanılabilir kredi (bakiye ucundan); ödeme ekranı önce krediyi önerir. */
+    readonly creditBalance = signal(0);
+    readonly applyingCredit = signal(false);
+    readonly creditError = signal<string | null>(null);
+    readonly creditLimitError = computed(() => creditApplyError(this.total(), this.creditBalance()));
+    readonly canApplyCredit = computed(() => this.creditBalance() > 0 && this.total() > 0 && !this.hasRowErrors() && !this.creditLimitError() && !this.balanceLoading());
+    readonly busy = computed(() => this.submitting() || this.applyingCredit());
 
     readonly methodOptions = [...PAYMENT_WRITE_METHOD_OPTIONS];
 
@@ -271,8 +362,57 @@ export class PaymentNewPageComponent implements OnInit {
         return allocationAmountError(this.amounts()[row.chargeId], row.outstandingAmount);
     }
 
+    onReceivedInput(raw: string): void {
+        this.receivedInput.set(parseDecimalFormInput(raw));
+    }
+
+    setPrepayment(on: boolean): void {
+        this.prepayment.set(on);
+        this.receivedInput.set(null);
+        this.submitError.set(null);
+    }
+
+    /** Seçilen ücret tutarları krediden kapatılır (ödeme oluşmaz); başarıda müşteri kartına dönülür, kart bilgi mesajını gösterir. */
+    applyCredit(): void {
+        if (this.busy() || this.ro.mutationBlocked() || !this.canApplyCredit()) {
+            return;
+        }
+
+        const clientId = this.clientIdValue();
+
+        this.creditError.set(null);
+        this.submitError.set(null);
+        this.applyingCredit.set(true);
+        this.clientCreditsService.applyCredit(clientId, this.creditRequestId, this.allocations()).subscribe({
+            next: () => {
+                // Başarıda düğme kilitli kalır (sayfadan çıkılır); aynı requestId ile tekrar mahsup zaten yazılmaz.
+                void this.router.navigate(['/panel/clients', clientId], { queryParams: { creditApplied: '1' } });
+            },
+            error: (e: unknown) => {
+                this.applyingCredit.set(false);
+
+                if (!(e instanceof HttpErrorResponse)) {
+                    this.creditError.set(e instanceof Error ? e.message : 'Krediden ödenemedi.');
+
+                    return;
+                }
+
+                const code = problemCodeFromHttpError(e);
+
+                if (code && STALE_CREDIT_CODES.has(code)) {
+                    this.creditError.set(STALE_CREDIT_MESSAGE);
+                    this.loadBalance(clientId, true);
+
+                    return;
+                }
+
+                this.creditError.set(messageFromHttpError(e, 'Krediden ödenemedi.', CLIENT_CREDIT_PROBLEM_MESSAGES));
+            }
+        });
+    }
+
     onSubmit(): void {
-        if (this.submitting() || this.ro.mutationBlocked()) {
+        if (this.busy() || this.ro.mutationBlocked()) {
             return;
         }
 
@@ -286,7 +426,7 @@ export class PaymentNewPageComponent implements OnInit {
         }
 
         if (!this.canSubmit()) {
-            this.submitError.set('En az bir ücrete geçerli bir tutar girin.');
+            this.submitError.set(this.prepayment() ? 'Geçerli bir alınan tutar girin.' : 'En az bir ücrete geçerli bir tutar girin.');
 
             return;
         }
@@ -309,20 +449,20 @@ export class PaymentNewPageComponent implements OnInit {
             return;
         }
 
-        const allocations = this.allocations();
         const payload = {
             ...mapPaymentUpsertFormToWriteRequest({
                 clinicId,
                 clientId: v.clientId,
                 examinationId: this.context?.examinationId,
-                amount: allocationTotal(allocations),
+                amount: this.received(),
                 currency: PAYMENT_CURRENCY,
                 method: v.method,
                 paidAtUtc,
                 note: v.note
             }),
             requestId: this.requestId,
-            allocations
+            allocations: this.allocations(),
+            creditAmount: this.creditAmount()
         };
 
         this.submitting.set(true);
@@ -388,6 +528,10 @@ export class PaymentNewPageComponent implements OnInit {
     private resetCharges(): void {
         this.openCharges.set([]);
         this.amounts.set({});
+        this.creditBalance.set(0);
+        this.creditError.set(null);
+        this.prepayment.set(false);
+        this.receivedInput.set(null);
         this.balanceError.set(null);
         this.balanceLoading.set(false);
     }
@@ -410,6 +554,12 @@ export class PaymentNewPageComponent implements OnInit {
                 const charges = b.openCharges.filter((c) => c.clinicId === clinicId);
 
                 this.openCharges.set(charges);
+                this.creditBalance.set(b.creditBalance);
+
+                if (charges.length > 0) {
+                    this.prepayment.set(false);
+                }
+
                 this.amounts.update((a) => (keepAmounts ? this.keepEnteredAmounts(charges, a) : this.contextAmounts(charges)));
                 this.balanceLoading.set(false);
             },

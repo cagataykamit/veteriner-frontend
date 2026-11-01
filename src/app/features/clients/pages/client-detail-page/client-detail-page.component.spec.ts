@@ -9,6 +9,7 @@ import type { ChargeSuggestionVm } from '@/app/entities/charge/models/charge-sug
 import type { ClientBalanceVm } from '@/app/entities/client/models/client-balance-vm.model';
 import type { ClientDetailVm, ClientPaymentSummaryVm } from '@/app/entities/client/models/client-vm.model';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
+import { ClientCreditsService } from '@/app/entities/client-credit/services/client-credits.service';
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PetCardDataService } from '@/app/entities/patient/services/pet-card-data.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
@@ -52,6 +53,8 @@ const balance: ClientBalanceVm = {
     chargedAmount: 300,
     allocatedAmount: 0,
     outstandingAmount: 300,
+    creditBalance: 0,
+    openCreditCount: 0,
     openCharges: [{ chargeId: 'ch1', petId: 'p1', petName: 'Pamuk', outstandingAmount: 300 } as ClientBalanceVm['openCharges'][number]]
 };
 
@@ -95,6 +98,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
                         clientPendingCharges: pendingChargesSpy
                     }
                 },
+                { provide: ClientCreditsService, useValue: { getCredits: () => of([]) } },
                 { provide: VisitsService, useValue: { getVeterinarians: () => ({ subscribe: () => undefined }) } },
                 { provide: PetsService, useValue: {} }
             ]

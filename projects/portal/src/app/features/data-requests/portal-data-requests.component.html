@@ -1,0 +1,129 @@
+<div class="portal-stack">
+    <a class="portal-back" routerLink="/account"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Hesabım</a>
+    <h1 class="portal-title">Verilerimle ilgili talep</h1>
+
+    @if (session.activeLink()) {
+        <section class="portal-card portal-stack" aria-labelledby="data-request-info-title">
+            <h2 id="data-request-info-title" class="portal-subtitle">Bu başvuru ne içindir?</h2>
+            <p class="portal-muted" data-testid="data-request-info">
+                {{ clinicName() }} kliniğindeki kayıtlarınız (sizin ve hayvanlarınızın bilgileri, muayene, aşı ve ödeme kayıtları) için KVKK kapsamında başvuru yapabilirsiniz.
+                Klinik, verilerinizin sorumlusu olarak başvurunuzu en geç 30 gün içinde yanıtlar; yanıt e-posta adresinize de gönderilir.
+            </p>
+            <p class="portal-muted">
+                Portal hesabınızı silmek ayrı bir işlemdir ve klinikteki kayıtlarınızı silmez.
+                <a routerLink="/account/delete" data-testid="account-delete-link">Portal hesabımı silmek istiyorum</a>
+            </p>
+        </section>
+
+        <section class="portal-card portal-stack" aria-labelledby="data-request-form-title">
+            <h2 id="data-request-form-title" class="portal-subtitle">Yeni talep</h2>
+            <form class="portal-stack" (submit)="$event.preventDefault(); submit()" novalidate>
+                <fieldset class="portal-choice" [attr.aria-describedby]="typeError() ? 'data-request-type-error' : null">
+                    <legend class="portal-field-label">Talep türü</legend>
+                    @for (option of types; track option.type) {
+                        <label class="portal-check">
+                            <input type="radio" name="data-request-type" [value]="option.type" [checked]="type() === option.type" (change)="type.set(option.type)" />
+                            <span>
+                                {{ option.label }}
+                                <span class="portal-field-hint">{{ option.hint }}</span>
+                            </span>
+                        </label>
+                    }
+                </fieldset>
+                @if (typeError(); as error) {
+                    <p id="data-request-type-error" class="portal-field-error">{{ error }}</p>
+                }
+
+                <div class="portal-field">
+                    <label for="data-request-message">Açıklama</label>
+                    <textarea
+                        pTextarea
+                        id="data-request-message"
+                        rows="4"
+                        [value]="message()"
+                        [attr.maxlength]="messageMax"
+                        [attr.aria-invalid]="!!messageError()"
+                        [attr.aria-describedby]="messageError() ? 'data-request-message-error' : 'data-request-message-hint'"
+                        (input)="onMessage($any($event.target).value)"
+                    ></textarea>
+                    @if (messageError(); as error) {
+                        <p id="data-request-message-error" class="portal-field-error">{{ error }}</p>
+                    } @else {
+                        <p id="data-request-message-hint" class="portal-field-hint">Hangi kaydı ve ne istediğinizi yazın. En fazla {{ messageMax }} karakter ({{ message().length }}/{{ messageMax }}).</p>
+                    }
+                </div>
+
+                @if (submitError(); as error) {
+                    <p-message severity="error" role="alert">{{ error }}</p-message>
+                }
+                <p class="portal-muted" role="status" aria-live="polite" data-testid="data-request-status">{{ status() }}</p>
+
+                <div class="portal-actions">
+                    <button pButton type="submit" [disabled]="submitting()">@if (submitting()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Talebi gönder</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="portal-stack" aria-labelledby="data-request-list-title">
+            <h2 id="data-request-list-title" class="portal-subtitle">Taleplerim</h2>
+            @switch (requests.state()) {
+                @case ('loading') {
+                    <portal-skeleton [rows]="2" message="Talepleriniz yükleniyor…" />
+                }
+                @case ('error') {
+                    <portal-error-state [message]="requests.error()" (retry)="load()" />
+                }
+                @default {
+                    @if (cancelError(); as error) {
+                        <p class="portal-field-error" role="alert">{{ error }}</p>
+                    }
+                    @if (requests.data()?.length) {
+                        <ul class="portal-list" data-testid="data-request-list">
+                            @for (r of requests.data(); track r.id) {
+                                <li class="portal-row">
+                                    <div class="portal-row-head">
+                                        <p class="portal-row-title">{{ typeLabel(r) }}</p>
+                                        <span class="portal-badge" [class]="'portal-badge--' + statusOf(r).tone">{{ statusOf(r).label }}</span>
+                                    </div>
+                                    <p class="portal-muted">Gönderildi: {{ date(r.createdAtUtc) }}</p>
+                                    @if (isOpen(r)) {
+                                        <p class="portal-muted" data-testid="data-request-due">Son yanıt tarihi: {{ date(r.dueAtUtc) }}</p>
+                                    }
+                                    <p class="portal-prewrap">{{ r.message }}</p>
+                                    @if (r.responseNote) {
+                                        <div class="portal-note" data-testid="data-request-response">
+                                            <i class="fa-solid fa-reply" aria-hidden="true"></i>
+                                            <p class="portal-prewrap">
+                                                <strong>Klinik yanıtı{{ r.respondedAtUtc ? ' (' + date(r.respondedAtUtc) + ')' : '' }}:</strong>
+                                                {{ r.responseNote }}
+                                            </p>
+                                        </div>
+                                    }
+                                    @if (r.canCancel) {
+                                        @if (confirmingId() === r.id) {
+                                            <div class="portal-stack" role="group" aria-label="Geri çekme onayı">
+                                                <p>Bu talebi geri çekmek istediğinize emin misiniz?</p>
+                                                <div class="portal-actions">
+                                                    <button pButton type="button" severity="danger" [disabled]="cancellingId() === r.id" (click)="cancel(r)">
+                                                        @if (cancellingId() === r.id) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Evet, geri çek
+                                                    </button>
+                                                    <button pButton type="button" severity="secondary" [outlined]="true" (click)="keep()">Vazgeç</button>
+                                                </div>
+                                            </div>
+                                        } @else {
+                                            <button pButton type="button" severity="secondary" [outlined]="true" class="portal-button-block" (click)="askCancel(r)">Talebi geri çek</button>
+                                        }
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    } @else {
+                        <portal-empty-state title="Talep yok" message="Bu klinikte henüz bir veri talebiniz yok." icon="fa-file-shield" />
+                    }
+                }
+            }
+        </section>
+    } @else {
+        <portal-empty-state title="Bağlı klinik yok" message="Kliniğinizden yeni bir portal daveti isteyebilirsiniz." icon="fa-hospital" />
+    }
+</div>

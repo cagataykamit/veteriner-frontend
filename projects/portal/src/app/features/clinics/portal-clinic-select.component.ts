@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { isClinicPortalClosed, type PortalLink } from '@portal/app/core/auth/portal-auth.models';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
+import { PORTAL_CLINIC_CLOSED_MESSAGE } from '@portal/app/core/errors/portal-errors';
 import { PortalBrandHeader, PortalFooter } from '@portal/app/layout/portal-brand.component';
 import { PortalEmptyState } from '@portal/app/shared/ui/portal-states.component';
 
@@ -35,6 +37,9 @@ import { PortalEmptyState } from '@portal/app/shared/ui/portal-states.component'
                                 <span class="portal-option-text">
                                     <strong>{{ link.clinicName }}</strong>
                                     <span class="portal-muted">{{ link.clientFullName }}</span>
+                                    @if (isClosed(link)) {
+                                        <span class="portal-field-hint" data-testid="clinic-closed">{{ closedMessage }}</span>
+                                    }
                                 </span>
                                 <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
                             </button>
@@ -52,6 +57,12 @@ import { PortalEmptyState } from '@portal/app/shared/ui/portal-states.component'
 export class PortalClinicSelectComponent {
     protected readonly session = inject(PortalSessionService);
     private readonly router = inject(Router);
+    protected readonly closedMessage = PORTAL_CLINIC_CLOSED_MESSAGE;
+
+    /** Klinik portalı kapattıysa (§12) seçim yine yapılabilir; kabuk aynı durumu gösterir, hesap sayfaları açık kalır. */
+    isClosed(link: PortalLink): boolean {
+        return isClinicPortalClosed(link);
+    }
 
     initial(name: string): string {
         return name.trim().charAt(0).toLocaleUpperCase('tr-TR');

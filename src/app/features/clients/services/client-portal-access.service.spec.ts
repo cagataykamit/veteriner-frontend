@@ -55,7 +55,26 @@ describe('ClientsService — portal erişimi (PORTAL_API_CONTRACT §4)', () => {
         http.expectOne('http://api.test/api/v1/clients/c1/portal-invites').flush({ title: 'Conflict', status: 409, extensions: { code: 'OwnerPortal.ClientOptedOut' } }, { status: 409, statusText: 'Conflict' });
 
         expect(message).toContain('Portal daveti bu müşteriye gönderilemez');
-        expect(message).toContain('KVKK açık rızayı reddetmiş ya da hatırlatma istemiyor');
+        expect(message).toContain('KVKK açık rızayı reddetmiş.');
+    });
+
+    it('WhatsApp bağlantısı kind ve targetId sorgusuyla istenir (§13.2)', () => {
+        let url = '';
+
+        service.getWhatsAppLink('c1', 'AppointmentReminder', 'a1').subscribe((r) => (url = r.url));
+        const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/clients/c1/whatsapp-link');
+
+        expect(req.request.method).toBe('GET');
+        expect(req.request.params.get('kind')).toBe('AppointmentReminder');
+        expect(req.request.params.get('targetId')).toBe('a1');
+        req.flush({ phoneE164: '+905321234567', url: 'https://wa.me/905321234567?text=x', text: 'x' });
+        expect(url).toBe('https://wa.me/905321234567?text=x');
+
+        service.getWhatsAppLink('c1', 'PortalInvite').subscribe();
+        const invite = http.expectOne((r) => r.url === 'http://api.test/api/v1/clients/c1/whatsapp-link');
+
+        expect(invite.request.params.has('targetId')).toBe(false);
+        invite.flush({ phoneE164: '+905321234567', url: 'https://wa.me/905321234567', text: '' });
     });
 
     it('iptal ve erişimi kapat POST uçları (204)', () => {

@@ -21,6 +21,7 @@
         <section class="portal-card portal-stack" aria-labelledby="deletion-clinics-title">
             <h2 id="deletion-clinics-title" class="portal-subtitle">Klinikteki verileriniz için</h2>
             <p class="portal-muted">Klinikteki kayıtlarınızla ilgili talepleriniz için kliniğinize başvurun.</p>
+            <a class="portal-link-button" routerLink="/account/data-requests" data-testid="deletion-data-request-link">Portaldan veri talebi oluştur</a>
             @for (clinic of clinics(); track clinic.linkId) {
                 <div class="portal-stack" data-testid="deletion-clinic">
                     <p class="portal-row-title">{{ clinic.name }}</p>

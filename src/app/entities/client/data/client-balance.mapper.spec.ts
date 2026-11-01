@@ -61,4 +61,11 @@ describe('mapClientBalanceDtoToVm', () => {
         expect(vm.openCharges).toEqual([]);
         expect(vm.clientName).toBe('—');
     });
+
+    it('kredi alanları olduğu gibi taşınır; eski yanıtta yoksa sıfır sayılır', () => {
+        const base = { clientId: 'cl1', currency: 'TRY', chargedAmount: 0, allocatedAmount: 0, outstandingAmount: 0, openChargeCount: 0 };
+
+        expect(mapClientBalanceDtoToVm({ ...base, creditBalance: 150, openCreditCount: 2 })).toEqual(expect.objectContaining({ creditBalance: 150, openCreditCount: 2 }));
+        expect(mapClientBalanceDtoToVm(base)).toEqual(expect.objectContaining({ creditBalance: 0, openCreditCount: 0 }));
+    });
 });

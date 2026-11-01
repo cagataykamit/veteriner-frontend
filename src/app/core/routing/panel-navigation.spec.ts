@@ -75,14 +75,16 @@ describe('panel-navigation', () => {
         expect(new Set(icons).size).toBe(icons.length);
     });
 
-    it('sayaç Bugün, Randevular ve Kayıtlar öğelerinde; Randevular altında Talepler, Kayıtlar altında Lab sekmesinde tanımlıdır', () => {
+    it('sayaç Bugün, Randevular, Müşteri ve Hasta ve Kayıtlar öğelerinde; Talepler, Portal gelen kutusu ve Lab sekmelerinde tanımlıdır', () => {
         const badged = MENU_GROUPS.flatMap((g) => g.entries).filter((e) => e.badge);
 
         expect(badged.map((e) => [e.label, e.badge])).toEqual([
             ['Bugün', 'waitingVisits'],
             ['Randevular', 'pendingAppointmentRequests'],
+            ['Müşteri ve Hasta', 'openPortalDataRequests'],
             ['Kayıtlar', 'requestedLabResults']
         ]);
+        expect(entry('Müşteri ve Hasta').tabs!.filter((t) => t.badge).map((t) => [t.label, t.badge])).toEqual([['Portal gelen kutusu', 'openPortalDataRequests']]);
         expect(entry('Kayıtlar').tabs!.filter((t) => t.badge).map((t) => [t.label, t.badge])).toEqual([['Lab sonuçları', 'requestedLabResults']]);
         expect(entry('Randevular').tabs!.filter((t) => t.badge).map((t) => [t.label, t.badge])).toEqual([['Talepler', 'pendingAppointmentRequests']]);
     });
@@ -93,7 +95,8 @@ describe('panel-navigation', () => {
         expect(tabs('Müşteri ve Hasta')).toEqual([
             ['Ara', '/panel/patients'],
             ['Müşteriler', '/panel/clients'],
-            ['Hastalar', '/panel/pets']
+            ['Hastalar', '/panel/pets'],
+            ['Portal gelen kutusu', '/panel/portal-inbox']
         ]);
         expect(tabs('Randevular')).toEqual([
             ['Liste', '/panel/appointments'],
@@ -276,7 +279,7 @@ describe('panel-navigation', () => {
         const tabs = (url: string, hasClaim: (c: string) => boolean = () => true) => tabsForUrl(MENU_GROUPS, url, hasClaim);
 
         it('liste adresinde yetkili sekmeleri ve etkin sekmeyi verir; sorgu süzgeci etkin sekmeyi değiştirmez', () => {
-            expect(tabs('/panel/pets?clientId=c1')?.tabs.map((t) => t.label)).toEqual(['Ara', 'Müşteriler', 'Hastalar']);
+            expect(tabs('/panel/pets?clientId=c1')?.tabs.map((t) => t.label)).toEqual(['Ara', 'Müşteriler', 'Hastalar', 'Portal gelen kutusu']);
             expect(tabs('/panel/pets?clientId=c1')?.active.label).toBe('Hastalar');
             expect(tabs('/panel/appointments/calendar')?.active.label).toBe('Takvim');
             expect(tabs('/panel/administrations')?.tabs).toHaveLength(8);

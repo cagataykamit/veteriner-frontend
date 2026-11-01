@@ -77,6 +77,15 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
                     <dt>Tutar</dt>
                     <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ moneyLine(p) }}</dd>
                 </div>
+                @if (p.creditedAmount > 0) {
+                    <div stat>
+                        <dt>Krediye yazılan</dt>
+                        <dd data-testid="payment-credited">
+                            <span class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ creditedLine(p) }}</span>
+                            <span class="block text-sm text-muted-color">Ücretlere bağlanmayan kısım müşteri kredisinde</span>
+                        </dd>
+                    </div>
+                }
                 <div stat>
                     <dt>Kanal</dt>
                     <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ methodLabel(p.method) }}</dd>
@@ -175,7 +184,7 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
             [(visible)]="voidVisible"
             header="Ödemeyi iptal et"
             [summary]="payment() ? payment()!.clientName + ' · ' + headerDescription(payment()!) : null"
-            description="Ödeme hiç alınmamış sayılır: bağlı olduğu ücretlerin açık tutarı artar, listelerden ve bakiyeden düşer. Geri alınamaz; yanlışsa doğrusu yeni ödeme olarak girilir."
+            description="Ödeme hiç alınmamış sayılır: bağlı olduğu ücretlerin açık tutarı artar, listelerden ve bakiyeden düşer; ödemeden doğan kullanılmamış kredi de iptal olur. Geri alınamaz; yanlışsa doğrusu yeni ödeme olarak girilir."
             confirmLabel="Ödemeyi iptal et"
             failureFallback="Ödeme iptal edilemedi."
             [execute]="voidPayment"
@@ -231,6 +240,10 @@ export class PaymentDetailPageComponent implements OnInit {
 
     moneyLine(p: PaymentDetailVm): string {
         return formatMoney(p.amount, p.currency || 'TRY');
+    }
+
+    creditedLine(p: PaymentDetailVm): string {
+        return formatMoney(p.creditedAmount, p.currency || 'TRY');
     }
 
     headerDescription(p: PaymentDetailVm): string {

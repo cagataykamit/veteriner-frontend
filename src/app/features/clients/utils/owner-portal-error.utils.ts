@@ -6,7 +6,7 @@ import type { ProblemMessages } from '@/app/shared/utils/api-error.utils';
  */
 export const OWNER_PORTAL_PROBLEM_MESSAGES: ProblemMessages = {
     'OwnerPortal.ClientEmailMissing': 'Portal daveti bu müşteriye gönderilemez: müşteri kaydında e-posta yok. Davet e-postayla gider; önce müşteri kaydına e-posta ekleyin.',
-    'OwnerPortal.ClientOptedOut': 'Portal daveti bu müşteriye gönderilemez: müşteri KVKK açık rızayı reddetmiş ya da hatırlatma istemiyor.',
+    'OwnerPortal.ClientOptedOut': 'Portal daveti bu müşteriye gönderilemez: müşteri KVKK açık rızayı reddetmiş.',
     'OwnerPortal.ClientNotInvitable': 'Portal daveti bu müşteriye gönderilemez: peşin müşteri (sistem kaydı) portala davet edilemez.',
     'OwnerPortal.AlreadyLinked': 'Bu müşterinin portal erişimi zaten açık; yeni davet gerekmez.',
     'OwnerPortal.ClinicRequired': 'Portal daveti için önce bir klinik seçmelisiniz.',
@@ -15,7 +15,12 @@ export const OWNER_PORTAL_PROBLEM_MESSAGES: ProblemMessages = {
     'OwnerPortal.InviteNotFound': 'Davet bulunamadı. Sayfayı yenileyin.',
     'OwnerPortal.InviteNotPending': 'Bu davet artık beklemede değil (kabul edilmiş ya da iptal edilmiş). Sayfayı yenileyin.',
     'OwnerPortal.LinkNotFound': 'Portal erişimi bulunamadı. Sayfayı yenileyin.',
-    'OwnerPortal.LinkAlreadyClosed': 'Bu portal erişimi zaten kapatılmış. Sayfayı yenileyin.'
+    'OwnerPortal.LinkAlreadyClosed': 'Bu portal erişimi zaten kapatılmış. Sayfayı yenileyin.',
+    'OwnerPortal.ClinicPortalDisabled': 'Portal daveti gönderilemez: hasta sahibi portalı bu klinikte kapalı. Ayarlar > Hasta sahibi portalı ekranından açabilirsiniz.',
+    // WhatsApp bağlantısı (§13.2): sistem göndermez, personel kendi WhatsApp'ında açar.
+    'Clients.WhatsAppPhoneInvalid': 'WhatsApp bağlantısı oluşturulamadı: müşteri kaydında geçerli bir Türkiye cep telefonu yok.',
+    'Clients.RemindersOptedOut': 'Müşteri hatırlatma almak istemiyor; hatırlatma iletisi hazırlanamaz.',
+    'Clients.WhatsAppTargetNotFound': 'Hatırlatılacak kayıt bulunamadı ya da bu müşteriye ait değil. Sayfayı yenileyin.'
 };
 
 export function ownerPortalProblemUserMessageByCode(code: string | null | undefined): string | null {

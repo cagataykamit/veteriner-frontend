@@ -25,6 +25,9 @@ export const PORTAL_ERROR_CODES = {
     slotUnavailable: 'AppointmentRequests.SlotUnavailable',
     pendingLimitReached: 'AppointmentRequests.PendingLimitReached',
     requestNotPending: 'AppointmentRequests.NotPending',
+    dataRequestsTooManyOpen: 'Portal.DataRequests.TooManyOpen',
+    dataRequestNotOpen: 'Portal.DataRequests.NotOpen',
+    dataRequestNotFound: 'Portal.DataRequests.NotFound',
     validation: 'Validation.FluentValidation'
 } as const;
 
@@ -40,7 +43,8 @@ export const PORTAL_ERROR_MESSAGES: Readonly<Record<string, string>> = {
     [C.alreadyLinked]: 'Bu müşteri kaydı başka bir portal hesabına bağlanmış. Kliniğinizle iletişime geçin.',
     [C.legalRequired]: 'Devam etmek için belgeleri onaylamanız gerekiyor.',
     [C.legalVersionOutdated]: 'Belgelerin yeni bir sürümü yayımlandı. Güncel sürümü okuyup yeniden onaylayın.',
-    [C.linkNotFound]: 'Bu kliniğe erişiminiz kapatılmış ya da bulunamadı.',
+    // Klinik portalı kapattığında da aynı kod döner (§12); sebep ayırt edilmez.
+    [C.linkNotFound]: 'Bu kliniğe portal erişiminiz şu an yok: klinik portalı geçici olarak kapatmış ya da erişiminizi sonlandırmış olabilir. Bilgi için kliniğinizle iletişime geçin.',
     [C.petNotFound]: 'Hayvan kaydı bulunamadı.',
     [C.deletionCodeInvalid]: 'Onay kodu doğrulanamadı. Kod yanlış ya da süresi dolmuş olabilir; yeni kod isteyip tekrar deneyin.',
     [C.remindersKvkkDeclined]: 'Klinikteki KVKK açık rıza kaydınız "Ret" olduğu için hatırlatmalar açılamıyor. Açmak için kliniğinizle görüşün.',
@@ -51,6 +55,9 @@ export const PORTAL_ERROR_MESSAGES: Readonly<Record<string, string>> = {
     [C.slotUnavailable]: 'Seçtiğiniz saat artık müsait değil. Lütfen başka bir saat seçin.',
     [C.pendingLimitReached]: 'Bu klinikte bekleyen talep sınırına ulaştınız. Klinik mevcut taleplerinizi yanıtladıktan sonra yeni talep oluşturabilirsiniz.',
     [C.requestNotPending]: 'Bu talep artık beklemede değil; sayfayı yenileyin.',
+    [C.dataRequestsTooManyOpen]: 'Bu klinikte yanıt bekleyen 3 talebiniz var. Klinik bunlardan birini yanıtladıktan sonra yeni talep oluşturabilirsiniz.',
+    [C.dataRequestNotOpen]: 'Bu talep artık geri çekilemez: klinik incelemeye almış ya da yanıtlamış olabilir. Liste yenilendi.',
+    [C.dataRequestNotFound]: 'Talep bulunamadı; liste yenilendi.',
     [C.validation]: 'Girdiğiniz bilgileri kontrol edin.'
 };
 
@@ -61,6 +68,8 @@ export const PORTAL_NETWORK_ERROR_MESSAGE = 'Sunucuya ulaşılamadı. İnternet 
 export const PORTAL_RATE_LIMIT_MESSAGE = 'Çok fazla deneme yapıldı. Lütfen biraz bekleyip tekrar deneyin.';
 export const PORTAL_SERVER_ERROR_MESSAGE = 'Beklenmeyen bir sorun oluştu. Lütfen daha sonra tekrar deneyin.';
 export const PORTAL_GENERIC_ERROR_MESSAGE = 'İşlem tamamlanamadı. Lütfen tekrar deneyin.';
+/** `/me` bağında `isClinicPortalEnabled=false` (§12): klinik seçimi ve kabuk aynı metni gösterir. */
+export const PORTAL_CLINIC_CLOSED_MESSAGE = 'Bu klinik portal erişimini geçici olarak kapattı; bilgi için kliniğinizle iletişime geçin.';
 
 export function portalProblemCode(err: unknown): string | null {
     if (!(err instanceof HttpErrorResponse)) {
