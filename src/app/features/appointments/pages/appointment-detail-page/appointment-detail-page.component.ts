@@ -137,7 +137,7 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
                     <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-8">
                         <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 items-center mb-3">
                             <h5 class="mt-0 mb-0">Bağlı muayene</h5>
-                            <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm">Muayene listesi →</a>
+                            <a routerLink="/panel/examinations" class="text-primary font-medium no-underline text-sm max-sm:touch-hit">Muayene listesi →</a>
                         </div>
                         @if (linkedExamLoading()) {
                             <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
@@ -151,7 +151,7 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
                                     <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0">
                                         <div class="flex flex-wrap gap-2 justify-between items-baseline">
                                             <span class="text-muted-color text-sm min-w-0">{{ row.examinedAtUtc | trDateTime }}</span>
-                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0">Muayene detayı →</a>
+                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm shrink-0 max-sm:touch-hit">Muayene detayı →</a>
                                         </div>
                                         <div class="font-medium min-w-0 break-words">{{ row.visitReason }}</div>
                                     </li>
