@@ -206,6 +206,18 @@ export const EXAMINATION_TEMPLATES_DEACTIVATE_CLAIM = 'ExaminationTemplates.Deac
 /** Şablonu muayeneye uygulama; ayrıca `Examinations.Update` + `Administrations.Create` gerekir */
 export const EXAMINATION_TEMPLATES_APPLY_CLAIM = 'ExaminationTemplates.Apply' as const;
 
+/** Klinik metin parçaları — liste (muayene metin alanında `#` seçicisi ve yönetim) */
+export const CLINICAL_SNIPPETS_READ_CLAIM = 'ClinicalSnippets.Read' as const;
+
+/** Metin parçası ekleme */
+export const CLINICAL_SNIPPETS_CREATE_CLAIM = 'ClinicalSnippets.Create' as const;
+
+/** Metin parçasını düzenleme */
+export const CLINICAL_SNIPPETS_UPDATE_CLAIM = 'ClinicalSnippets.Update' as const;
+
+/** Metin parçasını pasifleştirme / etkinleştirme */
+export const CLINICAL_SNIPPETS_DEACTIVATE_CLAIM = 'ClinicalSnippets.Deactivate' as const;
+
 /** Veri içe aktarma: parti listesi, önizleme ve şablon (yönetici düzeyi) */
 export const IMPORTS_READ_CLAIM = 'Imports.Read' as const;
 

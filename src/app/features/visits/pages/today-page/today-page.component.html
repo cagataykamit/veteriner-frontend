@@ -74,6 +74,7 @@
                                 }
                             </div>
                             <div class="text-sm text-muted-color">{{ item.speciesName }}</div>
+                            <ng-container *ngTemplateOutlet="preparation; context: { $implicit: item }" />
                             <dl class="m-0 mt-2 grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-1 text-sm">
                                 <dt class="text-muted-color">Sahip</dt>
                                 <dd class="m-0 min-w-0 break-words">
@@ -155,6 +156,7 @@
                                         }
                                     </div>
                                     <div class="text-sm text-muted-color truncate" [attr.title]="item.speciesName">{{ item.speciesName }}</div>
+                                    <ng-container *ngTemplateOutlet="preparation; context: { $implicit: item }" />
                                     <!-- Dar kipte Hekim sütunu yok: ad burada görünür -->
                                     <div class="text-sm text-muted-color truncate @min-[76rem]:hidden" [attr.title]="item.responsibleVeterinarianName ?? 'Atanmadı'">
                                         {{ item.responsibleVeterinarianName ?? 'Atanmadı' }}
@@ -320,6 +322,20 @@
     }
 </ng-template>
 
+<!-- Geliş hazırlığı: neden (planlı satırda randevu nedeni) ve hazırlanan şablon / paket; tek satır, tam metin ipucunda (satır taşmaz). -->
+<ng-template #preparation let-item>
+    @if (reasonOf(item); as reason) {
+        <div class="text-sm text-muted-color truncate" [attr.title]="reason" data-testid="today-reason">{{ reason }}</div>
+    }
+    @if (item.preparedExaminationTemplateName; as prepared) {
+        <div class="mt-1 min-w-0 flex">
+            <span class="min-w-0 truncate text-xs rounded-full px-2 py-0.5 bg-surface-100 dark:bg-surface-800" [attr.title]="'Gelişte hazırlanan şablon / paket: ' + prepared" data-testid="today-prepared-template"
+                ><i class="pi pi-clone text-xs mr-1" aria-hidden="true"></i>Hazırlık: {{ prepared }}</span
+            >
+        </div>
+    }
+</ng-template>
+
 <ng-template #moneyTags let-item let-group="group">
     @if (group.key !== 'noShow') {
         <app-today-money [item]="item" [canPay]="canCollectPayment && !ro.mutationBlocked() && !item.isVoided" (pay)="openPayment(item)" (review)="openPendingCharges(item)" />
@@ -421,6 +437,9 @@
 <p-menu #rowMenu [popup]="true" [model]="rowMenuItems()" appendTo="body" (onHide)="openPendingNavigation()" />
 @if (canCreateVisit) {
     <app-visit-arrival-dialog [(visible)]="arrivalOpen" [appointment]="arrivalAppointment()" (arrived)="onArrived($event)" />
+}
+@if (canUpdateVisit) {
+    <app-visit-preparation-dialog [(visible)]="preparationOpen" [item]="preparationItem()" (saved)="onPreparationSaved()" />
 }
 @if (canNoShow) {
     <app-appointment-no-show-dialog [(visible)]="noShowOpen" [appointmentId]="noShowItem()?.appointmentId ?? null" [mode]="noShowMode()" [subject]="noShowSubject()" (done)="onNoShowDone()" />

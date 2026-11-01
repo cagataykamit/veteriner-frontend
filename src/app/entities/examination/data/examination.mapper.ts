@@ -224,6 +224,7 @@ export function mapExaminationDetailDtoToVm(dto: ExaminationDetailDto): Examinat
         petId: canonicalPetId(dto),
         petName: canonicalPetName(dto),
         appointmentId: dto.appointmentId?.trim() ? dto.appointmentId : null,
+        visitId: trimmedOrNull(dto.visitId),
         visitReason: canonicalVisitReason(dto),
         notes: canonicalNotes(dto),
         findings: canonicalFindings(dto),

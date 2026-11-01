@@ -6,6 +6,7 @@ import {
     groupTodayItems,
     isPossiblyForgottenVisit,
     todayItemActions,
+    todayReasonText,
     todaySecondaryActions,
     todayUrgencyToggle,
     waitAlertLevel,
@@ -42,6 +43,10 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     voidReason: null,
     petAlerts: { flags: [], note: null },
     isUrgent: false,
+    appointmentReasonName: null,
+    arrivalReason: null,
+    preparedExaminationTemplateId: null,
+    preparedExaminationTemplateName: null,
     ...over
 });
 
@@ -200,6 +205,26 @@ describe('canToggleUrgency', () => {
     });
 });
 
+describe('geliş hazırlığı (CHECKIN-001/002)', () => {
+    it('Hazırlığı düzenle yalnız açık Visit te ve Visits.Update ile; tamamlanmış, yanlış işaretli ve planlı satırda yok', () => {
+        const perms = { canUpdateVisit: true, canNoShow: false, canCorrect: false, canCollectPayment: false, canCreateCharge: false };
+        const keys = (i: TodayItemVm, p = perms) => todaySecondaryActions(i, todayItemActions(i), p).map((a) => a.key);
+
+        expect(keys(item({ careStatus: 'Waiting' }))).toEqual(['editPreparation']);
+        expect(keys(item({ careStatus: 'InProgress' }))).toEqual(['editPreparation']);
+        expect(keys(item({ careStatus: 'Completed' }))).toEqual([]);
+        expect(keys(item({ isVoided: true }))).toEqual([]);
+        expect(keys(item({ visitId: null, careStatus: null, appointmentId: 'a1', appointmentStatus: 'Scheduled' }))).toEqual([]);
+        expect(keys(item(), { ...perms, canUpdateVisit: false })).toEqual([]);
+    });
+
+    it('satır nedeni: geliş nedeni, yoksa randevu nedeni; ikisi de yoksa null', () => {
+        expect(todayReasonText(item({ arrivalReason: 'Kulak kaşıntısı', appointmentReasonName: 'Kontrol' }))).toBe('Kulak kaşıntısı');
+        expect(todayReasonText(item({ appointmentReasonName: 'Kontrol' }))).toBe('Kontrol');
+        expect(todayReasonText(item())).toBeNull();
+    });
+});
+
 describe('Gelmedi (NoShow) satırı', () => {
     const now = new Date('2026-10-10T10:00:00Z');
     const planned = (over: Partial<TodayItemVm> = {}) => item({ visitId: null, key: 'a1', appointmentId: 'a1', careStatus: null, arrivedAtUtc: null, appointmentStatus: 'Scheduled', scheduledAtUtc: '2026-10-10T09:00:00Z', ...over });
@@ -237,7 +262,7 @@ describe('satır eylem düzeni (görünür / menü)', () => {
     it('acil açık satırda görünür ikon düğmesidir, menüde değildir', () => {
         expect(urgency(item())).toEqual({ label: 'Acil işaretle', pressed: false });
         expect(urgency(item({ isUrgent: true }))).toEqual({ label: 'Acili kaldır', pressed: true });
-        expect(secondary(item())).toEqual(['correct']);
+        expect(secondary(item())).toEqual(['editPreparation', 'correct']);
     });
 
     it('acil düğmesi yetkisiz, tamamlanmış, yanlış işaretli ve planlı satırda yok', () => {
@@ -249,7 +274,7 @@ describe('satır eylem düzeni (görünür / menü)', () => {
 
     it('menüde yalnızca seyrek eylemler; yetkisiz kullanıcıda menü boş', () => {
         expect(secondary(item({ careStatus: 'Completed' }))).toEqual(['correct']);
-        expect(secondary(item(), { ...all, canCorrect: false })).toEqual([]);
+        expect(secondary(item(), { ...all, canCorrect: false })).toEqual(['editPreparation']);
     });
 
     it('yanlış işaretli satırda Geri al menüdedir; yetkisizde menü boş', () => {
@@ -260,17 +285,17 @@ describe('satır eylem düzeni (görünür / menü)', () => {
     it('Ödeme al: yetki varsa menünün başında; yanlış işaretli satırda ve yetkisizde yok', () => {
         const pay = { ...all, canCollectPayment: true };
 
-        expect(secondary(item(), pay)).toEqual(['collectPayment', 'correct']);
-        expect(secondary(item(), all)).toEqual(['correct']);
+        expect(secondary(item(), pay)).toEqual(['collectPayment', 'editPreparation', 'correct']);
+        expect(secondary(item(), all)).toEqual(['editPreparation', 'correct']);
         expect(secondary(item({ isVoided: true }), pay)).toEqual(['restore']);
     });
 
     it("Ücret ekle: yetki varsa Ödeme al'dan önce; yanlış işaretli satırda ve yetkisizde yok", () => {
         const charge = { ...all, canCreateCharge: true };
 
-        expect(secondary(item(), charge)).toEqual(['addCharge', 'correct']);
-        expect(secondary(item(), { ...charge, canCollectPayment: true })).toEqual(['addCharge', 'collectPayment', 'correct']);
-        expect(secondary(item(), all)).toEqual(['correct']);
+        expect(secondary(item(), charge)).toEqual(['addCharge', 'editPreparation', 'correct']);
+        expect(secondary(item(), { ...charge, canCollectPayment: true })).toEqual(['addCharge', 'collectPayment', 'editPreparation', 'correct']);
+        expect(secondary(item(), all)).toEqual(['editPreparation', 'correct']);
         expect(secondary(item({ isVoided: true }), charge)).toEqual(['restore']);
     });
 

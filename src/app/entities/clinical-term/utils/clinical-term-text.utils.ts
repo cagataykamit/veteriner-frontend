@@ -1,18 +1,13 @@
+import { turkishTextKey } from '@/app/shared/utils/turkish-text-key.utils';
+
 const SEPARATOR = ', ';
 
-const TURKISH_FOLD: Record<string, string> = { ı: 'i', ç: 'c', ğ: 'g', ö: 'o', ş: 's', ü: 'u', â: 'a', î: 'i', û: 'u' };
-
 /**
- * Sunucunun mükerrer ad anahtarının (`TurkishTextKey`) istemci karşılığı: büyük/küçük harf, `I/ı/İ/i`, `ç/ğ/ö/ş/ü`,
- * `â/î/û` farkı ve fazla boşluk yok sayılır. Mükerrer kararını sunucu verir (`409 DuplicateName`); bu anahtar yalnız
+ * Mükerrer ad anahtarı (`turkishTextKey`). Mükerrer kararını sunucu verir (`409 DuplicateName`); bu anahtar yalnız
  * çakışan kaydı, kelime içeren arama sonuçları arasından seçmek içindir.
  */
 export function clinicalTermNameKey(name: string): string {
-    return name
-        .trim()
-        .replace(/\s+/g, ' ')
-        .toLocaleLowerCase('tr')
-        .replace(/[ıçğöşüâîû]/g, (c) => TURKISH_FOLD[c]);
+    return turkishTextKey(name);
 }
 
 /**

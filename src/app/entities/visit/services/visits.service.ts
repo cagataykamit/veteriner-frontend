@@ -7,6 +7,7 @@ import {
     mapCorrectVisitToApiBody,
     findVeterinarianUserId,
     mapCreateVisitToApiBody,
+    mapPreparationToApiBody,
     mapRestoreVisitToApiBody,
     mapUrgencyToApiBody,
     mapTodayDtoToVm,
@@ -28,8 +29,10 @@ import type {
     TodayVm,
     VeterinarianVm,
     VisitCreateResultVm,
+    VisitPreparationRequest,
     VisitVm
 } from '@/app/entities/visit/models/visit-vm.model';
+import { VISIT_PREPARATION_PROBLEM_MESSAGES } from '@/app/entities/visit/utils/visit-error.utils';
 import { toUserError } from '@/app/shared/utils/api-error.utils';
 
 @Injectable({ providedIn: 'root' })
@@ -87,7 +90,15 @@ export class VisitsService {
     createVisit(request: CreateVisitRequest): Observable<VisitCreateResultVm> {
         return this.api.post<VisitCreateResultDto>(ApiEndpoints.visits.create(), mapCreateVisitToApiBody(request)).pipe(
             map(mapVisitCreateResultDtoToVm),
-            toUserError('Geliş kaydı oluşturulamadı.')
+            toUserError('Geliş kaydı oluşturulamadı.', VISIT_PREPARATION_PROBLEM_MESSAGES)
+        );
+    }
+
+    /** `Visits.Update`; geliş nedeni ve hazırlanan şablonun tam yazımı (boş alan temizler). Şablon uygulanmaz. */
+    setPreparation(id: string, request: VisitPreparationRequest): Observable<VisitVm> {
+        return this.api.put<VisitDto>(ApiEndpoints.visits.preparation(id), mapPreparationToApiBody(request)).pipe(
+            map(mapVisitDtoToVm),
+            toUserError('Hazırlık kaydedilemedi.', VISIT_PREPARATION_PROBLEM_MESSAGES)
         );
     }
 

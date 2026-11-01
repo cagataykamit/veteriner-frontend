@@ -64,3 +64,17 @@ export function templateChargePreview(t: ExaminationTemplateDto): { total: numbe
 
     return t.packagePrice != null ? { total: t.packagePrice, linesTotal, isPackage: true } : { total: linesTotal, linesTotal, isPackage: false };
 }
+
+/**
+ * Gelişte seçilen şablonun tahmini ücreti (CHECKIN-004; kayıt/teklif değildir): paket fiyatı varsa o, yoksa satırların bugünkü
+ * fiyat toplamı; toplam bilinmiyorsa (satırsız ya da bedelsiz) `null` ve hiçbir şey gösterilmez.
+ */
+export function templateEstimatedChargeText(t: ExaminationTemplateDto): string | null {
+    const p = templateChargePreview(t);
+
+    if (p.isPackage) {
+        return `Tahmini ücret: ${formatMoney(p.total)} (paket fiyatı)`;
+    }
+
+    return p.total > 0 ? `Tahmini ücret: ${formatMoney(p.total)} (kalem fiyatları toplamı, tahmini)` : null;
+}

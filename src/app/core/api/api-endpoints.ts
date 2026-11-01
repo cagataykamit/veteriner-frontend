@@ -55,7 +55,8 @@ export const ApiEndpoints = {
         complete: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/complete`,
         corrections: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/corrections`,
         restore: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/restore`,
-        urgency: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/urgency`
+        urgency: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/urgency`,
+        preparation: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/preparation`
     },
     charges: {
         /** GET (Query: `page`, `pageSize`, `clinicId`, `clientId`, `petId`, `visitId`, `examinationId`) ve POST. */
@@ -382,6 +383,14 @@ export const ApiEndpoints = {
         byId: (id: string) => `/api/v1/clinical-terms/${encodeURIComponent(id)}`,
         activate: (id: string) => `/api/v1/clinical-terms/${encodeURIComponent(id)}/activate`,
         deactivate: (id: string) => `/api/v1/clinical-terms/${encodeURIComponent(id)}/deactivate`
+    },
+    clinicalSnippets: {
+        /** GET (Query: `search`, `includeInactive`, `page`, `pageSize` ≤ 200) ve POST `{ shortcut, title, body }`. */
+        list: () => `/api/v1/clinical-snippets`,
+        /** GET; PUT = tam güncelleme (`rowVersion` zorunlu). */
+        byId: (id: string) => `/api/v1/clinical-snippets/${encodeURIComponent(id)}`,
+        activate: (id: string) => `/api/v1/clinical-snippets/${encodeURIComponent(id)}/activate`,
+        deactivate: (id: string) => `/api/v1/clinical-snippets/${encodeURIComponent(id)}/deactivate`
     },
     examinationTemplates: {
         /** GET (Query: `search`, `includeInactive`, `page`, `pageSize`) ve POST. */

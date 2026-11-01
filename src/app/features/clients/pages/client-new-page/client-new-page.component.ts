@@ -18,11 +18,13 @@ import { type ClientCreateFieldErrors, type ClientCreateFormFieldKey, parseClien
 import { clientUpsertFieldErrorMessage } from '@/app/entities/client/utils/client-upsert.validation.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
+import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
 
 @Component({
     selector: 'app-client-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent, AppTrialLimitNoticeComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" title="Yeni Müşteri" description="Müşteri kaydı oluşturun." />
@@ -69,6 +71,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 @if (submitError()) {
                     <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
                 }
+                @if (trialLimitError(); as message) {
+                    <div class="mt-4"><app-trial-limit-notice [message]="message" /></div>
+                }
 
                 <div class="flex flex-wrap gap-2 mt-4">
                     <button pButton type="submit" [disabled]="form.invalid || invoicingForm.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
@@ -88,6 +93,8 @@ export class ClientNewPageComponent {
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
+    /** Deneme müşteri kotası (`Trial.ClientQuotaExceeded`, 422): sunucu metni + "Aboneliğe geç". */
+    readonly trialLimitError = signal<string | null>(null);
     /** Sunucu / ValidationProblemDetails alan mesajları — input altında gösterilir. */
     readonly apiFieldErrors = signal<ClientCreateFieldErrors>({});
 
@@ -133,6 +140,7 @@ export class ClientNewPageComponent {
 
     onSubmit(): void {
         this.submitError.set(null);
+        this.trialLimitError.set(null);
         this.apiFieldErrors.set({});
         this.invoicingApiErrors.set({});
 
@@ -158,6 +166,11 @@ export class ClientNewPageComponent {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+                this.trialLimitError.set(trialLimitMessage(e));
+
+                if (this.trialLimitError()) {
+                    return;
+                }
 
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseClientCreateHttpError(e);

@@ -33,7 +33,11 @@ const item: TodayItemVm = {
     isVoided: false,
     voidReason: null,
     petAlerts: { flags: [], note: null },
-    isUrgent: false
+    isUrgent: false,
+    appointmentReasonName: null,
+    arrivalReason: null,
+    preparedExaminationTemplateId: null,
+    preparedExaminationTemplateName: null
 };
 
 const visit: VisitVm = {
@@ -46,7 +50,9 @@ const visit: VisitVm = {
     arrivedAtUtc: item.arrivedAtUtc!,
     careStatus: 'InProgress',
     isVoided: false,
-    isUrgent: false
+    isUrgent: false,
+    arrivalReason: null,
+    preparedExaminationTemplateId: null
 };
 
 describe('VisitCorrectionDialogComponent', () => {

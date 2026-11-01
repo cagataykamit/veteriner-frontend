@@ -5,6 +5,8 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import type { StoredFileVm } from '@/app/shared/files/stored-file.model';
 import { formatFileSize, precheckStoredFile, STORED_FILE_ACCEPT, STORED_FILE_MAX_BYTES } from '@/app/shared/files/stored-file.utils';
 import { StoredFilesService } from '@/app/shared/files/stored-files.service';
+import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
+import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
 
 type QueueStatus = 'pending' | 'uploading' | 'done' | 'failed' | 'rejected';
 
@@ -31,7 +33,7 @@ let nextKey = 1;
     selector: 'app-stored-file-upload',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [ButtonModule, ProgressBarModule],
+    imports: [ButtonModule, ProgressBarModule, AppTrialLimitNoticeComponent],
     template: `
         <div
             class="stored-file-dropzone rounded-border border-2 border-dashed p-4 text-center"
@@ -93,6 +95,9 @@ let nextKey = 1;
                 }
             </ul>
         }
+        @if (trialLimitError(); as message) {
+            <div class="mt-3"><app-trial-limit-notice [message]="message" /></div>
+        }
     `,
     styles: `
         .stored-file-dropzone {
@@ -127,6 +132,8 @@ export class StoredFileUploadComponent {
     /** Yüklenmeyi bekleyen veya başarısız (yeniden denenebilir) dosya sayısı. */
     readonly pendingCount = computed(() => this.items().filter((i) => i.status === 'pending' || i.status === 'failed').length);
     readonly failedCount = computed(() => this.items().filter((i) => i.status === 'failed').length);
+    /** Deneme depolama kotası (`Trial.StorageQuotaExceeded`, 422): sunucu metni + "Aboneliğe geç" (kuyruk altında bir kez). */
+    readonly trialLimitError = signal<string | null>(null);
 
     private readonly filesService = inject(StoredFilesService);
     private readonly destroyRef = inject(DestroyRef);
@@ -191,6 +198,7 @@ export class StoredFileUploadComponent {
         }
 
         this.busy.set(true);
+        this.trialLimitError.set(null);
 
         try {
             for (const item of this.items().filter((i) => (i.status === 'pending' || i.status === 'failed') && i.file)) {
@@ -223,6 +231,7 @@ export class StoredFileUploadComponent {
                     },
                     error: (e: unknown) => {
                         this.patch(item.key, { status: 'failed', error: e instanceof Error ? e.message : 'Dosya yüklenemedi.' });
+                        this.trialLimitError.update((current) => current ?? trialLimitMessage(e));
                         resolve();
                     },
                     complete: () => resolve()

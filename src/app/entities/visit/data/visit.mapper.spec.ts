@@ -1,4 +1,13 @@
-import { mapCorrectVisitToApiBody, mapCreateVisitToApiBody, mapTodayDtoToVm, mapVeterinarianDtoToVm, mapVisitCreateResultDtoToVm, todayQueryToHttpParams } from '@/app/entities/visit/data/visit.mapper';
+import {
+    mapCorrectVisitToApiBody,
+    mapCreateVisitToApiBody,
+    mapPreparationToApiBody,
+    mapTodayDtoToVm,
+    mapVeterinarianDtoToVm,
+    mapVisitCreateResultDtoToVm,
+    mapVisitDtoToVm,
+    todayQueryToHttpParams
+} from '@/app/entities/visit/data/visit.mapper';
 import type { TodayItemDto, VisitDto } from '@/app/entities/visit/models/visit-api.model';
 
 const visitDto = (over: Partial<VisitDto> = {}): VisitDto => ({
@@ -150,6 +159,27 @@ describe('visit mapper — okuma', () => {
         expect([bare.petName, bare.clientName, bare.plannedDischargeAtUtc]).toEqual(['—', '—', null]);
     });
 
+    it('geliş hazırlığı: Visit ve Bugün satırı nedeni, şablonu ve randevu nedenini taşır; boş/eksik alan null', () => {
+        expect(mapVisitDtoToVm(visitDto({ arrivalReason: ' Kulak kaşıntısı ', preparedExaminationTemplateId: 't1' }))).toMatchObject({
+            arrivalReason: 'Kulak kaşıntısı',
+            preparedExaminationTemplateId: 't1'
+        });
+        expect(mapVisitDtoToVm(visitDto())).toMatchObject({ arrivalReason: null, preparedExaminationTemplateId: null });
+
+        const [prepared, planned] = mapTodayDtoToVm({
+            date: 'd',
+            clinicId: 'c',
+            generatedAtUtc: 'g',
+            items: [
+                itemDto({ appointmentReasonName: 'Aşı', arrivalReason: 'Karma aşı + kontrol', preparedExaminationTemplateId: 't1', preparedExaminationTemplateName: ' Karma aşı ' }),
+                itemDto({ visitId: null, appointmentId: 'a2', careStatus: null, appointmentReasonName: ' ', arrivalReason: null })
+            ]
+        }).items;
+
+        expect([prepared.appointmentReasonName, prepared.arrivalReason, prepared.preparedExaminationTemplateId, prepared.preparedExaminationTemplateName]).toEqual(['Aşı', 'Karma aşı + kontrol', 't1', 'Karma aşı']);
+        expect([planned.appointmentReasonName, planned.arrivalReason, planned.preparedExaminationTemplateId, planned.preparedExaminationTemplateName]).toEqual([null, null, null, null]);
+    });
+
     it('hekim adı yoksa — gösterir', () => {
         expect(mapVeterinarianDtoToVm({ userId: 'u1', name: null })).toEqual({ userId: 'u1', name: '—' });
     });
@@ -164,6 +194,20 @@ describe('visit mapper — yazma gövdeleri', () => {
     it('randevulu geliş: yalnızca appointmentId; hekim seçilmediyse alan hiç gitmez', () => {
         expect(mapCreateVisitToApiBody({ appointmentId: 'a1', responsibleVeterinarianUserId: '' })).toEqual({ appointmentId: 'a1' });
         expect(mapCreateVisitToApiBody({ appointmentId: 'a1', responsibleVeterinarianUserId: null })).toEqual({ appointmentId: 'a1' });
+    });
+
+    it('geliş hazırlığı: neden kırpılır, boş neden ve şablon gövdeye girmez', () => {
+        expect(mapCreateVisitToApiBody({ appointmentId: 'a1', arrivalReason: '  Aşı  ', preparedExaminationTemplateId: 't1' })).toEqual({
+            appointmentId: 'a1',
+            arrivalReason: 'Aşı',
+            preparedExaminationTemplateId: 't1'
+        });
+        expect(mapCreateVisitToApiBody({ appointmentId: 'a1', arrivalReason: '   ', preparedExaminationTemplateId: null })).toEqual({ appointmentId: 'a1' });
+    });
+
+    it('hazırlık düzenleme tam yazımdır: boş alan null olarak gider (temizler)', () => {
+        expect(mapPreparationToApiBody({ arrivalReason: ' Kulak ', preparedExaminationTemplateId: 't1' })).toEqual({ arrivalReason: 'Kulak', preparedExaminationTemplateId: 't1' });
+        expect(mapPreparationToApiBody({ arrivalReason: '  ', preparedExaminationTemplateId: '' })).toEqual({ arrivalReason: null, preparedExaminationTemplateId: null });
     });
 
     it('randevusuz geliş: petId + clinicId + seçilen hekim', () => {

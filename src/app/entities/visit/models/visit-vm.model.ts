@@ -7,6 +7,9 @@ export type TodayAppointmentStatus = TodayAppointmentStatusDto;
 
 export type TodayChargeIndicator = TodayChargeIndicatorDto;
 
+/** Geliş nedeni üst sınırı (`VISITS_API_CONTRACT.md` §4.5; sunucu da denetler). */
+export const VISIT_ARRIVAL_REASON_MAX = 500;
+
 export interface VisitVm {
     id: string;
     clinicId: string;
@@ -18,6 +21,10 @@ export interface VisitVm {
     careStatus: VisitCareStatus;
     isVoided: boolean;
     isUrgent: boolean;
+    /** Geliş hazırlığı: yeni muayenede şikâyet önerisi olur. */
+    arrivalReason: string | null;
+    /** Gelişte hazırlanan şablon / paket; uygulanmaz, muayenede öneri olarak sunulur. */
+    preparedExaminationTemplateId: string | null;
 }
 
 export interface VisitCreateResultVm {
@@ -65,6 +72,13 @@ export interface TodayItemVm {
     voidReason: string | null;
     petAlerts: PetAlertsVm;
     isUrgent: boolean;
+    /** Randevu nedeni; randevusuz satırda veya nedensiz randevuda `null`. Geliş diyaloğunda geliş nedenine önerilir. */
+    appointmentReasonName: string | null;
+    /** Geliş hazırlığı (yalnız Visit satırı). */
+    arrivalReason: string | null;
+    preparedExaminationTemplateId: string | null;
+    /** Şablon sonradan pasifleşse de dolu gelir. */
+    preparedExaminationTemplateName: string | null;
 }
 
 /** Bugün'deki aktif yatış satırı; `items` içine karışmaz, sorumlu hekim süzgecinden etkilenmez. */
@@ -120,6 +134,15 @@ export interface CreateVisitRequest {
     clinicId?: string;
     responsibleVeterinarianUserId?: string | null;
     isUrgent?: boolean;
+    /** Hazırlık yalnız yeni kayıtta uygulanır; mevcut açık geliş dönerse değişmez (sonradan `setPreparation`). */
+    arrivalReason?: string | null;
+    preparedExaminationTemplateId?: string | null;
+}
+
+/** Geliş hazırlığı tam yazımı: boş alan temizler. */
+export interface VisitPreparationRequest {
+    arrivalReason: string | null;
+    preparedExaminationTemplateId: string | null;
 }
 
 /** Düzeltme hedefi: bir bakım durumu veya "yanlış geliş" işareti. */

@@ -11,7 +11,8 @@ import { SpeciesService } from '@/app/entities/species/services/species.service'
 import { type PetCreateFieldErrors, type PetCreateFormFieldKey, parsePetCreateHttpError } from '@/app/entities/pet/utils/pet-create-validation-parse.utils';
 import { PET_GENDER_FORM_OPTIONS } from '@/app/entities/pet/utils/pet-status.utils';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, trialLimitMessage } from '@/app/shared/utils/api-error.utils';
+import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
@@ -24,7 +25,7 @@ import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick
 @Component({
     selector: 'app-quick-pet-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, SelectModule, QuickBreedDialogComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, SelectModule, QuickBreedDialogComponent, AppTrialLimitNoticeComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Yeni hasta" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(560px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onDialogShow()">
@@ -96,6 +97,9 @@ import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick
                 @if (submitError()) {
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
+                @if (trialLimitError(); as message) {
+                    <div class="mt-3"><app-trial-limit-notice [message]="message" /></div>
+                }
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>İptal</button>
@@ -123,6 +127,8 @@ export class QuickPetDialogComponent {
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
+    /** Deneme hasta kotası (`Trial.PetQuotaExceeded`, 422): sunucu metni + "Aboneliğe geç". */
+    readonly trialLimitError = signal<string | null>(null);
     readonly selectionError = signal<string | null>(null);
     readonly loadingSpecies = signal(false);
     readonly loadingBreeds = signal(false);
@@ -177,6 +183,7 @@ export class QuickPetDialogComponent {
     onDialogShow(): void {
         this.quickBreedOpen.set(false);
         this.submitError.set(null);
+        this.trialLimitError.set(null);
         this.selectionError.set(null);
         this.apiFieldErrors.set({});
         this.form.reset({
@@ -239,6 +246,7 @@ export class QuickPetDialogComponent {
 
     onSubmit(): void {
         this.submitError.set(null);
+        this.trialLimitError.set(null);
         this.apiFieldErrors.set({});
         const cid = this.ownerClientIdTrimmed();
 
@@ -267,6 +275,11 @@ export class QuickPetDialogComponent {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+                this.trialLimitError.set(trialLimitMessage(e));
+
+                if (this.trialLimitError()) {
+                    return;
+                }
 
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parsePetCreateHttpError(e);

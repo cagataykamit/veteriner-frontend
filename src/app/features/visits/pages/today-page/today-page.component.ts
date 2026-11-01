@@ -31,6 +31,7 @@ import { TodayMoneyComponent } from '@/app/features/visits/components/today-mone
 import { TodayOpenItemsComponent } from '@/app/features/visits/components/today-open-items.component';
 import { VisitArrivalDialogComponent } from '@/app/entities/visit/components/visit-arrival-dialog.component';
 import { VisitCorrectionDialogComponent } from '@/app/features/visits/components/visit-correction-dialog.component';
+import { VisitPreparationDialogComponent } from '@/app/features/visits/components/visit-preparation-dialog.component';
 import type { TodayItemVm, TodayQuery, TodayVm, VisitCreateResultVm } from '@/app/entities/visit/models/visit-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { countWaitingVisits } from '@/app/entities/visit/utils/visit-today.utils';
@@ -41,6 +42,7 @@ import {
     formatHospitalizationStay,
     groupTodayItems,
     todayItemActions,
+    todayReasonText,
     todaySecondaryActions,
     todayUrgencyToggle,
     type TodayItemActions,
@@ -98,6 +100,7 @@ type TodayScope = 'mine' | 'all';
         TodayOpenItemsComponent,
         VisitArrivalDialogComponent,
         VisitCorrectionDialogComponent,
+        VisitPreparationDialogComponent,
         AppointmentNoShowDialogComponent,
         PetAlertBadgesComponent
     ],
@@ -149,6 +152,8 @@ export class TodayPageComponent implements OnInit {
     readonly correctionItem = signal<TodayItemVm | null>(null);
     readonly restoreOpen = signal(false);
     readonly restoreItem = signal<TodayItemVm | null>(null);
+    readonly preparationOpen = signal(false);
+    readonly preparationItem = signal<TodayItemVm | null>(null);
     private readonly rowMenu = viewChild<Menu>('rowMenu');
     readonly rowMenuItems = signal<MenuItem[]>([]);
     /** Menü kapanış animasyonu bitmeden sayfa değişirse kaplama gövdede asılı kalır; ödeme/ücret sayfasına menü kapandıktan sonra gidilir. */
@@ -182,6 +187,7 @@ export class TodayPageComponent implements OnInit {
     readonly statusSeverity = careStatusSeverity;
     readonly phone = formatClientPhoneForDisplay;
     readonly actionsOf = (item: TodayItemVm) => todayItemActions(item, this.now());
+    readonly reasonOf = todayReasonText;
     readonly waitTitle = waitAlertTitle;
     /**
      * Tüm grup tabloları aynı sütun şablonunu kullanır (hizalı başlıklar): Saat, Hasta, Sahip, Hekim, Durum, Ödeme/yatış, Süre, Eylemler.
@@ -293,7 +299,8 @@ export class TodayPageComponent implements OnInit {
                 : {
                       severity: 'info',
                       summary: 'Açık geliş kaydı zaten var.',
-                      detail: 'Yeni kayıt açılmadı; mevcut kayıt listede.',
+                      // Sunucu mevcut gelişin hazırlığını değiştirmez (sözleşme §3); düzeltme satır menüsünden yapılır.
+                      detail: this.canUpdateVisit ? 'Yeni kayıt açılmadı; mevcut kayıt listede. Hazırlık değişmedi; gerekirse satırdaki ⋯ → Hazırlığı düzenle.' : 'Yeni kayıt açılmadı; mevcut kayıt listede.',
                       life: 6000
                   }
         );
@@ -359,6 +366,7 @@ export class TodayPageComponent implements OnInit {
             revertNoShow: () => this.openNoShow(item, 'revert'),
             restore: () => this.openRestore(item),
             correct: () => this.openCorrection(item),
+            editPreparation: () => this.openPreparation(item),
             collectPayment: () => this.navigateAfterMenu.set({ item, target: 'payment' }),
             addCharge: () => this.navigateAfterMenu.set({ item, target: 'charge' })
         };
@@ -389,6 +397,16 @@ export class TodayPageComponent implements OnInit {
 
     onRestored(): void {
         addTracedToast(this.messages, 'TodayPage', this.router.url, { severity: 'success', summary: 'Geliş geri alındı.', life: 4000 });
+        this.refresh('silent');
+    }
+
+    openPreparation(item: TodayItemVm): void {
+        this.preparationItem.set(item);
+        this.preparationOpen.set(true);
+    }
+
+    onPreparationSaved(): void {
+        addTracedToast(this.messages, 'TodayPage', this.router.url, { severity: 'success', summary: 'Hazırlık kaydedildi.', life: 4000 });
         this.refresh('silent');
     }
 

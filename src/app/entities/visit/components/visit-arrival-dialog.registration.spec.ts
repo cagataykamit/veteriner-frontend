@@ -2,6 +2,7 @@ import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { ExaminationTemplatesService } from '@/app/entities/examination-template/services/examination-templates.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
@@ -22,7 +23,9 @@ const visitResult = {
         arrivedAtUtc: '2026-10-10T07:00:00Z',
         careStatus: 'Waiting' as const,
         isVoided: false,
-        isUrgent: false
+        isUrgent: false,
+        arrivalReason: null,
+        preparedExaminationTemplateId: null
     }
 };
 
@@ -44,7 +47,8 @@ describe('VisitArrivalDialogComponent (hızlı kayıt entegrasyonu)', () => {
                 { provide: AuthService, useValue: { getClinicId: () => 'c1', getUserId: () => null, hasOperationClaim: (c: string) => claims.includes(c) } },
                 { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli' }), getClients: () => of({ items: [] }), quickRegister: () => of({ clientId: 'c-new', petId: 'p-new' }) } },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }), createPet: () => of({ id: 'p-new' }) } },
-                { provide: SpeciesService, useValue: { getSpeciesList: () => of([{ id: 's1', name: 'Kedi' }]) } }
+                { provide: SpeciesService, useValue: { getSpeciesList: () => of([{ id: 's1', name: 'Kedi' }]) } },
+                { provide: ExaminationTemplatesService, useValue: { list: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } }
             ]
         });
         fixture = TestBed.createComponent(VisitArrivalDialogComponent);

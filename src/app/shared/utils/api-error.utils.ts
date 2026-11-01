@@ -115,7 +115,11 @@ const TRIAL_LIMIT_CODE_PREFIX = 'Trial.';
 
 const TRIAL_LIMIT_FALLBACK_MESSAGES: Record<string, string> = {
     'Trial.ExportLimitExceeded': 'Deneme sürümünde dışa aktarma en fazla 1000 satır sınırı; abonelikle kalkar. Filtreyi daraltın.',
-    'Trial.ImportLimitExceeded': 'Deneme sürümünde içe aktarma tablo başına en fazla 500 satır sınırı; abonelikle kalkar.'
+    'Trial.ImportLimitExceeded': 'Deneme sürümünde içe aktarma tablo başına en fazla 500 satır sınırı; abonelikle kalkar.',
+    /** Kullanım kotası (TRIAL-006, §3.4): mevcut kayıtlar okunur/düzenlenir, yalnız yeni kayıt/dosya engellenir. */
+    'Trial.ClientQuotaExceeded': 'Deneme sürümünde en fazla 1000 müşteri kaydı sınırı doldu; abonelikle kalkar.',
+    'Trial.PetQuotaExceeded': 'Deneme sürümünde en fazla 2000 hasta kaydı sınırı doldu; abonelikle kalkar.',
+    'Trial.StorageQuotaExceeded': 'Deneme sürümünde dosya depolama 500 MB sınırı doldu; abonelikle kalkar.'
 };
 
 const TRIAL_LIMIT_GENERIC_MESSAGE = 'Deneme sürümünde bu işlem için sınır aşıldı; sınır abonelikle kalkar.';
@@ -147,6 +151,18 @@ export function trialLimitProblemCode(err: unknown): string | null {
 /** Servis katmanında `Error`'a çevrilmiş (`TrialLimitError`) ya da ham `HttpErrorResponse` deneme kısıtı. */
 export function isTrialLimitError(err: unknown): boolean {
     return err instanceof TrialLimitError || trialLimitProblemCode(err) !== null;
+}
+
+/**
+ * Deneme kısıtı hatasının kullanıcı metni (sunucu `detail`, yoksa sözleşme metni); başka hata `null`. Ham `HttpErrorResponse`
+ * ileten formlar (müşteri/hasta oluşturma, hızlı kayıt) ve `TrialLimitError` çeviren servisler için tek kural.
+ */
+export function trialLimitMessage(err: unknown): string | null {
+    if (err instanceof TrialLimitError) {
+        return err.message;
+    }
+
+    return err instanceof HttpErrorResponse ? trialLimitProblemUserMessage(err) : null;
 }
 
 function trialLimitProblemUserMessage(err: HttpErrorResponse): string | null {

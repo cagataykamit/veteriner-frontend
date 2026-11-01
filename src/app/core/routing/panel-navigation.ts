@@ -7,6 +7,9 @@ import {
     BREEDS_CREATE_CLAIM,
     BREEDS_UPDATE_CLAIM,
     CHARGES_READ_CLAIM,
+    CLINICAL_SNIPPETS_CREATE_CLAIM,
+    CLINICAL_SNIPPETS_DEACTIVATE_CLAIM,
+    CLINICAL_SNIPPETS_UPDATE_CLAIM,
     CLINICAL_TERMS_CREATE_CLAIM,
     CLINICAL_TERMS_DEACTIVATE_CLAIM,
     CLINICAL_TERMS_UPDATE_CLAIM,
@@ -109,6 +112,7 @@ export const SPECIES_ROUTE = `${DEFINITIONS_ROUTE}/species`;
 export const BREEDS_ROUTE = `${DEFINITIONS_ROUTE}/breeds`;
 export const PRODUCT_CATEGORIES_ROUTE = `${DEFINITIONS_ROUTE}/product-categories`;
 export const CLINICAL_TERMS_ROUTE = `${DEFINITIONS_ROUTE}/clinical-terms`;
+export const CLINICAL_SNIPPETS_ROUTE = `${DEFINITIONS_ROUTE}/clinical-snippets`;
 export const EXAMINATION_TEMPLATES_ROUTE = `${DEFINITIONS_ROUTE}/examination-templates`;
 export const HOSPITALIZATION_WARDS_ROUTE = `${DEFINITIONS_ROUTE}/hospitalization-wards`;
 export const APPOINTMENT_REASONS_ROUTE = `${DEFINITIONS_ROUTE}/appointment-reasons`;
@@ -410,6 +414,14 @@ export const DEFINITION_ENTRIES: readonly CardEntry[] = [
         description: 'Şikâyet, bulgu, plan ve işlem satırlarını tek seçimle dolduran paketler.'
     },
     {
+        label: 'Metin parçaları',
+        icon: 'pi pi-fw pi-hashtag',
+        route: CLINICAL_SNIPPETS_ROUTE,
+        // Yalnız okuyan (ör. sekreter) parçayı muayene alanında # ile kullanır; kart yönetebilene görünür (sözlük kartıyla aynı ilke).
+        claims: [CLINICAL_SNIPPETS_CREATE_CLAIM, CLINICAL_SNIPPETS_UPDATE_CLAIM, CLINICAL_SNIPPETS_DEACTIVATE_CLAIM],
+        description: 'Muayene metin alanında # ile eklenen hazır cümle ve soru setleri.'
+    },
+    {
         label: 'Yatış konumları',
         icon: 'pi pi-fw pi-building',
         route: HOSPITALIZATION_WARDS_ROUTE,
@@ -480,7 +492,7 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 icon: 'pi pi-fw pi-book',
                 route: DEFINITIONS_ROUTE,
                 claims: DEFINITION_ENTRIES.flatMap((e) => e.claims ?? []),
-                description: 'Tür, ırk, ürün kategorisi, tanı/şikâyet sözlüğü, muayene şablonları ve yatış konumları gibi referans kayıtları.'
+                description: 'Tür, ırk, ürün kategorisi, tanı/şikâyet sözlüğü, muayene şablonları, metin parçaları ve yatış konumları gibi referans kayıtları.'
             }
         ]
     },

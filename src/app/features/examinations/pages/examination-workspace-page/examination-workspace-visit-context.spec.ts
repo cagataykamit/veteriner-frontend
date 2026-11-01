@@ -27,6 +27,8 @@ const visit = (over: Partial<VisitVm> = {}): VisitVm => ({
     careStatus: 'Waiting',
     isVoided: false,
     isUrgent: false,
+    arrivalReason: null,
+    preparedExaminationTemplateId: null,
     ...over
 });
 
@@ -98,6 +100,21 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
         expect(payload.clinicId).toBeUndefined();
         expect(payload.appointmentId).toBeUndefined();
         expect(navigate).toHaveBeenCalledWith(['/panel/examinations', 'e1'], { queryParams: { saved: '1' } });
+    });
+
+    it('gelişte yazılan neden boş şikâyet alanına öneri olarak girer; kullanıcı değiştirebilir (CHECKIN-002)', () => {
+        const cmp = create(ctxQuery, of(visit({ arrivalReason: 'Kulak kaşıntısı, 3 gündür' })));
+
+        expect(cmp.form.controls.visitReason.value).toBe('Kulak kaşıntısı, 3 gündür');
+        expect(cmp.form.controls.visitReason.enabled).toBe(true);
+        cmp.form.controls.visitReason.setValue('Otitis şüphesi');
+        expect(cmp.form.controls.visitReason.value).toBe('Otitis şüphesi');
+    });
+
+    it('geliş nedeni yoksa şikâyet alanı boş kalır', () => {
+        const cmp = create(ctxQuery, of(visit()));
+
+        expect(cmp.form.controls.visitReason.value).toBe('');
     });
 
     it('tamamlanmış Visit reddedilir; mesaj gösterilir ve serbest oluşturma formu açılır', () => {

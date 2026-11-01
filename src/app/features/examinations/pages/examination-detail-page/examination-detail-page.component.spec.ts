@@ -1,5 +1,6 @@
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import type { Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -16,6 +17,8 @@ import { TreatmentsService } from '@/app/entities/treatment/services/treatments.
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
 import { DetailRelatedSummariesService } from '@/app/entities/patient/services/detail-related-summaries.service';
 import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
+import { ExaminationTemplatesService } from '@/app/entities/examination-template/services/examination-templates.service';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { ExaminationDetailPageComponent } from './examination-detail-page.component';
 
 const recentlyViewed = { record: vi.fn() };
@@ -138,7 +141,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         rowVersion: 'V2'
     };
 
-    const setup = async (vm: ExaminationDetailVm, claims: string[], relatedSummary: object = { examinationId: 'e1' }, readOnly = false) => {
+    const setup = async (vm: ExaminationDetailVm, claims: string[], relatedSummary: object = { examinationId: 'e1' }, readOnly = false, extraProviders: Provider[] = []) => {
         const service = {
             getExaminationById: vi.fn().mockName('ExaminationsService.getExaminationById'),
             getExaminationRelatedSummary: vi.fn().mockName('ExaminationsService.getExaminationRelatedSummary'),
@@ -175,7 +178,8 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
                 { provide: TreatmentsService, useValue: { getTreatments: () => EMPTY } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
                 { provide: RecentlyViewedService, useValue: recentlyViewed },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => readOnly } }
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => readOnly } },
+                ...extraProviders
             ]
         }).compileComponents();
         const fixture = TestBed.createComponent(ExaminationDetailPageComponent);
@@ -504,6 +508,81 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(fixture.componentInstance.exam()?.rowVersion).toBe('V2');
         expect(fixture.componentInstance.exam()?.visitReason).toContain('Kulak kaşıntısı');
         expect(vi.mocked(service.getExaminationRelatedSummary).mock.calls.length).toBe(relatedBefore + 1);
+    });
+
+    describe('gelişte hazırlanan şablon önerisi (CHECKIN-003)', () => {
+        const prepared = { id: 't1', name: 'Karma aşı', visitReason: null, findings: null, plan: null, isActive: true, isSystem: false, lines: [], rowVersion: 'T1' };
+        const claims = [...TEMPLATE_CLAIMS, 'Visits.Read'];
+        const visitWith = (preparedExaminationTemplateId: string | null) => ({ id: 'visit-1', preparedExaminationTemplateId, arrivalReason: null });
+
+        const mocks = (templateId: string | null, template: object = prepared) => {
+            const visits = { getVisitById: vi.fn().mockReturnValue(of(visitWith(templateId))) };
+            const templates = {
+                getById: vi.fn().mockReturnValue(of(template)),
+                list: vi.fn().mockReturnValue(of({ items: [], page: 1, pageSize: 20, totalItems: 0, totalPages: 0 }))
+            };
+
+            return { visits, templates, providers: [{ provide: VisitsService, useValue: visits }, { provide: ExaminationTemplatesService, useValue: templates }] };
+        };
+
+        const linked = { ...detailVm, visitId: 'visit-1' };
+
+        it('taslak + geliş + aktif hazırlanan şablon: şerit görünür; Uygula diyaloğu bu şablonun ön izlemesinde açar', async () => {
+            const m = mocks('t1');
+            const { fixture, el } = await setup(linked, claims, undefined, false, m.providers);
+
+            fixture.detectChanges();
+            expect(m.visits.getVisitById).toHaveBeenCalledWith('visit-1');
+            expect(el.querySelector('[data-testid="prepared-template-strip"]')?.textContent).toContain('Gelişte hazırlanan: Karma aşı');
+
+            (el.querySelector('[data-testid="prepared-template-apply"]') as HTMLButtonElement).click();
+            fixture.detectChanges();
+
+            expect(fixture.componentInstance.templateDialogVisible()).toBe(true);
+            expect(fixture.componentInstance.templateDialogPreselect()).toBe('t1');
+            expect(m.templates.getById).toHaveBeenLastCalledWith('t1');
+            expect(document.body.querySelector('[data-testid="template-preview"]')?.textContent).toContain('Karma aşı');
+        });
+
+        it('genel "Şablon uygula" düğmesi ön seçimsiz (listeyle) açar', async () => {
+            const m = mocks('t1');
+            const { fixture } = await setup(linked, claims, undefined, false, m.providers);
+
+            fixture.componentInstance.openTemplateDialog(null);
+            expect(fixture.componentInstance.templateDialogPreselect()).toBeNull();
+        });
+
+        it('hazırlanan şablon uygulanınca şerit bu oturumda gizlenir (yeniden yüklemede de)', async () => {
+            const m = mocks('t1');
+            const { fixture, service, el } = await setup(linked, claims, undefined, false, m.providers);
+
+            service.getExaminationById.mockReturnValue(of(linked));
+            fixture.componentInstance.onTemplateApplied({ template: prepared, result: { examinationId: 'e1', rowVersion: 'V2', updatedFields: [], administrations: [], services: [] } });
+            fixture.detectChanges();
+            expect(el.querySelector('[data-testid="prepared-template-strip"]')).toBeNull();
+
+            fixture.componentInstance.reload();
+            fixture.detectChanges();
+            expect(el.querySelector('[data-testid="prepared-template-strip"]')).toBeNull();
+        });
+
+        it('pasif şablon, hazırlıksız geliş, gelişsiz muayene, Visits.Read yokluğu ve kesinleşmiş muayenede şerit yok', async () => {
+            const cases: Array<{ vm: ExaminationDetailVm; c: string[]; m: ReturnType<typeof mocks> }> = [
+                { vm: linked, c: claims, m: mocks('t1', { ...prepared, isActive: false }) },
+                { vm: linked, c: claims, m: mocks(null) },
+                { vm: detailVm, c: claims, m: mocks('t1') },
+                { vm: linked, c: TEMPLATE_CLAIMS, m: mocks('t1') },
+                { vm: { ...finalizedVm, visitId: 'visit-1' }, c: claims, m: mocks('t1') }
+            ];
+
+            for (const { vm, c, m } of cases) {
+                TestBed.resetTestingModule();
+                const { fixture, el } = await setup(vm, c, undefined, false, m.providers);
+
+                fixture.detectChanges();
+                expect(el.querySelector('[data-testid="prepared-template-strip"]')).toBeNull();
+            }
+        });
     });
 
     it('kesinleştirme sonrası durum Kesinleşti olur, sürüm yenilenir ve düğme kalkar', async () => {

@@ -2,6 +2,7 @@ import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { ExaminationTemplatesService } from '@/app/entities/examination-template/services/examination-templates.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
@@ -29,7 +30,8 @@ describe('VisitArrivalDialogComponent (hasta arama alanına yazma)', () => {
                 { provide: VisitsService, useValue: { getVeterinarians: () => of([]) } },
                 { provide: AuthService, useValue: { getClinicId: () => 'c1', getUserId: () => null, hasOperationClaim: () => false } },
                 { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli' }) } },
-                { provide: PetsService, useValue: { getPets } }
+                { provide: PetsService, useValue: { getPets } },
+                { provide: ExaminationTemplatesService, useValue: { list: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } }
             ]
         }).compileComponents();
         fixture = TestBed.createComponent(VisitArrivalDialogComponent);

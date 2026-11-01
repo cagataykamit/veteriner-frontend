@@ -33,6 +33,8 @@ export interface ExaminationDetailVm {
     petId: string | null;
     petName: string;
     appointmentId: string | null;
+    /** Bağlı geliş (Visit); gelişte hazırlanan şablonun önerisi için. Eski kayıt/yanıtta yok. */
+    visitId?: string | null;
     visitReason: string;
     notes: string;
     findings: string;

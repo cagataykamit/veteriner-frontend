@@ -2,6 +2,7 @@ import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
@@ -188,5 +189,37 @@ describe('VisitQuickRegistrationComponent', () => {
 
         expect(cmp.stepError()).toBeTruthy();
         expect(registered.length).toBe(0);
+    });
+
+    describe('deneme kotası (TRIAL-006)', () => {
+        beforeEach(() => {
+            TestBed.configureTestingModule({ providers: [{ provide: AuthService, useValue: { hasOperationClaim: () => false } }] });
+        });
+
+        it('hızlı kayıtta 422 Trial.ClientQuotaExceeded: sunucu metni deneme uyarısında, alan hatası/çift kayıt yok', () => {
+            const detail = 'Deneme sürümünde en fazla 1000 müşteri kaydı sınırı doldu; abonelikle kalkar.';
+
+            clients.quickRegister.mockReturnValue(throwError(() => httpError(422, { status: 422, detail, code: 'Trial.ClientQuotaExceeded' })));
+            create();
+            fillValid();
+            cmp.submit();
+            fixture.detectChanges();
+
+            expect(cmp.trialLimitError()).toBe(detail);
+            expect(cmp.stepError()).toBeNull();
+            expect(cmp.duplicateClient()).toBe(false);
+            expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="trial-limit-notice"]')?.textContent).toContain('1000 müşteri');
+            expect(registered.length).toBe(0);
+        });
+
+        it('kayıtlı sahibe hayvanda 422 Trial.PetQuotaExceeded detail yoksa sözleşme metni gösterilir', () => {
+            pets.createPet.mockReturnValue(throwError(() => httpError(422, { status: 422, extensions: { code: 'Trial.PetQuotaExceeded' } })));
+            create({ existingOwner: { id: 'c-old', name: 'Veli Kaya' } });
+            cmp.petForm.patchValue({ name: 'Pamuk', speciesId: 's1' });
+            cmp.submit();
+
+            expect(cmp.trialLimitError()).toContain('2000 hasta');
+            expect(cmp.stepError()).toBeNull();
+        });
     });
 });

@@ -45,6 +45,10 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     voidReason: null,
     petAlerts: { flags: [], note: null },
     isUrgent: false,
+    appointmentReasonName: null,
+    arrivalReason: null,
+    preparedExaminationTemplateId: null,
+    preparedExaminationTemplateName: null,
     ...over
 });
 
@@ -58,7 +62,9 @@ const visitVm: VisitVm = {
     arrivedAtUtc: '2026-10-10T07:00:00Z',
     careStatus: 'InProgress',
     isVoided: false,
-    isUrgent: false
+    isUrgent: false,
+    arrivalReason: null,
+    preparedExaminationTemplateId: null
 };
 
 describe('TodayPageComponent', () => {
@@ -628,6 +634,58 @@ describe('TodayPageComponent', () => {
         f.componentInstance.onArrived({ created: false, visit: { ...visitVm } });
 
         expect(vi.mocked(toasts).mock.lastCall![0]).toEqual(expect.objectContaining({ severity: 'info', summary: 'Açık geliş kaydı zaten var.' }));
+    });
+
+    describe('geliş hazırlığı (CHECKIN-001/002)', () => {
+        it('Visit satırında geliş nedeni ve hazırlanan paket, planlı satırda randevu nedeni görünür', async () => {
+            const prepared = item({ key: 'w', arrivalReason: 'Kulak kaşıntısı, 3 gündür', appointmentReasonName: 'Kontrol', preparedExaminationTemplateId: 't1', preparedExaminationTemplateName: 'Karma aşı' });
+            const planned = item({ key: 'a1', visitId: null, appointmentId: 'a1', careStatus: null, appointmentStatus: 'Scheduled', arrivedAtUtc: null, scheduledAtUtc: '2026-10-10T09:00:00Z', appointmentReasonName: 'Aşı' });
+            const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [prepared, planned] });
+            const el = f.nativeElement as HTMLElement;
+            const reasons = Array.from(el.querySelectorAll('[data-testid="today-reason"]')).map((r) => r.textContent?.trim());
+
+            expect(reasons).toEqual(['Kulak kaşıntısı, 3 gündür', 'Aşı']);
+            expect(el.querySelector('[data-testid="today-prepared-template"]')?.textContent).toContain('Hazırlık: Karma aşı');
+            expect(el.querySelector('[data-testid="today-reason"]')?.getAttribute('title')).toBe('Kulak kaşıntısı, 3 gündür');
+        });
+
+        it('hazırlık yoksa satırda neden/paket satırı oluşmaz', async () => {
+            const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item()] });
+
+            expect((f.nativeElement as HTMLElement).querySelector('[data-testid="today-reason"]')).toBeNull();
+            expect((f.nativeElement as HTMLElement).querySelector('[data-testid="today-prepared-template"]')).toBeNull();
+        });
+
+        it('"Hazırlığı düzenle" Visits.Update ile menüdedir; seçilince düzenleme diyaloğu satırla açılır, kayıtta liste yenilenir', async () => {
+            const today: TodayVm = { date: 'd', activeHospitalizations: [], items: [item({ arrivalReason: 'Kusma' })] };
+            const keys = (fx: ComponentFixture<TodayPageComponent>) => fx.componentInstance.secondaryActionsOf(today.items[0], fx.componentInstance.actionsOf(today.items[0])).map((a) => a.key);
+            const without = await create(['Visits.Read'], today);
+
+            expect(keys(without)).not.toContain('editPreparation');
+            TestBed.resetTestingModule();
+
+            const f = await create(['Visits.Read', 'Visits.Update'], today);
+            const c = f.componentInstance;
+
+            expect(keys(f)).toContain('editPreparation');
+            c.openRowMenu(new Event('click'), today.items[0], [{ key: 'editPreparation', label: 'Hazırlığı düzenle', icon: 'pi pi-clipboard' }]);
+            c.rowMenuItems()[0].command?.({});
+            expect(c.preparationOpen()).toBe(true);
+            expect(c.preparationItem()?.arrivalReason).toBe('Kusma');
+
+            const callsBefore = vi.mocked(visits.getToday).mock.calls.length;
+
+            c.onPreparationSaved();
+            expect(vi.mocked(toasts).mock.lastCall![0]).toEqual(expect.objectContaining({ severity: 'success', summary: 'Hazırlık kaydedildi.' }));
+            expect(vi.mocked(visits.getToday).mock.calls.length).toBe(callsBefore + 1);
+        });
+
+        it('created:false bilgisinde Visits.Update varsa hazırlığın değişmediği ve düzenleme yolu söylenir', async () => {
+            const f = await create(['Visits.Read', 'Visits.Create', 'Visits.Update'], { date: 'd', activeHospitalizations: [], items: [] });
+
+            f.componentInstance.onArrived({ created: false, visit: { ...visitVm } });
+            expect(vi.mocked(toasts).mock.lastCall![0].detail).toContain('Hazırlığı düzenle');
+        });
     });
 
     it('otomatik yenileme hatasında eski liste kalır ve uyarı gösterilir', async () => {

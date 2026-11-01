@@ -5,7 +5,7 @@ import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import type { StoredFileAccessUrlDto, StoredFileDto, StoredFileUploadEvent, StoredFileVm } from '@/app/shared/files/stored-file.model';
 import { mapStoredFileDtoToVm, storedFileProblemMessage } from '@/app/shared/files/stored-file.utils';
-import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, problemCodeFromHttpError, TrialLimitError, trialLimitProblemCode } from '@/app/shared/utils/api-error.utils';
 import { fileNameFromContentDisposition } from '@/app/shared/utils/file-download.utils';
 
 /**
@@ -40,7 +40,7 @@ export class StoredFilesService {
             }),
             catchError((err: unknown) =>
                 throwError(() =>
-                    err instanceof HttpErrorResponse ? new Error(fileErrorMessage(err, 'Dosya yüklenemedi.')) : err instanceof Error ? err : new Error('Dosya yüklenemedi.')
+                    err instanceof HttpErrorResponse ? fileUploadError(err) : err instanceof Error ? err : new Error('Dosya yüklenemedi.')
                 )
             )
         );
@@ -70,4 +70,12 @@ export class StoredFilesService {
 
 function fileErrorMessage(err: HttpErrorResponse, fallback: string): string {
     return storedFileProblemMessage(problemCodeFromHttpError(err)) ?? (err.status === 413 ? storedFileProblemMessage('Files.TooLarge')! : messageFromHttpError(err, fallback));
+}
+
+/** Deneme depolama kotası (`Trial.StorageQuotaExceeded`) `TrialLimitError` olur: ekran "Aboneliğe geç" ekler. */
+function fileUploadError(err: HttpErrorResponse): Error {
+    const message = fileErrorMessage(err, 'Dosya yüklenemedi.');
+    const trialCode = trialLimitProblemCode(err);
+
+    return trialCode ? new TrialLimitError(message, trialCode) : new Error(message);
 }

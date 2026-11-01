@@ -14,6 +14,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { isAppointmentCancelledStatus } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
+import { ClinicalSnippetTriggerDirective } from '@/app/entities/clinical-snippet/components/clinical-snippet-trigger.directive';
 import { ClinicalTermPickerComponent } from '@/app/entities/clinical-term/components/clinical-term-picker.component';
 import { DoseCalculatorComponent } from '@/app/entities/procedure/components/dose-calculator.component';
 import { ExaminationPatientContextComponent } from '@/app/features/examinations/components/examination-patient-context.component';
@@ -87,6 +88,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
         PetSearchComponent,
         DateInputComponent,
         ClinicalTermPickerComponent,
+        ClinicalSnippetTriggerDirective,
         DoseCalculatorComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -543,6 +545,7 @@ export class ExaminationWorkspacePageComponent implements OnInit {
                 this.visitContextId.set(ctx.visitId);
                 this.selectedClientId.set(ctx.clientId);
                 this.selectedPetId.set(ctx.petId);
+                this.suggestVisitReason(visit.arrivalReason);
                 // Seçim formu kullanılmaz; devre dışı kontroller geçerliliği etkilemez.
                 this.selectionForm.controls.clientId.disable({ emitEvent: false });
                 this.selectionForm.controls.petId.disable({ emitEvent: false });
@@ -550,6 +553,15 @@ export class ExaminationWorkspacePageComponent implements OnInit {
             },
             error: (e: unknown) => this.rejectVisitContext(panelHttpFailureMessage(e, 'Geliş kaydı yüklenemedi.'))
         });
+    }
+
+    /** Gelişte yazılan neden, şikâyet alanı boşsa öneri olarak girer; hekim değiştirebilir (sunucu kopyalamaz, sözleşme §4.5). */
+    private suggestVisitReason(arrivalReason: string | null): void {
+        const control = this.form.controls.visitReason;
+
+        if (arrivalReason && !control.value.trim()) {
+            control.setValue(arrivalReason);
+        }
     }
 
     private rejectVisitContext(message: string): void {
