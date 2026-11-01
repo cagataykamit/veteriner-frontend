@@ -92,7 +92,7 @@ type ClosingStatus = Extract<DataRequestStaffStatus, 'Completed' | 'Rejected'>;
             } @else if (items().length === 0) {
                 <app-empty-state [message]="status() ? 'Bu filtreye uyan talep yok.' : 'Portaldan gelen veri talebi yok.'" [hint]="status() ? '' : 'Hasta sahibi portalda Hesabım > Verilerimle ilgili talep ekranından başvurduğunda burada ve bildirimlerde görünür.'" />
             } @else {
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto table-stack-phone">
                     <p-table [value]="items()" [tableStyle]="{ 'min-width': '56rem' }" [rowHover]="true">
                         <ng-template #header>
                             <tr>
@@ -107,21 +107,21 @@ type ClosingStatus = Extract<DataRequestStaffStatus, 'Completed' | 'Rejected'>;
                         <ng-template #body let-r>
                             <tr data-testid="data-request-row" class="cursor-pointer" [class.bg-highlight]="r.id === openId()" (click)="openDetail(r)">
                                 <td>
-                                    <a [routerLink]="['/panel/clients', r.clientId]" class="font-medium" (click)="$event.stopPropagation()" data-testid="data-request-client">{{ r.clientName }}</a>
+                                    <a [routerLink]="['/panel/clients', r.clientId]" class="font-medium max-sm:touch-hit" (click)="$event.stopPropagation()" data-testid="data-request-client">{{ r.clientName }}</a>
                                     @if (showClinic()) {
                                         <div><small class="text-muted-color">{{ r.clinicName }}</small></div>
                                     }
                                 </td>
-                                <td>{{ typeLabel(r.type) }}</td>
-                                <td><app-status-tag [label]="statusLabel(r.status)" [severity]="statusSeverity(r.status)" /></td>
-                                <td class="whitespace-nowrap">{{ fmtDate(r.createdAtUtc) }}</td>
-                                <td class="whitespace-nowrap">
+                                <td data-label="Tür">{{ typeLabel(r.type) }}</td>
+                                <td data-label="Durum"><app-status-tag [label]="statusLabel(r.status)" [severity]="statusSeverity(r.status)" /></td>
+                                <td class="whitespace-nowrap" data-label="Oluşturma">{{ fmtDate(r.createdAtUtc) }}</td>
+                                <td class="whitespace-nowrap" data-label="Son yanıt tarihi">
                                     {{ fmtDate(r.dueAtUtc) }}
                                     @if (r.isOverdue && isOpen(r.status)) {
                                         <app-status-tag label="Süresi geçti" severity="danger" data-testid="data-request-overdue" />
                                     }
                                 </td>
-                                <td class="text-right whitespace-nowrap" (click)="$event.stopPropagation()">
+                                <td class="text-right whitespace-nowrap max-sm:pt-2" (click)="$event.stopPropagation()">
                                     @if (r.status === 'Open') {
                                         <button pButton type="button" size="small" class="p-button-text" [disabled]="busyId() === r.id" (click)="takeOver(r)" data-testid="data-request-take">
                                             <i [class]="busyId() === r.id ? 'pi pi-spin pi-spinner' : 'pi pi-user-edit'"></i>Ele al

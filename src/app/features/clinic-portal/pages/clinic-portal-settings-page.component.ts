@@ -106,7 +106,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                 @if (rulesError(); as err) {
                     <app-error-state [detail]="err" (retry)="loadRules()" />
                 } @else if (rules(); as list) {
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto table-stack-phone">
                         <p-table [value]="list" [tableStyle]="{ 'min-width': '36rem' }" data-testid="portal-rules">
                             <ng-template #header>
                                 <tr>
@@ -123,7 +123,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                                         <small class="text-muted-color">{{ categoryLabel(r.category) }}</small>
                                     </td>
                                     @for (c of channels; track c.channel) {
-                                        <td><app-status-tag [label]="modeLabel(r, c.channel)" [severity]="modeSeverity(r, c.channel)" /></td>
+                                        <td [attr.data-label]="c.label"><app-status-tag [label]="modeLabel(r, c.channel)" [severity]="modeSeverity(r, c.channel)" /></td>
                                     }
                                 </tr>
                             </ng-template>

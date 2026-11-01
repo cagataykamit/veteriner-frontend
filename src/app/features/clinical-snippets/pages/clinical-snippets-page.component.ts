@@ -105,7 +105,7 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
                     [hint]="activeSearch() ? copy.listEmptyHint : 'Sık yazdığınız soru setlerini ve cümleleri kısayolla kaydedin; muayenede # yazınca listelenir.'"
                 />
             } @else {
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto table-stack-phone">
                     <p-table
                         [value]="rows()"
                         [lazy]="true"
@@ -129,25 +129,25 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
                         <ng-template #body let-row>
                             <tr data-testid="snippet-row">
                                 <td class="font-medium whitespace-nowrap" [class.text-muted-color]="!row.isActive">#{{ row.shortcut }}</td>
-                                <td [class.text-muted-color]="!row.isActive">{{ row.title }}</td>
-                                <td>
-                                    <div class="truncate max-w-[24rem] text-sm text-muted-color" [title]="row.body">{{ row.body }}</div>
+                                <td data-label="Başlık" [class.text-muted-color]="!row.isActive">{{ row.title }}</td>
+                                <td data-label="Metin">
+                                    <div class="truncate max-w-[24rem] max-sm:max-w-none max-sm:whitespace-normal max-sm:break-words text-sm text-muted-color" [title]="row.body">{{ row.body }}</div>
                                 </td>
-                                <td>
+                                <td data-label="Durum">
                                     <app-status-tag [label]="row.isActive ? 'Aktif' : 'Pasif'" [severity]="row.isActive ? 'success' : 'warn'" />
                                 </td>
                                 <td>
                                     @if (!ro.mutationBlocked()) {
-                                        <div class="flex flex-wrap gap-x-3 gap-y-1 items-center">
+                                        <div class="flex flex-wrap gap-x-3 gap-y-1 items-center max-sm:pt-2 max-sm:gap-x-5">
                                             @if (canUpdate) {
-                                                <button type="button" class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50" [disabled]="mutatingId() !== null" (click)="openEdit(row)">
+                                                <button type="button" class="max-sm:touch-hit p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50" [disabled]="mutatingId() !== null" (click)="openEdit(row)">
                                                     Düzenle
                                                 </button>
                                             }
                                             @if (canDeactivate && row.isActive) {
                                                 <button
                                                     type="button"
-                                                    class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-red-600 dark:text-red-400 disabled:opacity-50"
+                                                    class="max-sm:touch-hit p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-red-600 dark:text-red-400 disabled:opacity-50"
                                                     [disabled]="mutatingId() !== null"
                                                     (click)="confirmDeactivate(row)"
                                                 >
@@ -155,7 +155,7 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
                                                 </button>
                                             }
                                             @if (canDeactivate && !row.isActive) {
-                                                <button type="button" class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50" [disabled]="mutatingId() !== null" (click)="setActive(row, true)">
+                                                <button type="button" class="max-sm:touch-hit p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50" [disabled]="mutatingId() !== null" (click)="setActive(row, true)">
                                                     Etkinleştir
                                                 </button>
                                             }

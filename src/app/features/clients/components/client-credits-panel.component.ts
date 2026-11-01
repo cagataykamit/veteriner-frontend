@@ -57,7 +57,7 @@ export const CREDIT_APPLIED_QUERY_KEY = 'creditApplied';
                                     <span class="font-medium">{{ sourceLabel(c.source) }}</span>
                                     <app-status-tag [label]="statusTag(c).label" [severity]="statusTag(c).severity" />
                                     <span class="text-sm text-muted-color">{{ c.createdAtUtc | trDateTime }}</span>
-                                    <a [routerLink]="['/panel/payments', c.sourcePaymentId]" class="text-primary text-sm no-underline">Kaynak ödeme</a>
+                                    <a [routerLink]="['/panel/payments', c.sourcePaymentId]" class="text-primary text-sm no-underline max-sm:touch-hit">Kaynak ödeme</a>
                                     @if (canCorrect && c.status === 'Open' && c.remainingAmount > 0) {
                                         <button pButton type="button" class="p-button-text p-button-sm p-button-danger ml-auto" data-testid="client-credit-refund" (click)="openRefund(c)"><i class="pi pi-replay"></i>İade et</button>
                                     }
