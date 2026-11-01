@@ -38,6 +38,8 @@ export const ApiEndpoints = {
         appointmentSettings: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/appointment-settings`,
         /** KVKK açık rıza formu şablonu; GET `Clinics.Read` | `Clinics.Update` | `Clients.Read`, PUT `Clinics.Update` (`KVKK_CONSENT_API_CONTRACT.md` §2). */
         kvkkFormTemplate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/kvkk-form-template`,
+        /** GET `Clinics.Read`, PUT `Clinics.Update` `{ isEnabled }`; kayıt yoksa açık (`PORTAL_API_CONTRACT.md` §12). */
+        portalSettings: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/portal-settings`,
         /** KVKK aydınlatma metni şablonu; açık rıza şablonuyla aynı sözleşme ve izinler (`KVKK_CONSENT_API_CONTRACT.md` §2b). */
         kvkkDisclosureTemplate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/kvkk-disclosure-template`,
         /** Mükellef ayarları; GET `Clinics.Read`, PUT `Clinics.Update` (`INVOICING_IDENTITY_API_CONTRACT.md` §3). */
@@ -103,7 +105,18 @@ export const ApiEndpoints = {
         /** POST; 204, yalnız bekleyen davet (§4.3). */
         portalInviteRevoke: (id: string, inviteId: string) => `/api/v1/clients/${encodeURIComponent(id)}/portal-invites/${encodeURIComponent(inviteId)}/revoke`,
         /** POST; 204, bağ `Closed` olur, silinmez (§4.4). */
-        portalLinkClose: (id: string, linkId: string) => `/api/v1/clients/${encodeURIComponent(id)}/portal-links/${encodeURIComponent(linkId)}/close`
+        portalLinkClose: (id: string, linkId: string) => `/api/v1/clients/${encodeURIComponent(id)}/portal-links/${encodeURIComponent(linkId)}/close`,
+        /** GET `Charges.Read`; `?includeClosed=true` tüm krediler (`CLIENT_CREDIT_API_CONTRACT.md` §7). */
+        credits: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/credits`,
+        /** POST `Payments.Create`; krediden ücretlere mahsup, en eski kredi önce (§4). */
+        creditsApply: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/credits/apply`,
+        /** POST `Payments.Correct`; gövde `{ reason }`, 204 (§5). */
+        creditApplicationReverse: (id: string, applicationId: string) =>
+            `/api/v1/clients/${encodeURIComponent(id)}/credits/applications/${encodeURIComponent(applicationId)}/reverse`,
+        /** POST `Payments.Correct`; gövde `{ reason, method }`, kalanın tamamı iade (§6). */
+        creditRefund: (id: string, creditId: string) => `/api/v1/clients/${encodeURIComponent(id)}/credits/${encodeURIComponent(creditId)}/refund`,
+        /** GET `Clients.Read`; `?kind=PortalInvite|AppointmentReminder|VaccinationReminder&targetId=` wa.me bağlantısı (`PORTAL_API_CONTRACT.md` §13.2). */
+        whatsappLink: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/whatsapp-link`
     },
     pets: {
         /** Query: `Page`, `PageSize`, `Search`, `Sort`, `Order`, `SpeciesId`, `ClientId`, `Status` (+ opsiyonel legacy `Species` — @see docs/BACKEND-INTEGRATION.md). */
@@ -348,6 +361,14 @@ export const ApiEndpoints = {
         unreadCount: () => `/api/v1/notifications/unread-count`,
         read: (id: string) => `/api/v1/notifications/${encodeURIComponent(id)}/read`,
         readAll: () => `/api/v1/notifications/read-all`
+    },
+    /** Klinik portal gelen kutusu, `OwnerPortal.Manage` (`PORTAL_API_CONTRACT.md` §11.2). */
+    portalInbox: {
+        dataRequests: () => `/api/v1/portal-inbox/data-requests`,
+        summary: () => `/api/v1/portal-inbox/summary`,
+        dataRequestStatus: (id: string) => `/api/v1/portal-inbox/data-requests/${encodeURIComponent(id)}/status`,
+        /** GET `Clinics.Read`; bildirim türü × kanal matrisi (§13). */
+        notificationRules: () => `/api/v1/portal-notification-rules`
     },
     hospitalizationWards: {
         /** GET: aktif/pasif tüm bölümler odalarıyla (`Clinics_HospitalizationWardsRead`); POST `{ name, sortOrder }` (`Clinics.Update`). */

@@ -22,6 +22,11 @@ export const PORTAL_ENDPOINTS = {
     clinicDisclosure: (linkId: string) => `${link(linkId)}/clinic-disclosure`,
     acknowledgeClinicDisclosure: (linkId: string) => `${link(linkId)}/clinic-disclosure/acknowledge`,
     reminderPreferences: (linkId: string) => `${link(linkId)}/reminder-preferences`,
+    // Bildirim tercihleri ve KVKK veri talebi (PORTAL_API_CONTRACT.md §10, §11)
+    myNotificationPreferences: 'me/notification-preferences',
+    notificationPreferences: (linkId: string) => `${link(linkId)}/notification-preferences`,
+    dataRequests: (linkId: string) => `${link(linkId)}/data-requests`,
+    cancelDataRequest: (linkId: string, id: string) => `${link(linkId)}/data-requests/${encodeURIComponent(id)}/cancel`,
     // Dilim B, salt okunur (§6)
     clinic: (linkId: string) => `${link(linkId)}/clinic`,
     pets: (linkId: string) => `${link(linkId)}/pets`,
