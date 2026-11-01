@@ -1,6 +1,9 @@
 import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { TrialLimitError } from '@/app/shared/utils/api-error.utils';
 import type { StoredFileUploadEvent, StoredFileVm } from './stored-file.model';
 import { StoredFileUploadComponent } from './stored-file-upload.component';
 import { StoredFilesService } from './stored-files.service';
@@ -13,7 +16,11 @@ describe('StoredFileUploadComponent — yükleme kuyruğu', () => {
     const create = (ownerPath: string | null = null) => {
         TestBed.configureTestingModule({
             imports: [StoredFileUploadComponent],
-            providers: [{ provide: StoredFilesService, useValue: { upload: (upload = vi.fn().mockName('upload')) } }]
+            providers: [
+                provideRouter([]),
+                { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                { provide: StoredFilesService, useValue: { upload: (upload = vi.fn().mockName('upload')) } }
+            ]
         });
         const fixture = TestBed.createComponent(StoredFileUploadComponent);
 
@@ -85,6 +92,23 @@ describe('StoredFileUploadComponent — yükleme kuyruğu', () => {
 
         expect(upload).toHaveBeenCalledTimes(2);
         expect(c.items()[0].status).toBe('done');
+    });
+
+    it('deneme depolama kotası: sunucu metni ve "Aboneliğe geç" bağlantısı kuyruk altında görünür (TRIAL-006)', async () => {
+        const fixture = create('/api/v1/lab-results/l1');
+        const c = fixture.componentInstance;
+        const detail = 'Deneme sürümünde dosya depolama 500 MB sınırı doldu; abonelikle kalkar.';
+
+        upload.mockReturnValue(throwError(() => new TrialLimitError(detail, 'Trial.StorageQuotaExceeded')));
+        c.addFiles([jpg()]);
+        await c.uploadPending('/api/v1/lab-results/l1');
+        fixture.detectChanges();
+
+        const notice = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="trial-limit-notice"]');
+
+        expect(c.trialLimitError()).toBe(detail);
+        expect(notice?.textContent).toContain('500 MB');
+        expect(notice?.querySelector('[data-testid="trial-limit-subscription-link"]')).not.toBeNull();
     });
 
     it('autoUpload açıkken seçim anında yükler', () => {

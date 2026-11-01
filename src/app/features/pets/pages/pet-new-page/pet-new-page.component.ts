@@ -27,7 +27,8 @@ import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/
 import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick-breed-dialog.component';
 import { QuickSpeciesDialogComponent } from '@/app/entities/species/components/quick-species-dialog.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { messageFromHttpError, trialLimitMessage } from '@/app/shared/utils/api-error.utils';
+import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
 import { DATE_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
@@ -46,7 +47,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         QuickSpeciesDialogComponent,
         QuickBreedDialogComponent,
         ClientSearchComponent,
-        DateInputComponent
+        DateInputComponent,
+        AppTrialLimitNoticeComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -216,6 +218,9 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                 @if (submitError()) {
                     <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
                 }
+                @if (trialLimitError(); as message) {
+                    <div class="mt-4"><app-trial-limit-notice [message]="message" /></div>
+                }
 
                 <div class="flex flex-wrap gap-2 mt-4">
                     <button pButton type="submit" [disabled]="form.invalid || submitting() || loadingSpecies() || loadingBreeds() || loadingColors() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
@@ -249,6 +254,8 @@ export class PetNewPageComponent implements OnInit {
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
+    /** Deneme hasta kotası (`Trial.PetQuotaExceeded`, 422): sunucu metni + "Aboneliğe geç". */
+    readonly trialLimitError = signal<string | null>(null);
     readonly selectionError = signal<string | null>(null);
     readonly loadingSpecies = signal(false);
     readonly loadingBreeds = signal(false);
@@ -366,6 +373,7 @@ export class PetNewPageComponent implements OnInit {
         }
 
         this.submitError.set(null);
+        this.trialLimitError.set(null);
         this.apiFieldErrors.set({});
 
         if (this.form.invalid) {
@@ -384,6 +392,11 @@ export class PetNewPageComponent implements OnInit {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+                this.trialLimitError.set(trialLimitMessage(e));
+
+                if (this.trialLimitError()) {
+                    return;
+                }
 
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parsePetCreateHttpError(e);

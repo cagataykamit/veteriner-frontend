@@ -18,7 +18,8 @@ import { SpeciesService } from '@/app/entities/species/services/species.service'
 import type { PetSuggestion } from '@/app/entities/visit/models/visit-vm.model';
 import { splitSearchTermForRegistration } from '@/app/entities/visit/utils/visit-registration.utils';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
-import { panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
+import { panelHttpFailureMessage, problemCodeFromHttpError, trialLimitMessage } from '@/app/shared/utils/api-error.utils';
 
 export interface RegistrationOwner {
     id: string;
@@ -36,7 +37,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
 @Component({
     selector: 'app-visit-quick-registration',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppTrialLimitNoticeComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4" aria-label="Hızlı kayıt">
@@ -100,6 +101,9 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
             @if (stepError()) {
                 <p class="text-red-500 mt-3 mb-0" role="alert">{{ stepError() }}</p>
             }
+            @if (trialLimitError(); as message) {
+                <div class="mt-3"><app-trial-limit-notice [message]="message" /></div>
+            }
             <div class="flex flex-wrap gap-2 mt-4">
                 <button pButton type="button" [disabled]="submitting() || !canSubmit()" (click)="submit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ owner() ? 'Hastayı kaydet ve geliş için seç' : 'Müşteri ve hastayı kaydet' }}</button>
                 <button pButton type="button" severity="secondary" [disabled]="submitting()" (click)="cancelled.emit()"><i class="p-button-icon" [class]="duplicateClient() ? 'pi pi-search' : 'pi pi-times'"></i>{{ duplicateClient() ? 'Aramaya dön' : 'Vazgeç' }}</button>
@@ -127,6 +131,8 @@ export class VisitQuickRegistrationComponent implements OnInit {
     readonly owner = signal<RegistrationOwner | null>(null);
     readonly submitting = signal(false);
     readonly stepError = signal<string | null>(null);
+    /** Deneme müşteri/hasta kotası (`Trial.ClientQuotaExceeded` / `Trial.PetQuotaExceeded`, 422): sunucu metni + "Aboneliğe geç". */
+    readonly trialLimitError = signal<string | null>(null);
     /** `409 Clients.DuplicateClient`: aynı ad ve telefonla müşteri var; kullanıcı aramadan seçmeli. */
     readonly duplicateClient = signal(false);
     readonly apiClientErrors = signal<ClientCreateFieldErrors>({});
@@ -178,6 +184,7 @@ export class VisitQuickRegistrationComponent implements OnInit {
         }
 
         this.stepError.set(null);
+        this.trialLimitError.set(null);
         this.duplicateClient.set(false);
         this.apiClientErrors.set({});
         this.submitting.set(true);
@@ -224,6 +231,11 @@ export class VisitQuickRegistrationComponent implements OnInit {
 
     private failQuickRegister(e: unknown): void {
         this.submitting.set(false);
+        this.trialLimitError.set(trialLimitMessage(e));
+
+        if (this.trialLimitError()) {
+            return;
+        }
 
         if (!(e instanceof HttpErrorResponse)) {
             this.stepError.set(panelHttpFailureMessage(e, 'Kayıt oluşturulamadı.'));
@@ -246,6 +258,12 @@ export class VisitQuickRegistrationComponent implements OnInit {
 
     private failPet(e: unknown): void {
         this.submitting.set(false);
+        this.trialLimitError.set(trialLimitMessage(e));
+
+        if (this.trialLimitError()) {
+            return;
+        }
+
         this.stepError.set(e instanceof HttpErrorResponse ? (parsePetCreateHttpError(e).summaryMessage ?? 'Hasta kaydedilemedi. Bilgileri kontrol edin.') : panelHttpFailureMessage(e, 'Hasta kaydedilemedi.'));
     }
 

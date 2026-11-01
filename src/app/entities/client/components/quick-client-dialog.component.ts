@@ -13,6 +13,8 @@ import { quickClientPrefill } from '@/app/entities/client/utils/quick-client-pre
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
+import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
+import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
  * Randevu / muayene formlarında tam sayfa ayrılmadan müşteri oluşturma (create contract ile aynı).
@@ -20,7 +22,7 @@ import { InputTextModule } from 'primeng/inputtext';
 @Component({
     selector: 'app-quick-client-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, AppTrialLimitNoticeComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Yeni müşteri ekle" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible" (onShow)="onShow()">
@@ -58,6 +60,9 @@ import { InputTextModule } from 'primeng/inputtext';
                 @if (submitError()) {
                     <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
+                @if (trialLimitError(); as message) {
+                    <div class="mt-3"><app-trial-limit-notice [message]="message" /></div>
+                }
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>İptal</button>
@@ -78,6 +83,8 @@ export class QuickClientDialogComponent {
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
+    /** Deneme müşteri kotası (`Trial.ClientQuotaExceeded`, 422): sunucu metni + "Aboneliğe geç". */
+    readonly trialLimitError = signal<string | null>(null);
     readonly apiFieldErrors = signal<ClientCreateFieldErrors>({});
 
     readonly form = createClientUpsertFormGroup(this.fb);
@@ -115,6 +122,7 @@ export class QuickClientDialogComponent {
 
     onShow(): void {
         this.submitError.set(null);
+        this.trialLimitError.set(null);
         this.apiFieldErrors.set({});
         this.form.reset({
             ...quickClientPrefill(this.initialText()),
@@ -129,6 +137,7 @@ export class QuickClientDialogComponent {
 
     onSubmit(): void {
         this.submitError.set(null);
+        this.trialLimitError.set(null);
         this.apiFieldErrors.set({});
 
         if (this.form.invalid) {
@@ -148,6 +157,11 @@ export class QuickClientDialogComponent {
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
+                this.trialLimitError.set(trialLimitMessage(e));
+
+                if (this.trialLimitError()) {
+                    return;
+                }
 
                 if (e instanceof HttpErrorResponse) {
                     const parsed = parseClientCreateHttpError(e);

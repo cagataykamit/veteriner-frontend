@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { isTrialLimitError, messageFromHttpError, trialLimitProblemCode, TrialLimitError, userErrorFromHttp } from '@/app/shared/utils/api-error.utils';
+import { isTrialLimitError, messageFromHttpError, trialLimitMessage, trialLimitProblemCode, TrialLimitError, userErrorFromHttp } from '@/app/shared/utils/api-error.utils';
 
 const EXPORT_DETAIL = 'Deneme sürümünde dışa aktarma en fazla 1000 satır sınırı; abonelikle kalkar. Filtreyi daraltın.';
 
@@ -45,5 +45,33 @@ describe('api-error: deneme kısıtları (TRIAL-004, docs/TRIAL_LIMITS_API_CONTR
         expect(isTrialLimitError(problem('Imports.TooManyRows', 'x', 400))).toBe(false);
         expect(isTrialLimitError(new Error('Trial.ExportLimitExceeded'))).toBe(false);
         expect(isTrialLimitError(null)).toBe(false);
+    });
+});
+
+describe('api-error: deneme kullanım kotası (TRIAL-006, docs/TRIAL_LIMITS_API_CONTRACT.md §3.4)', () => {
+    const QUOTA_CODES = ['Trial.ClientQuotaExceeded', 'Trial.PetQuotaExceeded', 'Trial.StorageQuotaExceeded'];
+
+    it('sunucu detail metni olduğu gibi gösterilir; TrialLimitError üretilir', () => {
+        const detail = 'Deneme sürümünde en fazla 1000 müşteri kaydı sınırı doldu; abonelikle kalkar.';
+        const err = userErrorFromHttp(problem('Trial.ClientQuotaExceeded', detail), 'yedek');
+
+        expect(err).toBeInstanceOf(TrialLimitError);
+        expect(err.message).toBe(detail);
+    });
+
+    it('detail yoksa her kota kodu kendi sözleşme metnine düşer', () => {
+        expect(messageFromHttpError(problem('Trial.ClientQuotaExceeded', null))).toContain('1000 müşteri');
+        expect(messageFromHttpError(problem('Trial.PetQuotaExceeded', null))).toContain('2000 hasta');
+        expect(messageFromHttpError(problem('Trial.StorageQuotaExceeded', ''))).toContain('500 MB');
+    });
+
+    it('trialLimitMessage: ham HttpErrorResponse ve TrialLimitError için metin, diğer hatalar için null', () => {
+        for (const code of QUOTA_CODES) {
+            expect(trialLimitMessage(problem(code, null))).toContain('abonelikle kalkar');
+        }
+
+        expect(trialLimitMessage(new TrialLimitError('Depolama doldu.', 'Trial.StorageQuotaExceeded'))).toBe('Depolama doldu.');
+        expect(trialLimitMessage(problem('Clients.DuplicateClient', 'x', 409))).toBeNull();
+        expect(trialLimitMessage(new Error('x'))).toBeNull();
     });
 });
