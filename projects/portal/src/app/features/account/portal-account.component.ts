@@ -4,13 +4,13 @@ import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { portalErrorMessage } from '@portal/app/core/errors/portal-errors';
-import { PortalReminderPreferencesComponent } from '@portal/app/features/reminders/portal-reminder-preferences.component';
+import { PortalNotificationPreferencesComponent } from '@portal/app/features/notifications/portal-notification-preferences.component';
 
-/** Hesabım: oturum bilgisi, klinik değiştirme, seçili klinikteki hatırlatma tercihi (§5.11), çıkış, tüm cihazlardan çıkış (sözleşme §5.7) ve hesap silmeye geçiş (§5.10). */
+/** Hesabım: oturum bilgisi, klinik değiştirme, bildirim tercihleri (§10), çıkış, tüm cihazlardan çıkış (sözleşme §5.7) ve hesap silmeye geçiş (§5.10). */
 @Component({
     selector: 'portal-account',
     standalone: true,
-    imports: [RouterLink, ButtonModule, MessageModule, PortalReminderPreferencesComponent],
+    imports: [RouterLink, ButtonModule, MessageModule, PortalNotificationPreferencesComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="portal-stack">
@@ -27,9 +27,7 @@ import { PortalReminderPreferencesComponent } from '@portal/app/features/reminde
                 </section>
             }
 
-            @if (session.activeLink()) {
-                <portal-reminder-preferences />
-            }
+            <portal-notification-preferences />
 
             <section class="portal-card portal-stack" aria-labelledby="account-session-title">
                 <h2 id="account-session-title" class="portal-subtitle">Oturum</h2>
