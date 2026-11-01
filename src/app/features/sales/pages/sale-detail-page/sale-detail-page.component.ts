@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { SALES_CORRECT_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -25,7 +24,6 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
         AppDetailIdentityCardComponent,
