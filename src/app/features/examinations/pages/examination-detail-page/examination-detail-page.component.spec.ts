@@ -557,7 +557,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
             const { fixture, service, el } = await setup(linked, claims, undefined, false, m.providers);
 
             service.getExaminationById.mockReturnValue(of(linked));
-            fixture.componentInstance.onTemplateApplied({ template: prepared, result: { examinationId: 'e1', rowVersion: 'V2', updatedFields: [], administrations: [], services: [] } });
+            fixture.componentInstance.onTemplateApplied({ template: prepared, result: { examinationId: 'e1', rowVersion: 'V2', updatedFields: [], text: { visitReason: 'NotInTemplate', findingsLinesAdded: 0, planLinesAdded: 0 }, pendingChargeCount: 0, administrations: [], services: [] } });
             fixture.detectChanges();
             expect(el.querySelector('[data-testid="prepared-template-strip"]')).toBeNull();
 
