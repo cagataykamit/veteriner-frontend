@@ -11,7 +11,6 @@ import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.u
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { appointmentStatusLabel, appointmentStatusSeverity, canMarkAppointmentNoShow, canRevertAppointmentNoShow, isAppointmentNoShowStatus, isAppointmentCancelledStatus } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { appointmentTypeDisplayLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
-import { speciesEmoji } from '@/app/shared/utils/species-icon.utils';
 import { DETAIL_STATS_GRID_CLASS } from '@/app/shared/ui/detail.classes';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -27,11 +26,12 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { APPOINTMENTS_NOSHOW_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM, EXAMINATIONS_CREATE_CLAIM, VISITS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
+import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-line/app-detail-subject-line.component';
 
 @Component({
     selector: 'app-appointment-detail-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppointmentNoShowDialogComponent, TrDateTimePipe],
+    imports: [AppDetailSubjectLineComponent, CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppointmentNoShowDialogComponent, TrDateTimePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
@@ -64,30 +64,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                         <p class="m-0 mt-1 text-base font-medium text-surface-900 dark:text-surface-0 tabular-nums">{{ a.scheduledAtUtc | trDateTime }}</p>
                         <p class="m-0 mt-1 text-sm text-muted-color">Oluşturulma: {{ a.createdAtUtc | trDateTime }} · Güncellenme: {{ a.updatedAtUtc | trDateTime }}</p>
 
-                        <p class="m-0 mt-3 flex flex-wrap items-center gap-x-6 gap-y-2" aria-label="Hasta ve sahip">
-                            <span>
-                                <span class="text-muted-color">Hasta:</span>
-                                @if (a.speciesName) {
-                                    <span class="ml-1" [title]="a.speciesName" aria-hidden="true">{{ speciesIcon(a.speciesName) }}</span>
-                                }
-                                @if (a.petId) {
-                                    <a [routerLink]="['/panel/pets', a.petId]" class="text-primary font-semibold no-underline ml-1">{{ a.petName }}</a>
-                                } @else {
-                                    <span class="ml-1 font-medium">{{ a.petName }}</span>
-                                }
-                                @if (a.speciesName) {
-                                    <span class="text-muted-color text-sm"> · {{ a.speciesName }}</span>
-                                }
-                            </span>
-                            <span>
-                                <span class="text-muted-color">Sahip:</span>
-                                @if (a.clientId) {
-                                    <a [routerLink]="['/panel/clients', a.clientId]" class="text-primary font-medium no-underline ml-1">{{ a.clientName }}</a>
-                                } @else {
-                                    <span class="ml-1">{{ a.clientName }}</span>
-                                }
-                            </span>
-                        </p>
+                        <app-detail-subject-line [petId]="a.petId" [petName]="a.petName" [speciesName]="a.speciesName" [clientId]="a.clientId" [clientName]="a.clientName" />
 
                         @if (isCancelledForExam(a.status) || isNoShow(a.status)) {
                             <p class="m-0 mt-3 inline-flex items-start gap-2 rounded-border border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-sm font-medium text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-300" role="status">
@@ -232,7 +209,6 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly statusLabel = appointmentStatusLabel;
     readonly statusSeverity = appointmentStatusSeverity;
     readonly typeDisplay = appointmentTypeDisplayLabel;
-    readonly speciesIcon = speciesEmoji;
     readonly statsClass = DETAIL_STATS_GRID_CLASS;
     readonly canRescheduleAppointment = this.auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM);
     readonly canCreateExamination = this.auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM);
