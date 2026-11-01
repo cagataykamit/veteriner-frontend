@@ -16,6 +16,8 @@ export interface PortalBalance {
     readonly outstanding: number;
     readonly unallocatedPaymentsAmount: number;
     readonly lastPaymentAtUtc: string | null;
+    /** Kalan müşteri kredisi (fazla ya da peşin ödeme; FIN-005); kalan tutardan düşülmez. Eski yanıtta yoksa 0 sayılır. */
+    readonly creditBalance?: number;
 }
 
 export type PortalPaymentMethod = 'Cash' | 'Card' | 'Transfer';
@@ -31,6 +33,11 @@ export interface PortalPayment {
 /** Kalan borç var mı; sıfır ve altı "borç yok" sayılır. */
 export function hasOutstanding(balance: PortalBalance): boolean {
     return balance.outstanding > 0;
+}
+
+/** Kullanılabilir kredi var mı. */
+export function hasCredit(balance: PortalBalance): boolean {
+    return (balance.creditBalance ?? 0) > 0;
 }
 
 @Injectable({ providedIn: 'root' })

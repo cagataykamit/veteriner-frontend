@@ -8,7 +8,7 @@ import { formatPortalDay } from '@portal/app/shared/format/portal-date';
 import { paymentMethodLabel, telHref } from '@portal/app/shared/format/portal-labels';
 import { formatPortalMoney } from '@portal/app/shared/format/portal-money';
 import { PortalEmptyState, PortalErrorState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
-import { hasOutstanding, PortalBalance, PortalBalanceApi, PortalPayment } from './portal-balance.api';
+import { hasCredit, hasOutstanding, PortalBalance, PortalBalanceApi, PortalPayment } from './portal-balance.api';
 
 /**
  * Bakiye ve ödemeler (sözleşme §6.5, AK-9): yalnız görüntüleme; online ödeme yok. Ödeme için kliniğin telefonu
@@ -57,6 +57,10 @@ export class PortalBalanceComponent {
 
     hasOutstanding(balance: PortalBalance): boolean {
         return hasOutstanding(balance);
+    }
+
+    hasCredit(balance: PortalBalance): boolean {
+        return hasCredit(balance);
     }
 
     money(amount: number, currency: string): string {

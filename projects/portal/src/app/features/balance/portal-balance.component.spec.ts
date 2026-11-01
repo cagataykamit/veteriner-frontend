@@ -64,6 +64,21 @@ describe('PortalBalanceComponent (bakiye ve ödemeler)', () => {
         expect(note).toContain('kalan tutardan düşülmemiştir');
     });
 
+    it('kullanılabilir kredi varsa ayrı satırda gösterilir; kalan tutardan düşülmez', async () => {
+        respond({ ...BALANCE, creditBalance: 250 });
+        await settle();
+
+        expect(strip(el.querySelector('[data-testid=balance-credit]')?.textContent)).toBe('Kullanılabilirkrediniz₺250,00');
+        expect(strip(el.querySelector('[data-testid=balance-summary]')?.textContent)).toContain('Kalan₺500,00');
+    });
+
+    it('kredi sıfırsa ya da alan yoksa kredi satırı çizilmez', async () => {
+        respond({ ...BALANCE, creditBalance: 0 });
+        await settle();
+
+        expect(el.querySelector('[data-testid=balance-credit]')).toBeNull();
+    });
+
     it('borç yoksa "Borcunuz yok", açıklama satırı yok', async () => {
         respond(BALANCE_CLEAR);
         await settle();
