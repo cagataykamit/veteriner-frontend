@@ -58,7 +58,7 @@ const FOLLOW_UP_LIMIT = 3;
                                 <span class="font-semibold">{{ w.weightKg }} kg</span>
                                 <span class="text-muted-color text-sm"> · {{ w.measuredAtUtc | trDateTime }}</span>
                                 @if (w.examinationId) {
-                                    <a [routerLink]="['/panel/examinations', w.examinationId]" class="text-primary no-underline text-sm ml-2">Muayene →</a>
+                                    <a [routerLink]="['/panel/examinations', w.examinationId]" class="text-primary no-underline text-sm ml-2 max-sm:touch-hit">Muayene →</a>
                                 }
                             } @else if (s.latestWeight.state === 'Empty') {
                                 <p class="m-0 field-empty" data-testid="state-empty">Muayenede kilo ölçülmemiş</p>

@@ -20,7 +20,7 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
             <div class="flex items-center justify-between gap-2 mb-3">
                 <h5 id="pet-imaging-title" class="m-0">Görüntüleme</h5>
                 @if (canCreate && !ro.mutationBlocked()) {
-                    <a routerLink="/panel/imaging/new" [queryParams]="{ clientId: clientId(), petId: petId() }" class="text-primary font-medium no-underline text-sm" data-testid="pet-imaging-new">+ Ekle</a>
+                    <a routerLink="/panel/imaging/new" [queryParams]="{ clientId: clientId(), petId: petId() }" class="text-primary font-medium no-underline text-sm max-sm:touch-hit" data-testid="pet-imaging-new">+ Ekle</a>
                 }
             </div>
             @if (loading()) {

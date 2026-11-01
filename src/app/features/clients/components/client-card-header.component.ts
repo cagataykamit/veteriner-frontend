@@ -52,7 +52,7 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
 
                     <p class="m-0 mt-3 flex flex-wrap items-center gap-x-6 gap-y-2" aria-label="İletişim">
                         @if (phoneHref(); as href) {
-                            <a [href]="href" class="text-primary no-underline whitespace-nowrap text-base font-semibold tabular-nums" data-testid="client-phone"><i class="pi pi-phone text-sm mr-1.5" aria-hidden="true"></i>{{ phone() }}</a>
+                            <a [href]="href" class="text-primary no-underline whitespace-nowrap text-base font-semibold tabular-nums max-sm:inline-flex max-sm:items-center max-sm:min-h-(--touch-target)" data-testid="client-phone"><i class="pi pi-phone text-sm mr-1.5" aria-hidden="true"></i>{{ phone() }}</a>
                         } @else {
                             <span class="text-muted-color text-base" data-testid="client-phone-missing"><i class="pi pi-phone text-sm mr-1.5" aria-hidden="true"></i>Telefon yok</span>
                         }

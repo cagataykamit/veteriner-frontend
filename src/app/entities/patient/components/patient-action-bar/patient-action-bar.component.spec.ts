@@ -103,17 +103,18 @@ describe('PatientActionBarComponent', () => {
         expect(locked.disabled).toBe(true);
     });
 
-    it('sticky açıkken çubuk üst çubuğun altında sabitlenir; varsayılan sabit değildir; şerit kart değildir', () => {
+    it('sticky açıkken çubuk (telefon dışında) üst çubuğun altında sabitlenir; varsayılan sabit değildir; şerit kart değildir', () => {
         const fixture = create({ clientId: 'cl1', petId: 'p1' });
         const bar = () => fixture.nativeElement.querySelector('[data-testid="patient-action-bar"]') as HTMLElement;
 
-        expect(bar().classList).not.toContain('sticky');
+        expect(bar().classList).not.toContain('sm:sticky');
         expect(bar().classList).not.toContain('card');
 
         fixture.componentRef.setInput('sticky', true);
         fixture.detectChanges();
 
-        expect(bar().classList).toContain('sticky');
+        // Telefonda satır kıran şerit ekranı kaplamasın diye yapışkanlık yalnız sm ve üstünde (MOBILE-004).
+        expect(bar().classList).toContain('sm:sticky');
         expect(bar().classList).toContain('top-16');
         expect(bar().classList).not.toContain('card');
     });
