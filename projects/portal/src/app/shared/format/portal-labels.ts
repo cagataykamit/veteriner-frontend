@@ -28,7 +28,7 @@ export const APPOINTMENT_STATUS_LABELS: Readonly<Record<PortalAppointmentStatus,
     NoShow: { label: 'Gelinmedi', tone: 'warning' }
 };
 
-/** Randevu talebi durumu (ADR-042 K4); backend sayı döner, ad da kabul edilir. */
+/** Randevu talebi durumu (ADR-042 K4); backend metin döner (sözleşme §13.4), eski sayısal değer sıra numarasıyla okunur. */
 const APPOINTMENT_REQUEST_STATUSES: readonly { readonly name: string; readonly label: string; readonly tone: PortalBadgeTone }[] = [
     { name: 'Pending', label: 'Bekliyor', tone: 'warning' },
     { name: 'Approved', label: 'Onaylandı', tone: 'success' },

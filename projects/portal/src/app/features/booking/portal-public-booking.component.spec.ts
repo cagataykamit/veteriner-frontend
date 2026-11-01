@@ -96,7 +96,7 @@ describe('PortalPublicBookingComponent (kliniğe özel bağlantı)', () => {
     });
 
     it('kod gönderilir, sayaç başlar; talep gönderilince "kesin randevu değildir" mesajı', async () => {
-        api.createPublicRequest.mockReturnValue(of({ id: 'req-1', status: 0, requestedStartUtc: SLOT_MON_0900 }));
+        api.createPublicRequest.mockReturnValue(of({ id: 'req-1', status: 'Pending', requestedStartUtc: SLOT_MON_0900 }));
         await create();
         await chooseReasonAndSlot();
         expect(buttonByText(el, 'Talebi gönder')!.disabled).toBe(true);

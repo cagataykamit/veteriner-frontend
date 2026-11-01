@@ -37,8 +37,8 @@ export interface PortalBookingDay {
     readonly slots: readonly PortalBookingSlot[];
 }
 
-/** Talep durumu; backend sayı döner (0–4), ad gelirse de kabul edilir. */
-export type PortalAppointmentRequestStatus = 0 | 1 | 2 | 3 | 4 | 'Pending' | 'Approved' | 'Rejected' | 'Cancelled' | 'Expired';
+/** Talep durumu metindir (sözleşme §13.4); eski sayısal yanıt (0–4) da okunur. */
+export type PortalAppointmentRequestStatus = 'Pending' | 'Approved' | 'Rejected' | 'Cancelled' | 'Expired' | 0 | 1 | 2 | 3 | 4;
 
 export interface PortalAppointmentRequestCreated {
     readonly id: string;

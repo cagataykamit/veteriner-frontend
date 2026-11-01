@@ -24,7 +24,7 @@ export const TEST_ME: PortalMe = {
     email: 'ayse@example.com',
     displayName: 'Ayşe',
     hasPassword: false,
-    links: [{ linkId: 'link-1', clinicId: 'clinic-1', clinicName: 'Merkez', clientFullName: 'Ayşe Yılmaz' }]
+    links: [{ linkId: 'link-1', clinicId: 'clinic-1', clinicName: 'Merkez', clientFullName: 'Ayşe Yılmaz', isClinicPortalEnabled: true }]
 };
 
 /** Söz zincirlerinin ilerlemesi için bir makro görev bekler. */

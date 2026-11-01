@@ -133,7 +133,7 @@ describe('PortalSessionService', () => {
 
     it('çok klinikte seçim yoksa klinik seçimi ister; seçim cihazda hatırlanır', async () => {
         store.save(tokens(1));
-        const twoLinks: PortalMe = { ...ME, links: [...ME.links, { linkId: 'link-2', clinicId: 'clinic-2', clinicName: 'Şube', clientFullName: 'Ayşe Yılmaz' }] };
+        const twoLinks: PortalMe = { ...ME, links: [...ME.links, { linkId: 'link-2', clinicId: 'clinic-2', clinicName: 'Şube', clientFullName: 'Ayşe Yılmaz', isClinicPortalEnabled: true }] };
 
         session.loadMe().subscribe();
         http.expectOne(`${BASE}/me`).flush(twoLinks);

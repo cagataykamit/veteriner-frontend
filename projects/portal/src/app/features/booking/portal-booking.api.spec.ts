@@ -66,7 +66,7 @@ describe('PortalBookingApi (online randevu talebi uçları)', () => {
         const createReq = http.expectOne('/api/portal/v1/booking/kod/requests');
 
         expect(createReq.request.headers.has('Authorization')).toBe(false);
-        createReq.flush({ id: 'req-1', status: 0, requestedStartUtc: SLOT_MON_0900 });
+        createReq.flush({ id: 'req-1', status: 'Pending', requestedStartUtc: SLOT_MON_0900 });
     });
 
     it('oturumlu uçlar bağ yoluyla çağrılır', async () => {
@@ -85,13 +85,16 @@ describe('PortalBookingApi (online randevu talebi uçları)', () => {
         const cancel = http.expectOne('/api/portal/v1/links/link-1/appointment-requests/req-1/cancel');
 
         expect(cancel.request.method).toBe('POST');
-        cancel.flush(bookingRequest({ status: 3, canCancel: false }));
+        cancel.flush(bookingRequest({ status: 'Cancelled', canCancel: false }));
     });
 
-    it('booking/ yolları anonimdir; durum etiketi sayı ve ad kabul eder', () => {
+    it('booking/ yolları anonimdir; durum etiketi metni okur, eski sayıyı da kabul eder', () => {
         expect(isAnonymousPortalPath('booking/kod/requests')).toBe(true);
         expect(isAnonymousPortalPath('links/link-1/booking')).toBe(false);
 
+        expect(appointmentRequestStatus('Pending').label).toBe('Bekliyor');
+        expect(appointmentRequestStatus('Expired').label).toBe('Süresi doldu');
+        // Eski sayısal yanıt (sözleşme §13.4 öncesi) sıra numarasıyla okunur.
         expect(appointmentRequestStatus(0).label).toBe('Bekliyor');
         expect(appointmentRequestStatus(1).label).toBe('Onaylandı');
         expect(appointmentRequestStatus('Rejected').label).toBe('Reddedildi');
