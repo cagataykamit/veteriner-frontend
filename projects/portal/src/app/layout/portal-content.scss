@@ -1,10 +1,6 @@
 /* Oturumlu içerik sayfalarının ortak stilleri (Dilim 2). Kabuk bileşenine `ViewEncapsulation.None` ile bağlıdır:
    kabuk yüklenince bir kez eklenir, giriş/davet sayfalarının paketine girmez. Kök değişkenler `styles.scss`'tedir. */
 
-.portal-shell-header .portal-brand-name {
-    flex: 1 1 auto;
-}
-
 .portal-header-action {
     display: inline-flex;
     align-items: center;
