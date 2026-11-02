@@ -33,10 +33,10 @@ describe('ExaminationFinalizeDialogComponent', () => {
         fixture.detectChanges();
     });
 
-    it('onay metni kesinleştirdikten sonra tedavi, reçete, aşı ve yatış eklenemeyeceğini söyler', () => {
+    it('onay metni tedavi, aşı ve yatışın eklenemeyeceğini, reçetenin gerekçeyle eklenebileceğini söyler', () => {
         const text = document.body.querySelector('[data-testid="finalize-locks-linked"]')?.textContent;
 
-        expect(text).toContain('Kesinleştirdikten sonra tedavi, reçete, aşı ve yatış eklenemez');
+        expect(text).toContain('tedavi, aşı ve yatış eklenemez; reçete ve uygulama yalnız gerekçeyle eklenebilir');
     });
 
     it('eksik kalem uyarıları listelenir ve kesinleştirmeyi engellemez', () => {

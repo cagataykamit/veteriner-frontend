@@ -11,20 +11,19 @@
                 <portal-error-state [message]="view.error()" (retry)="load()" />
             }
             @default {
-                @if (view.data()?.bookingOpen) {
-                    <a class="portal-action-link portal-action-link--primary" routerLink="/appointments/requests/new" data-testid="new-request">
-                        <i class="fa-solid fa-plus" aria-hidden="true"></i> Yeni randevu talebi
-                    </a>
-                    <p class="portal-muted">Talep klinik onayladığında kesin randevuya dönüşür ve Randevularım'da görünür.</p>
-                } @else {
-                    <p class="portal-muted" data-testid="booking-closed">Kliniğiniz şu an online randevu talebi almıyor.</p>
-                }
-
                 @if (cancelError(); as message) {
                     <p class="portal-field-error" role="alert">{{ message }}</p>
                 }
 
                 @if (requests().length) {
+                    @if (view.data()?.bookingOpen) {
+                        <a class="portal-action-link portal-action-link--primary" routerLink="/appointments/requests/new" data-testid="new-request">
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i> Yeni randevu talebi
+                        </a>
+                        <p class="portal-muted">Talep klinik onayladığında kesin randevuya dönüşür ve Randevularım'da görünür.</p>
+                    } @else {
+                        <p class="portal-muted" data-testid="booking-closed">Kliniğiniz şu an online randevu talebi almıyor; geçmiş talepleriniz aşağıda.</p>
+                    }
                     <ul class="portal-list" data-testid="request-list">
                         @for (r of requests(); track r.id) {
                             <li class="portal-row">
@@ -59,8 +58,27 @@
                             </li>
                         }
                     </ul>
+                } @else if (view.data()?.bookingOpen) {
+                    <portal-empty-state
+                        title="Henüz talebiniz yok"
+                        message="Uygun bir saat seçip talep gönderin; klinik onaylayınca kesin randevuya dönüşür."
+                        icon="fa-calendar-plus"
+                    >
+                        <a class="portal-action-link portal-action-link--primary" routerLink="/appointments/requests/new" data-testid="new-request">
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i> Yeni randevu talebi
+                        </a>
+                    </portal-empty-state>
                 } @else {
-                    <portal-empty-state title="Talep yok" message="Henüz online randevu talebiniz yok." icon="fa-calendar-plus" />
+                    <portal-empty-state
+                        title="Online randevu şu an kapalı"
+                        message="Kliniğiniz şu an online randevu talebi almıyor. Randevu için kliniği arayabilirsiniz."
+                        icon="fa-calendar-xmark"
+                        data-testid="booking-closed"
+                    >
+                        <a class="portal-action-link" routerLink="/clinic">
+                            <i class="fa-solid fa-phone" aria-hidden="true"></i> Klinik iletişim bilgileri
+                        </a>
+                    </portal-empty-state>
                 }
             }
         }

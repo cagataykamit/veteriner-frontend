@@ -19,7 +19,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         <p-dialog header="Muayeneyi kesinleştir" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">
             <p class="mt-0">
                 Kesinleştirdikten sonra bu muayenenin içeriği <strong>değiştirilemez</strong>; işlem geri alınamaz. Sonradan düzeltme gerekirse yalnızca gerekçeli bir <strong>ek not</strong> eklenebilir.
-                <strong data-testid="finalize-locks-linked">Kesinleştirdikten sonra tedavi, reçete, aşı ve yatış eklenemez.</strong>
+                <strong data-testid="finalize-locks-linked">Kesinleştirdikten sonra tedavi, aşı ve yatış eklenemez; reçete ve uygulama yalnız gerekçeyle eklenebilir.</strong>
             </p>
             @if (warnings().length > 0) {
                 <div class="mt-3 mb-3 p-3 rounded-border border border-amber-400" role="status" data-testid="finalize-warnings">

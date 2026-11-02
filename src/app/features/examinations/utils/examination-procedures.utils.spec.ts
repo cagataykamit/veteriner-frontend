@@ -1,5 +1,5 @@
 import type { ExaminationRelatedSummaryVm } from '@/app/entities/examination/models/examination-vm.model';
-import { buildProcedureRows, FINALIZED_IMAGING_NOTE, FINALIZED_LOCK_MESSAGE, finalizeChecklist, finalizeWarnings, procedureAddState, READ_ONLY_TENANT_MESSAGE, type ProcedureKind } from './examination-procedures.utils';
+import { buildProcedureRows, FINALIZED_IMAGING_NOTE, FINALIZED_LOCK_MESSAGE, FINALIZED_PRESCRIPTION_NOTE, finalizeChecklist, finalizeWarnings, procedureAddState, READ_ONLY_TENANT_MESSAGE, type ProcedureKind } from './examination-procedures.utils';
 
 const summary = (over: Partial<ExaminationRelatedSummaryVm> = {}): ExaminationRelatedSummaryVm => ({
     examinationId: 'e1',
@@ -27,13 +27,19 @@ describe('procedureAddState', () => {
         }
     });
 
-    it('kesinleşmiş muayenede tedavi, reçete ve aşı kilit nedeniyle kapanır', () => {
-        for (const kind of ['treatment', 'prescription', 'vaccination'] as ProcedureKind[]) {
+    it('kesinleşmiş muayenede tedavi ve aşı kilit nedeniyle kapanır', () => {
+        for (const kind of ['treatment', 'vaccination'] as ProcedureKind[]) {
             const s = procedureAddState(kind, { ...open, finalized: true });
 
             expect(s.disabled, kind).toBe(true);
             expect(s.reason, kind).toBe(FINALIZED_LOCK_MESSAGE);
         }
+    });
+
+    it('kesinleşmiş muayenede reçete açıktır; gerekçeyle sonradan eklendiği söylenir (ADR-013 eki, RECORD-008)', () => {
+        const s = procedureAddState('prescription', { ...open, finalized: true });
+
+        expect(s).toEqual({ disabled: false, reason: null, note: FINALIZED_PRESCRIPTION_NOTE });
     });
 
     it('kesinleşmiş muayenede lab açık, yatış açık ama muayeneye bağlanmaz notu taşır', () => {

@@ -359,17 +359,18 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(el.querySelector('[data-testid="related-payments"] ul + app-detail-see-all-link')).not.toBeNull();
     });
 
-    it('kesinleşmiş muayenede tedavi/reçete/aşı düğmeleri kilitli ve neden görünür; lab ve yatış açık kalır', async () => {
+    it('kesinleşmiş muayenede tedavi/aşı düğmeleri kilitli ve neden görünür; reçete (gerekçeyle), lab ve yatış açık kalır', async () => {
         const { el } = await setup(finalizedVm, ADD_CLAIMS);
 
         // Kesinleşme kalıcı: kapalı türlerin düğmesi çizilmez, neden tek not satırında.
-        for (const kind of ['treatment', 'prescription', 'vaccination']) {
+        for (const kind of ['treatment', 'vaccination']) {
             expect(addButton(el, kind), kind).toBeNull();
         }
 
+        expect(addButton(el, 'prescription')?.disabled).toBe(false);
         expect(addButton(el, 'lab')?.disabled).toBe(false);
         expect(addButton(el, 'hospitalization')?.disabled).toBe(false);
-        expect(el.querySelector('[data-testid="procedure-lock-reason"]')?.textContent).toContain('yalnız gerekçeli uygulama ve ek not eklenebilir');
+        expect(el.querySelector('[data-testid="procedure-lock-reason"]')?.textContent).toContain('reçete ve uygulama yalnız gerekçeyle');
         expect(el.querySelectorAll('[data-testid="procedures-section"] p[role="note"]').length).toBe(1);
     });
 
@@ -455,7 +456,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(el.querySelector('[data-testid="check-plan"]')).toBeNull();
         expect(el.querySelector('[data-testid="exam-identity-card"] [data-testid="finalized-info"]')?.textContent).toContain('Dr. Ayşe');
         expect(el.querySelectorAll('[data-testid="procedure-lock-reason"]').length).toBe(1);
-        expect(label(el).split('yalnız gerekçeli uygulama ve ek not eklenebilir').length - 1).toBe(1);
+        expect(label(el).split('reçete ve uygulama yalnız gerekçeyle').length - 1).toBe(1);
     });
 
     it('kesinleşmiş muayenede ücret bekliyorsa yan sütunda yalnız o madde kalır', async () => {
@@ -463,7 +464,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const panel = el.querySelector('[data-testid="finalize-checklist"]')!;
 
         expect(panel.textContent).toContain('Bekleyen iş');
-        expect(panel.textContent).not.toContain('yalnız gerekçeli uygulama');
+        expect(panel.textContent).not.toContain('reçete ve uygulama yalnız gerekçeyle');
         expect(Array.from(panel.querySelectorAll('li')).map((li) => li.getAttribute('data-testid'))).toEqual(['check-pendingCharges']);
     });
 

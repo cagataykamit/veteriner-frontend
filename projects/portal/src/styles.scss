@@ -94,6 +94,16 @@ a {
     margin: 0;
 }
 
+/* Sayfa başlığı ortada; kart içindeki başlıklar metinleriyle birlikte solda kalır. */
+.portal-stack > .portal-title,
+.portal-page-head {
+    text-align: center;
+}
+
+.portal-page-head.portal-brand {
+    justify-content: center;
+}
+
 .portal-subtitle {
     font-size: 1.0625rem;
     font-weight: 600;

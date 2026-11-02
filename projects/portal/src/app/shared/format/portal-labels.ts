@@ -113,3 +113,15 @@ export function telHref(phone: string | null | undefined): string | null {
 
     return /\d/.test(digits) ? `tel:${digits}` : null;
 }
+
+/**
+ * Kişi adı gösterimi: her kelimenin ilk harfi büyük (Türkçe kurallarıyla "i" → "İ"); geri kalan harflere dokunulmaz,
+ * böylece "McAllister" gibi bilerek karışık yazılmış adlar bozulmaz. Kayıt değişmez, yalnız gösterim.
+ */
+export function formatPersonName(name: string): string {
+    return name
+        .trim()
+        .split(/\s+/)
+        .map((word) => word.charAt(0).toLocaleUpperCase('tr-TR') + word.slice(1))
+        .join(' ');
+}

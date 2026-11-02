@@ -12,7 +12,7 @@
         }
         @default {
             @if (pet.data(); as p) {
-                <div>
+                <div class="portal-page-head">
                     <h1 class="portal-title">{{ p.name }}</h1>
                     @if (deceased()) {
                         <p class="portal-memorial" data-testid="pet-memorial">Vefat etti.</p>
