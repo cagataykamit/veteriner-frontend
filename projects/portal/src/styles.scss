@@ -100,10 +100,6 @@ a {
     text-align: center;
 }
 
-.portal-page-head.portal-brand {
-    justify-content: center;
-}
-
 .portal-subtitle {
     font-size: 1.0625rem;
     font-weight: 600;
@@ -363,12 +359,25 @@ a {
     text-align: center;
 }
 
-/* Marka başlığı, alt bilgi, alt gezinme. */
+/* Marka başlığı, alt bilgi, alt gezinme. Klinik adı ortada; "Değiştir" sağ kenarda, ad ona binmesin diye iki yanda eşit pay. */
 .portal-brand {
+    position: relative;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.75rem;
     min-height: 3.5rem;
+}
+
+.portal-brand:has(> .portal-header-action) {
+    padding-inline: 6.5rem;
+}
+
+.portal-brand > .portal-header-action {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .portal-brand-badge {
