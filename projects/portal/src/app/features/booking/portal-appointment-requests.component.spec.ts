@@ -108,10 +108,22 @@ describe('PortalAppointmentRequestsComponent (randevu taleplerim)', () => {
         expect(rows()).toHaveLength(3);
     });
 
-    it('talep yoksa boş durum', async () => {
+    it('talep yoksa boş durum yeni talep düğmesini içerir', async () => {
         api.myRequests.mockReturnValue(of([]));
         await create();
 
-        expect(el.textContent).toContain('Henüz online randevu talebiniz yok.');
+        expect(el.textContent).toContain('Henüz talebiniz yok');
+        expect(el.querySelector('portal-empty-state [data-testid=new-request]')).not.toBeNull();
+        expect(el.querySelector('[data-testid=booking-closed]')).toBeNull();
+    });
+
+    it('klinik online talep almıyorsa ve talep yoksa tek "kapalı" durumu gösterilir', async () => {
+        api.linkPage.mockReturnValue(throwError(() => problem(404, PORTAL_ERROR_CODES.onlineBookingNotFound)));
+        api.myRequests.mockReturnValue(of([]));
+        await create();
+
+        expect(el.querySelector('[data-testid=booking-closed]')?.textContent).toContain('Online randevu şu an kapalı');
+        expect(el.querySelector('[data-testid=new-request]')).toBeNull();
+        expect(el.textContent).not.toContain('Henüz talebiniz yok');
     });
 });
