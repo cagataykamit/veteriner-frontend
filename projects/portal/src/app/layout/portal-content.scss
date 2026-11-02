@@ -99,17 +99,6 @@
     color: #9a4d0b;
 }
 
-/* Geri bağlantısı. */
-.portal-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    align-self: flex-start;
-    min-height: var(--portal-touch);
-    font-weight: 500;
-    text-decoration: none;
-}
-
 /* Büyük düğme gibi davranan bağlantı (tel:, mailto:). */
 .portal-action-link {
     display: flex;
