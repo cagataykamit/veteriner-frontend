@@ -92,6 +92,10 @@ describe('PortalHomeComponent (ana ekran)', () => {
         expect(el.querySelector('[data-testid=home-balance]')!.textContent!.replace(/\s/g, '')).toContain('Kalantutar₺500,00');
         expect(el.textContent).toContain('Boncuk');
         expect(el.textContent).toContain('Vefat etti');
+
+        const seeAll = el.querySelector('[data-testid=home-pets-see-all]')!;
+
+        expect(seeAll.getAttribute('href')).toBe('/pets');
     });
 
     it('borç yoksa "Borcunuz yok"; gecikmiş aşı yoksa sıradaki aşı sakin kartta', async () => {
@@ -117,6 +121,7 @@ describe('PortalHomeComponent (ana ekran)', () => {
         await settle();
 
         expect(el.textContent).toContain('Kayıtlı hayvanınız yok');
+        expect(el.querySelector('[data-testid=home-pets-see-all]')).toBeNull();
         expect(el.querySelector('[data-testid=home-vaccine]')?.textContent).toContain('Planlanmış aşı yok');
     });
 

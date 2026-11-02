@@ -121,7 +121,12 @@
         <section class="portal-stack" aria-labelledby="home-pets-title">
             <div class="portal-section-head">
                 <h2 id="home-pets-title" class="portal-subtitle">Hayvanlarınız</h2>
-                <a routerLink="/pets">Tümü</a>
+                @if (pets.data()?.length) {
+                    <!-- Hap 36 px; 44 px dokunma alanı bağlantının kendisi. Boş listede yok. -->
+                    <a class="portal-see-all" routerLink="/pets" data-testid="home-pets-see-all">
+                        <span class="portal-see-all-pill">Tümünü gör <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
+                    </a>
+                }
             </div>
             @switch (pets.state()) {
                 @case ('loading') {
