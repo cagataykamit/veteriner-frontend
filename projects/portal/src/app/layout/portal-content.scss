@@ -17,20 +17,28 @@
     white-space: nowrap;
 }
 
-/* Bölüm başlığı: başlık + sağda bağlantı. */
-.portal-section-head {
+/* "Tümünü gör": listenin altında ortalı şerit (paneldeki ortak parçayla aynı dil). */
+.portal-see-all {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: var(--portal-touch);
+    padding: 0.5rem 1rem;
+    border-radius: var(--portal-radius);
+    background: var(--vetinity-bg-soft);
+    color: var(--portal-text);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
 }
 
-.portal-section-head a {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--portal-touch);
-    font-size: 0.9375rem;
+.portal-see-all .portal-muted {
     font-weight: 500;
+}
+
+.portal-see-all i {
+    font-size: 0.75rem;
 }
 
 /* Dokunulabilir kart (bağlantı): tüm kart tek hedef, ≥44 px. */
