@@ -119,7 +119,15 @@
         </section>
 
         <section class="portal-stack" aria-labelledby="home-pets-title">
-            <h2 id="home-pets-title" class="portal-subtitle">Hayvanlarınız</h2>
+            <div class="portal-section-head">
+                <h2 id="home-pets-title" class="portal-subtitle">Hayvanlarınız</h2>
+                @if (pets.data()?.length) {
+                    <!-- Hap 36 px; 44 px dokunma alanı bağlantının kendisi. Boş listede yok. -->
+                    <a class="portal-see-all" routerLink="/pets" data-testid="home-pets-see-all">
+                        <span class="portal-see-all-pill">Tümünü gör <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
+                    </a>
+                }
+            </div>
             @switch (pets.state()) {
                 @case ('loading') {
                     <portal-skeleton [rows]="2" message="Hayvanlarınız yükleniyor…" />
@@ -150,11 +158,6 @@
                                 </li>
                             }
                         </ul>
-                        <!-- Panelle aynı kural: liste altında, boş listede yok. -->
-                        <a class="portal-see-all" routerLink="/pets" data-testid="home-pets-see-all">
-                            <span>Tümünü gör <span class="portal-muted">({{ pets.data()!.length }})</span></span>
-                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                        </a>
                     } @else {
                         <portal-empty-state title="Kayıtlı hayvanınız yok" message="Kliniğinizde kaydı açıldığında hayvanlarınız burada görünür." />
                     }

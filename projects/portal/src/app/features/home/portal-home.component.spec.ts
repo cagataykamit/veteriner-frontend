@@ -96,7 +96,6 @@ describe('PortalHomeComponent (ana ekran)', () => {
         const seeAll = el.querySelector('[data-testid=home-pets-see-all]')!;
 
         expect(seeAll.getAttribute('href')).toBe('/pets');
-        expect(seeAll.textContent).toContain('(2)');
     });
 
     it('borç yoksa "Borcunuz yok"; gecikmiş aşı yoksa sıradaki aşı sakin kartta', async () => {
