@@ -27,17 +27,20 @@ export const PROCEDURE_ROUTE_SEGMENT: Record<ProcedureKind, string> = {
 
 /** Kesinleşmiş muayenede kilit nedeni (ADR-013); düğme ve kesinleştirme onayı aynı metni kullanır. */
 export const FINALIZED_LOCK_MESSAGE =
-    'Muayene kesinleşti: tedavi, reçete ve aşı eklenemez; yalnız gerekçeli uygulama ve ek not eklenebilir.';
+    'Muayene kesinleşti: tedavi ve aşı eklenemez; reçete ve uygulama yalnız gerekçeyle, ek not her zaman eklenebilir.';
 
 export const READ_ONLY_TENANT_MESSAGE = 'İşletme salt okunur modda; kayıt oluşturulamaz.';
+
+/** Kesinleşmiş muayeneye reçete zorunlu gerekçeyle "kesinleştirmeden sonra eklendi" olarak yazılır (ADR-013 eki, RECORD-008); gerekçe alanı formda. */
+export const FINALIZED_PRESCRIPTION_NOTE = 'Kesinleşmiş muayeneye reçete gerekçeyle, "sonradan eklendi" olarak yazılır.';
 
 export const FINALIZED_HOSPITALIZATION_NOTE = 'Kesinleşmiş muayeneye bağlanmaz; yatış muayenesiz başlatılır.';
 
 /** Kesinleşmiş muayeneye görüntüleme bağlamak yeni (ek) kayıt sayılır (ADR-013 uyumu; IMAGING_API_CONTRACT.md §1). */
 export const FINALIZED_IMAGING_NOTE = 'Kesinleşmiş muayeneye görüntüleme yeni (ek) kayıt olarak eklenir.';
 
-/** Kesinleşmiş muayeneye eklenemeyen türler. Lab sonucu serbest, yatış muayeneye bağlanmadan başlar. */
-const LOCKED_WHEN_FINALIZED: readonly ProcedureKind[] = ['treatment', 'prescription', 'vaccination'];
+/** Kesinleşmiş muayeneye eklenemeyen türler. Lab sonucu serbest, yatış muayeneye bağlanmadan başlar; reçete gerekçeyle eklenir (ADR-013 eki, RECORD-008). */
+const LOCKED_WHEN_FINALIZED: readonly ProcedureKind[] = ['treatment', 'vaccination'];
 
 export interface ProcedureAddState {
     disabled: boolean;
@@ -54,6 +57,10 @@ export function procedureAddState(kind: ProcedureKind, ctx: { finalized: boolean
 
     if (ctx.finalized && LOCKED_WHEN_FINALIZED.includes(kind)) {
         return { disabled: true, reason: FINALIZED_LOCK_MESSAGE, note: null };
+    }
+
+    if (ctx.finalized && kind === 'prescription') {
+        return { disabled: false, reason: null, note: FINALIZED_PRESCRIPTION_NOTE };
     }
 
     if (ctx.finalized && kind === 'imaging') {

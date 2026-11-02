@@ -182,6 +182,14 @@ describe('ExaminationProceduresSectionComponent', () => {
         expect(el.querySelector('[data-testid="procedure-lock-reason"]')?.textContent).toContain('Muayene kesinleşti');
     });
 
+    it('kesinleşmiş muayenede reçete açılır; gerekçe formda istenir (ADR-013 eki)', () => {
+        create({ ...exam, status: 'Finalized' } as ExaminationDetailVm);
+
+        expect(cmp.state('prescription').disabled).toBe(false);
+        expect(cmp.state('prescription').reason).toBeNull();
+        expect(cmp.state('prescription').note).toContain('gerekçeyle');
+    });
+
     it('salt okunur kurumda ekleme kapanır ve neden gösterilir', () => {
         blocked = true;
         const el = create();
