@@ -7,7 +7,7 @@ import { hasOutstanding, PortalBalance, PortalBalanceApi } from '@portal/app/fea
 import { isDeceased, PortalPet, PortalPetsApi } from '@portal/app/features/pets/portal-pets.api';
 import { portalLoad } from '@portal/app/shared/data/portal-load';
 import { formatPortalDay, formatPortalTime, formatPortalWeekday } from '@portal/app/shared/format/portal-date';
-import { appointmentTypeLabel } from '@portal/app/shared/format/portal-labels';
+import { appointmentTypeLabel, formatPersonName } from '@portal/app/shared/format/portal-labels';
 import { formatPortalMoney } from '@portal/app/shared/format/portal-money';
 import { PortalEmptyState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
 import { nextScheduledAppointment, PortalPetVaccinationsEntry, PortalVaccineSummary, summarizeVaccines } from './portal-home.summary';
@@ -38,11 +38,11 @@ export class PortalHomeComponent {
     readonly appointment = portalLoad<PortalAppointment | null>();
     readonly balance = portalLoad<PortalBalance>();
 
-    /** Görünen ad; yoksa bağdaki müşteri adı; ikisi de boşsa yalnız "Merhaba". */
+    /** Görünen ad; yoksa bağdaki müşteri adı; ikisi de boşsa yalnız "Merhaba". Ad baş harfleri büyük gösterilir. */
     readonly greeting = computed(() => {
         const name = this.session.me()?.displayName?.trim() || this.session.activeLink()?.clientFullName?.trim();
 
-        return name ? `Merhaba, ${name}` : 'Merhaba';
+        return name ? `Merhaba, ${formatPersonName(name)}` : 'Merhaba';
     });
 
     readonly clinicInitial = computed(() => (this.session.activeLink()?.clinicName ?? '').trim().charAt(0).toLocaleUpperCase('tr-TR'));

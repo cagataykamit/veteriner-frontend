@@ -1,5 +1,5 @@
 import { formatPortalCalendarDate, formatPortalClock, formatPortalDay, formatPortalTime, formatPortalWeekday } from './portal-date';
-import { appointmentStatus, paymentMethodLabel, telHref } from './portal-labels';
+import { appointmentStatus, formatPersonName, paymentMethodLabel, telHref } from './portal-labels';
 import { formatPortalMoney, formatPortalWeight } from './portal-money';
 
 describe('Portal biçimleri (tarih, para, etiket)', () => {
@@ -40,5 +40,11 @@ describe('Portal biçimleri (tarih, para, etiket)', () => {
         expect(telHref('+90 (312) 555-00-00')).toBe('tel:+903125550000');
         expect(telHref(null)).toBeNull();
         expect(telHref('—')).toBeNull();
+    });
+
+    it('kişi adının her kelimesini Türkçe kuralla büyük harfle başlatır, kalanına dokunmaz', () => {
+        expect(formatPersonName('mehmet çağatay kamit')).toBe('Mehmet Çağatay Kamit');
+        expect(formatPersonName('  ilker   ışık ')).toBe('İlker Işık');
+        expect(formatPersonName('ayşe McAllister')).toBe('Ayşe McAllister');
     });
 });
