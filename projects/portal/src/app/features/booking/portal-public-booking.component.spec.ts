@@ -106,6 +106,19 @@ describe('PortalPublicBookingComponent (kliniğe özel bağlantı)', () => {
         expect(summaries()[2]).toBe('Pamuk · Ayşe Yılmaz');
     });
 
+    it('geçersiz cep telefonu alanın altında söylenir, bilgiler adımı tamamlanmaz', async () => {
+        await create();
+        await chooseReasonAndSlot();
+        typeInto(el, '#booking-name', 'Ayşe Yılmaz');
+        typeInto(el, '#booking-phone', '0212 123 45 67');
+        typeInto(el, '#booking-pet-name', 'Pamuk');
+        el.querySelector('#booking-phone')!.dispatchEvent(new Event('blur'));
+        await settle();
+
+        expect(el.querySelector('#booking-phone + .portal-field-error')?.textContent).toContain('Geçerli bir cep telefonu girin');
+        expect(summaries()).not.toContain('Pamuk · Ayşe Yılmaz');
+    });
+
     it('404 kapalı bağlantı mesajı; kod yoksa istek atılmaz', async () => {
         api.publicPage.mockReturnValue(throwError(() => problem(404, PORTAL_ERROR_CODES.onlineBookingNotFound)));
         await create();

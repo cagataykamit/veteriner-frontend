@@ -1,5 +1,5 @@
 import { FormControl } from '@angular/forms';
-import { normalizeOneTimeCode, portalFieldError, portalOneTimeCodeValidator, portalStrongPasswordValidator } from './portal-form-rules';
+import { normalizeOneTimeCode, portalFieldError, portalOneTimeCodeValidator, portalStrongPasswordValidator, portalTurkishMobileValidator } from './portal-form-rules';
 
 describe('portal form kuralları', () => {
     const password = (value: string) => portalStrongPasswordValidator()(new FormControl(value));
@@ -21,6 +21,19 @@ describe('portal form kuralları', () => {
         expect(code('12345')).toEqual({ oneTimeCode: true });
         expect(code('12a456')).toEqual({ oneTimeCode: true });
         expect(normalizeOneTimeCode(' 123 456 ')).toBe('123456');
+    });
+
+    it('cep telefonu kuralı backend TurkishMobilePhone ile aynı; boş geçer', () => {
+        const phone = (value: string) => portalTurkishMobileValidator()(new FormControl(value));
+
+        expect(phone('')).toBeNull();
+        expect(phone('5321234567')).toBeNull();
+        expect(phone('0532 123 45 67')).toBeNull();
+        expect(phone('+90 (532) 123-45-67')).toBeNull();
+        expect(phone('dcfvgbhnmö')).toEqual({ phone: true });
+        expect(phone('0532abc1234567')).toEqual({ phone: true });
+        expect(phone('0212 123 45 67')).toEqual({ phone: true });
+        expect(phone('053212345')).toEqual({ phone: true });
     });
 
     it('alan hataları Türkçe mesaja çevrilir', () => {

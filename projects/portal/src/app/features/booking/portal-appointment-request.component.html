@@ -109,7 +109,10 @@
 
                                 <div class="portal-field">
                                     <label for="request-phone">Telefon <span class="portal-field-hint">(isteğe bağlı)</span></label>
-                                    <input pInputText id="request-phone" type="text" inputmode="tel" formControlName="phone" autocomplete="tel" [attr.maxlength]="limits.phone" />
+                                    <input pInputText id="request-phone" type="text" inputmode="tel" formControlName="phone" autocomplete="tel" placeholder="05XX XXX XX XX" [attr.maxlength]="limits.phone" [attr.aria-invalid]="!!fieldError('phone')" />
+                                    @if (fieldError('phone'); as message) {
+                                        <p class="portal-field-error">{{ message }}</p>
+                                    }
                                     <p class="portal-field-hint">Boş bırakırsanız klinikteki kayıtlı telefonunuz kullanılır.</p>
                                 </div>
 
