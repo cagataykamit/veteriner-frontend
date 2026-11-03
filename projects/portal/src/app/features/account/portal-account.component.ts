@@ -48,12 +48,12 @@ import { PortalNotificationPreferencesComponent } from '@portal/app/features/not
                 @if (confirmAll()) {
                     <p role="alert">Bu hesabın açık olduğu tüm cihazlardan çıkış yapılacak. Emin misiniz?</p>
                     <div class="portal-actions">
-                        <button pButton type="button" severity="danger" [disabled]="busy()" (click)="logoutAll()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Evet, tüm cihazlardan çıkış yap</button>
+                        <button pButton type="button" severity="danger" [disabled]="busy()" (click)="logoutAll()">@if (busy()) {<i class="p-button-icon fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>}Evet, tüm cihazlardan çıkış yap</button>
                         <button pButton type="button" severity="secondary" [outlined]="true" (click)="confirmAll.set(false)">Vazgeç</button>
                     </div>
                 } @else {
                     <div class="portal-actions">
-                        <button pButton type="button" severity="secondary" [disabled]="busy()" (click)="logout()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Çıkış yap</button>
+                        <button pButton type="button" severity="secondary" [disabled]="busy()" (click)="logout()">@if (busy()) {<i class="p-button-icon fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>}Çıkış yap</button>
                         <button pButton type="button" severity="danger" [outlined]="true" (click)="confirmAll.set(true)">Tüm cihazlardan çıkış yap</button>
                     </div>
                 }

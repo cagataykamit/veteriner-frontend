@@ -92,10 +92,10 @@
 
             <div class="portal-actions">
                 @if (method() === 'password') {
-                    <button pButton type="submit" [disabled]="busy()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Giriş yap</button>
+                    <button pButton type="submit" [disabled]="busy()">@if (busy()) {<i class="p-button-icon fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>}Giriş yap</button>
                     <a class="portal-link-button" routerLink="/password-reset">Parolamı unuttum</a>
                 } @else if (codeSent()) {
-                    <button pButton type="submit" [disabled]="busy()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Doğrula ve giriş yap</button>
+                    <button pButton type="submit" [disabled]="busy()">@if (busy()) {<i class="p-button-icon fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>}Doğrula ve giriş yap</button>
                     <button type="button" class="portal-link-button" [disabled]="!resend.canSend() || busy()" (click)="requestCode()">
                         @if (resend.canSend()) {
                             Kodu tekrar gönder
@@ -105,7 +105,7 @@
                     </button>
                     <button type="button" class="portal-link-button" (click)="changeEmail()">E-postayı değiştir</button>
                 } @else {
-                    <button pButton type="submit" [disabled]="busy()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Kod gönder</button>
+                    <button pButton type="submit" [disabled]="busy()">@if (busy()) {<i class="p-button-icon fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>}Kod gönder</button>
                 }
             </div>
         </form>
