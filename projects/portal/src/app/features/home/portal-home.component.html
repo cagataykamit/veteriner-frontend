@@ -5,7 +5,7 @@
         <a class="portal-tile" routerLink="/clinic" data-testid="home-clinic">
             <span class="portal-brand-badge" aria-hidden="true">{{ clinicInitial() }}</span>
             <span class="portal-tile-body">
-                <span class="portal-tile-label">Kliniğiniz</span>
+                <span class="portal-tile-label">Kliniğim</span>
                 <span class="portal-tile-value">{{ link.clinicName }}</span>
             </span>
             <span class="portal-muted">Bilgiler</span>
@@ -120,7 +120,7 @@
 
         <section class="portal-stack" aria-labelledby="home-pets-title">
             <div class="portal-section-head">
-                <h2 id="home-pets-title" class="portal-subtitle">Hayvanlarınız</h2>
+                <h2 id="home-pets-title" class="portal-subtitle">Hayvanlarım</h2>
                 @if (pets.data()?.length) {
                     <!-- Hap 36 px; 44 px dokunma alanı bağlantının kendisi. Boş listede yok. -->
                     <a class="portal-see-all" routerLink="/pets" data-testid="home-pets-see-all">
@@ -141,7 +141,7 @@
                 }
                 @default {
                     @if (pets.data()?.length) {
-                        <ul class="portal-list" aria-label="Hayvanlarınız">
+                        <ul class="portal-list" aria-label="Hayvanlarım">
                             @for (pet of pets.data(); track pet.petId) {
                                 <li>
                                     <a class="portal-tile" [routerLink]="['/pets', pet.petId]">
