@@ -54,6 +54,14 @@ describe('PortalLegalPageComponent (sürüm gösterimi)', () => {
         expect(el.querySelector('.portal-legal-text a')?.getAttribute('href')).toBe('/legal/privacy');
     });
 
+    it('ayrı "Geri" düğmesi yok; marka adı ana sayfaya götürür', async () => {
+        legal.documents.mockReturnValue(of([]));
+        await open('PortalPrivacy');
+
+        expect(el.querySelector('button')).toBeNull();
+        expect(el.querySelector('[data-testid=brand-home]')?.getAttribute('href')).toBe('/');
+    });
+
     it('sürüm alınamazsa metin yine görünür, sürüm uydurulmaz', async () => {
         legal.documents.mockReturnValue(throwError(() => new Error('ağ')));
         await open('PortalTerms');

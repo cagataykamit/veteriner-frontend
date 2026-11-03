@@ -4,21 +4,25 @@ import { PORTAL_PRIVACY_PATH, PORTAL_TERMS_PATH } from '@portal/app/features/leg
 
 /**
  * Marka başlığı (ADR-031 AK-10): klinik biliniyorsa klinik adı ve harf rozeti, bilinmiyorsa Vetinity.
- * Klinik logosu sözleşmede henüz yok; rozet yer tutucudur.
+ * Klinik logosu sözleşmede henüz yok; rozet yer tutucudur. Ad ana sayfaya götürür; sayfalarda ayrıca "Geri" yoktur
+ * (oturum yoksa ana sayfa girişe yönlendirir).
  */
 @Component({
     selector: 'portal-brand-header',
     standalone: true,
+    imports: [RouterLink],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <header class="portal-brand">
-            @if (clinicName(); as name) {
-                <span class="portal-brand-badge" aria-hidden="true">{{ initial() }}</span>
-                <span class="portal-brand-name">{{ name }}</span>
-            } @else {
-                <img class="portal-brand-logo" src="icons/icon-192.png" alt="" width="40" height="40" />
-                <span class="portal-brand-name">Vetinity</span>
-            }
+            <a class="portal-brand-home" routerLink="/" aria-label="Ana sayfa" data-testid="brand-home">
+                @if (clinicName(); as name) {
+                    <span class="portal-brand-badge" aria-hidden="true">{{ initial() }}</span>
+                    <span class="portal-brand-name">{{ name }}</span>
+                } @else {
+                    <img class="portal-brand-logo" src="icons/icon-192.png" alt="" width="40" height="40" />
+                    <span class="portal-brand-name">Vetinity</span>
+                }
+            </a>
             <ng-content />
         </header>
     `
