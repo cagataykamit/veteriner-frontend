@@ -22,6 +22,7 @@ const TONE_MUTED = 'text-muted-color border-surface-300 dark:border-surface-700'
  * Bugün üstü "Açık işler" şeridi: klinik geneli, tarih ve hekim süzgecinden bağımsız özet.
  * Yalnızca sıfırdan büyük sayılar görünür (ücret yok ve lab öne); `null` alan (yetki yok) hiç gösterilmez.
  * Ücretsiz ziyaret ve tamamlanmamış geliş için liste sayfası yoktur: bağlantısız metin.
+ * Satır başına dışarıdan bir çip yansıtılabilir (bekleyen online talepler); özet henüz yoksa (`null`) satır yalnız o çiple çizilir.
  */
 @Component({
     selector: 'app-today-open-items',
@@ -31,6 +32,7 @@ const TONE_MUTED = 'text-muted-color border-surface-300 dark:border-surface-700'
     template: `
         <section class="flex flex-wrap items-center gap-2 mb-4" aria-label="Açık işler" data-testid="open-items-strip">
             <span class="text-sm font-medium">Açık işler</span>
+            <ng-content />
             @for (e of entries(); track e.key) {
                 @if (e.link; as link) {
                     <a [routerLink]="link" [queryParams]="e.queryParams ?? null" [attr.title]="e.title" class="inline-flex items-center gap-1 rounded-border border px-2 py-0.5 text-sm no-underline max-sm:min-h-(--touch-target)" [class]="e.tone">
@@ -40,17 +42,25 @@ const TONE_MUTED = 'text-muted-color border-surface-300 dark:border-surface-700'
                     <span [attr.title]="e.title" class="inline-flex items-center gap-1 rounded-border border px-2 py-0.5 text-sm" [class]="e.tone"> <i [class]="e.icon" aria-hidden="true"></i>{{ e.text }} </span>
                 }
             } @empty {
-                <span class="inline-flex items-center gap-1 text-sm text-muted-color"><i class="pi pi-check" aria-hidden="true"></i>Açık iş yok</span>
+                @if (!hasLeadingItem()) {
+                    <span class="inline-flex items-center gap-1 text-sm text-muted-color"><i class="pi pi-check" aria-hidden="true"></i>Açık iş yok</span>
+                }
             }
         </section>
     `
 })
 export class TodayOpenItemsComponent {
-    readonly summary = input.required<TodayOpenItemsVm>();
+    readonly summary = input<TodayOpenItemsVm | null>(null);
+    /** Satır başına çip yansıtılıyor: "Açık iş yok" yazılmaz. */
+    readonly hasLeadingItem = input(false);
 
     readonly entries = computed<OpenItemEntry[]>(() => {
         const s = this.summary();
         const out: OpenItemEntry[] = [];
+
+        if (!s) {
+            return out;
+        }
 
         if ((s.unchargedVisitCount ?? 0) > 0) {
             out.push({
