@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -121,10 +121,10 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                                     }
                                 </div>
                             </div>
-                            <form class="mt-6" (ngSubmit)="saveDisplayName()">
+                            <form class="mt-6" [formGroup]="displayNameForm" (ngSubmit)="saveDisplayName()">
                                 <label for="displayName" class="block text-sm font-medium text-muted-color mb-2">Görünen ad</label>
                                 <div class="flex flex-col gap-2 sm:flex-row">
-                                    <input id="displayName" pInputText class="w-full" [formControl]="displayNameControl" [maxlength]="displayNameMax" autocomplete="name" />
+                                    <input id="displayName" pInputText class="w-full" formControlName="displayName" [maxlength]="displayNameMax" autocomplete="name" />
                                     <button pButton type="submit" class="max-sm:self-start" [disabled]="displayNameSaving() || displayNameControl.pristine"><i class="p-button-icon" [class]="displayNameSaving() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
                                 </div>
                                 <small class="text-muted-color block mt-1"> Hasta kabulünde sorumlu hekim olarak bu ad gösterilir. Boş bırakırsanız e-postanızdan türetilen ad kullanılır. </small>
@@ -156,6 +156,8 @@ export class AccountSummaryPageComponent implements OnInit {
         nonNullable: true,
         validators: Validators.maxLength(ACCOUNT_DISPLAY_NAME_MAX_LENGTH)
     });
+    /** `<form>` bu grupla bağlanır; bağlanmazsa `ngSubmit` çalışmaz ve tarayıcı formu gönderip sayfayı yeniler. */
+    readonly displayNameForm = new FormGroup({ displayName: this.displayNameControl });
     readonly displayNameSaving = signal(false);
     readonly displayNameError = signal<string | null>(null);
 

@@ -52,6 +52,22 @@ describe('AccountSummaryPageComponent (görünen ad)', () => {
         expect(vi.mocked(toasts).mock.lastCall![0]).toEqual(expect.objectContaining({ severity: 'success' }));
     });
 
+    it('ekrandaki formdan yazılıp Kaydet\'e basılınca PUT gider (form gönderimi sayfayı yenilemez)', () => {
+        const el = fixture.nativeElement as HTMLElement;
+        const input = el.querySelector<HTMLInputElement>('#displayName')!;
+
+        input.value = 'Çağatay';
+        input.dispatchEvent(new Event('input'));
+        fixture.detectChanges();
+        const submit = new Event('submit', { cancelable: true });
+
+        el.querySelector('form')!.dispatchEvent(submit);
+
+        expect(submit.defaultPrevented).toBe(true);
+        http.expectOne('http://api.test/api/v1/me/display-name').flush(null, { status: 204, statusText: 'No Content' });
+        expect(cmp.summary()?.displayName).toBe('Çağatay');
+    });
+
     it('boş değer adı temizler (displayName: null)', () => {
         cmp.displayNameControl.setValue('   ');
         cmp.saveDisplayName();
