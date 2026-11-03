@@ -122,7 +122,7 @@ export class ClinicWorkingHoursSectionComponent {
     }
 
     canSaveWorkingHours(): boolean {
-        return this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) && !this.ro.mutationBlocked() && !this.whSaving() && this.whForm.valid && this.whDays.length > 0 && !this.whLoading() && this.whError() === null;
+        return this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) && !this.ro.mutationBlocked() && !this.whSaving() && this.whForm.valid && this.whForm.dirty && this.whDays.length > 0 && !this.whLoading() && this.whError() === null;
     }
 
     retryWorkingHoursLoad(): void {
@@ -277,5 +277,7 @@ export class ClinicWorkingHoursSectionComponent {
         }
 
         this.applyWhFormGlobalLock();
+        // Kayıtlı hâl: kaydet düğmesi bir sonraki değişikliğe kadar kapalı kalır.
+        this.whForm.markAsPristine();
     }
 }

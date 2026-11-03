@@ -156,12 +156,15 @@ export class KvkkFormTemplatePageComponent implements OnInit {
     readonly textValue = toSignal(this.text.valueChanges, { initialValue: '' });
     readonly length = computed(() => this.textValue().length);
 
-    /** Doğrulama sunucuyla aynı: kırpılmış metin boş olamaz, uzunluk sınırı aşılamaz. */
+    /**
+     * Doğrulama sunucuyla aynı: kırpılmış metin boş olamaz, uzunluk sınırı aşılamaz. Kayıtlı metin değişmeden yeniden
+     * kaydedilmez; varsayılan metin ise onaylanıp olduğu gibi kaydedilebilir.
+     */
     readonly canSave = computed(() => {
         const t = this.template();
         const v = this.textValue();
 
-        return !!t && !this.ro.mutationBlocked() && !this.saving() && !this.stale() && !!v.trim() && v.length <= t.maxLength;
+        return !!t && !this.ro.mutationBlocked() && !this.saving() && !this.stale() && !!v.trim() && v.length <= t.maxLength && (t.isDefault || v !== t.text);
     });
 
     private readonly lockEffect = effect(() => {

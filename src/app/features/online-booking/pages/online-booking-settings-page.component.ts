@@ -172,7 +172,7 @@ const CLINIC_DETAIL_ROUTE = '/panel/settings/clinics';
                         <small class="text-muted-color">Sahibe yalnız müsait saatler gösterilir; bekleyen talepler saati doldurmaz, çakışma onayda denetlenir.</small>
                         @if (canWrite()) {
                             <div class="flex justify-end">
-                                <button pButton type="submit" [disabled]="settingsForm.invalid || saving()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                                <button pButton type="submit" [disabled]="settingsForm.invalid || settingsUnchanged() || saving()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                             </div>
                         }
                     </form>
@@ -228,7 +228,7 @@ const CLINIC_DETAIL_ROUTE = '/panel/settings/clinics';
                             <button pButton type="button" severity="secondary" [disabled]="templateForm.invalid || templateBusy()" (click)="previewTemplate()"><i class="pi pi-eye"></i>Önizle</button>
                             @if (canWrite()) {
                                 <button pButton type="button" severity="secondary" [outlined]="true" [disabled]="templateBusy() || currentTemplate()?.isDefault" (click)="resetTemplate()">Varsayılana dön</button>
-                                <button pButton type="submit" [disabled]="templateForm.invalid || templateBusy()"><i class="pi pi-check"></i>{{ copy.buttonSave }}</button>
+                                <button pButton type="submit" [disabled]="templateForm.invalid || templateForm.pristine || templateBusy()"><i class="pi pi-check"></i>{{ copy.buttonSave }}</button>
                             }
                         </div>
                     </form>
@@ -390,6 +390,11 @@ export class OnlineBookingSettingsPageComponent implements OnInit {
         });
     }
 
+    /** Kayıtlı ayarla aynı form yeniden kaydedilmez; bağlantı ilk kayıtta oluştuğundan bağlantı yokken değişiklik olmadan da kaydedilebilir. */
+    settingsUnchanged(): boolean {
+        return this.settingsForm.pristine && !!this.settings()?.bookingUrl;
+    }
+
     saveSettings(): void {
         if (!this.canWrite() || this.settingsForm.invalid || this.saving()) {
             return;
@@ -454,6 +459,7 @@ export class OnlineBookingSettingsPageComponent implements OnInit {
 
         this.runTemplate(this.service.saveEmailTemplate(this.clinicId(), this.selectedKind(), this.templateForm.getRawValue()), (t) => {
             this.replaceTemplate(t);
+            this.templateForm.markAsPristine();
             this.templateMessageSeverity.set('success');
             this.templateMessage.set('Şablon kaydedildi.');
         });

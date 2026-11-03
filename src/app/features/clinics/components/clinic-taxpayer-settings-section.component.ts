@@ -89,7 +89,7 @@ import { TAX_IDENTITY_MSG_TAXPAYER, TAX_RATE_MSG_INVALID, taxpayerIdentityValida
                 </div>
 
                 <div class="mt-4 flex justify-end">
-                    <button pButton type="button" severity="secondary" [disabled]="form.invalid || saving() || ro.mutationBlocked()" (click)="save()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Mükellef bilgilerini kaydet</button>
+                    <button pButton type="button" severity="secondary" [disabled]="form.invalid || form.pristine || saving() || ro.mutationBlocked()" (click)="save()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Mükellef bilgilerini kaydet</button>
                 </div>
             }
         </div>

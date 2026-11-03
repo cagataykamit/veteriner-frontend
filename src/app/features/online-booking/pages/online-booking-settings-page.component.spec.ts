@@ -187,4 +187,62 @@ describe('OnlineBookingSettingsPageComponent', () => {
         expect(service['saveEmailTemplate']).toHaveBeenCalledWith('k1', AppointmentRequestEmailKind.Received, { subject: 'Yeni', body: 'Metin' });
         expect(cmp.currentTemplate()?.isDefault).toBe(false);
     });
+
+    describe('kaydet düğmeleri', () => {
+        const el = () => fixture.nativeElement as HTMLElement;
+        const saveIn = (formSelector: string) => el().querySelector(`${formSelector} button[type="submit"]`) as HTMLButtonElement;
+        const settingsSave = () => saveIn('section[aria-labelledby="onlineSettingsTitle"] form');
+        const templateSave = () => saveIn('section[aria-labelledby="onlineTemplatesTitle"] form');
+
+        const type = (selector: string, value: string) => {
+            const input = el().querySelector(selector) as HTMLInputElement;
+
+            input.value = value;
+            input.dispatchEvent(new Event('input'));
+            fixture.detectChanges();
+        };
+
+        it('ayar: bağlantı yokken ilk kayıt yapılabilir; kayıttan sonra değişiklik yokken kapalı, değişince açılır', async () => {
+            await create();
+
+            expect(settingsSave().disabled).toBe(false);
+            settingsSave().click();
+            fixture.detectChanges();
+
+            expect(service['saveSettings']).toHaveBeenCalledTimes(1);
+            expect(settingsSave().disabled).toBe(true);
+
+            type('#onlineMaxDays', '14');
+            expect(settingsSave().disabled).toBe(false);
+        });
+
+        it('ayar: kayıtlı bağlantı varken değişiklik yokken kapalı; kayıttan sonra yeniden kapanır', async () => {
+            service['getSettings'].mockReturnValue(of(settings({ isEnabled: true, bookingCode: 'abcdefghjkmn', bookingUrl: 'https://portal.test/randevu/abcdefghjkmn' })));
+            await create();
+
+            expect(settingsSave().disabled).toBe(true);
+            type('#onlineMaxDays', '14');
+            expect(settingsSave().disabled).toBe(false);
+
+            settingsSave().click();
+            fixture.detectChanges();
+
+            expect(service['saveSettings']).toHaveBeenCalledWith('k1', expect.objectContaining({ maxAdvanceDays: 14 }));
+            expect(settingsSave().disabled).toBe(true);
+        });
+
+        it('şablon: değişiklik yokken kapalı; kayıttan sonra yeniden kapanır', async () => {
+            await create();
+
+            expect(templateSave().disabled).toBe(true);
+            type('#templateSubject', 'Yeni');
+            expect(templateSave().disabled).toBe(false);
+
+            templateSave().click();
+            fixture.detectChanges();
+
+            expect(service['saveEmailTemplate']).toHaveBeenCalledWith('k1', AppointmentRequestEmailKind.Received, { subject: 'Yeni', body: 'Merhaba {{ownerName}}' });
+            expect(templateSave().disabled).toBe(true);
+        });
+    });
 });

@@ -83,4 +83,26 @@ describe('ClinicTaxpayerSettingsSectionComponent', () => {
             withholdingRate: 20
         });
     });
+
+    it('kaydet değişiklik yokken kapalı; kayıttan sonra yeniden kapanır', () => {
+        const fixture = render();
+        const el = fixture.nativeElement as HTMLElement;
+        const saveButton = () => Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Mükellef bilgilerini kaydet')) as HTMLButtonElement;
+
+        expect(saveButton().disabled).toBe(true);
+
+        const office = el.querySelector('#taxOffice') as HTMLInputElement;
+
+        office.value = 'Kadıköy';
+        office.dispatchEvent(new Event('input'));
+        fixture.detectChanges();
+        expect(saveButton().disabled).toBe(false);
+
+        service.update.mockReturnValue(of({ ...defaults, isConfigured: true, taxOffice: 'Kadıköy' }));
+        saveButton().click();
+        fixture.detectChanges();
+
+        expect(service.update).toHaveBeenCalledWith('k1', expect.objectContaining({ taxOffice: 'Kadıköy' }));
+        expect(saveButton().disabled).toBe(true);
+    });
 });
