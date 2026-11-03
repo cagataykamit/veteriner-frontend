@@ -55,6 +55,34 @@ export function normalizeOneTimeCode(value: string): string {
 
 export const portalEmailValidators: ValidatorFn[] = [Validators.required, Validators.email, Validators.maxLength(PORTAL_EMAIL_MAX_LENGTH)];
 
+/** `Validators.required` gibi, ama yalnız boşluk da boş sayılır (sunucu metni kırpıp boşsa reddeder). */
+export const portalRequiredText: ValidatorFn = (control: AbstractControl): ValidationErrors | null =>
+    typeof control.value === 'string' && control.value.trim() !== '' ? null : { required: true };
+
+/** Rakam ve telefonda olağan ayraçlar (boşluk, +, -, ., parantez) dışında karakter: harf yazılmış. */
+const PHONE_CHARS = /^[\d\s+\-.()]*$/;
+
+export const PORTAL_PHONE_INVALID_MESSAGE = 'Geçerli bir cep telefonu girin (ör. 05XX XXX XX XX).';
+
+/**
+ * Türkiye cep telefonu; backend `TurkishMobilePhone` ile aynı: rakamlar 5XXXXXXXXX, 05XXXXXXXXX ya da 905XXXXXXXXX.
+ * Boş değer geçer (zorunluluk ayrı `required` ile); sunucu yine doğrular.
+ */
+export function portalTurkishMobileValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+        const value = typeof control.value === 'string' ? control.value.trim() : '';
+
+        if (value === '') {
+            return null;
+        }
+
+        const digits = value.replace(/\D/g, '');
+        const valid = PHONE_CHARS.test(value) && /^(5\d{9}|05\d{9}|905\d{9})$/.test(digits);
+
+        return valid ? null : { phone: true };
+    };
+}
+
 /** Grup doğrulayıcı: iki parola alanı aynı olmalı. */
 export function portalPasswordsMatch(passwordKey: string, confirmKey: string): ValidatorFn {
     return (group: AbstractControl): ValidationErrors | null => {

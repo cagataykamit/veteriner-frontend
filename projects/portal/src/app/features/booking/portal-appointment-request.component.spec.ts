@@ -102,6 +102,27 @@ describe('PortalAppointmentRequestComponent (oturumlu talep)', () => {
         expect(done.querySelector('a.portal-action-link')?.getAttribute('href')).toBe('/appointments/requests');
     });
 
+    it('geçersiz telefon alanın altında söylenir ve gönderilmez; düzeltilince gider', async () => {
+        await create();
+        await chooseReasonAndSlot();
+        pick(PET_PAMUK.name);
+        typeInto(el, '#request-phone', 'dcfvgbhnmö');
+        await settle();
+        buttonByText(el, 'Talebi gönder')!.click();
+        await settle();
+
+        expect(api.createLinkRequest).not.toHaveBeenCalled();
+        expect(el.querySelector('#request-phone')!.getAttribute('aria-invalid')).toBe('true');
+        expect(el.querySelector('#request-phone + .portal-field-error')?.textContent).toContain('Geçerli bir cep telefonu girin');
+
+        typeInto(el, '#request-phone', '0532 123 45 67');
+        await settle();
+        buttonByText(el, 'Talebi gönder')!.click();
+        await settle();
+
+        expect(api.createLinkRequest).toHaveBeenCalledWith('link-1', expect.objectContaining({ phone: '0532 123 45 67' }));
+    });
+
     it('"Diğer" seçilince müsaitlik nedensiz istenir; not yazılmadan gönderilmez, yazılınca reasonId boş gider (ADR-042 eki)', async () => {
         await create();
         el.querySelector<HTMLInputElement>('input[name=request-reason][value=other]')!.click();

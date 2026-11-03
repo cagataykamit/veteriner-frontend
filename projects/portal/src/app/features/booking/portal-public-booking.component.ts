@@ -10,7 +10,15 @@ import { PortalResendTimer } from '@portal/app/features/auth/portal-resend-timer
 import { PortalBrandHeader, PortalFooter } from '@portal/app/layout/portal-brand.component';
 import { formatPortalDay, formatPortalTime, formatPortalWeekday } from '@portal/app/shared/format/portal-date';
 import { PortalErrorState, PortalLoadingState } from '@portal/app/shared/ui/portal-states.component';
-import { normalizeOneTimeCode, portalEmailValidators, portalFieldError, portalOneTimeCodeValidator } from '@portal/app/shared/validation/portal-form-rules';
+import {
+    normalizeOneTimeCode,
+    PORTAL_PHONE_INVALID_MESSAGE,
+    portalEmailValidators,
+    portalFieldError,
+    portalOneTimeCodeValidator,
+    portalRequiredText,
+    portalTurkishMobileValidator
+} from '@portal/app/shared/validation/portal-form-rules';
 import { PortalBookingApi, PortalBookingDay, PortalBookingPage, PortalBookingReason } from './portal-booking.api';
 import { PortalBookingReasonStep } from './portal-booking-reason-step.component';
 import { bookingNoteValidators, NOTE_REQUIRED_MESSAGE, PORTAL_BOOKING_LIMITS, pendingLimitMessage, reasonKey } from './portal-booking.rules';
@@ -82,10 +90,10 @@ export class PortalPublicBookingComponent implements OnInit {
     });
 
     readonly form = new FormGroup({
-        contactName: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(PORTAL_BOOKING_LIMITS.contactName)] }),
-        phone: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(PORTAL_BOOKING_LIMITS.phone)] }),
+        contactName: new FormControl('', { nonNullable: true, validators: [portalRequiredText, Validators.maxLength(PORTAL_BOOKING_LIMITS.contactName)] }),
+        phone: new FormControl('', { nonNullable: true, validators: [Validators.required, portalTurkishMobileValidator(), Validators.maxLength(PORTAL_BOOKING_LIMITS.phone)] }),
         email: new FormControl('', { nonNullable: true, validators: portalEmailValidators }),
-        petName: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(PORTAL_BOOKING_LIMITS.petName)] }),
+        petName: new FormControl('', { nonNullable: true, validators: [portalRequiredText, Validators.maxLength(PORTAL_BOOKING_LIMITS.petName)] }),
         petSpecies: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(PORTAL_BOOKING_LIMITS.petSpecies)] }),
         petBreed: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(PORTAL_BOOKING_LIMITS.petBreed)] }),
         note: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(PORTAL_BOOKING_LIMITS.note)] }),
@@ -271,6 +279,10 @@ export class PortalPublicBookingComponent implements OnInit {
 
         if (control.errors?.['required']) {
             return { contactName: 'Adınızı ve soyadınızı girin.', phone: 'Telefon numaranızı girin.', petName: 'Hayvanınızın adını girin.' }[name];
+        }
+
+        if (control.errors?.['phone']) {
+            return PORTAL_PHONE_INVALID_MESSAGE;
         }
 
         return control.errors?.['maxlength'] ? 'Bu alan çok uzun.' : null;

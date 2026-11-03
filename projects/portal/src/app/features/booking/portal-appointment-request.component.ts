@@ -10,6 +10,7 @@ import { PortalSessionService } from '@portal/app/core/auth/portal-session.servi
 import { PORTAL_ERROR_CODES, portalErrorMessage, portalProblemCode } from '@portal/app/core/errors/portal-errors';
 import { isDeceased, PortalPet, PortalPetsApi } from '@portal/app/features/pets/portal-pets.api';
 import { formatPortalDay, formatPortalTime, formatPortalWeekday } from '@portal/app/shared/format/portal-date';
+import { PORTAL_PHONE_INVALID_MESSAGE, portalRequiredText, portalTurkishMobileValidator } from '@portal/app/shared/validation/portal-form-rules';
 import { PortalEmptyState, PortalErrorState, PortalLoadingState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
 import { PortalBookingApi, PortalBookingDay, PortalBookingPage, PortalBookingReason } from './portal-booking.api';
 import { PortalBookingReasonStep } from './portal-booking-reason-step.component';
@@ -87,7 +88,7 @@ export class PortalAppointmentRequestComponent {
         petName: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(PORTAL_BOOKING_LIMITS.petName)] }),
         petSpecies: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(PORTAL_BOOKING_LIMITS.petSpecies)] }),
         petBreed: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(PORTAL_BOOKING_LIMITS.petBreed)] }),
-        phone: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(PORTAL_BOOKING_LIMITS.phone)] }),
+        phone: new FormControl('', { nonNullable: true, validators: [portalTurkishMobileValidator(), Validators.maxLength(PORTAL_BOOKING_LIMITS.phone)] }),
         note: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(PORTAL_BOOKING_LIMITS.note)] })
     });
 
@@ -98,7 +99,7 @@ export class PortalAppointmentRequestComponent {
             const isNew = value === NEW_PET_OPTION;
 
             this.isNewPet.set(isNew);
-            this.form.controls.petName.setValidators(isNew ? [Validators.required, Validators.maxLength(PORTAL_BOOKING_LIMITS.petName)] : [Validators.maxLength(PORTAL_BOOKING_LIMITS.petName)]);
+            this.form.controls.petName.setValidators(isNew ? [portalRequiredText, Validators.maxLength(PORTAL_BOOKING_LIMITS.petName)] : [Validators.maxLength(PORTAL_BOOKING_LIMITS.petName)]);
             this.form.controls.petName.updateValueAndValidity();
         });
 
@@ -245,11 +246,15 @@ export class PortalAppointmentRequestComponent {
         return this.activePets().find((p) => p.petId === v.pet)?.name ?? null;
     }
 
-    fieldError(name: 'pet' | 'petName'): string | null {
+    fieldError(name: 'pet' | 'petName' | 'phone'): string | null {
         const control = this.form.controls[name];
 
         if (!this.submitted() && !control.touched) {
             return null;
+        }
+
+        if (control.errors?.['phone']) {
+            return PORTAL_PHONE_INVALID_MESSAGE;
         }
 
         if (control.errors?.['required']) {
