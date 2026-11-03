@@ -127,7 +127,10 @@ describe('OnlineBookingSettingsPageComponent', () => {
         expect(preview).toContain('Aşı');
         expect(preview).toContain('Kontrol');
         expect(preview).not.toContain('Cerrahi');
-        expect(preview.trim().endsWith('Ne için geldiğinizi aşağıya yazın')).toBe(true);
+        const items = el.querySelectorAll('[data-testid="online-preview-reasons"] li');
+
+        expect(items[items.length - 1].textContent).toContain('Diğer / emin değilim');
+        expect(items[0].textContent).toContain('~15 dk');
         expect(el.querySelector('[data-testid="online-preview-phone"]')?.textContent).toBe('0543 958 0091');
         expect(Array.from(el.querySelectorAll('[data-testid="online-readiness"] li')).map((li) => li.getAttribute('data-level'))).toEqual(['ok', 'ok', 'ok']);
     });
@@ -144,6 +147,7 @@ describe('OnlineBookingSettingsPageComponent', () => {
         expect(el.querySelector('[data-testid="readiness-workingHours"]')?.getAttribute('data-level')).toBe('missing');
         expect(el.querySelector('[data-testid="readiness-phone"]')?.getAttribute('data-level')).toBe('warn');
         expect(el.querySelector('[data-testid="readiness-workingHours"] a')?.getAttribute('href')).toBe('/panel/settings/clinics/k1');
+        expect(el.querySelector('[data-testid="online-preview-phone"]')).toBeNull();
         expect(el.querySelector('[data-testid="online-gaps"]')).toBeNull();
 
         cmp.settingsForm.controls.isEnabled.setValue(true);
