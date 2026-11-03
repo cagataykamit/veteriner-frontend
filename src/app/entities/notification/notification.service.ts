@@ -4,7 +4,7 @@ import { map, Observable, tap } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { APPOINTMENT_REQUESTS_ROUTE, PORTAL_INBOX_ROUTE } from '@/app/core/routing/panel-navigation';
-import type { PagedVm } from '@/app/entities/online-booking/models/online-booking.model';
+import { type PagedResultDto, type PagedVm, toPagedVm } from '@/app/entities/online-booking/models/online-booking.model';
 import { toOnlineBookingError } from '@/app/entities/online-booking/utils/online-booking-error.utils';
 
 /** Sunucu `UserNotificationType` (sözleşme §8). */
@@ -80,8 +80,8 @@ export class NotificationService {
             params = params.set('type', String(type));
         }
 
-        return this.api.get<PagedVm<UserNotificationVm>>(ApiEndpoints.notifications.list(), params).pipe(
-            map((r) => ({ items: r?.items ?? [], totalCount: r?.totalCount ?? 0, page: r?.page ?? page, pageSize: r?.pageSize ?? pageSize })),
+        return this.api.get<PagedResultDto<UserNotificationVm>>(ApiEndpoints.notifications.list(), params).pipe(
+            map((r) => toPagedVm(r, page, pageSize)),
             toOnlineBookingError('Bildirimler yüklenemedi.')
         );
     }

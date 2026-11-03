@@ -16,8 +16,10 @@ import {
     type ApproveAppointmentRequestInput,
     type EmailMessageVm,
     type OnlineBookingSettingsVm,
+    type PagedResultDto,
     type PagedVm,
-    type StaffAvailabilityDayVm
+    type StaffAvailabilityDayVm,
+    toPagedVm
 } from '@/app/entities/online-booking/models/online-booking.model';
 import { toOnlineBookingError } from '@/app/entities/online-booking/utils/online-booking-error.utils';
 
@@ -147,8 +149,8 @@ export class AppointmentRequestsService {
             params = params.set('toUtc', query.toUtc);
         }
 
-        return this.api.get<PagedVm<AppointmentRequestListItemVm>>(ApiEndpoints.appointmentRequests.list(), params).pipe(
-            map((r) => ({ items: r?.items ?? [], totalCount: r?.totalCount ?? 0, page: r?.page ?? 1, pageSize: r?.pageSize ?? 20 })),
+        return this.api.get<PagedResultDto<AppointmentRequestListItemVm>>(ApiEndpoints.appointmentRequests.list(), params).pipe(
+            map((r) => toPagedVm(r, query.page ?? 1, query.pageSize ?? 20)),
             toOnlineBookingError('Randevu talepleri yüklenemedi.')
         );
     }

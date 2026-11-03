@@ -159,6 +159,19 @@ export interface PagedVm<T> {
     pageSize: number;
 }
 
+/** Sunucu `PagedResult<T>` gövdesi: toplam `totalItems` alanındadır (`totalCount` değil). */
+export interface PagedResultDto<T> {
+    items?: T[] | null;
+    page?: number;
+    pageSize?: number;
+    totalItems?: number;
+    totalPages?: number;
+}
+
+export function toPagedVm<T>(r: PagedResultDto<T> | null | undefined, page: number, pageSize: number): PagedVm<T> {
+    return { items: r?.items ?? [], totalCount: r?.totalItems ?? 0, page: r?.page ?? page, pageSize: r?.pageSize ?? pageSize };
+}
+
 export interface AppointmentRequestListQuery {
     clinicId?: string | null;
     status?: AppointmentRequestStatus | null;

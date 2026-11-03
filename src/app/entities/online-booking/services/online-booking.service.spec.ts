@@ -57,7 +57,8 @@ describe('online randevu servisleri', () => {
         expect(req.request.params.get('fromUtc')).toBe('2026-11-01T21:00:00.000Z');
         expect(req.request.params.get('page')).toBe('2');
         expect(req.request.params.get('pageSize')).toBe('50');
-        req.flush({ items: [], totalCount: 1, page: 2, pageSize: 50 });
+        // Sunucu PagedResult toplamı totalItems'ta taşır; görünüm modeli totalCount'a çevirir.
+        req.flush({ items: [], page: 2, pageSize: 50, totalItems: 1, totalPages: 1 });
     });
 
     it('onay ve red gövdeleri sözleşmedeki alanlarla gider; e-posta önizlemesi tür adını kullanır', () => {
@@ -115,12 +116,12 @@ describe('online randevu servisleri', () => {
         http.expectOne(`${base}/api/v1/notifications/n1/read`).flush(null);
         expect(service.unreadCount()).toBe(1);
 
-        service.list(UserNotificationType.AppointmentAssigned, true).subscribe();
+        service.list(UserNotificationType.AppointmentAssigned, true).subscribe((r) => expect(r.totalCount).toBe(3));
         const list = http.expectOne((r) => r.url === `${base}/api/v1/notifications`);
 
         expect(list.request.params.get('type')).toBe('2');
         expect(list.request.params.get('unreadOnly')).toBe('true');
-        list.flush({ items: [], totalCount: 0, page: 1, pageSize: 20 });
+        list.flush({ items: [], page: 1, pageSize: 20, totalItems: 3, totalPages: 1 });
 
         expect(notificationTargetUrl({ targetType: 'AppointmentRequest', targetId: 'q1' })).toEqual({
             commands: ['/panel/appointments/requests'],
