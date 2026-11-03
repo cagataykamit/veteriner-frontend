@@ -47,27 +47,17 @@
                     <p class="portal-muted">Gönderdiğiniz talep klinik onayladığında kesin randevuya dönüşür.</p>
                 </section>
 
-                <section class="portal-card portal-stack" aria-labelledby="booking-reason-title">
-                    <h2 id="booking-reason-title" class="portal-subtitle">1. Randevu nedeni</h2>
-                    @if (p.reasons.length) {
-                        <fieldset class="portal-choice">
-                            <legend class="sr-only">Randevu nedeni</legend>
-                            @for (reason of p.reasons; track reason.id) {
-                                <label class="portal-check">
-                                    <input type="radio" name="booking-reason" [value]="reason.id" [checked]="reasonId() === reason.id" (change)="selectReason(reason.id)" />
-                                    <span>
-                                        {{ reason.name }}
-                                        <span class="portal-field-hint">Yaklaşık {{ reason.durationMinutes }} dk</span>
-                                    </span>
-                                </label>
-                            }
-                        </fieldset>
-                    } @else {
-                        <p class="portal-muted" data-testid="no-reasons">Klinik şu an online talep için randevu nedeni tanımlamamış. Lütfen kliniği arayın.</p>
-                    }
-                </section>
+                <portal-booking-reason-step
+                    idPrefix="booking"
+                    [reasons]="p.reasons"
+                    [selectedKey]="reasonKey()"
+                    [note]="form.controls.note"
+                    [clinicPhone]="p.clinicPhone"
+                    [showErrors]="submitted()"
+                    (selectedChange)="selectReason($event)"
+                />
 
-                @if (reasonId()) {
+                @if (reasonKey()) {
                     <section class="portal-card portal-stack" aria-labelledby="booking-slot-title">
                         <h2 id="booking-slot-title" class="portal-subtitle">2. Gün ve saat</h2>
                         @if (slotMessage(); as message) {
@@ -120,10 +110,6 @@
                         <div class="portal-field">
                             <label for="booking-pet-breed">Irkı (isteğe bağlı)</label>
                             <input pInputText id="booking-pet-breed" type="text" formControlName="petBreed" [attr.maxlength]="limits.petBreed" />
-                        </div>
-                        <div class="portal-field">
-                            <label for="booking-note">Not (isteğe bağlı)</label>
-                            <textarea pTextarea id="booking-note" rows="3" formControlName="note" [attr.maxlength]="limits.note"></textarea>
                         </div>
 
                         <h2 class="portal-subtitle">4. E-posta doğrulama</h2>

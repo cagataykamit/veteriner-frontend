@@ -127,6 +127,29 @@ describe('PortalPublicBookingComponent (kliniğe özel bağlantı)', () => {
         expect(done).toContain('ayse@example.com');
     });
 
+    it('"Diğer" seçilince not zorunlu; notla nedensiz talep gider (ADR-042 eki)', async () => {
+        api.createPublicRequest.mockReturnValue(of({ id: 'req-1', status: 'Pending', requestedStartUtc: SLOT_MON_0900 }));
+        await create();
+        el.querySelector<HTMLInputElement>('input[name=booking-reason][value=other]')!.click();
+        await settle();
+
+        expect(api.publicAvailability).toHaveBeenCalledWith('k7m2p9xq4r8t', null);
+
+        buttonByText(el, '09:00')!.click();
+        await settle();
+        await fillAndSendCode();
+        await submit();
+
+        expect(api.createPublicRequest).not.toHaveBeenCalled();
+        expect(el.textContent).toContain('Ne için geldiğinizi kısaca yazın.');
+
+        typeInto(el, '#booking-note', 'Tırnak kesimi');
+        await settle();
+        await submit();
+
+        expect(api.createPublicRequest).toHaveBeenCalledWith('k7m2p9xq4r8t', expect.objectContaining({ reasonId: null, note: 'Tırnak kesimi' }));
+    });
+
     it('hatalı kod alanın altında gösterilir', async () => {
         api.createPublicRequest.mockReturnValue(throwError(() => problem(400, PORTAL_ERROR_CODES.onlineBookingInvalidCode)));
         await create();

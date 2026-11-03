@@ -95,6 +95,38 @@ describe('PortalAppointmentRequestComponent (oturumlu talep)', () => {
         expect(el.querySelector('[data-testid=request-done]')!.textContent).toContain('kesin randevu değildir');
     });
 
+    it('"Diğer" seçilince müsaitlik nedensiz istenir; not yazılmadan gönderilmez, yazılınca reasonId boş gider (ADR-042 eki)', async () => {
+        await create();
+        el.querySelector<HTMLInputElement>('input[name=request-reason][value=other]')!.click();
+        await settle();
+
+        expect(api.linkAvailability).toHaveBeenCalledWith('link-1', null);
+        expect(el.querySelector('label[for=request-note]')!.textContent).toContain('Kısaca ne için geliyorsunuz?');
+
+        buttonByText(el, '09:00')!.click();
+        await settle();
+        pick(PET_PAMUK.name);
+        await settle();
+        buttonByText(el, 'Talebi gönder')!.click();
+        await settle();
+
+        expect(api.createLinkRequest).not.toHaveBeenCalled();
+        expect(el.textContent).toContain('Ne için geldiğinizi kısaca yazın.');
+
+        typeInto(el, '#request-note', 'Kaşıntı var');
+        await settle();
+        buttonByText(el, 'Talebi gönder')!.click();
+        await settle();
+
+        expect(api.createLinkRequest).toHaveBeenCalledWith('link-1', expect.objectContaining({ reasonId: null, note: 'Kaşıntı var' }));
+    });
+
+    it('acil durum uyarısı kliniğin telefonunu aranabilir bağlantı olarak gösterir', async () => {
+        await create();
+
+        expect(el.querySelector('[data-testid=booking-urgent] a')?.getAttribute('href')).toBe('tel:02320000000');
+    });
+
     it('"Listede yok" seçilince hayvan adı zorunlu ve serbest metinle gönderilir', async () => {
         await create();
         await chooseReasonAndSlot();

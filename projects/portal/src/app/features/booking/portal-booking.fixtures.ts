@@ -13,8 +13,9 @@ export const BOOKING_PAGE: PortalBookingPage = {
     maxAdvanceDays: 30,
     maxPendingRequests: 3,
     reasons: [
-        { id: 'reason-1', name: 'Aşı', durationMinutes: 15 },
-        { id: 'reason-2', name: 'Kontrol', durationMinutes: 30 }
+        { id: 'reason-1', name: 'Aşı', durationMinutes: 15, requiresNote: false },
+        { id: 'reason-2', name: 'Kontrol', durationMinutes: 30, requiresNote: false },
+        { id: null, name: 'Diğer / emin değilim', durationMinutes: 30, requiresNote: true }
     ]
 };
 
