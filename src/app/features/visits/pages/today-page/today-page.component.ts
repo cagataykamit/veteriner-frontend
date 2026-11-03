@@ -27,6 +27,7 @@ import {
 } from '@/app/core/auth/operation-claims.constants';
 import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { PendingAppointmentRequestsCardComponent } from '@/app/entities/online-booking/components/pending-appointment-requests-card.component';
 import { TodayMoneyComponent } from '@/app/features/visits/components/today-money.component';
 import { TodayOpenItemsComponent } from '@/app/features/visits/components/today-open-items.component';
 import { VisitArrivalDialogComponent } from '@/app/entities/visit/components/visit-arrival-dialog.component';
@@ -102,7 +103,8 @@ type TodayScope = 'mine' | 'all';
         VisitCorrectionDialogComponent,
         VisitPreparationDialogComponent,
         AppointmentNoShowDialogComponent,
-        PetAlertBadgesComponent
+        PetAlertBadgesComponent,
+        PendingAppointmentRequestsCardComponent
     ],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -134,6 +136,8 @@ export class TodayPageComponent implements OnInit {
     readonly canCreateCharge = this.auth.hasOperationClaim(CHARGES_CREATE_CLAIM);
 
     readonly loading = signal(true);
+    /** Her yenilemede artar; bekleyen online talep kartı da aynı anda yenilenir. */
+    readonly refreshTick = signal(0);
     /** İlk yükleme / elle yenileme hatası: listeyi değiştirir. */
     readonly loadError = signal<string | null>(null);
     /** Otomatik yenileme hatası: eski liste kalır, yalnızca uyarı gösterilir. */
@@ -243,6 +247,7 @@ export class TodayPageComponent implements OnInit {
             this.loading.set(true);
         }
 
+        this.refreshTick.update((n) => n + 1);
         this.refresh$.next(mode);
     }
 

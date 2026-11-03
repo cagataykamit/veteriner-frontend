@@ -7,6 +7,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
+import { AppointmentRequestsService } from '@/app/entities/online-booking/services/online-booking.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TodayHospitalizationVm, TodayItemVm, TodayVm, VisitVm } from '@/app/entities/visit/models/visit-vm.model';
@@ -98,7 +99,9 @@ describe('TodayPageComponent', () => {
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'c1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
-                { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } }
+                { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
+                // Bekleyen online talep kartı: bu testlerde talep yok.
+                { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 5 }) } }
             ]
         }).compileComponents();
 
@@ -437,7 +440,9 @@ describe('TodayPageComponent', () => {
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
                 { provide: AppointmentsService, useValue: {} },
-                { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } }
+                { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
+                // Bekleyen online talep kartı: bu testlerde talep yok.
+                { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 5 }) } }
             ]
         }).compileComponents();
         const f = TestBed.createComponent(TodayPageComponent);
@@ -933,7 +938,9 @@ describe('TodayPageComponent — Benim hastalarım', () => {
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'c1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
-                { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } }
+                { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
+                // Bekleyen online talep kartı: bu testlerde talep yok.
+                { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 5 }) } }
             ]
         }).compileComponents();
         const fixture = TestBed.createComponent(TodayPageComponent);
@@ -1008,7 +1015,9 @@ describe('TodayPageComponent — Benim hastalarım boş liste', () => {
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: AppointmentsService, useValue: {} },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
-                { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } }
+                { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
+                // Bekleyen online talep kartı: bu testlerde talep yok.
+                { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 5 }) } }
             ]
         }).compileComponents();
         const f = TestBed.createComponent(TodayPageComponent);

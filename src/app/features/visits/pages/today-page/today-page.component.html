@@ -17,6 +17,9 @@
     </div>
 </app-page-header>
 
+<!-- Online randevu talebi gelince resepsiyon ilk burada görür (yetki ya da bekleyen yoksa çizilmez). -->
+<app-pending-appointment-requests-card [refreshTick]="refreshTick()" />
+
 <p-selectbutton class="block mb-4" [options]="viewOptions" [ngModel]="view()" (ngModelChange)="setView($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Görünüm" />
 @if (myUserId()) {
     <p-selectbutton class="block mb-4" [options]="scopeOptions" [ngModel]="scope()" (ngModelChange)="setScope($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Hasta kapsamı" />
