@@ -83,8 +83,13 @@ export class OnlineBookingService {
         return this.api.post<OnlineBookingSettingsVm>(ApiEndpoints.onlineBooking.regenerateCode(clinicId), {}).pipe(toOnlineBookingError('Bağlantı yenilenemedi.'));
     }
 
-    availability(clinicId: string, reasonId: string, fromYmd: string | null, days = 7): Observable<StaffAvailabilityDayVm[]> {
-        let params = new HttpParams().set('reasonId', reasonId).set('days', String(days));
+    /** `reasonId` boşsa ("Diğer / emin değilim" talebi) sunucu varsayılan süre ve tüm hekimlerle hesaplar (ADR-042 eki). */
+    availability(clinicId: string, reasonId: string | null, fromYmd: string | null, days = 7): Observable<StaffAvailabilityDayVm[]> {
+        let params = new HttpParams().set('days', String(days));
+
+        if (reasonId) {
+            params = params.set('reasonId', reasonId);
+        }
 
         if (fromYmd) {
             params = params.set('from', fromYmd);
