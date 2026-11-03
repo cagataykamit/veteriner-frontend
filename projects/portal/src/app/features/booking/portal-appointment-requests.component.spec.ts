@@ -59,7 +59,9 @@ describe('PortalAppointmentRequestsComponent (randevu taleplerim)', () => {
 
         expect(first.textContent).toContain('Bekliyor');
         expect(first.textContent).toContain('Pazartesi, 02.11.2026 · 09:00');
+        expect(first.querySelector('.req-date')?.textContent?.replace(/\s+/g, '')).toBe('Pzt2Kas');
         expect(second.textContent).toContain('Onaylandı');
+        expect(second.querySelector('.req-date')?.textContent?.replace(/\s+/g, '')).toBe('Sal3Kas');
         expect(second.textContent).toContain('Salı, 03.11.2026 · 14:00');
         expect(second.querySelector('[data-testid=rescheduled]')?.textContent).toContain('09:30');
         expect(third.textContent).toContain('Reddedildi');

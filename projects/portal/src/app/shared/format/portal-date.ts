@@ -5,6 +5,14 @@ const DATE_FORMAT = new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: 'l
 const DAY_FORMAT = new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: PORTAL_TIME_ZONE });
 const TIME_FORMAT = new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: PORTAL_TIME_ZONE });
 const WEEKDAY_FORMAT = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', timeZone: PORTAL_TIME_ZONE });
+const DATE_PARTS_FORMAT = new Intl.DateTimeFormat('tr-TR', { weekday: 'short', day: 'numeric', month: 'short', timeZone: PORTAL_TIME_ZONE });
+
+/** Takvim kutucuğu parçaları: "Pzt", "2", "Kas". */
+export interface PortalDateParts {
+    readonly weekday: string;
+    readonly day: string;
+    readonly month: string;
+}
 
 /** `…Utc` alanı UTC'dir; sözleşme §6 gereği `Z` soneki olmayabilir, bu durumda UTC kabul edilir. */
 export function parsePortalUtc(value: string): Date | null {
@@ -44,6 +52,15 @@ export function formatPortalTime(utc: string | null | undefined): string {
 /** UTC anın İstanbul'daki gün adı, ör. "Pazartesi". */
 export function formatPortalWeekday(utc: string | null | undefined): string {
     return formatUtc(utc, WEEKDAY_FORMAT);
+}
+
+/** UTC anın İstanbul günü kutucuk parçalarıyla ("Pzt", "2", "Kas"); geçersiz değerde boş parçalar. */
+export function formatPortalDateParts(utc: string | null | undefined): PortalDateParts {
+    const date = utc ? parsePortalUtc(utc) : null;
+    const parts = date ? DATE_PARTS_FORMAT.formatToParts(date) : [];
+    const part = (type: Intl.DateTimeFormatPartTypes): string => parts.find((p) => p.type === type)?.value ?? '';
+
+    return { weekday: part('weekday'), day: part('day'), month: part('month') };
 }
 
 /** Takvim tarihi (`yyyy-MM-dd`, saat dilimsiz) → "gg.aa.yyyy"; saat dilimi dönüşümü yapılmaz. */

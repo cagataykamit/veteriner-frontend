@@ -292,6 +292,34 @@ a {
     flex-direction: column;
 }
 
+/* Radyo seçenek kartı (randevu nedeni, hayvan): tüm kart tek dokunma hedefi; seçili kart turkuaz çerçeve ve zemin. */
+label.portal-option {
+    min-height: 3.5rem;
+}
+
+.portal-option input[type='radio'] {
+    flex: 0 0 auto;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: 0;
+    accent-color: var(--vetinity-teal);
+}
+
+.portal-option:has(input:checked) {
+    border-color: var(--vetinity-teal);
+    background: #f2fbfa;
+    box-shadow: inset 0 0 0 1px var(--vetinity-teal);
+}
+
+.portal-option:has(input:focus-visible) {
+    outline: 3px solid var(--portal-focus);
+    outline-offset: 2px;
+}
+
+.portal-option input:focus-visible {
+    outline: none;
+}
+
 /* Hukuki metin taslak bandı ve belge metni. */
 .portal-draft-band {
     background: #fef3c7;

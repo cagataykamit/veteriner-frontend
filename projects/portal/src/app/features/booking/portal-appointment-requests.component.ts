@@ -5,7 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { portalErrorMessage } from '@portal/app/core/errors/portal-errors';
 import { portalLoad } from '@portal/app/shared/data/portal-load';
-import { formatPortalDay, formatPortalTime, formatPortalWeekday } from '@portal/app/shared/format/portal-date';
+import { formatPortalDateParts, formatPortalDay, formatPortalTime, formatPortalWeekday, PortalDateParts } from '@portal/app/shared/format/portal-date';
 import { appointmentRequestStatus } from '@portal/app/shared/format/portal-labels';
 import { PortalEmptyState, PortalErrorState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
 import { isBookingClosed } from './portal-appointment-request.component';
@@ -17,16 +17,77 @@ interface RequestsView {
 }
 
 /**
- * Randevu taleplerim (`/appointments/requests`, ADR-042 K4; sözleşme §6): durum, onaylanan saat ("saat değiştirildi"),
- * red gerekçesi; bekleyen talep onay sorusuyla iptal edilir. Klinik online talep almıyorsa yeni talep düğmesi gizlenir,
- * geçmiş talepler yine listelenir.
+ * Randevu taleplerim (`/appointments/requests`, ADR-042 K4; sözleşme §6): takvim kutucuğu, saat ve durum; onaylanan saat
+ * ("saat değiştirildi"), red gerekçesi; bekleyen talep satır içinde onay sorusuyla iptal edilir. Klinik online talep almıyorsa
+ * yeni talep düğmesi gizlenir, geçmiş talepler yine listelenir.
  */
 @Component({
     selector: 'portal-appointment-requests',
     standalone: true,
     imports: [RouterLink, ButtonModule, PortalEmptyState, PortalErrorState, PortalSkeleton],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    templateUrl: './portal-appointment-requests.component.html'
+    templateUrl: './portal-appointment-requests.component.html',
+    styles: `
+        .req-main {
+            display: flex;
+            gap: 0.875rem;
+        }
+        .req-date {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 0 0 3.5rem;
+            padding: 0.375rem 0;
+            border-radius: 0.75rem;
+            background: var(--vetinity-bg-soft);
+            color: var(--vetinity-navy);
+            line-height: 1.15;
+        }
+        .req-date strong {
+            font-size: 1.375rem;
+        }
+        .req-date small {
+            font-size: 0.75rem;
+        }
+        .req-date--muted {
+            background: #eef2f6;
+            color: #475569;
+        }
+        .req-body {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .req-time {
+            font-size: 1.125rem;
+            font-variant-numeric: tabular-nums;
+        }
+        .req-cancel {
+            align-self: flex-start;
+            padding-left: 0;
+            color: #b42318;
+        }
+        .req-confirm {
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 0.625rem;
+            background: #fff5f2;
+        }
+        .req-confirm p {
+            margin: 0;
+        }
+        .req-confirm-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+        .req-confirm-actions .p-button {
+            min-height: var(--portal-touch);
+            justify-content: center;
+        }
+    `
 })
 export class PortalAppointmentRequestsComponent {
     protected readonly session = inject(PortalSessionService);
@@ -108,6 +169,19 @@ export class PortalAppointmentRequestsComponent {
 
     status(request: PortalAppointmentRequest) {
         return appointmentRequestStatus(request.status);
+    }
+
+    /** Gösterilen saat: onaylandıysa onaylanan, değilse istenen. */
+    start(request: PortalAppointmentRequest): string {
+        return request.approvedStartUtc ?? request.requestedStartUtc;
+    }
+
+    parts(request: PortalAppointmentRequest): PortalDateParts {
+        return formatPortalDateParts(this.start(request));
+    }
+
+    time(utc: string): string {
+        return formatPortalTime(utc);
     }
 
     when(utc: string): string {

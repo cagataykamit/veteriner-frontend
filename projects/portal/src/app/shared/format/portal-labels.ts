@@ -115,6 +115,26 @@ export function telHref(phone: string | null | undefined): string | null {
 }
 
 /**
+ * Telefon numarası gösterimi: Türkiye numarası gruplanır ("05439580091" → "0543 958 00 91", "+905439580091" →
+ * "+90 543 958 00 91"); tanınmayan biçim olduğu gibi (kırpılmış) kalır. Kayıt değişmez, yalnız gösterim.
+ */
+export function formatPortalPhone(phone: string | null | undefined): string {
+    const raw = (phone ?? '').trim();
+    const digits = raw.replace(/\D/g, '');
+    const group = (n: string): string => `${n.slice(0, 3)} ${n.slice(3, 6)} ${n.slice(6, 8)} ${n.slice(8, 10)}`;
+
+    if (digits.length === 11 && digits.startsWith('0')) {
+        return `0${group(digits.slice(1))}`;
+    }
+
+    if (digits.length === 12 && digits.startsWith('90')) {
+        return `+90 ${group(digits.slice(2))}`;
+    }
+
+    return raw;
+}
+
+/**
  * Kişi adı gösterimi: her kelimenin ilk harfi büyük (Türkçe kurallarıyla "i" → "İ"); geri kalan harflere dokunulmaz,
  * böylece "McAllister" gibi bilerek karışık yazılmış adlar bozulmaz. Kayıt değişmez, yalnız gösterim.
  */

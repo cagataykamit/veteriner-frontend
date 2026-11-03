@@ -1,0 +1,28 @@
+/* Talep formlarının ortak yerleşimi (bağlantı sayfası ve oturumlu talep): başlıklı alan grubu ve yan yana iki alan
+   (tür/ırk). Bileşen stillerine `@use` ile girer. */
+
+.booking-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+
+.booking-legend {
+    padding: 0;
+    margin-bottom: 0.125rem;
+    color: var(--portal-text-muted);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.booking-pair {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+    gap: 0.875rem 0.75rem;
+}

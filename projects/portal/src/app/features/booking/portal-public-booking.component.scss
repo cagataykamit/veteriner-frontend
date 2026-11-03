@@ -1,0 +1,48 @@
+/* Kliniğe özel bağlantı sayfası: giriş kartı, kapalı durumu ve bilgi/doğrulama adımlarının yerleşimi. Adım kartı,
+   neden ve saat seçici kendi bileşenlerindedir. */
+
+@use './portal-booking-form';
+
+.booking-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.booking-closed {
+    align-items: center;
+    text-align: center;
+}
+
+.booking-closed-icon {
+    font-size: 2rem;
+    color: var(--portal-text-muted);
+}
+
+.booking-closed p {
+    margin: 0;
+}
+
+.booking-sent {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.625rem;
+    background: var(--vetinity-bg-soft);
+    color: #0b5f5a;
+    font-size: 0.9375rem;
+}
+
+.booking-sent i {
+    margin-top: 0.1875rem;
+}
+
+.portal-field input.booking-code {
+    font-size: 1.375rem;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}

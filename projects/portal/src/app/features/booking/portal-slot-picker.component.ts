@@ -1,93 +1,151 @@
 import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output } from '@angular/core';
-import { formatPortalCalendarDate, formatPortalTime, formatPortalWeekday } from '@portal/app/shared/format/portal-date';
-import { PortalBookingDay } from './portal-booking.api';
+import { formatPortalDateParts, formatPortalTime, formatPortalWeekday, PortalDateParts } from '@portal/app/shared/format/portal-date';
+import { PortalBookingDay, PortalBookingSlot } from './portal-booking.api';
 
-/** Takvim günü (`yyyy-MM-dd`) → gün adı; İstanbul öğle saati (09:00Z) aynı takvim gününe düşer. */
-export function bookingDayWeekday(date: string): string {
-    return formatPortalWeekday(`${date}T09:00:00Z`);
+/** Takvim günü (`yyyy-MM-dd`) → İstanbul öğle saati (09:00Z); aynı takvim gününe düşer. */
+function calendarNoon(date: string): string {
+    return `${date}T09:00:00Z`;
 }
 
+/** Takvim günü (`yyyy-MM-dd`) → gün adı. */
+export function bookingDayWeekday(date: string): string {
+    return formatPortalWeekday(calendarNoon(date));
+}
+
+/** Saat grubu: göz gezdirmeyi kolaylaştırır; sınırlar İstanbul saatiyle 12:00 ve 17:00. */
+interface SlotGroup {
+    readonly label: string;
+    readonly slots: readonly PortalBookingSlot[];
+}
+
+const SLOT_GROUPS: readonly { readonly label: string; readonly untilHour: number }[] = [
+    { label: 'Sabah', untilHour: 12 },
+    { label: 'Öğleden sonra', untilHour: 17 },
+    { label: 'Akşam', untilHour: 24 }
+];
+
 /**
- * Gün ve saat seçimi (ADR-042 K3): yalnız müsait saati olan günler listelenir; saatler İstanbul saatiyle gösterilir.
- * Seçim `startUtc` olarak yayımlanır. Gün düğmeleri yatay kaydırılır, saatler ızgarada.
+ * Gün ve saat seçimi (ADR-042 K3): yalnız müsait saati olan günler takvim kutucuğu olarak yatay kaydırılır; seçili günün
+ * saatleri sabah / öğleden sonra / akşam gruplarında ızgaradır. Saatler İstanbul saatiyle gösterilir, seçim `startUtc`
+ * olarak yayımlanır.
  */
 @Component({
     selector: 'portal-slot-picker',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
     styles: `
-        .portal-slot-days {
+        :host {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .days {
             display: flex;
             gap: 0.5rem;
             overflow-x: auto;
-            padding-bottom: 0.25rem;
+            margin: 0 -1.25rem;
+            padding: 0.125rem 1.25rem 0.375rem;
+            scroll-snap-type: x proximity;
+            scroll-padding-inline: 1.25rem;
+            scrollbar-width: thin;
         }
-        .portal-slot-day,
-        .portal-slot-time {
-            min-height: var(--portal-touch, 44px);
-            border: 1px solid var(--portal-border, #e2e8f0);
-            border-radius: 0.625rem;
-            background: var(--portal-surface, #fff);
+        button {
+            border: 1px solid var(--portal-border);
+            border-radius: 0.75rem;
+            background: var(--portal-surface);
             color: inherit;
             font: inherit;
             cursor: pointer;
         }
-        .portal-slot-day {
-            flex: 0 0 auto;
+        .day {
+            flex: 0 0 4.25rem;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 0.375rem 0.75rem;
-            min-width: 5.5rem;
+            padding: 0.5rem 0.25rem;
+            line-height: 1.2;
+            scroll-snap-align: start;
         }
-        .portal-slot-day small {
-            color: var(--portal-text-muted, #64748b);
+        .day-num {
+            font-size: 1.375rem;
+            font-weight: 700;
         }
-        .portal-slot-times {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
+        .day small {
+            color: var(--portal-text-muted);
+            font-size: 0.75rem;
+        }
+        .group {
+            display: flex;
+            flex-direction: column;
             gap: 0.5rem;
         }
-        .portal-slot-day.is-active,
-        .portal-slot-time.is-active {
-            border-color: var(--vetinity-teal, #14b8a6);
+        .group h3 {
+            margin: 0;
+            color: var(--portal-text-muted);
+            font-size: 0.8125rem;
+            font-weight: 600;
+        }
+        .times {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(4.75rem, 1fr));
+            gap: 0.5rem;
+        }
+        .time {
+            min-height: var(--portal-touch);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+        button:hover {
+            border-color: var(--vetinity-teal);
+        }
+        button.is-active {
+            border-color: #0b6f69;
             background: #0b6f69;
             color: #fff;
         }
-        .portal-slot-day.is-active small {
+        .day.is-active small {
             color: #e6fffb;
         }
     `,
     template: `
         @if (availableDays().length) {
-            <div class="portal-slot-days" role="group" aria-label="Gün seçin">
+            <div class="days" role="group" aria-label="Gün seçin">
                 @for (day of availableDays(); track day.date) {
                     <button
                         type="button"
-                        class="portal-slot-day"
+                        class="day"
                         [class.is-active]="activeDate() === day.date"
                         [attr.aria-pressed]="activeDate() === day.date"
+                        [attr.aria-label]="weekday(day.date) + ', ' + parts(day.date).day + ' ' + parts(day.date).month + ', ' + day.slots.length + ' boş saat'"
                         (click)="activeDate.set(day.date)"
                     >
-                        <span>{{ weekday(day.date) }}</span>
-                        <small>{{ calendarDate(day.date) }}</small>
+                        <small>{{ parts(day.date).weekday }}</small>
+                        <span class="day-num">{{ parts(day.date).day }}</span>
+                        <small>{{ parts(day.date).month }}</small>
                     </button>
                 }
             </div>
-            <div class="portal-slot-times" role="group" aria-label="Saat seçin" data-testid="slot-times">
-                @for (slot of activeSlots(); track slot.startUtc) {
-                    <button
-                        type="button"
-                        class="portal-slot-time"
-                        [class.is-active]="selected() === slot.startUtc"
-                        [attr.aria-pressed]="selected() === slot.startUtc"
-                        (click)="selectedChange.emit(slot.startUtc)"
-                    >
-                        {{ time(slot.startUtc) }}
-                    </button>
+            <div class="portal-stack" data-testid="slot-times">
+                @for (group of groups(); track group.label) {
+                    <div class="group" role="group" [attr.aria-label]="group.label + ' saatleri'">
+                        <h3>{{ group.label }}</h3>
+                        <div class="times">
+                            @for (slot of group.slots; track slot.startUtc) {
+                                <button
+                                    type="button"
+                                    class="time"
+                                    [class.is-active]="selected() === slot.startUtc"
+                                    [attr.aria-pressed]="selected() === slot.startUtc"
+                                    (click)="selectedChange.emit(slot.startUtc)"
+                                >
+                                    {{ time(slot.startUtc) }}
+                                </button>
+                            }
+                        </div>
+                    </div>
                 }
             </div>
-            <p class="portal-field-hint">Saatler klinik saatiyle (İstanbul) gösterilir.</p>
+            <p class="portal-field-hint"><i class="fa-solid fa-clock" aria-hidden="true"></i> Saatler klinik saatiyle (İstanbul) gösterilir.</p>
         } @else {
             <p class="portal-muted" data-testid="no-slots">Bu neden için yakın tarihte uygun saat yok. Başka bir neden seçebilir ya da kliniği arayabilirsiniz.</p>
         }
@@ -108,17 +166,28 @@ export class PortalSlotPicker {
         return days.find((d) => d.slots.some((s) => s.startUtc === selected))?.date ?? days[0]?.date ?? null;
     });
 
-    readonly activeSlots = computed(() => this.availableDays().find((d) => d.date === this.activeDate())?.slots ?? []);
+    readonly groups = computed<readonly SlotGroup[]>(() => {
+        const slots = this.availableDays().find((d) => d.date === this.activeDate())?.slots ?? [];
+
+        return SLOT_GROUPS.map((g, i) => ({ label: g.label, slots: slots.filter((s) => slotGroupIndex(s.startUtc) === i) })).filter((g) => g.slots.length > 0);
+    });
 
     weekday(date: string): string {
         return bookingDayWeekday(date);
     }
 
-    calendarDate(date: string): string {
-        return formatPortalCalendarDate(date);
+    parts(date: string): PortalDateParts {
+        return formatPortalDateParts(calendarNoon(date));
     }
 
     time(utc: string): string {
         return formatPortalTime(utc);
     }
+}
+
+/** Saatin grubu: İstanbul saatinin saat kısmı ("09:30" → 9) ilk sınırın altında kaldığı grup. */
+function slotGroupIndex(utc: string): number {
+    const hour = Number(formatPortalTime(utc).slice(0, 2));
+
+    return SLOT_GROUPS.findIndex((g) => hour < g.untilHour);
 }

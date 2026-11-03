@@ -1,5 +1,5 @@
-import { formatPortalCalendarDate, formatPortalClock, formatPortalDay, formatPortalTime, formatPortalWeekday } from './portal-date';
-import { appointmentStatus, formatPersonName, paymentMethodLabel, telHref } from './portal-labels';
+import { formatPortalCalendarDate, formatPortalClock, formatPortalDateParts, formatPortalDay, formatPortalTime, formatPortalWeekday } from './portal-date';
+import { appointmentStatus, formatPersonName, formatPortalPhone, paymentMethodLabel, telHref } from './portal-labels';
 import { formatPortalMoney, formatPortalWeight } from './portal-money';
 
 describe('Portal biçimleri (tarih, para, etiket)', () => {
@@ -14,6 +14,12 @@ describe('Portal biçimleri (tarih, para, etiket)', () => {
     it('geçersiz/boş tarihte boş metin döner', () => {
         expect(formatPortalDay(null)).toBe('');
         expect(formatPortalDay('tarih değil')).toBe('');
+        expect(formatPortalDateParts(null)).toEqual({ weekday: '', day: '', month: '' });
+    });
+
+    it('takvim kutucuğu parçalarını İstanbul günüyle yazar', () => {
+        // 22:30 UTC Pazar = Pazartesi 01:30 İstanbul
+        expect(formatPortalDateParts('2026-11-01T22:30:00Z')).toEqual({ weekday: 'Pzt', day: '2', month: 'Kas' });
     });
 
     it('takvim tarihini ve saati saat dilimi dönüşümü olmadan yazar', () => {
@@ -40,6 +46,14 @@ describe('Portal biçimleri (tarih, para, etiket)', () => {
         expect(telHref('+90 (312) 555-00-00')).toBe('tel:+903125550000');
         expect(telHref(null)).toBeNull();
         expect(telHref('—')).toBeNull();
+    });
+
+    it('Türkiye telefon numarasını gruplayarak gösterir; tanınmayan biçime dokunmaz', () => {
+        expect(formatPortalPhone('05439580091')).toBe('0543 958 00 91');
+        expect(formatPortalPhone(' 0232-555-12-34 ')).toBe('0232 555 12 34');
+        expect(formatPortalPhone('+90 (543) 958 0091')).toBe('+90 543 958 00 91');
+        expect(formatPortalPhone('444 1 234')).toBe('444 1 234');
+        expect(formatPortalPhone(null)).toBe('');
     });
 
     it('kişi adının her kelimesini Türkçe kuralla büyük harfle başlatır, kalanına dokunmaz', () => {
