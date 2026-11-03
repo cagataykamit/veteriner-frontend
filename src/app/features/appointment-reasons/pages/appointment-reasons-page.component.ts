@@ -22,6 +22,7 @@ import {
     type AppointmentReasonVm
 } from '@/app/entities/online-booking/models/online-booking.model';
 import { AppointmentReasonsService } from '@/app/entities/online-booking/services/online-booking.service';
+import { isUrgentOnlineReason, ONLINE_OTHER_REASON_NOTE, URGENT_ONLINE_REASON_WARNING } from '@/app/entities/online-booking/utils/appointment-reason-online.utils';
 import { OnlineBookingError } from '@/app/entities/online-booking/utils/online-booking-error.utils';
 import type { VeterinarianVm } from '@/app/entities/visit/models/visit-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
@@ -91,6 +92,8 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                 <p class="text-red-500 text-sm mt-0 mb-3" role="alert">{{ listActionError() }}</p>
             }
 
+            <p class="text-sm text-muted-color mt-0 mb-3" data-testid="reasons-other-note">{{ otherReasonNote }}</p>
+
             @if (!clinicId()) {
                 <app-empty-state message="Aktif klinik bulunamadı." hint="Klinik seçimi yapıp yeniden deneyin." />
             } @else if (loading()) {
@@ -118,7 +121,12 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                             <tr data-testid="reason-row">
                                 <td class="font-medium" [class.text-muted-color]="!reason.isActive">{{ reason.name }}</td>
                                 <td>{{ reason.defaultDurationMinutes }} dk</td>
-                                <td>{{ reason.isOnlineBookable ? 'Görünür' : 'Gizli' }}</td>
+                                <td>
+                                    {{ reason.isOnlineBookable ? 'Görünür' : 'Gizli' }}
+                                    @if (reason.isActive && isUrgentOnline(reason.name, reason.isOnlineBookable)) {
+                                        <i class="pi pi-exclamation-triangle text-amber-600 dark:text-amber-400 ml-1" [title]="urgentWarning" data-testid="reason-urgent-online"></i>
+                                    }
+                                </td>
                                 <td class="text-sm">{{ vetNames(reason) }}</td>
                                 <td><app-status-tag [label]="reason.isActive ? 'Aktif' : 'Pasif'" [severity]="reason.isActive ? 'success' : 'warn'" /></td>
                                 @if (canWrite()) {
@@ -169,6 +177,9 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                     <p-toggleswitch inputId="reasonOnline" formControlName="isOnlineBookable" />
                     <label for="reasonOnline" class="text-sm">Online talepte görünsün</label>
                 </div>
+                @if (isUrgentOnline(form.controls.name.value, form.controls.isOnlineBookable.value)) {
+                    <p-message severity="warn" class="w-full" data-testid="reason-urgent-warning">{{ urgentWarning }}</p-message>
+                }
                 <fieldset class="flex flex-col gap-2 border-0 p-0 m-0">
                     <legend class="text-sm font-medium text-muted-color mb-1">Uygun hekimler</legend>
                     @if (veterinarians().length === 0) {
@@ -199,6 +210,9 @@ export class AppointmentReasonsPageComponent implements OnInit {
     readonly nameMax = APPOINTMENT_REASON_NAME_MAX;
     readonly durationMin = APPOINTMENT_DURATION_MIN;
     readonly durationMax = APPOINTMENT_DURATION_MAX;
+    readonly otherReasonNote = ONLINE_OTHER_REASON_NOTE;
+    readonly urgentWarning = URGENT_ONLINE_REASON_WARNING;
+    readonly isUrgentOnline = isUrgentOnlineReason;
 
     private readonly reasonsService = inject(AppointmentReasonsService);
     private readonly visits = inject(VisitsService);

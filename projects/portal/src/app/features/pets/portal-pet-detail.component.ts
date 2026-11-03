@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, untracked } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { portalLoad } from '@portal/app/shared/data/portal-load';
 import { formatPortalCalendarDate, formatPortalDay } from '@portal/app/shared/format/portal-date';
@@ -21,7 +20,7 @@ interface PetInfoRow {
 @Component({
     selector: 'portal-pet-detail',
     standalone: true,
-    imports: [RouterLink, PortalErrorState, PortalSkeleton],
+    imports: [PortalErrorState, PortalSkeleton],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './portal-pet-detail.component.html'
 })

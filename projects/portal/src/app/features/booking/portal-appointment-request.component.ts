@@ -6,14 +6,14 @@ import { forkJoin } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
-import { TextareaModule } from 'primeng/textarea';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { PORTAL_ERROR_CODES, portalErrorMessage, portalProblemCode } from '@portal/app/core/errors/portal-errors';
 import { isDeceased, PortalPet, PortalPetsApi } from '@portal/app/features/pets/portal-pets.api';
 import { formatPortalDay, formatPortalTime, formatPortalWeekday } from '@portal/app/shared/format/portal-date';
 import { PortalEmptyState, PortalErrorState, PortalLoadingState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
 import { PortalBookingApi, PortalBookingDay, PortalBookingPage, PortalBookingReason } from './portal-booking.api';
-import { PORTAL_BOOKING_LIMITS, pendingLimitMessage } from './portal-booking.rules';
+import { PortalBookingReasonStep } from './portal-booking-reason-step.component';
+import { bookingNoteValidators, NOTE_REQUIRED_MESSAGE, PORTAL_BOOKING_LIMITS, pendingLimitMessage, reasonKey } from './portal-booking.rules';
 import { PortalSlotPicker } from './portal-slot-picker.component';
 
 type PageState = 'loading' | 'closed' | 'error' | 'ready' | 'done';
@@ -23,21 +23,15 @@ type AvailabilityState = 'idle' | 'loading' | 'ready' | 'error';
 export const NEW_PET_OPTION = 'new';
 
 /**
- * Oturumlu randevu talebi (`/appointments/requests/new`, ADR-042 K1; sözleşme §6): bağın kliniğinde neden → saat → hayvan
- * (kendi hayvanı ya da listede olmayan hayvan için ad/tür/ırk) → isteğe bağlı telefon ve not. İletişim adı ve e-posta klinik
- * kaydından ve hesaptan gelir. Klinik online talep almıyorsa boş durum gösterilir.
+ * Oturumlu randevu talebi (`/appointments/requests/new`, ADR-042 K1 ve eki; sözleşme §6): bağın kliniğinde neden ve not →
+ * saat → hayvan (kendi hayvanı ya da listede olmayan hayvan için ad/tür/ırk) → isteğe bağlı telefon. İletişim adı ve e-posta
+ * klinik kaydından ve hesaptan gelir. Klinik online talep almıyorsa boş durum gösterilir.
  */
 @Component({
     selector: 'portal-appointment-request',
     standalone: true,
-    imports: [ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, TextareaModule, PortalEmptyState, PortalErrorState, PortalLoadingState, PortalSkeleton, PortalSlotPicker],
+    imports: [ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, PortalBookingReasonStep, PortalEmptyState, PortalErrorState, PortalLoadingState, PortalSkeleton, PortalSlotPicker],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    styles: `
-        .portal-field textarea {
-            width: 100%;
-            font-size: 1rem;
-        }
-    `,
     templateUrl: './portal-appointment-request.component.html'
 })
 export class PortalAppointmentRequestComponent {
@@ -52,7 +46,7 @@ export class PortalAppointmentRequestComponent {
     readonly page = signal<PortalBookingPage | null>(null);
     readonly pets = signal<readonly PortalPet[]>([]);
 
-    readonly reasonId = signal<string | null>(null);
+    readonly reasonKey = signal<string | null>(null);
     readonly availabilityState = signal<AvailabilityState>('idle');
     readonly days = signal<readonly PortalBookingDay[]>([]);
     readonly selectedSlot = signal<string | null>(null);
@@ -62,7 +56,7 @@ export class PortalAppointmentRequestComponent {
     readonly submitted = signal(false);
     readonly submitError = signal<string | null>(null);
 
-    readonly selectedReason = computed<PortalBookingReason | null>(() => this.page()?.reasons.find((r) => r.id === this.reasonId()) ?? null);
+    readonly selectedReason = computed<PortalBookingReason | null>(() => this.page()?.reasons.find((r) => reasonKey(r) === this.reasonKey()) ?? null);
     readonly activePets = computed(() => this.pets().filter((p) => !isDeceased(p)));
     readonly slotText = computed(() => {
         const slot = this.selectedSlot();
@@ -109,7 +103,7 @@ export class PortalAppointmentRequestComponent {
         }
 
         this.state.set('loading');
-        this.reasonId.set(null);
+        this.reasonKey.set(null);
         this.selectedSlot.set(null);
         forkJoin({ page: this.api.linkPage(linkId), pets: this.petsApi.pets(linkId) }).subscribe({
             next: ({ page, pets }) => {
@@ -130,12 +124,14 @@ export class PortalAppointmentRequestComponent {
         });
     }
 
-    selectReason(reasonId: string): void {
-        if (this.reasonId() === reasonId) {
+    selectReason(key: string): void {
+        if (this.reasonKey() === key) {
             return;
         }
 
-        this.reasonId.set(reasonId);
+        this.reasonKey.set(key);
+        this.form.controls.note.setValidators(bookingNoteValidators(this.selectedReason()));
+        this.form.controls.note.updateValueAndValidity();
         this.selectedSlot.set(null);
         this.slotMessage.set(null);
         this.loadAvailability();
@@ -143,14 +139,14 @@ export class PortalAppointmentRequestComponent {
 
     loadAvailability(): void {
         const linkId = this.session.activeLink()?.linkId;
-        const reasonId = this.reasonId();
+        const reason = this.selectedReason();
 
-        if (!linkId || !reasonId) {
+        if (!linkId || !reason) {
             return;
         }
 
         this.availabilityState.set('loading');
-        this.api.linkAvailability(linkId, reasonId).subscribe({
+        this.api.linkAvailability(linkId, reason.id).subscribe({
             next: (days) => {
                 this.days.set(days);
                 this.availabilityState.set('ready');
@@ -177,10 +173,13 @@ export class PortalAppointmentRequestComponent {
         this.submitted.set(true);
         this.form.markAllAsTouched();
         const linkId = this.session.activeLink()?.linkId;
-        const reasonId = this.reasonId();
+        const reason = this.selectedReason();
         const slot = this.selectedSlot();
 
-        if (this.form.invalid || !linkId || !reasonId || !slot || this.submitting()) {
+        // Not 1. adımda; gönder düğmesinin yanında da söylenir, yoksa kullanıcı neden gönderemediğini görmez.
+        this.submitError.set(this.form.controls.note.errors?.['noteRequired'] ? `${NOTE_REQUIRED_MESSAGE} (1. adım)` : null);
+
+        if (this.form.invalid || !linkId || !reason || !slot || this.submitting()) {
             return;
         }
 
@@ -195,7 +194,7 @@ export class PortalAppointmentRequestComponent {
                 petName: isNew ? v.petName.trim() : null,
                 petSpecies: isNew ? v.petSpecies.trim() || null : null,
                 petBreed: isNew ? v.petBreed.trim() || null : null,
-                reasonId,
+                reasonId: reason.id,
                 requestedStartUtc: slot,
                 phone: v.phone.trim() || null,
                 note: v.note.trim() || null

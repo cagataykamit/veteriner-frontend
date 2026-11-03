@@ -7,11 +7,15 @@ import { PORTAL_ENDPOINTS } from '@portal/app/core/api/portal-endpoints';
 /** Müsaitlik isteği gün sayısı (sözleşme: 1–14). */
 export const PORTAL_BOOKING_DAYS = 14;
 
-/** Online akışta seçilebilen neden (`ONLINE_APPOINTMENT_API_CONTRACT.md` §5). */
+/**
+ * Online akışta seçilebilen neden (`ONLINE_APPOINTMENT_API_CONTRACT.md` §5). Listenin sonunda her zaman sistemin
+ * "Diğer / emin değilim" seçeneği vardır: `id` boştur ve not zorunludur (ADR-042 eki).
+ */
 export interface PortalBookingReason {
-    readonly id: string;
+    readonly id: string | null;
     readonly name: string;
     readonly durationMinutes: number;
+    readonly requiresNote: boolean;
 }
 
 /** Talep sayfası: klinik iletişim bilgisi, talep sınırları ve nedenler (§5, §6 aynı yanıt). */
@@ -71,7 +75,7 @@ export interface PortalPublicBookingRequest {
     readonly petName: string;
     readonly petSpecies: string | null;
     readonly petBreed: string | null;
-    readonly reasonId: string;
+    readonly reasonId: string | null;
     readonly requestedStartUtc: string;
     readonly note: string | null;
 }
@@ -82,14 +86,17 @@ export interface PortalLinkBookingRequest {
     readonly petName: string | null;
     readonly petSpecies: string | null;
     readonly petBreed: string | null;
-    readonly reasonId: string;
+    readonly reasonId: string | null;
     readonly requestedStartUtc: string;
     readonly phone: string | null;
     readonly note: string | null;
 }
 
-function availabilityParams(reasonId: string): HttpParams {
-    return new HttpParams().set('reasonId', reasonId).set('days', PORTAL_BOOKING_DAYS);
+/** "Diğer" seçiliyse (`reasonId` boş) parametre gönderilmez; sunucu varsayılan süre ve tüm hekimlerle hesaplar. */
+function availabilityParams(reasonId: string | null): HttpParams {
+    const params = new HttpParams().set('days', PORTAL_BOOKING_DAYS);
+
+    return reasonId ? params.set('reasonId', reasonId) : params;
 }
 
 /** Online randevu talebi uçları: kimliksiz bağlantı (§5) ve oturumlu bağ (§6). */
@@ -101,7 +108,7 @@ export class PortalBookingApi {
         return this.api.get<PortalBookingPage>(PORTAL_ENDPOINTS.publicBooking(code));
     }
 
-    publicAvailability(code: string, reasonId: string): Observable<PortalBookingDay[]> {
+    publicAvailability(code: string, reasonId: string | null): Observable<PortalBookingDay[]> {
         return this.api.get<PortalBookingDay[]>(PORTAL_ENDPOINTS.publicBookingAvailability(code), availabilityParams(reasonId));
     }
 
@@ -117,7 +124,7 @@ export class PortalBookingApi {
         return this.api.get<PortalBookingPage>(PORTAL_ENDPOINTS.linkBooking(linkId));
     }
 
-    linkAvailability(linkId: string, reasonId: string): Observable<PortalBookingDay[]> {
+    linkAvailability(linkId: string, reasonId: string | null): Observable<PortalBookingDay[]> {
         return this.api.get<PortalBookingDay[]>(PORTAL_ENDPOINTS.linkBookingAvailability(linkId), availabilityParams(reasonId));
     }
 

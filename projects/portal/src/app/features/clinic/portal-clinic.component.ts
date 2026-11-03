@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { portalLoad } from '@portal/app/shared/data/portal-load';
 import { formatPortalClock } from '@portal/app/shared/format/portal-date';
@@ -17,7 +16,7 @@ interface HoursRow {
 @Component({
     selector: 'portal-clinic',
     standalone: true,
-    imports: [RouterLink, PortalErrorState, PortalSkeleton],
+    imports: [PortalErrorState, PortalSkeleton],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './portal-clinic.component.html',
     styles: `

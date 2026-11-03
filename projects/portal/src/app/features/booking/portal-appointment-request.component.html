@@ -26,27 +26,17 @@
             }
             @case ('ready') {
                 @if (page(); as p) {
-                    <section class="portal-card portal-stack" aria-labelledby="request-reason-title">
-                        <h2 id="request-reason-title" class="portal-subtitle">1. Randevu nedeni</h2>
-                        @if (p.reasons.length) {
-                            <fieldset class="portal-choice">
-                                <legend class="sr-only">Randevu nedeni</legend>
-                                @for (reason of p.reasons; track reason.id) {
-                                    <label class="portal-check">
-                                        <input type="radio" name="request-reason" [value]="reason.id" [checked]="reasonId() === reason.id" (change)="selectReason(reason.id)" />
-                                        <span>
-                                            {{ reason.name }}
-                                            <span class="portal-field-hint">Yaklaşık {{ reason.durationMinutes }} dk</span>
-                                        </span>
-                                    </label>
-                                }
-                            </fieldset>
-                        } @else {
-                            <p class="portal-muted" data-testid="no-reasons">Klinik online talep için randevu nedeni tanımlamamış. Lütfen kliniği arayın.</p>
-                        }
-                    </section>
+                    <portal-booking-reason-step
+                        idPrefix="request"
+                        [reasons]="p.reasons"
+                        [selectedKey]="reasonKey()"
+                        [note]="form.controls.note"
+                        [clinicPhone]="p.clinicPhone"
+                        [showErrors]="submitted()"
+                        (selectedChange)="selectReason($event)"
+                    />
 
-                    @if (reasonId()) {
+                    @if (reasonKey()) {
                         <section class="portal-card portal-stack" aria-labelledby="request-slot-title">
                             <h2 id="request-slot-title" class="portal-subtitle">2. Gün ve saat</h2>
                             @if (slotMessage(); as message) {
@@ -68,7 +58,7 @@
 
                     @if (selectedSlot()) {
                         <form class="portal-card portal-stack" [formGroup]="form" (ngSubmit)="submit()" novalidate aria-labelledby="request-form-title">
-                            <h2 id="request-form-title" class="portal-subtitle">3. Hayvan ve not</h2>
+                            <h2 id="request-form-title" class="portal-subtitle">3. Hayvan ve telefon</h2>
                             <p class="portal-muted">Seçilen saat: <strong>{{ slotText() }}</strong></p>
 
                             <fieldset class="portal-choice">
@@ -118,10 +108,6 @@
                                 <label for="request-phone">Telefon (isteğe bağlı)</label>
                                 <input pInputText id="request-phone" type="text" inputmode="tel" formControlName="phone" autocomplete="tel" [attr.maxlength]="limits.phone" />
                                 <p class="portal-field-hint">Boş bırakırsanız klinikteki kayıtlı telefonunuz kullanılır.</p>
-                            </div>
-                            <div class="portal-field">
-                                <label for="request-note">Not (isteğe bağlı)</label>
-                                <textarea pTextarea id="request-note" rows="3" formControlName="note" [attr.maxlength]="limits.note"></textarea>
                             </div>
 
                             @if (submitError(); as message) {

@@ -5,7 +5,6 @@ import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
-import { TextareaModule } from 'primeng/textarea';
 import { PORTAL_ERROR_CODES, portalErrorMessage, portalProblemCode } from '@portal/app/core/errors/portal-errors';
 import { PortalResendTimer } from '@portal/app/features/auth/portal-resend-timer';
 import { PortalBrandHeader, PortalFooter } from '@portal/app/layout/portal-brand.component';
@@ -13,28 +12,23 @@ import { formatPortalDay, formatPortalTime, formatPortalWeekday } from '@portal/
 import { PortalErrorState, PortalLoadingState } from '@portal/app/shared/ui/portal-states.component';
 import { normalizeOneTimeCode, portalEmailValidators, portalFieldError, portalOneTimeCodeValidator } from '@portal/app/shared/validation/portal-form-rules';
 import { PortalBookingApi, PortalBookingDay, PortalBookingPage, PortalBookingReason } from './portal-booking.api';
-import { PORTAL_BOOKING_LIMITS, pendingLimitMessage } from './portal-booking.rules';
+import { PortalBookingReasonStep } from './portal-booking-reason-step.component';
+import { bookingNoteValidators, NOTE_REQUIRED_MESSAGE, PORTAL_BOOKING_LIMITS, pendingLimitMessage, reasonKey } from './portal-booking.rules';
 import { PortalSlotPicker } from './portal-slot-picker.component';
 
 type PageState = 'loading' | 'closed' | 'error' | 'ready' | 'done';
 type AvailabilityState = 'idle' | 'loading' | 'ready' | 'error';
 
 /**
- * Kliniğe özel online randevu bağlantısı (`/randevu/:bookingCode`, ADR-042 K1; sözleşme §5). Kimliksizdir: neden → gün/saat →
+ * Kliniğe özel online randevu bağlantısı (`/randevu/:bookingCode`, ADR-042 K1 ve eki; sözleşme §5). Kimliksizdir: neden ve not → gün/saat →
  * iletişim ve hayvan bilgisi → e-posta doğrulama kodu → talep. Talep kesin randevu değildir; klinik onaylayınca e-posta gelir.
  * Bağlantıdan gelen kişi için hesap ya da müşteri kaydı oluşmaz.
  */
 @Component({
     selector: 'portal-public-booking',
     standalone: true,
-    imports: [ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, TextareaModule, PortalBrandHeader, PortalFooter, PortalLoadingState, PortalErrorState, PortalSlotPicker],
+    imports: [ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, PortalBookingReasonStep, PortalBrandHeader, PortalFooter, PortalLoadingState, PortalErrorState, PortalSlotPicker],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    styles: `
-        .portal-field textarea {
-            width: 100%;
-            font-size: 1rem;
-        }
-    `,
     templateUrl: './portal-public-booking.component.html'
 })
 export class PortalPublicBookingComponent implements OnInit {
@@ -48,7 +42,7 @@ export class PortalPublicBookingComponent implements OnInit {
     readonly page = signal<PortalBookingPage | null>(null);
     readonly loadError = signal('');
 
-    readonly reasonId = signal<string | null>(null);
+    readonly reasonKey = signal<string | null>(null);
     readonly availabilityState = signal<AvailabilityState>('idle');
     readonly days = signal<readonly PortalBookingDay[]>([]);
     readonly selectedSlot = signal<string | null>(null);
@@ -62,7 +56,7 @@ export class PortalPublicBookingComponent implements OnInit {
     readonly submitted = signal(false);
     readonly timer = new PortalResendTimer(inject(DestroyRef));
 
-    readonly selectedReason = computed<PortalBookingReason | null>(() => this.page()?.reasons.find((r) => r.id === this.reasonId()) ?? null);
+    readonly selectedReason = computed<PortalBookingReason | null>(() => this.page()?.reasons.find((r) => reasonKey(r) === this.reasonKey()) ?? null);
     readonly slotText = computed(() => {
         const slot = this.selectedSlot();
 
@@ -103,12 +97,14 @@ export class PortalPublicBookingComponent implements OnInit {
         });
     }
 
-    selectReason(reasonId: string): void {
-        if (this.reasonId() === reasonId) {
+    selectReason(key: string): void {
+        if (this.reasonKey() === key) {
             return;
         }
 
-        this.reasonId.set(reasonId);
+        this.reasonKey.set(key);
+        this.form.controls.note.setValidators(bookingNoteValidators(this.selectedReason()));
+        this.form.controls.note.updateValueAndValidity();
         this.selectedSlot.set(null);
         this.slotMessage.set(null);
         this.loadAvailability();
@@ -116,14 +112,14 @@ export class PortalPublicBookingComponent implements OnInit {
 
     loadAvailability(): void {
         const code = this.bookingCode()?.trim();
-        const reasonId = this.reasonId();
+        const reason = this.selectedReason();
 
-        if (!code || !reasonId) {
+        if (!code || !reason) {
             return;
         }
 
         this.availabilityState.set('loading');
-        this.api.publicAvailability(code, reasonId).subscribe({
+        this.api.publicAvailability(code, reason.id).subscribe({
             next: (days) => {
                 this.days.set(days);
                 this.availabilityState.set('ready');
@@ -182,14 +178,17 @@ export class PortalPublicBookingComponent implements OnInit {
         this.submitted.set(true);
         this.form.markAllAsTouched();
         const code = this.bookingCode()?.trim();
-        const reasonId = this.reasonId();
+        const reason = this.selectedReason();
         const slot = this.selectedSlot();
 
         if (!slot) {
             this.slotMessage.set('Lütfen bir gün ve saat seçin.');
         }
 
-        if (this.form.invalid || !code || !reasonId || !slot || this.submitting()) {
+        // Not 1. adımda; gönder düğmesinin yanında da söylenir, yoksa kullanıcı neden gönderemediğini görmez.
+        this.submitError.set(this.form.controls.note.errors?.['noteRequired'] ? `${NOTE_REQUIRED_MESSAGE} (1. adım)` : null);
+
+        if (this.form.invalid || !code || !reason || !slot || this.submitting()) {
             return;
         }
 
@@ -207,7 +206,7 @@ export class PortalPublicBookingComponent implements OnInit {
                 petName: v.petName.trim(),
                 petSpecies: v.petSpecies.trim() || null,
                 petBreed: v.petBreed.trim() || null,
-                reasonId,
+                reasonId: reason.id,
                 requestedStartUtc: slot,
                 note: v.note.trim() || null
             })
@@ -271,7 +270,7 @@ export class PortalPublicBookingComponent implements OnInit {
         }
 
         if (code === PORTAL_ERROR_CODES.reasonNotFound) {
-            this.reasonId.set(null);
+            this.reasonKey.set(null);
             this.selectedSlot.set(null);
             this.load();
         }

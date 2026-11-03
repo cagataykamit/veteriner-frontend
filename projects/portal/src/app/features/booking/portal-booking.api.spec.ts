@@ -76,6 +76,10 @@ describe('PortalBookingApi (online randevu talebi uçları)', () => {
         void firstValueFrom(api.linkAvailability('link-1', 'reason-2'));
         http.expectOne((r) => r.url === '/api/portal/v1/links/link-1/booking/availability' && r.params.get('reasonId') === 'reason-2').flush([]);
 
+        // "Diğer": nedensiz müsaitlik, parametre hiç gönderilmez (ADR-042 eki).
+        void firstValueFrom(api.linkAvailability('link-1', null));
+        http.expectOne((r) => r.url === '/api/portal/v1/links/link-1/booking/availability' && !r.params.has('reasonId') && r.params.get('days') === '14').flush([]);
+
         const list = firstValueFrom(api.myRequests('link-1'));
 
         http.expectOne('/api/portal/v1/links/link-1/appointment-requests').flush([bookingRequest()]);

@@ -78,6 +78,16 @@ describe('AppointmentReasonsPageComponent', () => {
         expect(cmp.dialogVisible()).toBe(false);
     });
 
+    it('online görünür "Acil" nedeni uyarı simgesiyle işaretlenir; "Diğer" seçeneği anlatılır (ADR-042 eki)', async () => {
+        service.list.mockReturnValue(of([reason('r1'), reason('r2', { name: 'ACİL muayene' }), reason('r3', { name: 'Acil', isOnlineBookable: false })]));
+        await create();
+        const el = fixture.nativeElement as HTMLElement;
+        const rows = Array.from(el.querySelectorAll('[data-testid="reason-row"]'));
+
+        expect(rows.map((r) => !!r.querySelector('[data-testid="reason-urgent-online"]'))).toEqual([false, true, false]);
+        expect(el.querySelector('[data-testid="reasons-other-note"]')?.textContent).toContain('Diğer / emin değilim');
+    });
+
     it('yetkisiz kullanıcı düzenleme penceresi açamaz', async () => {
         claims = new Set(['Appointments.Create']);
         await create();

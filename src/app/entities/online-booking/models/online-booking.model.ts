@@ -102,7 +102,8 @@ export interface AppointmentRequestListItemVm {
     clinicId: string;
     status: AppointmentRequestStatus;
     source: AppointmentRequestSource;
-    reasonId: string;
+    /** Boşsa sahip "Diğer / emin değilim" seçti; ne için geldiği `ownerNote`'tadır (ADR-042 eki). */
+    reasonId: string | null;
     reasonName: string;
     requestedStartUtc: string;
     durationMinutes: number;
