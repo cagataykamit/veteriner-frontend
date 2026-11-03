@@ -13,6 +13,7 @@ import { formatPortalDay, formatPortalTime, formatPortalWeekday } from '@portal/
 import { PortalEmptyState, PortalErrorState, PortalLoadingState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
 import { PortalBookingApi, PortalBookingDay, PortalBookingPage, PortalBookingReason } from './portal-booking.api';
 import { PortalBookingReasonStep } from './portal-booking-reason-step.component';
+import { PortalBookingDone, PortalBookingHow, PortalBookingStep, PortalBookingSummaryItem } from './portal-booking-ui.component';
 import { bookingNoteValidators, NOTE_REQUIRED_MESSAGE, PORTAL_BOOKING_LIMITS, pendingLimitMessage, reasonKey } from './portal-booking.rules';
 import { PortalSlotPicker } from './portal-slot-picker.component';
 
@@ -30,9 +31,25 @@ export const NEW_PET_OPTION = 'new';
 @Component({
     selector: 'portal-appointment-request',
     standalone: true,
-    imports: [ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, PortalBookingReasonStep, PortalEmptyState, PortalErrorState, PortalLoadingState, PortalSkeleton, PortalSlotPicker],
+    imports: [
+        ReactiveFormsModule,
+        RouterLink,
+        ButtonModule,
+        InputTextModule,
+        MessageModule,
+        PortalBookingDone,
+        PortalBookingHow,
+        PortalBookingReasonStep,
+        PortalBookingStep,
+        PortalEmptyState,
+        PortalErrorState,
+        PortalLoadingState,
+        PortalSkeleton,
+        PortalSlotPicker
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    templateUrl: './portal-appointment-request.component.html'
+    templateUrl: './portal-appointment-request.component.html',
+    styleUrl: './portal-appointment-request.component.scss'
 })
 export class PortalAppointmentRequestComponent {
     protected readonly session = inject(PortalSessionService);
@@ -55,6 +72,7 @@ export class PortalAppointmentRequestComponent {
     readonly submitting = signal(false);
     readonly submitted = signal(false);
     readonly submitError = signal<string | null>(null);
+    readonly doneItems = signal<readonly PortalBookingSummaryItem[]>([]);
 
     readonly selectedReason = computed<PortalBookingReason | null>(() => this.page()?.reasons.find((r) => reasonKey(r) === this.reasonKey()) ?? null);
     readonly activePets = computed(() => this.pets().filter((p) => !isDeceased(p)));
@@ -202,6 +220,11 @@ export class PortalAppointmentRequestComponent {
             .subscribe({
                 next: () => {
                     this.submitting.set(false);
+                    this.doneItems.set([
+                        { icon: 'fa-stethoscope', label: 'Neden', value: reason.name },
+                        { icon: 'fa-calendar-day', label: 'İstenen saat', value: this.slotText() },
+                        { icon: 'fa-paw', label: 'Hayvan', value: this.petSummary() ?? '' }
+                    ]);
                     this.state.set('done');
                 },
                 error: (err: unknown) => {
@@ -209,6 +232,17 @@ export class PortalAppointmentRequestComponent {
                     this.handleSubmitError(err);
                 }
             });
+    }
+
+    /** 3. adım özeti: seçilen hayvanın adı ya da "listede yok" için yazılan ad. */
+    petSummary(): string | null {
+        const v = this.form.getRawValue();
+
+        if (v.pet === NEW_PET_OPTION) {
+            return v.petName.trim() || null;
+        }
+
+        return this.activePets().find((p) => p.petId === v.pet)?.name ?? null;
     }
 
     fieldError(name: 'pet' | 'petName'): string | null {

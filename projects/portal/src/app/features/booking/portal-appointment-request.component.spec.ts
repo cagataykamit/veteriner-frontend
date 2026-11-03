@@ -38,7 +38,7 @@ describe('PortalAppointmentRequestComponent (oturumlu talep)', () => {
 
     /** Hayvan seçeneği etiket metniyle bulunur (`[value]` bağlamasını form erişimcisi alır, DOM değerine yazılmaz). */
     function pick(label: string): void {
-        Array.from(el.querySelectorAll<HTMLLabelElement>('label.portal-check'))
+        Array.from(el.querySelectorAll<HTMLLabelElement>('label.portal-option'))
             .find((l) => l.querySelector('input[formcontrolname=pet]') && l.textContent?.includes(label))!
             .querySelector('input')!
             .click();
@@ -79,6 +79,9 @@ describe('PortalAppointmentRequestComponent (oturumlu talep)', () => {
         pick(PET_PAMUK.name);
         typeInto(el, '#request-note', 'Karma aşı');
         await settle();
+
+        expect(el.querySelectorAll('[data-testid=step-summary]')[2]?.textContent?.trim()).toBe(PET_PAMUK.name);
+
         buttonByText(el, 'Talebi gönder')!.click();
         await settle();
 
@@ -92,7 +95,11 @@ describe('PortalAppointmentRequestComponent (oturumlu talep)', () => {
             phone: null,
             note: 'Karma aşı'
         });
-        expect(el.querySelector('[data-testid=request-done]')!.textContent).toContain('kesin randevu değildir');
+        const done = el.querySelector('[data-testid=request-done]')!;
+
+        expect(done.textContent).toContain('kesin randevu değildir');
+        expect(done.textContent).toContain('Pazartesi, 02.11.2026 · 09:00');
+        expect(done.querySelector('a.portal-action-link')?.getAttribute('href')).toBe('/appointments/requests');
     });
 
     it('"Diğer" seçilince müsaitlik nedensiz istenir; not yazılmadan gönderilmez, yazılınca reasonId boş gider (ADR-042 eki)', async () => {

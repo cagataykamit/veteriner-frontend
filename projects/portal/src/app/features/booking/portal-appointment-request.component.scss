@@ -1,0 +1,35 @@
+/* Oturumlu talep: hayvan seçimi kartları ve "listede yok" alanları. Adım kartı, neden ve saat seçici kendi bileşenlerindedir. */
+
+@use './portal-booking-form';
+
+.request-pets {
+    gap: 0.5rem;
+}
+
+.request-pet-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.625rem;
+    background: var(--vetinity-bg-soft);
+    color: var(--vetinity-navy);
+}
+
+.request-pet-new {
+    border-style: dashed;
+}
+
+.request-new-pet {
+    padding: 0.875rem;
+    border-radius: 0.75rem;
+    background: #f8fafc;
+}
+
+/* Zeminli fieldset'te başlık çerçeve çizgisine değil panelin içine otursun. */
+.request-new-pet > legend {
+    float: left;
+    width: 100%;
+}
