@@ -96,6 +96,30 @@ describe('KvkkFormTemplatePageComponent', () => {
         expect(el().querySelector('[data-testid="kvkk-default-warning"]')).toBeNull();
     });
 
+    it('kayıtlı metin: Kaydet değişiklik yokken kapalı, kayıttan sonra yeniden kapanır; varsayılan metin olduğu gibi kaydedilebilir', () => {
+        service.getTemplate.mockReturnValue(of(vm({ text: 'Kayıtlı metin', isDefault: false, rowVersion: 'rv0' })));
+        create();
+        const saveButton = () => el().querySelector('button[data-testid="kvkk-template-save"]') as HTMLButtonElement;
+        const textarea = el().querySelector('[data-testid="kvkk-template-text"]') as HTMLTextAreaElement;
+
+        expect(saveButton().disabled).toBe(true);
+
+        textarea.value = 'Onaylı metin';
+        textarea.dispatchEvent(new Event('input'));
+        fixture.detectChanges();
+        expect(saveButton().disabled).toBe(false);
+
+        saveButton().click();
+        fixture.detectChanges();
+        expect(service.updateTemplate).toHaveBeenCalledWith('k1', 'consent', 'Onaylı metin', expect.objectContaining({ rowVersion: 'rv0' }));
+        expect(saveButton().disabled).toBe(true);
+
+        TestBed.resetTestingModule();
+        service.getTemplate.mockReturnValue(of(vm()));
+        create();
+        expect(saveButton().disabled).toBe(false);
+    });
+
     it('?kind=disclosure: aydınlatma şablonu yüklenir, önizlemede kutu/imza yok, kayıt aydınlatma ucuna gider', () => {
         query = { kind: 'disclosure' };
         service.getTemplate.mockReturnValue(of(vm({ text: 'Aydınlatma {{clientName}}' })));
