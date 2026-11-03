@@ -118,7 +118,7 @@ const KIND_TITLE: Readonly<Record<HbsRecordKind, string>> = {
                             @if (entry()?.status !== 'NotEntered') {
                                 <button pButton type="button" severity="secondary" [text]="true" [disabled]="saving()" data-testid="hbs-reset" (click)="save('NotEntered')">Girilmedi olarak geri al</button>
                             }
-                            <button pButton type="button" [disabled]="saving() || (mode() === 'NotRequired' && reason.invalid) || reference.invalid" data-testid="hbs-save" (click)="save(mode())"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
+                            <button pButton type="button" [disabled]="saving() || unchanged() || (mode() === 'NotRequired' && reason.invalid) || reference.invalid" data-testid="hbs-save" (click)="save(mode())"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
                         </div>
                     }
                 </div>
@@ -164,6 +164,11 @@ export class HbsDataDialogComponent {
                 untracked(() => this.load(id));
             }
         });
+    }
+
+    /** Kayıtlı durumla aynı seçim, numara ve gerekçe yeniden kaydedilmez; Kaydet bir sonraki değişikliğe kadar kapalı kalır. */
+    protected unchanged(): boolean {
+        return this.entry()?.status === this.mode() && this.reference.pristine && this.reason.pristine;
     }
 
     protected markedText(e: HbsEntryVm): string {

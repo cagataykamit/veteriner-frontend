@@ -97,6 +97,27 @@ describe('HbsDataDialogComponent', () => {
         expect(emitted).toEqual([saved]);
     });
 
+    it('kayıtlı durumda değişiklik yokken Kaydet kapalı; kayıttan sonra yeniden kapanır', () => {
+        hbs.getHbsData.mockReturnValue(of({ ...data, hbs: { status: 'Entered', referenceNumber: '2RX4K9', isTracked: true } }));
+        const fixture = open();
+        const saveButton = () => body().querySelector('button[data-testid="hbs-save"]') as HTMLButtonElement;
+        const input = body().querySelector('[data-testid="hbs-reference-input"]') as HTMLInputElement;
+
+        expect(saveButton().disabled).toBe(true);
+
+        input.value = '7KQ2M1';
+        input.dispatchEvent(new Event('input'));
+        fixture.detectChanges();
+        expect(saveButton().disabled).toBe(false);
+
+        hbs.updateHbsEntry.mockReturnValue(of({ ...saved, referenceNumber: '7KQ2M1' }));
+        saveButton().click();
+        fixture.detectChanges();
+
+        expect(hbs.updateHbsEntry).toHaveBeenCalledWith('prescription', 'r1', { status: 'Entered', referenceNumber: '7KQ2M1', notRequiredReason: null });
+        expect(saveButton().disabled).toBe(true);
+    });
+
     it('"Gerekmiyor" gerekçe olmadan gönderilmez; gerekçeyle numarasız gider', () => {
         const fixture = open();
 
