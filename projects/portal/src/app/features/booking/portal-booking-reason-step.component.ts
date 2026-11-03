@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { TextareaModule } from 'primeng/textarea';
-import { telHref } from '@portal/app/shared/format/portal-labels';
+import { formatPortalPhone, telHref } from '@portal/app/shared/format/portal-labels';
 import type { PortalBookingReason } from './portal-booking.api';
 import { NOTE_REQUIRED_MESSAGE, PORTAL_BOOKING_LIMITS, reasonKey } from './portal-booking.rules';
 import { PortalBookingStep } from './portal-booking-ui.component';
@@ -19,21 +19,46 @@ import { PortalBookingStep } from './portal-booking-ui.component';
     styles: `
         .urgent {
             display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.5rem 0.75rem;
-            padding: 0.75rem 0.875rem;
+            flex-direction: column;
+            overflow: hidden;
             border: 1px solid #f5b8a8;
             border-radius: 0.75rem;
             background: #fff5f2;
             color: #7a2410;
             font-size: 0.9375rem;
         }
-        .urgent > i {
-            font-size: 1.125rem;
+        .urgent-text {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.625rem;
+            margin: 0;
+            padding: 0.75rem 0.875rem;
         }
-        .urgent > span {
-            flex: 1 1 12rem;
+        .urgent-text > i {
+            margin-top: 0.25rem;
+        }
+        .urgent-phone {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.625rem 0.875rem;
+            border-top: 1px solid #f5b8a8;
+            background: var(--portal-surface);
+            line-height: 1.25;
+        }
+        .urgent-phone small {
+            display: block;
+            color: var(--portal-text-muted);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .urgent-number {
+            color: var(--portal-text);
+            font-size: 1.125rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
         }
         .urgent-call {
             display: inline-flex;
@@ -41,12 +66,11 @@ import { PortalBookingStep } from './portal-booking-ui.component';
             gap: 0.5rem;
             min-height: var(--portal-touch);
             padding: 0 1rem;
-            border-radius: 999px;
+            border-radius: 0.625rem;
             background: #b42318;
             color: #fff;
             font-weight: 600;
             text-decoration: none;
-            white-space: nowrap;
         }
         .portal-choice {
             gap: 0.5rem;
@@ -78,10 +102,18 @@ import { PortalBookingStep } from './portal-booking-ui.component';
     template: `
         <portal-booking-step [step]="1" title="Ne için geliyorsunuz?" [headingId]="idPrefix() + '-reason-title'" [done]="done()" [summary]="summary()">
             <div class="urgent" data-testid="booking-urgent">
-                <i class="fa-solid fa-truck-medical" aria-hidden="true"></i>
-                <span><strong>Acil durum mu?</strong> Online talep kliniğin onayını bekler; acil durumda beklemeyin, kliniği hemen arayın.</span>
+                <p class="urgent-text">
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                    <span><strong>Acil durum mu?</strong> Online talep kliniğin onayını bekler; acil durumda beklemeyin, kliniği telefonla arayın.</span>
+                </p>
                 @if (phoneHref(); as href) {
-                    <a class="urgent-call" [href]="href"><i class="fa-solid fa-phone" aria-hidden="true"></i>{{ clinicPhone() }}</a>
+                    <div class="urgent-phone">
+                        <span>
+                            <small>Klinik telefonu</small>
+                            <span class="urgent-number">{{ phoneText() }}</span>
+                        </span>
+                        <a class="urgent-call" [href]="href" [attr.aria-label]="'Kliniği ara: ' + phoneText()"><i class="fa-solid fa-phone" aria-hidden="true"></i>Ara</a>
+                    </div>
                 }
             </div>
 
@@ -148,6 +180,7 @@ export class PortalBookingReasonStep {
         return reason ? `${reason.name} · ~${reason.durationMinutes} dk` : null;
     });
     readonly phoneHref = computed(() => telHref(this.clinicPhone()));
+    readonly phoneText = computed(() => formatPortalPhone(this.clinicPhone()));
 
     /** Neden seçili ve not kurala uyuyor. Not alanı sinyal değildir; değer her değişiklik olayında yeniden okunur. */
     done(): boolean {

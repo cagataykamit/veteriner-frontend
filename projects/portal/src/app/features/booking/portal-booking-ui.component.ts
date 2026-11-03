@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { telHref } from '@portal/app/shared/format/portal-labels';
+import { formatPortalPhone, telHref } from '@portal/app/shared/format/portal-labels';
 
 /** Talep özeti satırı (bitti ekranı). */
 export interface PortalBookingSummaryItem {
@@ -234,7 +234,7 @@ export class PortalBookingHow {}
                 </ol>
             </div>
             @if (phoneHref(); as href) {
-                <p class="portal-muted">Sorunuz varsa kliniği arayın: <a class="done-phone" [href]="href">{{ clinicPhone() }}</a></p>
+                <p class="portal-muted">Sorunuz varsa kliniği arayın: <a class="done-phone" [href]="href">{{ phoneText() }}</a></p>
             }
             <ng-content />
         </section>
@@ -249,4 +249,5 @@ export class PortalBookingDone {
     readonly pageTitle = input(false);
 
     readonly phoneHref = computed(() => telHref(this.clinicPhone()));
+    readonly phoneText = computed(() => formatPortalPhone(this.clinicPhone()));
 }

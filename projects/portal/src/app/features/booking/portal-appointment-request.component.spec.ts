@@ -128,10 +128,22 @@ describe('PortalAppointmentRequestComponent (oturumlu talep)', () => {
         expect(api.createLinkRequest).toHaveBeenCalledWith('link-1', expect.objectContaining({ reasonId: null, note: 'Kaşıntı var' }));
     });
 
-    it('acil durum uyarısı kliniğin telefonunu aranabilir bağlantı olarak gösterir', async () => {
+    it('acil durum uyarısı kliniğin biçimli telefonunu ve "Ara" bağlantısını gösterir', async () => {
         await create();
 
-        expect(el.querySelector('[data-testid=booking-urgent] a')?.getAttribute('href')).toBe('tel:02320000000');
+        const call = el.querySelector('[data-testid=booking-urgent] a')!;
+
+        expect(call.getAttribute('href')).toBe('tel:02320000000');
+        expect(call.getAttribute('aria-label')).toBe('Kliniği ara: 0232 000 00 00');
+        expect(el.querySelector('[data-testid=booking-urgent] .urgent-number')?.textContent?.trim()).toBe('0232 000 00 00');
+    });
+
+    it('klinik telefonu yoksa acil uyarısında telefon satırı olmaz', async () => {
+        api.linkPage.mockReturnValue(of({ ...BOOKING_PAGE, clinicPhone: null }));
+        await create();
+
+        expect(el.querySelector('[data-testid=booking-urgent]')?.textContent).toContain('kliniği telefonla arayın');
+        expect(el.querySelector('[data-testid=booking-urgent] .urgent-phone')).toBeNull();
     });
 
     it('"Listede yok" seçilince hayvan adı zorunlu ve serbest metinle gönderilir', async () => {
