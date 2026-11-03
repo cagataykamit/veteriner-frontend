@@ -1,4 +1,4 @@
-import { formatPortalCalendarDate, formatPortalClock, formatPortalDay, formatPortalTime, formatPortalWeekday } from './portal-date';
+import { formatPortalCalendarDate, formatPortalClock, formatPortalDateParts, formatPortalDay, formatPortalTime, formatPortalWeekday } from './portal-date';
 import { appointmentStatus, formatPersonName, paymentMethodLabel, telHref } from './portal-labels';
 import { formatPortalMoney, formatPortalWeight } from './portal-money';
 
@@ -14,6 +14,12 @@ describe('Portal biçimleri (tarih, para, etiket)', () => {
     it('geçersiz/boş tarihte boş metin döner', () => {
         expect(formatPortalDay(null)).toBe('');
         expect(formatPortalDay('tarih değil')).toBe('');
+        expect(formatPortalDateParts(null)).toEqual({ weekday: '', day: '', month: '' });
+    });
+
+    it('takvim kutucuğu parçalarını İstanbul günüyle yazar', () => {
+        // 22:30 UTC Pazar = Pazartesi 01:30 İstanbul
+        expect(formatPortalDateParts('2026-11-01T22:30:00Z')).toEqual({ weekday: 'Pzt', day: '2', month: 'Kas' });
     });
 
     it('takvim tarihini ve saati saat dilimi dönüşümü olmadan yazar', () => {
