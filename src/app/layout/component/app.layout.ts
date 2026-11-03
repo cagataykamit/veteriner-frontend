@@ -8,13 +8,14 @@ import { AppSidebar } from './app.sidebar';
 import { AppFooter } from './app.footer';
 import { AppReadOnlyBannerComponent } from './app-read-only-banner.component';
 import { AppSectionTabsComponent } from './app-section-tabs.component';
+import { AppAppointmentRequestAlertComponent } from './app-appointment-request-alert.component';
 import { LayoutService } from '@/app/layout/service/layout.service';
 import { LegalAcceptanceGateComponent } from '@/app/features/legal-acceptance/components/legal-acceptance-gate.component';
 
 @Component({
     selector: 'app-layout',
     standalone: true,
-    imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter, AppReadOnlyBannerComponent, AppSectionTabsComponent, LegalAcceptanceGateComponent],
+    imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter, AppReadOnlyBannerComponent, AppSectionTabsComponent, LegalAcceptanceGateComponent, AppAppointmentRequestAlertComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `<div class="layout-wrapper" [ngClass]="containerClass()">
         <div #primePanelOverlayHost class="layout-prime-panel-overlay-host"></div>
@@ -29,6 +30,8 @@ import { LegalAcceptanceGateComponent } from '@/app/features/legal-acceptance/co
             <app-footer></app-footer>
         </div>
         <div class="layout-mask"></div>
+        <!-- Yeni online randevu talebi uyarısı (sağ alt); yetki yoksa hiçbir şey yapmaz. -->
+        <app-appointment-request-alert />
         <!-- Bekleyen hukuki kabul penceresi (ADR-029); ilk paketi büyütmemek için ayrı parça. -->
         @defer {
             <app-legal-acceptance-gate />

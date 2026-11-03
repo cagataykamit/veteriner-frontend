@@ -1,6 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
@@ -49,6 +50,7 @@ type Mode = 'view' | 'approve' | 'reject';
     imports: [
         FormsModule,
         NgTemplateOutlet,
+        RouterLink,
         ButtonModule,
         DialogModule,
         InputTextModule,
@@ -78,11 +80,25 @@ type Mode = 'view' | 'approve' | 'reject';
                         <dt class="col-span-4 text-muted-color">İstenen saat</dt>
                         <dd class="col-span-8 m-0 font-medium">{{ fmt(d.summary.requestedStartUtc) }}</dd>
                         <dt class="col-span-4 text-muted-color">Sahip</dt>
-                        <dd class="col-span-8 m-0">{{ d.summary.contactName }} · {{ d.summary.contactPhone ?? '—' }} · {{ d.summary.contactEmail }}</dd>
+                        <dd class="col-span-8 m-0">
+                            {{ d.summary.contactName }} · {{ d.summary.contactPhone ?? '—' }} · {{ d.summary.contactEmail }}
+                            <!-- Portal talebi kayıtlı müşteriden gelir: kartı yeni sekmede açılır, talep penceresi kaybolmaz. -->
+                            @if (d.summary.clientId) {
+                                <a class="block font-medium" [routerLink]="['/panel/clients', d.summary.clientId]" target="_blank" data-testid="request-client-link"
+                                    ><i class="pi pi-user mr-1" aria-hidden="true"></i>Müşteri kartı: {{ d.summary.clientName ?? d.summary.contactName }} <i class="pi pi-external-link text-xs" aria-hidden="true"></i
+                                ></a>
+                            } @else {
+                                <span class="block text-muted-color">Kayıtlı müşteri değil; onaylarken eşleştirilir ya da yeni müşteri açılır.</span>
+                            }
+                        </dd>
                         <dt class="col-span-4 text-muted-color">Hayvan</dt>
                         <dd class="col-span-8 m-0">
                             {{ d.summary.petName ?? '—' }}
-                            @if (!d.summary.petId) {
+                            @if (d.summary.petId) {
+                                <a class="block font-medium" [routerLink]="['/panel/pets', d.summary.petId]" target="_blank" data-testid="request-pet-link"
+                                    ><i class="pi pi-heart mr-1" aria-hidden="true"></i>Hasta kartı <i class="pi pi-external-link text-xs" aria-hidden="true"></i
+                                ></a>
+                            } @else {
                                 <span class="text-muted-color">({{ petExtra(d) }}kayıtlı değil)</span>
                             }
                         </dd>
