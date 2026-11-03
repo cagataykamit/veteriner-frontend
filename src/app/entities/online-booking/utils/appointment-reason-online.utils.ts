@@ -8,5 +8,10 @@ export function isUrgentOnlineReason(name: string | null | undefined, isOnlineBo
     return isOnlineBookable && (name ?? '').toLocaleLowerCase('tr-TR').includes('acil');
 }
 
-/** Sahip portalında her zaman listenin sonunda duran sistem seçeneği; klinik tanımlamaz (ADR-042 eki). */
-export const ONLINE_OTHER_REASON_NOTE = 'Online talepte listenin sonunda her zaman "Diğer / emin değilim" seçeneği de bulunur; onu seçen sahip ne için geldiğini yazar.';
+/**
+ * Sahip portalında her zaman listenin sonunda duran sistem seçeneği; klinik tanımlamaz, kapatamaz (ADR-042 eki).
+ * Ad ve süre backend `AppointmentRequest.OtherReasonName` / `OtherReasonDurationMinutes` ile aynıdır; panelde yalnız gösterilir.
+ */
+export const ONLINE_OTHER_REASON = { name: 'Diğer / emin değilim', durationMinutes: 30 } as const;
+
+export const ONLINE_OTHER_REASON_NOTE = `Online talepte listenin sonunda her zaman "${ONLINE_OTHER_REASON.name}" seçeneği de bulunur; onu seçen sahip ne için geldiğini yazar.`;

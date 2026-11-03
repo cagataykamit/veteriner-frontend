@@ -1,9 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
+import { AppointmentReasonsManagerComponent } from '@/app/entities/online-booking/components/appointment-reasons-manager.component';
 import type { AppointmentReasonVm } from '@/app/entities/online-booking/models/online-booking.model';
 import { AppointmentReasonsService } from '@/app/entities/online-booking/services/online-booking.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
@@ -21,10 +23,13 @@ const reason = (id: string, over: Partial<AppointmentReasonVm> = {}): Appointmen
     ...over
 });
 
-describe('AppointmentReasonsPageComponent', () => {
+describe('AppointmentReasonsPageComponent (Tanımlar, ortak neden parçası)', () => {
     let fixture: ComponentFixture<AppointmentReasonsPageComponent>;
     let service: { list: ReturnType<typeof vi.fn>; create: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn>; setActive: ReturnType<typeof vi.fn> };
     let claims: Set<string>;
+
+    const el = () => fixture.nativeElement as HTMLElement;
+    const manager = () => fixture.debugElement.query(By.directive(AppointmentReasonsManagerComponent)).componentInstance as AppointmentReasonsManagerComponent;
 
     async function create(): Promise<void> {
         await TestBed.configureTestingModule({
@@ -54,20 +59,22 @@ describe('AppointmentReasonsPageComponent', () => {
         };
     });
 
-    it('nedenleri süre, online görünürlük ve uygun hekim adlarıyla listeler', async () => {
+    it('nedenleri süre, online görünürlük ve uygun hekim adlarıyla listeler; sonda sistemin "Diğer" satırı var', async () => {
         await create();
-        const rows = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="reason-row"]')).map((r) => (r.textContent ?? '').replace(/\s+/g, ' '));
+        const rows = Array.from(el().querySelectorAll('[data-testid="reason-row"]')).map((r) => (r.textContent ?? '').replace(/\s+/g, ' '));
 
         expect(rows[0]).toContain('Aşı');
         expect(rows[0]).toContain('15 dk');
         expect(rows[0]).toContain('Dr. Ece');
         expect(rows[1]).toContain('Gizli');
         expect(rows[1]).toContain('Pasif');
+        expect(el().querySelector('[data-testid="reason-other-row"]')?.textContent).toContain('Diğer / emin değilim');
+        expect(el().querySelector('[data-testid="reasons-online-link"] a')?.getAttribute('href')).toBe('/panel/settings/online-booking');
     });
 
     it('yeni neden seçilen hekimlerle kaydedilir', async () => {
         await create();
-        const cmp = fixture.componentInstance;
+        const cmp = manager();
 
         cmp.openCreate();
         cmp.form.patchValue({ name: 'Kontrol', defaultDurationMinutes: 20 });
@@ -78,23 +85,21 @@ describe('AppointmentReasonsPageComponent', () => {
         expect(cmp.dialogVisible()).toBe(false);
     });
 
-    it('online görünür "Acil" nedeni uyarı simgesiyle işaretlenir; "Diğer" seçeneği anlatılır (ADR-042 eki)', async () => {
+    it('online görünür "Acil" nedeni uyarı simgesiyle işaretlenir (ADR-042 eki)', async () => {
         service.list.mockReturnValue(of([reason('r1'), reason('r2', { name: 'ACİL muayene' }), reason('r3', { name: 'Acil', isOnlineBookable: false })]));
         await create();
-        const el = fixture.nativeElement as HTMLElement;
-        const rows = Array.from(el.querySelectorAll('[data-testid="reason-row"]'));
+        const rows = Array.from(el().querySelectorAll('[data-testid="reason-row"]'));
 
         expect(rows.map((r) => !!r.querySelector('[data-testid="reason-urgent-online"]'))).toEqual([false, true, false]);
-        expect(el.querySelector('[data-testid="reasons-other-note"]')?.textContent).toContain('Diğer / emin değilim');
     });
 
     it('yetkisiz kullanıcı düzenleme penceresi açamaz', async () => {
         claims = new Set(['Appointments.Create']);
         await create();
-        const cmp = fixture.componentInstance;
+        const cmp = manager();
 
         cmp.openCreate();
         expect(cmp.dialogVisible()).toBe(false);
-        expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="reason-new"]')).toBeNull();
+        expect(el().querySelector('[data-testid="reason-new"]')).toBeNull();
     });
 });
