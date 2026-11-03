@@ -55,6 +55,10 @@ export function normalizeOneTimeCode(value: string): string {
 
 export const portalEmailValidators: ValidatorFn[] = [Validators.required, Validators.email, Validators.maxLength(PORTAL_EMAIL_MAX_LENGTH)];
 
+/** `Validators.required` gibi, ama yalnız boşluk da boş sayılır (sunucu metni kırpıp boşsa reddeder). */
+export const portalRequiredText: ValidatorFn = (control: AbstractControl): ValidationErrors | null =>
+    typeof control.value === 'string' && control.value.trim() !== '' ? null : { required: true };
+
 /** Rakam ve telefonda olağan ayraçlar (boşluk, +, -, ., parantez) dışında karakter: harf yazılmış. */
 const PHONE_CHARS = /^[\d\s+\-.()]*$/;
 

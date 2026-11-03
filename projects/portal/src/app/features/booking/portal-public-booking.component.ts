@@ -16,6 +16,7 @@ import {
     portalEmailValidators,
     portalFieldError,
     portalOneTimeCodeValidator,
+    portalRequiredText,
     portalTurkishMobileValidator
 } from '@portal/app/shared/validation/portal-form-rules';
 import { PortalBookingApi, PortalBookingDay, PortalBookingPage, PortalBookingReason } from './portal-booking.api';
@@ -89,10 +90,10 @@ export class PortalPublicBookingComponent implements OnInit {
     });
 
     readonly form = new FormGroup({
-        contactName: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(PORTAL_BOOKING_LIMITS.contactName)] }),
+        contactName: new FormControl('', { nonNullable: true, validators: [portalRequiredText, Validators.maxLength(PORTAL_BOOKING_LIMITS.contactName)] }),
         phone: new FormControl('', { nonNullable: true, validators: [Validators.required, portalTurkishMobileValidator(), Validators.maxLength(PORTAL_BOOKING_LIMITS.phone)] }),
         email: new FormControl('', { nonNullable: true, validators: portalEmailValidators }),
-        petName: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(PORTAL_BOOKING_LIMITS.petName)] }),
+        petName: new FormControl('', { nonNullable: true, validators: [portalRequiredText, Validators.maxLength(PORTAL_BOOKING_LIMITS.petName)] }),
         petSpecies: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(PORTAL_BOOKING_LIMITS.petSpecies)] }),
         petBreed: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(PORTAL_BOOKING_LIMITS.petBreed)] }),
         note: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(PORTAL_BOOKING_LIMITS.note)] }),

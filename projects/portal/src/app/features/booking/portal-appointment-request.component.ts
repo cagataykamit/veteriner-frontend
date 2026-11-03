@@ -10,7 +10,7 @@ import { PortalSessionService } from '@portal/app/core/auth/portal-session.servi
 import { PORTAL_ERROR_CODES, portalErrorMessage, portalProblemCode } from '@portal/app/core/errors/portal-errors';
 import { isDeceased, PortalPet, PortalPetsApi } from '@portal/app/features/pets/portal-pets.api';
 import { formatPortalDay, formatPortalTime, formatPortalWeekday } from '@portal/app/shared/format/portal-date';
-import { PORTAL_PHONE_INVALID_MESSAGE, portalTurkishMobileValidator } from '@portal/app/shared/validation/portal-form-rules';
+import { PORTAL_PHONE_INVALID_MESSAGE, portalRequiredText, portalTurkishMobileValidator } from '@portal/app/shared/validation/portal-form-rules';
 import { PortalEmptyState, PortalErrorState, PortalLoadingState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
 import { PortalBookingApi, PortalBookingDay, PortalBookingPage, PortalBookingReason } from './portal-booking.api';
 import { PortalBookingReasonStep } from './portal-booking-reason-step.component';
@@ -99,7 +99,7 @@ export class PortalAppointmentRequestComponent {
             const isNew = value === NEW_PET_OPTION;
 
             this.isNewPet.set(isNew);
-            this.form.controls.petName.setValidators(isNew ? [Validators.required, Validators.maxLength(PORTAL_BOOKING_LIMITS.petName)] : [Validators.maxLength(PORTAL_BOOKING_LIMITS.petName)]);
+            this.form.controls.petName.setValidators(isNew ? [portalRequiredText, Validators.maxLength(PORTAL_BOOKING_LIMITS.petName)] : [Validators.maxLength(PORTAL_BOOKING_LIMITS.petName)]);
             this.form.controls.petName.updateValueAndValidity();
         });
 
