@@ -97,6 +97,27 @@ describe('AppointmentRequestDetailDialogComponent', () => {
         expect(cmp.mode()).toBe('view');
     });
 
+    it('kayıtlı müşteri ve hastanın kartları yeni sekmede açılır; kayıtsızsa bağlantı yok', async () => {
+        await create(detail({ source: AppointmentRequestSource.Portal, clientId: 'cl5', clientName: 'Portal Sahip', petId: 'p5' }));
+        fixture.detectChanges();
+        const client = document.querySelector<HTMLAnchorElement>('[data-testid="request-client-link"]');
+        const pet = document.querySelector<HTMLAnchorElement>('[data-testid="request-pet-link"]');
+
+        expect(client?.getAttribute('href')).toBe('/panel/clients/cl5');
+        expect(client?.getAttribute('target')).toBe('_blank');
+        expect(client?.textContent).toContain('Portal Sahip');
+        expect(pet?.getAttribute('href')).toBe('/panel/pets/p5');
+
+        fixture.destroy();
+        TestBed.resetTestingModule();
+        await create(detail());
+        fixture.detectChanges();
+
+        expect(document.querySelector('[data-testid="request-client-link"]')).toBeNull();
+        expect(document.querySelector('[data-testid="request-pet-link"]')).toBeNull();
+        expect(document.body.textContent).toContain('Kayıtlı müşteri değil');
+    });
+
     it('portal talebinde müşteri ve hayvan bağdan gelir; farklı saat seçilince yeniden planlama saati gider', async () => {
         await create(detail({ source: AppointmentRequestSource.Portal, clientId: 'cl5', clientName: 'Portal Sahip', petId: 'p5' }));
         const cmp = fixture.componentInstance;
