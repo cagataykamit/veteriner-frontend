@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -14,9 +16,13 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { CLINICS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { SETTINGS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import type { ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
+import { AppointmentReasonsManagerComponent } from '@/app/entities/online-booking/components/appointment-reasons-manager.component';
+import { OnlineBookingPreviewComponent } from '@/app/entities/online-booking/components/online-booking-preview.component';
 import {
     APPOINTMENT_REQUEST_EMAIL_KIND_LABELS,
+    type AppointmentReasonVm,
     AppointmentRequestEmailKind,
     EMAIL_BODY_MAX,
     EMAIL_SUBJECT_MAX,
@@ -25,6 +31,7 @@ import {
     type OnlineBookingSettingsVm
 } from '@/app/entities/online-booking/models/online-booking.model';
 import { OnlineBookingService } from '@/app/entities/online-booking/services/online-booking.service';
+import { onlineBookingGaps, onlineBookingReadiness, type OnlineBookingReadinessLevel } from '@/app/entities/online-booking/utils/online-booking-readiness.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -42,10 +49,14 @@ export const MIN_LEAD_OPTIONS: { label: string; value: number }[] = [
     { label: '2 gün sonrası', value: 2880 }
 ];
 
+/** Klinik ayrıntı sayfası: çalışma saatleri ve telefon burada düzenlenir. */
+const CLINIC_DETAIL_ROUTE = '/panel/settings/clinics';
+
 /**
- * Online randevu (ADR-042 K1/K3/K5/K6), Ayarlar altında: talebi açma/kapatma (varsayılan kapalı), en erken/en geç sınır,
- * kliniğe özel bağlantı (kopyala, yenile) ve sahibe giden e-posta şablonları (önizleme, varsayılana dönme). Randevu nedenleri
- * Tanımlar'dadır. Yazma `Clinics.Update` ve salt okunur kiracı durumuna bağlıdır.
+ * Online randevu kurulumu (ADR-042 K1/K3/K5/K6 ve eki), Ayarlar altında, tek sayfada adım adım: 1) müşterinin seçeceği
+ * randevu nedenleri (Tanımlar'daki ortak parça), 2) kurulum kontrolü (nedenler, çalışma saatleri, telefon) ve müşterinin
+ * göreceği önizleme, 3) talebi açma/kapatma ve en erken/en geç sınır (eksik varsa açarken söylenir, engel değil), kliniğe
+ * özel bağlantı ve sahibe giden e-posta şablonları. Yazma `Clinics.Update` ve salt okunur kiracı durumuna bağlıdır.
  */
 @Component({
     selector: 'app-online-booking-settings-page',
@@ -54,6 +65,7 @@ export const MIN_LEAD_OPTIONS: { label: string; value: number }[] = [
     imports: [
         FormsModule,
         ReactiveFormsModule,
+        RouterLink,
         ButtonModule,
         ConfirmDialogModule,
         InputTextModule,
@@ -65,7 +77,9 @@ export const MIN_LEAD_OPTIONS: { label: string; value: number }[] = [
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        AppointmentReasonsManagerComponent,
+        OnlineBookingPreviewComponent
     ],
     providers: [ConfirmationService],
     template: `
@@ -73,7 +87,7 @@ export const MIN_LEAD_OPTIONS: { label: string; value: number }[] = [
             [categoryLink]="settingsRoute"
             categoryLinkLabel="Ayarlar"
             title="Online randevu"
-            description="Hasta sahipleri portaldan ya da kliniğe özel bağlantıdan randevu talebi gönderir; talep klinik onaylayınca randevuya dönüşür. Nedenler ve süreleri Tanımlar > Randevu nedenleri'ndedir."
+            description="Hasta sahipleri portaldan ya da kliniğe özel bağlantıdan randevu talebi gönderir; talep klinik onaylayınca randevuya dönüşür. Açmadan önce nedenleri ayarlayın ve müşterinin ne göreceğine bakın."
         />
 
         @if (ro.mutationBlocked()) {
@@ -95,8 +109,37 @@ export const MIN_LEAD_OPTIONS: { label: string; value: number }[] = [
             <app-error-state [detail]="error()!" (retry)="reload()" />
         } @else {
             <div class="grid grid-cols-12 gap-4">
+                <section class="card col-span-12 mb-0" aria-labelledby="onlineReasonsTitle">
+                    <h5 id="onlineReasonsTitle" class="mt-0 mb-1">1. Müşterinin seçeceği nedenler</h5>
+                    <p class="text-sm text-muted-color mt-0 mb-3">Talep formunun ilk adımı: müşteri ne için geldiğini seçer, süre ve uygun hekimler boş saatleri belirler. Aynı liste klinik içi randevu formunda da kullanılır.</p>
+                    <app-appointment-reasons-manager [clinicId]="clinicId()" [canWrite]="canWrite()" (reasonsChange)="reasons.set($event)" />
+                </section>
+
+                <section class="card col-span-12 lg:col-span-6 mb-0" aria-labelledby="onlineReadinessTitle">
+                    <h5 id="onlineReadinessTitle" class="mt-0">2. Kurulum kontrolü</h5>
+                    <ul class="list-none m-0 p-0 flex flex-col gap-3" data-testid="online-readiness">
+                        @for (item of readiness(); track item.key) {
+                            <li class="flex items-start gap-3" [attr.data-testid]="'readiness-' + item.key" [attr.data-level]="item.level">
+                                <i class="pi mt-1" [class]="readinessIcon(item.level)" aria-hidden="true"></i>
+                                <div class="flex flex-col gap-1">
+                                    <span class="font-medium">{{ item.title }}</span>
+                                    <span class="text-sm text-muted-color">{{ item.detail }}</span>
+                                    @if (item.level !== 'ok' && item.key !== 'reasons') {
+                                        <a class="text-sm" [routerLink]="clinicDetailLink()">{{ item.key === 'workingHours' ? 'Çalışma saatlerini ayarla' : 'Telefonu ekle' }}</a>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </section>
+
+                <section class="card col-span-12 lg:col-span-6 mb-0" aria-labelledby="onlinePreviewTitle">
+                    <h5 id="onlinePreviewTitle" class="mt-0">Müşterinin göreceği</h5>
+                    <app-online-booking-preview [reasons]="reasons()" [clinicPhone]="clinicPhone() ?? null" />
+                </section>
+
                 <section class="card col-span-12 lg:col-span-6 mb-0" aria-labelledby="onlineSettingsTitle">
-                    <h5 id="onlineSettingsTitle" class="mt-0">Talep alma</h5>
+                    <h5 id="onlineSettingsTitle" class="mt-0">3. Talep alma</h5>
                     <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()" class="flex flex-col gap-4">
                         @if (settingsMessage()) {
                             <p-message [severity]="settingsMessageSeverity()" class="w-full" role="status">{{ settingsMessage() }}</p-message>
@@ -105,6 +148,16 @@ export const MIN_LEAD_OPTIONS: { label: string; value: number }[] = [
                             <p-toggleswitch inputId="onlineEnabled" formControlName="isEnabled" data-testid="online-enabled" />
                             <label for="onlineEnabled">Online randevu talebi açık</label>
                         </div>
+                        @if (enabledInForm() && gaps().length > 0) {
+                            <p-message severity="warn" class="w-full" data-testid="online-gaps">
+                                <span>
+                                    Açabilirsiniz, ama müşteri şu eksikleri görecek:
+                                    @for (gap of gaps(); track gap.key) {
+                                        <span class="block">· {{ gap.detail }}</span>
+                                    }
+                                </span>
+                            </p-message>
+                        }
                         <div class="flex flex-col gap-1">
                             <label for="onlineMinLead" class="text-sm font-medium text-muted-color">En erken talep</label>
                             <p-select inputId="onlineMinLead" [options]="minLeadOptions()" optionLabel="label" optionValue="value" formControlName="minLeadMinutes" class="w-full" />
@@ -238,6 +291,15 @@ export class OnlineBookingSettingsPageComponent implements OnInit {
         maxAdvanceDays: this.fb.nonNullable.control(30, [Validators.required, Validators.min(1), Validators.max(180)])
     });
 
+    /** Kurulum kontrolü ve önizleme girdileri: nedenler ortak parçadan, saatler ve telefon klinik kaydından. */
+    readonly reasons = signal<AppointmentReasonVm[]>([]);
+    readonly workingHours = signal<ClinicWorkingHourVm[] | null>(null);
+    readonly clinicPhone = signal<string | null | undefined>(undefined);
+    readonly readiness = computed(() => onlineBookingReadiness({ reasons: this.reasons(), workingHours: this.workingHours(), clinicPhone: this.clinicPhone() }));
+    readonly gaps = computed(() => onlineBookingGaps(this.readiness()));
+    readonly enabledInForm = toSignal(this.settingsForm.controls.isEnabled.valueChanges, { initialValue: false });
+    readonly clinicDetailLink = computed(() => `${CLINIC_DETAIL_ROUTE}/${this.clinicId()}`);
+
     readonly templateForm = this.fb.nonNullable.group({
         subject: this.fb.nonNullable.control('', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(EMAIL_SUBJECT_MAX)]),
         body: this.fb.nonNullable.control('', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(EMAIL_BODY_MAX)])
@@ -302,6 +364,17 @@ export class OnlineBookingSettingsPageComponent implements OnInit {
                     this.loading.set(false);
                 }
             }
+        });
+        // Kurulum kontrolü için; okunamazsa (yetki, ağ) ilgili madde gösterilmez, sayfa çalışmaya devam eder.
+        this.workingHours.set(null);
+        this.clinicPhone.set(undefined);
+        this.clinics.getWorkingHours(clinicId).subscribe({
+            next: (hours) => seq === this.loadSeq && this.workingHours.set(hours),
+            error: () => undefined
+        });
+        this.clinics.getClinicById(clinicId).subscribe({
+            next: (clinic) => seq === this.loadSeq && this.clinicPhone.set(clinic.phone ?? null),
+            error: () => undefined
         });
         this.service.getEmailTemplates(clinicId).subscribe({
             next: (t) => {
@@ -436,6 +509,10 @@ export class OnlineBookingSettingsPageComponent implements OnInit {
                 this.templateMessage.set(e instanceof Error ? e.message : 'İşlem başarısız.');
             }
         });
+    }
+
+    readinessIcon(level: OnlineBookingReadinessLevel): string {
+        return { ok: 'pi-check-circle text-green-600 dark:text-green-400', warn: 'pi-exclamation-triangle text-amber-600 dark:text-amber-400', missing: 'pi-times-circle text-red-600 dark:text-red-400' }[level];
     }
 
     private replaceTemplate(t: AppointmentRequestEmailTemplateVm): void {
