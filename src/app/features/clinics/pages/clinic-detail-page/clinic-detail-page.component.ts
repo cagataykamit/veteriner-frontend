@@ -209,7 +209,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         </div>
                     </div>
                     <div class="mt-4 mb-0">
-                        <button pButton type="submit" [disabled]="form.invalid || saving() || ro.mutationBlocked() || busyDeactivate() || busyActivate()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
+                        <button pButton type="submit" [disabled]="form.invalid || form.pristine || saving() || ro.mutationBlocked() || busyDeactivate() || busyActivate()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
                     </div>
                 </form>
             </div>
@@ -496,6 +496,8 @@ export class ClinicDetailPageComponent implements OnInit {
             address: vm.address,
             description: vm.description
         });
+        // Kayıtlı hâl: Kaydet bir sonraki değişikliğe kadar kapalı kalır, tekrar tekrar basılamaz.
+        this.form.markAsPristine();
     }
 
     private refreshAfterMutation(clinicId: string): void {

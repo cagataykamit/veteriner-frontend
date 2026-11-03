@@ -240,14 +240,19 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
         expect(t).not.toContain('Pasife al');
     });
 
-    it('Kaydet klinik bilgilerini günceller', async () => {
+    it('Kaydet değişiklik yokken kapalı; klinik bilgilerini günceller ve kayıttan sonra yeniden kapanır', async () => {
         clinics['updateClinicFromForm'].mockReturnValue(of(clinic({ name: 'Yeni Pati' })));
         await render();
 
+        expect(button('Kaydet').disabled).toBe(true);
+
         type('#clinicName', 'Yeni Pati');
+        await settle();
+        expect(button('Kaydet').disabled).toBe(false);
         await click('Kaydet');
 
         expect(clinics['updateClinicFromForm']).toHaveBeenCalledWith('c1', expect.objectContaining({ name: 'Yeni Pati', city: 'İstanbul' }));
+        expect(button('Kaydet').disabled).toBe(true);
     });
 
     it('çalışma saatleri kaydedilir', async () => {
