@@ -45,7 +45,7 @@
             @case ('info') {
                 <p class="portal-muted">Silmeyi onaylamak için e-posta adresinize 6 haneli kod göndereceğiz.</p>
                 <div class="portal-actions">
-                    <button pButton type="button" severity="danger" [outlined]="true" [disabled]="busy()" (click)="requestCode()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Onay kodu gönder</button>
+                    <button pButton type="button" severity="danger" [outlined]="true" [disabled]="busy()" (click)="requestCode()">@if (busy()) {<i class="p-button-icon fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>}Onay kodu gönder</button>
                     <a class="portal-link-button" routerLink="/account">Vazgeç</a>
                 </div>
             }
@@ -77,7 +77,7 @@
                         <p class="portal-field-error">Devam etmek için onay kutusunu işaretleyin.</p>
                     }
                     <div class="portal-actions">
-                        <button pButton type="submit" severity="danger" [disabled]="busy()">@if (busy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Hesabımı kalıcı olarak sil</button>
+                        <button pButton type="submit" severity="danger" [disabled]="busy()">@if (busy()) {<i class="p-button-icon fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>}Hesabımı kalıcı olarak sil</button>
                         <button type="button" class="portal-link-button" [disabled]="!resend.canSend() || busy()" (click)="requestCode()">
                             @if (resend.canSend()) {
                                 Kodu tekrar gönder

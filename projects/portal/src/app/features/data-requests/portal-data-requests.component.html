@@ -58,7 +58,7 @@
                 <p class="portal-muted" role="status" aria-live="polite" data-testid="data-request-status">{{ status() }}</p>
 
                 <div class="portal-actions">
-                    <button pButton type="submit" [disabled]="submitting()">@if (submitting()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Talebi gönder</button>
+                    <button pButton type="submit" [disabled]="submitting()">@if (submitting()) {<i class="p-button-icon fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>}Talebi gönder</button>
                 </div>
             </form>
         </section>
@@ -104,7 +104,7 @@
                                                 <p>Bu talebi geri çekmek istediğinize emin misiniz?</p>
                                                 <div class="portal-actions">
                                                     <button pButton type="button" severity="danger" [disabled]="cancellingId() === r.id" (click)="cancel(r)">
-                                                        @if (cancellingId() === r.id) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Evet, geri çek
+                                                        @if (cancellingId() === r.id) {<i class="p-button-icon fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>}Evet, geri çek
                                                     </button>
                                                     <button pButton type="button" severity="secondary" [outlined]="true" (click)="keep()">Vazgeç</button>
                                                 </div>

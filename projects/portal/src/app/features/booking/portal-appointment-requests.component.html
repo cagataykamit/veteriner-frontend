@@ -64,7 +64,7 @@
                                             <p>Bu talebi iptal etmek istediğinize emin misiniz?</p>
                                             <div class="req-confirm-actions">
                                                 <button pButton type="button" severity="danger" [disabled]="cancellingId() === r.id" (click)="cancel(r)">
-                                                    @if (cancellingId() === r.id) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Evet, iptal et
+                                                    @if (cancellingId() === r.id) {<i class="p-button-icon fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>}Evet, iptal et
                                                 </button>
                                                 <button pButton type="button" severity="secondary" [outlined]="true" (click)="keep()">Vazgeç</button>
                                             </div>

@@ -139,7 +139,7 @@
                                 </button>
                             } @else {
                                 <button pButton type="button" severity="secondary" [outlined]="true" class="portal-button-block" [disabled]="sendingCode()" (click)="sendCode()">
-                                    @if (sendingCode()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}
+                                    @if (sendingCode()) {<i class="p-button-icon fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>}
                                     Doğrulama kodu gönder
                                 </button>
                             }
@@ -158,7 +158,7 @@
 
                             <div class="portal-actions">
                                 <button pButton type="submit" [disabled]="submitting() || !codeSent()">
-                                    @if (submitting()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Talebi gönder
+                                    @if (submitting()) {<i class="p-button-icon fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>}Talebi gönder
                                 </button>
                                 @if (!codeSent()) {
                                     <p class="portal-field-hint portal-center">Göndermek için önce e-postanıza gelen kodu girin.</p>
