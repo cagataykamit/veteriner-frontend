@@ -25,7 +25,7 @@ import { isDeceased, PortalPet, PortalPetsApi } from './portal-pets.api';
                     }
                     @default {
                         @if (pets.data()?.length) {
-                            <ul class="portal-list" aria-label="Hayvanlarınız">
+                            <ul class="portal-list" aria-label="Hayvanlarım">
                                 @for (pet of pets.data(); track pet.petId) {
                                     <li>
                                         <a class="portal-tile" [routerLink]="['/pets', pet.petId]">
