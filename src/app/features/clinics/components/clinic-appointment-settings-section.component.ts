@@ -118,7 +118,7 @@ export class ClinicAppointmentSettingsSectionComponent {
     }
 
     canSaveAppointmentSettings(): boolean {
-        return this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) && !this.ro.mutationBlocked() && !this.apSettingsSaving() && this.apSettingsForm.valid && !this.apSettingsLoading() && this.apSettingsError() === null;
+        return this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) && !this.ro.mutationBlocked() && !this.apSettingsSaving() && this.apSettingsForm.valid && this.apSettingsForm.dirty && !this.apSettingsLoading() && this.apSettingsError() === null;
     }
 
     retryAppointmentSettingsLoad(): void {
@@ -196,6 +196,8 @@ export class ClinicAppointmentSettingsSectionComponent {
             },
             { emitEvent: false }
         );
+        // Kayıtlı hâl: kaydet düğmesi bir sonraki değişikliğe kadar kapalı kalır.
+        this.apSettingsForm.markAsPristine();
     }
 
     private loadAppointmentSettings(clinicId: string): void {

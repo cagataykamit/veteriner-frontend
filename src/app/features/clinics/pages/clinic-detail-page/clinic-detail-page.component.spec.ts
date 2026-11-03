@@ -255,27 +255,37 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
         expect(button('Kaydet').disabled).toBe(true);
     });
 
-    it('çalışma saatleri kaydedilir', async () => {
+    it('çalışma saatleri değişiklik yokken kaydedilemez; kaydedilir ve kayıttan sonra yeniden kapanır', async () => {
         clinics['updateWorkingHours'].mockReturnValue(of(hours()));
         await render();
 
+        expect(button('Çalışma saatlerini kaydet').disabled).toBe(true);
+
+        (el().querySelector('#whClosed6') as HTMLInputElement).click();
+        await settle();
+        expect(button('Çalışma saatlerini kaydet').disabled).toBe(false);
         await click('Çalışma saatlerini kaydet');
 
         expect(clinics['updateWorkingHours']).toHaveBeenCalledTimes(1);
         expect(clinics['updateWorkingHours'].mock.calls[0][0]).toBe('c1');
+        expect(button('Çalışma saatlerini kaydet').disabled).toBe(true);
     });
 
-    it('randevu varsayılanı aralık dışıysa kaydetme kapalı; geçerli değer kaydedilir', async () => {
+    it('randevu varsayılanı değişiklik yokken veya aralık dışıysa kaydetme kapalı; geçerli değer kaydedilir ve düğme yeniden kapanır', async () => {
         clinics['updateAppointmentSettings'].mockReturnValue(of({ ...settings, slotIntervalMinutes: 10 }));
         await render();
+
+        expect(button('Randevu varsayılanlarını kaydet').disabled).toBe(true);
 
         type('#slotIntervalMinutes', '200');
         expect(button('Randevu varsayılanlarını kaydet').disabled).toBe(true);
 
         type('#slotIntervalMinutes', '10');
+        expect(button('Randevu varsayılanlarını kaydet').disabled).toBe(false);
         await click('Randevu varsayılanlarını kaydet');
 
         expect(clinics['updateAppointmentSettings']).toHaveBeenCalledWith('c1', expect.objectContaining({ slotIntervalMinutes: 10 }));
+        expect(button('Randevu varsayılanlarını kaydet').disabled).toBe(true);
     });
 
     it('Pasife al sonrası klinik, saatler ve varsayılanlar yeniden çekilir', async () => {
