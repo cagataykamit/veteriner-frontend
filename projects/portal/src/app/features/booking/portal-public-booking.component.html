@@ -6,7 +6,8 @@
             <portal-loading-state message="Randevu sayfası yükleniyor…" />
         }
         @case ('closed') {
-            <section class="portal-card portal-stack" aria-labelledby="booking-closed-title" data-testid="booking-closed">
+            <section class="portal-card portal-stack booking-closed" aria-labelledby="booking-closed-title" data-testid="booking-closed">
+                <span class="booking-closed-icon" aria-hidden="true"><i class="fa-solid fa-calendar-xmark"></i></span>
                 <h1 id="booking-closed-title" class="portal-title">Online randevu kapalı</h1>
                 <p>Bu online randevu sayfası kapalı ya da bağlantı geçersiz.</p>
                 <p class="portal-muted">Randevu için kliniği telefonla arayabilirsiniz.</p>
@@ -16,35 +17,28 @@
             <portal-error-state [message]="loadError()" (retry)="load()" />
         }
         @case ('done') {
-            <section class="portal-card portal-stack" aria-labelledby="booking-done-title" data-testid="booking-done" role="status">
-                <h1 id="booking-done-title" class="portal-title">Talebiniz alındı</h1>
-                <p><strong>{{ slotText() }}</strong> · {{ selectedReason()?.name }}</p>
-                <p>
-                    Bu bir <strong>randevu talebidir, kesin randevu değildir.</strong> {{ page()?.clinicName }} talebinizi inceleyip onayladığında ya da
-                    farklı bir saat önerdiğinde {{ form.controls.email.value }} adresine e-posta gelir.
-                </p>
-                @if (page()?.clinicPhone; as phone) {
-                    <p class="portal-muted">Sorularınız için klinik: {{ phone }}</p>
-                }
-            </section>
+            <portal-booking-done
+                data-testid="booking-done"
+                [pageTitle]="true"
+                [items]="doneItems()"
+                [clinicName]="page()?.clinicName ?? null"
+                [clinicPhone]="page()?.clinicPhone ?? null"
+                [email]="form.controls.email.value"
+            />
         }
         @case ('ready') {
             @if (page(); as p) {
                 <section class="portal-card portal-stack" aria-labelledby="booking-title">
-                    <h1 id="booking-title" class="portal-title">Online randevu talebi</h1>
-                    <p>
-                        <strong>{{ p.clinicName }}</strong>
-                        @if (p.clinicCity) {
-                            · {{ p.clinicCity }}
+                    <div class="booking-hero">
+                        <h1 id="booking-title" class="portal-title">Online randevu talebi</h1>
+                        @if (p.clinicAddress || p.clinicCity) {
+                            <p class="portal-muted">
+                                <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                                {{ p.clinicAddress }}{{ p.clinicAddress && p.clinicCity ? ' · ' : '' }}{{ p.clinicCity }}
+                            </p>
                         }
-                    </p>
-                    @if (p.clinicAddress) {
-                        <p class="portal-muted">{{ p.clinicAddress }}</p>
-                    }
-                    @if (p.clinicPhone) {
-                        <p class="portal-muted">Telefon: {{ p.clinicPhone }}</p>
-                    }
-                    <p class="portal-muted">Gönderdiğiniz talep klinik onayladığında kesin randevuya dönüşür.</p>
+                    </div>
+                    <portal-booking-how />
                 </section>
 
                 <portal-booking-reason-step
@@ -58,8 +52,7 @@
                 />
 
                 @if (reasonKey()) {
-                    <section class="portal-card portal-stack" aria-labelledby="booking-slot-title">
-                        <h2 id="booking-slot-title" class="portal-subtitle">2. Gün ve saat</h2>
+                    <portal-booking-step [step]="2" title="Gün ve saat seçin" headingId="booking-slot-title" [done]="!!selectedSlot()" [summary]="slotText() || null">
                         @if (slotMessage(); as message) {
                             <p-message severity="warn" role="alert">{{ message }}</p-message>
                         }
@@ -74,83 +67,104 @@
                                 <portal-slot-picker [days]="days()" [selected]="selectedSlot()" (selectedChange)="selectSlot($event)" />
                             }
                         }
-                    </section>
+                    </portal-booking-step>
                 }
 
                 @if (selectedSlot()) {
-                    <form class="portal-card portal-stack" [formGroup]="form" (ngSubmit)="submit()" novalidate aria-labelledby="booking-form-title">
-                        <h2 id="booking-form-title" class="portal-subtitle">3. Bilgileriniz</h2>
-                        <p class="portal-muted">Seçilen saat: <strong>{{ slotText() }}</strong></p>
+                    <form class="portal-stack" [formGroup]="form" (ngSubmit)="submit()" novalidate aria-label="Bilgileriniz ve doğrulama">
+                        <portal-booking-step [step]="3" title="Bilgileriniz" headingId="booking-form-title" [done]="infoDone()" [summary]="infoSummary()">
+                            <fieldset class="booking-group">
+                                <legend class="booking-legend">İletişim</legend>
+                                <div class="portal-field">
+                                    <label for="booking-name">Ad soyad</label>
+                                    <input pInputText id="booking-name" type="text" formControlName="contactName" autocomplete="name" [attr.maxlength]="limits.contactName" [attr.aria-invalid]="!!fieldError('contactName')" />
+                                    @if (fieldError('contactName'); as message) {
+                                        <p class="portal-field-error">{{ message }}</p>
+                                    }
+                                </div>
+                                <div class="portal-field">
+                                    <label for="booking-phone">Cep telefonu</label>
+                                    <input pInputText id="booking-phone" type="text" inputmode="tel" formControlName="phone" autocomplete="tel" placeholder="05XX XXX XX XX" [attr.maxlength]="limits.phone" [attr.aria-invalid]="!!fieldError('phone')" />
+                                    @if (fieldError('phone'); as message) {
+                                        <p class="portal-field-error">{{ message }}</p>
+                                    }
+                                </div>
+                            </fieldset>
+                            <fieldset class="booking-group">
+                                <legend class="booking-legend">Hayvanınız</legend>
+                                <div class="portal-field">
+                                    <label for="booking-pet-name">Adı</label>
+                                    <input pInputText id="booking-pet-name" type="text" formControlName="petName" [attr.maxlength]="limits.petName" [attr.aria-invalid]="!!fieldError('petName')" />
+                                    @if (fieldError('petName'); as message) {
+                                        <p class="portal-field-error">{{ message }}</p>
+                                    }
+                                </div>
+                                <div class="booking-pair">
+                                    <div class="portal-field">
+                                        <label for="booking-pet-species">Türü <span class="portal-field-hint">(isteğe bağlı)</span></label>
+                                        <input pInputText id="booking-pet-species" type="text" formControlName="petSpecies" placeholder="Kedi, köpek…" [attr.maxlength]="limits.petSpecies" />
+                                    </div>
+                                    <div class="portal-field">
+                                        <label for="booking-pet-breed">Irkı <span class="portal-field-hint">(isteğe bağlı)</span></label>
+                                        <input pInputText id="booking-pet-breed" type="text" formControlName="petBreed" [attr.maxlength]="limits.petBreed" />
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </portal-booking-step>
 
-                        <div class="portal-field">
-                            <label for="booking-name">Ad soyad</label>
-                            <input pInputText id="booking-name" type="text" formControlName="contactName" autocomplete="name" [attr.maxlength]="limits.contactName" [attr.aria-invalid]="!!fieldError('contactName')" />
-                            @if (fieldError('contactName'); as message) {
-                                <p class="portal-field-error">{{ message }}</p>
-                            }
-                        </div>
-                        <div class="portal-field">
-                            <label for="booking-phone">Cep telefonu</label>
-                            <input pInputText id="booking-phone" type="text" inputmode="tel" formControlName="phone" autocomplete="tel" placeholder="05XX XXX XX XX" [attr.maxlength]="limits.phone" [attr.aria-invalid]="!!fieldError('phone')" />
-                            @if (fieldError('phone'); as message) {
-                                <p class="portal-field-error">{{ message }}</p>
-                            }
-                        </div>
-                        <div class="portal-field">
-                            <label for="booking-pet-name">Hayvanınızın adı</label>
-                            <input pInputText id="booking-pet-name" type="text" formControlName="petName" [attr.maxlength]="limits.petName" [attr.aria-invalid]="!!fieldError('petName')" />
-                            @if (fieldError('petName'); as message) {
-                                <p class="portal-field-error">{{ message }}</p>
-                            }
-                        </div>
-                        <div class="portal-field">
-                            <label for="booking-pet-species">Türü (isteğe bağlı)</label>
-                            <input pInputText id="booking-pet-species" type="text" formControlName="petSpecies" placeholder="Kedi, köpek…" [attr.maxlength]="limits.petSpecies" />
-                        </div>
-                        <div class="portal-field">
-                            <label for="booking-pet-breed">Irkı (isteğe bağlı)</label>
-                            <input pInputText id="booking-pet-breed" type="text" formControlName="petBreed" [attr.maxlength]="limits.petBreed" />
-                        </div>
-
-                        <h2 class="portal-subtitle">4. E-posta doğrulama</h2>
-                        <div class="portal-field">
-                            <label for="booking-email">E-posta</label>
-                            <input pInputText id="booking-email" type="email" formControlName="email" autocomplete="email" [attr.aria-invalid]="!!fieldError('email')" />
-                            @if (fieldError('email'); as message) {
-                                <p class="portal-field-error">{{ message }}</p>
-                            }
-                            <p class="portal-field-hint">Talebiniz e-posta adresinize gelen kodla doğrulanır; sonuç da bu adrese gönderilir.</p>
-                        </div>
-                        <button pButton type="button" severity="secondary" [outlined]="true" class="portal-button-block" [disabled]="!timer.canSend() || sendingCode()" (click)="sendCode()">
-                            @if (sendingCode()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}
-                            {{ timer.canSend() ? (codeSent() ? 'Kodu tekrar gönder' : 'Doğrulama kodu gönder') : 'Kodu tekrar gönder (' + timer.remaining() + ' sn)' }}
-                        </button>
-                        @if (codeSent()) {
-                            <p class="portal-muted" role="status">Kod e-posta adresinize gönderildi. Gelen kutunuzu ve istenmeyen klasörünü kontrol edin.</p>
+                        <portal-booking-step [step]="4" title="E-postanızı doğrulayın" headingId="booking-verify-title">
                             <div class="portal-field">
-                                <label for="booking-code">Doğrulama kodu</label>
-                                <input pInputText id="booking-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" formControlName="code" [attr.aria-invalid]="!!fieldError('code') || !!codeError()" />
-                                @if (fieldError('code'); as message) {
+                                <label for="booking-email">E-posta</label>
+                                <input pInputText id="booking-email" type="email" formControlName="email" autocomplete="email" [attr.aria-invalid]="!!fieldError('email')" />
+                                @if (fieldError('email'); as message) {
                                     <p class="portal-field-error">{{ message }}</p>
                                 }
+                                <p class="portal-field-hint">Talebiniz bu adrese gelen kodla doğrulanır; klinik yanıtı da bu adrese gelir.</p>
                             </div>
-                        }
-                        @if (codeError(); as message) {
-                            <p class="portal-field-error" role="alert">{{ message }}</p>
-                        }
 
-                        <p class="portal-field-hint" data-testid="booking-privacy">
-                            Talebiniz için ad, telefon, e-posta ve hayvan bilgileriniz {{ p.clinicName }} ile paylaşılır.
-                            Ayrıntılar: <a routerLink="/legal/privacy">Gizlilik Politikası</a>.
-                        </p>
+                            @if (codeSent()) {
+                                <p class="booking-sent" role="status">
+                                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                                    <span>Kod gönderildi. Gelen kutunuzu ve istenmeyen klasörünü kontrol edin.</span>
+                                </p>
+                                <div class="portal-field">
+                                    <label for="booking-code">Doğrulama kodu</label>
+                                    <input pInputText id="booking-code" class="booking-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="••• •••" formControlName="code" [attr.aria-invalid]="!!fieldError('code') || !!codeError()" />
+                                    @if (fieldError('code'); as message) {
+                                        <p class="portal-field-error">{{ message }}</p>
+                                    }
+                                </div>
+                                <button type="button" class="portal-link-button" [disabled]="!timer.canSend() || sendingCode()" (click)="sendCode()">
+                                    {{ timer.canSend() ? 'Kodu tekrar gönder' : 'Kodu tekrar gönder (' + timer.remaining() + ' sn)' }}
+                                </button>
+                            } @else {
+                                <button pButton type="button" severity="secondary" [outlined]="true" class="portal-button-block" [disabled]="sendingCode()" (click)="sendCode()">
+                                    @if (sendingCode()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}
+                                    Doğrulama kodu gönder
+                                </button>
+                            }
+                            @if (codeError(); as message) {
+                                <p class="portal-field-error" role="alert">{{ message }}</p>
+                            }
 
-                        @if (submitError(); as message) {
-                            <p-message severity="error" role="alert">{{ message }}</p-message>
-                        }
+                            <p class="portal-field-hint" data-testid="booking-privacy">
+                                Talebiniz için ad, telefon, e-posta ve hayvan bilgileriniz {{ p.clinicName }} ile paylaşılır.
+                                Ayrıntılar: <a routerLink="/legal/privacy">Gizlilik Politikası</a>.
+                            </p>
 
-                        <div class="portal-actions">
-                            <button pButton type="submit" [disabled]="submitting() || !codeSent()">@if (submitting()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Talebi gönder</button>
-                        </div>
+                            @if (submitError(); as message) {
+                                <p-message severity="error" role="alert">{{ message }}</p-message>
+                            }
+
+                            <div class="portal-actions">
+                                <button pButton type="submit" [disabled]="submitting() || !codeSent()">
+                                    @if (submitting()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Talebi gönder
+                                </button>
+                                @if (!codeSent()) {
+                                    <p class="portal-field-hint portal-center">Göndermek için önce e-postanıza gelen kodu girin.</p>
+                                }
+                            </div>
+                        </portal-booking-step>
                     </form>
                 }
             }

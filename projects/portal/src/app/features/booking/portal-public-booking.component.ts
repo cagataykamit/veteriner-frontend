@@ -14,6 +14,7 @@ import { normalizeOneTimeCode, portalEmailValidators, portalFieldError, portalOn
 import { PortalBookingApi, PortalBookingDay, PortalBookingPage, PortalBookingReason } from './portal-booking.api';
 import { PortalBookingReasonStep } from './portal-booking-reason-step.component';
 import { bookingNoteValidators, NOTE_REQUIRED_MESSAGE, PORTAL_BOOKING_LIMITS, pendingLimitMessage, reasonKey } from './portal-booking.rules';
+import { PortalBookingDone, PortalBookingHow, PortalBookingStep, PortalBookingSummaryItem } from './portal-booking-ui.component';
 import { PortalSlotPicker } from './portal-slot-picker.component';
 
 type PageState = 'loading' | 'closed' | 'error' | 'ready' | 'done';
@@ -22,14 +23,30 @@ type AvailabilityState = 'idle' | 'loading' | 'ready' | 'error';
 /**
  * Kliniğe özel online randevu bağlantısı (`/randevu/:bookingCode`, ADR-042 K1 ve eki; sözleşme §5). Kimliksizdir: neden ve not → gün/saat →
  * iletişim ve hayvan bilgisi → e-posta doğrulama kodu → talep. Talep kesin randevu değildir; klinik onaylayınca e-posta gelir.
- * Bağlantıdan gelen kişi için hesap ya da müşteri kaydı oluşmaz.
+ * Bağlantıdan gelen kişi için hesap ya da müşteri kaydı oluşmaz. Adımlar numaralı kartlarda sırayla açılır.
  */
 @Component({
     selector: 'portal-public-booking',
     standalone: true,
-    imports: [ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, PortalBookingReasonStep, PortalBrandHeader, PortalFooter, PortalLoadingState, PortalErrorState, PortalSlotPicker],
+    imports: [
+        ReactiveFormsModule,
+        RouterLink,
+        ButtonModule,
+        InputTextModule,
+        MessageModule,
+        PortalBookingDone,
+        PortalBookingHow,
+        PortalBookingReasonStep,
+        PortalBookingStep,
+        PortalBrandHeader,
+        PortalFooter,
+        PortalLoadingState,
+        PortalErrorState,
+        PortalSlotPicker
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    templateUrl: './portal-public-booking.component.html'
+    templateUrl: './portal-public-booking.component.html',
+    styleUrl: './portal-public-booking.component.scss'
 })
 export class PortalPublicBookingComponent implements OnInit {
     private readonly api = inject(PortalBookingApi);
@@ -54,6 +71,7 @@ export class PortalPublicBookingComponent implements OnInit {
     readonly submitError = signal<string | null>(null);
     readonly submitting = signal(false);
     readonly submitted = signal(false);
+    readonly doneItems = signal<readonly PortalBookingSummaryItem[]>([]);
     readonly timer = new PortalResendTimer(inject(DestroyRef));
 
     readonly selectedReason = computed<PortalBookingReason | null>(() => this.page()?.reasons.find((r) => reasonKey(r) === this.reasonKey()) ?? null);
@@ -213,6 +231,11 @@ export class PortalPublicBookingComponent implements OnInit {
             .subscribe({
                 next: () => {
                     this.submitting.set(false);
+                    this.doneItems.set([
+                        { icon: 'fa-stethoscope', label: 'Neden', value: reason.name },
+                        { icon: 'fa-calendar-day', label: 'İstenen saat', value: this.slotText() },
+                        { icon: 'fa-paw', label: 'Hayvan', value: [v.petName.trim(), v.petSpecies.trim()].filter(Boolean).join(' · ') }
+                    ]);
                     this.state.set('done');
                 },
                 error: (err: unknown) => {
@@ -220,6 +243,19 @@ export class PortalPublicBookingComponent implements OnInit {
                     this.handleSubmitError(err);
                 }
             });
+    }
+
+    /** 3. adım tamam: iletişim ve hayvan alanları geçerli. */
+    infoDone(): boolean {
+        const c = this.form.controls;
+
+        return c.contactName.valid && c.phone.valid && c.petName.valid && c.petSpecies.valid && c.petBreed.valid;
+    }
+
+    infoSummary(): string | null {
+        const v = this.form.getRawValue();
+
+        return this.infoDone() ? `${v.petName.trim()} · ${v.contactName.trim()}` : null;
     }
 
     fieldError(name: 'contactName' | 'phone' | 'email' | 'petName' | 'code'): string | null {

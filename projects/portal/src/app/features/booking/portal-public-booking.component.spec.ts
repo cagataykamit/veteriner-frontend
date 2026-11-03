@@ -45,6 +45,11 @@ describe('PortalPublicBookingComponent (kliniğe özel bağlantı)', () => {
         await settle();
     }
 
+    /** Tamamlanan adımların başlık özetleri, sırayla. */
+    function summaries(): string[] {
+        return Array.from(el.querySelectorAll('[data-testid=step-summary]')).map((p) => p.textContent!.trim());
+    }
+
     async function submit(): Promise<void> {
         buttonByText(el, 'Talebi gönder')!.click();
         await settle();
@@ -79,8 +84,26 @@ describe('PortalPublicBookingComponent (kliniğe özel bağlantı)', () => {
         await chooseReasonAndSlot();
 
         expect(api.publicAvailability).toHaveBeenCalledWith('k7m2p9xq4r8t', 'reason-1');
-        expect(el.textContent).toContain('Seçilen saat');
-        expect(el.textContent).toContain('09:00');
+        expect(summaries()).toEqual(['Aşı · ~15 dk', 'Pazartesi, 02.11.2026 · 09:00']);
+        expect(el.querySelector('#booking-name')).not.toBeNull();
+    });
+
+    it('giriş kartı "nasıl işler" adımlarını, acil şeridi aranabilir klinik telefonunu gösterir', async () => {
+        await create();
+
+        expect(el.querySelector('[data-testid=booking-urgent] a')?.getAttribute('href')).toBe('tel:02320000000');
+        expect(el.querySelector('portal-booking-how')?.textContent).toContain('Klinik onaylar');
+    });
+
+    it('bilgiler adımı alanlar dolunca tamamlanır ve özetlenir', async () => {
+        await create();
+        await chooseReasonAndSlot();
+        typeInto(el, '#booking-name', 'Ayşe Yılmaz');
+        typeInto(el, '#booking-phone', '05551234567');
+        typeInto(el, '#booking-pet-name', 'Pamuk');
+        await settle();
+
+        expect(summaries()[2]).toBe('Pamuk · Ayşe Yılmaz');
     });
 
     it('404 kapalı bağlantı mesajı; kod yoksa istek atılmaz', async () => {
@@ -125,6 +148,9 @@ describe('PortalPublicBookingComponent (kliniğe özel bağlantı)', () => {
 
         expect(done).toContain('kesin randevu değildir');
         expect(done).toContain('ayse@example.com');
+        expect(done).toContain('Pazartesi, 02.11.2026 · 09:00');
+        expect(done).toContain('Pamuk · Kedi');
+        expect(el.querySelector('h1')?.textContent).toContain('Talebiniz alındı');
     });
 
     it('"Diğer" seçilince not zorunlu; notla nedensiz talep gider (ADR-042 eki)', async () => {
