@@ -409,6 +409,15 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         void this.router.navigate(this.isEdit ? ['/panel/examinations', this.examinationId] : ['/panel/examinations']);
     }
 
+    /** Doz hesaplayıcının "Plana ekle"si: hesap planın sonuna yeni satır olarak eklenir; kayıt hekim kaydedince olur. */
+    appendToPlan(line: string): void {
+        const plan = this.form.controls.plan;
+        const current = plan.value.trimEnd();
+
+        plan.setValue(current ? `${current}\n${line}` : line);
+        plan.markAsDirty();
+    }
+
     goAppointmentDetail(): void {
         const id = this.blockedAppointmentId();
 
