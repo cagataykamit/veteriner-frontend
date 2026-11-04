@@ -1,27 +1,28 @@
-import { CommonModule, DOCUMENT } from '@angular/common';
-import { Component, computed, inject, OnDestroy, OnInit, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, computed, ElementRef, inject, OnInit, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { ConfirmationService, MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { Menu, MenuModule } from 'primeng/menu';
-import { finalize } from 'rxjs';
+import { Popover, PopoverModule } from 'primeng/popover';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
+import type { AccountSummary } from '@/app/features/account/models/account-summary.model';
+import { AccountService } from '@/app/features/account/services/account.service';
+import { resolveAccountAvatarInitials, resolveAccountDisplayName } from '@/app/features/account/utils/account-summary.utils';
 import { AppClinicSwitcher } from './app-clinic-switcher.component';
 import { AppGlobalSearch } from './app-global-search.component';
 import { AppNotificationBell } from './app-notification-bell.component';
 import { LayoutService } from '@/app/layout/service/layout.service';
 
-/** Topbar user `p-menu` body overlay — clinic switcher menüsünden ayrı hedeflenir. */
-const TOPBAR_USER_MENU_OVERLAY_SELECTORS = ['.layout-topbar-user-menu', '.p-menu.p-menu-overlay.layout-topbar-user-menu', '[data-pc-name="menu"].layout-topbar-user-menu'] as const;
-
-const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS = '.p-menu-overlay, .p-connected-overlay, p-menu, p-motion';
-
+/**
+ * Üst çubuk. Zil, klinik seçici ve kullanıcı menüsü aynı tür panel (`p-popover`, `.layout-topbar-panel`; taslak C) açar;
+ * aynı anda yalnız biri açık kalır: tetik tıklamaları document'a ulaşır, açık panel dışarı tıklama sayıp kapanır.
+ */
 @Component({
     selector: 'app-topbar',
     standalone: true,
-    imports: [RouterModule, CommonModule, AppClinicSwitcher, AppGlobalSearch, AppNotificationBell, MenuModule, ButtonModule, ConfirmDialogModule],
+    imports: [RouterModule, CommonModule, AppClinicSwitcher, AppGlobalSearch, AppNotificationBell, PopoverModule, ButtonModule, ConfirmDialogModule],
     providers: [ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: ` <div class="layout-topbar">
@@ -50,16 +51,59 @@ const TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS = '.p-menu-overlay, .p-connect
                 </div>
 
                 <div class="relative">
-                    <button type="button" class="layout-topbar-action" (click)="userMenu.toggle($event)" aria-haspopup="true" aria-label="Kullanıcı menüsü">
+                    <button
+                        #userTrigger
+                        type="button"
+                        class="layout-topbar-action"
+                        [class.bg-surface-hover]="userMenuOpen()"
+                        (click)="userMenu.toggle($event)"
+                        aria-haspopup="dialog"
+                        [attr.aria-expanded]="userMenuOpen()"
+                        aria-label="Kullanıcı menüsü"
+                    >
                         <i class="pi pi-user"></i>
                     </button>
-                    <p-menu #userMenu [popup]="true" [model]="userMenuItems" styleClass="layout-topbar-user-menu" appendTo="body" (onHide)="onUserMenuHide()" />
+                    <p-popover #userMenu styleClass="layout-topbar-panel layout-topbar-user-menu" ariaLabel="Kullanıcı menüsü" (onShow)="onUserMenuShow()">
+                        <div class="pb-2" (keydown.escape)="closeUserMenuAndFocusTrigger()" data-testid="user-panel">
+                            <div class="px-4 pt-4 pb-1 text-center">
+                                <span class="w-12 h-12 rounded-full bg-primary-50 dark:bg-primary-950/40 text-primary inline-flex items-center justify-center font-semibold" aria-hidden="true">
+                                    @if (account(); as a) {
+                                        {{ initials(a) }}
+                                    } @else {
+                                        <i class="pi pi-user"></i>
+                                    }
+                                </span>
+                                @if (account(); as a) {
+                                    <span class="block font-semibold mt-2 truncate" data-testid="user-panel-name">{{ displayName(a) }}</span>
+                                    @if (displayName(a) !== a.email) {
+                                        <span class="block text-xs text-muted-color truncate">{{ a.email }}</span>
+                                    }
+                                }
+                            </div>
+                            @for (g of userMenuGroups; track g.label) {
+                                <div class="layout-topbar-panel-group" [id]="'userMenuGroup-' + $index">{{ g.label }}</div>
+                                <ul class="list-none m-0 p-0" [attr.aria-labelledby]="'userMenuGroup-' + $index">
+                                    @for (item of g.items; track item.label) {
+                                        <li>
+                                            @if (item.routerLink) {
+                                                <a class="layout-topbar-panel-row" [routerLink]="item.routerLink" [attr.autofocus]="$first && g === userMenuGroups[0] ? '' : null" (click)="userMenu.hide()">
+                                                    <i [class]="item.icon" class="w-4 text-muted-color" aria-hidden="true"></i>{{ item.label }}
+                                                </a>
+                                            } @else {
+                                                <button type="button" class="layout-topbar-panel-row" (click)="userMenu.hide(); item.command?.({})"><i [class]="item.icon" class="w-4 text-muted-color" aria-hidden="true"></i>{{ item.label }}</button>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </p-popover>
                 </div>
             </div>
         </div>
         <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />`
 })
-export class AppTopbar implements OnInit, OnDestroy {
+export class AppTopbar implements OnInit {
     readonly logoAlt = 'Vetinity';
     readonly layoutService = inject(LayoutService);
 
@@ -68,65 +112,45 @@ export class AppTopbar implements OnInit, OnDestroy {
     readonly iconSrc = computed(() => (this.layoutService.layoutConfig().darkTheme ? VETINITY_BRAND_LOGOS.iconDark : VETINITY_BRAND_LOGOS.icon));
 
     readonly auth = inject(AuthService);
+    private readonly account$ = inject(AccountService);
     private readonly router = inject(Router);
-    private readonly document = inject(DOCUMENT);
     private readonly confirmationService = inject(ConfirmationService);
-    private readonly userMenuRef = viewChild<Menu>('userMenu');
+    private readonly userMenuRef = viewChild<Popover>('userMenu');
+    private readonly userTriggerEl = viewChild<ElementRef<HTMLButtonElement>>('userTrigger');
 
-    userMenuItems: MenuItem[] = [];
+    /** Panel açık (popover anında; kapanış animasyonunu beklemez). */
+    readonly userMenuOpen = computed(() => this.userMenuRef()?.overlayVisible() ?? false);
+    /** Panel başlığı (ad, e-posta); ilk açılışta yüklenir. Alınamazsa başlık yalnız simge. */
+    readonly account = signal<AccountSummary | null>(null);
+    readonly displayName = resolveAccountDisplayName;
+    readonly initials = resolveAccountAvatarInitials;
+
+    userMenuGroups: { label: string; items: MenuItem[] }[] = [];
 
     ngOnInit(): void {
-        this.userMenuItems = [
-            { label: 'Hesabım', icon: 'pi pi-user', routerLink: ['/panel/settings/account'] },
-            { label: 'Çıkış yap', icon: 'pi pi-sign-out', command: () => this.onUserMenuLogoutCurrent() },
-            { label: 'Tüm oturumları kapat', icon: 'pi pi-ban', command: () => this.onUserMenuLogoutAll() }
+        this.userMenuGroups = [
+            { label: 'Hesap', items: [{ label: 'Hesabım', icon: 'pi pi-user', routerLink: ['/panel/settings/account'] }] },
+            {
+                label: 'Oturum',
+                items: [
+                    { label: 'Çıkış yap', icon: 'pi pi-sign-out', command: () => this.logoutCurrent() },
+                    { label: 'Tüm oturumları kapat', icon: 'pi pi-ban', command: () => this.logoutAll() }
+                ]
+            }
         ];
     }
 
-    ngOnDestroy(): void {
-        this.purgeTopbarUserMenuOverlay();
+    /** Başlık bilgisi ilk açılışta yüklenir. */
+    onUserMenuShow(): void {
+        if (!this.account()) {
+            this.account$.getAccountSummary().subscribe({ next: (a) => this.account.set(a), error: () => undefined });
+        }
     }
 
-    onUserMenuHide(): void {
-        this.purgeTopbarUserMenuOverlay();
-    }
-
-    private onUserMenuLogoutCurrent(): void {
-        this.purgeTopbarUserMenuOverlay();
-        queueMicrotask(() => this.logoutCurrent());
-    }
-
-    private onUserMenuLogoutAll(): void {
-        this.purgeTopbarUserMenuOverlay();
-        queueMicrotask(() => this.logoutAll());
-    }
-
-    /** Yalnız topbar user `p-menu` body overlay’ini hedefler; clinic switcher menüsüne dokunmaz. */
-    private purgeTopbarUserMenuOverlay(): void {
+    /** Escape: panel kapanır, odak düğmeye döner (PrimeNG popover odak geri vermez). */
+    closeUserMenuAndFocusTrigger(): void {
         this.userMenuRef()?.hide();
-
-        const doc = this.document;
-        const removed = new Set<Element>();
-
-        for (const selector of TOPBAR_USER_MENU_OVERLAY_SELECTORS) {
-            doc.querySelectorAll(selector).forEach((el) => {
-                const overlay = el.closest(TOPBAR_USER_MENU_OVERLAY_ANCESTOR_SELECTORS) ?? el;
-
-                if (!removed.has(overlay)) {
-                    removed.add(overlay);
-                    overlay.remove();
-                }
-            });
-        }
-
-        for (const child of Array.from(doc.body.children)) {
-            if (child.matches('.layout-topbar-user-menu') || child.querySelector('.layout-topbar-user-menu')) {
-                if (!removed.has(child)) {
-                    removed.add(child);
-                    child.remove();
-                }
-            }
-        }
+        this.userTriggerEl()?.nativeElement.focus();
     }
 
     toggleDarkMode() {
@@ -134,20 +158,13 @@ export class AppTopbar implements OnInit, OnDestroy {
     }
 
     private logoutCurrent(): void {
-        this.auth
-            .logoutCurrentSession()
-            .pipe(finalize(() => this.purgeTopbarUserMenuOverlay()))
-            .subscribe({
-                next: () => {
-                    this.purgeTopbarUserMenuOverlay();
-                    void this.router.navigate(['/auth/login'], { replaceUrl: true });
-                },
-                error: () => {
-                    this.auth.logout();
-                    this.purgeTopbarUserMenuOverlay();
-                    void this.router.navigate(['/auth/login'], { replaceUrl: true });
-                }
-            });
+        this.auth.logoutCurrentSession().subscribe({
+            next: () => void this.router.navigate(['/auth/login'], { replaceUrl: true }),
+            error: () => {
+                this.auth.logout();
+                void this.router.navigate(['/auth/login'], { replaceUrl: true });
+            }
+        });
     }
 
     private logoutAll(): void {
@@ -159,23 +176,14 @@ export class AppTopbar implements OnInit, OnDestroy {
             rejectLabel: 'Vazgeç',
             acceptButtonStyleClass: 'p-button-danger',
             rejectButtonStyleClass: 'p-button-secondary',
-            reject: () => this.purgeTopbarUserMenuOverlay(),
             accept: () => {
-                this.purgeTopbarUserMenuOverlay();
-                this.auth
-                    .logoutAllSessions()
-                    .pipe(finalize(() => this.purgeTopbarUserMenuOverlay()))
-                    .subscribe({
-                        next: () => {
-                            this.purgeTopbarUserMenuOverlay();
-                            void this.router.navigate(['/auth/login'], { replaceUrl: true });
-                        },
-                        error: () => {
-                            this.auth.logout();
-                            this.purgeTopbarUserMenuOverlay();
-                            void this.router.navigate(['/auth/login'], { replaceUrl: true });
-                        }
-                    });
+                this.auth.logoutAllSessions().subscribe({
+                    next: () => void this.router.navigate(['/auth/login'], { replaceUrl: true }),
+                    error: () => {
+                        this.auth.logout();
+                        void this.router.navigate(['/auth/login'], { replaceUrl: true });
+                    }
+                });
             }
         });
     }

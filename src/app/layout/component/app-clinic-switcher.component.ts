@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, DestroyRef, ElementRef, inject, OnDestroy, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MenuItem, MessageService } from 'primeng/api';
-import { Menu, MenuModule } from 'primeng/menu';
+import { MessageService } from 'primeng/api';
+import { Popover, PopoverModule } from 'primeng/popover';
 import { ToastModule } from 'primeng/toast';
 import { finalize } from 'rxjs';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
@@ -11,14 +11,14 @@ import { authFailureMessage } from '@/app/core/auth/auth-error.utils';
 import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ClinicSwitcherRefreshService } from '@/app/core/tenant/clinic-switcher-refresh.service';
-import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
 /**
  * Panel topbar içinde aktif klinik gösterimi + çoklu klinik kullanıcıları için switcher.
  *
  * Tasarım:
- * - Tek orchestration: liste yükleme (lazy), menü aç/kapa, `selectClinic` çağrısı, post-switch refresh.
+ * - Tek orchestration: liste yükleme (lazy), panel aç/kapa, `selectClinic` çağrısı, post-switch refresh.
+ * - Panel (taslak C): "Klinik değiştir" + arama, "Klinikleriniz" grubu, aktif klinikte "aktif" hapı.
  * - Token/JWT parse YOK; tüm clinic state `AuthService` üzerinden okunur.
  * - localStorage'a doğrudan erişim YOK; tokenlar `auth.selectClinic` içinde persist edilir.
  * - `/me/clinics` mount'ta sessiz yüklenir; tek klinikte button DOM'a girmez, dropdown açılmaz.
@@ -29,7 +29,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 @Component({
     selector: 'app-clinic-switcher',
     standalone: true,
-    imports: [CommonModule, MenuModule, ToastModule],
+    imports: [CommonModule, PopoverModule, ToastModule],
     providers: [MessageService],
     host: { class: 'app-clinic-switcher' },
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,7 +43,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         #triggerBtn
                         type="button"
                         class="layout-topbar-clinic layout-topbar-clinic-trigger"
-                        aria-haspopup="true"
+                        aria-haspopup="dialog"
                         [attr.aria-expanded]="menuOpen()"
                         [attr.aria-label]="'Aktif klinik: ' + label + ' (değiştirmek için tıklayın)'"
                         [attr.title]="label"
@@ -53,7 +53,41 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         <span class="layout-topbar-clinic-text">{{ label }}</span>
                         <i class="pi pi-angle-down layout-topbar-clinic__caret" [class.layout-topbar-clinic__caret--busy]="loading() || submitting()" aria-hidden="true"></i>
                     </button>
-                    <p-menu #clinicMenu [popup]="true" [model]="menuItems()" styleClass="layout-clinic-switcher-menu" appendTo="body" (onShow)="menuOpen.set(true)" (onHide)="menuOpen.set(false)" />
+                    <p-popover #clinicPanel styleClass="layout-topbar-panel" ariaLabel="Klinik değiştir" (onHide)="query.set('')">
+                        <div class="pb-2" (keydown.escape)="closeAndFocusTrigger()" data-testid="clinic-panel">
+                            <div class="px-4 pt-3 pb-2">
+                                <div class="font-semibold mb-2">Klinik değiştir</div>
+                                <label class="flex items-center gap-2 rounded-border border border-surface-300 dark:border-surface-600 px-2 py-1.5 text-sm text-muted-color focus-within:border-primary">
+                                    <i class="pi pi-search text-xs" aria-hidden="true"></i>
+                                    <input
+                                        type="search"
+                                        autofocus
+                                        class="flex-1 min-w-0 bg-transparent border-0 outline-none p-0 text-sm text-color"
+                                        placeholder="Klinik ara…"
+                                        aria-label="Klinik ara"
+                                        [value]="query()"
+                                        (input)="query.set($any($event.target).value)"
+                                        data-testid="clinic-search"
+                                    />
+                                </label>
+                            </div>
+                            <div class="layout-topbar-panel-group pt-1!" id="clinicPanelGroup">Klinikleriniz</div>
+                            <ul class="list-none m-0 p-0" aria-labelledby="clinicPanelGroup">
+                                @for (c of filteredClinics(); track c.id) {
+                                    <li>
+                                        <button type="button" class="layout-topbar-panel-row" [disabled]="submitting()" [attr.aria-current]="c.id === activeId() ? 'true' : null" (click)="onSelect(c)" data-testid="clinic-option">
+                                            <span class="flex-1 min-w-0 truncate" [class.font-semibold]="c.id === activeId()">{{ c.name }}</span>
+                                            @if (c.id === activeId()) {
+                                                <span class="text-xs rounded-full px-2 py-0.5 bg-primary-50 dark:bg-primary-950/40 text-primary font-medium">aktif</span>
+                                            }
+                                        </button>
+                                    </li>
+                                } @empty {
+                                    <li class="px-4 py-2 text-sm text-muted-color">Eşleşen klinik yok</li>
+                                }
+                            </ul>
+                        </div>
+                    </p-popover>
                 } @else {
                     <span class="layout-topbar-clinic layout-topbar-clinic-trigger layout-topbar-clinic-trigger--readonly" [attr.title]="label" [attr.aria-label]="'Aktif klinik: ' + label" aria-disabled="true" tabindex="-1">
                         <i class="pi pi-building" aria-hidden="true"></i>
@@ -64,20 +98,22 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
         }
     `
 })
-export class AppClinicSwitcher implements OnDestroy {
+export class AppClinicSwitcher {
     private readonly auth = inject(AuthService);
     private readonly messages = inject(MessageService);
     private readonly clinicListRefresh = inject(ClinicSwitcherRefreshService);
     private readonly destroyRef = inject(DestroyRef);
 
-    private readonly menuRef = viewChild<Menu>('clinicMenu');
+    private readonly menuRef = viewChild<Popover>('clinicPanel');
     private readonly triggerEl = viewChild<ElementRef<HTMLButtonElement>>('triggerBtn');
 
     readonly clinics = signal<ClinicSummary[]>([]);
     readonly loading = signal(false);
     readonly submitting = signal(false);
     readonly hasLoadedOnce = signal(false);
-    readonly menuOpen = signal(false);
+    /** Panel açık (popover anında; kapanış animasyonunu beklemez). */
+    readonly menuOpen = computed(() => this.menuRef()?.overlayVisible() ?? false);
+    readonly query = signal('');
 
     readonly activeId = computed(() => this.auth.getJwtClinicId());
     readonly activeLabel = this.auth.activeClinicLabel;
@@ -92,31 +128,22 @@ export class AppClinicSwitcher implements OnDestroy {
         this.reloadClinics(false);
     }
 
-    readonly menuItems = computed<MenuItem[]>(() => {
-        const activeId = this.activeId();
-        const busy = this.submitting();
+    /** Arama kutusu: Türkçe duyarlı, adın herhangi bir yerinde geçen. */
+    readonly filteredClinics = computed(() => {
+        const q = this.query().trim().toLocaleLowerCase('tr-TR');
 
-        return this.clinics().map((c) => {
-            const isActive = c.id === activeId;
-
-            return {
-                label: c.name,
-                icon: isActive ? 'pi pi-check' : 'pi pi-circle',
-                disabled: busy,
-                styleClass: isActive ? 'layout-clinic-switcher-menu__item--active' : undefined,
-                command: () => this.onSelect(c)
-            };
-        });
+        return q ? this.clinics().filter((c) => c.name.toLocaleLowerCase('tr-TR').includes(q)) : this.clinics();
     });
 
-    ngOnDestroy(): void {
+    /** Escape: panel kapanır, odak düğmeye döner (PrimeNG popover odak geri vermez). */
+    closeAndFocusTrigger(): void {
         this.menuRef()?.hide();
-        removeOrphanedPrimeMenuPopupsFromBody(document);
+        this.triggerEl()?.nativeElement.focus();
     }
 
+    /** Tıklama document'a ulaşmalı: üst çubuktaki diğer paneller (zil, kullanıcı menüsü) dışarı tıklamayla kapanır. */
     onClinicTriggerClick(event: MouseEvent): void {
         event.preventDefault();
-        event.stopPropagation();
 
         if (this.submitting() || !this.canOpenClinicSwitcher()) {
             return;
@@ -137,16 +164,13 @@ export class AppClinicSwitcher implements OnDestroy {
         this.menuRef()?.toggle(event);
     }
 
-    /** PrimeNG `Menu.show` async callback'te orijinal `currentTarget` null olabilir; canlı trigger kullan. */
+    /** Async callback'te orijinal `currentTarget` null olabilir; canlı trigger kullan. */
     private showClinicMenuFromTrigger(): void {
         const target = this.triggerEl()?.nativeElement;
 
-        if (!target) {
-            return;
+        if (target) {
+            this.menuRef()?.show(null, target);
         }
-
-        // PrimeNG 22 imzası `Event` ister; menü yalnız `currentTarget`'ı okur.
-        this.menuRef()?.show({ currentTarget: target } as unknown as Event);
     }
 
     private reloadClinics(forceRefresh = false, then?: () => void): void {
@@ -179,7 +203,7 @@ export class AppClinicSwitcher implements OnDestroy {
             });
     }
 
-    private onSelect(item: ClinicSummary): void {
+    onSelect(item: ClinicSummary): void {
         this.menuRef()?.hide();
 
         if (item.id === this.activeId()) {

@@ -244,64 +244,116 @@
     }
 }
 
-.layout-clinic-switcher-menu {
-    max-width: min(20rem, calc(100vw - 2rem));
+/**
+ * Üst çubuk açılır panelleri (zil, klinik seçici, kullanıcı menüsü; taslak C "Gruplu / sekmeli"): PrimeNG `p-popover`,
+ * oksuz, iç boşluğu panel şablonu verir. Aynı anda tek panel: her tetik tıklaması document'a ulaşır, açık popover dışarı
+ * tıklama sayıp kapanır; Escape de kapatır.
+ */
+.layout-topbar-panel.p-popover {
+    width: 16rem;
+    max-width: calc(100vw - 1rem);
+    overflow: hidden;
 
-    .p-menuitem-content,
-    .p-menu-item-content {
-        overflow: visible;
+    &::before,
+    &::after {
+        display: none;
     }
 
-    .p-menuitem-link,
-    .p-menu-item-link {
-        align-items: center;
-        min-width: 12rem;
-        min-height: 2.5rem;
-        padding-block: 0.625rem;
-        line-height: 1.4;
-        overflow: visible;
+    .p-popover-content {
+        padding: 0;
     }
 
-    .p-menuitem-text,
-    .p-menu-item-label {
-        min-width: 0;
-        padding-block: 0.0625rem;
-        line-height: 1.4;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+    &.layout-topbar-panel--wide {
+        width: 22rem;
+    }
+}
+
+/** Panel satırı (düğme ya da bağlantı): tam genişlik, sade, hover/odak tonu. */
+.layout-topbar-panel-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: 0;
+    background: transparent;
+    color: var(--text-color);
+    font: inherit;
+    font-size: 0.875rem;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        background-color: var(--surface-hover);
     }
 
-    .layout-clinic-switcher-menu__item--active {
-        > .p-menuitem-content,
-        > .p-menu-item-content {
-            background-color: color-mix(in srgb, var(--primary-color) 14%, transparent);
-            color: var(--text-color);
-        }
+    &:focus-visible {
+        @include focused();
+        outline-offset: -2px;
+        background-color: var(--surface-hover);
+    }
 
-        .p-menuitem-link,
-        .p-menu-item-link {
-            font-weight: 700;
-            color: var(--primary-color);
+    &:disabled {
+        cursor: default;
+        opacity: 0.6;
+    }
+}
 
-            &:hover {
-                background-color: color-mix(in srgb, var(--primary-color) 18%, transparent);
-                color: var(--primary-color);
-            }
-        }
+/** Grup başlığı: "Bugün", "Klinikleriniz", "Hesap"… */
+.layout-topbar-panel-group {
+    padding: 0.75rem 1rem 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+    color: var(--text-color-secondary);
+}
 
-        .p-menuitem-icon,
-        .p-menu-item-icon {
-            color: var(--primary-color);
-        }
+/** Yeni online talep balonu (taslak C): zilin altında küçük oklu balon; telefonda üst çubuğun altında sağa yaslı. */
+.layout-topbar-request-alert {
+    position: absolute;
+    top: calc(100% + 0.625rem);
+    right: -0.5rem;
+    width: 19rem;
+    z-index: 1;
+    border: 1px solid var(--surface-border);
+    border-radius: var(--content-border-radius);
+    background-color: var(--surface-overlay);
+    color: var(--text-color);
+    box-shadow:
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    padding: 0.75rem;
 
-        &.p-disabled,
-        &.p-menuitem-disabled,
-        &.p-menu-item-disabled {
-            > .p-menuitem-content,
-            > .p-menu-item-content {
-                opacity: 0.75;
-            }
+    &::before {
+        content: '';
+        position: absolute;
+        top: -0.4rem;
+        right: 1.35rem;
+        width: 0.8rem;
+        height: 0.8rem;
+        transform: rotate(45deg);
+        background: inherit;
+        border-left: 1px solid var(--surface-border);
+        border-top: 1px solid var(--surface-border);
+    }
+}
+
+// Üst çubukta bir panel açıkken balon gizlenir (panelin altında kalmasın); kapanınca süresi dolmadıysa yeniden görünür.
+body:has(.layout-topbar-panel) .layout-topbar-request-alert {
+    visibility: hidden;
+}
+
+@include phone {
+    .layout-topbar-request-alert {
+        position: fixed;
+        top: 4.5rem;
+        right: 0.5rem;
+        width: min(19rem, calc(100vw - 1rem));
+
+        &::before {
+            display: none;
         }
     }
 }

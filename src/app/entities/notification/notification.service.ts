@@ -1,5 +1,6 @@
 import { HttpParams } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
+import type { Router } from '@angular/router';
 import { map, Observable, tap } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
@@ -53,6 +54,34 @@ export function notificationTargetUrl(
         default:
             return null;
     }
+}
+
+/**
+ * Bildirim açma (bildirim merkezi ve zil paneli aynı kural): okunmamışsa okundu işaretlenir, sonra hedefe gidilir; işaretleme
+ * başarısız olsa da gidilir. `onRead` okundu işaretlendiğinde çağrılır (liste satırını günceller).
+ */
+export function openNotification(service: Pick<NotificationService, 'markRead'>, router: Router, n: UserNotificationVm, onRead?: () => void): void {
+    const target = notificationTargetUrl(n);
+
+    const navigate = () => {
+        if (target) {
+            void router.navigate(target.commands, { queryParams: target.queryParams });
+        }
+    };
+
+    if (n.readAtUtc) {
+        navigate();
+
+        return;
+    }
+
+    service.markRead(n.id).subscribe({
+        next: () => {
+            onRead?.();
+            navigate();
+        },
+        error: () => navigate()
+    });
 }
 
 /**
