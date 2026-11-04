@@ -114,9 +114,9 @@ export class AppClinicSwitcher implements OnDestroy {
         removeOrphanedPrimeMenuPopupsFromBody(document);
     }
 
+    /** Tıklama document'a ulaşmalı: üst çubuktaki diğer popup'lar (kullanıcı menüsü vb.) dışarı tıklamayla kapanır. */
     onClinicTriggerClick(event: MouseEvent): void {
         event.preventDefault();
-        event.stopPropagation();
 
         if (this.submitting() || !this.canOpenClinicSwitcher()) {
             return;
