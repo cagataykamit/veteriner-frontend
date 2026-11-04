@@ -19,8 +19,15 @@
 
 <!-- Online randevu talebi gelince resepsiyon ilk burada görür: kutucuklar ya da (varsayılan) Açık işler'de çip; yetki ya da bekleyen yoksa çizilmez. -->
 @if (pendingRequests.hasPending() && pendingRequests.view() === 'tiles') {
-    <app-pending-appointment-requests-tiles [rows]="pendingRequests.rows()" [total]="pendingRequests.total()" (showChip)="pendingRequests.setView('chip')" />
+    <app-pending-appointment-requests-tiles
+        [rows]="pendingRequests.rows()"
+        [total]="pendingRequests.total()"
+        (showChip)="pendingRequests.setView('chip')"
+        (openRequest)="pendingRequests.open($event)"
+    />
 }
+<!-- Talep Bugün ekranından ayrılmadan açılır; onay/red sonrası talepler ve günlük liste yenilenir. -->
+<app-appointment-request-detail-dialog [requestId]="pendingRequests.openId()" [canDecide]="!ro.mutationBlocked()" (closed)="onRequestDialogClosed($event)" />
 
 <p-selectbutton class="block mb-4" [options]="viewOptions" [ngModel]="view()" (ngModelChange)="setView($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Görünüm" />
 @if (myUserId()) {
@@ -34,7 +41,12 @@
 @if (showPendingChip() || today()?.openItems) {
     <app-today-open-items [summary]="today()?.openItems ?? null" [hasLeadingItem]="showPendingChip()">
         @if (showPendingChip()) {
-            <app-pending-appointment-requests-chip [rows]="pendingRequests.rows()" [total]="pendingRequests.total()" (showTiles)="pendingRequests.setView('tiles')" />
+            <app-pending-appointment-requests-chip
+                [rows]="pendingRequests.rows()"
+                [total]="pendingRequests.total()"
+                (showTiles)="pendingRequests.setView('tiles')"
+                (openRequest)="pendingRequests.open($event)"
+            />
         }
     </app-today-open-items>
 }

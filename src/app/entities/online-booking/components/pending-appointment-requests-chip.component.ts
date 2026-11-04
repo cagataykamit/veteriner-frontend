@@ -68,7 +68,7 @@ import type { PendingRequestPreviewVm } from '@/app/entities/online-booking/util
                                 <span class="block truncate font-medium">{{ r.contactName }} · {{ r.petLabel }}</span>
                                 <span class="block truncate text-xs text-muted-color">{{ r.reasonName }} · {{ r.receivedAgo }}</span>
                             </span>
-                            <a pButton size="small" [text]="true" [routerLink]="requestsRoute" [queryParams]="{ requestId: r.id }" (click)="panel.hide()" data-testid="pending-request-open">İncele</a>
+                            <button pButton type="button" size="small" [text]="true" (click)="panel.hide(); openRequest.emit(r.id)" data-testid="pending-request-open">İncele</button>
                         </li>
                     }
                 </ul>
@@ -87,6 +87,8 @@ export class PendingAppointmentRequestsChipComponent {
     readonly total = input.required<number>();
     /** Kullanıcı kutucuk görünümünü seçti (tercih üst katmanda saklanır). */
     readonly showTiles = output<void>();
+    /** Talep sayfadan ayrılmadan açılsın (pencereyi üst sayfa çizer). */
+    readonly openRequest = output<string>();
 
     readonly requestsRoute = APPOINTMENT_REQUESTS_ROUTE;
     readonly open = signal(false);

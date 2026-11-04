@@ -31,6 +31,8 @@ export class PendingAppointmentRequestsState {
     readonly rows = computed(() => this.items().map((r) => toPendingRequestPreview(r, this.now())));
     readonly view = signal<PendingRequestsView>(readPendingRequestsView(this.userId));
     readonly hasPending = computed(() => this.total() > 0);
+    /** Bugün ekranında açık talep penceresi; sayfadan ayrılmadan incelenir, onaylanır ya da reddedilir. */
+    readonly openId = signal<string | null>(null);
 
     constructor() {
         if (this.canManage) {
@@ -53,6 +55,19 @@ export class PendingAppointmentRequestsState {
             // Yardımcı bilgi; okunamazsa Bugün ekranı etkilenmez, son liste kalır.
             error: () => undefined
         });
+    }
+
+    open(id: string): void {
+        this.openId.set(id);
+    }
+
+    /** Pencere kapandı; talep onaylandı ya da reddedildiyse (`changed`) liste yeniden yüklenir. */
+    close(changed: boolean): void {
+        this.openId.set(null);
+
+        if (changed) {
+            this.load();
+        }
     }
 
     setView(view: PendingRequestsView): void {

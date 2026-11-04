@@ -23,15 +23,20 @@ describe('PendingAppointmentRequestsTilesComponent', () => {
         return { fixture, el: fixture.nativeElement as HTMLElement };
     }
 
-    it('her talep bir kutucuk: gün etiketi, saat, ne zaman geldiği; kutucuk talep penceresini açar', async () => {
-        const { el } = await render(2);
-        const tiles = el.querySelectorAll('[data-testid="pending-request-tile"]');
+    it('her talep bir kutucuk: gün etiketi, saat, ne zaman geldiği; kutucuk sayfadan ayrılmadan talebi açtırır', async () => {
+        const { fixture, el } = await render(2);
+        const tiles = el.querySelectorAll<HTMLElement>('[data-testid="pending-request-tile"]');
+        const opened: string[] = [];
+
+        fixture.componentInstance.openRequest.subscribe((id) => opened.push(id));
 
         expect(tiles.length).toBe(2);
         expect(tiles[0].textContent).toContain('Yarın');
         expect(tiles[0].textContent).toContain('17:30');
         expect(tiles[0].textContent).toContain('Portal · 12 dk önce');
-        expect(tiles[0].getAttribute('href')).toBe('/panel/appointments/requests?requestId=r1');
+        expect(tiles[0].getAttribute('href')).toBeNull();
+        tiles[0].click();
+        expect(opened).toEqual(['r1']);
         expect(tiles[1].textContent).toContain('5 Kas Per');
         expect(tiles[1].textContent).toContain('Hayvan belirtilmedi');
         expect(el.querySelector('[data-testid="pending-requests-more"]')).toBeNull();

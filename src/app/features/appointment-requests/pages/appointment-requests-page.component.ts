@@ -18,7 +18,7 @@ import {
     appointmentRequestStatusLabel,
     appointmentRequestStatusSeverity
 } from '@/app/entities/online-booking/utils/appointment-request-labels.utils';
-import { AppointmentRequestDetailDialogComponent } from '@/app/features/appointment-requests/components/appointment-request-detail-dialog.component';
+import { AppointmentRequestDetailDialogComponent } from '@/app/entities/online-booking/components/appointment-request-detail-dialog.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';

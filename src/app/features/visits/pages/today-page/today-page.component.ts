@@ -27,6 +27,7 @@ import {
 } from '@/app/core/auth/operation-claims.constants';
 import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { AppointmentRequestDetailDialogComponent } from '@/app/entities/online-booking/components/appointment-request-detail-dialog.component';
 import { PendingAppointmentRequestsChipComponent } from '@/app/entities/online-booking/components/pending-appointment-requests-chip.component';
 import { PendingAppointmentRequestsTilesComponent } from '@/app/entities/online-booking/components/pending-appointment-requests-tiles.component';
 import { PendingAppointmentRequestsState } from '@/app/entities/online-booking/services/pending-appointment-requests-state';
@@ -107,7 +108,8 @@ type TodayScope = 'mine' | 'all';
         AppointmentNoShowDialogComponent,
         PetAlertBadgesComponent,
         PendingAppointmentRequestsChipComponent,
-        PendingAppointmentRequestsTilesComponent
+        PendingAppointmentRequestsTilesComponent,
+        AppointmentRequestDetailDialogComponent
     ],
     providers: [MessageService, PendingAppointmentRequestsState],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -254,6 +256,15 @@ export class TodayPageComponent implements OnInit {
 
         this.pendingRequests.load();
         this.refresh$.next(mode);
+    }
+
+    /** Talep penceresi kapandı; onay randevu oluşturduğu için karar verildiyse günlük liste de yenilenir. */
+    onRequestDialogClosed(changed: boolean): void {
+        this.pendingRequests.close(false);
+
+        if (changed) {
+            this.refresh('silent');
+        }
     }
 
     time(utc: string | null): string {

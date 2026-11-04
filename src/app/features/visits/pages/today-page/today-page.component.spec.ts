@@ -2,14 +2,14 @@ import type { Mock, MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { of, Subject, throwError } from 'rxjs';
+import { NEVER, of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { pendingRequest } from '@/app/entities/online-booking/models/appointment-request.testing';
 import { AppointmentRequestStatus } from '@/app/entities/online-booking/models/online-booking.model';
-import { AppointmentRequestsService } from '@/app/entities/online-booking/services/online-booking.service';
+import { AppointmentRequestsService, OnlineBookingService } from '@/app/entities/online-booking/services/online-booking.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TodayHospitalizationVm, TodayItemVm, TodayVm, VisitVm } from '@/app/entities/visit/models/visit-vm.model';
@@ -108,7 +108,10 @@ describe('TodayPageComponent', () => {
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
                 // Bekleyen online talepler: varsayılan yok; "bekleyen online talepler" bloğu doldurur.
-                { provide: AppointmentRequestsService, useValue: { list: requestList } }
+                // get: açılan talep penceresi ayrıntıyı ister; bu testler yalnız açıldığını denetler.
+                { provide: AppointmentRequestsService, useValue: { list: requestList, get: () => NEVER } },
+                // Talep penceresinin onay servisi: bu testlerde onay/red yapılmaz.
+                { provide: OnlineBookingService, useValue: {} }
             ]
         }).compileComponents();
 
@@ -246,6 +249,26 @@ describe('TodayPageComponent', () => {
             expect(el(f).querySelector('[data-testid="pending-requests-tiles"]')).toBeNull();
             expect(el(f).querySelector('[data-testid="pending-requests-chip"]')).not.toBeNull();
             expect(localStorage.getItem('vetinity.pendingRequestsView.u1')).toBe('chip');
+        });
+
+        it('talep Bugün ekranından ayrılmadan açılır; karar verilip kapanınca talepler ve günlük liste yenilenir', async () => {
+            const f = await create(MANAGE, empty);
+            const router = TestBed.inject(Router);
+            const urlBefore = router.url;
+            const firstId = f.componentInstance.pendingRequests.items()[0].id;
+
+            el(f).querySelector<HTMLButtonElement>('[data-testid="pending-requests-chip"]')!.click();
+            await settle(f);
+            document.querySelector<HTMLButtonElement>('[data-testid="pending-requests-panel"] [data-testid="pending-request-open"]')!.click();
+            await settle(f);
+
+            expect(router.url).toBe(urlBefore);
+            expect(f.componentInstance.pendingRequests.openId()).toBe(firstId);
+
+            f.componentInstance.onRequestDialogClosed(true);
+
+            expect(f.componentInstance.pendingRequests.openId()).toBeNull();
+            expect(requestList).toHaveBeenCalledTimes(2);
         });
 
         it('kayıtlı tercih kutucuksa sayfa kutucukla açılır; çip ve boş Açık işler satırı çizilmez', async () => {
@@ -547,7 +570,9 @@ describe('TodayPageComponent', () => {
                 { provide: AppointmentsService, useValue: {} },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
                 // Bekleyen online talepler: bu testlerde talep yok.
-                { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 5 }) } }
+                { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 5 }) } },
+                // Talep penceresinin onay servisi: bu testlerde onay/red yapılmaz.
+                { provide: OnlineBookingService, useValue: {} }
             ]
         }).compileComponents();
         const f = TestBed.createComponent(TodayPageComponent);
@@ -1045,7 +1070,9 @@ describe('TodayPageComponent — Benim hastalarım', () => {
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
                 // Bekleyen online talepler: bu testlerde talep yok.
-                { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 5 }) } }
+                { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 5 }) } },
+                // Talep penceresinin onay servisi: bu testlerde onay/red yapılmaz.
+                { provide: OnlineBookingService, useValue: {} }
             ]
         }).compileComponents();
         const fixture = TestBed.createComponent(TodayPageComponent);
@@ -1122,7 +1149,9 @@ describe('TodayPageComponent — Benim hastalarım boş liste', () => {
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
                 // Bekleyen online talepler: bu testlerde talep yok.
-                { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 5 }) } }
+                { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 5 }) } },
+                // Talep penceresinin onay servisi: bu testlerde onay/red yapılmaz.
+                { provide: OnlineBookingService, useValue: {} }
             ]
         }).compileComponents();
         const f = TestBed.createComponent(TodayPageComponent);

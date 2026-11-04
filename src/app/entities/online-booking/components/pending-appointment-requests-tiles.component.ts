@@ -6,7 +6,8 @@ import type { PendingRequestPreviewVm } from '@/app/entities/online-booking/util
 
 /**
  * Bekleyen online talepler, Bugün ekranının başında kutucuklar (kullanıcının seçtiği görünüm): istenen saat iri, gün etiketi
- * bugün/yarın için vurgulu, altta kaynak ve ne zaman geldiği. Kutucuk talep penceresini açar; listede olmayanlar "+N" kutucuğunda.
+ * bugün/yarın için vurgulu, altta kaynak ve ne zaman geldiği. Kutucuk talebi `openRequest` ile açtırır (pencere Bugün ekranında);
+ * listede olmayanlar "+N" kutucuğunda kuyruğa gider.
  * Dar ekranda kutucuklar yatay kayar. Başlıktaki düğme çip görünümüne döner.
  */
 @Component({
@@ -40,10 +41,10 @@ import type { PendingRequestPreviewVm } from '@/app/entities/online-booking/util
             </div>
             <div class="pending-tiles flex gap-3 overflow-x-auto pb-1">
                 @for (r of rows(); track r.id) {
-                    <a
-                        [routerLink]="requestsRoute"
-                        [queryParams]="{ requestId: r.id }"
-                        class="group shrink-0 flex-1 min-w-[12.5rem] max-w-[18rem] max-sm:min-w-[78%] flex flex-col gap-1 rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-3 no-underline text-color hover:border-primary transition-colors"
+                    <button
+                        type="button"
+                        (click)="openRequest.emit(r.id)"
+                        class="group shrink-0 flex-1 min-w-[12.5rem] max-w-[18rem] max-sm:min-w-[78%] flex flex-col gap-1 text-left cursor-pointer rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-3 text-color hover:border-primary transition-colors"
                         [class]="r.isNew ? 'border-t-4 border-t-primary!' : ''"
                         [attr.aria-label]="r.dayLabel + ' ' + r.time + ', ' + r.contactName + ', ' + r.petLabel + (r.isNew ? ', yeni' : '')"
                         data-testid="pending-request-tile"
@@ -61,7 +62,7 @@ import type { PendingRequestPreviewVm } from '@/app/entities/online-booking/util
                             <span class="inline-flex items-center gap-1 min-w-0 truncate"><i [class]="r.sourceIcon" aria-hidden="true"></i>{{ r.sourceLabel }} · {{ r.receivedAgo }}</span>
                             <span class="font-medium text-primary group-hover:underline">İncele</span>
                         </span>
-                    </a>
+                    </button>
                 }
                 @if (more() > 0) {
                     <a
@@ -82,6 +83,8 @@ export class PendingAppointmentRequestsTilesComponent {
     readonly total = input.required<number>();
     /** Kullanıcı çip görünümüne döndü (tercih üst katmanda saklanır). */
     readonly showChip = output<void>();
+    /** Talep sayfadan ayrılmadan açılsın (pencereyi üst sayfa çizer). */
+    readonly openRequest = output<string>();
 
     readonly requestsRoute = APPOINTMENT_REQUESTS_ROUTE;
     readonly more = computed(() => this.total() - this.rows().length);
