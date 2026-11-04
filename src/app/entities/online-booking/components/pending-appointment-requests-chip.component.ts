@@ -6,7 +6,7 @@ import { APPOINTMENT_REQUESTS_ROUTE } from '@/app/core/routing/panel-navigation'
 import type { PendingRequestPreviewVm } from '@/app/entities/online-booking/utils/pending-request-preview.utils';
 
 /**
- * Bekleyen online talepler, "Açık işler" satırının ilk çipi (varsayılan görünüm): sayı ve en yakın istenen saat.
+ * Bekleyen online talepler, "Açık işler" satırının ilk çipi (kullanıcının seçtiği görünüm): sayı ve en yakın istenen saat.
  * Tıklanınca açılır panelde ilk talepler; panelden kutucuk görünümüne geçilir. Son 30 dk içinde gelen talep varsa nabız noktası.
  */
 @Component({

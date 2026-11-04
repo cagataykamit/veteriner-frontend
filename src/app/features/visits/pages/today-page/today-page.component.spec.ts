@@ -214,7 +214,19 @@ describe('TodayPageComponent', () => {
             );
         });
 
-        it('varsayılan: Açık işler satırının ilk çipi; açık iş özeti yokken de satır çizilir; sayı menü sayacına bildirilir', async () => {
+        it('varsayılan: sayfa başında kutucuklar; çip ve boş Açık işler satırı çizilmez; sayı menü sayacına bildirilir', async () => {
+            const f = await create(MANAGE, empty);
+
+            expect(requestList).toHaveBeenCalledWith({ status: AppointmentRequestStatus.Pending, page: 1, pageSize: 5 });
+            expect(el(f).querySelectorAll('[data-testid="pending-request-tile"]').length).toBe(2);
+            expect(el(f).querySelector('[data-testid="pending-requests-more"]')?.textContent).toContain('+5');
+            expect(el(f).querySelector('[data-testid="pending-requests-chip"]')).toBeNull();
+            expect(el(f).querySelector('[data-testid="open-items-strip"]')).toBeNull();
+            expect(TestBed.inject(MenuBadgeFeed).value('pendingAppointmentRequests')).toBe(7);
+        });
+
+        it('kayıtlı tercih çipse Açık işler satırının ilk çipi; açık iş özeti yokken de satır çizilir', async () => {
+            localStorage.setItem('vetinity.pendingRequestsView.u1', 'chip');
             const f = await create(MANAGE, empty);
             const strip = el(f).querySelector('[data-testid="open-items-strip"]');
 
@@ -228,6 +240,7 @@ describe('TodayPageComponent', () => {
         });
 
         it('çipin panelinden kutucuğa, "Açık işlerde göster" ile geri; tercih kullanıcı adına saklanır', async () => {
+            localStorage.setItem('vetinity.pendingRequestsView.u1', 'chip');
             const f = await create(MANAGE, empty);
 
             el(f).querySelector<HTMLButtonElement>('[data-testid="pending-requests-chip"]')!.click();
@@ -257,9 +270,7 @@ describe('TodayPageComponent', () => {
             const urlBefore = router.url;
             const firstId = f.componentInstance.pendingRequests.items()[0].id;
 
-            el(f).querySelector<HTMLButtonElement>('[data-testid="pending-requests-chip"]')!.click();
-            await settle(f);
-            document.querySelector<HTMLButtonElement>('[data-testid="pending-requests-panel"] [data-testid="pending-request-open"]')!.click();
+            el(f).querySelector<HTMLButtonElement>('[data-testid="pending-request-tile"]')!.click();
             await settle(f);
 
             expect(router.url).toBe(urlBefore);
@@ -269,14 +280,6 @@ describe('TodayPageComponent', () => {
 
             expect(f.componentInstance.pendingRequests.openId()).toBeNull();
             expect(requestList).toHaveBeenCalledTimes(2);
-        });
-
-        it('kayıtlı tercih kutucuksa sayfa kutucukla açılır; çip ve boş Açık işler satırı çizilmez', async () => {
-            localStorage.setItem('vetinity.pendingRequestsView.u1', 'tiles');
-            const f = await create(MANAGE, empty);
-
-            expect(el(f).querySelector('[data-testid="pending-requests-tiles"]')).not.toBeNull();
-            expect(el(f).querySelector('[data-testid="open-items-strip"]')).toBeNull();
         });
 
         it('bekleyen yoksa ne çip ne kutucuk çizilir', async () => {
@@ -301,6 +304,7 @@ describe('TodayPageComponent', () => {
             const f = await create(['Visits.Read'], empty);
 
             expect(requestList).not.toHaveBeenCalled();
+            expect(el(f).querySelector('[data-testid="pending-requests-tiles"]')).toBeNull();
             expect(el(f).querySelector('[data-testid="pending-requests-chip"]')).toBeNull();
         });
     });

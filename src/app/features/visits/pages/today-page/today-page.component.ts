@@ -143,7 +143,7 @@ export class TodayPageComponent implements OnInit {
     readonly loading = signal(true);
     /** Bekleyen online talepler; Bugün her yenilendiğinde birlikte yenilenir. */
     readonly pendingRequests = inject(PendingAppointmentRequestsState);
-    /** Varsayılan görünüm: Açık işler satırında çip (kutucuk görünümünde sayfa başında çizilir). */
+    /** Kullanıcı çip görünümünü seçtiyse talepler Açık işler satırında çip (varsayılan: sayfa başında kutucuklar). */
     readonly showPendingChip = computed(() => this.pendingRequests.hasPending() && this.pendingRequests.view() === 'chip');
     /** İlk yükleme / elle yenileme hatası: listeyi değiştirir. */
     readonly loadError = signal<string | null>(null);

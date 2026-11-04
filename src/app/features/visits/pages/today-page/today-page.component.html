@@ -17,7 +17,7 @@
     </div>
 </app-page-header>
 
-<!-- Online randevu talebi gelince resepsiyon ilk burada görür: kutucuklar ya da (varsayılan) Açık işler'de çip; yetki ya da bekleyen yoksa çizilmez. -->
+<!-- Online randevu talebi gelince resepsiyon ilk burada görür: (varsayılan) kutucuklar ya da Açık işler'de çip; yetki ya da bekleyen yoksa çizilmez. -->
 @if (pendingRequests.hasPending() && pendingRequests.view() === 'tiles') {
     <app-pending-appointment-requests-tiles
         [rows]="pendingRequests.rows()"

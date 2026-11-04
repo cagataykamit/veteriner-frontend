@@ -53,14 +53,24 @@ describe('PendingAppointmentRequestsTilesComponent', () => {
         expect(days[1].className).toContain('text-muted-color');
     });
 
-    it('listede olmayanlar "+N talep daha"; "Açık işlerde göster" çip görünümünü ister', async () => {
+    it('eylemler sıranın sonundaki kutucukta: hepsi listedeyken de "Tümünü gör" ve "Açık işlerde göster" vardır', async () => {
+        const { el } = await render(2);
+        const actions = el.querySelector('[data-testid="pending-requests-actions-tile"]');
+
+        expect(actions?.querySelector('[data-testid="pending-requests-all"]')?.getAttribute('href')).toBeTruthy();
+        expect(actions?.textContent).toContain('Tümünü gör');
+        expect(actions?.querySelector('[data-testid="pending-requests-show-chip"]')).not.toBeNull();
+        expect(el.querySelector('h2')?.querySelector('a, button')).toBeNull();
+    });
+
+    it('listede olmayanlar eylem kutucuğunda "+N talep daha"; "Açık işlerde göster" çip görünümünü ister', async () => {
         const { fixture, el } = await render(7);
         const showChip = vi.fn();
 
         fixture.componentInstance.showChip.subscribe(showChip);
 
         expect(el.querySelector('[data-testid="pending-requests-count"]')?.textContent).toContain('7');
-        expect(el.querySelector('[data-testid="pending-requests-more"]')?.textContent).toContain('+5');
+        expect(el.querySelector('[data-testid="pending-requests-actions-tile"] [data-testid="pending-requests-more"]')?.textContent).toContain('+5');
 
         el.querySelector<HTMLButtonElement>('[data-testid="pending-requests-show-chip"]')!.click();
         expect(showChip).toHaveBeenCalledTimes(1);
