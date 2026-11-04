@@ -124,6 +124,9 @@ describe('AppMenu', () => {
         expect(badges(fixture)).toEqual(['3', '99+']);
         expect(link(fixture, 'Kayıtlar').querySelector('.sr-only')?.textContent?.trim()).toBe('sonuç bekleyen lab istemi');
         expect(link(fixture, 'Bugün').querySelector('.sr-only')?.textContent?.trim()).toBe('bekleyen');
+        // Oku olmayan öğede görünmez ok yeri: rozet oklu öğelerinkiyle aynı sütunda.
+        expect(link(fixture, 'Bugün').querySelector('[data-testid="menu-badge-arrow-spacer"]')?.classList).toContain('invisible');
+        expect(link(fixture, 'Kayıtlar').querySelector('[data-testid="menu-badge-arrow-spacer"]')).toBeNull();
 
         counts = { waitingVisits: 0, requestedLabResults: null };
         const hidden = TestBed.createComponent(AppMenu);

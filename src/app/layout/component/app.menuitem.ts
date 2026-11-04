@@ -64,6 +64,9 @@ import { filter } from 'rxjs/operators';
                 }
                 @if (hasFlyout()) {
                     <i class="fa-solid fa-angle-right layout-menuitem-flyout-toggler" aria-hidden="true"></i>
+                } @else if (item().badge) {
+                    <!-- Ok yeri: oku olmayan öğenin rozeti oklu öğelerinkiyle aynı sütunda durur. -->
+                    <i class="fa-solid fa-angle-right layout-menuitem-flyout-toggler invisible" aria-hidden="true" data-testid="menu-badge-arrow-spacer"></i>
                 }
                 @if (hasChildren()) {
                     <i class="pi pi-fw pi-angle-down layout-submenu-toggler"></i>

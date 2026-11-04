@@ -29,8 +29,10 @@ describe('panel yönlendirmeleri', () => {
         expect(await go('/panel')).toBe('/panel/today');
     });
 
-    it('yönetici düzeyi (Visits.Correct) /panel açınca Özet sayfasına gider', async () => {
+    it('yönetici düzeyi (Visits.Correct) de /panel açınca Bugün sayfasına gider; Bugün yetkisi yoksa Özet', async () => {
         claims.add('visits.correct');
+        expect(await go('/panel')).toBe('/panel/today');
+        claims.delete('visits.read');
         expect(await go('/panel')).toBe('/panel/dashboard');
     });
 

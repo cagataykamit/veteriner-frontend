@@ -55,22 +55,22 @@ import type { PendingRequestPreviewVm } from '@/app/entities/online-booking/util
                         </span>
                     </button>
                 }
-                <div class="shrink-0 w-36 flex flex-col items-stretch justify-center gap-2 rounded-border border border-dashed border-surface-300 dark:border-surface-600 p-3 text-sm" data-testid="pending-requests-actions-tile">
-                    <a [routerLink]="requestsRoute" class="flex flex-col items-center gap-0.5 no-underline text-muted-color hover:text-primary" data-testid="pending-requests-all">
+                <div class="shrink-0 w-40 flex flex-col rounded-border border border-dashed border-surface-300 dark:border-surface-600 text-sm" data-testid="pending-requests-actions-tile">
+                    <a [routerLink]="requestsRoute" class="flex-1 flex flex-col items-center justify-center gap-1 px-3 py-2 no-underline text-muted-color hover:text-primary" data-testid="pending-requests-all">
                         @if (more() > 0) {
                             <span class="text-2xl font-semibold leading-none" data-testid="pending-requests-more">+{{ more() }}</span>
                             <span>talep daha</span>
                         }
-                        <span class="font-medium text-primary mt-1">Tümünü gör<i class="pi pi-angle-right ml-1 text-xs" aria-hidden="true"></i></span>
+                        <span class="inline-flex items-center gap-1 font-medium text-primary">Tümünü gör<i class="pi pi-angle-right text-xs" aria-hidden="true"></i></span>
                     </a>
                     <button
                         type="button"
-                        class="p-0 pt-2 bg-transparent border-0 border-t border-dashed border-surface-300 dark:border-surface-600 cursor-pointer text-xs text-muted-color hover:text-color"
+                        class="flex items-center justify-center gap-1.5 whitespace-nowrap px-3 pt-2 pb-3 bg-transparent border-0 border-t border-dashed border-surface-300 dark:border-surface-600 cursor-pointer text-xs text-muted-color hover:text-color"
                         title="Talepleri Açık işler satırında tek satır olarak göster"
                         (click)="showChip.emit()"
                         data-testid="pending-requests-show-chip"
                     >
-                        <i class="pi pi-window-minimize mr-1" aria-hidden="true"></i>Açık işlerde göster
+                        <i class="pi pi-window-minimize text-xs! leading-none!" aria-hidden="true"></i>Açık işlerde göster
                     </button>
                 </div>
             </div>
