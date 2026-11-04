@@ -7,8 +7,10 @@ import { of } from 'rxjs';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { NotificationService } from '@/app/entities/notification/notification.service';
+import { AppointmentRequestsService } from '@/app/entities/online-booking/services/online-booking.service';
 import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
 import { GlobalSearchService } from '@/app/features/patients/services/global-search.service';
+import { MenuBadgeService } from '@/app/layout/service/menu-badge.service';
 import { AppTopbar } from './app.topbar';
 
 const clinics = [
@@ -26,9 +28,11 @@ describe('AppTopbar açılır menüler', () => {
                 provideRouter([]),
                 {
                     provide: AuthService,
-                    useValue: { activeClinicLabel: signal('Merkez Klinik'), getJwtClinicId: () => 'c1', getMyClinics: () => of(clinics) }
+                    useValue: { activeClinicLabel: signal('Merkez Klinik'), getJwtClinicId: () => 'c1', getMyClinics: () => of(clinics), hasOperationClaim: () => false }
                 },
                 { provide: NotificationService, useValue: { unreadCount: signal(0), refreshUnreadCount: () => of(0) } },
+                { provide: MenuBadgeService, useValue: { count: () => null } },
+                { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 20 }) } },
                 { provide: GlobalSearchService, useValue: { search: () => of({ clients: [], pets: [], failedKinds: [] }), canSearch: () => false } },
                 { provide: RecentlyViewedService, useValue: { list: () => [] } }
             ]
