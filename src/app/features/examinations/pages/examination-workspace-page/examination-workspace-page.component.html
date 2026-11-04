@@ -84,7 +84,7 @@
         <!-- Hasta bağlamı | form: kırılım içerik alanına göre (detay sayfasıyla aynı: ≥56rem iki sütun). -->
         <div class="@container grid grid-cols-12 gap-4 items-start">
             @if (contextPetId(); as pid) {
-                <aside class="col-span-12 @4xl:col-span-4">
+                <aside class="col-span-12 @4xl:col-span-4 @4xl:sticky @4xl:top-20 min-w-0" data-testid="patient-context-aside">
                     <app-examination-patient-context [petId]="pid" [excludeExaminationId]="isEdit ? examinationId : null" />
                 </aside>
             }
@@ -157,35 +157,36 @@
                                 <small class="text-red-500">{{ apiFieldErrors().findings }}</small>
                             }
                         </div>
-                        <div class="col-span-6 md:col-span-2">
+                        <!-- Dört vital tek satırda, etiketler tek satıra sığacak kadar kısa: alanlar aynı hizada durur. -->
+                        <div class="col-span-6 md:col-span-3">
                             <label for="weightKg" class="block text-sm font-medium text-muted-color mb-2">Kilo (kg)</label>
                             <input id="weightKg" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="weightKg" />
                             @if (vitalError('weightKg'); as e) {
                                 <small class="text-red-500">{{ e }}</small>
                             }
                         </div>
-                        <div class="col-span-6 md:col-span-2">
-                            <label for="temperatureC" class="block text-sm font-medium text-muted-color mb-2">Vücut sıcaklığı (°C)</label>
+                        <div class="col-span-6 md:col-span-3">
+                            <label for="temperatureC" class="block text-sm font-medium text-muted-color mb-2">Sıcaklık (°C)</label>
                             <input id="temperatureC" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="temperatureC" />
                             @if (vitalError('temperatureC'); as e) {
                                 <small class="text-red-500">{{ e }}</small>
                             }
                         </div>
-                        <div class="col-span-6 md:col-span-2">
-                            <label for="heartRateBpm" class="block text-sm font-medium text-muted-color mb-2">Kalp atış hızı (atım/dk)</label>
+                        <div class="col-span-6 md:col-span-3">
+                            <label for="heartRateBpm" class="block text-sm font-medium text-muted-color mb-2">Nabız (atım/dk)</label>
                             <input id="heartRateBpm" type="number" step="1" min="0" class="w-full p-inputtext p-component" formControlName="heartRateBpm" />
                             @if (vitalError('heartRateBpm'); as e) {
                                 <small class="text-red-500">{{ e }}</small>
                             }
                         </div>
-                        <div class="col-span-6 md:col-span-2">
-                            <label for="respiratoryRatePerMin" class="block text-sm font-medium text-muted-color mb-2">Solunum sayısı (soluk/dk)</label>
+                        <div class="col-span-6 md:col-span-3">
+                            <label for="respiratoryRatePerMin" class="block text-sm font-medium text-muted-color mb-2">Solunum (soluk/dk)</label>
                             <input id="respiratoryRatePerMin" type="number" step="1" min="0" class="w-full p-inputtext p-component" formControlName="respiratoryRatePerMin" />
                             @if (vitalError('respiratoryRatePerMin'); as e) {
                                 <small class="text-red-500">{{ e }}</small>
                             }
                         </div>
-                        <div class="col-span-12 md:col-span-4">
+                        <div class="col-span-12 md:col-span-6">
                             <label for="vitalsMeasuredAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ölçüm zamanı</label>
                             <app-date-input inputId="vitalsMeasuredAtLocal" type="datetime-local" formControlName="vitalsMeasuredAtLocal" limit="past" />
                             <small class="text-muted-color block">Vital değerler opsiyoneldir. Boş bırakılırsa ilk ölçüm girişinde muayene zamanı kullanılır.</small>
