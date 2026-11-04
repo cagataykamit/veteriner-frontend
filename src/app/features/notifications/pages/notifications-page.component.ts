@@ -4,13 +4,7 @@ import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
-import {
-    NotificationService,
-    notificationTargetUrl,
-    USER_NOTIFICATION_TYPE_LABELS,
-    UserNotificationType,
-    type UserNotificationVm
-} from '@/app/entities/notification/notification.service';
+import { NotificationService, openNotification, USER_NOTIFICATION_TYPE_LABELS, UserNotificationType, type UserNotificationVm } from '@/app/entities/notification/notification.service';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -128,27 +122,7 @@ export class NotificationsPageComponent implements OnInit {
     }
 
     open(n: UserNotificationVm): void {
-        const target = notificationTargetUrl(n);
-
-        const navigate = () => {
-            if (target) {
-                void this.router.navigate(target.commands, { queryParams: target.queryParams });
-            }
-        };
-
-        if (n.readAtUtc) {
-            navigate();
-
-            return;
-        }
-
-        this.service.markRead(n.id).subscribe({
-            next: () => {
-                this.items.update((list) => list.map((x) => (x.id === n.id ? { ...x, readAtUtc: new Date().toISOString() } : x)));
-                navigate();
-            },
-            error: () => navigate()
-        });
+        openNotification(this.service, this.router, n, () => this.items.update((list) => list.map((x) => (x.id === n.id ? { ...x, readAtUtc: new Date().toISOString() } : x))));
     }
 
     markAllRead(): void {
