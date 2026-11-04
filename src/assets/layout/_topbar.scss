@@ -244,68 +244,6 @@
     }
 }
 
-.layout-clinic-switcher-menu {
-    max-width: min(20rem, calc(100vw - 2rem));
-
-    .p-menuitem-content,
-    .p-menu-item-content {
-        overflow: visible;
-    }
-
-    .p-menuitem-link,
-    .p-menu-item-link {
-        align-items: center;
-        min-width: 12rem;
-        min-height: 2.5rem;
-        padding-block: 0.625rem;
-        line-height: 1.4;
-        overflow: visible;
-    }
-
-    .p-menuitem-text,
-    .p-menu-item-label {
-        min-width: 0;
-        padding-block: 0.0625rem;
-        line-height: 1.4;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .layout-clinic-switcher-menu__item--active {
-        > .p-menuitem-content,
-        > .p-menu-item-content {
-            background-color: color-mix(in srgb, var(--primary-color) 14%, transparent);
-            color: var(--text-color);
-        }
-
-        .p-menuitem-link,
-        .p-menu-item-link {
-            font-weight: 700;
-            color: var(--primary-color);
-
-            &:hover {
-                background-color: color-mix(in srgb, var(--primary-color) 18%, transparent);
-                color: var(--primary-color);
-            }
-        }
-
-        .p-menuitem-icon,
-        .p-menu-item-icon {
-            color: var(--primary-color);
-        }
-
-        &.p-disabled,
-        &.p-menuitem-disabled,
-        &.p-menu-item-disabled {
-            > .p-menuitem-content,
-            > .p-menu-item-content {
-                opacity: 0.75;
-            }
-        }
-    }
-}
-
 /**
  * Üst çubuk açılır panelleri (zil, klinik seçici, kullanıcı menüsü; taslak C "Gruplu / sekmeli"): PrimeNG `p-popover`,
  * oksuz, iç boşluğu panel şablonu verir. Aynı anda tek panel: her tetik tıklaması document'a ulaşır, açık popover dışarı
