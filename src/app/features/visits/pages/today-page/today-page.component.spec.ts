@@ -224,7 +224,7 @@ describe('TodayPageComponent', () => {
             expect(TestBed.inject(MenuBadgeFeed).value('pendingAppointmentRequests')).toBe(7);
         });
 
-        it('çipin panelinden kutucuğa, Küçült ile geri; tercih kullanıcı adına saklanır', async () => {
+        it('çipin panelinden kutucuğa, "Açık işlerde göster" ile geri; tercih kullanıcı adına saklanır', async () => {
             const f = await create(MANAGE, empty);
 
             el(f).querySelector<HTMLButtonElement>('[data-testid="pending-requests-chip"]')!.click();

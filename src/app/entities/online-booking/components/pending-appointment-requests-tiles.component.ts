@@ -32,8 +32,8 @@ import type { PendingRequestPreviewVm } from '@/app/entities/online-booking/util
                     <span class="text-sm font-normal text-muted-color max-sm:hidden">onay bekliyor</span>
                 </h2>
                 <span class="flex items-center gap-1">
-                    <button pButton type="button" size="small" [text]="true" severity="secondary" title="Açık işler satırında tek çip olarak göster" (click)="showChip.emit()" data-testid="pending-requests-show-chip">
-                        <i class="pi pi-window-minimize" aria-hidden="true"></i>Küçült
+                    <button pButton type="button" size="small" [text]="true" severity="secondary" title="Talepleri Açık işler satırında tek satır olarak göster" (click)="showChip.emit()" data-testid="pending-requests-show-chip">
+                        <i class="pi pi-window-minimize" aria-hidden="true"></i>Açık işlerde göster
                     </button>
                     <a [routerLink]="requestsRoute" class="text-sm font-medium">Tümünü gör<i class="pi pi-angle-right ml-1 text-xs" aria-hidden="true"></i></a>
                 </span>

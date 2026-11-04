@@ -48,7 +48,7 @@ describe('PendingAppointmentRequestsTilesComponent', () => {
         expect(days[1].className).toContain('text-muted-color');
     });
 
-    it('listede olmayanlar "+N talep daha"; Küçült çip görünümünü ister', async () => {
+    it('listede olmayanlar "+N talep daha"; "Açık işlerde göster" çip görünümünü ister', async () => {
         const { fixture, el } = await render(7);
         const showChip = vi.fn();
 
