@@ -234,7 +234,7 @@ type Mode = 'view' | 'approve' | 'reject';
                     @if (mode() === 'view' && isPending() && canDecide()) {
                         <div class="flex flex-wrap justify-end gap-2">
                             <button pButton type="button" severity="danger" [outlined]="true" (click)="startReject()" data-testid="reject-start">Reddet</button>
-                            <button pButton type="button" (click)="startApprove()" data-testid="approve-start"><i class="pi pi-check"></i>Onayla…</button>
+                            <button pButton type="button" (click)="startApprove()" data-testid="approve-start"><i class="pi pi-check"></i>Onayla</button>
                         </div>
                     }
 

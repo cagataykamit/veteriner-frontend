@@ -6,7 +6,7 @@ import { APPOINTMENT_REQUESTS_ROUTE } from '@/app/core/routing/panel-navigation'
 import type { PendingRequestPreviewVm } from '@/app/entities/online-booking/utils/pending-request-preview.utils';
 
 /**
- * Bekleyen online talepler, "Açık işler" satırının ilk çipi (varsayılan görünüm): sayı ve en yakın istenen saat.
+ * Bekleyen online talepler, "Açık işler" satırının ilk çipi (kullanıcının seçtiği görünüm): sayı ve en yakın istenen saat.
  * Tıklanınca açılır panelde ilk talepler; panelden kutucuk görünümüne geçilir. Son 30 dk içinde gelen talep varsa nabız noktası.
  */
 @Component({
@@ -68,7 +68,7 @@ import type { PendingRequestPreviewVm } from '@/app/entities/online-booking/util
                                 <span class="block truncate font-medium">{{ r.contactName }} · {{ r.petLabel }}</span>
                                 <span class="block truncate text-xs text-muted-color">{{ r.reasonName }} · {{ r.receivedAgo }}</span>
                             </span>
-                            <a pButton size="small" [text]="true" [routerLink]="requestsRoute" [queryParams]="{ requestId: r.id }" (click)="panel.hide()" data-testid="pending-request-open">İncele</a>
+                            <button pButton type="button" size="small" [text]="true" (click)="panel.hide(); openRequest.emit(r.id)" data-testid="pending-request-open">İncele</button>
                         </li>
                     }
                 </ul>
@@ -87,6 +87,8 @@ export class PendingAppointmentRequestsChipComponent {
     readonly total = input.required<number>();
     /** Kullanıcı kutucuk görünümünü seçti (tercih üst katmanda saklanır). */
     readonly showTiles = output<void>();
+    /** Talep sayfadan ayrılmadan açılsın (pencereyi üst sayfa çizer). */
+    readonly openRequest = output<string>();
 
     readonly requestsRoute = APPOINTMENT_REQUESTS_ROUTE;
     readonly open = signal(false);
