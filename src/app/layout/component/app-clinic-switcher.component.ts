@@ -18,7 +18,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
  *
  * Tasarım:
  * - Tek orchestration: liste yükleme (lazy), panel aç/kapa, `selectClinic` çağrısı, post-switch refresh.
- * - Panel (taslak C): "Klinik değiştir" + arama, "Klinikleriniz" grubu, aktif klinikte "aktif" hapı.
+ * - Panel (taslak C): "Klinik değiştir" + arama, "Klinikleriniz" grubu, ad altında kısa adres, aktif klinikte "aktif" hapı.
  * - Token/JWT parse YOK; tüm clinic state `AuthService` üzerinden okunur.
  * - localStorage'a doğrudan erişim YOK; tokenlar `auth.selectClinic` içinde persist edilir.
  * - `/me/clinics` mount'ta sessiz yüklenir; tek klinikte button DOM'a girmez, dropdown açılmaz.
@@ -76,7 +76,12 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                                 @for (c of filteredClinics(); track c.id) {
                                     <li>
                                         <button type="button" class="layout-topbar-panel-row" [disabled]="submitting()" [attr.aria-current]="c.id === activeId() ? 'true' : null" (click)="onSelect(c)" data-testid="clinic-option">
-                                            <span class="flex-1 min-w-0 truncate" [class.font-semibold]="c.id === activeId()">{{ c.name }}</span>
+                                            <span class="flex-1 min-w-0">
+                                                <span class="block truncate" [class.font-semibold]="c.id === activeId()" data-testid="clinic-option-name">{{ c.name }}</span>
+                                                @if (c.shortAddress) {
+                                                    <span class="block truncate text-xs text-muted-color" data-testid="clinic-option-address">{{ c.shortAddress }}</span>
+                                                }
+                                            </span>
                                             @if (c.id === activeId()) {
                                                 <span class="text-xs rounded-full px-2 py-0.5 bg-primary-50 dark:bg-primary-950/40 text-primary font-medium">aktif</span>
                                             }
@@ -128,11 +133,12 @@ export class AppClinicSwitcher {
         this.reloadClinics(false);
     }
 
-    /** Arama kutusu: Türkçe duyarlı, adın herhangi bir yerinde geçen. */
+    /** Arama kutusu: Türkçe duyarlı, adın ya da kısa adresin (ilçe, il) herhangi bir yerinde geçen. */
     readonly filteredClinics = computed(() => {
         const q = this.query().trim().toLocaleLowerCase('tr-TR');
+        const matches = (text: string | undefined) => !!text && text.toLocaleLowerCase('tr-TR').includes(q);
 
-        return q ? this.clinics().filter((c) => c.name.toLocaleLowerCase('tr-TR').includes(q)) : this.clinics();
+        return q ? this.clinics().filter((c) => matches(c.name) || matches(c.shortAddress)) : this.clinics();
     });
 
     /** Escape: panel kapanır, odak düğmeye döner (PrimeNG popover odak geri vermez). */

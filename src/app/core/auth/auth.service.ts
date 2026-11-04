@@ -528,10 +528,15 @@ export class AuthService {
         }
 
         const isActive = this.readClinicIsActiveTri(o);
+        const shortAddress = this.firstString(o['shortAddress'], o['ShortAddress']);
         const base: ClinicSummary = { id: id.trim(), name: name.trim() };
 
         if (isActive !== null) {
             base.isActive = isActive;
+        }
+
+        if (shortAddress) {
+            base.shortAddress = shortAddress.trim();
         }
 
         return base;
