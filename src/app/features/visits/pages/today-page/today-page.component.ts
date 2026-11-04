@@ -27,7 +27,9 @@ import {
 } from '@/app/core/auth/operation-claims.constants';
 import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { PendingAppointmentRequestsCardComponent } from '@/app/entities/online-booking/components/pending-appointment-requests-card.component';
+import { PendingAppointmentRequestsChipComponent } from '@/app/entities/online-booking/components/pending-appointment-requests-chip.component';
+import { PendingAppointmentRequestsTilesComponent } from '@/app/entities/online-booking/components/pending-appointment-requests-tiles.component';
+import { PendingAppointmentRequestsState } from '@/app/entities/online-booking/services/pending-appointment-requests-state';
 import { TodayMoneyComponent } from '@/app/features/visits/components/today-money.component';
 import { TodayOpenItemsComponent } from '@/app/features/visits/components/today-open-items.component';
 import { VisitArrivalDialogComponent } from '@/app/entities/visit/components/visit-arrival-dialog.component';
@@ -104,9 +106,10 @@ type TodayScope = 'mine' | 'all';
         VisitPreparationDialogComponent,
         AppointmentNoShowDialogComponent,
         PetAlertBadgesComponent,
-        PendingAppointmentRequestsCardComponent
+        PendingAppointmentRequestsChipComponent,
+        PendingAppointmentRequestsTilesComponent
     ],
-    providers: [MessageService],
+    providers: [MessageService, PendingAppointmentRequestsState],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './today-page.component.html'
 })
@@ -136,8 +139,10 @@ export class TodayPageComponent implements OnInit {
     readonly canCreateCharge = this.auth.hasOperationClaim(CHARGES_CREATE_CLAIM);
 
     readonly loading = signal(true);
-    /** Her yenilemede artar; bekleyen online talep kartı da aynı anda yenilenir. */
-    readonly refreshTick = signal(0);
+    /** Bekleyen online talepler; Bugün her yenilendiğinde birlikte yenilenir. */
+    readonly pendingRequests = inject(PendingAppointmentRequestsState);
+    /** Varsayılan görünüm: Açık işler satırında çip (kutucuk görünümünde sayfa başında çizilir). */
+    readonly showPendingChip = computed(() => this.pendingRequests.hasPending() && this.pendingRequests.view() === 'chip');
     /** İlk yükleme / elle yenileme hatası: listeyi değiştirir. */
     readonly loadError = signal<string | null>(null);
     /** Otomatik yenileme hatası: eski liste kalır, yalnızca uyarı gösterilir. */
@@ -247,7 +252,7 @@ export class TodayPageComponent implements OnInit {
             this.loading.set(true);
         }
 
-        this.refreshTick.update((n) => n + 1);
+        this.pendingRequests.load();
         this.refresh$.next(mode);
     }
 

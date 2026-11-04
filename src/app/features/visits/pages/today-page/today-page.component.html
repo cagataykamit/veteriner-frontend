@@ -17,8 +17,10 @@
     </div>
 </app-page-header>
 
-<!-- Online randevu talebi gelince resepsiyon ilk burada görür (yetki ya da bekleyen yoksa çizilmez). -->
-<app-pending-appointment-requests-card [refreshTick]="refreshTick()" />
+<!-- Online randevu talebi gelince resepsiyon ilk burada görür: kutucuklar ya da (varsayılan) Açık işler'de çip; yetki ya da bekleyen yoksa çizilmez. -->
+@if (pendingRequests.hasPending() && pendingRequests.view() === 'tiles') {
+    <app-pending-appointment-requests-tiles [rows]="pendingRequests.rows()" [total]="pendingRequests.total()" (showChip)="pendingRequests.setView('chip')" />
+}
 
 <p-selectbutton class="block mb-4" [options]="viewOptions" [ngModel]="view()" (ngModelChange)="setView($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Görünüm" />
 @if (myUserId()) {
@@ -26,6 +28,15 @@
     @if (scope() === 'mine') {
         <p class="text-muted-color text-sm mt-0 mb-4">Yalnızca sorumlu hekimi siz olan kayıtlar gösterilir; planlı randevular bu görünümde yer almaz.</p>
     }
+}
+
+<!-- Talep çipi listenin yüklenmesinden ve açık iş özetinden bağımsız: bekleyen talep varsa satır yine çizilir. -->
+@if (showPendingChip() || today()?.openItems) {
+    <app-today-open-items [summary]="today()?.openItems ?? null" [hasLeadingItem]="showPendingChip()">
+        @if (showPendingChip()) {
+            <app-pending-appointment-requests-chip [rows]="pendingRequests.rows()" [total]="pendingRequests.total()" (showTiles)="pendingRequests.setView('tiles')" />
+        }
+    </app-today-open-items>
 }
 
 @if (loading()) {
@@ -40,9 +51,6 @@
     }
     @if (ro.mutationBlocked()) {
         <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; değişiklik kaydedilemez.</p>
-    }
-    @if (today()?.openItems; as openItems) {
-        <app-today-open-items [summary]="openItems" />
     }
     @for (group of groups(); track group.key) {
         <section class="card mb-4" [attr.aria-label]="group.title">

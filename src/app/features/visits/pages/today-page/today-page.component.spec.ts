@@ -7,6 +7,8 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
+import { pendingRequest } from '@/app/entities/online-booking/models/appointment-request.testing';
+import { AppointmentRequestStatus } from '@/app/entities/online-booking/models/online-booking.model';
 import { AppointmentRequestsService } from '@/app/entities/online-booking/services/online-booking.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -78,6 +80,11 @@ describe('TodayPageComponent', () => {
 
     let visits: MockedObject<VisitsService>;
     let toasts: Mock;
+    let requestList: Mock;
+
+    beforeEach(() => {
+        requestList = vi.fn().mockReturnValue(of({ items: [], totalCount: 0, page: 1, pageSize: 5 }));
+    });
 
     const create = async (claims: string[], today: TodayVm, vetUserId: string | null = null): Promise<ComponentFixture<TodayPageComponent>> => {
         visits = {
@@ -96,12 +103,12 @@ describe('TodayPageComponent', () => {
             providers: [
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
-                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'c1' } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'c1', getUserId: () => 'u1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
-                // Bekleyen online talep kartı: bu testlerde talep yok.
-                { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 5 }) } }
+                // Bekleyen online talepler: varsayılan yok; "bekleyen online talepler" bloğu doldurur.
+                { provide: AppointmentRequestsService, useValue: { list: requestList } }
             ]
         }).compileComponents();
 
@@ -175,6 +182,104 @@ describe('TodayPageComponent', () => {
         expect(t).toContain('Bekliyor');
         expect(t).not.toContain('Ödeme kaydı');
         expect((f.nativeElement as HTMLElement).querySelector('[aria-label="2 kayıt"]')).not.toBeNull();
+    });
+
+    describe('bekleyen online talepler', () => {
+        const MANAGE = ['Visits.Read', 'AppointmentRequests.Manage'];
+        const empty: TodayVm = { date: 'd', activeHospitalizations: [], items: [], openItems: null };
+        const el = (f: ComponentFixture<TodayPageComponent>) => f.nativeElement as HTMLElement;
+
+        const settle = async (f: ComponentFixture<TodayPageComponent>) => {
+            f.detectChanges();
+            await f.whenStable();
+            f.detectChanges();
+        };
+
+        beforeEach(() => {
+            localStorage.clear();
+            requestList.mockReturnValue(
+                of({
+                    items: [
+                        // NOW 13:00 (İstanbul): ilki yarın 17:30, 12 dk önce geldi.
+                        pendingRequest('r1', { requestedStartUtc: '2026-10-11T14:30:00Z', createdAtUtc: '2026-10-10T09:48:00Z' }),
+                        pendingRequest('r2', { requestedStartUtc: '2026-10-12T07:00:00Z', createdAtUtc: '2026-10-09T09:00:00Z' })
+                    ],
+                    totalCount: 7,
+                    page: 1,
+                    pageSize: 5
+                })
+            );
+        });
+
+        it('varsayılan: Açık işler satırının ilk çipi; açık iş özeti yokken de satır çizilir; sayı menü sayacına bildirilir', async () => {
+            const f = await create(MANAGE, empty);
+            const strip = el(f).querySelector('[data-testid="open-items-strip"]');
+
+            expect(requestList).toHaveBeenCalledWith({ status: AppointmentRequestStatus.Pending, page: 1, pageSize: 5 });
+            expect(strip?.querySelector('[data-testid="pending-requests-chip"]')?.textContent).toContain('Online talep: 7');
+            expect(strip?.querySelector('[data-testid="pending-requests-chip-nearest"]')?.textContent).toContain('en yakını yarın 17:30');
+            expect(strip?.querySelector('.pending-pulse')).not.toBeNull(); // 12 dk önce gelen talep: yeni
+            expect(strip?.textContent).not.toContain('Açık iş yok');
+            expect(el(f).querySelector('[data-testid="pending-requests-tiles"]')).toBeNull();
+            expect(TestBed.inject(MenuBadgeFeed).value('pendingAppointmentRequests')).toBe(7);
+        });
+
+        it('çipin panelinden kutucuğa, Küçült ile geri; tercih kullanıcı adına saklanır', async () => {
+            const f = await create(MANAGE, empty);
+
+            el(f).querySelector<HTMLButtonElement>('[data-testid="pending-requests-chip"]')!.click();
+            await settle(f);
+            const panelRows = document.querySelectorAll('[data-testid="pending-requests-panel"] [data-testid="pending-request-row"]');
+
+            expect(panelRows.length).toBe(2);
+            expect(panelRows[0].textContent).toContain('12 dk önce');
+            document.querySelector<HTMLButtonElement>('[data-testid="pending-requests-show-tiles"]')!.click();
+            await settle(f);
+
+            expect(el(f).querySelector('[data-testid="pending-requests-chip"]')).toBeNull();
+            expect(el(f).querySelectorAll('[data-testid="pending-request-tile"]').length).toBe(2);
+            expect(localStorage.getItem('vetinity.pendingRequestsView.u1')).toBe('tiles');
+
+            el(f).querySelector<HTMLButtonElement>('[data-testid="pending-requests-show-chip"]')!.click();
+            await settle(f);
+
+            expect(el(f).querySelector('[data-testid="pending-requests-tiles"]')).toBeNull();
+            expect(el(f).querySelector('[data-testid="pending-requests-chip"]')).not.toBeNull();
+            expect(localStorage.getItem('vetinity.pendingRequestsView.u1')).toBe('chip');
+        });
+
+        it('kayıtlı tercih kutucuksa sayfa kutucukla açılır; çip ve boş Açık işler satırı çizilmez', async () => {
+            localStorage.setItem('vetinity.pendingRequestsView.u1', 'tiles');
+            const f = await create(MANAGE, empty);
+
+            expect(el(f).querySelector('[data-testid="pending-requests-tiles"]')).not.toBeNull();
+            expect(el(f).querySelector('[data-testid="open-items-strip"]')).toBeNull();
+        });
+
+        it('bekleyen yoksa ne çip ne kutucuk çizilir', async () => {
+            requestList.mockReturnValue(of({ items: [], totalCount: 0, page: 1, pageSize: 5 }));
+            const f = await create(MANAGE, empty);
+
+            expect(el(f).querySelector('[data-testid="open-items-strip"]')).toBeNull();
+            expect(el(f).querySelector('[data-testid="pending-requests-tiles"]')).toBeNull();
+        });
+
+        it('Bugün yenilenince talepler de yenilenir; sayfa kapanınca sayaç bildirimi bırakılır', async () => {
+            const f = await create(MANAGE, empty);
+
+            f.componentInstance.refresh('silent');
+            expect(requestList).toHaveBeenCalledTimes(2);
+
+            f.destroy();
+            expect(TestBed.inject(MenuBadgeFeed).value('pendingAppointmentRequests')).toBeUndefined();
+        });
+
+        it('talep yönetme yetkisi yoksa sorgu atılmaz', async () => {
+            const f = await create(['Visits.Read'], empty);
+
+            expect(requestList).not.toHaveBeenCalled();
+            expect(el(f).querySelector('[data-testid="pending-requests-chip"]')).toBeNull();
+        });
     });
 
     describe('aktif yatışlar bölümü', () => {
@@ -436,12 +541,12 @@ describe('TodayPageComponent', () => {
             providers: [
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
-                { provide: AuthService, useValue: { hasOperationClaim: () => true, getClinicId: () => 'c1' } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => true, getClinicId: () => 'c1', getUserId: () => 'u1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
                 { provide: AppointmentsService, useValue: {} },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
-                // Bekleyen online talep kartı: bu testlerde talep yok.
+                // Bekleyen online talepler: bu testlerde talep yok.
                 { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 5 }) } }
             ]
         }).compileComponents();
@@ -935,11 +1040,11 @@ describe('TodayPageComponent — Benim hastalarım', () => {
             providers: [
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
-                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'c1' } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'c1', getUserId: () => 'u1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
-                // Bekleyen online talep kartı: bu testlerde talep yok.
+                // Bekleyen online talepler: bu testlerde talep yok.
                 { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 5 }) } }
             ]
         }).compileComponents();
@@ -1011,12 +1116,12 @@ describe('TodayPageComponent — Benim hastalarım boş liste', () => {
             providers: [
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
-                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => c !== 'Visits.None', getClinicId: () => 'c1' } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => c !== 'Visits.None', getClinicId: () => 'c1', getUserId: () => 'u1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: AppointmentsService, useValue: {} },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
-                // Bekleyen online talep kartı: bu testlerde talep yok.
+                // Bekleyen online talepler: bu testlerde talep yok.
                 { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 5 }) } }
             ]
         }).compileComponents();
