@@ -213,7 +213,7 @@
                 <div class="card">
                     <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                         <h5 class="m-0">Plan / tedavi planı</h5>
-                        <app-dose-calculator [weightKg]="form.controls.weightKg.value" />
+                        <app-dose-calculator [weightKg]="form.controls.weightKg.value" insertLabel="Plana ekle" (insertText)="appendToPlan($event)" />
                     </div>
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12">

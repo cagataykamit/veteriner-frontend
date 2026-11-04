@@ -337,6 +337,19 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         expect(cmp.form.controls.visitReason.valid).toBe(false);
     });
 
+    it('doz hesabı planın sonuna yeni satır olarak eklenir ve form kirlenir', () => {
+        cmp.form.controls.plan.setValue('Amoksisilin başla  ');
+        cmp.appendToPlan('Doz hesabı: 10 kg × 5 mg/kg = 50 mg');
+
+        expect(cmp.form.controls.plan.value).toBe('Amoksisilin başla\nDoz hesabı: 10 kg × 5 mg/kg = 50 mg');
+        expect(cmp.form.controls.plan.dirty).toBe(true);
+
+        cmp.form.controls.plan.setValue('');
+        cmp.appendToPlan('Doz hesabı: x');
+
+        expect(cmp.form.controls.plan.value).toBe('Doz hesabı: x');
+    });
+
     it('vital değer 0 veya negatifse geçersiz, boşsa geçerlidir', () => {
         cmp.form.controls.weightKg.setValue(0);
         expect(cmp.form.controls.weightKg.valid).toBe(false);

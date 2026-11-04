@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { startWith } from 'rxjs';
@@ -10,8 +10,8 @@ import { copyTextToClipboard } from '@/app/shared/utils/clipboard.utils';
 
 /**
  * Doz hesaplayıcı (EXAM-008): kilo, doz/kg ve (isteğe bağlı) konsantrasyondan toplam doz ve hacim. Yalnız hesap yardımcısıdır;
- * kayda yazmaz, doz önermez. Sonucu hekim isterse kopyalayıp plana veya reçeteye kendisi yazar.
- * Kilo açılışta verilen değerle (ör. muayenedeki ölçüm) dolar, değiştirilebilir.
+ * doz önermez ve kendisi kaydetmez. `insertLabel` verilirse hesabı `insertText` ile üst forma verir (ör. "Plana ekle"); metin
+ * hekim formu kaydedince kayda girer. Verilmezse yalnız kopyalanır. Kilo açılışta verilen değerle dolar, değiştirilebilir.
  */
 @Component({
     selector: 'app-dose-calculator',
@@ -21,7 +21,13 @@ import { copyTextToClipboard } from '@/app/shared/utils/clipboard.utils';
     template: `
         <button pButton type="button" class="p-button-secondary p-button-sm" data-testid="dose-calculator-open" (click)="open()"><i class="pi pi-calculator"></i>Doz hesapla</button>
         <p-dialog header="Doz hesaplayıcı" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">
-            <p class="mt-0 mb-4 text-sm text-muted-color">Yalnız hesap yardımcısıdır: doz önermez ve kayda yazılmaz. Doz kararı ve kontrolü hekimdedir.</p>
+            <p class="mt-0 mb-4 text-sm text-muted-color">
+                @if (insertLabel(); as label) {
+                    Yalnız hesap yardımcısıdır, doz önermez. "{{ label }}" hesabı metin olarak ekler; siz kaydedince kayda girer. Doz kararı ve kontrolü hekimdedir.
+                } @else {
+                    Yalnız hesap yardımcısıdır: doz önermez ve kayda yazılmaz. Doz kararı ve kontrolü hekimdedir.
+                }
+            </p>
             <form [formGroup]="form" class="grid grid-cols-12 gap-4">
                 <div class="col-span-12 sm:col-span-6">
                     <label for="dc-weight" class="block text-sm font-medium text-muted-color mb-2">Kilo (kg) *</label>
@@ -55,7 +61,12 @@ import { copyTextToClipboard } from '@/app/shared/utils/clipboard.utils';
                     <span class="text-sm text-muted-color self-center mr-2" role="status">Kopyalandı.</span>
                 }
                 <button pButton type="button" severity="secondary" [disabled]="!result()" (click)="copy()"><i class="p-button-icon pi pi-copy"></i>Hesabı kopyala</button>
-                <button pButton type="button" (click)="visible.set(false)"><i class="p-button-icon pi pi-check"></i>Kapat</button>
+                @if (insertLabel(); as label) {
+                    <button pButton type="button" severity="secondary" (click)="visible.set(false)">Kapat</button>
+                    <button pButton type="button" data-testid="dose-insert" [disabled]="!result()" (click)="insert()"><i class="p-button-icon pi pi-plus"></i>{{ label }}</button>
+                } @else {
+                    <button pButton type="button" (click)="visible.set(false)"><i class="p-button-icon pi pi-check"></i>Kapat</button>
+                }
             </ng-template>
         </p-dialog>
     `
@@ -63,6 +74,10 @@ import { copyTextToClipboard } from '@/app/shared/utils/clipboard.utils';
 export class DoseCalculatorComponent {
     /** Açılışta kilo alanına yazılır (ör. muayene formundaki ölçüm); boşsa kullanıcı girer. */
     readonly weightKg = input<number | null>(null);
+    /** Verilirse ana düğme bu adla çıkar ve hesabı `insertText` ile yayar (ör. "Plana ekle"). */
+    readonly insertLabel = input<string | null>(null);
+    /** Eklenecek hesap metni: "Doz hesabı: 12,4 kg × 5 mg/kg = 62 mg …". */
+    readonly insertText = output<string>();
 
     private readonly fb = inject(FormBuilder);
 
@@ -113,6 +128,17 @@ export class DoseCalculatorComponent {
         this.copied.set(false);
         this.form.reset({ weightKg: this.weightKg(), dosePerKg: null, doseUnit: 'mg', concentrationMgPerMl: null });
         this.visible.set(true);
+    }
+
+    insert(): void {
+        const r = this.result();
+
+        if (!r) {
+            return;
+        }
+
+        this.insertText.emit(`Doz hesabı: ${r.text}`);
+        this.visible.set(false);
     }
 
     async copy(): Promise<void> {
