@@ -9,18 +9,11 @@ const ROLE_CLAIMS = {
 
 const only = (...claims: string[]) => (claim: string) => claims.includes(claim);
 
-describe('panelHomeRoute (ADR-030)', () => {
-    it('yönetici düzeyi Özet ile açılır', () => {
-        expect(panelHomeRoute(only(...ROLE_CLAIMS.manager))).toBe('/panel/dashboard');
-    });
-
-    it('Resepsiyon ve Hekim Bugün ile açılır', () => {
+describe('panelHomeRoute (ADR-030 eki 2026-11-04)', () => {
+    it('yönetici, Resepsiyon ve Hekim Bugün ile açılır', () => {
+        expect(panelHomeRoute(only(...ROLE_CLAIMS.manager))).toBe('/panel/today');
         expect(panelHomeRoute(only(...ROLE_CLAIMS.receptionist))).toBe('/panel/today');
         expect(panelHomeRoute(only(...ROLE_CLAIMS.veterinarian))).toBe('/panel/today');
-    });
-
-    it('yalnız Bugün yetkisi olan Bugün ile açılır', () => {
-        expect(panelHomeRoute(only('Visits.Read'))).toBe('/panel/today');
     });
 
     it('Bugün yetkisi olmayan yönetici Özet ile açılır', () => {
