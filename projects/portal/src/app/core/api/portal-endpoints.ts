@@ -24,6 +24,8 @@ export const PORTAL_ENDPOINTS = {
     reminderPreferences: (linkId: string) => `${link(linkId)}/reminder-preferences`,
     // Bildirim tercihleri ve KVKK veri talebi (PORTAL_API_CONTRACT.md §10, §11)
     myNotificationPreferences: 'me/notification-preferences',
+    // Push cihaz jetonu (§14.2; MOBILE-003). İptal (§14.3) çıkışla birlikte MOBILE-002'de bağlanır.
+    myPushDevices: 'me/push-devices',
     notificationPreferences: (linkId: string) => `${link(linkId)}/notification-preferences`,
     dataRequests: (linkId: string) => `${link(linkId)}/data-requests`,
     cancelDataRequest: (linkId: string, id: string) => `${link(linkId)}/data-requests/${encodeURIComponent(id)}/cancel`,
