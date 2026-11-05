@@ -150,6 +150,12 @@ const KIND_TONE: Readonly<Record<RecentlyViewedKind, string>> = {
                     }
 
                     @if (groups().length) {
+                        @if (showRecent()) {
+                            <!-- Listenin ne olduğunu söyler: grup başlıklarının üstünde, koyu yazı ve simgeyle ayrışır; erişilebilir ad listbox'ta. -->
+                            <div class="layout-topbar-panel-group flex items-center gap-2 px-1! pt-2! pb-1! text-color!" aria-hidden="true" data-testid="global-search-recent-heading">
+                                <i class="pi pi-history text-muted-color" aria-hidden="true"></i>Son görüntülenenler
+                            </div>
+                        }
                         <div [id]="listboxId" role="listbox" [attr.aria-label]="showRecent() ? 'Son görüntülenenler' : 'Arama sonuçları'" [attr.data-testid]="showRecent() ? 'recently-viewed' : null">
                             @for (g of groups(); track g.kind) {
                                 <div role="group" [attr.aria-labelledby]="'global-search-group-' + g.kind">

@@ -139,7 +139,7 @@ describe('AppGlobalSearch', () => {
         expect(sub(client)).toBe('+90 532 123 45 67 · Hastalar: Pamuk');
     });
 
-    it('sorgu boşken son görüntülenenler listelenir; klavyeyle seçilip detaya gidilir; yazınca sonuçlar yerini alır', async () => {
+    it('sorgu boşken son görüntülenenler başlığıyla listelenir; klavyeyle seçilip detaya gidilir; yazınca sonuçlar yerini alır', async () => {
         recent = [
             { kind: 'pet', id: 'p1', title: 'Pamuk', subtitle: 'Kedi · Ali Veli' },
             { kind: 'examination', id: 'e1', title: 'Pamuk', subtitle: 'Kontrol · 10.10.2026' },
@@ -150,7 +150,9 @@ describe('AppGlobalSearch', () => {
 
         key({ key: 'k', ctrlKey: true });
         const list = document.querySelector('[data-testid="recently-viewed"]')!;
+        const heading = () => document.querySelector('[data-testid="global-search-recent-heading"]');
 
+        expect(heading()?.textContent?.trim()).toBe('Son görüntülenenler');
         expect(list.getAttribute('aria-label')).toBe('Son görüntülenenler');
         expect(groupLabels()).toEqual(['Hastalar', 'Müşteriler', 'Muayeneler']);
         expect(list.textContent).toContain('Kedi · Ali Veli');
@@ -160,11 +162,14 @@ describe('AppGlobalSearch', () => {
 
         await typeQuery('a');
         expect(document.querySelector('[data-testid="recently-viewed"]')).toBeNull();
+        expect(heading()).toBeNull();
         await typeQuery('pamuk');
         expect(document.querySelector('[data-testid="recently-viewed"]')).toBeNull();
+        expect(heading()).toBeNull();
         expect(document.querySelectorAll('[role="option"]').length).toBe(2);
         await typeQuery('');
         expect(document.querySelector('[data-testid="recently-viewed"]')).not.toBeNull();
+        expect(heading()).not.toBeNull();
 
         const input = document.querySelector<HTMLInputElement>('.p-dialog input')!;
 
@@ -179,6 +184,7 @@ describe('AppGlobalSearch', () => {
         key({ key: '/' });
 
         expect(document.querySelector('[data-testid="recently-viewed"]')).toBeNull();
+        expect(document.querySelector('[data-testid="global-search-recent-heading"]')).toBeNull();
         expect(document.querySelector('[data-testid="global-search-first-use"]')!.textContent).toContain('Açtığınız kayıtlar burada listelenir.');
     });
 
