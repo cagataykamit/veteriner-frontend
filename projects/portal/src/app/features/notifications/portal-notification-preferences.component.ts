@@ -57,7 +57,7 @@ type PreferenceKey = 'push' | 'reminders' | 'marketing';
                                 Anlık bildirim
                                 <span id="account-push-hint" class="portal-field-hint" data-testid="push-hint">{{
                                     a.push.available
-                                        ? 'Randevu talebi yanıtları ve hatırlatmalar cihazınıza anlık bildirim olarak da gelir.'
+                                        ? '"Verilerimle ilgili talep" yanıtları cihazınıza anlık bildirim olarak da gelir.'
                                         : 'Anlık bildirimler henüz etkin değil. Tercihiniz şimdiden kaydedilir; etkinleştiğinde yeniden sorulmaz.'
                                 }}</span>
                             </span>
