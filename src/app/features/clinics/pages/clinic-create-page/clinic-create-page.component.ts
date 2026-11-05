@@ -26,7 +26,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-toast position="bottom-right" />
+        <p-toast position="top-right" />
         <app-page-header
             categoryLink="/panel/settings/clinics"
             categoryLinkLabel="Klinik listesine dön"

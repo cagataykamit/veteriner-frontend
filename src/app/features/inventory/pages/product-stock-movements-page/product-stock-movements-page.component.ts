@@ -63,7 +63,7 @@ type ProductStockMovementsListState = {
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-toast position="bottom-right" />
+        <p-toast position="top-right" />
 
         <app-page-header [categoryLink]="productDetailLink()" categoryLinkLabel="Ürün detayına dön" title="Ürün stok hareketleri" description="Bu ürüne ait stok hareketleri; liste salt okunur. Yetkiniz varsa yeni kayıt ekleyebilirsiniz.">
             @if (canCreateStockMovement && !ro.mutationBlocked()) {

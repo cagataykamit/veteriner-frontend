@@ -30,7 +30,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-toast position="bottom-right" />
+        <p-toast position="top-right" />
         <div class="flex justify-center w-full">
             <div class="w-full max-w-4xl">
                 <app-page-header title="Hesabım" description="Hesap bilgilerinizi görüntüleyin ve giriş şifrenizi yönetin." />

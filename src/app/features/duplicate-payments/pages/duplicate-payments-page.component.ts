@@ -36,7 +36,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
     providers: [MessageService, ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-toast position="bottom-right" />
+        <p-toast position="top-right" />
         <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
         <app-page-header
             title="Çift ödemeler"

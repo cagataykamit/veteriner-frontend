@@ -38,14 +38,6 @@
     }
 }
 
-.p-toast {
-    &.p-toast-top-right,
-    &.p-toast-top-left,
-    &.p-toast-top-center {
-        top: 100px;
-    }
-}
-
 /* Native tarih/saat — kompakt input (date: md:max-w-64, datetime-local: md:max-w-96) yanında satır içi hata kaymasını önler */
 input[type='date'] ~ small.text-red-500,
 input[type='date'] ~ small.text-amber-600,

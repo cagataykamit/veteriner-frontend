@@ -29,7 +29,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-toast position="bottom-right" />
+        <p-toast position="top-right" />
 
         <app-page-header title="Kurum Bilgileri" description="Kurum adınızı görüntüleyip güncelleyebilirsiniz. Paket ve ödeme işlemleri için Abonelik sayfasını kullanın." />
 

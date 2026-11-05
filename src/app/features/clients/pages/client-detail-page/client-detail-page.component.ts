@@ -74,7 +74,7 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-toast position="bottom-right" />
+        <p-toast position="top-right" />
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Müşteri kaydedildi.</p>
         }

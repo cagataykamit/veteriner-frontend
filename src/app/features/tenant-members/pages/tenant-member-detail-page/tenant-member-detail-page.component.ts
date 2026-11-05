@@ -40,7 +40,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-toast position="bottom-right" />
+        <p-toast position="top-right" />
         <app-page-header categoryLink="/panel/settings/members" categoryLinkLabel="Üye listesine dön" />
 
         @if (loading()) {

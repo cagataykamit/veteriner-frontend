@@ -70,7 +70,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-toast position="bottom-right" />
+        <p-toast position="top-right" />
 
         <div class="card">
             @if (exportError()) {
