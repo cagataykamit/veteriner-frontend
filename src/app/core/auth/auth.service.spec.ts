@@ -301,11 +301,20 @@ describe('AuthService', () => {
 
     describe('klinik listesi önbelleği', () => {
         it('yanıt normalize edilir: kimliksiz/adsız ve pasif klinik düşer', async () => {
-            api.get.mockReturnValue(of({ items: [{ Id: ' c1 ', Name: ' A ' }, { id: 'c2', name: 'B', isActive: 'false' }, { id: 'c3' }, { clinicId: 'c4', clinicName: 'D', IsActive: true }] }));
+            api.get.mockReturnValue(
+                of({
+                    items: [
+                        { Id: ' c1 ', Name: ' A ', shortAddress: '  ' },
+                        { id: 'c2', name: 'B', isActive: 'false' },
+                        { id: 'c3' },
+                        { clinicId: 'c4', clinicName: 'D', IsActive: true, ShortAddress: ' Kadıköy, İstanbul ' }
+                    ]
+                })
+            );
 
             await expect(firstValueFrom(create().getMyClinics())).resolves.toEqual([
                 { id: 'c1', name: 'A' },
-                { id: 'c4', name: 'D', isActive: true }
+                { id: 'c4', name: 'D', isActive: true, shortAddress: 'Kadıköy, İstanbul' }
             ]);
             expect(api.get).toHaveBeenCalledWith(ApiEndpoints.me.clinics());
         });

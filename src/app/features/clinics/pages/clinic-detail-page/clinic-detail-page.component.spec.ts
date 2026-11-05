@@ -23,7 +23,7 @@ describe('ClinicDetailPageComponent — çalışma saatleri ve randevu varsayıl
             getAppointmentSettings: vi.fn().mockName('ClinicsService.getAppointmentSettings')
         };
 
-        clinics.getClinicById.mockReturnValue(of({ id: 'c1', name: 'Merkez Pati', city: 'İstanbul', isActive: true, phone: '', email: '', address: '', description: '' }));
+        clinics.getClinicById.mockReturnValue(of({ id: 'c1', name: 'Merkez Pati', city: 'İstanbul', district: '', isActive: true, phone: '', email: '', address: '', description: '' }));
         clinics.getWorkingHours.mockReturnValue(
             of(
                 DAYS.map((dayLabel, dayOfWeek) => ({
@@ -85,6 +85,7 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
         id: 'c1',
         name: 'Merkez Pati',
         city: 'İstanbul',
+        district: 'Kadıköy',
         isActive: true,
         phone: '02125550000',
         email: 'merkez@ornek.com',
@@ -251,8 +252,26 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
         expect(button('Kaydet').disabled).toBe(false);
         await click('Kaydet');
 
-        expect(clinics['updateClinicFromForm']).toHaveBeenCalledWith('c1', expect.objectContaining({ name: 'Yeni Pati', city: 'İstanbul' }));
+        expect(clinics['updateClinicFromForm']).toHaveBeenCalledWith('c1', expect.objectContaining({ name: 'Yeni Pati', city: 'İstanbul', district: 'Kadıköy' }));
         expect(button('Kaydet').disabled).toBe(true);
+    });
+
+    it('İlçe alanı kayıtlı değerle dolar, değiştirilip kaydedilir; sınırı aşan ilçe kaydettirmez', async () => {
+        clinics['updateClinicFromForm'].mockReturnValue(of(clinic({ district: 'Üsküdar' })));
+        await render();
+
+        expect(text()).toContain('İlçe');
+        expect((el().querySelector('#clinicDistrict') as HTMLInputElement).value).toBe('Kadıköy');
+
+        type('#clinicDistrict', 'a'.repeat(101));
+        await settle();
+        expect(button('Kaydet').disabled).toBe(true);
+
+        type('#clinicDistrict', 'Üsküdar');
+        await settle();
+        await click('Kaydet');
+
+        expect(clinics['updateClinicFromForm']).toHaveBeenCalledWith('c1', expect.objectContaining({ city: 'İstanbul', district: 'Üsküdar' }));
     });
 
     it('çalışma saatleri değişiklik yokken kaydedilemez; kaydedilir ve kayıttan sonra yeniden kapanır', async () => {

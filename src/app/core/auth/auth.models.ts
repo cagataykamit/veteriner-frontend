@@ -45,6 +45,8 @@ export interface ClinicSummary {
     name: string;
     /** `/me/clinics` yanıtında varsa; pasifler seçim listelerinde gösterilmez. */
     isActive?: boolean | null;
+    /** `/me/clinics` `shortAddress` — "İlçe, İl" ya da yalnız il; boşsa alan yok. */
+    shortAddress?: string;
 }
 
 export interface SelectClinicRequest {

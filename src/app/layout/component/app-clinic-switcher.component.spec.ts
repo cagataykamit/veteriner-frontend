@@ -7,8 +7,8 @@ import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { AppClinicSwitcher } from './app-clinic-switcher.component';
 
-const merkez = { id: 'c1', name: 'Merkez Klinik', isActive: true } as ClinicSummary;
-const sube = { id: 'c2', name: 'Şube Klinik', isActive: true } as ClinicSummary;
+const merkez = { id: 'c1', name: 'Merkez Klinik', isActive: true, shortAddress: 'Kadıköy, İstanbul' } as ClinicSummary;
+const sube = { id: 'c2', name: 'Şube Klinik', isActive: true, shortAddress: 'Ankara' } as ClinicSummary;
 const istinye = { id: 'c3', name: 'İstinye Şubesi', isActive: true } as ClinicSummary;
 
 describe('AppClinicSwitcher', () => {
@@ -37,6 +37,7 @@ describe('AppClinicSwitcher', () => {
     const popover = () => fixture.debugElement.query(By.directive(Popover)).componentInstance as Popover;
     const panel = () => document.querySelector('[data-testid="clinic-panel"]') as HTMLElement;
     const options = () => Array.from(panel().querySelectorAll<HTMLButtonElement>('[data-testid="clinic-option"]'));
+    const optionNames = () => options().map((o) => o.querySelector('[data-testid="clinic-option-name"]')!.textContent!.trim());
 
     it('tek klinikte açılır düğme yoktur', async () => {
         await create([merkez]);
@@ -67,7 +68,7 @@ describe('AppClinicSwitcher', () => {
 
         expect(panel().textContent).toContain('Klinik değiştir');
         expect(panel().textContent).toContain('Klinikleriniz');
-        expect(options().map((o) => o.querySelector('span')!.textContent!.trim())).toEqual(['İstinye Şubesi', 'Merkez Klinik', 'Şube Klinik']);
+        expect(optionNames()).toEqual(['İstinye Şubesi', 'Merkez Klinik', 'Şube Klinik']);
         expect(options().map((o) => o.textContent!.includes('aktif'))).toEqual([false, true, false]);
 
         const search = panel().querySelector('[data-testid="clinic-search"]') as HTMLInputElement;
@@ -76,7 +77,23 @@ describe('AppClinicSwitcher', () => {
         search.dispatchEvent(new Event('input'));
         await settle();
 
-        expect(options().map((o) => o.textContent!.trim())).toEqual(['İstinye Şubesi', 'Şube Klinik']);
+        expect(optionNames()).toEqual(['İstinye Şubesi', 'Şube Klinik']);
+    });
+
+    it('kısa adres adın altında gösterilir; boşsa satır çizilmez; arama adresle de eşleşir', async () => {
+        await create([merkez, sube, istinye]);
+        trigger()!.click();
+        await settle();
+
+        expect(options().map((o) => o.querySelector('[data-testid="clinic-option-address"]')?.textContent!.trim() ?? null)).toEqual([null, 'Kadıköy, İstanbul', 'Ankara']);
+
+        const search = panel().querySelector('[data-testid="clinic-search"]') as HTMLInputElement;
+
+        search.value = 'KADIKÖY';
+        search.dispatchEvent(new Event('input'));
+        await settle();
+
+        expect(optionNames()).toEqual(['Merkez Klinik']);
     });
 
     it('aktif klinik seçilince istek atılmaz, panel kapanır', async () => {

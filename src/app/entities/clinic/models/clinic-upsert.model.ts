@@ -2,6 +2,7 @@
 export interface ClinicUpsertFormValue {
     name: string;
     city: string;
+    district: string;
     phone: string;
     email: string;
     address: string;

@@ -1,5 +1,6 @@
 import { AbstractControl, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 
+export const CLINIC_DISTRICT_MAX = 100;
 export const CLINIC_PHONE_MAX = 50;
 export const CLINIC_EMAIL_MAX = 256;
 export const CLINIC_ADDRESS_MAX = 500;
