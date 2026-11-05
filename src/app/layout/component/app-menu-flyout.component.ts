@@ -17,8 +17,9 @@ const VIEWPORT_MARGIN_PX = 8;
 const ANCHOR_GAP_PX = 4;
 
 /**
- * Sekmeli menü satırının alt sayfa paneli (flyout). Kenar çubuğunun `overflow` kırpmasına takılmaması için `body`'ye taşınır
- * ve satırın sağına `position: fixed` ile hizalanır; pencereye sığmazsa yukarı kayar, çok kısa pencerede kendi içinde kaydırılır.
+ * Sekmeli menü satırının alt sayfa paneli (flyout): başlıksız, sade sekme listesi; daraltılmış menüde de satır adı yalnız ekran
+ * okuyucu etiketindedir. Kenar çubuğunun `overflow` kırpmasına takılmaması için `body`'ye taşınır ve satırın sağına
+ * `position: fixed` ile hizalanır; pencereye sığmazsa yukarı kayar, çok kısa pencerede liste kendi içinde kaydırılır.
  * Klavye: Aşağı/Yukarı/Home/End gezinir, Escape ve Sol ok kapatıp odağı satıra verir, Tab kapatıp satırdan sonraki öğeye geçer.
  */
 @Component({
@@ -37,25 +38,25 @@ const ANCHOR_GAP_PX = 4;
         '(keydown)': 'onKeydown($event)'
     },
     template: `
-        @if (heading()) {
-            <div class="layout-menu-flyout-heading" role="presentation">{{ label() }}</div>
-        }
-        @for (tab of tabs(); track tab.route) {
-            <a
-                role="menuitem"
-                class="layout-menu-flyout-item"
-                tabindex="-1"
-                [routerLink]="tab.route"
-                [class.active-route]="tab.active"
-                [attr.aria-current]="tab.active ? 'page' : null"
-                (click)="selected.emit()"
-            >
-                <span class="layout-menu-flyout-text">{{ tab.label }}</span>
-                @if (tab.badge) {
-                    <span class="layout-menuitem-badge">{{ tab.badge }}<span class="sr-only"> bekleyen</span></span>
-                }
-            </a>
-        }
+        <!-- Satıra bakan ok panelin dışına taştığından kaydırma panelde değil listededir. -->
+        <div class="layout-menu-flyout-list" role="none">
+            @for (tab of tabs(); track tab.route) {
+                <a
+                    role="menuitem"
+                    class="layout-menu-flyout-item"
+                    tabindex="-1"
+                    [routerLink]="tab.route"
+                    [class.active-route]="tab.active"
+                    [attr.aria-current]="tab.active ? 'page' : null"
+                    (click)="selected.emit()"
+                >
+                    <span class="layout-menu-flyout-text">{{ tab.label }}</span>
+                    @if (tab.badge) {
+                        <span class="layout-menuitem-badge">{{ tab.badge }}<span class="sr-only"> bekleyen</span></span>
+                    }
+                </a>
+            }
+        </div>
     `
 })
 export class AppMenuFlyout implements AfterViewInit {
@@ -65,10 +66,8 @@ export class AppMenuFlyout implements AfterViewInit {
     /** Panelin hizalandığı menü satırı (bağlantı); odak kapanınca buraya döner. */
     readonly anchor = input.required<HTMLElement>();
     readonly tabs = input.required<readonly MenuFlyoutTab[]>();
-    /** Menü öğesinin adı: ekran okuyucu etiketi ve (başlık açıksa) panel başlığı. */
+    /** Menü öğesinin adı: panelin ekran okuyucu etiketi. */
     readonly label = input.required<string>();
-    /** Daraltılmış menüde satır adı görünmediğinden panelin üstünde başlık olarak yazılır. */
-    readonly heading = input(false);
     readonly panelId = input.required<string>();
     /** Klavyeyle açıldıysa odak ilk sekmeye geçer. */
     readonly focusFirst = input(false);
@@ -177,14 +176,19 @@ export class AppMenuFlyout implements AfterViewInit {
         return Array.from(this.host.querySelectorAll<HTMLElement>('[role="menuitem"]'));
     }
 
-    /** Satırın sağına hizalar; alt kenara sığmazsa yukarı, sağ kenara sığmazsa sola kaydırır. */
+    /**
+     * Satırın sağına hizalar; alt kenara sığmazsa yukarı, sağ kenara sığmazsa sola kaydırır. Panel kaysa da ok satırı göstersin diye
+     * satırın ortası panelin üstüne göre `--layout-menu-flyout-row-center` olarak verilir (satır yüksekliği pencereye göre değişir).
+     */
     private position(): void {
         const anchor = this.anchor().getBoundingClientRect();
         const { offsetWidth: width, offsetHeight: height } = this.host;
         const maxLeft = window.innerWidth - VIEWPORT_MARGIN_PX - width;
         const maxTop = window.innerHeight - VIEWPORT_MARGIN_PX - height;
+        const top = Math.max(VIEWPORT_MARGIN_PX, Math.min(anchor.top, maxTop));
 
         this.host.style.left = `${Math.max(VIEWPORT_MARGIN_PX, Math.min(anchor.right + ANCHOR_GAP_PX, maxLeft))}px`;
-        this.host.style.top = `${Math.max(VIEWPORT_MARGIN_PX, Math.min(anchor.top, maxTop))}px`;
+        this.host.style.top = `${top}px`;
+        this.host.style.setProperty('--layout-menu-flyout-row-center', `${anchor.top + anchor.height / 2 - top}px`);
     }
 }
