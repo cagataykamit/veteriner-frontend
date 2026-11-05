@@ -32,7 +32,7 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card">
-            <app-list-header class="mb-4" title="Hastalar" />
+            <app-list-header class="mb-4" title="Müşteri ve Hasta" />
             <label for="patientSearch" class="block text-sm font-medium text-muted-color mb-2">Hasta veya sahip ara</label>
             <div class="[&_input]:text-xl [&_input]:py-4">
                 <app-search-input inputId="patientSearch" ariaLabel="Hasta veya sahip ara" placeholder="Hasta adı, sahip adı soyadı, telefon veya mikroçip" [(value)]="term" (searchRequested)="onSearch()" />

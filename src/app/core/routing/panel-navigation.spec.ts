@@ -265,7 +265,7 @@ describe('panel-navigation', () => {
 
     it('listLabelForUrl adresin tam karşılığı olan liste adını verir; genel sekme adları yerine liste adı', () => {
         expect(listLabelForUrl('/panel/pets?clientId=c1')).toBe('Hastalar');
-        expect(listLabelForUrl('/panel/patients')).toBe('Hastalar');
+        expect(listLabelForUrl('/panel/patients')).toBe('Müşteri ve Hasta');
         expect(listLabelForUrl('/panel/appointments')).toBe('Randevular');
         expect(listLabelForUrl('/panel/examinations')).toBe('Muayeneler');
         expect(listLabelForUrl('/panel/today')).toBe('Bugün');

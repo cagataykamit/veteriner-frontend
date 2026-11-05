@@ -54,9 +54,10 @@ describe('PatientsHomePageComponent (arama-öncelikli Hastalar girişi)', () => 
             .mockReturnValue(of({ patients: [PAMUK], owners: [], failedKinds: [] } satisfies PatientSearchResultVm));
     });
 
-    it('açılışta önce arama kutusu görünür; tablo yoktur ve arama yapılmaz', () => {
+    it('açılışta "Müşteri ve Hasta" başlığı altında önce arama kutusu görünür; tablo yoktur ve arama yapılmaz', () => {
         const el: HTMLElement = create().nativeElement;
 
+        expect(el.querySelector('h1')?.textContent).toBe('Müşteri ve Hasta');
         expect(el.querySelector('input#patientSearch')).not.toBeNull();
         expect(el.querySelector('table')).toBeNull();
         expect(search).not.toHaveBeenCalled();
