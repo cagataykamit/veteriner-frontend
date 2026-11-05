@@ -9,7 +9,7 @@ export interface RecentlyViewedEntry {
     readonly kind: RecentlyViewedKind;
     readonly id: string;
     readonly title: string;
-    /** Kısa ayırt edici bilgi (tür ve sahip, muayene nedeni ve tarih); boş olabilir. */
+    /** Kısa ayırt edici bilgi (tür ve sahip, müşteri telefonu, muayene nedeni ve tarih); boş olabilir. */
     readonly subtitle: string;
 }
 
