@@ -512,10 +512,11 @@ body:has(.layout-topbar-panel) .layout-topbar-request-alert {
     }
 }
 
-// Global arama sonucu satırı (pencere body'ye eklendiği için topbar kapsamı dışında).
+// Global arama (pencere body'ye eklendiği için topbar kapsamı dışında): solda tür simgesi, yanında başlık ve alt satır.
 .global-search-option {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
     padding: 0.5rem 0.75rem;
     border-radius: var(--content-border-radius);
     color: var(--text-color);
@@ -525,5 +526,39 @@ body:has(.layout-topbar-panel) .layout-topbar-request-alert {
     &.is-active,
     &:hover {
         background-color: var(--surface-hover);
+    }
+}
+
+.global-search-kind {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    font-size: 0.8rem;
+}
+
+// Alt şerit: klavye ipuçları ve Ara sekmesine geçiş.
+.global-search-dialog .p-dialog-footer {
+    padding: 0.5rem 1.25rem;
+    border-top: 1px solid var(--surface-border);
+}
+
+.global-search-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 1rem;
+    width: 100%;
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+
+    kbd {
+        padding: 0.05rem 0.4rem;
+        border-radius: 0.25rem;
+        background-color: var(--surface-hover);
+        font-family: inherit;
     }
 }

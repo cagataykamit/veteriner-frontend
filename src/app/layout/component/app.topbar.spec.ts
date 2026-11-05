@@ -6,6 +6,7 @@ import { Popover } from 'primeng/popover';
 import { of } from 'rxjs';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { NotificationService } from '@/app/entities/notification/notification.service';
 import { AppointmentRequestsService } from '@/app/entities/online-booking/services/online-booking.service';
 import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
@@ -41,7 +42,8 @@ describe('AppTopbar açılır paneller (aynı anda tek panel)', () => {
                 { provide: MenuBadgeService, useValue: { count: () => null } },
                 { provide: AppointmentRequestsService, useValue: { list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 20 }) } },
                 { provide: GlobalSearchService, useValue: { search: () => of({ clients: [], pets: [], failedKinds: [] }), canSearch: () => false } },
-                { provide: RecentlyViewedService, useValue: { list: () => [] } }
+                { provide: RecentlyViewedService, useValue: { list: () => [] } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
         });
         fixture = TestBed.createComponent(AppTopbar);

@@ -18,24 +18,26 @@ export const RECENTLY_VIEWED_LIMIT = 10;
 const STORAGE_PREFIX = 'vetinity.recentlyViewed.v1';
 
 interface KindDefinition {
-    readonly label: string;
+    /** Global aramadaki grup başlığı. */
+    readonly plural: string;
     readonly icon: string;
     readonly route: string;
     readonly claim: string;
 }
 
 const KINDS: Readonly<Record<RecentlyViewedKind, KindDefinition>> = {
-    client: { label: 'Müşteri', icon: 'pi-user', route: '/panel/clients', claim: CLIENTS_READ_CLAIM },
-    pet: { label: 'Hasta', icon: 'pi-heart', route: '/panel/pets', claim: PETS_READ_CLAIM },
-    examination: { label: 'Muayene', icon: 'pi-file-edit', route: '/panel/examinations', claim: EXAMINATIONS_READ_CLAIM }
+    client: { plural: 'Müşteriler', icon: 'pi-user', route: '/panel/clients', claim: CLIENTS_READ_CLAIM },
+    pet: { plural: 'Hastalar', icon: 'pi-heart', route: '/panel/pets', claim: PETS_READ_CLAIM },
+    examination: { plural: 'Muayeneler', icon: 'pi-file-edit', route: '/panel/examinations', claim: EXAMINATIONS_READ_CLAIM }
 };
 
-export function recentlyViewedRoute(entry: RecentlyViewedEntry): string[] {
+/** Kaydın detay adresi; global aramanın sonuç satırları da kullanır. */
+export function recentlyViewedRoute(entry: Pick<RecentlyViewedEntry, 'kind' | 'id'>): string[] {
     return [KINDS[entry.kind].route, entry.id];
 }
 
-export function recentlyViewedKindLabel(kind: RecentlyViewedKind): string {
-    return KINDS[kind].label;
+export function recentlyViewedKindPlural(kind: RecentlyViewedKind): string {
+    return KINDS[kind].plural;
 }
 
 export function recentlyViewedKindIcon(kind: RecentlyViewedKind): string {

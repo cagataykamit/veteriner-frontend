@@ -2,6 +2,8 @@ import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { GlobalSearchResultVm, GlobalSearchService } from '@/app/features/patients/services/global-search.service';
 import { type RecentlyViewedEntry, RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
 import { AppGlobalSearch } from './app-global-search.component';
@@ -17,8 +19,14 @@ describe('AppGlobalSearch', () => {
     let search: MockedObject<GlobalSearchService>;
     let router: Router;
     let recent: RecentlyViewedEntry[];
+    let claims: Set<string>;
+    let mutationBlocked: boolean;
 
-    beforeEach(() => (recent = []));
+    beforeEach(() => {
+        recent = [];
+        claims = new Set(['Clients.Create', 'Pets.Create']);
+        mutationBlocked = false;
+    });
 
     const create = (canSearch = true) => {
         search = {
@@ -29,7 +37,13 @@ describe('AppGlobalSearch', () => {
         search.search.mockReturnValue(of(result));
         TestBed.configureTestingModule({
             imports: [AppGlobalSearch],
-            providers: [provideRouter([]), { provide: GlobalSearchService, useValue: search }, { provide: RecentlyViewedService, useValue: { list: () => recent } }]
+            providers: [
+                provideRouter([]),
+                { provide: GlobalSearchService, useValue: search },
+                { provide: RecentlyViewedService, useValue: { list: () => recent } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } }
+            ]
         });
         router = TestBed.inject(Router);
         fixture = TestBed.createComponent(AppGlobalSearch);
@@ -103,28 +117,33 @@ describe('AppGlobalSearch', () => {
         expect(document.activeElement).toBe(document.querySelector('.p-dialog input'));
     });
 
-    it('en az 2 karakter yazılınca arar ve müşteri/hayvan gruplarını gösterir', async () => {
+    const groupLabels = () => Array.from(document.querySelectorAll('[role="listbox"] .layout-topbar-panel-group')).map((g) => g.textContent?.trim());
+    const optionHrefs = () => Array.from(document.querySelectorAll('[role="option"]')).map((a) => a.getAttribute('href'));
+
+    it('en az 2 karakter yazılınca arar; sonuçlar türe göre gruplu, önce hastalar; müşteri satırında telefon', async () => {
         create();
         key({ key: '/' });
         await typeQuery('a');
         expect(search.search).not.toHaveBeenCalled();
+        expect(document.querySelector('.p-dialog')!.textContent).toContain('En az 2 karakter yazın.');
         await typeQuery('pamuk');
         expect(search.search).toHaveBeenCalledTimes(1);
         expect(search.search).toHaveBeenCalledWith('pamuk');
-        const text = document.querySelector('.p-dialog')!.textContent!;
+        expect(groupLabels()).toEqual(['Hastalar', 'Müşteriler']);
+        expect(optionHrefs()).toEqual(['/panel/pets/p1', '/panel/clients/c1']);
+        const [pet, client] = Array.from(document.querySelectorAll('[role="option"]'));
+        const sub = (option: Element) => option.querySelector('.block')!.textContent!.trim();
 
-        expect(text).toContain('Müşteriler');
-        expect(text).toContain('Hastalar');
-        expect(text).toContain('Sahip: Ali Veli');
-        expect(text).toContain('Mikroçip: 985112345678901');
-        expect(document.querySelectorAll('[role="option"]').length).toBe(2);
+        expect(pet.textContent).toContain('Pamuk · Kedi · Tekir');
+        expect(sub(pet)).toBe('Sahip: Ali Veli · +90 532 123 45 67 · Mikroçip: 985112345678901');
+        expect(sub(client)).toBe('+90 532 123 45 67 · Hastalar: Pamuk');
     });
 
     it('sorgu boşken son görüntülenenler listelenir; klavyeyle seçilip detaya gidilir; yazınca sonuçlar yerini alır', async () => {
         recent = [
             { kind: 'pet', id: 'p1', title: 'Pamuk', subtitle: 'Kedi · Ali Veli' },
             { kind: 'examination', id: 'e1', title: 'Pamuk', subtitle: 'Kontrol · 10.10.2026' },
-            { kind: 'client', id: 'c1', title: 'Ali Veli', subtitle: '' }
+            { kind: 'client', id: 'c1', title: 'Ali Veli', subtitle: '+90 532 123 45 67' }
         ];
         create();
         const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
@@ -132,10 +151,12 @@ describe('AppGlobalSearch', () => {
         key({ key: 'k', ctrlKey: true });
         const list = document.querySelector('[data-testid="recently-viewed"]')!;
 
-        expect(list.textContent).toContain('Son görüntülenenler');
-        expect(list.textContent).toContain('Hasta · Kedi · Ali Veli');
-        expect(list.textContent).toContain('Muayene · Kontrol · 10.10.2026');
-        expect(Array.from(list.querySelectorAll('[role="option"]')).map((a) => a.getAttribute('href'))).toEqual(['/panel/pets/p1', '/panel/examinations/e1', '/panel/clients/c1']);
+        expect(list.getAttribute('aria-label')).toBe('Son görüntülenenler');
+        expect(groupLabels()).toEqual(['Hastalar', 'Müşteriler', 'Muayeneler']);
+        expect(list.textContent).toContain('Kedi · Ali Veli');
+        expect(list.textContent).toContain('+90 532 123 45 67');
+        expect(list.textContent).toContain('Kontrol · 10.10.2026');
+        expect(optionHrefs()).toEqual(['/panel/pets/p1', '/panel/clients/c1', '/panel/examinations/e1']);
 
         await typeQuery('a');
         expect(document.querySelector('[data-testid="recently-viewed"]')).toBeNull();
@@ -149,16 +170,16 @@ describe('AppGlobalSearch', () => {
 
         key({ key: 'ArrowUp' }, input);
         key({ key: 'Enter' }, input);
-        expect(navigate).toHaveBeenCalledWith(['/panel/clients', 'c1']);
+        expect(navigate).toHaveBeenCalledWith(['/panel/examinations', 'e1']);
         expect(isVisible()).toBe(false);
     });
 
-    it('son görüntülenen yoksa yalnız yazma ipucu gösterilir', () => {
+    it('ilk kullanımda (son görüntülenen yok) yazma ipucu ve listenin ne göstereceği yazılır', () => {
         create();
         key({ key: '/' });
 
         expect(document.querySelector('[data-testid="recently-viewed"]')).toBeNull();
-        expect(document.querySelector('.p-dialog')!.textContent).toContain('En az 2 karakter yazın.');
+        expect(document.querySelector('[data-testid="global-search-first-use"]')!.textContent).toContain('Açtığınız kayıtlar burada listelenir.');
     });
 
     it('ok tuşları seçimi gezdirir, Enter seçili kaydın detayına gider', async () => {
@@ -172,7 +193,7 @@ describe('AppGlobalSearch', () => {
         key({ key: 'ArrowDown' }, input);
         expect(input.getAttribute('aria-activedescendant')).toBe('global-search-listbox-option-1');
         key({ key: 'Enter' }, input);
-        expect(navigate).toHaveBeenCalledWith(['/panel/pets', 'p1']);
+        expect(navigate).toHaveBeenCalledWith(['/panel/clients', 'c1']);
         expect(isVisible()).toBe(false);
     });
 
@@ -181,10 +202,56 @@ describe('AppGlobalSearch', () => {
         key({ key: '/' });
         search.search.mockReturnValue(of({ clients: [], pets: [], failedKinds: [] }));
         await typeQuery('yok');
-        expect(document.querySelector('.p-dialog')!.textContent).toContain('Sonuç bulunamadı.');
+        expect(document.querySelector('[data-testid="global-search-no-result"]')!.textContent).toContain('"yok" için müşteri veya hasta bulunamadı.');
         search.search.mockReturnValue(throwError(() => new Error('x')));
         await typeQuery('hata');
         expect(document.querySelector('.p-dialog [role="alert"]')!.textContent).toContain('Arama yapılamadı');
+    });
+
+    it('sonuç yoksa Yeni kayıt, Ara sekmesinde aranan metinle ve form açık olarak açılır', async () => {
+        create();
+        const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+        key({ key: '/' });
+        search.search.mockReturnValue(of({ clients: [], pets: [], failedKinds: [] }));
+        await typeQuery('Ayşe Kaya');
+        const button = document.querySelector<HTMLButtonElement>('[data-testid="global-search-no-result"] button')!;
+
+        expect(button.textContent).toContain('Yeni kayıt: müşteri ve hasta');
+        button.click();
+        expect(navigate).toHaveBeenCalledWith(['/panel/patients'], { queryParams: { search: 'Ayşe Kaya', register: '1' } });
+        expect(isVisible()).toBe(false);
+    });
+
+    it('kayıt izni yoksa veya salt okunurken sonuç yok durumunda Yeni kayıt sunulmaz', async () => {
+        claims.delete('Pets.Create');
+        create();
+        key({ key: '/' });
+        search.search.mockReturnValue(of({ clients: [], pets: [], failedKinds: [] }));
+        await typeQuery('yok');
+        expect(document.querySelector('[data-testid="global-search-no-result"] button')).toBeNull();
+
+        TestBed.resetTestingModule();
+        document.querySelectorAll('.p-dialog-mask').forEach((el) => el.remove());
+        claims.add('Pets.Create');
+        mutationBlocked = true;
+        create();
+        key({ key: '/' });
+        search.search.mockReturnValue(of({ clients: [], pets: [], failedKinds: [] }));
+        await typeQuery('yok');
+        expect(document.querySelector('[data-testid="global-search-no-result"] button')).toBeNull();
+    });
+
+    it('alt şeritteki Ara sekmesi bağlantısı yeterince uzun sorguyu taşır', async () => {
+        create();
+        key({ key: '/' });
+        const link = () => document.querySelector('[data-testid="global-search-patients-link"]')!.getAttribute('href');
+
+        expect(link()).toBe('/panel/patients');
+        await typeQuery('p');
+        expect(link()).toBe('/panel/patients');
+        await typeQuery('pamuk');
+        expect(link()).toBe('/panel/patients?search=pamuk');
     });
 
     it('yükleniyor durumunu gösterir ve kapanınca sıfırlanır', async () => {
