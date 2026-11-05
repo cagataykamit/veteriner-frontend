@@ -315,7 +315,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
                 'Müşteri ve Hasta',
                 'fa-solid fa-fw fa-paw',
                 [
-                    { label: 'Ara', listLabel: 'Hastalar', route: '/panel/patients', claims: [CLIENTS_READ_CLAIM, PETS_READ_CLAIM] },
+                    { label: 'Ara', listLabel: 'Müşteri ve Hasta', route: '/panel/patients', claims: [CLIENTS_READ_CLAIM, PETS_READ_CLAIM] },
                     { label: 'Müşteriler', route: '/panel/clients', claims: [CLIENTS_READ_CLAIM] },
                     { label: 'Hastalar', route: '/panel/pets', claims: [PETS_READ_CLAIM] },
                     // Hasta sahiplerinin portaldan gönderdiği KVKK veri talepleri (PORTAL-009): müşteri işinin sekmesi (ADR-004).

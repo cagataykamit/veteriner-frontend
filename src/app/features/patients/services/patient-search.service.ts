@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import type { ParamMap, Params } from '@angular/router';
 import { catchError, forkJoin, map, Observable, of, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PETS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -8,6 +9,27 @@ import { GlobalSearchService } from '@/app/features/patients/services/global-sea
 
 const MAX_PATIENTS = 15;
 const PETS_PER_OWNER = 5;
+const ENTRY_TERM_PARAM = 'search';
+const ENTRY_REGISTER_PARAM = 'register';
+
+/** Ara sekmesine başka yerden (global arama) geçiş: aranacak metin ve "Yeni kayıt" formunun açık gelmesi. */
+export interface PatientSearchEntry {
+    term: string;
+    register: boolean;
+}
+
+/** Geçişin sorgu parametreleri; boş değerler `null` olur ki birleştirilen sorgudan silinsin. */
+export function patientSearchEntryParams(entry: PatientSearchEntry): Params {
+    return { [ENTRY_TERM_PARAM]: entry.term.trim() || null, [ENTRY_REGISTER_PARAM]: entry.register ? '1' : null };
+}
+
+/** Sorguda geçiş yoksa `null`. */
+export function readPatientSearchEntry(query: ParamMap): PatientSearchEntry | null {
+    const term = query.get(ENTRY_TERM_PARAM)?.trim() ?? '';
+    const register = query.get(ENTRY_REGISTER_PARAM) === '1';
+
+    return term || register ? { term, register } : null;
+}
 
 /** Arama sonucunda hayvan ve sahibi birlikte; eylemler ikisinin kimliğini taşır. */
 export interface PatientRowVm {

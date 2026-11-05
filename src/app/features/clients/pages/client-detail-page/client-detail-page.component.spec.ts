@@ -142,7 +142,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         expect(pendingChargesSpy).toHaveBeenCalledWith('c1');
         expect(el().querySelector('[data-testid="account-pending-charges"]')?.textContent).toContain('1 işlem');
         expect(el().querySelector('[data-testid="pending-amount"]')?.textContent).toContain('100');
-        expect(recordRecent).toHaveBeenCalledWith({ kind: 'client', id: 'c1', title: 'Ali Veli', subtitle: '' });
+        expect(recordRecent).toHaveBeenCalledWith({ kind: 'client', id: 'c1', title: 'Ali Veli', subtitle: '+90 532 123 45 67' });
     });
 
     it('KVKK: formu yazdır herkese; rıza işaretleme Clients.Update ile, yanıt (durum + rowVersion) karta birleşir', () => {

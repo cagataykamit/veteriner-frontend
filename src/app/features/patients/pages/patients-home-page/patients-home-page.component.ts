@@ -1,17 +1,27 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, DestroyRef, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { catchError, of, Subject, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { CLIENTS_CREATE_CLAIM, CLIENTS_READ_CLAIM, PETS_CREATE_CLAIM, PETS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { PatientSearchService, type OwnerRowVm, type PatientRowVm, type PatientSearchResultVm } from '@/app/features/patients/services/patient-search.service';
+import { CLIENTS_READ_CLAIM, PETS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import {
+    PatientSearchService,
+    patientSearchEntryParams,
+    readPatientSearchEntry,
+    type OwnerRowVm,
+    type PatientRowVm,
+    type PatientSearchEntry,
+    type PatientSearchResultVm
+} from '@/app/features/patients/services/patient-search.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { VisitArrivalDialogComponent } from '@/app/entities/visit/components/visit-arrival-dialog.component';
 import { VisitQuickRegistrationComponent } from '@/app/entities/visit/components/visit-quick-registration.component';
 import type { PetSuggestion } from '@/app/entities/visit/models/visit-vm.model';
 import { buildPatientActions, type PatientAction, type PatientActionKey } from '@/app/entities/patient/components/patient-action-bar/patient-actions.utils';
+import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { canShowQuickClientPetRegistration } from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { SearchInputComponent, SEARCH_MIN_LENGTH } from '@/app/shared/ui/search-input/search-input.component';
 
@@ -23,7 +33,8 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
 /**
  * Hastalar girişi (ADR-017 K3 ince ayar, P5): arama-öncelikli. Büyük arama kutusu üst çubuktaki global aramanın aynı
  * mantığını kullanır; her sonuç hayvan + sahip birlikte gelir ve satırdan Geldi / Muayene başlat / Randevu al tek tıktır.
- * Müşteri ve Hayvan tabloları ikinci düzeydir (sekmeler); sonuç yoksa "Yeni kayıt" öne çıkar.
+ * Müşteri ve Hayvan tabloları ikinci düzeydir (sekmeler); sonuç yoksa "Yeni kayıt" öne çıkar. Global aramadan aranan metinle
+ * (istenirse yeni kayıt formu açık) gelinebilir ({@link readPatientSearchEntry}).
  */
 @Component({
     selector: 'app-patients-home-page',
@@ -32,7 +43,7 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card">
-            <app-list-header class="mb-4" title="Hastalar" />
+            <app-list-header class="mb-4" title="Müşteri ve Hasta" />
             <label for="patientSearch" class="block text-sm font-medium text-muted-color mb-2">Hasta veya sahip ara</label>
             <div class="[&_input]:text-xl [&_input]:py-4">
                 <app-search-input inputId="patientSearch" ariaLabel="Hasta veya sahip ara" placeholder="Hasta adı, sahip adı soyadı, telefon veya mikroçip" [(value)]="term" (searchRequested)="onSearch()" />
@@ -122,13 +133,13 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
                 }
             </div>
 
-            @if (canRegister && !ro.mutationBlocked()) {
+            @if (canRegister()) {
                 <div class="mt-4 pt-4 border-t border-surface-200 dark:border-surface-700">
                     @if (registering()) {
                         <app-visit-quick-registration [searchTerm]="searchedTerm()" (registered)="onRegistered($event)" (cancelled)="registering.set(false)" />
                     } @else {
                         <div class="flex flex-wrap items-center gap-3">
-                            <button pButton type="button" [severity]="noResults() ? 'primary' : 'secondary'" [outlined]="!noResults()" (click)="registering.set(true)"><i class="p-button-icon pi pi-user-plus"></i>Yeni kayıt: müşteri ve hasta</button>
+                            <button pButton type="button" [severity]="noResults() ? 'primary' : 'secondary'" [outlined]="!noResults()" (click)="registering.set(true)"><i class="p-button-icon pi pi-user-plus"></i>{{ copy.newClientPetRegistration }}</button>
                             @if (noResults()) {
                                 <span class="text-sm text-muted-color">Kayıt bulunamadı; yeni hasta olarak ekleyebilirsiniz.</span>
                             }
@@ -156,14 +167,16 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
         <app-visit-arrival-dialog [(visible)]="arrivalOpen" [presetPet]="arrivalPet()" (arrived)="onArrived()" />
     `
 })
-export class PatientsHomePageComponent {
+export class PatientsHomePageComponent implements OnInit {
     protected readonly minLength = SEARCH_MIN_LENGTH;
+    protected readonly copy = PANEL_COPY;
     private readonly auth = inject(AuthService);
     private readonly router = inject(Router);
+    private readonly route = inject(ActivatedRoute);
+    private readonly destroyRef = inject(DestroyRef);
     private readonly search = inject(PatientSearchService);
     readonly ro = inject(TenantReadOnlyContextService);
 
-    readonly canRegister = this.auth.hasOperationClaim(CLIENTS_CREATE_CLAIM) && this.auth.hasOperationClaim(PETS_CREATE_CLAIM);
     readonly canListClients = this.auth.hasOperationClaim(CLIENTS_READ_CLAIM);
     readonly canListPets = this.auth.hasOperationClaim(PETS_READ_CLAIM);
 
@@ -187,7 +200,7 @@ export class PatientsHomePageComponent {
             .pipe(
                 // Boş terim: yazı kısaldı; bekleyen arama `switchMap` ile iptal edilir.
                 switchMap((term) => (term ? this.search.search(term).pipe(catchError(() => of(null))) : of(undefined))),
-                takeUntilDestroyed(inject(DestroyRef))
+                takeUntilDestroyed(this.destroyRef)
             )
             .subscribe((result) => {
                 if (result === undefined) {
@@ -197,6 +210,20 @@ export class PatientsHomePageComponent {
                 this.result.set(result);
                 this.status.set(result ? 'ready' : 'error');
             });
+    }
+
+    ngOnInit(): void {
+        this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((query) => {
+            const entry = readPatientSearchEntry(query);
+
+            if (entry) {
+                this.applyEntry(entry);
+            }
+        });
+    }
+
+    canRegister(): boolean {
+        return canShowQuickClientPetRegistration(this.auth, this.ro);
     }
 
     onSearch(): void {
@@ -236,6 +263,18 @@ export class PatientsHomePageComponent {
     /** Yeni kayıtla oluşan hastanın kartına gidilir; Geldi / Muayene oradaki eylem çubuğundadır. */
     onRegistered(pet: PetSuggestion): void {
         void this.router.navigate(['/panel/pets', pet.id]);
+    }
+
+    /** Sorgu okunduktan sonra temizlenir; aynı geçiş (ör. yine "Yeni kayıt") tekrar gelince yeniden uygulanır. */
+    private applyEntry(entry: PatientSearchEntry): void {
+        this.term.set(entry.term);
+        this.onSearch();
+
+        if (entry.register && this.canRegister()) {
+            this.registering.set(true);
+        }
+
+        void this.router.navigate([], { relativeTo: this.route, queryParams: patientSearchEntryParams({ term: '', register: false }), queryParamsHandling: 'merge', replaceUrl: true });
     }
 
     failedMessage(r: PatientSearchResultVm): string {

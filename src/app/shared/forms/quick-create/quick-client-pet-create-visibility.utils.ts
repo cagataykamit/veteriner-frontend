@@ -18,3 +18,8 @@ export function canShowQuickPetCreateButton(
 ): boolean {
     return !contextLocked && auth.hasOperationClaim(PETS_CREATE_CLAIM) && !ro.mutationBlocked();
 }
+
+/** "Yeni kayıt: müşteri ve hasta" (Ara sekmesi ve global arama): ikisini birlikte oluşturma yetkisi gerekir. */
+export function canShowQuickClientPetRegistration(auth: AuthService, ro: TenantReadOnlyContextService): boolean {
+    return auth.hasOperationClaim(CLIENTS_CREATE_CLAIM) && auth.hasOperationClaim(PETS_CREATE_CLAIM) && !ro.mutationBlocked();
+}

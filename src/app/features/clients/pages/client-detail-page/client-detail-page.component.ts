@@ -39,7 +39,8 @@ import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } f
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
+import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/patient/services/recently-viewed.service';
+import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
 import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-detail-row-link.component';
 
@@ -461,7 +462,8 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     }
 
     private onClientLoaded(c: ClientDetailVm): void {
-        this.recentlyViewed.record({ kind: 'client', id: c.id, title: c.fullName, subtitle: '' });
+        // Telefon, aynı adlı müşterileri global aramada ayırt eder.
+        this.recentlyViewed.record({ kind: 'client', id: c.id, title: c.fullName, subtitle: recentlyViewedSubtitle(formatClientPhoneForDisplay(c.phone)) });
         this.loadRecentSummary(c.id);
         this.loadPaymentSummary(c.id);
         this.cardSubscriptions.add(this.cardData.ownerBalance(c.id).subscribe((s) => this.balance.set(s)));
