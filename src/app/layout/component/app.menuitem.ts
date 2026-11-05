@@ -73,7 +73,7 @@ import { filter } from 'rxjs/operators';
                 }
             </a>
             @if (flyoutOpen()) {
-                <app-menu-flyout [anchor]="link" [tabs]="item().flyoutTabs" [label]="item().label" [heading]="layoutService.isMenuRail()" [panelId]="flyoutId()" [focusFirst]="flyoutFocusFirst()" (selected)="onFlyoutSelected()" />
+                <app-menu-flyout [anchor]="link" [tabs]="item().flyoutTabs" [label]="item().label" [panelId]="flyoutId()" [focusFirst]="flyoutFocusFirst()" (selected)="onFlyoutSelected()" />
             }
         }
         @if (hasChildren() && isVisible() && (root() || isActive())) {

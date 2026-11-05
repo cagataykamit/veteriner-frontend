@@ -184,7 +184,7 @@ describe('AppMenu', () => {
             expect(link(fixture, 'Kayıtlar').getAttribute('aria-expanded')).toBe('true');
             expect(link(fixture, 'Kayıtlar').getAttribute('aria-controls')).toBe(panel().id);
             expect(itemLabels()).toEqual(['Muayeneler', 'Tedaviler', 'Reçeteler', 'Aşılar', 'Lab sonuçları', 'Görüntüleme', 'Yatışlar', 'Uygulamalar']);
-            expect(panel().querySelector('.layout-menu-flyout-heading')).toBeNull();
+            expect(panel().textContent, 'panelde başlık yok').not.toContain('Kayıtlar');
 
             pointer(row(fixture, 'Kayıtlar'), 'pointerleave');
             vi.advanceTimersByTime(100);
@@ -198,6 +198,22 @@ describe('AppMenu', () => {
             fixture.detectChanges();
             expect(panels()).toEqual([]);
             expect(link(fixture, 'Kayıtlar').getAttribute('aria-expanded')).toBe('false');
+        });
+
+        it('panelin oku satırın ortasını gösterir; panel pencere kenarına kaysa da', () => {
+            const fixture = create();
+            const rowCenter = () => panel().style.getPropertyValue('--layout-menu-flyout-row-center');
+            const anchorAt = (label: string, top: number) => vi.spyOn(link(fixture, label), 'getBoundingClientRect').mockReturnValue(new DOMRect(0, top, 200, 38));
+
+            anchorAt('Para', 300);
+            hover(fixture, 'Para');
+            expect(panel().style.top).toBe('300px');
+            expect(rowCenter()).toBe('19px');
+
+            anchorAt('Stok', 2);
+            hover(fixture, 'Stok');
+            expect(panel().style.top, 'pencere kenarından 8 px içeride').toBe('8px');
+            expect(rowCenter()).toBe('13px');
         });
 
         it('aynı anda tek panel açıktır', () => {
@@ -417,7 +433,7 @@ describe('AppMenu', () => {
             expect(TestBed.inject(Router).url).toBe('/panel/charges');
         });
 
-        it('daraltılmış menüde ad ipucu yerine başlıklı panel açılır; sekmesiz satırda panel yoktur', () => {
+        it('daraltılmış menüde ad ipucu yerine başlıksız panel açılır (ad yalnız ekran okuyucu etiketinde); sekmesiz satırda panel yoktur', () => {
             rail.set(true);
             const fixture = create();
 
@@ -426,7 +442,8 @@ describe('AppMenu', () => {
             expect(link(fixture, 'Özet').getAttribute('aria-haspopup')).toBeNull();
 
             hover(fixture, 'Müşteri ve Hasta');
-            expect(panel().querySelector('.layout-menu-flyout-heading')?.textContent?.trim()).toBe('Müşteri ve Hasta');
+            expect(panel().textContent).not.toContain('Müşteri ve Hasta');
+            expect(panel().getAttribute('aria-label')).toBe('Müşteri ve Hasta alt sayfaları');
             expect(itemLabels()).toEqual(['Ara', 'Müşteriler', 'Hastalar', 'Portal gelen kutusu']);
             expect(link(fixture, 'Müşteri ve Hasta').getAttribute('aria-haspopup')).toBe('menu');
         });
