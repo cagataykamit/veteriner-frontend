@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { MessageModule } from 'primeng/message';
-import { Observable, Subscription } from 'rxjs';
+import { from, Observable, Subscription, switchMap } from 'rxjs';
 import { isClinicPortalClosed } from '@portal/app/core/auth/portal-auth.models';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { portalErrorMessage } from '@portal/app/core/errors/portal-errors';
+import { PortalPushDevice } from '@portal/app/core/push/portal-push-device';
 import { portalLoad } from '@portal/app/shared/data/portal-load';
 import { formatPortalDate } from '@portal/app/shared/format/portal-date';
 import { PortalErrorState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
@@ -17,9 +18,10 @@ import {
 type PreferenceKey = 'push' | 'reminders' | 'marketing';
 
 /**
- * Bildirim tercihleri (PORTAL-007, sözleşme §10): hesap düzeyi push ve seçili klinikteki hatırlatma (§5.11 ile aynı alan)
- * ile ticari ileti onayı. Anahtar değişince hemen kaydedilir; kayıt sürerken anahtarlar kilitlenir, hata olursa sunucudaki
- * değer korunur. İşlem iletileri tercihle kapanmaz. Push sağlayıcısı yokken ve ticari gönderim kapalıyken tercih yine saklanır.
+ * Bildirim tercihleri (PORTAL-007, sözleşme §10): hesap düzeyi anlık bildirim (push, MOBILE-003 §14) ve seçili klinikteki hatırlatma
+ * (§5.11 ile aynı alan) ile ticari ileti onayı. Anahtar değişince hemen kaydedilir; kayıt sürerken anahtarlar kilitlenir, hata
+ * olursa sunucudaki değer korunur. İşlem iletileri tercihle kapanmaz. Push sağlayıcısı yokken ve ticari gönderim kapalıyken tercih
+ * yine saklanır. Cihaz jetonu `PortalPushDevice`'tan gelir (tarayıcıda yok; mağaza paketinde MOBILE-002).
  */
 @Component({
     selector: 'portal-notification-preferences',
@@ -52,14 +54,20 @@ type PreferenceKey = 'push' | 'reminders' | 'marketing';
                                 (change)="togglePush($any($event.target))"
                             />
                             <span>
-                                Mobil uygulama bildirimleri
+                                Anlık bildirim
                                 <span id="account-push-hint" class="portal-field-hint" data-testid="push-hint">{{
                                     a.push.available
-                                        ? 'Randevu talebi yanıtları ve hatırlatmalar telefonunuza bildirim olarak da gelir.'
-                                        : 'Mobil uygulama bildirimleri yakında. Tercihiniz şimdiden kaydedilir; uygulama çıktığında yeniden sorulmaz.'
+                                        ? 'Randevu talebi yanıtları ve hatırlatmalar cihazınıza anlık bildirim olarak da gelir.'
+                                        : 'Anlık bildirimler henüz etkin değil. Tercihiniz şimdiden kaydedilir; etkinleştiğinde yeniden sorulmaz.'
                                 }}</span>
                             </span>
                         </label>
+                        @if (pushNote(); as note) {
+                            <div class="portal-note" data-testid="push-note">
+                                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                                <p>{{ note }}</p>
+                            </div>
+                        }
                     }
                 }
             }
@@ -132,12 +140,15 @@ type PreferenceKey = 'push' | 'reminders' | 'marketing';
 export class PortalNotificationPreferencesComponent {
     private readonly session = inject(PortalSessionService);
     private readonly api = inject(PortalNotificationPreferencesApi);
+    private readonly pushDevice = inject(PortalPushDevice);
 
     readonly account = portalLoad<PortalAccountNotificationPreferences>();
     readonly link = portalLoad<PortalLinkNotificationPreferences>();
     readonly saving = signal<PreferenceKey | null>(null);
     readonly saveError = signal<string | null>(null);
     readonly status = signal('');
+    /** Bu cihazın jetonu alınamadı/kaydedilemedi (izin verilmedi vb.); tercih yine kayıtlıdır. */
+    private readonly deviceError = signal<string | null>(null);
 
     /** Klinik portalı kapattıysa bağ kapsamlı uçlar 404 döner (§12); bölüm hiç sorulmaz. */
     readonly linkVisible = computed(() => {
@@ -157,6 +168,30 @@ export class PortalNotificationPreferencesComponent {
         const since = prefs?.marketingConsented ? formatPortalDate(prefs.marketingConsentedAtUtc) : '';
 
         return since ? `Onay tarihi: ${since}. Onayınızı istediğiniz zaman geri çekebilirsiniz.` : 'Onayınızı istediğiniz zaman geri çekebilirsiniz.';
+    });
+
+    /**
+     * Anlık bildirim açıkken bu cihazın durumu: cihaz izni alınamadıysa o; tarayıcı/paket jeton üretemiyorsa bildirimin nereye
+     * gideceği. Sağlayıcı yokken ipucu yeterlidir (not yok).
+     */
+    readonly pushNote = computed(() => {
+        const push = this.account.data()?.push;
+
+        if (!push?.enabled || !push.available) {
+            return null;
+        }
+
+        if (this.deviceError()) {
+            return this.deviceError();
+        }
+
+        if (this.pushDevice.supported) {
+            return null;
+        }
+
+        return push.deviceCount > 0
+            ? `Bildirimler kayıtlı ${push.deviceCount} cihazınıza gelir. Bu tarayıcı anlık bildirim almıyor.`
+            : 'Bu tarayıcıda anlık bildirim alınamıyor. Bildirimler, Vetinity mobil uygulamasında oturum açtığınız cihaza gelir.';
     });
 
     private request: Subscription | null = null;
@@ -187,11 +222,33 @@ export class PortalNotificationPreferencesComponent {
             return;
         }
 
+        this.deviceError.set(null);
         this.save('push', input, current.push.enabled, this.api.updateAccount(input.checked), (saved) => {
             this.account.data.set(saved);
+            this.registerThisDevice(saved);
 
-            return saved.push.enabled ? 'Mobil uygulama bildirimleri açıldı.' : 'Mobil uygulama bildirimleri kapatıldı.';
+            return saved.push.enabled ? 'Anlık bildirimler açıldı.' : 'Anlık bildirimler kapatıldı.';
         });
+    }
+
+    /**
+     * Tercih açılınca bu cihaz jeton üretebiliyorsa izin istenir ve jeton kaydedilir (§14.2); sayaç sunucudan yeniden okunur.
+     * Kapatmada sunucu tüm cihazları siler, istemcinin ayrıca bir şey yapması gerekmez.
+     */
+    private registerThisDevice(saved: PortalAccountNotificationPreferences): void {
+        if (!saved.push.enabled || !saved.push.available || !this.pushDevice.supported) {
+            return;
+        }
+
+        from(this.pushDevice.obtainToken())
+            .pipe(
+                switchMap((token) => this.api.registerPushDevice(this.pushDevice.platform, token)),
+                switchMap(() => this.api.getAccount())
+            )
+            .subscribe({
+                next: (fresh) => this.account.data.set(fresh),
+                error: () => this.deviceError.set('Bu cihaz için bildirim izni alınamadı. Cihaz ayarlarından bildirimlere izin verip anahtarı kapatıp yeniden açın.')
+            });
     }
 
     toggleReminders(input: HTMLInputElement): void {
