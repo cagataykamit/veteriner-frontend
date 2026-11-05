@@ -29,6 +29,7 @@ export const PORTAL_ERROR_CODES = {
     dataRequestsTooManyOpen: 'Portal.DataRequests.TooManyOpen',
     dataRequestNotOpen: 'Portal.DataRequests.NotOpen',
     dataRequestNotFound: 'Portal.DataRequests.NotFound',
+    pushDisabled: 'Portal.Push.Disabled',
     validation: 'Validation.FluentValidation'
 } as const;
 
@@ -60,6 +61,7 @@ export const PORTAL_ERROR_MESSAGES: Readonly<Record<string, string>> = {
     [C.dataRequestsTooManyOpen]: 'Bu klinikte yanıt bekleyen 3 talebiniz var. Klinik bunlardan birini yanıtladıktan sonra yeni talep oluşturabilirsiniz.',
     [C.dataRequestNotOpen]: 'Bu talep artık geri çekilemez: klinik incelemeye almış ya da yanıtlamış olabilir. Liste yenilendi.',
     [C.dataRequestNotFound]: 'Talep bulunamadı; liste yenilendi.',
+    [C.pushDisabled]: 'Anlık bildirim tercihiniz kapalı; önce bildirimleri açın.',
     [C.validation]: 'Girdiğiniz bilgileri kontrol edin.'
 };
 

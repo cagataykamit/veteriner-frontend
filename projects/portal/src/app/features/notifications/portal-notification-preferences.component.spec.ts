@@ -2,7 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { PORTAL_ERROR_MESSAGES } from '@portal/app/core/errors/portal-errors';
 import { configurePortalPage, createSessionStub, LINK_MERKEZ, LINK_SAHIL, url, type PortalSessionStub } from '@portal/app/testing/portal-fixtures';
-import type { PortalLinkNotificationPreferences } from './portal-notification-preferences.api';
+import { PortalPushDevice, type PortalPushPlatform } from '@portal/app/core/push/portal-push-device';
+import type { PortalAccountNotificationPreferences, PortalLinkNotificationPreferences } from './portal-notification-preferences.api';
 import { PortalNotificationPreferencesComponent } from './portal-notification-preferences.component';
 
 describe('PortalNotificationPreferencesComponent (bildirim tercihleri)', () => {
@@ -29,16 +30,21 @@ describe('PortalNotificationPreferencesComponent (bildirim tercihleri)', () => {
         fixture.detectChanges();
     }
 
-    async function create(links = [LINK_MERKEZ, LINK_SAHIL]): Promise<void> {
+    async function create(links = [LINK_MERKEZ, LINK_SAHIL], device?: PortalPushDevice): Promise<void> {
         session = createSessionStub(links);
         configurePortalPage(PortalNotificationPreferencesComponent, session);
+
+        if (device) {
+            TestBed.overrideProvider(PortalPushDevice, { useValue: device });
+        }
+
         http = TestBed.inject(HttpTestingController);
         fixture = TestBed.createComponent(PortalNotificationPreferencesComponent);
         el = fixture.nativeElement;
         await settle();
     }
 
-    async function load(link: PortalLinkNotificationPreferences = prefs(), push = { enabled: false, available: false }): Promise<void> {
+    async function load(link: PortalLinkNotificationPreferences = prefs(), push: PortalAccountNotificationPreferences['push'] = { enabled: false, available: false, deviceCount: 0 }): Promise<void> {
         http.expectOne(accountUrl).flush({ push });
         http.expectOne(linkUrl()).flush(link);
         await settle();
@@ -56,18 +62,19 @@ describe('PortalNotificationPreferencesComponent (bildirim tercihleri)', () => {
             await load();
 
             expect(switchOf('push').disabled).toBe(false);
-            expect(el.querySelector('[data-testid=push-hint]')?.textContent).toContain('Mobil uygulama bildirimleri yakında');
+            expect(el.querySelector('[data-testid=push-hint]')?.textContent).toContain('Anlık bildirimler henüz etkin değil');
 
             switchOf('push').click();
             const put = http.expectOne(accountUrl);
 
             expect(put.request.method).toBe('PUT');
             expect(put.request.body).toEqual({ pushEnabled: true });
-            put.flush({ push: { enabled: true, available: false } });
+            put.flush({ push: { enabled: true, available: false, deviceCount: 0 } });
             await settle();
 
             expect(switchOf('push').checked).toBe(true);
-            expect(el.textContent).toContain('Mobil uygulama bildirimleri açıldı.');
+            expect(el.textContent).toContain('Anlık bildirimler açıldı.');
+            expect(el.querySelector('[data-testid=push-note]')).toBeNull();
         });
 
         it('push kaydı başarısızsa anahtar eski değere döner', async () => {
@@ -79,6 +86,79 @@ describe('PortalNotificationPreferencesComponent (bildirim tercihleri)', () => {
 
             expect(switchOf('push').checked).toBe(false);
             expect(el.querySelector('[role=alert]')).not.toBeNull();
+        });
+    });
+
+    describe('anlık bildirim cihazı', () => {
+        const deviceUrl = url('me/push-devices');
+
+        function fakeDevice(obtainToken: () => Promise<string>): PortalPushDevice {
+            return { supported: true, platform: 'Android' as PortalPushPlatform, obtainToken };
+        }
+
+        it('sağlayıcı varken tarayıcı jeton üretemiyorsa açıklama görünür, cihaz kaydı istenmez', async () => {
+            await create();
+            await load(prefs(), { enabled: true, available: true, deviceCount: 0 });
+
+            expect(el.querySelector('[data-testid=push-note]')?.textContent).toContain('Bu tarayıcıda anlık bildirim alınamıyor');
+            http.expectNone(deviceUrl);
+        });
+
+        it('kayıtlı başka cihaz varsa sayısı yazılır', async () => {
+            await create();
+            await load(prefs(), { enabled: true, available: true, deviceCount: 2 });
+
+            expect(el.querySelector('[data-testid=push-note]')?.textContent).toContain('kayıtlı 2 cihazınıza');
+        });
+
+        it('destekleyen cihazda açınca jeton kaydedilir ve sayaç yeniden okunur: PUT me/push-devices', async () => {
+            await create([LINK_MERKEZ], fakeDevice(() => Promise.resolve('fcm-token')));
+            await load(prefs(), { enabled: false, available: true, deviceCount: 0 });
+
+            switchOf('push').click();
+            http.expectOne(accountUrl).flush({ push: { enabled: true, available: true, deviceCount: 0 } });
+            await settle();
+
+            const put = http.expectOne(deviceUrl);
+
+            expect(put.request.method).toBe('PUT');
+            expect(put.request.body).toEqual({ platform: 'Android', token: 'fcm-token' });
+            put.flush(null, { status: 204, statusText: 'No Content' });
+            await settle();
+
+            http.expectOne(accountUrl).flush({ push: { enabled: true, available: true, deviceCount: 1 } });
+            await settle();
+
+            expect(switchOf('push').checked).toBe(true);
+            expect(el.querySelector('[data-testid=push-note]')).toBeNull();
+        });
+
+        it('izin verilmezse tercih açık kalır, cihaz notu görünür', async () => {
+            await create([LINK_MERKEZ], fakeDevice(() => Promise.reject(new Error('denied'))));
+            await load(prefs(), { enabled: false, available: true, deviceCount: 0 });
+
+            switchOf('push').click();
+            http.expectOne(accountUrl).flush({ push: { enabled: true, available: true, deviceCount: 0 } });
+            await settle();
+            await settle();
+
+            http.expectNone(deviceUrl);
+            expect(switchOf('push').checked).toBe(true);
+            expect(el.querySelector('[data-testid=push-note]')?.textContent).toContain('bildirim izni alınamadı');
+        });
+
+        it('sağlayıcı yokken destekleyen cihazda da jeton istenmez', async () => {
+            const obtainToken = vi.fn(() => Promise.resolve('fcm-token'));
+
+            await create([LINK_MERKEZ], fakeDevice(obtainToken));
+            await load(prefs());
+
+            switchOf('push').click();
+            http.expectOne(accountUrl).flush({ push: { enabled: true, available: false, deviceCount: 0 } });
+            await settle();
+
+            expect(obtainToken).not.toHaveBeenCalled();
+            http.expectNone(deviceUrl);
         });
     });
 
@@ -173,7 +253,7 @@ describe('PortalNotificationPreferencesComponent (bildirim tercihleri)', () => {
     it('klinik portalı kapattıysa bağ tercihleri istenmez, yalnız hesap tercihi görünür', async () => {
         await create([{ ...LINK_MERKEZ, isClinicPortalEnabled: false }]);
 
-        http.expectOne(accountUrl).flush({ push: { enabled: false, available: false } });
+        http.expectOne(accountUrl).flush({ push: { enabled: false, available: false, deviceCount: 0 } });
         http.expectNone(linkUrl());
         await settle();
 
