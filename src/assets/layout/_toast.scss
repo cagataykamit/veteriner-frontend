@@ -1,0 +1,159 @@
+@use 'mixins' as *;
+
+/*
+ * Bildirimler (PrimeNG p-toast, her sayfada `position="top-right"`): üst çubuğun altında sağda, en yenisi üstte, eskiler
+ * aşağı yığılır. Yüzey üst çubuk panelleriyle (zil, klinik, kullanıcı paneli, talep balonu) aynı ve her türde aynıdır;
+ * tür rengi yalnız simgenin dolgulu diskindedir. Ömür, açılış ve fare üstündeyken durma PrimeNG'nindir.
+ * PrimeNG biçemleri çalışma anında sonradan eklenir; çakışan özellikler `.p-toast.p-toast` önekiyle daha özgüldür, konum ise
+ * satır içi stil (top/right: 20px) olarak yazıldığından ancak `!important` ile değişir.
+ */
+
+$toast-severities: (
+    success: green,
+    info: sky,
+    warn: amber,
+    error: red
+);
+
+.p-toast.p-toast {
+    width: 22rem;
+
+    &.p-toast-top-right,
+    &.p-toast-top-left,
+    &.p-toast-top-center {
+        top: 4.75rem !important;
+    }
+
+    &.p-toast-top-right {
+        right: 1.5rem !important;
+    }
+
+    @include phone {
+        width: calc(100vw - 1rem);
+
+        &.p-toast-top-right,
+        &.p-toast-top-left,
+        &.p-toast-top-center {
+            top: 4.5rem !important;
+        }
+
+        &.p-toast-top-right {
+            right: 0.5rem !important;
+        }
+    }
+
+    // Türsüz (normal/secondary/contrast) iletiler nötr disk alır; tür kuralları aynı özgüllükte olduğundan sonra gelir.
+    .p-toast-message {
+        --vet-toast-solid: var(--p-surface-500);
+
+        // Yığında arkadaki kartların yalnız alt şeridi görünür; şeritte metin kırpığı değil yalnız yüzey kalsın.
+        &:not([data-expanded]):not([data-front]) .p-toast-message-content {
+            visibility: hidden;
+        }
+    }
+
+    @each $sev, $tone in $toast-severities {
+        .p-toast-message-#{$sev} {
+            --vet-toast-solid: var(--p-#{$tone}-600);
+        }
+    }
+
+    .p-toast-message-normal,
+    .p-toast-message-info,
+    .p-toast-message-success,
+    .p-toast-message-warn,
+    .p-toast-message-error,
+    .p-toast-message-secondary,
+    .p-toast-message-contrast {
+        background: var(--surface-overlay);
+        border: 1px solid var(--surface-border);
+        border-radius: var(--content-border-radius);
+        color: var(--text-color);
+        box-shadow:
+            0 10px 15px -3px rgba(0, 0, 0, 0.1),
+            0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        backdrop-filter: none;
+    }
+
+    .p-toast-message-content {
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.75rem 2.25rem 0.75rem 1rem;
+    }
+
+    .p-toast-message-text {
+        gap: 0.125rem;
+        min-width: 0;
+    }
+
+    .p-toast-summary {
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 1.35;
+    }
+
+    .p-toast-detail {
+        font-size: 0.8125rem;
+        font-weight: 400;
+        line-height: 1.4;
+        color: var(--text-color-secondary);
+    }
+
+    .p-toast-message-icon {
+        width: 1.75rem;
+        height: 1.75rem;
+        padding: 0.4375rem;
+        box-sizing: border-box;
+        margin: 0;
+        border-radius: 50%;
+        background: var(--vet-toast-solid);
+        color: #fff;
+    }
+
+    .p-toast-close-button {
+        top: 0.5rem;
+        right: 0.5rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        color: var(--text-color-secondary);
+
+        &:hover {
+            background: var(--surface-hover);
+            color: var(--text-color);
+        }
+
+        &:focus-visible {
+            outline-color: var(--focus-ring-color);
+            box-shadow: none;
+        }
+    }
+
+    .p-toast-close-icon {
+        width: 0.75rem;
+        height: 0.75rem;
+    }
+}
+
+:root[class*='app-dark'] .p-toast.p-toast {
+    @each $sev, $tone in $toast-severities {
+        .p-toast-message-#{$sev} {
+            --vet-toast-solid: var(--p-#{$tone}-500);
+        }
+    }
+
+    .p-toast-message-normal,
+    .p-toast-message-info,
+    .p-toast-message-success,
+    .p-toast-message-warn,
+    .p-toast-message-error,
+    .p-toast-message-secondary,
+    .p-toast-message-contrast {
+        box-shadow:
+            0 10px 15px -3px rgba(0, 0, 0, 0.35),
+            0 4px 6px -4px rgba(0, 0, 0, 0.3);
+    }
+
+    .p-toast-message-icon {
+        color: var(--p-surface-950);
+    }
+}
