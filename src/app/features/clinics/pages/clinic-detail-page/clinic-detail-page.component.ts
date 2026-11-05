@@ -54,7 +54,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-toast position="bottom-right" />
+        <p-toast position="top-right" />
         @if (loading()) {
             <app-loading-state message="Klinik bilgileri yükleniyor…" />
         } @else if (loadError()) {

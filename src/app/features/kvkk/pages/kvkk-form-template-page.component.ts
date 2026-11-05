@@ -36,7 +36,7 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
     providers: [MessageService, ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-toast position="bottom-right" />
+        <p-toast position="top-right" />
         <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
         <app-page-header title="KVKK metinleri" [description]="'Müşteri kartından yazdırılan açık rıza formu ve aydınlatma metni' + (clinicName ? ' · ' + clinicName : '') + '.'" />
 

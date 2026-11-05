@@ -49,7 +49,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-toast position="bottom-right" />
+        <p-toast position="top-right" />
         <app-page-header title="Kurum üyeleri" description="Bu kuruma bağlı kullanıcıların salt okunur listesi.">
             @if (canManageTenantAccess()) {
                 <a actions routerLink="/panel/settings/members/role-permission-matrix" pButton type="button" class="p-button-secondary p-button-outlined"><i class="pi pi-table"></i>{{ copy.tenantRoleMatrixTitle }}</a>

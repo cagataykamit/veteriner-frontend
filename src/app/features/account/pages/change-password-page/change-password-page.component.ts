@@ -72,7 +72,7 @@ function resolveChangePasswordErrorMessage(err: unknown): string {
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-toast position="bottom-right" />
+        <p-toast position="top-right" />
 
         <div class="flex justify-center w-full">
             <div class="w-full max-w-4xl bg-surface-0 dark:bg-surface-900 rounded-2xl shadow-md border border-surface-200 dark:border-surface-700 px-6 py-8 md:px-12 md:py-10">

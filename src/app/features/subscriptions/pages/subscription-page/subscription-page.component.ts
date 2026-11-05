@@ -51,7 +51,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
     providers: [MessageService, CheckoutFlowService, CheckoutReturnVerificationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-toast position="bottom-right" />
+        <p-toast position="top-right" />
         <app-page-header title="Abonelik" [description]="subscriptionHeaderDescription" />
 
         @if (flow.summary(); as s) {
