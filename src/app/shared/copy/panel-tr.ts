@@ -18,6 +18,8 @@ export const PANEL_COPY = {
     buttonRefresh: 'Yenile',
     labelClient: 'Müşteri',
     labelPet: 'Hasta',
+    /** Ara sekmesi ve global arama — müşteri ve hastayı birlikte açan kayıt */
+    newClientPetRegistration: 'Yeni kayıt: müşteri ve hasta',
     /** Dashboard — klinik bağlamı yokken */
     dashboardNeedClinicMessage: 'Önce bir klinik seçmelisiniz.',
     dashboardNeedClinicHint:

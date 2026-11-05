@@ -1,6 +1,7 @@
 import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PatientSearchService, type PatientSearchResultVm } from '@/app/features/patients/services/patient-search.service';
@@ -8,6 +9,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
+import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { PatientsHomePageComponent } from './patients-home-page.component';
 
 const PAMUK = { petId: 'p1', petName: 'Pamuk', summary: 'Kedi · Tekir', microchip: '985', clientId: 'c1', ownerName: 'Ali Veli', ownerPhone: '+90 532 123 45 67', deceased: false };
@@ -17,19 +19,23 @@ describe('PatientsHomePageComponent (arama-öncelikli Hastalar girişi)', () => 
     let mutationBlocked: boolean;
     let search: Mock;
 
-    const create = () => {
+    const configure = () =>
         TestBed.configureTestingModule({
             imports: [PatientsHomePageComponent],
             providers: [
-                provideRouter([]),
+                provideRouter([{ path: 'panel/patients', component: PatientsHomePageComponent }]),
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'cl', getUserId: () => 'u1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } },
                 { provide: PatientSearchService, useValue: { search } },
                 { provide: VisitsService, useValue: { getVeterinarians: () => ({ subscribe: () => undefined }) } },
                 { provide: ClientsService, useValue: {} },
-                { provide: PetsService, useValue: {} }
+                { provide: PetsService, useValue: {} },
+                { provide: SpeciesService, useValue: { getSpeciesList: () => of([]) } }
             ]
         });
+
+    const create = () => {
+        configure();
         const fixture = TestBed.createComponent(PatientsHomePageComponent);
 
         fixture.detectChanges();
@@ -139,6 +145,29 @@ describe('PatientsHomePageComponent (arama-öncelikli Hastalar girişi)', () => 
 
         expect(link.getAttribute('href')).toContain('/panel/pets/new');
         expect(link.getAttribute('href')).toContain('clientId=c9');
+    });
+
+    it('global aramadan gelen metin aranır, istenirse Yeni kayıt formu açık gelir; sorgu adresten temizlenir', async () => {
+        search.mockReturnValue(of({ patients: [], owners: [], failedKinds: [] }));
+        configure();
+        const harness = await RouterTestingHarness.create();
+        const page = await harness.navigateByUrl('/panel/patients?search=zzz&register=1', PatientsHomePageComponent);
+
+        await harness.fixture.whenStable();
+        expect(search).toHaveBeenCalledWith('zzz');
+        expect(page.term()).toBe('zzz');
+        expect(page.registering()).toBe(true);
+        expect(TestBed.inject(Router).url).toBe('/panel/patients');
+    });
+
+    it('kayıt izni yoksa global aramadan gelen Yeni kayıt isteği formu açmaz, yalnız arar', async () => {
+        claims.delete('Pets.Create');
+        configure();
+        const harness = await RouterTestingHarness.create();
+        const page = await harness.navigateByUrl('/panel/patients?search=pamuk&register=1', PatientsHomePageComponent);
+
+        expect(search).toHaveBeenCalledWith('pamuk');
+        expect(page.registering()).toBe(false);
     });
 
     it('arama hatasında uyarı gösterilir; kısa terimde arama yapılmaz', () => {
