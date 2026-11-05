@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, effect, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import type { ClinicUpsertFormValue } from '@/app/entities/clinic/models/clinic-upsert.model';
 import { formatClinicPhoneForInput } from '@/app/entities/clinic/utils/clinic-phone-format.utils';
-import { CLINIC_ADDRESS_MAX, CLINIC_DESCRIPTION_MAX, CLINIC_EMAIL_MAX, CLINIC_PHONE_MAX, clinicOptionalEmailValidator } from '@/app/entities/clinic/utils/clinic-profile-form.validators';
+import { CLINIC_ADDRESS_MAX, CLINIC_DESCRIPTION_MAX, CLINIC_DISTRICT_MAX, CLINIC_EMAIL_MAX, CLINIC_PHONE_MAX, clinicOptionalEmailValidator } from '@/app/entities/clinic/utils/clinic-profile-form.validators';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -52,13 +52,22 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                             <small class="text-red-500">Klinik adı zorunludur.</small>
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-6">
+                    <div class="col-span-12 md:col-span-3">
                         <label for="newClinicCity" class="block text-sm font-medium text-muted-color mb-2">Şehir *</label>
-                        <input id="newClinicCity" pInputText class="w-full" formControlName="city" autocomplete="address-level2" />
+                        <input id="newClinicCity" pInputText class="w-full" formControlName="city" autocomplete="address-level1" />
                         @if (apiFieldErrors().city) {
                             <small class="text-red-500">{{ apiFieldErrors().city }}</small>
                         } @else if (form.controls.city.invalid && form.controls.city.touched) {
                             <small class="text-red-500">Şehir zorunludur.</small>
+                        }
+                    </div>
+                    <div class="col-span-12 md:col-span-3">
+                        <label for="newClinicDistrict" class="block text-sm font-medium text-muted-color mb-2">İlçe</label>
+                        <input id="newClinicDistrict" pInputText class="w-full" formControlName="district" autocomplete="address-level2" />
+                        @if (apiFieldErrors().district) {
+                            <small class="text-red-500">{{ apiFieldErrors().district }}</small>
+                        } @else if (form.controls.district.invalid && form.controls.district.touched) {
+                            <small class="text-red-500">En fazla {{ districtMax }} karakter.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -116,6 +125,7 @@ export class ClinicCreatePageComponent {
     private readonly clinicSwitcherRefresh = inject(ClinicSwitcherRefreshService);
     readonly ro = inject(TenantReadOnlyContextService);
 
+    readonly districtMax = CLINIC_DISTRICT_MAX;
     readonly phoneMax = CLINIC_PHONE_MAX;
     readonly emailMax = CLINIC_EMAIL_MAX;
     readonly addressMax = CLINIC_ADDRESS_MAX;
@@ -128,6 +138,7 @@ export class ClinicCreatePageComponent {
     readonly form = this.fb.nonNullable.group({
         name: ['', [Validators.required, Validators.maxLength(256)]],
         city: ['', [Validators.required, Validators.maxLength(128)]],
+        district: ['', [Validators.maxLength(CLINIC_DISTRICT_MAX)]],
         phone: ['', [Validators.maxLength(CLINIC_PHONE_MAX)]],
         email: ['', [Validators.maxLength(CLINIC_EMAIL_MAX), clinicOptionalEmailValidator()]],
         address: ['', [Validators.maxLength(CLINIC_ADDRESS_MAX)]],

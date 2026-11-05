@@ -12,6 +12,8 @@ export interface ClinicDetailVm {
     id: string;
     name: string;
     city: string;
+    /** İsteğe bağlı ilçe; boşsa `''`. */
+    district: string;
     isActive: boolean | null;
     phone: string;
     email: string;

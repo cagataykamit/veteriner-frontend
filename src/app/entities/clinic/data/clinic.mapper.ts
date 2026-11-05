@@ -127,13 +127,14 @@ export function mapClinicDetailDtoToVm(dto: ClinicDetailDto | Record<string, unk
 
     const name = firstString(o, ['name', 'Name', 'clinicName', 'ClinicName']) ?? '';
     const city = firstString(o, ['city', 'City']) ?? '';
+    const district = nullableStringField(o, ['district', 'District']);
     const isActive = readTriBool(o, ['isActive', 'IsActive', 'active', 'Active']);
     const phone = nullableStringField(o, ['phone', 'Phone', 'phoneNumber', 'PhoneNumber']);
     const email = nullableStringField(o, ['email', 'Email', 'emailAddress', 'EmailAddress']);
     const address = nullableStringField(o, ['address', 'Address']);
     const description = nullableStringField(o, ['description', 'Description']);
 
-    return { id, name, city, isActive, phone, email, address, description };
+    return { id, name, city, district, isActive, phone, email, address, description };
 }
 
 export function mapClinicDetailRaw(raw: unknown): ClinicDetailVm | null {
@@ -162,6 +163,7 @@ export function mapClinicDetailRaw(raw: unknown): ClinicDetailVm | null {
 export function clinicProfileToWriteDto(v: ClinicUpsertFormValue): ClinicUpdateRequestDto {
     const name = v.name.trim();
     const city = v.city.trim();
+    const district = v.district.trim();
     const phone = normalizeClinicPhoneForApi(v.phone);
     const email = v.email.trim();
     const address = v.address.trim();
@@ -170,6 +172,7 @@ export function clinicProfileToWriteDto(v: ClinicUpsertFormValue): ClinicUpdateR
     return {
         name,
         city,
+        district: district === '' ? null : district,
         phone: phone === '' ? null : phone,
         email: email === '' ? null : email,
         address: address === '' ? null : address,

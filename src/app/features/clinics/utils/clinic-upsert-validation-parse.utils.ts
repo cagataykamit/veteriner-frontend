@@ -5,7 +5,7 @@ import { parseValidationHttpError } from '@/app/shared/utils/validation-error-pa
 const FALLBACK_UPDATE = 'Klinik güncellenemedi.';
 const SUMMARY_FIELD_ERRORS = 'Lütfen hatalı alanları düzeltin.';
 
-export type ClinicUpsertFormFieldKey = 'name' | 'city' | 'phone' | 'email' | 'address' | 'description';
+export type ClinicUpsertFormFieldKey = 'name' | 'city' | 'district' | 'phone' | 'email' | 'address' | 'description';
 export type ClinicUpsertFieldErrors = Partial<Record<ClinicUpsertFormFieldKey, string>>;
 
 export interface ParsedClinicUpsertHttpError {
@@ -16,6 +16,7 @@ export interface ParsedClinicUpsertHttpError {
 const FIELD_MAP: Record<string, ClinicUpsertFormFieldKey> = {
     name: 'name',
     city: 'city',
+    district: 'district',
     phone: 'phone',
     email: 'email',
     address: 'address',
