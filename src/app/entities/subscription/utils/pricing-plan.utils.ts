@@ -1,7 +1,8 @@
 /**
- * Paketler — fiyat, sınır ve paket içeriğinin TEK veri kaynağı (ADR-035). Tanıtım `/paketler`, ana sayfa, SSS, SEO/JSON-LD,
- * kayıt `?plan=` ve panel abonelik kartı buradan beslenir; sayılar başka yere kopyalanmaz. Fiyat ya da sınır değişince
- * yalnız PRICING_PLAN_DEFS ve PRICING_FEATURE_ROWS düzenlenir. `null` alan sayfada hiç gösterilmez.
+ * Paketler — paket metni (ad, açıklama, özellik tablosu; ADR-035) ve fiyat görünümü. Tanıtım `/paketler`, ana sayfa, SSS,
+ * SEO/JSON-LD, kayıt `?plan=` ve panel abonelik kartı buradan beslenir. Sayılar burada YOK (WEB-007): fiyat, yıllık kural ve
+ * kullanıcı sınırı backend'den gelir (`GET /api/v1/public/subscription-plans`, panelde `subscription-summary`); checkout aynı
+ * kuraldan çektiği için sitedeki fiyat ile çekilen tutar ayrışmaz. Klinik sınırı backend'de yok, gösterilmez.
  */
 
 /** URL query `plan=` değeri (küçük harf). */
@@ -10,43 +11,27 @@ export type PricingPlanSlug = 'basic' | 'pro' | 'premium';
 /** Backend `planCode` (SubscriptionPlanCatalog). */
 export type PricingPlanApiCode = 'Basic' | 'Pro' | 'Premium';
 
-/** Kullanıcı/klinik sınırı: sayı, `'sinirsiz'`, `'coklu'` (çok klinik) ya da `null` (gösterilmez). */
-export type PricingPlanLimit = number | 'sinirsiz' | 'coklu' | null;
-
 export interface PricingPlanDef {
     readonly slug: PricingPlanSlug;
     readonly apiCode: PricingPlanApiCode;
     readonly title: string;
     /** Kime göre, tek cümle (kayıt sayfası ve paket kartı). */
     readonly description: string;
-    /** Aylık tutar, TL, KDV hariç. `null` ve `priceOnRequest` ise "İletişime geçin". */
-    readonly monthlyPriceTry: number | null;
-    /** Fiyat teklifle belirlenir (kartta "İletişime geçin", düğme iletişim sayfasına). */
-    readonly priceOnRequest: boolean;
-    readonly maxUsers: PricingPlanLimit;
-    readonly maxClinics: PricingPlanLimit;
     /** "Önerilen" etiketi (en çok bir paket; tasarım belgesi 5.5 orta kart). */
     readonly recommended: boolean;
     readonly trialDays: number;
 }
 
-/** Fiyatların vergi notu (ADR-035: KDV hariç). */
+/** Fiyatların vergi notu (ADR-035: KDV hariç; backend `vatIncluded: false`). */
 export const PRICING_VAT_NOTE = 'KDV hariç';
 
-/**
- * VERİ — paketler (ADR-035 tablosu). Kullanıcı sınırının backend karşılığı `SubscriptionPlanCatalog`; ürün içinde
- * zorlanması ayrı iştir (ADR-035 Sonuçlar).
- */
+/** VERİ — paket metni (ADR-035 tablosu). Fiyat ve sınır backend'den. */
 export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
     {
         slug: 'basic',
         apiCode: 'Basic',
         title: 'Temel',
         description: 'Tek klinik ve küçük ekip için.',
-        monthlyPriceTry: 999,
-        priceOnRequest: false,
-        maxUsers: 3,
-        maxClinics: 1,
         recommended: false,
         trialDays: 14
     },
@@ -55,10 +40,6 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         apiCode: 'Pro',
         title: 'Profesyonel',
         description: 'Birkaç kullanıcıyla çalışan ve hasta sahiplerine portal sunan klinikler için.',
-        monthlyPriceTry: 1990,
-        priceOnRequest: false,
-        maxUsers: 10,
-        maxClinics: 1,
         recommended: true,
         trialDays: 14
     },
@@ -67,14 +48,39 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         apiCode: 'Premium',
         title: 'Kurumsal',
         description: 'Birden fazla şubesi olan işletmeler için.',
-        monthlyPriceTry: null,
-        priceOnRequest: true,
-        maxUsers: 'sinirsiz',
-        maxClinics: 'coklu',
         recommended: false,
         trialDays: 14
     }
 ];
+
+/** Backend paket kataloğundan bir paketin sayıları (TL; fiyat yapılandırılmamışsa `null`). */
+export interface PricingPlanOffer {
+    readonly apiCode: string;
+    readonly maxUsers: number | null;
+    readonly monthlyPriceTry: number | null;
+    readonly yearlyPriceTry: number | null;
+}
+
+/** Backend paket kataloğu (`PublicSubscriptionPlanCatalogDto`). */
+export interface PricingCatalog {
+    readonly vatIncluded: boolean;
+    /** Yıllık ödemede ücretlendirilen ay (12 − bu = hediye ay). */
+    readonly yearlyBilledMonths: number;
+    readonly plans: readonly PricingPlanOffer[];
+}
+
+/** Sayfadaki katalog durumu: yükleniyor, geldi ya da alınamadı (alınamazsa tutar yazılmaz, "Fiyat için bize yazın"). */
+export type PricingCatalogState = { readonly status: 'loading' } | { readonly status: 'ready'; readonly catalog: PricingCatalog } | { readonly status: 'error' };
+
+/** Katalogda paketin sayıları; paket katalogda yoksa `null`. */
+export function catalogOffer(catalog: PricingCatalog, def: PricingPlanDef): PricingPlanOffer | null {
+    return catalog.plans.find((p) => p.apiCode.toLowerCase() === def.apiCode.toLowerCase()) ?? null;
+}
+
+/** Sayfadaki katalog durumundan paketin sayıları; katalog henüz yoksa ya da alınamadıysa `null`. */
+export function planOffer(state: PricingCatalogState, def: PricingPlanDef): PricingPlanOffer | null {
+    return state.status === 'ready' ? catalogOffer(state.catalog, def) : null;
+}
 
 /** Karşılaştırma hücresi: `true` var, `false` yok, metin kısa değer (örn. "E-posta"); `null` gösterilmez. */
 export type PricingFeatureCell = boolean | string | null;
@@ -84,6 +90,8 @@ export interface PricingFeatureRowDef {
     readonly label: string;
     /** Satırın altındaki kısa açıklama. */
     readonly detail?: string;
+    /** Metinde adıyla anılan satır (SSS çok klinik yanıtı). */
+    readonly key?: 'multiClinic';
     readonly plans: Readonly<Record<PricingPlanSlug, PricingFeatureCell>>;
 }
 
@@ -109,7 +117,7 @@ export const PRICING_FEATURE_ROWS: readonly PricingFeatureRowDef[] = [
     },
     { group: 'Yönetim', label: 'Eski sistemden veri aktarımı (içe aktarma sihirbazı)', plans: ALL },
     { group: 'Yönetim', label: 'Rol bazlı yetki, denetim kaydı', plans: ALL },
-    { group: 'Yönetim', label: 'Çok klinik yönetimi ve klinikler arası yetki', plans: { basic: false, pro: false, premium: true } },
+    { group: 'Yönetim', label: 'Çok klinik yönetimi ve klinikler arası yetki', key: 'multiClinic', plans: { basic: false, pro: false, premium: true } },
     {
         group: 'Hasta sahibi',
         label: 'Hasta sahibi portalı',
@@ -119,89 +127,97 @@ export const PRICING_FEATURE_ROWS: readonly PricingFeatureRowDef[] = [
     { group: 'Destek', label: 'Destek', plans: { basic: 'E-posta', pro: 'E-posta, öncelikli', premium: 'Özel iletişim, kurulum desteği' } }
 ];
 
+/** Özellik satırında "var" olan paketlerin adları ("Kurumsal"); satır yoksa boş. */
+export function planTitlesWithFeature(key: NonNullable<PricingFeatureRowDef['key']>, rows: readonly PricingFeatureRowDef[] = PRICING_FEATURE_ROWS): string {
+    const row = rows.find((r) => r.key === key);
+
+    return row
+        ? PRICING_PLAN_DEFS.filter((d) => row.plans[d.slug] === true)
+              .map((d) => d.title)
+              .join(', ')
+        : '';
+}
+
 /** Şu an olmayanlar (ADR-035): dürüst kısa liste, paketten bağımsız; tarih ya da vaat yazılmaz. */
 export const PRICING_NOT_AVAILABLE: readonly string[] = ['SMS hatırlatma (hatırlatmalar e-posta ile gider)', 'e-Fatura', 'Online ödeme', 'Online randevu'];
 
+/** Katalog alınamadığında ya da paketin fiyatı yokken tutar yerine yazılan metin (ADR-034); bağlantı iletişime gider. */
+export const PRICING_ON_REQUEST_TEXT = 'Fiyat için bize yazın';
+
 const formatTry = (amount: number): string => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(amount);
 
-/** `999` → "₺999"; `null` → `null`. */
+/** Backend kuruş tutarı → TL (`149000` → `1490`); yoksa ya da geçersizse `null`. */
+export function priceMinorToTry(minor: number | null | undefined): number | null {
+    return typeof minor === 'number' && Number.isFinite(minor) && minor > 0 ? minor / 100 : null;
+}
+
+/** `1490` → "₺1.490"; `null` → `null`. */
 export function formatPlanPrice(amount: number | null): string | null {
     return amount == null ? null : formatTry(amount);
 }
 
-/** `3, 'kullanıcı'` → "3 kullanıcı"; `'sinirsiz'` → "Sınırsız kullanıcı"; `'coklu'` → "Çok klinik"; `null` → `null`. */
-export function formatPlanLimit(limit: PricingPlanLimit, unit: string): string | null {
-    if (limit == null) {
-        return null;
-    }
-
-    if (limit === 'sinirsiz') {
-        return `Sınırsız ${unit}`;
-    }
-
-    return limit === 'coklu' ? `Çok ${unit}` : `${limit} ${unit}`;
+/** `3` → "3 kullanıcı"; `null` → `null` (gösterilmez). */
+export function formatUserLimit(maxUsers: number | null): string | null {
+    return maxUsers == null ? null : `${maxUsers} kullanıcı`;
 }
 
 /** Ödeme dönemi (BILL-001). */
 export type PricingBillingPeriod = 'monthly' | 'yearly';
 
-/** Yıllık ödemede alınan ay sayısı: 12 ay için 10 ay ("2 ay hediye"). Backend `SubscriptionPricing.YearlyBilledMonths` ile aynı. */
-export const YEARLY_BILLED_MONTHS = 10;
+/** Yıllıkta hediye ay sayısı (12 − ücretlendirilen ay); katalogdan. */
+export function yearlyGiftMonths(catalog: PricingCatalog): number {
+    return Math.max(0, 12 - catalog.yearlyBilledMonths);
+}
 
-/** `999` → `9990`; aylık tutar yoksa `null`. */
-export function yearlyPriceTry(def: PricingPlanDef): number | null {
-    return def.monthlyPriceTry == null ? null : def.monthlyPriceTry * YEARLY_BILLED_MONTHS;
+/** Vergi notu katalogdan ("KDV hariç" / "KDV dahil"). */
+export function pricingVatNote(catalog: PricingCatalog): string {
+    return catalog.vatIncluded ? 'KDV dahil' : PRICING_VAT_NOTE;
 }
 
 export interface PricingPriceView {
-    /** "₺999" ya da "İletişime geçin". */
+    /** "₺1.490". */
     readonly amount: string;
-    /** "/ ay" ya da "/ yıl"; teklifli pakette `null`. */
-    readonly unit: string | null;
-    /** Yıllıkta "2 ay hediye · aylık ₺833'e denk"; aksi halde `null`. */
+    /** "/ ay" ya da "/ yıl". */
+    readonly unit: string;
+    /** Yıllıkta "2 ay hediye · aylık ortalama ₺1.242"; aylıkta `null`. */
     readonly note: string | null;
 }
 
-/** Kart ve tablo için fiyat görünümü (varsayılan aylık); tutar ve teklif bilgisi yoksa `null`. */
-export function planPriceView(def: PricingPlanDef, period: PricingBillingPeriod = 'monthly'): PricingPriceView | null {
-    if (def.priceOnRequest) {
-        return { amount: 'İletişime geçin', unit: null, note: null };
-    }
-
-    const yearly = yearlyPriceTry(def);
-
-    if (def.monthlyPriceTry == null || yearly == null) {
+/** Kart ve tablo için fiyat görünümü (varsayılan aylık); tutar yoksa `null` (sayfa "Fiyat için bize yazın" yazar). */
+export function planPriceView(offer: PricingPlanOffer | null, catalog: PricingCatalog | null, period: PricingBillingPeriod = 'monthly'): PricingPriceView | null {
+    if (offer == null || catalog == null) {
         return null;
     }
 
     if (period === 'monthly') {
-        return { amount: formatTry(def.monthlyPriceTry), unit: '/ ay', note: null };
+        return offer.monthlyPriceTry == null ? null : { amount: formatTry(offer.monthlyPriceTry), unit: '/ ay', note: null };
     }
 
-    return { amount: formatTry(yearly), unit: '/ yıl', note: `${12 - YEARLY_BILLED_MONTHS} ay hediye · aylık ${formatTry(Math.round(yearly / 12))}'e denk` };
+    if (offer.yearlyPriceTry == null) {
+        return null;
+    }
+
+    const gift = yearlyGiftMonths(catalog);
+    const average = `aylık ortalama ${formatTry(Math.round(offer.yearlyPriceTry / 12))}`;
+
+    return { amount: formatTry(offer.yearlyPriceTry), unit: '/ yıl', note: gift > 0 ? `${gift} ay hediye · ${average}` : average };
 }
 
-/** "Fiyatlar KDV hariç" — fiyat koşulu notu (ADR-035; yıllık ödeme BILL-001). */
+/** "Fiyatlar KDV hariç" — fiyat koşulu notu (ADR-035). */
 export function pricingTermsText(): string {
     return `Fiyatlar ${PRICING_VAT_NOTE}`;
 }
 
-/** "Temel aylık ₺999, Profesyonel aylık ₺1.990; Kurumsal için bize ulaşın" — SSS ve ana sayfa için, veriden. */
-export function pricingSummaryText(plans: readonly PricingPlanDef[] = PRICING_PLAN_DEFS): string {
-    const priced = plans.filter((p) => p.monthlyPriceTry != null).map((p) => `${p.title} aylık ${formatTry(p.monthlyPriceTry!)}`);
-    const onRequest = plans.filter((p) => p.priceOnRequest).map((p) => p.title);
+/** Paket adları ("Temel, Profesyonel ve Kurumsal") — SEO ve SSS metni için; sayı içermez. */
+export function planTitlesText(plans: readonly PricingPlanDef[] = PRICING_PLAN_DEFS): string {
+    const titles = plans.map((p) => p.title);
 
-    return [priced.join(', '), onRequest.length ? `${onRequest.join(', ')} için bize ulaşın` : ''].filter(Boolean).join('; ');
+    return titles.length > 1 ? `${titles.slice(0, -1).join(', ')} ve ${titles[titles.length - 1]}` : (titles[0] ?? '');
 }
 
 /** Karşılaştırma tablosuna girecek satırlar: en az bir hücresi dolu olanlar. */
 export function decidedFeatureRows(rows: readonly PricingFeatureRowDef[] = PRICING_FEATURE_ROWS): readonly PricingFeatureRowDef[] {
     return rows.filter((row) => Object.values(row.plans).some((cell) => cell !== null));
-}
-
-/** Karşılaştırma tablosu çizilecek mi: en az bir sınır ya da doldurulmuş özellik satırı var. */
-export function hasPlanComparison(plans: readonly PricingPlanDef[] = PRICING_PLAN_DEFS, rows: readonly PricingFeatureRowDef[] = PRICING_FEATURE_ROWS): boolean {
-    return decidedFeatureRows(rows).length > 0 || plans.some((p) => p.maxUsers !== null || p.maxClinics !== null);
 }
 
 /** Kartta "öne çıkanlar": bu pakette olan ve paketler arasında fark yaratan satırlar (her pakette aynı olan satır değil). */

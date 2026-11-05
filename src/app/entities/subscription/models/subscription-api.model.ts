@@ -5,6 +5,9 @@ export interface SubscriptionPlanDto {
     name?: string | null;
     description?: string | null;
     maxUsers?: number | null;
+    /** WEB-007: liste fiyatı, kuruş, KDV hariç; yapılandırılmamışsa `null`. */
+    monthlyPriceMinor?: number | null;
+    yearlyPriceMinor?: number | null;
 }
 
 export interface SubscriptionSummaryDto {

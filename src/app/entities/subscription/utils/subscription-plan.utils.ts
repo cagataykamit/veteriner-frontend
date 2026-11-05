@@ -1,5 +1,5 @@
 import type { SubscriptionBillingPeriod } from '@/app/entities/subscription/models/subscription-vm.model';
-import { defByPlanKey, formatPlanLimit, PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
 
 /** Paket adları tek kaynaktan (ADR-035): `basic` → "Temel", `pro` → "Profesyonel", `premium` → "Kurumsal". */
 const PLAN_LABELS: Record<string, string> = Object.fromEntries(PRICING_PLAN_DEFS.map((d) => [d.slug, d.title]));
@@ -62,22 +62,4 @@ export function subscriptionPlanLabel(code: string | null | undefined, name: str
     }
 
     return '—';
-}
-
-export interface SubscriptionPlanLimitLabels {
-    readonly userLimitLabel: string;
-    readonly clinicLimitLabel: string;
-}
-
-/** Public paket tanımıyla hizalı kullanıcı / klinik limit etiketleri; sınırlar girilmemişse `null` (gösterilmez). */
-export function subscriptionPlanLimitLabels(code: string | null | undefined): SubscriptionPlanLimitLabels | null {
-    const def = defByPlanKey(code);
-    const userLimitLabel = def ? formatPlanLimit(def.maxUsers, 'kullanıcı') : null;
-    const clinicLimitLabel = def ? formatPlanLimit(def.maxClinics, 'klinik') : null;
-
-    if (!userLimitLabel || !clinicLimitLabel) {
-        return null;
-    }
-
-    return { userLimitLabel, clinicLimitLabel };
 }

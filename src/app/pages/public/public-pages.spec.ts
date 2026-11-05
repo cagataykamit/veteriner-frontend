@@ -1,5 +1,5 @@
 import { provideHttpClient, withXhr } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
@@ -13,8 +13,32 @@ import { PUBLIC_HOME_AUDIENCE, PUBLIC_HOME_DAY_FLOW } from '@/app/features/publi
 import { PUBLIC_NAV_LINKS, PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { PUBLIC_REGISTERS } from '@/app/features/public/utils/public-registers-content.utils';
 import { PUBLIC_SCREENSHOTS } from '@/app/features/public/utils/public-screenshots.utils';
-import { formatPlanPrice, PRICING_FEATURE_ROWS, PRICING_NOT_AVAILABLE, PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { PRICING_FEATURE_ROWS, PRICING_NOT_AVAILABLE, PRICING_ON_REQUEST_TEXT, PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import type { PublicSubscriptionPlanCatalogDto } from '@/app/features/public/models/public-plan-catalog-api.model';
 import { PUBLIC_ABOUT_PAGE_META, PUBLIC_CONTACT_PAGE_META, PUBLIC_FAQ_PAGE_META, PUBLIC_FEATURES_PAGE_META, PUBLIC_HOME_PAGE_META, PUBLIC_LOGO_PATH, PUBLIC_MIGRATION_PAGE_META, PUBLIC_OG_IMAGE_PATH, PUBLIC_PACKAGES_PAGE_META, PUBLIC_REGISTERS_PAGE_META, PUBLIC_SITE_ORIGIN, publicOrganizationJsonLd } from '@/app/features/public/utils/public-seo.utils';
+
+/** Backend paket kataloğu yanıtı (WEB-007 sözleşmesi §2); sayfa sayıları yalnız buradan çizer. */
+const PLAN_CATALOG: PublicSubscriptionPlanCatalogDto = {
+    currency: 'TRY',
+    vatIncluded: false,
+    yearlyBilledMonths: 10,
+    plans: [
+        { planCode: 'Basic', name: 'Basic', maxUsers: 3, monthlyPriceMinor: 149000, yearlyPriceMinor: 1490000 },
+        { planCode: 'Pro', name: 'Pro', maxUsers: 10, monthlyPriceMinor: 249000, yearlyPriceMinor: 2490000 },
+        { planCode: 'Premium', name: 'Premium', maxUsers: 50, monthlyPriceMinor: 399000, yearlyPriceMinor: 3990000 }
+    ]
+};
+
+/** Bekleyen paket kataloğu isteğini yanıtlar (`'error'`: API'ye ulaşılamadı). */
+function flushPlanCatalog(body: PublicSubscriptionPlanCatalogDto | 'error'): void {
+    const request = TestBed.inject(HttpTestingController).expectOne((r) => r.url.endsWith('/api/v1/public/subscription-plans'));
+
+    if (body === 'error') {
+        request.error(new ProgressEvent('error'));
+    } else {
+        request.flush(body);
+    }
+}
 
 /** Tanıtım sayfaları: ortak iskelet, rota, başlık ve içerik sabitleri. */
 describe('Tanıtım sayfaları (PublicLayout)', () => {
@@ -30,6 +54,12 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
     const root = (): HTMLElement => harness.fixture.nativeElement as HTMLElement;
     const text = (selector: string): string => (root().querySelector(selector)?.textContent ?? '').trim();
     const texts = (selector: string): string[] => Array.from(root().querySelectorAll(selector)).map((el) => (el.textContent ?? '').trim());
+
+    const openPackages = async (catalog: PublicSubscriptionPlanCatalogDto | 'error' = PLAN_CATALOG): Promise<void> => {
+        await harness.navigateByUrl(PUBLIC_PATHS.packages);
+        flushPlanCatalog(catalog);
+        harness.detectChanges();
+    };
 
     const pages = [
         { path: PUBLIC_PATHS.home, meta: PUBLIC_HOME_PAGE_META, h1: 'Veteriner kliniğinizin günü tek ekranda' },
@@ -115,31 +145,43 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(body).not.toContain('KVKK uyumlu');
     });
 
-    it('paketler: üç paket kartı veriden; fiyatlı paket kayda, teklifli paket iletişime gider', async () => {
-        await harness.navigateByUrl(PUBLIC_PATHS.packages);
-        harness.detectChanges();
+    it('paketler: üç paket kartı; aylık fiyat ve kullanıcı sınırı backend kataloğundan (WEB-007), klinik sınırı yok; her paket kayda gider', async () => {
+        await openPackages();
 
         expect(texts('[data-plan] h3')).toEqual(PRICING_PLAN_DEFS.map((p) => p.title));
+        const expected: Record<string, readonly [string, string]> = { basic: ['₺1.490', '3 kullanıcı'], pro: ['₺2.490', '10 kullanıcı'], premium: ['₺3.990', '50 kullanıcı'] };
 
         for (const p of PRICING_PLAN_DEFS) {
             const card = root().querySelector(`[data-plan="${p.slug}"]`)!;
 
-            if (p.priceOnRequest) {
-                expect(card.textContent).toContain('İletişime geçin');
-                expect(card.querySelector(`a[href="${PUBLIC_PATHS.contact}"]`)).not.toBeNull();
-            }
-            else {
-                expect(card.textContent).toContain(formatPlanPrice(p.monthlyPriceTry)!);
-                expect(card.querySelector(`a[href="/auth/signup?plan=${p.slug}"]`)).not.toBeNull();
-            }
+            expect(card.textContent).toContain(expected[p.slug][0]);
+            expect(card.textContent).toContain(expected[p.slug][1]);
+            expect(card.textContent).toContain('KDV hariç');
+            expect(card.textContent).not.toMatch(/\d+ klinik|Sınırsız/);
+            expect(card.querySelector(`a[href="/auth/signup?plan=${p.slug}"]`)).not.toBeNull();
         }
 
         expect(root().textContent).not.toContain('Fiyat yakında');
+        expect(root().textContent).not.toContain('İletişime geçin');
     });
 
-    it('paketler: Aylık/Yıllık anahtarı (BILL-001) aylıkla açılır, yıllıkta 10 aylık tutar; karşılaştırma tablosu tüm özellik satırlarını gösterir', async () => {
-        await harness.navigateByUrl(PUBLIC_PATHS.packages);
-        harness.detectChanges();
+    it('paketler: katalog alınamazsa sabit sayı yerine "Fiyat için bize yazın" (iletişim); anahtar ve fiyat satırları yok', async () => {
+        await openPackages('error');
+
+        const cards = root().querySelectorAll('[data-plan]');
+
+        expect(cards.length).toBe(3);
+        cards.forEach((card) => {
+            expect(card.querySelector(`a[href="${PUBLIC_PATHS.contact}"]`)?.textContent?.trim()).toBe(PRICING_ON_REQUEST_TEXT);
+            expect(card.textContent).not.toContain('₺');
+        });
+        expect(root().querySelector('[aria-label="Ödeme dönemi"]')).toBeNull();
+        expect(texts('th[scope="colgroup"]')).not.toContain('Fiyat');
+        expect(document.head.querySelector('script[data-public-json-ld="packages-offers"]')).toBeNull();
+    });
+
+    it('paketler: Aylık/Yıllık anahtarı (BILL-001) aylıkla açılır, yıllıkta katalogdaki yıllık tutar; karşılaştırma tablosu tüm özellik satırlarını gösterir', async () => {
+        await openPackages();
 
         const cardPrices = () => texts('[data-plan]').join(' ');
         const toggle = root().querySelector('[aria-label="Ödeme dönemi"]');
@@ -155,7 +197,8 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         harness.detectChanges();
 
         expect(yearly.getAttribute('aria-pressed')).toBe('true');
-        expect(cardPrices()).toContain('₺9.990');
+        expect(cardPrices()).toContain('₺14.900');
+        expect(cardPrices()).toContain('₺39.900');
         expect(cardPrices()).toContain('/ yıl');
         expect(cardPrices()).toContain('2 ay hediye');
         const rowHeaders = texts('table.public-plan-table tbody th[scope="row"]');
@@ -164,16 +207,19 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(texts('#packages-not-title + ul li')).toEqual([...PRICING_NOT_AVAILABLE]);
     });
 
-    it('paketler: SoftwareApplication JSON-LD fiyatları paket verisinden (KDV hariç)', async () => {
-        await harness.navigateByUrl(PUBLIC_PATHS.packages);
+    it('paketler: SoftwareApplication JSON-LD fiyatları backend kataloğundan (KDV hariç)', async () => {
+        await openPackages();
 
         const data = JSON.parse(document.head.querySelector('script[data-public-json-ld="packages-offers"]')?.textContent ?? '{}');
-        const priced = PRICING_PLAN_DEFS.filter((p) => p.monthlyPriceTry != null);
 
         expect(data.offers.map((o: {
             name: string;
             price: number;
-        }) => [o.name, o.price])).toEqual(priced.map((p) => [p.title, p.monthlyPriceTry]));
+        }) => [o.name, o.price])).toEqual([
+            ['Temel', 1490],
+            ['Profesyonel', 2490],
+            ['Kurumsal', 3990]
+        ]);
         expect(data.offers[0].priceSpecification.valueAddedTaxIncluded).toBe(false);
     });
 
@@ -282,14 +328,25 @@ describe('Ana sayfa (PublicHomePage)', () => {
         expect(body).not.toContain('Türkiye veri merkezi');
     });
 
-    it('SSS: 6–8 soru, tek kaynaktan; fiyat yanıtı tutarları paket verisinden alır', () => {
+    it('SSS: 6–8 soru, tek kaynaktan; fiyat yanıtı tutar yazmaz, Paketler sayfasına yollar (fiyat backend kataloğunda, WEB-007)', () => {
         const questions = texts('section[aria-labelledby="public-home-faq-title"] h3');
         const answer = PUBLIC_HOME_FAQS.find((f) => f.question === 'Fiyat ne kadar?')?.answer ?? '';
 
         expect(questions).toEqual(PUBLIC_HOME_FAQS.map((f) => f.question));
-        PRICING_PLAN_DEFS.filter((p) => p.monthlyPriceTry != null).forEach((p) => expect(answer).toContain(formatPlanPrice(p.monthlyPriceTry)!));
+        expect(answer).toContain('Paketler sayfasında');
         expect(answer).toContain('KDV hariç');
+        expect(answer).not.toMatch(/₺|\d{3,}/);
         expect(answer).not.toMatch(/pilot/i);
+    });
+
+    it('paketler bölümü: aylık fiyat ve kullanıcı sınırı backend kataloğundan', () => {
+        flushPlanCatalog(PLAN_CATALOG);
+        harness.detectChanges();
+        const section = root().querySelector('section[aria-labelledby="public-home-packages-title"]')!;
+
+        expect(section.querySelector('[data-plan="pro"]')?.textContent).toContain('₺2.490');
+        expect(section.querySelector('[data-plan="premium"]')?.textContent).toContain('50 kullanıcı');
+        expect(section.querySelector('[aria-label="Ödeme dönemi"]')).toBeNull();
     });
 });
 

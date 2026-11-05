@@ -3,7 +3,7 @@ import { environment } from '@/environments/environment';
 import { PUBLIC_CONTACT_EMAIL, PUBLIC_CONTACT_PHONE } from './public-contact-content.utils';
 import type { PublicFaqDef } from './public-faq-content.utils';
 import { PUBLIC_PATHS } from './public-navigation.utils';
-import { PRICING_PLAN_DEFS, PRICING_VAT_NOTE, pricingSummaryText, type PricingPlanDef } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { catalogOffer, planTitlesText, PRICING_PLAN_DEFS, PRICING_VAT_NOTE, type PricingCatalog, type PricingPlanDef } from '@/app/entities/subscription/utils/pricing-plan.utils';
 
 /** Canlı tanıtım sitesi kökü; canonical ve OG adresleri buradan türetilir (origin'den değil: staging kendini asıl saymaz). */
 export const PUBLIC_SITE_ORIGIN = 'https://www.vetinity.com';
@@ -51,7 +51,7 @@ export const PUBLIC_MIGRATION_PAGE_META: PublicPageMetaOptions = {
 
 export const PUBLIC_PACKAGES_PAGE_META: PublicPageMetaOptions = {
     title: 'Paketler ve fiyat — Vetinity',
-    description: `Vetinity paketleri: ${pricingSummaryText()} (${PRICING_VAT_NOTE}). Her paketi 14 gün ücretsiz deneyin.`,
+    description: `Vetinity paketleri: ${planTitlesText()}; aylık ya da yıllık ödeme, fiyatlar ${PRICING_VAT_NOTE}. Her paketi 14 gün ücretsiz deneyin.`,
     canonicalPath: PUBLIC_PATHS.packages
 };
 
@@ -188,8 +188,30 @@ export function publicFaqPageJsonLd(faqs: readonly PublicFaqDef[]): Record<strin
     };
 }
 
-/** schema.org `SoftwareApplication` + paket teklifleri (ADR-035) — paketler sayfası; fiyatlar paket verisinden. */
-export function publicPricingJsonLd(plans: readonly PricingPlanDef[] = PRICING_PLAN_DEFS): Record<string, unknown> {
+/** schema.org `SoftwareApplication` + paket teklifleri (ADR-035) — paketler sayfası; aylık fiyatlar backend kataloğundan (WEB-007). */
+export function publicPricingJsonLd(catalog: PricingCatalog, plans: readonly PricingPlanDef[] = PRICING_PLAN_DEFS): Record<string, unknown> {
+    const offers = plans.flatMap((p) => {
+        const price = catalogOffer(catalog, p)?.monthlyPriceTry;
+
+        return price == null
+            ? []
+            : [
+                  {
+                      '@type': 'Offer',
+                      name: p.title,
+                      price,
+                      priceCurrency: 'TRY',
+                      priceSpecification: {
+                          '@type': 'UnitPriceSpecification',
+                          price,
+                          priceCurrency: 'TRY',
+                          unitCode: 'MON',
+                          valueAddedTaxIncluded: catalog.vatIncluded
+                      }
+                  }
+              ];
+    });
+
     return {
         '@context': 'https://schema.org',
         '@type': 'SoftwareApplication',
@@ -197,20 +219,6 @@ export function publicPricingJsonLd(plans: readonly PricingPlanDef[] = PRICING_P
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         url: publicSiteUrl(PUBLIC_PATHS.packages),
-        offers: plans
-            .filter((p) => p.monthlyPriceTry != null)
-            .map((p) => ({
-                '@type': 'Offer',
-                name: p.title,
-                price: p.monthlyPriceTry,
-                priceCurrency: 'TRY',
-                priceSpecification: {
-                    '@type': 'UnitPriceSpecification',
-                    price: p.monthlyPriceTry,
-                    priceCurrency: 'TRY',
-                    unitCode: 'MON',
-                    valueAddedTaxIncluded: false
-                }
-            }))
+        offers
     };
 }

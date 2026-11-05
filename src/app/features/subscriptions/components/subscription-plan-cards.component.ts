@@ -3,8 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import type { SubscriptionBillingPeriod, SubscriptionCheckoutSessionVm, SubscriptionPlanVm, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
-import { defByPlanKey, planPriceView } from '@/app/entities/subscription/utils/pricing-plan.utils';
-import { SUBSCRIPTION_BILLING_PERIOD_LABELS, subscriptionPlanLabel, subscriptionPlanLimitLabels } from '@/app/entities/subscription/utils/subscription-plan.utils';
+import { formatPlanPrice, formatUserLimit } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { SUBSCRIPTION_BILLING_PERIOD_LABELS, subscriptionPlanLabel } from '@/app/entities/subscription/utils/subscription-plan.utils';
 import { isActiveTrialingSubscription, isExpiredReadOnlySubscription } from '@/app/features/subscriptions/utils/subscription-access.utils';
 import { canChooseBillingPeriod, isSwitchToYearly } from '@/app/features/subscriptions/utils/subscription-billing-period.utils';
 import { hasOpenCheckoutForPlan, isCurrentPlan, isDowngradePlan, isUpgradePlan } from '@/app/features/subscriptions/utils/subscription-plan-change.utils';
@@ -56,15 +56,11 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
                             @if (planPriceText(plan, s); as price) {
                                 <p class="mt-2 mb-0 text-sm font-medium text-color">{{ price }}</p>
                             }
-                            @if (planLimitLabels(plan.code); as limits) {
+                            @if (userLimitLabel(plan.maxUsers); as userLimit) {
                                 <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <div class="rounded-lg bg-surface-100 dark:bg-surface-800 px-2.5 py-2">
                                         <div class="text-[10px] font-medium uppercase tracking-wide text-muted-color">Kullanıcı</div>
-                                        <div class="text-xs font-semibold text-color">{{ limits.userLimitLabel }}</div>
-                                    </div>
-                                    <div class="rounded-lg bg-surface-100 dark:bg-surface-800 px-2.5 py-2">
-                                        <div class="text-[10px] font-medium uppercase tracking-wide text-muted-color">Klinik</div>
-                                        <div class="text-xs font-semibold text-color">{{ limits.clinicLimitLabel }}</div>
+                                        <div class="text-xs font-semibold text-color">{{ userLimit }}</div>
                                     </div>
                                 </div>
                             }
@@ -110,7 +106,8 @@ export class SubscriptionPlanCardsComponent {
     readonly canChooseBillingPeriod = canChooseBillingPeriod;
     readonly isTrialingSubscription = isActiveTrialingSubscription;
     readonly isCurrentPlan = isCurrentPlan;
-    readonly planLimitLabels = subscriptionPlanLimitLabels;
+    /** Kullanıcı sınırı backend kataloğundan (`maxUsers`); klinik sınırı backend'de yok, gösterilmez (WEB-007). */
+    readonly userLimitLabel = formatUserLimit;
 
     planLabel(plan: { code: string; name: string }): string {
         return subscriptionPlanLabel(plan.code, plan.name);
@@ -150,17 +147,14 @@ export class SubscriptionPlanCardsComponent {
         return !isCurrentPlan(plan, summary) || isSwitchToYearly(summary, this.billingPeriod());
     }
 
-    /** Kartta seçilen dönemin liste fiyatı ("₺999 / ay", "₺9.990 / yıl"); fiyat verisi yoksa `null`. */
+    /**
+     * Kartta seçilen dönemin liste fiyatı ("₺1.490 / ay", "₺14.900 / yıl"), backend özetinden; checkout aynı kuraldan çeker
+     * (WEB-007). Fiyat yapılandırılmamışsa `null`.
+     */
     planPriceText(plan: SubscriptionPlanVm, summary: SubscriptionSummaryVm): string | null {
-        const def = defByPlanKey(plan.code);
         const period = canChooseBillingPeriod(summary) ? this.billingPeriod() : summary.billingPeriod;
-        const view = def ? planPriceView(def, period === 'Yearly' ? 'yearly' : 'monthly') : null;
+        const amount = formatPlanPrice(period === 'Yearly' ? plan.yearlyPriceTry : plan.monthlyPriceTry);
 
-        if (!view) {
-            return null;
-        }
-
-        // Fiyatı talep üzerine olan plan (Kurumsal) birimsiz "İletişime geçin" gösterir.
-        return view.unit ? `${view.amount} ${view.unit}` : view.amount;
+        return amount ? `${amount} ${period === 'Yearly' ? '/ yıl' : '/ ay'}` : null;
     }
 }

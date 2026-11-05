@@ -2,41 +2,37 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import {
     decidedFeatureRows,
-    formatPlanLimit,
     formatPlanPrice,
-    hasPlanComparison,
+    formatUserLimit,
     planHighlights,
+    planOffer,
     planPriceView,
-    pricingSummaryText,
+    planTitlesText,
+    planTitlesWithFeature,
+    priceMinorToTry,
     pricingTermsText,
+    PRICING_ON_REQUEST_TEXT,
     PRICING_PLAN_DEFS,
-    yearlyPriceTry,
-    type PricingFeatureRowDef,
-    type PricingPlanDef
+    type PricingCatalog,
+    type PricingCatalogState,
+    type PricingFeatureRowDef
 } from '@/app/entities/subscription/utils/pricing-plan.utils';
-import { subscriptionPlanLabel, subscriptionPlanLimitLabels } from '@/app/entities/subscription/utils/subscription-plan.utils';
+import { subscriptionPlanLabel } from '@/app/entities/subscription/utils/subscription-plan.utils';
 import { PublicPlanCardsComponent } from './public-plan-cards.component';
 import { PublicPlanComparisonComponent } from './public-plan-comparison.component';
 
-/** Örnek veri: bileşenlerin farklı veriyle de doğru çizildiğini sınar; ürün kararı değildir. */
-const SAMPLE_PLANS: readonly PricingPlanDef[] = PRICING_PLAN_DEFS.map((def, i) => ({
-    ...def,
-    monthlyPriceTry: [500, 1000, null][i],
-    priceOnRequest: i === 2,
-    maxUsers: [2, 8, 'sinirsiz' as const][i],
-    maxClinics: [1, 2, 'coklu' as const][i],
-    recommended: i === 1
-}));
+/** Örnek katalog: bileşenlerin backend verisiyle çizildiğini sınar; ürün fiyatı değildir (fiyat backend'de, WEB-007). */
+const SAMPLE_CATALOG: PricingCatalog = {
+    vatIncluded: false,
+    yearlyBilledMonths: 10,
+    plans: [
+        { apiCode: 'Basic', maxUsers: 2, monthlyPriceTry: 500, yearlyPriceTry: 5000 },
+        { apiCode: 'Pro', maxUsers: 8, monthlyPriceTry: 1000, yearlyPriceTry: 10000 },
+        { apiCode: 'Premium', maxUsers: 40, monthlyPriceTry: null, yearlyPriceTry: null }
+    ]
+};
 
-/** Undecided (veri girilmemiş) paketler: alanlar sayfada hiç çıkmaz. */
-const EMPTY_PLANS: readonly PricingPlanDef[] = PRICING_PLAN_DEFS.map((def) => ({
-    ...def,
-    monthlyPriceTry: null,
-    priceOnRequest: false,
-    maxUsers: null,
-    maxClinics: null,
-    recommended: false
-}));
+const READY: PricingCatalogState = { status: 'ready', catalog: SAMPLE_CATALOG };
 
 const SAMPLE_ROWS: readonly PricingFeatureRowDef[] = [
     { group: 'Günlük iş', label: 'Yatış takibi', plans: { basic: false, pro: true, premium: true } },
@@ -46,131 +42,165 @@ const SAMPLE_ROWS: readonly PricingFeatureRowDef[] = [
 ];
 
 describe('Paket verisi (pricing-plan.utils)', () => {
-    it('ADR-035 tablosu: aylık fiyat (KDV hariç, yıllık ödeme ve indirim yok), sınırlar ve kademe farkları', () => {
-        const [temel, profesyonel, kurumsal] = PRICING_PLAN_DEFS;
-
+    it('paket metni ADR-035; sayı yok (fiyat, yıllık kural ve sınır backend kataloğundan, WEB-007)', () => {
         expect(PRICING_PLAN_DEFS.map((p) => p.title)).toEqual(['Temel', 'Profesyonel', 'Kurumsal']);
-        expect([temel.monthlyPriceTry, temel.maxClinics, temel.maxUsers]).toEqual([999, 1, 3]);
-        expect([profesyonel.monthlyPriceTry, profesyonel.maxClinics, profesyonel.maxUsers]).toEqual([1990, 1, 10]);
-        expect([kurumsal.priceOnRequest, kurumsal.monthlyPriceTry, kurumsal.maxClinics, kurumsal.maxUsers]).toEqual([true, null, 'coklu', 'sinirsiz']);
+        PRICING_PLAN_DEFS.forEach((p) => expect(Object.keys(p).filter((k) => /price|max/i.test(k))).toEqual([]));
         expect(pricingTermsText()).toBe('Fiyatlar KDV hariç');
-        expect(pricingSummaryText()).toBe('Temel aylık ₺999, Profesyonel aylık ₺1.990; Kurumsal için bize ulaşın');
+        expect(planTitlesText()).toBe('Temel, Profesyonel ve Kurumsal');
+        expect(planTitlesWithFeature('multiClinic')).toBe('Kurumsal');
         expect(planHighlights('basic')).toEqual(['Destek: E-posta']);
         expect(planHighlights('pro')).toContain('Hasta sahibi portalı');
-        expect(planHighlights('pro')).not.toContain('Çok klinik yönetimi ve klinikler arası yetki');
         expect(planHighlights('premium')).toContain('Çok klinik yönetimi ve klinikler arası yetki');
-        expect(hasPlanComparison()).toBe(true);
     });
 
-    it('fiyat görünümü: aylık birim; teklifli pakette "İletişime geçin"', () => {
-        expect(planPriceView(PRICING_PLAN_DEFS[0])).toEqual({ amount: '₺999', unit: '/ ay', note: null });
-        expect(planPriceView(PRICING_PLAN_DEFS[1])).toEqual({ amount: '₺1.990', unit: '/ ay', note: null });
-        expect(planPriceView(PRICING_PLAN_DEFS[2])).toEqual({ amount: 'İletişime geçin', unit: null, note: null });
-        expect(planPriceView(EMPTY_PLANS[0])).toBeNull();
-        expect(hasPlanComparison(EMPTY_PLANS, [])).toBe(false);
+    it('katalogdan paket: kod büyük/küçük harf duyarsız; katalog yükleniyorsa ya da alınamadıysa yok', () => {
+        expect(planOffer(READY, PRICING_PLAN_DEFS[1])?.maxUsers).toBe(8);
+        expect(planOffer({ status: 'ready', catalog: { ...SAMPLE_CATALOG, plans: [{ ...SAMPLE_CATALOG.plans[0], apiCode: 'basic' }] } }, PRICING_PLAN_DEFS[0])?.monthlyPriceTry).toBe(500);
+        expect(planOffer({ status: 'loading' }, PRICING_PLAN_DEFS[0])).toBeNull();
+        expect(planOffer({ status: 'error' }, PRICING_PLAN_DEFS[0])).toBeNull();
     });
 
-    it('yıllık fiyat (BILL-001): 10 aylık tutar, "2 ay hediye" ve aylık karşılığı; teklifli pakette yine "İletişime geçin"', () => {
-        expect(yearlyPriceTry(PRICING_PLAN_DEFS[0])).toBe(9990);
-        expect(yearlyPriceTry(PRICING_PLAN_DEFS[2])).toBeNull();
-        expect(planPriceView(PRICING_PLAN_DEFS[0], 'yearly')).toEqual({ amount: '₺9.990', unit: '/ yıl', note: "2 ay hediye · aylık ₺833'e denk" });
-        expect(planPriceView(PRICING_PLAN_DEFS[1], 'yearly')).toEqual({ amount: '₺19.900', unit: '/ yıl', note: "2 ay hediye · aylık ₺1.658'e denk" });
-        expect(planPriceView(PRICING_PLAN_DEFS[2], 'yearly')).toEqual({ amount: 'İletişime geçin', unit: null, note: null });
+    it('fiyat görünümü: aylık birim; yıllıkta katalogdaki yıllık tutar, hediye ay ve aylık ortalama; fiyat yoksa null', () => {
+        const [basic, , premium] = SAMPLE_CATALOG.plans;
+
+        expect(planPriceView(basic, SAMPLE_CATALOG)).toEqual({ amount: '₺500', unit: '/ ay', note: null });
+        expect(planPriceView(basic, SAMPLE_CATALOG, 'yearly')).toEqual({ amount: '₺5.000', unit: '/ yıl', note: '2 ay hediye · aylık ortalama ₺417' });
+        expect(planPriceView(basic, { ...SAMPLE_CATALOG, yearlyBilledMonths: 12 }, 'yearly')?.note).toBe('aylık ortalama ₺417');
+        expect(planPriceView(premium, SAMPLE_CATALOG)).toBeNull();
+        expect(planPriceView(null, SAMPLE_CATALOG)).toBeNull();
+        expect(planPriceView(basic, null)).toBeNull();
     });
 
-    it('biçimlendirme: TL tutar, sınır etiketi; null → null', () => {
-        expect(formatPlanPrice(1990)).toBe('₺1.990');
+    it('biçimlendirme: kuruş → TL, TL tutar, kullanıcı sınırı; geçersiz → null', () => {
+        expect(priceMinorToTry(149000)).toBe(1490);
+        expect(priceMinorToTry(0)).toBeNull();
+        expect(priceMinorToTry(null)).toBeNull();
+        expect(formatPlanPrice(1490)).toBe('₺1.490');
         expect(formatPlanPrice(null)).toBeNull();
-        expect(formatPlanLimit(10, 'kullanıcı')).toBe('10 kullanıcı');
-        expect(formatPlanLimit('sinirsiz', 'kullanıcı')).toBe('Sınırsız kullanıcı');
-        expect(formatPlanLimit('coklu', 'klinik')).toBe('Çok klinik');
-        expect(formatPlanLimit(null, 'klinik')).toBeNull();
+        expect(formatUserLimit(50)).toBe('50 kullanıcı');
+        expect(formatUserLimit(null)).toBeNull();
     });
 
     it('öne çıkanlar: pakette olup her pakette olmayan satırlar; karar verilmemiş satır yok sayılır', () => {
         expect(planHighlights('basic', SAMPLE_ROWS)).toEqual([]);
         expect(planHighlights('pro', SAMPLE_ROWS)).toEqual(['Yatış takibi']);
         expect(decidedFeatureRows(SAMPLE_ROWS).map((r) => r.label)).not.toContain('Karar verilmemiş satır');
-        expect(hasPlanComparison(SAMPLE_PLANS, [])).toBe(true);
     });
 
-    it('panel abonelik kartı: paket adı ve sınır etiketleri aynı veriden', () => {
+    it('panel abonelik kartı: paket adı aynı veriden', () => {
         expect(subscriptionPlanLabel('Pro', null)).toBe('Profesyonel');
         expect(subscriptionPlanLabel('Premium', null)).toBe('Kurumsal');
-        expect(subscriptionPlanLimitLabels('Basic')).toEqual({ userLimitLabel: '3 kullanıcı', clinicLimitLabel: '1 klinik' });
-        expect(subscriptionPlanLimitLabels('Premium')).toEqual({ userLimitLabel: 'Sınırsız kullanıcı', clinicLimitLabel: 'Çok klinik' });
     });
 });
 
 describe('PublicPlanCardsComponent', () => {
     beforeEach(() => TestBed.configureTestingModule({ imports: [PublicPlanCardsComponent], providers: [provideRouter([])] }));
 
-    it('veri girilmemişse: başlık, açıklama, deneme bağlantısı; fiyat ve sınır satırı yok', () => {
+    const render = (pricing: PricingCatalogState, periodToggle = false) => {
         const fixture = TestBed.createComponent(PublicPlanCardsComponent);
 
-        fixture.componentRef.setInput('plans', EMPTY_PLANS);
-        fixture.componentRef.setInput('featureRows', []);
+        fixture.componentRef.setInput('pricing', pricing);
+        fixture.componentRef.setInput('featureRows', SAMPLE_ROWS);
+        fixture.componentRef.setInput('periodToggle', periodToggle);
         fixture.detectChanges();
-        const el = fixture.nativeElement as HTMLElement;
+
+        return fixture;
+    };
+
+    it('katalog yüklenirken: başlık, açıklama, deneme bağlantısı ve yer tutucu; tutar, sınır ve anahtar yok', () => {
+        const el = render({ status: 'loading' }, true).nativeElement as HTMLElement;
 
         expect(Array.from(el.querySelectorAll('[data-plan] h3')).map((h) => h.textContent?.trim())).toEqual(PRICING_PLAN_DEFS.map((p) => p.title));
-        expect(el.textContent).not.toContain('/ ay');
-        expect(el.querySelector('.public-plan-badge')).toBeNull();
-        expect(el.querySelector('[data-plan="pro"] a')?.getAttribute('href')).toBe('/auth/signup?plan=pro');
+        expect(el.querySelectorAll('[data-price-loading]').length).toBe(3);
+        expect(el.textContent).not.toContain('₺');
+        expect(el.textContent).not.toMatch(/\d+ kullanıcı/);
+        expect(el.querySelector('[aria-label="Ödeme dönemi"]')).toBeNull();
+        expect(el.querySelector('[data-plan="pro"] a.public-btn')?.getAttribute('href')).toBe('/auth/signup?plan=pro');
     });
 
-    it('veri gelince: fiyat, not, sınırlar, öne çıkanlar ve "Önerilen" etiketi', () => {
-        const fixture = TestBed.createComponent(PublicPlanCardsComponent);
+    it('katalog alınamazsa: her kartta "Fiyat için bize yazın" (iletişim), sabit sayı yok; deneme düğmesi kalır', () => {
+        const el = render({ status: 'error' }, true).nativeElement as HTMLElement;
+        const links = Array.from(el.querySelectorAll<HTMLAnchorElement>('[data-price-on-request]'));
 
-        fixture.componentRef.setInput('plans', SAMPLE_PLANS);
-        fixture.componentRef.setInput('featureRows', SAMPLE_ROWS);
-        fixture.detectChanges();
-        const pro = (fixture.nativeElement as HTMLElement).querySelector('[data-plan="pro"]')!;
+        expect(links.map((a) => a.textContent?.trim())).toEqual([PRICING_ON_REQUEST_TEXT, PRICING_ON_REQUEST_TEXT, PRICING_ON_REQUEST_TEXT]);
+        expect(links[0].getAttribute('href')).toBe('/iletisim');
+        expect(el.textContent).not.toContain('₺');
+        expect(el.textContent).not.toMatch(/\d+ kullanıcı/);
+        expect(el.querySelectorAll('a.public-btn').length).toBe(3);
+    });
+
+    it('katalog gelince: fiyat, KDV notu, kullanıcı sınırı (klinik sınırı yok), öne çıkanlar ve "Önerilen" etiketi', () => {
+        const el = render(READY).nativeElement as HTMLElement;
+        const pro = el.querySelector('[data-plan="pro"]')!;
 
         expect(pro.textContent).toContain('₺1.000');
         expect(pro.textContent).toContain('/ ay');
         expect(pro.textContent).toContain('KDV hariç');
         expect(pro.textContent).toContain('8 kullanıcı');
-        expect(pro.textContent).toContain('2 klinik');
+        expect(pro.textContent).not.toMatch(/\d+ klinik/i);
         expect(pro.textContent).toContain('Yatış takibi');
         expect(pro.querySelector('.public-plan-badge')?.textContent?.trim()).toBe('Önerilen');
         expect(pro.querySelector('a.public-btn-primary')).not.toBeNull();
         expect(pro.textContent).not.toMatch(/\/ yıl|hediye/);
-        const premium = (fixture.nativeElement as HTMLElement).querySelector('[data-plan="premium"]')!;
+        const premium = el.querySelector('[data-plan="premium"]')!;
 
-        expect(premium.textContent).toContain('İletişime geçin');
-        expect(premium.textContent).toContain('Çok klinik');
+        expect(premium.querySelector('[data-price-on-request]')?.textContent?.trim()).toBe(PRICING_ON_REQUEST_TEXT);
+        expect(premium.textContent).toContain('40 kullanıcı');
+    });
+
+    it('Aylık/Yıllık anahtarı: hediye ay katalogdan, yıllıkta katalogdaki yıllık tutar', () => {
+        const fixture = render(READY, true);
+        const el = fixture.nativeElement as HTMLElement;
+        const toggle = el.querySelector('[aria-label="Ödeme dönemi"]')!;
+
+        expect(el.textContent).toContain('Yıllıkta 2 ay hediye');
+        Array.from(toggle.querySelectorAll('button'))
+            .find((b) => b.textContent?.trim() === 'Yıllık')!
+            .click();
+        fixture.detectChanges();
+
+        const basic = el.querySelector('[data-plan="basic"]')!;
+
+        expect(basic.textContent).toContain('₺5.000');
+        expect(basic.textContent).toContain('/ yıl');
+        expect(basic.textContent?.replace(/\s+/g, ' ')).toContain('2 ay hediye · aylık ortalama ₺417 · KDV hariç');
     });
 });
 
 describe('PublicPlanComparisonComponent', () => {
     beforeEach(() => TestBed.configureTestingModule({ imports: [PublicPlanComparisonComponent] }));
 
-    it('veri girilmemişse tablo çizilmez', () => {
+    const render = (pricing: PricingCatalogState, rows: readonly PricingFeatureRowDef[] = SAMPLE_ROWS): HTMLElement => {
         const fixture = TestBed.createComponent(PublicPlanComparisonComponent);
 
-        fixture.componentRef.setInput('plans', EMPTY_PLANS);
-        fixture.componentRef.setInput('featureRows', []);
+        fixture.componentRef.setInput('pricing', pricing);
+        fixture.componentRef.setInput('featureRows', rows);
         fixture.detectChanges();
 
-        expect((fixture.nativeElement as HTMLElement).querySelector('table')).toBeNull();
+        return fixture.nativeElement as HTMLElement;
+    };
+
+    it('gösterilecek satır yoksa tablo çizilmez', () => {
+        expect(render({ status: 'error' }, []).querySelector('table')).toBeNull();
     });
 
-    it('veri gelince: paket sütunları, Sınırlar grubu, doldurulmuş satırlar; Var/Yok ekran okuyucu metni', () => {
-        const fixture = TestBed.createComponent(PublicPlanComparisonComponent);
+    it('katalog yokken yalnız özellik satırları (Fiyat ve Sınırlar grubu yok)', () => {
+        const el = render({ status: 'error' });
 
-        fixture.componentRef.setInput('plans', SAMPLE_PLANS);
-        fixture.componentRef.setInput('featureRows', SAMPLE_ROWS);
-        fixture.detectChanges();
-        const el = fixture.nativeElement as HTMLElement;
+        expect(Array.from(el.querySelectorAll('th[scope="colgroup"]')).map((th) => th.textContent?.trim())).toEqual(['Günlük iş', 'Yönetim']);
+        expect(el.textContent).not.toContain('₺');
+    });
+
+    it('katalog gelince: aylık ve yıllık fiyat, kullanıcı sınırı; klinik satırı yok; Var/Yok ekran okuyucu metni', () => {
+        const el = render(READY);
         const cells = (label: string): string[] => Array.from(Array.from(el.querySelectorAll('tbody tr')).find((tr) => tr.querySelector('th')?.textContent?.trim() === label)!.querySelectorAll('td')).map((td) => td.textContent?.trim() ?? '');
 
         expect(Array.from(el.querySelectorAll('thead th')).map((th) => th.textContent?.trim())).toEqual(['Özellik', ...PRICING_PLAN_DEFS.map((p) => p.title)]);
         expect(Array.from(el.querySelectorAll('th[scope="colgroup"]')).map((th) => th.textContent?.trim())).toEqual(['Fiyat', 'Sınırlar', 'Günlük iş', 'Yönetim']);
-        expect(cells('Aylık (KDV hariç)')).toEqual(['₺500', '₺1.000', 'İletişime geçin']);
-        expect(el.textContent).not.toContain('Yıllık');
-        expect(cells('Kullanıcı')).toEqual(['2 kullanıcı', '8 kullanıcı', 'Sınırsız kullanıcı']);
-        expect(cells('Klinik')).toEqual(['1 klinik', '2 klinik', 'Çok klinik']);
+        expect(cells('Aylık (KDV hariç)')).toEqual(['₺500', '₺1.000', PRICING_ON_REQUEST_TEXT]);
+        expect(cells('Yıllık (10 ay ücreti, KDV hariç)')).toEqual(['₺5.000', '₺10.000', PRICING_ON_REQUEST_TEXT]);
+        expect(cells('Kullanıcı')).toEqual(['2 kullanıcı', '8 kullanıcı', '40 kullanıcı']);
+        expect(el.textContent).not.toMatch(/klinik/i);
         expect(cells('Yatış takibi')).toEqual(['Yok', 'Var', 'Var']);
         expect(cells('Hatırlatma')).toEqual(['E-posta', 'E-posta', 'E-posta']);
         expect(el.textContent).not.toContain('Karar verilmemiş satır');

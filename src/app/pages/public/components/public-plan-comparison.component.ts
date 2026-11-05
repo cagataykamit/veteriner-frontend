@@ -1,12 +1,14 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import {
     decidedFeatureRows,
-    formatPlanLimit,
     formatPlanPrice,
-    hasPlanComparison,
+    formatUserLimit,
+    planOffer,
+    pricingVatNote,
     PRICING_FEATURE_ROWS,
+    PRICING_ON_REQUEST_TEXT,
     PRICING_PLAN_DEFS,
-    PRICING_VAT_NOTE,
+    type PricingCatalogState,
     type PricingFeatureCell,
     type PricingFeatureRowDef,
     type PricingPlanDef
@@ -24,7 +26,8 @@ interface ComparisonGroupVm {
 }
 
 /**
- * Paket karşılaştırma tablosu (tasarım belgesi 5.5, ADR-035): fiyat, sınırlar ve özellik satırları, gruplu.
+ * Paket karşılaştırma tablosu (tasarım belgesi 5.5, ADR-035): fiyat, kullanıcı sınırı ve özellik satırları, gruplu.
+ * Fiyat ve sınır backend kataloğundan (WEB-007); katalog yokken bu satırlar çizilmez. Klinik sınırı backend'de yok, satırı yok.
  * Gösterilecek satır yoksa hiç çizilmez. Dar ekranda yazı ve boşluk küçülür; taşarsa yalnız tablo kabı kayar.
  */
 @Component({
@@ -32,7 +35,7 @@ interface ComparisonGroupVm {
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        @if (hasRows()) {
+        @if (groups().length > 0) {
             <div class="public-card overflow-x-auto">
                 <table class="public-plan-table w-full border-collapse text-left text-xs sm:text-sm">
                     <caption class="sr-only">Paket karşılaştırması</caption>
@@ -82,15 +85,33 @@ interface ComparisonGroupVm {
 export class PublicPlanComparisonComponent {
     readonly plans = input<readonly PricingPlanDef[]>(PRICING_PLAN_DEFS);
     readonly featureRows = input<readonly PricingFeatureRowDef[]>(PRICING_FEATURE_ROWS);
+    /** Backend paket kataloğu durumu (`PublicPlanCatalogService.state`). */
+    readonly pricing = input<PricingCatalogState>({ status: 'loading' });
 
     readonly groups = computed<readonly ComparisonGroupVm[]>(() => {
         const plans = this.plans();
-        const priceCell = (p: PricingPlanDef): PricingFeatureCell => (p.priceOnRequest ? 'İletişime geçin' : formatPlanPrice(p.monthlyPriceTry));
-        const priceRows: ComparisonRowVm[] = [{ label: `Aylık (${PRICING_VAT_NOTE})`, cells: plans.map(priceCell) }].filter((row) => row.cells.some((cell) => cell !== null));
-        const limitRows: ComparisonRowVm[] = [
-            { label: 'Klinik', cells: plans.map((p) => formatPlanLimit(p.maxClinics, 'klinik')) },
-            { label: 'Kullanıcı', cells: plans.map((p) => formatPlanLimit(p.maxUsers, 'kullanıcı')) }
-        ].filter((row) => row.cells.some((cell) => cell !== null));
+        const state = this.pricing();
+        const offers = plans.map((p) => planOffer(state, p));
+        const priceRows: ComparisonRowVm[] = [];
+        const limitRows: ComparisonRowVm[] = [];
+
+        if (state.status === 'ready') {
+            const vat = pricingVatNote(state.catalog);
+            const price = (amount: number | null | undefined): PricingFeatureCell => formatPlanPrice(amount ?? null) ?? PRICING_ON_REQUEST_TEXT;
+
+            priceRows.push({ label: `Aylık (${vat})`, cells: offers.map((o) => price(o?.monthlyPriceTry)) });
+
+            if (offers.some((o) => o?.yearlyPriceTry != null)) {
+                priceRows.push({ label: `Yıllık (${state.catalog.yearlyBilledMonths} ay ücreti, ${vat})`, cells: offers.map((o) => price(o?.yearlyPriceTry)) });
+            }
+
+            const users = offers.map((o) => formatUserLimit(o?.maxUsers ?? null));
+
+            if (users.some((cell) => cell !== null)) {
+                limitRows.push({ label: 'Kullanıcı', cells: users });
+            }
+        }
+
         const byGroup = new Map<string, ComparisonRowVm[]>();
 
         for (const row of decidedFeatureRows(this.featureRows())) {
@@ -103,6 +124,4 @@ export class PublicPlanComparisonComponent {
             ...[...byGroup].map(([group, rows]) => ({ group, rows }))
         ];
     });
-
-    readonly hasRows = computed(() => hasPlanComparison(this.plans(), this.featureRows()));
 }

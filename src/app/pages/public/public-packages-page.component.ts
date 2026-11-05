@@ -1,8 +1,9 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, DestroyRef, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, DestroyRef, effect, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { PUBLIC_PACKAGES_FAQ_CATEGORY_ID, publicFaqsOf } from '@/app/features/public/utils/public-faq-content.utils';
 import { PRICING_NOT_AVAILABLE, PRICING_PLAN_DEFS, pricingTermsText } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { PublicPlanCatalogService } from '@/app/features/public/services/public-plan-catalog.service';
 import {
     PUBLIC_PACKAGES_PAGE_META,
     publicFaqPageJsonLd,
@@ -21,8 +22,9 @@ const PRICING_JSON_LD_ID = 'packages-offers';
 const PRICING_FAQ_JSON_LD_ID = 'packages-faq';
 
 /**
- * Paketler (tasarım belgesi 5.5, ADR-035): aylık fiyatlı üç paket kartı, karşılaştırma tablosu, "Şu an yok", SSS.
- * Tüm fiyat ve sınırlar `pricing-plan.utils.ts`'ten; sayfa sayı kopyalamaz.
+ * Paketler (tasarım belgesi 5.5, ADR-035, WEB-007): üç paket kartı (Aylık/Yıllık), karşılaştırma tablosu, "Şu an yok", SSS.
+ * Paket metni `pricing-plan.utils.ts`'ten; fiyat, yıllık kural ve kullanıcı sınırı backend kataloğundan, sayfa sayı kopyalamaz.
+ * Teklif (JSON-LD) yalnız katalog gelince yazılır.
  */
 @Component({
     selector: 'app-public-packages-page',
@@ -40,12 +42,12 @@ const PRICING_FAQ_JSON_LD_ID = 'packages-faq';
             <section class="public-section" aria-labelledby="packages-plans-title">
                 <h2 id="packages-plans-title" class="sr-only">Paketler</h2>
                 <p class="m-0 mb-8 text-center text-sm text-muted-color">{{ pricingTerms }}.</p>
-                <app-public-plan-cards [plans]="plans" [periodToggle]="true" />
+                <app-public-plan-cards [plans]="plans" [pricing]="pricing()" [periodToggle]="true" />
             </section>
 
             <section class="public-section" aria-labelledby="packages-compare-title">
                 <h2 id="packages-compare-title" class="public-h2 m-0 mb-6">Paketleri karşılaştırın</h2>
-                <app-public-plan-comparison [plans]="plans" />
+                <app-public-plan-comparison [plans]="plans" [pricing]="pricing()" />
             </section>
 
             <section class="public-section" aria-labelledby="packages-not-title">
@@ -76,15 +78,29 @@ export class PublicPackagesPageComponent implements OnInit {
     private readonly meta = inject(Meta);
     private readonly document = inject(DOCUMENT);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly planCatalog = inject(PublicPlanCatalogService);
 
     readonly plans = PRICING_PLAN_DEFS;
+    readonly pricing = this.planCatalog.state;
     readonly pricingTerms = pricingTermsText();
     readonly notAvailable = PRICING_NOT_AVAILABLE;
     readonly faqs = publicFaqsOf(PUBLIC_PACKAGES_FAQ_CATEGORY_ID);
 
+    constructor() {
+        effect(() => {
+            const state = this.pricing();
+
+            if (state.status === 'ready') {
+                setPublicJsonLd(this.document, PRICING_JSON_LD_ID, publicPricingJsonLd(state.catalog, this.plans));
+            } else {
+                removePublicJsonLd(this.document, PRICING_JSON_LD_ID);
+            }
+        });
+    }
+
     ngOnInit(): void {
+        this.planCatalog.ensureLoaded();
         setPublicPageMeta(this.title, this.meta, PUBLIC_PACKAGES_PAGE_META, this.document);
-        setPublicJsonLd(this.document, PRICING_JSON_LD_ID, publicPricingJsonLd(this.plans));
         setPublicJsonLd(this.document, PRICING_FAQ_JSON_LD_ID, publicFaqPageJsonLd(this.faqs));
         this.destroyRef.onDestroy(() => {
             removePublicJsonLd(this.document, PRICING_JSON_LD_ID);
