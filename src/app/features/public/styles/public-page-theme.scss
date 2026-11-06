@@ -690,26 +690,25 @@ html.public-site-root {
     border-top: 1px solid var(--public-border);
 }
 
-/* Var: dolu teal daire; yok: kısa soluk çizgi */
-.public-page .public-plan-compare-yes {
+/* Var: dolu teal daire; yok: dolu kırmızı daire, çarpılı */
+.public-page .public-plan-compare-yes,
+.public-page .public-plan-compare-no {
     display: inline-flex;
     width: 1.5rem;
     height: 1.5rem;
     align-items: center;
     justify-content: center;
     border-radius: 999px;
-    background: var(--vetinity-teal);
     color: #ffffff;
     font-size: 0.75rem;
 }
 
+.public-page .public-plan-compare-yes {
+    background: var(--vetinity-teal);
+}
+
 .public-page .public-plan-compare-no {
-    display: inline-block;
-    width: 0.75rem;
-    height: 2px;
-    vertical-align: middle;
-    border-radius: 2px;
-    background: var(--public-border-emphasis);
+    background: #dc2626;
 }
 
 /* Paketler: fiyat */

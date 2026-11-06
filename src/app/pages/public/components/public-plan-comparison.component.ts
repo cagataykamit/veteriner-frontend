@@ -95,7 +95,7 @@ interface ComparisonGroupVm {
                                             @if (cell === true) {
                                                 <span class="public-plan-compare-yes" aria-hidden="true"><i class="pi pi-check"></i></span><span class="sr-only">Var</span>
                                             } @else if (cell === false || cell === null) {
-                                                <span class="public-plan-compare-no" aria-hidden="true"></span><span class="sr-only">Yok</span>
+                                                <span class="public-plan-compare-no" aria-hidden="true"><i class="pi pi-times"></i></span><span class="sr-only">Yok</span>
                                             } @else {
                                                 <span class="font-medium">{{ cell }}</span>
                                             }
