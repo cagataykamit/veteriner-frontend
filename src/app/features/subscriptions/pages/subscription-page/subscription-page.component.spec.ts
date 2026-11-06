@@ -32,7 +32,7 @@ const summary = (over: Partial<SubscriptionSummaryVm> = {}): SubscriptionSummary
     isReadOnly: false,
     canManageSubscription: true,
     availablePlans: [
-        { code: 'basic', name: 'Basic', description: 'Küçük klinikler için', maxUsers: 1, monthlyPriceTry: 890, yearlyPriceTry: 8900 },
+        { code: 'basic', name: 'Basic', description: 'Küçük klinikler için', maxUsers: 3, monthlyPriceTry: 890, yearlyPriceTry: 8900 },
         { code: 'pro', name: 'Pro', description: 'Büyüyen klinikler için', maxUsers: 5, monthlyPriceTry: 1790, yearlyPriceTry: 17900 },
         { code: 'premium', name: 'Premium', description: 'Çok şubeli kurumlar için', maxUsers: null, monthlyPriceTry: null, yearlyPriceTry: null }
     ],
@@ -184,7 +184,7 @@ describe('SubscriptionPageComponent', () => {
                     ?.textContent ?? '';
 
             expect(card('Temel')).toContain('₺890 / ay');
-            expect(card('Temel')).toContain('1 kullanıcı');
+            expect(card('Temel')).toContain('3 kullanıcı');
             expect(card('Temel')).not.toContain('Klinik');
             expect(card('Profesyonel')).toContain('₺1.790 / ay');
             expect(card('Kurumsal')).toContain('Kurumsal');

@@ -23,7 +23,7 @@ const PLAN_CATALOG: PublicSubscriptionPlanCatalogDto = {
     vatIncluded: false,
     yearlyBilledMonths: 10,
     plans: [
-        { planCode: 'Basic', name: 'Basic', maxUsers: 1, monthlyPriceMinor: 89000, yearlyPriceMinor: 890000 },
+        { planCode: 'Basic', name: 'Basic', maxUsers: 3, monthlyPriceMinor: 89000, yearlyPriceMinor: 890000 },
         { planCode: 'Pro', name: 'Pro', maxUsers: 5, monthlyPriceMinor: 179000, yearlyPriceMinor: 1790000 },
         { planCode: 'Premium', name: 'Premium', maxUsers: 15, monthlyPriceMinor: 379000, yearlyPriceMinor: 3790000 }
     ]
@@ -149,7 +149,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         await openPackages();
 
         expect(texts('[data-plan] h3')).toEqual(PRICING_PLAN_DEFS.map((p) => p.title));
-        const expected: Record<string, readonly [string, string]> = { basic: ['₺890', '1 kullanıcı'], pro: ['₺1.790', '5 kullanıcı'], premium: ['₺3.790', '15 kullanıcı'] };
+        const expected: Record<string, readonly [string, string]> = { basic: ['₺890', '3 kullanıcı'], pro: ['₺1.790', '5 kullanıcı'], premium: ['₺3.790', '15 kullanıcı'] };
 
         for (const p of PRICING_PLAN_DEFS) {
             const card = root().querySelector(`[data-plan="${p.slug}"]`)!;
