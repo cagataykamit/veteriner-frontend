@@ -165,7 +165,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(root().textContent).not.toContain('İletişime geçin');
     });
 
-    it('paketler: katalog alınamazsa sabit sayı yerine "Fiyat için bize yazın" (iletişim); anahtar ve fiyat satırları yok', async () => {
+    it('paketler: katalog alınamazsa sabit sayı yerine "Fiyat için bize yazın" (iletişim); anahtar yok, tablo başlığında fiyat ve kullanıcı yok', async () => {
         await openPackages('error');
 
         const cards = root().querySelectorAll('[data-plan]');
@@ -176,7 +176,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
             expect(card.textContent).not.toContain('₺');
         });
         expect(root().querySelector('[aria-label="Ödeme dönemi"]')).toBeNull();
-        expect(texts('th[scope="colgroup"]')).not.toContain('Fiyat');
+        expect(root().querySelector('table.public-plan-compare')?.textContent).not.toMatch(/₺|\d+ kullanıcı/);
         expect(document.head.querySelector('script[data-public-json-ld="packages-offers"]')).toBeNull();
     });
 
@@ -201,8 +201,12 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(cardPrices()).toContain('₺37.900');
         expect(cardPrices()).toContain('/ yıl');
         expect(cardPrices()).toContain('2 ay hediye');
-        const rowHeaders = texts('table.public-plan-table tbody th[scope="row"]');
+        const table = root().querySelector('table.public-plan-compare')!;
+        const rowHeaders = texts('table.public-plan-compare tbody th[scope="row"]');
 
+        expect(texts('table.public-plan-compare thead th')[2]).toContain('₺1.790');
+        expect(table.textContent).not.toMatch(/Yıllık|\/ yıl|₺17\.900/);
+        expect(rowHeaders.length).toBe(PRICING_FEATURE_ROWS.length);
         PRICING_FEATURE_ROWS.forEach((r) => expect(rowHeaders.some((t) => t.startsWith(r.label)), r.label).toBe(true));
         expect(texts('#packages-not-title + ul li')).toEqual([...PRICING_NOT_AVAILABLE]);
     });
@@ -326,7 +330,7 @@ describe('Ana sayfa (PublicHomePage)', () => {
         expect(body).not.toContain('mevzuata uygun');
         expect(body).not.toContain('KVKK uyumlu');
         expect(body).not.toContain('Türkiye veri merkezi');
-        expect(root().querySelector('table.public-plan-table')).toBeNull();
+        expect(root().querySelector('table.public-plan-compare')).toBeNull();
         expect(root().querySelector(`section[aria-labelledby="public-home-packages-title"] a[href="${PUBLIC_PATHS.packages}"]`)?.textContent?.trim()).toBe('Paketleri karşılaştırın');
     });
 

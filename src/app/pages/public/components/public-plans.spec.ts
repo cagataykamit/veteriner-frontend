@@ -17,7 +17,8 @@ import {
     PRICING_PLAN_DEFS,
     type PricingCatalog,
     type PricingCatalogState,
-    type PricingFeatureRowDef
+    type PricingFeatureRowDef,
+    type PricingPlanDef
 } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import { subscriptionPlanLabel } from '@/app/entities/subscription/utils/subscription-plan.utils';
 import { PublicPlanCardsComponent } from './public-plan-cards.component';
@@ -191,49 +192,147 @@ describe('PublicPlanCardsComponent', () => {
 });
 
 describe('PublicPlanComparisonComponent', () => {
-    beforeEach(() => TestBed.configureTestingModule({ imports: [PublicPlanComparisonComponent] }));
+    beforeEach(() => TestBed.configureTestingModule({ imports: [PublicPlanComparisonComponent], providers: [provideRouter([])] }));
 
-    const render = (pricing: PricingCatalogState, rows: readonly PricingFeatureRowDef[] = SAMPLE_ROWS): HTMLElement => {
+    const render = (pricing: PricingCatalogState, rows: readonly PricingFeatureRowDef[] = SAMPLE_ROWS, plans: readonly PricingPlanDef[] = PRICING_PLAN_DEFS): HTMLElement => {
         const fixture = TestBed.createComponent(PublicPlanComparisonComponent);
 
         fixture.componentRef.setInput('pricing', pricing);
         fixture.componentRef.setInput('featureRows', rows);
+        fixture.componentRef.setInput('plans', plans);
         fixture.detectChanges();
 
         return fixture.nativeElement as HTMLElement;
     };
 
-    it('gösterilecek satır yoksa tablo çizilmez', () => {
-        expect(render({ status: 'error' }, []).querySelector('table')).toBeNull();
+    /** `thead`'in paket sütunları, paket sırasıyla. */
+    const planHeads = (el: HTMLElement): HTMLElement[] => Array.from(el.querySelectorAll<HTMLElement>('thead th')).slice(1);
+    const texts = (el: HTMLElement, selector: string): string[] => Array.from(el.querySelectorAll(selector)).map((n) => n.textContent?.trim() ?? '');
+    const rowCells = (el: HTMLElement, label: string): HTMLElement[] => Array.from(Array.from(el.querySelectorAll('tbody tr')).find((tr) => tr.querySelector('th')?.textContent?.trim() === label)!.querySelectorAll('td'));
+
+    it('gösterilecek satır yoksa katalog hazır olsa da hiçbir şey çizilmez', () => {
+        const undecided = SAMPLE_ROWS.filter((r) => r.plans.basic === null);
+
+        for (const state of [{ status: 'loading' }, { status: 'error' }, READY] as const) {
+            expect(render(state, []).querySelector('*')).toBeNull();
+            expect(render(state, undecided).querySelector('*')).toBeNull();
+        }
     });
 
-    it('katalog yokken yalnız özellik satırları (Fiyat ve Sınırlar grubu yok)', () => {
-        const el = render({ status: 'error' });
+    for (const state of [{ status: 'loading' }, { status: 'error' }] as const) {
+        it(`katalog durumu ${state.status}: başlıkta yalnız paket adı; fiyat, KDV notu, kullanıcı ve iletişim bağlantısı çizilmez, özellik satırları kalır`, () => {
+            const el = render(state);
 
-        expect(Array.from(el.querySelectorAll('th[scope="colgroup"]')).map((th) => th.textContent?.trim())).toEqual(['Günlük iş', 'Yönetim']);
-        expect(el.textContent).not.toContain('₺');
-    });
+            expect(planHeads(el).map((th) => th.textContent?.replace('Önerilen', '').trim())).toEqual(PRICING_PLAN_DEFS.map((p) => p.title));
+            expect(el.textContent).not.toContain('₺');
+            expect(el.textContent).not.toContain('/ ay');
+            expect(el.textContent).not.toContain('KDV');
+            expect(el.textContent).not.toContain('kullanıcı');
+            expect(el.textContent).not.toContain(PRICING_ON_REQUEST_TEXT);
+            expect(el.querySelector('a')).toBeNull();
+            expect(texts(el, '[data-group-title]')).toEqual(['Günlük iş', 'Yönetim']);
+            expect(texts(el, 'tbody th[scope="row"]')).toEqual(['Yatış takibi', 'Roller, izinler ve denetim izi', 'Hatırlatma']);
+        });
+    }
 
-    it('katalog gelince: aylık ve yıllık fiyat, kullanıcı sınırı; klinik satırı yok; Var/Yok ekran okuyucu metni', () => {
+    it('katalog gelince başlıkta aylık fiyat, KDV notu ve kullanıcı sınırı; yıllık fiyat ve klinik sınırı tabloda yok', () => {
         const el = render(READY);
-        const cells = (label: string): string[] => Array.from(Array.from(el.querySelectorAll('tbody tr')).find((tr) => tr.querySelector('th')?.textContent?.trim() === label)!.querySelectorAll('td')).map((td) => td.textContent?.trim() ?? '');
+        const [basic, pro] = planHeads(el);
 
-        expect(Array.from(el.querySelectorAll('thead th')).map((th) => th.textContent?.trim())).toEqual(['Özellik', ...PRICING_PLAN_DEFS.map((p) => p.title)]);
-        expect(Array.from(el.querySelectorAll('th[scope="colgroup"]')).map((th) => th.textContent?.trim())).toEqual(['Fiyat', 'Sınırlar', 'Günlük iş', 'Yönetim']);
-        expect(cells('Aylık (KDV hariç)')).toEqual(['₺500', '₺1.000', PRICING_ON_REQUEST_TEXT]);
-        expect(cells('Yıllık (10 ay ücreti, KDV hariç)')).toEqual(['₺5.000', '₺10.000', PRICING_ON_REQUEST_TEXT]);
-        expect(cells('Kullanıcı')).toEqual(['2 kullanıcı', '8 kullanıcı', '40 kullanıcı']);
+        expect(basic.textContent).toContain('Temel');
+        expect(basic.textContent).toContain('₺500');
+        expect(basic.textContent).toContain('/ ay, KDV hariç');
+        expect(basic.textContent).toContain('2 kullanıcı');
+        expect(pro.textContent).toContain('₺1.000');
+        expect(pro.textContent).toContain('8 kullanıcı');
+        expect(el.textContent).not.toContain('₺5.000');
+        expect(el.textContent).not.toMatch(/yıllık|\/ yıl/i);
         expect(el.textContent).not.toMatch(/klinik/i);
-        expect(cells('Yatış takibi')).toEqual(['Yok', 'Var', 'Var']);
-        expect(cells('Hatırlatma')).toEqual(['E-posta', 'E-posta', 'E-posta']);
+        expect(texts(el, '[data-group-title]')).toEqual(['Günlük iş', 'Yönetim']);
+    });
+
+    it('KDV notu katalogdan', () => {
+        expect(planHeads(render({ status: 'ready', catalog: { ...SAMPLE_CATALOG, vatIncluded: true } }))[0].textContent).toContain('/ ay, KDV dahil');
+    });
+
+    it('fiyatı olmayan paket: "Fiyat için bize yazın" iletişime gider, tutar ve "/ ay" yok; kullanıcı sınırı kalır', () => {
+        const premium = planHeads(render(READY))[2];
+        const link = premium.querySelector('a');
+
+        expect(link?.textContent?.trim()).toBe(PRICING_ON_REQUEST_TEXT);
+        expect(link?.getAttribute('href')).toBe('/iletisim');
+        expect(premium.textContent).not.toContain('₺');
+        expect(premium.textContent).not.toContain('/ ay');
+        expect(premium.textContent).toContain('40 kullanıcı');
+    });
+
+    it('katalogda olmayan paket: "Fiyat için bize yazın", kullanıcı sınırı uydurulmaz', () => {
+        const pro = planHeads(render({ status: 'ready', catalog: { ...SAMPLE_CATALOG, plans: SAMPLE_CATALOG.plans.filter((p) => p.apiCode !== 'Pro') } }))[1];
+
+        expect(pro.querySelector('a')?.textContent?.trim()).toBe(PRICING_ON_REQUEST_TEXT);
+        expect(pro.textContent).not.toContain('kullanıcı');
+    });
+
+    it('"Önerilen" etiketi ve sütun vurgusu `recommended` alanından: başlıkta ve her özellik satırında aynı sütun', () => {
+        const recommendedColumns = (el: HTMLElement): number[][] =>
+            [planHeads(el), ...Array.from(el.querySelectorAll('tbody tr.public-plan-compare-row')).map((tr) => Array.from(tr.querySelectorAll('td')))].map((cells) => cells.flatMap((cell, i) => (cell.classList.contains('public-plan-compare-col--recommended') ? [i] : [])));
+        const tags = (el: HTMLElement): (string | null)[] => planHeads(el).map((th) => th.querySelector('.public-plan-compare-tag')?.textContent?.trim() ?? null);
+
+        const byData = render(READY);
+
+        expect(tags(byData)).toEqual([null, 'Önerilen', null]);
+        recommendedColumns(byData).forEach((columns) => expect(columns).toEqual([1]));
+
+        const premiumRecommended = render(
+            READY,
+            SAMPLE_ROWS,
+            PRICING_PLAN_DEFS.map((p) => ({ ...p, recommended: p.slug === 'premium' }))
+        );
+
+        expect(tags(premiumRecommended)).toEqual([null, null, 'Önerilen']);
+        recommendedColumns(premiumRecommended).forEach((columns) => expect(columns).toEqual([2]));
+
+        const none = render(
+            READY,
+            SAMPLE_ROWS,
+            PRICING_PLAN_DEFS.map((p) => ({ ...p, recommended: false }))
+        );
+
+        expect(none.querySelector('.public-plan-compare-tag')).toBeNull();
+        expect(none.querySelector('.public-plan-compare-col--recommended')).toBeNull();
+    });
+
+    it('alan bantları: sıra numarası ve karar verilmiş satır sayısı', () => {
+        const el = render(READY);
+
+        expect(texts(el, '.public-plan-compare-group-no')).toEqual(['1', '2']);
+        expect(texts(el, '[data-group-count]')).toEqual(['1 özellik', '2 özellik']);
+        expect(el.querySelector('.public-plan-compare-group-no')?.getAttribute('aria-hidden')).toBe('true');
+        expect(el.querySelector('tbody th[scope="rowgroup"]')?.getAttribute('colspan')).toBe('4');
+    });
+
+    it('hücreler: var dolu daire, yok çizgi, ekran okuyucuya "Var"/"Yok"; metin hücresi metni gösterir; karar verilmemiş satır yok', () => {
+        const el = render(READY);
+        const [no, yes] = rowCells(el, 'Yatış takibi');
+
+        expect(rowCells(el, 'Yatış takibi').map((td) => td.textContent?.trim())).toEqual(['Yok', 'Var', 'Var']);
+        expect(no.querySelector('.public-plan-compare-no')?.getAttribute('aria-hidden')).toBe('true');
+        expect(no.querySelector('.sr-only')?.textContent).toBe('Yok');
+        expect(yes.querySelector('.public-plan-compare-yes')?.getAttribute('aria-hidden')).toBe('true');
+        expect(yes.querySelector('.sr-only')?.textContent).toBe('Var');
+        rowCells(el, 'Hatırlatma').forEach((td) => {
+            expect(td.textContent?.trim()).toBe('E-posta');
+            expect(td.querySelector('.public-plan-compare-yes, .public-plan-compare-no, .sr-only')).toBeNull();
+        });
         expect(el.textContent).not.toContain('Karar verilmemiş satır');
     });
 
-    it('uzun tabloda paket adları ilk grup dışındaki grup satırlarında tekrar eder; ekran okuyucudan gizli', () => {
-        const repeats = Array.from(render(READY).querySelectorAll('td[data-plan-repeat]'));
-        const titles = PRICING_PLAN_DEFS.map((p) => p.title);
+    it('gerçek tablo: caption, sütun ve satır başlıkları', () => {
+        const el = render(READY);
 
-        expect(repeats.map((td) => td.textContent?.trim())).toEqual([...titles, ...titles, ...titles]);
-        repeats.forEach((td) => expect(td.getAttribute('aria-hidden')).toBe('true'));
+        expect(el.querySelector('table caption')?.textContent?.trim()).toBe('Paket karşılaştırması');
+        expect(el.querySelectorAll('thead th[scope="col"]').length).toBe(PRICING_PLAN_DEFS.length + 1);
+        expect(el.querySelector('thead th')?.textContent?.trim()).toBe('Özellik');
+        expect(el.querySelectorAll('tbody th[scope="row"]').length).toBe(3);
     });
 });
