@@ -2,8 +2,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
+const USER_LIMIT_CODE = 'Subscriptions.UserLimitExceeded';
+
 const PANEL_INVITE_CODE_MESSAGES: Record<string, string> = {
-    'Subscriptions.UserLimitExceeded': 'Kullanıcı kotası doldu; yeni davet oluşturulamıyor.',
+    [USER_LIMIT_CODE]: 'Paketinizin kullanıcı sınırına ulaşıldı; üyeler ve bekleyen davetler birlikte sayılır. Daha fazla kullanıcı için üst pakete geçebilirsiniz.',
     'Invites.DuplicatePending': 'Bu e-posta için zaten bekleyen bir davet var.',
     'Tenants.TenantInactive': 'Kurum hesabı aktif değil.',
     'Tenants.NotFound': 'Kurum bulunamadı veya erişilemiyor.',
@@ -66,6 +68,11 @@ function firstValidationMessage(errors: ProblemDetails['errors'] | null | undefi
     }
 
     return null;
+}
+
+/** Paketin kullanıcı sınırı hatası mı (ekran mesajın yanına abonelik bağlantısı koyar). */
+export function isTenantInviteUserLimitError(err: unknown): boolean {
+    return err instanceof HttpErrorResponse && readProblemFromHttp(err)?.code?.trim() === USER_LIMIT_CODE;
 }
 
 export function tenantInvitePanelFailureMessage(err: unknown, fallback: string): string {

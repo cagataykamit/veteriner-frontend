@@ -8,6 +8,9 @@ export interface SubscriptionPlanVm {
     name: string;
     description: string | null;
     maxUsers: number | null;
+    /** Liste fiyatı TL, KDV hariç (backend `subscription-summary`, WEB-007); yoksa `null`. */
+    monthlyPriceTry: number | null;
+    yearlyPriceTry: number | null;
 }
 
 export interface SubscriptionSummaryVm {

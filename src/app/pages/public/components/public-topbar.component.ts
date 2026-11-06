@@ -20,10 +20,12 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
     standalone: true,
     imports: [RouterLink, RouterLinkActive, ButtonModule, RippleModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    /* Yapışkan konum bileşenin kendisinde: iskeletin flex sütununda bileşen kutusu header'ın kapsayıcısıdır, içerideki sticky tutmaz */
+    host: { class: 'sticky top-0 z-40 block' },
     template: `
         <a [href]="'#' + mainContentId" class="public-skip-link" (click)="skipToContent($event)">İçeriğe atla</a>
 
-        <header class="public-topbar sticky top-0 z-40 w-full">
+        <header class="public-topbar w-full">
             <div class="mx-auto flex h-[64px] max-w-6xl items-center justify-between gap-3 px-4 md:px-6">
                 <a routerLink="/" class="public-topbar-logo-link flex h-[44px] shrink-0 items-center no-underline" aria-label="Vetinity ana sayfa">
                     <img

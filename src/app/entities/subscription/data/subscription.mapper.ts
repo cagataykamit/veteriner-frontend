@@ -1,4 +1,5 @@
-import type { PendingPlanChangeDto, SubscriptionCheckoutSessionDto, SubscriptionSummaryDto } from '@/app/entities/subscription/models/subscription-api.model';
+import type { PendingPlanChangeDto, SubscriptionCheckoutSessionDto, SubscriptionPlanDto, SubscriptionSummaryDto } from '@/app/entities/subscription/models/subscription-api.model';
+import { priceMinorToTry } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import type {
     PendingPlanChangeStatusKey,
     PendingPlanChangeTypeKey,
@@ -156,7 +157,7 @@ export function mapPendingPlanChangeDtoToVm(dto: PendingPlanChangeDto | null | u
     };
 }
 
-function mapPlan(dto: { code?: string | null; name?: string | null; description?: string | null; maxUsers?: number | null }): SubscriptionPlanVm | null {
+function mapPlan(dto: SubscriptionPlanDto): SubscriptionPlanVm | null {
     const code = trimOrNull(dto.code);
     const name = trimOrNull(dto.name);
 
@@ -168,7 +169,9 @@ function mapPlan(dto: { code?: string | null; name?: string | null; description?
         code: code ?? name ?? EM_DASH,
         name: name ?? code ?? EM_DASH,
         description: trimOrNull(dto.description),
-        maxUsers: toNullableNumber(dto.maxUsers)
+        maxUsers: toNullableNumber(dto.maxUsers),
+        monthlyPriceTry: priceMinorToTry(dto.monthlyPriceMinor),
+        yearlyPriceTry: priceMinorToTry(dto.yearlyPriceMinor)
     };
 }
 

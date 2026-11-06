@@ -51,6 +51,8 @@
  */
 html.public-site-root {
     font-size: 16px;
+    /* Yapışkan üst çubuk (64 px) sayfa içi bağlantı ve odak hedeflerini örtmesin */
+    scroll-padding-top: 72px;
 }
 
 /* Koyu tema: zemin #0b1220, kart #111a2e, metin #e5e7eb, teal aynı */
@@ -535,6 +537,11 @@ html.public-site-root {
     color: #ffffff;
 }
 
+.public-page .public-chip-tab--active:hover {
+    border-color: var(--vetinity-navy);
+    color: #ffffff;
+}
+
 .app-dark .public-page .public-chip-tab {
     background: #111a2e;
     color: var(--p-surface-200);
@@ -553,7 +560,7 @@ html.public-site-root {
     }
 }
 
-/* Paketler: önerilen kart 1 px teal çerçeve + etiket (gölge yok); karşılaştırma tablosu satır çizgileri */
+/* Paketler: önerilen kart 1 px teal çerçeve + etiket (gölge yok) */
 .public-page .public-plan-card--recommended {
     border-color: var(--vetinity-teal);
 }
@@ -574,16 +581,134 @@ html.public-site-root {
     color: var(--vetinity-soft-teal);
 }
 
-.public-page .public-plan-table thead tr {
-    border-bottom: 1px solid var(--public-border);
+/* Paket karşılaştırma tablosu: sütunlar sabit, gövde metni sarar; paket adı kelime ortasından kırılmasın diye daha dar ekranda
+   (min-width) yalnız tablo kabı kayar */
+.public-page .public-plan-compare {
+    table-layout: fixed;
+    min-width: 21rem;
 }
 
-.public-page .public-plan-table tbody tr:not(:first-child) {
+.public-page .public-plan-compare tbody th,
+.public-page .public-plan-compare tbody td {
+    overflow-wrap: anywhere;
+}
+
+/* Başlık bandı lacivert, üstünde beyaz metin; bağlantı açık teal (lacivertte 9.6:1, önerilen sütunda 6:1) */
+.public-page .public-plan-compare-head th {
+    background: var(--vetinity-navy);
+    color: var(--public-on-brand);
+}
+
+.app-dark .public-page .public-plan-compare-head th {
+    background: #07122a;
+}
+
+.public-page .public-plan-compare-link {
+    color: var(--vetinity-soft-teal);
+}
+
+.public-page .public-plan-compare-link:hover,
+.public-page .public-plan-compare-link:focus-visible {
+    color: #ffffff;
+}
+
+/* "Önerilen" etiketi: başlığın üstünde teal şerit */
+.public-page .public-plan-compare-tag {
+    display: inline-block;
+    margin-bottom: 0.375rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 999px;
+    background: var(--vetinity-teal);
+    color: #0b1220;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+    .public-page .public-plan-compare-tag {
+        padding: 0.125rem 0.5rem;
+        font-size: 0.6875rem;
+        letter-spacing: 0.04em;
+    }
+}
+
+/* Önerilen paketin sütunu: başlıkta koyu teal, gövdede açık teal yüzey; kenarları çizgili */
+.public-page .public-plan-compare-head .public-plan-compare-col--recommended {
+    background: color-mix(in srgb, var(--vetinity-navy) 70%, var(--vetinity-teal));
+}
+
+.app-dark .public-page .public-plan-compare-head .public-plan-compare-col--recommended {
+    background: color-mix(in srgb, #07122a 72%, var(--vetinity-teal));
+}
+
+.public-page .public-plan-compare-row .public-plan-compare-col--recommended {
+    background: color-mix(in srgb, var(--vetinity-teal) 8%, transparent);
+    border-left: 1px solid var(--public-border);
+    border-right: 1px solid var(--public-border);
+}
+
+.app-dark .public-page .public-plan-compare-row .public-plan-compare-col--recommended {
+    background: color-mix(in srgb, var(--vetinity-teal) 12%, transparent);
+}
+
+/* Alan bandı: numaralı, açık teal yüzey, üst çizgi */
+.public-page .public-plan-compare-group th {
+    background: var(--vetinity-bg-soft);
+    color: var(--vetinity-navy);
     border-top: 1px solid var(--public-border);
 }
 
-.public-page .public-plan-table-group {
-    color: var(--public-accent-text);
+.app-dark .public-page .public-plan-compare-group th {
+    background: color-mix(in srgb, var(--vetinity-teal) 10%, #111a2e);
+    color: #e5e7eb;
+}
+
+.public-page .public-plan-compare-group-no {
+    display: inline-flex;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+    background: var(--vetinity-navy);
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.app-dark .public-page .public-plan-compare-group-no {
+    background: var(--vetinity-teal);
+    color: #0b1220;
+}
+
+.public-page .public-plan-compare-row + .public-plan-compare-row th,
+.public-page .public-plan-compare-row + .public-plan-compare-row td {
+    border-top: 1px solid var(--public-border);
+}
+
+/* Var: dolu teal daire; yok: dolu kırmızı daire, çarpılı */
+.public-page .public-plan-compare-yes,
+.public-page .public-plan-compare-no {
+    display: inline-flex;
+    width: 1.5rem;
+    height: 1.5rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: #ffffff;
+    font-size: 0.75rem;
+}
+
+.public-page .public-plan-compare-yes {
+    background: var(--vetinity-teal);
+}
+
+.public-page .public-plan-compare-no {
+    background: #dc2626;
 }
 
 /* Paketler: fiyat */

@@ -551,6 +551,8 @@ export const ApiEndpoints = {
         legalDocuments: () => `/api/v1/public/legal-documents`,
         /** Anonim, hız sınırlı (IP başına 10 dakikada 3): canlı demo talebi, 204 (`TRIAL_DEMO_REQUEST_API_CONTRACT.md`). */
         demoRequests: () => `/api/v1/public/demo-requests`,
+        /** Anonim: paket kataloğu, kullanıcı sınırı ve liste fiyatı (kuruş, KDV hariç; `SUBSCRIPTION_PLAN_CATALOG_API_CONTRACT.md`). */
+        subscriptionPlans: () => `/api/v1/public/subscription-plans`,
         inviteByToken: (token: string) => `/api/v1/public/invites/${encodeURIComponent(token)}`,
         inviteAccept: (token: string) => `/api/v1/public/invites/${encodeURIComponent(token)}/accept`,
         inviteSignupAndAccept: (token: string) => `/api/v1/public/invites/${encodeURIComponent(token)}/signup-and-accept`

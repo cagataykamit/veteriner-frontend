@@ -1,15 +1,14 @@
 /**
  * Sık sorulan sorular — tek kaynak. `/sss` sayfası kategorilere göre gösterir; ana sayfa `homepage: true`
- * olanları (6–8 soru) listeler. Yalnız doğrulanmış yetenekler; tutar, sınır ve paket adı paket verisinden gelir
- * (`pricing-plan.utils.ts`, ADR-035), burada sayı yazılmaz; hatırlatma yalnız e-posta, deneme sonu kuralı yazılmaz.
+ * olanları (6–8 soru) listeler. Yalnız doğrulanmış yetenekler; paket adı paket verisinden (`pricing-plan.utils.ts`, ADR-035).
+ * Tutar, yıllık kural ve sınır burada yazılmaz: backend kataloğundan Paketler sayfasında gösterilir (WEB-007); hatırlatma
+ * yalnız e-posta, deneme sonu kuralı yazılmaz.
  */
 
-import { PRICING_PLAN_DEFS, PRICING_VAT_NOTE, pricingSummaryText, pricingTermsText, YEARLY_BILLED_MONTHS } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { planTitlesText, planTitlesWithFeature, PRICING_VAT_NOTE, pricingTermsText } from '@/app/entities/subscription/utils/pricing-plan.utils';
 
-/** Çok klinik sunan paketlerin adları ("Kurumsal"). */
-const MULTI_CLINIC_PLANS = PRICING_PLAN_DEFS.filter((d) => d.maxClinics === 'coklu')
-    .map((d) => d.title)
-    .join(', ');
+/** Çok klinik yönetimi olan paketlerin adları ("Kurumsal"), özellik tablosundan. */
+const MULTI_CLINIC_PLANS = planTitlesWithFeature('multiClinic');
 
 export interface PublicFaqDef {
     readonly question: string;
@@ -56,7 +55,7 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
         items: [
             {
                 question: 'Fiyat ne kadar?',
-                answer: `${pricingSummaryText()}. ${pricingTermsText()}. Her paketi 14 gün ücretsiz, kart bilgisi vermeden deneyebilirsiniz.`,
+                answer: `${planTitlesText()} paketlerinin aylık ve yıllık fiyatı Paketler sayfasında yazılıdır. ${pricingTermsText()}. Her paketi 14 gün ücretsiz, kart bilgisi vermeden deneyebilirsiniz.`,
                 homepage: true
             },
             {
@@ -65,7 +64,7 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
             },
             {
                 question: 'Yıllık ödeme var mı?',
-                answer: `Evet. Yıllık ödemede 12 ay için ${YEARLY_BILLED_MONTHS} ay ücreti alınır (${12 - YEARLY_BILLED_MONTHS} ay hediye). Aylık ödemeden yıllığa panelden istediğiniz an geçebilirsiniz; içinde bulunduğunuz ayın kalan günleri ücretten düşülür.`
+                answer: 'Evet. Yıllık ödeme aylık ödemeye göre daha uygundur; tutarı ve hediye ay sayısını Paketler sayfasında Yıllık seçeneğinde görürsünüz. Aylık ödemeden yıllığa panelden istediğiniz an geçebilirsiniz; içinde bulunduğunuz ayın kalan günleri ücretten düşülür.'
             },
             {
                 question: 'Deneme nasıl işliyor?',

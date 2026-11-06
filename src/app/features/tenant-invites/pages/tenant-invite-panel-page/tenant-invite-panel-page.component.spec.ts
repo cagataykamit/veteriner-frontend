@@ -1,7 +1,8 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TenantInvitesService } from '@/app/entities/tenant-invite/services/tenant-invites.service';
@@ -43,5 +44,38 @@ describe('TenantInvitePanelPageComponent (oluşturulan davet kartı)', () => {
 
     it('geliştirici notu gösterilmez', () => {
         expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('backend');
+    });
+
+    it('paketin kullanıcı sınırı doluysa sınır ve üst paket söylenir, abonelik bağlantısı çıkar (WEB-007)', () => {
+        const cmp = fixture.componentInstance;
+        const limitError = new HttpErrorResponse({ status: 403, error: { code: 'Subscriptions.UserLimitExceeded', detail: 'Kiracı kullanıcı kotası dolu; yeni davet oluşturulamaz.' } });
+
+        vi.spyOn(TestBed.inject(TenantInvitesService), 'createInvite').mockReturnValue(throwError(() => limitError));
+        cmp.form.setValue({ email: 'ayse@example.com', clinicId: 'c1', operationClaimId: 'r1', expiresAtLocal: '' });
+        cmp.onSubmit();
+        fixture.detectChanges();
+
+        const el = fixture.nativeElement as HTMLElement;
+        const alert = el.querySelector('form [role="alert"]')?.textContent ?? '';
+
+        expect(alert).toContain('kullanıcı sınırına ulaşıldı');
+        expect(alert).toContain('üst pakete');
+        expect(alert).not.toContain('Kiracı');
+        expect(el.querySelector('[data-testid="invite-user-limit-link"]')?.getAttribute('href')).toBe('/panel/settings/subscription');
+    });
+
+    it('başka hatada abonelik bağlantısı çıkmaz', () => {
+        const cmp = fixture.componentInstance;
+        const duplicate = new HttpErrorResponse({ status: 409, error: { code: 'Invites.DuplicatePending' } });
+
+        vi.spyOn(TestBed.inject(TenantInvitesService), 'createInvite').mockReturnValue(throwError(() => duplicate));
+        cmp.form.setValue({ email: 'ayse@example.com', clinicId: 'c1', operationClaimId: 'r1', expiresAtLocal: '' });
+        cmp.onSubmit();
+        fixture.detectChanges();
+
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(el.querySelector('form [role="alert"]')?.textContent).toContain('bekleyen bir davet');
+        expect(el.querySelector('[data-testid="invite-user-limit-link"]')).toBeNull();
     });
 });

@@ -22,6 +22,7 @@ import {
 } from '@/app/features/public/utils/public-registers-content.utils';
 import { PUBLIC_HOME_PAGE_META, publicFaqPageJsonLd, publicOrganizationJsonLd, removePublicJsonLd, setPublicJsonLd, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { pricingTermsText } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { PublicPlanCatalogService } from '@/app/features/public/services/public-plan-catalog.service';
 import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicPlanCardsComponent } from './components/public-plan-cards.component';
 import { PublicFaqListComponent } from './components/public-faq-list.component';
@@ -202,7 +203,7 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
             </p>
         </section>
 
-        <!-- 7 Paketler: kartlar paket verisinden (ADR-035) -->
+        <!-- 7 Paketler: kart metni paket verisinden (ADR-035), fiyat ve sınır backend kataloğundan (WEB-007) -->
         <section class="public-soft-surface mt-20 lg:mt-28" aria-labelledby="public-home-packages-title">
             <div class="mx-auto max-w-6xl px-4 py-16 md:px-6 lg:py-20">
                 <h2 id="public-home-packages-title" class="public-h2 m-0 text-center">Paketler</h2>
@@ -210,7 +211,7 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
                     Kayıt defterleri ve KVKK araçları her pakette. {{ pricingTerms }}.
                 </p>
                 <div class="mt-10">
-                    <app-public-plan-cards />
+                    <app-public-plan-cards [pricing]="pricing()" />
                 </div>
                 <p class="m-0 mt-6 text-center">
                     <a [routerLink]="paths.packages" class="public-brand-link inline-flex min-h-[44px] items-center">Paketleri karşılaştırın</a>
@@ -240,6 +241,7 @@ export class PublicHomePageComponent implements OnInit {
     private readonly meta = inject(Meta);
     private readonly document = inject(DOCUMENT);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly planCatalog = inject(PublicPlanCatalogService);
 
     readonly paths = PUBLIC_PATHS;
     readonly trialLine = PUBLIC_HOME_TRIAL_LINE;
@@ -254,11 +256,13 @@ export class PublicHomePageComponent implements OnInit {
     readonly migrationExcluded = PUBLIC_MIGRATION_EXCLUDED;
     readonly pricingTerms = pricingTermsText();
     readonly faqs = PUBLIC_HOME_FAQS;
+    readonly pricing = this.planCatalog.state;
 
     readonly activeFlowId = signal(PUBLIC_HOME_DAY_FLOW[0].id);
     readonly activeFlow = computed(() => this.dayFlow.find((s) => s.id === this.activeFlowId()) ?? this.dayFlow[0]);
 
     ngOnInit(): void {
+        this.planCatalog.ensureLoaded();
         setPublicPageMeta(this.title, this.meta, PUBLIC_HOME_PAGE_META, this.document);
         setPublicJsonLd(this.document, HOME_ORGANIZATION_JSON_LD_ID, publicOrganizationJsonLd());
         setPublicJsonLd(this.document, HOME_FAQ_JSON_LD_ID, publicFaqPageJsonLd(this.faqs));

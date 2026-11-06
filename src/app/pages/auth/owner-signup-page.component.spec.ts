@@ -1,5 +1,6 @@
 import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -8,6 +9,8 @@ import { LegalAcceptanceService } from '@/app/features/legal-acceptance/services
 import { LEGAL_ACCEPTANCE_CODE_MESSAGES, LEGAL_VERSION_OUTDATED_CODE } from '@/app/entities/legal-document/utils/legal-acceptance-error.utils';
 import type { PublicOwnerSignupRequestDto, PublicOwnerSignupResultDto } from '@/app/features/public/models/public-owner-signup-api.model';
 import { PublicOwnerSignupService } from '@/app/features/public/services/public-owner-signup.service';
+import { PublicPlanCatalogService } from '@/app/features/public/services/public-plan-catalog.service';
+import { PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import { DiscountCodesService } from '@/app/entities/sales-partner/services/discount-codes.service';
 import { PENDING_DISCOUNT_CODE_KEY } from '@/app/entities/sales-partner/utils/discount-code.utils';
 import { OwnerSignupPageComponent } from './owner-signup-page.component';
@@ -56,7 +59,7 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
 
         await TestBed.configureTestingModule({
             imports: [OwnerSignupPageComponent],
-            providers: [provideRouter([]), { provide: PublicOwnerSignupService, useValue: signup }, { provide: LegalAcceptanceService, useValue: legal }, { provide: DiscountCodesService, useValue: discountCodes }]
+            providers: [provideRouter([]), { provide: PublicOwnerSignupService, useValue: signup }, { provide: LegalAcceptanceService, useValue: legal }, { provide: DiscountCodesService, useValue: discountCodes }, { provide: PublicPlanCatalogService, useValue: { state: signal({ status: 'error' }), ensureLoaded: vi.fn() } }]
         }).compileComponents();
 
         fixture = TestBed.createComponent(OwnerSignupPageComponent);
@@ -68,6 +71,7 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
         cmp.clinicCity = 'Ankara';
         cmp.email = 'sahip@example.com';
         cmp.password = 'Abc12345!';
+        cmp.selectPlan(PRICING_PLAN_DEFS[0]);
     });
 
     it('üç belgeye bağlantılı tek onay kutusu gösterir', () => {
@@ -205,5 +209,48 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
         expect(cmp.formError()).toBe(LEGAL_ACCEPTANCE_CODE_MESSAGES[LEGAL_VERSION_OUTDATED_CODE]);
         expect(cmp.legalConsent()).toBe(false);
         expect(legal.refreshCurrentVersions).toHaveBeenCalled();
+    });
+
+    describe('paket seçimi', () => {
+        const optionButton = (slug: string): HTMLButtonElement => host().querySelector<HTMLButtonElement>(`[role="radio"][data-plan="${slug}"]`)!;
+
+        it('varsayılan paket yoktur: seçilmeden gönderilemez ve mesaj gösterilir', () => {
+            const fresh = TestBed.createComponent(OwnerSignupPageComponent);
+
+            fresh.detectChanges();
+            expect(fresh.componentInstance.selectedPlan()).toBeNull();
+
+            fresh.componentInstance.submit();
+
+            expect(signup.signup).not.toHaveBeenCalled();
+            expect(fresh.componentInstance.formError()).toBe('Bir paket seçin.');
+        });
+
+        it('üç paket seçenek olarak gösterilir; tıklanan paket seçilir ve gövdeye gider', () => {
+            cmp.legalConsent.set(true);
+            signup.signup.mockReturnValue(of(RESULT));
+            fixture.detectChanges();
+            expect(host().querySelectorAll('[role="radio"][data-plan]').length).toBe(PRICING_PLAN_DEFS.length);
+
+            optionButton('pro').click();
+            fixture.detectChanges();
+
+            expect(optionButton('pro').getAttribute('aria-checked')).toBe('true');
+            expect(optionButton('basic').getAttribute('aria-checked')).toBe('false');
+
+            cmp.submit();
+
+            expect((signup.signup.mock.calls[0][0] as PublicOwnerSignupRequestDto).planCode).toBe('Pro');
+        });
+
+        it('paket seçilince "Bir paket seçin" mesajı kalkar', () => {
+            cmp.selectedPlan.set(null);
+            cmp.submit();
+            expect(cmp.formError()).toBe('Bir paket seçin.');
+
+            cmp.selectPlan(PRICING_PLAN_DEFS[1]);
+
+            expect(cmp.formError()).toBeNull();
+        });
     });
 });

@@ -32,9 +32,9 @@ const summary = (over: Partial<SubscriptionSummaryVm> = {}): SubscriptionSummary
     isReadOnly: false,
     canManageSubscription: true,
     availablePlans: [
-        { code: 'basic', name: 'Basic', description: 'Küçük klinikler için', maxUsers: 2 },
-        { code: 'pro', name: 'Pro', description: 'Büyüyen klinikler için', maxUsers: 5 },
-        { code: 'premium', name: 'Premium', description: 'Çok şubeli kurumlar için', maxUsers: null }
+        { code: 'basic', name: 'Basic', description: 'Küçük klinikler için', maxUsers: 3, monthlyPriceTry: 890, yearlyPriceTry: 8900 },
+        { code: 'pro', name: 'Pro', description: 'Büyüyen klinikler için', maxUsers: 5, monthlyPriceTry: 1790, yearlyPriceTry: 17900 },
+        { code: 'premium', name: 'Premium', description: 'Çok şubeli kurumlar için', maxUsers: null, monthlyPriceTry: null, yearlyPriceTry: null }
     ],
     billingPeriod: 'Monthly',
     ...over
@@ -176,10 +176,24 @@ describe('SubscriptionPageComponent', () => {
             expect(text()).toContain('Plan listesi bulunamadı.');
         });
 
-        it('fiyatı talep üzerine olan plan "İletişime geçin" gösterir', () => {
+        it('plan fiyatı ve kullanıcı sınırı özetten (WEB-007); yıllık seçilince yıllık tutar; fiyatsız planda tutar ve klinik sınırı yok', () => {
             render();
+            const card = (title: string): string =>
+                Array.from(el().querySelectorAll('app-subscription-plan-cards .grid > div'))
+                    .find((d) => d.querySelector('.font-medium.break-words')?.textContent?.trim() === title)
+                    ?.textContent ?? '';
 
-            expect(text()).toContain('İletişime geçin');
+            expect(card('Temel')).toContain('₺890 / ay');
+            expect(card('Temel')).toContain('3 kullanıcı');
+            expect(card('Temel')).not.toContain('Klinik');
+            expect(card('Profesyonel')).toContain('₺1.790 / ay');
+            expect(card('Kurumsal')).toContain('Kurumsal');
+            expect(card('Kurumsal')).not.toContain('₺');
+            expect(text()).not.toContain('İletişime geçin');
+
+            chooseYearly();
+
+            expect(card('Temel')).toContain('₺8.900 / yıl');
         });
 
         it('ilk yüklemede özet önbelleği atlanmaz ve salt okunur bağlamına uygulanır', () => {
