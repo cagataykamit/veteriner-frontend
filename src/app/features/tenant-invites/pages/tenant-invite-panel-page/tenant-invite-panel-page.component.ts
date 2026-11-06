@@ -13,7 +13,8 @@ import { mapCreateInviteFormToApiDto } from '@/app/entities/tenant-invite/data/t
 import type { OperationClaimOptionVm, TenantInviteCreatedVm } from '@/app/entities/tenant-invite/models/tenant-invite-vm.model';
 import { TenantInvitesService } from '@/app/entities/tenant-invite/services/tenant-invites.service';
 import { buildPublicJoinInviteUrl } from '@/app/features/tenant-invites/utils/join-invite-link.utils';
-import { tenantInvitePanelFailureMessage } from '@/app/features/tenant-invites/utils/tenant-invite-panel-error.utils';
+import { isTenantInviteUserLimitError, tenantInvitePanelFailureMessage } from '@/app/features/tenant-invites/utils/tenant-invite-panel-error.utils';
+import { SUBSCRIPTION_ROUTE } from '@/app/core/routing/panel-navigation';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { dateTimeLocalInputToIsoUtc, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
@@ -101,6 +102,9 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     @if (submitError()) {
                         <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
                     }
+                    @if (userLimitReached()) {
+                        <a [routerLink]="subscriptionRoute" class="inline-block text-primary mt-2" data-testid="invite-user-limit-link">Paketleri görüntüle</a>
+                    }
 
                     <div class="flex flex-wrap gap-2 mt-4">
                         <button pButton type="submit" [disabled]="form.invalid || submitting() || clinics().length === 0 || operationClaims().length === 0 || !canManageTenantAccess()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-send'"></i>Davet oluştur</button>
@@ -179,6 +183,9 @@ export class TenantInvitePanelPageComponent implements OnInit {
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
+    /** Paket sınırı doluysa mesajın altında abonelik bağlantısı çıkar. */
+    readonly userLimitReached = signal(false);
+    readonly subscriptionRoute = SUBSCRIPTION_ROUTE;
     readonly lastCreated = signal<TenantInviteCreatedVm | null>(null);
     readonly recentInvites = signal<TenantInviteCreatedVm[]>([]);
     readonly copyFeedback = signal<'ok' | 'fail' | null>(null);
@@ -246,6 +253,7 @@ export class TenantInvitePanelPageComponent implements OnInit {
         }
 
         this.submitError.set(null);
+        this.userLimitReached.set(false);
         this.copyFeedback.set(null);
 
         if (this.form.invalid) {
@@ -287,6 +295,7 @@ export class TenantInvitePanelPageComponent implements OnInit {
             error: (e: unknown) => {
                 this.submitting.set(false);
                 this.submitError.set(tenantInvitePanelFailureMessage(e, 'Davet oluşturulamadı.'));
+                this.userLimitReached.set(isTenantInviteUserLimitError(e));
             }
         });
     }
