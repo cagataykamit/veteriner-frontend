@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
+import { RouterLink } from '@angular/router';
 import { PUBLIC_FEATURE_SECTIONS } from '@/app/features/public/utils/public-features-content.utils';
 import { PUBLIC_FEATURES_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { PublicCtaComponent } from './components/public-cta.component';
@@ -11,7 +12,7 @@ import { PublicScreenshotComponent } from './components/public-screenshot.compon
 @Component({
     selector: 'app-public-features-page',
     standalone: true,
-    imports: [PublicPageHeaderComponent, PublicScreenshotComponent, PublicCtaComponent],
+    imports: [RouterLink, PublicPageHeaderComponent, PublicScreenshotComponent, PublicCtaComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-public-page-header
@@ -25,7 +26,7 @@ import { PublicScreenshotComponent } from './components/public-screenshot.compon
                 <ul class="sticky top-24 m-0 list-none p-0 pt-16 text-sm">
                     @for (section of sections; track section.id) {
                         <li>
-                            <a [href]="'#' + section.id" class="public-index-link flex min-h-9 items-center text-surface-600 no-underline dark:text-surface-300">{{
+                            <a [routerLink]="[]" [fragment]="section.id" class="public-index-link flex min-h-9 items-center text-surface-600 no-underline dark:text-surface-300">{{
                                 section.title
                             }}</a>
                         </li>

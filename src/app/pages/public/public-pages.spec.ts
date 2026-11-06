@@ -1,9 +1,11 @@
+import { ViewportScroller } from '@angular/common';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { PUBLIC_ANCHOR_SCROLL_OFFSET_PX, PublicLayoutComponent } from './public-layout.component';
 import { appRoutes } from '@/app.routes';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { PUBLIC_CONTACT_CARD_ROWS, PUBLIC_CONTACT_EMAIL } from '@/app/features/public/utils/public-contact-content.utils';
@@ -132,6 +134,26 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
             expect(img.getAttribute('loading')).toBe('lazy');
         });
         expect(root().querySelectorAll('figure.public-shot img.public-shot-img--dark').length).toBe(PUBLIC_FEATURE_SECTIONS.length);
+    });
+
+    it('özellikler: bölüm dizini aynı sayfanın bölümüne gider, ana sayfaya atmaz', async () => {
+        await harness.navigateByUrl(PUBLIC_PATHS.features);
+        harness.detectChanges();
+
+        const hrefs = Array.from(root().querySelectorAll<HTMLAnchorElement>('nav[aria-label="Bölüm dizini"] a')).map((a) => a.getAttribute('href'));
+
+        expect(hrefs).toEqual(PUBLIC_FEATURE_SECTIONS.map((s) => `${PUBLIC_PATHS.features}#${s.id}`));
+    });
+
+    it('iskelet: bölüm bağlantısı üst çubuğun altına kayar, panele dönünce kaydırma payı sıfırlanır', () => {
+        const setOffset = vi.spyOn(TestBed.inject(ViewportScroller), 'setOffset');
+        const fixture = TestBed.createComponent(PublicLayoutComponent);
+
+        fixture.componentInstance.ngOnInit();
+        expect(setOffset).toHaveBeenLastCalledWith([0, PUBLIC_ANCHOR_SCROLL_OFFSET_PX]);
+
+        fixture.destroy();
+        expect(setOffset).toHaveBeenLastCalledWith([0, 0]);
     });
 
     it('defterler: tablo tüm defterleri listeler; "mevzuata uygun" ve "KVKK uyumlu" yazmaz', async () => {

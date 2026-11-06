@@ -1,4 +1,4 @@
-import { DOCUMENT } from '@angular/common';
+import { DOCUMENT, ViewportScroller } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { PublicFooterComponent } from './components/public-footer.component';
@@ -8,6 +8,9 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
 
 /** `html` sınıfı: tanıtım sayfalarında kök yazı boyutu 16 px (public-page-theme.scss). */
 export const PUBLIC_SITE_ROOT_CLASS = 'public-site-root';
+
+/** Yapışkan üst çubuk bölüm başlığını örtmesin: yönlendirici CSS `scroll-padding-top` değerini dikkate almaz. Değer temadakiyle aynı. */
+export const PUBLIC_ANCHOR_SCROLL_OFFSET_PX = 72;
 
 /** Tanıtım sitesi ortak iskeleti (tasarım belgesi bölüm 4): üst çubuk + sayfa + alt bilgi. Hukuki sayfalar da bu iskelette. */
 @Component({
@@ -28,14 +31,17 @@ export const PUBLIC_SITE_ROOT_CLASS = 'public-site-root';
 })
 export class PublicLayoutComponent implements OnInit, OnDestroy {
     private readonly document = inject(DOCUMENT);
+    private readonly viewportScroller = inject(ViewportScroller);
     readonly mainContentId = PUBLIC_MAIN_CONTENT_ID;
 
     ngOnInit(): void {
         removeOrphanedPrimeMenuPopupsFromBody(this.document);
         this.document.documentElement.classList.add(PUBLIC_SITE_ROOT_CLASS);
+        this.viewportScroller.setOffset([0, PUBLIC_ANCHOR_SCROLL_OFFSET_PX]);
     }
 
     ngOnDestroy(): void {
         this.document.documentElement.classList.remove(PUBLIC_SITE_ROOT_CLASS);
+        this.viewportScroller.setOffset([0, 0]);
     }
 }
