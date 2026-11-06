@@ -16,7 +16,8 @@ export const PUBLIC_SITE_ROOT_CLASS = 'public-site-root';
     imports: [RouterOutlet, PublicTopbarComponent, PublicFooterComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="public-page flex min-h-screen flex-col overflow-x-hidden bg-surface-0 dark:bg-surface-950">
+        <!-- overflow-x-clip: "hidden" kaydırma kabı yaratıp üst çubuğun "sticky" konumunu bozuyordu; "clip" yalnız kırpar -->
+        <div class="public-page flex min-h-screen flex-col overflow-x-clip bg-surface-0 dark:bg-surface-950">
             <app-public-topbar />
             <main [id]="mainContentId" class="relative flex-1">
                 <router-outlet />

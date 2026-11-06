@@ -51,6 +51,8 @@
  */
 html.public-site-root {
     font-size: 16px;
+    /* Yapışkan üst çubuk (64 px) sayfa içi bağlantı ve odak hedeflerini örtmesin */
+    scroll-padding-top: 72px;
 }
 
 /* Koyu tema: zemin #0b1220, kart #111a2e, metin #e5e7eb, teal aynı */
