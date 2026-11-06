@@ -143,7 +143,7 @@ export const PRICING_FEATURE_ROWS: readonly PricingFeatureRowDef[] = [
     { group: 'Yönetim', label: 'Denetim kaydı', detail: 'Kayıt geçmişi: kim, ne zaman', plans: ALL },
     { group: 'Yönetim', label: 'Çok klinik yönetimi ve klinikler arası yetki', key: 'multiClinic', plans: { basic: false, pro: false, premium: true } },
     { group: 'Destek', label: 'Destek', plans: { basic: 'E-posta', pro: 'E-posta, öncelikli', premium: 'Özel iletişim, kurulum desteği' } },
-    { group: 'Destek', label: 'Size özel geliştirmeler', detail: 'Kapsam ve ücret birlikte belirlenir', plans: { basic: false, pro: false, premium: true } }
+    { group: 'Destek', label: 'Size özel geliştirmeler', detail: 'İş akışınıza göre ekran, rapor ve çıktı düzenlemeleri; Vetinity içinde', plans: { basic: false, pro: false, premium: true } }
 ];
 
 /** Özellik satırında "var" olan paketlerin adları ("Kurumsal"); satır yoksa boş. */
