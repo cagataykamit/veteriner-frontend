@@ -28,7 +28,8 @@ interface ComparisonGroupVm {
 /**
  * Paket karşılaştırma tablosu (tasarım belgesi 5.5, ADR-035): fiyat, kullanıcı sınırı ve özellik satırları, gruplu.
  * Fiyat ve sınır backend kataloğundan (WEB-007); katalog yokken bu satırlar çizilmez. Klinik sınırı backend'de yok, satırı yok.
- * Gösterilecek satır yoksa hiç çizilmez. Dar ekranda yazı ve boşluk küçülür; taşarsa yalnız tablo kabı kayar.
+ * Gösterilecek satır yoksa hiç çizilmez. Dar ekranda yazı ve boşluk küçülür; taşarsa yalnız tablo kabı kayar. Tablo uzun olduğu
+ * için ilk grup dışında grup satırı paket adlarını tekrarlar (ekran okuyucu başlıkları zaten `thead`'den alır).
  */
 @Component({
     selector: 'app-public-plan-comparison',
@@ -47,12 +48,17 @@ interface ComparisonGroupVm {
                             }
                         </tr>
                     </thead>
-                    @for (group of groups(); track group.group) {
+                    @for (group of groups(); track group.group; let first = $first) {
                         <tbody>
                             <tr>
-                                <th scope="colgroup" [attr.colspan]="plans().length + 1" class="public-plan-table-group px-4 pb-2 pt-5 text-xs font-semibold uppercase tracking-wide">
+                                <th scope="colgroup" [attr.colspan]="first ? plans().length + 1 : 1" class="public-plan-table-group px-3 pb-2 pt-5 text-xs font-semibold uppercase tracking-wide sm:px-4">
                                     {{ group.group }}
                                 </th>
+                                @if (!first) {
+                                    @for (plan of plans(); track plan.slug) {
+                                        <td class="px-1.5 pb-2 pt-5 text-center align-bottom text-xs text-muted-color sm:px-3" aria-hidden="true" data-plan-repeat>{{ plan.title }}</td>
+                                    }
+                                }
                             </tr>
                             @for (row of group.rows; track row.label) {
                                 <tr>

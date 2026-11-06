@@ -326,6 +326,8 @@ describe('Ana sayfa (PublicHomePage)', () => {
         expect(body).not.toContain('mevzuata uygun');
         expect(body).not.toContain('KVKK uyumlu');
         expect(body).not.toContain('Türkiye veri merkezi');
+        expect(root().querySelector('table.public-plan-table')).toBeNull();
+        expect(root().querySelector(`section[aria-labelledby="public-home-packages-title"] a[href="${PUBLIC_PATHS.packages}"]`)?.textContent?.trim()).toBe('Paketleri karşılaştırın');
     });
 
     it('SSS: 6–8 soru, tek kaynaktan; fiyat yanıtı tutar yazmaz, Paketler sayfasına yollar (fiyat backend kataloğunda, WEB-007)', () => {

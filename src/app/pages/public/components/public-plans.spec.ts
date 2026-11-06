@@ -11,6 +11,8 @@ import {
     planTitlesWithFeature,
     priceMinorToTry,
     pricingTermsText,
+    PRICING_FEATURE_ROWS,
+    PRICING_NOT_AVAILABLE,
     PRICING_ON_REQUEST_TEXT,
     PRICING_PLAN_DEFS,
     type PricingCatalog,
@@ -51,6 +53,27 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         expect(planHighlights('basic')).toEqual(['Destek: E-posta']);
         expect(planHighlights('pro')).toContain('Hasta sahibi portalı');
         expect(planHighlights('premium')).toContain('Çok klinik yönetimi ve klinikler arası yetki');
+    });
+
+    it('özellik tablosu: gruplar sırayla, satır adı tekil; hücreler ADR-035 (fark yalnız portal, çok klinik, destek)', () => {
+        const groups = [...new Set(PRICING_FEATURE_ROWS.map((r) => r.group))];
+        const labels = PRICING_FEATURE_ROWS.map((r) => r.label);
+
+        expect(groups).toEqual(['Klinik', 'Kayıt ve KVKK', 'Para ve stok', 'Hasta sahibi', 'Yönetim', 'Destek']);
+        expect(new Set(labels).size).toBe(labels.length);
+        expect(PRICING_FEATURE_ROWS.length).toBeGreaterThanOrEqual(25);
+        expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.basic === false).map((r) => r.label)).toEqual(['Hasta sahibi portalı', 'Portaldan randevu talebi', 'Çok klinik yönetimi ve klinikler arası yetki']);
+        expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.pro === false).map((r) => r.key)).toEqual(['multiClinic']);
+        expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.premium === false)).toEqual([]);
+        expect(PRICING_FEATURE_ROWS.find((r) => r.label === 'Online randevu talebi')?.plans).toEqual({ basic: true, pro: true, premium: true });
+    });
+
+    it('özellik tablosu ve "Şu an yok": söylenmeyecek iddia yok (ADR-034 karar 6); online randevu artık "yok" listesinde değil', () => {
+        const text = PRICING_FEATURE_ROWS.map((r) => `${r.label} ${r.detail ?? ''}`).join(' ');
+
+        expect(text).not.toMatch(/mevzuata uygun|KVKK uyumlu|SMS|e-?fatura|mobil uygulama|mağaza|veri merkezi|push|anlık bildirim|yalnızca bizde|en iyi|müşteri sayısı/i);
+        expect(PRICING_NOT_AVAILABLE).not.toContain('Online randevu');
+        expect(PRICING_NOT_AVAILABLE).toContain('Online ödeme');
     });
 
     it('katalogdan paket: kod büyük/küçük harf duyarsız; katalog yükleniyorsa ya da alınamadıysa yok', () => {
@@ -204,5 +227,13 @@ describe('PublicPlanComparisonComponent', () => {
         expect(cells('Yatış takibi')).toEqual(['Yok', 'Var', 'Var']);
         expect(cells('Hatırlatma')).toEqual(['E-posta', 'E-posta', 'E-posta']);
         expect(el.textContent).not.toContain('Karar verilmemiş satır');
+    });
+
+    it('uzun tabloda paket adları ilk grup dışındaki grup satırlarında tekrar eder; ekran okuyucudan gizli', () => {
+        const repeats = Array.from(render(READY).querySelectorAll('td[data-plan-repeat]'));
+        const titles = PRICING_PLAN_DEFS.map((p) => p.title);
+
+        expect(repeats.map((td) => td.textContent?.trim())).toEqual([...titles, ...titles, ...titles]);
+        repeats.forEach((td) => expect(td.getAttribute('aria-hidden')).toBe('true'));
     });
 });

@@ -96,34 +96,52 @@ export interface PricingFeatureRowDef {
 }
 
 const ALL: Readonly<Record<PricingPlanSlug, PricingFeatureCell>> = { basic: true, pro: true, premium: true };
+const WITH_PORTAL: Readonly<Record<PricingPlanSlug, PricingFeatureCell>> = { basic: false, pro: true, premium: true };
 
 /**
  * VERİ — özellik × paket (ADR-035 tablosu). Yasal kayıt defterleri ve KVKK araçları hiçbir pakette kilitlenmez;
- * fark kullanıcı sayısı, çok klinik ve hasta sahibi portalıdır.
+ * fark kullanıcı sayısı, çok klinik ve hasta sahibi portalıdır. Satır yalnız çalışan ve panelden erişilen özellik için
+ * yazılır (kodda doğrulanır, backlog'dan değil). Söylenmeyecek iddialar: ADR-034 karar 6.
  */
 export const PRICING_FEATURE_ROWS: readonly PricingFeatureRowDef[] = [
-    {
-        group: 'Klinik iş akışı',
-        label: 'Çekirdek klinik akış',
-        detail: 'Bugün/geliş, randevu, muayene, hasta kartı ve zaman çizelgesi, aşı, tedavi/reçete, lab durumu, yatış',
-        plans: ALL
-    },
-    { group: 'Klinik iş akışı', label: 'Ücret, tahsilat, bakiye, gün sonu, stok ve satış', plans: ALL },
+    { group: 'Klinik', label: 'Bugün ekranı ve geliş takibi', detail: 'Randevulu ve randevusuz geliş, bekleme, acil işareti', plans: ALL },
+    { group: 'Klinik', label: 'Randevu listesi ve takvimi', plans: ALL },
+    { group: 'Klinik', label: 'Online randevu talebi', detail: 'Kliniğe özel bağlantıdan; onayı klinik verir', plans: ALL },
+    { group: 'Klinik', label: 'Müşteri ve hasta kartı', detail: 'Hastanın geçmişi zaman çizelgesinde', plans: ALL },
+    { group: 'Klinik', label: 'Muayene kaydı', detail: 'Kesinleşince kilitlenir; düzeltme gerekçeli ek notla', plans: ALL },
+    { group: 'Klinik', label: 'Muayene şablonları ve metin parçaları', detail: 'Tanı ve şikâyet sözlüğüyle', plans: ALL },
+    { group: 'Klinik', label: 'Doz hesaplayıcı', detail: 'Kilo ve doz/kg ile toplam doz ve hacim', plans: ALL },
+    { group: 'Klinik', label: 'Aşı takibi', plans: ALL },
+    { group: 'Klinik', label: 'Reçete', plans: ALL },
+    { group: 'Klinik', label: 'Tedavi ve uygulama kaydı', plans: ALL },
+    { group: 'Klinik', label: 'Tedavi paketi', detail: 'Şablondan tek ücretle uygulanır', plans: ALL },
+    { group: 'Klinik', label: 'Laboratuvar istemi ve sonucu', plans: ALL },
+    { group: 'Klinik', label: 'Görüntüleme kaydı', plans: ALL },
+    { group: 'Klinik', label: 'Yatış takibi ve bakım talimatları', plans: ALL },
     {
         group: 'Kayıt ve KVKK',
-        label: 'Kayıt defterleri, Aşı Bilgi Raporu, KVKK formları',
-        detail: 'Aydınlatma ve açık rıza formları, veri kopyası',
+        label: 'Kayıt defterleri ve Aşı Bilgi Raporu',
+        detail: 'Muayene, reçete, aşı, ilaç, narkotik ve psikotropik; yazdırma ve dışa aktarma',
         plans: ALL
     },
-    { group: 'Yönetim', label: 'Eski sistemden veri aktarımı (içe aktarma sihirbazı)', plans: ALL },
-    { group: 'Yönetim', label: 'Rol bazlı yetki, denetim kaydı', plans: ALL },
+    { group: 'Kayıt ve KVKK', label: 'HBS takip listeleri', detail: "HBS'e girilmemiş reçete ve aşılar; giriş klinikçe yapılır", plans: ALL },
+    { group: 'Kayıt ve KVKK', label: 'Aydınlatma metni ve açık rıza formu', detail: 'Klinik başına, yazdırılabilir; rıza kaydı ve metin sürümü', plans: ALL },
+    { group: 'Kayıt ve KVKK', label: 'Müşteri veri kopyası', plans: ALL },
+    { group: 'Para ve stok', label: 'Ücret ve tahsilat', detail: 'Nakit, kart ya da havale kaydı', plans: ALL },
+    { group: 'Para ve stok', label: 'Ücret bekleyen kalemler', plans: ALL },
+    { group: 'Para ve stok', label: 'Bakiye, borç raporu ve müşteri kredisi', plans: ALL },
+    { group: 'Para ve stok', label: 'Gün sonu raporu', plans: ALL },
+    { group: 'Para ve stok', label: 'Ürün ve stok takibi', detail: 'Düşük ve süresi geçmiş stok görünür', plans: ALL },
+    { group: 'Para ve stok', label: 'Mal kabul, parti ve son kullanma tarihi', plans: ALL },
+    { group: 'Para ve stok', label: 'Muayenesiz doğrudan satış', plans: ALL },
+    { group: 'Hasta sahibi', label: 'E-posta ile aşı ve randevu hatırlatması', plans: ALL },
+    { group: 'Hasta sahibi', label: 'Hasta sahibi portalı', detail: 'Aşı, randevu, bakiye, veri talebi; telefonda ana ekrana eklenebilir', plans: WITH_PORTAL },
+    { group: 'Hasta sahibi', label: 'Portaldan randevu talebi', detail: 'Kendi hayvanını seçerek', plans: WITH_PORTAL },
+    { group: 'Yönetim', label: 'Raporlar', detail: 'Randevu, muayene, aşı, ödeme, borç ve işletme performansı', plans: ALL },
+    { group: 'Yönetim', label: 'Eski sistemden veri aktarımı', detail: 'Excel veya CSV ile müşteri, hasta ve aşı kayıtları', plans: ALL },
+    { group: 'Yönetim', label: 'Rol bazlı yetki', plans: ALL },
+    { group: 'Yönetim', label: 'Denetim kaydı', detail: 'Kayıt geçmişi: kim, ne zaman', plans: ALL },
     { group: 'Yönetim', label: 'Çok klinik yönetimi ve klinikler arası yetki', key: 'multiClinic', plans: { basic: false, pro: false, premium: true } },
-    {
-        group: 'Hasta sahibi',
-        label: 'Hasta sahibi portalı',
-        detail: 'Aşı, randevu, bakiye; telefonda ana ekrana eklenebilir',
-        plans: { basic: false, pro: true, premium: true }
-    },
     { group: 'Destek', label: 'Destek', plans: { basic: 'E-posta', pro: 'E-posta, öncelikli', premium: 'Özel iletişim, kurulum desteği' } }
 ];
 
@@ -139,7 +157,7 @@ export function planTitlesWithFeature(key: NonNullable<PricingFeatureRowDef['key
 }
 
 /** Şu an olmayanlar (ADR-035): dürüst kısa liste, paketten bağımsız; tarih ya da vaat yazılmaz. */
-export const PRICING_NOT_AVAILABLE: readonly string[] = ['SMS hatırlatma (hatırlatmalar e-posta ile gider)', 'e-Fatura', 'Online ödeme', 'Online randevu'];
+export const PRICING_NOT_AVAILABLE: readonly string[] = ['SMS hatırlatma (hatırlatmalar e-posta ile gider)', 'e-Fatura', 'Online ödeme'];
 
 /** Katalog alınamadığında ya da paketin fiyatı yokken tutar yerine yazılan metin (ADR-034); bağlantı iletişime gider. */
 export const PRICING_ON_REQUEST_TEXT = 'Fiyat için bize yazın';
