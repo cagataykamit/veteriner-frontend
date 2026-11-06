@@ -1,4 +1,6 @@
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import {
     decidedFeatureRows,
     formatPlanPrice,
@@ -14,6 +16,14 @@ import {
     type PricingPlanDef
 } from '@/app/entities/subscription/utils/pricing-plan.utils';
 
+interface ComparisonHeadVm {
+    readonly def: PricingPlanDef;
+    readonly monthly: string | null;
+    /** Katalog geldi ama paketin fiyatı yok: "Fiyat için bize yazın". */
+    readonly priceOnRequest: boolean;
+    readonly users: string | null;
+}
+
 interface ComparisonRowVm {
     readonly label: string;
     readonly detail?: string;
@@ -26,56 +36,68 @@ interface ComparisonGroupVm {
 }
 
 /**
- * Paket karşılaştırma tablosu (tasarım belgesi 5.5, ADR-035): fiyat, kullanıcı sınırı ve özellik satırları, gruplu.
- * Fiyat ve sınır backend kataloğundan (WEB-007); katalog yokken bu satırlar çizilmez. Klinik sınırı backend'de yok, satırı yok.
- * Gösterilecek satır yoksa hiç çizilmez. Dar ekranda yazı ve boşluk küçülür; taşarsa yalnız tablo kabı kayar. Tablo uzun olduğu
- * için ilk grup dışında grup satırı paket adlarını tekrarlar (ekran okuyucu başlıkları zaten `thead`'den alır).
+ * Paket karşılaştırma tablosu (tasarım belgesi 5.5, ADR-035): lacivert başlık bandında paket adı, aylık fiyat ve kullanıcı sınırı;
+ * önerilen paketin sütunu baştan sona vurgulu; her alan numaralı bir bantla açılır. Fiyat ve sınır backend kataloğundan (WEB-007);
+ * katalog yokken başlıkta yalnız paket adı kalır. Klinik sınırı backend'de yok, gösterilmez. Gösterilecek özellik satırı yoksa hiç
+ * çizilmez. Dar ekranda sütunlar sabit, metin sarar; daha darda yalnız tablo kabı kayar.
  */
 @Component({
     selector: 'app-public-plan-comparison',
     standalone: true,
+    imports: [RouterLink],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (groups().length > 0) {
             <div class="public-card overflow-x-auto">
-                <table class="public-plan-table w-full border-collapse text-left text-xs sm:text-sm">
+                <table class="public-plan-compare w-full border-collapse text-left text-xs sm:text-sm">
                     <caption class="sr-only">Paket karşılaştırması</caption>
-                    <thead>
+                    <thead class="public-plan-compare-head">
                         <tr>
-                            <th scope="col" class="w-2/5 px-3 py-3 sm:px-4 font-semibold text-surface-900 dark:text-surface-0">Özellik</th>
-                            @for (plan of plans(); track plan.slug) {
-                                <th scope="col" class="px-1.5 py-3 text-center sm:px-3 font-semibold text-surface-900 dark:text-surface-0">{{ plan.title }}</th>
+                            <th scope="col" class="w-[31%] px-2 py-4 align-bottom text-xs font-semibold uppercase tracking-wide sm:w-[38%] sm:px-5">Özellik</th>
+                            @for (head of heads(); track head.def.slug) {
+                                <th scope="col" class="px-1 py-4 text-center align-bottom sm:px-3" [class.public-plan-compare-col--recommended]="head.def.recommended">
+                                    @if (head.def.recommended) {
+                                        <span class="public-plan-compare-tag">Önerilen</span>
+                                    }
+                                    <span class="block text-[12px] font-bold tracking-tight sm:text-base sm:tracking-normal">{{ head.def.title }}</span>
+                                    @if (head.monthly; as monthly) {
+                                        <span class="mt-1 block text-sm font-bold sm:text-xl">{{ monthly }}</span>
+                                        <span class="block text-[11px] opacity-80 sm:text-xs">/ ay, {{ vatNote() }}</span>
+                                    } @else if (head.priceOnRequest) {
+                                        <a [routerLink]="paths.contact" class="public-plan-compare-link mt-1 block text-xs font-medium">{{ onRequestText }}</a>
+                                    }
+                                    @if (head.users; as users) {
+                                        <span class="mt-1 block text-[11px] font-medium opacity-90 sm:text-xs">{{ users }}</span>
+                                    }
+                                </th>
                             }
                         </tr>
                     </thead>
-                    @for (group of groups(); track group.group; let first = $first) {
+                    @for (group of groups(); track group.group; let groupNo = $index) {
                         <tbody>
-                            <tr>
-                                <th scope="colgroup" [attr.colspan]="first ? plans().length + 1 : 1" class="public-plan-table-group px-3 pb-2 pt-5 text-xs font-semibold uppercase tracking-wide sm:px-4">
-                                    {{ group.group }}
+                            <tr class="public-plan-compare-group">
+                                <th scope="rowgroup" [attr.colspan]="plans().length + 1" class="px-2 py-2.5 sm:px-5">
+                                    <span class="public-plan-compare-group-no" aria-hidden="true">{{ groupNo + 1 }}</span>
+                                    <span class="text-xs font-semibold uppercase tracking-wide" data-group-title>{{ group.group }}</span>
+                                    <span class="ml-2 text-xs font-normal normal-case text-muted-color" data-group-count>{{ group.rows.length }} özellik</span>
                                 </th>
-                                @if (!first) {
-                                    @for (plan of plans(); track plan.slug) {
-                                        <td class="px-1.5 pb-2 pt-5 text-center align-bottom text-xs text-muted-color sm:px-3" aria-hidden="true" data-plan-repeat>{{ plan.title }}</td>
-                                    }
-                                }
                             </tr>
                             @for (row of group.rows; track row.label) {
-                                <tr>
-                                    <th scope="row" class="px-3 py-3 align-top font-medium sm:px-4 text-surface-800 dark:text-surface-100">
+                                <tr class="public-plan-compare-row">
+                                    <th scope="row" class="px-2 py-3 align-top font-medium text-surface-800 sm:px-5 dark:text-surface-100">
                                         {{ row.label }}
                                         @if (row.detail) {
                                             <span class="mt-0.5 block text-xs font-normal text-muted-color">{{ row.detail }}</span>
                                         }
                                     </th>
                                     @for (cell of row.cells; track $index) {
-                                        <td class="px-1.5 py-3 text-center sm:px-3 align-top text-surface-800 dark:text-surface-100">
+                                        <td class="px-1 py-3 text-center align-top text-surface-800 sm:px-3 dark:text-surface-100" [class.public-plan-compare-col--recommended]="plans()[$index].recommended">
                                             @if (cell === true) {
-                                                <i class="pi pi-check text-[var(--public-accent)]" aria-hidden="true"></i><span class="sr-only">Var</span>
+                                                <span class="public-plan-compare-yes" aria-hidden="true"><i class="pi pi-check"></i></span><span class="sr-only">Var</span>
                                             } @else if (cell === false || cell === null) {
-                                                <i class="pi pi-minus text-surface-500 dark:text-surface-400" aria-hidden="true"></i><span class="sr-only">Yok</span>
+                                                <span class="public-plan-compare-no" aria-hidden="true"></span><span class="sr-only">Yok</span>
                                             } @else {
-                                                {{ cell }}
+                                                <span class="font-medium">{{ cell }}</span>
                                             }
                                         </td>
                                     }
@@ -94,40 +116,34 @@ export class PublicPlanComparisonComponent {
     /** Backend paket kataloğu durumu (`PublicPlanCatalogService.state`). */
     readonly pricing = input<PricingCatalogState>({ status: 'loading' });
 
+    readonly paths = PUBLIC_PATHS;
+    readonly onRequestText = PRICING_ON_REQUEST_TEXT;
+
+    readonly vatNote = computed(() => {
+        const state = this.pricing();
+
+        return state.status === 'ready' ? pricingVatNote(state.catalog) : '';
+    });
+
+    readonly heads = computed<readonly ComparisonHeadVm[]>(() => {
+        const state = this.pricing();
+
+        return this.plans().map((def) => {
+            const offer = planOffer(state, def);
+            const monthly = formatPlanPrice(offer?.monthlyPriceTry ?? null);
+
+            return { def, monthly, priceOnRequest: state.status === 'ready' && monthly === null, users: formatUserLimit(offer?.maxUsers ?? null) };
+        });
+    });
+
     readonly groups = computed<readonly ComparisonGroupVm[]>(() => {
         const plans = this.plans();
-        const state = this.pricing();
-        const offers = plans.map((p) => planOffer(state, p));
-        const priceRows: ComparisonRowVm[] = [];
-        const limitRows: ComparisonRowVm[] = [];
-
-        if (state.status === 'ready') {
-            const vat = pricingVatNote(state.catalog);
-            const price = (amount: number | null | undefined): PricingFeatureCell => formatPlanPrice(amount ?? null) ?? PRICING_ON_REQUEST_TEXT;
-
-            priceRows.push({ label: `Aylık (${vat})`, cells: offers.map((o) => price(o?.monthlyPriceTry)) });
-
-            if (offers.some((o) => o?.yearlyPriceTry != null)) {
-                priceRows.push({ label: `Yıllık (${state.catalog.yearlyBilledMonths} ay ücreti, ${vat})`, cells: offers.map((o) => price(o?.yearlyPriceTry)) });
-            }
-
-            const users = offers.map((o) => formatUserLimit(o?.maxUsers ?? null));
-
-            if (users.some((cell) => cell !== null)) {
-                limitRows.push({ label: 'Kullanıcı', cells: users });
-            }
-        }
-
         const byGroup = new Map<string, ComparisonRowVm[]>();
 
         for (const row of decidedFeatureRows(this.featureRows())) {
             byGroup.set(row.group, [...(byGroup.get(row.group) ?? []), { label: row.label, detail: row.detail, cells: plans.map((p) => row.plans[p.slug]) }]);
         }
 
-        return [
-            ...(priceRows.length > 0 ? [{ group: 'Fiyat', rows: priceRows }] : []),
-            ...(limitRows.length > 0 ? [{ group: 'Sınırlar', rows: limitRows }] : []),
-            ...[...byGroup].map(([group, rows]) => ({ group, rows }))
-        ];
+        return [...byGroup].map(([group, rows]) => ({ group, rows }));
     });
 }
