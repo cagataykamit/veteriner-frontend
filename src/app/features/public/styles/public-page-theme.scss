@@ -535,6 +535,11 @@ html.public-site-root {
     color: #ffffff;
 }
 
+.public-page .public-chip-tab--active:hover {
+    border-color: var(--vetinity-navy);
+    color: #ffffff;
+}
+
 .app-dark .public-page .public-chip-tab {
     background: #111a2e;
     color: var(--p-surface-200);
