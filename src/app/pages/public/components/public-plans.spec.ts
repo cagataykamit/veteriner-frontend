@@ -72,12 +72,12 @@ describe('Paket verisi (pricing-plan.utils)', () => {
     });
 
     it('biçimlendirme: kuruş → TL, TL tutar, kullanıcı sınırı; geçersiz → null', () => {
-        expect(priceMinorToTry(149000)).toBe(1490);
+        expect(priceMinorToTry(179000)).toBe(1790);
         expect(priceMinorToTry(0)).toBeNull();
         expect(priceMinorToTry(null)).toBeNull();
-        expect(formatPlanPrice(1490)).toBe('₺1.490');
+        expect(formatPlanPrice(1790)).toBe('₺1.790');
         expect(formatPlanPrice(null)).toBeNull();
-        expect(formatUserLimit(50)).toBe('50 kullanıcı');
+        expect(formatUserLimit(15)).toBe('15 kullanıcı');
         expect(formatUserLimit(null)).toBeNull();
     });
 

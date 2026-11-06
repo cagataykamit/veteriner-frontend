@@ -25,11 +25,11 @@ describe('PublicPlanCatalogService (WEB-007)', () => {
 
         service.ensureLoaded();
         service.ensureLoaded();
-        http.expectOne(URL).flush({ currency: 'TRY', vatIncluded: false, yearlyBilledMonths: 10, plans: [{ planCode: 'Pro', maxUsers: 10, monthlyPriceMinor: 249000, yearlyPriceMinor: 2490000 }] });
+        http.expectOne(URL).flush({ currency: 'TRY', vatIncluded: false, yearlyBilledMonths: 10, plans: [{ planCode: 'Pro', maxUsers: 5, monthlyPriceMinor: 179000, yearlyPriceMinor: 1790000 }] });
 
         const state = service.state();
 
-        expect(state.status === 'ready' ? state.catalog.plans[0].monthlyPriceTry : null).toBe(2490);
+        expect(state.status === 'ready' ? state.catalog.plans[0].monthlyPriceTry : null).toBe(1790);
         service.ensureLoaded();
         http.expectNone(URL);
     });

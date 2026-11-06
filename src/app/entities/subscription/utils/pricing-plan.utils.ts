@@ -31,7 +31,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         slug: 'basic',
         apiCode: 'Basic',
         title: 'Temel',
-        description: 'Tek klinik ve küçük ekip için.',
+        description: 'Tek başına çalışan hekim için.',
         recommended: false,
         trialDays: 14
     },
@@ -146,12 +146,12 @@ export const PRICING_ON_REQUEST_TEXT = 'Fiyat için bize yazın';
 
 const formatTry = (amount: number): string => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(amount);
 
-/** Backend kuruş tutarı → TL (`149000` → `1490`); yoksa ya da geçersizse `null`. */
+/** Backend kuruş tutarı → TL (`179000` → `1790`); yoksa ya da geçersizse `null`. */
 export function priceMinorToTry(minor: number | null | undefined): number | null {
     return typeof minor === 'number' && Number.isFinite(minor) && minor > 0 ? minor / 100 : null;
 }
 
-/** `1490` → "₺1.490"; `null` → `null`. */
+/** `1790` → "₺1.790"; `null` → `null`. */
 export function formatPlanPrice(amount: number | null): string | null {
     return amount == null ? null : formatTry(amount);
 }
@@ -175,11 +175,11 @@ export function pricingVatNote(catalog: PricingCatalog): string {
 }
 
 export interface PricingPriceView {
-    /** "₺1.490". */
+    /** "₺1.790". */
     readonly amount: string;
     /** "/ ay" ya da "/ yıl". */
     readonly unit: string;
-    /** Yıllıkta "2 ay hediye · aylık ortalama ₺1.242"; aylıkta `null`. */
+    /** Yıllıkta "2 ay hediye · aylık ortalama ₺742"; aylıkta `null`. */
     readonly note: string | null;
 }
 

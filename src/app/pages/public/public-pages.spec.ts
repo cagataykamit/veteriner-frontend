@@ -23,9 +23,9 @@ const PLAN_CATALOG: PublicSubscriptionPlanCatalogDto = {
     vatIncluded: false,
     yearlyBilledMonths: 10,
     plans: [
-        { planCode: 'Basic', name: 'Basic', maxUsers: 3, monthlyPriceMinor: 149000, yearlyPriceMinor: 1490000 },
-        { planCode: 'Pro', name: 'Pro', maxUsers: 10, monthlyPriceMinor: 249000, yearlyPriceMinor: 2490000 },
-        { planCode: 'Premium', name: 'Premium', maxUsers: 50, monthlyPriceMinor: 399000, yearlyPriceMinor: 3990000 }
+        { planCode: 'Basic', name: 'Basic', maxUsers: 1, monthlyPriceMinor: 89000, yearlyPriceMinor: 890000 },
+        { planCode: 'Pro', name: 'Pro', maxUsers: 5, monthlyPriceMinor: 179000, yearlyPriceMinor: 1790000 },
+        { planCode: 'Premium', name: 'Premium', maxUsers: 15, monthlyPriceMinor: 379000, yearlyPriceMinor: 3790000 }
     ]
 };
 
@@ -149,7 +149,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         await openPackages();
 
         expect(texts('[data-plan] h3')).toEqual(PRICING_PLAN_DEFS.map((p) => p.title));
-        const expected: Record<string, readonly [string, string]> = { basic: ['₺1.490', '3 kullanıcı'], pro: ['₺2.490', '10 kullanıcı'], premium: ['₺3.990', '50 kullanıcı'] };
+        const expected: Record<string, readonly [string, string]> = { basic: ['₺890', '1 kullanıcı'], pro: ['₺1.790', '5 kullanıcı'], premium: ['₺3.790', '15 kullanıcı'] };
 
         for (const p of PRICING_PLAN_DEFS) {
             const card = root().querySelector(`[data-plan="${p.slug}"]`)!;
@@ -197,8 +197,8 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         harness.detectChanges();
 
         expect(yearly.getAttribute('aria-pressed')).toBe('true');
-        expect(cardPrices()).toContain('₺14.900');
-        expect(cardPrices()).toContain('₺39.900');
+        expect(cardPrices()).toContain('₺8.900');
+        expect(cardPrices()).toContain('₺37.900');
         expect(cardPrices()).toContain('/ yıl');
         expect(cardPrices()).toContain('2 ay hediye');
         const rowHeaders = texts('table.public-plan-table tbody th[scope="row"]');
@@ -216,9 +216,9 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
             name: string;
             price: number;
         }) => [o.name, o.price])).toEqual([
-            ['Temel', 1490],
-            ['Profesyonel', 2490],
-            ['Kurumsal', 3990]
+            ['Temel', 890],
+            ['Profesyonel', 1790],
+            ['Kurumsal', 3790]
         ]);
         expect(data.offers[0].priceSpecification.valueAddedTaxIncluded).toBe(false);
     });
@@ -344,8 +344,8 @@ describe('Ana sayfa (PublicHomePage)', () => {
         harness.detectChanges();
         const section = root().querySelector('section[aria-labelledby="public-home-packages-title"]')!;
 
-        expect(section.querySelector('[data-plan="pro"]')?.textContent).toContain('₺2.490');
-        expect(section.querySelector('[data-plan="premium"]')?.textContent).toContain('50 kullanıcı');
+        expect(section.querySelector('[data-plan="pro"]')?.textContent).toContain('₺1.790');
+        expect(section.querySelector('[data-plan="premium"]')?.textContent).toContain('15 kullanıcı');
         expect(section.querySelector('[aria-label="Ödeme dönemi"]')).toBeNull();
     });
 });

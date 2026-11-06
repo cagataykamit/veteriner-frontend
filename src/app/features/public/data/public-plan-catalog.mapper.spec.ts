@@ -8,16 +8,16 @@ describe('public-plan-catalog.mapper (WEB-007)', () => {
                 vatIncluded: false,
                 yearlyBilledMonths: 10,
                 plans: [
-                    { planCode: ' Basic ', name: 'Basic', maxUsers: 3, monthlyPriceMinor: 149000, yearlyPriceMinor: 1490000 },
-                    { planCode: 'Premium', name: 'Premium', maxUsers: 50, monthlyPriceMinor: null, yearlyPriceMinor: null }
+                    { planCode: ' Basic ', name: 'Basic', maxUsers: 1, monthlyPriceMinor: 89000, yearlyPriceMinor: 890000 },
+                    { planCode: 'Premium', name: 'Premium', maxUsers: 15, monthlyPriceMinor: null, yearlyPriceMinor: null }
                 ]
             })
         ).toEqual({
             vatIncluded: false,
             yearlyBilledMonths: 10,
             plans: [
-                { apiCode: 'Basic', maxUsers: 3, monthlyPriceTry: 1490, yearlyPriceTry: 14900 },
-                { apiCode: 'Premium', maxUsers: 50, monthlyPriceTry: null, yearlyPriceTry: null }
+                { apiCode: 'Basic', maxUsers: 1, monthlyPriceTry: 890, yearlyPriceTry: 8900 },
+                { apiCode: 'Premium', maxUsers: 15, monthlyPriceTry: null, yearlyPriceTry: null }
             ]
         });
     });
