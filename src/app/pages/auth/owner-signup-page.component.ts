@@ -16,7 +16,8 @@ import { mapPublicOwnerSignupFormToRequest } from '@/app/features/public/data/pu
 import { PublicOwnerSignupService } from '@/app/features/public/services/public-owner-signup.service';
 import { ExampleClinicSummaryComponent } from '@/app/entities/example-clinic/components/example-clinic-summary.component';
 import { publicOwnerSignupFailureMessage } from '@/app/features/public/utils/public-owner-signup-error.utils';
-import { resolveSignupPlan, defByApiCode, type PricingPlanDef } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { defByApiCode, formatUserLimit, parsePlanQueryParam, planOffer, planPriceView, PRICING_PLAN_DEFS, type PricingPlanDef } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { PublicPlanCatalogService } from '@/app/features/public/services/public-plan-catalog.service';
 import { AUTH_SIGNUP_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 import { PublicLegalLinksComponent } from '@/app/pages/public/components/public-legal-links.component';
@@ -31,6 +32,8 @@ import { DiscountCodeFieldComponent } from '@/app/entities/sales-partner/compone
 import type { DiscountCodeValidationDto } from '@/app/entities/sales-partner/models/sales-partner.model';
 import { clearPendingDiscountCode, DISCOUNT_CODE_QUERY_PARAM, discountNoteText, normalizeDiscountCodeInput, readPendingDiscountCode } from '@/app/entities/sales-partner/utils/discount-code.utils';
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
+
+const PLAN_REQUIRED_MESSAGE = 'Bir paket seçin.';
 
 @Component({
     selector: 'app-owner-signup-page',
@@ -96,12 +99,34 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
                             </div>
 
                             <div class="flex flex-col gap-6">
-                                <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4">
-                                    <div class="text-xs text-muted-color uppercase tracking-wide mb-1">Seçilen paket</div>
-                                    <div class="font-semibold text-surface-900 dark:text-surface-0 text-lg mb-2">{{ selectedPlan().title }}</div>
-                                    <p class="text-sm text-muted-color m-0 mb-3">{{ selectedPlan().description }}</p>
-                                    <p class="text-sm text-muted-color m-0 mb-3">Deneme paketiyle başlayın. İsterseniz paketleri inceleyerek farklı bir planla devam edebilirsiniz.</p>
-                                    <a routerLink="/paketler" class="public-brand-link no-underline text-sm">Paketleri inceleyin</a>
+                                <div>
+                                    <div id="signup-plan-label" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Paket seçin *</div>
+                                    <div role="radiogroup" aria-labelledby="signup-plan-label" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        @for (option of planOptions(); track option.def.slug) {
+                                            <button
+                                                type="button"
+                                                role="radio"
+                                                class="text-left rounded-lg border p-3 cursor-pointer bg-transparent"
+                                                [class.border-primary]="option.selected"
+                                                [class.border-surface-200]="!option.selected"
+                                                [class.dark:border-surface-700]="!option.selected"
+                                                [attr.aria-checked]="option.selected"
+                                                [attr.data-plan]="option.def.slug"
+                                                (click)="selectPlan(option.def)"
+                                            >
+                                                <span class="block font-semibold text-surface-900 dark:text-surface-0">{{ option.def.title }}</span>
+                                                <span class="block text-sm text-muted-color mt-1">{{ option.def.description }}</span>
+                                                @if (option.userLimit; as userLimit) {
+                                                    <span class="block text-sm text-surface-900 dark:text-surface-0 mt-2">{{ userLimit }}</span>
+                                                }
+                                                @if (option.price; as price) {
+                                                    <span class="block text-sm text-muted-color">{{ price.amount }} {{ price.unit }}</span>
+                                                }
+                                            </button>
+                                        }
+                                    </div>
+                                    <p class="text-sm text-muted-color m-0 mt-2">Her paket 14 gün ücretsiz denenir, kart bilgisi istenmez.</p>
+                                    <a routerLink="/paketler" class="public-brand-link no-underline text-sm">Paketleri karşılaştırın</a>
                                 </div>
 
                                 <div>
@@ -195,13 +220,30 @@ export class OwnerSignupPageComponent implements OnInit {
     private readonly meta = inject(Meta);
     private readonly document = inject(DOCUMENT);
     private readonly legal = inject(LegalAcceptanceService);
+    private readonly planCatalog = inject(PublicPlanCatalogService);
 
     /** Kayıt olan klinik yöneticisidir: sunucunun yayımladığı tüm belgeler (ADR-029 madde 4). */
     private readonly legalVersions = signal<LegalDocumentVersionDto[] | null>(null);
     readonly legalDocumentTypes = computed<readonly LegalDocumentType[]>(() => this.legalVersions()?.map((v) => v.documentType) ?? (Object.keys(LEGAL_DOCUMENTS_BY_TYPE) as LegalDocumentType[]));
     readonly legalConsent = signal(false);
 
-    readonly selectedPlan = signal<PricingPlanDef>(resolveSignupPlan(null));
+    /** Paketi kullanıcı seçer; varsayılan yok. Paketler sayfasından gelen `?plan=` seçimi hazır getirir. */
+    readonly selectedPlan = signal<PricingPlanDef | null>(null);
+    readonly planOptions = computed(() => {
+        const state = this.planCatalog.state();
+        const selected = this.selectedPlan();
+
+        return PRICING_PLAN_DEFS.map((def) => {
+            const offer = planOffer(state, def);
+
+            return {
+                def,
+                selected: selected?.slug === def.slug,
+                userLimit: formatUserLimit(offer?.maxUsers ?? null),
+                price: planPriceView(offer, state.status === 'ready' ? state.catalog : null)
+            };
+        });
+    });
     readonly successResult = signal<PublicOwnerSignupResultDto | null>(null);
     /** Success sonrası login prefill için saklanır. */
     private readonly loginEmailAfterSuccess = signal<string>('');
@@ -233,13 +275,26 @@ export class OwnerSignupPageComponent implements OnInit {
         setPublicPageMeta(this.title, this.meta, AUTH_SIGNUP_PAGE_META);
         removeOrphanedPrimeMenuPopupsFromBody(this.document);
         this.loadLegalVersions(false);
+        this.planCatalog.ensureLoaded();
         this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((q) => {
             if (this.successResult()) {
                 return;
             }
 
-            this.selectedPlan.set(resolveSignupPlan(q.get('plan')));
+            const linkedPlan = parsePlanQueryParam(q.get('plan'));
+
+            if (linkedPlan) {
+                this.selectedPlan.set(linkedPlan);
+            }
         });
+    }
+
+    selectPlan(plan: PricingPlanDef): void {
+        this.selectedPlan.set(plan);
+
+        if (this.formError() === PLAN_REQUIRED_MESSAGE) {
+            this.formError.set(null);
+        }
     }
 
     submit(): void {
@@ -251,6 +306,12 @@ export class OwnerSignupPageComponent implements OnInit {
         this.passwordFieldError.set(null);
 
         const plan = this.selectedPlan();
+
+        if (!plan) {
+            this.formError.set(PLAN_REQUIRED_MESSAGE);
+
+            return;
+        }
 
         const tenantName = this.tenantName?.trim() ?? '';
         const clinicName = this.clinicName?.trim() ?? '';

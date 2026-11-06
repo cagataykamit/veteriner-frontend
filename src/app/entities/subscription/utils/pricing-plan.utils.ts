@@ -31,7 +31,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         slug: 'basic',
         apiCode: 'Basic',
         title: 'Temel',
-        description: 'Tek başına çalışan hekim için.',
+        description: 'Tek klinik ve küçük ekip için.',
         recommended: false,
         trialDays: 14
     },
@@ -245,9 +245,6 @@ export function planHighlights(slug: PricingPlanSlug, rows: readonly PricingFeat
         .map((row) => (typeof row.plans[slug] === 'string' ? `${row.label}: ${row.plans[slug]}` : row.label));
 }
 
-/** `/auth/signup` doğrudan açıldığında kullanılan deneme başlangıç paketi. */
-export const DEFAULT_SIGNUP_PLAN: PricingPlanDef = PRICING_PLAN_DEFS[0];
-
 const slugToDef = new Map<PricingPlanSlug, PricingPlanDef>(PRICING_PLAN_DEFS.map((d) => [d.slug, d]));
 
 /**
@@ -267,10 +264,6 @@ export function parsePlanQueryParam(raw: string | null | undefined): PricingPlan
     return null;
 }
 
-/** Query param yoksa veya geçersizse varsayılan signup planına düşer. */
-export function resolveSignupPlan(raw: string | null | undefined): PricingPlanDef {
-    return parsePlanQueryParam(raw) ?? DEFAULT_SIGNUP_PLAN;
-}
 
 export function defByApiCode(code: string | null | undefined): PricingPlanDef | null {
     const t = code?.trim();
