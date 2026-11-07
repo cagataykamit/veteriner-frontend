@@ -38,7 +38,7 @@ export interface LinkVm {
     readonly path: string;
 }
 
-/** Eylem düğmesi: sitede randevu sayfası kapalıysa telefona düşer; telefon da yoksa düğme çizilmez. */
+/** Eylem düğmesi (K11): online randevu açıksa kliniğin talep formuna gider, kapalıysa telefona düşer; telefon da yoksa çizilmez. */
 export interface CtaVm {
     readonly label: string;
     readonly path: string | null;
@@ -61,6 +61,7 @@ export interface SiteVm {
     readonly phone: string;
     readonly telHref: string | null;
     readonly whatsappHref: string | null;
+    readonly bookingHref: string | null;
     readonly email: string;
     readonly mailHref: string | null;
     readonly mapHref: string | null;
@@ -199,7 +200,8 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date): Sit
 
         return { label: MENU_LABELS[key] ?? def.label, path: def.path! };
     });
-    const cta: CtaVm | null = pages.randevu ? { label: copy.ctaPrimary, path: '/randevu', href: null } : telHref ? { label: 'Hemen ara', path: null, href: telHref } : null;
+    const bookingHref = safeHref(clinic.bookingUrl);
+    const cta: CtaVm | null = bookingHref ? { label: copy.ctaPrimary, path: null, href: bookingHref } : telHref ? { label: 'Hemen ara', path: null, href: telHref } : null;
 
     return {
         name,
@@ -213,6 +215,7 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date): Sit
         phone,
         telHref,
         whatsappHref: whatsappDigits ? `https://wa.me/${whatsappDigits}` : null,
+        bookingHref,
         email,
         mailHref: email ? safeHref(`mailto:${email}`) : null,
         mapHref: safeHref(clinic.mapUrl) ?? (address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}` : null),

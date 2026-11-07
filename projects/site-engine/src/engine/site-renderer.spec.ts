@@ -252,7 +252,7 @@ describe('SiteRendererComponent', () => {
             expect((await render(closed, { path: '/sss' })).querySelector('.lost')).not.toBeNull();
         });
 
-        it('randevu sayfası kapalıysa eylem düğmesi telefona döner, telefon da yoksa çizilmez (K11)', async () => {
+        it('online randevu kapalıysa eylem düğmesi telefona döner, telefon da yoksa çizilmez (K11)', async () => {
             const config = sampleConfig();
             const noBooking = { ...config, structure: { ...config.structure, pages: { ...config.structure.pages, randevu: false } } };
             const withPhone = await render(noBooking);

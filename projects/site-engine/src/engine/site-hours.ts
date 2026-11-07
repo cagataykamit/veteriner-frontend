@@ -1,6 +1,6 @@
 import type { WorkingDay } from '../model/site.model';
 
-/** Çalışma saatlerinden sayfada görünen durum ve saat tablosu. Hesap yerel saate göredir. */
+/** Çalışma saatlerinden sayfada görünen durum ve saat tablosu. Klinik saatleri İstanbul duvar saatidir: sunucu ve ziyaretçi nerede olursa olsun hesap Europe/Istanbul'a göredir. */
 export type ClinicStatusState = 'open' | 'break' | 'closed';
 
 export interface ClinicStatus {
@@ -30,6 +30,16 @@ const DAY_NAMES: Readonly<Record<number, string>> = {
     6: 'Cumartesi'
 };
 
+const ISTANBUL_CLOCK = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Istanbul', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/** Verilen anın İstanbul'daki günü (0 pazar) ve gece yarısından itibaren dakikası. */
+export function istanbulClock(now: Date): { readonly day: number; readonly minute: number } {
+    const parts = Object.fromEntries(ISTANBUL_CLOCK.formatToParts(now).map((part) => [part.type, part.value]));
+
+    return { day: WEEKDAYS.indexOf(parts['weekday']), minute: Number(parts['hour']) * 60 + Number(parts['minute']) };
+}
+
 /** "HH:mm" → gece yarısından itibaren dakika. */
 function toMinutes(time: string | null): number | null {
     if (!time) return null;
@@ -45,8 +55,8 @@ function isOpenDay(day: WorkingDay | undefined): day is WorkingDay {
 
 /** Saate ek gelmesin diye ("19:00'a", "17:00'ye") durum metni "Kapanış 19:00" biçimindedir. */
 export function clinicStatus(days: readonly WorkingDay[], now: Date): ClinicStatus {
-    const minute = now.getHours() * 60 + now.getMinutes();
-    const today = days.find((d) => d.dayOfWeek === now.getDay());
+    const { day: weekday, minute } = istanbulClock(now);
+    const today = days.find((d) => d.dayOfWeek === weekday);
 
     if (isOpenDay(today)) {
         const opens = toMinutes(today.opensAt)!;
@@ -68,7 +78,7 @@ export function clinicStatus(days: readonly WorkingDay[], now: Date): ClinicStat
     }
 
     for (let offset = 1; offset <= 7; offset++) {
-        const next = days.find((d) => d.dayOfWeek === (now.getDay() + offset) % 7);
+        const next = days.find((d) => d.dayOfWeek === (weekday + offset) % 7);
 
         if (isOpenDay(next)) {
             const when = offset === 1 ? 'yarın' : DAY_NAMES[next.dayOfWeek];
@@ -82,6 +92,7 @@ export function clinicStatus(days: readonly WorkingDay[], now: Date): ClinicStat
 
 /** Aynı saatlere sahip ardışık günler tek satır olur: "Pazartesi – Cuma". */
 export function hoursGroups(days: readonly WorkingDay[], now: Date): HoursGroup[] {
+    const { day: weekday } = istanbulClock(now);
     const groups: { first: number; last: number; day: WorkingDay | undefined; key: string; isToday: boolean }[] = [];
 
     for (const dayOfWeek of DAY_ORDER) {
@@ -91,9 +102,9 @@ export function hoursGroups(days: readonly WorkingDay[], now: Date): HoursGroup[
 
         if (current?.key === key) {
             current.last = dayOfWeek;
-            current.isToday ||= dayOfWeek === now.getDay();
+            current.isToday ||= dayOfWeek === weekday;
         } else {
-            groups.push({ first: dayOfWeek, last: dayOfWeek, day, key, isToday: dayOfWeek === now.getDay() });
+            groups.push({ first: dayOfWeek, last: dayOfWeek, day, key, isToday: dayOfWeek === weekday });
         }
     }
 

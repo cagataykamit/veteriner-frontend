@@ -109,6 +109,8 @@ export interface SiteClinic {
     readonly instagram: string;
     readonly facebook: string;
     readonly workingDays: readonly WorkingDay[];
+    /** Online randevu açıksa kliniğin talep formu (ADR-045 K11). Çalışma anında gelir, yapılandırmada saklanmaz. */
+    readonly bookingUrl: string | null;
 }
 
 export interface SiteContent {
@@ -198,7 +200,7 @@ export const PAGE_DEFS: readonly { readonly key: PageKey; readonly label: string
     { key: 'rehber', label: 'Sağlık Rehberi', path: '/saglik-rehberi', optional: false, hint: 'Hasta sahipleri için yazılar.' },
     { key: 'galeri', label: 'Galeri', path: '/galeri', optional: false, hint: 'Klinikten fotoğraflar.' },
     { key: 'iletisim', label: 'İletişim', path: '/iletisim', optional: false, hint: 'Adres, saatler, konum.' },
-    { key: 'randevu', label: 'Randevu', path: '/randevu', optional: true, hint: 'Randevu talep formu.' },
+    { key: 'randevu', label: 'Randevu', path: '/randevu', optional: true, hint: 'Online randevu bağlantısı, telefon ve saatler.' },
     { key: 'acil', label: 'Acil Veteriner Hizmeti', path: '/acil', optional: true, hint: 'Acil durumda ne yapılacağı.' },
     { key: 'sss', label: 'Sıkça Sorulan Sorular', path: '/sss', optional: true, hint: 'Soru ve yanıtlar.' },
     { key: 'ekibimiz', label: 'Ekibimiz', path: '/ekibimiz', optional: true, hint: 'Hekim dışındaki ekip de görünür.' },

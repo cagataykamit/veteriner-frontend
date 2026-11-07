@@ -9,7 +9,7 @@ import { buildSiteTokens } from './site-tokens';
 import { buildSiteVm, memberInitials } from './site-vm';
 import { STOCK_PHOTOS, stockPhoto } from './stock-photos';
 
-const NOW = new Date(2026, 10, 9, 10, 30); // Pazartesi
+const NOW = new Date(Date.UTC(2026, 10, 9, 7, 30)); // Pazartesi
 const voice = SITE_CONCEPTS[0].voice;
 
 describe('safeHref', () => {
@@ -64,14 +64,14 @@ describe('çalışma saatleri', () => {
     const week = [1, 2, 3, 4, 5].map(open);
 
     it('durum: açık, molada, açılış öncesi, kapanış sonrası', () => {
-        expect(clinicStatus(week, new Date(2026, 10, 9, 10, 30))).toEqual({ state: 'open', word: 'Açık', detail: 'Kapanış 19:00' });
-        expect(clinicStatus(week, new Date(2026, 10, 9, 13, 30))).toEqual({ state: 'break', word: 'Molada', detail: 'Dönüş 14:00' });
-        expect(clinicStatus(week, new Date(2026, 10, 9, 8, 0)).detail).toBe('Açılış bugün 09:00');
-        expect(clinicStatus(week, new Date(2026, 10, 9, 20, 0)).detail).toBe('Açılış yarın 09:00');
+        expect(clinicStatus(week, new Date(Date.UTC(2026, 10, 9, 7, 30)))).toEqual({ state: 'open', word: 'Açık', detail: 'Kapanış 19:00' });
+        expect(clinicStatus(week, new Date(Date.UTC(2026, 10, 9, 10, 30)))).toEqual({ state: 'break', word: 'Molada', detail: 'Dönüş 14:00' });
+        expect(clinicStatus(week, new Date(Date.UTC(2026, 10, 9, 5, 0))).detail).toBe('Açılış bugün 09:00');
+        expect(clinicStatus(week, new Date(Date.UTC(2026, 10, 9, 17, 0))).detail).toBe('Açılış yarın 09:00');
     });
 
     it('hafta sonu kapalıyken sonraki açılış günü söylenir; saat yoksa bozulmaz', () => {
-        expect(clinicStatus(week, new Date(2026, 10, 7, 12, 0)).detail).toBe('Açılış Pazartesi 09:00');
+        expect(clinicStatus(week, new Date(Date.UTC(2026, 10, 7, 9, 0))).detail).toBe('Açılış Pazartesi 09:00');
         expect(clinicStatus([], NOW).detail).toBe('Saat girilmemiş');
     });
 

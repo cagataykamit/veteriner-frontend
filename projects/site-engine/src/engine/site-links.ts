@@ -21,13 +21,13 @@ export function safeHref(value: string | null | undefined): string | null {
     }
 }
 
-/** Görsel: tam adres, kök göreli yol (bizim sunucu) ya da yüklenen dosyanın önizlemesi (raster data URL). */
+/** Görsel: tam adres, kök göreli yol (bizim sunucu) ya da yüklenen dosyanın önizlemesi (raster data URL, panelde yetkili uçtan alınan `blob:`). */
 export function safeImageSrc(value: string | null | undefined): string | null {
     const text = value?.trim();
 
     if (!text) return null;
 
-    if (/^\/(?!\/)/.test(text) || /^data:image\/(png|jpe?g|webp|gif);/i.test(text)) return text;
+    if (/^\/(?!\/)/.test(text) || /^data:image\/(png|jpe?g|webp|gif);/i.test(text) || /^blob:https?:\/\//i.test(text)) return text;
 
     const href = safeHref(text);
 

@@ -33,3 +33,8 @@ export const STOCK_PHOTOS: Readonly<Partial<Record<StockSlot, StockPhoto>>> = {}
 export function stockPhoto(slot: StockSlot): SiteImage | null {
     return safeImage(STOCK_PHOTOS[slot] ?? null);
 }
+
+/** Klinik görsel yüklemediği yerde hazır fotoğraf çiziliyorsa sitede "temsili görsel" ibaresi görünür (K7). Set boşken görünmez. */
+export function showsStockPhotoNote(hero: SiteImage | null, about: SiteImage | null, stock: Readonly<Partial<Record<StockSlot, StockPhoto>>> = STOCK_PHOTOS): boolean {
+    return Object.keys(stock).length > 0 && (!hero || !about);
+}

@@ -74,13 +74,18 @@ import { SiteStatusComponent } from '../../site-parts.component';
                 line-height: 1;
             }
 
+            /* Satır içi kutu değil: arka plan satırın içinde kalır, üst satırın kuyruklu harflerini (y, g, ş) örtmez. */
             mark {
-                padding: 0 0.14em;
+                display: inline-block;
+                max-width: 100%;
+                margin-top: 0.06em;
+                padding: 0.02em 0.14em 0.06em;
                 border-radius: 0.2em;
                 background: var(--s-secondary);
                 color: var(--s-on-secondary);
                 font: inherit;
-                box-decoration-break: clone;
+                line-height: 1;
+                overflow-wrap: anywhere;
             }
 
             .lead {
