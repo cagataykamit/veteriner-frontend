@@ -17,7 +17,9 @@ export type ClientPortalInviteBlockedCode =
     | 'OwnerPortal.ClientNotInvitable'
     | 'OwnerPortal.AlreadyLinked'
     /** Aktif klinikte portal kapalı (§12). */
-    | 'OwnerPortal.ClinicPortalDisabled';
+    | 'OwnerPortal.ClinicPortalDisabled'
+    /** Paket portalı içermiyor (`PLAN_FEATURES_API_CONTRACT.md` §2). */
+    | 'Subscriptions.FeatureNotInPlan';
 
 export interface ClientPortalLinkDto {
     linkId: string;

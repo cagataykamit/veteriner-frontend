@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { type Confirmation, ConfirmationService, MessageService } from 'primeng/api';
 import { of, throwError } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
 import type { ClientPortalAccessDto, ClientPortalInviteDto, ClientPortalLinkDto } from '@/app/entities/client/models/client-portal-access-api.model';
 import type { ClientDetailVm } from '@/app/entities/client/models/client-vm.model';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
@@ -64,7 +65,7 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
     const create = () => {
         TestBed.configureTestingModule({
             imports: [ClientPortalAccessPanelComponent],
-            providers: [provideRouter([]), MessageService, { provide: ClientsService, useValue: service }, { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: readOnly } }]
+            providers: [provideRouter([]), MessageService, { provide: AuthService, useValue: { hasOperationClaim: () => true } }, { provide: ClientsService, useValue: service }, { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: readOnly, lockedPlanFeature: () => ({ feature: 'OwnerPortal', isEnabled: false, requiredPlanCode: 'Pro' }) } }]
         });
         messages = TestBed.inject(MessageService);
         vi.spyOn(messages, 'add').mockReturnValue(undefined);
@@ -87,6 +88,38 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
         service.sendPortalInvite.mockReturnValue(of(pendingInvite));
         service.revokePortalInvite.mockReturnValue(of(undefined));
         service.closePortalLink.mockReturnValue(of(undefined));
+    });
+
+    describe('paket portalı içermiyor (TIER-001)', () => {
+        const locked: ClientPortalAccessDto = { ...none, canInvite: false, inviteBlockedCode: 'Subscriptions.FeatureNotInPlan' };
+
+        it('davet yerine üst paket kutusu çıkar', () => {
+            access = locked;
+            create();
+
+            expect(q('client-portal-invite')).toBeNull();
+            expect(q('client-portal-invite-blocked')).toBeNull();
+            expect(q('plan-upgrade-notice')?.textContent).toContain('Profesyonel ve Kurumsal paketlerinde var');
+        });
+
+        it('bekleyen davet iptal edilebilir; yeni davet ve WhatsApp yok', () => {
+            access = { ...locked, invites: [pendingInvite] };
+            create();
+
+            expect(q('client-portal-revoke')).not.toBeNull();
+            expect(q('client-portal-invite')).toBeNull();
+            expect(q('client-portal-whatsapp')).toBeNull();
+            expect(q('plan-upgrade-notice')).not.toBeNull();
+        });
+
+        it('mevcut bağ açık görünür, kapatılabilir; üst paket kutusu çıkmaz', () => {
+            access = { ...locked, links: [activeLink] };
+            create();
+
+            expect(status()).toContain('Portal erişimi açık');
+            expect(q('client-portal-close')).not.toBeNull();
+            expect(q('plan-upgrade-notice')).toBeNull();
+        });
     });
 
     it('davet yok: durum ve "Portal daveti gönder" etkin; iptal/kapat yok', () => {

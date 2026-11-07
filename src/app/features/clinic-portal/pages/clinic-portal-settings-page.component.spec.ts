@@ -24,6 +24,7 @@ describe('ClinicPortalSettingsPageComponent', () => {
     let claims: Set<string>;
     let confirmation: ConfirmationService;
     let el: HTMLElement;
+    let planLocked: boolean;
 
     async function create(): Promise<void> {
         await TestBed.configureTestingModule({
@@ -33,7 +34,13 @@ describe('ClinicPortalSettingsPageComponent', () => {
                 { provide: ClinicPortalSettingsService, useValue: service },
                 { provide: ClinicsService, useValue: { listClinics: () => of([{ id: 'k1', name: 'Pati', isActive: true }]) } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'k1', getClinicName: () => 'Pati' } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+                {
+                    provide: TenantReadOnlyContextService,
+                    useValue: {
+                        mutationBlocked: () => false,
+                        lockedPlanFeature: () => (planLocked ? { feature: 'OwnerPortal', isEnabled: false, requiredPlanCode: 'Pro' } : null)
+                    }
+                }
             ]
         }).compileComponents();
         fixture = TestBed.createComponent(ClinicPortalSettingsPageComponent);
@@ -45,6 +52,7 @@ describe('ClinicPortalSettingsPageComponent', () => {
     }
 
     beforeEach(() => {
+        planLocked = false;
         claims = new Set(['Clinics.Read', 'Clinics.Update']);
         service = {
             get: vi.fn().mockReturnValue(of(settings())),
@@ -114,6 +122,30 @@ describe('ClinicPortalSettingsPageComponent', () => {
         confirm.mock.calls[0][0].reject!();
         expect(fixture.componentInstance.toggle()).toBe(true);
         expect(service.save).not.toHaveBeenCalled();
+    });
+
+    it('paket açıkken üst paket kutusu çıkmaz', async () => {
+        await create();
+
+        expect(el.querySelector('[data-testid="plan-upgrade-notice"]')).toBeNull();
+        expect(el.querySelector('[data-testid="portal-enabled"]')).not.toBeNull();
+    });
+
+    it('paket portalı içermiyor ve kullanım yoksa anahtar yerine üst paket kutusu çıkar', async () => {
+        planLocked = true;
+        service.get.mockReturnValue(of(settings({ activeLinkCount: 0, pendingInviteCount: 0 })));
+        await create();
+
+        expect(el.querySelector('[data-testid="plan-upgrade-notice"]')?.textContent).toContain('Profesyonel ve Kurumsal paketlerinde var');
+        expect(el.querySelector('[data-testid="portal-enabled"]')).toBeNull();
+    });
+
+    it('paket düşmüş kiracıda mevcut erişim varsa anahtar kalır, üst paket kutusu da çıkar', async () => {
+        planLocked = true;
+        await create();
+
+        expect(el.querySelector('[data-testid="plan-upgrade-notice"]')?.textContent).toContain('Mevcut erişimler açık kalır');
+        expect(el.querySelector('[data-testid="portal-enabled"]')).not.toBeNull();
     });
 
     it('Clinics.Update yoksa anahtar kilitli ve açıklama görünür', async () => {

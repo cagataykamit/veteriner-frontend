@@ -157,6 +157,19 @@ export function planTitlesWithFeature(key: NonNullable<PricingFeatureRowDef['key
         : '';
 }
 
+/** Verilen paket ve üstündekiler cümle içinde: `Pro` → "Profesyonel ve Kurumsal paketlerinde", `Premium` → "Kurumsal paketinde"; bilinmeyen kodda boş. */
+export function plansFromText(apiCode: string): string {
+    const index = PRICING_PLAN_DEFS.findIndex((d) => d.apiCode.toLowerCase() === apiCode.trim().toLowerCase());
+
+    if (index < 0) {
+        return '';
+    }
+
+    const titles = PRICING_PLAN_DEFS.slice(index).map((d) => d.title);
+
+    return titles.length === 1 ? `${titles[0]} paketinde` : `${titles.slice(0, -1).join(', ')} ve ${titles[titles.length - 1]} paketlerinde`;
+}
+
 /** Şu an olmayanlar (ADR-035): dürüst kısa liste, paketten bağımsız; tarih ya da vaat yazılmaz. */
 export const PRICING_NOT_AVAILABLE: readonly string[] = ['SMS hatırlatma (hatırlatmalar e-posta ile gider)', 'e-Fatura', 'Online ödeme'];
 
