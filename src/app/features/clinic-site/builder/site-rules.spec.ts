@@ -3,6 +3,7 @@ import { suggestDesign } from '@/app/features/clinic-site/builder/design-suggest
 import { prepareSiteImage, SITE_IMAGE_MAX_BYTES, SITE_IMAGE_MAX_SIDE } from '@/app/features/clinic-site/builder/image-resize';
 import { draftClaims, findClaims } from '@/app/features/clinic-site/builder/site-claims';
 import { contrastChecks, defaultCopyLabels, isSlug, publishWarnings, slugify, uniqueSlug } from '@/app/features/clinic-site/builder/site-checks';
+import { siteQrDataUrl } from '@/app/features/clinic-site/builder/site-share.component';
 
 const RECORD = { name: 'Çağrı', city: 'Ankara', district: '', address: 'Adres', phone: '03120000000', email: '', workingDays: [], bookingUrl: null };
 
@@ -139,5 +140,15 @@ describe('prepareSiteImage (K12)', () => {
     it('izin verilmeyen türü ve görsel olmayan dosyayı açıklar', async () => {
         await expect(prepareSiteImage(new File(['x'], 'belge.pdf', { type: 'application/pdf' }))).rejects.toThrow('JPEG, PNG ve WebP');
         await expect(prepareSiteImage(new File(['x'], 'bozuk.png', { type: 'image/png' }))).rejects.toThrow('açılamadı');
+    });
+});
+
+describe('siteQrDataUrl', () => {
+    it('üçüncü tarafa gitmeden SVG üretir', () => {
+        const url = siteQrDataUrl('https://vetinity.com/k/cagri');
+
+        expect(url.startsWith('data:image/svg+xml')).toBe(true);
+        expect(decodeURIComponent(url)).toContain('<svg');
+        expect(url).not.toContain('http%3A%2F%2Fapi');
     });
 });

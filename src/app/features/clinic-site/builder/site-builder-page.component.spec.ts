@@ -111,4 +111,23 @@ describe('SiteBuilderPageComponent', () => {
         TestBed.resetTestingModule();
         expect(root(await open({ clinics: 2 })).querySelectorAll('.clinic option')).toHaveLength(2);
     });
+
+    it('yayınlanmamış sitede paylaşım gösterilmez, yayınlanmışta gösterilir', async () => {
+        const draftOnly = await open({ detail: { ...DETAIL, site: { ...PUBLISHED, publishedVersionNumber: null } } });
+
+        (draftOnly.componentInstance as unknown as { step: { set(value: number): void } }).step.set(6);
+        await draftOnly.whenStable();
+        draftOnly.detectChanges();
+        expect(root(draftOnly).querySelector('app-site-share')).toBeNull();
+
+        TestBed.resetTestingModule();
+
+        const published = await open();
+
+        (published.componentInstance as unknown as { step: { set(value: number): void } }).step.set(6);
+        await published.whenStable();
+        published.detectChanges();
+        expect(root(published).querySelector('app-site-share')).not.toBeNull();
+        expect(text(published)).toContain('eski bağlantı çalışır');
+    });
 });

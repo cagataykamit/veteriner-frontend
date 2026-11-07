@@ -4,6 +4,7 @@ import { draftClaims } from '@/app/features/clinic-site/builder/site-claims';
 import { type DeviceKey, SiteBuilderStore } from '@/app/features/clinic-site/builder/site-builder.store';
 import { defaultCopyLabels, publishWarnings, seoChecks } from '@/app/features/clinic-site/builder/site-checks';
 import { SiteThumbComponent } from '@/app/features/clinic-site/builder/site-preview.component';
+import { SiteShareComponent } from '@/app/features/clinic-site/builder/site-share.component';
 import { WFieldComponent, WIZARD_STYLES } from '@/app/features/clinic-site/builder/wizard-kit';
 import { CLINIC_SITE_MISSING_LABELS } from '@/app/features/clinic-site/models/clinic-site.model';
 import { environment } from '@/environments/environment';
@@ -18,9 +19,13 @@ const DEVICES: readonly { readonly key: DeviceKey; readonly label: string; reado
 @Component({
     selector: 'app-publish-step',
     standalone: true,
-    imports: [SiteThumbComponent, WFieldComponent],
+    imports: [SiteThumbComponent, WFieldComponent, SiteShareComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
+        @if (store.isPublished()) {
+            <app-site-share />
+        }
+
         <section class="group">
             <h3 class="group-title">Cihaz önizlemeleri</h3>
             <div class="devices">
