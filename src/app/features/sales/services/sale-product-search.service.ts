@@ -4,6 +4,7 @@ import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { productsQueryToHttpParams } from '@/app/entities/inventory/data/product.mapper';
 import type { ProductDtoPagedResult } from '@/app/entities/inventory/models/product-api.model';
+import type { ProductsListQuery } from '@/app/entities/inventory/models/product-query.model';
 import { isSellableProduct, mapProductDtoToSaleProductVm } from '@/app/features/sales/data/sale.mapper';
 import type { SaleProductVm } from '@/app/features/sales/models/sale-vm.model';
 import { SALE_PANEL_PROBLEM_MESSAGES } from '@/app/features/sales/utils/sale-error.utils';
@@ -20,9 +21,16 @@ export class SaleProductSearchService {
     private readonly api = inject(ApiClient);
 
     search(term: string): Observable<SaleProductVm[]> {
-        const params = productsQueryToHttpParams({ page: 1, pageSize: SEARCH_PAGE_SIZE, search: term, isActive: true });
+        return this.list({ page: 1, pageSize: SEARCH_PAGE_SIZE, search: term, isActive: true });
+    }
 
-        return this.api.get<ProductDtoPagedResult>(ApiEndpoints.products.list(), params).pipe(
+    /** Kamerayla okunan barkod (TIER-006): tam eşleşen satılabilir ürün; barkod kiracıda tektir. */
+    findByBarcode(barcode: string): Observable<SaleProductVm | null> {
+        return this.list({ page: 1, pageSize: 1, barcode, isActive: true }).pipe(map((r) => r[0] ?? null));
+    }
+
+    private list(query: ProductsListQuery): Observable<SaleProductVm[]> {
+        return this.api.get<ProductDtoPagedResult>(ApiEndpoints.products.list(), productsQueryToHttpParams(query)).pipe(
             map((r) => (r.items ?? []).map(mapProductDtoToSaleProductVm).filter(isSellableProduct)),
             toUserError('Ürünler aranamadı.', SALE_PANEL_PROBLEM_MESSAGES)
         );
