@@ -1,0 +1,22 @@
+/* Klinik sitesi (ADR-045 K12): panelle aynı derleyici kuralları, ayrı kaynak. `paths` burada yeniden tanımlanır; panelin `@/*` takma adı
+   bu uygulamada çözülmez, panel kodu ve oturumu pakete giremez. Motor paylaşılan klasörden gelir. */
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "outDir": "../../out-tsc/site",
+        "types": ["node"],
+        "paths": {
+            "@site-engine": ["../site-engine/src/index.ts"]
+        }
+    },
+    "files": ["src/main.ts", "src/main.server.ts", "src/server.ts"],
+    "include": ["src/**/*.d.ts"],
+    "angularCompilerOptions": {
+        "extendedDiagnostics": {
+            "checks": {
+                "nullishCoalescingNotNullable": "suppress",
+                "optionalChainNotNullable": "suppress"
+            }
+        }
+    }
+}

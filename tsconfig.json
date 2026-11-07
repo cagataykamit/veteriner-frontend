@@ -4,7 +4,7 @@
     "compileOnSave": false,
     "compilerOptions": {
         "outDir": "./dist/out-tsc",
-        "rootDir": "./src",
+        "rootDir": "./",
         "strict": true,
         "noImplicitOverride": true,
         "noPropertyAccessFromIndexSignature": true,
@@ -21,6 +21,9 @@
         "paths": {
             "@/*": [
                 "./src/*"
+            ],
+            "@site-engine": [
+                "./projects/site-engine/src/index.ts"
             ]
         }
     },

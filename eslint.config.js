@@ -95,6 +95,66 @@ export default tseslint.config(
         }
     },
     {
+        // Site çizim motoru (ADR-045 K3, K12): panel önizlemesi ve ayrı site uygulaması aynı kodu çizer. Yalnız site yapılandırmasını
+        // alır; panel, portal, sihirbaz, oturum, yönlendirici, HTTP ve PrimeNG koduna bağımlı olmaz. Takma ad `@site-engine` dışına
+        // açılan kod `src/index.ts`'ten geçer.
+        files: ['projects/site-engine/**/*.ts'],
+        rules: {
+            '@angular-eslint/component-selector': [
+                'warn',
+                [
+                    { type: 'element', prefix: 'site', style: 'kebab-case' },
+                    { type: 'attribute', prefix: 'site', style: 'camelCase' }
+                ]
+            ],
+            '@angular-eslint/directive-selector': ['warn', { type: 'attribute', prefix: 'site', style: 'camelCase' }],
+            'no-restricted-imports': [
+                'error',
+                {
+                    patterns: [
+                        {
+                            group: ['@/*', '@portal/*', '**/src/app/**', '**/src/environments/**', '**/portal/**', '**/wizard/**'],
+                            message: 'Site motoru panele, portala, sihirbaza ya da oturuma bağımlı olmaz (ADR-045 K3).'
+                        },
+                        {
+                            group: ['@angular/router', '@angular/router/*', '@angular/common/http', '@angular/forms', 'primeng', 'primeng/*', '@primeuix/*', 'rxjs', 'rxjs/*'],
+                            message: 'Site motoru yalnız yapılandırmayı alıp çizer: yönlendirme, API, form ve PrimeNG çizimi kullanan uygulamanın işidir.'
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        // Klinik sitesi (ADR-045 K12) ayrı uygulamadır: panel ve portal kodu, panel oturumu ve PrimeNG bu pakete giremez. Motor `@site-engine`ten gelir.
+        files: ['projects/site/**/*.ts'],
+        rules: {
+            '@angular-eslint/component-selector': [
+                'warn',
+                [
+                    { type: 'element', prefix: 'site', style: 'kebab-case' },
+                    { type: 'attribute', prefix: 'site', style: 'camelCase' }
+                ]
+            ],
+            '@angular-eslint/directive-selector': ['warn', { type: 'attribute', prefix: 'site', style: 'camelCase' }],
+            'no-restricted-imports': [
+                'error',
+                {
+                    patterns: [
+                        {
+                            group: ['@/*', '@portal/*', '**/src/app/core/**', '**/src/app/features/**', '**/src/app/entities/**', '**/src/app/shared/**', '**/portal/**', '**/src/environments/**'],
+                            message: 'Klinik sitesi panel ve portal kodunu içe aktarmaz (ADR-045 K12).'
+                        },
+                        {
+                            group: ['primeng', 'primeng/*', '@primeuix/*', '@angular/common/http'],
+                            message: 'Klinik sitesi PrimeNG içermez; API çağrısı sunucu tarafındadır (server/site-loader).'
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
         // core ve shared, entities ve features'a bağımlı olmaz: varlık servisini kullanan bileşen/servis (arama, hızlı kayıt,
         // hasta eylem çubuğu vb.) shared'da değil o varlığın ya da özelliğin altında yaşar.
         files: ['src/app/core/**/*.ts', 'src/app/shared/**/*.ts'],

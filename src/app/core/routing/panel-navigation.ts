@@ -122,12 +122,14 @@ export const APPOINTMENT_REQUESTS_ROUTE = '/panel/appointments/requests';
 export const NOTIFICATIONS_ROUTE = '/panel/notifications';
 export const PORTAL_INBOX_ROUTE = '/panel/portal-inbox';
 export const CLINIC_PORTAL_SETTINGS_ROUTE = '/panel/settings/owner-portal';
+export const CLINIC_SITE_ROUTE = '/panel/settings/web-page';
 export const IMPORTS_ROUTE = '/panel/settings/imports';
 export const SUBSCRIPTION_ROUTE = '/panel/settings/subscription';
 export const REPORTS_ROUTE = '/panel/reports';
 export const SALES_PARTNERS_ROUTE = '/panel/sales-partners';
 export const TRIAL_METRICS_ROUTE = '/panel/trial-metrics';
 export const DUPLICATE_PAYMENTS_ROUTE = '/panel/duplicate-payments';
+export const CLINIC_ADDRESSES_ROUTE = '/panel/clinic-addresses';
 
 /** Rapor Merkezi kartları; menüde tek "Raporlar" girişi vardır (ADR-003). Yeni rapor buraya kart olarak eklenir. */
 export const REPORT_SECTIONS: readonly CardSection[] = [
@@ -380,6 +382,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
             { label: 'Satış ortakları', icon: 'fa-solid fa-fw fa-handshake', route: SALES_PARTNERS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
             { label: 'Deneme ölçümleri', icon: 'fa-solid fa-fw fa-chart-simple', route: TRIAL_METRICS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
             { label: 'Çift ödemeler', icon: 'fa-solid fa-fw fa-money-bill-transfer', route: DUPLICATE_PAYMENTS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
+            { label: 'Klinik adresleri', icon: 'fa-solid fa-fw fa-link', route: CLINIC_ADDRESSES_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
             { label: 'Ayarlar', icon: 'fa-solid fa-fw fa-gear', route: SETTINGS_ROUTE }
         ]
     }
@@ -480,6 +483,13 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 route: ONLINE_BOOKING_SETTINGS_ROUTE,
                 claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
                 description: 'Online talebi açıp kapatma, kliniğe özel bağlantı ve sahibe giden e-posta şablonları.'
+            },
+            {
+                label: 'Web sayfam',
+                icon: 'pi pi-fw pi-desktop',
+                route: CLINIC_SITE_ROUTE,
+                claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
+                description: 'Kliniğinizin web sitesini oluşturun, yayınlayın ve bağlantısını paylaşın.'
             },
             {
                 label: 'Hasta sahibi portalı',

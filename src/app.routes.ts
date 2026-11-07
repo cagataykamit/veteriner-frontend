@@ -65,6 +65,12 @@ export const appRoutes: Routes = [
         ]
     },
     {
+        // Site oluşturucu geniş çalışma alanı ister (ADR-045): panel menüsünün yanında sıkışmasın diye iskeletin dışında, kendi üst çubuğunda panele dönüş bağlantısı var.
+        path: 'panel/settings/web-page',
+        canActivate: [authGuard],
+        loadChildren: () => import('./app/features/clinic-site/routes/clinic-site.routes')
+    },
+    {
         path: 'panel',
         // Panel iskeleti (üst çubuk, menü, genel arama) yalnız panelde gerekir; ilk pakete girmez.
         loadComponent: () => import('./app/layout/component/app.layout').then((m) => m.AppLayout),

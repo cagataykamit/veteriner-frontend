@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Site motoru Tailwind kullanmaz (token sözleşmesi); sınıf adları panel CSS'ine girmez. */
+@source not '../../projects/site-engine';
+
 @plugin 'tailwindcss-primeui';
 
 @custom-variant dark (&:where([class*="app-dark"], [class*="app-dark"] *));
