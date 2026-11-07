@@ -1,6 +1,6 @@
 import { sampleConfig } from '../testing/site-sample';
 import { clinicStatus, hoursGroups, istanbulClock } from './site-hours';
-import { safeImageSrc } from './site-links';
+import { safeHref, safeImageSrc, socialLinks } from './site-links';
 import { siteJsonLd, sitePageHead, sitePagePaths, siteRootUrl, siteSitemapXml, seoDescription } from './site-seo';
 import { composeSiteConfig, defaultStoredConfig, readStoredConfig, resolveSiteImages, siteImageId, toWorkingDays, usedSiteImageIds } from './site-stored-config';
 import { showsStockPhotoNote } from './stock-photos';
@@ -79,6 +79,45 @@ describe('görsel başvuruları', () => {
         expect(safeImageSrc('stock:a')).toBeNull();
         expect(safeImageSrc('blob:http://localhost:4200/abc')).toBe('blob:http://localhost:4200/abc');
         expect(safeImageSrc('blob:javascript:alert(1)')).toBeNull();
+    });
+});
+
+describe('bağlantı ve görsel adresi denetimi', () => {
+    const BOM = '\uFEFF';
+    const ZWSP = '\u200B';
+
+    it.each([`${BOM}javascript:alert(1)`, `${ZWSP}javascript:alert(1)`, `java${ZWSP}script:alert(1)`, `${BOM}https://example.com`, `https://exa${ZWSP}mple.com`, '  javascript:alert(1)  ', 'java\nscript:alert(1)', '\tjavascript:alert(1)', 'JaVaScRiPt:alert(1)', 'data:text/html,x', 'vbscript:x'])('%j bağlantı olmaz', (value) => {
+        expect(safeHref(value)).toBeNull();
+    });
+
+    it('şema kırpılmış değerde denetlenir, güvenli adres kalır', () => {
+        expect(safeHref('  https://example.com/a  ')).toBe('https://example.com/a');
+        expect(safeHref('tel:0312')).toBe('tel:0312');
+    });
+
+    it.each(['/\\kotu.example.com/a.png', '//kotu.example.com/a.png', '/\t/kotu.example.com/a.png', `${BOM}/a.png`, 'data:image/svg+xml;base64,AAAA', 'javascript:alert(1)'])('%j görsel olmaz', (value) => {
+        expect(safeImageSrc(value)).toBeNull();
+    });
+
+    it('güvensiz harita bağlantısı çizilmez, adresten üretilen bağlantıya döner', () => {
+        const base = sampleConfig();
+        const vm = buildSiteVm({ ...base, content: { ...base.content, clinic: { ...base.content.clinic, mapUrl: `${BOM}javascript:alert(1)` } } }, conceptByKey('modern').voice, new Date());
+
+        expect(vm.mapHref?.startsWith('https://www.google.com/maps/search/')).toBe(true);
+    });
+
+    it('sosyal bağlantılarda biçim karakteri reddedilir', () => {
+        const clinic = { ...sampleConfig().content.clinic, website: `${BOM}javascript:alert(1)`, instagram: `${ZWSP}kullanici`, facebook: 'https://facebook.com/klinik' };
+
+        expect(socialLinks(clinic).map((link) => link.key)).toEqual(['facebook']);
+    });
+
+    it('sayfa başı güvensiz görseli yazmaz', () => {
+        const base = sampleConfig();
+        const head = sitePageHead({ ...base, seo: { ...base.seo, ogImage: 'javascript:alert(1)', favicon: '//kotu.example.com/i.png' }, content: { ...base.content, heroImage: null, clinic: { ...base.content.clinic, logo: null } } }, '/');
+
+        expect(head.imageSrc).toBeNull();
+        expect(head.iconSrc).toBeNull();
     });
 });
 

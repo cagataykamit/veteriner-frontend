@@ -6,9 +6,21 @@ import type { SiteClinic, SiteImage } from '../model/site.model';
  */
 const LINK_SCHEMES: ReadonlySet<string> = new Set(['http:', 'https:', 'tel:', 'mailto:']);
 
-/** Yalnız tam adres: `http`, `https`, `tel`, `mailto`. Ayrıştırıcı `java\nscript:` gibi gizlemeleri de tarayıcı gibi çözer. */
+/**
+ * Adres değerinin ön denetimi. Görünmez biçim karakteri (Unicode Cf: U+FEFF, U+200B) varsa değer reddedilir: `trim` U+FEFF'i kırpar, böylece
+ * başında U+FEFF olan "javascript:" göründüğünden farklı okunurdu. Backend de aynı değeri reddeder. Kırpma sonrası denetim karakteri de reddedilir.
+ */
+function cleanAddress(value: string | null | undefined): string | null {
+    if (!value || /\p{Cf}/u.test(value)) return null;
+
+    const text = value.trim();
+
+    return text && !/\p{Cc}/u.test(text) ? text : null;
+}
+
+/** Yalnız tam adres: `http`, `https`, `tel`, `mailto`. Şema kırpılmış değer üzerinde, tarayıcının ayrıştırıcısıyla denetlenir. */
 export function safeHref(value: string | null | undefined): string | null {
-    const text = value?.trim();
+    const text = cleanAddress(value);
 
     if (!text) return null;
 
@@ -23,11 +35,12 @@ export function safeHref(value: string | null | undefined): string | null {
 
 /** Görsel: tam adres, kök göreli yol (bizim sunucu) ya da yüklenen dosyanın önizlemesi (raster data URL, panelde yetkili uçtan alınan `blob:`). */
 export function safeImageSrc(value: string | null | undefined): string | null {
-    const text = value?.trim();
+    const text = cleanAddress(value);
 
     if (!text) return null;
 
-    if (/^\/(?!\/)/.test(text) || /^data:image\/(png|jpe?g|webp|gif);/i.test(text) || /^blob:https?:\/\//i.test(text)) return text;
+    // Kök göreli yol başka sunucuya kaçamaz: tarayıcı "/\\" ile başlayanı da "//" sayar.
+    if (/^\/(?![/\\])/.test(text) || /^data:image\/(png|jpe?g|webp|gif);/i.test(text) || /^blob:https?:\/\//i.test(text)) return text;
 
     const href = safeHref(text);
 
@@ -48,18 +61,26 @@ export interface SocialVm {
 
 /** Tam adres de kullanıcı adı da girilebilir. Kullanıcı adı adrese yol parçası olarak gömülür, başka adrese kaçamaz. */
 function profileHref(value: string, base: string): string | null {
-    return /^[a-z][a-z0-9+.-]*:/i.test(value) ? safeHref(value) : safeHref(`${base}${encodeURIComponent(value.replace(/^@/, ''))}/`);
+    const text = cleanAddress(value);
+
+    if (!text) return null;
+
+    return /^[a-z][a-z0-9+.-]*:/i.test(text) ? safeHref(text) : safeHref(`${base}${encodeURIComponent(text.replace(/^@/, ''))}/`);
 }
 
 function websiteHref(value: string): string | null {
-    return safeHref(/^[a-z][a-z0-9+.-]*:\/\//i.test(value) ? value : `https://${value}`);
+    const text = cleanAddress(value);
+
+    if (!text) return null;
+
+    return safeHref(/^[a-z][a-z0-9+.-]*:\/\//i.test(text) ? text : `https://${text}`);
 }
 
 export function socialLinks(clinic: SiteClinic): readonly SocialVm[] {
     const links: { key: string; label: string; href: string | null }[] = [
-        { key: 'website', label: 'Web sitesi', href: clinic.website.trim() ? websiteHref(clinic.website.trim()) : null },
-        { key: 'instagram', label: 'Instagram', href: clinic.instagram.trim() ? profileHref(clinic.instagram.trim(), 'https://www.instagram.com/') : null },
-        { key: 'facebook', label: 'Facebook', href: clinic.facebook.trim() ? profileHref(clinic.facebook.trim(), 'https://www.facebook.com/') : null }
+        { key: 'website', label: 'Web sitesi', href: websiteHref(clinic.website) },
+        { key: 'instagram', label: 'Instagram', href: profileHref(clinic.instagram, 'https://www.instagram.com/') },
+        { key: 'facebook', label: 'Facebook', href: profileHref(clinic.facebook, 'https://www.facebook.com/') }
     ];
 
     return links.filter((link): link is SocialVm => link.href !== null);

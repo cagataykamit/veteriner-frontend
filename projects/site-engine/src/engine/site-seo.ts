@@ -1,5 +1,6 @@
 import { PAGE_DEFS, type SiteConfig } from '../model/site.model';
 import { conceptByKey } from './site-concepts';
+import { safeImageSrc } from './site-links';
 import { pageHeading, resolveSitePage } from './site-page-route';
 import { buildSiteVm } from './site-vm';
 
@@ -44,8 +45,8 @@ export function sitePageHead(config: SiteConfig, path: string, now: Date = new D
         found: page.kind !== 'notfound',
         title: home ? seoTitle(config) || vm.siteName : heading ? `${heading.title} | ${vm.siteName}` : vm.siteName,
         description: (home ? seoDescription(config) : heading?.lead || seoDescription(config)).slice(0, 300),
-        imageSrc: config.seo.ogImage || vm.heroImage?.src || null,
-        iconSrc: config.seo.favicon || vm.logo
+        imageSrc: safeImageSrc(config.seo.ogImage) ?? vm.heroImage?.src ?? null,
+        iconSrc: safeImageSrc(config.seo.favicon) ?? vm.logo
     };
 }
 
