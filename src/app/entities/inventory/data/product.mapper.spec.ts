@@ -1,4 +1,4 @@
-import { mapProductUpsertFormValueToCreateRequest, mapProductUpsertFormValueToUpdateRequest } from './product.mapper';
+import { mapProductUpsertFormValueToCreateRequest, mapProductUpsertFormValueToUpdateRequest, productsQueryToHttpParams } from './product.mapper';
 import type { ProductUpsertFormValue } from '@/app/entities/inventory/models/product-upsert-form.model';
 
 const form = (over: Partial<ProductUpsertFormValue> = {}): ProductUpsertFormValue => ({
@@ -59,5 +59,12 @@ describe('product.mapper üretici (RECORD-005)', () => {
 
     it('hizmette üretici gönderilmez', () => {
         expect(mapProductUpsertFormValueToCreateRequest(form({ manufacturer: 'X' })).manufacturer).toBeNull();
+    });
+});
+
+describe('productsQueryToHttpParams barkod', () => {
+    it('barkod tam eşleşme parametresi olarak kırpılıp gider; boşsa gönderilmez', () => {
+        expect(productsQueryToHttpParams({ barcode: ' 8690001 ', isActive: true }).get('Barcode')).toBe('8690001');
+        expect(productsQueryToHttpParams({ barcode: '  ' }).has('Barcode')).toBe(false);
     });
 });
