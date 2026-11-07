@@ -10,6 +10,8 @@ export const environment = {
      * Swagger: LoginCommand.tenantId
      */
     authTenantId: null as string | null,
+    /** Klinik sitelerinin kökü (`{siteBaseUrl}/k/{adres}`, ADR-045 K6). */
+    siteBaseUrl: 'http://localhost:4400',
     /** Tanıtım sayfalarını arama motorlarına kapat (yalnız staging). */
     siteNoindex: false
 };

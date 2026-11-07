@@ -334,6 +334,21 @@ export const ApiEndpoints = {
         deactivate: (clinicId: string, reasonId: string) =>
             `/api/v1/clinics/${encodeURIComponent(clinicId)}/appointment-reasons/${encodeURIComponent(reasonId)}/deactivate`
     },
+    /** Klinik web sitesi yönetimi (Veteriner `docs/CLINIC_SITE_API_CONTRACT.md` §2, ADR-045). */
+    clinicSite: {
+        root: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/site`,
+        draft: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/site/draft`,
+        addressAvailability: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/site/address-availability`,
+        address: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/site/address`,
+        publish: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/site/publish`,
+        versions: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/site/versions`,
+        restoreVersion: (clinicId: string, versionNumber: number) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/site/versions/${versionNumber}/restore`,
+        close: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/site/close`,
+        reopen: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/site/reopen`,
+        images: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/site/images`,
+        image: (clinicId: string, imageId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/site/images/${encodeURIComponent(imageId)}`,
+        imageContent: (clinicId: string, imageId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/site/images/${encodeURIComponent(imageId)}/content`
+    },
     /** Online randevu ayarları, bağlantı kodu, personel müsaitliği ve talep e-posta şablonları (sözleşme §3, §7). */
     onlineBooking: {
         settings: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/online-booking`,

@@ -1,0 +1,143 @@
+import { contrast, defaultStoredConfig, composeSiteConfig, type SiteConfig } from '@site-engine';
+import { suggestDesign } from '@/app/features/clinic-site/builder/design-suggest';
+import { prepareSiteImage, SITE_IMAGE_MAX_BYTES, SITE_IMAGE_MAX_SIDE } from '@/app/features/clinic-site/builder/image-resize';
+import { draftClaims, findClaims } from '@/app/features/clinic-site/builder/site-claims';
+import { contrastChecks, defaultCopyLabels, isSlug, publishWarnings, slugify, uniqueSlug } from '@/app/features/clinic-site/builder/site-checks';
+
+const RECORD = { name: 'Çağrı', city: 'Ankara', district: '', address: 'Adres', phone: '03120000000', email: '', workingDays: [], bookingUrl: null };
+
+function config(conceptKey = 'modern'): SiteConfig {
+    return composeSiteConfig(defaultStoredConfig(conceptKey), RECORD, 'cagri');
+}
+
+describe('findClaims (K14)', () => {
+    it.each([
+        ['En iyi kliniğiz', 'en iyi'],
+        ['EN İYİ KLİNİK', 'en iyi'],
+        ['Ücretsiz muayene', 'ucretsiz'],
+        ['ÜCRETSİZ aşı', 'ucretsiz'],
+        ['%20 indirim', 'indirim'],
+        ['Tedavi garantili', 'garantili'],
+        ['7/24 açığız', '7/24'],
+        ['Uzman kadro', 'uzman'],
+        ['Muayene fiyatları', 'fiyatlari'],
+        ['Muayene 500 TL', '500 tl'],
+        ['Kesin tedavi', 'kesin tedavi']
+    ])('"%s" uyarı verir', (text, term) => {
+        expect(findClaims(text).map((claim) => claim.term)).toContain(term);
+    });
+
+    it.each(['Muayene sonunda ne yapıldığını anlatırız.', 'Fiyakalı değil, sakin bir klinik.', 'Bir numaralı dosya', 'Mahallenin kliniği', ''])('"%s" uyarı vermez', (text) => {
+        expect(findClaims(text)).toEqual([]);
+    });
+
+    it('taslaktaki yeri söyler, düzeltme adımını verir', () => {
+        const stored = defaultStoredConfig();
+        const claims = draftClaims({
+            ...stored,
+            content: { ...stored.content, copy: { ...stored.content.copy, heroTitle: 'En iyi klinik' }, services: [{ slug: 's', title: 'Aşı', summary: 'Ücretsiz', body: '', image: null }] }
+        });
+
+        expect(claims).toEqual(expect.arrayContaining([expect.objectContaining({ where: 'Hero başlığı', step: 4 }), expect.objectContaining({ where: 'Hizmetler: Aşı', term: 'ucretsiz' })]));
+    });
+});
+
+describe('yayın kontrolleri', () => {
+    it('yazılmamış metinler hazır cümle olarak söylenir (K14)', () => {
+        const stored = defaultStoredConfig();
+
+        expect(defaultCopyLabels(stored)).toContain('Hero başlığı');
+        expect(defaultCopyLabels({ ...stored, content: { ...stored.content, copy: { ...stored.content.copy, heroTitle: 'Başlık' } } })).not.toContain('Hero başlığı');
+    });
+
+    it('zorunlu listeyi kopyalamaz: ad, telefon, adres ve saat uyarıda yoktur (K9)', () => {
+        const texts = publishWarnings(config()).map((item) => item.text);
+
+        expect(texts).toEqual(expect.arrayContaining(['Logo yüklenmedi; baş harf çiziliyor.', 'Hizmet eklenmedi.', 'Hekim eklenmedi.']));
+        expect(texts.join(' ')).not.toMatch(/telefon|adres|saat/i);
+    });
+
+    it('adres biçimi sözleşmeye uyar', () => {
+        expect(isSlug('cagri-vet')).toBe(true);
+        expect(isSlug('ab')).toBe(false);
+        expect(isSlug('-cagri')).toBe(false);
+        expect(isSlug('cagri--vet')).toBe(false);
+        expect(isSlug('Çağrı')).toBe(false);
+        expect(isSlug('a'.repeat(61))).toBe(false);
+    });
+
+    it('alt sayfa adresi Türkçe karakterden arınır, çakışmaz', () => {
+        expect(slugify('Aşı ve Koruyucu Bakım')).toBe('asi-ve-koruyucu-bakim');
+        expect(uniqueSlug('asi', ['asi', 'asi-2'])).toBe('asi-3');
+    });
+
+    it('dört konseptin kontrastı ölçülür ve geçer', () => {
+        for (const key of ['modern', 'premium', 'friendly', 'nature']) {
+            expect(contrastChecks(config(key)).every((check) => check.ok)).toBe(true);
+        }
+    });
+});
+
+describe('suggestDesign (K5)', () => {
+    it('karakterden konsept seçer, nedenini söyler', () => {
+        const base = config();
+        const result = suggestDesign({ ...base, design: { ...base.design, character: 'dogal' } }, null);
+
+        expect(result.design.conceptKey).toBe('nature');
+        expect(result.reason).toContain('doğal');
+        expect(result.reason).toContain(result.conceptName);
+    });
+
+    it('logodan palet kurarken açık renkte bile okunur ana renk verir', () => {
+        const result = suggestDesign(config(), '#f7e04a');
+
+        expect(contrast(result.design.colors.primary, '#ffffff')).toBeGreaterThanOrEqual(3);
+        expect(result.reason).toContain('logonuzun');
+    });
+
+    it('fotoğrafsız hekimlerde satır düzeni önerir ve söyler', () => {
+        const base = config();
+        const members = [1, 2].map((n) => ({ slug: `h${n}`, kind: 'hekim' as const, name: `Hekim ${n}`, title: '', specialties: '', bio: '', image: null }));
+        const result = suggestDesign({ ...base, design: { ...base.design, character: 'samimi' }, content: { ...base.content, members } }, null);
+
+        expect(result.design.sections.team).toBe('modern');
+        expect(result.reason).toContain('fotoğraf');
+    });
+});
+
+async function imageFile(width: number, height: number, type = 'image/png'): Promise<File> {
+    const canvas = document.createElement('canvas');
+
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext('2d')!.fillRect(0, 0, width, height);
+
+    const blob = await new Promise<Blob>((resolve) => canvas.toBlob((value) => resolve(value!), type));
+
+    return new File([blob], 'foto.png', { type });
+}
+
+async function size(file: File): Promise<[number, number]> {
+    const bitmap = await createImageBitmap(file);
+
+    return [bitmap.width, bitmap.height];
+}
+
+describe('prepareSiteImage (K12)', () => {
+    it('en uzun kenarı sınıra indirir, oranı korur, boyut sınırının altında kalır', async () => {
+        const prepared = await prepareSiteImage(await imageFile(3000, 1500));
+
+        expect(await size(prepared)).toEqual([SITE_IMAGE_MAX_SIDE, 1200]);
+        expect(['image/webp', 'image/jpeg']).toContain(prepared.type);
+        expect(prepared.size).toBeLessThanOrEqual(SITE_IMAGE_MAX_BYTES);
+    });
+
+    it('küçük görseli büyütmez', async () => {
+        expect(await size(await prepareSiteImage(await imageFile(300, 200)))).toEqual([300, 200]);
+    });
+
+    it('izin verilmeyen türü ve görsel olmayan dosyayı açıklar', async () => {
+        await expect(prepareSiteImage(new File(['x'], 'belge.pdf', { type: 'application/pdf' }))).rejects.toThrow('JPEG, PNG ve WebP');
+        await expect(prepareSiteImage(new File(['x'], 'bozuk.png', { type: 'image/png' }))).rejects.toThrow('açılamadı');
+    });
+});

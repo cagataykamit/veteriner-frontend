@@ -122,6 +122,7 @@ export const APPOINTMENT_REQUESTS_ROUTE = '/panel/appointments/requests';
 export const NOTIFICATIONS_ROUTE = '/panel/notifications';
 export const PORTAL_INBOX_ROUTE = '/panel/portal-inbox';
 export const CLINIC_PORTAL_SETTINGS_ROUTE = '/panel/settings/owner-portal';
+export const CLINIC_SITE_ROUTE = '/panel/settings/web-page';
 export const IMPORTS_ROUTE = '/panel/settings/imports';
 export const SUBSCRIPTION_ROUTE = '/panel/settings/subscription';
 export const REPORTS_ROUTE = '/panel/reports';
@@ -480,6 +481,13 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 route: ONLINE_BOOKING_SETTINGS_ROUTE,
                 claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
                 description: 'Online talebi açıp kapatma, kliniğe özel bağlantı ve sahibe giden e-posta şablonları.'
+            },
+            {
+                label: 'Web sayfam',
+                icon: 'pi pi-fw pi-desktop',
+                route: CLINIC_SITE_ROUTE,
+                claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
+                description: 'Kliniğinizin web sitesini oluşturun, yayınlayın ve bağlantısını paylaşın.'
             },
             {
                 label: 'Hasta sahibi portalı',

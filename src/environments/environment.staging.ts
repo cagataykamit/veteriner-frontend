@@ -10,6 +10,8 @@ export const environment = {
      * Örnek: '3fa85f64-5717-4562-b3fc-2c963f66afa6'
      */
     authTenantId: null as string | null,
+    /** Klinik sitelerinin kökü (`{siteBaseUrl}/k/{adres}`, ADR-045 K6). */
+    siteBaseUrl: 'https://staging.vetinity.com',
     /** Staging kendini asıl site saymaz: her tanıtım sayfası noindex (öneri belgesi 6.3). */
     siteNoindex: true
 };
