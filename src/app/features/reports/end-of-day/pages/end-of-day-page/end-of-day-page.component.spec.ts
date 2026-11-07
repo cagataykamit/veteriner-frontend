@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 import { map, of } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
 import { EndOfDayPageComponent } from './end-of-day-page.component';
 
@@ -265,6 +266,60 @@ describe('EndOfDayPageComponent', () => {
         expect(el.textContent).toContain('İptal ve kredi iadesi düşülmüştür.');
         expect(el.textContent).toContain('Gerekçe: Müşteri istedi');
         expect(strip(el.textContent)).toContain('-₺150,00');
+    });
+
+    describe('kasa kontrolü (TIER-008)', () => {
+        beforeEach(() => {
+            const base = api.get.getMockImplementation()!;
+
+            TestBed.overrideProvider(TenantReadOnlyContextService, { useValue: { lockedPlanFeature: () => null, mutationBlocked: () => false } });
+            api.get.mockImplementation(((path: string, params?: HttpParams) => {
+                if (path.endsWith('/cash-counts/day')) {
+                    return of({
+                        clinicId: 'k1',
+                        businessDate: localDateYyyyMmDd(),
+                        currency: 'TRY',
+                        cash: { paymentMethod: 'Cash', ...zeroAmounts },
+                        current: null,
+                        expectedChangedSinceCount: false,
+                        previous: null,
+                        history: []
+                    });
+                }
+
+                if (path.endsWith('/cash-counts')) {
+                    return of({ items: [], page: 1, pageSize: 30, totalItems: 0, totalPages: 0 });
+                }
+
+                return base(path, params);
+            }) as never);
+        });
+
+        it('izin yoksa bölüm yok, istek atılmaz', () => {
+            const el = create().nativeElement as HTMLElement;
+
+            expect(el.querySelector('[data-testid="cash-count"]')).toBeNull();
+            expect(calls('/cash-counts/day').length).toBe(0);
+        });
+
+        it('CashCounts.Read ile tek gün ve aktif klinik için görünür', () => {
+            claims.add('CashCounts.Read');
+            const el = create().nativeElement as HTMLElement;
+            const params = calls('/cash-counts/day')[0][1] as HttpParams;
+
+            expect(el.querySelector('[data-testid="cash-count"]')).not.toBeNull();
+            expect(params.get('date')).toBe(localDateYyyyMmDd());
+            expect(params.get('clinicId')).toBe('k1');
+        });
+
+        it('çok günlük aralıkta gösterilmez', () => {
+            claims.add('CashCounts.Read');
+            sessionStorage.setItem(STATE_KEY, JSON.stringify({ fromDate: '2026-01-05', toDate: '2026-01-06', clinicId: '', page: 1, pageSize: 50 }));
+            const el = create().nativeElement as HTMLElement;
+
+            expect(el.querySelector('[data-testid="cash-count"]')).toBeNull();
+            expect(calls('/cash-counts/day').length).toBe(0);
+        });
     });
 
     it('yazdırma sınıfını ekler ve sayfadan çıkınca kaldırır', () => {
