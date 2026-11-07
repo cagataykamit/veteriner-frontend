@@ -46,8 +46,9 @@ export class SiteHead {
         this.setName('robots', 'noindex');
     }
 
+    /** Paylaşımda tam adres gerekir: kök göreli yol kökten, hazır fotoğraf gibi göreli yol sitenin tabanından çözülür. */
     private absolute(src: string, origin: string): string {
-        return src.startsWith('/') ? `${origin}${src}` : src;
+        return new URL(src, `${origin}/k/`).href;
     }
 
     private setName(name: string, content: string): void {
