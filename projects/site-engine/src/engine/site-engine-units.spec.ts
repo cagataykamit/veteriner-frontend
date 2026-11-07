@@ -1,5 +1,5 @@
 import type { SiteColors, SiteDesign, WorkingDay } from '../model/site.model';
-import { emptyContent, patchClinic, sampleConfig } from '../testing/site-sample';
+import { emptyContent, forbiddenCopy, patchClinic, sampleConfig } from '../testing/site-sample';
 import { contrast } from './site-color.utils';
 import { designFromConcept, SITE_CONCEPTS } from './site-concepts';
 import { SITE_FONTS } from './site-fonts';
@@ -97,6 +97,19 @@ describe('buildSiteVm', () => {
         for (const concept of SITE_CONCEPTS) {
             expect(Object.values(concept.voice).join(' ').toLocaleLowerCase('tr')).not.toMatch(/örnek|taslak/);
         }
+    });
+
+    it('hazır metinler K14 sınırını aşmaz: üstünlük, süre, fiyat, ürün ve müşteri yorumu yok', () => {
+        for (const concept of SITE_CONCEPTS) {
+            for (const [key, text] of Object.entries(concept.voice)) {
+                expect(forbiddenCopy(text), `${concept.key}.${key}`).toEqual([]);
+            }
+        }
+    });
+
+    it('yasak ifade denetimi sözcük başından eşleşir, büyük harfe takılmaz', () => {
+        expect(forbiddenCopy('EN İYİ uzmanlık, 7/24 açık, ücretsiz muayene, garantili')).toEqual(['en iyi', 'ücret', 'garanti', '7/24', 'uzman']);
+        expect(forbiddenCopy('Tamamen açık bir yaklaşım; sözcük içinde kalanlar sayılmaz: yaşamama')).toEqual([]);
     });
 
     it('telefon ve e-posta güvenli bağlantıya çevrilir', () => {

@@ -1,7 +1,7 @@
 import { provideZonelessChangeDetection, reflectComponentType } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { SectionType, SiteConfig } from '../model/site.model';
-import { emptyContent, patchClinic, patchContent, sampleConfig, sampleImage, withoutImages } from '../testing/site-sample';
+import { emptyContent, forbiddenCopy, patchClinic, patchContent, sampleConfig, sampleImage, withoutImages } from '../testing/site-sample';
 import { findAlternative, SECTION_REGISTRY, sectionAlternatives } from './section-registry';
 import { designFromConcept, SITE_CONCEPTS } from './site-concepts';
 import { SiteRendererComponent } from './site-renderer.component';
@@ -96,6 +96,16 @@ describe('SiteRendererComponent', () => {
 
                     expect(host.querySelector('.lost'), path).toBeNull();
                     expect(host.querySelector('main')?.textContent?.trim().length, path).toBeGreaterThan(0);
+                }
+            });
+        }
+
+        for (const concept of SITE_CONCEPTS) {
+            it(`${concept.key}: çizilen sabit ve hazır metinler K14 sınırını aşmaz`, async () => {
+                for (const path of ['/', ...SUB_PAGES]) {
+                    const host = await render(sampleConfig(concept.key), { path });
+
+                    expect(forbiddenCopy(host.textContent ?? ''), path).toEqual([]);
                 }
             });
         }

@@ -2,7 +2,8 @@ import type { CharacterKey, GroundKey, LogoPlacement, RadiusKey, SectionType, Si
 
 /**
  * Konsept: bölüm sisteminin hazır kombinasyonu. Seçilince varsayılan bölüm alternatifleri, renk, yazı ve köşe gelir; klinik sonra
- * tek tek değiştirir. `voice`, klinik boş bıraktığı metinlerde kullanılan elle yazılmış cümlelerdir.
+ * tek tek değiştirir. `voice`, klinik boş bıraktığı metinlerde kullanılan elle yazılmış cümlelerdir: her kliniğe uyacak kadar genel
+ * kalır, kliniğe dair doğrulanamayan iddia içermez (ADR-045 K14; spec korur).
  */
 export interface SiteConcept {
     readonly key: string;
@@ -35,17 +36,17 @@ export const SITE_CONCEPTS: readonly SiteConcept[] = [
         character: 'sade',
         sectionKey: 'modern',
         voice: {
-            heroEyebrow: 'Kedi, köpek ve küçük evcil hayvanlar',
-            heroTitle: 'Veteriner hekimlikte açık ve anlaşılır bir yol.',
-            heroText: 'Muayeneden aşıya, ne yapacağımızı ve nedenini önce size anlatırız.',
+            heroEyebrow: 'Veteriner kliniği',
+            heroTitle: 'Evcil hayvanınızın sağlığı için bize ulaşın.',
+            heroText: 'Klinikle ilgili temel bilgileri ve iletişim bilgilerimizi bu sayfada bulabilirsiniz.',
             ctaPrimary: 'Randevu al',
             ctaSecondary: 'Hizmetlere bak',
             aboutTitle: 'Klinik',
-            aboutText: 'Mahallemizdeki küçük hayvanlar için günlük bakımı düzenli ve anlaşılır tutmaya çalışıyoruz. Her muayenenin sonunda ne yapıldığını, sırada ne olduğunu ve ne zaman görüşeceğimizi bilirsiniz.',
+            aboutText: 'Evcil hayvanlar için hizmet veren bir veteriner kliniğiyiz. Sorularınız için bize ulaşabilirsiniz.',
             servicesTitle: 'Hizmetler',
-            servicesIntro: 'Günlük bakımdan planlı operasyona kadar klinikte yaptıklarımız.',
+            servicesIntro: 'Klinikte sunduğumuz hizmetler.',
             teamTitle: 'Hekimler',
-            teamIntro: 'Hayvanınızı kim muayene edecek, önceden bilin.',
+            teamIntro: 'Kliniğimizde görev yapan veteriner hekimler.',
             featuresTitle: 'Çalışma biçimimiz',
             galleryTitle: 'Klinikten',
             guideTitle: 'Sağlık rehberi',
@@ -66,22 +67,22 @@ export const SITE_CONCEPTS: readonly SiteConcept[] = [
         character: 'zarif',
         sectionKey: 'premium',
         voice: {
-            heroEyebrow: 'Randevulu veteriner kliniği',
-            heroTitle: 'Sakin bir muayene, özenli bir takip.',
-            heroText: 'Her randevuya yeterince zaman ayırır, süreci başından sonuna aynı hekimle yürütürüz.',
+            heroEyebrow: 'Veteriner kliniği',
+            heroTitle: 'Evcil dostunuzun sağlığı için.',
+            heroText: 'Randevu ve sorularınız için bize ulaşabilirsiniz.',
             ctaPrimary: 'Randevu talep edin',
             ctaSecondary: 'Hizmetler',
             aboutTitle: 'Klinik',
-            aboutText: 'Kliniğimizde randevuları sık tutmuyoruz. Hayvanınızın geçmişini dinlemek, muayeneyi telaşsız yapmak ve kararları sizinle birlikte almak için zaman ayırıyoruz.',
+            aboutText: 'Evcil hayvanlara veteriner hekimlik hizmeti sunuyoruz. Kliniğimiz hakkında bilgi almak için bize ulaşabilirsiniz.',
             servicesTitle: 'Hizmetlerimiz',
-            servicesIntro: 'Günlük bakımdan planlı operasyona, her adımı önceden konuşulan bir süreç.',
+            servicesIntro: 'Kliniğimizde sunulan hizmetler.',
             teamTitle: 'Hekimlerimiz',
-            teamIntro: 'Takibini aynı hekimle sürdürmek isteyenler için.',
+            teamIntro: 'Kliniğimizin veteriner hekimleri.',
             featuresTitle: 'Yaklaşımımız',
             galleryTitle: 'Klinikten kareler',
             guideTitle: 'Sağlık rehberi',
             contactTitle: 'Ziyaret',
-            contactText: 'Gelmeden önce aramanızı rica ederiz; size uygun saati birlikte belirleyelim.'
+            contactText: 'Adresimiz, çalışma saatlerimiz ve iletişim bilgilerimiz.'
         }
     },
     {
@@ -97,17 +98,17 @@ export const SITE_CONCEPTS: readonly SiteConcept[] = [
         character: 'samimi',
         sectionKey: 'friendly',
         voice: {
-            heroEyebrow: 'Mahallenizin veterineri',
+            heroEyebrow: 'Veteriner kliniğiniz',
             heroTitle: 'Hoş geldiniz. Minik dostunuz bugün nasıl?',
-            heroText: 'Aşı zamanı mı geldi, iştahı mı kesildi, yoksa sadece bir sorunuz mu var? Arayın, birlikte bakalım.',
+            heroText: 'Bir sorunuz mu var? Arayın ya da yazın.',
             ctaPrimary: 'Randevu alalım',
             ctaSecondary: 'Neler yapıyoruz?',
             aboutTitle: 'Biz kimiz?',
-            aboutText: 'Yakınınızda, kapısından rahatça girebileceğiniz bir kliniğiz. Kedinizin de köpeğinizin de adını öğrenir, huyunu suyunu not alırız.',
+            aboutText: 'Evcil hayvanlar için hizmet veren bir veteriner kliniğiyiz. Sorunuz olursa çekinmeden bize ulaşın.',
             servicesTitle: 'Neyle geldiniz?',
-            servicesIntro: 'Günlük işlerden planlı operasyonlara, burada yapabildiklerimiz.',
+            servicesIntro: 'Klinikte yapabildiklerimiz.',
             teamTitle: 'Tanışalım',
-            teamIntro: 'Sizi ve minik dostunuzu karşılayacak hekimler.',
+            teamIntro: 'Hekimlerimizle tanışın.',
             featuresTitle: 'Burada işler nasıl yürür?',
             galleryTitle: 'Klinikten kareler',
             guideTitle: 'Küçük notlar',
@@ -128,22 +129,22 @@ export const SITE_CONCEPTS: readonly SiteConcept[] = [
         character: 'dogal',
         sectionKey: 'nature',
         voice: {
-            heroEyebrow: 'Bütün yaşamı boyunca',
-            heroTitle: 'Hayvanınızın temposuna uyan bir bakım.',
-            heroText: 'Beslenmesini, yaşını ve alışkanlıklarını birlikte ele alıyor, telaşsız bir muayene ortamı kuruyoruz.',
+            heroEyebrow: 'Hayvan dostlarımız için',
+            heroTitle: 'Hayvanınızın sağlığı için buradayız.',
+            heroText: 'Kliniğimiz hakkında bilgi almak ve bize ulaşmak için bu sayfayı kullanabilirsiniz.',
             ctaPrimary: 'Randevu alın',
             ctaSecondary: 'Hizmetler',
-            aboutTitle: 'Yaklaşımımız',
-            aboutText: 'Hayvanınızı yalnız hasta olduğunda değil, sağlıklıyken de tanımak istiyoruz. Günlük düzeni, beslenmesi ve yaşı muayene kadar önemli.',
+            aboutTitle: 'Hakkımızda',
+            aboutText: 'Evcil hayvanlara veteriner hekimlik hizmeti veren bir kliniğiz. Bilgi almak için bize ulaşabilirsiniz.',
             servicesTitle: 'Neler yapıyoruz',
-            servicesIntro: 'Her yaşta düzenli takip ve gerektiğinde tedavi.',
+            servicesIntro: 'Klinikte sunduğumuz hizmetler.',
             teamTitle: 'Hekimlerimiz',
-            teamIntro: 'Hayvanınızı yıllar içinde tanıyan bir ekip.',
+            teamIntro: 'Kliniğimizin veteriner hekimleri.',
             featuresTitle: 'Bize gelince',
             galleryTitle: 'Günlük hayatımız',
             guideTitle: 'Sağlık defteri',
             contactTitle: 'Ziyaret edin',
-            contactText: 'Sakin saatleri telefonda sorabilirsiniz.'
+            contactText: 'Sorularınız için bizi arayabilirsiniz.'
         }
     }
 ];

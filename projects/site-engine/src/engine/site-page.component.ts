@@ -168,7 +168,7 @@ export function resolveSitePage(path: string, vm: SiteVm): SitePage {
                     @if (v.telHref) {
                         <a class="h call" [href]="v.telHref"><i class="pi pi-phone" aria-hidden="true"></i>{{ v.phone }}</a>
                     }
-                    <p class="muted">Acil durumda online talep bırakıp beklemeyin; kliniği arayın.</p>
+                    <p class="muted">Acil durumda kliniği arayın.</p>
                     <site-hours />
                 </section>
             }
@@ -236,7 +236,7 @@ export class SitePageComponent extends SiteSection {
             case 'ekibimiz':
                 return { title: 'Ekibimiz', lead: 'Hekimler ve onlarla çalışan ekip.', back: null };
             case 'rehber':
-                return { title: v.copy.guideTitle, lead: 'Genel bilgilendirme yazıları. Hayvanınız için en doğrusunu muayenede birlikte değerlendiririz.', back: null };
+                return { title: v.copy.guideTitle, lead: 'Genel bilgilendirme yazılarıdır; hayvanınız için hekiminize danışın.', back: null };
             case 'galeri':
                 return { title: v.copy.galleryTitle, lead: '', back: null };
             case 'iletisim':

@@ -134,6 +134,42 @@ export function emptyContent(config: SiteConfig): SiteConfig {
     };
 }
 
+/**
+ * ADR-045 K14: hazır metinde bulunmaması gereken ifadeler. Sözcük başından eşleşir ("uzman" → "uzmanlık"; "tamamen" "mama"ya takılmaz).
+ * Kliniğe dair her iddiayı liste yakalayamaz, bilinen kalıpları korur. Marka adı listelenemez; "ilaç" ve "mama" genel sözcükle tutulur.
+ */
+const FORBIDDEN_COPY: readonly string[] = [
+    'en iyi',
+    'en doğru',
+    'ücret',
+    'bedava',
+    'indirim',
+    'kampanya',
+    'garanti',
+    '7/24',
+    'uzman',
+    'lider',
+    'yorum',
+    'müşteri',
+    'fiyat',
+    '₺',
+    'ilaç',
+    'mama',
+    'süre',
+    'dakika',
+    'ekipman',
+    'cihaz',
+    'teknoloji',
+    'aynı hekim',
+    'randevuları sık'
+];
+
+export function forbiddenCopy(text: string): readonly string[] {
+    const lower = text.toLocaleLowerCase('tr');
+
+    return FORBIDDEN_COPY.filter((word) => new RegExp(`(?<![\\p{L}\\p{N}])${word}`, 'u').test(lower));
+}
+
 export function patchClinic(config: SiteConfig, clinic: Partial<SiteContent['clinic']>): SiteConfig {
     return { ...config, content: { ...config.content, clinic: { ...config.content.clinic, ...clinic } } };
 }
