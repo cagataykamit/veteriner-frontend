@@ -52,6 +52,12 @@ export default [
             import('@/app/features/reports/performance/pages/performance-page/performance-page.component').then((m) => m.PerformancePageComponent)
     },
     {
+        path: 'clinics-overview',
+        canActivate: [requireAnyClaim([MANAGER_LEVEL_CLAIM])],
+        loadComponent: () =>
+            import('@/app/features/reports/performance/pages/clinics-overview-page/clinics-overview-page.component').then((m) => m.ClinicsOverviewPageComponent)
+    },
+    {
         path: 'payments',
         canActivate: [requireAnyClaim([PAYMENTS_READ_CLAIM])],
         loadComponent: () =>

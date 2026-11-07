@@ -1,0 +1,128 @@
+<app-page-header title="Şubeler özeti" description="Tüm şubelerin cirosu, tahsilatı, açık alacağı ve iş yükü yan yana; önceki dönemle karşılaştırma." [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" />
+
+@if (planLocked()) {
+    <div class="card mb-4">
+        <app-plan-upgrade-notice feature="ClinicsOverview" detail="Şubeleri tek tek açmadan ciro, tahsilat, açık alacak, geliş, muayene ve randevuyu tek tabloda, önceki dönemle görürsünüz." />
+    </div>
+} @else {
+    <div class="card mb-4">
+        <p class="text-sm text-muted-color m-0 mb-4">Erişebildiğiniz tüm aktif şubeler listelenir; panelde seçili klinik listeyi daraltmaz.</p>
+        <div class="flex flex-wrap items-end gap-3">
+            <app-filter-field label="Dönem" labelId="overviewPresetLabel" width="select">
+                <p-select ariaLabelledBy="overviewPresetLabel" inputId="overviewPreset" [options]="presetOptions" optionLabel="label" optionValue="value" [ngModel]="preset()" (ngModelChange)="selectPreset($event)" class="w-full" />
+            </app-filter-field>
+            <app-filter-field label="Başlangıç" labelFor="overviewFrom" width="date">
+                <app-date-input inputId="overviewFrom" type="date" min="1900-01-01" [ngModel]="from()" (ngModelChange)="setFrom($event)" />
+            </app-filter-field>
+            <app-filter-field label="Bitiş" labelFor="overviewTo" width="date">
+                <app-date-input inputId="overviewTo" type="date" min="1900-01-01" [ngModel]="to()" (ngModelChange)="setTo($event)" />
+            </app-filter-field>
+            <label class="flex items-center gap-2 text-sm pb-2" for="overviewCompare">
+                <p-toggleswitch inputId="overviewCompare" [ngModel]="compare()" (ngModelChange)="setCompare($event)" />
+                Önceki dönemle karşılaştır
+            </label>
+        </div>
+    </div>
+
+    @if (error(); as message) {
+        <div class="card mb-4">
+            <p class="text-red-500 m-0" role="alert">{{ message }}</p>
+            <button pButton type="button" class="mt-3" size="small" severity="secondary" (click)="load()"><i class="p-button-icon pi pi-refresh"></i>Tekrar dene</button>
+        </div>
+    } @else if (loading() && !data()) {
+        <div class="card mb-4"><p class="text-muted-color m-0" role="status">Yükleniyor…</p></div>
+    } @else if (data(); as d) {
+        @if (d.previousFrom && d.previousTo) {
+            <p class="text-sm text-muted-color mt-0 mb-3" data-testid="overview-previous-period">Karşılaştırılan dönem: {{ displayDate(d.previousFrom) }} – {{ displayDate(d.previousTo) }}</p>
+        }
+
+        @if (rows().length === 0) {
+            <div class="card mb-4" data-testid="overview-empty">
+                <p class="m-0">Erişebildiğiniz aktif şube yok.</p>
+                <p class="text-muted-color text-sm mt-2 mb-0">Şube ataması kullanıcı ayarlarından yapılır; kurum yöneticinize başvurabilirsiniz.</p>
+            </div>
+        } @else {
+            <!-- Geniş ekran: tablo -->
+            <div class="card mb-4 hidden md:block" [class.opacity-60]="loading()" data-testid="overview-table">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-muted-color">
+                                <th class="py-2 pr-3 font-medium">Şube</th>
+                                @for (col of columns(); track col.key) {
+                                    <th class="py-2 pr-3 font-medium text-right whitespace-nowrap">
+                                        {{ col.label }} <i class="pi pi-info-circle text-xs ml-1" [attr.title]="col.hint" [attr.aria-label]="col.hint"></i>
+                                    </th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (row of rows(); track row.key) {
+                                <tr class="border-t border-surface-200 dark:border-surface-700" [attr.data-testid]="'overview-row-' + row.key">
+                                    <td class="py-2 pr-3 font-medium">{{ row.name }}</td>
+                                    @for (cell of row.cells; track cell.key) {
+                                        <td class="py-2 pr-3 text-right whitespace-nowrap">
+                                            <span class="block">{{ cell.text }}</span>
+                                            @if (cell.deltaText) {
+                                                <span class="block text-xs" [class.text-green-600]="cell.direction === 'up'" [class.text-red-500]="cell.direction === 'down'" [class.text-muted-color]="cell.direction === 'flat'">{{ cell.deltaText }}</span>
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                        @if (totalRow(); as total) {
+                            <tfoot>
+                                <tr class="border-t-2 border-surface-300 dark:border-surface-600 font-medium" data-testid="overview-total">
+                                    <td class="py-2 pr-3">{{ total.name }}</td>
+                                    @for (cell of total.cells; track cell.key) {
+                                        <td class="py-2 pr-3 text-right whitespace-nowrap">
+                                            <span class="block">{{ cell.text }}</span>
+                                            @if (cell.deltaText) {
+                                                <span class="block text-xs font-normal" [class.text-green-600]="cell.direction === 'up'" [class.text-red-500]="cell.direction === 'down'" [class.text-muted-color]="cell.direction === 'flat'">{{ cell.deltaText }}</span>
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            </tfoot>
+                        }
+                    </table>
+                </div>
+            </div>
+
+            <!-- Telefon: şube başına kart, toplam en üstte -->
+            <div class="md:hidden flex flex-col gap-3 mb-4" [class.opacity-60]="loading()" data-testid="overview-cards">
+                @if (totalRow(); as total) {
+                    <ng-container *ngTemplateOutlet="card; context: { $implicit: total, highlight: true }" />
+                }
+                @for (row of rows(); track row.key) {
+                    <ng-container *ngTemplateOutlet="card; context: { $implicit: row, highlight: false }" />
+                }
+            </div>
+
+            <ng-template #card let-row let-highlight="highlight">
+                <div class="card mb-0" [class.border-primary]="highlight">
+                    <h6 class="mt-0 mb-3">{{ row.name }}</h6>
+                    <dl class="grid grid-cols-2 gap-x-4 gap-y-3 m-0 text-sm">
+                        @for (cell of row.cells; track cell.key) {
+                            <div>
+                                <dt class="text-muted-color">{{ cell.label }}</dt>
+                                <dd class="m-0 font-medium">
+                                    {{ cell.text }}
+                                    @if (cell.deltaText) {
+                                        <span class="text-xs font-normal ml-1" [class.text-green-600]="cell.direction === 'up'" [class.text-red-500]="cell.direction === 'down'" [class.text-muted-color]="cell.direction === 'flat'">{{ cell.deltaText }}</span>
+                                    }
+                                </dd>
+                            </div>
+                        }
+                    </dl>
+                </div>
+            </ng-template>
+
+            <small class="block text-muted-color mb-4">
+                Her şubenin sayıları İşletme performansı ve gün sonu raporuyla aynı hesaptır. Açık alacak bugünkü durumdur; toplamda iki şubede borcu olan müşteri bir kez sayılır. Bir şubenin ayrıntısı için panelde o kliniği seçip
+                <a [routerLink]="performanceRoute">İşletme performansı</a>'nı açın.
+            </small>
+        }
+    }
+}

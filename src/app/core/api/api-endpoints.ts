@@ -271,6 +271,8 @@ export const ApiEndpoints = {
         /** İşletme performansı özeti (REPORT-008). */
         performanceSummary: () => `/api/v1/reports/performance-summary`,
         performanceBreakdowns: () => `/api/v1/reports/performance-breakdowns`,
+        /** Patron ekranı (TIER-007): erişilebilen tüm şubeler; `from`, `to`, `compare`; klinik gönderilmez. */
+        clinicsOverview: () => `/api/v1/reports/clinics-overview`,
         /** Rapor favorileri (REPORT-003): GET liste; PUT/DELETE `{reportKey}` idempotent. Kullanıcı + kiracı kapsamı. */
         favorites: () => `/api/v1/reports/favorites`,
         favorite: (reportKey: string) => `/api/v1/reports/favorites/${encodeURIComponent(reportKey)}`,
