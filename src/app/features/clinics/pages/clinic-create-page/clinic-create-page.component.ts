@@ -37,7 +37,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
         @if (ro.lockedPlanFeature('MultiClinic')) {
             <div class="card">
-                <app-plan-upgrade-notice feature="MultiClinic" detail="Mevcut paketinizde aynı anda tek aktif klinik olur. Var olan bir kliniği pasife alıp yenisini açabilirsiniz; tek kurum altında birden fazla klinik için üst pakete geçin." />
+                <app-plan-upgrade-notice feature="MultiClinic" detail="Mevcut paketinizde aynı anda tek aktif klinik olur; birden fazla klinik için üst pakete geçin." />
             </div>
         } @else {
         <div class="card">
