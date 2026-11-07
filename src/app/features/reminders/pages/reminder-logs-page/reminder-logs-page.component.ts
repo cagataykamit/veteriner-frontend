@@ -267,7 +267,9 @@ export class ReminderLogsPageComponent implements OnInit {
     readonly reminderTypeOptions = [
         { label: 'Tümü', value: '' },
         { label: 'Randevu', value: 'Appointment' },
-        { label: 'Aşı', value: 'Vaccination' }
+        { label: 'Aşı', value: 'Vaccination' },
+        { label: 'Kontrol', value: 'FollowUp' },
+        { label: 'Ödeme', value: 'Debt' }
     ];
 
     readonly statusOptions = [

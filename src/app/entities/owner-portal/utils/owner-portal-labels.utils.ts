@@ -64,6 +64,9 @@ const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
     DataRequestAnswered: 'Veri talebi yanıtı',
     AppointmentReminder: 'Randevu hatırlatması',
     VaccinationReminder: 'Aşı hatırlatması',
+    FollowUpReminder: 'Kontrol hatırlatması',
+    DebtReminder: 'Ödeme hatırlatması',
+    NoReturnReminder: 'Uzun süredir gelmedi',
     Marketing: 'Kampanya ve duyuru'
 };
 

@@ -23,6 +23,18 @@ function logItem(overrides: Partial<ReminderLogItemDto> = {}): ReminderLogItemDt
 }
 
 describe('reminders.mapper — hatırlatma günlüğü', () => {
+    it('otomatik hatırlatıcı kayıtları sayı ya da metin değerle etiketlenir (TIER-003)', () => {
+        const followUp = mapReminderLogItemDtoToVm(logItem({ reminderType: 2, sourceEntityType: 2, sourceEntityId: 't1' }));
+        const debt = mapReminderLogItemDtoToVm(logItem({ reminderType: 'Debt', sourceEntityType: 'Charge', sourceEntityId: 'ch1' }));
+
+        expect(followUp.reminderTypeLabel).toBe('Kontrol');
+        expect(followUp.sourceEntityTypeLabel).toBe('Tedavi');
+        expect(followUp.relatedRecordRoute).toEqual(['/panel/treatments', 't1']);
+        expect(debt.reminderTypeLabel).toBe('Ödeme');
+        expect(debt.sourceEntityTypeLabel).toBe('Ücret');
+        expect(debt.relatedRecordRoute).toBeNull();
+    });
+
     it('TrialDailyLimit atlaması okunur etiket ve açıklama alır; ham kod gösterilmez (TRIAL-004, sözleşme §3.3)', () => {
         const vm = mapReminderLogItemDtoToVm(logItem({ lastError: 'TrialDailyLimit' }));
 

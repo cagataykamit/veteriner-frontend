@@ -120,6 +120,12 @@ export function mapReminderLogsPagedDtoToVm(dto: ReminderLogsPagedDto): Reminder
 }
 
 function reminderTypeLabel(type: unknown): string {
+    const automated = AUTOMATED_REMINDER_TYPE_LABELS[toTrimmedString(type).toLowerCase()];
+
+    if (automated) {
+        return automated;
+    }
+
     const normalized = normalizeReminderType(type);
 
     if (normalized === 0) {
@@ -196,7 +202,36 @@ function recipientDisplay(dto: ReminderLogItemDto): string {
     return safeText(name ?? email);
 }
 
+/** Otomatik hatırlatıcı değerleri (TIER-003); API sayı ya da metin dönebilir. */
+const AUTOMATED_REMINDER_TYPE_LABELS: Readonly<Record<string, string>> = {
+    '2': 'Kontrol',
+    followup: 'Kontrol',
+    '3': 'Ödeme',
+    debt: 'Ödeme',
+    '4': 'Uzun süredir gelmedi',
+    noreturn: 'Uzun süredir gelmedi'
+};
+
+const AUTOMATED_REMINDER_SOURCES: Readonly<Record<string, { label: string; link: { label: string; route: string } | null }>> = {
+    '2': { label: 'Tedavi', link: { label: 'Tedaviye git', route: '/panel/treatments' } },
+    treatment: { label: 'Tedavi', link: { label: 'Tedaviye git', route: '/panel/treatments' } },
+    '3': { label: 'Ücret', link: null },
+    charge: { label: 'Ücret', link: null },
+    '4': { label: 'Hasta', link: { label: 'Hastaya git', route: '/panel/pets' } },
+    pet: { label: 'Hasta', link: { label: 'Hastaya git', route: '/panel/pets' } }
+};
+
+function automatedSource(sourceEntityType: unknown) {
+    return AUTOMATED_REMINDER_SOURCES[toTrimmedString(sourceEntityType).toLowerCase()] ?? null;
+}
+
 function sourceEntityTypeLabelForDisplay(sourceEntityType: unknown, fallbackReminderType: unknown): string {
+    const automated = automatedSource(sourceEntityType);
+
+    if (automated) {
+        return automated.label;
+    }
+
     const normalizedSourceEntityType = normalizeReminderType(sourceEntityType);
 
     if (normalizedSourceEntityType === 0) {
@@ -225,6 +260,12 @@ function relatedRecordMeta(
     fallbackReminderType: unknown,
     sourceEntityId: string | null
 ): { label: string; route: string[] | null } {
+    const automated = automatedSource(sourceEntityType);
+
+    if (automated) {
+        return automated.link && sourceEntityId ? { label: automated.link.label, route: [automated.link.route, sourceEntityId] } : { label: '—', route: null };
+    }
+
     const normalizedType = normalizeReminderType(sourceEntityType) ?? normalizeReminderType(fallbackReminderType);
 
     if (normalizedType === 0) {
