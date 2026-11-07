@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, DOCUMENT, HostListener, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DOCUMENT, effect, ElementRef, HostListener, inject, OnInit, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PAGE_DEFS } from '@site-engine';
 import { SETTINGS_ROUTE, SUBSCRIPTION_ROUTE } from '@/app/core/routing/panel-navigation';
@@ -122,7 +122,7 @@ const FONTS_LINK_ID = 'site-fonts-css';
 
             <div class="split">
                 <section class="panel" aria-label="Sihirbaz">
-                    <div class="panel-scroll">
+                    <div #panelScroll class="panel-scroll">
                         <header class="head">
                             <p class="count">Adım {{ step() + 1 }} / {{ steps.length }}</p>
                             <h1>{{ current().title }}</h1>
@@ -212,6 +212,7 @@ export class SiteBuilderPageComponent implements OnInit {
     protected readonly store = inject(SiteBuilderStore);
     private readonly readOnly = inject(TenantReadOnlyContextService);
     private readonly document = inject(DOCUMENT);
+    private readonly panelScroll = viewChild<ElementRef<HTMLElement>>('panelScroll');
 
     protected readonly settingsRoute = SETTINGS_ROUTE;
     protected readonly subscriptionRoute = SUBSCRIPTION_ROUTE;
@@ -251,6 +252,14 @@ export class SiteBuilderPageComponent implements OnInit {
                 return this.store.site() ? 'Taslak kayıtlı' : '';
         }
     });
+
+    constructor() {
+        // Adım değişince okuma baştan başlar; "Düzelt" ve yayın şeridi de adımı değiştirir.
+        effect(() => {
+            this.step();
+            this.panelScroll()?.nativeElement.scrollTo({ top: 0 });
+        });
+    }
 
     ngOnInit(): void {
         this.readOnly.ensurePanelTenantAccess().subscribe();
