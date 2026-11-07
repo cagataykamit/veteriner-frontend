@@ -11,6 +11,7 @@ import { mapProductDtoToUpsertFormValue } from '@/app/entities/inventory/data/pr
 import { createProductUpsertFormGroup } from '@/app/features/inventory/forms/product-upsert-form.factory';
 import type { ProductUpsertFormValue } from '@/app/entities/inventory/models/product-upsert-form.model';
 import { ProductCategoryService } from '@/app/features/inventory/services/product-category.service';
+import { BarcodeScanButtonComponent } from '@/app/entities/inventory/components/barcode-scan-button.component';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -30,7 +31,7 @@ import { EMPTY, map, switchMap } from 'rxjs';
 @Component({
     selector: 'app-product-edit-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, ProductClassificationFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, BarcodeScanButtonComponent, ProductClassificationFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [categoryLink]="productId() ? ['/panel/products', productId()!] : ['/panel/products']" categoryLinkLabel="Ürün detayına dön" title="Ürünü düzenle" description="Ürün kartını güncelleyin." />
@@ -90,7 +91,10 @@ import { EMPTY, map, switchMap } from 'rxjs';
                         </div>
                         <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
                             <label for="barcodeEdit" class="block text-sm font-medium text-muted-color">Barkod</label>
-                            <input id="barcodeEdit" pInputText class="w-full" type="text" formControlName="barcode" autocomplete="off" />
+                            <div class="flex gap-2">
+                                <input id="barcodeEdit" pInputText class="flex-1 min-w-0" type="text" formControlName="barcode" autocomplete="off" />
+                                <app-barcode-scan-button (scanned)="form.controls.barcode.setValue($event)" />
+                            </div>
                         </div>
                         <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
                             <label for="unitEdit" class="block text-sm font-medium text-muted-color">Birim *</label>

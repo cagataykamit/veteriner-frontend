@@ -10,6 +10,7 @@ import { mapProductCategoryListItemVmToSelectOption } from '@/app/features/inven
 import { createProductUpsertFormGroup } from '@/app/features/inventory/forms/product-upsert-form.factory';
 import type { ProductUpsertFormValue } from '@/app/entities/inventory/models/product-upsert-form.model';
 import { ProductCategoryService } from '@/app/features/inventory/services/product-category.service';
+import { BarcodeScanButtonComponent } from '@/app/entities/inventory/components/barcode-scan-button.component';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -24,7 +25,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 @Component({
     selector: 'app-product-create-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, ProductClassificationFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, BarcodeScanButtonComponent, ProductClassificationFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/products" categoryLinkLabel="Ürün listesine dön" title="Yeni ürün" description="Ürün kartı oluşturun." />
@@ -77,7 +78,10 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                     </div>
                     <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
                         <label for="barcode" class="block text-sm font-medium text-muted-color">Barkod</label>
-                        <input id="barcode" pInputText class="w-full" type="text" formControlName="barcode" autocomplete="off" />
+                        <div class="flex gap-2">
+                            <input id="barcode" pInputText class="flex-1 min-w-0" type="text" formControlName="barcode" autocomplete="off" />
+                            <app-barcode-scan-button (scanned)="form.controls.barcode.setValue($event)" />
+                        </div>
                     </div>
                     <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
                         <label for="unit" class="block text-sm font-medium text-muted-color">Birim *</label>
