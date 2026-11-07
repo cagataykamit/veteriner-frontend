@@ -147,14 +147,14 @@ export class PerformanceBreakdownsComponent {
                 key: 'line-kinds',
                 title: 'Hizmet ve ürün',
                 nameLabel: 'Tür',
-                countLabel: 'Kalem',
+                countLabel: 'Satır',
                 rows: breakdownRows(c.byLineKind, p?.byLineKind, (r) => ({ key: r.lineKind, name: LINE_KIND_LABELS[r.lineKind] ?? r.lineKind, count: r.chargeCount, amount: r.netChargeAmount }), cmp)
             },
             c.topItems && {
                 key: 'items',
                 title: 'En çok ciro yapan kalemler',
                 nameLabel: 'Kalem',
-                countLabel: 'Adet',
+                countLabel: 'Satır',
                 rows: breakdownRows(c.topItems, p?.topItems, (r) => ({ key: `${r.lineKind}:${r.description}`, name: r.description, count: r.chargeCount, amount: r.netChargeAmount }), cmp)
             },
             c.bySpecies && {
