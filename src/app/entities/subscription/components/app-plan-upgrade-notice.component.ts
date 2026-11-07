@@ -13,7 +13,8 @@ const FEATURE_TITLES: Readonly<Record<PlanFeatureCode, string>> = {
     PortalAppointmentRequests: 'Portaldan randevu talebi',
     MultiClinic: 'Birden fazla klinik',
     AutomatedReminders: 'Otomatik hatırlatıcılar',
-    AdvancedReports: 'Gelişmiş raporlar'
+    AdvancedReports: 'Gelişmiş raporlar',
+    VaccinationWizard: 'Otomatik aşı sihirbazı'
 };
 
 /**

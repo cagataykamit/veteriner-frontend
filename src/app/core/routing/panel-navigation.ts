@@ -42,6 +42,7 @@ import {
     TENANT_MANAGEMENT_CLAIM,
     TREATMENTS_READ_CLAIM,
     VACCINATIONS_READ_CLAIM,
+    VACCINE_DEFINITIONS_UPDATE_CLAIM,
     VISITS_CORRECT_CLAIM,
     VISITS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
@@ -117,6 +118,7 @@ export const CLINICAL_SNIPPETS_ROUTE = `${DEFINITIONS_ROUTE}/clinical-snippets`;
 export const EXAMINATION_TEMPLATES_ROUTE = `${DEFINITIONS_ROUTE}/examination-templates`;
 export const HOSPITALIZATION_WARDS_ROUTE = `${DEFINITIONS_ROUTE}/hospitalization-wards`;
 export const APPOINTMENT_REASONS_ROUTE = `${DEFINITIONS_ROUTE}/appointment-reasons`;
+export const VACCINATION_SCHEDULE_ROUTE = `${DEFINITIONS_ROUTE}/vaccination-schedule`;
 export const ONLINE_BOOKING_SETTINGS_ROUTE = '/panel/settings/online-booking';
 export const APPOINTMENT_REQUESTS_ROUTE = '/panel/appointments/requests';
 export const NOTIFICATIONS_ROUTE = '/panel/notifications';
@@ -449,6 +451,14 @@ export const DEFINITION_ENTRIES: readonly CardEntry[] = [
         // Okuma randevu planlama yetkisiyle (sözleşme §2); düzenleme sayfa içinde `Clinics.Update`'e bağlıdır.
         claims: [CLINICS_UPDATE_CLAIM, CLINICS_READ_CLAIM, APPOINTMENTS_CREATE_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM],
         description: 'Randevu formunda ve online talepte seçilen nedenler; süre önerisi ve uygun hekimler.'
+    },
+    {
+        label: 'Aşı takvimi',
+        icon: 'pi pi-fw pi-calendar-plus',
+        route: VACCINATION_SCHEDULE_ROUTE,
+        // Öneriyi hasta kartında hekim kullanır; kart takvimi yönetebilene görünür (sözlük kartıyla aynı ilke). Paket kilidi sayfadadır.
+        claims: [VACCINE_DEFINITIONS_UPDATE_CLAIM],
+        description: 'Türe göre aşıların başlangıç haftası, doz sayısı ve tekrarı; hasta kartında aşı planı önerisi buradan çıkar.'
     }
 ];
 

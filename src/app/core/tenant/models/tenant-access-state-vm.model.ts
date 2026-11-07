@@ -1,5 +1,5 @@
 /** Pakete bağlı özellik (`PLAN_FEATURES_API_CONTRACT.md` §1). Kural backend'dedir; panel yalnız sonucu okur. */
-export type PlanFeatureCode = 'OwnerPortal' | 'PortalAppointmentRequests' | 'MultiClinic' | 'AutomatedReminders' | 'AdvancedReports';
+export type PlanFeatureCode = 'OwnerPortal' | 'PortalAppointmentRequests' | 'MultiClinic' | 'AutomatedReminders' | 'AdvancedReports' | 'VaccinationWizard';
 
 export interface TenantPlanFeatureVm {
     readonly feature: string;
