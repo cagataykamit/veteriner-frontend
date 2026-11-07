@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { SECTION_DIRECTIVES, SiteSection } from '../../site-context';
-import { stockPhoto } from '../../stock-photos';
 import { SECTION_BASE } from '../../section-base';
 
 /** Premium: dikey, çerçeveli tek fotoğraf ve yanında büyük harfle başlayan metin; basılı dergi sayfası gibi. */
@@ -114,5 +113,5 @@ import { SECTION_BASE } from '../../section-base';
     ]
 })
 export class PremiumAboutComponent extends SiteSection {
-    protected readonly photo = computed(() => this.vm().aboutImage ?? stockPhoto('premium-about'));
+    protected readonly photo = computed(() => this.vm().aboutImage ?? this.vm().stock['premium-about']);
 }

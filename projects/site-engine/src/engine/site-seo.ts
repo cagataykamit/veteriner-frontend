@@ -3,6 +3,7 @@ import { conceptByKey } from './site-concepts';
 import { safeImageSrc } from './site-links';
 import { pageHeading, resolveSitePage } from './site-page-route';
 import { buildSiteVm } from './site-vm';
+import { stockSharePhoto } from './stock-photos';
 
 /**
  * Arama ve paylaşım çıktılarının tek kaynağı: sihirbazdaki önizleme ile sitenin sunucu çıktısı aynı kuralı kullanır (ADR-045 K12).
@@ -45,7 +46,7 @@ export function sitePageHead(config: SiteConfig, path: string, now: Date = new D
         found: page.kind !== 'notfound',
         title: home ? seoTitle(config) || vm.siteName : heading ? `${heading.title} | ${vm.siteName}` : vm.siteName,
         description: (home ? seoDescription(config) : heading?.lead || seoDescription(config)).slice(0, 300),
-        imageSrc: safeImageSrc(config.seo.ogImage) ?? vm.heroImage?.src ?? null,
+        imageSrc: safeImageSrc(config.seo.ogImage) ?? vm.heroImage?.src ?? stockSharePhoto(config.design.conceptKey).src,
         iconSrc: safeImageSrc(config.seo.favicon) ?? vm.logo
     };
 }

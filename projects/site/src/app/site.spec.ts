@@ -1,5 +1,7 @@
-import { defaultStoredConfig } from '@site-engine';
+import { TestBed } from '@angular/core/testing';
+import { composeSiteConfig, defaultStoredConfig } from '@site-engine';
 import { loadPublicSite, readSiteServerConfig, redirectLocation } from '../server/site-loader';
+import { SiteHead } from './site-head';
 import { sitePathFromUrl } from './site-page-host.component';
 import { publishedSiteConfig, type PublicSiteResponse, type PublishedSite } from './site-state';
 
@@ -93,6 +95,27 @@ describe('publishedSiteConfig', () => {
 
     it('online randevu kapalıysa bağlantı taşınmaz', () => {
         expect(publishedSiteConfig({ ...site, onlineBooking: { isEnabled: false, bookingUrl: 'https://portal/randevu/k' } }).content.clinic.bookingUrl).toBeNull();
+    });
+});
+
+describe('SiteHead paylaşım görseli', () => {
+    const RECORD = { name: 'Çağrı', city: 'Ankara', district: '', address: '', phone: '', email: '', workingDays: [], bookingUrl: null };
+    const ogImage = (hero: string | null): string | null => {
+        const stored = defaultStoredConfig('premium');
+        const config = composeSiteConfig({ ...stored, content: { ...stored.content, heroImage: hero ? { src: hero, alt: 'x' } : null } }, RECORD, 'cagri');
+
+        TestBed.inject(SiteHead).applyPublished(config, '/', 'https://vetinity.com');
+
+        return document.head.querySelector('meta[property="og:image"]')?.getAttribute('content') ?? null;
+    };
+
+    it('klinik görsel yüklemediyse hazır fotoğraf sitenin tabanından tam adres olur', () => {
+        expect(ogImage(null)).toBe('https://vetinity.com/k/_stock/tuxedo-dark.webp');
+    });
+
+    it('kök göreli ve tam adresli görsel olduğu gibi kalır', () => {
+        expect(ogImage('/api/v1/public/sites/cagri/images/g1')).toBe('https://vetinity.com/api/v1/public/sites/cagri/images/g1');
+        expect(ogImage('https://api.example.com/g1')).toBe('https://api.example.com/g1');
     });
 });
 

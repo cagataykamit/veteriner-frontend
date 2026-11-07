@@ -99,6 +99,61 @@ describe('SiteBuilderPageComponent', () => {
         expect(root(fixture).querySelector<HTMLFieldSetElement>('fieldset.steps')?.disabled).toBe(true);
     });
 
+    async function contentStep(draft = defaultStoredConfig()) {
+        const fixture = await open({ detail: { ...DETAIL, draft } });
+
+        (fixture.componentInstance as unknown as { step: { set(value: number): void } }).step.set(4);
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        return fixture;
+    }
+
+    const imageField = (fixture: ComponentFixture<SiteBuilderPageComponent>, label: string): HTMLElement => root(fixture).querySelector<HTMLElement>(`input[aria-label="${label}"]`)!.closest('app-w-image')!;
+
+    it('boş görsel alanında hazır fotoğraf görünür, yükleme tek tıktadır (K7)', async () => {
+        const fixture = await contentStep();
+        const hero = imageField(fixture, 'Hero fotoğrafı yükle');
+
+        expect(hero.querySelector('img')?.getAttribute('src')).toBe('_stock/bandana.webp');
+        expect(hero.textContent).toContain('Hazır fotoğraf, değiştirebilirsiniz.');
+        expect(hero.textContent).toContain('Kendi fotoğrafını yükle');
+        expect(hero.textContent).not.toContain('Kaldır');
+    });
+
+    it('seçili konseptin karesi görünür', async () => {
+        const fixture = await contentStep(defaultStoredConfig('premium'));
+
+        expect(imageField(fixture, 'Hero fotoğrafı yükle').querySelector('img')?.getAttribute('src')).toBe('_stock/tuxedo-dark.webp');
+        expect(imageField(fixture, 'Bölüm fotoğrafı yükle').querySelector('img')?.getAttribute('src')).toBe('_stock/siamese-dark.webp');
+    });
+
+    it('klinik yüklediyse hazır fotoğraf görünmez; kaldırılabileceği ve neyin döneceği söylenir', async () => {
+        const stored = defaultStoredConfig();
+        const fixture = await contentStep({ ...stored, content: { ...stored.content, heroImage: { src: 'site-image:a1', alt: 'Klinik' } } });
+        const hero = imageField(fixture, 'Hero fotoğrafı yükle');
+
+        expect(hero.querySelector('img')?.getAttribute('src')).not.toContain('_stock/');
+        expect(hero.textContent).toContain('Kaldırırsanız hazır fotoğraf döner.');
+        expect(hero.textContent).toContain('Dosya seç');
+    });
+
+    it('galeri boşken hazır kareler ve geri dönüş kuralı görünür', async () => {
+        const fixture = await contentStep();
+
+        expect(root(fixture).querySelectorAll('.stock-strip img')).toHaveLength(8);
+        expect(text(fixture)).toContain('hepsini kaldırırsanız hazır fotoğraflar döner');
+    });
+
+    it('hekim fotoğraf alanında hazır fotoğraf yoktur, monogram söylenir', async () => {
+        const stored = defaultStoredConfig();
+        const fixture = await contentStep({ ...stored, content: { ...stored.content, members: [{ slug: 'hekim', kind: 'hekim', name: 'Dr. Hekim', title: '', specialties: '', bio: '', image: null }] } });
+        const member = imageField(fixture, 'Fotoğraf yükle');
+
+        expect(member.querySelector('img')).toBeNull();
+        expect(member.textContent).toContain('Fotoğraf yoksa baş harfler çizilir.');
+    });
+
     async function addressStep(remaining?: number) {
         const site = { ...PUBLISHED, ...(remaining === undefined ? {} : { addressChangesRemaining: remaining }) };
         const fixture = await open({ detail: { ...DETAIL, site } });

@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { SECTION_DIRECTIVES, SiteSection } from '../../site-context';
-import { stockPhoto } from '../../stock-photos';
 import { SECTION_BASE } from '../../section-base';
 import { SiteStatusComponent } from '../../site-parts.component';
 
@@ -168,7 +167,7 @@ import { SiteStatusComponent } from '../../site-parts.component';
     ]
 })
 export class NatureHeroComponent extends SiteSection {
-    protected readonly one = computed(() => this.vm().heroImage ?? stockPhoto('nature-hero'));
-    protected readonly two = computed(() => stockPhoto('nature-hero-2'));
+    protected readonly one = computed(() => this.vm().heroImage ?? this.vm().stock['nature-hero']);
+    protected readonly two = computed(() => this.vm().stock['nature-hero-2']);
     protected readonly title = computed(() => this.lastWord(this.vm().copy.heroTitle));
 }

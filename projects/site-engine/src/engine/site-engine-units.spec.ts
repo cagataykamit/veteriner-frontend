@@ -7,7 +7,8 @@ import { clinicStatus, hoursGroups } from './site-hours';
 import { safeHref, safeImageSrc, socialLinks } from './site-links';
 import { buildSiteTokens } from './site-tokens';
 import { buildSiteVm, memberInitials, whatsappNumber } from './site-vm';
-import { STOCK_PHOTOS, stockPhoto } from './stock-photos';
+import record from '../../stock/KAYNAKLAR.json';
+import { isStockPhoto, STOCK_GALLERY, STOCK_LIBRARY, STOCK_PHOTOS, stockArticlePhoto, stockSectionPhoto, stockServicePhoto, stockSharePhoto } from './stock-photos';
 
 const NOW = new Date(Date.UTC(2026, 10, 9, 7, 30)); // Pazartesi
 const voice = SITE_CONCEPTS[0].voice;
@@ -128,14 +129,14 @@ describe('buildSiteVm', () => {
         expect(whatsappNumber('')).toBe('');
     });
 
-    it('boş içerikte ad yer tutucusu ve baş harf üretilir, bölüm listesi yalnız tanıtımdır', () => {
+    it('boş içerikte ad yer tutucusu ve baş harf üretilir, bölüm listesi tanıtım ve hazır galeridir', () => {
         const vm = buildSiteVm(emptyContent(sampleConfig()), voice, NOW);
 
         expect(vm.name).toBe('Klinik adı');
         expect(vm.initial).toBe('K');
         expect(vm.telHref).toBeNull();
         expect(vm.mapHref).toBeNull();
-        expect(vm.homeSections).toEqual(['about']);
+        expect(vm.homeSections).toEqual(['about', 'gallery']);
     });
 
     it('üye baş harfleri unvanı atlar, Türkçe büyük harf kullanır', () => {
@@ -204,8 +205,46 @@ describe('fontlar ve hazır fotoğraf', () => {
         }
     });
 
-    it('hazır set şimdilik boştur; boş yuva görsel üretmez (K7)', () => {
-        expect(Object.keys(STOCK_PHOTOS)).toEqual([]);
-        expect(stockPhoto('modern-hero')).toBeNull();
+    it('her hazır fotoğrafın kaynağı, tarihi ve lisansı kayıtlıdır; kayıtta kullanılmayan dosya yoktur (K7)', () => {
+        const used = STOCK_LIBRARY.map((photo) => photo.src.replace('_stock/', '')).sort();
+
+        expect(record.photos.map((photo) => photo.file).sort()).toEqual(used);
+
+        for (const photo of record.photos) {
+            expect(photo.source, photo.file).toMatch(/^https:\/\/unsplash\.com\/photos\//);
+            expect(photo.url, photo.file).toMatch(/^https:\/\/images\.unsplash\.com\/photo-/);
+            expect(photo.license, photo.file).toBe('Unsplash License');
+            expect(photo.downloaded, photo.file).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        }
+    });
+
+    it('hazır fotoğraf adresleri göreli ve kendi sunucumuzdadır; alt metni vardır', () => {
+        for (const photo of [...STOCK_LIBRARY, ...Object.values(STOCK_PHOTOS), ...STOCK_GALLERY]) {
+            expect(photo.src).toMatch(/^_stock\/[a-z0-9-]+\.webp$/);
+            expect(photo.alt.trim().length).toBeGreaterThan(0);
+            expect(isStockPhoto(photo)).toBe(true);
+        }
+
+        expect(isStockPhoto({ src: '/api/v1/public/sites/a/images/b', alt: '' })).toBe(false);
+    });
+
+    it('her konseptin yuvaları doludur; yuvası olmayan alternatif boş döner', () => {
+        for (const concept of SITE_CONCEPTS) {
+            for (const type of ['hero', 'about', 'features'] as const) expect(stockSectionPhoto(concept.key, type), `${concept.key}-${type}`).not.toBeNull();
+        }
+
+        expect(stockSectionPhoto('yok', 'hero')).toBeNull();
+        expect(stockSharePhoto('premium').src).toContain('tuxedo-dark');
+        expect(stockSharePhoto('modern').src).toContain('bandana');
+    });
+
+    it('hizmet ve yazı karesi adresten seçilir, bilinmeyende sıradakine döner', () => {
+        expect(stockServicePhoto('genel-muayene', 5).src).toContain('ex-table');
+        expect(stockServicePhoto('asi-ve-koruyucu-bakim', 5).src).toContain('ex-small-dog');
+        expect(stockServicePhoto('dis-bakimi', 5).src).toContain('ex-white-cat-2');
+        expect(stockServicePhoto('rontgen-ve-ultrason', 0).src).toContain('ex-ultrasound');
+        expect(stockServicePhoto('mikrocip', 0).src).toBe(stockServicePhoto('mikrocip', 6).src);
+        expect(stockArticlePhoto('yavru-kedi-ilk-ziyaret', 3).src).toContain('orange-white');
+        expect(stockArticlePhoto('baska-bir-yazi', 1).src).not.toBe(stockArticlePhoto('baska-bir-yazi', 2).src);
     });
 });

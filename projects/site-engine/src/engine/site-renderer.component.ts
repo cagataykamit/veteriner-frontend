@@ -6,7 +6,6 @@ import { SiteContext } from './site-context';
 import { conceptByKey } from './site-concepts';
 import { SitePageComponent } from './site-page.component';
 import { resolveSitePage } from './site-page-route';
-import { showsStockPhotoNote } from './stock-photos';
 import { buildSiteTokens } from './site-tokens';
 import { buildSiteVm } from './site-vm';
 
@@ -39,7 +38,7 @@ import { buildSiteVm } from './site-vm';
                         <site-page [page]="page()" [sections]="config().design.sections" />
                     }
                 </main>
-                @if (stockNote()) {
+                @if (vm().usesStock) {
                     <p class="stock-note">Bu sitedeki bazı görseller temsilidir.</p>
                 }
                 <ng-container *ngComponentOutlet="component('footer')" />
@@ -95,10 +94,9 @@ export class SiteRendererComponent {
     private readonly now = new Date();
 
     protected readonly tokens = computed(() => buildSiteTokens(this.config().design));
-    protected readonly vm = computed(() => buildSiteVm(this.config(), conceptByKey(this.config().design.conceptKey).voice, this.now));
+    protected readonly vm = computed(() => buildSiteVm(this.config(), conceptByKey(this.config().design.conceptKey).voice, this.now, this.context.failedImages()));
 
     protected readonly page = computed(() => resolveSitePage(this.path(), this.vm()));
-    protected readonly stockNote = computed(() => showsStockPhotoNote(this.vm().heroImage, this.vm().aboutImage));
 
     protected readonly homeSections = computed(() => {
         const limit = this.maxSections();

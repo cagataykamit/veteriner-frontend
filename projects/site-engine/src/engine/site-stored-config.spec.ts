@@ -3,9 +3,9 @@ import { clinicStatus, hoursGroups, istanbulClock } from './site-hours';
 import { safeHref, safeImageSrc, socialLinks } from './site-links';
 import { siteJsonLd, sitePageHead, sitePagePaths, siteRootUrl, siteSitemapXml, seoDescription } from './site-seo';
 import { composeSiteConfig, defaultStoredConfig, readStoredConfig, resolveSiteImages, siteImageId, toWorkingDays, usedSiteImageIds } from './site-stored-config';
-import { showsStockPhotoNote } from './stock-photos';
 import { buildSiteVm } from './site-vm';
-import { conceptByKey } from './site-concepts';
+import { STOCK_PHOTOS } from './stock-photos';
+import { conceptByKey, designFromConcept, SITE_CONCEPTS } from './site-concepts';
 
 const RECORD = { name: 'Çağrı', city: 'Ankara', district: 'Çankaya', address: 'Adres', phone: '0312', email: 'a@example.com', workingDays: [], bookingUrl: null };
 
@@ -116,7 +116,7 @@ describe('bağlantı ve görsel adresi denetimi', () => {
         const base = sampleConfig();
         const head = sitePageHead({ ...base, seo: { ...base.seo, ogImage: 'javascript:alert(1)', favicon: '//kotu.example.com/i.png' }, content: { ...base.content, heroImage: null, clinic: { ...base.content.clinic, logo: null } } }, '/');
 
-        expect(head.imageSrc).toBeNull();
+        expect(head.imageSrc).toBe('_stock/bandana.webp');
         expect(head.iconSrc).toBeNull();
     });
 });
@@ -194,11 +194,46 @@ describe('randevu düğmesi (K11)', () => {
 });
 
 describe('temsili görsel ibaresi (K7)', () => {
-    const photo = { src: '/s.jpg', alt: '', source: 'kaynak', license: 'lisans' };
+    const voice = SITE_CONCEPTS[0].voice;
+    const now = new Date('2026-11-07T10:00:00+03:00');
+    const photo = { src: '/s.jpg', alt: 'x' };
+    const premium = designFromConcept(SITE_CONCEPTS.find((concept) => concept.key === 'premium')!);
+    const base = sampleConfig();
+    const allUploaded = {
+        ...base,
+        design: { ...premium, sections: Object.fromEntries(Object.keys(premium.sections).map((type) => [type, 'premium'])) as typeof premium.sections },
+        content: {
+            ...base.content,
+            heroImage: photo,
+            aboutImage: photo,
+            featuresImage: photo,
+            gallery: [photo],
+            services: base.content.services.map((service) => ({ ...service, image: photo })),
+            articles: base.content.articles.map((article) => ({ ...article, image: photo }))
+        }
+    };
 
-    it('set boşken görünmez; hazır fotoğraf çizilen yerde görünür', () => {
-        expect(showsStockPhotoNote(null, null, {})).toBe(false);
-        expect(showsStockPhotoNote(null, photo, { 'modern-hero': photo })).toBe(true);
-        expect(showsStockPhotoNote(photo, photo, { 'modern-hero': photo })).toBe(false);
+    it('kliniğin görselleri her yeri doldurduysa görünmez', () => {
+        expect(buildSiteVm(allUploaded, voice, now).usesStock).toBe(false);
+    });
+
+    it('tek bir hazır fotoğraf çizilse görünür: boş hero, boş galeri, boş hizmet, ikinci kare', () => {
+        expect(buildSiteVm({ ...allUploaded, content: { ...allUploaded.content, heroImage: null } }, voice, now).usesStock).toBe(true);
+        expect(buildSiteVm({ ...allUploaded, content: { ...allUploaded.content, gallery: [] } }, voice, now).usesStock).toBe(true);
+        expect(buildSiteVm({ ...allUploaded, content: { ...allUploaded.content, services: [{ ...allUploaded.content.services[0], image: null }] } }, voice, now).usesStock).toBe(true);
+        expect(buildSiteVm({ ...allUploaded, design: { ...allUploaded.design, sections: { ...allUploaded.design.sections, about: 'modern' } } }, voice, now).usesStock).toBe(true);
+    });
+
+    it('kapalı bölümün hazır karesi sayılmaz', () => {
+        const noGallery = { ...allUploaded, content: { ...allUploaded.content, gallery: [] }, structure: { pages: { ...allUploaded.structure.pages, galeri: false }, homeSections: allUploaded.structure.homeSections.filter((section) => section.type !== 'gallery') } };
+
+        expect(buildSiteVm(noGallery, voice, now).usesStock).toBe(false);
+    });
+
+    it('yüklenemeyen hazır fotoğraf çizilmez, ibare de kalkar', () => {
+        const failed = new Set(Object.values(STOCK_PHOTOS).map((image) => image.src));
+
+        expect(buildSiteVm(base, voice, now, failed).stock['modern-hero']).toBeNull();
+        expect(buildSiteVm({ ...allUploaded, content: { ...allUploaded.content, heroImage: null } }, voice, now, failed).usesStock).toBe(false);
     });
 });

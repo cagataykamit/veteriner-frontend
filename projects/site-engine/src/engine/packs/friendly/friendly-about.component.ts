@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { SECTION_DIRECTIVES, SiteSection } from '../../site-context';
-import { stockPhoto } from '../../stock-photos';
 import { SECTION_BASE } from '../../section-base';
 
 /** Friendly: sohbet gibi: başlık soran balon, metin yanıtlayan balon; yanında eğik fotoğraf. */
@@ -89,5 +88,5 @@ import { SECTION_BASE } from '../../section-base';
     ]
 })
 export class FriendlyAboutComponent extends SiteSection {
-    protected readonly photo = computed(() => this.vm().aboutImage ?? stockPhoto('friendly-about'));
+    protected readonly photo = computed(() => this.vm().aboutImage ?? this.vm().stock['friendly-about']);
 }

@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { SECTION_DIRECTIVES, SiteSection } from '../../site-context';
-import { stockPhoto } from '../../stock-photos';
 import { SECTION_BASE } from '../../section-base';
 import { SiteStatusComponent } from '../../site-parts.component';
 
@@ -208,7 +207,7 @@ import { SiteStatusComponent } from '../../site-parts.component';
     ]
 })
 export class FriendlyHeroComponent extends SiteSection {
-    protected readonly one = computed(() => this.vm().heroImage ?? stockPhoto('friendly-hero'));
-    protected readonly two = computed(() => stockPhoto('friendly-hero-2'));
+    protected readonly one = computed(() => this.vm().heroImage ?? this.vm().stock['friendly-hero']);
+    protected readonly two = computed(() => this.vm().stock['friendly-hero-2']);
     protected readonly title = computed(() => this.lastWord(this.vm().copy.heroTitle));
 }

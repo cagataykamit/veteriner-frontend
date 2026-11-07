@@ -56,6 +56,14 @@ Backend'in `public-site` sınırı IP başınadır. Site sunucusu her isteği ke
 
 Dokuz aile `@fontsource-variable` paketlerinden bizim sunucudan gelir (`projects/site-engine/src/styles/site-fonts.css`, OFL-1.1). Google Fonts ve gömülü harita yoktur; haritaya bağlantı verilir. İkonlar `primeicons`.
 
+## Hazır fotoğraflar
+
+Klinik görsel yüklemediği yerde motor çizerken konsept ve yuvaya göre hazır fotoğraf seçer (ADR-045 K7, `projects/site-engine/src/engine/stock-photos.ts`). Yapılandırmaya yazılmaz: mevcut sitelere de yansır, yükleme geçer, kaldırınca hazır fotoğraf döner. Hekim kartında monogram kalır. Sitede hazır fotoğraf çiziliyorsa "temsili" ibaresi görünür. Dosya yüklenemezse bölüm görselsiz düzenini çizer.
+
+- Dosyalar `projects/site-engine/stock/photos` altındadır, panel ve site uygulaması `_stock/` altından verir (sitede `/k/_stock/`). Adres, klinik adresi biçimine uymadığı için bir siteyle çakışmaz. JS paketine girmez, üçüncü taraftan çizilmez.
+- Kaynak, indirme tarihi ve lisans `projects/site-engine/stock/KAYNAKLAR.json`'dadır. Dosya eklenince ya da çıkınca kayıt da değişir, spec denetler.
+- Site sunucusu dosyaları bir yıl `immutable` verir: kare değişirse yeni dosya adı verilir, eski ad yeniden kullanılmaz.
+
 ## Canlıya çıkış (ADR-033, yapılmadı)
 
 - Ters vekil `vetinity.com/k/*` isteklerini bu Node sürecine yönlendirmeli. Uygulamanın dosyaları da `/k/` altındadır (`baseHref`), başka yol gerekmez.

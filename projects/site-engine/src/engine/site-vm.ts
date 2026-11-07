@@ -1,6 +1,7 @@
 import { PAGE_DEFS, type CopyKey, type HomeSectionType, type PageKey, type SiteBranch, type SiteConfig, type SiteCopy, type SiteFaq, type SiteFeature, type SiteImage } from '../model/site.model';
 import { clinicStatus, hoursGroups, type ClinicStatus, type HoursGroup } from './site-hours';
 import { safeHref, safeImage, safeImageSrc, socialLinks, type SocialVm } from './site-links';
+import { isStockPhoto, STOCK_GALLERY, STOCK_PHOTOS, stockArticlePhoto, stockSectionPhoto, stockServicePhoto, type StockSlot } from './stock-photos';
 
 export interface ServiceVm {
     readonly slug: string;
@@ -48,6 +49,7 @@ export interface CtaVm {
 /**
  * Sitenin çizime hazır hâli. Bölüm alternatifleri yalnız bunu okur; boş veri burada elenir, bölüm boşsa görünmez. `pages` de içeriğe
  * göre düzeltilir: açık ama boş sayfa menüye girmez, adresi "bulunamadı" olur. Bağlantı ve görsel adresleri `site-links`'ten geçmiştir.
+ * Klinik görsel yüklemediyse hazır fotoğraf gelir (K7); yüklenemeyen adres `unavailable` ile düşer, bölüm görselsiz düzenini çizer.
  */
 export interface SiteVm {
     readonly name: string;
@@ -71,6 +73,11 @@ export interface SiteVm {
     readonly copy: SiteCopy;
     readonly heroImage: SiteImage | null;
     readonly aboutImage: SiteImage | null;
+    readonly featuresImage: SiteImage | null;
+    /** Hazır fotoğraf yuvaları; bölümler kliniğin görseli yoksa buradan okur. */
+    readonly stock: Readonly<Record<StockSlot, SiteImage | null>>;
+    /** Sitede hazır fotoğraf çiziliyor: "temsili görsel" ibaresi görünür. */
+    readonly usesStock: boolean;
     readonly aboutParagraphs: readonly string[];
     readonly services: readonly ServiceVm[];
     readonly doctors: readonly MemberVm[];
@@ -125,9 +132,13 @@ function resolveCopy(content: SiteCopy, voice: SiteCopy): SiteCopy {
     return Object.fromEntries(Object.keys(voice).map((key) => [key, content[key as CopyKey]?.trim() || voice[key as CopyKey]])) as unknown as SiteCopy;
 }
 
-export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date): SiteVm {
+const NOTHING_FAILED: ReadonlySet<string> = new Set();
+
+export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unavailable: ReadonlySet<string> = NOTHING_FAILED): SiteVm {
     const { content, structure } = config;
     const { clinic } = content;
+    const usable = (image: SiteImage | null): SiteImage | null => (image && !unavailable.has(image.src) ? image : null);
+    const uploaded = (image: SiteImage | null): SiteImage | null => usable(safeImage(image));
     const name = clinic.name.trim() || 'Klinik adı';
     const place = [clinic.district.trim(), clinic.city.trim()].filter(Boolean);
     const address = clinic.address.trim();
@@ -150,33 +161,38 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date): Sit
                 .map((item) => item.trim())
                 .filter(Boolean),
             bio: member.bio.trim(),
-            image: safeImage(member.image),
+            image: uploaded(member.image),
             isDoctor: member.kind === 'hekim'
         }));
     const services: ServiceVm[] = content.services
         .filter((service) => service.title.trim())
-        .map((service) => ({
+        .map((service, index) => ({
             slug: service.slug,
             title: service.title.trim(),
             summary: service.summary.trim(),
             paragraphs: split(service.body),
-            image: safeImage(service.image),
+            image: uploaded(service.image) ?? usable(stockServicePhoto(service.slug, index)),
             path: structure.pages.hizmetDetay ? `/hizmetler/${service.slug}` : structure.pages.hizmetler ? '/hizmetler' : '/#services'
         }));
     const articles: ArticleVm[] = content.articles
         .filter((article) => article.title.trim())
-        .map((article) => ({
+        .map((article, index) => ({
             slug: article.slug,
             category: article.category.trim(),
             title: article.title.trim(),
             summary: article.summary.trim(),
             paragraphs: split(article.body),
             minutes: article.minutes,
-            image: safeImage(article.image),
+            image: uploaded(article.image) ?? usable(stockArticlePhoto(article.slug, index)),
             path: structure.pages.rehber ? `/saglik-rehberi/${article.slug}` : '/#guide'
         }));
     const features = content.features.filter((feature) => feature.title.trim());
-    const gallery = content.gallery.map(safeImage).filter((image): image is SiteImage => image !== null);
+    const uploadedGallery = content.gallery.map(uploaded).filter((image): image is SiteImage => image !== null);
+    const gallery = uploadedGallery.length ? uploadedGallery : STOCK_GALLERY.filter((image) => usable(image));
+    const stock = Object.fromEntries(Object.entries(STOCK_PHOTOS).map(([slot, image]) => [slot, usable(image)])) as Record<StockSlot, SiteImage | null>;
+    const heroImage = uploaded(content.heroImage);
+    const aboutImage = uploaded(content.aboutImage);
+    const featuresImage = uploaded(content.featuresImage);
     const faqs = content.faqs.filter((faq) => faq.question.trim() && faq.answer.trim());
     const branches = content.branches.filter((branch) => branch.name.trim());
     const emergencyText = content.emergencyText.trim();
@@ -212,6 +228,19 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date): Sit
     });
     const bookingHref = safeHref(clinic.bookingUrl);
     const cta: CtaVm | null = bookingHref ? { label: copy.ctaPrimary, path: null, href: bookingHref } : telHref ? { label: 'Hemen ara', path: null, href: telHref } : null;
+    const homeSections = structure.homeSections.filter((section) => section.on && hasContent[section.type]).map((section) => section.type);
+    const isShown = (type: HomeSectionType, page: PageKey): boolean => homeSections.includes(type) || pages[page];
+    const { sections } = config.design;
+    const sectionPhoto = (slot: string): SiteImage | null => usable(STOCK_PHOTOS[slot as StockSlot] ?? null);
+    const drawn: readonly (SiteImage | null)[] = [
+        heroImage ?? usable(stockSectionPhoto(sections.hero, 'hero')),
+        sectionPhoto(`${sections.hero}-hero-2`),
+        ...(isShown('about', 'hakkimizda') ? [aboutImage ?? usable(stockSectionPhoto(sections.about, 'about')), sectionPhoto(`${sections.about}-about-2`)] : []),
+        ...(isShown('features', 'hakkimizda') && features.length ? [featuresImage ?? usable(stockSectionPhoto(sections.features, 'features'))] : []),
+        ...(isShown('services', 'hizmetler') ? services.map((service) => service.image) : []),
+        ...(isShown('guide', 'rehber') ? articles.map((article) => article.image) : []),
+        ...(isShown('gallery', 'galeri') ? gallery : [])
+    ];
 
     return {
         name,
@@ -233,8 +262,11 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date): Sit
         status: clinicStatus(clinic.workingDays, now),
         groups: hoursGroups(clinic.workingDays, now),
         copy,
-        heroImage: safeImage(content.heroImage),
-        aboutImage: safeImage(content.aboutImage),
+        heroImage,
+        aboutImage,
+        featuresImage,
+        stock,
+        usesStock: drawn.some(isStockPhoto),
         aboutParagraphs,
         services,
         doctors,
@@ -248,7 +280,7 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date): Sit
         pages,
         menu,
         cta,
-        homeSections: structure.homeSections.filter((section) => section.on && hasContent[section.type]).map((section) => section.type),
+        homeSections,
         siteName: config.publish.siteName.trim() || name
     };
 }

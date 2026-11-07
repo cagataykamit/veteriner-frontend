@@ -119,6 +119,7 @@ export interface SiteContent {
     readonly copy: SiteCopy;
     readonly heroImage: SiteImage | null;
     readonly aboutImage: SiteImage | null;
+    readonly featuresImage: SiteImage | null;
     readonly services: readonly SiteService[];
     readonly members: readonly SiteMember[];
     readonly features: readonly SiteFeature[];

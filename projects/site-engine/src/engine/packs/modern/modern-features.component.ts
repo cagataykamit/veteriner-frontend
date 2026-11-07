@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { SiteSection } from '../../site-context';
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { SECTION_DIRECTIVES, SiteSection } from '../../site-context';
 import { SECTION_BASE } from '../../section-base';
 
-/** Modern: üst çizgiyle ayrılmış sütunlar, kart yok; başlık solda küçük kalır, cümleler öne çıkar. */
+/** Modern: üst çizgiyle ayrılmış sütunlar, kart yok; başlık solda küçük kalır, cümleler öne çıkar. Altında geniş tek fotoğraf. */
 @Component({
     selector: 'site-modern-features',
     standalone: true,
+    imports: [SECTION_DIRECTIVES],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @let v = vm();
@@ -21,6 +22,9 @@ import { SECTION_BASE } from '../../section-base';
                         </li>
                     }
                 </ul>
+                @if (photo(); as image) {
+                    <figure class="wide"><img [siteImg]="image" /></figure>
+                }
             </div>
         </section>
     `,
@@ -32,6 +36,13 @@ import { SECTION_BASE } from '../../section-base';
                 color: var(--s-muted);
                 font-size: 14px;
                 font-weight: 500;
+            }
+
+            .wide {
+                margin-top: 40px;
+                aspect-ratio: 4 / 3;
+                overflow: hidden;
+                border-radius: var(--s-radius-img);
             }
 
             .cols {
@@ -76,8 +87,14 @@ import { SECTION_BASE } from '../../section-base';
                 .t {
                     min-height: 2.1em;
                 }
+
+                .wide {
+                    aspect-ratio: 21 / 9;
+                }
             }
         `
     ]
 })
-export class ModernFeaturesComponent extends SiteSection {}
+export class ModernFeaturesComponent extends SiteSection {
+    protected readonly photo = computed(() => this.vm().featuresImage ?? this.vm().stock['modern-features']);
+}

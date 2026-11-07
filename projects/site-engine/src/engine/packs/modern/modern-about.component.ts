@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { SECTION_DIRECTIVES, SiteSection } from '../../site-context';
-import { stockPhoto } from '../../stock-photos';
 import { SECTION_BASE } from '../../section-base';
 
 /** Modern: solda küçük etiket, sağda büyük puntoyla düz yazı gibi açıklama; altında farklı boyda iki fotoğraf. */
@@ -102,6 +101,6 @@ import { SECTION_BASE } from '../../section-base';
     ]
 })
 export class ModernAboutComponent extends SiteSection {
-    protected readonly one = computed(() => this.vm().aboutImage ?? stockPhoto('modern-about'));
-    protected readonly two = computed(() => stockPhoto('modern-about-2'));
+    protected readonly one = computed(() => this.vm().aboutImage ?? this.vm().stock['modern-about']);
+    protected readonly two = computed(() => this.vm().stock['modern-about-2']);
 }

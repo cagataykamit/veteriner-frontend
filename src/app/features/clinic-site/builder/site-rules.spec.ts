@@ -2,7 +2,7 @@ import { contrast, defaultStoredConfig, composeSiteConfig, type SiteConfig } fro
 import { suggestDesign } from '@/app/features/clinic-site/builder/design-suggest';
 import { prepareSiteImage, SITE_IMAGE_MAX_BYTES, SITE_IMAGE_MAX_SIDE } from '@/app/features/clinic-site/builder/image-resize';
 import { draftClaims, findClaims } from '@/app/features/clinic-site/builder/site-claims';
-import { cleanLinkInput, contrastChecks, defaultCopyLabels, isSlug, publishWarnings, slugify, uniqueSlug } from '@/app/features/clinic-site/builder/site-checks';
+import { cleanLinkInput, contrastChecks, defaultCopyLabels, isSlug, publishWarnings, seoChecks, slugify, uniqueSlug } from '@/app/features/clinic-site/builder/site-checks';
 import { siteQrDataUrl } from '@/app/features/clinic-site/builder/site-share.component';
 
 const RECORD = { name: 'Çağrı', city: 'Ankara', district: '', address: 'Adres', phone: '03120000000', email: '', workingDays: [], bookingUrl: null };
@@ -56,6 +56,23 @@ describe('yayın kontrolleri', () => {
 
         expect(texts).toEqual(expect.arrayContaining(['Logo yüklenmedi; baş harf çiziliyor.', 'Hizmet eklenmedi.', 'Hekim eklenmedi.']));
         expect(texts.join(' ')).not.toMatch(/telefon|adres|saat/i);
+    });
+
+    it('hazır fotoğraf önerisi engel değil uyarıdır; kendi fotoğrafı yüklenince kalkar (K7)', () => {
+        const photo = { src: 'site-image:a', alt: 'x' };
+        const empty = config();
+        const uploaded = { ...empty, content: { ...empty.content, heroImage: photo, aboutImage: photo } };
+        const note = 'Hazır fotoğraflar görünüyor; dilerseniz kendi fotoğrafınızı yükleyin.';
+
+        expect(publishWarnings(empty).map((item) => item.text)).toContain(note);
+        expect(publishWarnings(uploaded).map((item) => item.text)).not.toContain(note);
+        expect(publishWarnings(empty).map((item) => item.text).join(' ')).not.toContain('Galeri');
+    });
+
+    it('paylaşım görseli boşken hazır fotoğraf kullanılır, kontrol geçer (K7)', () => {
+        const check = seoChecks(config()).find((item) => item.label === 'Paylaşım görseli');
+
+        expect(check).toEqual(expect.objectContaining({ ok: true, detail: 'Hazır fotoğraf kullanılır.' }));
     });
 
     it('adres biçimi sözleşmeye uyar', () => {

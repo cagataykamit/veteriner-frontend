@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
-import { seoDescription, seoTitle, siteJsonLd, siteRobotsTxt, siteRootUrl, siteSitemapXml, type StoredSiteConfig } from '@site-engine';
+import { seoDescription, seoTitle, siteJsonLd, siteRobotsTxt, siteRootUrl, siteSitemapXml, stockSharePhoto, type StoredSiteConfig } from '@site-engine';
 import { SiteAddressComponent } from '@/app/features/clinic-site/builder/site-address.component';
 import { SiteBuilderStore } from '@/app/features/clinic-site/builder/site-builder.store';
 import { auditPreview, contrastChecks, imageChecks, seoChecks, type SiteCheck } from '@/app/features/clinic-site/builder/site-checks';
@@ -20,7 +20,7 @@ import { environment } from '@/environments/environment';
             <app-site-address />
             <div>
                 <p class="mini">Paylaşım görseli (OG)</p>
-                <app-w-image label="Paylaşım görseli yükle" [reference]="s.ogImage" emptyText="Boşsa hero fotoğrafı kullanılır." (referenceChange)="set('ogImage', $event)" />
+                <app-w-image label="Paylaşım görseli yükle" [reference]="s.ogImage" emptyText="Boşsa hero fotoğrafı kullanılır." [stock]="shareStock()" (referenceChange)="set('ogImage', $event)" />
             </div>
             <div>
                 <p class="mini">Site simgesi (favicon)</p>
@@ -218,7 +218,9 @@ export class SeoStepComponent {
     protected readonly staticChecks = computed(() => [...seoChecks(this.store.config()), ...contrastChecks(this.store.config()), ...imageChecks(this.store.config())]);
     protected readonly deviceLabel = computed(() => ({ masaustu: 'masaüstü', tablet: 'tablet', mobil: 'mobil' })[this.store.device()]);
     protected readonly audit = signal<readonly SiteCheck[]>([]);
-    protected readonly ogPreview = computed(() => this.store.imageSrc(this.seo().ogImage ?? this.store.stored().content.heroImage?.src));
+    /** Klinik hero da yüklemediyse paylaşımda hazır fotoğraf görünür. */
+    protected readonly shareStock = computed(() => (this.store.stored().content.heroImage ? null : stockSharePhoto(this.store.stored().design.conceptKey)));
+    protected readonly ogPreview = computed(() => this.store.imageSrc(this.seo().ogImage ?? this.store.stored().content.heroImage?.src) ?? this.shareStock()?.src ?? null);
 
     constructor() {
         effect(() => {
