@@ -37,6 +37,11 @@
                                 "glob": "*.webp",
                                 "input": "projects/site-engine/stock/photos",
                                 "output": "_stock"
+                            },
+                            {
+                                "glob": "zxing_reader.wasm",
+                                "input": "node_modules/zxing-wasm/dist/reader",
+                                "output": "vendor/zxing"
                             }
                         ],
                         "styles": [
@@ -110,6 +115,11 @@
                                     "glob": "*.webp",
                                     "input": "projects/site-engine/stock/photos",
                                     "output": "_stock"
+                                },
+                                {
+                                    "glob": "zxing_reader.wasm",
+                                    "input": "node_modules/zxing-wasm/dist/reader",
+                                    "output": "vendor/zxing"
                                 },
                                 {
                                     "glob": "robots.txt",
