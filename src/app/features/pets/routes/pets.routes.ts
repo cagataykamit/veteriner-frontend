@@ -4,13 +4,15 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import {
     PETS_CREATE_CLAIM,
     PETS_READ_CLAIM,
-    PETS_UPDATE_CLAIM
+    PETS_UPDATE_CLAIM,
+    VACCINATIONS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import { PetDetailPageComponent } from '@/app/features/pets/pages/pet-detail-page/pet-detail-page.component';
 import { PetEditPageComponent } from '@/app/features/pets/pages/pet-edit-page/pet-edit-page.component';
 import { PetNewPageComponent } from '@/app/features/pets/pages/pet-new-page/pet-new-page.component';
 import { PetsListPageComponent } from '@/app/features/pets/pages/pets-list-page/pets-list-page.component';
 import { PetTimelinePageComponent } from '@/app/features/pets/pages/pet-timeline-page/pet-timeline-page.component';
+import { PetVaccinationPlanPageComponent } from '@/app/features/pets/pages/pet-vaccination-plan-page/pet-vaccination-plan-page.component';
 
 export default [
     {
@@ -52,6 +54,17 @@ export default [
             return auth.hasOperationClaim(PETS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
         }],
         component: PetTimelinePageComponent
+    },
+    {
+        // Aşı planı önerisi (TIER-005): öneri okumak `Vaccinations.Read` ister; onay düğmesi sayfada `Vaccinations.Create`'e bağlıdır.
+        path: ':id/vaccination-plan',
+        canActivate: [() => {
+            const auth = inject(AuthService);
+            const router = inject(Router);
+
+            return auth.hasOperationClaim(VACCINATIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+        }],
+        component: PetVaccinationPlanPageComponent
     },
     {
         path: ':id',

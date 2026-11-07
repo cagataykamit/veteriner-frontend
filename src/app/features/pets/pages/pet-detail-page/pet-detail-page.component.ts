@@ -4,7 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { type Observable, Subscription } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { IMAGING_READ_CLAIM, PETS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { IMAGING_READ_CLAIM, PETS_UPDATE_CLAIM, VACCINATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import { PetImagingSectionComponent } from '@/app/entities/imaging/components/pet-imaging-section.component';
 import { PetCardHeaderComponent } from '@/app/features/pets/components/pet-card-header.component';
@@ -100,7 +100,7 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
             <div class="@container flex flex-col gap-4">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 @4xl:col-span-8 min-w-0" [class.order-first]="emphasis === 'clinical'" data-testid="clinical-column">
-                        <app-pet-summary-card [summary]="summary()" [loading]="summaryLoading()" [error]="summaryError()" [lastExamination]="lastExamination()" [followUps]="followUps()" (retry)="retrySummary()" />
+                        <app-pet-summary-card [summary]="summary()" [loading]="summaryLoading()" [error]="summaryError()" [lastExamination]="lastExamination()" [followUps]="followUps()" [vaccinationPlanLink]="vaccinationPlanLink()" (retry)="retrySummary()" />
                     </div>
                     <div class="col-span-12 @4xl:col-span-4 min-w-0" [class.order-first]="emphasis === 'frontDesk'" data-testid="todo-column">
                         <app-pet-todo-panel [view]="todo()" [retryable]="true" (retry)="reloadOpenItems()" />
@@ -203,6 +203,14 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     readonly followUps = signal<PetCardSection<TreatmentListItemVm[]>>(null);
 
     readonly canUpdatePet = this.auth.hasOperationClaim(PETS_UPDATE_CLAIM);
+    /** Aşı planı önerisi (TIER-005): planlayabilen kullanıcıya, bakımı süren hayvanda; paket kilidi hedef sayfadadır (üst paket kutusu). */
+    readonly vaccinationPlanLink = computed(() => {
+        const p = this.pet();
+
+        return p && p.status !== 'Deceased' && this.auth.hasOperationClaim(VACCINATIONS_CREATE_CLAIM) && !this.ro.mutationBlocked()
+            ? ['/panel/pets', p.id, 'vaccination-plan']
+            : null;
+    });
     readonly emphasis = petCardEmphasis((claim) => this.auth.hasOperationClaim(claim));
     protected readonly fieldListClass = DETAIL_FIELD_LIST_CLASS;
 

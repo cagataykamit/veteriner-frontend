@@ -79,6 +79,20 @@ describe('PetSummaryCardComponent', () => {
         expect(section(el, 'vaccinations').querySelector('[data-testid="vaccine-overdue"]')).toBeNull();
     });
 
+    it('aşı planı bağlantısı yalnız verilince aşı bölümünde görünür (TIER-005)', () => {
+        const el = render(ok);
+
+        expect(section(el, 'vaccinations').querySelector('[data-testid="vaccination-plan-link"]')).toBeNull();
+
+        fixture.componentRef.setInput('vaccinationPlanLink', ['/panel/pets', 'p1', 'vaccination-plan']);
+        fixture.detectChanges();
+
+        const link = section(el, 'vaccinations').querySelector<HTMLAnchorElement>('[data-testid="vaccination-plan-link"]');
+
+        expect(link?.textContent).toContain('Aşı planı öner');
+        expect(link?.getAttribute('href')).toBe('/panel/pets/p1/vaccination-plan');
+    });
+
     it('vital ve değerlendirme yoksa değer uydurulmaz, boş durum gösterilir; muayene yoksa "Kayıt yok"', () => {
         let el = render(ok, { lastExamination: exam({ temperatureC: null, heartRateBpm: null, respiratoryRatePerMin: null, assessment: '—' }) });
 

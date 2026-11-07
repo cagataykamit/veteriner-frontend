@@ -186,6 +186,9 @@ const FOLLOW_UP_LIMIT = 3;
                             } @else {
                                 <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.vaccinations.state, label: 'Aşı bilgisi' }" />
                             }
+                            @if (vaccinationPlanLink(); as link) {
+                                <a [routerLink]="link" class="inline-block mt-1 text-primary text-sm font-medium no-underline" data-testid="vaccination-plan-link"><i class="pi pi-calendar-plus mr-1" aria-hidden="true"></i>Aşı planı öner</a>
+                            }
                         </dd>
                     </div>
 
@@ -219,6 +222,8 @@ export class PetSummaryCardComponent {
     readonly lastExamination = input<PetCardSection<ExaminationDetailVm>>(null);
     /** Takip tarihi gelmemiş tedaviler (sıralı); `null` = tedavi okuma yetkisi yok. */
     readonly followUps = input<PetCardSection<TreatmentListItemVm[]>>(null);
+    /** Aşı planı önerisine bağlantı (TIER-005); `null` = gösterilmez (yetki, salt okunur, vefat). */
+    readonly vaccinationPlanLink = input<readonly unknown[] | null>(null);
     readonly retry = output<void>();
     protected readonly tileGridClass = DETAIL_TILE_GRID_CLASS;
 
