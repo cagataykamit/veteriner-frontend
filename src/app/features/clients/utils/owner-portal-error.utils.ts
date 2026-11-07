@@ -1,5 +1,8 @@
 import type { ProblemMessages } from '@/app/shared/utils/api-error.utils';
 
+/** Özellik pakette yok (`PLAN_FEATURES_API_CONTRACT.md` §2); davet ucu ve `portal-access.inviteBlockedCode`. */
+export const PLAN_FEATURE_NOT_IN_PLAN_CODE = 'Subscriptions.FeatureNotInPlan';
+
 /**
  * Hasta sahibi portalı klinik paneli uçları — `PORTAL_API_CONTRACT.md` §4. Davet uygunluk kodları hem 409 yanıtında hem
  * `portal-access.inviteBlockedCode` alanında gelir; metin tek yerde (`ownerPortalProblemUserMessageByCode`).
@@ -17,6 +20,7 @@ export const OWNER_PORTAL_PROBLEM_MESSAGES: ProblemMessages = {
     'OwnerPortal.LinkNotFound': 'Portal erişimi bulunamadı. Sayfayı yenileyin.',
     'OwnerPortal.LinkAlreadyClosed': 'Bu portal erişimi zaten kapatılmış. Sayfayı yenileyin.',
     'OwnerPortal.ClinicPortalDisabled': 'Portal daveti gönderilemez: hasta sahibi portalı bu klinikte kapalı. Ayarlar > Hasta sahibi portalı ekranından açabilirsiniz.',
+    [PLAN_FEATURE_NOT_IN_PLAN_CODE]: 'Portal daveti gönderilemez: hasta sahibi portalı mevcut paketinizde yok. Üst pakete geçerek kullanabilirsiniz.',
     // WhatsApp bağlantısı (§13.2): sistem göndermez, personel kendi WhatsApp'ında açar.
     'Clients.WhatsAppPhoneInvalid': 'WhatsApp bağlantısı oluşturulamadı: müşteri kaydında geçerli bir Türkiye cep telefonu yok.',
     'Clients.RemindersOptedOut': 'Müşteri hatırlatma almak istemiyor; hatırlatma iletisi hazırlanamaz.',

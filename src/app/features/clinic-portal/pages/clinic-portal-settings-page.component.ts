@@ -25,12 +25,14 @@ import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppPlanUpgradeNoticeComponent } from '@/app/entities/subscription/components/app-plan-upgrade-notice.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
 /**
  * Hasta sahibi portalı (PORTAL-009/010; `PORTAL_API_CONTRACT.md` §12, §13), Ayarlar altında: portalı klinik için açma/kapatma
  * (kayıt yoksa açık; kapatınca hesaplar ve bağlar silinmez, erişim durur, yeni davet gitmez) ve hasta sahibine giden bildirimlerin
  * tür × kanal kuralı (salt okunur; kural sunucuda tek yerde). Yazma `Clinics.Update` ve salt okunur kiracı durumuna bağlıdır.
+ * Paket portalı içermiyorsa (TIER-001) "üst pakete geç" çıkar; paket düşmüş kiracının mevcut erişimleri için anahtar kalır.
  */
 @Component({
     selector: 'app-clinic-portal-settings-page',
@@ -46,6 +48,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
+        AppPlanUpgradeNoticeComponent,
         AppStatusTagComponent
     ],
     providers: [ConfirmationService],
@@ -77,8 +80,13 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                     <app-loading-state message="Portal ayarı yükleniyor…" />
                 } @else if (error()) {
                     <app-error-state [detail]="error()!" (retry)="reload()" />
+                } @else if (planLocked() && !hasPortalUse()) {
+                    <app-plan-upgrade-notice feature="OwnerPortal" detail="Hasta sahipleri portalda hayvanlarını, randevularını, aşılarını ve bakiyelerini görür; randevu talebi gönderir." />
                 } @else if (settings(); as s) {
                     <div class="flex flex-col gap-3">
+                        @if (planLocked()) {
+                            <app-plan-upgrade-notice feature="OwnerPortal" detail="Mevcut erişimler açık kalır; yeni davet gönderilemez ve bekleyen davetler kabul edilemez." />
+                        }
                         @if (message(); as m) {
                             <p-message [severity]="m.severity" class="w-full" role="status">{{ m.text }}</p-message>
                         }
@@ -151,6 +159,13 @@ export class ClinicPortalSettingsPageComponent implements OnInit {
 
     readonly canManage = this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM);
     readonly canWrite = computed(() => this.canManage && !this.ro.mutationBlocked());
+    readonly planLocked = computed(() => this.ro.lockedPlanFeature('OwnerPortal') !== null);
+    /** Paket düşmüş kiracıda portalı kullanan var mı; yoksa yönetilecek bir şey de yoktur. */
+    readonly hasPortalUse = computed(() => {
+        const s = this.settings();
+
+        return !!s && s.activeLinkCount + s.pendingInviteCount > 0;
+    });
     readonly clinicId = signal('');
     readonly clinicOptions = signal<SelectOption[]>([]);
     readonly settings = signal<ClinicPortalSettingsVm | null>(null);

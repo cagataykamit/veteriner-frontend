@@ -11,7 +11,8 @@ import { clientPortalChipLabel, clientPortalClosedLabels, clientPortalLastInvite
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { ownerPortalProblemUserMessageByCode } from '@/app/features/clients/utils/owner-portal-error.utils';
+import { ownerPortalProblemUserMessageByCode, PLAN_FEATURE_NOT_IN_PLAN_CODE } from '@/app/features/clients/utils/owner-portal-error.utils';
+import { AppPlanUpgradeNoticeComponent } from '@/app/entities/subscription/components/app-plan-upgrade-notice.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
@@ -22,11 +23,12 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
  * Salt okunur kiracıda yalnız davet gönderme kapalıdır; iptal ve erişimi kapatma sunucuda da açıktır (KVKK güvenli taraf, §4.3–4.4).
  * Müşteri kaydı değişince (ör. KVKK Ret) durum yeniden okunur; davet uygunluğu sunucudadır (`canInvite`).
  * Bekleyen davette davet bilgisi WhatsApp'ta açılabilir (§13.2); gönderimi personel yapar.
+ * Paket portalı içermiyorsa (TIER-001) davet yerine "üst pakete geç" çıkar; mevcut bağ ve davet yönetilebilir kalır.
  */
 @Component({
     selector: 'app-client-portal-access-panel',
     standalone: true,
-    imports: [ButtonModule, ConfirmDialogModule, AppErrorStateComponent, TrDateTimePipe],
+    imports: [ButtonModule, ConfirmDialogModule, AppErrorStateComponent, AppPlanUpgradeNoticeComponent, TrDateTimePipe],
     providers: [ConfirmationService],
     /** Boşluğu ve genişliği sayfadaki ızgara verir (öğeye `col-span-*` yazılır); kart kendi kenar boşluğu taşımaz, satırla eşit yüksekliktedir. */
     host: { class: 'block' },
@@ -79,7 +81,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                 }
 
                 <div class="flex flex-wrap items-center gap-2 mt-2">
-                    @if (state()?.kind !== 'linked') {
+                    @if (state()?.kind !== 'linked' && !planLocked()) {
                         <button
                             pButton
                             type="button"
@@ -98,15 +100,17 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                             data-testid="client-portal-revoke"
                             (click)="confirmRevoke()"
                         ><i [class]="busy() === 'revoke' ? 'pi pi-spin pi-spinner' : 'pi pi-times'"></i>Daveti iptal et</button>
-                        <button
-                            pButton
-                            type="button"
-                            class="p-button-text p-button-sm"
-                            [disabled]="!!busy()"
-                            data-testid="client-portal-whatsapp"
-                            title="Davet bilgisi metni WhatsApp'ta açılır; mesajı siz gönderirsiniz. Davet bağlantısı yalnız e-postayla gider."
-                            (click)="openWhatsAppInvite()"
-                        ><i [class]="busy() === 'whatsapp' ? 'pi pi-spin pi-spinner' : 'pi pi-whatsapp'"></i>Davet bilgisini WhatsApp'ta aç</button>
+                        @if (!planLocked()) {
+                            <button
+                                pButton
+                                type="button"
+                                class="p-button-text p-button-sm"
+                                [disabled]="!!busy()"
+                                data-testid="client-portal-whatsapp"
+                                title="Davet bilgisi metni WhatsApp'ta açılır; mesajı siz gönderirsiniz. Davet bağlantısı yalnız e-postayla gider."
+                                (click)="openWhatsAppInvite()"
+                            ><i [class]="busy() === 'whatsapp' ? 'pi pi-spin pi-spinner' : 'pi pi-whatsapp'"></i>Davet bilgisini WhatsApp'ta aç</button>
+                        }
                     }
                     @if (linked()) {
                         <button
@@ -119,7 +123,9 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                         ><i [class]="busy() === 'close' ? 'pi pi-spin pi-spinner' : 'pi pi-ban'"></i>Erişimi kapat</button>
                     }
                 </div>
-                @if (inviteBlockedReason(); as reason) {
+                @if (planLocked() && !linked()) {
+                    <app-plan-upgrade-notice class="block mt-2" feature="OwnerPortal" detail="Hasta sahipleri portalda hayvanlarını, randevularını, aşılarını ve bakiyelerini görür; randevu talebi gönderir." />
+                } @else if (inviteBlockedReason(); as reason) {
                     <p class="m-0 mt-1 text-sm text-muted-color" role="note" data-testid="client-portal-invite-blocked"><i class="pi pi-info-circle mr-1" aria-hidden="true"></i>{{ reason }}</p>
                 }
             } @else {
@@ -178,6 +184,7 @@ export class ClientPortalAccessPanelComponent {
 
         return this.ro.mutationBlocked() ? `${base} (salt okunur)` : base;
     });
+    readonly planLocked = computed(() => this.access()?.inviteBlockedCode === PLAN_FEATURE_NOT_IN_PLAN_CODE);
     /** Bağ aktifken düğme yoktur; nedeni yalnız davet gönderilebilecek durumlarda yazılır. */
     readonly inviteBlockedReason = computed(() => {
         const a = this.access();
