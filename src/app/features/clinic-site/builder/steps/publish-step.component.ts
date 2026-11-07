@@ -7,6 +7,7 @@ import { SiteThumbComponent } from '@/app/features/clinic-site/builder/site-prev
 import { SiteShareComponent } from '@/app/features/clinic-site/builder/site-share.component';
 import { WFieldComponent, WIZARD_STYLES } from '@/app/features/clinic-site/builder/wizard-kit';
 import { CLINIC_SITE_MISSING_LABELS } from '@/app/features/clinic-site/models/clinic-site.model';
+import { formatUtcToLocalDateTime } from '@/app/shared/utils/date.utils';
 import { environment } from '@/environments/environment';
 
 const DEVICES: readonly { readonly key: DeviceKey; readonly label: string; readonly width: number; readonly height: number }[] = [
@@ -357,7 +358,7 @@ export class PublishStepComponent {
     }
 
     protected when(iso: string): string {
-        return new Date(iso).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        return formatUtcToLocalDateTime(iso);
     }
 
     protected setSiteName(value: string): void {
