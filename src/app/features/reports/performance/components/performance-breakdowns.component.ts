@@ -7,7 +7,7 @@ import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppPlanUpgradeNoticeComponent } from '@/app/entities/subscription/components/app-plan-upgrade-notice.component';
 import type { PerformanceBreakdownPeriodDto, PerformanceBreakdownsDto } from '@/app/features/reports/performance/models/performance-breakdowns.model';
-import { formatPercent, performanceDelta } from '@/app/features/reports/performance/utils/performance.utils';
+import { deltaPercentText, performanceDelta } from '@/app/features/reports/performance/utils/performance.utils';
 import { userErrorFromHttp } from '@/app/shared/utils/api-error.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
@@ -34,9 +34,8 @@ export function breakdownRows<T>(
     return (current ?? []).map((r) => {
         const row = pick(r);
         const delta = comparing ? performanceDelta(row.amount, before.get(row.key)?.amount ?? (row.amount == null ? null : 0)) : null;
-        const deltaText = delta == null ? null : delta.percent == null ? (delta.diff === 0 ? '—' : 'yeni') : `${delta.diff >= 0 ? '+' : '−'}${formatPercent(Math.abs(delta.percent))}`;
 
-        return { ...row, deltaText };
+        return { ...row, deltaText: deltaPercentText(delta) };
     });
 }
 
