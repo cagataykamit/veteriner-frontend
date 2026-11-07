@@ -68,6 +68,17 @@ export const ApiEndpoints = {
         /** POST `{ reason }`; 204. */
         void: (id: string) => `/api/v1/charges/${encodeURIComponent(id)}/void`
     },
+    /** Günlük kasa kontrolü (TIER-008, `CASH_COUNT_API_CONTRACT.md`): tek klinik zorunlu. */
+    cashCounts: {
+        /** GET `?date=&clinicId=`; beklenen nakit, geçerli sayım, önceki sayım ve günün düzeltme izi. */
+        day: () => `/api/v1/cash-counts/day`,
+        /** GET geçmiş (`from`, `to`, `clinicId`, `includeVoided`, `page`, `pageSize`); POST yeni sayım. */
+        list: () => `/api/v1/cash-counts`,
+        /** POST `{ openingAmount, countedAmount, expectedCashAmount, note, reason }`; yerine geçen kaydı döner. */
+        correct: (id: string) => `/api/v1/cash-counts/${encodeURIComponent(id)}/correct`,
+        /** POST `{ reason }`; 204. */
+        void: (id: string) => `/api/v1/cash-counts/${encodeURIComponent(id)}/void`
+    },
     /** Ücret bekleyen kalemler (ADR-018). */
     chargeSuggestions: {
         /** GET (`Charges.Read`; query: `page`, `pageSize`, `clinicId`, `petId`, `examinationId`, `visitId`; yalnız `Pending`). */

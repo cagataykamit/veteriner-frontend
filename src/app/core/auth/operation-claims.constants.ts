@@ -95,6 +95,11 @@ export const CHARGES_CREATE_CLAIM = 'Charges.Create' as const;
 /** Ücret düzeltme ve iptal (yalnız Admin/Owner/ClinicAdmin) — `FINANCE_CORRECTION_API_CONTRACT.md`. */
 export const CHARGES_CORRECT_CLAIM = 'Charges.Correct' as const;
 
+/** Günlük kasa sayımı (TIER-008) — `CASH_COUNT_API_CONTRACT.md` §6; düzeltme ve iptal yalnız Admin/Owner/ClinicAdmin. */
+export const CASH_COUNTS_READ_CLAIM = 'CashCounts.Read' as const;
+export const CASH_COUNTS_CREATE_CLAIM = 'CashCounts.Create' as const;
+export const CASH_COUNTS_CORRECT_CLAIM = 'CashCounts.Correct' as const;
+
 /** Doğrudan ürün satışı — `DIRECT_SALE_API_CONTRACT.md` §5; iptal yalnız Admin/Owner/ClinicAdmin. */
 export const SALES_READ_CLAIM = 'Sales.Read' as const;
 export const SALES_CREATE_CLAIM = 'Sales.Create' as const;

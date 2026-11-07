@@ -6,8 +6,9 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { CHARGES_READ_CLAIM, LAB_RESULTS_READ_CLAIM, PAYMENTS_READ_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { CASH_COUNTS_READ_CLAIM, CHARGES_READ_CLAIM, LAB_RESULTS_READ_CLAIM, PAYMENTS_READ_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { REPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
+import { CashCountPanelComponent } from '@/app/features/reports/end-of-day/components/cash-count-panel.component';
 import type { CashSummaryDto, DailyTransactionItemDto, DailyTransactionsResultVm } from '@/app/features/reports/end-of-day/models/end-of-day.model';
 import { DailyTransactionsSource, EndOfDayService } from '@/app/features/reports/end-of-day/services/end-of-day.service';
 import {
@@ -52,13 +53,13 @@ interface OpenItemRow {
 @Component({
     selector: 'app-end-of-day-page',
     standalone: true,
-    imports: [RouterLink, FormsModule, ButtonModule, SelectModule, TableModule, FilterFieldComponent, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, MoneyPipe],
+    imports: [RouterLink, FormsModule, ButtonModule, SelectModule, TableModule, FilterFieldComponent, AppPageHeaderComponent, ReportFilterBarComponent, ReportResultsComponent, CashCountPanelComponent, MoneyPipe],
     styleUrl: './end-of-day-page.component.scss',
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="end-of-day-page">
-            <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" class="eod-screen-only" title="Gün sonu" description="Günün ücret, tahsilat ve açık işlerini tek yerde görün. Kasa sayımı ve günü kilitleme yoktur." />
+            <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" class="eod-screen-only" title="Gün sonu" description="Günün ücret, tahsilat, kasa sayımı ve açık işlerini tek yerde görün. Günü kilitleme yoktur." />
 
             <app-report-filter-bar
                 class="eod-screen-only block"
@@ -250,6 +251,17 @@ interface OpenItemRow {
                 </section>
             }
 
+            @if (canCashCount && !multiDay() && state.activeFromDate()) {
+                @if (cashCountClinicId(); as clinicId) {
+                    <app-cash-count-panel [date]="state.activeFromDate()" [clinicId]="clinicId" />
+                } @else {
+                    <section class="card mb-4" aria-labelledby="eodCashCountTitle">
+                        <h5 id="eodCashCountTitle" class="mt-0 mb-1">Kasa kontrolü</h5>
+                        <p class="text-sm text-muted-color m-0">Kasa tek klinik için sayılır. Klinik filtresinden bir klinik seçin.</p>
+                    </section>
+                }
+            }
+
             @if (canOpen && (openItemRows().length > 0 || openItemsNeedClinic() || openError())) {
                 <section class="card mb-4" aria-labelledby="eodOpenTitle">
                     <h5 id="eodOpenTitle" class="mt-0 mb-1">Açık işler</h5>
@@ -362,6 +374,8 @@ export class EndOfDayPageComponent implements OnInit, OnDestroy {
     readonly canCash = this.auth.hasOperationClaim(PAYMENTS_READ_CLAIM);
     readonly canDaily = this.canCash && this.auth.hasOperationClaim(CHARGES_READ_CLAIM);
     readonly canOpen = this.auth.hasOperationClaim(VISITS_READ_CLAIM);
+    /** Kasa kontrolü tek gün ve tek klinik içindir (TIER-008); kayıt paketi bölümün içinde denetlenir. */
+    readonly canCashCount = this.auth.hasOperationClaim(CASH_COUNTS_READ_CLAIM);
 
     readonly state = new ReportListState<ReportListQueryBase, DailyTransactionsResultVm>({
         source: inject(DailyTransactionsSource),
@@ -382,6 +396,8 @@ export class EndOfDayPageComponent implements OnInit, OnDestroy {
     private summarySeq = 0;
 
     readonly multiDay = computed(() => this.state.activeFromDate() !== this.state.activeToDate());
+    /** Diğer bölümlerle aynı kural: filtrede klinik yoksa panelin aktif kliniği. */
+    readonly cashCountClinicId = computed(() => this.state.activeClinicId().trim() || this.auth.getClinicId()?.trim() || null);
     readonly isPastRange = computed(() => !!this.state.activeToDate() && this.state.activeToDate() < localDateYyyyMmDd());
     readonly filtersActive = computed(() => Object.values(this.state.activeExtras()).some((v) => !!v));
     readonly days = computed(() => {
