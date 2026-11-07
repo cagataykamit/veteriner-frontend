@@ -552,6 +552,10 @@ export const ApiEndpoints = {
         summary: () => `/api/v1/admin/trial-metrics`
     },
     /** Platform yöneticisi: aynı ödeme denemesinde gelen ikinci ödemeler ve iadeleri; en yeni tespit önce, en fazla 200 satır. */
+    /** Destek: klinik sitesine ek adres değiştirme hakkı (Veteriner `docs/CLINIC_SITE_API_CONTRACT.md` §4). Yalnız platform yöneticisi. */
+    clinicAddressGrants: {
+        grant: (slug: string) => `/api/v1/admin/clinic-sites/${encodeURIComponent(slug)}/address-change-grants`
+    },
     duplicatePayments: {
         list: () => `/api/v1/admin/billing/duplicate-payments`,
         /** POST `{}` → 204; yalnız `ManualRequired` satırda anlamlı, `Pending` için 409. */
