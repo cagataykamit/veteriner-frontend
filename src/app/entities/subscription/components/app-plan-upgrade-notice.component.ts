@@ -11,7 +11,8 @@ import { plansFromText } from '@/app/entities/subscription/utils/pricing-plan.ut
 const FEATURE_TITLES: Readonly<Record<PlanFeatureCode, string>> = {
     OwnerPortal: 'Hasta sahibi portalı',
     PortalAppointmentRequests: 'Portaldan randevu talebi',
-    MultiClinic: 'Birden fazla klinik'
+    MultiClinic: 'Birden fazla klinik',
+    AutomatedReminders: 'Otomatik hatırlatıcılar'
 };
 
 /**

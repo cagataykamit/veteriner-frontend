@@ -159,6 +159,7 @@ export const ApiEndpoints = {
     },
     reminders: {
         settings: () => `/api/v1/reminders/settings`,
+        clinicRules: (clinicId: string) => `/api/v1/reminders/clinics/${encodeURIComponent(clinicId)}/rules`,
         logs: () => `/api/v1/reminders/logs`
     },
     examinations: {
