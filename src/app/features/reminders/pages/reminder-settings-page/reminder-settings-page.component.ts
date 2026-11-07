@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ToastModule } from 'primeng/toast';
+import { ClinicReminderRulesPanelComponent } from '@/app/features/reminders/components/clinic-reminder-rules-panel.component';
 import { createReminderSettingsFormGroup, getReminderSettingsFormValue } from '@/app/features/reminders/forms/reminder-settings-form.factory';
 import { mapReminderSettingsFormToUpdateRequest } from '@/app/features/reminders/data/reminders.mapper';
 import { RemindersService } from '@/app/features/reminders/services/reminders.service';
@@ -23,7 +24,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-reminder-settings-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputNumberModule, ToggleSwitchModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputNumberModule, ToggleSwitchModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, ClinicReminderRulesPanelComponent],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -89,6 +90,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     </div>
                 </form>
             </div>
+            <app-clinic-reminder-rules-panel />
         }
     `
 })

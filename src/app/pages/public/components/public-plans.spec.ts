@@ -56,14 +56,14 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         expect(planHighlights('premium')).toContain('Çok klinik yönetimi ve klinikler arası yetki');
     });
 
-    it('özellik tablosu: gruplar sırayla, satır adı tekil; hücreler ADR-035 (fark portal, çok klinik, destek, özel geliştirme)', () => {
+    it('özellik tablosu: gruplar sırayla, satır adı tekil; hücreler ADR-035 (fark portal, otomatik hatırlatıcı, çok klinik, destek, özel geliştirme)', () => {
         const groups = [...new Set(PRICING_FEATURE_ROWS.map((r) => r.group))];
         const labels = PRICING_FEATURE_ROWS.map((r) => r.label);
 
         expect(groups).toEqual(['Klinik', 'Kayıt ve KVKK', 'Para ve stok', 'Hasta sahibi', 'Yönetim', 'Destek']);
         expect(new Set(labels).size).toBe(labels.length);
         expect(PRICING_FEATURE_ROWS.length).toBeGreaterThanOrEqual(25);
-        expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.basic === false).map((r) => r.label)).toEqual(['Hasta sahibi portalı', 'Portaldan randevu talebi', 'Çok klinik yönetimi ve klinikler arası yetki', 'Size özel geliştirmeler']);
+        expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.basic === false).map((r) => r.label)).toEqual(['Otomatik hatırlatıcılar', 'Hasta sahibi portalı', 'Portaldan randevu talebi', 'Çok klinik yönetimi ve klinikler arası yetki', 'Size özel geliştirmeler']);
         expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.pro === false).map((r) => r.label)).toEqual(['Çok klinik yönetimi ve klinikler arası yetki', 'Size özel geliştirmeler']);
         expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.premium === false)).toEqual([]);
         expect(PRICING_FEATURE_ROWS.find((r) => r.label === 'Online randevu talebi')?.plans).toEqual({ basic: true, pro: true, premium: true });

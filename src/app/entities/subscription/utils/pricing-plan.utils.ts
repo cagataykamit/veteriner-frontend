@@ -135,6 +135,7 @@ export const PRICING_FEATURE_ROWS: readonly PricingFeatureRowDef[] = [
     { group: 'Para ve stok', label: 'Mal kabul, parti ve son kullanma tarihi', plans: ALL },
     { group: 'Para ve stok', label: 'Muayenesiz doğrudan satış', plans: ALL },
     { group: 'Hasta sahibi', label: 'E-posta ile aşı ve randevu hatırlatması', plans: ALL },
+    { group: 'Hasta sahibi', label: 'Otomatik hatırlatıcılar', detail: 'Kontrol muayenesi ve ödenmemiş bakiye için e-posta; klinik başına açılır', plans: { basic: false, pro: true, premium: true } },
     { group: 'Hasta sahibi', label: 'Hasta sahibi portalı', detail: 'Aşı, randevu, bakiye, veri talebi; telefonda ana ekrana eklenebilir', plans: WITH_PORTAL },
     { group: 'Hasta sahibi', label: 'Portaldan randevu talebi', detail: 'Kendi hayvanını seçerek', plans: WITH_PORTAL },
     { group: 'Yönetim', label: 'Raporlar', detail: 'Randevu, muayene, aşı, ödeme, borç ve işletme performansı', plans: ALL },

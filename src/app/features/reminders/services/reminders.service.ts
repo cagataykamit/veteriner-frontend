@@ -8,6 +8,7 @@ import {
     mapReminderSettingsDtoToVm,
     reminderLogsQueryToHttpParams
 } from '@/app/features/reminders/data/reminders.mapper';
+import type { ClinicReminderRulesDto, ClinicReminderRuleUpdateDto } from '@/app/features/reminders/models/clinic-reminder-rule.model';
 import type { ReminderLogsPagedDto, ReminderLogsQuery } from '@/app/features/reminders/models/reminder-log-api.model';
 import type { ReminderLogsPagedVm } from '@/app/features/reminders/models/reminder-log-vm.model';
 import type {
@@ -36,6 +37,18 @@ export class RemindersService {
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Hatırlatma ayarları kaydedilemedi.')))
             )
+        );
+    }
+
+    getClinicRules(clinicId: string): Observable<ClinicReminderRulesDto> {
+        return this.api.get<ClinicReminderRulesDto>(ApiEndpoints.reminders.clinicRules(clinicId)).pipe(
+            catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Kurallar yüklenemedi.'))))
+        );
+    }
+
+    saveClinicRules(clinicId: string, rules: readonly ClinicReminderRuleUpdateDto[]): Observable<ClinicReminderRulesDto> {
+        return this.api.put<ClinicReminderRulesDto>(ApiEndpoints.reminders.clinicRules(clinicId), { rules }).pipe(
+            catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Kurallar kaydedilemedi.'))))
         );
     }
 
