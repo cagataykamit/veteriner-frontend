@@ -211,6 +211,13 @@ export const ApiEndpoints = {
     vaccineDefinitions: {
         list: () => `/api/v1/vaccine-definitions`
     },
+    /** Otomatik aşı sihirbazı (TIER-005, `VACCINATION_SCHEDULE_API_CONTRACT.md`): takvim satırları, başlangıç şablonu, hayvan planı (GET öneri, POST onay). */
+    vaccinationSchedule: {
+        items: () => `/api/v1/vaccination-schedule/items`,
+        item: (id: string) => `/api/v1/vaccination-schedule/items/${encodeURIComponent(id)}`,
+        starterTemplate: () => `/api/v1/vaccination-schedule/starter-template`,
+        petPlan: (petId: string) => `/api/v1/vaccination-schedule/pets/${encodeURIComponent(petId)}/plan`
+    },
     payments: {
         /** Query: `Page`, `PageSize`, `Search`, `Method`, `paidFromUtc`, `paidToUtc` (iki uç dahil) (+ `ClientId`, `PetId`, `clinicId`). */
         list: () => `/api/v1/payments`,

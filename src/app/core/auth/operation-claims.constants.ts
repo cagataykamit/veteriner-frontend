@@ -80,6 +80,8 @@ export const VACCINATIONS_UPDATE_CLAIM = 'Vaccinations.Update' as const;
 
 /** Aşı tanımı kataloğu (dropdown / liste) */
 export const VACCINE_DEFINITIONS_READ_CLAIM = 'VaccineDefinitions.Read' as const;
+/** Kiracı aşı tanımı ve aşı takvimi (TIER-005) yönetimi. */
+export const VACCINE_DEFINITIONS_UPDATE_CLAIM = 'VaccineDefinitions.Update' as const;
 
 export const PAYMENTS_READ_CLAIM = 'Payments.Read' as const;
 export const PAYMENTS_CREATE_CLAIM = 'Payments.Create' as const;
