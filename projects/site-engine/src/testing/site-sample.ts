@@ -52,6 +52,7 @@ const SAMPLE_CONTENT: SiteContent = {
     copy: EMPTY_COPY,
     heroImage: sampleImage('Muayene masasında köpek'),
     aboutImage: sampleImage('Kucakta tekir kedi'),
+    featuresImage: sampleImage('Çayırda koşan köpek'),
     services: [
         { slug: 'genel-muayene', title: 'Genel muayene', summary: 'Tartı, ateş, kalp ve akciğer dinleme.', body: 'Birinci paragraf.\n\nİkinci paragraf.', image: sampleImage('Muayene') },
         { slug: 'asi', title: 'Aşı ve koruyucu bakım', summary: 'Yaşına göre aşı takvimi.', body: 'Takvimi birlikte planlarız.', image: null },
@@ -95,7 +96,7 @@ export function sampleConfig(conceptKey = 'modern'): SiteConfig {
     };
 }
 
-/** Görselin hiç olmadığı site: klinik yüklemedi, hazır set boş. */
+/** Klinik hiç görsel yüklemedi: yerlerine hazır fotoğraf gelir. */
 export function withoutImages(config: SiteConfig): SiteConfig {
     const { content } = config;
 
@@ -106,6 +107,7 @@ export function withoutImages(config: SiteConfig): SiteConfig {
             clinic: { ...content.clinic, logo: null },
             heroImage: null,
             aboutImage: null,
+            featuresImage: null,
             gallery: [],
             services: content.services.map((service) => ({ ...service, image: null })),
             members: content.members.map((member) => ({ ...member, image: null })),
@@ -123,6 +125,7 @@ export function emptyContent(config: SiteConfig): SiteConfig {
             copy: EMPTY_COPY,
             heroImage: null,
             aboutImage: null,
+            featuresImage: null,
             services: [],
             members: [],
             features: [],

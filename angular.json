@@ -32,6 +32,11 @@
                                 "glob": "**/*",
                                 "input": "src/assets/brand",
                                 "output": "assets/brand"
+                            },
+                            {
+                                "glob": "*.webp",
+                                "input": "projects/site-engine/stock/photos",
+                                "output": "_stock"
                             }
                         ],
                         "styles": [
@@ -102,6 +107,11 @@
                                     "output": "assets/brand"
                                 },
                                 {
+                                    "glob": "*.webp",
+                                    "input": "projects/site-engine/stock/photos",
+                                    "output": "_stock"
+                                },
+                                {
                                     "glob": "robots.txt",
                                     "input": "public-staging"
                                 }
@@ -119,7 +129,12 @@
                             "extractLicenses": false,
                             "assets": [
                                 "src/favicon.ico",
-                                "src/assets"
+                                "src/assets",
+                                {
+                                    "glob": "*.webp",
+                                    "input": "projects/site-engine/stock/photos",
+                                    "output": "_stock"
+                                }
                             ],
                             "styles": []
                         }
@@ -292,6 +307,13 @@
                         },
                         "baseHref": "/k/",
                         "tsConfig": "projects/site/tsconfig.app.json",
+                        "assets": [
+                            {
+                                "glob": "*.webp",
+                                "input": "projects/site-engine/stock/photos",
+                                "output": "_stock"
+                            }
+                        ],
                         "styles": ["projects/site/src/styles.css"],
                         "scripts": []
                     },

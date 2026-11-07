@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { SECTION_DIRECTIVES, SiteSection } from '../../site-context';
-import { stockPhoto } from '../../stock-photos';
 import { SECTION_BASE } from '../../section-base';
 import { SiteStatusComponent } from '../../site-parts.component';
 
@@ -180,5 +179,5 @@ import { SiteStatusComponent } from '../../site-parts.component';
     ]
 })
 export class PremiumHeroComponent extends SiteSection {
-    protected readonly photo = computed(() => this.vm().heroImage ?? stockPhoto('premium-hero'));
+    protected readonly photo = computed(() => this.vm().heroImage ?? this.vm().stock['premium-hero']);
 }

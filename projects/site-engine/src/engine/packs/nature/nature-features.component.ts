@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { SiteSection } from '../../site-context';
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { SECTION_DIRECTIVES, SiteSection } from '../../site-context';
 import { SECTION_BASE } from '../../section-base';
 
-/** Nature: farklı boyda kemerli sütunlar, serada sıra sıra pencere gibi; metin alta oturur. Mobilde sade liste. */
+/** Nature: farklı boyda kemerli sütunlar, serada sıra sıra pencere gibi; metin alta oturur, ilk kemer fotoğraftır. Mobilde sade liste. */
 @Component({
     selector: 'site-nature-features',
     standalone: true,
+    imports: [SECTION_DIRECTIVES],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @let v = vm();
@@ -13,6 +14,9 @@ import { SECTION_BASE } from '../../section-base';
             <div class="inner">
                 <h2 class="h title s-head">{{ v.copy.featuresTitle }}</h2>
                 <ul class="arches">
+                    @if (photo(); as image) {
+                        <li class="pic"><img [siteImg]="image" /></li>
+                    }
                     @for (feature of v.features; track $index) {
                         <li>
                             <h3 class="h t">{{ feature.title }}</h3>
@@ -48,6 +52,12 @@ import { SECTION_BASE } from '../../section-base';
                 color: var(--s-on-tint);
             }
 
+            li.pic {
+                height: 260px;
+                padding: 0;
+                overflow: hidden;
+            }
+
             .t {
                 font-size: calc(var(--s-head-scale) * clamp(25px, 2.4cqi, 34px));
                 font-style: italic;
@@ -75,6 +85,11 @@ import { SECTION_BASE } from '../../section-base';
                     border-radius: 999px 999px var(--s-radius-img) var(--s-radius-img);
                 }
 
+                li.pic {
+                    height: auto;
+                    align-self: stretch;
+                }
+
                 li:nth-child(4n + 1) {
                     min-height: 360px;
                 }
@@ -94,4 +109,6 @@ import { SECTION_BASE } from '../../section-base';
         `
     ]
 })
-export class NatureFeaturesComponent extends SiteSection {}
+export class NatureFeaturesComponent extends SiteSection {
+    protected readonly photo = computed(() => this.vm().featuresImage ?? this.vm().stock['nature-features']);
+}

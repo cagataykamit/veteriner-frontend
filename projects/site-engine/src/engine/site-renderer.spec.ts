@@ -40,6 +40,14 @@ describe('SiteRendererComponent', () => {
         return host;
     }
 
+    /** Görsellerin yüklenemediğini bildirir: motor görselsiz düzene döner. Ekranda görsel kalmayana kadar sürer. */
+    async function failImages(host: HTMLElement): Promise<void> {
+        for (let images = [...host.querySelectorAll('img')]; images.length; images = [...host.querySelectorAll('img')]) {
+            images.forEach((image) => image.dispatchEvent(new Event('error')));
+            await fixture!.whenStable();
+        }
+    }
+
     function withSections(config: SiteConfig, key: string): SiteConfig {
         return { ...config, design: { ...config.design, sections: { ...config.design.sections, ...Object.fromEntries(SECTION_TYPES.map((type) => [type, key])) } } };
     }
@@ -142,8 +150,10 @@ describe('SiteRendererComponent', () => {
     describe('görselsiz çizim', () => {
         for (const key of PACK_KEYS) {
             for (const width of [375, 1280]) {
-                it(`${key}, ${width}px: görsel yokken kırık <img> çizilmez, metin taşmaz`, async () => {
+                it(`${key}, ${width}px: fotoğraf yüklenemezse görselsiz düzen çizilir, metin taşmaz`, async () => {
                     const host = await render(withSections(withoutImages(sampleConfig()), key), { width });
+
+                    await failImages(host);
 
                     expect(host.querySelectorAll('img').length).toBe(0);
                     expect(host.querySelector('h1')?.textContent?.trim().length).toBeGreaterThan(0);
@@ -154,6 +164,7 @@ describe('SiteRendererComponent', () => {
             it(`${key}: hekim kartında fotoğraf yoksa monogram çizilir`, async () => {
                 const host = await render(withSections(withoutImages(sampleConfig()), key), { only: 'team' });
 
+                expect(host.querySelectorAll('img').length).toBe(0);
                 expect(host.textContent).toContain('ÖH');
                 expect(host.textContent).toContain('DK');
             });
@@ -161,6 +172,8 @@ describe('SiteRendererComponent', () => {
             it(`${key}: yazıdaki hizmet ve rehber sayfaları görselsiz çizilir`, async () => {
                 for (const path of ['/hizmetler/genel-muayene', '/saglik-rehberi/ilk-ziyaret', '/saglik-rehberi', '/hizmetler']) {
                     const host = await render(withSections(withoutImages(sampleConfig()), key), { path });
+
+                    await failImages(host);
 
                     expect(host.querySelector('.lost'), path).toBeNull();
                     expect(host.querySelectorAll('img').length, path).toBe(0);
@@ -176,17 +189,74 @@ describe('SiteRendererComponent', () => {
             });
         }
 
-        it('galeri hazır fotoğrafla dolmaz: yükleme yoksa bölüm de sayfa da yoktur (K7)', async () => {
-            const config = withoutImages(sampleConfig());
+        it('galeri kareleri de yüklenemezse sayfa düşer', async () => {
+            const host = await render(withoutImages(sampleConfig()), { path: '/galeri' });
 
-            for (const key of PACK_KEYS) {
-                const host = await render(withSections(config, key));
+            await failImages(host);
 
-                expect(host.querySelector(`site-${key}-gallery`), key).toBeNull();
-                expect(host.textContent, key).not.toContain('Galeri');
-            }
+            expect(host.querySelector('.lost')).not.toBeNull();
+        });
+    });
 
-            expect((await render(config, { path: '/galeri' })).querySelector('.lost')).not.toBeNull();
+    describe('hazır fotoğraf (K7)', () => {
+        const srcs = (host: HTMLElement): string[] => [...host.querySelectorAll('img')].map((image) => image.getAttribute('src') ?? '');
+
+        for (const key of PACK_KEYS) {
+            it(`${key}: klinik yüklemediği her bölümde hazır fotoğraf çizilir, adres bizim sunucudadır`, async () => {
+                const config = withSections(withoutImages(sampleConfig()), key);
+
+                for (const only of ['hero', 'about', 'features', 'gallery', 'guide'] as const) {
+                    const list = srcs(await render(config, { only }));
+
+                    expect(list.length, only).toBeGreaterThan(0);
+                    expect(list.every((src) => src.startsWith('_stock/') && src.endsWith('.webp')), only).toBe(true);
+                }
+
+                // Premium hizmet listesi tasarımı gereği fotoğrafsızdır; detay sayfası her pakette fotoğraflıdır.
+                expect(srcs(await render(config, { path: '/hizmetler/genel-muayene' }))[0]).toContain('_stock/ex-table');
+            });
+
+            it(`${key}: yüklenen görsel hazır fotoğrafın yerine geçer, kaldırınca hazır fotoğraf döner`, async () => {
+                const empty = withSections(withoutImages(sampleConfig()), key);
+                const uploaded = patchContent(empty, { heroImage: sampleImage('Kliniğin kendi fotoğrafı') });
+                const host = await render(uploaded, { only: 'hero' });
+
+                expect(host.querySelector('img')?.getAttribute('alt')).toBe('Kliniğin kendi fotoğrafı');
+                fixture!.componentRef.setInput('config', empty);
+                await fixture!.whenStable();
+                expect(host.querySelector('img')?.getAttribute('src')).toContain('_stock/');
+            });
+
+            it(`${key}: hekim kartına hazır fotoğraf konmaz, monogram kalır`, async () => {
+                const host = await render(withSections(withoutImages(sampleConfig()), key), { only: 'team' });
+
+                expect(host.querySelectorAll('img').length).toBe(0);
+                expect(host.textContent).toContain('ÖH');
+            });
+
+            it(`${key}: "temsili" ibaresi hazır fotoğraf çizilen sitede bir kez görünür`, async () => {
+                const host = await render(withSections(withoutImages(sampleConfig()), key));
+
+                expect(host.querySelectorAll('.stock-note').length).toBe(1);
+                expect(host.querySelector('.stock-note')?.textContent).toContain('temsilidir');
+            });
+        }
+
+        it('hazır fotoğraf dosyası gerçekten yüklenir, en uzun kenarı 2000 pikseli aşmaz', async () => {
+            const host = await render(withoutImages(sampleConfig()), { only: 'hero' });
+            const image = host.querySelector('img')!;
+
+            await image.decode();
+
+            expect(image.naturalWidth).toBeGreaterThan(0);
+            expect(Math.max(image.naturalWidth, image.naturalHeight)).toBeLessThanOrEqual(2000);
+        });
+
+        it('galeri yüklemesi yoksa hazır kareler sayfada da görünür', async () => {
+            const host = await render(withoutImages(sampleConfig()), { path: '/galeri' });
+
+            expect(host.querySelector('.lost')).toBeNull();
+            expect(srcs(host).length).toBeGreaterThanOrEqual(8);
         });
     });
 
@@ -200,11 +270,11 @@ describe('SiteRendererComponent', () => {
                     expect(host.querySelector(`site-${key}-hero`)).not.toBeNull();
                     expect(host.querySelector(`site-${key}-footer`)).not.toBeNull();
 
-                    for (const type of ['services', 'team', 'features', 'gallery', 'guide', 'contact'] as const) {
+                    for (const type of ['services', 'team', 'features', 'guide', 'contact'] as const) {
                         expect(host.querySelector(`site-${key}-${type}`), type).toBeNull();
                     }
 
-                    expect(host.querySelectorAll('img').length).toBe(0);
+                    expect(host.querySelector(`site-${key}-gallery`)).not.toBeNull();
                     expect(overflowing(host)).toEqual([]);
                 });
             }
@@ -216,7 +286,9 @@ describe('SiteRendererComponent', () => {
 
             expect(menu).toContain('/hakkimizda');
 
-            for (const path of ['/hizmetler', '/hekimler', '/saglik-rehberi', '/galeri', '/sss', '/acil', '/ekibimiz', '/subelerimiz', '/iletisim']) {
+            expect(menu).toContain('/galeri');
+
+            for (const path of ['/hizmetler', '/hekimler', '/saglik-rehberi', '/sss', '/acil', '/ekibimiz', '/subelerimiz', '/iletisim']) {
                 expect(menu, path).not.toContain(path);
                 expect((await render(emptyContent(sampleConfig()), { path })).querySelector('.lost'), path).not.toBeNull();
             }
@@ -280,7 +352,7 @@ describe('SiteRendererComponent', () => {
                     expect(url, key).not.toMatch(/^(javascript|data:text|unsafe)/i);
                 }
 
-                expect(host.querySelector(`site-${key}-gallery`), key).toBeNull();
+                expect(host.querySelector(`site-${key}-gallery img`)?.getAttribute('src'), key).toContain('_stock/');
             }
         });
 
@@ -306,7 +378,7 @@ describe('SiteRendererComponent', () => {
             for (const key of PACK_KEYS) {
                 const host = await render(withSections(clean, key));
 
-                expect(host.querySelector('img'), key).toBeNull();
+                expect(host.querySelector('img[src="x"]'), key).toBeNull();
                 expect(host.querySelector('script'), key).toBeNull();
                 expect(host.textContent, key).toContain('<img src=x');
                 expect((window as unknown as { __xss?: number }).__xss, key).toBeUndefined();

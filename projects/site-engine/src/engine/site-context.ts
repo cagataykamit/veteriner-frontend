@@ -16,6 +16,12 @@ export class SiteContext {
     readonly page = computed(() => this.path().split('#')[0] || '/');
     readonly onHome = computed(() => this.page() === '/');
     readonly navTick = signal(0);
+    /** Yüklenemeyen görsel adresleri: VM bunları düşer, bölüm görselsiz düzenini çizer. */
+    readonly failedImages = signal<ReadonlySet<string>>(new Set());
+
+    imageFailed(src: string): void {
+        this.failedImages.update((failed) => (failed.has(src) ? failed : new Set(failed).add(src)));
+    }
 
     connect(source: { vm: Signal<SiteVm>; path: Signal<string>; base: Signal<string>; go: (path: string) => void }): void {
         this.source = source;
@@ -56,18 +62,30 @@ export class SiteLinkDirective {
     protected readonly href = computed(() => this.site.href(this.siteLink()));
 }
 
-/** `<img [siteImg]="foto">`: adres, alt metin ve tembel yükleme tek yerde. Boş alt ile süs görseli de olur. */
+/**
+ * `<img [siteImg]="foto">`: adres, alt metin ve tembel yükleme tek yerde. Boş alt ile süs görseli de olur. Yüklenemezse bağlama bildirir;
+ * sunucudan gelen sayfada hata JS'ten önce olmuş olabilir, ilk çizimde bakılır.
+ */
 @Directive({
     selector: 'img[siteImg]',
     standalone: true,
-    host: { '[attr.src]': 'siteImg().src', '[attr.alt]': 'alt() ?? siteImg().alt', '[attr.loading]': 'eager ? "eager" : "lazy"', '[attr.decoding]': 'eager ? "sync" : "async"' }
+    host: { '[attr.src]': 'siteImg().src', '[attr.alt]': 'alt() ?? siteImg().alt', '[attr.loading]': 'eager ? "eager" : "lazy"', '[attr.decoding]': 'eager ? "sync" : "async"', '(error)': 'site.imageFailed(siteImg().src)' }
 })
 export class SiteImgDirective {
     readonly siteImg = input.required<SiteImage>();
     /** Fotoğraf yanındaki metnin tekrarıysa boş verilir. */
     readonly alt = input<string | null>(null);
 
+    protected readonly site = inject(SiteContext);
     protected readonly eager = inject(new HostAttributeToken('eager'), { optional: true }) !== null;
+
+    constructor() {
+        const image = inject(ElementRef<HTMLImageElement>).nativeElement as HTMLImageElement;
+
+        afterNextRender(() => {
+            if (image.complete && image.naturalWidth === 0) this.site.imageFailed(this.siteImg().src);
+        });
+    }
 }
 
 /** Ana eylem düğmesi: `vm.cta` randevu sayfasına ya da telefona gider. Metni çağıran yazar. */

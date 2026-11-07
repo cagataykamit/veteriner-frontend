@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { SECTION_DIRECTIVES, SiteSection } from '../../site-context';
-import { stockPhoto } from '../../stock-photos';
 import { SECTION_BASE } from '../../section-base';
 
 /** Nature: ortada dar ve iri bir metin, iki yanda farklı yükseklikte yuvarlak hatlı fotoğraflar; aralarda boşluk bol. */
@@ -109,6 +108,6 @@ import { SECTION_BASE } from '../../section-base';
     ]
 })
 export class NatureAboutComponent extends SiteSection {
-    protected readonly one = computed(() => this.vm().aboutImage ?? stockPhoto('nature-about'));
-    protected readonly two = computed(() => stockPhoto('nature-about-2'));
+    protected readonly one = computed(() => this.vm().aboutImage ?? this.vm().stock['nature-about']);
+    protected readonly two = computed(() => this.vm().stock['nature-about-2']);
 }

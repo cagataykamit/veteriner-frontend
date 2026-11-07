@@ -9,7 +9,7 @@ export { conceptByKey, designFromConcept, SITE_CONCEPTS, type SiteConcept } from
 export { SITE_FONTS, fontByKey, type SiteFont } from './engine/site-fonts';
 export { buildSiteTokens, colorWarnings, GROUNDS, groundOf, RADIUS_OPTIONS, type ContrastWarning } from './engine/site-tokens';
 export { contrast, ensureContrast, hexToHsl, hexToRgb, hslToHex, isHex, luminance, mix, readableOn, rgbToHex, rgbToHsl, type Hsl, type Rgb } from './engine/site-color.utils';
-export { STOCK_PHOTOS, stockPhoto, type StockPhoto, type StockSlot } from './engine/stock-photos';
+export { isStockPhoto, STOCK_GALLERY, STOCK_PHOTOS, stockArticlePhoto, stockSectionPhoto, stockServicePhoto, stockSharePhoto, type StockSlot } from './engine/stock-photos';
 export { safeHref, safeImageSrc } from './engine/site-links';
 export * from './engine/site-stored-config';
 export { sitePagePaths, sitePageHead, siteJsonLd, siteRobotsTxt, siteRootUrl, siteSitemapXml, seoDescription, seoTitle, type SitePageHead } from './engine/site-seo';

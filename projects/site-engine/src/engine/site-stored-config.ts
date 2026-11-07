@@ -56,6 +56,7 @@ export function defaultStoredConfig(conceptKey: string = SITE_CONCEPTS[0].key): 
             copy: EMPTY_SITE_COPY,
             heroImage: null,
             aboutImage: null,
+            featuresImage: null,
             services: [],
             members: [],
             features: [],

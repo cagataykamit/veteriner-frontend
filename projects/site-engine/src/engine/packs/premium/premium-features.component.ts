@@ -1,17 +1,21 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { SiteSection } from '../../site-context';
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { SECTION_DIRECTIVES, SiteSection } from '../../site-context';
 import { SECTION_BASE } from '../../section-base';
 
-/** Premium: sayfa boyu büyük tırnaklı satırlar; açıklama sağda küçük durur. Kart ya da ikon yok. */
+/** Premium: sayfa boyu büyük tırnaklı satırlar; açıklama sağda küçük durur. Kart ya da ikon yok; üstte afiş gibi tek fotoğraf. */
 @Component({
     selector: 'site-premium-features',
     standalone: true,
+    imports: [SECTION_DIRECTIVES],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @let v = vm();
         <section class="sec">
             <div class="inner">
                 <h2 class="kick s-head">{{ v.copy.featuresTitle }}</h2>
+                @if (photo(); as image) {
+                    <figure class="poster"><img [siteImg]="image" /></figure>
+                }
                 <ul>
                     @for (feature of v.features; track $index) {
                         <li>
@@ -33,6 +37,16 @@ import { SECTION_BASE } from '../../section-base';
                 font-weight: 400;
                 letter-spacing: 0.2em;
                 text-transform: uppercase;
+            }
+
+            .poster {
+                margin-bottom: 32px;
+                aspect-ratio: 4 / 3;
+                overflow: hidden;
+            }
+
+            .poster img {
+                filter: saturate(0.88);
             }
 
             li {
@@ -58,6 +72,10 @@ import { SECTION_BASE } from '../../section-base';
             }
 
             @container site (min-width: 860px) {
+                .poster {
+                    aspect-ratio: 21 / 9;
+                }
+
                 li {
                     grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
                     align-items: center;
@@ -67,4 +85,6 @@ import { SECTION_BASE } from '../../section-base';
         `
     ]
 })
-export class PremiumFeaturesComponent extends SiteSection {}
+export class PremiumFeaturesComponent extends SiteSection {
+    protected readonly photo = computed(() => this.vm().featuresImage ?? this.vm().stock['premium-features']);
+}
