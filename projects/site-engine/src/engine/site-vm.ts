@@ -111,6 +111,16 @@ export function memberInitials(name: string): string {
 }
 
 /** Metinler: klinik boş bıraktıysa konseptin önerdiği cümle. */
+/** `wa.me` ülke kodlu, başında sıfır olmayan numara ister; Türkiye'de 0 ile ya da ülke kodsuz yazılan numara tamamlanır. */
+export function whatsappNumber(raw: string): string {
+    const digits = raw.replace(/\D/g, '');
+
+    if (/^0\d{10}$/.test(digits)) return `90${digits.slice(1)}`;
+    if (/^\d{10}$/.test(digits)) return `90${digits}`;
+
+    return digits;
+}
+
 function resolveCopy(content: SiteCopy, voice: SiteCopy): SiteCopy {
     return Object.fromEntries(Object.keys(voice).map((key) => [key, content[key as CopyKey]?.trim() || voice[key as CopyKey]])) as unknown as SiteCopy;
 }
@@ -124,7 +134,7 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date): Sit
     const phone = clinic.phone.trim();
     const email = clinic.email.trim();
     const phoneDigits = clinic.phone.replace(/[^\d+]/g, '');
-    const whatsappDigits = clinic.whatsapp.replace(/\D/g, '');
+    const whatsappDigits = whatsappNumber(clinic.whatsapp);
     const telHref = phoneDigits ? safeHref(`tel:${phoneDigits}`) : null;
     const mapQuery = [address, ...place].join(', ');
     const copy = resolveCopy(content.copy, voice);

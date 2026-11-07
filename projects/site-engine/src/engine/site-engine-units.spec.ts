@@ -6,7 +6,7 @@ import { SITE_FONTS } from './site-fonts';
 import { clinicStatus, hoursGroups } from './site-hours';
 import { safeHref, safeImageSrc, socialLinks } from './site-links';
 import { buildSiteTokens } from './site-tokens';
-import { buildSiteVm, memberInitials } from './site-vm';
+import { buildSiteVm, memberInitials, whatsappNumber } from './site-vm';
 import { STOCK_PHOTOS, stockPhoto } from './stock-photos';
 
 const NOW = new Date(Date.UTC(2026, 10, 9, 7, 30)); // Pazartesi
@@ -116,8 +116,16 @@ describe('buildSiteVm', () => {
         const vm = buildSiteVm(patchClinic(sampleConfig(), { phone: '+90 (555) 000 00 00', whatsapp: '0555 000 00 00', email: 'ornek@example.com' }), voice, NOW);
 
         expect(vm.telHref).toBe('tel:+905550000000');
-        expect(vm.whatsappHref).toBe('https://wa.me/05550000000');
+        expect(vm.whatsappHref).toBe('https://wa.me/905550000000');
         expect(vm.mailHref).toBe('mailto:ornek@example.com');
+    });
+
+    it('WhatsApp numarası ülke kodlu ve sıfırsız olur', () => {
+        expect(whatsappNumber('0555 000 00 00')).toBe('905550000000');
+        expect(whatsappNumber('555 000 00 00')).toBe('905550000000');
+        expect(whatsappNumber('+90 555 000 00 00')).toBe('905550000000');
+        expect(whatsappNumber('+49 151 2345 6789')).toBe('4915123456789');
+        expect(whatsappNumber('')).toBe('');
     });
 
     it('boş içerikte ad yer tutucusu ve baş harf üretilir, bölüm listesi yalnız tanıtımdır', () => {
