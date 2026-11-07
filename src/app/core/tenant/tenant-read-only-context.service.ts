@@ -4,7 +4,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { resolveTenantIdFromJwt } from '@/app/core/auth/jwt-tenant.utils';
 import { SUBSCRIPTIONS_MANAGE_CLAIM, SUBSCRIPTIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TenantAccessService } from '@/app/core/tenant/tenant-access.service';
-import type { TenantAccessStateVm } from '@/app/core/tenant/models/tenant-access-state-vm.model';
+import type { PlanFeatureCode, TenantAccessStateVm, TenantPlanFeatureVm } from '@/app/core/tenant/models/tenant-access-state-vm.model';
 import type { SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
 
 /**
@@ -34,6 +34,13 @@ export class TenantReadOnlyContextService {
 
     /** Yazma UI’si (mutation) kapalı mı. */
     readonly mutationBlocked = this.isTenantReadOnly;
+
+    /** Özellik paket yüzünden kapalıysa kaydı; açıksa ya da durum henüz bilinmiyorsa `null` (red sunucudadır). */
+    lockedPlanFeature(feature: PlanFeatureCode): TenantPlanFeatureVm | null {
+        const row = this.accessStateSignal()?.planFeatures.find((f) => f.feature === feature);
+
+        return row && !row.isEnabled ? row : null;
+    }
 
     /**
      * Abonelik yönetimi için özet patch’i varsa (subscription-summary yüklendiğinde).
@@ -125,10 +132,18 @@ export class TenantReadOnlyContextService {
 
     /**
      * Abonelik veya kurum ayarları özeti yüklendiğinde `canManageSubscription` senkronu (salt okunur bayrağı access-state’tedir).
+     * Paket değiştiyse (denemede anında geçiş, ödeme dönüşü) paket özellikleri access-state'ten yeniden okunur.
      */
     applySummary(s: SubscriptionSummaryVm): void {
         this.subscriptionSummaryPatchSignal.set({
             canManageSubscription: !!s.canManageSubscription
         });
+
+        const known = this.accessStateSignal()?.planCode;
+
+        if (known && s.planCode && known.toLowerCase() !== s.planCode.toLowerCase()) {
+            this.panelTenantAccess$ = null;
+            this.loadForPanel();
+        }
     }
 }
