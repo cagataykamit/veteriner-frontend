@@ -52,6 +52,7 @@
     "@fortawesome/fontawesome-free": "^7.3.1",
     "@primeuix/themes": "^2.0.3",
     "@tailwindcss/postcss": "^4.3.3",
+    "barcode-detector": "3.2.3",
     "chart.js": "^4.6.1",
     "express": "5.1.0",
     "primeicons": "^8.0.2",

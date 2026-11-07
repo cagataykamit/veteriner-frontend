@@ -34,6 +34,7 @@ import {
 import { printSaleReceipt } from '@/app/features/sales/utils/sale-receipt-print.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
+import { BarcodeScanButtonComponent } from '@/app/entities/inventory/components/barcode-scan-button.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
@@ -67,7 +68,7 @@ function numberFromInput(event: Event): number | null {
     selector: 'app-sale-new-page',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [FormsModule, RouterLink, ButtonModule, SelectModule, SelectButtonModule, ClientSearchComponent, AppPageHeaderComponent, SaleReceiptComponent, MoneyPipe],
+    imports: [FormsModule, RouterLink, ButtonModule, SelectModule, SelectButtonModule, ClientSearchComponent, BarcodeScanButtonComponent, AppPageHeaderComponent, SaleReceiptComponent, MoneyPipe],
     host: { '(keydown.control.enter)': 'submit()' },
     template: `
         <app-page-header title="Hızlı satış" description="Ürünü okutun ya da arayın; Enter ile sepete ekleyin, Ctrl+Enter ile tamamlayın." />
@@ -99,24 +100,27 @@ function numberFromInput(event: Event): number | null {
                 <div class="col-span-12 lg:col-span-8">
                     <div class="card">
                         <label for="sale-search" class="block text-sm font-medium text-muted-color mb-2">Ürün ara (barkod, ad veya SKU)</label>
-                        <input
-                            #searchInput
-                            id="sale-search"
-                            type="text"
-                            autocomplete="off"
-                            autofocus
-                            class="w-full p-inputtext p-component"
-                            placeholder="Barkodu okutun veya yazın"
-                            [value]="term()"
-                            (input)="onTermInput($event)"
-                            (keydown.enter)="onEnter($event)"
-                            (keydown.arrowdown)="moveActive(1, $event)"
-                            (keydown.arrowup)="moveActive(-1, $event)"
-                            (keydown.escape)="clearSearch()"
-                            role="combobox"
-                            aria-controls="sale-results"
-                            [attr.aria-expanded]="results().length > 0"
-                        />
+                        <div class="flex gap-2">
+                            <input
+                                #searchInput
+                                id="sale-search"
+                                type="text"
+                                autocomplete="off"
+                                autofocus
+                                class="flex-1 min-w-0 p-inputtext p-component"
+                                placeholder="Barkodu okutun veya yazın"
+                                [value]="term()"
+                                (input)="onTermInput($event)"
+                                (keydown.enter)="onEnter($event)"
+                                (keydown.arrowdown)="moveActive(1, $event)"
+                                (keydown.arrowup)="moveActive(-1, $event)"
+                                (keydown.escape)="clearSearch()"
+                                role="combobox"
+                                aria-controls="sale-results"
+                                [attr.aria-expanded]="results().length > 0"
+                            />
+                            <app-barcode-scan-button (scanned)="onScanned($event)" />
+                        </div>
                         @if (searchError()) {
                             <small class="text-red-500 block mt-1" role="alert">{{ searchError() }}</small>
                         } @else if (cartNotice()) {
@@ -427,6 +431,36 @@ export class SaleNewPageComponent {
                 } else {
                     this.results.set(r);
                     this.activeIndex.set(0);
+                }
+            },
+            error: (e: Error) => {
+                this.searching.set(false);
+                this.searchError.set(panelHttpFailureMessage(e, 'Ürünler aranamadı.'));
+            }
+        });
+    }
+
+    /** Kamerayla okunan barkod (TIER-006): tam eşleşen satılabilir ürün sepete eklenir; yoksa barkod kutuda "bulunamadı" ile kalır. */
+    protected onScanned(code: string): void {
+        this.results.set([]);
+        this.arrowNavigated = false;
+        this.searchError.set(null);
+        this.cartNotice.set(null);
+        this.term$.next('');
+        this.term.set(code);
+        const input = this.searchInput()?.nativeElement;
+
+        if (input) {
+            input.value = code;
+        }
+
+        this.searching.set(true);
+        this.productSearch.findByBarcode(code).subscribe({
+            next: (product) => {
+                this.searching.set(false);
+
+                if (product) {
+                    this.addProduct(product);
                 }
             },
             error: (e: Error) => {

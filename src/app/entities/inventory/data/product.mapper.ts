@@ -242,5 +242,9 @@ export function productsQueryToHttpParams(query: ProductsListQuery, opts?: { omi
         p = p.set('IsActive', 'false');
     }
 
+    if (query.barcode?.trim()) {
+        p = p.set('Barcode', query.barcode.trim());
+    }
+
     return p;
 }

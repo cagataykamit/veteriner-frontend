@@ -1,5 +1,7 @@
 import type { Mock } from 'vitest';
+import { signal, type WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { TenantPlanFeatureVm } from '@/app/core/tenant/models/tenant-access-state-vm.model';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -50,8 +52,10 @@ describe('SaleNewPageComponent', () => {
     let fixture: ComponentFixture<SaleNewPageComponent>;
     let cmp: SaleNewPageComponent;
     let search: Mock;
+    let findByBarcode: Mock;
     let createSale: Mock;
     let mutationBlocked: boolean;
+    let locked: WritableSignal<TenantPlanFeatureVm | null>;
 
     const el = () => fixture.nativeElement as HTMLElement;
     const searchInput = () => el().querySelector<HTMLInputElement>('#sale-search')!;
@@ -69,6 +73,8 @@ describe('SaleNewPageComponent', () => {
 
     beforeEach(async () => {
         mutationBlocked = false;
+        locked = signal(null);
+        findByBarcode = vi.fn().mockName('findByBarcode');
         search = vi
             .fn()
             .mockName('search')
@@ -96,12 +102,12 @@ describe('SaleNewPageComponent', () => {
             imports: [SaleNewPageComponent],
             providers: [
                 provideRouter([]),
-                { provide: SaleProductSearchService, useValue: { search } },
+                { provide: SaleProductSearchService, useValue: { search, findByBarcode } },
                 { provide: SalesService, useValue: { createSale } },
                 { provide: StockBatchService, useValue: { getByProduct: () => of(batches) } },
                 { provide: ClientSearchService, useValue: { search: () => of([]), getById: () => of({ id: 'cl1', fullName: 'Ali Veli', phone: '—', petNames: [], label: 'Ali Veli' }) } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => c === 'Sales.Read', getClinicId: () => 'c1' } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } }
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked, lockedPlanFeature: () => locked() } }
             ]
         }).compileComponents();
         fixture = TestBed.createComponent(SaleNewPageComponent);
@@ -130,6 +136,33 @@ describe('SaleNewPageComponent', () => {
         expect(el().querySelectorAll('[data-testid="sale-line"]')).toHaveLength(1);
         expect(cmp['lines']()[0].quantity).toBe(2);
         expect(el().querySelector('[data-testid="sale-totals"]')!.textContent).toContain('91,00');
+    });
+
+    it('kamerayla okunan barkod tam eşleşen ürünü sepete ekler', async () => {
+        findByBarcode.mockReturnValue(of(mama));
+        cmp['onScanned']('8690001');
+        fixture.detectChanges();
+        expect(findByBarcode).toHaveBeenCalledWith('8690001');
+        expect(cmp['lines']().map((l) => l.product.id)).toEqual(['p1']);
+        expect(searchInput().value).toBe('');
+    });
+
+    it('kamerayla okunan barkodla ürün yoksa barkod kutuda kalır ve bulunamadı yazılır', async () => {
+        findByBarcode.mockReturnValue(of(null));
+        cmp['onScanned']('000');
+        fixture.detectChanges();
+        expect(cmp['lines']()).toHaveLength(0);
+        expect(searchInput().value).toBe('000');
+        expect(el().textContent).toContain('Satılabilir ürün bulunamadı');
+    });
+
+    it('kamera paketi kilitliyse kilitli düğme gösterilir, elle arama açık kalır', async () => {
+        locked.set({ feature: 'MobileBarcode', isEnabled: false, requiredPlanCode: 'Pro' });
+        fixture.detectChanges();
+        expect(el().querySelector('[data-testid="barcode-scan-locked"]')).not.toBeNull();
+        expect(el().querySelector('[data-testid="barcode-scan-button"]')).toBeNull();
+        await typeAndEnter('8690001');
+        expect(cmp['lines']()).toHaveLength(1);
     });
 
     it('belirsiz aramada Enter listeyi gösterir, satıra tıklayınca ekler', async () => {

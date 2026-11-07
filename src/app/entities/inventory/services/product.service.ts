@@ -55,6 +55,11 @@ export class ProductService {
         );
     }
 
+    /** Barkodu tam eşleşen ürün (TIER-006); barkod kiracıda tektir. Yoksa ya da filtreye uymuyorsa `null`. */
+    findByBarcode(barcode: string, query: Pick<ProductsListQuery, 'isActive' | 'stockTrackedOnly'> = {}): Observable<ProductListItemVm | null> {
+        return this.getProducts({ ...query, page: 1, pageSize: 1, barcode }).pipe(map((paged) => paged.items[0] ?? null));
+    }
+
     getById(id: string): Observable<ProductDetailVm> {
         return this.api.get<ProductDto>(ApiEndpoints.products.byId(id)).pipe(
             map((dto) => mapProductDtoToDetailVm(dto)),

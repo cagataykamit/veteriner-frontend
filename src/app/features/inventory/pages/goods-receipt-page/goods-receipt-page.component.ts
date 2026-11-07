@@ -16,6 +16,8 @@ import { isStockBatchExpiryPast, STOCK_BATCH_INVOICE_MAX, STOCK_BATCH_LOT_MAX, S
 import { GOODS_RECEIPT_MAX_LINES } from '@/app/features/inventory/models/goods-receipt-api.model';
 import { GoodsReceiptSubmitError, type GoodsReceiptProductPick, type GoodsReceiptResultVm } from '@/app/features/inventory/models/goods-receipt-form.model';
 import { GoodsReceiptService } from '@/app/features/inventory/services/goods-receipt.service';
+import { BarcodeScanButtonComponent } from '@/app/entities/inventory/components/barcode-scan-button.component';
+import type { ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { goodsReceiptTotalCost } from '@/app/features/inventory/utils/goods-receipt.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -26,6 +28,10 @@ type SelectOption = { label: string; value: string };
 
 const MONEY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barcode' | 'requiresLotAndExpiry'>): GoodsReceiptProductPick {
+    return { id: p.id, label: `${p.name} (${p.sku})`, barcode: p.barcode, requiresLotAndExpiry: p.requiresLotAndExpiry };
+}
+
 /**
  * Mal kabul: tek fatura/irsaliyeden N ürünün tek işlemde (hepsi ya da hiçbiri) stoğa girişi.
  * Kurallar (lot/SKT zorunluluğu, geçmiş SKT onayı, atomiklik) backend'dedir; burada yalnız erken geri bildirim vardır.
@@ -33,7 +39,7 @@ const MONEY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximum
 @Component({
     selector: 'app-goods-receipt-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, AutoCompleteModule, DateInputComponent, AppListHeaderComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, AutoCompleteModule, BarcodeScanButtonComponent, DateInputComponent, AppListHeaderComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card">
@@ -118,10 +124,16 @@ const MONEY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximum
                     </div>
 
                     <div>
-                        <div class="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                             <h5 class="m-0">Ürünler</h5>
-                            <span class="text-xs text-muted-color">Ürünü barkod veya adla arayın. Satırda Enter yeni satır açar.</span>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-xs text-muted-color">Ürünü barkod veya adla arayın. Satırda Enter yeni satır açar.</span>
+                                <app-barcode-scan-button label="Barkod okut" [disabled]="lines.length >= maxLines && !hasEmptyLine()" (scanned)="onScanned($event)" />
+                            </div>
                         </div>
+                        @if (scanNotice(); as notice) {
+                            <p class="text-red-500 text-sm mt-0 mb-2" role="alert" data-testid="gr-scan-notice">{{ notice }}</p>
+                        }
                         <div class="overflow-x-auto">
                             <table class="w-full border-collapse" style="min-width: 52rem" formArrayName="lines">
                                 <thead>
@@ -279,6 +291,7 @@ export class GoodsReceiptPageComponent implements OnInit {
     readonly attempted = signal(false);
     readonly submitError = signal<string | null>(null);
     readonly result = signal<GoodsReceiptResultVm | null>(null);
+    readonly scanNotice = signal<string | null>(null);
     private readonly lineErrors = signal<Readonly<Record<number, string>>>({});
 
     /** Form açılışında bir kez üretilir; hata sonrası tekrar denemelerde aynı kalır, yalnız yeni mal kabulde yenilenir. */
@@ -301,7 +314,7 @@ export class GoodsReceiptPageComponent implements OnInit {
                 switchMap((term) => this.productService.getProducts({ search: term, page: 1, pageSize: 20, isActive: true, stockTrackedOnly: true }).pipe(catchError(() => of(null)))),
                 takeUntilDestroyed(this.destroyRef)
             )
-            .subscribe((r) => this.suggestions.set((r?.items ?? []).map((p) => ({ id: p.id, label: `${p.name} (${p.sku})`, barcode: p.barcode, requiresLotAndExpiry: p.requiresLotAndExpiry }))));
+            .subscribe((r) => this.suggestions.set((r?.items ?? []).map(toProductPick)));
     }
 
     ngOnInit(): void {
@@ -321,6 +334,38 @@ export class GoodsReceiptPageComponent implements OnInit {
         if (term) {
             this.productSearch$.next(term);
         }
+    }
+
+    hasEmptyLine(): boolean {
+        return this.lines.controls.some((l) => !l.controls.product.value);
+    }
+
+    /** Kamerayla okunan barkod (TIER-006): stok takipli aktif ürün ilk boş satıra, boş satır yoksa yeni satıra yazılır; miktara geçilir. */
+    onScanned(code: string): void {
+        this.scanNotice.set(null);
+        this.productService.findByBarcode(code, { isActive: true, stockTrackedOnly: true }).subscribe({
+            next: (p) => {
+                if (!p) {
+                    this.scanNotice.set(`"${code}" barkodlu, stok takipli aktif ürün bulunamadı. Ürünü adla arayabilirsiniz.`);
+
+                    return;
+                }
+
+                const line = this.lines.controls.find((l) => !l.controls.product.value) ?? this.addLine();
+
+                if (!line) {
+                    this.scanNotice.set(`En çok ${this.maxLines} satır eklenebilir.`);
+
+                    return;
+                }
+
+                line.patchValue({ product: toProductPick(p) });
+                const index = this.lines.controls.indexOf(line);
+
+                setTimeout(() => document.querySelector<HTMLInputElement>(`[data-testid="gr-row-${index}"] input[formcontrolname="quantity"]`)?.focus());
+            },
+            error: (e: Error) => this.scanNotice.set(e.message)
+        });
     }
 
     addLine(): GoodsReceiptLineGroup | null {
@@ -443,7 +488,7 @@ export class GoodsReceiptPageComponent implements OnInit {
                 const line = this.lines.at(0);
 
                 line.patchValue({
-                    product: { id: p.id, label: `${p.name} (${p.sku})`, barcode: p.barcode, requiresLotAndExpiry: p.requiresLotAndExpiry },
+                    product: toProductPick(p),
                     quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : null
                 });
             },

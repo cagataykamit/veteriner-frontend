@@ -4,7 +4,7 @@ import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { InputTextModule } from 'primeng/inputtext';
@@ -12,6 +12,7 @@ import { Paginator } from 'primeng/paginator';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { ListPageState } from '@/app/shared/list/list-page-state';
+import { BarcodeScanButtonComponent } from '@/app/entities/inventory/components/barcode-scan-button.component';
 import type { ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -56,6 +57,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
         AppStatusTagComponent,
         FilterFieldComponent,
         SearchInputComponent,
+        BarcodeScanButtonComponent,
         AppRowActionButtonComponent
     ],
     providers: [ConfirmationService],
@@ -69,7 +71,10 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                     <app-list-header class="mb-3" title="Ürünler" [count]="totalItems()">
                         <app-filter-field label="Arama" labelFor="productSearch" [active]="isSearchActive()" width="grow">
-                            <app-search-input inputId="productSearch" placeholder="Ad, SKU veya barkod…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                            <div class="flex gap-2">
+                                <app-search-input class="flex-1 min-w-0" inputId="productSearch" placeholder="Ad, SKU veya barkod…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                                <app-barcode-scan-button (scanned)="onScanned($event)" />
+                            </div>
                         </app-filter-field>
                         <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canCreateProduct && !ro.mutationBlocked()) {
@@ -240,6 +245,7 @@ export class ProductListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
 
     private readonly productService = inject(ProductService);
+    private readonly router = inject(Router);
     private readonly confirmationService = inject(ConfirmationService);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
@@ -318,6 +324,24 @@ export class ProductListPageComponent implements OnInit {
         this.activeSearch.set(this.searchInput.trim());
         this.activeIsActiveFilter.set(String(this.isActiveFilter ?? '').trim());
         this.list.loadFirstPage();
+    }
+
+    /** Kamerayla okunan barkod (TIER-006): tam eşleşen ürünün kartı açılır; yoksa barkod aramaya yazılır ve liste boş görünür. */
+    onScanned(code: string): void {
+        this.listActionError.set(null);
+        this.productService.findByBarcode(code).subscribe({
+            next: (p) => {
+                if (p) {
+                    void this.router.navigate(['/panel/products', p.id]);
+
+                    return;
+                }
+
+                this.searchInput = code;
+                this.applyFilters();
+            },
+            error: (e: Error) => this.listActionError.set(panelHttpFailureMessage(e, 'Ürün aranamadı.'))
+        });
     }
 
     resetFilters(): void {

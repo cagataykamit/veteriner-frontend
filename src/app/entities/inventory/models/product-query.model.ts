@@ -15,6 +15,8 @@ export interface ProductsListQuery {
     productCategoryId?: string;
     /** Tanımlı değil → tümü; true/false → filtre. */
     isActive?: boolean;
+    /** Tam eşleşme (TIER-006, `MOBILE_BARCODE_API_CONTRACT.md`); barkod kiracıda tektir. */
+    barcode?: string;
     /** İstemcide uygulanır (sunucuda `kind` süzgeci yok): hizmetler (`Service`) sonuçtan çıkarılır. Stok, uygulama, reçete ve satış seçicileri için. */
     stockTrackedOnly?: boolean;
 }

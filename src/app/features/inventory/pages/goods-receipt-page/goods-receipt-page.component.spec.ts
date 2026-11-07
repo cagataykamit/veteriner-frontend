@@ -10,7 +10,7 @@ import type { CreateGoodsReceiptRequest } from '@/app/features/inventory/models/
 import { GoodsReceiptSubmitError, type GoodsReceiptProductPick } from '@/app/features/inventory/models/goods-receipt-form.model';
 import { GoodsReceiptService } from '@/app/features/inventory/services/goods-receipt.service';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
-import type { ProductDetailVm } from '@/app/entities/inventory/models/product-vm.model';
+import type { ProductDetailVm, ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 const plain: GoodsReceiptProductPick = { id: 'p1', label: 'Serum (S1)', barcode: '869', requiresLotAndExpiry: false };
@@ -28,7 +28,8 @@ describe('GoodsReceiptPageComponent', () => {
         } as unknown as MockedObject<GoodsReceiptService>;
         products = {
             getProducts: vi.fn().mockName('ProductService.getProducts'),
-            getById: vi.fn().mockName('ProductService.getById')
+            getById: vi.fn().mockName('ProductService.getById'),
+            findByBarcode: vi.fn().mockName('ProductService.findByBarcode')
         } as unknown as MockedObject<ProductService>;
         products.getById.mockReturnValue(of({ id: 'p1', name: 'Serum', sku: 'S1', barcode: '869', requiresLotAndExpiry: false } as unknown as ProductDetailVm));
         await TestBed.configureTestingModule({
@@ -37,7 +38,7 @@ describe('GoodsReceiptPageComponent', () => {
                 provideRouter([]),
                 { provide: GoodsReceiptService, useValue: service },
                 { provide: ProductService, useValue: products },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null } },
                 { provide: ClinicsService, useValue: { listClinics: () => of([{ id: 'c1', name: 'Merkez', isActive: true }]) } },
                 { provide: AuthService, useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez' } },
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } }
@@ -109,6 +110,31 @@ describe('GoodsReceiptPageComponent', () => {
         fillFirstLine(plain);
         cmp.onSubmit();
         expect((vi.mocked(service.create).mock.lastCall![0] as CreateGoodsReceiptRequest).requestId).not.toBe(first);
+    });
+
+    it('kamerayla okunan barkod stok takipli aktif ürünü ilk boş satıra, sonra yeni satıra yazar', async () => {
+        await setup();
+        products.findByBarcode.mockReturnValue(of({ id: 'p1', name: 'Serum', sku: 'S1', barcode: '869', requiresLotAndExpiry: false } as unknown as ProductListItemVm));
+
+        cmp.onScanned('869');
+        cmp.onScanned('869');
+
+        expect(products.findByBarcode).toHaveBeenCalledWith('869', { isActive: true, stockTrackedOnly: true });
+        expect(cmp.lines.length).toBe(2);
+        expect((cmp.lines.at(0).getRawValue().product as GoodsReceiptProductPick).label).toBe('Serum (S1)');
+        expect((cmp.lines.at(1).getRawValue().product as GoodsReceiptProductPick).id).toBe('p1');
+        expect(cmp.scanNotice()).toBeNull();
+    });
+
+    it('barkodla ürün bulunmazsa satır değişmez ve elle arama önerilir', async () => {
+        await setup();
+        products.findByBarcode.mockReturnValue(of(null));
+
+        cmp.onScanned('000');
+        fixture.detectChanges();
+
+        expect(cmp.lines.at(0).getRawValue().product).toBeFalsy();
+        expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="gr-scan-notice"]')?.textContent).toContain('"000" barkodlu');
     });
 
     it('satır sayısı 100 ile sınırlıdır; son satır silinmez', async () => {

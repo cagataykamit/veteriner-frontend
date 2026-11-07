@@ -4,13 +4,15 @@ import type { ProductControlledClassApi, ProductKindApi } from '@/app/entities/i
 export const PRODUCT_CLASSIFICATION_TEXT_MAX = 100;
 /** Sözleşme: `Product.ManufacturerMaxLength`. */
 export const PRODUCT_MANUFACTURER_MAX = 200;
+/** Sözleşme: `Product.BarcodeMaxLength` (TIER-006). */
+export const PRODUCT_BARCODE_MAX = 100;
 
 export function createProductUpsertFormGroup(fb: FormBuilder) {
     return fb.nonNullable.group({
         name: ['', [Validators.required, Validators.maxLength(256)]],
         productCategoryId: [''],
         sku: ['', Validators.maxLength(128)],
-        barcode: ['', Validators.maxLength(128)],
+        barcode: ['', Validators.maxLength(PRODUCT_BARCODE_MAX)],
         unit: ['', [Validators.required, Validators.maxLength(64)]],
         unitPrice: [null as number | null, [Validators.required, Validators.min(0)]],
         currency: ['TRY', Validators.required],
