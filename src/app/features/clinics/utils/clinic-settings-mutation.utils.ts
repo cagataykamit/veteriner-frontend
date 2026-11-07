@@ -50,7 +50,9 @@ const CLINIC_MESSAGES: Record<string, string> = {
     'Subscriptions.TenantCancelled':
         'Bu işletmenin aboneliği iptal edildiği için yazma işlemleri kapalıdır. Yöneticiyseniz Hesap → Abonelik ekranından durumu yönetin.',
     SubscriptionsTenantCancelled:
-        'Bu işletmenin aboneliği iptal edildiği için yazma işlemleri kapalıdır. Yöneticiyseniz Hesap → Abonelik ekranından durumu yönetin.'
+        'Bu işletmenin aboneliği iptal edildiği için yazma işlemleri kapalıdır. Yöneticiyseniz Hesap → Abonelik ekranından durumu yönetin.',
+    'Subscriptions.FeatureNotInPlan': 'Mevcut paketinizde aynı anda tek aktif klinik olur. Diğer kliniği pasife alın ya da Hesap → Abonelik ekranından üst pakete geçin.',
+    SubscriptionsFeatureNotInPlan: 'Mevcut paketinizde aynı anda tek aktif klinik olur. Diğer kliniği pasife alın ya da Hesap → Abonelik ekranından üst pakete geçin.'
 };
 
 export function clinicSettingsMutationMessage(err: HttpErrorResponse, fallback: string): string {

@@ -17,12 +17,13 @@ import { parseClinicUpsertHttpError, type ClinicUpsertFieldErrors } from '@/app/
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClinicSwitcherRefreshService } from '@/app/core/tenant/clinic-switcher-refresh.service';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppPlanUpgradeNoticeComponent } from '@/app/entities/subscription/components/app-plan-upgrade-notice.component';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
 @Component({
     selector: 'app-clinic-create-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, TextareaModule, ToastModule, AppPageHeaderComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, TextareaModule, ToastModule, AppPageHeaderComponent, AppPlanUpgradeNoticeComponent],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -34,6 +35,11 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
             description="Kurumunuza yeni bir klinik kaydı oluşturun. Ad ve şehir zorunludur; iletişim ve profil alanları isteğe bağlıdır."
         />
 
+        @if (ro.lockedPlanFeature('MultiClinic')) {
+            <div class="card">
+                <app-plan-upgrade-notice feature="MultiClinic" detail="Mevcut paketinizde aynı anda tek aktif klinik olur. Var olan bir kliniği pasife alıp yenisini açabilirsiniz; tek kurum altında birden fazla klinik için üst pakete geçin." />
+            </div>
+        } @else {
         <div class="card">
             @if (ro.mutationBlocked()) {
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">Bu işletme salt okunur moddadır; yeni klinik oluşturulamaz.</p>
@@ -115,6 +121,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                 </div>
             </form>
         </div>
+        }
     `
 })
 export class ClinicCreatePageComponent {
