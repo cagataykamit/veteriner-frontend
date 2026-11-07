@@ -1,0 +1,13 @@
+/* Klinik sitesinin global stili: yazı tipleri ve motorun kullandığı ikonlar bizim sunucudan gelir (ADR-045 K12). Üçüncü taraf bağlantı yok. */
+@import '../../site-engine/src/styles/site-fonts.css';
+@import 'primeicons/primeicons.css';
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #ffffff;
+}

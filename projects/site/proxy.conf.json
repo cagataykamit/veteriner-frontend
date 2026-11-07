@@ -1,0 +1,7 @@
+{
+    "/api/v1/public/sites": {
+        "target": "https://localhost:7173",
+        "secure": false,
+        "changeOrigin": true
+    }
+}
