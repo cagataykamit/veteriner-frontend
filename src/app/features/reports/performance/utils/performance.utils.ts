@@ -52,6 +52,19 @@ export function performanceDelta(current: number | null | undefined, previous: n
     };
 }
 
+/** Tablo hücresi için kısa fark: "+%12", "−%5"; önceki dönem 0 iken "yeni" (ya da ikisi de 0 ise "—"); fark yoksa `null`. */
+export function deltaPercentText(delta: PerformanceDelta | null): string | null {
+    if (delta == null) {
+        return null;
+    }
+
+    if (delta.percent == null) {
+        return delta.diff === 0 ? '—' : 'yeni';
+    }
+
+    return `${delta.diff >= 0 ? '+' : '−'}${formatPercent(Math.abs(delta.percent))}`;
+}
+
 /**
  * Net tahsilat ÷ net ciro (yüzde). Önceki dönem ücretlerinin tahsilatı da girdiği için "tahsilat oranı" değildir; ciro 0 ise `null`.
  */

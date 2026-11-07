@@ -343,6 +343,7 @@ describe('panel-navigation', () => {
         expect(all.map((g) => g.label)).toEqual(['Yönetim', 'Randevu ve ziyaret', 'Klinik', 'Para', 'Kayıt defterleri', 'HBS takibi']);
         expect(labels(all)).toEqual([
             'İşletme performansı',
+            'Şubeler özeti',
             'Randevu Raporu',
             'Muayene Raporu',
             'Aşı Raporu',

@@ -15,7 +15,8 @@ const FEATURE_TITLES: Readonly<Record<PlanFeatureCode, string>> = {
     AutomatedReminders: 'Otomatik hatırlatıcılar',
     AdvancedReports: 'Gelişmiş raporlar',
     VaccinationWizard: 'Otomatik aşı sihirbazı',
-    MobileBarcode: 'Kamerayla barkod okutma'
+    MobileBarcode: 'Kamerayla barkod okutma',
+    ClinicsOverview: 'Şubeler özeti'
 };
 
 /**

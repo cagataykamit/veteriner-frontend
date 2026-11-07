@@ -145,6 +145,14 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
                 // Yönetici düzeyi, Özet ile aynı koşul (MANAGER_LEVEL_CLAIM); sabit aşağıda tanımlı olduğu için izin doğrudan yazılır.
                 claims: [VISITS_CORRECT_CLAIM],
                 description: 'Dönemin cirosu, tahsilatı ve iş hacmi; önceki dönemle karşılaştırma.'
+            },
+            {
+                label: 'Şubeler özeti',
+                icon: 'pi pi-fw pi-sitemap',
+                route: `${REPORTS_ROUTE}/clinics-overview`,
+                // İşletme performansıyla aynı yönetici düzeyi koşulu; paket kilidi (Kurumsal) sayfada gösterilir.
+                claims: [VISITS_CORRECT_CLAIM],
+                description: 'Tüm şubelerin cirosu, tahsilatı, açık alacağı ve iş yükü yan yana.'
             }
         ]
     },
