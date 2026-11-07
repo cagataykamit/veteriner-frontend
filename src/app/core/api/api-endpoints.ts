@@ -263,6 +263,7 @@ export const ApiEndpoints = {
         endOfDayOpenItems: () => `/api/v1/reports/end-of-day/open-items`,
         /** İşletme performansı özeti (REPORT-008). */
         performanceSummary: () => `/api/v1/reports/performance-summary`,
+        performanceBreakdowns: () => `/api/v1/reports/performance-breakdowns`,
         /** Rapor favorileri (REPORT-003): GET liste; PUT/DELETE `{reportKey}` idempotent. Kullanıcı + kiracı kapsamı. */
         favorites: () => `/api/v1/reports/favorites`,
         favorite: (reportKey: string) => `/api/v1/reports/favorites/${encodeURIComponent(reportKey)}`,
