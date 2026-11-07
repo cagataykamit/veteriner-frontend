@@ -51,7 +51,7 @@ app.get('/k/:slug/sitemap.xml', async (req, res) => {
     const loaded = await loadPublicSite(req.params.slug, req.ip, config);
 
     if (loaded.kind === 'redirect') {
-        res.redirect(301, redirectLocation(req.originalUrl, req.params.slug, loaded.slug));
+        res.redirect(301, redirectLocation(req.originalUrl, loaded.slug));
     } else if (loaded.kind === 'published') {
         res.type('application/xml').send(siteSitemapXml(publishedSiteConfig(loaded), config.origin, loaded.publishedAtUtc));
     } else {
@@ -65,7 +65,7 @@ app.get('/k/:slug{/*rest}', async (req, res, next) => {
     const loaded = await loadPublicSite(req.params.slug, req.ip, config);
 
     if (loaded.kind === 'redirect') {
-        res.redirect(301, redirectLocation(req.originalUrl, req.params.slug, loaded.slug));
+        res.redirect(301, redirectLocation(req.originalUrl, loaded.slug));
 
         return;
     }

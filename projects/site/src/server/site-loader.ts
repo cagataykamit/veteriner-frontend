@@ -60,8 +60,9 @@ export async function loadPublicSite(slug: string, clientIp: string | undefined,
     const body = (await response.json()) as PublicSiteResponse;
 
     switch (body.status) {
+        // Sözleşme §6: kapalı sitenin eski adresi de "Closed" döner, yeni adres açıklanmaz. "Redirect" yalnız açık sitede gelir.
         case 'Redirect':
-            return body.redirectToSlug ? { kind: 'redirect', slug: body.redirectToSlug } : { kind: 'notfound' };
+            return isRedirectTarget(body.redirectToSlug, slug) ? { kind: 'redirect', slug: body.redirectToSlug } : { kind: 'notfound' };
         case 'Closed':
             return { kind: 'closed', message: body.message };
         case 'Published':
@@ -71,7 +72,12 @@ export async function loadPublicSite(slug: string, clientIp: string | undefined,
     }
 }
 
-/** 301 hedefi: yalnız adres değişir, alt sayfa ve sorgu korunur. */
-export function redirectLocation(originalUrl: string, oldSlug: string, newSlug: string): string {
-    return originalUrl.replace(`/k/${encodeURIComponent(oldSlug)}`, `/k/${encodeURIComponent(newSlug)}`);
+/** Hedef adres biçiminde olmalı ve istekteki adres olmamalı: yanıt başlığına yalnız denetlenmiş değer yazılır, döngü kurulmaz. */
+function isRedirectTarget(target: string | null, slug: string): target is string {
+    return !!target && target !== slug.toLowerCase() && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(target);
+}
+
+/** 301 hedefi: yalnız adres parçası değişir, alt sayfa ve sorgu korunur. */
+export function redirectLocation(originalUrl: string, newSlug: string): string {
+    return originalUrl.replace(/^\/k\/[^/?#]+/, `/k/${newSlug}`);
 }

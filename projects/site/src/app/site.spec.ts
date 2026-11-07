@@ -43,6 +43,12 @@ describe('loadPublicSite', () => {
         expect(await loadPublicSite('a', undefined, CONFIG, vi.fn(async () => Promise.reject(new Error('ağ'))) as unknown as typeof fetch)).toEqual({ kind: 'unavailable' });
     });
 
+    it('yönlendirme hedefi denetlenir: bozuk adres ve kendine dönüş yönlenmez', async () => {
+        for (const target of ['a', 'https://kotu.example.com', 'b/../c', 'b\r\nSet-Cookie: x=1', null]) {
+            expect(await loadPublicSite('a', undefined, CONFIG, respond(200, { status: 'Redirect', redirectToSlug: target }))).toEqual({ kind: 'notfound' });
+        }
+    });
+
     it('eski adres yönlenir, kapalı site neden söylemez', async () => {
         expect(await loadPublicSite('a', undefined, CONFIG, respond(200, { status: 'Redirect', redirectToSlug: 'b' }))).toEqual({ kind: 'redirect', slug: 'b' });
         expect(await loadPublicSite('a', undefined, CONFIG, respond(200, { status: 'Closed', message: 'Yayında değil.' }))).toEqual({ kind: 'closed', message: 'Yayında değil.' });
@@ -57,7 +63,8 @@ describe('loadPublicSite', () => {
 
 describe('redirectLocation', () => {
     it('alt sayfayı ve sorguyu korur', () => {
-        expect(redirectLocation('/k/eski/hizmetler?x=1', 'eski', 'yeni')).toBe('/k/yeni/hizmetler?x=1');
+        expect(redirectLocation('/k/eski/hizmetler?x=1', 'yeni')).toBe('/k/yeni/hizmetler?x=1');
+        expect(redirectLocation('/k/ESKI', 'yeni')).toBe('/k/yeni');
     });
 });
 

@@ -36,8 +36,8 @@ npm run serve:site
 | Durum | Yanıt |
 |---|---|
 | Yayında | 200, tam içerik; JS kapalıyken de okunur |
-| Eski adres | 301, alt sayfa ve sorgu korunur |
-| Kapalı (geçici ya da abonelik) | 503, `Retry-After: 3600`, `noindex`, neden söylenmez |
+| Açık sitenin eski adresi | 301, alt sayfa ve sorgu korunur; hedef adres biçimi denetlenir |
+| Kapalı (geçici ya da abonelik, güncel ya da eski adresten) | 503, `Retry-After: 3600`, `noindex`, neden ve yeni adres söylenmez |
 | Adres yok ya da kapatılmış alt sayfa | 404, `noindex` |
 | API'ye ulaşılamadı, hız sınırı | 503, `noindex`; "yok" denmez |
 
@@ -50,7 +50,7 @@ Tarayıcı JSON API'ye gitmez: durum sunucudan `TransferState` ile gelir, alt sa
 Backend'in `public-site` sınırı IP başınadır. Site sunucusu her isteği kendi IP'siyle yapacağından ziyaretçinin adresini `X-Forwarded-For` ile iletir.
 
 - Ziyaretçinin yazdığı başlığa güvenilmez. İletilen değer Express'in `req.ip`'sidir: `SITE_TRUSTED_PROXY_HOPS=0` iken soket adresi, `N` iken sağdan `N` vekil atlanmış adres.
-- Backend `UseForwardedHeaders` kullanır, `KnownProxies` verilmediği için yalnız aynı makineden (loopback) gelen başlığa güvenir. Site sunucusu API ile aynı makinedeyse ek ayar gerekmez. Ayrı makinedeyse API'nin `ForwardedHeadersOptions`'ına site sunucusunun adresi eklenmelidir; eklenmezse bütün ziyaretçiler tek IP sayılır ve 429 başlar.
+- Backend bu başlığa yalnız güvendiği vekilden inanır, varsayılan loopback'tir. Site sunucusu API ile aynı makinedeyse ek ayar gerekmez. Ayrı makinedeyse adresi API'nin `ForwardedHeaders:KnownProxies` listesine yazılmalıdır; yazılmazsa bütün ziyaretçiler tek IP sayılır ve 429 başlar.
 
 ## Yazı tipleri ve üçüncü taraf
 
