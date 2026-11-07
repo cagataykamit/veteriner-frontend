@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import type { SiteImage } from '@site-engine';
 import { findClaims } from '@/app/features/clinic-site/builder/site-claims';
 import { SiteBuilderStore } from '@/app/features/clinic-site/builder/site-builder.store';
 
@@ -397,6 +398,8 @@ export class WFieldComponent {
                 <img [src]="image" alt="" [class.contain]="contain()" />
             } @else if (reference() && state() === 'idle') {
                 <span class="gone"><i class="pi pi-image" aria-hidden="true"></i></span>
+            } @else if (shownStock(); as photo) {
+                <img [src]="photo.src" alt="" />
             }
             <div class="info">
                 @switch (state()) {
@@ -407,12 +410,12 @@ export class WFieldComponent {
                         <span class="line good" role="status"><i class="pi pi-check" aria-hidden="true"></i>Eklendi</span>
                     }
                     @default {
-                        <span class="line">{{ reference() ? 'Değiştirmek için sürükleyin' : emptyText() }}</span>
+                        <span class="line">{{ line() }}</span>
                     }
                 }
                 <div class="acts">
                     <label class="pick">
-                        Dosya seç
+                        {{ shownStock() ? 'Kendi fotoğrafını yükle' : 'Dosya seç' }}
                         <input type="file" accept="image/png,image/jpeg,image/webp" (change)="picked($event)" [attr.aria-label]="label()" />
                     </label>
                     @if (reference()) {
@@ -544,9 +547,17 @@ export class WImageComponent {
     readonly contain = input(false);
     readonly emptyText = input('Görseli buraya sürükleyin');
     readonly maxSide = input<number | undefined>(undefined);
+    /** Alan boşken sitede çizilen hazır fotoğraf (K7). */
+    readonly stock = input<SiteImage | null>(null);
     readonly referenceChange = output<string | null>();
 
     protected readonly src = computed(() => this.store.imageSrc(this.reference()));
+    protected readonly shownStock = computed(() => (this.reference() ? null : this.stock()));
+    protected readonly line = computed(() => {
+        if (this.reference()) return this.stock() ? 'Kaldırırsanız hazır fotoğraf döner.' : 'Değiştirmek için sürükleyin';
+
+        return this.stock() ? 'Hazır fotoğraf, değiştirebilirsiniz.' : this.emptyText();
+    });
     protected readonly over = signal(false);
     protected readonly state = signal<'idle' | 'busy' | 'done'>('idle');
     protected readonly progress = signal<number | null>(null);

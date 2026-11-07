@@ -36,7 +36,7 @@ export function seoChecks(config: SiteConfig): readonly SiteCheck[] {
     return [
         { label: 'SEO başlığı', ok: title.length >= 10 && title.length <= 60, detail: `${title.length} karakter (10–60 önerilir).` },
         { label: 'Meta açıklama', ok: description.length >= 50 && description.length <= 160, detail: `${description.length} karakter (50–160 önerilir).` },
-        { label: 'Paylaşım görseli', ok: !!config.seo.ogImage || !!config.content.heroImage, detail: config.seo.ogImage ? 'Yüklendi.' : config.content.heroImage ? 'Hero fotoğrafı kullanılır.' : 'Yüklenmedi; paylaşımda görsel görünmez.' },
+        { label: 'Paylaşım görseli', ok: true, detail: config.seo.ogImage ? 'Yüklendi.' : config.content.heroImage ? 'Hero fotoğrafı kullanılır.' : 'Hazır fotoğraf kullanılır.' },
         { label: 'Site simgesi (favicon)', ok: !!config.seo.favicon || !!config.content.clinic.logo, detail: config.seo.favicon ? 'Yüklendi.' : config.content.clinic.logo ? 'Logo kullanılır.' : 'Yüklenmedi.' }
     ];
 }
@@ -57,7 +57,7 @@ export function imageChecks(config: SiteConfig): readonly SiteCheck[] {
     const { gallery } = config.content;
     const noAlt = gallery.filter((item) => !item.alt.trim()).length;
 
-    return [{ label: 'Galeri alt metinleri', ok: noAlt === 0, detail: noAlt ? `${noAlt} fotoğrafın alt metni boş.` : gallery.length ? `${gallery.length} fotoğrafın hepsinde var.` : 'Galeride fotoğraf yok.' }];
+    return [{ label: 'Galeri alt metinleri', ok: noAlt === 0, detail: noAlt ? `${noAlt} fotoğrafın alt metni boş.` : gallery.length ? `${gallery.length} fotoğrafın hepsinde var.` : 'Hazır fotoğrafların alt metni var.' }];
 }
 
 /** Önizlemedeki açık sayfayı gerçekten ölçer: taşma, başlık sayısı, alt metin, dokunma hedefi. */
@@ -83,14 +83,14 @@ export function auditPreview(root: HTMLElement): readonly SiteCheck[] {
 
 /** K9: zorunlu liste backend'dedir (`missingForPublish`); bunlar engel olmayan uyarılardır. */
 export function publishWarnings(config: SiteConfig): readonly MissingItem[] {
-    const { clinic, services, members, gallery } = config.content;
+    const { clinic, services, members, heroImage, aboutImage } = config.content;
     const items: MissingItem[] = [];
 
     if (!clinic.logo) items.push({ text: 'Logo yüklenmedi; baş harf çiziliyor.', step: 0 });
     if (!clinic.email.trim()) items.push({ text: 'E-posta yok.', step: 0 });
     if (!services.length) items.push({ text: 'Hizmet eklenmedi.', step: 4 });
     if (!members.some((member) => member.kind === 'hekim' && member.name.trim())) items.push({ text: 'Hekim eklenmedi.', step: 4 });
-    if (!gallery.length && config.structure.pages.galeri) items.push({ text: 'Galeri sayfası açık ama fotoğraf yok; menüde görünmez.', step: 4 });
+    if (!heroImage || !aboutImage) items.push({ text: 'Hazır fotoğraflar görünüyor; dilerseniz kendi fotoğrafınızı yükleyin.', step: 4 });
 
     return items;
 }

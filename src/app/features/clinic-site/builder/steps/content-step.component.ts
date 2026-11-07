@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { conceptByKey, type CopyKey, type SiteArticle, type SiteBranch, type SiteFaq, type SiteFeature, type SiteImage, type SiteMember, type SiteService, type StoredSiteConfig } from '@site-engine';
+import { conceptByKey, type CopyKey, type SiteArticle, type SiteBranch, type SiteFaq, type SiteFeature, type SiteImage, type SiteMember, type SiteService, STOCK_GALLERY, stockArticlePhoto, stockSectionPhoto, stockServicePhoto, type StoredSiteConfig } from '@site-engine';
 import { slugify, uniqueSlug } from '@/app/features/clinic-site/builder/site-checks';
 import { SiteBuilderStore } from '@/app/features/clinic-site/builder/site-builder.store';
 import { WFieldComponent, WImageComponent, WIZARD_STYLES } from '@/app/features/clinic-site/builder/wizard-kit';
@@ -77,11 +77,11 @@ const replaceAt = <T>(list: readonly T[], index: number, change: Partial<T>): T[
                     @if (first) {
                         <div>
                             <p class="mini">Hero fotoğrafı</p>
-                            <app-w-image label="Hero fotoğrafı yükle" [reference]="c.heroImage?.src ?? null" emptyText="Boşsa fotoğrafsız düzen çizilir." (referenceChange)="setHero($event)" />
+                            <app-w-image label="Hero fotoğrafı yükle" [reference]="c.heroImage?.src ?? null" [stock]="sectionStock('hero')" (referenceChange)="setHero($event)" />
                         </div>
                         <div>
                             <p class="mini">Tanıtım fotoğrafı</p>
-                            <app-w-image label="Tanıtım fotoğrafı yükle" [reference]="c.aboutImage?.src ?? null" emptyText="Boşsa fotoğrafsız düzen çizilir." (referenceChange)="setAbout($event)" />
+                            <app-w-image label="Tanıtım fotoğrafı yükle" [reference]="c.aboutImage?.src ?? null" [stock]="sectionStock('about')" (referenceChange)="setAbout($event)" />
                         </div>
                     }
                 </div>
@@ -100,7 +100,7 @@ const replaceAt = <T>(list: readonly T[], index: number, change: Partial<T>): T[
                         <app-w-field label="Ad" [value]="service.title" (valueChange)="patchService(i, { title: $event })" (committed)="settleServiceSlug(i)" />
                         <app-w-field label="Kısa açıklama" [rows]="2" [value]="service.summary" (valueChange)="patchService(i, { summary: $event })" />
                         <app-w-field label="Detay sayfası metni" [rows]="4" hint="Boş satırla paragraf ayrılır." [value]="service.body" (valueChange)="patchService(i, { body: $event })" />
-                        <app-w-image label="Hizmet görseli yükle" [reference]="service.image?.src ?? null" (referenceChange)="patchService(i, { image: toImage($event, service.title) })" />
+                        <app-w-image label="Hizmet görseli yükle" [reference]="service.image?.src ?? null" [stock]="serviceStock(service.slug, i)" (referenceChange)="patchService(i, { image: toImage($event, service.title) })" />
                     </div>
                 }
                 <button type="button" class="wbtn" (click)="addService()"><i class="pi pi-plus" aria-hidden="true"></i>Hizmet ekle</button>
@@ -149,6 +149,10 @@ const replaceAt = <T>(list: readonly T[], index: number, change: Partial<T>): T[
                     </div>
                 }
                 <button type="button" class="wbtn" (click)="addFeature()"><i class="pi pi-plus" aria-hidden="true"></i>Ekle</button>
+                <div>
+                    <p class="mini">Bölüm fotoğrafı</p>
+                    <app-w-image label="Bölüm fotoğrafı yükle" [reference]="c.featuresImage?.src ?? null" [stock]="sectionStock('features')" (referenceChange)="setFeatures($event)" />
+                </div>
             </div>
         </details>
 
@@ -162,7 +166,12 @@ const replaceAt = <T>(list: readonly T[], index: number, change: Partial<T>): T[
                         <app-w-field label="Alt metin" [claimCheck]="false" hint="Fotoğrafı görmeyen ziyaretçi için kısa açıklama." [error]="photo.alt.trim() ? null : 'Alt metin ekleyin.'" [value]="photo.alt" (valueChange)="patchList('gallery', i, { alt: $event })" />
                     </div>
                 } @empty {
-                    <p class="hint">Galeri boş; bölüm sitede görünmez.</p>
+                    <p class="hint">Hazır fotoğraflar görünüyor, değiştirebilirsiniz. İlk yüklemenizle kendi galeriniz başlar; hepsini kaldırırsanız hazır fotoğraflar döner.</p>
+                    <ul class="stock-strip">
+                        @for (photo of stockGallery; track photo.src) {
+                            <li><img [src]="photo.src" [alt]="photo.alt" loading="lazy" /></li>
+                        }
+                    </ul>
                 }
                 <app-w-image label="Yeni fotoğraf yükle" emptyText="Yeni fotoğrafı buraya sürükleyin." (referenceChange)="addGallery($event)" />
             </div>
@@ -178,6 +187,7 @@ const replaceAt = <T>(list: readonly T[], index: number, change: Partial<T>): T[
                         <app-w-field label="Kategori" [value]="article.category" (valueChange)="patchList('articles', i, { category: $event })" />
                         <app-w-field label="Özet" [rows]="2" [value]="article.summary" (valueChange)="patchList('articles', i, { summary: $event })" />
                         <app-w-field label="Metin" [rows]="5" [value]="article.body" (valueChange)="patchList('articles', i, { body: $event })" />
+                        <app-w-image label="Yazı görseli yükle" [reference]="article.image?.src ?? null" [stock]="articleStock(article.slug, i)" (referenceChange)="patchList('articles', i, { image: toImage($event, article.title) })" />
                         <button type="button" class="wbtn ghost small rm" (click)="removeFrom('articles', i)">Sil</button>
                     </div>
                 }
@@ -297,6 +307,20 @@ const replaceAt = <T>(list: readonly T[], index: number, change: Partial<T>): T[
                 justify-self: start;
             }
 
+            .stock-strip {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+                gap: 6px;
+            }
+
+            .stock-strip img {
+                display: block;
+                width: 100%;
+                aspect-ratio: 1;
+                border-radius: 8px;
+                object-fit: cover;
+            }
+
             .library {
                 display: grid;
                 grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
@@ -333,6 +357,9 @@ export class ContentStepComponent {
 
     protected readonly copyGroups = COPY_GROUPS;
     protected readonly suggestions = SUGGESTIONS;
+    protected readonly stockGallery = STOCK_GALLERY;
+    protected readonly serviceStock = stockServicePhoto;
+    protected readonly articleStock = stockArticlePhoto;
     protected readonly content = computed(() => this.store.stored().content);
     protected readonly voice = computed(() => conceptByKey(this.store.stored().design.conceptKey).voice);
     protected readonly serviceTips = computed(() => SERVICE_SUGGESTIONS.filter((tip) => !this.content().services.some((service) => service.title.trim() === tip)));
@@ -359,6 +386,15 @@ export class ContentStepComponent {
 
     protected setAbout(reference: string | null): void {
         this.patch({ aboutImage: this.toImage(reference, this.store.record().name) });
+    }
+
+    protected setFeatures(reference: string | null): void {
+        this.patch({ featuresImage: this.toImage(reference, this.store.record().name) });
+    }
+
+    /** Seçili bölüm alternatifinin hazır karesi; sitede çizilenle aynı. */
+    protected sectionStock(type: 'hero' | 'about' | 'features'): SiteImage | null {
+        return stockSectionPhoto(this.store.stored().design.sections[type], type);
     }
 
     protected patchService(index: number, change: Partial<SiteService>): void {
