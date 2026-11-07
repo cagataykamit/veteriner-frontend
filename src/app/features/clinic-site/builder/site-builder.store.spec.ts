@@ -266,6 +266,45 @@ describe('SiteBuilderStore', () => {
         expect(store.actionError()).toContain('taslakta ve yayındaki sürümde');
     });
 
+    it('yüklenen dosya özgünü değil, yeniden kodlanmış hâlidir', async () => {
+        const { store, api } = setup();
+        const canvas = document.createElement('canvas');
+
+        canvas.width = 40;
+        canvas.height = 30;
+        canvas.getContext('2d')!.fillRect(0, 0, 40, 30);
+
+        const blob = await new Promise<Blob>((resolve) => canvas.toBlob((value) => resolve(value!), 'image/jpeg'));
+        const original = new File([blob], 'telefon.jpg', { type: 'image/jpeg' });
+
+        api.uploadImage.mockReturnValue(of({ id: 'g1', reference: 'site-image:g1', contentType: 'image/webp', sizeBytes: 1, createdAtUtc: '' }));
+
+        expect(await store.uploadImage(original, undefined, () => undefined)).toBe('site-image:g1');
+        expect(api.uploadImage.mock.calls[0][1]).not.toBe(original);
+    });
+
+    it('görsel silinince dönen sürüm sonraki yazmada kullanılır; eski kopyanın boş yanıtı bozmaz', async () => {
+        const { store, api } = setup();
+
+        api.deleteImage.mockReturnValueOnce(of({ ...STATE, rowVersion: 'r5' }) as never);
+        await store.deleteImage('g1');
+        expect(store.site()?.rowVersion).toBe('r5');
+
+        await store.deleteImage('g2');
+        expect(store.site()?.rowVersion).toBe('r5');
+        expect(store.actionError()).toBeNull();
+    });
+
+    it('adres hakkı bitince kalan hak sıfırlanır, destek söylenir', async () => {
+        const { store, api } = setup({ detail: { ...DETAIL, site: { ...STATE, addressChangesRemaining: 1 } } });
+
+        api.changeAddress.mockReturnValueOnce(throwError(() => new ClinicSiteError('Destekle iletişime geçin.', 'ClinicSites.AddressChangeLimitReached')));
+
+        expect(await store.changeAddress('yeni')).toBe(false);
+        expect(store.site()?.addressChangesRemaining).toBe(0);
+        expect(store.actionError()).toContain('Destekle');
+    });
+
     it('adres değişince site yoksa önce oluşturur', async () => {
         const { store, api } = setup({ detail: NO_SITE });
 

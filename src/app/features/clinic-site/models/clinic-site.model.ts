@@ -9,6 +9,8 @@ export interface ClinicSiteStateDto {
     readonly publishedAtUtc: string | null;
     readonly hasUnpublishedChanges: boolean;
     readonly draftUpdatedAtUtc: string;
+    /** Yayınlanmış sitenin kalan adres değiştirme hakkı (K10). Eski backend kopyası göndermeyebilir: yoksa gösterilmez. */
+    readonly addressChangesRemaining?: number;
     readonly rowVersion: string;
 }
 

@@ -7,6 +7,7 @@ import { messageFromHttpError, problemCodeFromHttpError, type ProblemMessages } 
 const CLINIC_SITE_PROBLEM_MESSAGES: ProblemMessages = {
     'ClinicSites.ConcurrencyConflict': 'Bu taslak siz düzenlerken başka bir sekmede ya da başka bir kullanıcı tarafından değiştirildi.',
     'ClinicSites.SlugTaken': 'Bu adres kullanılıyor; başka bir adres deneyin.',
+    'ClinicSites.AddressChangeLimitReached': 'Adres değiştirme hakkınız doldu. Adresi yeniden değiştirmek için destekle iletişime geçin.',
     'ClinicSites.ClinicInactive': 'Klinik pasif olduğu için yayınlanamaz.',
     'ClinicSites.NotFound': 'Site bulunamadı; sayfayı yenileyin.',
     'ClinicSites.VersionNotFound': 'Bu sürüm artık saklanmıyor; liste yenilendi.',

@@ -2,7 +2,7 @@ import { contrast, defaultStoredConfig, composeSiteConfig, type SiteConfig } fro
 import { suggestDesign } from '@/app/features/clinic-site/builder/design-suggest';
 import { prepareSiteImage, SITE_IMAGE_MAX_BYTES, SITE_IMAGE_MAX_SIDE } from '@/app/features/clinic-site/builder/image-resize';
 import { draftClaims, findClaims } from '@/app/features/clinic-site/builder/site-claims';
-import { contrastChecks, defaultCopyLabels, isSlug, publishWarnings, slugify, uniqueSlug } from '@/app/features/clinic-site/builder/site-checks';
+import { cleanLinkInput, contrastChecks, defaultCopyLabels, isSlug, publishWarnings, slugify, uniqueSlug } from '@/app/features/clinic-site/builder/site-checks';
 import { siteQrDataUrl } from '@/app/features/clinic-site/builder/site-share.component';
 
 const RECORD = { name: 'Çağrı', city: 'Ankara', district: '', address: 'Adres', phone: '03120000000', email: '', workingDays: [], bookingUrl: null };
@@ -67,6 +67,10 @@ describe('yayın kontrolleri', () => {
         expect(isSlug('a'.repeat(61))).toBe(false);
     });
 
+    it('bağlantı alanına yapıştırılan görünmez karakter atılır', () => {
+        expect(cleanLinkInput('\uFEFFhttps://exa\u200Bmple.com')).toBe('https://example.com');
+    });
+
     it('alt sayfa adresi Türkçe karakterden arınır, çakışmaz', () => {
         expect(slugify('Aşı ve Koruyucu Bakım')).toBe('asi-ve-koruyucu-bakim');
         expect(uniqueSlug('asi', ['asi', 'asi-2'])).toBe('asi-3');
@@ -118,6 +122,20 @@ async function imageFile(width: number, height: number, type = 'image/png'): Pro
     return new File([blob], 'foto.png', { type });
 }
 
+function latin1(bytes: Uint8Array): string {
+    return Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
+}
+
+/** JPEG'in başına telefon fotoğrafındaki gibi bir APP1 (EXIF) parçası ekler. */
+async function withExif(file: File): Promise<File> {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const payload = Array.from('Exif\0\0GPSLatitude39.9', (char) => char.charCodeAt(0));
+    const length = payload.length + 2;
+    const segment = [0xff, 0xe1, length >> 8, length & 0xff, ...payload];
+
+    return new File([bytes.slice(0, 2), new Uint8Array(segment), bytes.slice(2)], 'telefon.jpg', { type: 'image/jpeg' });
+}
+
 async function size(file: File): Promise<[number, number]> {
     const bitmap = await createImageBitmap(file);
 
@@ -135,6 +153,31 @@ describe('prepareSiteImage (K12)', () => {
 
     it('küçük görseli büyütmez', async () => {
         expect(await size(await prepareSiteImage(await imageFile(300, 200)))).toEqual([300, 200]);
+    });
+
+    it('küçük görseli de yeniden kodlar: EXIF ve konum bilgisi çıkar', async () => {
+        const original = await withExif(await imageFile(300, 200, 'image/jpeg'));
+        const before = latin1(new Uint8Array(await original.arrayBuffer()));
+
+        expect(before).toContain('Exif');
+        expect(before).toContain('GPSLatitude39.9');
+
+        const after = latin1(new Uint8Array(await (await prepareSiteImage(original)).arrayBuffer()));
+
+        expect(after).not.toContain('Exif');
+        expect(after).not.toContain('EXIF');
+        expect(after).not.toContain('GPSLatitude');
+    });
+
+    it('canvas işleyemezse özgün dosyaya düşmez, anlaşılır hata verir', async () => {
+        const file = await imageFile(300, 200);
+        const toBlob = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((callback) => callback(null));
+
+        try {
+            await expect(prepareSiteImage(file)).rejects.toThrow('işlenemedi');
+        } finally {
+            toBlob.mockRestore();
+        }
     });
 
     it('izin verilmeyen türü ve görsel olmayan dosyayı açıklar', async () => {

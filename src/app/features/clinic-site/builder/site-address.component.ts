@@ -21,6 +21,14 @@ const REASON_TEXT: Readonly<Record<string, string>> = {
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-w-field label="Sayfa adresi" [claimCheck]="false" [value]="value()" hint="vetinity.com/k/ sonrası." [error]="formatError()" (valueChange)="changed($event)" />
+        @if (store.isPublished()) {
+            <p class="hint">Eski adres yeni adrese yönlenir ve başkasına verilmez; paylaştığınız bağlantı ve QR çalışmaya devam eder.</p>
+            @if (remaining() === 0) {
+                <p class="warn" role="status"><i class="pi pi-lock" aria-hidden="true"></i><span>Adres değiştirme hakkınız doldu. Adresi yeniden değiştirmek için destekle iletişime geçin.</span></p>
+            } @else if (remaining() !== null) {
+                <p class="hint">Kalan değiştirme hakkı: <strong>{{ remaining() }}</strong>. Eski adresinize dönüş de bir hak kullanır, süreyle yenilenmez.</p>
+            }
+        }
         @if (dirty()) {
             <div class="state" role="status">
                 @if (checking()) {
@@ -37,8 +45,8 @@ const REASON_TEXT: Readonly<Record<string, string>> = {
                 <button type="button" class="wbtn main small" [disabled]="!canSave()" (click)="save()">Adresi değiştir</button>
                 <button type="button" class="wbtn ghost small" (click)="reset()">Vazgeç</button>
             </div>
-            @if (store.isPublished()) {
-                <p class="hint">Eski adres yeni adrese yönlenir ve başkasına verilmez; paylaştığınız bağlantı ve QR çalışmaya devam eder.</p>
+            @if (store.isPublished() && remaining()) {
+                <p class="hint">Değiştirince {{ remaining()! - 1 }} hakkınız kalır.</p>
             }
         }
         @if (saved()) {
@@ -93,7 +101,9 @@ export class SiteAddressComponent {
     protected readonly saved = signal(false);
     protected readonly error = signal<string | null>(null);
     protected readonly formatError = computed(() => (this.dirty() && !isSlug(this.value()) ? REASON_TEXT['Invalid'] : null));
-    protected readonly canSave = computed(() => this.dirty() && !this.checking() && !!this.availability()?.isAvailable && !this.store.actionBusy() && this.store.canWrite());
+    /** Yalnız yayınlanmış sitede sayılır; alan gelmiyorsa (eski backend kopyası) gösterilmez, sınırı backend söyler. */
+    protected readonly remaining = computed(() => (this.store.isPublished() ? (this.store.site()?.addressChangesRemaining ?? null) : null));
+    protected readonly canSave = computed(() => this.dirty() && this.remaining() !== 0 && !this.checking() && !!this.availability()?.isAvailable && !this.store.actionBusy() && this.store.canWrite());
 
     constructor() {
         this.checks

@@ -428,7 +428,10 @@ export class SiteBuilderStore {
 
         await this.run(async () => {
             try {
-                await firstValueFrom(this.api.deleteImage(this.clinicId(), imageId));
+                const state = await firstValueFrom(this.api.deleteImage(this.clinicId(), imageId));
+
+                if (state) this.site.set(state);
+
                 this.images.update((list) => list.filter((image) => image.id !== imageId));
                 this.imageUrls.update((urls) => {
                     const { [imageId]: removed, ...rest } = urls;
@@ -532,7 +535,17 @@ export class SiteBuilderStore {
 
         if (!(await this.ensureSite())) return false;
 
-        return this.run(async () => this.site.set(await firstValueFrom(this.api.changeAddress(this.clinicId(), slug))));
+        return this.run(async () => {
+            try {
+                this.site.set(await firstValueFrom(this.api.changeAddress(this.clinicId(), slug)));
+            } catch (err) {
+                if (err instanceof ClinicSiteError && err.code === 'ClinicSites.AddressChangeLimitReached') {
+                    this.site.update((site) => site && { ...site, addressChangesRemaining: 0 });
+                }
+
+                throw err;
+            }
+        });
     }
 
     /** Eksikler, görseller ve durum sunucudan tazelenir. Sürüm numarası alınmaz: başka yerden gelen değişiklik kayıtta çakışma olarak görünsün. */

@@ -75,7 +75,8 @@ export class ClinicSiteService {
         );
     }
 
-    deleteImage(clinicId: string, imageId: string): Observable<void> {
-        return this.api.delete<void>(ApiEndpoints.clinicSite.image(clinicId, imageId)).pipe(toClinicSiteError('Görsel silinemedi.'));
+    /** Sözleşme §5: yanıt sitenin yeni durumudur, `rowVersion` değişir. Eski backend kopyası 204 döner: gövde boş gelir. */
+    deleteImage(clinicId: string, imageId: string): Observable<ClinicSiteStateDto | null> {
+        return this.api.delete<ClinicSiteStateDto | null>(ApiEndpoints.clinicSite.image(clinicId, imageId)).pipe(toClinicSiteError('Görsel silinemedi.'));
     }
 }

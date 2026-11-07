@@ -102,6 +102,11 @@ export function defaultCopyLabels(stored: StoredSiteConfig): readonly string[] {
     return SHOWN_COPY.filter((key) => !stored.content.copy[key].trim()).map((key) => COPY_LABELS[key]);
 }
 
+/** Bağlantı alanına yapıştırılan görünmez biçim karakterleri atılır; kalsa backend reddeder, klinik sebebini göremez. */
+export function cleanLinkInput(text: string): string {
+    return text.replace(/\p{Cf}/gu, '');
+}
+
 export function slugify(text: string): string {
     return text
         .toLocaleLowerCase('tr')

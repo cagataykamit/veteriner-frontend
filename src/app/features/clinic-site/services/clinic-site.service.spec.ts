@@ -67,7 +67,8 @@ describe('ClinicSiteService', () => {
         ['Files.TooLarge', 413, '5 MB'],
         ['Files.UnsupportedType', 415, 'JPEG'],
         ['Files.LimitReached', 409, '100'],
-        ['ClinicSites.SlugTaken', 409, 'kullanılıyor']
+        ['ClinicSites.SlugTaken', 409, 'kullanılıyor'],
+        ['ClinicSites.AddressChangeLimitReached', 409, 'destekle iletişime geçin']
     ])('%s anlaşılır mesaja çevrilir', async (code, status, text) => {
         const result = firstValueFrom(service.saveDraft('c1', defaultStoredConfig(), null));
 

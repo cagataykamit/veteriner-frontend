@@ -1,6 +1,7 @@
 /**
- * Yüklemeden önce tarayıcıda küçültme (ADR-045 K12): backend görsel işlemez, tür ve boyutu yine zorlar. Her görsel yeniden kodlanır;
- * böylece fotoğrafın konum ve cihaz bilgisi (EXIF) herkese açık siteye taşınmaz.
+ * Yüklemeden önce tarayıcıda küçültme (ADR-045 K12): backend görsel işlemez, olduğu gibi saklar. Her görsel, küçük olsa da canvas üzerinden
+ * yeniden kodlanır; canvas yalnız pikselleri taşıdığı için telefon fotoğrafındaki konum ve cihaz bilgisi (EXIF) herkese açık siteye çıkmaz.
+ * Canvas'ın işleyemediği dosya yüklenmez: özgün dosyaya düşmek EXIF'i geçirirdi.
  */
 export const SITE_IMAGE_MAX_SIDE = 2400;
 export const SITE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
@@ -8,6 +9,7 @@ export const SITE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 export const SITE_IMAGE_INPUT_MAX_BYTES = 40 * 1024 * 1024;
 const ACCEPTED_TYPES: readonly string[] = ['image/jpeg', 'image/png', 'image/webp'];
 const QUALITIES: readonly number[] = [0.86, 0.78, 0.7, 0.6, 0.5];
+const NOT_PROCESSABLE = 'Bu görsel işlenemedi. JPEG, PNG ya da WebP olarak yeniden kaydedip deneyin.';
 
 export class SiteImageFileError extends Error {}
 
@@ -42,7 +44,7 @@ function draw(image: HTMLImageElement, width: number, height: number, opaque: bo
     canvas.height = height;
 
     if (!context) {
-        throw new SiteImageFileError('Görsel hazırlanamadı.');
+        throw new SiteImageFileError(NOT_PROCESSABLE);
     }
 
     if (opaque) {
@@ -66,6 +68,11 @@ export async function prepareSiteImage(file: File, maxSide: number = SITE_IMAGE_
     }
 
     const image = await loadImage(file);
+
+    if (!image.naturalWidth || !image.naturalHeight) {
+        throw new SiteImageFileError(NOT_PROCESSABLE);
+    }
+
     const baseName = file.name.replace(/\.[^.]+$/, '') || 'gorsel';
     let scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
 
@@ -79,7 +86,11 @@ export async function prepareSiteImage(file: File, maxSide: number = SITE_IMAGE_
         for (const quality of QUALITIES) {
             const blob = await encode(canvas, type, quality);
 
-            if (blob && blob.size <= SITE_IMAGE_MAX_BYTES) {
+            if (!blob) {
+                throw new SiteImageFileError(NOT_PROCESSABLE);
+            }
+
+            if (blob.size <= SITE_IMAGE_MAX_BYTES) {
                 return new File([blob], `${baseName}.${type === 'image/webp' ? 'webp' : 'jpg'}`, { type });
             }
         }

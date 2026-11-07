@@ -99,6 +99,35 @@ describe('SiteBuilderPageComponent', () => {
         expect(root(fixture).querySelector<HTMLFieldSetElement>('fieldset.steps')?.disabled).toBe(true);
     });
 
+    async function addressStep(remaining?: number) {
+        const site = { ...PUBLISHED, ...(remaining === undefined ? {} : { addressChangesRemaining: remaining }) };
+        const fixture = await open({ detail: { ...DETAIL, site } });
+
+        (fixture.componentInstance as unknown as { step: { set(value: number): void } }).step.set(5);
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        return root(fixture).querySelector('app-site-address')?.textContent ?? '';
+    }
+
+    it('yayınlı sitede kalan hak ve eski adresin başkasına verilmeyeceği değiştirmeden önce görünür', async () => {
+        const text = await addressStep(2);
+
+        expect(text).toContain('Kalan değiştirme hakkı: 2');
+        expect(text).toContain('başkasına verilmez');
+    });
+
+    it('hak bitince destek söylenir', async () => {
+        expect(await addressStep(0)).toContain('destekle iletişime geçin');
+    });
+
+    it('eski backend kopyası kalan hak göndermezse ekran bozulmaz', async () => {
+        const text = await addressStep();
+
+        expect(text).not.toContain('Kalan değiştirme hakkı');
+        expect(text).toContain('başkasına verilmez');
+    });
+
     it('geçici kapalı site açıkça gösterilir', async () => {
         const fixture = await open({ detail: { ...DETAIL, site: { ...PUBLISHED, isTemporarilyClosed: true } } });
 
