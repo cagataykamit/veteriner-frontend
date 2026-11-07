@@ -9,6 +9,7 @@ import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { REPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { DAILY_TRANSACTION_METHOD_OPTIONS, fillEmptyDays } from '@/app/features/reports/end-of-day/utils/end-of-day.utils';
+import { PerformanceBreakdownsComponent } from '@/app/features/reports/performance/components/performance-breakdowns.component';
 import type { PerformanceSummaryDto } from '@/app/features/reports/performance/models/performance-summary.model';
 import { PerformanceSummaryService } from '@/app/features/reports/performance/services/performance-summary.service';
 import {
@@ -48,7 +49,7 @@ const LOAD_ERROR = 'Performans özeti yüklenemedi. Lütfen tekrar deneyin.';
 @Component({
     selector: 'app-performance-page',
     standalone: true,
-    imports: [FormsModule, RouterLink, ButtonModule, SelectModule, ToggleSwitchModule, AppPageHeaderComponent, FilterFieldComponent, DateInputComponent],
+    imports: [FormsModule, RouterLink, ButtonModule, SelectModule, ToggleSwitchModule, AppPageHeaderComponent, FilterFieldComponent, DateInputComponent, PerformanceBreakdownsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './performance-page.component.html'
 })
