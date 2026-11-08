@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, effect, inject, input, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -19,7 +19,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
  * Klinik ayarlarındaki "Randevu Varsayılanları" kartı: varsayılan süre, başlangıç aralığı, çakışma izni ve hatırlatmadaki
- * "iptal et" bağlantısı (TIER-019). Yalnız
+ * "iptal et" bağlantısı (TIER-019), bekleme listesine otomatik teklif (TIER-018; pakette yoksa gizli). Yalnız
  * `Clinics.Update` olan kullanıcıya gösterilir (sayfa koşulu). `reloadKey` değişince yeniden yüklenir.
  */
 @Component({
@@ -76,6 +76,18 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                             Müşteri hatırlatmadaki bağlantıyla geleceğini her zaman onaylayabilir. Kapalıysa e-postada iptal bağlantısı yerine "iptal için kliniği arayın" yazar.
                         </small>
                     </div>
+
+                    @if (!waitlistLocked()) {
+                        <div class="col-span-12">
+                            <div class="flex items-center gap-2">
+                                <p-checkbox formControlName="waitlistAutoOfferEnabled" [binary]="true" inputId="waitlistAutoOfferEnabled" />
+                                <label class="text-sm cursor-pointer" for="waitlistAutoOfferEnabled">Randevu iptal edilince bekleme listesindeki sıradaki kişiye otomatik teklif gönder</label>
+                            </div>
+                            <small class="block text-muted-color mt-1">
+                                Kapalıysa boşalan saat için teklifi bekleme listesinden siz gönderirsiniz.
+                            </small>
+                        </div>
+                    }
                 </div>
 
                 <div class="mt-4 flex justify-end">
@@ -96,6 +108,9 @@ export class ClinicAppointmentSettingsSectionComponent {
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
+    /** Bekleme listesi pakette yoksa otomatik teklif seçeneği gösterilmez (TIER-018). */
+    readonly waitlistLocked = computed(() => this.ro.lockedPlanFeature('Waitlist') !== null);
+
     readonly apSettingsLoading = signal(false);
     readonly apSettingsError = signal<string | null>(null);
     readonly apSettingsSaving = signal(false);
@@ -105,7 +120,8 @@ export class ClinicAppointmentSettingsSectionComponent {
         defaultAppointmentDurationMinutes: [30, [Validators.required, Validators.min(5), Validators.max(240), Validators.pattern(/^\d+$/)]],
         slotIntervalMinutes: [15, [Validators.required, Validators.min(5), Validators.max(120), Validators.pattern(/^\d+$/)]],
         allowOverlappingAppointments: [false],
-        ownerCancelLinkEnabled: [true]
+        ownerCancelLinkEnabled: [true],
+        waitlistAutoOfferEnabled: [true]
     });
 
     private readonly apSettingsFormLockEffect = effect(() => {
@@ -205,7 +221,8 @@ export class ClinicAppointmentSettingsSectionComponent {
                 defaultAppointmentDurationMinutes: vm.defaultAppointmentDurationMinutes,
                 slotIntervalMinutes: vm.slotIntervalMinutes,
                 allowOverlappingAppointments: vm.allowOverlappingAppointments,
-                ownerCancelLinkEnabled: vm.ownerCancelLinkEnabled
+                ownerCancelLinkEnabled: vm.ownerCancelLinkEnabled,
+                waitlistAutoOfferEnabled: vm.waitlistAutoOfferEnabled
             },
             { emitEvent: false }
         );

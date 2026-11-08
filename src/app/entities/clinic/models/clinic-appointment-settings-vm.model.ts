@@ -3,6 +3,8 @@ export interface ClinicAppointmentSettingsVm {
     slotIntervalMinutes: number;
     allowOverlappingAppointments: boolean;
     ownerCancelLinkEnabled: boolean;
+    /** İptalde bekleme listesine otomatik teklif (TIER-018; varsayılan açık). */
+    waitlistAutoOfferEnabled: boolean;
 }
 
 export interface ClinicAppointmentSettingsFormValue {
@@ -10,4 +12,6 @@ export interface ClinicAppointmentSettingsFormValue {
     slotIntervalMinutes: number;
     allowOverlappingAppointments: boolean;
     ownerCancelLinkEnabled: boolean;
+    /** İptalde bekleme listesine otomatik teklif (TIER-018; varsayılan açık). */
+    waitlistAutoOfferEnabled: boolean;
 }
