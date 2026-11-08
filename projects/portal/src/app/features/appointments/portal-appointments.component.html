@@ -43,6 +43,9 @@
                                     @if (showClinic()) {
                                         <p class="portal-muted"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> {{ a.clinicName }}</p>
                                     }
+                                    @if (a.googleCalendarUrl; as googleUrl) {
+                                        <portal-add-to-calendar [googleUrl]="googleUrl" [ics]="calendarFile(a)" />
+                                    }
                                 </li>
                             }
                         </ul>
