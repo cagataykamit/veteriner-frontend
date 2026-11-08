@@ -7,6 +7,9 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Popover, PopoverModule } from 'primeng/popover';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
+import { TODAY_ROUTE } from '@/app/core/routing/panel-navigation';
+import { FirstWeekGuideService } from '@/app/entities/first-week-guide/services/first-week-guide.service';
+import { firstWeekGuideRole } from '@/app/entities/first-week-guide/utils/first-week-guide.steps';
 import type { AccountSummary } from '@/app/features/account/models/account-summary.model';
 import { AccountService } from '@/app/features/account/services/account.service';
 import { resolveAccountAvatarInitials, resolveAccountDisplayName } from '@/app/features/account/utils/account-summary.utils';
@@ -115,6 +118,7 @@ export class AppTopbar implements OnInit {
     private readonly account$ = inject(AccountService);
     private readonly router = inject(Router);
     private readonly confirmationService = inject(ConfirmationService);
+    private readonly firstWeekGuide = inject(FirstWeekGuideService);
     private readonly userMenuRef = viewChild<Popover>('userMenu');
     private readonly userTriggerEl = viewChild<ElementRef<HTMLButtonElement>>('userTrigger');
 
@@ -128,8 +132,15 @@ export class AppTopbar implements OnInit {
     userMenuGroups: { label: string; items: MenuItem[] }[] = [];
 
     ngOnInit(): void {
+        const accountItems: MenuItem[] = [{ label: 'Hesabım', icon: 'pi pi-user', routerLink: ['/panel/settings/account'] }];
+
+        // İlk hafta rehberi (TIER-022) kapatıldıktan ya da 14 gün geçtikten sonra buradan yeniden açılır.
+        if (firstWeekGuideRole((claim) => this.auth.hasOperationClaim(claim))) {
+            accountItems.push({ label: 'İlk hafta rehberi', icon: 'pi pi-list-check', command: () => this.openFirstWeekGuide() });
+        }
+
         this.userMenuGroups = [
-            { label: 'Hesap', items: [{ label: 'Hesabım', icon: 'pi pi-user', routerLink: ['/panel/settings/account'] }] },
+            { label: 'Hesap', items: accountItems },
             {
                 label: 'Oturum',
                 items: [
@@ -155,6 +166,11 @@ export class AppTopbar implements OnInit {
 
     toggleDarkMode() {
         this.layoutService.toggleDarkMode();
+    }
+
+    private openFirstWeekGuide(): void {
+        this.firstWeekGuide.reopen();
+        void this.router.navigate([TODAY_ROUTE]);
     }
 
     private logoutCurrent(): void {
