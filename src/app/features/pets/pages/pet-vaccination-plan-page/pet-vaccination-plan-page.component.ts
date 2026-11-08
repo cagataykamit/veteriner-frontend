@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -159,7 +159,7 @@ export interface VaccinationPlanRow {
         </div>
     `
 })
-export class PetVaccinationPlanPageComponent implements OnInit {
+export class PetVaccinationPlanPageComponent {
     private readonly route = inject(ActivatedRoute);
     private readonly service = inject(VaccinationScheduleService);
     private readonly auth = inject(AuthService);
@@ -175,6 +175,7 @@ export class PetVaccinationPlanPageComponent implements OnInit {
     private readonly clinicId = this.auth.getClinicId()?.trim() ?? '';
 
     readonly planLocked = computed(() => this.ro.lockedPlanFeature('VaccinationWizard') !== null);
+    private readonly planReady = computed(() => this.ro.planFeatureReady('VaccinationWizard'));
     readonly canApply = computed(() => this.auth.hasOperationClaim(VACCINATIONS_CREATE_CLAIM) && !this.ro.mutationBlocked() && !!this.clinicId);
 
     readonly plan = signal<VaccinationPlanDto | null>(null);
@@ -204,12 +205,17 @@ export class PetVaccinationPlanPageComponent implements OnInit {
         return this.clinicId ? 'Planı kaydetmek için aşı kaydı oluşturma yetkisi gerekir.' : 'Planı kaydetmek için aktif klinik seçin.';
     });
 
-    ngOnInit(): void {
-        this.reload();
+    constructor() {
+        // Paket bilgisi (access-state) gelince plan istenir; gelmeden ya da kilitliyken istek gitmez.
+        effect(() => {
+            if (this.planReady()) {
+                untracked(() => this.reload());
+            }
+        });
     }
 
     reload(): void {
-        if (this.planLocked()) {
+        if (!this.planReady()) {
             this.loading.set(false);
 
             return;

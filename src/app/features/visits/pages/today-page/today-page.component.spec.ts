@@ -106,7 +106,7 @@ describe('TodayPageComponent', () => {
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'c1', getUserId: () => 'u1' } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null, planFeatureReady: () => true } },
                 // Bekleme listesi bilgisi (TIER-018): bu testlerde boşalan saat yok.
                 { provide: WaitlistService, useValue: { today: () => of({ waitingCount: 0, releasedSlots: [] }) } },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
@@ -573,7 +573,7 @@ describe('TodayPageComponent', () => {
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true, getClinicId: () => 'c1', getUserId: () => 'u1' } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null, planFeatureReady: () => true } },
                 // Bekleme listesi bilgisi (TIER-018): bu testlerde boşalan saat yok.
                 { provide: WaitlistService, useValue: { today: () => of({ waitingCount: 0, releasedSlots: [] }) } },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
@@ -1121,7 +1121,7 @@ describe('TodayPageComponent — Benim hastalarım', () => {
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'c1', getUserId: () => 'u1' } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null, planFeatureReady: () => true } },
                 // Bekleme listesi bilgisi (TIER-018): bu testlerde boşalan saat yok.
                 { provide: WaitlistService, useValue: { today: () => of({ waitingCount: 0, releasedSlots: [] }) } },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
@@ -1201,7 +1201,7 @@ describe('TodayPageComponent — Benim hastalarım boş liste', () => {
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => c !== 'Visits.None', getClinicId: () => 'c1', getUserId: () => 'u1' } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null, planFeatureReady: () => true } },
                 // Bekleme listesi bilgisi (TIER-018): bu testlerde boşalan saat yok.
                 { provide: WaitlistService, useValue: { today: () => of({ waitingCount: 0, releasedSlots: [] }) } },
                 { provide: AppointmentsService, useValue: {} },

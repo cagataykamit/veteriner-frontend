@@ -1,4 +1,5 @@
 import type { HttpParams } from '@angular/common/http';
+import { signal, type WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -42,6 +43,7 @@ describe('ClinicsOverviewPageComponent (TIER-007)', () => {
     let fixture: ComponentFixture<ClinicsOverviewPageComponent>;
     let get: ReturnType<typeof vi.fn>;
     let locked: boolean;
+    let settled: WritableSignal<boolean>;
 
     const el = () => fixture.nativeElement as HTMLElement;
     const text = (testId: string) => el().querySelector(`[data-testid="${testId}"]`)?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
@@ -54,7 +56,7 @@ describe('ClinicsOverviewPageComponent (TIER-007)', () => {
                 provideRouter([]),
                 { provide: ApiClient, useValue: { get } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },
-                { provide: TenantReadOnlyContextService, useValue: { lockedPlanFeature: () => (locked ? { feature: 'ClinicsOverview', isEnabled: false, requiredPlanCode: 'Premium' } : null) } }
+                { provide: TenantReadOnlyContextService, useValue: { lockedPlanFeature: () => (locked ? { feature: 'ClinicsOverview', isEnabled: false, requiredPlanCode: 'Premium' } : null), planFeatureReady: () => settled() && !locked } }
             ]
         }).compileComponents();
         fixture = TestBed.createComponent(ClinicsOverviewPageComponent);
@@ -65,6 +67,7 @@ describe('ClinicsOverviewPageComponent (TIER-007)', () => {
 
     beforeEach(() => {
         locked = false;
+        settled = signal(true);
     });
 
     afterEach(() => fixture?.destroy());
@@ -112,5 +115,16 @@ describe('ClinicsOverviewPageComponent (TIER-007)', () => {
 
         expect(get).not.toHaveBeenCalled();
         expect(text('plan-upgrade-notice')).toContain('Şubeler özeti Kurumsal paketinde var');
+    });
+
+    it('paket bilgisi gelmeden istek göndermez; gelince bir kez yükler', async () => {
+        settled.set(false);
+        await create(overview([row('c1', 'Merkez', 2000, 1000)]));
+        expect(get).not.toHaveBeenCalled();
+
+        settled.set(true);
+        fixture.detectChanges();
+        await fixture.whenStable();
+        expect(get).toHaveBeenCalledTimes(1);
     });
 });
