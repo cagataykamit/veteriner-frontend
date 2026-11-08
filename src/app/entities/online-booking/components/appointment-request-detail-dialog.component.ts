@@ -23,7 +23,8 @@ import {
 import { AppointmentRequestsService, OnlineBookingService } from '@/app/entities/online-booking/services/online-booking.service';
 import {
     appointmentRequestActorLabel,
-    appointmentRequestSourceLabel,
+    appointmentRequestChannelLabel,
+    appointmentRequestChannelSeverity,
     appointmentRequestStatusLabel,
     appointmentRequestStatusSeverity
 } from '@/app/entities/online-booking/utils/appointment-request-labels.utils';
@@ -73,7 +74,8 @@ type Mode = 'view' | 'approve' | 'reject';
                 <div class="flex flex-col gap-4" data-testid="request-detail">
                     <div class="flex flex-wrap items-center gap-2">
                         <app-status-tag [label]="statusLabel(d.summary.status)" [severity]="statusSeverity(d.summary.status)" />
-                        <span class="text-sm text-muted-color">{{ sourceLabel(d.summary.source) }} · {{ d.summary.reasonName }} · {{ d.summary.durationMinutes }} dk</span>
+                        <app-status-tag [label]="'Kaynak: ' + channelLabel(d.summary.channel)" [severity]="channelSeverity(d.summary.channel)" data-testid="request-channel" />
+                        <span class="text-sm text-muted-color">{{ d.summary.reasonName }} · {{ d.summary.durationMinutes }} dk</span>
                     </div>
 
                     <dl class="grid grid-cols-12 gap-x-4 gap-y-2 m-0 text-sm">
@@ -323,7 +325,8 @@ export class AppointmentRequestDetailDialogComponent {
 
     statusLabel = appointmentRequestStatusLabel;
     statusSeverity = appointmentRequestStatusSeverity;
-    sourceLabel = appointmentRequestSourceLabel;
+    channelLabel = appointmentRequestChannelLabel;
+    channelSeverity = appointmentRequestChannelSeverity;
     actor = appointmentRequestActorLabel;
     fmt = (utc: string | null) => formatDateTimeDisplay(utc);
     time = (utc: string) => formatTimeDisplay(utc);

@@ -1,4 +1,4 @@
-import { AppointmentRequestSource, AppointmentRequestStatus, type AppointmentRequestListItemVm } from './online-booking.model';
+import { AppointmentRequestChannel, AppointmentRequestSource, AppointmentRequestStatus, type AppointmentRequestListItemVm } from './online-booking.model';
 
 /** Yalnız spec'ler: bekleyen randevu talebi satırı. */
 export function pendingRequest(id: string, over: Partial<AppointmentRequestListItemVm> = {}): AppointmentRequestListItemVm {
@@ -7,6 +7,7 @@ export function pendingRequest(id: string, over: Partial<AppointmentRequestListI
         clinicId: 'k1',
         status: AppointmentRequestStatus.Pending,
         source: AppointmentRequestSource.Portal,
+        channel: AppointmentRequestChannel.OwnerPortal,
         reasonId: null,
         reasonName: 'Diğer / emin değilim',
         requestedStartUtc: '2026-11-03T11:30:00Z',

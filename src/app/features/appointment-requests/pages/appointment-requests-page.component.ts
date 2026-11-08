@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -14,11 +14,13 @@ import { AppointmentRequestStatus, type AppointmentRequestListItemVm } from '@/a
 import { AppointmentRequestsService } from '@/app/entities/online-booking/services/online-booking.service';
 import {
     APPOINTMENT_REQUEST_STATUS_FILTER_OPTIONS,
-    appointmentRequestSourceLabel,
+    appointmentRequestChannelLabel,
+    appointmentRequestChannelSeverity,
     appointmentRequestStatusLabel,
     appointmentRequestStatusSeverity
 } from '@/app/entities/online-booking/utils/appointment-request-labels.utils';
 import { AppointmentRequestDetailDialogComponent } from '@/app/entities/online-booking/components/appointment-request-detail-dialog.component';
+import { AppointmentRequestChannelSummaryComponent } from '@/app/features/appointment-requests/components/appointment-request-channel-summary.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -47,10 +49,11 @@ const PAGE_SIZE = 20;
         AppEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
-        AppointmentRequestDetailDialogComponent
+        AppointmentRequestDetailDialogComponent,
+        AppointmentRequestChannelSummaryComponent
     ],
     template: `
-        <app-page-header title="Randevu talepleri" description="Portaldan ve kliniğe özel bağlantıdan gelen talepler. Talep onaylanınca randevu oluşur; sahibe e-posta gider.">
+        <app-page-header title="Randevu talepleri" description="Portaldan, kliniğin sitesinden ve kliniğe özel bağlantıdan gelen talepler. Talep onaylanınca randevu oluşur; sahibe e-posta gider.">
             @if (canSeeSettings) {
                 <a actions pButton severity="secondary" [outlined]="true" [routerLink]="settingsRoute"><i class="pi pi-cog"></i>Online randevu ayarları</a>
             }
@@ -93,7 +96,7 @@ const PAGE_SIZE = 20;
                                     <small class="text-muted-color">{{ r.contactPhone ?? r.contactEmail }}</small>
                                 </td>
                                 <td>{{ r.petName ?? '—' }}</td>
-                                <td>{{ sourceLabel(r.source) }}</td>
+                                <td><app-status-tag [label]="channelLabel(r.channel)" [severity]="channelSeverity(r.channel)" data-testid="request-channel" /></td>
                                 <td><app-status-tag [label]="statusLabel(r.status)" [severity]="statusSeverity(r.status)" /></td>
                                 <td><button pButton type="button" size="small" class="p-button-text" (click)="$event.stopPropagation(); openRequest(r.id)">Aç</button></td>
                             </tr>
@@ -109,6 +112,8 @@ const PAGE_SIZE = 20;
                 }
             }
         </div>
+
+        <app-appointment-request-channel-summary />
 
         <app-appointment-request-detail-dialog [requestId]="openId()" [canDecide]="canDecide()" (closed)="onDialogClosed($event)" />
     `
@@ -137,10 +142,12 @@ export class AppointmentRequestsPageComponent implements OnInit {
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
     readonly openId = signal<string | null>(null);
+    private readonly channelSummary = viewChild(AppointmentRequestChannelSummaryComponent);
 
     statusLabel = appointmentRequestStatusLabel;
     statusSeverity = appointmentRequestStatusSeverity;
-    sourceLabel = appointmentRequestSourceLabel;
+    channelLabel = appointmentRequestChannelLabel;
+    channelSeverity = appointmentRequestChannelSeverity;
     fmt = (utc: string) => formatDateTimeDisplay(utc);
 
     private loadSeq = 0;
@@ -172,6 +179,7 @@ export class AppointmentRequestsPageComponent implements OnInit {
 
         if (changed) {
             this.load();
+            this.channelSummary()?.load();
         }
     }
 

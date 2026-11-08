@@ -1,4 +1,4 @@
-import { AppointmentRequestActorKind, AppointmentRequestSource, AppointmentRequestStatus } from '@/app/entities/online-booking/models/online-booking.model';
+import { AppointmentRequestActorKind, AppointmentRequestChannel, AppointmentRequestSource, AppointmentRequestStatus } from '@/app/entities/online-booking/models/online-booking.model';
 
 export type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
 
@@ -20,6 +20,23 @@ export function appointmentRequestStatusSeverity(status: AppointmentRequestStatu
 
 export function appointmentRequestSourceLabel(source: AppointmentRequestSource): string {
     return source === AppointmentRequestSource.Portal ? 'Portal' : 'Bağlantı';
+}
+
+const CHANNEL: Record<AppointmentRequestChannel, string> = {
+    [AppointmentRequestChannel.ClinicLink]: 'Klinik bağlantısı',
+    [AppointmentRequestChannel.ClinicSite]: 'Kendi sitesi',
+    [AppointmentRequestChannel.OwnerPortal]: 'Portal',
+    [AppointmentRequestChannel.Phone]: 'Telefon / elle',
+    [AppointmentRequestChannel.VetFinder]: 'Veteriner bul'
+};
+
+/** Talebin kaynağı (TIER-016); eski talepte kaynak yoktur: "Bilinmiyor". */
+export function appointmentRequestChannelLabel(channel: AppointmentRequestChannel | null): string {
+    return (channel !== null && CHANNEL[channel]) || 'Bilinmiyor';
+}
+
+export function appointmentRequestChannelSeverity(channel: AppointmentRequestChannel | null): TagSeverity {
+    return channel !== null && CHANNEL[channel] ? 'info' : 'secondary';
 }
 
 export function appointmentRequestActorLabel(kind: AppointmentRequestActorKind, actorName: string | null): string {
