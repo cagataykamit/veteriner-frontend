@@ -67,7 +67,8 @@ const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
     FollowUpReminder: 'Kontrol hatırlatması',
     DebtReminder: 'Ödeme hatırlatması',
     NoReturnReminder: 'Uzun süredir gelmedi',
-    Marketing: 'Kampanya ve duyuru'
+    Marketing: 'Kampanya ve duyuru',
+    WaitlistOffer: 'Bekleme listesi teklifi'
 };
 
 const NOTIFICATION_CATEGORY_LABELS: Record<OwnerNotificationCategory, string> = {
