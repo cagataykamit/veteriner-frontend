@@ -453,6 +453,7 @@ describe('SubscriptionPageComponent', () => {
             click('Dönem sonunda bu pakete geç');
 
             const notice = el().querySelector('[data-testid=plan-fit-notice]')?.textContent ?? '';
+
             expect(notice).toContain('Temel en çok 1 aktif klinik ve 3 kullanıcı içerir.');
             expect(notice).toContain('Sizin 2 aktif kliniğiniz ve 5 kullanıcınız var.');
             expect(notice).toContain('Paketi düşürmek için önce 1 kliniği pasife alın ve 2 kullanıcıyı çıkarın.');
@@ -472,6 +473,7 @@ describe('SubscriptionPageComponent', () => {
             click('Hemen yükselt');
 
             const notice = el().querySelector('[data-testid=plan-fit-notice]')?.textContent ?? '';
+
             expect(notice).toContain('Profesyonel en çok 1 aktif klinik ve 5 kullanıcı içerir.');
             expect(notice).toContain('6 kullanıcınız (1 bekleyen davet dahil)');
             expect(notice).toContain('Bu pakete geçmek için önce 1 kliniği pasife alın ve 1 kullanıcıyı çıkarın ya da bekleyen davetleri iptal edin.');
@@ -485,6 +487,7 @@ describe('SubscriptionPageComponent', () => {
             render();
 
             const notice = el().querySelector('[data-testid=rejected-plan-change]')?.textContent ?? '';
+
             expect(notice).toContain('Planlanan Temel geçişi uygulanmadı');
             expect(notice).toContain('Paketi düşürmek için önce 1 kliniği pasife alın.');
             expect(el().querySelector('[data-testid=plan-fit-members]')).toBeNull();
