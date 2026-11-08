@@ -45,6 +45,17 @@ export default [
         loadComponent: () => import('@/app/features/appointment-requests/pages/appointment-requests-page.component').then((m) => m.AppointmentRequestsPageComponent)
     },
     {
+        // Bekleme listesi (TIER-018): okuma randevu okuma iznidir; paket kilidi sayfada "üst pakete geç" kutusuyla gösterilir.
+        path: 'waitlist',
+        canActivate: [() => {
+            const auth = inject(AuthService);
+            const router = inject(Router);
+
+            return auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+        }],
+        loadComponent: () => import('@/app/features/waitlist/pages/waitlist-page.component').then((m) => m.WaitlistPageComponent)
+    },
+    {
         path: 'new',
         canActivate: [() => {
             const auth = inject(AuthService);

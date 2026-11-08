@@ -123,6 +123,9 @@ export const APPOINTMENT_REASONS_ROUTE = `${DEFINITIONS_ROUTE}/appointment-reaso
 export const VACCINATION_SCHEDULE_ROUTE = `${DEFINITIONS_ROUTE}/vaccination-schedule`;
 export const ONLINE_BOOKING_SETTINGS_ROUTE = '/panel/settings/online-booking';
 export const APPOINTMENT_REQUESTS_ROUTE = '/panel/appointments/requests';
+
+/** Bekleme listesi (TIER-018): Randevular'ın sekmesi. */
+export const WAITLIST_ROUTE = '/panel/appointments/waitlist';
 export const NOTIFICATIONS_ROUTE = '/panel/notifications';
 export const PORTAL_INBOX_ROUTE = '/panel/portal-inbox';
 export const CLINIC_PORTAL_SETTINGS_ROUTE = '/panel/settings/owner-portal';
@@ -320,7 +323,9 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
                         route: APPOINTMENT_REQUESTS_ROUTE,
                         claims: [APPOINTMENT_REQUESTS_MANAGE_CLAIM],
                         badge: 'pendingAppointmentRequests'
-                    }
+                    },
+                    // Bekleme listesi (TIER-018): boşalan saat randevu işinin parçası; Randevular'ın sekmesi (ADR-004).
+                    { label: 'Bekleme listesi', route: WAITLIST_ROUTE, claims: [APPOINTMENTS_READ_CLAIM] }
                 ],
                 { badge: 'pendingAppointmentRequests', badgeText: 'bekleyen online randevu talebi' }
             )
