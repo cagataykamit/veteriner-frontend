@@ -45,19 +45,23 @@ export type SiteRequestState =
     | { readonly kind: 'unavailable' };
 
 /**
- * Talep formuna sitenin kaynak değeri eklenir (TIER-016, Veteriner `docs/ONLINE_APPOINTMENT_API_CONTRACT.md` §14): form bunu talebe
- * taşır, sunucu yalnız izinli değeri sayar. Okunamayan adres olduğu gibi kalır; motor onu zaten göstermez.
+ * Talep formuna kaynak değeri eklenir (TIER-016, Veteriner `docs/ONLINE_APPOINTMENT_API_CONTRACT.md` §14): form bunu talebe taşır,
+ * sunucu yalnız izinli değeri sayar (`site`, `veteriner-bul`). Okunamayan adres olduğu gibi kalır; motor onu zaten göstermez.
  */
-export function withSiteBookingSource(bookingUrl: string): string {
+export function withBookingSource(bookingUrl: string, source: string): string {
     try {
         const url = new URL(bookingUrl);
 
-        url.searchParams.set('kaynak', 'site');
+        url.searchParams.set('kaynak', source);
 
         return url.href;
     } catch {
         return bookingUrl;
     }
+}
+
+export function withSiteBookingSource(bookingUrl: string): string {
+    return withBookingSource(bookingUrl, 'site');
 }
 
 /** Klinik kaydı + yayınlanmış yapılandırma → motorun çizdiği yapılandırma. Görsel başvuruları herkese açık uca çözülür (sözleşme §6). */

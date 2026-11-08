@@ -30,7 +30,7 @@ export function readSiteServerConfig(env: Readonly<Record<string, string | undef
 
 export type SiteLoadResult = SiteRequestState | { readonly kind: 'redirect'; readonly slug: string };
 
-const API_TIMEOUT_MS = 8000;
+export const API_TIMEOUT_MS = 8000;
 
 /**
  * Herkese açık ucu tek yerden çağırır. İstemci IP'si `X-Forwarded-For` ile iletilir: backend hız sınırı ziyaretçi başına işlesin (K12).
@@ -102,7 +102,7 @@ export async function withNextSlots(site: PublishedSite, clientIp: string | unde
     }
 }
 
-function apiHeaders(clientIp: string | undefined): Record<string, string> {
+export function apiHeaders(clientIp: string | undefined): Record<string, string> {
     return { accept: 'application/json', ...(clientIp ? { 'x-forwarded-for': clientIp.replace(/^::ffff:/, '') } : {}) };
 }
 

@@ -13,3 +13,4 @@ export { isStockPhoto, STOCK_GALLERY, STOCK_PHOTOS, stockArticlePhoto, stockSect
 export { safeHref, safeImageSrc } from './engine/site-links';
 export * from './engine/site-stored-config';
 export { sitePagePaths, sitePageHead, siteJsonLd, siteRobotsTxt, siteRootUrl, siteSitemapXml, seoDescription, seoTitle, type SitePageHead } from './engine/site-seo';
+export { clinicStatus, hoursGroups, nextSlotDays, type ClinicStatus, type HoursGroup, type SlotDayVm, type SlotVm } from './engine/site-hours';
