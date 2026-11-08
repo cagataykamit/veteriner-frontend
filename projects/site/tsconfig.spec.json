@@ -3,6 +3,7 @@
     "compilerOptions": {
         "outDir": "../../out-tsc/site-spec",
         "types": ["vitest/globals"],
+        "resolveJsonModule": true,
         "paths": {
             "@site-engine": ["../site-engine/src/index.ts"]
         }
