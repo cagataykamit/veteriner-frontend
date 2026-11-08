@@ -73,6 +73,7 @@ describe('ApiAccessPageComponent', () => {
         await create();
 
         const rows = el.querySelectorAll('[data-testid="api-key-row"]');
+
         expect(rows.length).toBe(2);
         expect(rows[0].textContent).toContain('vtk_testtest_••••••••');
         expect(rows[0].textContent).toContain('Müşteriler, Hayvanlar');
@@ -102,12 +103,14 @@ describe('ApiAccessPageComponent', () => {
 
         expect(service.create).toHaveBeenCalledWith('Yeni', ['clients:read', 'vaccinations:read']);
         const revealed = el.querySelector('[data-testid="api-key-revealed"]')!;
+
         expect(revealed.textContent).toContain('bir daha gösterilmeyecek');
         expect(el.querySelector<HTMLInputElement>('[data-testid="api-key-plain"]')!.value).toBe(FAKE_PLAIN);
         expect(page.name()).toBe('');
         expect(page.selected().size).toBe(0);
 
         const writeText = vi.fn().mockResolvedValue(undefined);
+
         Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
         el.querySelector<HTMLButtonElement>('[data-testid="api-key-copy"]')!.click();
         expect(writeText).toHaveBeenCalledWith(FAKE_PLAIN);

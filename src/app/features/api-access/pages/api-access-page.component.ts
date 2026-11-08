@@ -319,9 +319,11 @@ export class ApiAccessPageComponent implements OnInit {
         this.service.revoke(key.id).subscribe({
             next: () => {
                 this.revoking.set(false);
+
                 if (this.revealed()?.key.id === key.id) {
                     this.dismissRevealed();
                 }
+
                 this.listMessage.set({ text: `"${key.name}" iptal edildi.`, severity: 'success' });
                 this.reload();
             },
