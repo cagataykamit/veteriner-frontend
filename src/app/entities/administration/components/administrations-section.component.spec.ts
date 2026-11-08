@@ -256,4 +256,28 @@ describe('AdministrationsSectionComponent', () => {
         fixture.detectChanges();
         expect(text()).toContain('stok tekrar düşülmedi');
     });
+
+    it('"Tekrar uygula" (RECORD-004): Create izniyle görünür, ön dolumla diyaloğu açar; aşıya bağlı satırda ve salt okunurda yok', async () => {
+        claims.add('Administrations.Create');
+        service.getAdministrations.mockReturnValue(of(page([{ ...row, route: 'Intravenous', site: 'Sol ön bacak' }, { ...row, id: 'a2', vaccinationId: 'v1' }])));
+        await setup();
+
+        const repeats = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('[data-testid="administration-repeat"]');
+
+        expect(repeats.length).toBe(1);
+        repeats[0].click();
+        fixture.detectChanges();
+        expect(fixture.componentInstance.createPrefill()).toEqual({ productId: 'pr1', productName: 'Serum', quantity: 0.5, route: 'Intravenous', site: 'Sol ön bacak' });
+        expect(fixture.componentInstance.createVisible).toBe(true);
+
+        fixture.componentInstance.openCreate(null);
+        expect(fixture.componentInstance.createPrefill()).toBeNull();
+    });
+
+    it('salt okunur kiracıda "Tekrar uygula" görünmez', async () => {
+        claims.add('Administrations.Create');
+        mutationBlocked = true;
+        await setup();
+        expect(has('administration-repeat')).toBe(false);
+    });
 });

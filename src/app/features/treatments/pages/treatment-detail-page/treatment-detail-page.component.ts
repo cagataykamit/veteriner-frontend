@@ -15,7 +15,8 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TREATMENTS_CREATE_CLAIM, TREATMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { recordCopyQueryParams } from '@/app/shared/panel/record-copy.utils';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
@@ -61,6 +62,9 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                         <a [routerLink]="['/panel/treatments', r.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                     } @else if (canUpdateTreatment && ro.mutationBlocked()) {
                         <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                    }
+                    @if (canCreateTreatment && r.petId && !ro.mutationBlocked()) {
+                        <a [routerLink]="['/panel/treatments/new']" [queryParams]="copyQueryParams(r.id)" pButton type="button" class="p-button-outlined p-button-secondary" data-testid="treatment-copy"><i class="pi pi-copy"></i>Kopyasını oluştur</a>
                     }
                     <app-record-history-button resource="treatments" [recordId]="r.id" />
                 </ng-container>
@@ -153,6 +157,9 @@ export class TreatmentDetailPageComponent implements OnInit {
     readonly row = this.loader.value;
     readonly showSavedBanner = signal(false);
     readonly canUpdateTreatment = this.auth.hasOperationClaim(TREATMENTS_UPDATE_CLAIM);
+    readonly canCreateTreatment = this.auth.hasOperationClaim(TREATMENTS_CREATE_CLAIM);
+    /** RECORD-004: kopya oluşturma formunu doldurur; ayrı kopyalama ucu yok. */
+    readonly copyQueryParams = recordCopyQueryParams;
     /** Mapper boş metin için kullandığı EM ile aynı. */
     readonly emptyMark = '—';
 
