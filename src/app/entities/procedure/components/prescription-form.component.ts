@@ -10,14 +10,18 @@ import { convertToParamMap, type ParamMap } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { PRODUCTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import type { ProductDetailVm } from '@/app/entities/inventory/models/product-vm.model';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { followUpBeforePrescribedMessage, mapPrescriptionUpsertFormToCreateRequest } from '@/app/entities/prescription/data/prescription.mapper';
 import { PrescriptionItemsEditorComponent } from '@/app/entities/prescription/components/prescription-items-editor.component';
 import { PrescriptionsService } from '@/app/entities/prescription/services/prescriptions.service';
-import { createPrescriptionItemsArray, prescriptionItemsFormToInputs } from '@/app/entities/prescription/utils/prescription-items-form.utils';
+import { createPrescriptionItemGroup, createPrescriptionItemsArray, prescriptionItemsFormToInputs } from '@/app/entities/prescription/utils/prescription-items-form.utils';
+import { prescriptionCopyDraft, prescriptionCopySourceId, type PrescriptionCopyDraft } from '@/app/entities/prescription/utils/prescription-copy.utils';
 import { type PrescriptionUpsertFieldErrors, parsePrescriptionUpsertHttpError } from '@/app/entities/prescription/utils/prescription-upsert-validation-parse.utils';
 import type { ExaminationDetailVm, ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import { examinationListItemFromDetail, filterTreatmentsByExamination, prescriptionExaminationSelectOption, prescriptionTreatmentSelectOption, treatmentListItemFromDetail } from '@/app/entities/prescription/utils/prescription-relation-select.utils';
@@ -52,6 +56,14 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                 <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
+            @if (copySourceTitle(); as source) {
+                <p class="text-sm text-muted-color mt-0 mb-4" role="status" data-testid="prescription-copy-notice">"{{ source }}" reçetesinden kopyalandı; kopya yalnız aynı hasta için yazılır. Tarih, parti/seri no, HBS bilgisi ve muayene bağı kopyalanmaz. Gözden geçirip kaydedin.</p>
+            }
+            @if (copyControlledNames().length > 0) {
+                <p class="rounded-border border border-amber-400 text-sm p-3 mt-0 mb-4" role="alert" data-testid="prescription-copy-controlled">
+                    <strong>Kontrollü ilaç içeriyor:</strong> {{ copyControlledNames().join(', ') }}. Doz, miktar ve endikasyonu bu muayene için yeniden değerlendirin; kontrollü ilaç kaydı ve bildirim yükümlülükleri kopyada da geçerlidir.
+                </p>
+            }
             @if (contextFromTreatment()) {
                 <p class="text-sm text-muted-color mt-0 mb-4">Bu tedavi kaydından bağlam taşındı; müşteri, hasta, bağlı muayene ve bağlı tedavi alanları kilitlidir.</p>
             } @else if (contextFromExamination()) {
@@ -210,12 +222,17 @@ export class PrescriptionFormComponent implements OnInit, HasUnsavedChanges {
     private readonly petsService = inject(PetsService);
     private readonly examinationsService = inject(ExaminationsService);
     private readonly treatmentsService = inject(TreatmentsService);
+    private readonly productService = inject(ProductService);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly contextFromExamination = signal(false);
     readonly contextFromTreatment = signal(false);
+    /** Kopya (RECORD-004): müşteri ve hasta kaynaktan gelir ve kilitlidir; muayene ve tedavi serbestçe seçilir. */
+    readonly contextFromCopy = signal(false);
+    readonly copySourceTitle = signal<string | null>(null);
+    readonly copyControlledNames = signal<string[]>([]);
     readonly applyingRouteContext = signal(false);
 
     readonly submitting = signal(false);
@@ -352,7 +369,7 @@ export class PrescriptionFormComponent implements OnInit, HasUnsavedChanges {
             return;
         }
 
-        const hasPet = !this.form.controls.petId.disabled && !!trimClientIdControlValue(this.form.controls.petId.value);
+        const hasPet = (!this.form.controls.petId.disabled || this.contextFromCopy()) && !!trimClientIdControlValue(this.form.controls.petId.value);
 
         if (!hasPet) {
             this.form.controls.examinationId.disable({ emitEvent: false });
@@ -523,6 +540,7 @@ export class PrescriptionFormComponent implements OnInit, HasUnsavedChanges {
                     this.allTreatmentsForPet = tr.items;
                     this.applyTreatmentFilter();
                     this.syncPrescriptionRelationSelects();
+                    this.preselectOpenExaminationForCopy(examItems);
                 }
 
                 this.loadingExaminations.set(false);
@@ -549,6 +567,14 @@ export class PrescriptionFormComponent implements OnInit, HasUnsavedChanges {
     }
 
     private tryApplyRouteContexts(): void {
+        const copySourceId = prescriptionCopySourceId(this.contextParams());
+
+        if (copySourceId) {
+            this.tryApplyCopyContext(copySourceId);
+
+            return;
+        }
+
         const tCtx = parseTreatmentPrescriptionRouteContext(this.contextParams());
 
         if (tCtx) {
@@ -558,6 +584,69 @@ export class PrescriptionFormComponent implements OnInit, HasUnsavedChanges {
         }
 
         this.tryApplyExaminationRouteContext();
+    }
+
+    /** Kopya kaynağı oluşturma formunu doldurur (RECORD-004); kayıt hekim kaydedince normal oluşturma ucundan yapılır. */
+    private tryApplyCopyContext(sourceId: string): void {
+        this.applyingRouteContext.set(true);
+        this.selectionError.set(null);
+        this.prescriptionsService.getPrescriptionForEditById(sourceId).subscribe({
+            next: (source) => {
+                const draft = prescriptionCopyDraft(source);
+
+                if (!draft) {
+                    this.selectionError.set('Kopyalanacak reçetede hasta bilgisi yok; serbest oluşturma ile devam edebilirsiniz.');
+                    this.applyingRouteContext.set(false);
+
+                    return;
+                }
+
+                this.applyCopyDraft(draft);
+                this.applyingRouteContext.set(false);
+            },
+            error: () => {
+                this.selectionError.set('Kopyalanacak reçete yüklenemedi; serbest oluşturma ile devam edebilirsiniz.');
+                this.applyingRouteContext.set(false);
+            }
+        });
+    }
+
+    private applyCopyDraft(draft: PrescriptionCopyDraft): void {
+        this.form.patchValue({ clientId: draft.clientId, petId: draft.petId, title: draft.title, content: draft.content }, { emitEvent: false });
+        this.form.controls.clientId.disable({ emitEvent: false });
+        this.form.controls.petId.disable({ emitEvent: false });
+        this.form.controls.items.clear({ emitEvent: false });
+        draft.items.forEach((item) => this.form.controls.items.push(createPrescriptionItemGroup(item), { emitEvent: false }));
+        this.contextFromCopy.set(true);
+        this.copySourceTitle.set(draft.sourceTitle);
+        this.loadRelationsForPet(draft.petId);
+        this.loadCopyControlledNames(draft);
+    }
+
+    /** Hedef aynı hastanın açık muayenesidir: tek taslak muayene varsa seçili gelir, yoksa hekim seçer (bağ kaynaktan taşınmaz). */
+    private preselectOpenExaminationForCopy(examItems: ExaminationListItemVm[]): void {
+        if (!this.contextFromCopy() || this.form.controls.examinationId.value.trim()) {
+            return;
+        }
+
+        const open = examItems.filter((e) => e.status === 'Draft');
+
+        if (open.length === 1) {
+            this.form.controls.examinationId.setValue(open[0].id);
+        }
+    }
+
+    /** Kontrollü ürün uyarısı ürün kartından okunur; ürün okuma izni yoksa ya da kart okunamazsa uyarı çıkmaz. */
+    private loadCopyControlledNames(draft: PrescriptionCopyDraft): void {
+        const productIds = [...new Set(draft.items.map((i) => i.productId?.trim() ?? '').filter(Boolean))];
+
+        if (productIds.length === 0 || !this.auth.hasOperationClaim(PRODUCTS_READ_CLAIM)) {
+            return;
+        }
+
+        forkJoin(productIds.map((id) => this.productService.getById(id).pipe(catchError(() => of(null))))).subscribe((products) => {
+            this.copyControlledNames.set(products.filter((p): p is ProductDetailVm => !!p && p.controlledClass !== 'None').map((p) => p.name));
+        });
     }
 
     private tryApplyTreatmentRouteContext(ctx: TreatmentPrescriptionRouteContext): void {
