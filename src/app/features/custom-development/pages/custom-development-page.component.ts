@@ -32,7 +32,8 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
-const TARGET_OPTIONS = (Object.keys(CUSTOM_DEVELOPMENT_TARGET_LABELS) as CustomDevelopmentTargetKind[]).map((value) => ({
+// Geçiş desteği kendi sayfasından açılır (TIER-021); bu formda konu olarak sunulmaz.
+const TARGET_OPTIONS = (Object.keys(CUSTOM_DEVELOPMENT_TARGET_LABELS) as CustomDevelopmentTargetKind[]).filter((value) => value !== 'Migration').map((value) => ({
     value,
     label: CUSTOM_DEVELOPMENT_TARGET_LABELS[value]
 }));

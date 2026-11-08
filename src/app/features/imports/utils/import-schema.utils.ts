@@ -127,8 +127,8 @@ export function columnMapsToRequest(maps: ImportColumnMaps, tables: readonly Imp
     return columns;
 }
 
-/** Seçilen kaynak sütunun eşleme güveni: önerilenle aynıysa Kesin/Benzer, değilse elle. */
-export function mappingConfidence(columns: readonly ImportColumnDto[], source: string | null, key: string): 'Exact' | 'Alias' | 'Manual' | null {
+/** Seçilen kaynak sütunun eşleme güveni: önerilenle aynıysa Kesin/Hazır/Benzer, değilse elle. */
+export function mappingConfidence(columns: readonly ImportColumnDto[], source: string | null, key: string): 'Exact' | 'Profile' | 'Alias' | 'Manual' | null {
     if (!source) {
         return null;
     }

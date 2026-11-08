@@ -81,7 +81,7 @@ describe('CustomDevelopmentAdminPageComponent', () => {
     it('varsayılan filtre açık talepler; satırda kiracı, durum ve not görünür, kapanmış talepte durum düğmesi yok', async () => {
         await create();
 
-        expect(service.list).toHaveBeenCalledWith('open', 1);
+        expect(service.list).toHaveBeenCalledWith('open', 1, null);
         const rows = el.querySelectorAll('[data-testid="cda-row"]');
 
         expect(rows.length).toBe(2);
@@ -98,7 +98,7 @@ describe('CustomDevelopmentAdminPageComponent', () => {
 
         fixture.componentInstance.onFilterChange('OutOfScope');
 
-        expect(service.list).toHaveBeenLastCalledWith('OutOfScope', 1);
+        expect(service.list).toHaveBeenLastCalledWith('OutOfScope', 1, null);
     });
 
     it('yalnız sunucunun verdiği sonraki durumlar sunulur; kapsam dışında gerekçe zorunlu', async () => {
@@ -153,5 +153,40 @@ describe('CustomDevelopmentAdminPageComponent', () => {
         expect(p.editing()).not.toBeNull();
         expect(p.dialogError()).toContain('bu duruma geçemez');
         expect(service.list).toHaveBeenCalledTimes(2);
+    });
+
+    it('konu filtresi geçiş desteğini ister; geçiş talebinde program, kayıt, gün, saat ve ücret görünür (TIER-021)', async () => {
+        await create();
+        service.list.mockReturnValue(
+            of(
+                page([
+                    row({
+                        request: request({
+                            id: 'm1',
+                            requestTitle: 'Geçiş desteği ve kurulum görüşmesi',
+                            requestText: '',
+                            targetKind: 'Migration',
+                            requestTarget: 'Kolayvet',
+                            priority: 'Normal',
+                            status: 'Received',
+                            migration: { sourceProgram: 'Kolayvet', recordVolume: 'UpTo5000', meetingDays: 'Monday, Thursday', meetingTimes: 'Morning', fee: 'Quoted', meetingDurationMinutes: 60 }
+                        }),
+                        nextStatuses: ['InReview']
+                    })
+                ])
+            )
+        );
+
+        fixture.componentInstance.onKindChange('Migration');
+        fixture.detectChanges();
+
+        expect(service.list).toHaveBeenLastCalledWith('open', 1, 'Migration');
+        const text = el.querySelector('[data-testid="cda-row"]')?.textContent ?? '';
+
+        expect(text).toContain('Geçiş desteği: Kolayvet');
+        expect(text).toContain('1.000 – 5.000');
+        expect(text).toContain('Pazartesi, Perşembe');
+        expect(text).toContain('09.00 – 12.00');
+        expect(text).toContain('Ücretli; fiyat size bildirilecek');
     });
 });

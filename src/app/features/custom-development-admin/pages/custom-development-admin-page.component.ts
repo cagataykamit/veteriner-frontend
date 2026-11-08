@@ -7,14 +7,16 @@ import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import {
     CUSTOM_DEVELOPMENT_LIMITS,
-    type CustomDevelopmentRequestStatus
+    type CustomDevelopmentRequestStatus,
+    type CustomDevelopmentTargetKind
 } from '@/app/entities/custom-development/models/custom-development-request.model';
 import {
     CUSTOM_DEVELOPMENT_STATUS_LABELS,
     customDevelopmentPriorityLabel,
     customDevelopmentStatusLabel,
     customDevelopmentStatusSeverity,
-    customDevelopmentTargetLabel
+    customDevelopmentTargetLabel,
+    migrationSupportSummary
 } from '@/app/entities/custom-development/utils/custom-development-labels.utils';
 import {
     CustomDevelopmentAdminService,
@@ -28,6 +30,14 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+
+// Konu filtresi: geçiş desteği talepleri her paketten gelir ve ayrı izlenebilir (TIER-021).
+type KindFilter = CustomDevelopmentTargetKind | 'All';
+
+const KIND_OPTIONS: { value: KindFilter; label: string }[] = [
+    { value: 'All', label: 'Tüm konular' },
+    { value: 'Migration', label: 'Geçiş desteği' }
+];
 
 const FILTER_OPTIONS: { value: AdminCustomDevelopmentFilter; label: string }[] = [
     { value: 'open', label: 'Açık talepler' },
@@ -63,7 +73,7 @@ const FILTER_OPTIONS: { value: AdminCustomDevelopmentFilter; label: string }[] =
     template: `
         <app-page-header
             title="Özel geliştirme talepleri"
-            description="Kurumsal kliniklerin Vetinity içindeki ekran, rapor ve çıktılar için açtığı talepler. Gerekçe ve not kliniğe görünür. Yalnız Vetinity platform yöneticisi görür."
+            description="Kurumsal kliniklerin Vetinity içindeki ekran, rapor ve çıktılar için açtığı talepler ve her paketten gelen geçiş desteği talepleri. Gerekçe ve not kliniğe görünür. Yalnız Vetinity platform yöneticisi görür."
         />
 
         <div class="card">
@@ -71,6 +81,10 @@ const FILTER_OPTIONS: { value: AdminCustomDevelopmentFilter; label: string }[] =
                 <div class="flex flex-col gap-1 w-full sm:w-64">
                     <label for="cdaFilter" class="text-sm font-medium text-muted-color">Filtre</label>
                     <p-select inputId="cdaFilter" [options]="filterOptions" optionLabel="label" optionValue="value" [ngModel]="filter()" (ngModelChange)="onFilterChange($event)" class="w-full" data-testid="cda-filter" />
+                </div>
+                <div class="flex flex-col gap-1 w-full sm:w-64">
+                    <label for="cdaKind" class="text-sm font-medium text-muted-color">Konu</label>
+                    <p-select inputId="cdaKind" [options]="kindOptions" optionLabel="label" optionValue="value" [ngModel]="kind()" (ngModelChange)="onKindChange($event)" class="w-full" data-testid="cda-kind" />
                 </div>
                 @if (data(); as d) {
                     <small class="text-muted-color pb-2" data-testid="cda-total">{{ d.totalItems }} talep</small>
@@ -166,7 +180,9 @@ export class CustomDevelopmentAdminPageComponent implements OnInit {
     readonly filterOptions = FILTER_OPTIONS;
     readonly limits = CUSTOM_DEVELOPMENT_LIMITS;
 
+    readonly kindOptions = KIND_OPTIONS;
     readonly filter = signal<AdminCustomDevelopmentFilter>('open');
+    readonly kind = signal<KindFilter>('All');
     readonly page = signal(1);
     readonly data = signal<AdminCustomDevelopmentRequestPage | null>(null);
     readonly loading = signal(true);
@@ -193,7 +209,9 @@ export class CustomDevelopmentAdminPageComponent implements OnInit {
     load(): void {
         this.loading.set(true);
         this.error.set(null);
-        this.service.list(this.filter(), this.page()).subscribe({
+        const kind = this.kind();
+
+        this.service.list(this.filter(), this.page(), kind === 'All' ? null : kind).subscribe({
             next: (d) => {
                 this.data.set(d);
                 this.loading.set(false);
@@ -212,6 +230,13 @@ export class CustomDevelopmentAdminPageComponent implements OnInit {
         this.load();
     }
 
+    onKindChange(value: KindFilter): void {
+        this.kind.set(value);
+        this.page.set(1);
+        this.message.set(null);
+        this.load();
+    }
+
     goTo(page: number): void {
         this.page.set(page);
         this.load();
@@ -219,6 +244,12 @@ export class CustomDevelopmentAdminPageComponent implements OnInit {
 
     meta(row: AdminCustomDevelopmentRequestDto): string {
         const r = row.request;
+
+        // Geçiş desteği: program, kayıt sayısı, uygun gün ve saat, ücret bilgisi (TIER-021).
+        if (r.migration) {
+            return [`${customDevelopmentTargetLabel(r.targetKind)}: ${r.requestTarget}`, migrationSupportSummary(r.migration), formatDateTimeDisplay(r.createdAtUtc), r.createdByName].filter(Boolean).join(' · ');
+        }
+
         const parts = [
             `${customDevelopmentTargetLabel(r.targetKind)}: ${r.requestTarget}`,
             `Öncelik ${customDevelopmentPriorityLabel(r.priority).toLocaleLowerCase('tr')}`,

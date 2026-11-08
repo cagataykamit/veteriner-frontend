@@ -7,8 +7,8 @@ import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { IMPORTS_COMMIT_CLAIM, IMPORTS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { IMPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
+import { CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM, IMPORTS_COMMIT_CLAIM, IMPORTS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { IMPORTS_ROUTE, MIGRATION_SUPPORT_ROUTE } from '@/app/core/routing/panel-navigation';
 import type { ImportBatchDto, ImportBatchStatus } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
@@ -31,6 +31,9 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
         <app-page-header title="Veri içe aktarma" description="Eski sistemdeki müşteri, hasta ve aşı geçmişini Excel veya CSV dosyasıyla aktarın. Her adım onayınızla ilerler; aktarmadan önce sonucu görürsünüz.">
             <div actions class="flex flex-wrap gap-2">
                 <button pButton type="button" size="small" severity="secondary" [disabled]="templateBusy()" (click)="downloadTemplate()"><i class="p-button-icon" [class]="templateBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Excel şablonu</button>
+                @if (canRequestSupport) {
+                    <a pButton size="small" severity="secondary" [routerLink]="migrationSupportRoute" data-testid="import-migration-support-link"><i class="p-button-icon pi pi-headphones"></i>Geçiş desteği iste</a>
+                }
                 @if (canManage) {
                     <a pButton size="small" [routerLink]="newRoute"><i class="p-button-icon pi pi-plus"></i>Yeni içe aktarma</a>
                 }
@@ -105,6 +108,9 @@ export class ImportsListPageComponent implements OnInit {
     readonly canManage = this.auth.hasOperationClaim(IMPORTS_MANAGE_CLAIM);
     readonly canCommit = this.auth.hasOperationClaim(IMPORTS_COMMIT_CLAIM);
     readonly newRoute = `${IMPORTS_ROUTE}/new`;
+    /** Geçiş desteği talebi (TIER-021) her pakette açılır; ticari talep olduğundan yalnız `CustomDevelopmentRequests.Manage`. */
+    readonly canRequestSupport = this.auth.hasOperationClaim(CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM);
+    readonly migrationSupportRoute = MIGRATION_SUPPORT_ROUTE;
     readonly pageSize = 20;
     readonly statusOptions = (Object.keys(IMPORT_STATUS_LABELS) as ImportBatchStatus[]).map((value) => ({ value, label: IMPORT_STATUS_LABELS[value] }));
     statusFilter: ImportBatchStatus | null = null;
