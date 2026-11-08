@@ -1021,6 +1021,39 @@ describe('TodayPageComponent', () => {
             expect(root.querySelectorAll('section table tbody tr').length).toBe(2);
         });
 
+        describe('hasta uyarı rozetleri (CHECKIN-013)', () => {
+            const note = 'Penisilin alerjisi; muayenede ağızlık kullanın ve sahibi yanında bulunsun, sakinleştirici öncesi hekime danışın';
+            const alerted: TodayVm = {
+                date: 'd',
+                activeHospitalizations: [],
+                items: [item({ key: 'a', petAlerts: { flags: ['Allergy', 'Aggressive', 'ChronicCondition', 'AnesthesiaRisk'], note } }), item({ key: 'b', petName: 'Boncuk' })]
+            };
+            const badgeGroups = (root: HTMLElement) => Array.from(root.querySelectorAll('app-pet-alert-badges [role="group"]')) as HTMLElement[];
+
+            for (const compact of [false, true]) {
+                it(`${compact ? 'kart' : 'tablo'}: paylaşılan rozet bileşeni tüm uyarıları etiketle gösterir, uyarısız satırda rozet yok, not görünür`, async () => {
+                    narrow(compact);
+                    const f = await create(['Visits.Read'], alerted);
+                    const root = f.nativeElement as HTMLElement;
+                    const [group, ...rest] = badgeGroups(root);
+
+                    expect(rest.length).toBe(0);
+                    expect(Array.from(group.querySelectorAll('p-tag')).map((t) => t.textContent?.trim())).toEqual(['Alerji', 'Agresif', 'Kronik hastalık', 'Anestezi riski']);
+                    expect(group.getAttribute('aria-label')).toBe(`Hasta uyarıları: Alerji, Agresif, Kronik hastalık, Anestezi riski — ${note}`);
+
+                    const notes = Array.from(root.querySelectorAll('[data-testid="today-alert-note"]')) as HTMLElement[];
+
+                    expect(notes.length).toBe(1);
+                    expect(notes[0].textContent?.trim()).toBe(note);
+                    expect(notes[0].getAttribute('title')).toBe(note);
+                    // Dar sütun/kartta rozetler sarar; hasta adını sıkıştırıp taşmaz
+                    expect(notes[0].className).toContain(compact ? 'line-clamp-2' : 'truncate');
+                    expect(group.closest('app-pet-alert-badges')?.className).not.toContain('shrink-0');
+                    expect(group.closest('app-pet-alert-badges')?.parentElement?.className).toContain('flex-wrap');
+                });
+            }
+        });
+
         describe('aktif yatışlar', () => {
             const withHosp: TodayVm = {
                 date: 'd',

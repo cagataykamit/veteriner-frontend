@@ -18,6 +18,7 @@ import {
     CLINICS_READ_CLAIM,
     CLINICS_UPDATE_CLAIM,
     CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM,
+    DATA_EXPORT_MANAGE_CLAIM,
     EXAMINATION_TEMPLATES_CREATE_CLAIM,
     EXAMINATION_TEMPLATES_DEACTIVATE_CLAIM,
     EXAMINATION_TEMPLATES_UPDATE_CLAIM,
@@ -136,6 +137,8 @@ export const IMPORTS_ROUTE = '/panel/settings/imports';
 export const MIGRATION_SUPPORT_ROUTE = '/panel/settings/imports/migration-support';
 export const SUBSCRIPTION_ROUTE = '/panel/settings/subscription';
 export const API_ACCESS_ROUTE = '/panel/settings/api-access';
+/** Tüm veri dışa aktarma (`DATA_EXPORT_API_CONTRACT.md`): yalnız Admin/Owner. */
+export const DATA_EXPORT_ROUTE = '/panel/settings/data-export';
 export const CUSTOM_DEVELOPMENT_ROUTE = '/panel/settings/custom-development';
 export const REPORTS_ROUTE = '/panel/reports';
 export const SALES_PARTNERS_ROUTE = '/panel/sales-partners';
@@ -585,6 +588,13 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 route: API_ACCESS_ROUTE,
                 claims: [API_KEYS_MANAGE_CLAIM],
                 description: 'Kendi yazılımınızın kayıtları okuması için kliniğe özel anahtar oluşturun ve iptal edin.'
+            },
+            {
+                label: 'Verimi dışa aktar',
+                icon: 'pi pi-fw pi-download',
+                route: DATA_EXPORT_ROUTE,
+                claims: [DATA_EXPORT_MANAGE_CLAIM],
+                description: 'Kurumunuzun tüm kayıtlarını tek pakette (ZIP içinde CSV dosyaları) indirin.'
             }
         ]
     }

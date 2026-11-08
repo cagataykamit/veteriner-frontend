@@ -72,6 +72,16 @@ describe('NotificationsPageComponent', () => {
         expect(navigate).toHaveBeenCalledWith(['/panel/portal-inbox'], { queryParams: { requestId: 'dr1' } });
     });
 
+    it('veri paketi bildirimi etiketlenir ve Verimi dışa aktar sayfasını açar', () => {
+        const cmp = fixture.componentInstance;
+        const n = item('n4', { type: UserNotificationType.DataExportReady, targetType: 'DataExport', targetId: 'j1', readAtUtc: '2026-11-08T10:00:00Z' });
+
+        expect(cmp.typeLabel(n.type)).toBe('Veri paketi hazır');
+        expect(cmp.typeOptions.map((o) => o.label)).toContain('Veri paketi hazırlanamadı');
+        cmp.open(n);
+        expect(navigate).toHaveBeenCalledWith(['/panel/settings/data-export'], { queryParams: undefined });
+    });
+
     it('tümünü okundu say sayacı yeniler', () => {
         fixture.componentInstance.markAllRead();
 

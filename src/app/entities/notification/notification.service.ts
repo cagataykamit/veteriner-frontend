@@ -4,7 +4,7 @@ import type { Router } from '@angular/router';
 import { map, Observable, tap } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
-import { APPOINTMENT_REQUESTS_ROUTE, PORTAL_INBOX_ROUTE } from '@/app/core/routing/panel-navigation';
+import { APPOINTMENT_REQUESTS_ROUTE, DATA_EXPORT_ROUTE, PORTAL_INBOX_ROUTE } from '@/app/core/routing/panel-navigation';
 import { type PagedResultDto, type PagedVm, toPagedVm } from '@/app/entities/online-booking/models/online-booking.model';
 import { toOnlineBookingError } from '@/app/entities/online-booking/utils/online-booking-error.utils';
 
@@ -18,7 +18,11 @@ export enum UserNotificationType {
     /** Sahip randevuyu hatırlatma bağlantısından iptal etti (TIER-019; `APPOINTMENT_OWNER_LINK_API_CONTRACT.md` §3). */
     AppointmentCancelledByOwner = 4,
     /** Sahip bekleme listesi teklifini kabul etti, randevu oluştu (TIER-018; `WAITLIST_API_CONTRACT.md` §4). */
-    WaitlistOfferAccepted = 5
+    WaitlistOfferAccepted = 5,
+    /** Tüm veri dışa aktarma paketi hazır (`DATA_EXPORT_API_CONTRACT.md` §7); yalnız talep edene. */
+    DataExportReady = 6,
+    /** Tüm veri dışa aktarma paketi hazırlanamadı. */
+    DataExportFailed = 7
 }
 
 export const USER_NOTIFICATION_TYPE_LABELS: Record<UserNotificationType, string> = {
@@ -27,7 +31,9 @@ export const USER_NOTIFICATION_TYPE_LABELS: Record<UserNotificationType, string>
     [UserNotificationType.AppointmentAssigned]: 'Size atanan randevu',
     [UserNotificationType.PortalDataRequestCreated]: 'Portal veri talebi',
     [UserNotificationType.AppointmentCancelledByOwner]: 'Sahip randevuyu iptal etti',
-    [UserNotificationType.WaitlistOfferAccepted]: 'Bekleme listesinden randevu'
+    [UserNotificationType.WaitlistOfferAccepted]: 'Bekleme listesinden randevu',
+    [UserNotificationType.DataExportReady]: 'Veri paketi hazır',
+    [UserNotificationType.DataExportFailed]: 'Veri paketi hazırlanamadı'
 };
 
 export interface UserNotificationVm {
@@ -57,6 +63,8 @@ export function notificationTargetUrl(
             return { commands: ['/panel/appointments', n.targetId] };
         case 'PortalDataRequest':
             return { commands: [PORTAL_INBOX_ROUTE], queryParams: { requestId: n.targetId } };
+        case 'DataExport':
+            return { commands: [DATA_EXPORT_ROUTE] };
         default:
             return null;
     }

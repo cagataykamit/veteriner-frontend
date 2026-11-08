@@ -93,13 +93,17 @@
                             </div>
                             <div class="font-medium flex flex-wrap items-center gap-2 min-w-0">
                                 <a [routerLink]="['/panel/pets', item.petId]" class="break-words min-w-0 text-primary no-underline" data-testid="today-pet-link">{{ item.petName }}</a>
-                                <app-pet-alert-badges class="shrink-0" [alerts]="item.petAlerts" />
+                                <app-pet-alert-badges class="min-w-0 max-w-full" [alerts]="item.petAlerts" />
                                 @if (item.isUrgent) {
                                     <app-status-tag class="shrink-0" label="Acil" severity="danger" />
                                 }
                                 <ng-container *ngTemplateOutlet="ownerConfirmed; context: { $implicit: item }" />
                             </div>
                             <div class="text-sm text-muted-color">{{ item.speciesName }}</div>
+                            <!-- Dokunmatik ekranda ipucu yok: uyarı notu kartta görünür -->
+                            @if (item.petAlerts.note; as alertNote) {
+                                <p class="m-0 text-sm break-words line-clamp-2" [attr.title]="alertNote" data-testid="today-alert-note">{{ alertNote }}</p>
+                            }
                             <ng-container *ngTemplateOutlet="preparation; context: { $implicit: item }" />
                             <dl class="m-0 mt-2 grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-1 text-sm">
                                 <dt class="text-muted-color">Sahip</dt>
@@ -174,15 +178,19 @@
                                     }
                                 </td>
                                 <td>
-                                    <div class="font-medium flex items-center gap-2 min-w-0">
+                                    <!-- Dar sütunda birden çok uyarı rozeti alt satıra sarar; hasta adını sıkıştırmaz -->
+                                    <div class="font-medium flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
                                         <a [routerLink]="['/panel/pets', item.petId]" class="line-clamp-2 break-words min-w-0 text-primary no-underline" data-testid="today-pet-link" [attr.title]="item.petName">{{ item.petName }}</a>
-                                        <app-pet-alert-badges class="shrink-0" [alerts]="item.petAlerts" />
+                                        <app-pet-alert-badges class="min-w-0 max-w-full" [alerts]="item.petAlerts" />
                                         @if (item.isUrgent) {
                                             <app-status-tag class="shrink-0" label="Acil" severity="danger" />
                                         }
                                         <ng-container *ngTemplateOutlet="ownerConfirmed; context: { $implicit: item }" />
                                     </div>
                                     <div class="text-sm text-muted-color truncate" [attr.title]="item.speciesName">{{ item.speciesName }}</div>
+                                    @if (item.petAlerts.note; as alertNote) {
+                                        <div class="text-sm truncate" [attr.title]="alertNote" data-testid="today-alert-note">{{ alertNote }}</div>
+                                    }
                                     <ng-container *ngTemplateOutlet="preparation; context: { $implicit: item }" />
                                     <!-- Dar kipte Hekim sütunu yok: ad burada görünür -->
                                     <div class="text-sm text-muted-color truncate @min-[76rem]:hidden" [attr.title]="item.responsibleVeterinarianName ?? 'Atanmadı'">
