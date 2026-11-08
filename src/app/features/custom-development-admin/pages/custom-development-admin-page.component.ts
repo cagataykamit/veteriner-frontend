@@ -29,7 +29,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
-const FILTER_OPTIONS: ReadonlyArray<{ value: AdminCustomDevelopmentFilter; label: string }> = [
+const FILTER_OPTIONS: { value: AdminCustomDevelopmentFilter; label: string }[] = [
     { value: 'open', label: 'Açık talepler' },
     { value: 'all', label: 'Tümü' },
     ...(Object.keys(CUSTOM_DEVELOPMENT_STATUS_LABELS) as CustomDevelopmentRequestStatus[]).map((value) => ({
