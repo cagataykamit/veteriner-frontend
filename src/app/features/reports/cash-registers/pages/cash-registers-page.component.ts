@@ -138,7 +138,8 @@ const MOVEMENT_KINDS: ReadonlySet<string> = new Set(['In', 'Out', 'TransferIn', 
                         @if (r.rows.length === 0) {
                             <p class="text-sm text-muted-color m-0">Bu aralıkta kasa hareketi yok.</p>
                         } @else {
-                            <div class="overflow-x-auto">
+                            <!-- relative: başlıktaki sr-only metin kaydırma kutusunda kalır; telefonda sayfa yana taşmaz. -->
+                            <div class="overflow-x-auto relative">
                                 <table class="cash-table" aria-label="Kasa hareketleri" data-testid="cash-report-rows">
                                     <thead>
                                         <tr>
