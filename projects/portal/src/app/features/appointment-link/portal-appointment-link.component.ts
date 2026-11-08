@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { PORTAL_ERROR_CODES, PORTAL_ERROR_MESSAGES, portalErrorMessage, portalProblemCode } from '@portal/app/core/errors/portal-errors';
 import { PortalBrandHeader, PortalFooter } from '@portal/app/layout/portal-brand.component';
 import { formatPortalDate, formatPortalTime, formatPortalWeekday } from '@portal/app/shared/format/portal-date';
+import { PortalAddToCalendar } from '@portal/app/shared/ui/portal-add-to-calendar.component';
 import { PortalErrorState, PortalLoadingState } from '@portal/app/shared/ui/portal-states.component';
 import { PortalAppointmentLinkApi, PortalAppointmentLinkPage } from './portal-appointment-link.api';
 
@@ -15,11 +17,12 @@ type LinkAction = 'confirm' | 'cancel';
  * Hatırlatmadaki "onayla / iptal et" bağlantısı (`/randevu-yanit?token=…&islem=onayla|iptal`; TIER-019). Kimliksiz ve kabuk
  * dışında. Sayfayı açmak hiçbir şeyi değiştirmez (e-posta tarayıcıları bağlantıyı açar): yalnız randevu bilgisi okunur,
  * eylem düğmeyle gönderilir. Bağlantı tek kullanımlıktır; geçersiz/kullanılmış/süresi dolmuş bağlantı tek mesajla gösterilir.
+ * "Takvime ekle" (TIER-020) onay görünümünde ve onaydan sonra çıkar; .ics aynı tokenle alınır (okuma, tüketmez).
  */
 @Component({
     selector: 'portal-appointment-link',
     standalone: true,
-    imports: [ButtonModule, MessageModule, PortalBrandHeader, PortalFooter, PortalLoadingState, PortalErrorState],
+    imports: [ButtonModule, MessageModule, PortalAddToCalendar, PortalBrandHeader, PortalFooter, PortalLoadingState, PortalErrorState],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './portal-appointment-link.component.html'
 })
@@ -41,6 +44,9 @@ export class PortalAppointmentLinkComponent implements OnInit {
     readonly mode = signal<LinkAction>('confirm');
 
     readonly invalidMessage = PORTAL_ERROR_MESSAGES[PORTAL_ERROR_CODES.appointmentLinkNotFound];
+
+    /** .ics isteği: token gövdede gider. */
+    readonly calendarFile = (): Observable<Blob> => this.api.calendar(this.token()?.trim() ?? '');
 
     /** İptal görünümü ve klinik iptale izin veriyor. */
     readonly cancelFirst = computed(() => this.mode() === 'cancel' && !!this.page()?.cancelEnabled);

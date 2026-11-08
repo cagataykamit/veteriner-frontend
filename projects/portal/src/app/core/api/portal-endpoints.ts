@@ -35,6 +35,8 @@ export const PORTAL_ENDPOINTS = {
     pet: (linkId: string, petId: string) => `${link(linkId)}/pets/${encodeURIComponent(petId)}`,
     petVaccinations: (linkId: string, petId: string) => `${link(linkId)}/pets/${encodeURIComponent(petId)}/vaccinations`,
     appointments: (linkId: string) => `${link(linkId)}/appointments`,
+    // Takvime ekle (TIER-020; APPOINTMENT_OWNER_LINK_API_CONTRACT.md §8.6)
+    appointmentCalendar: (linkId: string, appointmentId: string) => `${link(linkId)}/appointments/${encodeURIComponent(appointmentId)}/calendar.ics`,
     balance: (linkId: string) => `${link(linkId)}/balance`,
     payments: (linkId: string) => `${link(linkId)}/payments`,
     // Online randevu talebi (ONLINE_APPOINTMENT_API_CONTRACT.md §5 kimliksiz bağlantı, §6 oturumlu)
@@ -50,6 +52,8 @@ export const PORTAL_ENDPOINTS = {
     appointmentLinkPreview: 'appointment-link/preview',
     appointmentLinkConfirm: 'appointment-link/confirm',
     appointmentLinkCancel: 'appointment-link/cancel',
+    // Takvime ekle (TIER-020, §8.5): .ics, token gövdede; onaydan sonra da çalışır
+    appointmentLinkCalendar: 'appointment-link/calendar',
     // Ticari iletideki ret bağlantısı (ADR-046; AUTOMATED_REMINDERS_API_CONTRACT.md §2): kimliksiz, token gövdede
     marketingOptOutPreview: 'marketing-opt-out/preview',
     marketingOptOutConfirm: 'marketing-opt-out/confirm'
@@ -67,6 +71,7 @@ const ANONYMOUS_EXACT = new Set<string>([
     PORTAL_ENDPOINTS.appointmentLinkPreview,
     PORTAL_ENDPOINTS.appointmentLinkConfirm,
     PORTAL_ENDPOINTS.appointmentLinkCancel,
+    PORTAL_ENDPOINTS.appointmentLinkCalendar,
     PORTAL_ENDPOINTS.marketingOptOutPreview,
     PORTAL_ENDPOINTS.marketingOptOutConfirm
 ]);

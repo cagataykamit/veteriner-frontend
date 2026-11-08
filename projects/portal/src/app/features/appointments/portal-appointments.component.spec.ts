@@ -117,6 +117,46 @@ describe('PortalAppointmentsComponent (randevularım)', () => {
         expect(rows[1].textContent).toContain('Şube');
     });
 
+    it('takvime eklenebilen randevuda Google bağlantısı ve .ics düğmesi; .ics oturumla iner (TIER-020)', async () => {
+        const google = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Merkez%20randevusu';
+        const createUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:randevu');
+        const revokeUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+        const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+
+        await create();
+        expectList('upcoming', 1).flush(page([appointment({ googleCalendarUrl: google }), appointment({ appointmentId: 'ap-2', status: 'Cancelled', googleCalendarUrl: null })]));
+        await settle();
+
+        const rows = el.querySelectorAll('[data-testid=appointment-list] li');
+        const link = rows[0].querySelector<HTMLAnchorElement>('[data-testid=calendar-google]');
+
+        expect(link?.getAttribute('href')).toBe(google);
+        expect(link?.getAttribute('target')).toBe('_blank');
+        expect(link?.getAttribute('rel')).toContain('noopener');
+        expect(rows[1].querySelector('[data-testid=add-to-calendar]')).toBeNull();
+
+        rows[0].querySelector<HTMLButtonElement>('[data-testid=calendar-ics]')!.click();
+        await settle();
+        const ics = http.expectOne(url(`links/${LINK_MERKEZ.linkId}/appointments/${appointment().appointmentId}/calendar.ics`));
+
+        expect(ics.request.method).toBe('GET');
+        expect(ics.request.responseType).toBe('blob');
+        ics.flush(new Blob(['BEGIN:VCALENDAR'], { type: 'text/calendar' }));
+        await settle();
+
+        expect(createUrl).toHaveBeenCalled();
+        expect(anchorClick).toHaveBeenCalled();
+        expect(revokeUrl).toHaveBeenCalledWith('blob:randevu');
+
+        rows[0].querySelector<HTMLButtonElement>('[data-testid=calendar-ics]')!.click();
+        await settle();
+        http.expectOne((r) => r.url.endsWith('/calendar.ics')).flush(new Blob(), { status: 404, statusText: 'Not Found' });
+        await settle();
+
+        expect(rows[0].querySelector('[role=alert]')?.textContent).toContain('Takvim dosyası alınamadı');
+        vi.restoreAllMocks();
+    });
+
     it('hata durumunda mesaj ve "Tekrar dene"', async () => {
         await create();
         expectList('upcoming', 1).flush(null, { status: 500, statusText: 'Error' });

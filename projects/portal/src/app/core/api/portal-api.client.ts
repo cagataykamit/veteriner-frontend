@@ -38,6 +38,16 @@ export class PortalApiClient {
         return this.http.post<T>(portalApiUrl(this.baseUrl, path), body);
     }
 
+    /** Dosya yanıtı (ör. takvim .ics). */
+    getBlob(path: string): Observable<Blob> {
+        return this.http.get(portalApiUrl(this.baseUrl, path), { responseType: 'blob' });
+    }
+
+    /** Gövdeli istekle dosya yanıtı (token gövdede taşınır). */
+    postBlob(path: string, body: unknown = {}): Observable<Blob> {
+        return this.http.post(portalApiUrl(this.baseUrl, path), body, { responseType: 'blob' });
+    }
+
     put<T>(path: string, body: unknown = {}): Observable<T> {
         return this.http.put<T>(portalApiUrl(this.baseUrl, path), body);
     }

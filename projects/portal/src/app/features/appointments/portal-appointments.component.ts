@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { Observable } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { portalPagedLoad } from '@portal/app/shared/data/portal-load';
 import { formatPortalDay, formatPortalTime, formatPortalWeekday } from '@portal/app/shared/format/portal-date';
 import { appointmentStatus, appointmentTypeLabel } from '@portal/app/shared/format/portal-labels';
+import { PortalAddToCalendar } from '@portal/app/shared/ui/portal-add-to-calendar.component';
 import { PortalEmptyState, PortalErrorState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
 import { PortalAppointment, PortalAppointmentScope, PortalAppointmentsApi } from './portal-appointments.api';
 
@@ -16,11 +18,12 @@ const TABS: readonly { readonly scope: PortalAppointmentScope; readonly label: s
 /**
  * Randevularım (sözleşme §6.4): yaklaşan ve geçmiş (son 12 ay) sekmeleri, "Daha fazla göster" ile sayfalama.
  * İptal edilen ve gelinmeyen randevular da durum rozetiyle listelenir. Sekme adres çubuğunda (`?scope=past`) tutulur.
+ * Takvime eklenebilen randevuda (backend `googleCalendarUrl` verir) "Takvime ekle" düğmeleri çıkar (TIER-020).
  */
 @Component({
     selector: 'portal-appointments',
     standalone: true,
-    imports: [RouterLink, ButtonModule, PortalEmptyState, PortalErrorState, PortalSkeleton],
+    imports: [RouterLink, ButtonModule, PortalAddToCalendar, PortalEmptyState, PortalErrorState, PortalSkeleton],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './portal-appointments.component.html'
 })
@@ -36,6 +39,8 @@ export class PortalAppointmentsComponent {
     readonly activeScope = computed<PortalAppointmentScope>(() => (this.scope() === 'past' ? 'past' : 'upcoming'));
 
     readonly list = portalPagedLoad<PortalAppointment>();
+
+    private readonly calendarRequests = new Map<string, () => Observable<Blob>>();
 
     /** Randevular bağın kliniğinden farklı bir klinikteyse (aynı işletmenin şubesi) klinik adı her satırda yazılır. */
     readonly showClinic = computed(() => {
@@ -73,6 +78,18 @@ export class PortalAppointmentsComponent {
 
     status(a: PortalAppointment) {
         return appointmentStatus(a.status);
+    }
+
+    /** Satırın .ics isteği; aynı randevu için aynı işlev döner (girdi her çizimde değişmez). */
+    calendarFile(a: PortalAppointment): () => Observable<Blob> {
+        let request = this.calendarRequests.get(a.appointmentId);
+
+        if (!request) {
+            request = () => this.api.calendar(this.session.activeLink()?.linkId ?? '', a.appointmentId);
+            this.calendarRequests.set(a.appointmentId, request);
+        }
+
+        return request;
     }
 
     emptyMessage(): string {

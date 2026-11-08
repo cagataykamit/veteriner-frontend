@@ -21,6 +21,8 @@ export interface PortalAppointment {
     readonly durationMinutes: number;
     readonly appointmentType: PortalAppointmentType;
     readonly status: PortalAppointmentStatus;
+    /** Takvime ekle (TIER-020): yalnız planlı ve saati gelmemiş randevuda dolu. */
+    readonly googleCalendarUrl?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -29,5 +31,10 @@ export class PortalAppointmentsApi {
 
     appointments(linkId: string, scope: PortalAppointmentScope, page: number, pageSize?: number): Observable<PortalPage<PortalAppointment>> {
         return this.api.get<PortalPage<PortalAppointment>>(PORTAL_ENDPOINTS.appointments(linkId), portalPageParams(page, pageSize).set('scope', scope));
+    }
+
+    /** Randevunun .ics dosyası (planlı ve saati gelmemiş randevu; değilse 404). */
+    calendar(linkId: string, appointmentId: string): Observable<Blob> {
+        return this.api.getBlob(PORTAL_ENDPOINTS.appointmentCalendar(linkId, appointmentId));
     }
 }
