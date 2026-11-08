@@ -51,6 +51,7 @@ export function clinicsQuery(route: VetFinderRoute, location?: { readonly lat: n
     if (route.service) query.set('service', route.service);
     if (route.openNow) query.set('openNow', 'true');
     if (route.page > 1) query.set('page', String(route.page));
+
     if (location) {
         query.set('lat', String(location.lat));
         query.set('lng', String(location.lng));
