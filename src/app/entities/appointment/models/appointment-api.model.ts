@@ -76,6 +76,8 @@ export interface AppointmentDetailDto {
     /** Randevu nedeni ve hekimi (ADR-042 K2/K3). */
     reasonId?: string | null;
     veterinarianUserId?: string | null;
+    /** Sahip hatırlatma bağlantısıyla geleceğini onayladı (TIER-019); durumu değiştirmez. */
+    ownerConfirmedAtUtc?: string | null;
 }
 
 /** POST/PUT /appointments body — durum backend’de ayrı iş akışlarıyla yönetilir; gövdede yok. */

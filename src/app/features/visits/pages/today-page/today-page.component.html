@@ -95,6 +95,7 @@
                                 @if (item.isUrgent) {
                                     <app-status-tag class="shrink-0" label="Acil" severity="danger" />
                                 }
+                                <ng-container *ngTemplateOutlet="ownerConfirmed; context: { $implicit: item }" />
                             </div>
                             <div class="text-sm text-muted-color">{{ item.speciesName }}</div>
                             <ng-container *ngTemplateOutlet="preparation; context: { $implicit: item }" />
@@ -177,6 +178,7 @@
                                         @if (item.isUrgent) {
                                             <app-status-tag class="shrink-0" label="Acil" severity="danger" />
                                         }
+                                        <ng-container *ngTemplateOutlet="ownerConfirmed; context: { $implicit: item }" />
                                     </div>
                                     <div class="text-sm text-muted-color truncate" [attr.title]="item.speciesName">{{ item.speciesName }}</div>
                                     <ng-container *ngTemplateOutlet="preparation; context: { $implicit: item }" />
@@ -356,6 +358,15 @@
                 ><i class="pi pi-clone text-xs mr-1" aria-hidden="true"></i>Hazırlık: {{ prepared }}</span
             >
         </div>
+    }
+</ng-template>
+
+<!-- Sahip hatırlatma bağlantısıyla geleceğini onayladı (TIER-019): yalnız henüz gelmemiş randevu satırında; durum değişmez. -->
+<ng-template #ownerConfirmed let-item>
+    @if (item.ownerConfirmedAtUtc && !item.visitId) {
+        <span class="shrink-0" [attr.title]="'Hatırlatma e-postasından onaylandı: ' + date(item.ownerConfirmedAtUtc) + ' ' + time(item.ownerConfirmedAtUtc)" data-testid="today-owner-confirmed">
+            <app-status-tag label="Sahip onayladı" severity="success" />
+        </span>
     }
 </ng-template>
 

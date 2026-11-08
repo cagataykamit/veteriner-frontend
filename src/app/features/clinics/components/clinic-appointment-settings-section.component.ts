@@ -18,7 +18,8 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
- * Klinik ayarlarındaki "Randevu Varsayılanları" kartı: varsayılan süre, başlangıç aralığı ve çakışma izni. Yalnız
+ * Klinik ayarlarındaki "Randevu Varsayılanları" kartı: varsayılan süre, başlangıç aralığı, çakışma izni ve hatırlatmadaki
+ * "iptal et" bağlantısı (TIER-019). Yalnız
  * `Clinics.Update` olan kullanıcıya gösterilir (sayfa koşulu). `reloadKey` değişince yeniden yüklenir.
  */
 @Component({
@@ -65,6 +66,16 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                             <label class="text-sm cursor-pointer" for="allowOverlappingAppointments"> Aynı saate birden fazla randevuya izin ver </label>
                         </div>
                     </div>
+
+                    <div class="col-span-12">
+                        <div class="flex items-center gap-2">
+                            <p-checkbox formControlName="ownerCancelLinkEnabled" [binary]="true" inputId="ownerCancelLinkEnabled" />
+                            <label class="text-sm cursor-pointer" for="ownerCancelLinkEnabled">Hatırlatma e-postasında "iptal et" bağlantısı gönder</label>
+                        </div>
+                        <small class="block text-muted-color mt-1">
+                            Müşteri hatırlatmadaki bağlantıyla geleceğini her zaman onaylayabilir. Kapalıysa e-postada iptal bağlantısı yerine "iptal için kliniği arayın" yazar.
+                        </small>
+                    </div>
                 </div>
 
                 <div class="mt-4 flex justify-end">
@@ -93,7 +104,8 @@ export class ClinicAppointmentSettingsSectionComponent {
     readonly apSettingsForm = this.fb.nonNullable.group({
         defaultAppointmentDurationMinutes: [30, [Validators.required, Validators.min(5), Validators.max(240), Validators.pattern(/^\d+$/)]],
         slotIntervalMinutes: [15, [Validators.required, Validators.min(5), Validators.max(120), Validators.pattern(/^\d+$/)]],
-        allowOverlappingAppointments: [false]
+        allowOverlappingAppointments: [false],
+        ownerCancelLinkEnabled: [true]
     });
 
     private readonly apSettingsFormLockEffect = effect(() => {
@@ -192,7 +204,8 @@ export class ClinicAppointmentSettingsSectionComponent {
             {
                 defaultAppointmentDurationMinutes: vm.defaultAppointmentDurationMinutes,
                 slotIntervalMinutes: vm.slotIntervalMinutes,
-                allowOverlappingAppointments: vm.allowOverlappingAppointments
+                allowOverlappingAppointments: vm.allowOverlappingAppointments,
+                ownerCancelLinkEnabled: vm.ownerCancelLinkEnabled
             },
             { emitEvent: false }
         );

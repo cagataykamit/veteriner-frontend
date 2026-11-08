@@ -48,6 +48,8 @@ export interface AppointmentDetailVm {
     updatedAtUtc: string | null;
     reasonId: string | null;
     veterinarianUserId: string | null;
+    /** Sahip hatırlatma bağlantısıyla geleceğini onayladı (TIER-019). */
+    ownerConfirmedAtUtc: string | null;
 }
 
 export interface AppointmentEditVm {
