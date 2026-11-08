@@ -2,6 +2,7 @@ import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { PORTAL_FRAMED } from '@portal/app/core/embed/portal-embed';
 import { PORTAL_ERROR_CODES, PORTAL_ERROR_MESSAGES } from '@portal/app/core/errors/portal-errors';
 import { buttonByText, problem, typeInto } from '@portal/app/testing/portal-testing';
 import { PortalBookingApi } from './portal-booking.api';
@@ -60,18 +61,58 @@ describe('PortalPublicBookingComponent (kliniğe özel bağlantı)', () => {
             publicPage: vi.fn().mockName('publicPage'),
             publicAvailability: vi.fn().mockName('publicAvailability'),
             requestPublicCode: vi.fn().mockName('requestPublicCode'),
-            createPublicRequest: vi.fn().mockName('createPublicRequest')
+            createPublicRequest: vi.fn().mockName('createPublicRequest'),
+            publicLogoUrl: vi.fn((code: string) => `/api/portal/v1/booking/${code}/logo`)
         } as unknown as MockedObject<PortalBookingApi>;
         api.publicPage.mockReturnValue(of(BOOKING_PAGE));
         api.publicAvailability.mockReturnValue(of(BOOKING_DAYS));
         api.requestPublicCode.mockReturnValue(of(undefined));
         await TestBed.configureTestingModule({
             imports: [PortalPublicBookingComponent],
-            providers: [provideRouter([]), { provide: PortalBookingApi, useValue: api }]
+            // Test koşucusu sayfayı çerçevede açar; gömülü görünüm yalnız kendi testlerinde açılır.
+            providers: [provideRouter([]), { provide: PortalBookingApi, useValue: api }, { provide: PORTAL_FRAMED, useValue: false }]
         }).compileComponents();
     });
 
     afterEach(() => fixture?.destroy());
+
+    describe('marka ve gömülü görünüm (APPT-021/022)', () => {
+        const main = () => el.querySelector<HTMLElement>('main')!;
+
+        it('kliniğin okunur rengi sayfa değişkenlerine yazılır, logo başlıkta çizilir', async () => {
+            api.publicPage.mockReturnValue(of({ ...BOOKING_PAGE, branding: { accentColor: '#1d3557', hasLogo: true } }));
+            await create();
+
+            expect(main().style.getPropertyValue('--vetinity-navy')).toBe('#1d3557');
+            expect(main().style.getPropertyValue('--p-button-primary-background')).toBe('#1d3557');
+            expect(el.querySelector('[data-testid=brand-clinic-logo]')?.getAttribute('src')).toBe('/api/portal/v1/booking/k7m2p9xq4r8t/logo');
+            expect(el.querySelector('.portal-brand-name')?.textContent).toContain('Merkez Veteriner');
+        });
+
+        it('kontrastı düşük renk uygulanmaz; logo yoksa harf rozeti kalır', async () => {
+            api.publicPage.mockReturnValue(of({ ...BOOKING_PAGE, branding: { accentColor: '#ffd166', hasLogo: false } }));
+            await create();
+
+            expect(main().style.getPropertyValue('--vetinity-navy')).toBe('');
+            expect(el.querySelector('[data-testid=brand-clinic-logo]')).toBeNull();
+            expect(el.querySelector('.portal-brand-badge')?.textContent).toBe('M');
+            expect(api.publicLogoUrl).not.toHaveBeenCalled();
+        });
+
+        it('gömülüyken üst başlık çizilmez, belgeler yeni sekmede açılır', async () => {
+            TestBed.overrideProvider(PORTAL_FRAMED, { useValue: true });
+            await create();
+
+            expect(el.querySelector('portal-brand-header')).toBeNull();
+            expect(main().classList).toContain('booking-embedded');
+
+            await chooseReasonAndSlot();
+            const links = Array.from(el.querySelectorAll<HTMLAnchorElement>('a[href^="/legal/"]'));
+
+            expect(links.length).toBe(3);
+            expect(links.every((a) => a.target === '_blank' && a.rel === 'noopener')).toBe(true);
+        });
+    });
 
     it('klinik bilgisini ve yalnız online nedenleri gösterir; neden seçilince müsaitlik istenir', async () => {
         await create();

@@ -1,5 +1,7 @@
-<main class="portal-page portal-stack">
-    <portal-brand-header [clinicName]="page()?.clinicName ?? null" />
+<main #root class="portal-page portal-stack" [class.booking-embedded]="embedded" [style]="accent()">
+    @if (!embedded) {
+        <portal-brand-header [clinicName]="page()?.clinicName ?? null" [logoUrl]="logoUrl()" />
+    }
 
     @switch (state()) {
         @case ('loading') {
@@ -152,7 +154,7 @@
 
                             <p class="portal-field-hint" data-testid="booking-privacy">
                                 Talebiniz için ad, telefon, e-posta ve hayvan bilgileriniz {{ p.clinicName }} ile paylaşılır.
-                                Ayrıntılar: <a routerLink="/legal/privacy">Gizlilik Politikası</a>.
+                                Ayrıntılar: <a routerLink="/legal/privacy" [target]="linkTarget" [attr.rel]="embedded ? 'noopener' : null">Gizlilik Politikası</a>.
                             </p>
 
                             @if (submitError(); as message) {
@@ -174,5 +176,5 @@
         }
     }
 
-    <portal-footer />
+    <portal-footer [newTab]="embedded" />
 </main>
