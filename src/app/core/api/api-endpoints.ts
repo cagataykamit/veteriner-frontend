@@ -79,6 +79,13 @@ export const ApiEndpoints = {
         /** POST `{ reason }`; 204. */
         void: (id: string) => `/api/v1/cash-counts/${encodeURIComponent(id)}/void`
     },
+    /** Dış API anahtarları (TIER-009, `EXTERNAL_API_CONTRACT.md` §6): `ApiKeys.Manage`. */
+    apiKeys: {
+        /** GET liste; POST `{ name, scopes }`, açık anahtar yalnız bu yanıtta döner. */
+        list: () => `/api/v1/api-keys`,
+        /** POST; 204. Geri alınmaz. */
+        revoke: (id: string) => `/api/v1/api-keys/${encodeURIComponent(id)}/revoke`
+    },
     /** Ücret bekleyen kalemler (ADR-018). */
     chargeSuggestions: {
         /** GET (`Charges.Read`; query: `page`, `pageSize`, `clinicId`, `petId`, `examinationId`, `visitId`; yalnız `Pending`). */

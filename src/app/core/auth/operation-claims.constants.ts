@@ -100,6 +100,9 @@ export const CASH_COUNTS_READ_CLAIM = 'CashCounts.Read' as const;
 export const CASH_COUNTS_CREATE_CLAIM = 'CashCounts.Create' as const;
 export const CASH_COUNTS_CORRECT_CLAIM = 'CashCounts.Correct' as const;
 
+/** Dış API anahtarları (TIER-009) — `EXTERNAL_API_CONTRACT.md` §6; oluşturma, liste ve iptal. Yalnız Admin/Owner. */
+export const API_KEYS_MANAGE_CLAIM = 'ApiKeys.Manage' as const;
+
 /** Doğrudan ürün satışı — `DIRECT_SALE_API_CONTRACT.md` §5; iptal yalnız Admin/Owner/ClinicAdmin. */
 export const SALES_READ_CLAIM = 'Sales.Read' as const;
 export const SALES_CREATE_CLAIM = 'Sales.Create' as const;
