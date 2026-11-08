@@ -244,7 +244,7 @@ describe('PublicPlanCardsComponent', () => {
         expect(pro.textContent).not.toMatch(/\d+ klinik/i);
         expect(pro.textContent).toContain('Yatış takibi');
         expect(pro.querySelector('[data-plan-lead]')?.textContent?.trim()).toBe("Temel'deki her şey, artı:");
-        expect(pro.querySelector('[data-plan-audience]')?.textContent?.replace(/s+/g, ' ').trim()).toBe(`Kimin için: ${PRICING_PLAN_DEFS[1].description}`);
+        expect(pro.querySelector('[data-plan-audience]')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(`Kimin için: ${PRICING_PLAN_DEFS[1].description}`);
         expect(pro.querySelector('.public-plan-badge')?.textContent?.trim()).toBe('Önerilen');
         expect(pro.querySelector('a.public-btn-primary')).not.toBeNull();
         expect(pro.textContent).not.toMatch(/\/ yıl|hediye/);
