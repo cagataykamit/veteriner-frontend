@@ -56,7 +56,11 @@ export const PORTAL_ENDPOINTS = {
     appointmentLinkCalendar: 'appointment-link/calendar',
     // Ticari iletideki ret bağlantısı (ADR-046; AUTOMATED_REMINDERS_API_CONTRACT.md §2): kimliksiz, token gövdede
     marketingOptOutPreview: 'marketing-opt-out/preview',
-    marketingOptOutConfirm: 'marketing-opt-out/confirm'
+    marketingOptOutConfirm: 'marketing-opt-out/confirm',
+    // Bekleme listesi teklifi (TIER-018; WAITLIST_API_CONTRACT.md §4): kimliksiz, token gövdede; preview durum değiştirmez
+    waitlistOfferPreview: 'waitlist-offer/preview',
+    waitlistOfferAccept: 'waitlist-offer/accept',
+    waitlistOfferDecline: 'waitlist-offer/decline'
 } as const;
 
 /** Anonim uçlar (sözleşme §7 "Anonim"): Bearer eklenmez, 401'de yenileme denenmez. */
@@ -73,7 +77,10 @@ const ANONYMOUS_EXACT = new Set<string>([
     PORTAL_ENDPOINTS.appointmentLinkCancel,
     PORTAL_ENDPOINTS.appointmentLinkCalendar,
     PORTAL_ENDPOINTS.marketingOptOutPreview,
-    PORTAL_ENDPOINTS.marketingOptOutConfirm
+    PORTAL_ENDPOINTS.marketingOptOutConfirm,
+    PORTAL_ENDPOINTS.waitlistOfferPreview,
+    PORTAL_ENDPOINTS.waitlistOfferAccept,
+    PORTAL_ENDPOINTS.waitlistOfferDecline
 ]);
 
 export function isAnonymousPortalPath(relativePath: string): boolean {
