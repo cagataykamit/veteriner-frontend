@@ -26,11 +26,11 @@ import { PortalBookingDone, PortalBookingHow, PortalBookingStep, PortalBookingSu
 import { PortalSlotPicker } from './portal-slot-picker.component';
 
 type PageState = 'loading' | 'closed' | 'error' | 'ready' | 'done';
+type AvailabilityState = 'idle' | 'loading' | 'ready' | 'error';
 
 function slotLabel(slot: string | null): string {
     return slot ? `${formatPortalWeekday(slot)}, ${formatPortalDay(slot)} · ${formatPortalTime(slot)}` : '';
 }
-type AvailabilityState = 'idle' | 'loading' | 'ready' | 'error';
 
 /**
  * Kliniğe özel online randevu bağlantısı (`/randevu/:bookingCode`, ADR-042 K1 ve eki; sözleşme §5). Kimliksizdir: neden ve not → gün/saat →
