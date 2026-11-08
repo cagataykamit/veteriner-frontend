@@ -1,5 +1,16 @@
 import type { ExaminationTemplateDto } from '@/app/entities/examination-template/models/examination-template.model';
-import { templateApplySummary, templateChargePreview, templateContentSummary, templateEstimatedChargeText, templateHasText, templateInactiveLineNames } from './examination-template.utils';
+import {
+    templateApplyInitialChoices,
+    templateApplyQuantityValid,
+    templateApplyRequestLines,
+    templateApplySummary,
+    templateChargePreview,
+    templateContentSummary,
+    templateEstimatedChargeText,
+    templateHasText,
+    templateIncludedLines,
+    templateInactiveLineNames
+} from './examination-template.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
 const line = (productId: string, over: Partial<ExaminationTemplateDto['lines'][number]> = {}): ExaminationTemplateDto['lines'][number] => ({
@@ -96,5 +107,33 @@ describe('examination-template.utils', () => {
 
         expect(summary).toContain('paket ücreti');
         expect(summary).toContain('satırlar pakete dahil');
+    });
+});
+
+describe('şablon uygulamada satır seçimi (EXAM-013)', () => {
+    const t = template({ lines: [line('a', { quantity: 1 }), line('b', { quantity: 2 })] });
+
+    it('başlangıçta seçim şablonla aynıdır ve satır listesi gönderilmez', () => {
+        const choices = templateApplyInitialChoices(t);
+
+        expect(choices).toEqual({ a: { included: true, quantity: 1 }, b: { included: true, quantity: 2 } });
+        expect(templateApplyRequestLines(t, choices)).toBeUndefined();
+    });
+
+    it('hariç satır ve değişen miktar listeye yansır; sıra şablondaki sıradır', () => {
+        const choices = { a: { included: true, quantity: 3 }, b: { included: false, quantity: 2 } };
+
+        expect(templateIncludedLines(t, choices).map((l) => [l.productId, l.quantity])).toEqual([['a', 3]]);
+        expect(templateApplyRequestLines(t, choices)).toEqual([{ productId: 'a', quantity: 3 }]);
+        expect(templateApplyRequestLines(t, { a: { included: false, quantity: 1 }, b: { included: false, quantity: 2 } })).toEqual([]);
+    });
+
+    it('miktar kuralı şablon satırıyla aynı', () => {
+        expect(templateApplyQuantityValid(0.5)).toBe(true);
+        expect(templateApplyQuantityValid(1.234)).toBe(true);
+        expect(templateApplyQuantityValid(null)).toBe(false);
+        expect(templateApplyQuantityValid(0)).toBe(false);
+        expect(templateApplyQuantityValid(1.2345)).toBe(false);
+        expect(templateApplyQuantityValid(100001)).toBe(false);
     });
 });

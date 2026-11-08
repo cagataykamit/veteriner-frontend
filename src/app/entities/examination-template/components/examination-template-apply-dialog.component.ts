@@ -1,9 +1,23 @@
 import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import type { ExaminationTemplateApplyResultDto, ExaminationTemplateDto, ExaminationTemplateLineDto } from '@/app/entities/examination-template/models/examination-template.model';
 import { EXAMINATION_CONCURRENCY_CONFLICT_CODE, EXAMINATION_FINALIZED_CODE, ExaminationTemplateError, ExaminationTemplatesService } from '@/app/entities/examination-template/services/examination-templates.service';
-import { templateChargePreview, templateContentSummary, templateInactiveLineNames, templateLineAmount } from '@/app/entities/examination-template/utils/examination-template.utils';
+import {
+    templateApplyInitialChoices,
+    templateApplyQuantityValid,
+    templateApplyRequestLines,
+    templateChargePreview,
+    templateContentSummary,
+    templateHasText,
+    templateIncludedLines,
+    templateInactiveLineNames,
+    templateLineAmount,
+    type TemplateApplyLineChoice
+} from '@/app/entities/examination-template/utils/examination-template.utils';
+import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS } from '@/app/entities/charge/utils/charge-amount.utils';
 import { isStockTrackedKind } from '@/app/entities/inventory/utils/product-classification.utils';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
@@ -27,14 +41,15 @@ interface TextPreviewSection {
 /**
  * Muayeneye şablon uygulama (ADR-020 S4): aramalı liste → ön izleme (eklenecek metin + işlem/ürün satırları) → onay.
  * Metin sunucuda birleşir: şikâyet yalnız boşsa yazılır; bulgu ve plan satır satır sona eklenir, muayenede zaten olan satır
- * tekrar eklenmez. Satırlar her uygulamada yeniden yazılır.
+ * tekrar eklenmez. Satırlar her uygulamada yeniden yazılır. Satır bu uygulama için hariç tutulabilir, miktarı değiştirilebilir (EXAM-013;
+ * şablon değişmez); fiyatlı pakette paket fiyatı sabit kalır.
  * Yetki ve durum (taslak, salt okunur kiracı) denetimi çağıran sayfadadır. Muayene sürümü çakışırsa veya muayene
  * kesinleşmişse `stale` ile sayfa muayeneyi yeniden okur; yeni `rowVersion` girdi olarak geri gelir.
  */
 @Component({
     selector: 'app-examination-template-apply-dialog',
     standalone: true,
-    imports: [DialogModule, ButtonModule, SearchInputComponent, AppStatusTagComponent],
+    imports: [FormsModule, DialogModule, ButtonModule, CheckboxModule, SearchInputComponent, AppStatusTagComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Şablon uygula" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(44rem, 95vw)' }" [(visible)]="visible">
@@ -65,26 +80,49 @@ interface TextPreviewSection {
 
                     @if (t.lines.length > 0) {
                         <h6 class="mt-0 mb-1 text-sm text-muted-color">Yazılacak işlem / ürün satırları</h6>
+                        <p class="text-xs text-muted-color mt-0 mb-1">İşaretini kaldırdığınız satır bu uygulamada yazılmaz; miktarı yalnız bu muayene için değiştirebilirsiniz, şablon değişmez.</p>
                         <ul class="list-none m-0 p-0 mb-3" data-testid="template-preview-lines">
-                            @for (line of t.lines; track line.productId) {
+                            @for (line of t.lines; track line.productId; let i = $index) {
+                                @let c = choice(line.productId);
                                 <li class="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0" data-testid="template-preview-line">
-                                    <span class="font-medium flex-1 min-w-0 break-words" [class.text-muted-color]="!line.productIsActive">{{ line.productName }}</span>
-                                    <span class="text-sm tabular-nums">{{ line.quantity }} {{ line.unit }}</span>
+                                    <p-checkbox [inputId]="'tpl-apply-line-' + i" [binary]="true" [ngModel]="c.included" [disabled]="submitting()" (ngModelChange)="setIncluded(line.productId, $event)" data-testid="template-line-include" />
+                                    <label [for]="'tpl-apply-line-' + i" class="font-medium flex-1 min-w-0 break-words cursor-pointer" [class.text-muted-color]="!line.productIsActive || !c.included" [class.line-through]="!c.included">{{ line.productName }}</label>
+                                    <span class="inline-flex items-center gap-1">
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            min="0"
+                                            class="p-inputtext p-component w-24 text-right tabular-nums"
+                                            [value]="c.quantity ?? ''"
+                                            [disabled]="!c.included || submitting()"
+                                            [attr.aria-label]="line.productName + ' miktarı'"
+                                            [attr.aria-invalid]="c.included && !quantityValid(c.quantity)"
+                                            data-testid="template-line-quantity"
+                                            (input)="setQuantity(line.productId, $event)"
+                                        />
+                                        <span class="text-sm">{{ line.unit }}</span>
+                                    </span>
                                     <span class="text-sm text-muted-color">{{ lineEffect(line) }}</span>
-                                    <span class="text-sm tabular-nums">{{ lineTotal(line) }}</span>
+                                    <span class="text-sm tabular-nums">{{ c.included ? lineTotal(line, c.quantity) : 'Hariç' }}</span>
                                     @if (!line.productIsActive) {
                                         <app-status-tag label="Pasif ürün" severity="warn" />
+                                    }
+                                    @if (c.included && !quantityValid(c.quantity)) {
+                                        <small class="w-full text-red-500" data-testid="template-line-quantity-error">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı, en çok {{ quantityMax }}.</small>
                                     }
                                 </li>
                             }
                         </ul>
+                        @if (includedLines().length === 0) {
+                            <p class="text-sm text-muted-color mt-0 mb-3" data-testid="template-no-lines-selected">{{ hasText() ? 'Hiç satır seçilmedi; yalnız metin uygulanır.' : 'Uygulanacak satır seçin.' }}</p>
+                        }
                         @if (chargePreview(); as p) {
                             <div class="flex flex-wrap items-baseline justify-between gap-2 mb-1" data-testid="template-preview-total">
                                 <span class="text-sm font-medium">{{ p.isPackage ? 'Paket fiyatı' : 'Toplam' }}</span>
                                 <span class="font-semibold tabular-nums">{{ money(p.total) }}</span>
                             </div>
                             @if (p.isPackage) {
-                                <p class="text-xs text-muted-color mt-0 mb-3">Tek ücret bekleyen kalem olarak eklenir; satırlar pakete dahildir (stoklu ürünler stoktan düşer, ayrı ücretlenmez). Satırların bugünkü fiyat toplamı: {{ money(p.linesTotal) }}.</p>
+                                <p class="text-xs text-muted-color mt-0 mb-3">Tek ücret bekleyen kalem olarak eklenir; satırlar pakete dahildir (stoklu ürünler stoktan düşer, ayrı ücretlenmez). Satır hariç tutulsa ya da miktar değişse de paket fiyatı aynı kalır; gerekirse ücrete çevirirken düzenlenir. Seçili satırların bugünkü fiyat toplamı: {{ money(p.linesTotal) }}.</p>
                             } @else {
                                 <p class="text-xs text-muted-color mt-0 mb-3">Fiyatlar ürün kartının bugünkü fiyatıdır; her fiyatlı satır ayrı ücret bekleyen kalem olarak eklenir.</p>
                             }
@@ -92,7 +130,7 @@ interface TextPreviewSection {
                     }
 
                     @if (inactiveLineNames().length > 0) {
-                        <p class="text-red-500 text-sm mt-0 mb-3" role="alert" data-testid="template-inactive-lines">Pasif ürün içerdiği için uygulanamaz: {{ inactiveLineNames().join(', ') }}. Satırı şablondan çıkarın veya ürünü etkinleştirin.</p>
+                        <p class="text-red-500 text-sm mt-0 mb-3" role="alert" data-testid="template-inactive-lines">Pasif ürün içerdiği için uygulanamaz: {{ inactiveLineNames().join(', ') }}. Satırı hariç tutun veya ürünü etkinleştirin.</p>
                     }
                     @if (reapplyWarning()) {
                         <div class="rounded-border border border-amber-400 p-3 mb-3" role="status" data-testid="template-reapply-warning">
@@ -182,17 +220,39 @@ export class ExaminationTemplateApplyDialogComponent {
 
         return [visitReason, ...lines].filter((s) => !!s.text);
     });
+    /** Satır seçimi (EXAM-013): ürün kimliği → dahil/hariç ve miktar; şablon seçilince şablondaki hâliyle başlar. */
+    readonly lineChoices = signal<Record<string, TemplateApplyLineChoice>>({});
+    /** Uygulanacak satırlar (seçilen miktarla); toplam ve pasif ürün denetimi bunlardan yapılır. */
+    readonly includedLines = computed(() => {
+        const t = this.selected();
+
+        return t ? templateIncludedLines(t, this.lineChoices()) : [];
+    });
+    readonly hasText = computed(() => {
+        const t = this.selected();
+
+        return !!t && templateHasText(t);
+    });
+    /** Yalnız dahil satırlar: hariç tutulan pasif ürün uygulamayı engellemez. */
     readonly inactiveLineNames = computed(() => {
         const t = this.selected();
 
-        return t ? templateInactiveLineNames(t) : [];
+        return t ? templateInactiveLineNames({ ...t, lines: this.includedLines() }) : [];
     });
     readonly reapplyWarning = computed(() => {
         const t = this.selected();
 
-        return !!t && t.lines.length > 0 && this.appliedTemplateIds().has(t.id);
+        return !!t && this.includedLines().length > 0 && this.appliedTemplateIds().has(t.id);
     });
-    readonly canSubmit = computed(() => !!this.selected() && !!this.rowVersion() && !this.submitting() && this.inactiveLineNames().length === 0);
+    readonly canSubmit = computed(
+        () =>
+            !!this.selected() &&
+            !!this.rowVersion() &&
+            !this.submitting() &&
+            this.inactiveLineNames().length === 0 &&
+            this.includedLines().every((l) => templateApplyQuantityValid(l.quantity)) &&
+            (this.includedLines().length > 0 || this.hasText())
+    );
 
     constructor() {
         effect(() => {
@@ -249,8 +309,28 @@ export class ExaminationTemplateApplyDialogComponent {
 
     select(t: ExaminationTemplateDto): void {
         this.submitError.set(null);
+        this.lineChoices.set(templateApplyInitialChoices(t));
         this.selected.set(t);
     }
+
+    choice(productId: string): TemplateApplyLineChoice {
+        return this.lineChoices()[productId] ?? { included: true, quantity: null };
+    }
+
+    setIncluded(productId: string, included: boolean): void {
+        this.lineChoices.update((all) => ({ ...all, [productId]: { ...this.choice(productId), included } }));
+    }
+
+    setQuantity(productId: string, event: Event): void {
+        const raw = (event.target as HTMLInputElement).value.trim();
+        const quantity = raw === '' ? null : Number(raw);
+
+        this.lineChoices.update((all) => ({ ...all, [productId]: { ...this.choice(productId), quantity: Number.isFinite(quantity) ? quantity : null } }));
+    }
+
+    readonly quantityValid = templateApplyQuantityValid;
+    protected readonly quantityMax = CHARGE_QUANTITY_MAX;
+    protected readonly quantityDecimals = CHARGE_QUANTITY_MAX_DECIMALS;
 
     clearSelection(): void {
         this.submitError.set(null);
@@ -267,19 +347,24 @@ export class ExaminationTemplateApplyDialogComponent {
         return isStockTrackedKind(line.productKind) ? 'Stoktan düşer' : 'Hizmet';
     }
 
-    lineTotal(line: ExaminationTemplateLineDto): string {
+    lineTotal(line: ExaminationTemplateLineDto, quantity: number | null): string {
         if (this.selected()?.packagePrice != null) {
             return 'Pakete dahil';
         }
 
-        return line.currentUnitPrice > 0 ? formatMoney(templateLineAmount(line), line.currency || 'TRY') : 'Bedelsiz';
+        if (line.currentUnitPrice <= 0) {
+            return 'Bedelsiz';
+        }
+
+        return quantity != null && templateApplyQuantityValid(quantity) ? formatMoney(templateLineAmount({ ...line, quantity }), line.currency || 'TRY') : '—';
     }
 
-    /** Önizleme toplamı (EXAM-007): paket fiyatı veya satırların toplamı. */
+    /** Önizleme toplamı (EXAM-007): paket fiyatı veya seçili satırların toplamı; satır seçilmediyse ücret doğmaz (paket kalemi de). */
     readonly chargePreview = computed(() => {
         const t = this.selected();
+        const lines = this.includedLines();
 
-        return t ? templateChargePreview(t) : null;
+        return t && lines.length > 0 ? templateChargePreview({ ...t, lines }) : null;
     });
 
     readonly money = (amount: number) => formatMoney(amount);
@@ -294,7 +379,7 @@ export class ExaminationTemplateApplyDialogComponent {
 
         this.submitting.set(true);
         this.submitError.set(null);
-        this.templatesService.apply(this.examinationId(), template.id, rowVersion).subscribe({
+        this.templatesService.apply(this.examinationId(), template.id, rowVersion, templateApplyRequestLines(template, this.lineChoices())).subscribe({
             next: (result) => {
                 this.submitting.set(false);
                 this.appliedTemplateIds.update((ids) => new Set([...ids, template.id]));
@@ -323,7 +408,7 @@ export class ExaminationTemplateApplyDialogComponent {
 
                 if (e.code === EXAMINATION_CONCURRENCY_CONFLICT_CODE) {
                     this.stale.emit(message);
-                } else if (e.code === 'ExaminationTemplates.Inactive' || e.code === 'ExaminationTemplates.NotFound') {
+                } else if (e.code === 'ExaminationTemplates.Inactive' || e.code === 'ExaminationTemplates.NotFound' || e.code === 'ExaminationTemplates.LineNotInTemplate') {
                     this.selected.set(null);
                     this.load();
                 }
