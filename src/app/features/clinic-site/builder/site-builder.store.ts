@@ -93,8 +93,11 @@ export class SiteBuilderStore {
     readonly bookingUrl = signal<string | null>(null);
     readonly slug = computed(() => this.site()?.slug ?? this.suggestedSlug());
 
-    /** Görsel başvurularıyla birleşik yapılandırma: kontroller ve metin önerileri bunu okur. */
-    readonly config = computed(() => composeSiteConfig(this.stored(), { ...this.record(), bookingUrl: this.bookingUrl() }, this.slug()));
+    /**
+     * Görsel başvurularıyla birleşik yapılandırma: kontroller ve metin önerileri bunu okur. Önizlemede en yakın saat çizilmez (TIER-017):
+     * saatler yalnız yayındaki sitede, çizim anında gelir.
+     */
+    readonly config = computed(() => composeSiteConfig(this.stored(), { ...this.record(), bookingUrl: this.bookingUrl(), nextSlots: [] }, this.slug()));
     /** Önizlemenin çizdiği hâl: `site-image:` başvuruları yetkili uçtan alınan önizleme adreslerine çözülür. */
     readonly renderConfig = computed(() => {
         const urls = this.imageUrls();

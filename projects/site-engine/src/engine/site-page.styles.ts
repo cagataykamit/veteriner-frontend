@@ -242,6 +242,56 @@ export const PAGE_INFO_STYLES = `
         font-size: 0.5em;
     }
 
+    /* En yakın müsait saatler (TIER-017): her saat talep formuna gider. */
+    .slots {
+        display: grid;
+        gap: 16px;
+        padding: clamp(18px, 3cqi, 28px);
+        border: 1px solid var(--s-line);
+        border-radius: var(--s-radius);
+        background: var(--s-surface);
+    }
+
+    .slots h2 {
+        font-size: calc(var(--s-head-scale) * clamp(22px, 2.4cqi, 28px));
+    }
+
+    .slot-day {
+        display: grid;
+        gap: 8px;
+    }
+
+    .slot-day h3 {
+        color: var(--s-muted);
+        font: 600 14px/1.3 var(--s-body);
+    }
+
+    .slot-day ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .slot {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 76px;
+        min-height: 44px;
+        padding: 0 14px;
+        border: 1px solid var(--s-line);
+        border-radius: var(--s-radius-btn);
+        color: var(--s-primary-text);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        text-decoration: none;
+    }
+
+    .slot:hover,
+    .slot:focus-visible {
+        border-color: var(--s-primary);
+    }
+
     .branches {
         display: grid;
         gap: 20px;

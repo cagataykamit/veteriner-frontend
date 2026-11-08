@@ -38,6 +38,7 @@ const settings = (over: Partial<OnlineBookingSettingsVm> = {}): OnlineBookingSet
     isEnabled: false,
     minLeadMinutes: 120,
     maxAdvanceDays: 30,
+    showNextAvailableSlots: true,
     bookingCode: null,
     bookingUrl: null,
     bookingCodeGeneratedAtUtc: null,
@@ -114,8 +115,25 @@ describe('OnlineBookingSettingsPageComponent', () => {
         cmp.saveSettings();
         fixture.detectChanges();
 
-        expect(service['saveSettings']).toHaveBeenCalledWith('k1', { isEnabled: true, minLeadMinutes: 60, maxAdvanceDays: 14 });
+        expect(service['saveSettings']).toHaveBeenCalledWith('k1', { isEnabled: true, minLeadMinutes: 60, maxAdvanceDays: 14, showNextAvailableSlots: true });
         expect((el.querySelector('[data-testid="booking-url"]') as HTMLInputElement).value).toBe('https://portal.test/randevu/abcdefghjkmn');
+    });
+
+    it('en yakın saat gösterimi varsayılan açık gelir ve kapatılınca kayda gider (TIER-017)', async () => {
+        service['getSettings'].mockReturnValue(of(settings({ isEnabled: true, bookingCode: 'abcdefghjkmn', bookingUrl: 'https://portal.test/randevu/abcdefghjkmn' })));
+        await create();
+        const cmp = fixture.componentInstance;
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(cmp.settingsForm.getRawValue().showNextAvailableSlots).toBe(true);
+        expect(el.querySelector('[data-testid="online-next-slots"]')).not.toBeNull();
+        expect(el.textContent).toContain('En yakın müsait saatleri klinik sitesinde göster');
+
+        cmp.settingsForm.controls.showNextAvailableSlots.setValue(false);
+        cmp.settingsForm.markAsDirty();
+        cmp.saveSettings();
+
+        expect(service['saveSettings']).toHaveBeenCalledWith('k1', expect.objectContaining({ isEnabled: true, showNextAvailableSlots: false }));
     });
 
     it('nedenler sayfada yönetilir; önizleme yalnız online görünenleri ve sonda "Diğer"i, telefonu gösterir; kurulum hazır', async () => {

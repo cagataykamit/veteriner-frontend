@@ -3,7 +3,7 @@ import { emptyContent, forbiddenCopy, patchClinic, sampleConfig } from '../testi
 import { contrast } from './site-color.utils';
 import { designFromConcept, SITE_CONCEPTS } from './site-concepts';
 import { SITE_FONTS } from './site-fonts';
-import { clinicStatus, hoursGroups } from './site-hours';
+import { clinicStatus, hoursGroups, nextSlotDays } from './site-hours';
 import { safeHref, safeImageSrc, socialLinks } from './site-links';
 import { buildSiteTokens } from './site-tokens';
 import { buildSiteVm, memberInitials, whatsappNumber } from './site-vm';
@@ -82,6 +82,39 @@ describe('çalışma saatleri', () => {
         expect(groups.map((group) => group.label)).toEqual(['Pazartesi – Cuma', 'Cumartesi – Pazar']);
         expect(groups[0]).toEqual({ label: 'Pazartesi – Cuma', value: '09:00–19:00', note: 'Mola 13:00–14:00', isToday: true });
         expect(groups[1].value).toBe('Kapalı');
+    });
+});
+
+describe('nextSlotDays (TIER-017)', () => {
+    const BOOKING = 'https://portal.example.com/randevu/kod';
+
+    it('saatler güne göre toplanır; bugün ve yarın adıyla, saat İstanbul duvar saatiyle', () => {
+        const days = nextSlotDays(
+            [
+                { date: '2026-11-09', startUtc: '2026-11-09T09:00:00Z' },
+                { date: '2026-11-09', startUtc: '2026-11-09T09:30:00Z' },
+                { date: '2026-11-10', startUtc: '2026-11-10T06:00:00Z' },
+                { date: '2026-11-12', startUtc: '2026-11-12T13:15:00Z' }
+            ],
+            BOOKING,
+            NOW
+        );
+
+        expect(days.map((day) => day.label)).toEqual(['Bugün, 9 Kasım', 'Yarın, 10 Kasım', 'Perşembe, 12 Kasım']);
+        expect(days[0].slots.map((slot) => slot.time)).toEqual(['12:00', '12:30']);
+        expect(days[2].slots[0]).toEqual({ time: '16:15', href: `${BOOKING}?saat=2026-11-12T13%3A15%3A00Z`, label: 'Perşembe, 12 Kasım 16:15 için talep formunu aç' });
+    });
+
+    it('gün API\'nin İstanbul takvimidir: UTC gece yarısından önceki saat ertesi güne yazılır', () => {
+        const days = nextSlotDays([{ date: '2026-11-10', startUtc: '2026-11-09T21:30:00Z' }], BOOKING, NOW);
+
+        expect(days).toEqual([{ label: 'Yarın, 10 Kasım', slots: [expect.objectContaining({ time: '00:30' })] }]);
+    });
+
+    it('online randevu kapalıysa ya da satır bozuksa çizilmez', () => {
+        expect(nextSlotDays([{ date: '2026-11-09', startUtc: '2026-11-09T09:00:00Z' }], null, NOW)).toEqual([]);
+        expect(nextSlotDays([{ date: 'bozuk', startUtc: '2026-11-09T09:00:00Z' }, { date: '2026-11-09', startUtc: 'x' }], BOOKING, NOW)).toEqual([]);
+        expect(buildSiteVm(patchClinic(sampleConfig(), { bookingUrl: 'javascript:alert(1)', nextSlots: [{ date: '2026-11-09', startUtc: '2026-11-09T09:00:00Z' }] }), voice, NOW).nextSlotDays).toEqual([]);
     });
 });
 

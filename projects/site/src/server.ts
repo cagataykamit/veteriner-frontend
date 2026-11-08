@@ -3,7 +3,7 @@ import { AngularNodeAppEngine, createNodeRequestHandler, isMainModule, writeResp
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { siteRobotsTxt, siteSitemapXml } from '@site-engine';
 import { publishedSiteConfig, type SiteRequestState } from './app/site-state';
-import { loadPublicSite, readSiteServerConfig, redirectLocation } from './server/site-loader';
+import { loadPublicSite, readSiteServerConfig, redirectLocation, withNextSlots } from './server/site-loader';
 
 /**
  * Klinik sitelerinin Node sunucusu (ADR-045 K12). Her istekte yayınlanmış yapılandırmayı API'den alır, Angular ile çizer. Eski adresi
@@ -70,7 +70,7 @@ app.get('/k/:slug{/*rest}', async (req, res, next) => {
         return;
     }
 
-    await render(req, res, next, loaded);
+    await render(req, res, next, loaded.kind === 'published' ? await withNextSlots(loaded, req.ip, config) : loaded);
 });
 
 app.use((req, res, next) => void render(req, res, next, { kind: 'notfound' }));
