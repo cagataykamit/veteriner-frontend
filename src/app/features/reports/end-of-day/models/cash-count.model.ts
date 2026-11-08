@@ -1,9 +1,11 @@
+import type { CashRegisterTotalsDto } from '@/app/entities/cash-register/models/cash-register.model';
 import type { CashSummaryMethodDto } from '@/app/features/reports/end-of-day/models/end-of-day.model';
 
 /** Kasa sayımı kaydı (`CASH_COUNT_API_CONTRACT.md` §3.1). `expectedCashAmount` kayıt anındaki beklenen nakittir. */
 export interface CashCountDto {
     id: string;
     clinicId: string;
+    cashRegisterId: string;
     businessDate: string;
     currency: string;
     openingAmount: number;
@@ -23,12 +25,19 @@ export interface CashCountDto {
     voidReason: string | null;
 }
 
-/** GET `/api/v1/cash-counts/day`: `cash` kasa özetinin nakit satırının şu anki hâli; `cash.netAmount` beklenen nakittir. */
+/**
+ * GET `/api/v1/cash-counts/day` (tek kasa): `cash` kasanın nakit tahsilat satırı (kasa özetinin nakit satırı, kasaya göre); `movements` giriş/çıkış
+ * ve aktarımlarla günün toplamı; `expectedCashAmount` beklenen nakittir (sunucu hesaplar).
+ */
 export interface CashCountDayDto {
     clinicId: string;
     businessDate: string;
     currency: string;
+    cashRegisterId: string | null;
+    cashRegisterName: string;
     cash: CashSummaryMethodDto;
+    movements: CashRegisterTotalsDto;
+    expectedCashAmount: number;
     current: CashCountDto | null;
     expectedChangedSinceCount: boolean;
     previous: { businessDate: string; countedAmount: number } | null;

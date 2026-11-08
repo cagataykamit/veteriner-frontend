@@ -4,6 +4,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import {
     ADMINISTRATIONS_READ_CLAIM,
     APPOINTMENTS_READ_CLAIM,
+    CASH_REGISTERS_READ_CLAIM,
     CHARGES_READ_CLAIM,
     EXAMINATIONS_READ_CLAIM,
     PAYMENTS_READ_CLAIM,
@@ -70,6 +71,12 @@ export default [
         canActivate: [requireAnyClaim([PAYMENTS_READ_CLAIM, VISITS_READ_CLAIM])],
         loadComponent: () =>
             import('@/app/features/reports/end-of-day/pages/end-of-day-page/end-of-day-page.component').then((m) => m.EndOfDayPageComponent)
+    },
+    {
+        path: 'cash-registers',
+        canActivate: [requireAnyClaim([CASH_REGISTERS_READ_CLAIM])],
+        loadComponent: () =>
+            import('@/app/features/reports/cash-registers/pages/cash-registers-page.component').then((m) => m.CashRegistersPageComponent)
     },
     {
         path: 'appointments',

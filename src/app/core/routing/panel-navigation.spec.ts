@@ -374,6 +374,7 @@ describe('panel-navigation', () => {
             'Muayene Raporu',
             'Aşı Raporu',
             'Gün sonu',
+            'Kasa',
             'Ödeme Raporu',
             'Borç Raporu',
             'Muayene Kayıt Defteri',

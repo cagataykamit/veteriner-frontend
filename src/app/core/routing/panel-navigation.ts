@@ -7,6 +7,7 @@ import {
     APPOINTMENTS_READ_CLAIM,
     BREEDS_CREATE_CLAIM,
     BREEDS_UPDATE_CLAIM,
+    CASH_REGISTERS_READ_CLAIM,
     CHARGES_READ_CLAIM,
     CLINICAL_SNIPPETS_CREATE_CLAIM,
     CLINICAL_SNIPPETS_DEACTIVATE_CLAIM,
@@ -210,6 +211,13 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
                 route: `${REPORTS_ROUTE}/end-of-day`,
                 claims: [PAYMENTS_READ_CLAIM, VISITS_READ_CLAIM],
                 description: 'Günün ücret, tahsilat ve açık işleri; işlem dökümü ve yazdırma.'
+            },
+            {
+                label: 'Kasa',
+                icon: 'pi pi-fw pi-box',
+                route: `${REPORTS_ROUTE}/cash-registers`,
+                claims: [CASH_REGISTERS_READ_CLAIM],
+                description: 'Kasa hareketleri, kasaya giriş/çıkış, kasalar arası aktarım ve kasa tanımları.'
             },
             {
                 label: 'Ödeme Raporu',

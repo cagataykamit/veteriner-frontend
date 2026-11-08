@@ -17,7 +17,7 @@ const FEATURE_TITLES: Readonly<Record<PlanFeatureCode, string>> = {
     VaccinationWizard: 'Otomatik aşı sihirbazı',
     MobileBarcode: 'Kamerayla barkod okutma',
     ClinicsOverview: 'Şubeler özeti',
-    CashManagement: 'Kasa kontrolü',
+    CashManagement: 'Kasa yönetimi',
     ExternalApi: 'API erişimi',
     CustomDevelopment: 'Size özel geliştirmeler',
     Waitlist: 'Bekleme listesi',
