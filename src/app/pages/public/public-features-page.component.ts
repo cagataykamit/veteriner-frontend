@@ -2,15 +2,16 @@ import { DOCUMENT } from '@angular/common';
 import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
-import { PUBLIC_FEATURE_GROUPS, PUBLIC_FEATURE_SECTIONS, publicFeatureCardPlans } from '@/app/features/public/utils/public-features-content.utils';
+import { PUBLIC_FEATURE_GROUPS, PUBLIC_FEATURE_SECTIONS, publicFeatureCardPlans, publicFeatureGroupShotCaption } from '@/app/features/public/utils/public-features-content.utils';
 import { PUBLIC_FEATURES_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicPageHeaderComponent } from './components/public-page-header.component';
 import { PublicScreenshotComponent } from './components/public-screenshot.component';
 
 /**
- * Özellikler (tasarım belgesi 5.2): 6 bölüm, metin + ekran dönüşümlü; ardından ekran görüntüsü olmayan işler kart gruplarında
- * (kartta paket etiketi). Masaüstünde yapışkan bölüm dizini ikisini de listeler.
+ * Özellikler (tasarım belgesi 5.2): 6 bölüm, metin + ekran dönüşümlü; ardından gün akışı dışındaki işler kart gruplarında
+ * (kartta paket etiketi; grubun ekranı varsa kartların altında, altyazıda kartın adı ve paketi). Masaüstünde yapışkan bölüm
+ * dizini ikisini de listeler.
  */
 @Component({
     selector: 'app-public-features-page',
@@ -72,6 +73,11 @@ import { PublicScreenshotComponent } from './components/public-screenshot.compon
                                 </article>
                             }
                         </div>
+                        @if (group.shot; as shot) {
+                            <div class="mt-8">
+                                <app-public-screenshot [shot]="shot.screenshot" [caption]="shotCaptionOf(group)" />
+                            </div>
+                        }
                     </section>
                 }
             </div>
@@ -89,6 +95,7 @@ export class PublicFeaturesPageComponent implements OnInit {
     readonly groups = PUBLIC_FEATURE_GROUPS;
     readonly index = [...PUBLIC_FEATURE_SECTIONS, ...PUBLIC_FEATURE_GROUPS].map(({ id, title }) => ({ id, title }));
     readonly plansOf = publicFeatureCardPlans;
+    readonly shotCaptionOf = publicFeatureGroupShotCaption;
 
     ngOnInit(): void {
         setPublicPageMeta(this.title, this.meta, PUBLIC_FEATURES_PAGE_META, this.document);

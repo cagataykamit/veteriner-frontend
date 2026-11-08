@@ -1,7 +1,8 @@
 /**
  * Özellikler sayfası (`/ozellikler`, tasarım belgesi 5.2): bir ziyaretin yolculuğu, modül listesi değil.
- * Her bölüm = bir problem + bir ekran (gerçek ekran görüntüsü, `public-screenshots.utils.ts`). Ekran görüntüsü olmayan işler
- * sonda kısa kart gruplarıdır; kartın paketi özellik tablosundan okunur (`PRICING_FEATURE_ROWS`, tek kaynak).
+ * Her bölüm = bir problem + bir ekran (gerçek ekran görüntüsü, `public-screenshots.utils.ts`). Gün akışının dışındaki işler
+ * sonda kısa kart gruplarıdır; grup, kartlarından birinin ekranını gösterebilir. Kartın paketi özellik tablosundan okunur
+ * (`PRICING_FEATURE_ROWS`, tek kaynak).
  */
 
 import { planAvailabilityText, type PricingFeatureKey } from '@/app/entities/subscription/utils/pricing-plan.utils';
@@ -44,7 +45,7 @@ export const PUBLIC_FEATURE_SECTIONS: readonly PublicFeatureSectionDef[] = [
         title: 'Hasta kartı ve zaman çizelgesi',
         lead: 'Bir hastanın tüm geçmişi tek sayfada: muayeneler, aşılar, reçeteler, yatışlar, gelişler.',
         bullets: [
-            'Zaman çizelgesi tarih aralığına göre süzülür',
+            'Zaman çizelgesi tarih aralığına göre filtrelenir',
             'Kilo geçmişi muayene vitallerinden kendiliğinden oluşur',
             'Mikroçip, telefon ya da adla arama; Türkçe harf fark etmez'
         ],
@@ -99,6 +100,8 @@ export interface PublicFeatureGroupDef {
     readonly title: string;
     readonly lead: string;
     readonly cards: readonly PublicFeatureCardDef[];
+    /** Gruptaki bir kartın ekranı; altyazıdaki ad ve paket o karttan (`planRow`). */
+    readonly shot?: { readonly screenshot: PublicScreenshotKey; readonly planRow: PricingFeatureKey };
 }
 
 /** Kart grupları: gün akışının dışındaki işler. Abartı ve üstünlük sözü yok (ADR-034 karar 3, ADR-047 K6). */
@@ -145,7 +148,8 @@ export const PUBLIC_FEATURE_GROUPS: readonly PublicFeatureGroupDef[] = [
                 icon: 'pi pi-list',
                 planRow: 'waitlist'
             }
-        ]
+        ],
+        shot: { screenshot: 'klinikSitesi', planRow: 'clinicSite' }
     },
     {
         id: 'klinik-ici',
@@ -170,7 +174,8 @@ export const PUBLIC_FEATURE_GROUPS: readonly PublicFeatureGroupDef[] = [
                 icon: 'pi pi-wallet',
                 planRow: 'cashManagement'
             }
-        ]
+        ],
+        shot: { screenshot: 'asiSihirbazi', planRow: 'vaccinationWizard' }
     },
     {
         id: 'isletme',
@@ -201,11 +206,19 @@ export const PUBLIC_FEATURE_GROUPS: readonly PublicFeatureGroupDef[] = [
                 icon: 'pi pi-download',
                 planRow: 'dataExport'
             }
-        ]
+        ],
+        shot: { screenshot: 'gelismisRaporlar', planRow: 'advancedReports' }
     }
 ];
 
 /** Kartın paket etiketi ("Tüm paketlerde", "Profesyonel ve Kurumsal paketlerinde"). */
 export function publicFeatureCardPlans(card: PublicFeatureCardDef): string {
     return planAvailabilityText(card.planRow);
+}
+
+/** Grup ekranının altyazısı: gösterdiği kartın adı ve paketi ("Otomatik aşı sihirbazı · Profesyonel ve Kurumsal paketlerinde"). */
+export function publicFeatureGroupShotCaption(group: PublicFeatureGroupDef): string {
+    const card = group.cards.find((c) => c.planRow === group.shot?.planRow);
+
+    return card ? `${card.title} · ${publicFeatureCardPlans(card)}` : '';
 }

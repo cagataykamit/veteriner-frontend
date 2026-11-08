@@ -335,6 +335,17 @@ html.public-site-root {
     display: block;
 }
 
+.public-page .public-shot-caption {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--public-border);
+    font-size: 0.875rem;
+    color: var(--p-surface-700);
+}
+
+.app-dark .public-page .public-shot-caption {
+    color: var(--p-surface-200);
+}
+
 /* Düğmeler: birincil lacivert zemin + beyaz metin; ikincil beyaz zemin + lacivert çerçeve (teal üstünde beyaz metin yok) */
 .public-page .public-btn {
     display: inline-flex;
