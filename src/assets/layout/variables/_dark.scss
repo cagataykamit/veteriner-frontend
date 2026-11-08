@@ -22,3 +22,15 @@
         border: 1px solid var(--p-surface-500);
     }
 }
+
+/*
+ * Koyu temada kapalı (disabled) dolu düğme, açık zeminin %60 saydamı üstünde koyu yazıyla kalıyordu: yazı zor okunuyor, düğme açık
+ * gibi görünüyordu (ör. "Verimi dışa aktar"). Kapalı dolu düğme nötr yüzeyde soluk yazıyla çizilir; çerçeveli, metin ve bağlantı
+ * düğmeleri ile açık tema etkilenmez.
+ */
+:root[class*='app-dark'] .p-button:disabled:not(.p-button-outlined):not(.p-button-text):not(.p-button-link) {
+    opacity: 1;
+    background: var(--p-surface-800);
+    border-color: var(--p-surface-600);
+    color: var(--p-surface-400);
+}
