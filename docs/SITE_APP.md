@@ -68,9 +68,21 @@ Klinik görsel yüklemediği yerde motor çizerken konsept ve yuvaya göre hazı
 - Kaynak, indirme tarihi ve lisans `projects/site-engine/stock/KAYNAKLAR.json`'dadır. Dosya eklenince ya da çıkınca kayıt da değişir, spec denetler.
 - Site sunucusu dosyaları bir yıl `immutable` verir: kare değişirse yeni dosya adı verilir, eski ad yeniden kullanılmaz.
 
+## Veteriner bul (TIER-015, ADR-047)
+
+Klinik listesi sayfaları da bu süreçtedir: `/veteriner`, `/veteriner/{il}`, `/veteriner/{il}/{ilçe}`, `/veteriner/{il}/{ilçe}/{hizmet}`. Sözleşme backend `docs/VET_FINDER_API_CONTRACT.md`. Kod `projects/site/src/app/vet-finder/` ve `src/server/vet-finder-loader.ts`, stil `src/vet-finder.css` (`vf-` önekli, klinik sitelerine dokunmaz).
+
+- **Neden bu uygulama:** sayfalar SEO için sunucuda çizilmeli (ADR-045 K12 ile aynı gerekçe), Node süreci, istemci IP iletimi ve hız sınırı deseni zaten burada. Tanıtım sitesi (`vetinity-web`) istemci tarafında çizilir; ayrı bir SSR uygulaması ikinci bir Node süreci isterdi.
+- **Taban yolu:** uygulama `/k/` tabanında yaşar. Sunucu `/veteriner/...` isteğini Angular'a `/k/veteriner/...` olarak verir (`veteriner` klinik adresinde ayrılmış sözcüktür, çakışmaz). Sayfa yönlendiriciyle değil kök bileşenle çizilir; tarayıcıda bu sayfalarda yönlendiricinin ilk gezintisi kapalıdır (`main.ts`), yoksa adres `/k/veteriner/...` olarak yeniden yazılırdı. Filtreler ve sayfalar gerçek bağlantıdır, her biri sunucuda çizilir, JS'siz okunur.
+- **Durum kodları:** liste 200; biçimsiz adres, bilinmeyen il/ilçe/hizmet 404; API'ye ulaşılamadı ya da 429 ise 503. Üçü de HTML `no-cache`.
+- **SEO:** başlık, açıklama ve kanonik adres (`SiteHead.applyVetFinder`). Dizine alınma backend'in `indexable` değerine (eşik `VetFinderPages.MinClinicsToIndex`, 3) ve sorgu filtresine bağlıdır: "şu an açık", sorgudaki hizmet ve 2. sayfadan sonrası `noindex, follow`, kanonik adres filtresiz sayfadır. Site haritası `/veteriner/sitemap.xml` (yalnız eşiği geçen sayfalar), `/robots.txt` bu süreçte `Allow: /veteriner/` ve harita satırını ekler.
+- **Tarayıcı istekleri** yine bu sürece gelir, API'ye sunucu gider: kartların en yakın saati `GET /veteriner/_api/saatler?keys=` (sayfa başına bir istek, en çok 24 anahtar), konuma göre sıralama `POST /veteriner/_api/klinikler`. Konum gövdeyle gelir, iki ondalığa (yaklaşık 1 km) yuvarlanır; sorgu satırına yazılmadığı için ters vekil erişim günlüğüne düşmez. Konum düğmesi yalnız sonuçlarda konumu olan klinik varken görünür.
+- **Randevu:** kart bağlantıya `?kaynak=veteriner-bul` ekler (TIER-016), saat seçilince `?saat=` (TIER-017). Online randevu kapalıysa düğme yoktur, "Ara" kalır.
+
 ## Canlıya çıkış (ADR-033, yapılmadı)
 
-- Ters vekil `vetinity.com/k/*` isteklerini bu Node sürecine yönlendirmeli. Uygulamanın dosyaları da `/k/` altındadır (`baseHref`), başka yol gerekmez.
+- Ters vekil `vetinity.com/k/*` ve `vetinity.com/veteriner` ile `vetinity.com/veteriner/*` isteklerini bu Node sürecine yönlendirmeli. Uygulamanın dosyaları `/k/` altındadır (`baseHref`), başka yol gerekmez. `/veteriner/_api/*` POST dahil iletilmeli.
+- Tanıtım sitesinin `robots.txt` dosyası (`public/robots.txt`) Veteriner bul yayına girince `Sitemap: https://www.vetinity.com/veteriner/sitemap.xml` satırını almalı; şu an bilerek eklenmedi (sayfa canlı değil).
 - `vetinity.com/robots.txt` tanıtım sitesindedir ve `/k/` yolunu kapatmamalı. Her sitenin haritası `/k/{adres}/sitemap.xml`; bütün siteleri listeleyen bir harita için herkese açık liste ucu gerekir, bu sürümde yok.
 - `SITE_API_BASE_URL`, `SITE_PUBLIC_API_BASE_URL`, `SITE_PUBLIC_ORIGIN`, `SITE_ALLOWED_HOSTS`, `SITE_TRUSTED_PROXY_HOPS` ayarlanmalı.
 - `environment.ts` içindeki `siteBaseUrl` panelin gösterdiği bağlantıdır; staging değeri (`https://staging.vetinity.com`) varsayımdır, doğrulanmalı.
