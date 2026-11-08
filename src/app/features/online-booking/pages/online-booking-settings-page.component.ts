@@ -19,6 +19,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import type { ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { AppointmentReasonsManagerComponent } from '@/app/entities/online-booking/components/appointment-reasons-manager.component';
+import { OnlineBookingEmbedComponent } from '@/app/entities/online-booking/components/online-booking-embed.component';
 import { OnlineBookingPreviewComponent } from '@/app/entities/online-booking/components/online-booking-preview.component';
 import {
     APPOINTMENT_REQUEST_EMAIL_KIND_LABELS,
@@ -79,6 +80,7 @@ const CLINIC_DETAIL_ROUTE = '/panel/settings/clinics';
         AppErrorStateComponent,
         AppStatusTagComponent,
         AppointmentReasonsManagerComponent,
+        OnlineBookingEmbedComponent,
         OnlineBookingPreviewComponent
     ],
     providers: [ConfirmationService],
@@ -206,6 +208,19 @@ const CLINIC_DETAIL_ROUTE = '/panel/settings/clinics';
                     }
                 </section>
 
+                @if (settings()?.bookingUrl; as url) {
+                    <section class="card col-span-12 mb-0" aria-labelledby="onlineEmbedTitle" data-testid="online-embed">
+                        <h5 id="onlineEmbedTitle" class="mt-0 mb-1">Sitenize ekleyin</h5>
+                        <p class="text-sm text-muted-color mt-0 mb-3">
+                            Kodu sitenizin HTML alanına yapıştırın. Bu kodlardan gelen talepler Talepler'de "Dış site" kaynağıyla sayılır. Bağlantıyı yenilerseniz kodu da yeniden kopyalayın.
+                            @if (!settings()!.isEnabled) {
+                                <span class="block text-amber-700 dark:text-amber-300" data-testid="online-embed-closed">Online talep kapalıyken düğme ve form "kapalı" sayfasını gösterir.</span>
+                            }
+                        </p>
+                        <app-online-booking-embed [bookingUrl]="url" [clinicName]="clinicName()" />
+                    </section>
+                }
+
                 <section class="card col-span-12 mb-0" aria-labelledby="onlineTemplatesTitle">
                     <h5 id="onlineTemplatesTitle" class="mt-0">Sahibe giden e-postalar</h5>
                     <p-selectbutton [options]="kindOptions" optionLabel="label" optionValue="value" [ngModel]="selectedKind()" (ngModelChange)="selectKind($event)" [allowEmpty]="false" class="mb-4" />
@@ -275,6 +290,7 @@ export class OnlineBookingSettingsPageComponent implements OnInit {
 
     readonly clinicId = signal('');
     readonly clinicOptions = signal<SelectOption[]>([]);
+    readonly clinicName = computed(() => this.clinicOptions().find((o) => o.value === this.clinicId())?.label ?? '');
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
     readonly saving = signal(false);
