@@ -33,6 +33,7 @@ export const PORTAL_ERROR_CODES = {
     appointmentLinkNotFound: 'AppointmentLinks.NotFound',
     appointmentLinkCancelDisabled: 'AppointmentLinks.CancelDisabled',
     appointmentConcurrencyConflict: 'Appointments.ConcurrencyConflict',
+    marketingOptOutNotFound: 'MarketingOptOut.NotFound',
     validation: 'Validation.FluentValidation'
 } as const;
 
@@ -68,6 +69,7 @@ export const PORTAL_ERROR_MESSAGES: Readonly<Record<string, string>> = {
     [C.appointmentLinkNotFound]: 'Bu bağlantı geçersiz, süresi dolmuş ya da daha önce kullanılmış. Randevunuzla ilgili kliniğinizi arayabilirsiniz.',
     [C.appointmentLinkCancelDisabled]: 'Bu klinik bağlantıdan iptali kapattı. İptal için lütfen kliniği arayın.',
     [C.appointmentConcurrencyConflict]: 'Randevunuz bu sırada güncellendi. Sayfayı yenileyip tekrar deneyin.',
+    [C.marketingOptOutNotFound]: 'Bu bağlantı geçersiz. Ticari ileti almak istemiyorsanız kliniğinize bildirebilir ya da portalda Hesabım > Bildirim tercihlerinden kapatabilirsiniz.',
     [C.pushDisabled]: 'Anlık bildirim tercihiniz kapalı; önce bildirimleri açın.',
     [C.validation]: 'Girdiğiniz bilgileri kontrol edin.'
 };

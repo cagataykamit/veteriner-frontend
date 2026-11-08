@@ -49,7 +49,10 @@ export const PORTAL_ENDPOINTS = {
     // Hatırlatmada onayla / iptal et (APPOINTMENT_OWNER_LINK_API_CONTRACT.md §3): kimliksiz, token gövdede (yolda görünmez)
     appointmentLinkPreview: 'appointment-link/preview',
     appointmentLinkConfirm: 'appointment-link/confirm',
-    appointmentLinkCancel: 'appointment-link/cancel'
+    appointmentLinkCancel: 'appointment-link/cancel',
+    // Ticari iletideki ret bağlantısı (ADR-046; AUTOMATED_REMINDERS_API_CONTRACT.md §2): kimliksiz, token gövdede
+    marketingOptOutPreview: 'marketing-opt-out/preview',
+    marketingOptOutConfirm: 'marketing-opt-out/confirm'
 } as const;
 
 /** Anonim uçlar (sözleşme §7 "Anonim"): Bearer eklenmez, 401'de yenileme denenmez. */
@@ -63,7 +66,9 @@ const ANONYMOUS_EXACT = new Set<string>([
     PORTAL_ENDPOINTS.refresh,
     PORTAL_ENDPOINTS.appointmentLinkPreview,
     PORTAL_ENDPOINTS.appointmentLinkConfirm,
-    PORTAL_ENDPOINTS.appointmentLinkCancel
+    PORTAL_ENDPOINTS.appointmentLinkCancel,
+    PORTAL_ENDPOINTS.marketingOptOutPreview,
+    PORTAL_ENDPOINTS.marketingOptOutConfirm
 ]);
 
 export function isAnonymousPortalPath(relativePath: string): boolean {
