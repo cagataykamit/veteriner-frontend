@@ -170,6 +170,13 @@ const CLINIC_DETAIL_ROUTE = '/panel/settings/clinics';
                             }
                         </div>
                         <small class="text-muted-color">Sahibe yalnız müsait saatler gösterilir; bekleyen talepler saati doldurmaz, çakışma onayda denetlenir.</small>
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-3">
+                                <p-toggleswitch inputId="onlineNextSlots" formControlName="showNextAvailableSlots" data-testid="online-next-slots" />
+                                <label for="onlineNextSlots">En yakın müsait saatleri klinik sitesinde göster</label>
+                            </div>
+                            <small class="text-muted-color">Sitenin Randevu sayfasında ilk boş saatler görünür; seçilen saat talep formuna hazır gelir, yine sizin onayınızı bekler. Hekim adı ve dolu saat görünmez.</small>
+                        </div>
                         @if (canWrite()) {
                             <div class="flex justify-end">
                                 <button pButton type="submit" [disabled]="settingsForm.invalid || settingsUnchanged() || saving()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
@@ -288,7 +295,8 @@ export class OnlineBookingSettingsPageComponent implements OnInit {
     readonly settingsForm = this.fb.nonNullable.group({
         isEnabled: false,
         minLeadMinutes: 120,
-        maxAdvanceDays: this.fb.nonNullable.control(30, [Validators.required, Validators.min(1), Validators.max(180)])
+        maxAdvanceDays: this.fb.nonNullable.control(30, [Validators.required, Validators.min(1), Validators.max(180)]),
+        showNextAvailableSlots: true
     });
 
     /** Kurulum kontrolü ve önizleme girdileri: nedenler ortak parçadan, saatler ve telefon klinik kaydından. */
@@ -527,7 +535,7 @@ export class OnlineBookingSettingsPageComponent implements OnInit {
 
     private applySettings(s: OnlineBookingSettingsVm): void {
         this.settings.set(s);
-        this.settingsForm.reset({ isEnabled: s.isEnabled, minLeadMinutes: s.minLeadMinutes, maxAdvanceDays: s.maxAdvanceDays });
+        this.settingsForm.reset({ isEnabled: s.isEnabled, minLeadMinutes: s.minLeadMinutes, maxAdvanceDays: s.maxAdvanceDays, showNextAvailableSlots: s.showNextAvailableSlots });
 
         if (!this.canWrite()) {
             this.settingsForm.disable();

@@ -77,7 +77,7 @@ export class OnlineBookingService {
         return this.api.get<OnlineBookingSettingsVm>(ApiEndpoints.onlineBooking.settings(clinicId)).pipe(toOnlineBookingError('Online randevu ayarları yüklenemedi.'));
     }
 
-    saveSettings(clinicId: string, value: Pick<OnlineBookingSettingsVm, 'isEnabled' | 'minLeadMinutes' | 'maxAdvanceDays'>): Observable<OnlineBookingSettingsVm> {
+    saveSettings(clinicId: string, value: Pick<OnlineBookingSettingsVm, 'isEnabled' | 'minLeadMinutes' | 'maxAdvanceDays' | 'showNextAvailableSlots'>): Observable<OnlineBookingSettingsVm> {
         return this.api.put<OnlineBookingSettingsVm>(ApiEndpoints.onlineBooking.settings(clinicId), value).pipe(toOnlineBookingError('Ayarlar kaydedilemedi.'));
     }
 

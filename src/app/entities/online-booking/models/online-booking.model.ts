@@ -36,6 +36,8 @@ export interface OnlineBookingSettingsVm {
     isEnabled: boolean;
     minLeadMinutes: number;
     maxAdvanceDays: number;
+    /** En yakın müsait saatler klinik sitesinde görünsün mü (TIER-017); varsayılan açık, online randevu kapalıyken etkisiz. */
+    showNextAvailableSlots: boolean;
     bookingCode: string | null;
     bookingUrl: string | null;
     bookingCodeGeneratedAtUtc: string | null;
