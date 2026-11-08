@@ -12,6 +12,7 @@ describe('PetAlertBadgesComponent', () => {
 
         return fixture;
     };
+
     const group = (f: ComponentFixture<PetAlertBadgesComponent>) => (f.nativeElement as HTMLElement).querySelector('[role="group"]') as HTMLElement | null;
     const tags = (f: ComponentFixture<PetAlertBadgesComponent>) => Array.from((f.nativeElement as HTMLElement).querySelectorAll('p-tag'));
 
