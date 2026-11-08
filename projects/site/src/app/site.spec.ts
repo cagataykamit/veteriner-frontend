@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { composeSiteConfig, defaultStoredConfig } from '@site-engine';
-import { loadPublicSite, readSiteServerConfig, redirectLocation } from '../server/site-loader';
+import { loadPublicSite, readSiteServerConfig, redirectLocation, withNextSlots } from '../server/site-loader';
 import { SiteHead } from './site-head';
 import { sitePathFromUrl } from './site-page-host.component';
 import { publishedSiteConfig, type PublicSiteResponse, type PublishedSite } from './site-state';
@@ -63,6 +63,50 @@ describe('loadPublicSite', () => {
     });
 });
 
+describe('withNextSlots (TIER-017)', () => {
+    const published = (pages: Record<string, boolean>, isEnabled = true): PublishedSite => ({
+        kind: 'published',
+        slug: 'cagri',
+        config: { structure: { pages } },
+        clinic: null,
+        onlineBooking: { isEnabled, bookingUrl: isEnabled ? 'https://portal/randevu/k' : null },
+        nextSlots: [],
+        publishedAtUtc: null,
+        imageBaseUrl: '',
+        origin: 'https://vetinity.com'
+    });
+    const slots = [{ date: '2026-11-09', startUtc: '2026-11-09T06:00:00Z' }];
+    const answer = (status: number, body: unknown) => vi.fn(async () => new Response(JSON.stringify(body), { status })) as unknown as typeof fetch;
+
+    it('randevu sayfası ve online randevu açıksa saatleri istemci IP\'siyle sorar', async () => {
+        const fetcher = answer(200, { slots });
+
+        const loaded = await withNextSlots(published({ randevu: true }), '203.0.113.9', CONFIG, fetcher);
+
+        const [url, init] = (fetcher as unknown as { mock: { calls: [string, RequestInit][] } }).mock.calls[0];
+
+        expect(url).toBe('https://api.example.com/api/v1/public/sites/cagri/next-available-slots');
+        expect((init.headers as Record<string, string>)['x-forwarded-for']).toBe('203.0.113.9');
+        expect(loaded.nextSlots).toEqual(slots);
+    });
+
+    it('randevu sayfası ya da online randevu kapalıysa sormaz', async () => {
+        const fetcher = answer(200, { slots });
+
+        expect((await withNextSlots(published({ randevu: false }), undefined, CONFIG, fetcher)).nextSlots).toEqual([]);
+        expect((await withNextSlots(published({ randevu: true }, false), undefined, CONFIG, fetcher)).nextSlots).toEqual([]);
+        expect(fetcher).not.toHaveBeenCalled();
+    });
+
+    it('hata, hız sınırı ya da bozuk yanıtta saatsiz devam eder', async () => {
+        const site = published({ randevu: true });
+
+        expect((await withNextSlots(site, undefined, CONFIG, answer(429, {}))).nextSlots).toEqual([]);
+        expect((await withNextSlots(site, undefined, CONFIG, answer(200, { slots: 'x' }))).nextSlots).toEqual([]);
+        expect((await withNextSlots(site, undefined, CONFIG, vi.fn(async () => Promise.reject(new Error('ağ'))) as unknown as typeof fetch)).nextSlots).toEqual([]);
+    });
+});
+
 describe('redirectLocation', () => {
     it('alt sayfayı ve sorguyu korur', () => {
         expect(redirectLocation('/k/eski/hizmetler?x=1', 'yeni')).toBe('/k/yeni/hizmetler?x=1');
@@ -78,10 +122,15 @@ describe('publishedSiteConfig', () => {
         config: { ...stored, content: { ...stored.content, heroImage: { src: 'site-image:g1', alt: 'Köpek' } } },
         clinic: { name: 'Çağrı', city: 'Ankara', district: null, address: 'Adres', phone: '0312', email: null, workingHours: [{ dayOfWeek: 1, isClosed: false, opensAt: '09:00:00', closesAt: '18:00:00', breakStartsAt: null, breakEndsAt: null }] },
         onlineBooking: { isEnabled: true, bookingUrl: 'https://portal/randevu/k' },
+        nextSlots: [{ date: '2026-11-09', startUtc: '2026-11-09T06:00:00Z' }],
         publishedAtUtc: null,
         imageBaseUrl: 'https://api.example.com',
         origin: 'https://vetinity.com'
     };
+
+    it('en yakın saatler klinik kaydıyla motora gider (TIER-017)', () => {
+        expect(publishedSiteConfig(site).content.clinic.nextSlots).toEqual(site.nextSlots);
+    });
 
     it('klinik kaydı birleşir, görsel herkese açık uca çözülür', () => {
         const config = publishedSiteConfig(site);
@@ -99,7 +148,7 @@ describe('publishedSiteConfig', () => {
 });
 
 describe('SiteHead paylaşım görseli', () => {
-    const RECORD = { name: 'Çağrı', city: 'Ankara', district: '', address: '', phone: '', email: '', workingDays: [], bookingUrl: null };
+    const RECORD = { name: 'Çağrı', city: 'Ankara', district: '', address: '', phone: '', email: '', workingDays: [], bookingUrl: null, nextSlots: [] };
     const ogImage = (hero: string | null): string | null => {
         const stored = defaultStoredConfig('premium');
         const config = composeSiteConfig({ ...stored, content: { ...stored.content, heroImage: hero ? { src: hero, alt: 'x' } : null } }, RECORD, 'cagri');

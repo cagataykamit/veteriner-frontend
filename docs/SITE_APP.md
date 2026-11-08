@@ -45,6 +45,10 @@ npm run serve:site
 
 Tarayıcı JSON API'ye gitmez: durum sunucudan `TransferState` ile gelir, alt sayfa geçişi yeni istek yapmaz. Bu yüzden CORS gerekmez; görseller `<img>` ile okunur.
 
+## En yakın müsait saatler (TIER-017)
+
+Online randevu açık ve Randevu sayfası açıksa sunucu `GET /api/v1/public/sites/{slug}/next-available-slots` ucunu da sorar (backend `ONLINE_APPOINTMENT_API_CONTRACT.md` §12), ziyaretçi IP'siyle. Saatler durumla birlikte tarayıcıya geçer; Randevu sayfasında güne göre çizilir. Her saat talep formuna `?saat={startUtc}` ile gider, form neden seçilince o saati hazır getirir; talep klinik onaylayınca kesinleşir. Hata, zaman aşımı ya da 429'da saatsiz devam edilir, site ve randevu düğmesi kalır. Klinik gösterimi panelde Ayarlar > Online randevu'dan kapatır; o zaman backend boş liste döner. Panel önizlemesinde saat çizilmez.
+
 ## İstemci IP'si ve hız sınırı
 
 Backend'in `public-site` sınırı IP başınadır. Site sunucusu her isteği kendi IP'siyle yapacağından ziyaretçinin adresini `X-Forwarded-For` ile iletir.

@@ -8,7 +8,7 @@ import { conceptByKey, designFromConcept, SITE_CONCEPTS } from './site-concepts'
  */
 export const SITE_SCHEMA_VERSION = 1;
 
-export type SiteClinicRecord = Pick<SiteClinic, 'name' | 'city' | 'district' | 'address' | 'phone' | 'email' | 'workingDays' | 'bookingUrl'>;
+export type SiteClinicRecord = Pick<SiteClinic, 'name' | 'city' | 'district' | 'address' | 'phone' | 'email' | 'workingDays' | 'bookingUrl' | 'nextSlots'>;
 
 export type StoredSiteClinic = Omit<SiteClinic, keyof SiteClinicRecord>;
 

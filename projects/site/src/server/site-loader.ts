@@ -1,4 +1,5 @@
-import type { PublicSiteResponse, SiteRequestState } from '../app/site-state';
+import { readStoredConfig } from '@site-engine';
+import type { PublicNextSlotsResponse, PublicSiteResponse, PublishedSite, SiteRequestState } from '../app/site-state';
 
 /** Site sunucusunun ayarları: tek kaynak ortam değişkenleri, belge `docs/SITE_APP.md`. */
 export interface SiteServerConfig {
@@ -40,7 +41,7 @@ export async function loadPublicSite(slug: string, clientIp: string | undefined,
 
     try {
         response = await fetcher(`${config.apiBaseUrl}/api/v1/public/sites/${encodeURIComponent(slug)}`, {
-            headers: { accept: 'application/json', ...(clientIp ? { 'x-forwarded-for': clientIp.replace(/^::ffff:/, '') } : {}) },
+            headers: apiHeaders(clientIp),
             signal: AbortSignal.timeout(API_TIMEOUT_MS)
         });
     } catch (error) {
@@ -66,10 +67,43 @@ export async function loadPublicSite(slug: string, clientIp: string | undefined,
         case 'Closed':
             return { kind: 'closed', message: body.message };
         case 'Published':
-            return { kind: 'published', slug: body.slug, config: body.config, clinic: body.clinic, onlineBooking: body.onlineBooking, publishedAtUtc: body.publishedAtUtc, imageBaseUrl: config.publicApiBaseUrl, origin: config.origin };
+            return { kind: 'published', slug: body.slug, config: body.config, clinic: body.clinic, onlineBooking: body.onlineBooking, nextSlots: [], publishedAtUtc: body.publishedAtUtc, imageBaseUrl: config.publicApiBaseUrl, origin: config.origin };
         default:
             return { kind: 'unavailable' };
     }
+}
+
+/**
+ * En yakın müsait saatleri ekler (TIER-017). Yalnız online randevu açık ve randevu sayfası açıksa sorulur; gösterim kapalıysa backend
+ * boş liste döner. Hata, zaman aşımı ya da hız sınırında saatsiz devam edilir: site yine çizilir, randevu düğmesi kalır.
+ */
+export async function withNextSlots(site: PublishedSite, clientIp: string | undefined, config: SiteServerConfig, fetcher: typeof fetch = fetch): Promise<PublishedSite> {
+    if (!site.onlineBooking?.isEnabled || !readStoredConfig(site.config).structure.pages.randevu) return site;
+
+    try {
+        const response = await fetcher(`${config.apiBaseUrl}/api/v1/public/sites/${encodeURIComponent(site.slug)}/next-available-slots`, {
+            headers: apiHeaders(clientIp),
+            signal: AbortSignal.timeout(API_TIMEOUT_MS)
+        });
+
+        if (!response.ok) {
+            console.error(`[site] En yakın saat yanıtı ${response.status}`);
+
+            return site;
+        }
+
+        const body = (await response.json()) as PublicNextSlotsResponse;
+
+        return Array.isArray(body.slots) ? { ...site, nextSlots: body.slots } : site;
+    } catch (error) {
+        console.error(`[site] En yakın saatler alınamadı: ${error instanceof Error ? error.message : 'bilinmeyen hata'}`);
+
+        return site;
+    }
+}
+
+function apiHeaders(clientIp: string | undefined): Record<string, string> {
+    return { accept: 'application/json', ...(clientIp ? { 'x-forwarded-for': clientIp.replace(/^::ffff:/, '') } : {}) };
 }
 
 /** Hedef adres biçiminde olmalı ve istekteki adres olmamalı: yanıt başlığına yalnız denetlenmiş değer yazılır, döngü kurulmaz. */

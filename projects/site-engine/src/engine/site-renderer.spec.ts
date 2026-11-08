@@ -335,6 +335,25 @@ describe('SiteRendererComponent', () => {
 
             expect(noPhone.querySelector('site-modern-nav a.cta')).toBeNull();
         });
+
+        it('randevu sayfası en yakın saatleri talep formuna bağlar; online randevu kapalıysa çizmez (TIER-017)', async () => {
+            const slots = [
+                { date: '2026-11-09', startUtc: '2026-11-09T06:00:00Z' },
+                { date: '2026-11-09', startUtc: '2026-11-09T06:30:00Z' },
+                { date: '2026-11-10', startUtc: '2026-11-10T11:00:00Z' }
+            ];
+            const host = await render(patchClinic(sampleConfig(), { bookingUrl: 'https://portal.example.com/randevu/kod', nextSlots: slots }), { path: '/randevu' });
+            const links = [...host.querySelectorAll<HTMLAnchorElement>('.slots a.slot')];
+
+            expect(links.map((link) => link.textContent?.trim())).toEqual(['09:00', '09:30', '14:00']);
+            expect(links[0].getAttribute('href')).toBe('https://portal.example.com/randevu/kod?saat=2026-11-09T06%3A00%3A00Z');
+            expect(host.querySelectorAll('.slot-day h3')).toHaveLength(2);
+            expect(host.querySelector('.slots')?.textContent).toContain('klinik onaylayınca');
+
+            const off = await render(patchClinic(sampleConfig(), { bookingUrl: null, nextSlots: slots }), { path: '/randevu' });
+
+            expect(off.querySelector('.slots')).toBeNull();
+        });
     });
 
     describe('güvenlik', () => {

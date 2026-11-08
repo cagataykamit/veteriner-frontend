@@ -1,5 +1,5 @@
 import { PAGE_DEFS, type CopyKey, type HomeSectionType, type PageKey, type SiteBranch, type SiteConfig, type SiteCopy, type SiteFaq, type SiteFeature, type SiteImage } from '../model/site.model';
-import { clinicStatus, hoursGroups, type ClinicStatus, type HoursGroup } from './site-hours';
+import { clinicStatus, hoursGroups, nextSlotDays, type ClinicStatus, type HoursGroup, type SlotDayVm } from './site-hours';
 import { safeHref, safeImage, safeImageSrc, socialLinks, type SocialVm } from './site-links';
 import { isStockPhoto, STOCK_GALLERY, STOCK_PHOTOS, stockArticlePhoto, stockSectionPhoto, stockServicePhoto, type StockSlot } from './stock-photos';
 
@@ -64,6 +64,8 @@ export interface SiteVm {
     readonly telHref: string | null;
     readonly whatsappHref: string | null;
     readonly bookingHref: string | null;
+    /** En yakın müsait saatler (TIER-017); online randevu kapalıysa ya da saat yoksa boş. */
+    readonly nextSlotDays: readonly SlotDayVm[];
     readonly email: string;
     readonly mailHref: string | null;
     readonly mapHref: string | null;
@@ -255,6 +257,7 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
         telHref,
         whatsappHref: whatsappDigits ? `https://wa.me/${whatsappDigits}` : null,
         bookingHref,
+        nextSlotDays: nextSlotDays(clinic.nextSlots, bookingHref, now),
         email,
         mailHref: email ? safeHref(`mailto:${email}`) : null,
         mapHref: safeHref(clinic.mapUrl) ?? (address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}` : null),

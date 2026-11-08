@@ -13,7 +13,7 @@ import { pageHeading, type SitePage } from './site-page-route';
  * sayfa başlığı ve yazı sayfaları burada, token'larla ortak yazılıdır. Başlığın duruşu seçili hero'dan gelir.
  *
  * Randevu sayfası kliniğin talep formuna (ADR-042, K11) bağlantı verir, telefon ve saatleri gösterir; motor ikinci bir randevu
- * modeli kurmaz.
+ * modeli kurmaz. En yakın müsait saatler (TIER-017) aynı forma o saat seçili gider.
  */
 @Component({
     selector: 'site-page',
@@ -140,6 +140,22 @@ import { pageHeading, type SitePage } from './site-page-route';
             }
             @case ('randevu') {
                 <section class="inner callout">
+                    @if (v.nextSlotDays.length) {
+                        <div class="slots" role="group" aria-label="En yakın müsait saatler">
+                            <h2 class="h">En yakın müsait saatler</h2>
+                            @for (day of v.nextSlotDays; track day.label) {
+                                <div class="slot-day">
+                                    <h3>{{ day.label }}</h3>
+                                    <ul>
+                                        @for (slot of day.slots; track slot.href) {
+                                            <li><a class="slot" [href]="slot.href" [attr.aria-label]="slot.label">{{ slot.time }}</a></li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                            <p class="muted">Saati seçince talep formu bu saatle açılır. Bu bir talep; klinik onaylayınca randevunuz kesinleşir.</p>
+                        </div>
+                    }
                     @if (v.bookingHref) {
                         <a siteCta class="btn main">Randevu talebi gönder</a>
                     }

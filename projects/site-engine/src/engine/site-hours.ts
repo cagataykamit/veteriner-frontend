@@ -1,4 +1,4 @@
-import type { WorkingDay } from '../model/site.model';
+import type { SiteSlot, WorkingDay } from '../model/site.model';
 
 /** Çalışma saatlerinden sayfada görünen durum ve saat tablosu. Klinik saatleri İstanbul duvar saatidir: sunucu ve ziyaretçi nerede olursa olsun hesap Europe/Istanbul'a göredir. */
 export type ClinicStatusState = 'open' | 'break' | 'closed';
@@ -114,4 +114,59 @@ export function hoursGroups(days: readonly WorkingDay[], now: Date): HoursGroup[
         note: isOpenDay(g.day) && g.day.breakStartsAt ? `Mola ${g.day.breakStartsAt}–${g.day.breakEndsAt}` : null,
         isToday: g.isToday
     }));
+}
+
+/** En yakın müsait saatin düğmesi: talep formuna bu saat önceden seçili gider (TIER-017, `?saat=`). */
+export interface SlotVm {
+    readonly time: string;
+    readonly href: string;
+    readonly label: string;
+}
+
+export interface SlotDayVm {
+    readonly label: string;
+    readonly slots: readonly SlotVm[];
+}
+
+const MONTH_NAMES = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+const ISTANBUL_DATE = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' });
+const ISTANBUL_TIME = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** "2026-11-09" → "Pazartesi, 9 Kasım"; bugün ve yarın adıyla. Gün API'den İstanbul takvimiyle gelir, burada yeniden hesaplanmaz. */
+function slotDayLabel(date: string, now: Date): string {
+    const [year, month, day] = date.split('-').map(Number);
+    const name = date === ISTANBUL_DATE.format(now) ? 'Bugün' : date === ISTANBUL_DATE.format(new Date(now.getTime() + DAY_MS)) ? 'Yarın' : DAY_NAMES[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
+
+    return `${name}, ${day} ${MONTH_NAMES[month - 1]}`;
+}
+
+/**
+ * En yakın müsait saatler güne göre (TIER-017). Online randevu kapalıysa (`bookingHref` yok) gösterim yoktur. Saatler İstanbul duvar
+ * saatidir; bağlantı talep formudur, saat önceden seçili gelir. Okunamayan satır atlanır.
+ */
+export function nextSlotDays(slots: readonly SiteSlot[], bookingHref: string | null, now: Date): SlotDayVm[] {
+    if (!bookingHref) return [];
+
+    const days: { label: string; date: string; slots: SlotVm[] }[] = [];
+    const separator = bookingHref.includes('?') ? '&' : '?';
+
+    for (const slot of slots) {
+        const start = new Date(slot.startUtc);
+
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(slot.date) || Number.isNaN(start.getTime())) continue;
+
+        let day = days.at(-1);
+
+        if (day?.date !== slot.date) {
+            day = { label: slotDayLabel(slot.date, now), date: slot.date, slots: [] };
+            days.push(day);
+        }
+
+        const time = ISTANBUL_TIME.format(start);
+
+        day.slots.push({ time, href: `${bookingHref}${separator}saat=${encodeURIComponent(slot.startUtc)}`, label: `${day.label} ${time} için talep formunu aç` });
+    }
+
+    return days.map(({ label, slots: daySlots }) => ({ label, slots: daySlots }));
 }

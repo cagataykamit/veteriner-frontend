@@ -1,4 +1,4 @@
-import { composeSiteConfig, readStoredConfig, resolveSiteImages, type SiteConfig, toWorkingDays } from '@site-engine';
+import { composeSiteConfig, readStoredConfig, resolveSiteImages, type SiteConfig, type SiteSlot, toWorkingDays } from '@site-engine';
 
 /** `GET /api/v1/public/sites/{slug}` yanıtı (Veteriner `docs/CLINIC_SITE_API_CONTRACT.md` §6). Duruma uymayan alanlar `null`. */
 export interface PublicSiteResponse {
@@ -20,8 +20,15 @@ export interface PublicSiteResponse {
     readonly onlineBooking: { readonly isEnabled: boolean; readonly bookingUrl: string | null } | null;
 }
 
+/** `GET /api/v1/public/sites/{slug}/next-available-slots` yanıtı (Veteriner `docs/ONLINE_APPOINTMENT_API_CONTRACT.md` §12). */
+export interface PublicNextSlotsResponse {
+    readonly slots: readonly SiteSlot[];
+}
+
 export type PublishedSite = Pick<PublicSiteResponse, 'slug' | 'config' | 'clinic' | 'onlineBooking' | 'publishedAtUtc'> & {
     readonly kind: 'published';
+    /** En yakın müsait saatler (TIER-017); alınamazsa boş, site yine çizilir. */
+    readonly nextSlots: readonly SiteSlot[];
     /** Tarayıcının görsel istediği API kökü; boşsa aynı alan adı. */
     readonly imageBaseUrl: string;
     /** Site kökü: "https://vetinity.com". Canonical, OG ve JSON-LD adresleri buradan üretilir. */
@@ -50,7 +57,8 @@ export function publishedSiteConfig(site: PublishedSite): SiteConfig {
             phone: clinic?.phone ?? '',
             email: clinic?.email ?? '',
             workingDays: toWorkingDays(clinic?.workingHours ?? []),
-            bookingUrl: onlineBooking?.isEnabled ? onlineBooking.bookingUrl : null
+            bookingUrl: onlineBooking?.isEnabled ? onlineBooking.bookingUrl : null,
+            nextSlots: site.nextSlots
         },
         site.slug
     );

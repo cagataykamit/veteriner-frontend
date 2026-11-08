@@ -7,7 +7,7 @@ import { buildSiteVm } from './site-vm';
 import { STOCK_PHOTOS } from './stock-photos';
 import { conceptByKey, designFromConcept, SITE_CONCEPTS } from './site-concepts';
 
-const RECORD = { name: 'Çağrı', city: 'Ankara', district: 'Çankaya', address: 'Adres', phone: '0312', email: 'a@example.com', workingDays: [], bookingUrl: null };
+const RECORD = { name: 'Çağrı', city: 'Ankara', district: 'Çankaya', address: 'Adres', phone: '0312', email: 'a@example.com', workingDays: [], bookingUrl: null, nextSlots: [] };
 
 describe('saklanan yapılandırma (K8)', () => {
     it('yeni site boş başlar, kliniğe dair bir şey varsaymaz', () => {

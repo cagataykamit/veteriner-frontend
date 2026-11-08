@@ -47,7 +47,8 @@ const SAMPLE_CONTENT: SiteContent = {
         instagram: 'ornekklinik',
         facebook: '',
         workingDays: [weekday(1), weekday(2), weekday(3), weekday(4), weekday(5), { dayOfWeek: 6, isClosed: false, opensAt: '10:00', closesAt: '16:00', breakStartsAt: null, breakEndsAt: null }, { dayOfWeek: 0, isClosed: true, opensAt: null, closesAt: null, breakStartsAt: null, breakEndsAt: null }],
-        bookingUrl: null
+        bookingUrl: null,
+        nextSlots: []
     },
     copy: EMPTY_COPY,
     heroImage: sampleImage('Muayene masasında köpek'),
@@ -121,7 +122,7 @@ export function emptyContent(config: SiteConfig): SiteConfig {
     return {
         ...config,
         content: {
-            clinic: { name: '', logo: null, slogan: '', intro: '', phone: '', whatsapp: '', email: '', website: '', address: '', district: '', city: '', mapUrl: '', instagram: '', facebook: '', workingDays: [], bookingUrl: null },
+            clinic: { name: '', logo: null, slogan: '', intro: '', phone: '', whatsapp: '', email: '', website: '', address: '', district: '', city: '', mapUrl: '', instagram: '', facebook: '', workingDays: [], bookingUrl: null, nextSlots: [] },
             copy: EMPTY_COPY,
             heroImage: null,
             aboutImage: null,

@@ -5,7 +5,7 @@ import { draftClaims, findClaims } from '@/app/features/clinic-site/builder/site
 import { cleanLinkInput, contrastChecks, defaultCopyLabels, isSlug, publishWarnings, seoChecks, slugify, uniqueSlug } from '@/app/features/clinic-site/builder/site-checks';
 import { siteQrDataUrl } from '@/app/features/clinic-site/builder/site-share.component';
 
-const RECORD = { name: 'Çağrı', city: 'Ankara', district: '', address: 'Adres', phone: '03120000000', email: '', workingDays: [], bookingUrl: null };
+const RECORD = { name: 'Çağrı', city: 'Ankara', district: '', address: 'Adres', phone: '03120000000', email: '', workingDays: [], bookingUrl: null, nextSlots: [] };
 
 function config(conceptKey = 'modern'): SiteConfig {
     return composeSiteConfig(defaultStoredConfig(conceptKey), RECORD, 'cagri');

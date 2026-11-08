@@ -111,6 +111,14 @@ export interface SiteClinic {
     readonly workingDays: readonly WorkingDay[];
     /** Online randevu açıksa kliniğin talep formu (ADR-045 K11). Çalışma anında gelir, yapılandırmada saklanmaz. */
     readonly bookingUrl: string | null;
+    /** En yakın müsait saatler (TIER-017). Çalışma anında gelir, yapılandırmada saklanmaz; boşsa gösterim yoktur. */
+    readonly nextSlots: readonly SiteSlot[];
+}
+
+/** Herkese açık en yakın saat: İstanbul takvim günü (`yyyy-MM-dd`) ve başlangıç (UTC ISO). Hekim ve süre yoktur. */
+export interface SiteSlot {
+    readonly date: string;
+    readonly startUtc: string;
 }
 
 export interface SiteContent {
