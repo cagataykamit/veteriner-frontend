@@ -17,7 +17,20 @@ import { filter } from 'rxjs/operators';
             <div class="layout-menuitem-root-text">{{ item().label }}</div>
         }
         @if ((!hasRouterLink() || hasChildren()) && isVisible()) {
-            <a [attr.href]="item().url" (click)="itemClick($event)" [ngClass]="item().class" [attr.target]="item().target" tabindex="0" pRipple>
+            <a
+                [attr.href]="item().url"
+                (click)="itemClick($event)"
+                [ngClass]="item().class"
+                [attr.target]="item().target"
+                [attr.rel]="item().target === '_blank' ? 'noopener' : null"
+                [attr.aria-label]="layoutService.isMenuRail() ? railTooltip() : null"
+                tabindex="0"
+                pRipple
+                [pTooltip]="railTooltip()"
+                [tooltipDisabled]="!layoutService.isMenuRail()"
+                tooltipPosition="right"
+                appendTo="body"
+            >
                 <i [ngClass]="item().icon" class="layout-menuitem-icon"></i>
                 <span class="layout-menuitem-text">{{ item().label }}</span>
                 @if (hasChildren()) {

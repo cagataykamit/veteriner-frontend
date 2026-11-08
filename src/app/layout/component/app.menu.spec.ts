@@ -10,6 +10,7 @@ import { AppMenu } from './app.menu';
 
 describe('AppMenu', () => {
     const rail = signal(false);
+    const clinicLabel = signal<string | null>(null);
     let counts: Record<string, number | null>;
 
     // Varsayılan: tüm izinleri olan klinik kullanıcısı; platform yöneticisi claim'i izin değildir (ADR-037).
@@ -18,7 +19,7 @@ describe('AppMenu', () => {
             imports: [AppMenu],
             providers: [
                 provideRouter([{ path: '**', children: [] }]),
-                { provide: AuthService, useValue: { hasOperationClaim: hasClaim } },
+                { provide: AuthService, useValue: { hasOperationClaim: hasClaim, activeClinicLabel: clinicLabel } },
                 { provide: LayoutService, useValue: { isMenuRail: rail, layoutState: signal({ activePath: null }) } },
                 { provide: MenuBadgeService, useValue: { count: (key: string) => counts[key] ?? null, connect: () => undefined } }
             ]
@@ -38,6 +39,7 @@ describe('AppMenu', () => {
     beforeEach(() => {
         localStorage.clear();
         rail.set(false);
+        clinicLabel.set(null);
         counts = {};
     });
 
@@ -52,17 +54,17 @@ describe('AppMenu', () => {
     it('menü ADR-023 bölüm başlıklarıyla gruplanır; başlıklar açılıp kapanmaz, Yönetim bölümü alta sabittir', () => {
         const fixture = create();
 
-        expect(outline(fixture)).toEqual(['# Günlük iş', 'Bugün', 'Randevular', '# Müşteri ve hasta', 'Müşteri ve Hasta', '# Klinik', 'Kayıtlar', '# Para ve stok', 'Para', 'Stok', '# Yönetim', 'Raporlar', 'Özet', 'Ayarlar']);
+        expect(outline(fixture)).toEqual(['# Günlük iş', 'Bugün', 'Randevular', '# Müşteri ve hasta', 'Müşteri ve Hasta', '# Klinik', 'Kayıtlar', '# Para ve stok', 'Para', 'Stok', '# Yönetim', 'Raporlar', 'Özet', 'Ayarlar', 'WhatsApp destek']);
         expect(root(fixture).querySelector('.layout-menu-group-toggle')).toBeNull();
         expect(root(fixture).querySelector('.layout-menu-divider')).toBeNull();
         const pinned = root(fixture).querySelector('.layout-menu-pinned')!;
 
         expect(pinned.querySelector('.layout-menu-heading')?.textContent?.trim()).toBe('Yönetim');
-        expect(Array.from(pinned.querySelectorAll('.layout-menuitem-text')).map((el) => el.textContent?.trim())).toEqual(['Raporlar', 'Özet', 'Ayarlar']);
+        expect(Array.from(pinned.querySelectorAll('.layout-menuitem-text')).map((el) => el.textContent?.trim())).toEqual(['Raporlar', 'Özet', 'Ayarlar', 'WhatsApp destek']);
     });
 
     it('tüm girişleri izinle gizlenen bölümün başlığı da görünmez', () => {
-        expect(outline(create((claim) => claim === 'Pets.Read'))).toEqual(['# Müşteri ve hasta', 'Müşteri ve Hasta', '# Yönetim', 'Ayarlar']);
+        expect(outline(create((claim) => claim === 'Pets.Read'))).toEqual(['# Müşteri ve hasta', 'Müşteri ve Hasta', '# Yönetim', 'Ayarlar', 'WhatsApp destek']);
     });
 
     it('simge şeridinde bölüm başlıkları yerine ince ayırıcı çıkar', () => {
@@ -70,7 +72,7 @@ describe('AppMenu', () => {
         const fixture = create();
 
         expect(root(fixture).querySelector('.layout-menu-heading')).toBeNull();
-        expect(outline(fixture)).toEqual(['—', 'Bugün', 'Randevular', '—', 'Müşteri ve Hasta', '—', 'Kayıtlar', '—', 'Para', 'Stok', '—', 'Raporlar', 'Özet', 'Ayarlar']);
+        expect(outline(fixture)).toEqual(['—', 'Bugün', 'Randevular', '—', 'Müşteri ve Hasta', '—', 'Kayıtlar', '—', 'Para', 'Stok', '—', 'Raporlar', 'Özet', 'Ayarlar', 'WhatsApp destek']);
     });
 
     it('simge şeridinde aynı öğeler görünür ve her biri tek bağlantıdır; simge ve ad aynı tıklanabilir satırın içindedir', () => {
@@ -80,7 +82,7 @@ describe('AppMenu', () => {
         expect(labels(fixture)).toContain('Kayıtlar');
         const items = Array.from(root(fixture).querySelectorAll('li[appMenuitem]'));
 
-        expect(items.length).toBe(9);
+        expect(items.length).toBe(10);
 
         for (const li of items) {
             const links = li.querySelectorAll('a');
@@ -94,8 +96,32 @@ describe('AppMenu', () => {
     it('izinsiz sekme görünmez: bağlantı yetkili ilk sekmeye gider, hiç yetkili sekme yoksa öğe çıkmaz', () => {
         const fixture = create((claim) => claim === 'StockMovements.Read');
 
-        expect(labels(fixture)).toEqual(['Stok', 'Raporlar', 'Ayarlar']);
+        expect(labels(fixture)).toEqual(['Stok', 'Raporlar', 'Ayarlar', 'WhatsApp destek']);
         expect(link(fixture, 'Stok').getAttribute('href')).toBe('/panel/stock-movements');
+    });
+
+    it('WhatsApp destek yetkiye bağlı değildir: izni olmayan kullanıcıda da sabit bölümün en altında, yeni sekmede açılır', () => {
+        clinicLabel.set('Patiler Kliniği');
+        const fixture = create(() => false);
+        const support = link(fixture, 'WhatsApp destek');
+
+        expect(labels(fixture)).toEqual(['Ayarlar', 'WhatsApp destek']);
+        expect(root(fixture).querySelector('.layout-menu-pinned li[appMenuitem]:last-child a')).toBe(support);
+        expect(support.getAttribute('href')).toBe('https://wa.me/905439580091?text=Merhaba%2C%20Vetinity%20panelinden%20yaz%C4%B1yorum.%20Klinik%3A%20Patiler%20Klini%C4%9Fi');
+        expect(support.getAttribute('target')).toBe('_blank');
+        expect(support.getAttribute('rel')).toBe('noopener');
+        expect(support.querySelector('.layout-menuitem-icon')?.classList).toContain('pi-whatsapp');
+        expect(support.getAttribute('aria-label')).toBeNull();
+
+        clinicLabel.set(null);
+        fixture.detectChanges();
+        expect(new URL(support.getAttribute('href')!).searchParams.get('text')).toBe('Merhaba, Vetinity panelinden yazıyorum.');
+    });
+
+    it('simge şeridinde WhatsApp destek bağlantısı adını aria-label ile verir', () => {
+        rail.set(true);
+
+        expect(link(create(), 'WhatsApp destek').getAttribute('aria-label')).toBe('WhatsApp destek');
     });
 
     it('tüm sekmeler yetkiliyse bağlantı ilk sekmeye gider', () => {
