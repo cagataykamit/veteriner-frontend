@@ -28,6 +28,7 @@ export default [
     { path: 'trial-metrics', loadChildren: () => import('../trial-metrics/routes/trial-metrics.routes') },
     { path: 'duplicate-payments', loadChildren: () => import('../duplicate-payments/routes/duplicate-payments.routes') },
     { path: 'clinic-addresses', loadChildren: () => import('../clinic-addresses/routes/clinic-addresses.routes') },
+    { path: 'custom-development-requests', loadChildren: () => import('../custom-development-admin/routes/custom-development-admin.routes') },
     {
         path: 'settings',
         pathMatch: 'full',

@@ -136,6 +136,7 @@ export const SALES_PARTNERS_ROUTE = '/panel/sales-partners';
 export const TRIAL_METRICS_ROUTE = '/panel/trial-metrics';
 export const DUPLICATE_PAYMENTS_ROUTE = '/panel/duplicate-payments';
 export const CLINIC_ADDRESSES_ROUTE = '/panel/clinic-addresses';
+export const CUSTOM_DEVELOPMENT_ADMIN_ROUTE = '/panel/custom-development-requests';
 
 /** Rapor Merkezi kartları; menüde tek "Raporlar" girişi vardır (ADR-003). Yeni rapor buraya kart olarak eklenir. */
 export const REPORT_SECTIONS: readonly CardSection[] = [
@@ -397,6 +398,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
             { label: 'Deneme ölçümleri', icon: 'fa-solid fa-fw fa-chart-simple', route: TRIAL_METRICS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
             { label: 'Çift ödemeler', icon: 'fa-solid fa-fw fa-money-bill-transfer', route: DUPLICATE_PAYMENTS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
             { label: 'Klinik adresleri', icon: 'fa-solid fa-fw fa-link', route: CLINIC_ADDRESSES_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
+            { label: 'Özel geliştirme talepleri', icon: 'fa-solid fa-fw fa-screwdriver-wrench', route: CUSTOM_DEVELOPMENT_ADMIN_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
             { label: 'Ayarlar', icon: 'fa-solid fa-fw fa-gear', route: SETTINGS_ROUTE }
         ]
     }
