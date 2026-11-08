@@ -127,6 +127,7 @@ export const NOTIFICATIONS_ROUTE = '/panel/notifications';
 export const PORTAL_INBOX_ROUTE = '/panel/portal-inbox';
 export const CLINIC_PORTAL_SETTINGS_ROUTE = '/panel/settings/owner-portal';
 export const CLINIC_SITE_ROUTE = '/panel/settings/web-page';
+export const VET_FINDER_SETTINGS_ROUTE = '/panel/settings/vet-finder';
 export const IMPORTS_ROUTE = '/panel/settings/imports';
 export const SUBSCRIPTION_ROUTE = '/panel/settings/subscription';
 export const API_ACCESS_ROUTE = '/panel/settings/api-access';
@@ -521,6 +522,13 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 route: CLINIC_SITE_ROUTE,
                 claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
                 description: 'Kliniğinizin web sitesini oluşturun, yayınlayın ve bağlantısını paylaşın.'
+            },
+            {
+                label: 'Veteriner bul',
+                icon: 'pi pi-fw pi-map-marker',
+                route: VET_FINDER_SETTINGS_ROUTE,
+                claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
+                description: 'Hayvan sahipleri kliniğinizi il, ilçe ve hizmete göre bulsun; listelenmeyi açıp kapatın.'
             },
             {
                 label: 'Hasta sahibi portalı',
