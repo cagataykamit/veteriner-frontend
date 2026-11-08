@@ -18,7 +18,8 @@ const FEATURE_TITLES: Readonly<Record<PlanFeatureCode, string>> = {
     MobileBarcode: 'Kamerayla barkod okutma',
     ClinicsOverview: 'Şubeler özeti',
     CashManagement: 'Kasa kontrolü',
-    ExternalApi: 'API erişimi'
+    ExternalApi: 'API erişimi',
+    CustomDevelopment: 'Size özel geliştirmeler'
 };
 
 /**

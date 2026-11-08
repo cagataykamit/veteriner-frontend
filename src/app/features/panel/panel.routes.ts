@@ -28,6 +28,7 @@ export default [
     { path: 'trial-metrics', loadChildren: () => import('../trial-metrics/routes/trial-metrics.routes') },
     { path: 'duplicate-payments', loadChildren: () => import('../duplicate-payments/routes/duplicate-payments.routes') },
     { path: 'clinic-addresses', loadChildren: () => import('../clinic-addresses/routes/clinic-addresses.routes') },
+    { path: 'custom-development-requests', loadChildren: () => import('../custom-development-admin/routes/custom-development-admin.routes') },
     {
         path: 'settings',
         pathMatch: 'full',
@@ -50,6 +51,7 @@ export default [
     { path: 'settings/online-booking', loadChildren: () => import('../online-booking/routes/online-booking.routes') },
     { path: 'settings/owner-portal', loadChildren: () => import('../clinic-portal/routes/clinic-portal.routes') },
     { path: 'settings/api-access', loadChildren: () => import('../api-access/routes/api-access.routes') },
+    { path: 'settings/custom-development', loadChildren: () => import('../custom-development/routes/custom-development.routes') },
     { path: 'notifications', loadChildren: () => import('../notifications/routes/notifications.routes') },
     { path: 'portal-inbox', loadChildren: () => import('../portal-inbox/routes/portal-inbox.routes') },
     { path: 'settings/reminders', loadChildren: () => import('../reminders/routes/reminders.routes') },

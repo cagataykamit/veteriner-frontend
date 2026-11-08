@@ -17,6 +17,7 @@ import {
     CLIENTS_READ_CLAIM,
     CLINICS_READ_CLAIM,
     CLINICS_UPDATE_CLAIM,
+    CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM,
     EXAMINATION_TEMPLATES_CREATE_CLAIM,
     EXAMINATION_TEMPLATES_DEACTIVATE_CLAIM,
     EXAMINATION_TEMPLATES_UPDATE_CLAIM,
@@ -129,11 +130,13 @@ export const CLINIC_SITE_ROUTE = '/panel/settings/web-page';
 export const IMPORTS_ROUTE = '/panel/settings/imports';
 export const SUBSCRIPTION_ROUTE = '/panel/settings/subscription';
 export const API_ACCESS_ROUTE = '/panel/settings/api-access';
+export const CUSTOM_DEVELOPMENT_ROUTE = '/panel/settings/custom-development';
 export const REPORTS_ROUTE = '/panel/reports';
 export const SALES_PARTNERS_ROUTE = '/panel/sales-partners';
 export const TRIAL_METRICS_ROUTE = '/panel/trial-metrics';
 export const DUPLICATE_PAYMENTS_ROUTE = '/panel/duplicate-payments';
 export const CLINIC_ADDRESSES_ROUTE = '/panel/clinic-addresses';
+export const CUSTOM_DEVELOPMENT_ADMIN_ROUTE = '/panel/custom-development-requests';
 
 /** Rapor Merkezi kartları; menüde tek "Raporlar" girişi vardır (ADR-003). Yeni rapor buraya kart olarak eklenir. */
 export const REPORT_SECTIONS: readonly CardSection[] = [
@@ -395,6 +398,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
             { label: 'Deneme ölçümleri', icon: 'fa-solid fa-fw fa-chart-simple', route: TRIAL_METRICS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
             { label: 'Çift ödemeler', icon: 'fa-solid fa-fw fa-money-bill-transfer', route: DUPLICATE_PAYMENTS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
             { label: 'Klinik adresleri', icon: 'fa-solid fa-fw fa-link', route: CLINIC_ADDRESSES_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
+            { label: 'Özel geliştirme talepleri', icon: 'fa-solid fa-fw fa-screwdriver-wrench', route: CUSTOM_DEVELOPMENT_ADMIN_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
             { label: 'Ayarlar', icon: 'fa-solid fa-fw fa-gear', route: SETTINGS_ROUTE }
         ]
     }
@@ -483,6 +487,13 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 route: SUBSCRIPTION_ROUTE,
                 claims: [SUBSCRIPTIONS_READ_CLAIM, SUBSCRIPTIONS_MANAGE_CLAIM],
                 description: 'Plan, deneme süresi ve ödeme durumu.'
+            },
+            {
+                label: 'Size özel geliştirmeler',
+                icon: 'pi pi-fw pi-wrench',
+                route: CUSTOM_DEVELOPMENT_ROUTE,
+                claims: [CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM],
+                description: 'Vetinity içindeki ekran, rapor ve çıktılar için düzenleme talebi açın, durumunu izleyin.'
             }
         ]
     },
