@@ -15,7 +15,7 @@ export interface PricingPlanDef {
     readonly slug: PricingPlanSlug;
     readonly apiCode: PricingPlanApiCode;
     readonly title: string;
-    /** Kime göre, tek cümle (kayıt sayfası ve paket kartı). */
+    /** Kimin için, kısa ad öbeği (kayıt sayfası; paket kartında "Kimin için" satırı). */
     readonly description: string;
     /** "Önerilen" etiketi (en çok bir paket; tasarım belgesi 5.5 orta kart). */
     readonly recommended: boolean;
@@ -31,7 +31,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         slug: 'basic',
         apiCode: 'Basic',
         title: 'Temel',
-        description: 'Tek klinik ve küçük ekip için.',
+        description: 'Tek hekimli ya da küçük ekipli, tek şubeli klinik',
         recommended: false,
         trialDays: 14
     },
@@ -39,7 +39,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         slug: 'pro',
         apiCode: 'Pro',
         title: 'Profesyonel',
-        description: 'Birkaç kullanıcıyla çalışan ve hasta sahiplerine portal sunan klinikler için.',
+        description: 'Büyüyen, birkaç kullanıcılı ve hasta portalı kullanan klinik',
         recommended: true,
         trialDays: 14
     },
@@ -47,7 +47,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         slug: 'premium',
         apiCode: 'Premium',
         title: 'Kurumsal',
-        description: 'Birden fazla şubesi olan işletmeler için.',
+        description: 'Birden fazla şubesi olan işletme',
         recommended: false,
         trialDays: 14
     }
@@ -109,6 +109,8 @@ export interface PricingFeatureRowDef {
     /** Satırın altındaki kısa açıklama. */
     readonly detail?: string;
     readonly key?: PricingFeatureKey;
+    /** Satır adının yanında kısa etiket (TIER-023; ör. yapay zekâ çalışınca "Eklenti gerekir"). Tabloda ve kartta görünür. */
+    readonly badge?: string;
     readonly plans: Readonly<Record<PricingPlanSlug, PricingFeatureCell>>;
 }
 
@@ -328,11 +330,60 @@ export function decidedFeatureRows(rows: readonly PricingFeatureRowDef[] = PRICI
     return rows.filter((row) => Object.values(row.plans).some((cell) => cell !== null));
 }
 
-/** Kartta "öne çıkanlar": bu pakette olan ve paketler arasında fark yaratan satırlar (her pakette aynı olan satır değil). */
-export function planHighlights(slug: PricingPlanSlug, rows: readonly PricingFeatureRowDef[] = PRICING_FEATURE_ROWS): readonly string[] {
-    return decidedFeatureRows(rows)
-        .filter((row) => row.plans[slug] !== null && row.plans[slug] !== false && new Set(Object.values(row.plans)).size > 1)
-        .map((row) => (typeof row.plans[slug] === 'string' ? `${row.label}: ${row.plans[slug]}` : row.label));
+/** Paketler arasında fark yaratan satır: karar verilmiş ve hücreleri her pakette aynı değil ("Sadece farkları göster"). */
+export function isPlanDifferenceRow(row: PricingFeatureRowDef): boolean {
+    return new Set(Object.values(row.plans)).size > 1;
+}
+
+const hasCell = (cell: PricingFeatureCell): boolean => cell !== null && cell !== false;
+const cellLabel = (row: PricingFeatureRowDef, cell: PricingFeatureCell): string => (typeof cell === 'string' ? `${row.label}: ${cell}` : row.label);
+
+export interface PlanCardItem {
+    readonly label: string;
+    readonly badge?: string;
+}
+
+export interface PlanCardFeatures {
+    /** Kartın giriş satırı: "Temel'deki her şey, artı:"; ilk pakette "Kapsam:". */
+    readonly lead: string;
+    readonly items: readonly PlanCardItem[];
+}
+
+/**
+ * Kart maddeleri (TIER-023), özellik tablosundan: ilk paket alan alan kaç özellik içerdiğini sayar; sonraki her paket yalnız
+ * bir önceki paketten farkını sayar (eklenen satır ya da değişen metin hücresi). Paket adları "e" ünlüsüyle bittiği için
+ * "'deki" eki (Temel'deki, Profesyonel'deki).
+ */
+export function planCardFeatures(
+    slug: PricingPlanSlug,
+    rows: readonly PricingFeatureRowDef[] = PRICING_FEATURE_ROWS,
+    plans: readonly PricingPlanDef[] = PRICING_PLAN_DEFS
+): PlanCardFeatures {
+    const decided = decidedFeatureRows(rows);
+    const previous = plans[plans.findIndex((p) => p.slug === slug) - 1];
+
+    if (previous) {
+        const items = decided
+            .filter((row) => hasCell(row.plans[slug]) && row.plans[slug] !== row.plans[previous.slug])
+            .map((row) => ({ label: cellLabel(row, row.plans[slug]), badge: row.badge }));
+
+        return { lead: `${previous.title}'deki her şey, artı:`, items };
+    }
+
+    const items: PlanCardItem[] = [];
+
+    for (const group of new Set(decided.map((row) => row.group))) {
+        const groupRows = decided.filter((row) => row.group === group);
+        const count = groupRows.filter((row) => row.plans[slug] === true).length;
+
+        if (count > 0) {
+            items.push({ label: `${group}: ${count} özellik` });
+        }
+
+        groupRows.filter((row) => typeof row.plans[slug] === 'string').forEach((row) => items.push({ label: cellLabel(row, row.plans[slug]), badge: row.badge }));
+    }
+
+    return { lead: 'Kapsam:', items };
 }
 
 const slugToDef = new Map<PricingPlanSlug, PricingPlanDef>(PRICING_PLAN_DEFS.map((d) => [d.slug, d]));

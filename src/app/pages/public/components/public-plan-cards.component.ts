@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import {
     formatUserLimit,
-    planHighlights,
+    planCardFeatures,
     planOffer,
     planPriceView,
     pricingVatNote,
@@ -13,6 +13,7 @@ import {
     yearlyGiftMonths,
     type PricingBillingPeriod,
     type PricingCatalogState,
+    type PlanCardFeatures,
     type PricingFeatureRowDef,
     type PricingPlanDef,
     type PricingPriceView
@@ -22,12 +23,13 @@ interface PlanCardVm {
     readonly def: PricingPlanDef;
     readonly price: PricingPriceView | null;
     readonly userLimit: string | null;
-    readonly highlights: readonly string[];
+    readonly features: PlanCardFeatures;
 }
 
 /**
  * Paket kartları (tasarım belgesi 5.5, ADR-035): yan yana üç kart, önerilen kart teal çerçeve + etiket (gölge yok).
- * Metin ve öne çıkanlar `pricing-plan.utils.ts`'ten; fiyat ve kullanıcı sınırı backend kataloğundan (WEB-007). Katalog
+ * Metin `pricing-plan.utils.ts`'ten; kart "kimin için" satırını ve yalnız bir önceki paketten farkını sayar ("Temel'deki her şey,
+ * artı:"), maddeler özellik tablosundan türer (TIER-023). Fiyat ve kullanıcı sınırı backend kataloğundan (WEB-007). Katalog
  * yüklenirken yer tutucu, alınamazsa ya da paketin fiyatı yoksa "Fiyat için bize yazın" (iletişim) yazar; sabit sayı yok.
  */
 @Component({
@@ -59,7 +61,9 @@ interface PlanCardVm {
                             <span class="public-plan-badge">Önerilen</span>
                         }
                     </div>
-                    <p class="m-0 mt-2 text-sm leading-relaxed text-surface-600 md:min-h-[2.75rem] dark:text-surface-300">{{ card.def.description }}</p>
+                    <p class="m-0 mt-2 text-sm leading-relaxed text-surface-600 md:min-h-[2.75rem] dark:text-surface-300" data-plan-audience>
+                        <span class="font-semibold text-surface-800 dark:text-surface-100">Kimin için:</span> {{ card.def.description }}
+                    </p>
 
                     @if (pricing().status === 'loading') {
                         <p class="m-0 mt-5 flex items-baseline" data-price-loading>
@@ -85,22 +89,28 @@ interface PlanCardVm {
                         <p class="m-0 mt-1 min-h-5"></p>
                     }
 
-                    @if (card.userLimit || card.highlights.length > 0) {
-                        <ul class="m-0 mt-5 list-none space-y-2.5 border-t border-[var(--public-border)] p-0 pt-5">
-                            @if (card.userLimit) {
-                                <li class="flex items-start gap-2.5 text-sm font-semibold text-surface-800 dark:text-surface-100">
-                                    <i class="pi pi-users mt-0.5 shrink-0 text-[var(--public-accent)]" aria-hidden="true"></i>
-                                    <span>{{ card.userLimit }}</span>
-                                </li>
-                            }
-                            @for (item of card.highlights; track item) {
+                    <div class="mt-5 border-t border-[var(--public-border)] pt-5">
+                        @if (card.userLimit) {
+                            <p class="m-0 mb-4 flex items-start gap-2.5 text-sm font-semibold text-surface-800 dark:text-surface-100">
+                                <i class="pi pi-users mt-0.5 shrink-0 text-[var(--public-accent)]" aria-hidden="true"></i>
+                                <span>{{ card.userLimit }}</span>
+                            </p>
+                        }
+                        <p class="m-0 text-sm font-semibold text-surface-900 dark:text-surface-0" data-plan-lead>{{ card.features.lead }}</p>
+                        <ul class="m-0 mt-2.5 list-none space-y-2.5 p-0">
+                            @for (item of card.features.items; track item.label) {
                                 <li class="flex items-start gap-2.5 text-sm text-surface-700 dark:text-surface-200">
                                     <i class="pi pi-check mt-0.5 shrink-0 text-[var(--public-accent)]" aria-hidden="true"></i>
-                                    <span>{{ item }}</span>
+                                    <span>
+                                        {{ item.label }}
+                                        @if (item.badge) {
+                                            <span class="public-plan-badge ml-1 align-middle" data-row-badge>{{ item.badge }}</span>
+                                        }
+                                    </span>
                                 </li>
                             }
                         </ul>
-                    }
+                    </div>
 
                     <div class="mt-auto pt-6">
                         <a
@@ -168,7 +178,7 @@ export class PublicPlanCardsComponent {
                 def,
                 price: planPriceView(offer, this.catalog(), period),
                 userLimit: formatUserLimit(offer?.maxUsers ?? null),
-                highlights: planHighlights(def.slug, this.featureRows())
+                features: planCardFeatures(def.slug, this.featureRows(), this.plans())
             };
         });
     });
