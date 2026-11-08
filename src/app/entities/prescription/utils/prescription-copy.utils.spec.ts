@@ -1,6 +1,5 @@
-import { convertToParamMap } from '@angular/router';
 import type { PrescriptionEditVm } from '@/app/entities/prescription/models/prescription-vm.model';
-import { prescriptionCopyDraft, prescriptionCopySourceId } from './prescription-copy.utils';
+import { prescriptionCopyDraft } from './prescription-copy.utils';
 
 const source: PrescriptionEditVm = {
     id: 'rx1',
@@ -33,9 +32,7 @@ describe('prescriptionCopyDraft (RECORD-004)', () => {
         });
     });
 
-    it('hasta bilgisi yoksa kopya yok; kaynak kimliği sorgudan okunur', () => {
+    it('hasta bilgisi yoksa kopya yok', () => {
         expect(prescriptionCopyDraft({ ...source, petId: '' })).toBeNull();
-        expect(prescriptionCopySourceId(convertToParamMap({ copyFrom: ' rx1 ' }))).toBe('rx1');
-        expect(prescriptionCopySourceId(convertToParamMap({}))).toBeNull();
     });
 });

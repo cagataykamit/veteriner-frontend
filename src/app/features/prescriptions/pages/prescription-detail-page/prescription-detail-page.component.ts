@@ -15,7 +15,7 @@ import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PRESCRIPTIONS_CREATE_CLAIM, PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { PRESCRIPTION_COPY_QUERY_KEY } from '@/app/entities/prescription/utils/prescription-copy.utils';
+import { recordCopyQueryParams } from '@/app/shared/panel/record-copy.utils';
 import { HbsSectionComponent } from '@/app/entities/hbs/components/hbs-section.component';
 import type { HbsEntryVm } from '@/app/entities/hbs/models/hbs.model';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
@@ -240,9 +240,7 @@ export class PrescriptionDetailPageComponent implements OnInit {
     }
 
     /** RECORD-004: kopya oluşturma formunu doldurur; ayrı kopyalama ucu yok. */
-    copyQueryParams(id: string): Record<string, string> {
-        return { [PRESCRIPTION_COPY_QUERY_KEY]: id };
-    }
+    readonly copyQueryParams = recordCopyQueryParams;
 
     /** HBS geri kaydı klinik içeriği değiştirmez; yalnız HBS alanı güncellenir (sayfa yeniden yüklenmez). */
     onHbsChange(hbs: HbsEntryVm): void {

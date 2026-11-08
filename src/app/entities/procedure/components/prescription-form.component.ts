@@ -21,7 +21,8 @@ import { followUpBeforePrescribedMessage, mapPrescriptionUpsertFormToCreateReque
 import { PrescriptionItemsEditorComponent } from '@/app/entities/prescription/components/prescription-items-editor.component';
 import { PrescriptionsService } from '@/app/entities/prescription/services/prescriptions.service';
 import { createPrescriptionItemGroup, createPrescriptionItemsArray, prescriptionItemsFormToInputs } from '@/app/entities/prescription/utils/prescription-items-form.utils';
-import { prescriptionCopyDraft, prescriptionCopySourceId, type PrescriptionCopyDraft } from '@/app/entities/prescription/utils/prescription-copy.utils';
+import { prescriptionCopyDraft, type PrescriptionCopyDraft } from '@/app/entities/prescription/utils/prescription-copy.utils';
+import { copyTargetExaminationId, recordCopySourceId } from '@/app/shared/panel/record-copy.utils';
 import { type PrescriptionUpsertFieldErrors, parsePrescriptionUpsertHttpError } from '@/app/entities/prescription/utils/prescription-upsert-validation-parse.utils';
 import type { ExaminationDetailVm, ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import { examinationListItemFromDetail, filterTreatmentsByExamination, prescriptionExaminationSelectOption, prescriptionTreatmentSelectOption, treatmentListItemFromDetail } from '@/app/entities/prescription/utils/prescription-relation-select.utils';
@@ -567,7 +568,7 @@ export class PrescriptionFormComponent implements OnInit, HasUnsavedChanges {
     }
 
     private tryApplyRouteContexts(): void {
-        const copySourceId = prescriptionCopySourceId(this.contextParams());
+        const copySourceId = recordCopySourceId(this.contextParams());
 
         if (copySourceId) {
             this.tryApplyCopyContext(copySourceId);
@@ -623,16 +624,16 @@ export class PrescriptionFormComponent implements OnInit, HasUnsavedChanges {
         this.loadCopyControlledNames(draft);
     }
 
-    /** Hedef aynı hastanın açık muayenesidir: tek taslak muayene varsa seçili gelir, yoksa hekim seçer (bağ kaynaktan taşınmaz). */
+    /** Hedef aynı hastanın açık muayenesidir (copyTargetExaminationId); bağ kaynaktan taşınmaz. */
     private preselectOpenExaminationForCopy(examItems: ExaminationListItemVm[]): void {
         if (!this.contextFromCopy() || this.form.controls.examinationId.value.trim()) {
             return;
         }
 
-        const open = examItems.filter((e) => e.status === 'Draft');
+        const targetId = copyTargetExaminationId(examItems);
 
-        if (open.length === 1) {
-            this.form.controls.examinationId.setValue(open[0].id);
+        if (targetId) {
+            this.form.controls.examinationId.setValue(targetId);
         }
     }
 
