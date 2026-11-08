@@ -1,5 +1,6 @@
 import {
     ADMINISTRATIONS_READ_CLAIM,
+    API_KEYS_MANAGE_CLAIM,
     APPOINTMENT_REQUESTS_MANAGE_CLAIM,
     APPOINTMENTS_CREATE_CLAIM,
     APPOINTMENTS_RESCHEDULE_CLAIM,
@@ -127,6 +128,7 @@ export const CLINIC_PORTAL_SETTINGS_ROUTE = '/panel/settings/owner-portal';
 export const CLINIC_SITE_ROUTE = '/panel/settings/web-page';
 export const IMPORTS_ROUTE = '/panel/settings/imports';
 export const SUBSCRIPTION_ROUTE = '/panel/settings/subscription';
+export const API_ACCESS_ROUTE = '/panel/settings/api-access';
 export const REPORTS_ROUTE = '/panel/reports';
 export const SALES_PARTNERS_ROUTE = '/panel/sales-partners';
 export const TRIAL_METRICS_ROUTE = '/panel/trial-metrics';
@@ -550,6 +552,13 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 route: IMPORTS_ROUTE,
                 claims: [IMPORTS_READ_CLAIM],
                 description: 'Eski sistemdeki müşteri, hasta ve aşı kayıtlarını Excel veya CSV ile aktarın.'
+            },
+            {
+                label: 'API erişimi',
+                icon: 'pi pi-fw pi-key',
+                route: API_ACCESS_ROUTE,
+                claims: [API_KEYS_MANAGE_CLAIM],
+                description: 'Kendi yazılımınızın kayıtları okuması için kliniğe özel anahtar oluşturun ve iptal edin.'
             }
         ]
     }

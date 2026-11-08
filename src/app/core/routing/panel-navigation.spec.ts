@@ -189,6 +189,13 @@ describe('panel-navigation', () => {
         expect(labels(visibleGroups(MENU_GROUPS, only('Imports.Read')))).toEqual(['Ayarlar']);
     });
 
+    it('API erişimi kartı Ayarlar altında yalnız ApiKeys.Manage ile görünür; menüye öğe eklenmez', () => {
+        expect(labels(visibleGroups(SETTINGS_SECTIONS, only('Clinics.Update', 'Tenants.InviteCreate')))).not.toContain('API erişimi');
+        expect(labels(visibleGroups(SETTINGS_SECTIONS, only('ApiKeys.Manage')))).toContain('API erişimi');
+        expect(labels(visibleGroups(MENU_GROUPS, only('ApiKeys.Manage')))).toEqual(['Ayarlar']);
+        expect(listLabelForUrl('/panel/settings/api-access')).toBe('API erişimi');
+    });
+
     it('KVKK metinleri kartı Ayarlar altında yalnız Clinics.Update ile görünür; menüye öğe eklenmez', () => {
         expect(labels(visibleGroups(SETTINGS_SECTIONS, only('Clinics.Read', 'Clients.Read')))).not.toContain('KVKK metinleri');
         expect(labels(visibleGroups(SETTINGS_SECTIONS, only('Clinics.Update')))).toContain('KVKK metinleri');
