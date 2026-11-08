@@ -45,7 +45,8 @@ const PANEL_PAGE_TITLES: ReadonlyArray<readonly [string, string]> = [
     ['settings/organization', 'Organizasyon Ayarları'],
     ['settings/members', 'Kurum üyeleri'],
     ['settings/invites', 'Davetler'],
-    ['settings/api-access', 'API erişimi']
+    ['settings/api-access', 'API erişimi'],
+    ['settings/custom-development', 'Size özel geliştirmeler']
 ];
 
 /** Panel sayfa adını URL'den çözer; panel dışı veya bilinmeyen yol için `null`. */

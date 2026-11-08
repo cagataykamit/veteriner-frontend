@@ -136,6 +136,13 @@ describe('panel-navigation', () => {
         expect(entryForUrl(MENU_GROUPS, '/panel/clinic-addresses')?.label).toBe('Klinik adresleri');
     });
 
+    it('Size özel geliştirmeler kartı Ayarlar > Hesap altında yalnız CustomDevelopmentRequests.Manage ile görünür; menüye öğe eklenmez', () => {
+        expect(labels(visibleGroups(SETTINGS_SECTIONS, only('Subscriptions.Read', 'Tenants.InviteCreate')))).not.toContain('Size özel geliştirmeler');
+        expect(labels(visibleGroups(SETTINGS_SECTIONS, only('CustomDevelopmentRequests.Manage')))).toContain('Size özel geliştirmeler');
+        expect(labels(visibleGroups(MENU_GROUPS, only('CustomDevelopmentRequests.Manage')))).toEqual(['Ayarlar']);
+        expect(listLabelForUrl('/panel/settings/custom-development')).toBe('Size özel geliştirmeler');
+    });
+
     it('izin yoksa yalnız Ayarlar kalır; Özet ve İşletme performansı (Raporlar) yalnız yönetici düzeyi izniyle görünür', () => {
         expect(labels(visibleGroups(MENU_GROUPS, () => false))).toEqual(['Ayarlar']);
         expect(labels(visibleGroups(MENU_GROUPS, only(MANAGER_LEVEL_CLAIM)))).toEqual(['Raporlar', 'Özet', 'Ayarlar']);

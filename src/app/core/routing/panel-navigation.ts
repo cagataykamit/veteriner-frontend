@@ -17,6 +17,7 @@ import {
     CLIENTS_READ_CLAIM,
     CLINICS_READ_CLAIM,
     CLINICS_UPDATE_CLAIM,
+    CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM,
     EXAMINATION_TEMPLATES_CREATE_CLAIM,
     EXAMINATION_TEMPLATES_DEACTIVATE_CLAIM,
     EXAMINATION_TEMPLATES_UPDATE_CLAIM,
@@ -129,6 +130,7 @@ export const CLINIC_SITE_ROUTE = '/panel/settings/web-page';
 export const IMPORTS_ROUTE = '/panel/settings/imports';
 export const SUBSCRIPTION_ROUTE = '/panel/settings/subscription';
 export const API_ACCESS_ROUTE = '/panel/settings/api-access';
+export const CUSTOM_DEVELOPMENT_ROUTE = '/panel/settings/custom-development';
 export const REPORTS_ROUTE = '/panel/reports';
 export const SALES_PARTNERS_ROUTE = '/panel/sales-partners';
 export const TRIAL_METRICS_ROUTE = '/panel/trial-metrics';
@@ -483,6 +485,13 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 route: SUBSCRIPTION_ROUTE,
                 claims: [SUBSCRIPTIONS_READ_CLAIM, SUBSCRIPTIONS_MANAGE_CLAIM],
                 description: 'Plan, deneme süresi ve ödeme durumu.'
+            },
+            {
+                label: 'Size özel geliştirmeler',
+                icon: 'pi pi-fw pi-wrench',
+                route: CUSTOM_DEVELOPMENT_ROUTE,
+                claims: [CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM],
+                description: 'Vetinity içindeki ekran, rapor ve çıktılar için düzenleme talebi açın, durumunu izleyin.'
             }
         ]
     },
