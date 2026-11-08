@@ -199,7 +199,8 @@ describe('PortalPublicBookingComponent (kliniğe özel bağlantı)', () => {
             petBreed: null,
             reasonId: 'reason-1',
             requestedStartUtc: SLOT_MON_0900,
-            note: null
+            note: null,
+            channel: null
         });
         const done = el.querySelector('[data-testid=booking-done]')!.textContent!;
 
@@ -208,6 +209,20 @@ describe('PortalPublicBookingComponent (kliniğe özel bağlantı)', () => {
         expect(done).toContain('Pazartesi, 02.11.2026 · 09:00');
         expect(done).toContain('Pamuk · Kedi');
         expect(el.querySelector('h1')?.textContent).toContain('Talebiniz alındı');
+    });
+
+    it('bağlantının kaynak değeri (?kaynak=) talebe olduğu gibi gider; izinli değeri sunucu belirler (TIER-016)', async () => {
+        api.createPublicRequest.mockReturnValue(of({ id: 'req-1', status: 'Pending', requestedStartUtc: SLOT_MON_0900 }));
+        fixture = TestBed.createComponent(PortalPublicBookingComponent);
+        fixture.componentRef.setInput('bookingCode', 'k7m2p9xq4r8t');
+        fixture.componentRef.setInput('kaynak', ' site ');
+        el = fixture.nativeElement;
+        await settle();
+        await chooseReasonAndSlot();
+        await fillAndSendCode();
+        await submit();
+
+        expect(api.createPublicRequest).toHaveBeenCalledWith('k7m2p9xq4r8t', expect.objectContaining({ channel: 'site' }));
     });
 
     it('"Diğer" seçilince not zorunlu; notla nedensiz talep gider (ADR-042 eki)', async () => {
