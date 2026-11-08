@@ -30,6 +30,9 @@ export const PORTAL_ERROR_CODES = {
     dataRequestNotOpen: 'Portal.DataRequests.NotOpen',
     dataRequestNotFound: 'Portal.DataRequests.NotFound',
     pushDisabled: 'Portal.Push.Disabled',
+    appointmentLinkNotFound: 'AppointmentLinks.NotFound',
+    appointmentLinkCancelDisabled: 'AppointmentLinks.CancelDisabled',
+    appointmentConcurrencyConflict: 'Appointments.ConcurrencyConflict',
     validation: 'Validation.FluentValidation'
 } as const;
 
@@ -61,6 +64,10 @@ export const PORTAL_ERROR_MESSAGES: Readonly<Record<string, string>> = {
     [C.dataRequestsTooManyOpen]: 'Bu klinikte yanıt bekleyen 3 talebiniz var. Klinik bunlardan birini yanıtladıktan sonra yeni talep oluşturabilirsiniz.',
     [C.dataRequestNotOpen]: 'Bu talep artık geri çekilemez: klinik incelemeye almış ya da yanıtlamış olabilir. Liste yenilendi.',
     [C.dataRequestNotFound]: 'Talep bulunamadı; liste yenilendi.',
+    // Hatırlatma bağlantısı: geçersiz, kullanılmış ve süresi dolmuş aynı kodla döner; sebep ayırt edilmez.
+    [C.appointmentLinkNotFound]: 'Bu bağlantı geçersiz, süresi dolmuş ya da daha önce kullanılmış. Randevunuzla ilgili kliniğinizi arayabilirsiniz.',
+    [C.appointmentLinkCancelDisabled]: 'Bu klinik bağlantıdan iptali kapattı. İptal için lütfen kliniği arayın.',
+    [C.appointmentConcurrencyConflict]: 'Randevunuz bu sırada güncellendi. Sayfayı yenileyip tekrar deneyin.',
     [C.pushDisabled]: 'Anlık bildirim tercihiniz kapalı; önce bildirimleri açın.',
     [C.validation]: 'Girdiğiniz bilgileri kontrol edin.'
 };

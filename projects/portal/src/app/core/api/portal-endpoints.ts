@@ -45,7 +45,11 @@ export const PORTAL_ENDPOINTS = {
     linkBooking: (linkId: string) => `${link(linkId)}/booking`,
     linkBookingAvailability: (linkId: string) => `${link(linkId)}/booking/availability`,
     appointmentRequests: (linkId: string) => `${link(linkId)}/appointment-requests`,
-    cancelAppointmentRequest: (linkId: string, requestId: string) => `${link(linkId)}/appointment-requests/${encodeURIComponent(requestId)}/cancel`
+    cancelAppointmentRequest: (linkId: string, requestId: string) => `${link(linkId)}/appointment-requests/${encodeURIComponent(requestId)}/cancel`,
+    // Hatırlatmada onayla / iptal et (APPOINTMENT_OWNER_LINK_API_CONTRACT.md §3): kimliksiz, token gövdede (yolda görünmez)
+    appointmentLinkPreview: 'appointment-link/preview',
+    appointmentLinkConfirm: 'appointment-link/confirm',
+    appointmentLinkCancel: 'appointment-link/cancel'
 } as const;
 
 /** Anonim uçlar (sözleşme §7 "Anonim"): Bearer eklenmez, 401'de yenileme denenmez. */
@@ -56,7 +60,10 @@ const ANONYMOUS_EXACT = new Set<string>([
     PORTAL_ENDPOINTS.login,
     PORTAL_ENDPOINTS.passwordReset,
     PORTAL_ENDPOINTS.passwordResetConfirm,
-    PORTAL_ENDPOINTS.refresh
+    PORTAL_ENDPOINTS.refresh,
+    PORTAL_ENDPOINTS.appointmentLinkPreview,
+    PORTAL_ENDPOINTS.appointmentLinkConfirm,
+    PORTAL_ENDPOINTS.appointmentLinkCancel
 ]);
 
 export function isAnonymousPortalPath(relativePath: string): boolean {

@@ -21,6 +21,12 @@ export const portalRoutes: Routes = [
         loadComponent: () => import('./features/booking/portal-public-booking.component').then((m) => m.PortalPublicBookingComponent)
     },
     {
+        // Hatırlatmadaki "onayla / iptal et" bağlantısı (TIER-019): kimliksiz, kabuk dışında; açmak bir şey değiştirmez.
+        path: 'randevu-yanit',
+        title: title('Randevu'),
+        loadComponent: () => import('./features/appointment-link/portal-appointment-link.component').then((m) => m.PortalAppointmentLinkComponent)
+    },
+    {
         path: 'login',
         title: title('Giriş'),
         canActivate: [portalGuestGuard],

@@ -1,0 +1,79 @@
+<main class="portal-page portal-stack">
+    <portal-brand-header [clinicName]="page()?.clinicName ?? null" />
+
+    @switch (state()) {
+        @case ('loading') {
+            <portal-loading-state message="Randevunuz kontrol ediliyor…" />
+        }
+        @case ('invalid') {
+            <section class="portal-card portal-stack" aria-labelledby="link-invalid-title">
+                <h1 id="link-invalid-title" class="portal-title">Bağlantı geçersiz</h1>
+                <p>{{ invalidMessage }}</p>
+            </section>
+        }
+        @case ('error') {
+            <portal-error-state [message]="loadError()" (retry)="load()" />
+        }
+        @case ('confirmed') {
+            <section class="portal-card portal-stack" aria-labelledby="link-done-title" data-testid="link-confirmed">
+                <h1 id="link-done-title" class="portal-title">Teşekkürler</h1>
+                <p>Geleceğinizi kliniğe bildirdik. {{ page()?.petName }} için randevunuz {{ whenText() }}.</p>
+                <p class="portal-muted">Bu bağlantı artık kullanılamaz. Bir değişiklik olursa kliniği arayabilirsiniz.</p>
+            </section>
+        }
+        @case ('cancelled') {
+            <section class="portal-card portal-stack" aria-labelledby="link-done-title" data-testid="link-cancelled">
+                <h1 id="link-done-title" class="portal-title">Randevunuz iptal edildi</h1>
+                <p>{{ page()?.clinicName }} bilgilendirildi. Yeni randevu için kliniği arayabilirsiniz.</p>
+            </section>
+        }
+        @case ('ready') {
+            @if (page(); as p) {
+                <section class="portal-card portal-stack" aria-labelledby="link-title">
+                    <h1 id="link-title" class="portal-title">{{ cancelFirst() ? 'Randevunuzu iptal edin' : 'Randevunuzu onaylayın' }}</h1>
+                    <dl class="portal-dl">
+                        <div>
+                            <dt>Klinik</dt>
+                            <dd>{{ p.clinicName }}</dd>
+                        </div>
+                        <div>
+                            <dt>Tarih ve saat</dt>
+                            <dd>{{ whenText() }}</dd>
+                        </div>
+                        <div>
+                            <dt>Hayvan</dt>
+                            <dd>{{ p.petName }}</dd>
+                        </div>
+                    </dl>
+
+                    @if (actionError(); as message) {
+                        <p-message severity="error" role="alert">{{ message }}</p-message>
+                    }
+
+                    <div class="portal-actions">
+                        @if (cancelFirst()) {
+                            <p>Gelemeyecekseniz randevuyu iptal edin; saat başka bir hastaya açılır.</p>
+                            <button pButton type="button" severity="danger" [disabled]="!!pending()" (click)="cancel()">
+                                @if (pending() === 'cancel') {<i class="p-button-icon fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>}Randevuyu iptal et
+                            </button>
+                            <button type="button" class="portal-link-button" [disabled]="!!pending()" (click)="confirm()">Vazgeçtim, geleceğim</button>
+                        } @else {
+                            <p>Randevunuza geleceğinizi kliniğe bildirin.</p>
+                            <button pButton type="button" [disabled]="!!pending()" (click)="confirm()">
+                                @if (pending() === 'confirm') {<i class="p-button-icon fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>}Geleceğim, onayla
+                            </button>
+                            @if (!cancelUnavailable()) {
+                                <button type="button" class="portal-link-button" [disabled]="!!pending()" (click)="askCancel()">Gelemeyeceğim, iptal et</button>
+                            }
+                        }
+                        @if (cancelUnavailable()) {
+                            <p class="portal-muted" data-testid="link-call-clinic">Gelemeyecekseniz iptal için lütfen kliniği arayın.</p>
+                        }
+                    </div>
+                </section>
+            }
+        }
+    }
+
+    <portal-footer />
+</main>
