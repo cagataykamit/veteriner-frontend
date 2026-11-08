@@ -13,7 +13,8 @@ const PAGE: PortalAppointmentLinkPage = {
     clinicName: 'Merkez Veteriner',
     scheduledAtUtc: '2026-11-09T07:30:00Z',
     petName: 'Pamuk',
-    cancelEnabled: true
+    cancelEnabled: true,
+    googleCalendarUrl: 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Merkez%20Veteriner%20randevusu'
 };
 
 describe('PortalAppointmentLinkComponent (hatırlatmada onayla / iptal et)', () => {
@@ -50,7 +51,8 @@ describe('PortalAppointmentLinkComponent (hatırlatmada onayla / iptal et)', () 
         api = {
             preview: vi.fn().mockName('PortalAppointmentLinkApi.preview'),
             confirm: vi.fn().mockName('PortalAppointmentLinkApi.confirm').mockReturnValue(of(undefined)),
-            cancel: vi.fn().mockName('PortalAppointmentLinkApi.cancel').mockReturnValue(of(undefined))
+            cancel: vi.fn().mockName('PortalAppointmentLinkApi.cancel').mockReturnValue(of(undefined)),
+            calendar: vi.fn().mockName('PortalAppointmentLinkApi.calendar').mockReturnValue(of(new Blob(['BEGIN:VCALENDAR'])))
         } as unknown as MockedObject<PortalAppointmentLinkApi>;
         await TestBed.configureTestingModule({
             imports: [PortalAppointmentLinkComponent],
@@ -120,6 +122,31 @@ describe('PortalAppointmentLinkComponent (hatırlatmada onayla / iptal et)', () 
         expect(buttonByText(el, 'Geleceğim, onayla')).toBeUndefined();
     });
 
+    it('onay görünümünde ve onaydan sonra "Takvime ekle"; .ics aynı tokenle iner, iptal görünümünde yok (TIER-020)', async () => {
+        const createUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:randevu');
+        const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+
+        vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+        await create('tok', 'onayla');
+        expect(el.querySelector('[data-testid=calendar-google]')?.getAttribute('href')).toBe(PAGE.googleCalendarUrl);
+        expect(api.calendar).not.toHaveBeenCalled();
+
+        await click('Geleceğim, onayla');
+        expect(el.querySelector('[data-testid="link-confirmed"] [data-testid=add-to-calendar]')).not.toBeNull();
+
+        el.querySelector<HTMLButtonElement>('[data-testid=calendar-ics]')!.click();
+        await settle();
+
+        expect(api.calendar).toHaveBeenCalledWith('tok');
+        expect(createUrl).toHaveBeenCalled();
+        expect(anchorClick).toHaveBeenCalled();
+        vi.restoreAllMocks();
+        fixture.destroy();
+
+        await create('tok', 'iptal');
+        expect(el.querySelector('[data-testid=add-to-calendar]')).toBeNull();
+    });
+
     it('eylem sırasında bağlantı kullanılmışsa geçersiz görünümüne geçer', async () => {
         await create('tok', 'onayla');
         api.confirm.mockReturnValue(throwError(() => problem(404, PORTAL_ERROR_CODES.appointmentLinkNotFound)));
@@ -162,6 +189,16 @@ describe('PortalAppointmentLinkApi', () => {
 
         expect(cancel.request.url).not.toContain('gizli-token');
         cancel.flush(null);
+
+        void firstValueFrom(api.calendar('gizli-token'));
+        const calendar = http.expectOne(`${TEST_PORTAL_BASE}/appointment-link/calendar`);
+
+        expect(calendar.request.method).toBe('POST');
+        expect(calendar.request.body).toEqual({ token: 'gizli-token' });
+        expect(calendar.request.responseType).toBe('blob');
+        expect(calendar.request.headers.has('Authorization')).toBe(false);
+        expect(isAnonymousPortalPath(PORTAL_ENDPOINTS.appointmentLinkCalendar)).toBe(true);
+        calendar.flush(new Blob(['BEGIN:VCALENDAR']));
         http.verify();
     });
 });

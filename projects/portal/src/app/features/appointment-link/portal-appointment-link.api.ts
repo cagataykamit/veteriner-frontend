@@ -9,6 +9,8 @@ export interface PortalAppointmentLinkPage {
     readonly scheduledAtUtc: string;
     readonly petName: string;
     readonly cancelEnabled: boolean;
+    /** Takvime ekle (TIER-020): backend'in ürettiği Google Takvim adresi. */
+    readonly googleCalendarUrl: string;
 }
 
 /** E-postadaki `islem` değeri; bilinmeyen değer onay görünümüne düşer. */
@@ -29,5 +31,10 @@ export class PortalAppointmentLinkApi {
 
     cancel(token: string): Observable<void> {
         return this.api.post<void>(PORTAL_ENDPOINTS.appointmentLinkCancel, { token });
+    }
+
+    /** .ics dosyası; durum değiştirmez, onaydan sonra da alınır. */
+    calendar(token: string): Observable<Blob> {
+        return this.api.postBlob(PORTAL_ENDPOINTS.appointmentLinkCalendar, { token });
     }
 }

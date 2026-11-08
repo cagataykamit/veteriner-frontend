@@ -18,7 +18,10 @@
             <section class="portal-card portal-stack" aria-labelledby="link-done-title" data-testid="link-confirmed">
                 <h1 id="link-done-title" class="portal-title">Teşekkürler</h1>
                 <p>Geleceğinizi kliniğe bildirdik. {{ page()?.petName }} için randevunuz {{ whenText() }}.</p>
-                <p class="portal-muted">Bu bağlantı artık kullanılamaz. Bir değişiklik olursa kliniği arayabilirsiniz.</p>
+                @if (page()?.googleCalendarUrl; as googleUrl) {
+                    <portal-add-to-calendar [googleUrl]="googleUrl" [ics]="calendarFile" />
+                }
+                <p class="portal-muted">Onay bağlantısı artık kullanılamaz. Bir değişiklik olursa kliniği arayabilirsiniz.</p>
             </section>
         }
         @case ('cancelled') {
@@ -70,6 +73,10 @@
                             <p class="portal-muted" data-testid="link-call-clinic">Gelemeyecekseniz iptal için lütfen kliniği arayın.</p>
                         }
                     </div>
+
+                    @if (!cancelFirst() && p.googleCalendarUrl) {
+                        <portal-add-to-calendar [googleUrl]="p.googleCalendarUrl" [ics]="calendarFile" />
+                    }
                 </section>
             }
         }
