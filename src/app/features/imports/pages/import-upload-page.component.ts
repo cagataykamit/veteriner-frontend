@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -7,10 +7,11 @@ import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { IMPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
+import { CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { IMPORTS_ROUTE, MIGRATION_SUPPORT_ROUTE } from '@/app/core/routing/panel-navigation';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { ImportDropZoneComponent } from '@/app/features/imports/components/import-drop-zone.component';
-import type { ImportFileFormat, ImportTable } from '@/app/features/imports/models/import-api.model';
+import type { ImportFileFormat, ImportSourceProfileCode, ImportSourceProfileDto, ImportTable } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
 import { duplicateBatchId, importErrorMessage } from '@/app/features/imports/utils/import-labels.utils';
@@ -35,6 +36,32 @@ type UploadMode = 'xlsx' | 'csv';
         </app-page-header>
 
         <div class="card flex flex-col gap-5">
+            <section class="flex flex-col gap-2">
+                @if (profiles().length > 0) {
+                    <h6 class="m-0">Hangi programdan geliyorsunuz?</h6>
+                    <p-select
+                        inputId="importSourceProfile"
+                        [options]="profileOptions()"
+                        [(ngModel)]="sourceProfile"
+                        optionLabel="label"
+                        optionValue="value"
+                        (ngModelChange)="resetAttempt()"
+                        class="w-full md:w-96"
+                        ariaLabel="Kaynak program"
+                        data-testid="import-source-profile"
+                    />
+                    @if (selectedProfile(); as p) {
+                        <small class="text-muted-color" data-testid="import-source-profile-note">{{ p.note }}</small>
+                        @if (!p.verified && p.mappings.length > 0) {
+                            <small class="text-amber-700 dark:text-amber-300">Bu programın hazır eşlemesi gerçek dosyayla henüz doğrulanmadı; eşleme adımında kontrol edin.</small>
+                        }
+                    }
+                }
+                @if (canRequestSupport) {
+                    <small class="text-muted-color">Yardım isterseniz <a [routerLink]="migrationSupportRoute" class="text-primary font-medium" data-testid="import-migration-support-link">geçiş desteği isteyin</a>; dosyanızı e-postayla göndermeyin, buradan kendiniz yükleyin.</small>
+                }
+            </section>
+
             <section class="flex flex-col gap-2">
                 <h6 class="m-0">1. Şablonu indirin</h6>
                 <p class="text-muted-color m-0">Şablon müşteri, hasta ve aşı sayfalarını içerir. Kendi dosyanızı da yükleyebilirsiniz; sütunları sonraki adımda eşlersiniz.</p>
@@ -138,6 +165,8 @@ export class ImportUploadPageComponent implements OnInit {
         { label: 'Sekme', value: '\t' }
     ];
 
+    /** TIER-021: sütun önerisini seçer; profiller sunucudan gelir, varsayılan genel liste. */
+    sourceProfile: ImportSourceProfileCode = 'Generic';
     mode: UploadMode = 'xlsx';
     clinicId: string | null = null;
     name = '';
@@ -154,9 +183,17 @@ export class ImportUploadPageComponent implements OnInit {
     /** Hata deneme kısıtı (`Trial.ImportLimitExceeded`, sözleşme §3.2): mesajın yanında "Aboneliğe geç" eylemi gösterilir. */
     readonly trialLimited = signal(false);
     readonly duplicateId = signal<string | null>(null);
+    readonly profiles = signal<ImportSourceProfileDto[]>([]);
+    readonly profileOptions = computed(() => this.profiles().map((p) => ({ label: p.displayName, value: p.code })));
+    readonly canRequestSupport = this.auth.hasOperationClaim(CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM);
+    readonly migrationSupportRoute = MIGRATION_SUPPORT_ROUTE;
 
     /** Aynı yükleme tekrarında aynı parti dönsün diye dosya değişene kadar sabit. */
     private requestId = crypto.randomUUID();
+
+    protected selectedProfile(): ImportSourceProfileDto | undefined {
+        return this.profiles().find((p) => p.code === this.sourceProfile);
+    }
 
     private get hasFile(): boolean {
         return this.mode === 'xlsx' ? !!this.xlsxFile() : Object.values(this.csvFiles()).some(Boolean);
@@ -171,6 +208,8 @@ export class ImportUploadPageComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        // Liste gelmezse seçim gizli kalır; yükleme genel eş anlamlılarla sürer (içe aktarma kilitlenmez).
+        this.imports.getSourceProfiles().subscribe({ next: (list) => this.profiles.set(list), error: () => this.profiles.set([]) });
         this.clinicId = this.auth.getClinicId();
         this.clinicsLoading.set(true);
         this.clinics.listClinics().subscribe({
@@ -233,6 +272,7 @@ export class ImportUploadPageComponent implements OnInit {
 
         if (this.clinicId) form.append('clinicId', this.clinicId);
         if (this.name.trim()) form.append('name', this.name.trim());
+        if (this.sourceProfile !== 'Generic') form.append('sourceProfile', this.sourceProfile);
 
         this.error.set(null);
         this.trialLimited.set(false);
@@ -252,7 +292,7 @@ export class ImportUploadPageComponent implements OnInit {
         });
     }
 
-    private resetAttempt(): void {
+    resetAttempt(): void {
         this.requestId = crypto.randomUUID();
         this.error.set(null);
         this.trialLimited.set(false);

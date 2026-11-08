@@ -46,6 +46,7 @@ const PANEL_PAGE_TITLES: ReadonlyArray<readonly [string, string]> = [
     ['settings/members', 'Kurum üyeleri'],
     ['settings/invites', 'Davetler'],
     ['settings/api-access', 'API erişimi'],
+    ['settings/imports/migration-support', 'Geçiş desteği'],
     ['settings/custom-development', 'Size özel geliştirmeler']
 ];
 

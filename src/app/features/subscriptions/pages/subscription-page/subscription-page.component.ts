@@ -9,6 +9,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { SubscriptionDiscountCardComponent } from '@/app/entities/sales-partner/components/subscription-discount-card.component';
 import { ExampleClinicLoadCardComponent } from '@/app/entities/example-clinic/components/example-clinic-load-card.component';
+import { MigrationSupportCardComponent } from '@/app/entities/custom-development/components/migration-support-card.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import type { PendingPlanChangeStatusKey, PendingPlanChangeTypeKey, PendingPlanChangeVm, SubscriptionCheckoutSessionVm, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
 import { shouldOfferManualCheckoutFinalize } from '@/app/entities/subscription/utils/subscription-checkout-provider.utils';
@@ -44,6 +45,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         AppStatusTagComponent,
         SubscriptionDiscountCardComponent,
         ExampleClinicLoadCardComponent,
+        MigrationSupportCardComponent,
         SubscriptionSummaryCardsComponent,
         SubscriptionPlanCardsComponent,
         SubscriptionPlanFitNoticeComponent,
@@ -111,6 +113,8 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                 <app-subscription-summary-cards [summary]="s" [canManage]="flow.canManageSubscriptionOperations(s)" />
 
                 <app-example-clinic-load-card class="col-span-12" [canManage]="flow.canManageSubscriptionOperations(s)" [trialing]="isTrialingSubscription(s)" [writable]="!isExpiredReadOnlySubscription(s)" />
+
+                <app-migration-support-card class="col-span-12" />
 
                 <app-subscription-discount-card class="col-span-12" [canManage]="flow.canManageSubscriptionOperations(s)" />
 

@@ -20,7 +20,8 @@ const FEATURE_TITLES: Readonly<Record<PlanFeatureCode, string>> = {
     CashManagement: 'Kasa kontrolü',
     ExternalApi: 'API erişimi',
     CustomDevelopment: 'Size özel geliştirmeler',
-    Waitlist: 'Bekleme listesi'
+    Waitlist: 'Bekleme listesi',
+    FreeMigrationSupport: 'Ücretsiz geçiş desteği'
 };
 
 /**

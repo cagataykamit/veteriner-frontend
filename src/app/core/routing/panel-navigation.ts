@@ -132,6 +132,8 @@ export const CLINIC_PORTAL_SETTINGS_ROUTE = '/panel/settings/owner-portal';
 export const CLINIC_SITE_ROUTE = '/panel/settings/web-page';
 export const VET_FINDER_SETTINGS_ROUTE = '/panel/settings/vet-finder';
 export const IMPORTS_ROUTE = '/panel/settings/imports';
+/** Geçiş desteği ve kurulum görüşmesi talebi (TIER-021); içe aktarma sayfasından ve abonelik sayfasından açılır. */
+export const MIGRATION_SUPPORT_ROUTE = '/panel/settings/imports/migration-support';
 export const SUBSCRIPTION_ROUTE = '/panel/settings/subscription';
 export const API_ACCESS_ROUTE = '/panel/settings/api-access';
 export const CUSTOM_DEVELOPMENT_ROUTE = '/panel/settings/custom-development';

@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, Routes } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { IMPORTS_COMMIT_CLAIM, IMPORTS_MANAGE_CLAIM, IMPORTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM, IMPORTS_COMMIT_CLAIM, IMPORTS_MANAGE_CLAIM, IMPORTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 
 const claimGuard =
     (claim: string): CanActivateFn =>
@@ -20,6 +20,13 @@ export default [
         title: 'Yeni içe aktarma',
         canActivate: [claimGuard(IMPORTS_MANAGE_CLAIM)],
         loadComponent: () => import('../pages/import-upload-page.component').then((m) => m.ImportUploadPageComponent)
+    },
+    {
+        // Geçiş desteği talebi (TIER-021): ticari talep olduğundan özel geliştirme talebiyle aynı yetki (Admin, Owner).
+        path: 'migration-support',
+        title: 'Geçiş desteği',
+        canActivate: [claimGuard(CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM)],
+        loadComponent: () => import('../pages/migration-support-page.component').then((m) => m.MigrationSupportPageComponent)
     },
     {
         path: ':id/rollback',
