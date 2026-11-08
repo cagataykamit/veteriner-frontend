@@ -53,8 +53,12 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
                     </div>
                     <p class="m-0 mt-4 text-sm public-on-brand-subtle">{{ trialLine }}</p>
                 </div>
-                <div class="lg:translate-y-12">
+                <div class="relative lg:translate-y-12">
                     <app-public-screenshot shot="bugun" [eager]="true" />
+                    <!-- Telefonda aynı ekran: yalnız geniş ekranda, masaüstü görüntüsünün sol alt köşesine biner -->
+                    <div class="absolute -bottom-10 -left-6 hidden w-[19%] lg:block" data-hero-phone>
+                        <app-public-screenshot shot="telefonBugun" />
+                    </div>
                 </div>
             </div>
         </section>
@@ -122,7 +126,7 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
                         </ul>
                         <p class="m-0 mt-3 text-sm text-surface-600 dark:text-surface-300">Yazdırın, Excel'e alın.</p>
                         <div class="mt-5">
-                            <app-public-screenshot shot="asiDefteri" />
+                            <app-public-screenshot shot="kayitDefteri" />
                         </div>
                     </div>
                     <div>

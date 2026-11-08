@@ -53,7 +53,7 @@ import { PublicScreenshotComponent } from './components/public-screenshot.compon
                             </tbody>
                         </table>
                     </div>
-                    <app-public-screenshot shot="asiDefteri" />
+                    <app-public-screenshot shot="kayitDefteri" />
                 </div>
                 <p class="public-note m-0 mt-6">{{ registersNote }}</p>
             </section>

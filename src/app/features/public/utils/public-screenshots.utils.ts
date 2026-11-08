@@ -1,5 +1,6 @@
 /**
- * Tanıtım ekran görüntüleri (WEB-005): panelden, yalnız "TEST"/"ÖRNEK" adlı yerel geliştirme kayıtlarıyla alındı.
+ * Tanıtım ekran görüntüleri (WEB-005): panelden, yerel geliştirme ortamında "Örnek Veteriner Kliniği" sentetik verisiyle
+ * ("ÖRNEK" işaretli; gerçek kişi verisi yok) alındı. Masaüstü 1440×900, telefon 390×844 (2×).
  * Her görüntünün açık ve koyu tema eşi `public/marketing/screens/` altında WebP; `width`/`height` CLS için gerçek piksel.
  */
 
@@ -11,8 +12,12 @@ export type PublicScreenshotKey =
     | 'gunSonu'
     | 'hastaKarti'
     | 'stok'
-    | 'asiDefteri'
-    | 'kvkkFormu';
+    | 'kayitDefteri'
+    | 'kvkkFormu'
+    | 'asiSihirbazi'
+    | 'gelismisRaporlar'
+    | 'klinikSitesi'
+    | 'telefonBugun';
 
 export interface PublicScreenshotDef {
     /** Dosya adı kökü: `<file>-light.webp` ve `<file>-dark.webp`. */
@@ -28,57 +33,81 @@ const SCREENS_DIR = '/marketing/screens';
 export const PUBLIC_SCREENSHOTS: Readonly<Record<PublicScreenshotKey, PublicScreenshotDef>> = {
     bugun: {
         file: 'bugun',
-        width: 1536,
+        width: 1440,
         height: 900,
-        alt: 'Bugün ekranı: bekleyen beş hasta, biri acil işaretli, biri önceki günden açık ve uzun bekleme uyarılı; muayenesi süren iki hasta ve açık işler çipleri'
+        alt: 'Bugün ekranı: bekleyen dört hasta, biri acil işaretli; muayenesi süren iki hasta, müşteri borcu ve açık işler çipleri'
     },
     muayene: {
         file: 'muayene',
-        width: 1536,
+        width: 1440,
         height: 900,
-        alt: 'Muayene kaydı: şikâyet, anamnez, klinik bulgular, kilo, ateş, nabız ve solunum; sağda kesinleştirme kontrol listesi'
+        alt: 'Muayene formu: solda hasta bağlamı (son kilo, aktif tedavi, son muayeneler); sağda şikâyet, anamnez, klinik bulgular, kilo, ateş, nabız ve solunum'
     },
     kesinlestirme: {
         file: 'kesinlestirme',
-        width: 940,
-        height: 560,
-        alt: 'Taslak muayene kaydı ve kesinleştirme kontrolü: tanı ve plan girildi, bağlı işlem uyarısı, Kesinleştir düğmesi'
+        width: 1131,
+        height: 700,
+        alt: 'Taslak muayene kaydı: şikâyet, anamnez, bulgular, vital değerler, tanı ve plan; yanda kesinleştirme kontrol listesi ve Kesinleştir düğmesi'
     },
     musteriBakiye: {
         file: 'musteri-bakiye',
-        width: 1238,
-        height: 1050,
-        alt: 'Müşteri kartı: açık borç, ücret bekleyen işlem, hastaları, yapılacaklar ve kartla alınmış son ödeme'
+        width: 1440,
+        height: 900,
+        alt: 'Müşteri kartı: açık borç, KVKK rıza ve portal durumu, hastaları, yapılacaklarda açık borç, son muayeneler, son randevular ve ödeme özeti'
     },
     gunSonu: {
         file: 'gun-sonu',
-        width: 1238,
-        height: 1088,
-        alt: 'Gün sonu raporu: brüt ve net ücret, ödeme türüne ve güne göre tahsilat, açık işler'
+        width: 1440,
+        height: 900,
+        alt: 'Gün sonu raporu: bir haftalık aralıkta ödeme türüne ve güne göre tahsilat, iptal ve net tutar; açık işler'
     },
     hastaKarti: {
         file: 'hasta-karti',
-        width: 1238,
-        height: 1050,
-        alt: 'Hasta kartı: sahip ve açık borç, son geliş, sonraki randevu, klinik özet ve gecikmiş aşı uyarılı yapılacaklar listesi'
+        width: 1440,
+        height: 900,
+        alt: 'Hasta kartı: tür, cins, yaş, kilo ve çip numarası; açık borç, klinik özet (son kilo, vital, son tanı, aktif tedavi, aşılar), yapılacaklar ve zaman çizelgesi'
     },
     stok: {
         file: 'stok',
-        width: 1238,
-        height: 650,
+        width: 1440,
+        height: 900,
         alt: 'Stok durumu: ürün başına kullanılabilir ve süresi geçmiş miktar, minimum seviye ve durum'
     },
-    asiDefteri: {
-        file: 'asi-defteri',
-        width: 1238,
-        height: 750,
-        alt: 'Aşı Kayıt Defteri: tarih aralığı süzgeci, Excel, CSV ve yazdırma; seri numarası, son kullanma tarihi ve firmayla aşı girişleri'
+    kayitDefteri: {
+        file: 'kayit-defteri',
+        width: 1440,
+        height: 900,
+        alt: 'Hayvan Muayene Kayıt Defteri: tarih aralığı filtresi, PDF, Excel, CSV ve yazdırma; sıra numarası, hasta sahibi, hasta, şikâyet, teşhis ve tedavi'
     },
     kvkkFormu: {
         file: 'kvkk-formu',
-        width: 671,
-        height: 365,
+        width: 710,
+        height: 370,
         alt: 'KVKK açık rıza formu yazdırma görünümü: kabul ve ret seçenekleri, veri sahibinin adı, tarih ve imza alanı'
+    },
+    asiSihirbazi: {
+        file: 'asi-sihirbazi',
+        width: 1440,
+        height: 900,
+        alt: 'Aşı planı önerisi: kliniğin aşı takviminden yavru köpek için hesaplanan dozlar ve tarihleri; hekim seçip onaylar'
+    },
+    gelismisRaporlar: {
+        file: 'gelismis-raporlar',
+        width: 1131,
+        height: 501,
+        alt: 'Gelişmiş rapor kırılımları: hekim, hizmet ve ürün, en çok ciro yapan kalemler ve hayvan türü; her biri önceki dönemle fark'
+    },
+    klinikSitesi: {
+        file: 'klinik-sitesi',
+        width: 1440,
+        height: 900,
+        alt: 'Klinik web sitesi sihirbazı: yedi adım; solda klinik bilgileri ve çalışma saatleri, sağda sitenin önizlemesi'
+    },
+    telefonBugun: {
+        file: 'telefon-bugun',
+        width: 780,
+        height: 1688,
+        alt: 'Telefonda Bugün ekranı: hızlı eylem düğmeleri, açık işler ve kart görünümünde acil işaretli bekleyen hasta'
     }
 };
 

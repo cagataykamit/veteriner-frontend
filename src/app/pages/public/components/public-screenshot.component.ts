@@ -4,6 +4,7 @@ import { PUBLIC_SCREENSHOTS, publicScreenshotSrc, type PublicScreenshotKey } fro
 /**
  * Gerçek ürün ekran görüntüsü (WEB-005): ince çerçeve, 16 px köşe, tek gölge (tasarım belgesi bölüm 3).
  * Açık ve koyu tema görselleri ayrı; yalnız etkin temanınki görünür ve tembel yüklenir. `width`/`height` CLS için.
+ * Altyazı isteğe bağlı (ör. ekranın hangi pakette olduğu); çerçevenin altında ince bir şerit.
  */
 @Component({
     selector: 'app-public-screenshot',
@@ -30,6 +31,9 @@ import { PUBLIC_SCREENSHOTS, publicScreenshotSrc, type PublicScreenshotKey } fro
                 loading="lazy"
                 decoding="async"
             />
+            @if (caption()) {
+                <figcaption class="public-shot-caption">{{ caption() }}</figcaption>
+            }
         </figure>
     `
 })
@@ -37,6 +41,7 @@ export class PublicScreenshotComponent {
     readonly shot = input.required<PublicScreenshotKey>();
     /** İlk ekrandaki (kahraman) görsel: tembel yükleme yok, yüksek öncelik. */
     readonly eager = input<boolean>(false);
+    readonly caption = input<string>('');
 
     readonly def = computed(() => PUBLIC_SCREENSHOTS[this.shot()]);
     readonly lightSrc = computed(() => publicScreenshotSrc(this.def(), 'light'));
