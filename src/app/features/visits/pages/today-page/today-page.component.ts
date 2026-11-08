@@ -238,6 +238,8 @@ export class TodayPageComponent implements OnInit {
         timer(REFRESH_INTERVAL_MS, REFRESH_INTERVAL_MS)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(() => this.refresh('silent'));
+        // Menü sayacı ilk yanıtı beklesin; aynı `visits/today` isteği açılışta iki kez gitmez.
+        this.menuBadgeFeed.claim('waitingVisits');
         this.destroyRef.onDestroy(() => this.menuBadgeFeed.release('waitingVisits'));
         this.startWithScope();
     }

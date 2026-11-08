@@ -1,7 +1,7 @@
-import { DestroyRef, inject, Injectable, signal } from '@angular/core';
+import { afterNextRender, DestroyRef, effect, inject, Injectable, Injector, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { filter, map, merge, Observable, Subscription, throttleTime, timer } from 'rxjs';
+import { filter, map, merge, Observable, Subscription, switchMap, throttleTime, timer } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { APPOINTMENT_REQUESTS_MANAGE_CLAIM, LAB_RESULTS_READ_CLAIM, OWNER_PORTAL_MANAGE_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
@@ -42,21 +42,56 @@ export class MenuBadgeService {
     private readonly appointmentRequests = inject(AppointmentRequestsService);
     private readonly portalInbox = inject(PortalInboxService);
     private readonly feed = inject(MenuBadgeFeed);
+    private readonly injector = inject(Injector);
 
     private readonly counts = signal<Readonly<Record<MenuBadgeKey, number | null>>>(EMPTY_COUNTS);
     private readonly inflight = new Map<MenuBadgeKey, Subscription>();
     private clinicId: string | null = null;
+
+    constructor() {
+        // Sayfanın bildirdiği sayı saklanır: sayfa kapanınca sayaç bir sonraki yenilemeye kadar boşalmaz.
+        effect(() => {
+            for (const key of Object.keys(EMPTY_COUNTS) as MenuBadgeKey[]) {
+                const fed = this.feed.value(key);
+
+                if (typeof fed === 'number') {
+                    untracked(() => this.set(key, fed));
+                }
+            }
+        });
+    }
 
     /** Sayaç değeri; izin yoksa veya henüz yüklenmediyse `null`. */
     count(key: MenuBadgeKey): number | null {
         return this.feed.value(key) ?? this.counts()[key];
     }
 
-    /** Aralıklı ve sayfa geçişlerinde yenilemeyi başlatır; sekme gizliyken aralık tetiklemesi atlanır. */
+    /**
+     * Aralıklı ve sayfa geçişlerinde yenilemeyi başlatır; sekme gizliyken aralık tetiklemesi atlanır. Gezinme sürerken ilk
+     * yenilemeyi onun bitişi yapar: hemen bir de zamanlayıcıyla başlasaydı 15 sn sonra aynı sorgular ikinci kez giderdi.
+     * Geçişte sayaç yeni sayfa çizildikten sonra yenilenir; sayfa açılırken sayacı üstlenebilir (`MenuBadgeFeed.claim`), aynı
+     * istek iki kez gitmez.
+     */
     connect(destroyRef: DestroyRef): void {
+        const rendered = () =>
+            new Observable<void>((subscriber) => {
+                const ref = afterNextRender(
+                    () => {
+                        subscriber.next();
+                        subscriber.complete();
+                    },
+                    { injector: this.injector }
+                );
+
+                return () => ref.destroy();
+            });
+
         merge(
-            timer(0, REFRESH_INTERVAL_MS).pipe(filter(() => !document.hidden)),
-            this.router.events.pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+            timer(this.router.currentNavigation() ? REFRESH_INTERVAL_MS : 0, REFRESH_INTERVAL_MS).pipe(filter(() => !document.hidden)),
+            this.router.events.pipe(
+                filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+                switchMap(rendered)
+            )
         )
             .pipe(throttleTime(MIN_GAP_MS, undefined, { leading: true, trailing: true }), takeUntilDestroyed(destroyRef))
             .subscribe(() => this.refresh());
@@ -94,9 +129,11 @@ export class MenuBadgeService {
 
         const fed = this.feed.value(key);
 
-        // Sayfa bildiriyorsa sorgu atlanır; değer saklanır ki sayfa kapanınca sayaç boşalmasın.
+        // Sayfa bildiriyorsa ya da üstlendiyse sorgu atlanır; değer saklanır ki sayfa kapanınca sayaç boşalmasın.
         if (fed !== undefined) {
-            this.set(key, fed);
+            if (fed !== null) {
+                this.set(key, fed);
+            }
 
             return;
         }

@@ -1,6 +1,7 @@
 import type { Mock } from 'vitest';
+import { DestroyRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { APPOINTMENT_REQUESTS_MANAGE_CLAIM, LAB_RESULTS_READ_CLAIM, OWNER_PORTAL_MANAGE_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -37,8 +38,12 @@ describe('MenuBadgeService', () => {
     let getPendingRequests: Mock;
     let getInboxSummary: Mock;
     let service: MenuBadgeService;
+    let routerEvents: Subject<unknown>;
+    let navigating: boolean;
 
     beforeEach(() => {
+        routerEvents = new Subject();
+        navigating = false;
         claims = new Set([VISITS_READ_CLAIM, LAB_RESULTS_READ_CLAIM]);
         clinicId = 'clinic-1';
         getToday = vi
@@ -61,7 +66,7 @@ describe('MenuBadgeService', () => {
                 { provide: LabResultsService, useValue: { getLabResults } },
                 { provide: AppointmentRequestsService, useValue: { list: getPendingRequests } },
                 { provide: PortalInboxService, useValue: { summary: getInboxSummary } },
-                { provide: Router, useValue: { events: new Subject() } }
+                { provide: Router, useValue: { events: routerEvents, currentNavigation: () => (navigating ? {} : null) } }
             ]
         });
         service = TestBed.inject(MenuBadgeService);
@@ -131,6 +136,44 @@ describe('MenuBadgeService', () => {
         service.refresh();
         expect(getToday).toHaveBeenCalledTimes(1);
         expect(service.count('waitingVisits')).toBe(2);
+    });
+
+    it('sayfa üstlendiyse ilk sayısı gelmeden de sorgu atlanır (Bugün açılışında çift istek yok)', () => {
+        const feed = TestBed.inject(MenuBadgeFeed);
+
+        feed.claim('waitingVisits');
+        service.refresh();
+        expect(getToday).not.toHaveBeenCalled();
+        expect(service.count('waitingVisits')).toBeNull();
+
+        feed.report('waitingVisits', 4);
+        feed.claim('waitingVisits');
+        expect(service.count('waitingVisits')).toBe(4);
+
+        // Sayfa kapanınca son bildirilen sayı bir sonraki yenilemeye kadar kalır.
+        TestBed.tick();
+        feed.release('waitingVisits');
+        expect(service.count('waitingVisits')).toBe(4);
+    });
+
+    it('gezinme sürerken bağlanırsa ilk yenilemeyi gezinme bitip sayfa çizilince yapar; 15 sn sonra ikinci kez sorgulamaz', () => {
+        vi.useFakeTimers();
+
+        try {
+            navigating = true;
+            service.connect(TestBed.inject(DestroyRef));
+            vi.advanceTimersByTime(1);
+            expect(getLabResults).not.toHaveBeenCalled();
+
+            routerEvents.next(new NavigationEnd(1, '/panel/today', '/panel/today'));
+            expect(getLabResults).not.toHaveBeenCalled();
+            TestBed.tick();
+            expect(getLabResults).toHaveBeenCalledTimes(1);
+            vi.advanceTimersByTime(20_000);
+            expect(getLabResults).toHaveBeenCalledTimes(1);
+        } finally {
+            vi.useRealTimers();
+        }
     });
 
     it('hata olursa son değer korunur', () => {
