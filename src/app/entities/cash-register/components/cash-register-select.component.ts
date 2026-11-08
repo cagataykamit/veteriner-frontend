@@ -32,7 +32,7 @@ import { CashRegistersService } from '@/app/entities/cash-register/services/cash
                 class="w-full"
                 data-testid="cash-register-select"
             />
-            <small class="text-muted-color block">Nakit bu kasaya girer.</small>
+            <small class="text-muted-color block">{{ hint() }}</small>
         }
     `
 })
@@ -42,6 +42,8 @@ export class CashRegisterSelectComponent {
     readonly method = input<string | null>(null);
     readonly inputId = input('cashRegisterId');
     readonly disabled = input(false);
+    /** Alan altı açıklaması; iadede nakit kasadan çıkar. */
+    readonly hint = input('Nakit bu kasaya girer.');
     /** Görünürken yer aldığı ızgara hücresinin sınıfları; görünmezken bileşen yer kaplamaz. */
     readonly fieldClass = input('');
     /** Seçilen kasa; görünmüyorsa boş (Ana kasa). */

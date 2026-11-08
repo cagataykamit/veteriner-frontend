@@ -140,7 +140,7 @@ export const CREDIT_APPLIED_QUERY_KEY = 'creditApplied';
             >
                 <label for="clientCreditRefundMethod" class="block text-sm font-medium text-muted-color mb-2">İade yöntemi *</label>
                 <p-select inputId="clientCreditRefundMethod" class="w-full mb-4" appendTo="body" [options]="methodOptions" optionLabel="label" optionValue="value" [ngModel]="refundMethod()" (ngModelChange)="refundMethod.set($event)" />
-                <app-cash-register-select fieldClass="block mb-4" inputId="clientCreditRefundRegister" [clinicId]="refundTarget()?.clinicId ?? null" [method]="refundMethod()" [(value)]="refundCashRegisterId" />
+                <app-cash-register-select fieldClass="block mb-4" inputId="clientCreditRefundRegister" [clinicId]="refundTarget()?.clinicId ?? null" [method]="refundMethod()" [(value)]="refundCashRegisterId" hint="İade edilen nakit bu kasadan çıkar." />
             </app-reason-confirm-dialog>
         }
     `

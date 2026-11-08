@@ -56,6 +56,15 @@ describe('CashRegisterSelectComponent', () => {
         expect(f.componentInstance.value()).toBe('r-main');
     });
 
+    it('alan altı açıklaması varsayılan olarak girişi, verilirse iadedeki çıkışı söyler', () => {
+        const f = create();
+
+        expect((f.nativeElement as HTMLElement).textContent).toContain('Nakit bu kasaya girer.');
+        f.componentRef.setInput('hint', 'İade edilen nakit bu kasadan çıkar.');
+        f.detectChanges();
+        expect((f.nativeElement as HTMLElement).textContent).toContain('İade edilen nakit bu kasadan çıkar.');
+    });
+
     it('kart ödemesinde görünmez ve değer boştur', () => {
         const f = create('card');
 
