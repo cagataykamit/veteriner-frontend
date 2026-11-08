@@ -85,7 +85,9 @@ describe('WaitlistPageComponent (bekleme listesi, TIER-018)', () => {
         await create([entry()]);
 
         expect(api.list).toHaveBeenCalledWith({ clinicId: 'c1', veterinarianUserId: null, status: 'Waiting' });
+
         const row = el.querySelector('[data-testid="wl-row"]')!;
+
         expect(row.textContent).toContain('Pamuk');
         expect(row.textContent).toContain('Pzt, Çar');
         expect(row.textContent).toContain('09:00–12:00');
@@ -109,6 +111,7 @@ describe('WaitlistPageComponent (bekleme listesi, TIER-018)', () => {
         await create([entry({ id: 'e1', position: 1 }), entry({ id: 'e2', position: 2, petName: 'Boncuk' })]);
 
         const down = el.querySelectorAll<HTMLButtonElement>('button[aria-label="Sırada geriye al"]')[0];
+
         down.click();
         await fixture.whenStable();
 

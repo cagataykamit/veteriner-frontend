@@ -19,6 +19,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 /** `yyyy-MM-dd` (yerel takvim günü). */
 function localDate(offsetDays = 0): string {
     const d = new Date();
+
     d.setDate(d.getDate() + offsetDays);
 
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -110,11 +111,11 @@ export class WaitlistEntryDialogComponent {
 
     readonly visible = model(false);
     readonly clinicId = input.required<string>();
-    readonly veterinarians = input<readonly VeterinarianVm[]>([]);
+    readonly veterinarians = input<VeterinarianVm[]>([]);
     /** Kayıt eklendi; teklif gidemeyecekse çağıran uyarıyı gösterir. */
     readonly saved = output<{ entry: WaitlistEntryDto; warning: string | null }>();
 
-    protected readonly typeOptions = APPOINTMENT_TYPE_WRITE_OPTIONS;
+    protected readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
     protected readonly weekdays = WAITLIST_WEEKDAYS;
     protected readonly limits = WAITLIST_LIMITS;
     protected readonly today = localDate();
