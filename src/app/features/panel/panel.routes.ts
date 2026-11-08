@@ -49,6 +49,7 @@ export default [
     { path: 'settings/clinics', loadChildren: () => import('../clinics/routes/clinics.routes') },
     { path: 'settings/kvkk-form', loadChildren: () => import('../kvkk/routes/kvkk-form-template.routes') },
     { path: 'settings/online-booking', loadChildren: () => import('../online-booking/routes/online-booking.routes') },
+    { path: 'settings/vet-finder', loadChildren: () => import('../vet-finder/routes/vet-finder.routes') },
     { path: 'settings/owner-portal', loadChildren: () => import('../clinic-portal/routes/clinic-portal.routes') },
     { path: 'settings/api-access', loadChildren: () => import('../api-access/routes/api-access.routes') },
     { path: 'settings/custom-development', loadChildren: () => import('../custom-development/routes/custom-development.routes') },

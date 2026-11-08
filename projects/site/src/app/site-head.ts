@@ -40,6 +40,21 @@ export class SiteHead {
         return head.found;
     }
 
+    /** Veteriner bul sayfası (ADR-047 K8): az klinikli, filtreli ya da bulunamayan sayfa dizine girmez; bağlantılar izlenir. */
+    applyVetFinder(head: { readonly title: string; readonly description: string; readonly canonical: string; readonly indexable: boolean }): void {
+        this.title.setTitle(head.title);
+        this.setName('description', head.description);
+        this.setName('robots', head.indexable ? 'index, follow' : 'noindex, follow');
+        this.setName('twitter:card', 'summary');
+        this.setProperty('og:type', 'website');
+        this.setProperty('og:locale', 'tr_TR');
+        this.setProperty('og:site_name', 'Vetinity');
+        this.setProperty('og:title', head.title);
+        this.setProperty('og:description', head.description || null);
+        this.setProperty('og:url', head.canonical);
+        this.setLink(LINK_CANONICAL, 'canonical', head.canonical);
+    }
+
     /** Kapalı, yok ya da açılamayan site: başlık yazılır, dizine girmez. */
     applyNotice(title: string): void {
         this.title.setTitle(title);

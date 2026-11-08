@@ -398,6 +398,10 @@ export const ApiEndpoints = {
         emailTemplatePreview: (clinicId: string, kind: string) =>
             `/api/v1/clinics/${encodeURIComponent(clinicId)}/appointment-request-email-templates/${encodeURIComponent(kind)}/preview`
     },
+    /** Veteriner bul kaydı (Veteriner `docs/VET_FINDER_API_CONTRACT.md` §2, ADR-047). */
+    vetFinder: {
+        listing: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/vet-finder`
+    },
     /** Online randevu talep kuyruğu (sözleşme §4); `AppointmentRequests.Manage`. */
     appointmentRequests: {
         list: () => `/api/v1/appointment-requests`,
