@@ -221,8 +221,9 @@ function numberFromInput(event: Event): number | null {
                             <p-selectbutton [options]="methodOptions" [ngModel]="method()" (ngModelChange)="method.set($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabelledBy="sale-method-label" />
                         </div>
 
+                        <app-cash-register-select fieldClass="block mt-4" inputId="sale-cash-register" [clinicId]="activeClinicId" [method]="cashRegisterMethod()" [(value)]="cashRegisterId" [disabled]="submitting()" />
+
                         @if (!isWalkIn()) {
-                        <app-cash-register-select fieldClass="block mt-4" inputId="sale-cash-register" [clinicId]="activeClinicId" [method]="method()" [(value)]="cashRegisterId" [disabled]="submitting()" />
                             <div class="mt-4" data-testid="sale-mode">
                                 <span id="sale-mode-label" class="block text-sm font-medium text-muted-color mb-2">Ödeme</span>
                                 <p-selectbutton [options]="modeOptions" [ngModel]="mode()" (ngModelChange)="mode.set($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabelledBy="sale-mode-label" />
@@ -320,6 +321,8 @@ export class SaleNewPageComponent {
         amount: this.partialAmount(),
         cashRegisterId: this.cashRegisterId()
     }));
+    /** Kasa yalnız ödeme alınırken sorulur: peşin müşteride de; veresiyede ödeme yoktur. */
+    protected readonly cashRegisterMethod = computed(() => (this.mode() === 'credit' ? null : this.method()));
     protected readonly payable = computed(() => effectivePaymentAmount(this.total(), this.isWalkIn(), this.paymentInput()));
     protected readonly outstanding = computed(() => Math.max(0, Math.round((this.total() - (this.payable() ?? 0)) * 100) / 100));
     protected readonly paymentErr = computed(() => paymentError(this.total(), this.isWalkIn(), this.paymentInput()));

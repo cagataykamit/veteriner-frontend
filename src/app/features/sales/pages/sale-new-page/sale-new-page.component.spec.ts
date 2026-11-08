@@ -13,6 +13,7 @@ import type { CreateSaleRequest } from '@/app/features/sales/models/sale-api.mod
 import type { SaleProductVm } from '@/app/features/sales/models/sale-vm.model';
 import { SaleProductSearchService } from '@/app/features/sales/services/sale-product-search.service';
 import { SalesService } from '@/app/features/sales/services/sales.service';
+import type { CashRegisterDto } from '@/app/entities/cash-register/models/cash-register.model';
 import { CashRegistersService } from '@/app/entities/cash-register/services/cash-registers.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { SaleNewPageComponent } from './sale-new-page.component';
@@ -56,6 +57,7 @@ describe('SaleNewPageComponent', () => {
     let findByBarcode: Mock;
     let createSale: Mock;
     let mutationBlocked: boolean;
+    let registers: CashRegisterDto[];
     let locked: WritableSignal<TenantPlanFeatureVm | null>;
 
     const el = () => fixture.nativeElement as HTMLElement;
@@ -74,6 +76,7 @@ describe('SaleNewPageComponent', () => {
 
     beforeEach(async () => {
         mutationBlocked = false;
+        registers = [];
         locked = signal(null);
         findByBarcode = vi.fn().mockName('findByBarcode');
         search = vi
@@ -107,9 +110,9 @@ describe('SaleNewPageComponent', () => {
                 { provide: SalesService, useValue: { createSale } },
                 { provide: StockBatchService, useValue: { getByProduct: () => of(batches) } },
                 { provide: ClientSearchService, useValue: { search: () => of([]), getById: () => of({ id: 'cl1', fullName: 'Ali Veli', phone: '—', petNames: [], label: 'Ali Veli' }) } },
-                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => c === 'Sales.Read', getClinicId: () => 'c1' } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => c === 'Sales.Read' || c === 'CashRegisters.Read', getClinicId: () => 'c1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked, lockedPlanFeature: () => locked() } },
-                { provide: CashRegistersService, useValue: { list: () => of([]) } }
+                { provide: CashRegistersService, useValue: { list: () => of(registers) } }
             ]
         }).compileComponents();
         fixture = TestBed.createComponent(SaleNewPageComponent);
@@ -249,6 +252,33 @@ describe('SaleNewPageComponent', () => {
         expect(submitButton().disabled).toBe(false);
         cmp['submit']();
         expect((vi.mocked(createSale).mock.lastCall![0] as CreateSaleRequest).payment).toEqual({ method: 'Cash', amount: 20 });
+    });
+
+    it('peşin müşteride nakitte kasa sorulur ve seçilen kasa gider; veresiyede kasa sorulmaz', async () => {
+        registers = [
+            { id: 'r-main', clinicId: 'c1', code: 'ANA', name: 'Ana kasa', isMain: true, isActive: true },
+            { id: 'r2', clinicId: 'c1', code: 'ONB', name: 'Ön büro', isMain: false, isActive: true }
+        ];
+        fixture = TestBed.createComponent(SaleNewPageComponent);
+        cmp = fixture.componentInstance;
+        fixture.detectChanges();
+        const registerSelect = () => el().querySelector('[data-testid="cash-register-select"]');
+
+        await typeAndEnter('8690001');
+        cmp['onClientChange']('cl1');
+        cmp['mode'].set('credit');
+        fixture.detectChanges();
+        expect(registerSelect()).toBeNull();
+        expect(cmp['cashRegisterId']()).toBeNull();
+
+        cmp['onClientChange']('');
+        fixture.detectChanges();
+        expect(registerSelect()).not.toBeNull();
+        expect(cmp['cashRegisterId']()).toBe('r-main');
+
+        cmp['cashRegisterId'].set('r2');
+        cmp['submit']();
+        expect((vi.mocked(createSale).mock.lastCall![0] as CreateSaleRequest).payment).toEqual({ method: 'Cash', amount: 45.5, cashRegisterId: 'r2' });
     });
 
     it('müşteri temizlenince ödeme modu tam ödemeye döner', async () => {
