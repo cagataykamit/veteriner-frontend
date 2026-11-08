@@ -8,6 +8,7 @@ import { PRIMENG_TR } from '@/app/core/i18n/primeng-tr';
 import { authInterceptor } from '@/app/core/api/auth.interceptor';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { providePanelServiceWorker } from '@/app/core/pwa/panel-service-worker';
+import { firstWeekGuideInterceptor } from '@/app/entities/first-week-guide/services/first-week-guide.interceptor';
 import { environment } from '@/environments/environment';
 import { PRIMEUI_LICENSE } from '@/environments/primeui-license.local';
 import { appRoutes } from './app.routes';
@@ -17,7 +18,7 @@ export const appConfig: ApplicationConfig = {
         provideRouter(appRoutes, withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'enabled' }), withEnabledBlockingInitialNavigation()),
         { provide: API_BASE_URL, useValue: environment.apiBaseUrl },
         { provide: TitleStrategy, useExisting: PageTitleStrategy },
-        provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
+        provideHttpClient(withFetch(), withInterceptors([authInterceptor, firstWeekGuideInterceptor])),
         provideZonelessChangeDetection(),
         providePanelServiceWorker(),
         providePrimeNG({ theme: { preset: Aura, options: { darkModeSelector: '.app-dark' } }, translation: PRIMENG_TR, license: PRIMEUI_LICENSE || undefined })
