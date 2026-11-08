@@ -10,6 +10,7 @@ import { DetailRelatedSummariesService } from '@/app/entities/patient/services/d
 import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { appointmentStatusLabel, appointmentStatusSeverity, canMarkAppointmentNoShow, canRevertAppointmentNoShow, isAppointmentNoShowStatus, isAppointmentCancelledStatus } from '@/app/entities/appointment/utils/appointment-status.utils';
+import { WaitlistSlotNoticeComponent } from '@/app/entities/waitlist/components/waitlist-slot-notice.component';
 import { appointmentTypeDisplayLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
 import { DETAIL_STATS_GRID_CLASS } from '@/app/shared/ui/detail.classes';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -31,7 +32,7 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
 @Component({
     selector: 'app-appointment-detail-page',
     standalone: true,
-    imports: [AppDetailSubjectLineComponent, CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppointmentNoShowDialogComponent, TrDateTimePipe],
+    imports: [AppDetailSubjectLineComponent, CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppointmentNoShowDialogComponent, TrDateTimePipe, WaitlistSlotNoticeComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
@@ -75,6 +76,10 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
                             <p class="m-0 mt-3 inline-flex items-start gap-2 rounded-border border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-sm font-medium text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-300" role="status">
                                 <i class="pi pi-exclamation-triangle text-xs mt-1" aria-hidden="true"></i>{{ isNoShow(a.status) ? copy.noShowAppointmentExamCreateBlocked : copy.cancelledAppointmentExamCreateBlocked }}
                             </p>
+                        }
+                        <!-- Bekleme listesi (TIER-018): iptal boşalan saattir; gelmedi değildir. Uyan kimse yoksa çizilmez. -->
+                        @if (isCancelledForExam(a.status)) {
+                            <div class="mt-3"><app-waitlist-slot-notice [appointmentId]="a.id" /></div>
                         }
                     </div>
                     <div class="flex flex-wrap gap-2 items-center w-full @md:w-auto @md:ml-auto">

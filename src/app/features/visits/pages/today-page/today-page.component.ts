@@ -31,6 +31,7 @@ import { AppointmentRequestDetailDialogComponent } from '@/app/entities/online-b
 import { PendingAppointmentRequestsChipComponent } from '@/app/entities/online-booking/components/pending-appointment-requests-chip.component';
 import { PendingAppointmentRequestsTilesComponent } from '@/app/entities/online-booking/components/pending-appointment-requests-tiles.component';
 import { PendingAppointmentRequestsState } from '@/app/entities/online-booking/services/pending-appointment-requests-state';
+import { WaitlistTodaySummaryComponent } from '@/app/entities/waitlist/components/waitlist-today-summary.component';
 import { TodayMoneyComponent } from '@/app/features/visits/components/today-money.component';
 import { TodayOpenItemsComponent } from '@/app/features/visits/components/today-open-items.component';
 import { VisitArrivalDialogComponent } from '@/app/entities/visit/components/visit-arrival-dialog.component';
@@ -88,6 +89,7 @@ type TodayScope = 'mine' | 'all';
     standalone: true,
     imports: [
         CommonModule,
+        WaitlistTodaySummaryComponent,
         ButtonModule,
         FormsModule,
         SelectButtonModule,

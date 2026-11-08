@@ -91,6 +91,23 @@ export const ApiEndpoints = {
         /** GET liste ve açık talep sınırı; POST yeni talep (Kurumsal). */
         list: () => `/api/v1/custom-development-requests`
     },
+    /** Bekleme listesi (TIER-018, Veteriner `docs/WAITLIST_API_CONTRACT.md` §2): okuma `Appointments.Read`, yazma `Appointments.Create`. */
+    waitlistEntries: {
+        /** GET (query: `clinicId`, `veterinarianUserId`, `status`); POST yeni kayıt (Profesyonel, Kurumsal). */
+        list: () => `/api/v1/waitlist-entries`,
+        /** GET kayıt, geçmiş ve teklifler. */
+        detail: (id: string) => `/api/v1/waitlist-entries/${encodeURIComponent(id)}`,
+        /** POST `{ reason }`: kaydı kapatır, açık teklif geri çekilir. */
+        close: (id: string) => `/api/v1/waitlist-entries/${encodeURIComponent(id)}/close`,
+        /** POST `{ direction: 'Up' | 'Down' }`. */
+        move: (id: string) => `/api/v1/waitlist-entries/${encodeURIComponent(id)}/move`,
+        /** POST `{ sourceAppointmentId }`: elle teklif. */
+        offers: (id: string) => `/api/v1/waitlist-entries/${encodeURIComponent(id)}/offers`,
+        /** GET iptal edilen randevunun boşalttığı saat ve uyan kayıtlar. */
+        slot: (appointmentId: string) => `/api/v1/waitlist-entries/slots/${encodeURIComponent(appointmentId)}`,
+        /** GET (query: `clinicId`): Bugün ekranı bilgisi. */
+        today: () => `/api/v1/waitlist-entries/today`
+    },
     /** Ücret bekleyen kalemler (ADR-018). */
     chargeSuggestions: {
         /** GET (`Charges.Read`; query: `page`, `pageSize`, `clinicId`, `petId`, `examinationId`, `visitId`; yalnız `Pending`). */

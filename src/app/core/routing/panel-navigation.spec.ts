@@ -101,7 +101,8 @@ describe('panel-navigation', () => {
         expect(tabs('Randevular')).toEqual([
             ['Liste', '/panel/appointments'],
             ['Takvim', '/panel/appointments/calendar'],
-            ['Talepler', '/panel/appointments/requests']
+            ['Talepler', '/panel/appointments/requests'],
+            ['Bekleme listesi', '/panel/appointments/waitlist']
         ]);
         expect(tabs('Para')).toEqual([
             ['Ücretler', '/panel/charges'],

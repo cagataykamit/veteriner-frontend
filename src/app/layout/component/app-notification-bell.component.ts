@@ -23,7 +23,8 @@ const TYPE_ICONS: Record<UserNotificationType, { icon: string; tone: string }> =
     [UserNotificationType.AppointmentRequestCancelled]: { icon: 'pi pi-calendar-times', tone: 'text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-950/40' },
     [UserNotificationType.AppointmentAssigned]: { icon: 'pi pi-user-plus', tone: 'text-sky-700 bg-sky-50 dark:text-sky-300 dark:bg-sky-950/40' },
     [UserNotificationType.PortalDataRequestCreated]: { icon: 'pi pi-file', tone: 'text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-950/40' },
-    [UserNotificationType.AppointmentCancelledByOwner]: { icon: 'pi pi-calendar-times', tone: 'text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-950/40' }
+    [UserNotificationType.AppointmentCancelledByOwner]: { icon: 'pi pi-calendar-times', tone: 'text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-950/40' },
+    [UserNotificationType.WaitlistOfferAccepted]: { icon: 'pi pi-calendar-plus', tone: 'text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-950/40' }
 };
 const FALLBACK_ICON = { icon: 'pi pi-bell', tone: 'text-muted-color bg-surface-100 dark:bg-surface-800' };
 

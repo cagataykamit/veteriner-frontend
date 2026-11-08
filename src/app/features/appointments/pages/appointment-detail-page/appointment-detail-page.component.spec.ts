@@ -1,12 +1,13 @@
 import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { NEVER, of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { AppointmentDetailVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
+import { WaitlistService } from '@/app/entities/waitlist/services/waitlist.service';
 import { DetailRelatedSummariesService } from '@/app/entities/patient/services/detail-related-summaries.service';
 import { AppointmentDetailPageComponent } from './appointment-detail-page.component';
 
@@ -45,7 +46,9 @@ describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () =>
                 provideRouter([]),
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'a1' })), snapshot: { queryParamMap: convertToParamMap(query) } } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null } },
+                // Bekleme listesi bilgisi (TIER-018): iptal edilen randevuda okunur; bu testlerde uyan kimse yok.
+                { provide: WaitlistService, useValue: { slot: () => NEVER } },
                 { provide: AppointmentsService, useValue: { getAppointmentById: () => of(appt) } },
                 { provide: DetailRelatedSummariesService, useValue: { loadExaminationsLinkedToAppointment: () => of([]) } },
                 { provide: VisitsService, useValue: { getCurrentVeterinarianUserId: () => of('vet1'), createVisit } }

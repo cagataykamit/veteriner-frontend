@@ -28,6 +28,8 @@
 }
 <!-- Talep Bugün ekranından ayrılmadan açılır; onay/red sonrası talepler ve günlük liste yenilenir. -->
 <app-appointment-request-detail-dialog [requestId]="pendingRequests.openId()" [canDecide]="!ro.mutationBlocked()" (closed)="onRequestDialogClosed($event)" />
+<!-- Bekleme listesi (TIER-018): iptal edilen saat için uygun kişi sayısı; pakette yoksa ya da uyan kimse yoksa çizilmez. -->
+<app-waitlist-today-summary />
 
 <p-selectbutton class="block mb-4" [options]="viewOptions" [ngModel]="view()" (ngModelChange)="setView($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Görünüm" />
 @if (myUserId()) {

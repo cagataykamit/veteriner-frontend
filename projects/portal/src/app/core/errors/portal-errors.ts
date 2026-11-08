@@ -34,6 +34,9 @@ export const PORTAL_ERROR_CODES = {
     appointmentLinkCancelDisabled: 'AppointmentLinks.CancelDisabled',
     appointmentConcurrencyConflict: 'Appointments.ConcurrencyConflict',
     marketingOptOutNotFound: 'MarketingOptOut.NotFound',
+    waitlistOfferNotFound: 'WaitlistOfferLinks.NotFound',
+    waitlistOfferSlotTaken: 'WaitlistOffers.SlotTaken',
+    waitlistOfferConflict: 'WaitlistOffers.ConcurrencyConflict',
     validation: 'Validation.FluentValidation'
 } as const;
 
@@ -70,6 +73,10 @@ export const PORTAL_ERROR_MESSAGES: Readonly<Record<string, string>> = {
     [C.appointmentLinkCancelDisabled]: 'Bu klinik bağlantıdan iptali kapattı. İptal için lütfen kliniği arayın.',
     [C.appointmentConcurrencyConflict]: 'Randevunuz bu sırada güncellendi. Sayfayı yenileyip tekrar deneyin.',
     [C.marketingOptOutNotFound]: 'Bu bağlantı geçersiz. Ticari ileti almak istemiyorsanız kliniğinize bildirebilir ya da portalda Hesabım > Bildirim tercihlerinden kapatabilirsiniz.',
+    // Bekleme listesi teklifi (TIER-018): geçersiz, kullanılmış ve süresi dolmuş aynı kodla döner.
+    [C.waitlistOfferNotFound]: 'Bu teklif artık geçerli değil: süresi dolmuş, yanıtlanmış ya da klinik tarafından kapatılmış olabilir. Bekleme listesindeki yeriniz için kliniğinizi arayabilirsiniz.',
+    [C.waitlistOfferSlotTaken]: 'Bu saat bu arada doldu; randevu oluşturulamadı. Bekleme listesindeki yeriniz korunuyor.',
+    [C.waitlistOfferConflict]: 'Teklif bu sırada yanıtlandı. Sayfayı yenileyip tekrar bakın.',
     [C.pushDisabled]: 'Anlık bildirim tercihiniz kapalı; önce bildirimleri açın.',
     [C.validation]: 'Girdiğiniz bilgileri kontrol edin.'
 };

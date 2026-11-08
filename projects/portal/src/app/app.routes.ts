@@ -27,6 +27,12 @@ export const portalRoutes: Routes = [
         loadComponent: () => import('./features/appointment-link/portal-appointment-link.component').then((m) => m.PortalAppointmentLinkComponent)
     },
     {
+        // Bekleme listesi teklifi (TIER-018): kimliksiz, kabuk dışında; açmak bir şey değiştirmez, kabul ve ret düğmeyle.
+        path: 'bekleme-teklifi',
+        title: title('Boşalan randevu saati'),
+        loadComponent: () => import('./features/waitlist-offer/portal-waitlist-offer.component').then((m) => m.PortalWaitlistOfferComponent)
+    },
+    {
         path: 'ticari-ileti-ret',
         title: title('Ticari ileti'),
         loadComponent: () => import('./features/marketing-opt-out/portal-marketing-opt-out.component').then((m) => m.PortalMarketingOptOutComponent)

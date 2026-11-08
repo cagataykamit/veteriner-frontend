@@ -37,7 +37,7 @@ describe('ClinicDetailPageComponent — çalışma saatleri ve randevu varsayıl
                 }))
             )
         );
-        clinics.getAppointmentSettings.mockReturnValue(of({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false, ownerCancelLinkEnabled: true }));
+        clinics.getAppointmentSettings.mockReturnValue(of({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false, ownerCancelLinkEnabled: true, waitlistAutoOfferEnabled: true }));
         await TestBed.configureTestingModule({
             imports: [ClinicDetailPageComponent],
             providers: [
@@ -45,7 +45,7 @@ describe('ClinicDetailPageComponent — çalışma saatleri ve randevu varsayıl
                 MessageService,
                 { provide: ClinicsService, useValue: clinics },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true, getAccessToken: () => 't' } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null } },
                 { provide: ClinicTaxpayerSettingsService, useValue: { get: () => NEVER, update: () => NEVER } },
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ clinicId: 'c1' })), snapshot: { paramMap: convertToParamMap({ clinicId: 'c1' }) } } }
             ]
@@ -103,7 +103,7 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
             breakStartsAt: null,
             breakEndsAt: null
         }));
-    const settings = { defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false, ownerCancelLinkEnabled: true };
+    const settings = { defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false, ownerCancelLinkEnabled: true, waitlistAutoOfferEnabled: true };
 
     const el = () => fixture.nativeElement as HTMLElement;
     const text = () => el().textContent ?? '';
@@ -147,7 +147,7 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
                 MessageService,
                 { provide: ClinicsService, useValue: clinics },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getAccessToken: () => 't' } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: readOnly } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: readOnly, lockedPlanFeature: () => null } },
                 { provide: ClinicTaxpayerSettingsService, useValue: { get: () => NEVER, update: () => NEVER } },
                 { provide: ActivatedRoute, useValue: { paramMap: of(params), snapshot: { paramMap: params } } }
             ]

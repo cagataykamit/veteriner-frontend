@@ -12,6 +12,8 @@ const DEFAULT_SLOT_INTERVAL_MINUTES = 15;
 const DEFAULT_ALLOW_OVERLAPPING_APPOINTMENTS = false;
 /** Backend varsayılanı (TIER-019): alan yoksa iptal bağlantısı açık sayılır. */
 const DEFAULT_OWNER_CANCEL_LINK_ENABLED = true;
+/** Backend varsayılanı (TIER-018): alan yoksa bekleme listesine otomatik teklif açık sayılır. */
+const DEFAULT_WAITLIST_AUTO_OFFER_ENABLED = true;
 
 function isRecord(x: unknown): x is Record<string, unknown> {
     return x !== null && typeof x === 'object' && !Array.isArray(x);
@@ -86,12 +88,15 @@ export function mapClinicAppointmentSettingsRaw(raw: unknown): ClinicAppointment
         DEFAULT_ALLOW_OVERLAPPING_APPOINTMENTS;
     const ownerCancelLinkEnabled =
         pickBoolean(source, ['ownerCancelLinkEnabled', 'OwnerCancelLinkEnabled']) ?? DEFAULT_OWNER_CANCEL_LINK_ENABLED;
+    const waitlistAutoOfferEnabled =
+        pickBoolean(source, ['waitlistAutoOfferEnabled', 'WaitlistAutoOfferEnabled']) ?? DEFAULT_WAITLIST_AUTO_OFFER_ENABLED;
 
     return {
         defaultAppointmentDurationMinutes,
         slotIntervalMinutes,
         allowOverlappingAppointments,
-        ownerCancelLinkEnabled
+        ownerCancelLinkEnabled,
+        waitlistAutoOfferEnabled
     };
 }
 
@@ -119,7 +124,8 @@ export function clinicAppointmentSettingsFormToPutBody(
         ),
         slotIntervalMinutes: normalizePositiveInteger(Number(value.slotIntervalMinutes), DEFAULT_SLOT_INTERVAL_MINUTES),
         allowOverlappingAppointments: Boolean(value.allowOverlappingAppointments),
-        ownerCancelLinkEnabled: Boolean(value.ownerCancelLinkEnabled)
+        ownerCancelLinkEnabled: Boolean(value.ownerCancelLinkEnabled),
+        waitlistAutoOfferEnabled: Boolean(value.waitlistAutoOfferEnabled)
     };
 }
 

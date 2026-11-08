@@ -16,7 +16,9 @@ export enum UserNotificationType {
     /** Portaldan KVKK veri talebi (PORTAL-009; `PORTAL_API_CONTRACT.md` §11). */
     PortalDataRequestCreated = 3,
     /** Sahip randevuyu hatırlatma bağlantısından iptal etti (TIER-019; `APPOINTMENT_OWNER_LINK_API_CONTRACT.md` §3). */
-    AppointmentCancelledByOwner = 4
+    AppointmentCancelledByOwner = 4,
+    /** Sahip bekleme listesi teklifini kabul etti, randevu oluştu (TIER-018; `WAITLIST_API_CONTRACT.md` §4). */
+    WaitlistOfferAccepted = 5
 }
 
 export const USER_NOTIFICATION_TYPE_LABELS: Record<UserNotificationType, string> = {
@@ -24,7 +26,8 @@ export const USER_NOTIFICATION_TYPE_LABELS: Record<UserNotificationType, string>
     [UserNotificationType.AppointmentRequestCancelled]: 'Talep iptali',
     [UserNotificationType.AppointmentAssigned]: 'Size atanan randevu',
     [UserNotificationType.PortalDataRequestCreated]: 'Portal veri talebi',
-    [UserNotificationType.AppointmentCancelledByOwner]: 'Sahip randevuyu iptal etti'
+    [UserNotificationType.AppointmentCancelledByOwner]: 'Sahip randevuyu iptal etti',
+    [UserNotificationType.WaitlistOfferAccepted]: 'Bekleme listesinden randevu'
 };
 
 export interface UserNotificationVm {

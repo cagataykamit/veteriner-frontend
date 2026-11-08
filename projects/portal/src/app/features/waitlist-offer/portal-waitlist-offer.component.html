@@ -1,0 +1,73 @@
+<main class="portal-page portal-stack">
+    <portal-brand-header [clinicName]="page()?.clinicName ?? null" />
+
+    @switch (state()) {
+        @case ('loading') {
+            <portal-loading-state message="Teklif kontrol ediliyor…" />
+        }
+        @case ('invalid') {
+            <section class="portal-card portal-stack" aria-labelledby="offer-invalid-title">
+                <h1 id="offer-invalid-title" class="portal-title">Teklif geçerli değil</h1>
+                <p>{{ invalidMessage }}</p>
+            </section>
+        }
+        @case ('error') {
+            <portal-error-state [message]="loadError()" (retry)="load()" />
+        }
+        @case ('accepted') {
+            <section class="portal-card portal-stack" aria-labelledby="offer-done-title" data-testid="offer-accepted">
+                <h1 id="offer-done-title" class="portal-title">Randevunuz oluştu</h1>
+                <p>{{ page()?.petName }} için {{ page()?.clinicName }} kliniğinde randevunuz {{ whenText() }}.</p>
+                <p class="portal-muted">Bir değişiklik olursa kliniği arayabilirsiniz.</p>
+            </section>
+        }
+        @case ('declined') {
+            <section class="portal-card portal-stack" aria-labelledby="offer-done-title" data-testid="offer-declined">
+                <h1 id="offer-done-title" class="portal-title">Teşekkürler</h1>
+                <p>Bu saati istemediğinizi kliniğe bildirdik. Bekleme listesindeki yeriniz korunuyor.</p>
+            </section>
+        }
+        @case ('slotTaken') {
+            <section class="portal-card portal-stack" aria-labelledby="offer-taken-title" data-testid="offer-slot-taken">
+                <h1 id="offer-taken-title" class="portal-title">Saat doldu</h1>
+                <p>{{ slotTakenMessage }}</p>
+            </section>
+        }
+        @case ('ready') {
+            @if (page(); as p) {
+                <section class="portal-card portal-stack" aria-labelledby="offer-title">
+                    <h1 id="offer-title" class="portal-title">Boşalan randevu saati</h1>
+                    <p>Bekleme listesinde olduğunuz için bu saat size ayrıldı.</p>
+                    <dl class="portal-dl">
+                        <div>
+                            <dt>Klinik</dt>
+                            <dd>{{ p.clinicName }}</dd>
+                        </div>
+                        <div>
+                            <dt>Tarih ve saat</dt>
+                            <dd>{{ whenText() }}</dd>
+                        </div>
+                        <div>
+                            <dt>Hayvan</dt>
+                            <dd>{{ p.petName }}</dd>
+                        </div>
+                    </dl>
+                    <p class="portal-muted" data-testid="offer-expires">Teklif {{ expiresText() }} saatine kadar geçerli; yanıt vermezseniz sıradaki kişiye geçer.</p>
+
+                    @if (actionError(); as message) {
+                        <p-message severity="error" role="alert">{{ message }}</p-message>
+                    }
+
+                    <div class="portal-actions">
+                        <button pButton type="button" [disabled]="!!pending()" (click)="accept()">
+                            @if (pending() === 'accept') {<i class="p-button-icon fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>}Randevuyu al
+                        </button>
+                        <button type="button" class="portal-link-button" [disabled]="!!pending()" (click)="decline()">Bu saat bana uymuyor</button>
+                    </div>
+                </section>
+            }
+        }
+    }
+
+    <portal-footer />
+</main>
