@@ -7,6 +7,7 @@ import {
     APPOINTMENT_REQUEST_EMAIL_KIND_NAMES,
     type AppointmentReasonFormValue,
     type AppointmentReasonVm,
+    type AppointmentRequestChannelSummaryVm,
     type AppointmentRequestDetailVm,
     type AppointmentRequestEmailKind,
     type AppointmentRequestEmailTemplatesVm,
@@ -153,6 +154,15 @@ export class AppointmentRequestsService {
             map((r) => toPagedVm(r, query.page ?? 1, query.pageSize ?? 20)),
             toOnlineBookingError('Randevu talepleri yüklenemedi.')
         );
+    }
+
+    /** Kaynağa göre özet (TIER-016); `from`/`to` İstanbul günleri (yyyy-MM-dd), ikisi de dahil. */
+    channelSummary(from: string, to: string): Observable<AppointmentRequestChannelSummaryVm> {
+        const params = new HttpParams().set('from', from).set('to', to);
+
+        return this.api
+            .get<AppointmentRequestChannelSummaryVm>(ApiEndpoints.appointmentRequests.channelSummary(), params)
+            .pipe(toOnlineBookingError('Kaynak özeti yüklenemedi.'));
     }
 
     get(id: string): Observable<AppointmentRequestDetailVm> {

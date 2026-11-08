@@ -70,6 +70,30 @@ export enum AppointmentRequestSource {
     Link = 1
 }
 
+/** Sunucu `AppointmentRequestChannel` (TIER-016, sözleşme §14): talebin kaynağı; eski talepte `null`. */
+export enum AppointmentRequestChannel {
+    ClinicLink = 0,
+    ClinicSite = 1,
+    OwnerPortal = 2,
+    Phone = 3,
+    VetFinder = 4
+}
+
+export interface AppointmentRequestChannelSummaryRowVm {
+    channel: AppointmentRequestChannel | null;
+    total: number;
+    approved: number;
+}
+
+/** Kaynağa göre özet; `from`/`to` İstanbul günleri (yyyy-MM-dd), talep tarihine göre. */
+export interface AppointmentRequestChannelSummaryVm {
+    from: string;
+    to: string;
+    rows: AppointmentRequestChannelSummaryRowVm[];
+    total: number;
+    approved: number;
+}
+
 /** Sunucu `AppointmentRequestActorKind`. */
 export enum AppointmentRequestActorKind {
     Owner = 0,
@@ -104,6 +128,8 @@ export interface AppointmentRequestListItemVm {
     clinicId: string;
     status: AppointmentRequestStatus;
     source: AppointmentRequestSource;
+    /** Boşsa kaynak bilinmiyor (TIER-016 öncesi talep). */
+    channel: AppointmentRequestChannel | null;
     /** Boşsa sahip "Diğer / emin değilim" seçti; ne için geldiği `ownerNote`'tadır (ADR-042 eki). */
     reasonId: string | null;
     reasonName: string;

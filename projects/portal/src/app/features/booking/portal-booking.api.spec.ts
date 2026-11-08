@@ -60,10 +60,13 @@ describe('PortalBookingApi (online randevu talebi uçları)', () => {
                 petBreed: null,
                 reasonId: 'reason-1',
                 requestedStartUtc: SLOT_MON_0900,
-                note: null
+                note: null,
+                channel: 'site'
             })
         );
         const createReq = http.expectOne('/api/portal/v1/booking/kod/requests');
+
+        expect(createReq.request.body.channel).toBe('site');
 
         expect(createReq.request.headers.has('Authorization')).toBe(false);
         createReq.flush({ id: 'req-1', status: 'Pending', requestedStartUtc: SLOT_MON_0900 });

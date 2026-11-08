@@ -78,6 +78,8 @@ export interface PortalPublicBookingRequest {
     readonly reasonId: string | null;
     readonly requestedStartUtc: string;
     readonly note: string | null;
+    /** Bağlantının `?kaynak=` değeri olduğu gibi (TIER-016, §14); izinli değilse sunucu klinik bağlantısı sayar. */
+    readonly channel: string | null;
 }
 
 /** Oturumlu talep gövdesi (§6): kayıtlı hayvan ya da serbest metin hayvan. */

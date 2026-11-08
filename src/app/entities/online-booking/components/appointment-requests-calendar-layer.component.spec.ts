@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
-import { AppointmentRequestSource, AppointmentRequestStatus } from '@/app/entities/online-booking/models/online-booking.model';
+import { AppointmentRequestChannel, AppointmentRequestSource, AppointmentRequestStatus } from '@/app/entities/online-booking/models/online-booking.model';
 import { AppointmentRequestsService } from '@/app/entities/online-booking/services/online-booking.service';
 import { AppointmentRequestsCalendarLayerComponent, CALENDAR_REQUEST_LAYER_STORAGE_KEY } from './appointment-requests-calendar-layer.component';
 
@@ -19,6 +19,7 @@ describe('AppointmentRequestsCalendarLayerComponent', () => {
                         clinicId: 'c1',
                         status: AppointmentRequestStatus.Pending,
                         source: AppointmentRequestSource.Link,
+                        channel: AppointmentRequestChannel.ClinicLink,
                         reasonId: 'r1',
                         reasonName: 'Aşı',
                         // İstanbul 2 Kasım 2026 10:00

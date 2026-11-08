@@ -7,6 +7,7 @@ import { of } from 'rxjs';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import {
     AppointmentRequestActorKind,
+    AppointmentRequestChannel,
     AppointmentRequestSource,
     AppointmentRequestStatus,
     type AppointmentRequestDetailVm
@@ -21,6 +22,7 @@ const detail = (over: Partial<AppointmentRequestDetailVm['summary']> = {}): Appo
         clinicId: 'c1',
         status: AppointmentRequestStatus.Pending,
         source: AppointmentRequestSource.Link,
+        channel: AppointmentRequestChannel.ClinicSite,
         reasonId: 'r1',
         reasonName: 'Aşı',
         requestedStartUtc: '2026-11-02T07:00:00Z',
@@ -95,6 +97,20 @@ describe('AppointmentRequestDetailDialogComponent', () => {
         expect(requests.approve).toHaveBeenCalledWith('q1', { clientId: 'cl1', petId: 'p9', scheduledAtUtc: null, veterinarianUserId: null, email: null });
         expect(cmp.detail()?.summary.status).toBe(AppointmentRequestStatus.Approved);
         expect(cmp.mode()).toBe('view');
+    });
+
+    it('kaynak rozeti gösterilir; eski talepte "Bilinmiyor" (TIER-016)', async () => {
+        await create(detail());
+        fixture.detectChanges();
+
+        expect(document.querySelector('[data-testid="request-channel"]')?.textContent).toContain('Kaynak: Kendi sitesi');
+
+        fixture.destroy();
+        TestBed.resetTestingModule();
+        await create(detail({ channel: null }));
+        fixture.detectChanges();
+
+        expect(document.querySelector('[data-testid="request-channel"]')?.textContent).toContain('Kaynak: Bilinmiyor');
     });
 
     it('kayıtlı müşteri ve hastanın kartları yeni sekmede açılır; kayıtsızsa bağlantı yok', async () => {

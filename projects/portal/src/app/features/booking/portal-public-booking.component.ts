@@ -67,6 +67,8 @@ export class PortalPublicBookingComponent implements OnInit {
     readonly bookingCode = input<string | undefined>();
     /** Klinik sitesinde seçilen en yakın saat (`?saat={startUtc}`, TIER-017). Neden seçilince o nedenin listesindeyse seçili gelir. */
     readonly saat = input<string | undefined>();
+    /** Bağlantıyı açan yer (`?kaynak=site`, TIER-016). Talebe olduğu gibi gider; izinli değeri sunucu belirler. */
+    readonly kaynak = input<string | undefined>();
 
     readonly limits = PORTAL_BOOKING_LIMITS;
     readonly state = signal<PageState>('loading');
@@ -246,7 +248,8 @@ export class PortalPublicBookingComponent implements OnInit {
                 petBreed: v.petBreed.trim() || null,
                 reasonId: reason.id,
                 requestedStartUtc: slot,
-                note: v.note.trim() || null
+                note: v.note.trim() || null,
+                channel: this.kaynak()?.trim() || null
             })
             .subscribe({
                 next: () => {

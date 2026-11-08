@@ -401,6 +401,8 @@ export const ApiEndpoints = {
     /** Online randevu talep kuyruğu (sözleşme §4); `AppointmentRequests.Manage`. */
     appointmentRequests: {
         list: () => `/api/v1/appointment-requests`,
+        /** GET `from`, `to` (yyyy-MM-dd), `clinicId`; kaynağa göre özet (sözleşme §14, TIER-016). */
+        channelSummary: () => `/api/v1/appointment-requests/channel-summary`,
         byId: (id: string) => `/api/v1/appointment-requests/${encodeURIComponent(id)}`,
         approve: (id: string) => `/api/v1/appointment-requests/${encodeURIComponent(id)}/approve`,
         reject: (id: string) => `/api/v1/appointment-requests/${encodeURIComponent(id)}/reject`,
