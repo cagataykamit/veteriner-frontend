@@ -29,6 +29,8 @@ export interface CartPaymentInput {
     method: SalePaymentMethodApi;
     /** Yalnız `partial` modunda kullanılır. */
     amount: number | null;
+    /** Nakitte seçilen kasa (TIER-008); boşsa sunucu Ana kasayı kullanır. */
+    cashRegisterId?: string | null;
 }
 
 /** Ürünün varsayılan fiyatı ve miktar 1 ile yeni satır; miktar ve fiyat satırda düzenlenir. */
@@ -156,6 +158,13 @@ export function toCreateSaleRequest(input: {
             unitPrice: l.unitPrice!,
             batchId: l.batchId || undefined
         })),
-        payment: amount == null ? undefined : { method: input.payment.method, amount }
+        payment:
+            amount == null
+                ? undefined
+                : {
+                      method: input.payment.method,
+                      amount,
+                      ...(input.payment.method === 'Cash' && input.payment.cashRegisterId ? { cashRegisterId: input.payment.cashRegisterId } : {})
+                  }
     };
 }

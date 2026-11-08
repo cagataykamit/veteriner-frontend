@@ -72,4 +72,6 @@ export interface ClientCreditApplyResultDto {
 export interface ClientCreditRefundRequestDto {
     reason: string;
     method: ClientCreditRefundMethod;
+    /** Nakit iadede kasa (TIER-008); boşsa sunucu Ana kasayı kullanır. */
+    cashRegisterId?: string;
 }

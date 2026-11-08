@@ -93,6 +93,14 @@ describe('payment mapper — müşteri kredisi (FIN-005)', () => {
         expect('creditAmount' in create(0)).toBe(false);
     });
 
+    it('cashRegisterId yalnız seçildiyse gövdeye girer (verilmezse sunucu Ana kasayı kullanır)', () => {
+        const base = { clinicId: 'k1', clientId: 'c1', amount: 100, currency: 'TRY', method: 'cash', paidAtUtc: '2026-10-30T10:00:00Z', requestId: 'r1', allocations: [] };
+
+        expect(mapCreatePaymentToApiBody({ ...base, cashRegisterId: 'reg-2' }).cashRegisterId).toBe('reg-2');
+        expect('cashRegisterId' in mapCreatePaymentToApiBody({ ...base, cashRegisterId: null })).toBe(false);
+        expect('cashRegisterId' in mapCreatePaymentToApiBody(base)).toBe(false);
+    });
+
     it('detay: creditedAmount okunur, yoksa 0', () => {
         expect(mapPaymentDetailDtoToVm({ id: 'p1', creditedAmount: 400 }).creditedAmount).toBe(400);
         expect(mapPaymentDetailDtoToVm({ id: 'p1' }).creditedAmount).toBe(0);

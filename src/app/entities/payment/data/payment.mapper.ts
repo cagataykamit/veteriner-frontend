@@ -329,7 +329,8 @@ export function mapCreatePaymentToApiBody(req: CreatePaymentRequest): PaymentCre
         ...mapUpdatePaymentToApiBody(req),
         requestId: req.requestId.trim(),
         allocations: req.allocations.map((a) => ({ chargeId: a.chargeId.trim(), amount: a.amount })),
-        ...(req.creditAmount && req.creditAmount > 0 ? { creditAmount: req.creditAmount } : {})
+        ...(req.creditAmount && req.creditAmount > 0 ? { creditAmount: req.creditAmount } : {}),
+        ...(req.cashRegisterId ? { cashRegisterId: req.cashRegisterId } : {})
     };
 }
 

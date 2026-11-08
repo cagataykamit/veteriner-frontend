@@ -24,6 +24,6 @@ export function mapClientCreditApplyToApiBody(clinicId: string | null | undefine
 }
 
 /** Form yöntemi (cash/card/transfer) sözleşmedeki metin değere çevrilir. */
-export function mapClientCreditRefundToApiBody(reason: string, method: CanonicalPaymentMethod): ClientCreditRefundRequestDto {
-    return { reason: reason.trim(), method: REFUND_METHODS[method] };
+export function mapClientCreditRefundToApiBody(reason: string, method: CanonicalPaymentMethod, cashRegisterId: string | null = null): ClientCreditRefundRequestDto {
+    return { reason: reason.trim(), method: REFUND_METHODS[method], ...(method === 'cash' && cashRegisterId ? { cashRegisterId } : {}) };
 }

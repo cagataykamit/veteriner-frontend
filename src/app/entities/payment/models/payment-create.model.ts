@@ -31,4 +31,6 @@ export interface CreatePaymentRequest extends UpdatePaymentRequest {
     allocations: PaymentAllocationInput[];
     /** Ücretlere bağlanmayan kısım (fazla ödeme ya da avans) müşteri kredisine yazılır. */
     creditAmount?: number;
+    /** Nakdin kasası (TIER-008); yalnız nakitte, boşsa sunucu Ana kasayı kullanır. */
+    cashRegisterId?: string | null;
 }

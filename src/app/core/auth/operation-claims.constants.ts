@@ -99,6 +99,13 @@ export const CHARGES_CORRECT_CLAIM = 'Charges.Correct' as const;
 export const CASH_COUNTS_READ_CLAIM = 'CashCounts.Read' as const;
 export const CASH_COUNTS_CREATE_CLAIM = 'CashCounts.Create' as const;
 export const CASH_COUNTS_CORRECT_CLAIM = 'CashCounts.Correct' as const;
+/** Kasalar, gelir/gider türleri, kasa hareketleri ve raporu görme (TIER-008); ödeme ekranında kasa seçimi için de gerekir. */
+export const CASH_REGISTERS_READ_CLAIM = 'CashRegisters.Read' as const;
+/** Kasa ve gelir/gider türü tanımı (yönetici düzeyi). */
+export const CASH_REGISTERS_MANAGE_CLAIM = 'CashRegisters.Manage' as const;
+export const CASH_MOVEMENTS_CREATE_CLAIM = 'CashMovements.Create' as const;
+/** Kasa hareketi ve aktarım iptali (yönetici düzeyi, ADR-012 K2). */
+export const CASH_MOVEMENTS_VOID_CLAIM = 'CashMovements.Void' as const;
 
 /** Dış API anahtarları (TIER-009) — `EXTERNAL_API_CONTRACT.md` §6; oluşturma, liste ve iptal. Yalnız Admin/Owner. */
 export const API_KEYS_MANAGE_CLAIM = 'ApiKeys.Manage' as const;

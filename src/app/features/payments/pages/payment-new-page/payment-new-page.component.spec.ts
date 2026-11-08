@@ -12,6 +12,7 @@ import { ClientCreditsService } from '@/app/entities/client-credit/services/clie
 import { PaymentsService } from '@/app/entities/payment/services/payments.service';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { parseDateInputValue } from '@/app/shared/forms/date-input/date-input-value.utils';
+import { CashRegistersService } from '@/app/entities/cash-register/services/cash-registers.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { PaymentNewPageComponent } from './payment-new-page.component';
@@ -69,7 +70,8 @@ describe('PaymentNewPageComponent', () => {
                 { provide: ClientCreditsService, useValue: credits },
                 { provide: ClientSearchService, useValue: { search: () => of([]), getById: () => of({ id: 'cl1', fullName: 'Ali Veli', phone: '—', petNames: [], label: 'Ali Veli' }) } },
                 { provide: AuthService, useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez', hasOperationClaim: () => true } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked, lockedPlanFeature: () => null } },
+                { provide: CashRegistersService, useValue: { list: () => of([]) } },
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: (k: string) => query[k] ?? null } } } }
             ]
         }).compileComponents();

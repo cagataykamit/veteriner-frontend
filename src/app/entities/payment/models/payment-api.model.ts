@@ -85,4 +85,6 @@ export interface PaymentCreateWithAllocationsRequestDto extends PaymentCreateReq
     allocations: Array<{ chargeId: string; amount: number }>;
     /** `CLIENT_CREDIT_API_CONTRACT.md` §3: yalnız > 0 iken gönderilir. */
     creditAmount?: number;
+    /** `CASH_REGISTERS_API_CONTRACT.md` §4: yalnız nakitte ve seçildiyse gönderilir. */
+    cashRegisterId?: string;
 }

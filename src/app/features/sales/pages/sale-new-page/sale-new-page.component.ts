@@ -33,6 +33,7 @@ import {
 } from '@/app/features/sales/utils/sale-cart.utils';
 import { printSaleReceipt } from '@/app/features/sales/utils/sale-receipt-print.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { CashRegisterSelectComponent } from '@/app/entities/cash-register/components/cash-register-select.component';
 import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { BarcodeScanButtonComponent } from '@/app/entities/inventory/components/barcode-scan-button.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -68,7 +69,7 @@ function numberFromInput(event: Event): number | null {
     selector: 'app-sale-new-page',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [FormsModule, RouterLink, ButtonModule, SelectModule, SelectButtonModule, ClientSearchComponent, BarcodeScanButtonComponent, AppPageHeaderComponent, SaleReceiptComponent, MoneyPipe],
+    imports: [FormsModule, RouterLink, ButtonModule, SelectModule, SelectButtonModule, ClientSearchComponent, BarcodeScanButtonComponent, AppPageHeaderComponent, SaleReceiptComponent, MoneyPipe, CashRegisterSelectComponent],
     host: { '(keydown.control.enter)': 'submit()' },
     template: `
         <app-page-header title="Hızlı satış" description="Ürünü okutun ya da arayın; Enter ile sepete ekleyin, Ctrl+Enter ile tamamlayın." />
@@ -220,6 +221,8 @@ function numberFromInput(event: Event): number | null {
                             <p-selectbutton [options]="methodOptions" [ngModel]="method()" (ngModelChange)="method.set($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabelledBy="sale-method-label" />
                         </div>
 
+                        <app-cash-register-select fieldClass="block mt-4" inputId="sale-cash-register" [clinicId]="activeClinicId" [method]="cashRegisterMethod()" [(value)]="cashRegisterId" [disabled]="submitting()" />
+
                         @if (!isWalkIn()) {
                             <div class="mt-4" data-testid="sale-mode">
                                 <span id="sale-mode-label" class="block text-sm font-medium text-muted-color mb-2">Ödeme</span>
@@ -297,6 +300,9 @@ export class SaleNewPageComponent {
     protected readonly partialAmount = signal<number | null>(null);
     protected readonly notes = signal('');
 
+    /** Nakitte kasa (TIER-008); boşsa Ana kasa. */
+    protected readonly cashRegisterId = signal<string | null>(null);
+    protected readonly activeClinicId = this.auth.getClinicId()?.trim() || null;
     protected readonly submitting = signal(false);
     protected readonly submitError = signal<string | null>(null);
     protected readonly done = signal<CreateSaleResultVm | null>(null);
@@ -309,7 +315,14 @@ export class SaleNewPageComponent {
 
     protected readonly isWalkIn = computed(() => !this.clientId());
     protected readonly total = computed(() => cartTotal(this.lines()));
-    private readonly paymentInput = computed<CartPaymentInput>(() => ({ mode: this.mode(), method: this.method(), amount: this.partialAmount() }));
+    private readonly paymentInput = computed<CartPaymentInput>(() => ({
+        mode: this.mode(),
+        method: this.method(),
+        amount: this.partialAmount(),
+        cashRegisterId: this.cashRegisterId()
+    }));
+    /** Kasa yalnız ödeme alınırken sorulur: peşin müşteride de; veresiyede ödeme yoktur. */
+    protected readonly cashRegisterMethod = computed(() => (this.mode() === 'credit' ? null : this.method()));
     protected readonly payable = computed(() => effectivePaymentAmount(this.total(), this.isWalkIn(), this.paymentInput()));
     protected readonly outstanding = computed(() => Math.max(0, Math.round((this.total() - (this.payable() ?? 0)) * 100) / 100));
     protected readonly paymentErr = computed(() => paymentError(this.total(), this.isWalkIn(), this.paymentInput()));

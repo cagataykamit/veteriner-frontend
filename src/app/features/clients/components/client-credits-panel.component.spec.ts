@@ -4,6 +4,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angul
 import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { CashRegistersService } from '@/app/entities/cash-register/services/cash-registers.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { ClientCreditDto } from '@/app/entities/client-credit/models/client-credit-api.model';
 import { ClientCreditsService } from '@/app/entities/client-credit/services/client-credits.service';
@@ -53,7 +54,8 @@ describe('ClientCreditsPanelComponent (müşteri kartı kredisi)', () => {
                 provideRouter([]),
                 { provide: ClientCreditsService, useValue: service },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null } },
+                { provide: CashRegistersService, useValue: { list: () => of([]) } },
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } },
                 { provide: MessageService, useValue: { add: toast } }
             ]
@@ -144,7 +146,7 @@ describe('ClientCreditsPanelComponent (müşteri kartı kredisi)', () => {
         cmp.openRefund(target);
         cmp.refundMethod.set('transfer');
         cmp.refund('Müşteri istedi').subscribe();
-        expect(service.refundCredit).toHaveBeenCalledWith('c1', 'cr2', 'Müşteri istedi', 'transfer');
+        expect(service.refundCredit).toHaveBeenCalledWith('c1', 'cr2', 'Müşteri istedi', 'transfer', null);
 
         service.getCredits.mockClear();
         cmp.afterChange('Kredi iade edildi.', 'x');

@@ -37,7 +37,7 @@ export class ClientCreditsService {
     }
 
     /** `Payments.Correct` — kalan kredinin tamamı iade edilir (kasadan çıkış); kredi kapanır. */
-    refundCredit(clientId: string, creditId: string, reason: string, method: CanonicalPaymentMethod): Observable<ClientCreditDto> {
-        return this.api.post<ClientCreditDto>(ApiEndpoints.clients.creditRefund(clientId, creditId), mapClientCreditRefundToApiBody(reason, method)).pipe(toUserError('Kredi iade edilemedi.', CLIENT_CREDIT_PROBLEM_MESSAGES));
+    refundCredit(clientId: string, creditId: string, reason: string, method: CanonicalPaymentMethod, cashRegisterId: string | null = null): Observable<ClientCreditDto> {
+        return this.api.post<ClientCreditDto>(ApiEndpoints.clients.creditRefund(clientId, creditId), mapClientCreditRefundToApiBody(reason, method, cashRegisterId)).pipe(toUserError('Kredi iade edilemedi.', CLIENT_CREDIT_PROBLEM_MESSAGES));
     }
 }
