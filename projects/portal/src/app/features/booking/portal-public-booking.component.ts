@@ -26,6 +26,10 @@ import { PortalBookingDone, PortalBookingHow, PortalBookingStep, PortalBookingSu
 import { PortalSlotPicker } from './portal-slot-picker.component';
 
 type PageState = 'loading' | 'closed' | 'error' | 'ready' | 'done';
+
+function slotLabel(slot: string | null): string {
+    return slot ? `${formatPortalWeekday(slot)}, ${formatPortalDay(slot)} · ${formatPortalTime(slot)}` : '';
+}
 type AvailabilityState = 'idle' | 'loading' | 'ready' | 'error';
 
 /**
@@ -61,6 +65,8 @@ export class PortalPublicBookingComponent implements OnInit {
 
     /** Rota parametresi (component input binding). */
     readonly bookingCode = input<string | undefined>();
+    /** Klinik sitesinde seçilen en yakın saat (`?saat={startUtc}`, TIER-017). Neden seçilince o nedenin listesindeyse seçili gelir. */
+    readonly saat = input<string | undefined>();
 
     readonly limits = PORTAL_BOOKING_LIMITS;
     readonly state = signal<PageState>('loading');
@@ -83,11 +89,15 @@ export class PortalPublicBookingComponent implements OnInit {
     readonly timer = new PortalResendTimer(inject(DestroyRef));
 
     readonly selectedReason = computed<PortalBookingReason | null>(() => this.page()?.reasons.find((r) => reasonKey(r) === this.reasonKey()) ?? null);
-    readonly slotText = computed(() => {
-        const slot = this.selectedSlot();
+    readonly slotText = computed(() => slotLabel(this.selectedSlot()));
+    readonly preferredSlot = computed(() => {
+        const value = this.saat()?.trim();
 
-        return slot ? `${formatPortalWeekday(slot)}, ${formatPortalDay(slot)} · ${formatPortalTime(slot)}` : '';
+        return value && !Number.isNaN(Date.parse(value)) ? value : null;
     });
+    readonly preferredText = computed(() => slotLabel(this.preferredSlot()));
+    /** Siteden gelen saat yalnız neden seçildikten sonraki ilk listede uygulanır; hata sonrası yenilemede kişinin seçimi ezilmez. */
+    private applyPreferred = false;
 
     readonly form = new FormGroup({
         contactName: new FormControl('', { nonNullable: true, validators: [portalRequiredText, Validators.maxLength(PORTAL_BOOKING_LIMITS.contactName)] }),
@@ -133,6 +143,7 @@ export class PortalPublicBookingComponent implements OnInit {
         this.form.controls.note.updateValueAndValidity();
         this.selectedSlot.set(null);
         this.slotMessage.set(null);
+        this.applyPreferred = this.preferredSlot() !== null;
         this.loadAvailability();
     }
 
@@ -149,6 +160,7 @@ export class PortalPublicBookingComponent implements OnInit {
             next: (days) => {
                 this.days.set(days);
                 this.availabilityState.set('ready');
+                this.selectPreferredSlot(days);
             },
             error: (err: unknown) => {
                 if (this.isClosed(err)) {
@@ -286,6 +298,25 @@ export class PortalPublicBookingComponent implements OnInit {
         }
 
         return control.errors?.['maxlength'] ? 'Bu alan çok uzun.' : null;
+    }
+
+    /** Siteden gelen saat bu nedenin müsait listesinde mi; zaman olarak karşılaştırılır (biçim farkı önemsizdir). */
+    private selectPreferredSlot(days: readonly PortalBookingDay[]): void {
+        const preferred = this.preferredSlot();
+
+        if (!this.applyPreferred || !preferred) {
+            return;
+        }
+
+        this.applyPreferred = false;
+        const at = Date.parse(preferred);
+        const match = days.flatMap((d) => d.slots).find((s) => Date.parse(s.startUtc) === at);
+
+        if (match) {
+            this.selectSlot(match.startUtc);
+        } else {
+            this.slotMessage.set('Sitede seçtiğiniz saat bu neden için uygun değil ya da doldu; lütfen başka bir saat seçin.');
+        }
     }
 
     private handleSubmitError(err: unknown): void {

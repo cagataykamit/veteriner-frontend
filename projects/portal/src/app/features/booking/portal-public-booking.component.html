@@ -39,6 +39,9 @@
                         }
                     </div>
                     <portal-booking-how />
+                    @if (preferredText(); as preferred) {
+                        <p-message severity="info" data-testid="preferred-slot">Klinik sitesinde seçtiğiniz saat: {{ preferred }}. Nedeni seçince bu saat uygunsa hazır gelir.</p-message>
+                    }
                 </section>
 
                 <portal-booking-reason-step

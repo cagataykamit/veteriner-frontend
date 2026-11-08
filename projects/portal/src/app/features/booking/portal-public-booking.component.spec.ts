@@ -5,7 +5,7 @@ import { of, throwError } from 'rxjs';
 import { PORTAL_ERROR_CODES, PORTAL_ERROR_MESSAGES } from '@portal/app/core/errors/portal-errors';
 import { buttonByText, problem, typeInto } from '@portal/app/testing/portal-testing';
 import { PortalBookingApi } from './portal-booking.api';
-import { BOOKING_DAYS, BOOKING_PAGE, SLOT_MON_0900 } from './portal-booking.fixtures';
+import { BOOKING_DAYS, BOOKING_PAGE, SLOT_MON_0900, SLOT_MON_0930 } from './portal-booking.fixtures';
 import { PortalPublicBookingComponent } from './portal-public-booking.component';
 
 describe('PortalPublicBookingComponent (kliniğe özel bağlantı)', () => {
@@ -86,6 +86,37 @@ describe('PortalPublicBookingComponent (kliniğe özel bağlantı)', () => {
         expect(api.publicAvailability).toHaveBeenCalledWith('k7m2p9xq4r8t', 'reason-1');
         expect(summaries()).toEqual(['Aşı · ~15 dk', 'Pazartesi, 02.11.2026 · 09:00']);
         expect(el.querySelector('#booking-name')).not.toBeNull();
+    });
+
+    it('klinik sitesinde seçilen saat (?saat=) neden seçilince müsaitse seçili gelir (TIER-017)', async () => {
+        fixture = TestBed.createComponent(PortalPublicBookingComponent);
+        fixture.componentRef.setInput('bookingCode', 'k7m2p9xq4r8t');
+        fixture.componentRef.setInput('saat', '2026-11-02T06:30:00.000Z');
+        el = fixture.nativeElement;
+        await settle();
+
+        expect(el.querySelector('[data-testid=preferred-slot]')?.textContent).toContain('Pazartesi, 02.11.2026 · 09:30');
+
+        el.querySelector<HTMLInputElement>('input[name=booking-reason][value=reason-1]')!.click();
+        await settle();
+
+        expect(fixture.componentInstance.selectedSlot()).toBe(SLOT_MON_0930);
+        expect(summaries()[1]).toBe('Pazartesi, 02.11.2026 · 09:30');
+        expect(el.querySelector('#booking-name')).not.toBeNull();
+    });
+
+    it('siteden gelen saat bu nedenin listesinde yoksa seçilmez ve söylenir', async () => {
+        fixture = TestBed.createComponent(PortalPublicBookingComponent);
+        fixture.componentRef.setInput('bookingCode', 'k7m2p9xq4r8t');
+        fixture.componentRef.setInput('saat', '2026-11-02T07:00:00Z');
+        el = fixture.nativeElement;
+        await settle();
+
+        el.querySelector<HTMLInputElement>('input[name=booking-reason][value=reason-1]')!.click();
+        await settle();
+
+        expect(fixture.componentInstance.selectedSlot()).toBeNull();
+        expect(el.textContent).toContain('Sitede seçtiğiniz saat bu neden için uygun değil');
     });
 
     it('giriş kartı "nasıl işler" adımlarını, acil şeridi aranabilir klinik telefonunu gösterir', async () => {
