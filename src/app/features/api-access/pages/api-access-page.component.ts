@@ -213,7 +213,7 @@ export class ApiAccessPageComponent implements OnInit {
     readonly copied = signal(false);
 
     readonly planLocked = computed(() => this.ro.lockedPlanFeature('ExternalApi') !== null);
-    readonly items = computed(() => this.data()?.items ?? []);
+    readonly items = computed(() => [...(this.data()?.items ?? [])]);
     readonly hasKeys = computed(() => this.items().length > 0);
     readonly activeCount = computed(() => this.items().filter((k) => !k.isRevoked).length);
     readonly canSubmit = computed(() => !this.saving() && this.name().trim().length > 0 && this.selected().size > 0);
