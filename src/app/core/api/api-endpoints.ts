@@ -79,6 +79,30 @@ export const ApiEndpoints = {
         /** POST `{ reason }`; 204. */
         void: (id: string) => `/api/v1/cash-counts/${encodeURIComponent(id)}/void`
     },
+    /** Kasalar ve kasa hareketleri raporu (TIER-008, `CASH_REGISTERS_API_CONTRACT.md`): tek klinik zorunlu. */
+    cashRegisters: {
+        /** GET `?clinicId=&includeInactive=`; POST `{ clinicId, code, name }`. */
+        list: () => `/api/v1/cash-registers`,
+        /** PUT `{ code, name, isActive }`; Ana kasa pasife alınamaz. */
+        byId: (id: string) => `/api/v1/cash-registers/${encodeURIComponent(id)}`,
+        /** GET `?from=&to=&clinicId=&cashRegisterId=`; devreden, hareketler, dönem sonu. */
+        report: () => `/api/v1/cash-registers/report`,
+        reportExport: () => `/api/v1/cash-registers/report/export`,
+        reportExportXlsx: () => `/api/v1/cash-registers/report/export-xlsx`
+    },
+    /** Kasa giriş/çıkışı, aktarım ve gelir/gider türleri (TIER-008). */
+    cashMovements: {
+        /** GET liste (`from`, `to`, `clinicId`, `cashRegisterId`, `includeVoided`, sayfa); POST giriş/çıkış. */
+        list: () => `/api/v1/cash-movements`,
+        /** POST `{ clinicId, sourceCashRegisterId, targetCashRegisterId, businessDate, amount, description }`. */
+        transfers: () => `/api/v1/cash-movements/transfers`,
+        /** POST `{ reason }`; 204. Aktarımda iki bacak birlikte. */
+        void: (id: string) => `/api/v1/cash-movements/${encodeURIComponent(id)}/void`,
+        /** GET `?includeInactive=`; POST `{ name }`. */
+        categories: () => `/api/v1/cash-movements/categories`,
+        /** PUT `{ name, isActive }`. */
+        categoryById: (id: string) => `/api/v1/cash-movements/categories/${encodeURIComponent(id)}`
+    },
     /** Dış API anahtarları (TIER-009, `EXTERNAL_API_CONTRACT.md` §6): `ApiKeys.Manage`. */
     apiKeys: {
         /** GET liste; POST `{ name, scopes }`, açık anahtar yalnız bu yanıtta döner. */

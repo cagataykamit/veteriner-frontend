@@ -13,6 +13,7 @@ import type { CreateSaleRequest } from '@/app/features/sales/models/sale-api.mod
 import type { SaleProductVm } from '@/app/features/sales/models/sale-vm.model';
 import { SaleProductSearchService } from '@/app/features/sales/services/sale-product-search.service';
 import { SalesService } from '@/app/features/sales/services/sales.service';
+import { CashRegistersService } from '@/app/entities/cash-register/services/cash-registers.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { SaleNewPageComponent } from './sale-new-page.component';
 
@@ -107,7 +108,8 @@ describe('SaleNewPageComponent', () => {
                 { provide: StockBatchService, useValue: { getByProduct: () => of(batches) } },
                 { provide: ClientSearchService, useValue: { search: () => of([]), getById: () => of({ id: 'cl1', fullName: 'Ali Veli', phone: '—', petNames: [], label: 'Ali Veli' }) } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => c === 'Sales.Read', getClinicId: () => 'c1' } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked, lockedPlanFeature: () => locked() } }
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked, lockedPlanFeature: () => locked() } },
+                { provide: CashRegistersService, useValue: { list: () => of([]) } }
             ]
         }).compileComponents();
         fixture = TestBed.createComponent(SaleNewPageComponent);

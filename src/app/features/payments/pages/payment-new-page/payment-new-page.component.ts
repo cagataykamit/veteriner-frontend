@@ -22,6 +22,7 @@ import {
     receivedAmountError,
     receivedCreditAmount
 } from '@/app/features/payments/utils/payment-allocation.utils';
+import { CashRegisterSelectComponent } from '@/app/entities/cash-register/components/cash-register-select.component';
 import { ClientCreditsService } from '@/app/entities/client-credit/services/client-credits.service';
 import { CLIENT_CREDIT_PROBLEM_MESSAGES } from '@/app/entities/client-credit/utils/client-credit-error.utils';
 import { PAYMENT_WRITE_METHOD_OPTIONS } from '@/app/entities/payment/utils/payment-method.utils';
@@ -50,7 +51,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
 @Component({
     selector: 'app-payment-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, TableModule, AppPageHeaderComponent, ClientSearchComponent, DateInputComponent, TrDateTimePipe],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, TableModule, AppPageHeaderComponent, ClientSearchComponent, DateInputComponent, TrDateTimePipe, CashRegisterSelectComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Yeni Ödeme" description="Müşterinin açık ücretlerinden hangilerine ne kadar ödeme alındığını girin." />
@@ -198,6 +199,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                             <small class="text-red-500">{{ apiFieldErrors().method }}</small>
                         }
                     </div>
+                    <app-cash-register-select fieldClass="col-span-12 md:col-span-6 lg:col-span-3" [clinicId]="activeClinicId" [method]="methodValue()" [(value)]="cashRegisterId" [disabled]="busy()" />
                     <div class="col-span-12 md:col-span-6 lg:col-span-3">
                         <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati *</label>
                         <app-date-input inputId="paidAtLocal" type="datetime-local" formControlName="paidAtLocal" [min]="paymentDateMinAllowed" limit="past" />
@@ -302,6 +304,10 @@ export class PaymentNewPageComponent implements OnInit {
     readonly busy = computed(() => this.submitting() || this.applyingCredit());
 
     readonly methodOptions = [...PAYMENT_WRITE_METHOD_OPTIONS];
+    /** Nakitte kasa sorulur (TIER-008); boşsa sunucu Ana kasayı kullanır. */
+    readonly methodValue = signal('cash');
+    readonly cashRegisterId = signal<string | null>(null);
+    readonly activeClinicId = this.auth.getClinicId()?.trim() || null;
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
@@ -315,6 +321,7 @@ export class PaymentNewPageComponent implements OnInit {
     ngOnInit(): void {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         this.form.statusChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.formValid.set(this.form.valid));
+        this.form.controls.method.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((m) => this.methodValue.set(m));
         this.formValid.set(this.form.valid);
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
             this.submitError.set(null);
@@ -462,7 +469,8 @@ export class PaymentNewPageComponent implements OnInit {
             }),
             requestId: this.requestId,
             allocations: this.allocations(),
-            creditAmount: this.creditAmount()
+            creditAmount: this.creditAmount(),
+            cashRegisterId: v.method === 'cash' ? this.cashRegisterId() : null
         };
 
         this.submitting.set(true);

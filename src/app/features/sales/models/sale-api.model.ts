@@ -79,6 +79,8 @@ export interface CreateSaleLineRequest {
 export interface CreateSalePaymentRequest {
     method: SalePaymentMethodApi;
     amount: number;
+    /** Nakdin kasası (TIER-008); yalnız nakitte ve seçildiyse. */
+    cashRegisterId?: string;
 }
 
 export interface CreateSaleRequest {

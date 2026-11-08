@@ -108,6 +108,14 @@ describe('sale-cart.utils', () => {
     describe('toCreateSaleRequest', () => {
         const base = { clinicId: 'c1', notes: '  ', requestId: 'rid-1' };
 
+        it('kasa yalnız nakit ödemede gönderilir', () => {
+            const cash = toCreateSaleRequest({ ...base, clientId: '', lines: [line({ quantity: 1, unitPrice: 10 })], payment: { mode: 'full', method: 'Cash', amount: null, cashRegisterId: 'reg-2' } });
+            const card = toCreateSaleRequest({ ...base, clientId: '', lines: [line({ quantity: 1, unitPrice: 10 })], payment: { mode: 'full', method: 'Card', amount: null, cashRegisterId: 'reg-2' } });
+
+            expect(cash.payment).toEqual({ method: 'Cash', amount: 10, cashRegisterId: 'reg-2' });
+            expect(card.payment).toEqual({ method: 'Card', amount: 10 });
+        });
+
         it('peşin müşteri: clientId yok, tam ödeme gönderilir, boş not atılır', () => {
             const req = toCreateSaleRequest({ ...base, clientId: '', lines: [line({ quantity: 2, unitPrice: 10 })], payment: { mode: 'credit', method: 'Card', amount: null } });
 

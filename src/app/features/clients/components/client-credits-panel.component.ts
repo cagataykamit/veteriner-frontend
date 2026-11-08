@@ -9,6 +9,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { CHARGES_READ_CLAIM, PAYMENTS_CORRECT_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { ClientCreditApplicationItemDto, ClientCreditDto } from '@/app/entities/client-credit/models/client-credit-api.model';
+import { CashRegisterSelectComponent } from '@/app/entities/cash-register/components/cash-register-select.component';
 import { ClientCreditsService } from '@/app/entities/client-credit/services/client-credits.service';
 import { clientCreditSourceLabel, clientCreditStatusTag } from '@/app/entities/client-credit/utils/client-credit.utils';
 import { type CanonicalPaymentMethod, PAYMENT_WRITE_METHOD_OPTIONS, paymentMethodLabel } from '@/app/entities/payment/utils/payment-method.utils';
@@ -31,7 +32,7 @@ export const CREDIT_APPLIED_QUERY_KEY = 'creditApplied';
 @Component({
     selector: 'app-client-credits-panel',
     standalone: true,
-    imports: [FormsModule, RouterLink, ButtonModule, SelectModule, ToggleSwitchModule, AppErrorStateComponent, AppStatusTagComponent, ReasonConfirmDialogComponent, TrDateTimePipe],
+    imports: [FormsModule, RouterLink, ButtonModule, SelectModule, ToggleSwitchModule, AppErrorStateComponent, AppStatusTagComponent, ReasonConfirmDialogComponent, TrDateTimePipe, CashRegisterSelectComponent],
     host: { class: 'block' },
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -139,6 +140,7 @@ export const CREDIT_APPLIED_QUERY_KEY = 'creditApplied';
             >
                 <label for="clientCreditRefundMethod" class="block text-sm font-medium text-muted-color mb-2">İade yöntemi *</label>
                 <p-select inputId="clientCreditRefundMethod" class="w-full mb-4" appendTo="body" [options]="methodOptions" optionLabel="label" optionValue="value" [ngModel]="refundMethod()" (ngModelChange)="refundMethod.set($event)" />
+                <app-cash-register-select fieldClass="block mb-4" inputId="clientCreditRefundRegister" [clinicId]="refundTarget()?.clinicId ?? null" [method]="refundMethod()" [(value)]="refundCashRegisterId" />
             </app-reason-confirm-dialog>
         }
     `
@@ -167,13 +169,15 @@ export class ClientCreditsPanelComponent {
 
     readonly methodOptions = [...PAYMENT_WRITE_METHOD_OPTIONS];
     readonly refundMethod = signal<CanonicalPaymentMethod>('cash');
+    /** Nakit iadede kasa (TIER-008); boşsa Ana kasa. */
+    readonly refundCashRegisterId = signal<string | null>(null);
     readonly refundTarget = signal<ClientCreditDto | null>(null);
     readonly reverseTarget = signal<{ credit: ClientCreditDto; application: ClientCreditApplicationItemDto } | null>(null);
     refundVisible = false;
     reverseVisible = false;
 
     readonly reverse = (reason: string) => this.creditsService.reverseApplication(this.clientId(), this.reverseTarget()!.application.id, reason);
-    readonly refund = (reason: string) => this.creditsService.refundCredit(this.clientId(), this.refundTarget()!.id, reason, this.refundMethod());
+    readonly refund = (reason: string) => this.creditsService.refundCredit(this.clientId(), this.refundTarget()!.id, reason, this.refundMethod(), this.refundCashRegisterId());
 
     readonly sourceLabel = clientCreditSourceLabel;
     readonly methodLabel = paymentMethodLabel;

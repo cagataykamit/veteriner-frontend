@@ -19,5 +19,7 @@ describe('client-credit.mapper', () => {
         expect(mapClientCreditRefundToApiBody('  Müşteri istedi  ', 'transfer')).toEqual({ reason: 'Müşteri istedi', method: 'Transfer' });
         expect(mapClientCreditRefundToApiBody('Nakit iade', 'cash').method).toBe('Cash');
         expect(mapClientCreditRefundToApiBody('Kart iade', 'card').method).toBe('Card');
+        expect(mapClientCreditRefundToApiBody('Nakit iade', 'cash', 'reg-2').cashRegisterId).toBe('reg-2');
+        expect('cashRegisterId' in mapClientCreditRefundToApiBody('Kart iade', 'card', 'reg-2')).toBe(false);
     });
 });
