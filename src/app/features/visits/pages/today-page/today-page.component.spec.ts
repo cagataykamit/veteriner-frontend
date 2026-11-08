@@ -14,6 +14,7 @@ import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TodayHospitalizationVm, TodayItemVm, TodayVm, VisitVm } from '@/app/entities/visit/models/visit-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
+import { WaitlistService } from '@/app/entities/waitlist/services/waitlist.service';
 import { TodayPageComponent } from './today-page.component';
 
 /** Göreli süreler ("12 dk", yatış süresi) gerçek saate değil sabit saate göre hesaplanır; describe seviyesindeki fixture'lar koşudan dakikalar önce üretilse de kaymaz. */
@@ -105,7 +106,9 @@ describe('TodayPageComponent', () => {
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'c1', getUserId: () => 'u1' } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null } },
+                // Bekleme listesi bilgisi (TIER-018): bu testlerde boşalan saat yok.
+                { provide: WaitlistService, useValue: { today: () => of({ waitingCount: 0, releasedSlots: [] }) } },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
                 // Bekleyen online talepler: varsayılan yok; "bekleyen online talepler" bloğu doldurur.
@@ -570,7 +573,9 @@ describe('TodayPageComponent', () => {
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true, getClinicId: () => 'c1', getUserId: () => 'u1' } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null } },
+                // Bekleme listesi bilgisi (TIER-018): bu testlerde boşalan saat yok.
+                { provide: WaitlistService, useValue: { today: () => of({ waitingCount: 0, releasedSlots: [] }) } },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
                 { provide: AppointmentsService, useValue: {} },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
@@ -1083,7 +1088,9 @@ describe('TodayPageComponent — Benim hastalarım', () => {
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'c1', getUserId: () => 'u1' } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null } },
+                // Bekleme listesi bilgisi (TIER-018): bu testlerde boşalan saat yok.
+                { provide: WaitlistService, useValue: { today: () => of({ waitingCount: 0, releasedSlots: [] }) } },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
                 // Bekleyen online talepler: bu testlerde talep yok.
@@ -1161,7 +1168,9 @@ describe('TodayPageComponent — Benim hastalarım boş liste', () => {
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => c !== 'Visits.None', getClinicId: () => 'c1', getUserId: () => 'u1' } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null } },
+                // Bekleme listesi bilgisi (TIER-018): bu testlerde boşalan saat yok.
+                { provide: WaitlistService, useValue: { today: () => of({ waitingCount: 0, releasedSlots: [] }) } },
                 { provide: AppointmentsService, useValue: {} },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [] }) } },
