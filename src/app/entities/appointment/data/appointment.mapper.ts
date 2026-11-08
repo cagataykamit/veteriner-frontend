@@ -355,7 +355,8 @@ export function mapAppointmentDetailDtoToVm(dto: AppointmentDetailDto): Appointm
         createdAtUtc: dto.createdAtUtc ?? null,
         updatedAtUtc: dto.updatedAtUtc ?? null,
         reasonId: dto.reasonId?.trim() || null,
-        veterinarianUserId: dto.veterinarianUserId?.trim() || null
+        veterinarianUserId: dto.veterinarianUserId?.trim() || null,
+        ownerConfirmedAtUtc: dto.ownerConfirmedAtUtc?.trim() || null
     };
 }
 

@@ -47,6 +47,7 @@ const item = (over: Partial<TodayItemVm> = {}): TodayItemVm => ({
     arrivalReason: null,
     preparedExaminationTemplateId: null,
     preparedExaminationTemplateName: null,
+    ownerConfirmedAtUtc: null,
     ...over
 });
 

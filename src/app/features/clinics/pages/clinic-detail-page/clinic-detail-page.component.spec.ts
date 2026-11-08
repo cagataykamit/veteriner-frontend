@@ -37,7 +37,7 @@ describe('ClinicDetailPageComponent — çalışma saatleri ve randevu varsayıl
                 }))
             )
         );
-        clinics.getAppointmentSettings.mockReturnValue(of({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false }));
+        clinics.getAppointmentSettings.mockReturnValue(of({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false, ownerCancelLinkEnabled: true }));
         await TestBed.configureTestingModule({
             imports: [ClinicDetailPageComponent],
             providers: [
@@ -103,7 +103,7 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
             breakStartsAt: null,
             breakEndsAt: null
         }));
-    const settings = { defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false };
+    const settings = { defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false, ownerCancelLinkEnabled: true };
 
     const el = () => fixture.nativeElement as HTMLElement;
     const text = () => el().textContent ?? '';

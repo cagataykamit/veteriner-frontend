@@ -63,7 +63,8 @@ const plannedItem: TodayItemVm = {
     appointmentReasonName: null,
     arrivalReason: null,
     preparedExaminationTemplateId: null,
-    preparedExaminationTemplateName: null
+    preparedExaminationTemplateName: null,
+    ownerConfirmedAtUtc: null
 };
 
 const template = (id: string, name: string, over: Partial<ExaminationTemplateDto> = {}): ExaminationTemplateDto => ({

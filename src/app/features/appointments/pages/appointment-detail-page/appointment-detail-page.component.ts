@@ -60,6 +60,11 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
                         <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                             <h1 class="m-0 text-2xl font-semibold leading-tight text-surface-900 dark:text-surface-0 break-words">{{ typeDisplay(a.appointmentType, a.appointmentTypeName) }}</h1>
                             <app-status-tag [label]="statusLabel(a.status)" [severity]="statusSeverity(a.status)" />
+                            @if (a.ownerConfirmedAtUtc) {
+                                <span [attr.title]="'Hatırlatma e-postasından onaylandı: ' + (a.ownerConfirmedAtUtc | trDateTime)" data-testid="appointment-owner-confirmed">
+                                    <app-status-tag label="Sahip onayladı" severity="success" />
+                                </span>
+                            }
                         </div>
                         <p class="m-0 mt-1 text-base font-medium text-surface-900 dark:text-surface-0 tabular-nums">{{ a.scheduledAtUtc | trDateTime }}</p>
                         <p class="m-0 mt-1 text-sm text-muted-color">Oluşturulma: {{ a.createdAtUtc | trDateTime }} · Güncellenme: {{ a.updatedAtUtc | trDateTime }}</p>

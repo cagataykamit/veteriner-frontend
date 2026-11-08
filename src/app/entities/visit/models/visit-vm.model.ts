@@ -79,6 +79,8 @@ export interface TodayItemVm {
     preparedExaminationTemplateId: string | null;
     /** Şablon sonradan pasifleşse de dolu gelir. */
     preparedExaminationTemplateName: string | null;
+    /** Sahip hatırlatma bağlantısıyla geleceğini onayladı (TIER-019); durum değişmez, satırda rozet. */
+    ownerConfirmedAtUtc: string | null;
 }
 
 /** Bugün'deki aktif yatış satırı; `items` içine karışmaz, sorumlu hekim süzgecinden etkilenmez. */

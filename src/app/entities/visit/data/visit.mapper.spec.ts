@@ -180,6 +180,18 @@ describe('visit mapper — okuma', () => {
         expect([planned.appointmentReasonName, planned.arrivalReason, planned.preparedExaminationTemplateId, planned.preparedExaminationTemplateName]).toEqual([null, null, null, null]);
     });
 
+    it('sahip onayını (TIER-019) taşır; alan yoksa null', () => {
+        const [confirmed, missing] = mapTodayDtoToVm({
+            date: 'd',
+            clinicId: 'c',
+            generatedAtUtc: 'g',
+            items: [itemDto({ visitId: null, appointmentId: 'a1', ownerConfirmedAtUtc: '2026-11-08T09:00:00Z' }), itemDto()]
+        }).items;
+
+        expect(confirmed.ownerConfirmedAtUtc).toBe('2026-11-08T09:00:00Z');
+        expect(missing.ownerConfirmedAtUtc).toBeNull();
+    });
+
     it('hekim adı yoksa — gösterir', () => {
         expect(mapVeterinarianDtoToVm({ userId: 'u1', name: null })).toEqual({ userId: 'u1', name: '—' });
     });

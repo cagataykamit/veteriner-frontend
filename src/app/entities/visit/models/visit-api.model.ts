@@ -77,6 +77,8 @@ export interface TodayItemDto {
     preparedExaminationTemplateId?: string | null;
     /** Şablon sonradan pasifleşse de döner. */
     preparedExaminationTemplateName?: string | null;
+    /** Sahip hatırlatma bağlantısıyla geleceğini onayladı (TIER-019); randevusuz satırda `null`. */
+    ownerConfirmedAtUtc?: string | null;
 }
 
 /** `TodayHospitalizationDto`: kliniğin tarihten bağımsız aktif yatışları (`VISITS_API_CONTRACT.md`). */

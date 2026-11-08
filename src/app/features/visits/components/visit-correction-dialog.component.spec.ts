@@ -37,7 +37,8 @@ const item: TodayItemVm = {
     appointmentReasonName: null,
     arrivalReason: null,
     preparedExaminationTemplateId: null,
-    preparedExaminationTemplateName: null
+    preparedExaminationTemplateName: null,
+    ownerConfirmedAtUtc: null
 };
 
 const visit: VisitVm = {

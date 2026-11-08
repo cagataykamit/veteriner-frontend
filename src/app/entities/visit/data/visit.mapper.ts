@@ -93,7 +93,8 @@ export function mapTodayItemDtoToVm(dto: TodayItemDto): TodayItemVm {
         appointmentReasonName: trimmedOrNull(dto.appointmentReasonName),
         arrivalReason: trimmedOrNull(dto.arrivalReason),
         preparedExaminationTemplateId: trimmedOrNull(dto.preparedExaminationTemplateId),
-        preparedExaminationTemplateName: trimmedOrNull(dto.preparedExaminationTemplateName)
+        preparedExaminationTemplateName: trimmedOrNull(dto.preparedExaminationTemplateName),
+        ownerConfirmedAtUtc: dto.ownerConfirmedAtUtc ?? null
     };
 }
 
