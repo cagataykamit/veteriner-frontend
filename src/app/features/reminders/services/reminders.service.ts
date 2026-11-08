@@ -8,7 +8,7 @@ import {
     mapReminderSettingsDtoToVm,
     reminderLogsQueryToHttpParams
 } from '@/app/features/reminders/data/reminders.mapper';
-import type { ClinicReminderRulesDto, ClinicReminderRuleUpdateDto } from '@/app/features/reminders/models/clinic-reminder-rule.model';
+import type { ClinicMarketingGateDto, ClinicReminderRulesDto, ClinicReminderRuleUpdateDto } from '@/app/features/reminders/models/clinic-reminder-rule.model';
 import type { ReminderLogsPagedDto, ReminderLogsQuery } from '@/app/features/reminders/models/reminder-log-api.model';
 import type { ReminderLogsPagedVm } from '@/app/features/reminders/models/reminder-log-vm.model';
 import type {
@@ -49,6 +49,13 @@ export class RemindersService {
     saveClinicRules(clinicId: string, rules: readonly ClinicReminderRuleUpdateDto[]): Observable<ClinicReminderRulesDto> {
         return this.api.put<ClinicReminderRulesDto>(ApiEndpoints.reminders.clinicRules(clinicId), { rules }).pipe(
             catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Kurallar kaydedilemedi.'))))
+        );
+    }
+
+    /** Ticari ileti kapısını açar (İYS beyanıyla) ya da kapatır; beyan ve kapatma denetime yazılır (ADR-046). */
+    saveMarketingGate(clinicId: string, isEnabled: boolean, iysDeclarationAccepted: boolean): Observable<ClinicMarketingGateDto> {
+        return this.api.put<ClinicMarketingGateDto>(ApiEndpoints.reminders.marketingGate(clinicId), { isEnabled, iysDeclarationAccepted }).pipe(
+            catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Ticari ileti ayarı kaydedilemedi.'))))
         );
     }
 
