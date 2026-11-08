@@ -4,6 +4,7 @@ import {
     decidedFeatureRows,
     formatPlanPrice,
     formatUserLimit,
+    planAvailabilityText,
     planHighlights,
     planOffer,
     planPriceView,
@@ -56,17 +57,51 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         expect(planHighlights('premium')).toContain('Çok klinik yönetimi ve klinikler arası yetki');
     });
 
-    it('özellik tablosu: gruplar sırayla, satır adı tekil; hücreler ADR-035 (fark portal, otomatik hatırlatıcı, çok klinik, destek, özel geliştirme)', () => {
+    it('özellik tablosu: gruplar sırayla, satır adı tekil; hücreler ADR-035 ve 2026-11-09 dağılımı', () => {
         const groups = [...new Set(PRICING_FEATURE_ROWS.map((r) => r.group))];
         const labels = PRICING_FEATURE_ROWS.map((r) => r.label);
+        const keys = PRICING_FEATURE_ROWS.flatMap((r) => (r.key ? [r.key] : []));
+        const plansOf = (key: string) => PRICING_FEATURE_ROWS.find((r) => r.key === key)?.plans;
 
-        expect(groups).toEqual(['Klinik', 'Kayıt ve KVKK', 'Para ve stok', 'Hasta sahibi', 'Yönetim', 'Destek']);
+        expect(groups).toEqual(['Klinik', 'Kayıt ve KVKK', 'Para ve stok', 'Web sitesi ve randevu', 'Hasta sahibi', 'Yönetim', 'Destek']);
         expect(new Set(labels).size).toBe(labels.length);
+        expect(new Set(keys).size).toBe(keys.length);
         expect(PRICING_FEATURE_ROWS.length).toBeGreaterThanOrEqual(25);
-        expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.basic === false).map((r) => r.label)).toEqual(['Otomatik hatırlatıcılar', 'Hasta sahibi portalı', 'Portaldan randevu talebi', 'Çok klinik yönetimi ve klinikler arası yetki', 'Size özel geliştirmeler']);
-        expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.pro === false).map((r) => r.label)).toEqual(['Çok klinik yönetimi ve klinikler arası yetki', 'Size özel geliştirmeler']);
+        expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.basic === false).map((r) => r.label)).toEqual([
+            'Bekleme listesi',
+            'Otomatik aşı sihirbazı',
+            'Çoklu kasa ve kasa yönetimi',
+            'Kamerayla barkod okutma',
+            'Otomatik hatırlatıcılar',
+            'Hasta sahibi portalı',
+            'Portaldan randevu talebi',
+            'Gelişmiş raporlar',
+            'Şubeler özeti',
+            'Çok klinik yönetimi ve klinikler arası yetki',
+            'API erişimi',
+            'Ücretsiz geçiş desteği',
+            'Size özel geliştirmeler'
+        ]);
+        expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.pro === false).map((r) => r.label)).toEqual([
+            'Şubeler özeti',
+            'Çok klinik yönetimi ve klinikler arası yetki',
+            'API erişimi',
+            'Ücretsiz geçiş desteği',
+            'Size özel geliştirmeler'
+        ]);
         expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.premium === false)).toEqual([]);
-        expect(PRICING_FEATURE_ROWS.find((r) => r.label === 'Online randevu talebi')?.plans).toEqual({ basic: true, pro: true, premium: true });
+
+        for (const key of ['clinicSite', 'vetFinder', 'onlineBooking', 'reminderReplies', 'dataExport']) {
+            expect(plansOf(key), key).toEqual({ basic: true, pro: true, premium: true });
+        }
+    });
+
+    it('paket etiketi satırdan: tüm paketler, Profesyonel ve üstü, yalnız Kurumsal', () => {
+        expect(planAvailabilityText('clinicSite')).toBe('Tüm paketlerde');
+        expect(planAvailabilityText('cashManagement')).toBe('Profesyonel ve Kurumsal paketlerinde');
+        expect(planAvailabilityText('clinicsOverview')).toBe('Kurumsal paketinde');
+        expect(planTitlesWithFeature('freeMigrationSupport')).toBe('Kurumsal');
+        expect(planAvailabilityText('clinicSite', SAMPLE_ROWS)).toBe('');
     });
 
     it('özellik tablosu ve "Şu an yok": söylenmeyecek iddia yok (ADR-034 karar 6); online randevu artık "yok" listesinde değil', () => {
@@ -75,6 +110,10 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         expect(text).not.toMatch(/mevzuata uygun|KVKK uyumlu|SMS|e-?fatura|mobil uygulama|mağaza|veri merkezi|push|anlık bildirim|yalnızca bizde|en iyi|müşteri sayısı/i);
         expect(PRICING_NOT_AVAILABLE).not.toContain('Online randevu');
         expect(PRICING_NOT_AVAILABLE).toContain('Online ödeme');
+        expect(PRICING_NOT_AVAILABLE.join(' ')).toMatch(/e-Fatura/);
+        expect(PRICING_NOT_AVAILABLE.join(' ')).toMatch(/HBS'e otomatik gönderim/);
+        expect(PRICING_NOT_AVAILABLE.join(' ')).toMatch(/Yapay zekâ/);
+        expect(PRICING_NOT_AVAILABLE.join(' ')).not.toMatch(/mağaza/i);
     });
 
     it('katalogdan paket: kod büyük/küçük harf duyarsız; katalog yükleniyorsa ya da alınamadıysa yok', () => {

@@ -54,7 +54,13 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
                                             <dt class="text-xs font-semibold uppercase tracking-wide text-muted-color">{{ row.label }}</dt>
                                             <dd class="m-0 mt-0.5 text-base text-surface-900 dark:text-surface-0">
                                                 @if (row.href) {
-                                                    <a [href]="row.href" class="public-brand-link break-all">{{ row.value }}</a>
+                                                    <a
+                                                        [href]="row.href"
+                                                        [attr.target]="row.external ? '_blank' : null"
+                                                        [attr.rel]="row.external ? 'noopener noreferrer' : null"
+                                                        class="public-brand-link break-all"
+                                                        >{{ row.value }}</a
+                                                    >
                                                 } @else {
                                                     {{ row.value }}
                                                 }
