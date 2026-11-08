@@ -292,10 +292,6 @@ export const PAGE_INFO_STYLES = `
         border-color: var(--s-primary);
     }
 
-    .slots .muted {
-        font-size: 14px;
-    }
-
     .branches {
         display: grid;
         gap: 20px;
