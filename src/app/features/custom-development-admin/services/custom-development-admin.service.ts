@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { type Observable } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
-import type { CustomDevelopmentRequestDto, CustomDevelopmentRequestStatus } from '@/app/entities/custom-development/models/custom-development-request.model';
+import type { CustomDevelopmentRequestDto, CustomDevelopmentRequestStatus, CustomDevelopmentTargetKind } from '@/app/entities/custom-development/models/custom-development-request.model';
 import { toUserError } from '@/app/shared/utils/api-error.utils';
 
 /** Platform satırı (sözleşme §4): talep, kiracı ve geçerli sonraki durumlar (akış backend'de). */
@@ -40,13 +40,18 @@ const PROBLEM_MESSAGES = {
 
 export const ADMIN_CUSTOM_DEVELOPMENT_PAGE_SIZE = 50;
 
-/** Platform yöneticisi: tüm kiracıların size özel geliştirme talepleri (TIER-010). */
+/** Platform yöneticisi: tüm kiracıların size özel geliştirme (TIER-010) ve geçiş desteği (TIER-021) talepleri. */
 @Injectable({ providedIn: 'root' })
 export class CustomDevelopmentAdminService {
     private readonly api = inject(ApiClient);
 
-    list(filter: AdminCustomDevelopmentFilter, page: number): Observable<AdminCustomDevelopmentRequestPage> {
+    /** `targetKind` verilirse yalnız o konu (ör. `Migration`, TIER-021 §11.4). */
+    list(filter: AdminCustomDevelopmentFilter, page: number, targetKind: CustomDevelopmentTargetKind | null = null): Observable<AdminCustomDevelopmentRequestPage> {
         let params = new HttpParams().set('page', page).set('pageSize', ADMIN_CUSTOM_DEVELOPMENT_PAGE_SIZE);
+
+        if (targetKind) {
+            params = params.set('targetKind', targetKind);
+        }
 
         if (filter === 'open') {
             params = params.set('openOnly', true);
