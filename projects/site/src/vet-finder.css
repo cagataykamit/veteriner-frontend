@@ -1,0 +1,349 @@
+/* Veteriner bul sayfaları (ADR-047). Klinik sitelerinin tasarım diliyle aynı aile (Figtree, sade kartlar), Vetinity'nin kendi nötr
+   rengiyle. Bütün seçiciler `vf` önekli: klinik sitelerine dokunmaz. Bileşen stil bütçesine girmesin diye global dosyadadır. */
+.vf {
+    --vf-ink: #16181b;
+    --vf-muted: #5d6167;
+    --vf-line: #e3e5e1;
+    --vf-ground: #f6f7f4;
+    --vf-card: #ffffff;
+    --vf-accent: #1f6b57;
+    --vf-accent-soft: #e5f1ec;
+    --vf-closed: #8a5a12;
+    --vf-closed-soft: #fbf1df;
+
+    min-height: 100dvh;
+    background: var(--vf-ground);
+    color: var(--vf-ink);
+    font-family: 'Figtree Variable', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.vf a {
+    color: inherit;
+}
+
+.vf-top,
+.vf-main,
+.vf-foot {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+.vf-top {
+    padding-top: 18px;
+    padding-bottom: 18px;
+}
+
+.vf-brand {
+    font-weight: 700;
+    font-size: 18px;
+    text-decoration: none;
+}
+
+.vf-brand span {
+    margin-left: 6px;
+    color: var(--vf-accent);
+    font-weight: 600;
+}
+
+.vf-crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    color: var(--vf-muted);
+    font-size: 14px;
+}
+
+.vf-crumbs a {
+    text-decoration: none;
+}
+
+.vf-crumbs a:hover {
+    text-decoration: underline;
+}
+
+.vf-title {
+    margin: 8px 0 4px;
+    font-size: clamp(26px, 4vw, 36px);
+    font-weight: 650;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+}
+
+.vf-lead {
+    margin: 0 0 16px;
+    color: var(--vf-muted);
+}
+
+.vf-filters,
+.vf-places {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 0 10px;
+    scrollbar-width: thin;
+}
+
+.vf-places {
+    flex-wrap: wrap;
+    overflow: visible;
+}
+
+.vf-chip,
+.vf-places a {
+    flex: none;
+    padding: 7px 13px;
+    border: 1px solid var(--vf-line);
+    border-radius: 999px;
+    background: var(--vf-card);
+    font-size: 14px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.vf-chip.is-on {
+    border-color: var(--vf-accent);
+    background: var(--vf-accent-soft);
+    color: var(--vf-accent);
+    font-weight: 600;
+}
+
+.vf-places a span {
+    margin-left: 4px;
+    color: var(--vf-muted);
+    font-size: 13px;
+}
+
+.vf-locate {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    margin: 4px 0 14px;
+}
+
+.vf-locate small {
+    color: var(--vf-muted);
+    font-size: 13px;
+}
+
+.vf-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    gap: 14px;
+    margin: 8px 0 20px;
+    padding: 0;
+    list-style: none;
+}
+
+.vf-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 18px;
+    border: 1px solid var(--vf-line);
+    border-radius: 14px;
+    background: var(--vf-card);
+}
+
+.vf-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.vf-card-name {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 650;
+    line-height: 1.25;
+}
+
+.vf-status {
+    flex: none;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--vf-closed-soft);
+    color: var(--vf-closed);
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+.vf-status.is-open {
+    background: var(--vf-accent-soft);
+    color: var(--vf-accent);
+}
+
+.vf-card p {
+    margin: 0;
+}
+
+.vf-card-place,
+.vf-card-hours {
+    color: var(--vf-muted);
+    font-size: 14.5px;
+}
+
+.vf-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.vf-tags li {
+    padding: 2px 9px;
+    border-radius: 6px;
+    background: var(--vf-ground);
+    font-size: 13px;
+}
+
+.vf-slot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    margin-top: 4px !important;
+    font-size: 14.5px;
+}
+
+.vf-slot span {
+    color: var(--vf-muted);
+}
+
+.vf-slot a {
+    color: var(--vf-accent);
+    font-weight: 600;
+}
+
+.vf-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 10px;
+}
+
+.vf-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid var(--vf-line);
+    border-radius: 10px;
+    background: var(--vf-card);
+    color: var(--vf-ink);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.vf-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.vf-btn-primary {
+    border-color: var(--vf-accent);
+    background: var(--vf-accent);
+    color: #ffffff !important;
+}
+
+.vf-hours summary {
+    color: var(--vf-muted);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.vf-hours dl {
+    margin: 6px 0 0;
+}
+
+.vf-hours dl > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 2px 12px;
+    padding: 6px 0;
+    border-top: 1px solid var(--vf-line);
+    font-size: 14px;
+}
+
+.vf-hours dl > div.is-today {
+    font-weight: 600;
+}
+
+.vf-hours dd {
+    margin: 0;
+    text-align: right;
+}
+
+.vf-hours small {
+    display: block;
+    color: var(--vf-muted);
+}
+
+.vf-empty {
+    display: grid;
+    justify-items: start;
+    gap: 10px;
+    margin: 12px 0 24px;
+    padding: 20px;
+    border: 1px dashed var(--vf-line);
+    border-radius: 14px;
+    background: var(--vf-card);
+}
+
+.vf-empty p {
+    margin: 0;
+}
+
+.vf-pages {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.vf-more {
+    margin-bottom: 24px;
+}
+
+.vf-how {
+    margin: 12px 0 0;
+    padding: 18px 0;
+    border-top: 1px solid var(--vf-line);
+    color: var(--vf-muted);
+    font-size: 14.5px;
+}
+
+.vf-how h2 {
+    margin: 0 0 6px;
+    color: var(--vf-ink);
+    font-size: 16px;
+}
+
+.vf-how p {
+    margin: 0 0 8px;
+    max-width: 760px;
+}
+
+.vf-foot {
+    padding-top: 12px;
+    padding-bottom: 28px;
+    color: var(--vf-muted);
+    font-size: 13.5px;
+}
+
+.vf-foot p {
+    margin: 0;
+}

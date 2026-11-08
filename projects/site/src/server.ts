@@ -4,10 +4,13 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import { siteRobotsTxt, siteSitemapXml } from '@site-engine';
 import { publishedSiteConfig, type SiteRequestState } from './app/site-state';
 import { loadPublicSite, readSiteServerConfig, redirectLocation, withNextSlots } from './server/site-loader';
+import { parseVetFinderUrl, VET_FINDER_LIST_PATH, VET_FINDER_ROOT, VET_FINDER_SLOTS_PATH, type VetFinderRequestState } from './app/vet-finder/vet-finder-state';
+import { loadVetFinderListByBody, loadVetFinderPage, loadVetFinderSlots, vetFinderRobotsLines, vetFinderSitemapXml } from './server/vet-finder-loader';
 
 /**
- * Klinik sitelerinin Node sunucusu (ADR-045 K12). Her istekte yayınlanmış yapılandırmayı API'den alır, Angular ile çizer. Eski adresi
- * burada 301'ler; durum kodlarını ve baş etiketlerini Angular tarafı yazar. Panel kodu ve oturumu yoktur, kimliksizdir.
+ * Klinik sitelerinin ve Veteriner bul sayfalarının Node sunucusu (ADR-045 K12, ADR-047). Her istekte yayınlanmış yapılandırmayı API'den
+ * alır, Angular ile çizer. Eski adresi burada 301'ler; durum kodlarını ve baş etiketlerini Angular tarafı yazar. Panel kodu ve oturumu
+ * yoktur, kimliksizdir.
  */
 const config = readSiteServerConfig(process.env);
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -23,7 +26,7 @@ app.use((req, _res, next) => {
     next();
 });
 
-async function render(req: Request, res: Response, next: NextFunction, state: SiteRequestState): Promise<void> {
+async function render(req: Request, res: Response, next: NextFunction, state: SiteRequestState | VetFinderRequestState): Promise<void> {
     try {
         const rendered = await angularApp.handle(req, state);
 
@@ -44,7 +47,40 @@ async function render(req: Request, res: Response, next: NextFunction, state: Si
 }
 
 app.get('/robots.txt', (_req, res) => {
-    res.type('text/plain').send(siteRobotsTxt());
+    res.type('text/plain').send(siteRobotsTxt() + vetFinderRobotsLines(config.origin));
+});
+
+// -- Veteriner bul (ADR-047): tarayıcının ek istekleri bu sunucuya gelir, API'ye sunucu gider. Konum gövdeyle gelir, sorguya yazılmaz.
+app.get(`${VET_FINDER_ROOT}/sitemap.xml`, async (req, res) => {
+    const loaded = await loadVetFinderPage(null, req.ip, config);
+
+    if (loaded.regions) res.type('application/xml').send(vetFinderSitemapXml(loaded.regions, config.origin));
+    else res.status(503).type('text/plain').send('Site haritası şu anda yok.');
+});
+
+app.get(VET_FINDER_SLOTS_PATH, async (req, res) => {
+    const result = await loadVetFinderSlots(req.query['keys'], req.ip, config);
+
+    res.setHeader('Cache-Control', 'no-store');
+    if (result.ok) res.json(result.body);
+    else res.status(result.status === 429 ? 429 : 503).json({ items: [] });
+});
+
+app.post(VET_FINDER_LIST_PATH, express.json({ limit: '2kb' }), async (req, res) => {
+    const result = await loadVetFinderListByBody(req.body, req.ip, config);
+
+    res.setHeader('Cache-Control', 'no-store');
+    if (result.ok) res.json(result.body);
+    else res.status(result.status === 404 ? 404 : result.status === 429 ? 429 : 503).json(null);
+});
+
+// Uygulama `/k/` tabanında yaşar: istek Angular'a `/k/veteriner/...` olarak verilir (`veteriner` klinik adresi olarak ayrılmış sözcüktür,
+// çakışmaz). Tarayıcıda yönlendirici bu sayfalarda çalışmaz (`main.ts`), adres çubuğu `/veteriner/...` kalır.
+app.get(`${VET_FINDER_ROOT}{/*rest}`, async (req, res, next) => {
+    const state = await loadVetFinderPage(parseVetFinderUrl(req.originalUrl), req.ip, config);
+
+    req.originalUrl = `/k${req.originalUrl}`;
+    await render(req, res, next, state);
 });
 
 app.get('/k/:slug/sitemap.xml', async (req, res) => {
