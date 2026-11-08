@@ -111,6 +111,12 @@ describe('nextSlotDays (TIER-017)', () => {
         expect(days).toEqual([{ label: 'Yarın, 10 Kasım', slots: [expect.objectContaining({ time: '00:30' })] }]);
     });
 
+    it('bağlantı kaynak değeri taşıyorsa saat onun ardına eklenir (TIER-016)', () => {
+        const days = nextSlotDays([{ date: '2026-11-09', startUtc: '2026-11-09T09:00:00Z' }], `${BOOKING}?kaynak=site`, NOW);
+
+        expect(days[0].slots[0].href).toBe(`${BOOKING}?kaynak=site&saat=2026-11-09T09%3A00%3A00Z`);
+    });
+
     it('online randevu kapalıysa ya da satır bozuksa çizilmez', () => {
         expect(nextSlotDays([{ date: '2026-11-09', startUtc: '2026-11-09T09:00:00Z' }], null, NOW)).toEqual([]);
         expect(nextSlotDays([{ date: 'bozuk', startUtc: '2026-11-09T09:00:00Z' }, { date: '2026-11-09', startUtc: 'x' }], BOOKING, NOW)).toEqual([]);

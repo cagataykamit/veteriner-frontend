@@ -44,6 +44,22 @@ export type SiteRequestState =
     /** API'ye ulaşılamadı ya da hız sınırına takıldı: "yok" denmez. */
     | { readonly kind: 'unavailable' };
 
+/**
+ * Talep formuna sitenin kaynak değeri eklenir (TIER-016, Veteriner `docs/ONLINE_APPOINTMENT_API_CONTRACT.md` §14): form bunu talebe
+ * taşır, sunucu yalnız izinli değeri sayar. Okunamayan adres olduğu gibi kalır; motor onu zaten göstermez.
+ */
+export function withSiteBookingSource(bookingUrl: string): string {
+    try {
+        const url = new URL(bookingUrl);
+
+        url.searchParams.set('kaynak', 'site');
+
+        return url.href;
+    } catch {
+        return bookingUrl;
+    }
+}
+
 /** Klinik kaydı + yayınlanmış yapılandırma → motorun çizdiği yapılandırma. Görsel başvuruları herkese açık uca çözülür (sözleşme §6). */
 export function publishedSiteConfig(site: PublishedSite): SiteConfig {
     const { clinic, onlineBooking } = site;
@@ -57,7 +73,7 @@ export function publishedSiteConfig(site: PublishedSite): SiteConfig {
             phone: clinic?.phone ?? '',
             email: clinic?.email ?? '',
             workingDays: toWorkingDays(clinic?.workingHours ?? []),
-            bookingUrl: onlineBooking?.isEnabled ? onlineBooking.bookingUrl : null,
+            bookingUrl: onlineBooking?.isEnabled && onlineBooking.bookingUrl ? withSiteBookingSource(onlineBooking.bookingUrl) : null,
             nextSlots: site.nextSlots
         },
         site.slug

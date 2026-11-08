@@ -3,7 +3,7 @@ import { composeSiteConfig, defaultStoredConfig } from '@site-engine';
 import { loadPublicSite, readSiteServerConfig, redirectLocation, withNextSlots } from '../server/site-loader';
 import { SiteHead } from './site-head';
 import { sitePathFromUrl } from './site-page-host.component';
-import { publishedSiteConfig, type PublicSiteResponse, type PublishedSite } from './site-state';
+import { publishedSiteConfig, withSiteBookingSource, type PublicSiteResponse, type PublishedSite } from './site-state';
 
 const CONFIG = readSiteServerConfig({ SITE_API_BASE_URL: 'https://api.example.com/', SITE_PUBLIC_ORIGIN: 'https://vetinity.com' });
 
@@ -139,7 +139,13 @@ describe('publishedSiteConfig', () => {
         expect(config.content.clinic.name).toBe('Çağrı');
         expect(config.content.clinic.district).toBe('');
         expect(config.content.clinic.workingDays[0].opensAt).toBe('09:00');
-        expect(config.content.clinic.bookingUrl).toBe('https://portal/randevu/k');
+        expect(config.content.clinic.bookingUrl).toBe('https://portal/randevu/k?kaynak=site');
+    });
+
+    it('talep bağlantısı sitenin kaynak değerini taşır, saat ondan sonra eklenir (TIER-016)', () => {
+        expect(withSiteBookingSource('https://portal/randevu/k')).toBe('https://portal/randevu/k?kaynak=site');
+        expect(withSiteBookingSource('https://portal/randevu/k?kaynak=baska&x=1')).toBe('https://portal/randevu/k?kaynak=site&x=1');
+        expect(withSiteBookingSource('bozuk adres')).toBe('bozuk adres');
     });
 
     it('online randevu kapalıysa bağlantı taşınmaz', () => {
