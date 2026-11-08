@@ -44,6 +44,7 @@ export const PORTAL_ENDPOINTS = {
     publicBookingAvailability: (code: string) => `${booking(code)}/availability`,
     publicBookingCode: (code: string) => `${booking(code)}/verification-code`,
     publicBookingRequests: (code: string) => `${booking(code)}/requests`,
+    publicBookingLogo: (code: string) => `${booking(code)}/logo`,
     linkBooking: (linkId: string) => `${link(linkId)}/booking`,
     linkBookingAvailability: (linkId: string) => `${link(linkId)}/booking/availability`,
     appointmentRequests: (linkId: string) => `${link(linkId)}/appointment-requests`,

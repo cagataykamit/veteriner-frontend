@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { environment } from '@portal/environments/environment';
 import { portalAuthGuard, portalClinicGuard, portalGuestGuard } from './core/auth/portal-auth.guards';
+import { PORTAL_EMBEDDABLE } from './core/embed/portal-embed';
 import { portalAcceptanceGuard } from './features/legal/portal-acceptance.guard';
 
 /** Davet bağlantısı yolu (sözleşme §4.2: `{PortalBaseUrl}/invite?token=…`). */
@@ -15,9 +16,10 @@ export const portalRoutes: Routes = [
         loadComponent: () => import('./features/invite/portal-invite.component').then((m) => m.PortalInviteComponent)
     },
     {
-        // Kliniğe özel online randevu bağlantısı (ADR-042 K1): kimliksiz, kabuk dışında.
+        // Kliniğe özel online randevu bağlantısı (ADR-042 K1): kimliksiz, kabuk dışında. Başka sitenin içinde açılabilen tek sayfa (APPT-021).
         path: 'randevu/:bookingCode',
         title: title('Online randevu'),
+        data: { [PORTAL_EMBEDDABLE]: true },
         loadComponent: () => import('./features/booking/portal-public-booking.component').then((m) => m.PortalPublicBookingComponent)
     },
     {

@@ -76,7 +76,9 @@ export enum AppointmentRequestChannel {
     ClinicSite = 1,
     OwnerPortal = 2,
     Phone = 3,
-    VetFinder = 4
+    VetFinder = 4,
+    /** Panelin verdiği düğme ve gömme kodu (`?kaynak=dis-site`, APPT-020/021). */
+    ExternalSite = 5
 }
 
 export interface AppointmentRequestChannelSummaryRowVm {

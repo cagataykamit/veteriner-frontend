@@ -1,7 +1,7 @@
 import { HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { PortalApiClient } from '@portal/app/core/api/portal-api.client';
+import { PORTAL_API_BASE_URL, PortalApiClient, portalApiUrl } from '@portal/app/core/api/portal-api.client';
 import { PORTAL_ENDPOINTS } from '@portal/app/core/api/portal-endpoints';
 
 /** Müsaitlik isteği gün sayısı (sözleşme: 1–14). */
@@ -28,6 +28,14 @@ export interface PortalBookingPage {
     readonly maxAdvanceDays: number;
     readonly maxPendingRequests: number;
     readonly reasons: readonly PortalBookingReason[];
+    /** Yalnız kliniğe özel bağlantıda (§5, APPT-022): kliniğin yayındaki sitesinin rengi ve logosu; portal ucunda `null`. */
+    readonly branding?: PortalBookingBranding | null;
+}
+
+/** `accentColor` `#rrggbb` ya da boş; `hasLogo` doğruysa logo `booking/{kod}/logo` ucundadır. */
+export interface PortalBookingBranding {
+    readonly accentColor: string | null;
+    readonly hasLogo: boolean;
 }
 
 export interface PortalBookingSlot {
@@ -105,6 +113,12 @@ function availabilityParams(reasonId: string | null): HttpParams {
 @Injectable({ providedIn: 'root' })
 export class PortalBookingApi {
     private readonly api = inject(PortalApiClient);
+    private readonly baseUrl = inject(PORTAL_API_BASE_URL);
+
+    /** Logo `<img>` ile yüklenir (kimliksiz görsel ucu, §5); adres istemci kuralıyla aynı kökten kurulur. */
+    publicLogoUrl(code: string): string {
+        return portalApiUrl(this.baseUrl, PORTAL_ENDPOINTS.publicBookingLogo(code));
+    }
 
     publicPage(code: string): Observable<PortalBookingPage> {
         return this.api.get<PortalBookingPage>(PORTAL_ENDPOINTS.publicBooking(code));

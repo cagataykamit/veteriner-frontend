@@ -437,6 +437,15 @@ label.portal-option {
     border-radius: 0.75rem;
 }
 
+/* Kliniğin logosu (APPT-022): oranı korunur, yatay logo da sığar. */
+.portal-brand-clinic-logo {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: 8rem;
+    height: 2.5rem;
+    object-fit: contain;
+}
+
 .portal-brand-name {
     font-weight: 700;
     font-size: 1.0625rem;

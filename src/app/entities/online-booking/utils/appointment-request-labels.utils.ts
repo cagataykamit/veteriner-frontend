@@ -27,7 +27,8 @@ const CHANNEL: Record<AppointmentRequestChannel, string> = {
     [AppointmentRequestChannel.ClinicSite]: 'Kendi sitesi',
     [AppointmentRequestChannel.OwnerPortal]: 'Portal',
     [AppointmentRequestChannel.Phone]: 'Telefon / elle',
-    [AppointmentRequestChannel.VetFinder]: 'Veteriner bul'
+    [AppointmentRequestChannel.VetFinder]: 'Veteriner bul',
+    [AppointmentRequestChannel.ExternalSite]: 'Dış site'
 };
 
 /** Talebin kaynağı (TIER-016); eski talepte kaynak yoktur: "Bilinmiyor". */
