@@ -24,6 +24,7 @@ import {
     shouldShowMisleadingNextRenewal
 } from '@/app/features/subscriptions/utils/subscription-access.utils';
 import { SubscriptionPlanCardsComponent } from '@/app/features/subscriptions/components/subscription-plan-cards.component';
+import { SubscriptionPlanFitNoticeComponent } from '@/app/features/subscriptions/components/subscription-plan-fit-notice.component';
 import { SubscriptionSummaryCardsComponent } from '@/app/features/subscriptions/components/subscription-summary-cards.component';
 import { CheckoutFlowService } from '@/app/features/subscriptions/services/checkout-flow.service';
 import { CheckoutReturnVerificationService } from '@/app/features/subscriptions/services/checkout-return-verification.service';
@@ -45,6 +46,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         ExampleClinicLoadCardComponent,
         SubscriptionSummaryCardsComponent,
         SubscriptionPlanCardsComponent,
+        SubscriptionPlanFitNoticeComponent,
         TrDatePipe,
         TrDateTimePipe
     ],
@@ -124,6 +126,22 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                     [actionInfo]="flow.planActionInfo()"
                     (planAction)="flow.onPlanAction($event)"
                 />
+
+                @if (flow.planFitBlock(); as block) {
+                    <app-subscription-plan-fit-notice class="col-span-12" [fit]="block.fit" [mode]="block.mode" />
+                }
+
+                @if (s.rejectedPlanChange; as rejected) {
+                    @if (rejected.fit; as fit) {
+                        <app-subscription-plan-fit-notice
+                            class="col-span-12"
+                            data-testid="rejected-plan-change"
+                            [fit]="fit"
+                            [mode]="'downgrade'"
+                            [title]="'Planlanan ' + subscriptionPlanLabel(rejected.targetPlanCode, null) + ' geçişi uygulanmadı'"
+                        />
+                    }
+                }
 
                 @if (s.pendingPlanChange; as pending) {
                     <div class="col-span-12">
@@ -306,11 +324,13 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                 @if (isTrialingSubscription(s)) {
                                     <li>Deneme süreniz boyunca plan değişiklikleri ödeme gerektirmez.</li>
                                     <li>Seçtiğiniz paket deneme süreniz bittiğinde geçerli olur.</li>
+                                    <li>Deneme seçtiğiniz paketin sınırlarıyla çalışır; aktif klinik ve kullanıcı sayınız pakete sığmalıdır.</li>
                                 } @else {
                                     <li>Ödemeler iyzico altyapısı üzerinden güvenli şekilde tamamlanır.</li>
                                     <li>Plan değişiklikleri ödeme tamamlandıktan sonra otomatik olarak aboneliğinize yansıtılır.</li>
                                     @if (!isRenewalCheckoutContext(s)) {
                                         <li>Paket düşürme işlemleri mevcut fatura dönemi sonunda uygulanır.</li>
+                                    <li>Aktif klinik ve kullanıcı sayınız yeni pakete sığmalıdır; dönem sonunda sığmıyorsa düşürme uygulanmaz.</li>
                                     }
                                 }
                             </ul>
@@ -410,6 +430,10 @@ export class SubscriptionPageComponent implements OnInit {
 
         if (status === 'applied') {
             return 'Uygulandı';
+        }
+
+        if (status === 'rejected') {
+            return 'Uygulanmadı';
         }
 
         return 'Bilinmiyor';

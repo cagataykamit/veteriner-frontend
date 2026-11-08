@@ -1,4 +1,4 @@
-import type { PendingPlanChangeDto, SubscriptionCheckoutSessionDto, SubscriptionPlanDto, SubscriptionSummaryDto } from '@/app/entities/subscription/models/subscription-api.model';
+import type { PendingPlanChangeDto, SubscriptionCheckoutSessionDto, SubscriptionPlanDto, SubscriptionPlanFitDto, SubscriptionSummaryDto } from '@/app/entities/subscription/models/subscription-api.model';
 import { priceMinorToTry } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import type {
     PendingPlanChangeStatusKey,
@@ -6,6 +6,7 @@ import type {
     PendingPlanChangeVm,
     SubscriptionBillingPeriod,
     SubscriptionCheckoutSessionVm,
+    SubscriptionPlanFitVm,
     SubscriptionPlanVm,
     SubscriptionSummaryVm
 } from '@/app/entities/subscription/models/subscription-vm.model';
@@ -108,6 +109,7 @@ function parsePendingPlanChangeStatus(raw: unknown): PendingPlanChangeStatusKey 
         if (v === 1) return 'scheduled';
         if (v === 2) return 'cancelled';
         if (v === 3) return 'applied';
+        if (v === 4) return 'rejected';
 
         return 'unknown';
     }
@@ -119,6 +121,7 @@ function parsePendingPlanChangeStatus(raw: unknown): PendingPlanChangeStatusKey 
         if (['scheduled', 'activepending', 'queued'].includes(n)) return 'scheduled';
         if (['cancelled', 'canceled'].includes(n)) return 'cancelled';
         if (['applied', 'completed'].includes(n)) return 'applied';
+        if (n === 'rejected') return 'rejected';
     }
 
     return 'unknown';
@@ -153,7 +156,30 @@ export function mapPendingPlanChangeDtoToVm(dto: PendingPlanChangeDto | null | u
         changeType: parsePendingPlanChangeType(changeTypeSource),
         statusRaw,
         status: parsePendingPlanChangeStatus(dto.status),
-        effectiveAtUtc: effective
+        effectiveAtUtc: effective,
+        fit: mapSubscriptionPlanFitDtoToVm(dto.fit)
+    };
+}
+
+/** Sığma bilgisi; hedef paket kodu yoksa `null`. Sayılar eksikse 0, klinik sınırı yoksa `null` (sınırsız). */
+export function mapSubscriptionPlanFitDtoToVm(dto: SubscriptionPlanFitDto | null | undefined): SubscriptionPlanFitVm | null {
+    const target = trimOrNull(dto?.targetPlanCode);
+
+    if (!dto || !target) {
+        return null;
+    }
+
+    const count = (v: number | null | undefined): number => toNullableNumber(v) ?? 0;
+
+    return {
+        targetPlanCode: target,
+        maxActiveClinics: toNullableNumber(dto.maxActiveClinics),
+        maxUsers: count(dto.maxUsers),
+        activeClinicCount: count(dto.activeClinicCount),
+        memberCount: count(dto.memberCount),
+        pendingInviteCount: count(dto.pendingInviteCount),
+        excessClinicCount: count(dto.excessClinicCount),
+        excessUserCount: count(dto.excessUserCount)
     };
 }
 
@@ -200,6 +226,7 @@ export function mapSubscriptionSummaryDtoToVm(dto: SubscriptionSummaryDto): Subs
         billingCycleAnchorUtc: trimOrNull(dto.billingCycleAnchorUtc),
         nextBillingAtUtc: trimOrNull(dto.nextBillingAtUtc),
         pendingPlanChange: mapPendingPlanChangeDtoToVm(dto.pendingPlanChange),
+        rejectedPlanChange: mapPendingPlanChangeDtoToVm(dto.rejectedPlanChange),
         isReadOnly: toBoolean(dto.isReadOnly),
         canManageSubscription: toBoolean(dto.canManageSubscription),
         availablePlans: plans,

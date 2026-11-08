@@ -183,6 +183,8 @@ export const ApiEndpoints = {
     reminders: {
         settings: () => `/api/v1/reminders/settings`,
         clinicRules: (clinicId: string) => `/api/v1/reminders/clinics/${encodeURIComponent(clinicId)}/rules`,
+        /** Ticari ileti kapısı (ADR-046); PUT { isEnabled, iysDeclarationAccepted }. */
+        marketingGate: (clinicId: string) => `/api/v1/reminders/clinics/${encodeURIComponent(clinicId)}/marketing-gate`,
         logs: () => `/api/v1/reminders/logs`
     },
     examinations: {

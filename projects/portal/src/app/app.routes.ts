@@ -27,6 +27,11 @@ export const portalRoutes: Routes = [
         loadComponent: () => import('./features/appointment-link/portal-appointment-link.component').then((m) => m.PortalAppointmentLinkComponent)
     },
     {
+        path: 'ticari-ileti-ret',
+        title: title('Ticari ileti'),
+        loadComponent: () => import('./features/marketing-opt-out/portal-marketing-opt-out.component').then((m) => m.PortalMarketingOptOutComponent)
+    },
+    {
         path: 'login',
         title: title('Giriş'),
         canActivate: [portalGuestGuard],

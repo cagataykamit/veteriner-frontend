@@ -23,7 +23,7 @@ export interface PortalLinkNotificationPreferences {
     readonly canEnableReminders: boolean;
     readonly marketingConsented: boolean;
     readonly marketingConsentedAtUtc: string | null;
-    /** Ticari ileti gönderimi açık mı; bu sürümde her zaman `false`, onay yine kaydedilir. */
+    /** Bu bağın kliniği ticari ileti gönderimini açtı mı (ADR-046, klinik başına; varsayılan kapalı). Onay her durumda kaydedilir. */
     readonly marketingSendingEnabled: boolean;
 }
 

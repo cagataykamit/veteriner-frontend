@@ -7,8 +7,8 @@ import { SUBSCRIPTIONS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.con
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ExampleClinicService } from '@/app/entities/example-clinic/services/example-clinic.service';
 import { DiscountCodesService } from '@/app/entities/sales-partner/services/discount-codes.service';
-import type { PendingPlanChangeVm, SubscriptionCheckoutSessionVm, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
-import { CheckoutAlreadyPaidError } from '@/app/entities/subscription/services/subscription-checkout.errors';
+import type { PendingPlanChangeVm, SubscriptionCheckoutSessionVm, SubscriptionPlanFitVm, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
+import { CheckoutAlreadyPaidError, PlanLimitsExceededError } from '@/app/entities/subscription/services/subscription-checkout.errors';
 import { SubscriptionsService } from '@/app/entities/subscription/services/subscriptions.service';
 import { SubscriptionPageComponent } from './subscription-page.component';
 
@@ -29,6 +29,7 @@ const summary = (over: Partial<SubscriptionSummaryVm> = {}): SubscriptionSummary
     billingCycleAnchorUtc: null,
     nextBillingAtUtc: '2099-11-01T00:00:00Z',
     pendingPlanChange: null,
+    rejectedPlanChange: null,
     isReadOnly: false,
     canManageSubscription: true,
     availablePlans: [
@@ -67,7 +68,19 @@ const pendingDowngrade: PendingPlanChangeVm = {
     changeType: 'downgrade',
     statusRaw: 'Scheduled',
     status: 'scheduled',
-    effectiveAtUtc: '2099-11-01T00:00:00Z'
+    effectiveAtUtc: '2099-11-01T00:00:00Z',
+    fit: null
+};
+
+const basicFit: SubscriptionPlanFitVm = {
+    targetPlanCode: 'Basic',
+    maxActiveClinics: 1,
+    maxUsers: 3,
+    activeClinicCount: 2,
+    memberCount: 5,
+    pendingInviteCount: 0,
+    excessClinicCount: 1,
+    excessUserCount: 2
 };
 
 describe('SubscriptionPageComponent', () => {
@@ -431,6 +444,53 @@ describe('SubscriptionPageComponent', () => {
             click('Dönem sonunda bu pakete geç');
 
             expect(text()).toContain('Düşürme reddedildi.');
+        });
+
+        it('pakete sığmayan düşürmede sınır, sayılar ve yapılacaklar düz Türkçe; ilgili sayfalara bağlantı (ADR-035 2026-11-08)', () => {
+            service.scheduleDowngrade.mockReturnValue(throwError(() => new PlanLimitsExceededError('Seçilen paket mevcut kullanımınıza sığmıyor.', basicFit)));
+            render();
+
+            click('Dönem sonunda bu pakete geç');
+
+            const notice = el().querySelector('[data-testid=plan-fit-notice]')?.textContent ?? '';
+
+            expect(notice).toContain('Temel en çok 1 aktif klinik ve 3 kullanıcı içerir.');
+            expect(notice).toContain('Sizin 2 aktif kliniğiniz ve 5 kullanıcınız var.');
+            expect(notice).toContain('Paketi düşürmek için önce 1 kliniği pasife alın ve 2 kullanıcıyı çıkarın.');
+            expect(el().querySelector('[data-testid=plan-fit-clinics]')?.getAttribute('href')).toBe('/panel/settings/clinics');
+            expect(el().querySelector('[data-testid=plan-fit-members]')?.getAttribute('href')).toBe('/panel/settings/members');
+            expect(el().querySelector('[data-testid=plan-fit-invites]')).toBeNull();
+            expect(text()).not.toContain('Paket düşürme dönem sonuna planlandı.');
+        });
+
+        it('denemede paket değişimi sığmazsa aynı not; bekleyen davet sayıma dahil ve iptali önerilir', () => {
+            service.getSubscriptionSummary.mockReturnValue(of(summary({ status: 'trialing', planCode: 'basic', planName: 'Basic', trialEndsAtUtc: '2099-11-01T00:00:00Z' })));
+            service.startCheckout.mockReturnValue(
+                throwError(() => new PlanLimitsExceededError('x', { ...basicFit, targetPlanCode: 'Pro', maxUsers: 5, memberCount: 5, pendingInviteCount: 1, excessUserCount: 1 }))
+            );
+            render();
+
+            click('Hemen yükselt');
+
+            const notice = el().querySelector('[data-testid=plan-fit-notice]')?.textContent ?? '';
+
+            expect(notice).toContain('Profesyonel en çok 1 aktif klinik ve 5 kullanıcı içerir.');
+            expect(notice).toContain('6 kullanıcınız (1 bekleyen davet dahil)');
+            expect(notice).toContain('Bu pakete geçmek için önce 1 kliniği pasife alın ve 1 kullanıcıyı çıkarın ya da bekleyen davetleri iptal edin.');
+            expect(el().querySelector('[data-testid=plan-fit-invites]')?.getAttribute('href')).toBe('/panel/settings/invites/list');
+        });
+
+        it('dönem sonunda uygulanmayan düşürme nedeniyle gösterilir', () => {
+            service.getSubscriptionSummary.mockReturnValue(
+                of(summary({ rejectedPlanChange: { ...pendingDowngrade, statusRaw: 'Rejected', status: 'rejected', fit: { ...basicFit, excessUserCount: 0, memberCount: 3 } } }))
+            );
+            render();
+
+            const notice = el().querySelector('[data-testid=rejected-plan-change]')?.textContent ?? '';
+
+            expect(notice).toContain('Planlanan Temel geçişi uygulanmadı');
+            expect(notice).toContain('Paketi düşürmek için önce 1 kliniği pasife alın.');
+            expect(el().querySelector('[data-testid=plan-fit-members]')).toBeNull();
         });
 
         it('bekleyen geçiş iptal edilir ve bilgi verilir', () => {

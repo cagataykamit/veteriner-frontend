@@ -8,14 +8,25 @@ export interface ClinicReminderRuleDto {
     readonly defaultDays: number;
     readonly minDays: number;
     readonly maxDays: number;
-    /** `false`: ticari ileti gönderimi merkezi olarak kapalı, kural açık olsa da e-posta gitmez. */
+    /** `false`: ticari ileti kuralı ve kliniğin ticari ileti kapısı kapalı (ADR-046); kural açık olsa da e-posta gitmez. */
     readonly sendingAvailable: boolean;
+    readonly updatedAtUtc: string | null;
+}
+
+/** Kliniğin ticari ileti kapısı (ADR-046; sözleşme §2). Beyan metni backend'dedir. */
+export interface ClinicMarketingGateDto {
+    readonly isEnabled: boolean;
+    readonly declarationText: string;
+    readonly declarationVersion: string;
+    readonly declaredAtUtc: string | null;
+    readonly declaredByUserId: string | null;
     readonly updatedAtUtc: string | null;
 }
 
 export interface ClinicReminderRulesDto {
     readonly clinicId: string;
     readonly rules: readonly ClinicReminderRuleDto[];
+    readonly marketingGate: ClinicMarketingGateDto;
 }
 
 export interface ClinicReminderRuleUpdateDto {
@@ -42,6 +53,6 @@ export const CLINIC_REMINDER_RULE_TEXT: Readonly<Record<ClinicReminderRuleType, 
         title: 'Uzun süredir gelmedi',
         before: 'Son gelişin üzerinden',
         after: 'gün geçince',
-        detail: 'Planlı randevusu olmayan hayvanın sahibine gider.'
+        detail: 'Ticari iletidir: planlı randevusu olmayan hayvanın, bu klinik için ticari ileti onayı veren sahibine gider. Konu satırında "Tanıtım" yazar, iletide ret bağlantısı bulunur.'
     }
 };

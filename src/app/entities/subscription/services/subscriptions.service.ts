@@ -18,7 +18,7 @@ import type {
     SubscriptionSummaryDto
 } from '@/app/entities/subscription/models/subscription-api.model';
 import type { PendingPlanChangeVm, SubscriptionBillingPeriod, SubscriptionCheckoutSessionVm, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
-import { CHECKOUT_ALREADY_PAID_CODE, CheckoutAlreadyPaidError } from '@/app/entities/subscription/services/subscription-checkout.errors';
+import { CHECKOUT_ALREADY_PAID_CODE, CheckoutAlreadyPaidError, planLimitsExceededFromHttpError } from '@/app/entities/subscription/services/subscription-checkout.errors';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { resolveTenantIdFromJwt } from '@/app/core/auth/jwt-tenant.utils';
 
@@ -65,7 +65,9 @@ export class SubscriptionsService {
             catchError((err: HttpErrorResponse) => {
                 const message = messageFromHttpError(err, 'Checkout oturumu başlatılamadı.');
 
-                return throwError(() => (problemCodeFromHttpError(err) === CHECKOUT_ALREADY_PAID_CODE ? new CheckoutAlreadyPaidError(message) : new Error(message)));
+                return throwError(
+                    () => planLimitsExceededFromHttpError(err, message) ?? (problemCodeFromHttpError(err) === CHECKOUT_ALREADY_PAID_CODE ? new CheckoutAlreadyPaidError(message) : new Error(message))
+                );
             })
         );
     }
@@ -136,9 +138,11 @@ export class SubscriptionsService {
 
         return this.api.post<SubscriptionSummaryDto>(ApiEndpoints.tenants.scheduleSubscriptionDowngrade(tenantId), body).pipe(
             map(mapSubscriptionSummaryDtoToVm),
-            catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Paket geçişi planlanamadı.')))
-            )
+            catchError((err: HttpErrorResponse) => {
+                const message = messageFromHttpError(err, 'Paket geçişi planlanamadı.');
+
+                return throwError(() => planLimitsExceededFromHttpError(err, message) ?? new Error(message));
+            })
         );
     }
 
