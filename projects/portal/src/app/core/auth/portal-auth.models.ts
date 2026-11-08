@@ -14,11 +14,21 @@ export interface PortalLink {
     readonly clientFullName: string;
     /** `false` → klinik portalı geçici olarak kapattı; bağ listede kalır, bağ kapsamlı uçlar 404 döner (§12). */
     readonly isClinicPortalEnabled: boolean;
+    /**
+     * `false` → kliniğin paketinde portal hizmeti yok (§12.1): okuma sayfaları kapanır; veri talebi, bildirim tercihleri ve hesap silme
+     * açık kalır. Sebep (paket) gösterilmez. Alan gelmezse açık sayılır.
+     */
+    readonly isPortalServiceAvailable?: boolean;
 }
 
 /** Klinik portalı kapattı mı (§12). Alan gelmezse açık sayılır (sunucuda kayıt yoksa açık). */
 export function isClinicPortalClosed(link: PortalLink | null | undefined): boolean {
     return link?.isClinicPortalEnabled === false;
+}
+
+/** Klinik portal hizmetini şu an sunmuyor mu (§12.1); sahip hakları açık kalır. */
+export function isPortalServiceUnavailable(link: PortalLink | null | undefined): boolean {
+    return link?.isPortalServiceAvailable === false;
 }
 
 /** `GET /me` (§5.8). */

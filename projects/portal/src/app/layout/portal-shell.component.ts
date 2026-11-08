@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, ViewEncapsulation
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
-import { isClinicPortalClosed } from '@portal/app/core/auth/portal-auth.models';
+import { isClinicPortalClosed, isPortalServiceUnavailable } from '@portal/app/core/auth/portal-auth.models';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
-import { PORTAL_CLINIC_CLOSED_MESSAGE } from '@portal/app/core/errors/portal-errors';
+import { PORTAL_CLINIC_CLOSED_MESSAGE, PORTAL_SERVICE_UNAVAILABLE_MESSAGE } from '@portal/app/core/errors/portal-errors';
 import { PortalEmptyState } from '@portal/app/shared/ui/portal-states.component';
 import { PortalBrandHeader, PortalFooter } from './portal-brand.component';
 
@@ -30,6 +30,9 @@ const NAV_ITEMS: readonly PortalNavItem[] = [
 /** Klinik portalı kapattığında (§12) yalnız hesap düzeyi sayfalar açılır; bağ kapsamlı sayfaların yerine durum notu çıkar. */
 const ACCOUNT_LEVEL_PATHS: readonly string[] = ['/account', '/account/delete'];
 
+/** Klinik portal hizmetini sunmuyorsa (§12.1) hesap sayfalarına ek olarak veri talebi de açık kalır. */
+const OWNER_RIGHTS_PATHS: readonly string[] = [...ACCOUNT_LEVEL_PATHS, '/account/data-requests'];
+
 @Component({
     selector: 'portal-shell',
     standalone: true,
@@ -53,6 +56,15 @@ const ACCOUNT_LEVEL_PATHS: readonly string[] = ['/account', '/account/delete'];
         <main id="portal-main" class="portal-page portal-page--with-nav" tabindex="-1">
             @if (showClosedNotice()) {
                 <portal-empty-state title="Portal geçici olarak kapalı" [message]="closedMessage" icon="fa-door-closed" data-testid="clinic-portal-closed">
+                    <div class="portal-actions">
+                        <a class="portal-link-button" routerLink="/account">Hesabım</a>
+                        @if (session.links().length > 1) {
+                            <a class="portal-link-button" routerLink="/clinics">Başka klinik seç</a>
+                        }
+                    </div>
+                </portal-empty-state>
+            } @else if (showServiceUnavailableNotice()) {
+                <portal-empty-state title="Bu hizmet şu an sunulmuyor" [message]="serviceUnavailableMessage" icon="fa-circle-info" data-testid="portal-service-unavailable">
                     <div class="portal-actions">
                         <a class="portal-link-button" routerLink="/account">Hesabım</a>
                         @if (session.links().length > 1) {
@@ -85,6 +97,7 @@ export class PortalShell {
     private readonly router = inject(Router);
     protected readonly navItems = NAV_ITEMS;
     protected readonly closedMessage = PORTAL_CLINIC_CLOSED_MESSAGE;
+    protected readonly serviceUnavailableMessage = PORTAL_SERVICE_UNAVAILABLE_MESSAGE;
 
     private readonly path = toSignal(
         this.router.events.pipe(
@@ -95,4 +108,8 @@ export class PortalShell {
     );
 
     protected readonly showClosedNotice = computed(() => isClinicPortalClosed(this.session.activeLink()) && !ACCOUNT_LEVEL_PATHS.includes(this.path().split(/[?#]/)[0]));
+
+    protected readonly showServiceUnavailableNotice = computed(
+        () => isPortalServiceUnavailable(this.session.activeLink()) && !OWNER_RIGHTS_PATHS.includes(this.path().split(/[?#]/)[0])
+    );
 }

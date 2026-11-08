@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { isClinicPortalClosed, type PortalLink } from '@portal/app/core/auth/portal-auth.models';
+import { isClinicPortalClosed, isPortalServiceUnavailable, type PortalLink } from '@portal/app/core/auth/portal-auth.models';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
-import { PORTAL_CLINIC_CLOSED_MESSAGE } from '@portal/app/core/errors/portal-errors';
+import { PORTAL_CLINIC_CLOSED_MESSAGE, PORTAL_SERVICE_UNAVAILABLE_SHORT_MESSAGE } from '@portal/app/core/errors/portal-errors';
 import { PortalBrandHeader, PortalFooter } from '@portal/app/layout/portal-brand.component';
 import { PortalEmptyState } from '@portal/app/shared/ui/portal-states.component';
 
@@ -39,6 +39,8 @@ import { PortalEmptyState } from '@portal/app/shared/ui/portal-states.component'
                                     <span class="portal-muted">{{ link.clientFullName }}</span>
                                     @if (isClosed(link)) {
                                         <span class="portal-field-hint" data-testid="clinic-closed">{{ closedMessage }}</span>
+                                    } @else if (isServiceUnavailable(link)) {
+                                        <span class="portal-field-hint" data-testid="clinic-service-unavailable">{{ serviceUnavailableMessage }}</span>
                                     }
                                 </span>
                                 <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
@@ -58,10 +60,15 @@ export class PortalClinicSelectComponent {
     protected readonly session = inject(PortalSessionService);
     private readonly router = inject(Router);
     protected readonly closedMessage = PORTAL_CLINIC_CLOSED_MESSAGE;
+    protected readonly serviceUnavailableMessage = PORTAL_SERVICE_UNAVAILABLE_SHORT_MESSAGE;
 
     /** Klinik portalı kapattıysa (§12) seçim yine yapılabilir; kabuk aynı durumu gösterir, hesap sayfaları açık kalır. */
     isClosed(link: PortalLink): boolean {
         return isClinicPortalClosed(link);
+    }
+
+    isServiceUnavailable(link: PortalLink): boolean {
+        return isPortalServiceUnavailable(link);
     }
 
     initial(name: string): string {

@@ -81,6 +81,11 @@ export const PORTAL_SERVER_ERROR_MESSAGE = 'Beklenmeyen bir sorun oluştu. Lütf
 export const PORTAL_GENERIC_ERROR_MESSAGE = 'İşlem tamamlanamadı. Lütfen tekrar deneyin.';
 /** `/me` bağında `isClinicPortalEnabled=false` (§12): klinik seçimi ve kabuk aynı metni gösterir. */
 export const PORTAL_CLINIC_CLOSED_MESSAGE = 'Bu klinik portal erişimini geçici olarak kapattı; bilgi için kliniğinizle iletişime geçin.';
+/** `/me` bağında `isPortalServiceAvailable=false` (§12.1): ticari bilgi (paket) yazılmaz; sahip hakları açık kalır. */
+export const PORTAL_SERVICE_UNAVAILABLE_MESSAGE =
+    'Kliniğiniz bu hizmeti şu an sunmuyor; bilgi için kliniğinize başvurun. Veri talebi, bildirim tercihleri ve hesap silme Hesabım sayfasında açık.';
+/** Klinik seçiminde kısa not (§12.1). */
+export const PORTAL_SERVICE_UNAVAILABLE_SHORT_MESSAGE = 'Kliniğiniz bu hizmeti şu an sunmuyor; bilgi için kliniğinize başvurun.';
 
 export function portalProblemCode(err: unknown): string | null {
     if (!(err instanceof HttpErrorResponse)) {
