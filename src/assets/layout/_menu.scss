@@ -246,15 +246,15 @@ app-menu {
 // Masaüstü (static kip): tek kenar çubuğu, yüzen kart görünümünde (üstte/altta boşluk) ama sol kenara dayalı. Simge sütunu sabit genişliktedir;
 // açıkken etiketler simgenin sağına doğru açılır, kapalıyken kenar çubuğu yalnız simge sütununa daralır (simge x konumu ve boyutu değişmez).
 // Satır yüksekliği (--menu-row) pencereye göre ayarlanır; bölüm başlıkları ve aralıkları satırla orantılıdır, tüm menü kaydırmasız sığar
-// (çok kısa pencerede, ~405 px altında, 22 px alt sınırda kalır ve üstteki liste kaydırılır). Menüye satır veya bölüm eklenirse $menu-row-units güncellenir.
+// (çok kısa pencerede, ~425 px altında, 22 px alt sınırda kalır ve üstteki liste kaydırılır). Menüye satır veya bölüm eklenirse $menu-row-units güncellenir.
 $menu-icon-column: 64px;
 $menu-open-width: 17rem;
-$menu-item-count: 9; // en geniş izinle görünen satır sayısı
+$menu-item-count: 10; // en geniş izinle görünen satır sayısı (WhatsApp destek dahil)
 $menu-heading-count: 5; // bölüm başlığı (açık) / ayırıcı (kapalı) sayısı
 $menu-heading-gap-count: 3; // üst boşluklu başlık sayısı: kayan listede ilk başlık hariç (sabit bölümün başlığı üst çizginin hemen altındadır)
 $menu-heading-ratio: 0.7; // başlık yüksekliği / satır yüksekliği
 $menu-heading-gap-ratio: 0.25; // başlık üst boşluğu / satır yüksekliği
-$menu-row-units: $menu-item-count + $menu-heading-count * $menu-heading-ratio + $menu-heading-gap-count * $menu-heading-gap-ratio; // 13.25
+$menu-row-units: $menu-item-count + $menu-heading-count * $menu-heading-ratio + $menu-heading-gap-count * $menu-heading-gap-ratio; // 14.25
 $menu-group-row: 28px; // açılır grup başlığı (şu an kullanılmıyor)
 $menu-edge-padding: 8px; // şeridin üstünde ve altında (sabit bölüm) boşluk
 $menu-rounding-slack: 4px; // kesirli piksel yuvarlaması kaydırma çubuğu açmasın
@@ -385,6 +385,15 @@ $menu-fixed-height: calc(6rem + 1px + 2 * #{$menu-edge-padding} + #{$menu-roundi
             }
         }
     }
+}
+
+// WhatsApp destek satırı: ölçüleri diğer satırlarla aynı, yalnız simgesi yeşil. Seçici static kipin simge rengini (0,4,1) geçer.
+.layout-wrapper .layout-sidebar .layout-menu a.layout-menuitem-support .layout-menuitem-icon {
+    color: var(--p-green-600, #16a34a);
+}
+
+:root[class*='app-dark'] .layout-wrapper .layout-sidebar .layout-menu a.layout-menuitem-support .layout-menuitem-icon {
+    color: var(--p-green-400, #4ade80);
 }
 
 // Alt sayfa paneli (flyout): sekmeli satırın sağında, başlıksız sade sekme listesi; sağ tık menüsü gibi küçük, çerçevesiz, ince

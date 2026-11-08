@@ -7,6 +7,7 @@ import { filter } from 'rxjs';
 import { AppMenuitem } from './app.menuitem';
 import { readMenuGroupPreferences, writeMenuGroupPreferences } from './menu-group-state';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { supportWhatsAppUrl } from '@/app/core/support/vetinity-support.constants';
 import { LayoutService } from '@/app/layout/service/layout.service';
 import { MenuBadgeService, menuBadgeLabel } from '@/app/layout/service/menu-badge.service';
 import { MenuFlyoutService } from '@/app/layout/service/menu-flyout.service';
@@ -56,13 +57,12 @@ interface MenuSection {
                 }
             }
         </ul>
-        @if (pinnedSections().length) {
-            <ul class="layout-menu layout-menu-pinned">
-                @for (section of pinnedSections(); track section.label ?? section.heading) {
-                    <ng-container *ngTemplateOutlet="flatSection; context: { $implicit: section }" />
-                }
-            </ul>
-        }
+        <ul class="layout-menu layout-menu-pinned">
+            @for (section of pinnedSections(); track section.label ?? section.heading) {
+                <ng-container *ngTemplateOutlet="flatSection; context: { $implicit: section }" />
+            }
+            <li appMenuitem [item]="supportItem()" [root]="false"></li>
+        </ul>
 
         <ng-template #flatSection let-section>
             @if (section.heading && rail()) {
@@ -115,6 +115,15 @@ export class AppMenu {
 
     protected readonly scrollingSections = computed(() => this.sections().filter((s) => !s.pinned));
     protected readonly pinnedSections = computed(() => this.sections().filter((s) => s.pinned));
+
+    /** Destek hattı yetkiye bağlı değildir: her rolde sabit bölümün en altındadır, WhatsApp'ı yeni sekmede açar. */
+    protected readonly supportItem = computed<MenuItem>(() => ({
+        label: 'WhatsApp destek',
+        icon: 'pi pi-fw pi-whatsapp',
+        url: supportWhatsAppUrl(this.auth.activeClinicLabel()),
+        target: '_blank',
+        class: 'layout-menuitem-support'
+    }));
 
     constructor() {
         this.badges.connect(inject(DestroyRef));
