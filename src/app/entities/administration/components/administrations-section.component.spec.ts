@@ -61,7 +61,7 @@ describe('AdministrationsSectionComponent', () => {
                 { provide: AdministrationsService, useValue: service },
                 { provide: ProductService, useValue: { getProducts: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } },
                 { provide: StockBatchService, useValue: { getByProduct: () => EMPTY } },
-                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'c1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } }
             ]
         }).compileComponents();
