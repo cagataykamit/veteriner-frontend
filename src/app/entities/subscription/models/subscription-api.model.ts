@@ -24,6 +24,8 @@ export interface SubscriptionSummaryDto {
     billingCycleAnchorUtc?: string | null;
     nextBillingAtUtc?: string | null;
     pendingPlanChange?: PendingPlanChangeDto | null;
+    /** ADR-035 2026-11-08: dönem sonunda sığmadığı için uygulanmayan son düşürme; `fit` bugünkü sayılardır. */
+    rejectedPlanChange?: PendingPlanChangeDto | null;
     isReadOnly?: boolean | null;
     canManageSubscription?: boolean | null;
     availablePlans?: SubscriptionPlanDto[] | null;
@@ -37,6 +39,19 @@ export interface PendingPlanChangeDto {
     changeType?: number | string | null;
     status?: number | string | null;
     effectiveAtUtc?: string | null;
+    fit?: SubscriptionPlanFitDto | null;
+}
+
+/** `Subscriptions.PlanLimitsExceeded` (409) gövdesindeki ve `rejectedPlanChange.fit` alanları. */
+export interface SubscriptionPlanFitDto {
+    targetPlanCode?: string | null;
+    maxActiveClinics?: number | null;
+    maxUsers?: number | null;
+    activeClinicCount?: number | null;
+    memberCount?: number | null;
+    pendingInviteCount?: number | null;
+    excessClinicCount?: number | null;
+    excessUserCount?: number | null;
 }
 
 export interface SubscriptionCheckoutSessionDto {

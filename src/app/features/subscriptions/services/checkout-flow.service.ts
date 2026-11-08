@@ -4,9 +4,16 @@ import { finalize, forkJoin, map, Observable, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { SUBSCRIPTIONS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import type { PendingPlanChangeVm, SubscriptionBillingPeriod, SubscriptionCheckoutSessionVm, SubscriptionPlanVm, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
+import type {
+    PendingPlanChangeVm,
+    SubscriptionBillingPeriod,
+    SubscriptionCheckoutSessionVm,
+    SubscriptionPlanFitVm,
+    SubscriptionPlanVm,
+    SubscriptionSummaryVm
+} from '@/app/entities/subscription/models/subscription-vm.model';
 import type { SubscriptionSummaryRequestOptions } from '@/app/entities/subscription/services/subscriptions.service';
-import { CheckoutAlreadyPaidError } from '@/app/entities/subscription/services/subscription-checkout.errors';
+import { CheckoutAlreadyPaidError, PlanLimitsExceededError } from '@/app/entities/subscription/services/subscription-checkout.errors';
 import { SubscriptionsService } from '@/app/entities/subscription/services/subscriptions.service';
 import { CheckoutReturnVerificationService, type CheckoutReturnVerificationHost } from '@/app/features/subscriptions/services/checkout-return-verification.service';
 import { isActiveTrialingSubscription, isExpiredReadOnlySubscription } from '@/app/features/subscriptions/utils/subscription-access.utils';
@@ -20,6 +27,7 @@ import {
     writeStoredCheckoutSessionId
 } from '@/app/features/subscriptions/utils/subscription-checkout-storage.utils';
 import { hasOpenCheckoutForPlan, isDowngradePlan } from '@/app/features/subscriptions/utils/subscription-plan-change.utils';
+import type { PlanFitMode } from '@/app/features/subscriptions/utils/subscription-plan-fit.utils';
 
 /**
  * Abonelik sayfasının durumu ve ödeme akışı: özet yükleme, plan eylemi, hosted checkout, ödeme dönüşünün işlenmesi.
@@ -56,6 +64,8 @@ export class CheckoutFlowService {
     readonly finalizeError = signal<string | null>(null);
     readonly planActionError = signal<string | null>(null);
     readonly planActionInfo = signal<string | null>(null);
+    /** Paket değişimi hedef pakete sığmadı (ADR-035 2026-11-08): ekran sınırları, sayıları ve yapılacakları gösterir. */
+    readonly planFitBlock = signal<{ readonly fit: SubscriptionPlanFitVm; readonly mode: PlanFitMode } | null>(null);
     readonly pendingCancelLoading = signal(false);
     readonly pendingCancelError = signal<string | null>(null);
     readonly returnBanner = this.returnVerification.returnBanner;
@@ -232,6 +242,7 @@ export class CheckoutFlowService {
 
         this.planActionError.set(null);
         this.planActionInfo.set(null);
+        this.planFitBlock.set(null);
 
         if (hasOpenCheckoutForPlan(plan, this.checkoutSession(), this.selectedBillingPeriod())) {
             if (this.checkoutSession()?.checkoutUrl?.trim()) {
@@ -389,6 +400,7 @@ export class CheckoutFlowService {
         this.finalizeError.set(null);
         this.planActionError.set(null);
         this.planActionInfo.set(null);
+        this.planFitBlock.set(null);
         // Dönem seçilemiyorsa (deneme, etkin yıllık dönem) backend mevcut dönemi kullanır; açık oturuma devamda oturumun dönemi.
         const billingPeriod = options.billingPeriod ?? (canChooseBillingPeriod(sum) ? this.selectedBillingPeriod() : undefined);
 
@@ -421,6 +433,12 @@ export class CheckoutFlowService {
                     return;
                 }
 
+                if (e instanceof PlanLimitsExceededError) {
+                    this.planFitBlock.set({ fit: e.fit, mode: 'change' });
+
+                    return;
+                }
+
                 const message = e instanceof Error ? e.message : 'Ödeme işlemi başlatılamadı.';
 
                 this.checkoutError.set(message);
@@ -439,6 +457,7 @@ export class CheckoutFlowService {
         this.schedulingDowngradeCode.set(targetPlanCode);
         this.planActionError.set(null);
         this.planActionInfo.set(null);
+        this.planFitBlock.set(null);
         this.subscriptions.scheduleDowngrade(targetPlanCode).subscribe({
             next: () => {
                 this.schedulingDowngradeCode.set(null);
@@ -447,6 +466,13 @@ export class CheckoutFlowService {
             },
             error: (e: unknown) => {
                 this.schedulingDowngradeCode.set(null);
+
+                if (e instanceof PlanLimitsExceededError) {
+                    this.planFitBlock.set({ fit: e.fit, mode: 'downgrade' });
+
+                    return;
+                }
+
                 this.planActionError.set(e instanceof Error ? e.message : 'Paket düşürme planlanamadı.');
             }
         });

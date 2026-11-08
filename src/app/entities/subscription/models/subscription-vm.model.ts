@@ -28,6 +28,8 @@ export interface SubscriptionSummaryVm {
     billingCycleAnchorUtc: string | null;
     nextBillingAtUtc: string | null;
     pendingPlanChange: PendingPlanChangeVm | null;
+    /** Dönem sonunda pakete sığmadığı için uygulanmayan son düşürme ve bugünkü sayılar (ADR-035 2026-11-08); yoksa `null`. */
+    rejectedPlanChange: PendingPlanChangeVm | null;
     isReadOnly: boolean;
     canManageSubscription: boolean;
     availablePlans: SubscriptionPlanVm[];
@@ -35,7 +37,22 @@ export interface SubscriptionSummaryVm {
 }
 
 export type PendingPlanChangeTypeKey = 'downgrade' | 'upgrade' | 'unknown';
-export type PendingPlanChangeStatusKey = 'pending' | 'scheduled' | 'cancelled' | 'applied' | 'unknown';
+export type PendingPlanChangeStatusKey = 'pending' | 'scheduled' | 'cancelled' | 'applied' | 'rejected' | 'unknown';
+
+/**
+ * Hedef paketin sınırları ve bugünkü kullanım (backend `Subscriptions.PlanLimitsExceeded` yanıtı ve `rejectedPlanChange.fit`).
+ * `maxActiveClinics` `null` ise klinik sınırı yok; kullanıcı sayımı üye + bekleyen davettir.
+ */
+export interface SubscriptionPlanFitVm {
+    targetPlanCode: string;
+    maxActiveClinics: number | null;
+    maxUsers: number;
+    activeClinicCount: number;
+    memberCount: number;
+    pendingInviteCount: number;
+    excessClinicCount: number;
+    excessUserCount: number;
+}
 
 export interface PendingPlanChangeVm {
     currentPlanCode: string | null;
@@ -45,6 +62,8 @@ export interface PendingPlanChangeVm {
     statusRaw: string | number | null;
     status: PendingPlanChangeStatusKey;
     effectiveAtUtc: string | null;
+    /** Yalnız uygulanmayan (`rejected`) değişiklikte dolu. */
+    fit: SubscriptionPlanFitVm | null;
 }
 
 export type SubscriptionCheckoutStatusKey =
