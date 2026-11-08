@@ -90,6 +90,12 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
                     <dt>Kanal</dt>
                     <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ methodLabel(p.method) }}</dd>
                 </div>
+                @if (p.cashRegisterName) {
+                    <div stat>
+                        <dt>Kasa</dt>
+                        <dd class="font-semibold text-surface-900 dark:text-surface-0" data-testid="payment-cash-register">{{ p.cashRegisterName }}</dd>
+                    </div>
+                }
                 <div stat>
                     <dt>Ödeme zamanı</dt>
                     <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ formatPaidAtUtc(p.paidAtUtc) }}</dd>

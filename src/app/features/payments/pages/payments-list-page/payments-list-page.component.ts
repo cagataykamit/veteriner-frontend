@@ -127,7 +127,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="list.onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '56rem' }"
+                                [tableStyle]="{ 'min-width': '62rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >
@@ -138,6 +138,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                         <th class="text-right">Tutar</th>
                                         <th>Para birimi</th>
                                         <th>Yöntem</th>
+                                        <th>Kasa</th>
                                         <th>Ödeme tarihi</th>
                                         <th style="width: 10rem">İşlemler</th>
                                     </tr>
@@ -161,6 +162,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                         <td class="text-right whitespace-nowrap font-medium">{{ row.amount | money: row.currency || 'TRY' }}</td>
                                         <td>{{ row.currency }}</td>
                                         <td class="whitespace-nowrap">{{ methodLabel(row.method) }}</td>
+                                        <td class="whitespace-nowrap" data-testid="payment-row-cash-register">{{ row.cashRegisterName ?? '—' }}</td>
                                         <td class="whitespace-nowrap">{{ formatPaidAtUtc(row.paidAtUtc) }}</td>
                                         <td class="whitespace-nowrap">
                                             <div class="flex items-center gap-1">
@@ -208,7 +210,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                         {{ row.amount | money: row.currency || 'TRY' }}
                                         <span class="text-muted-color font-normal"> {{ row.currency }}</span>
                                     </div>
-                                    <div class="text-sm text-muted-color mb-3 min-w-0"><span class="font-medium">Yöntem: </span>{{ methodLabel(row.method) }}</div>
+                                    <div class="text-sm text-muted-color mb-3 min-w-0"><span class="font-medium">Yöntem: </span>{{ methodLabel(row.method) }}@if (row.cashRegisterName) {<span> · <span class="font-medium">Kasa: </span>{{ row.cashRegisterName }}</span>}</div>
                                     <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
                                         <app-row-action-button action="detail" [link]="['/panel/payments', row.id]" />
                                         @if (canUpdatePayment && !ro.mutationBlocked()) {

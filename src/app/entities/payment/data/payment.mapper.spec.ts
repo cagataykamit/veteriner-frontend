@@ -105,4 +105,11 @@ describe('payment mapper — müşteri kredisi (FIN-005)', () => {
         expect(mapPaymentDetailDtoToVm({ id: 'p1', creditedAmount: 400 }).creditedAmount).toBe(400);
         expect(mapPaymentDetailDtoToVm({ id: 'p1' }).creditedAmount).toBe(0);
     });
+
+    it('kasa adı okunur; alan yoksa (eski yanıt, Query DB) null', () => {
+        expect(mapPaymentDetailDtoToVm({ id: 'p1', cashRegisterName: 'Ana kasa' }).cashRegisterName).toBe('Ana kasa');
+        expect(mapPaymentDetailDtoToVm({ id: 'p1' }).cashRegisterName).toBeNull();
+        expect(mapPaymentListItemDtoToVm({ id: 'p1', cashRegisterName: ' Arka kasa ' }).cashRegisterName).toBe('Arka kasa');
+        expect(mapPaymentListItemDtoToVm({ id: 'p1', cashRegisterName: null }).cashRegisterName).toBeNull();
+    });
 });
