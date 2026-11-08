@@ -58,6 +58,13 @@ describe('import-schema.utils', () => {
         expect(mappingConfidence(customers.columns, 'Cep', 'AdSoyad')).toBe('Manual');
         expect(mappingConfidence(customers.columns, null, 'AdSoyad')).toBeNull();
     });
+
+    it('seçilen programın hazır eşlemesi ayrı güvenle görünür (TIER-021)', () => {
+        const evet = [{ source: 'Adı', suggested: 'AdSoyad', confidence: 'Profile' as const, mapped: null }];
+
+        expect(mappingConfidence(evet, 'Adı', 'AdSoyad')).toBe('Profile');
+        expect(initialColumnMaps([{ table: 'customers', rowCount: 1, columns: evet }]).customers).toEqual({ AdSoyad: 'Adı' });
+    });
 });
 
 describe('import-value-mapping.utils', () => {

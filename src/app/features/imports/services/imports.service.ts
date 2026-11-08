@@ -17,6 +17,7 @@ import type {
     ImportRollbackRequestDto,
     ImportRowPageDto,
     ImportRowsQuery,
+    ImportSourceProfileDto,
     ImportTable
 } from '@/app/features/imports/models/import-api.model';
 
@@ -42,7 +43,12 @@ export class ImportsService {
         return this.api.get<ImportBatchDto>(ApiEndpoints.imports.batchById(id));
     }
 
-    /** Multipart yükleme: `file` (XLSX) veya `customersFile`/`petsFile`/`vaccinationsFile` (CSV). */
+    /** "Hangi programdan geliyorsunuz?" seçenekleri (TIER-021). */
+    getSourceProfiles(): Observable<ImportSourceProfileDto[]> {
+        return this.api.get<ImportSourceProfileDto[]>(ApiEndpoints.imports.sourceProfiles());
+    }
+
+    /** Multipart yükleme: `file` (XLSX) veya `customersFile`/`petsFile`/`vaccinationsFile` (CSV); isteğe bağlı `sourceProfile`. */
     createBatch(form: FormData): Observable<ImportBatchDto> {
         return this.api.post<ImportBatchDto>(ApiEndpoints.imports.batches(), form);
     }

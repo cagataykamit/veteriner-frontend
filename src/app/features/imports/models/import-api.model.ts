@@ -18,7 +18,29 @@ export type ImportBatchStatus =
     | 'Discarded'
     | 'Expired';
 
-export type ImportColumnConfidence = 'Exact' | 'Alias' | 'None';
+/** `Profile`: seçilen kaynak programın hazır eşlemesi (TIER-021, §4.5); doğrulanmamış olabilir. */
+export type ImportColumnConfidence = 'Exact' | 'Profile' | 'Alias' | 'None';
+
+/** Kliniğin geldiği program (TIER-021, §4.5). */
+export type ImportSourceProfileCode = 'Generic' | 'Kolayvet' | 'EVet';
+
+/** Hazır eşlemenin bir satırı (§7.15). */
+export interface ImportProfileMappingDto {
+    table: ImportTable;
+    header: string;
+    field: string;
+    source: string;
+    verified: boolean;
+}
+
+/** GET `/imports/source-profiles` öğesi; `verified` yalnız tüm eşlemeler gerçek dosyayla denetlendiyse true. */
+export interface ImportSourceProfileDto {
+    code: ImportSourceProfileCode;
+    displayName: string;
+    note: string;
+    verified: boolean;
+    mappings: ImportProfileMappingDto[];
+}
 export type ImportIssueSeverity = 'Info' | 'Warning' | 'Error';
 export type ImportValueKind = 'species' | 'breed' | 'vaccine' | 'color';
 export type ImportDuplicateClientMode = 'Match' | 'Skip' | 'Error';
@@ -83,6 +105,8 @@ export interface ImportBatchDto {
     rolledBackAtUtc: string | null;
     remindersReleasedAtUtc: string | null;
     payloadPurgedAtUtc: string | null;
+    /** TIER-021; eski sunucu göndermezse `Generic` sayılır. */
+    sourceProfile?: ImportSourceProfileCode;
     summary: ImportSummaryDto;
     /** B4: yoksa null/undefined. */
     progress?: ImportProgressDto | null;

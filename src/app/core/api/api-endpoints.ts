@@ -89,7 +89,9 @@ export const ApiEndpoints = {
     /** Size özel geliştirme talepleri (TIER-010, `CUSTOM_DEVELOPMENT_REQUESTS_API_CONTRACT.md` §3): `CustomDevelopmentRequests.Manage`. */
     customDevelopmentRequests: {
         /** GET liste ve açık talep sınırı; POST yeni talep (Kurumsal). */
-        list: () => `/api/v1/custom-development-requests`
+        list: () => `/api/v1/custom-development-requests`,
+        /** GET talepler, ücret bilgisi ve görüşme süresi; POST yeni geçiş desteği talebi (TIER-021, §11; her pakette). */
+        migrationSupport: () => `/api/v1/custom-development-requests/migration-support`
     },
     /** Bekleme listesi (TIER-018, Veteriner `docs/WAITLIST_API_CONTRACT.md` §2): okuma `Appointments.Read`, yazma `Appointments.Create`. */
     waitlistEntries: {
@@ -228,6 +230,8 @@ export const ApiEndpoints = {
     imports: {
         /** GET: `format=xlsx` veya `format=csv&table=customers|pets|vaccinations`. */
         template: () => `/api/v1/imports/template`,
+        /** GET: "Hangi programdan geliyorsunuz?" profilleri ve hazır sütun eşlemeleri (TIER-021, §7.15). */
+        sourceProfiles: () => `/api/v1/imports/source-profiles`,
         /** GET (liste: `page`, `pageSize`, `status`) ve POST (multipart yükleme). */
         batches: () => `/api/v1/imports/batches`,
         /** GET ayrıntı; DELETE taslağı siler. */
@@ -617,7 +621,7 @@ export const ApiEndpoints = {
     },
     /** Size özel geliştirme talepleri, platform tarafı (TIER-010, Veteriner `docs/CUSTOM_DEVELOPMENT_REQUESTS_API_CONTRACT.md` §4). Yalnız platform yöneticisi. */
     customDevelopmentRequestsAdmin: {
-        /** GET (query: `status`, `openOnly`, `page`, `pageSize` en çok 200). */
+        /** GET (query: `status`, `openOnly`, `targetKind`, `page`, `pageSize` en çok 200). */
         list: () => `/api/v1/admin/custom-development-requests`,
         /** POST `{ status, decisionReason, responseNote }`. */
         changeStatus: (id: string) => `/api/v1/admin/custom-development-requests/${encodeURIComponent(id)}/status`

@@ -7,6 +7,14 @@ import type { ImportBatchDto, ImportDuplicateClientMode, ImportTableInfoDto } fr
 import { IMPORT_FIELDS, IMPORT_TABLE_LABELS, isRequiredField, mappingConfidence, missingRequired, type ImportColumnMaps } from '@/app/features/imports/utils/import-schema.utils';
 import { AppStatusTagComponent, type StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
+// "Hazır": seçilen programın eşlemesi (TIER-021); gerçek dosyayla doğrulanmadığı için kontrol edilmeli.
+const CONFIDENCE_TAGS: Readonly<Record<'Exact' | 'Profile' | 'Alias' | 'Manual', { label: string; severity: StatusTagSeverity }>> = {
+    Exact: { label: 'Kesin', severity: 'success' },
+    Profile: { label: 'Hazır', severity: 'warn' },
+    Alias: { label: 'Benzer', severity: 'info' },
+    Manual: { label: 'Elle', severity: 'secondary' }
+};
+
 interface SourceOption {
     label: string;
     value: string;
@@ -21,6 +29,11 @@ interface SourceOption {
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p class="text-muted-color mt-0">Dosyanızdaki sütunları sistem alanlarıyla eşleyin. Önerileri kontrol edin; * işaretli alanlar zorunludur. Yeni tür veya aşı tanımı oluşturulmaz.</p>
+        @if (hasProfileSuggestions()) {
+            <p-message severity="warn" class="w-full mb-4" data-testid="import-profile-note">
+                "Hazır" işaretli eşlemeler seçtiğiniz programa göre önerildi. Bu programın gerçek dışa aktarma dosyasıyla henüz doğrulanmadı; her alanı kontrol edin, gerekirse değiştirin.
+            </p-message>
+        }
 
         @for (info of tables(); track info.table) {
             <section class="rounded-border border border-surface-200 dark:border-surface-700 p-4 mb-4">
@@ -118,6 +131,9 @@ export class ImportMappingStepComponent {
 
     protected readonly tables = computed(() => this.batch().tables ?? []);
 
+    /** Seçilen kaynak programın hazır eşlemesi (TIER-021) en az bir sütuna önerildiyse doğrulanmadı uyarısı gösterilir. */
+    protected readonly hasProfileSuggestions = computed(() => this.tables().some((t) => t.columns.some((c) => c.confidence === 'Profile')));
+
     protected readonly missing = computed(() => {
         const result: Partial<Record<string, string[]>> = {};
 
@@ -164,7 +180,7 @@ export class ImportMappingStepComponent {
             return null;
         }
 
-        return c === 'Exact' ? { label: 'Kesin', severity: 'success' } : c === 'Alias' ? { label: 'Benzer', severity: 'info' } : { label: 'Elle', severity: 'secondary' };
+        return CONFIDENCE_TAGS[c];
     }
 
     protected unusedColumns(info: ImportTableInfoDto): string[] {
