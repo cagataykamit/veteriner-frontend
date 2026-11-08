@@ -103,6 +103,9 @@ export const CASH_COUNTS_CORRECT_CLAIM = 'CashCounts.Correct' as const;
 /** Dış API anahtarları (TIER-009) — `EXTERNAL_API_CONTRACT.md` §6; oluşturma, liste ve iptal. Yalnız Admin/Owner. */
 export const API_KEYS_MANAGE_CLAIM = 'ApiKeys.Manage' as const;
 
+/** Tüm veri dışa aktarma — `DATA_EXPORT_API_CONTRACT.md` §2; talep, liste ve indirme. Yalnız Admin/Owner, salt okunur abonelikte de açık. */
+export const DATA_EXPORT_MANAGE_CLAIM = 'DataExport.Manage' as const;
+
 /** Size özel geliştirme talepleri (TIER-010) — `CUSTOM_DEVELOPMENT_REQUESTS_API_CONTRACT.md` §7; liste ve yeni talep. Yalnız Admin/Owner. */
 export const CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM = 'CustomDevelopmentRequests.Manage' as const;
 

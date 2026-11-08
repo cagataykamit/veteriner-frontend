@@ -86,6 +86,13 @@ export const ApiEndpoints = {
         /** POST; 204. Geri alınmaz. */
         revoke: (id: string) => `/api/v1/api-keys/${encodeURIComponent(id)}/revoke`
     },
+    /** Tüm veri dışa aktarma (`DATA_EXPORT_API_CONTRACT.md` §4): `DataExport.Manage`. */
+    dataExports: {
+        /** GET özet ve son işler; POST yeni talep (202). */
+        list: () => `/api/v1/data-exports`,
+        /** GET ZIP; yalnız kimlikli istekle. */
+        download: (id: string) => `/api/v1/data-exports/${encodeURIComponent(id)}/download`
+    },
     /** Size özel geliştirme talepleri (TIER-010, `CUSTOM_DEVELOPMENT_REQUESTS_API_CONTRACT.md` §3): `CustomDevelopmentRequests.Manage`. */
     customDevelopmentRequests: {
         /** GET liste ve açık talep sınırı; POST yeni talep (Kurumsal). */
