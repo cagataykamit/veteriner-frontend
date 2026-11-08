@@ -86,6 +86,11 @@ export const ApiEndpoints = {
         /** POST; 204. Geri alınmaz. */
         revoke: (id: string) => `/api/v1/api-keys/${encodeURIComponent(id)}/revoke`
     },
+    /** Size özel geliştirme talepleri (TIER-010, `CUSTOM_DEVELOPMENT_REQUESTS_API_CONTRACT.md` §3): `CustomDevelopmentRequests.Manage`. */
+    customDevelopmentRequests: {
+        /** GET liste ve açık talep sınırı; POST yeni talep (Kurumsal). */
+        list: () => `/api/v1/custom-development-requests`
+    },
     /** Ücret bekleyen kalemler (ADR-018). */
     chargeSuggestions: {
         /** GET (`Charges.Read`; query: `page`, `pageSize`, `clinicId`, `petId`, `examinationId`, `visitId`; yalnız `Pending`). */
@@ -584,6 +589,13 @@ export const ApiEndpoints = {
     /** Destek: klinik sitesine ek adres değiştirme hakkı (Veteriner `docs/CLINIC_SITE_API_CONTRACT.md` §4). Yalnız platform yöneticisi. */
     clinicAddressGrants: {
         grant: (slug: string) => `/api/v1/admin/clinic-sites/${encodeURIComponent(slug)}/address-change-grants`
+    },
+    /** Size özel geliştirme talepleri, platform tarafı (TIER-010, Veteriner `docs/CUSTOM_DEVELOPMENT_REQUESTS_API_CONTRACT.md` §4). Yalnız platform yöneticisi. */
+    customDevelopmentRequestsAdmin: {
+        /** GET (query: `status`, `openOnly`, `page`, `pageSize` en çok 200). */
+        list: () => `/api/v1/admin/custom-development-requests`,
+        /** POST `{ status, decisionReason, responseNote }`. */
+        changeStatus: (id: string) => `/api/v1/admin/custom-development-requests/${encodeURIComponent(id)}/status`
     },
     duplicatePayments: {
         list: () => `/api/v1/admin/billing/duplicate-payments`,
