@@ -32,6 +32,7 @@ import { PendingAppointmentRequestsChipComponent } from '@/app/entities/online-b
 import { PendingAppointmentRequestsTilesComponent } from '@/app/entities/online-booking/components/pending-appointment-requests-tiles.component';
 import { PendingAppointmentRequestsState } from '@/app/entities/online-booking/services/pending-appointment-requests-state';
 import { WaitlistTodaySummaryComponent } from '@/app/entities/waitlist/components/waitlist-today-summary.component';
+import { FirstWeekGuideCardComponent } from '@/app/entities/first-week-guide/components/first-week-guide-card.component';
 import { TodayMoneyComponent } from '@/app/features/visits/components/today-money.component';
 import { TodayOpenItemsComponent } from '@/app/features/visits/components/today-open-items.component';
 import { VisitArrivalDialogComponent } from '@/app/entities/visit/components/visit-arrival-dialog.component';
@@ -90,6 +91,7 @@ type TodayScope = 'mine' | 'all';
     imports: [
         CommonModule,
         WaitlistTodaySummaryComponent,
+        FirstWeekGuideCardComponent,
         ButtonModule,
         FormsModule,
         SelectButtonModule,

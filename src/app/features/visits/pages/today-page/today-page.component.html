@@ -17,6 +17,9 @@
     </div>
 </app-page-header>
 
+<!-- İlk hafta rehberi (TIER-022): rolüne göre kısa adımlar; ilk 14 gün ya da kullanıcı menüsünden açılınca görünür. -->
+<app-first-week-guide-card />
+
 <!-- Online randevu talebi gelince resepsiyon ilk burada görür: (varsayılan) kutucuklar ya da Açık işler'de çip; yetki ya da bekleyen yoksa çizilmez. -->
 @if (pendingRequests.hasPending() && pendingRequests.view() === 'tiles') {
     <app-pending-appointment-requests-tiles

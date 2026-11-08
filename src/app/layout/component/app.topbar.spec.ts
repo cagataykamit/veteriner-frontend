@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { Popover } from 'primeng/popover';
 import { of } from 'rxjs';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
@@ -11,6 +11,7 @@ import { NotificationService } from '@/app/entities/notification/notification.se
 import { AppointmentRequestsService } from '@/app/entities/online-booking/services/online-booking.service';
 import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
 import { AccountService } from '@/app/features/account/services/account.service';
+import { FirstWeekGuideService } from '@/app/entities/first-week-guide/services/first-week-guide.service';
 import { GlobalSearchService } from '@/app/features/patients/services/global-search.service';
 import { MenuBadgeService } from '@/app/layout/service/menu-badge.service';
 import { AppTopbar } from './app.topbar';
@@ -24,16 +25,21 @@ type PanelName = 'bell' | 'clinic' | 'user';
 
 describe('AppTopbar açılır paneller (aynı anda tek panel)', () => {
     let fixture: ComponentFixture<AppTopbar>;
+    let claims: string[];
+    let reopenGuide: ReturnType<typeof vi.fn>;
 
     beforeEach(async () => {
+        claims = [];
+        reopenGuide = vi.fn();
         TestBed.configureTestingModule({
             imports: [AppTopbar],
             providers: [
                 provideRouter([]),
                 {
                     provide: AuthService,
-                    useValue: { activeClinicLabel: signal('Merkez Klinik'), getJwtClinicId: () => 'c1', getMyClinics: () => of(clinics), hasOperationClaim: () => false }
+                    useValue: { activeClinicLabel: signal('Merkez Klinik'), getJwtClinicId: () => 'c1', getMyClinics: () => of(clinics), hasOperationClaim: (c: string) => claims.includes(c) }
                 },
+                { provide: FirstWeekGuideService, useValue: { reopen: reopenGuide } },
                 {
                     provide: NotificationService,
                     useValue: { unreadCount: signal(0), refreshUnreadCount: () => of(0), list: () => of({ items: [], totalCount: 0, page: 1, pageSize: 20 }) }
@@ -127,5 +133,22 @@ describe('AppTopbar açılır paneller (aynı anda tek panel)', () => {
         expect(panel.querySelector('[data-testid="user-panel-name"]')!.textContent).toContain('Dr. Ayşe Yılmaz');
         expect(Array.from(panel.querySelectorAll('.layout-topbar-panel-group')).map((g) => g.textContent!.trim())).toEqual(['Hesap', 'Oturum']);
         expect(Array.from(panel.querySelectorAll('.layout-topbar-panel-row')).map((r) => r.textContent!.trim())).toEqual(['Hesabım', 'Çıkış yap', 'Tüm oturumları kapat']);
+    });
+
+    it('Bugün’ü gören kullanıcıda "İlk hafta rehberi" rehberi yeniden açar ve Bugün’e gider', async () => {
+        claims = ['Visits.Read'];
+        fixture.destroy();
+        fixture = TestBed.createComponent(AppTopbar);
+        fixture.detectChanges();
+        await settle();
+        const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+        await click(triggers.user());
+        const row = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-testid="user-panel"] .layout-topbar-panel-row')).find((r) => r.textContent!.trim() === 'İlk hafta rehberi')!;
+
+        await click(row);
+
+        expect(reopenGuide).toHaveBeenCalled();
+        expect(navigate).toHaveBeenCalledWith(['/panel/today']);
     });
 });
