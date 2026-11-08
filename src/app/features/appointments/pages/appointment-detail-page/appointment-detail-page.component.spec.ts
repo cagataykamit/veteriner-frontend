@@ -46,7 +46,7 @@ describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () =>
                 provideRouter([]),
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'a1' })), snapshot: { queryParamMap: convertToParamMap(query) } } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null, planFeatureReady: () => true } },
                 // Bekleme listesi bilgisi (TIER-018): iptal edilen randevuda okunur; bu testlerde uyan kimse yok.
                 { provide: WaitlistService, useValue: { slot: () => NEVER } },
                 { provide: AppointmentsService, useValue: { getAppointmentById: () => of(appt) } },

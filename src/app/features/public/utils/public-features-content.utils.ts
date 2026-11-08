@@ -1,8 +1,10 @@
 /**
  * Özellikler sayfası (`/ozellikler`, tasarım belgesi 5.2): bir ziyaretin yolculuğu, modül listesi değil.
- * Her bölüm = bir problem + bir ekran (gerçek ekran görüntüsü, `public-screenshots.utils.ts`).
+ * Her bölüm = bir problem + bir ekran (gerçek ekran görüntüsü, `public-screenshots.utils.ts`). Ekran görüntüsü olmayan işler
+ * sonda kısa kart gruplarıdır; kartın paketi özellik tablosundan okunur (`PRICING_FEATURE_ROWS`, tek kaynak).
  */
 
+import { planAvailabilityText, type PricingFeatureKey } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import type { PublicScreenshotKey } from './public-screenshots.utils';
 
 export interface PublicFeatureSectionDef {
@@ -82,3 +84,128 @@ export const PUBLIC_FEATURE_SECTIONS: readonly PublicFeatureSectionDef[] = [
         screenshot: 'gunSonu'
     }
 ];
+
+export interface PublicFeatureCardDef {
+    readonly title: string;
+    readonly description: string;
+    readonly icon: string;
+    /** Hangi pakette olduğu bu satırdan yazılır. */
+    readonly planRow: PricingFeatureKey;
+}
+
+export interface PublicFeatureGroupDef {
+    /** Sayfa içi bağlantı kimliği (bölüm dizini). */
+    readonly id: string;
+    readonly title: string;
+    readonly lead: string;
+    readonly cards: readonly PublicFeatureCardDef[];
+}
+
+/** Kart grupları: gün akışının dışındaki işler. Abartı ve üstünlük sözü yok (ADR-034 karar 3, ADR-047 K6). */
+export const PUBLIC_FEATURE_GROUPS: readonly PublicFeatureGroupDef[] = [
+    {
+        id: 'hasta-sahibi',
+        title: 'Hasta sahibine ulaşın',
+        lead: 'Kliniğinizin sitesi, Veteriner bul kaydı ve randevu bağlantısı aynı klinik bilgisinden beslenir; saatleri ve telefonu bir kez yazarsınız.',
+        cards: [
+            {
+                title: 'Klinik web sitesi',
+                description: 'Sihirbazla adım adım çok sayfalı site: hekimler, hizmetler, saatler, iletişim. Yayından önce önizlersiniz; fotoğrafınız yoksa temsili görsel kullanılır.',
+                icon: 'pi pi-globe',
+                planRow: 'clinicSite'
+            },
+            {
+                title: "Veteriner bul'da listelenme",
+                description: 'Hasta sahipleri il ve ilçeye göre kliniğinizi bulur. Listelenmek sizin seçiminizdir ve ücretsizdir; sıralama yakınlığa ve o an açık olmaya göredir, ödemeyle değişmez.',
+                icon: 'pi pi-map-marker',
+                planRow: 'vetFinder'
+            },
+            {
+                title: 'Online randevu ve en yakın müsait saat',
+                description: 'Siteniz ve randevu bağlantınız boş saatleri gösterir; hasta sahibi saat seçip talep bırakır. Randevu siz onaylayınca kesinleşir.',
+                icon: 'pi pi-calendar-plus',
+                planRow: 'onlineBooking'
+            },
+            {
+                title: 'Hatırlatmada onayla, iptal et, takvime ekle',
+                description: 'Hasta sahibi hatırlatma e-postasındaki bağlantıyla gelişini onaylar ya da iptal eder, randevuyu kendi takvimine ekler. İptal size bildirim olarak düşer.',
+                icon: 'pi pi-check-square',
+                planRow: 'reminderReplies'
+            },
+            {
+                title: 'Otomatik hatırlatıcılar',
+                description:
+                    'Kontrol muayenesi ve ödenmemiş bakiye için e-posta kendiliğinden gider. "Uzun süredir gelmedi" iletisi ticari iletidir; yalnız kliniğiniz İYS\'ye kayıtlıysa ve hasta sahibi onay verdiyse gönderilir.',
+                icon: 'pi pi-bell',
+                planRow: 'automatedReminders'
+            },
+            {
+                title: 'Bekleme listesi',
+                description: 'Daha erken randevu isteyenler sıraya girer. Bir randevu iptal olunca o saate uyan ilk kişiye e-postayla teklif gider.',
+                icon: 'pi pi-list',
+                planRow: 'waitlist'
+            }
+        ]
+    },
+    {
+        id: 'klinik-ici',
+        title: 'Klinik içinde',
+        lead: 'Aşı planından kasaya, tekrarlanan işleri kısaltan araçlar.',
+        cards: [
+            {
+                title: 'Otomatik aşı sihirbazı',
+                description: 'Kliniğinizin aşı takviminden hayvanın kalan dozları önerilir; hekim kontrol edip onaylayınca planlı aşı olarak kaydedilir ve hatırlatılır.',
+                icon: 'pi pi-calendar',
+                planRow: 'vaccinationWizard'
+            },
+            {
+                title: 'Kamerayla barkod okutma',
+                description: 'Telefon kamerasıyla barkodu okutup ürünü mal kabulde, satışta ve ürün aramasında bulursunuz.',
+                icon: 'pi pi-qrcode',
+                planRow: 'mobileBarcode'
+            },
+            {
+                title: 'Çoklu kasa ve kasa yönetimi',
+                description: 'Birden fazla kasa, kasaya giriş ve çıkış, kasalar arası aktarım, kasa bazında gün sonu sayımı ve kasa hareketleri raporu.',
+                icon: 'pi pi-wallet',
+                planRow: 'cashManagement'
+            }
+        ]
+    },
+    {
+        id: 'isletme',
+        title: 'İşletme ve veri',
+        lead: 'Rakamların arkasını görün, veriniz her zaman sizde kalsın.',
+        cards: [
+            {
+                title: 'Gelişmiş raporlar',
+                description: 'Hekim, hizmet ve ürün, en çok ciro yapan kalemler ve hayvan türü kırılımları; her biri önceki dönemle.',
+                icon: 'pi pi-chart-bar',
+                planRow: 'advancedReports'
+            },
+            {
+                title: 'Şubeler özeti',
+                description: 'Tüm şubelerin ciro, tahsilat, açık alacak ve iş yükü tek tabloda; toplam satırı ve önceki dönemle fark.',
+                icon: 'pi pi-building',
+                planRow: 'clinicsOverview'
+            },
+            {
+                title: 'API erişimi',
+                description: 'Kurumunuza özel anahtarla müşteri, hasta, randevu ve aşı listelerini kendi sistemlerinize alırsınız; erişim salt okunurdur.',
+                icon: 'pi pi-code',
+                planRow: 'externalApi'
+            },
+            {
+                title: 'Tüm verinizi dışa aktarma',
+                description: 'Kurumunuzun tüm kayıtları tek ZIP paketinde, her tablo ayrı CSV dosyası. Başka bir sisteme geçerken ya da arşiv için.',
+                icon: 'pi pi-download',
+                planRow: 'dataExport'
+            }
+        ]
+    }
+];
+
+/** Kartın paket etiketi ("Tüm paketlerde", "Profesyonel ve Kurumsal paketlerinde"). */
+export function publicFeatureCardPlans(card: PublicFeatureCardDef): string {
+    return planAvailabilityText(card.planRow);
+}

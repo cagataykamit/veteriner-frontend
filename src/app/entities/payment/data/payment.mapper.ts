@@ -175,7 +175,8 @@ export function mapPaymentListItemDtoToVm(dto: PaymentListItemDto): PaymentListI
         amount: num(dto.amount),
         currency: dto.currency?.trim() ? dto.currency.trim() : 'TRY',
         method: canonicalMethodFromListDto(dto),
-        paidAtUtc: canonicalPaidAtList(dto)
+        paidAtUtc: canonicalPaidAtList(dto),
+        cashRegisterName: dto.cashRegisterName?.trim() || null
     };
 }
 
@@ -191,6 +192,7 @@ export function mapPaymentDetailDtoToVm(dto: PaymentDetailDto): PaymentDetailVm 
         creditedAmount: num(dto.creditedAmount) ?? 0,
         currency: detailCurrency(dto),
         method: resolvePaymentMethodFormValue(readRawMethodFromUnknown(dto)),
+        cashRegisterName: dto.cashRegisterName?.trim() || null,
         note: detailNotes(dto),
         paidAtUtc: detailPaidAt(dto),
         appointmentId: detailAppointmentId(dto),

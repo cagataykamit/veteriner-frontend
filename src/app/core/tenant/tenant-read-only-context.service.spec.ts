@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { mapTenantAccessStateDtoToVm } from '@/app/core/tenant/data/tenant-access-state.mapper';
 import type { TenantAccessStateVm } from '@/app/core/tenant/models/tenant-access-state-vm.model';
@@ -63,6 +63,28 @@ describe('TenantReadOnlyContextService paket özellikleri (TIER-001)', () => {
 
         expect(getState).toHaveBeenCalledTimes(2);
         expect(service.lockedPlanFeature('OwnerPortal')).toBeNull();
+    });
+
+    it('paket bilgisi gelene kadar pakete bağlı istek beklenir; gelince yalnız açık özellikte gönderilir', () => {
+        const pending = new Subject<TenantAccessStateVm>();
+
+        getState.mockReturnValue(pending);
+        service.loadForPanel();
+        expect(service.planFeatureReady('OwnerPortal')).toBe(false);
+        expect(service.planFeatureReady('MultiClinic')).toBe(false);
+
+        pending.next(stateFor('Pro', true));
+        pending.complete();
+        expect(service.planFeatureReady('OwnerPortal')).toBe(true);
+        expect(service.planFeatureReady('MultiClinic')).toBe(false);
+    });
+
+    it('paket bilgisi alınamazsa istek engellenmez (karar sunucuda)', () => {
+        getState.mockReturnValue(throwError(() => new Error('ağ')));
+        service.loadForPanel();
+
+        expect(service.lockedPlanFeature('MultiClinic')).toBeNull();
+        expect(service.planFeatureReady('MultiClinic')).toBe(true);
     });
 
     it('eski yanıtta özellik alanı yoksa kilit yok sayılır', () => {

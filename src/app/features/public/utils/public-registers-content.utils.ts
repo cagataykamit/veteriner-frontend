@@ -3,6 +3,8 @@
  * "Mevzuata uygun" ve "KVKK uyumlu" DENMEZ (ADR-034 karar 6); danışman onayı notu her iki yerde kalır.
  */
 
+import { planAvailabilityText } from '@/app/entities/subscription/utils/pricing-plan.utils';
+
 export interface PublicRegisterDef {
     readonly name: string;
     /** Ne zaman kendiliğinden dolar. */
@@ -38,6 +40,19 @@ export const PUBLIC_KVKK_STEPS: readonly PublicKvkkStepDef[] = [
 
 /** Gri not — KVKK. */
 export const PUBLIC_KVKK_NOTE = 'KVKK metinleri kliniğinizin veri sorumlusu sıfatıyla danışmanınızca onaylanır; Vetinity hukuki tavsiye vermez.';
+
+/**
+ * Tüm veriyi dışa aktarma (panel Ayarlar > Verimi dışa aktar, backend `DATA_EXPORT_API_CONTRACT.md`). Saklama süresi ve
+ * istek sınırı backend'den gelir; burada sayı yazılmaz. Hangi pakette olduğu özellik tablosundan.
+ */
+export const PUBLIC_DATA_EXPORT_POINTS: readonly string[] = [
+    'Kurumunuzun tüm kayıtları tek ZIP paketinde: her tablo ayrı CSV dosyası, sütunları açıklayan BENIOKU.txt ile.',
+    'Müşteriler, hastalar, randevular, muayeneler, aşılar, reçeteler, ücret ve ödemeler, stok ve satışlar dahil.',
+    'Paket arka planda hazırlanır, hazır olunca bildirim gelir; bir süre saklanır, sonra silinir.',
+    'Abonelik salt okunurken de alınabilir. Parolalar ve yüklenen dosyaların kendisi pakete girmez.'
+];
+
+export const PUBLIC_DATA_EXPORT_PLANS = planAvailabilityText('dataExport');
 
 export interface PublicAccessCardDef {
     readonly title: string;

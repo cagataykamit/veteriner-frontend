@@ -31,6 +31,9 @@ export interface PaymentListItemDto {
     paidAtUtc?: string | null;
     /** Liste / rapor satırı; backend gönderirse. */
     notes?: string | null;
+    /** Nakit ödemenin kasası (kasası boşsa Ana kasa); kart, havale ve Query DB yolunda null (`CASH_REGISTERS_API_CONTRACT.md` §4). */
+    cashRegisterId?: string | null;
+    cashRegisterName?: string | null;
 }
 
 export interface PaymentListItemDtoPagedResult {
@@ -64,6 +67,9 @@ export interface PaymentDetailDto {
     notes?: string | null;
     /** FIN-005: ödemenin müşteri kredisine yazılan kısmı (`CLIENT_CREDIT_API_CONTRACT.md` §3). */
     creditedAmount?: number | string | null;
+    /** Bkz. liste cashRegisterName. */
+    cashRegisterId?: string | null;
+    cashRegisterName?: string | null;
 }
 
 export interface PaymentCreateRequestDto {

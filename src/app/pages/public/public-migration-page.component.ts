@@ -5,14 +5,16 @@ import { publicFaqsOf } from '@/app/features/public/utils/public-faq-content.uti
 import {
     PUBLIC_MIGRATION_EXCLUDED,
     PUBLIC_MIGRATION_INCLUDED,
-    PUBLIC_MIGRATION_STEPS
+    PUBLIC_MIGRATION_STEPS,
+    PUBLIC_MIGRATION_SUPPORT_POINTS,
+    PUBLIC_MIGRATION_SUPPORT_PRICE
 } from '@/app/features/public/utils/public-migration-content.utils';
 import { PUBLIC_MIGRATION_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicFaqListComponent } from './components/public-faq-list.component';
 import { PublicPageHeaderComponent } from './components/public-page-header.component';
 
-/** Geçiş (tasarım belgesi 5.4): dikey zaman çizgisi, aktarılır/aktarılmaz kutuları, 3 soru, çağrı. */
+/** Geçiş (tasarım belgesi 5.4, TIER-021): dikey zaman çizgisi, aktarılır/aktarılmaz ve geçiş desteği kutuları, sorular, çağrı. */
 @Component({
     selector: 'app-public-migration-page',
     standalone: true,
@@ -60,6 +62,17 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
                             }
                         </ul>
                     </div>
+                    <div class="public-card p-5" data-testid="migration-support">
+                        <h2 class="m-0 text-base font-semibold text-surface-900 dark:text-surface-0">Geçiş desteği</h2>
+                        <ul class="m-0 mt-3 list-none space-y-2 p-0 text-sm">
+                            @for (item of supportPoints; track item) {
+                                <li class="flex items-start gap-2 text-surface-700 dark:text-surface-200">
+                                    <i class="pi pi-check mt-0.5 text-[var(--public-accent)]" aria-hidden="true"></i><span>{{ item }}</span>
+                                </li>
+                            }
+                        </ul>
+                        <p class="m-0 mt-3 text-sm font-semibold text-surface-900 dark:text-surface-0">{{ supportPrice }}</p>
+                    </div>
                 </aside>
             </div>
 
@@ -69,7 +82,7 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
             </section>
         </div>
 
-        <app-public-cta title="Dosyanıza birlikte bakalım" lead="Eski programınızın dışa aktarımını gönderin; neyin aktarılacağını önceden söyleyelim." secondaryLabel="Bize yazın" />
+        <app-public-cta title="Dosyanıza birlikte bakalım" lead="Sorunuzu yazın ya da demo isteyin; eski programınızın dışa aktarımına görüşmede ekran paylaşımıyla birlikte bakalım." secondaryLabel="Bize yazın" />
     `
 })
 export class PublicMigrationPageComponent implements OnInit {
@@ -80,6 +93,8 @@ export class PublicMigrationPageComponent implements OnInit {
     readonly steps = PUBLIC_MIGRATION_STEPS;
     readonly included = PUBLIC_MIGRATION_INCLUDED;
     readonly excluded = PUBLIC_MIGRATION_EXCLUDED;
+    readonly supportPoints = PUBLIC_MIGRATION_SUPPORT_POINTS;
+    readonly supportPrice = PUBLIC_MIGRATION_SUPPORT_PRICE;
     readonly faqs = publicFaqsOf('gecis');
 
     ngOnInit(): void {

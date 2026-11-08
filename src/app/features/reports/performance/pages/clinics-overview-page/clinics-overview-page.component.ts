@@ -128,6 +128,7 @@ export class ClinicsOverviewPageComponent {
     readonly data = signal<ClinicsOverviewDto | null>(null);
 
     readonly planLocked = computed(() => this.ro.lockedPlanFeature('ClinicsOverview') !== null);
+    private readonly planReady = computed(() => this.ro.planFeatureReady('ClinicsOverview'));
 
     readonly columns = computed(() => {
         const total = this.data()?.total;
@@ -151,9 +152,9 @@ export class ClinicsOverviewPageComponent {
     readonly displayDate = ymdToDisplay;
 
     constructor() {
-        // Paket bilgisi (access-state) geç gelebilir; kilit değişince yeniden karar verilir.
+        // Paket bilgisi (access-state) gelmeden ve kilitliyken istek gitmez; bilgi gelince yeniden karar verilir.
         effect(() => {
-            this.planLocked();
+            this.planReady();
             untracked(() => this.load());
         });
     }
@@ -192,7 +193,7 @@ export class ClinicsOverviewPageComponent {
 
         this.request?.unsubscribe();
 
-        if (this.planLocked() || !from || !to) {
+        if (!this.planReady() || !from || !to) {
             this.loading.set(false);
 
             return;

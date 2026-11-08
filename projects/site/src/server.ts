@@ -95,6 +95,8 @@ app.get('/k/:slug/sitemap.xml', async (req, res) => {
     }
 });
 
+// Dosyalar `/k/` altındadır. `angular.json`da `deployUrl` = `baseHref`: SSR kritik CSS'i yazı tipi adresini `deployUrl`'den çözer, yoksa
+// `/media/...` yazar (ilk istek 404, sonra `/k/media/...`).
 app.use('/k', express.static(browserDistFolder, { maxAge: '1y', immutable: true, index: false, redirect: false }));
 
 app.get('/k/:slug{/*rest}', async (req, res, next) => {

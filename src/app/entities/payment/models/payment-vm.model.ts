@@ -13,6 +13,8 @@ export interface PaymentListItemVm {
     currency: string;
     method: string | null;
     paidAtUtc: string | null;
+    /** Nakit ödemenin kasası; nakit dışında null. */
+    cashRegisterName: string | null;
 }
 
 /** Detay — GET /payments/{id}. İsteğe bağlı bağlantılar null; `petName` boş string olabilir. */
@@ -29,6 +31,8 @@ export interface PaymentDetailVm {
     creditedAmount: number;
     currency: string;
     method: string | null;
+    /** Nakit ödemenin kasası; nakit dışında null. */
+    cashRegisterName: string | null;
     note: string;
     paidAtUtc: string | null;
     appointmentId: string | null;

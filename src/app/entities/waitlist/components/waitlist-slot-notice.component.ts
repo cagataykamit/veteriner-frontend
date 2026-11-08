@@ -86,9 +86,13 @@ export class WaitlistSlotNoticeComponent {
 
     protected readonly blockerText = waitlistBlockerLabel;
 
+    private readonly planReady = computed(() => this.ro.planFeatureReady('Waitlist'));
+
     private readonly loadEffect = effect(() => {
         const id = this.appointmentId();
 
+        // Paket bilgisi (access-state) gelince yeniden karar verilir; gelmeden ya da kilitliyken istek gitmez.
+        this.planReady();
         untracked(() => this.load(id));
     });
 
@@ -113,7 +117,7 @@ export class WaitlistSlotNoticeComponent {
     }
 
     private load(appointmentId: string): void {
-        if (!appointmentId || this.ro.lockedPlanFeature('Waitlist')) {
+        if (!appointmentId || !this.planReady()) {
             this.slot.set(null);
 
             return;

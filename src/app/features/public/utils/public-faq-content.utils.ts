@@ -5,7 +5,8 @@
  * yalnız e-posta, deneme sonu kuralı yazılmaz.
  */
 
-import { planTitlesText, planTitlesWithFeature, PRICING_VAT_NOTE, pricingTermsText } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { VETINITY_SUPPORT_PHONE_DISPLAY } from '@/app/core/support/vetinity-support.constants';
+import { planAvailabilityText, planTitlesText, planTitlesWithFeature, PRICING_VAT_NOTE, pricingTermsText } from '@/app/entities/subscription/utils/pricing-plan.utils';
 
 /** Çok klinik yönetimi olan paketlerin adları ("Kurumsal"), özellik tablosundan. */
 const MULTI_CLINIC_PLANS = planTitlesWithFeature('multiClinic');
@@ -44,8 +45,20 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
             },
             {
                 question: 'Hatırlatmalar nasıl gider?',
-                answer: 'Aşı ve randevu hatırlatmaları e-posta ile gönderilir. SMS gönderimi şu an yoktur.',
+                answer: 'Aşı ve randevu hatırlatmaları e-posta ile gönderilir; randevu hatırlatmasında onay, iptal ve takvime ekle bağlantısı bulunur. SMS gönderimi şu an yoktur.',
                 homepage: true
+            },
+            {
+                question: 'Klinik web sitesi her pakette mi?',
+                answer: `${planAvailabilityText('clinicSite')} var. Sihirbazla kliniğinizin çok sayfalı sitesini kurar, yayından önce önizlersiniz; siteniz Vetinity adresi altında yayınlanır. Kendi alan adınızı bağlamak şu an yoktur.`
+            },
+            {
+                question: 'Veteriner bul nedir, ücretli mi?',
+                answer: 'Hasta sahiplerinin il ve ilçeye göre klinik aradığı sayfadır. Listelenmek kliniğin seçimidir ve ücret alınmaz; sıralama yakınlığa ve o an açık olmaya göredir, ödemeyle değişmez.'
+            },
+            {
+                question: 'Hasta sahibi randevusunu kendisi iptal edebilir mi?',
+                answer: 'Evet. Hatırlatma e-postasındaki bağlantıyla gelişini onaylar ya da iptal eder; iptal size bildirim olarak düşer. İsterseniz iptal bağlantısını kapatabilirsiniz.'
             }
         ]
     },
@@ -101,6 +114,10 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
             {
                 question: 'Kesinleşen muayene değiştirilebilir mi?',
                 answer: 'Kesinleşen muayene kilitlenir; düzeltme yalnız gerekçeli ek notla yapılır ve izlenir. İki kullanıcı aynı kaydı aynı anda değiştiremez.'
+            },
+            {
+                question: 'Verimi alabilir miyim?',
+                answer: `Evet, ${planAvailabilityText('dataExport').toLocaleLowerCase('tr-TR')}. Panelde Verimi dışa aktar ekranından kurumunuzun tüm kayıtlarını tek ZIP paketinde, her tablo ayrı CSV dosyası olarak alırsınız. Abonelik salt okunurken de açıktır.`
             }
         ]
     },
@@ -120,6 +137,10 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
             {
                 question: 'Geçiş ne kadar sürer?',
                 answer: 'Dosya hazırsa yükleme ve kontrol aynı gün biter; aktarım arka planda çalışır.'
+            },
+            {
+                question: 'Geçişte yardım alabilir miyim?',
+                answer: `Evet. Panelden geçiş desteği talebi açarsınız; 1 saatlik kurulum görüşmesinde aktarıma birlikte bakarız. ${planAvailabilityText('freeMigrationSupport')} ücretsizdir, diğer paketlerde ücretlidir.`
             }
         ]
     },
@@ -129,7 +150,7 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
         items: [
             {
                 question: 'Destek nasıl alırım?',
-                answer: 'İletişim sayfasından bize ulaşın; demo, geçiş ve kullanım sorularınızı yanıtlarız.',
+                answer: `İletişim sayfasından ya da WhatsApp destek hattından (${VETINITY_SUPPORT_PHONE_DISPLAY}) bize ulaşın; demo, geçiş ve kullanım sorularınızı yanıtlarız.`,
                 homepage: true
             }
         ]
