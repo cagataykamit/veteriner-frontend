@@ -31,7 +31,7 @@ describe('PortalLegalPageComponent (sürüm gösterimi)', () => {
 
     afterEach(() => fixture?.destroy());
 
-    it('sürüm numarasını backend listesinden gösterir; 0.x taslak olarak işaretlenir', async () => {
+    it('sürüm numarasını backend listesinden gösterir', async () => {
         legal.documents.mockReturnValue(
             of([
                 { documentType: 'PortalTerms', version: '0.1' },
@@ -44,12 +44,13 @@ describe('PortalLegalPageComponent (sürüm gösterimi)', () => {
         expect(el.querySelector('[data-testid=legal-version]')?.textContent?.trim()).toBe(`Sürüm: 1.0 · ${PORTAL_PRIVACY_DOCUMENT.statusLine}`);
     });
 
-    it('taslak bandı tek ayardan gelir ve metin bölümleri gösterilir', async () => {
+    it('taslak bandı ve taslak etiketi yok; metin bölümleri gösterilir', async () => {
         legal.documents.mockReturnValue(of([{ documentType: 'PortalTerms', version: '0.1' }]));
         await open('PortalTerms');
 
-        expect(el.querySelector('[data-testid=legal-version]')?.textContent?.trim()).toBe(`Sürüm: 0.1 (taslak) · ${PORTAL_TERMS_DOCUMENT.statusLine}`);
-        expect(el.querySelector('.portal-draft-band')?.textContent?.trim()).toBe(PORTAL_LEGAL_DRAFT_NOTICE!);
+        expect(el.querySelector('[data-testid=legal-version]')?.textContent?.trim()).toBe(`Sürüm: 0.1 · ${PORTAL_TERMS_DOCUMENT.statusLine}`);
+        expect(PORTAL_LEGAL_DRAFT_NOTICE).toBeNull();
+        expect(el.querySelector('.portal-draft-band')).toBeNull();
         expect(el.querySelectorAll('.portal-legal-text h3').length).toBe(PORTAL_TERMS_DOCUMENT.sections.length);
         expect(el.querySelector('.portal-legal-text a')?.getAttribute('href')).toBe('/legal/privacy');
     });

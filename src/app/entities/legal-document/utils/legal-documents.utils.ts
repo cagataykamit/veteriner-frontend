@@ -51,7 +51,7 @@ export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
     title: 'Vetinity Gizlilik Politikası',
     shortTitle: 'Gizlilik Politikası',
     subtitle: 'kullanıcı / site ziyaretçisi',
-    statusLine: 'Son güncelleme: 2026-10-15',
+    statusLine: 'Son güncelleme: 2026-11-09',
     description: "Vetinity'nin kendi kullanıcılarına ve site ziyaretçilerine ilişkin kişisel verilerin işlenmesi.",
     intro: [
         [
@@ -118,7 +118,7 @@ export const TERMS_OF_USE_DOCUMENT: LegalDocumentDef = {
     title: 'Vetinity Kullanım Şartları',
     shortTitle: 'Kullanım Şartları',
     subtitle: 'klinik abonelik sözleşmesi',
-    statusLine: 'Son güncelleme: 2026-10-15',
+    statusLine: 'Son güncelleme: 2026-11-09',
     description: "Vetinity ile Vetinity'yi kullanan veteriner kliniği arasındaki abonelik ve kullanım şartları.",
     sections: [
         {
@@ -146,7 +146,7 @@ export const TERMS_OF_USE_DOCUMENT: LegalDocumentDef = {
         {
             heading: '4. Deneme, abonelik ve ödeme',
             paragraphs: [
-                'Deneme süresi [süre] gündür; süre sonunda ücretli pakete geçilmezse hesap salt okunur olur [TRIAL ilkelerine göre] ve veriler [süre] boyunca saklanır. Ücretler, paket ve fatura dönemi uygulama içinde belirtilir; ödeme iyzico aracılığıyla alınır. İptal ve iade: [iade/iptal kuralları, mesafeli satış mevzuatı — hukuk belirler]. Fiyat değişikliği, yürürlüğe girmeden en az [30] gün önce bildirilir.'
+                'Deneme süresi [süre] gündür; süre sonunda ücretli pakete geçilmezse hesap salt okunur olur [TRIAL ilkelerine göre] ve veriler [süre] boyunca saklanır. Ücretler, paket ve fatura dönemi uygulama içinde belirtilir; ödeme iyzico aracılığıyla alınır. İptal ve iade: [iade/iptal kuralları]. Fiyat değişikliği, yürürlüğe girmeden en az [30] gün önce bildirilir.'
             ]
         },
         {
@@ -182,7 +182,7 @@ export const TERMS_OF_USE_DOCUMENT: LegalDocumentDef = {
         {
             heading: '9. Sorumluluk sınırı',
             paragraphs: [
-                "Kasıt ve ağır kusur hariç, Vetinity'nin toplam sorumluluğu son [12] ayda ödenen bedelle sınırlıdır; dolaylı zararlar (kâr kaybı, itibar kaybı, klinik hekimlik sonuçları) kapsam dışıdır. [Hukuk: tüketici/KOBİ ayrımı ve emredici hükümler gözden geçirilecek.]"
+                "Kasıt ve ağır kusur hariç, Vetinity'nin toplam sorumluluğu son [12] ayda ödenen bedelle sınırlıdır; dolaylı zararlar (kâr kaybı, itibar kaybı, klinik hekimlik sonuçları) kapsam dışıdır."
             ]
         },
         {
@@ -206,7 +206,7 @@ export const DATA_PROCESSING_AGREEMENT_DOCUMENT: LegalDocumentDef = {
     title: 'Vetinity Veri İşleme Sözleşmesi',
     shortTitle: 'Veri İşleme Sözleşmesi',
     subtitle: 'Klinik = veri sorumlusu, Vetinity = veri işleyen',
-    statusLine: 'Son güncelleme: 2026-10-15',
+    statusLine: 'Son güncelleme: 2026-11-09',
     description: "Klinik adına Vetinity'de işlenen müşteri ve hasta verilerine ilişkin veri işleme sözleşmesi.",
     sections: [
         {
