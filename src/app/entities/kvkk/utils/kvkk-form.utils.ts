@@ -3,7 +3,7 @@ import { printWithPageStyle } from '@/app/shared/utils/print.utils';
 
 /**
  * KVKK klinik şablon kuralları (ADR-021, ADR-024, `KVKK_CONSENT_API_CONTRACT.md` §2, §2b): açık rıza formu ve aydınlatma metni.
- * Varsayılan metinler ürün ekibinin taslaklarıdır (hukuki onay bekler); klinik Ayarlar'dan düzenler, sunucu ham metni döner,
+ * Varsayılan metinler ürün ekibinin metinleridir; klinik Ayarlar'dan düzenler, sunucu ham metni döner,
  * yer tutucuları istemci burada doldurur.
  */
 
@@ -55,8 +55,8 @@ export function kvkkFormPlaceholderHint(placeholder: string): string {
     return PLACEHOLDER_HINTS[placeholder] ?? '';
 }
 
-/** Şablon hâlâ sunucunun taslak varsayılan metniyken (`isDefault`) yazdırmadan önce ve Ayarlar'da gösterilir (sözleşme §4 madde 5). */
-export const KVKK_FORM_DEFAULT_TEXT_WARNING = 'Taslak metin: hukuk danışmanınızca onaylanmadan kullanmayın, köşeli parantezli alanları doldurun.';
+/** Şablon hâlâ sunucunun varsayılan metniyken (`isDefault`) yazdırmadan önce ve Ayarlar'da gösterilir (sözleşme §4 madde 5). */
+export const KVKK_FORM_DEFAULT_TEXT_WARNING = 'Varsayılan metin: köşeli parantezli alanları kendi bilgilerinizle doldurun.';
 
 const PLACEHOLDER_PATTERN = /\{\{(clinicName|clientName|date)\}\}/g;
 

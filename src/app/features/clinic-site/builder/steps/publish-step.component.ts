@@ -107,7 +107,7 @@ const DEVICES: readonly { readonly key: DeviceKey; readonly label: string; reado
                     <button type="button" class="wbtn ghost small" (click)="store.step.set(claim.step)">Düzelt</button>
                 </p>
             }
-            <p class="hint">Bu site veteriner hekimlik mevzuatındaki reklam sınırlarına uymak sizin sorumluluğunuzdadır; Vetinity hukuki görüş vermez. Fiyat, kampanya, müşteri yorumu ve önce/sonra görseli sunmayın. Bu uyarılar hukukçu görüşüne kadar taslaktır.</p>
+            <p class="hint">Bu site veteriner hekimlik mevzuatındaki reklam sınırlarına uymak sizin sorumluluğunuzdadır; Vetinity hukuki görüş vermez. Fiyat, kampanya, müşteri yorumu ve önce/sonra görseli sunmayın.</p>
         </section>
 
         <section class="group">
