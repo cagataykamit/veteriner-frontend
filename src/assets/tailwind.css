@@ -36,7 +36,7 @@
 
 /*
  * Kart içi etiket/değer deseni (klinik özet, kayıt bilgileri, gösterge şeridi; müşteri/hasta/randevu kimlik kartları):
- * - field-label: küçük, büyük harf, birincil koyu yeşil — değerden renkle ayrışır (açık: primary-700 ≈ 5.5:1, koyu: primary-300).
+ * - field-label: küçük, büyük harf, birincil koyu turkuaz — değerden renkle ayrışır (açık: primary-700 ≈ 6.9:1, koyu: primary-300).
  * - field-empty: boş durum metni ("Yok", "Kayıt yok" …) soluk ve italik; dolu değer koyu/kalın kalır.
  */
 @utility field-label {
