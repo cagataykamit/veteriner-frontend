@@ -125,6 +125,11 @@ app-menu {
             font-weight: inherit;
             -webkit-text-stroke: 0.4px currentColor;
             color: var(--primary-color);
+
+            // Açık temada seçili satır birincil rengin açık tonlu hapında: renk yalnız yazıda kalınca soluk görünüyordu (2026-11-09).
+            :root:not(.app-dark) & {
+                background-color: color-mix(in srgb, var(--primary-color) 10%, white);
+            }
         }
 
         &:hover {
