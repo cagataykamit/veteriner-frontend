@@ -4,8 +4,8 @@ import Aura from '@primeuix/themes/aura';
 /**
  * Vetinity panel teması — marka paleti A (turkuaz birincil). Aura'nın yapısı korunur; yalnız renk eşlemesi değişir.
  * Kontrast (WCAG 2.x): açıkta birincil #0c8079 + beyaz 4.8:1, hover #0a655f 6.9:1; koyuda birincil #42d7cd + #042f2e 8.2:1,
- * koyu kartta (#1e293b) bağlantı olarak 8.2:1. Durum renkleri açıkta 700 tonu + beyaz (başarı 5.0, uyarı 5.0, hata 6.5),
- * koyuda 400 tonu + 950 yazı (8.6 / 9.0 / 5.8).
+ * koyu kartta (#1e293b) bağlantı olarak 8.2:1. Durum renkleri açıkta 700 tonu + beyaz (başarı 5.0, bilgi 5.9, uyarı 5.0,
+ * hata 6.5), koyuda 400 tonu + 950 yazı (8.6 / 6.5 / 9.0 / 5.8).
  */
 
 /** Logo turkuazı ton ailesi; 500 logonun kendisi (#0fa39a, beyazla 3.1:1: yalnız simge, grafik, 24 px+ başlık; metin değil). */
@@ -23,15 +23,19 @@ const LOGO_TEAL_FAMILY = {
     950: '#042a27'
 };
 
-/** PrimeNG durum adı → Tailwind renk ailesi. Aura uyarıda turuncu/sarı kullanır; Vetinity'de her bileşende amber. */
-const STATUS_TONES = { success: 'green', warn: 'amber', danger: 'red' } as const;
+/**
+ * PrimeNG durum adı → Tailwind renk ailesi. Aura uyarıda turuncu/sarı, bilgi mesajında mavi kullanır; Vetinity'de her
+ * bileşende uyarı amber, bilgi sky.
+ */
+const STATUS_TONES = { success: 'green', info: 'sky', warn: 'amber', danger: 'red' } as const;
 
 type StatusSeverity = keyof typeof STATUS_TONES;
 
-/** Her durum için aynı biçimli belirteç kümesi üretir (`{ success: …, warn: …, danger: … }`). */
+/** Her durum için aynı biçimli belirteç kümesi üretir (`{ success: …, info: …, warn: …, danger: … }`). */
 function perStatus<T>(build: (tone: string) => T): Record<StatusSeverity, T> {
     return {
         success: build(STATUS_TONES.success),
+        info: build(STATUS_TONES.info),
         warn: build(STATUS_TONES.warn),
         danger: build(STATUS_TONES.danger)
     };
@@ -87,9 +91,9 @@ const darkMessage = (t: string) => ({
 
 /** p-message'da hata `error` adını taşır. */
 function messageTones(build: (tone: string) => object) {
-    const { success, warn, danger } = perStatus(build);
+    const { success, info, warn, danger } = perStatus(build);
 
-    return { success, warn, error: danger };
+    return { success, info, warn, error: danger };
 }
 
 export const VetinityPreset = definePreset(Aura, {
