@@ -7,8 +7,8 @@ import type { PortalLegalDocumentType } from './portal-legal.api';
  * belgeleri arası bağlantılar uygulama içi rotaya çevrilir. Sürüm numarası backend'den gelir (`GET /legal-documents`).
  */
 
-/** Taslak uyarısı — tek yer. Hukuki onay gelince `null` yapılır; tüm portal belgelerindeki bant birlikte kalkar. */
-export const PORTAL_LEGAL_DRAFT_NOTICE: string | null = 'Bu metin taslaktır, hukuki onaydan geçmemiştir.';
+/** Taslak uyarısı — tek yer. `null`: bant yok (2026-11-09 kullanıcı kararı: hukukçu görüşü beklenmez, metinler yayında). */
+export const PORTAL_LEGAL_DRAFT_NOTICE: string | null = null;
 
 export const PORTAL_TERMS_PATH = '/legal/terms';
 export const PORTAL_PRIVACY_PATH = '/legal/privacy';
@@ -45,7 +45,7 @@ export const PORTAL_TERMS_DOCUMENT: PortalLegalDocument = {
     path: PORTAL_TERMS_PATH,
     title: 'Vetinity Hasta Sahibi Portalı Kullanım Şartları',
     shortTitle: 'Kullanım Şartları',
-    statusLine: 'Taslak tarihi: 2026-10-16 · Durum: hukuki onay bekliyor',
+    statusLine: 'Son güncelleme: 2026-11-09',
     intro: [
         'Bu şartlar, veteriner kliniğinin müşterisi olarak hasta sahibi portalını (web ve mobil uygulama) kullanan kişilere ilişkindir. Kliniklerin Vetinity\'yi kullanma koşulları ayrı belgededir.'
     ],
@@ -53,7 +53,7 @@ export const PORTAL_TERMS_DOCUMENT: PortalLegalDocument = {
         {
             heading: '1. Taraflar ve kapsam',
             paragraphs: [
-                'Bu şartlar, [Şirket unvanı] ("Vetinity") ile portal hesabı açan hasta sahibi ("Kullanıcı") arasındadır. Portal, Kullanıcı\'nın hizmet aldığı ve kendisini davet eden veteriner kliniğinin ("Klinik") kayıtlarından türetilen bilgileri Kullanıcı\'ya gösteren bir yazılım hizmetidir ("Portal"). Hesap açarken veya şartların yeni sürümünü onaylarken bu şartları kabul etmiş olursunuz. Portal ücretsizdir; Klinik\'in veteriner hizmetlerinin ücreti Klinik ile Kullanıcı arasındadır. [AK-5: sözleşmenin tarafı yalnız Vetinity mi, Klinik de taraf mı — hukuki görüş bekliyor.]'
+                'Bu şartlar, [Şirket unvanı] ("Vetinity") ile portal hesabı açan hasta sahibi ("Kullanıcı") arasındadır. Portal, Kullanıcı\'nın hizmet aldığı ve kendisini davet eden veteriner kliniğinin ("Klinik") kayıtlarından türetilen bilgileri Kullanıcı\'ya gösteren bir yazılım hizmetidir ("Portal"). Hesap açarken veya şartların yeni sürümünü onaylarken bu şartları kabul etmiş olursunuz. Portal ücretsizdir; Klinik\'in veteriner hizmetlerinin ücreti Klinik ile Kullanıcı arasındadır.'
             ]
         },
         {
@@ -71,7 +71,7 @@ export const PORTAL_TERMS_DOCUMENT: PortalLegalDocument = {
         {
             heading: '3. Hesap ve giriş güvenliği',
             paragraphs: [
-                'Hesap yalnız Klinik\'in gönderdiği tek kullanımlık, süreli davetle açılır. Giriş, e-postanıza gelen tek kullanımlık kodla veya e-posta ve parolanızla yapılır. Kod ve parolanızı kimseyle paylaşmayın; Vetinity veya Klinik çalışanları kodunuzu ya da parolanızı sizden istemez. Cihazınızın ve e-posta hesabınızın güvenliğinden siz sorumlusunuz. Hesabınızın izinsiz kullanıldığından şüphelenirseniz parolanızı değiştirin, "tüm cihazlardan çıkış" yapın ve [destek e-postası] adresine bildirin. Güvenlik için çok sayıda hatalı denemeden sonra giriş geçici olarak kilitlenebilir. Hesap kişiseldir; başkası adına açılamaz ve devredilemez. [AK-5: yaş sınırı ve vekâlet/ortak sahiplik — hukuki görüş bekliyor; şimdilik Klinik\'in müşteri kaydındaki kişi tek sahip kabul edilir.]'
+                'Hesap yalnız Klinik\'in gönderdiği tek kullanımlık, süreli davetle açılır. Giriş, e-postanıza gelen tek kullanımlık kodla veya e-posta ve parolanızla yapılır. Kod ve parolanızı kimseyle paylaşmayın; Vetinity veya Klinik çalışanları kodunuzu ya da parolanızı sizden istemez. Cihazınızın ve e-posta hesabınızın güvenliğinden siz sorumlusunuz. Hesabınızın izinsiz kullanıldığından şüphelenirseniz parolanızı değiştirin, "tüm cihazlardan çıkış" yapın ve [destek e-postası] adresine bildirin. Güvenlik için çok sayıda hatalı denemeden sonra giriş geçici olarak kilitlenebilir. Hesap kişiseldir; başkası adına açılamaz ve devredilemez. Hesabın sahibi, Klinik\'in müşteri kaydındaki kişidir.'
             ]
         },
         {
@@ -82,7 +82,7 @@ export const PORTAL_TERMS_DOCUMENT: PortalLegalDocument = {
                     { text: 'veri sorumlusu Klinik\'tir', strong: true },
                     '; Vetinity bu kayıtları Klinik adına veri işleyen olarak barındırır ve Portal\'da gösterir. Kayıtların içeriği, düzeltilmesi ve silinmesi Klinik\'in kararıdır; bu konudaki talepleriniz Klinik\'e iletilir. Birden çok Vetinity kliniğinden hizmet alıyorsanız tek hesabınız her kliniğe ayrı ayrı bağlanır; her klinik yalnız kendi kayıtlarından sorumludur ve bir klinik diğerinin kayıtlarını görmez. Portal hesabının kendisine ilişkin veriler (giriş bilgileri, cihaz ve oturum, bildirim tercihi) ',
                     { text: 'portal gizlilik politikası', routerLink: PORTAL_PRIVACY_PATH },
-                    ' kapsamındadır. [AK-5: portal hesabı verileri için Vetinity\'nin veri sorumlusu mu, Klinik adına veri işleyen mi olduğu hukuki görüş bekliyor.]'
+                    ' kapsamındadır.'
                 ]
             ]
         },
@@ -101,13 +101,13 @@ export const PORTAL_TERMS_DOCUMENT: PortalLegalDocument = {
         {
             heading: '7. Doğruluk ve sorumluluk sınırı',
             paragraphs: [
-                'Portal\'daki bilgiler Klinik\'in girdiği kayıtları yansıtır; Vetinity bu kayıtların doğruluğunu, eksiksizliğini veya güncelliğini garanti etmez. Yanlış ya da eksik bir bilgi görürseniz Klinik\'e bildirin. Vetinity makul çabayla kesintisiz hizmet hedefler; bakım, bağlantı sorunları ve mücbir sebepler nedeniyle kesinti olabilir. Kasıt ve ağır kusur hariç, Vetinity Portal bilgisine dayanılarak verilen kararlardan, kaçırılan randevu veya aşıdan ve dolaylı zararlardan sorumlu değildir. [Hukuk: tüketici mevzuatının emredici hükümleri karşısında bu sınırın geçerliliği gözden geçirilecek.]'
+                'Portal\'daki bilgiler Klinik\'in girdiği kayıtları yansıtır; Vetinity bu kayıtların doğruluğunu, eksiksizliğini veya güncelliğini garanti etmez. Yanlış ya da eksik bir bilgi görürseniz Klinik\'e bildirin. Vetinity makul çabayla kesintisiz hizmet hedefler; bakım, bağlantı sorunları ve mücbir sebepler nedeniyle kesinti olabilir. Kasıt ve ağır kusur hariç, Vetinity Portal bilgisine dayanılarak verilen kararlardan, kaçırılan randevu veya aşıdan ve dolaylı zararlardan sorumlu değildir.'
             ]
         },
         {
             heading: '8. Bildirimler',
             paragraphs: [
-                'Hesap ve güvenlik iletileri (giriş kodu, parola sıfırlama, şartların değişmesi) hesabın işleyişi için gönderilir. Randevu ve aşı hatırlatmaları bildirim tercihinize bağlıdır ve uygulamadan kapatılabilir; Klinik size hatırlatma göndermeme kaydı tuttuysa Portal\'dan da hatırlatma gitmez. Tanıtım/kampanya iletisi yalnız ayrı onayınızla gönderilir. [AK-5: hatırlatmaların ticari elektronik ileti sayılıp sayılmadığı (İYS) hukuki görüş bekliyor.]'
+                'Hesap ve güvenlik iletileri (giriş kodu, parola sıfırlama, şartların değişmesi) hesabın işleyişi için gönderilir. Randevu ve aşı hatırlatmaları bildirim tercihinize bağlıdır ve uygulamadan kapatılabilir; Klinik size hatırlatma göndermeme kaydı tuttuysa Portal\'dan da hatırlatma gitmez. Tanıtım/kampanya iletisi yalnız ayrı onayınızla gönderilir.'
             ]
         },
         {
@@ -136,7 +136,7 @@ export const PORTAL_PRIVACY_DOCUMENT: PortalLegalDocument = {
     path: PORTAL_PRIVACY_PATH,
     title: 'Vetinity Hasta Sahibi Portalı Gizlilik Politikası',
     shortTitle: 'Gizlilik Politikası',
-    statusLine: 'Taslak tarihi: 2026-10-16 · Durum: hukuki onay bekliyor',
+    statusLine: 'Son güncelleme: 2026-11-09',
     intro: [
         [
             'Bu politika, hasta sahibi portalını (web ve mobil uygulama) kullanan kişilerin ',
@@ -148,7 +148,7 @@ export const PORTAL_PRIVACY_DOCUMENT: PortalLegalDocument = {
         {
             heading: '1. Veri sorumlusu',
             paragraphs: [
-                '[Şirket unvanı], [adres], [MERSİS/ticaret sicil no], [iletişim e-postası]. [AK-5: portal hesabı verileri (bölüm 2a) için Vetinity\'nin veri sorumlusu mu, bağlı klinik adına veri işleyen mi olduğu hukuki görüş bekliyor. Bu taslak, Vetinity\'nin kendi kullanıcı hesaplarındaki varsayımla (veri sorumlusu) yazılmıştır; görüş farklı çıkarsa 1, 3 ve 4. bölümler değişir.] Klinik kayıtları (bölüm 2b) bakımından Vetinity, kliniğin talimatıyla veri işleyendir.'
+                '[Şirket unvanı], [adres], [MERSİS/ticaret sicil no], [iletişim e-postası]. Klinik kayıtları (bölüm 2b) bakımından Vetinity, kliniğin talimatıyla veri işleyendir.'
             ]
         },
         {
@@ -156,7 +156,7 @@ export const PORTAL_PRIVACY_DOCUMENT: PortalLegalDocument = {
             paragraphs: [[{ text: 'a) Portal hesabı verileri', strong: true }]],
             items: [
                 'Hesap: e-posta adresi, görünen ad, parola (yalnız geri döndürülemez özet olarak; parolasız girişte hiç tutulmaz).',
-                'Giriş ve güvenlik: giriş kayıtları (zaman, başarılı/başarısız deneme, kullanılan yöntem), tek kullanımlık kodların geçerlilik ve deneme bilgisi, kilitleme durumu, IP adresi [hukuk: güvenlik kaydında IP tutulmalı mı, süresi], Portal\'da hangi kaydın görüntülendiğine ilişkin erişim kaydı (kim, ne zaman, hangi kayıt; içerik değil).',
+                'Giriş ve güvenlik: giriş kayıtları (zaman, başarılı/başarısız deneme, kullanılan yöntem), tek kullanımlık kodların geçerlilik ve deneme bilgisi, kilitleme durumu, IP adresi, Portal\'da hangi kaydın görüntülendiğine ilişkin erişim kaydı (kim, ne zaman, hangi kayıt; içerik değil).',
                 'Cihaz ve oturum: oturum ve yenileme jetonları, cihaz/tarayıcı türü, "tüm cihazlardan çıkış" için oturum listesi; bildirim izni verirseniz bildirim cihaz jetonu (v1).',
                 'Bildirim tercihi: hangi bildirim türünü hangi kanaldan almak istediğiniz.',
                 [
@@ -180,7 +180,7 @@ export const PORTAL_PRIVACY_DOCUMENT: PortalLegalDocument = {
         {
             heading: '3. Amaçlar ve hukuki sebepler',
             paragraphs: [
-                'Hesabın açılması, girişin sağlanması ve klinik kayıtlarının size gösterilmesi (Kanun m.5/2-c, sözleşmenin ifası); hesap güvenliği, yetkisiz erişimin ve kötüye kullanımın önlenmesi, erişim kaydı (m.5/2-f meşru menfaat; [hukuk: m.5/2-ç kapsamında saklama yükümlülüğü var mı]); şartların ve politikanın sürümlü kabulünün ispatı (m.5/2-e hakkın tesisi ve korunması); işlemsel bildirimler — giriş kodu, parola sıfırlama, randevu ve aşı hatırlatması (m.5/2-c; tercihinizle kapatılabilir); tanıtım/kampanya iletileri yalnız açık rızanızla [AK-5: İYS/ETK ayrımı hukuki görüş bekliyor].'
+                'Hesabın açılması, girişin sağlanması ve klinik kayıtlarının size gösterilmesi (Kanun m.5/2-c, sözleşmenin ifası); hesap güvenliği, yetkisiz erişimin ve kötüye kullanımın önlenmesi, erişim kaydı (m.5/2-f meşru menfaat;); şartların ve politikanın sürümlü kabulünün ispatı (m.5/2-e hakkın tesisi ve korunması); işlemsel bildirimler — giriş kodu, parola sıfırlama, randevu ve aşı hatırlatması (m.5/2-c; tercihinizle kapatılabilir); tanıtım/kampanya iletileri yalnız açık rızanızla.'
             ]
         },
         {
@@ -212,8 +212,8 @@ export const PORTAL_PRIVACY_DOCUMENT: PortalLegalDocument = {
             heading: '6. Saklama',
             items: [
                 'Hesap verileri, oturumlar, cihaz jetonları ve bildirim tercihleri: hesap açık olduğu sürece; hesap silinince silinir.',
-                'Giriş ve erişim kayıtları: [süre — hukuk belirler], sonra silinir veya anonimleştirilir.',
-                'Kabul kayıtları: hesap silinse de ispat amacıyla [süre — hukuk belirler] saklanır.',
+                'Giriş ve erişim kayıtları: 2 yıl, sonra silinir veya anonimleştirilir.',
+                'Kabul kayıtları: hesap silinse de ispat amacıyla 10 yıl saklanır.',
                 'Klinik kayıtları: kliniğin saklama ve imha politikasına ve mevzuattaki sürelere bağlıdır; portal hesabının silinmesi bu kayıtları silmez.'
             ]
         },
@@ -262,16 +262,11 @@ export const PORTAL_LEGAL_DOCUMENTS: Readonly<Record<PortalLegalDocumentType, Po
 /** Belgeler sayfada bu sırayla gösterilir (kabul adımı ve alt bilgi bağlantıları). */
 export const PORTAL_LEGAL_DOCUMENT_ORDER: readonly PortalLegalDocumentType[] = ['PortalTerms', 'PortalPrivacy'];
 
-/** "0.x" sürüm taslaktır (ADR-029 madde 2). */
-export function isDraftPortalLegalVersion(version: string): boolean {
-    return version.trim().startsWith('0.');
-}
-
 /** Sürüm satırı; sürüm backend'den gelir, yüklenmediyse yalnız durum kısmı. */
 export function portalLegalVersionLine(doc: PortalLegalDocument, version: string | null): string {
     if (!version) {
         return doc.statusLine;
     }
 
-    return `Sürüm: ${version}${isDraftPortalLegalVersion(version) ? ' (taslak)' : ''} · ${doc.statusLine}`;
+    return `Sürüm: ${version} · ${doc.statusLine}`;
 }
