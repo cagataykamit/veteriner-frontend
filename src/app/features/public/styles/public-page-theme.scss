@@ -1067,15 +1067,19 @@ html.public-site-root {
     color: var(--vetinity-teal);
 }
 
-.public-page .public-auth-submit.p-button {
-    background: var(--vetinity-teal) !important;
-    border-color: var(--vetinity-teal) !important;
+/*
+ * Giriş ve 404 gönder düğmesi: birincil turkuaz 600 + beyaz yazı (4.8:1), hover 700 (6.9:1); iki temada aynı. Logo tonu
+ * (#0fa39a) beyaz yazıyla 3.1:1 kaldığı için düğme zemini olmaz. Ton ailesi panel preset'inde (`core/theme/vetinity-preset.ts`).
+ */
+.public-page :is(.public-auth-submit, .public-notfound-submit).p-button {
+    background: var(--p-primary-600) !important;
+    border-color: var(--p-primary-600) !important;
     color: #ffffff !important;
 }
 
-.public-page .public-auth-submit.p-button:hover {
-    background: var(--public-accent-hover) !important;
-    border-color: var(--public-accent-hover) !important;
+.public-page :is(.public-auth-submit, .public-notfound-submit).p-button:not(:disabled):hover {
+    background: var(--p-primary-700) !important;
+    border-color: var(--p-primary-700) !important;
 }
 
 /* —— 404 Not Found — Vetinity marka renkleri (PrimeNG primary'den bağımsız) —— */
@@ -1087,15 +1091,4 @@ html.public-site-root {
 .public-notfound-icon-box {
     border: 2px solid color-mix(in srgb, var(--vetinity-teal) 55%, transparent);
     color: var(--vetinity-teal);
-}
-
-.public-page .public-notfound-submit.p-button {
-    background: var(--vetinity-teal) !important;
-    border-color: var(--vetinity-teal) !important;
-    color: #ffffff !important;
-}
-
-.public-page .public-notfound-submit.p-button:not(:disabled):hover {
-    background: var(--public-accent-hover) !important;
-    border-color: var(--public-accent-hover) !important;
 }
