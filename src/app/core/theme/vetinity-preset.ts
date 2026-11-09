@@ -4,7 +4,7 @@ import Aura from '@primeuix/themes/aura';
 /**
  * Vetinity panel teması — marka paleti A (turkuaz birincil). Aura'nın yapısı korunur; yalnız renk eşlemesi değişir.
  * Kontrast (WCAG 2.x): açıkta birincil #0c8079 + beyaz 4.8:1, hover #0a655f 6.9:1; koyuda birincil #42d7cd + #042f2e 8.2:1,
- * koyu kartta (#1e293b) bağlantı olarak 8.2:1. Durum renkleri açıkta 700 tonu + beyaz (başarı 5.0, bilgi 5.9, uyarı 5.0,
+ * koyu kartta (#18181b, zinc) bağlantı olarak ≈10:1. Durum renkleri açıkta 700 tonu + beyaz (başarı 5.0, bilgi 5.9, uyarı 5.0,
  * hata 6.5), koyuda 400 tonu + 950 yazı (8.6 / 6.5 / 9.0 / 5.8).
  */
 
@@ -105,27 +105,8 @@ export const VetinityPreset = definePreset(Aura, {
                 text: { color: '{surface.900}', hoverColor: '{surface.950}', mutedColor: '{surface.600}', hoverMutedColor: '{surface.700}' }
             },
             dark: {
-                /*
-                 * Koyu slate rampası bir basamak kaydırılır: Aura koyu temada kartı surface-900, zemini surface-950, kenarlığı
-                 * surface-700 çizer (şablonlardaki `dark:bg-surface-900` / `dark:border-surface-700` de öyle). Böylece kart #1e293b,
-                 * zemin #0f172a, kenarlık #334155 olur; 800 (hover, iç blok) slate-800 ile slate-700 arası ara tondur.
-                 */
-                surface: {
-                    0: '#ffffff',
-                    50: '{slate.50}',
-                    100: '{slate.100}',
-                    200: '{slate.200}',
-                    300: '{slate.300}',
-                    400: '{slate.400}',
-                    500: '{slate.500}',
-                    600: '{slate.600}',
-                    700: '{slate.700}',
-                    800: '#283548',
-                    900: '{slate.800}',
-                    950: '{slate.900}'
-                },
-                primary: { color: '{primary.400}', contrastColor: '#042f2e', hoverColor: '{primary.300}', activeColor: '{primary.200}' },
-                text: { color: '{surface.100}', hoverColor: '{surface.0}', mutedColor: '{surface.400}', hoverMutedColor: '{surface.300}' }
+                /* Koyu yüzey Aura varsayılanı (zinc, nötr gri) kalır; slate (lacivert tonlu) kullanıcı tarafından istenmedi (2026-11-09). */
+                primary: { color: '{primary.400}', contrastColor: '#042f2e', hoverColor: '{primary.300}', activeColor: '{primary.200}' }
             }
         }
     },
