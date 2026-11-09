@@ -66,7 +66,8 @@ describe('LegalAcceptanceGateComponent', () => {
 
         expect(links.map((a) => a.getAttribute('href'))).toEqual(['/kullanim-sartlari', '/gizlilik']);
         expect(links.every((a) => a.target === '_blank')).toBe(true);
-        expect(dialog()?.textContent).toContain('Sürüm 0.1 (taslak)');
+        expect(dialog()?.textContent).toContain('Sürüm 0.1');
+        expect(dialog()?.textContent).not.toContain('(taslak)');
         expect(document.querySelector('.legal-acceptance-gate .p-dialog-close-button')).toBeNull();
         expect(buttons().some((b) => b.textContent?.includes('Çıkış yap'))).toBe(true);
     });

@@ -4,9 +4,9 @@
  */
 
 /**
- * Taslak uyarısı — tek yer. Hukuki onay gelince `null` yapılır; bant ve `noindex` birlikte kalkar.
+ * Taslak uyarısı — tek yer. `null`: bant ve `noindex` yok (2026-11-09 kullanıcı kararı: hukukçu görüşü beklenmez, metinler yayında).
  */
-export const LEGAL_DRAFT_NOTICE: string | null = 'Bu metin taslaktır, hukuki onaydan geçmemiştir.';
+export const LEGAL_DRAFT_NOTICE: string | null = null;
 
 export interface LegalInlinePart {
     readonly text: string;
@@ -51,7 +51,7 @@ export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
     title: 'Vetinity Gizlilik Politikası',
     shortTitle: 'Gizlilik Politikası',
     subtitle: 'kullanıcı / site ziyaretçisi',
-    statusLine: 'Taslak tarihi: 2026-10-15 · Durum: hukuki onay bekliyor',
+    statusLine: 'Son güncelleme: 2026-10-15',
     description: "Vetinity'nin kendi kullanıcılarına ve site ziyaretçilerine ilişkin kişisel verilerin işlenmesi.",
     intro: [
         [
@@ -118,7 +118,7 @@ export const TERMS_OF_USE_DOCUMENT: LegalDocumentDef = {
     title: 'Vetinity Kullanım Şartları',
     shortTitle: 'Kullanım Şartları',
     subtitle: 'klinik abonelik sözleşmesi',
-    statusLine: 'Taslak tarihi: 2026-10-15 · Durum: hukuki onay bekliyor',
+    statusLine: 'Son güncelleme: 2026-10-15',
     description: "Vetinity ile Vetinity'yi kullanan veteriner kliniği arasındaki abonelik ve kullanım şartları.",
     sections: [
         {
@@ -133,7 +133,7 @@ export const TERMS_OF_USE_DOCUMENT: LegalDocumentDef = {
                 [
                     'Vetinity bir kayıt ve yönetim aracıdır; ',
                     { text: 'veterinerlik, hukuk, mali müşavirlik veya resmî bildirim tavsiyesi vermez', strong: true },
-                    '. Klinik, hekimlik kararlarından, kayıtların doğruluğundan ve mevzuattan doğan yükümlülüklerinden (resmî defterler, reçete, bildirim, saklama, vergi/fatura) kendisi sorumludur. Hizmetteki resmî defter ve belge çıktıları Klinik tarafından kontrol edilir; resmî biçime uygunluk garanti edilmez [hukuki inceleme: B1–B7]. Hizmetteki fişler mali değer taşımaz.'
+                    '. Klinik, hekimlik kararlarından, kayıtların doğruluğundan ve mevzuattan doğan yükümlülüklerinden (resmî defterler, reçete, bildirim, saklama, vergi/fatura) kendisi sorumludur. Hizmetteki resmî defter ve belge çıktıları Klinik tarafından kontrol edilir; resmî biçime uygunluk garanti edilmez. Hizmetteki fişler mali değer taşımaz.'
                 ]
             ]
         },
@@ -206,7 +206,7 @@ export const DATA_PROCESSING_AGREEMENT_DOCUMENT: LegalDocumentDef = {
     title: 'Vetinity Veri İşleme Sözleşmesi',
     shortTitle: 'Veri İşleme Sözleşmesi',
     subtitle: 'Klinik = veri sorumlusu, Vetinity = veri işleyen',
-    statusLine: 'Taslak tarihi: 2026-10-15 · Durum: hukuki onay bekliyor',
+    statusLine: 'Son güncelleme: 2026-10-15',
     description: "Klinik adına Vetinity'de işlenen müşteri ve hasta verilerine ilişkin veri işleme sözleşmesi.",
     sections: [
         {
@@ -241,7 +241,7 @@ export const DATA_PROCESSING_AGREEMENT_DOCUMENT: LegalDocumentDef = {
         },
         {
             heading: '5. Yurt dışı aktarım',
-            paragraphs: ["Veriler Türkiye'de [barındırma yeri] tutulur. Yurt dışına aktarım Kanun m.9'a uygun olmadıkça yapılmaz [hukuki inceleme: sağlayıcılar]."]
+            paragraphs: ["Veriler Türkiye'de [barındırma yeri] tutulur. Yurt dışına aktarım Kanun m.9'a uygun olmadıkça yapılmaz."]
         },
         {
             heading: '6. Süre sonu',
@@ -280,18 +280,13 @@ export const LEGAL_DOCUMENTS_BY_TYPE: Readonly<Record<LegalDocumentType, LegalDo
     DataProcessing: DATA_PROCESSING_AGREEMENT_DOCUMENT
 };
 
-/** "0.x" sürüm taslaktır (ADR-029 madde 2: hukuki onay bekliyor). */
-export function isDraftLegalVersion(version: string): boolean {
-    return version.trim().startsWith('0.');
-}
-
 /** Sayfadaki sürüm satırı; sürüm backend'den gelir, yüklenmediyse yalnız durum kısmı gösterilir. */
 export function legalVersionLine(doc: LegalDocumentDef, version: string | null): string {
     if (!version) {
         return doc.statusLine;
     }
 
-    return `Sürüm: ${version}${isDraftLegalVersion(version) ? ' (taslak)' : ''} · ${doc.statusLine}`;
+    return `Sürüm: ${version} · ${doc.statusLine}`;
 }
 
 /** Paragrafı satır içi parçalara çevirir (düz metin tek parça olur). */
