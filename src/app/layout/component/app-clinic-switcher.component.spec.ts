@@ -10,6 +10,8 @@ import { AppClinicSwitcher } from './app-clinic-switcher.component';
 const merkez = { id: 'c1', name: 'Merkez Klinik', isActive: true, shortAddress: 'Kadıköy, İstanbul' } as ClinicSummary;
 const sube = { id: 'c2', name: 'Şube Klinik', isActive: true, shortAddress: 'Ankara' } as ClinicSummary;
 const istinye = { id: 'c3', name: 'İstinye Şubesi', isActive: true } as ClinicSummary;
+/** Arama kutusu 5'ten fazla klinikte çıkar; arama testleri bu üç ek klinikle altıya tamamlanır. */
+const extra = ['Ulus', 'Yalova', 'Zonguldak'].map((name, i) => ({ id: `x${i}`, name: `${name} Pati`, isActive: true }) as ClinicSummary);
 
 describe('AppClinicSwitcher', () => {
     let fixture: ComponentFixture<AppClinicSwitcher>;
@@ -61,7 +63,7 @@ describe('AppClinicSwitcher', () => {
         expect(reachedDocument).toHaveBeenCalledTimes(1);
     });
 
-    it('panel "Klinik değiştir" başlığı, "Klinikleriniz" grubu ve aktif klinikte "aktif" hapı gösterir; arama süzer', async () => {
+    it('panel "Klinik değiştir" başlığı, "Klinikleriniz" grubu ve aktif klinikte "aktif" hapı gösterir; 5 ve daha az klinikte arama yok', async () => {
         await create([merkez, sube, istinye]);
         trigger()!.click();
         await settle();
@@ -70,6 +72,13 @@ describe('AppClinicSwitcher', () => {
         expect(panel().textContent).toContain('Klinikleriniz');
         expect(optionNames()).toEqual(['İstinye Şubesi', 'Merkez Klinik', 'Şube Klinik']);
         expect(options().map((o) => o.textContent!.includes('aktif'))).toEqual([false, true, false]);
+        expect(panel().querySelector('[data-testid="clinic-search"]')).toBeNull();
+    });
+
+    it('5\'ten fazla klinikte arama kutusu çıkar ve süzer', async () => {
+        await create([merkez, sube, istinye, ...extra]);
+        trigger()!.click();
+        await settle();
 
         const search = panel().querySelector('[data-testid="clinic-search"]') as HTMLInputElement;
 
@@ -81,11 +90,11 @@ describe('AppClinicSwitcher', () => {
     });
 
     it('kısa adres adın altında gösterilir; boşsa satır çizilmez; arama adresle de eşleşir', async () => {
-        await create([merkez, sube, istinye]);
+        await create([merkez, sube, istinye, ...extra]);
         trigger()!.click();
         await settle();
 
-        expect(options().map((o) => o.querySelector('[data-testid="clinic-option-address"]')?.textContent!.trim() ?? null)).toEqual([null, 'Kadıköy, İstanbul', 'Ankara']);
+        expect(options().map((o) => o.querySelector('[data-testid="clinic-option-address"]')?.textContent!.trim() ?? null)).toEqual([null, 'Kadıköy, İstanbul', 'Ankara', null, null, null]);
 
         const search = panel().querySelector('[data-testid="clinic-search"]') as HTMLInputElement;
 

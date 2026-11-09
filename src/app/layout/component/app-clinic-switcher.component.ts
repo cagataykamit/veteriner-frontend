@@ -13,12 +13,15 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { ClinicSwitcherRefreshService } from '@/app/core/tenant/clinic-switcher-refresh.service';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 
+/** Bu sayıdan fazla klinikte panelde arama kutusu çıkar. */
+const CLINIC_SEARCH_MIN_COUNT = 5;
+
 /**
  * Panel topbar içinde aktif klinik gösterimi + çoklu klinik kullanıcıları için switcher.
  *
  * Tasarım:
  * - Tek orchestration: liste yükleme (lazy), panel aç/kapa, `selectClinic` çağrısı, post-switch refresh.
- * - Panel (taslak C): "Klinik değiştir" + arama, "Klinikleriniz" grubu, ad altında kısa adres, aktif klinikte "aktif" hapı.
+ * - Panel (taslak C): "Klinik değiştir" + arama (yalnız 5'ten fazla klinikte), "Klinikleriniz" grubu, ad altında kısa adres, aktif klinikte "aktif" hapı.
  * - Token/JWT parse YOK; tüm clinic state `AuthService` üzerinden okunur.
  * - localStorage'a doğrudan erişim YOK; tokenlar `auth.selectClinic` içinde persist edilir.
  * - `/me/clinics` mount'ta sessiz yüklenir; tek klinikte button DOM'a girmez, dropdown açılmaz.
@@ -56,7 +59,8 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                     <p-popover #clinicPanel styleClass="layout-topbar-panel" ariaLabel="Klinik değiştir" (onHide)="query.set('')">
                         <div class="pb-2" (keydown.escape)="closeAndFocusTrigger()" data-testid="clinic-panel">
                             <div class="px-4 pt-3 pb-2">
-                                <div class="font-semibold mb-2">Klinik değiştir</div>
+                                <div class="font-semibold" [class.mb-2]="showSearch()">Klinik değiştir</div>
+                                @if (showSearch()) {
                                 <label class="flex items-center gap-2 rounded-border border border-surface-300 dark:border-surface-600 px-2 py-1.5 text-sm text-muted-color focus-within:border-primary">
                                     <i class="pi pi-search text-xs" aria-hidden="true"></i>
                                     <input
@@ -70,6 +74,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                                         data-testid="clinic-search"
                                     />
                                 </label>
+                                }
                             </div>
                             <div class="layout-topbar-panel-group pt-1!" id="clinicPanelGroup">Klinikleriniz</div>
                             <ul class="list-none m-0 p-0" aria-labelledby="clinicPanelGroup">
@@ -77,7 +82,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                                     <li>
                                         <button type="button" class="layout-topbar-panel-row" [disabled]="submitting()" [attr.aria-current]="c.id === activeId() ? 'true' : null" (click)="onSelect(c)" data-testid="clinic-option">
                                             <span class="flex-1 min-w-0">
-                                                <span class="block truncate" [class.font-semibold]="c.id === activeId()" data-testid="clinic-option-name">{{ c.name }}</span>
+                                                <span class="block truncate text-base" [class.font-semibold]="c.id === activeId()" data-testid="clinic-option-name">{{ c.name }}</span>
                                                 @if (c.shortAddress) {
                                                     <span class="block truncate text-xs text-muted-color" data-testid="clinic-option-address">{{ c.shortAddress }}</span>
                                                 }
@@ -125,6 +130,9 @@ export class AppClinicSwitcher {
 
     /** Yalnızca birden fazla klinik varken dropdown açılabilir. */
     readonly canOpenClinicSwitcher = computed(() => this.clinics().length > 1);
+
+    /** Arama kutusu yalnız uzun listede: beş ve daha az klinik tek bakışta seçilir. */
+    readonly showSearch = computed(() => this.clinics().length > CLINIC_SEARCH_MIN_COUNT);
 
     constructor() {
         this.clinicListRefresh.onRefreshRequested.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.reloadClinics(true));
