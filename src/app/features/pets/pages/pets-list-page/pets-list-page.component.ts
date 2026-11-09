@@ -137,7 +137,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                 <ng-template #body let-row>
                                     <tr [class.text-muted-color]="row.status === 'Deceased'">
                                         <td class="font-medium">
-                                            {{ row.name }}
+                                            <a [routerLink]="['/panel/pets', row.id]" class="text-primary no-underline">{{ row.name }}</a>
                                             @if (row.status === 'Deceased') {
                                                 <span class="ml-2 text-xs font-medium border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5" data-testid="pet-row-deceased">Vefat</span>
                                             }

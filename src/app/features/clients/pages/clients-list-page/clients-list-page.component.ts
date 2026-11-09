@@ -101,7 +101,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                                 </ng-template>
                                 <ng-template #body let-row>
                                     <tr>
-                                        <td class="font-medium">{{ row.fullName }}</td>
+                                        <td class="font-medium"><a [routerLink]="['/panel/clients', row.id]" class="text-primary no-underline">{{ row.fullName }}</a></td>
                                         <td>{{ formatClientPhoneForDisplay(row.phone) }}</td>
                                         <td>{{ row.email }}</td>
                                         <td>{{ row.createdAtUtc | trDate }}</td>
