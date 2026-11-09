@@ -45,7 +45,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
     template: `
         <p-dialog [header]="appointment() ? 'Hasta geldi' : 'Randevusuz geliş'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
             @if (loadError()) {
-                <p class="text-red-500 mt-0 mb-3" role="alert">{{ loadError() }}</p>
+                <p class="text-danger mt-0 mb-3" role="alert">{{ loadError() }}</p>
             }
             <form [formGroup]="form" (ngSubmit)="onSubmit()" id="visit-arrival-form">
                 <div class="grid grid-cols-12 gap-4">
@@ -72,7 +72,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                                 appendTo="body"
                             />
                             @if (petTextUnselected()) {
-                                <small class="text-red-500">Listeden bir hasta seçin.</small>
+                                <small class="text-danger">Listeden bir hasta seçin.</small>
                             }
                         </div>
                         @if (registration(); as reg) {
@@ -126,7 +126,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                     }
                 </div>
                 @if (submitError()) {
-                    <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
             <ng-template #footer>

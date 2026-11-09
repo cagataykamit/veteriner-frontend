@@ -84,10 +84,10 @@ export interface VaccinationSavedEvent {
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; kayıt oluşturulamaz.</p>
             }
             @if (selectionError()) {
-                <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
+                <p class="text-danger mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
             @if (vaccineDefinitionsError()) {
-                <p class="text-red-500 mt-0 mb-4" role="alert">{{ vaccineDefinitionsError() }}</p>
+                <p class="text-danger mt-0 mb-4" role="alert">{{ vaccineDefinitionsError() }}</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
             @if (contextFromRoute()) {
@@ -99,18 +99,18 @@ export interface VaccinationSavedEvent {
                         <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
                         <app-client-search inputId="clientId" formControlName="clientId" />
                         @if (apiFieldErrors().clientId) {
-                            <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
                         } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-danger">Zorunlu alan.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                         <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                         @if (apiFieldErrors().petId) {
-                            <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().petId }}</small>
                         } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-danger">Zorunlu alan.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -130,18 +130,18 @@ export interface VaccinationSavedEvent {
                             [loading]="vaccineDefinitionsLoading()"
                         />
                         @if (apiFieldErrors().vaccineDefinitionId) {
-                            <small class="text-red-500">{{ apiFieldErrors().vaccineDefinitionId }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().vaccineDefinitionId }}</small>
                         } @else if (form.controls.vaccineDefinitionId.invalid && form.controls.vaccineDefinitionId.touched) {
-                            <small class="text-red-500">{{ copy.vaccinationVaccineDefinitionRequired }}</small>
+                            <small class="text-danger">{{ copy.vaccinationVaccineDefinitionRequired }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="status" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
                         <p-select inputId="status" formControlName="status" [options]="statusOptions" optionLabel="label" optionValue="value" placeholder="Durum seçin" class="w-full" />
                         @if (apiFieldErrors().status) {
-                            <small class="text-red-500">{{ apiFieldErrors().status }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().status }}</small>
                         } @else if (form.controls.status.invalid && form.controls.status.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-danger">Zorunlu alan.</small>
                         }
                     </div>
                     @if (statusNum() === 1) {
@@ -149,13 +149,13 @@ export interface VaccinationSavedEvent {
                             <label for="appliedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Uygulama tarihi / saati *</label>
                             <app-date-input inputId="appliedAtLocal" type="datetime-local" formControlName="appliedAtLocal" [min]="datetimeLocalInputMin" limit="past" />
                             @if (form.controls.appliedAtLocal.hasError('dateYearInvalid') && form.controls.appliedAtLocal.touched) {
-                                <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                                <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (apiFieldErrors().appliedAtLocal) {
-                                <small class="text-red-500">{{ apiFieldErrors().appliedAtLocal }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().appliedAtLocal }}</small>
                             } @else if (form.controls.appliedAtLocal.hasError('required') && form.controls.appliedAtLocal.touched) {
-                                <small class="text-red-500">Uygulama tarihi zorunludur.</small>
+                                <small class="text-danger">Uygulama tarihi zorunludur.</small>
                             } @else if (form.controls.appliedAtLocal.hasError('appliedNotFuture') && form.controls.appliedAtLocal.touched) {
-                                <small class="text-red-500">Uygulama tarihi gelecek bir tarih olamaz.</small>
+                                <small class="text-danger">Uygulama tarihi gelecek bir tarih olamaz.</small>
                             }
                         </div>
                     }
@@ -165,13 +165,13 @@ export interface VaccinationSavedEvent {
                             <app-date-input inputId="nextDueDateScheduled" type="datetime-local" formControlName="nextDueDate" [min]="plannedDateTimeMin()" limit="planned" />
                             <p class="text-muted-color text-sm mt-2 mb-0">Aşı bu tarih ve saatte uygulanmak üzere planlanır.</p>
                             @if (form.controls.nextDueDate.hasError('dateYearInvalid') && form.controls.nextDueDate.touched) {
-                                <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                                <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (apiFieldErrors().nextDueDate) {
-                                <small class="text-red-500">{{ apiFieldErrors().nextDueDate }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().nextDueDate }}</small>
                             } @else if (form.controls.nextDueDate.hasError('required') && form.controls.nextDueDate.touched) {
-                                <small class="text-red-500">Planlanan uygulama tarihi ve saati zorunludur.</small>
+                                <small class="text-danger">Planlanan uygulama tarihi ve saati zorunludur.</small>
                             } @else if (form.controls.nextDueDate.hasError('plannedNotPast') && form.controls.nextDueDate.touched) {
-                                <small class="text-red-500">Planlanan uygulama tarihi ve saati gelecekte olmalıdır.</small>
+                                <small class="text-danger">Planlanan uygulama tarihi ve saati gelecekte olmalıdır.</small>
                             }
                         </div>
                     }
@@ -181,11 +181,11 @@ export interface VaccinationSavedEvent {
                             <app-date-input inputId="nextDueDateApplied" type="datetime-local" formControlName="nextDueDate" [min]="minNextDueAfterApplied()" limit="planned" />
                             <p class="text-muted-color text-sm mt-2 mb-0">Boş bırakılırsa bu aşı için hatırlatma oluşturulmaz.</p>
                             @if (form.controls.nextDueDate.hasError('dateYearInvalid') && form.controls.nextDueDate.touched) {
-                                <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                                <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (apiFieldErrors().nextDueDate) {
-                                <small class="text-red-500">{{ apiFieldErrors().nextDueDate }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().nextDueDate }}</small>
                             } @else if (form.hasError('nextDueAfterApplied') && (form.controls.nextDueDate.touched || form.touched)) {
-                                <small class="text-red-500">Sonraki uygulama tarihi ve saati, uygulama tarihinden sonra olmalıdır.</small>
+                                <small class="text-danger">Sonraki uygulama tarihi ve saati, uygulama tarihinden sonra olmalıdır.</small>
                             }
                         </div>
                     }
@@ -194,9 +194,9 @@ export interface VaccinationSavedEvent {
                             <label for="nextDueDateCancelled" class="block text-sm font-medium text-muted-color mb-2">Planlı / sonraki tarih (opsiyonel)</label>
                             <app-date-input inputId="nextDueDateCancelled" type="datetime-local" formControlName="nextDueDate" [min]="datetimeLocalInputMin" limit="planned" />
                             @if (form.controls.nextDueDate.hasError('dateYearInvalid') && form.controls.nextDueDate.touched) {
-                                <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                                <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (apiFieldErrors().nextDueDate) {
-                                <small class="text-red-500">{{ apiFieldErrors().nextDueDate }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().nextDueDate }}</small>
                             }
                         </div>
                     }
@@ -223,7 +223,7 @@ export interface VaccinationSavedEvent {
                                 }
                             }
                             @if (productsError()) {
-                                <small class="text-red-500 block">{{ productsError() }}</small>
+                                <small class="text-danger block">{{ productsError() }}</small>
                             } @else if (!productsLoading() && productOptions().length === 0) {
                                 <small class="text-muted-color block">Aşı türünde ürün yok; ürün tanımında tür "Aşı" seçilmelidir.</small>
                             }
@@ -238,7 +238,7 @@ export interface VaccinationSavedEvent {
                                 </label>
                                 <input id="vaccineQuantity" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="quantity" />
                                 @if (form.controls.quantity.invalid && form.controls.quantity.dirty) {
-                                    <small class="text-red-500">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
+                                    <small class="text-danger">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
                                 } @else if (productUnit()) {
                                     <small class="text-muted-color">Miktar ürünün stok birimindedir: {{ productUnit() }}.</small>
                                 }
@@ -256,13 +256,13 @@ export interface VaccinationSavedEvent {
                         <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
                         @if (apiFieldErrors().notes) {
-                            <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().notes }}</small>
                         }
                     </div>
                 </div>
 
                 @if (submitError()) {
-                    <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">

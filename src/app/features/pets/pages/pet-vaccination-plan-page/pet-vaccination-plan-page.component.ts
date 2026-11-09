@@ -138,7 +138,7 @@ export interface VaccinationPlanRow {
                     }
 
                     @if (saveError(); as err) {
-                        <p class="text-red-500 text-sm mt-4 mb-0" role="alert">{{ err }}</p>
+                        <p class="text-danger text-sm mt-4 mb-0" role="alert">{{ err }}</p>
                     }
                     @if (rows().length > 0) {
                         @if (canApply()) {
@@ -147,7 +147,7 @@ export interface VaccinationPlanRow {
                                     <i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Seçilenleri planla ({{ selectedItems().length }})
                                 </button>
                                 @if (hasInvalidDate()) {
-                                    <small class="text-red-500">Seçilen dozların tarihi yarından sonra olmalıdır.</small>
+                                    <small class="text-danger">Seçilen dozların tarihi yarından sonra olmalıdır.</small>
                                 }
                             </div>
                         } @else {

@@ -111,7 +111,7 @@ const MOVEMENT_KINDS: ReadonlySet<string> = new Set(['In', 'Out', 'TransferIn', 
                     </form>
 
                     @if (reportError(); as err) {
-                        <p class="text-red-500 text-sm" role="alert">{{ err }}</p>
+                        <p class="text-danger text-sm" role="alert">{{ err }}</p>
                     } @else if (report(); as r) {
                         <dl class="cash-summary" data-testid="cash-report-summary">
                             <div>

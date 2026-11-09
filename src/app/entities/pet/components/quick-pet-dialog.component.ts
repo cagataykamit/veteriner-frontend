@@ -30,7 +30,7 @@ import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick
     template: `
         <p-dialog header="Yeni hasta" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(560px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onDialogShow()">
             @if (selectionError()) {
-                <p class="text-red-500 mt-0 mb-3" role="alert">{{ selectionError() }}</p>
+                <p class="text-danger mt-0 mb-3" role="alert">{{ selectionError() }}</p>
             }
             <form [formGroup]="form" (ngSubmit)="onSubmit()" id="quick-pet-form">
                 <div class="grid grid-cols-12 gap-4">
@@ -38,9 +38,9 @@ import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick
                         <label for="qp-name" class="block text-sm font-medium text-muted-color mb-2">Hasta adı *</label>
                         <input id="qp-name" pInputText class="w-full" formControlName="name" />
                         @if (apiFieldErrors().name) {
-                            <small class="text-red-500">{{ apiFieldErrors().name }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().name }}</small>
                         } @else if (form.controls.name.invalid && form.controls.name.touched) {
-                            <small class="text-red-500">Hasta adı zorunludur.</small>
+                            <small class="text-danger">Hasta adı zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -58,9 +58,9 @@ import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick
                             appendTo="body"
                         />
                         @if (apiFieldErrors().speciesId) {
-                            <small class="text-red-500">{{ apiFieldErrors().speciesId }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().speciesId }}</small>
                         } @else if (form.controls.speciesId.invalid && form.controls.speciesId.touched) {
-                            <small class="text-red-500">Tür seçimi zorunludur.</small>
+                            <small class="text-danger">Tür seçimi zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -78,7 +78,7 @@ import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick
                             appendTo="body"
                         />
                         @if (apiFieldErrors().breedId) {
-                            <small class="text-red-500">{{ apiFieldErrors().breedId }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().breedId }}</small>
                         }
                         @if (hasSpeciesForQuickBreed()) {
                             <div class="mt-2">
@@ -90,12 +90,12 @@ import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick
                         <label for="qp-gender" class="block text-sm font-medium text-muted-color mb-2">Cinsiyet</label>
                         <p-select inputId="qp-gender" formControlName="gender" [options]="genderOptions" optionLabel="label" optionValue="value" placeholder="Seçin" class="w-full" [showClear]="true" appendTo="body" />
                         @if (apiFieldErrors().gender) {
-                            <small class="text-red-500">{{ apiFieldErrors().gender }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().gender }}</small>
                         }
                     </div>
                 </div>
                 @if (submitError()) {
-                    <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
                 @if (trialLimitError(); as message) {
                     <div class="mt-3"><app-trial-limit-notice [message]="message" /></div>

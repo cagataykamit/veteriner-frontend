@@ -26,7 +26,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 <app-visit-preparation-fields [(reason)]="reason" [(templateId)]="templateId" [currentTemplate]="currentTemplate()" />
             }
             @if (submitError()) {
-                <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
+                <p class="text-danger mt-3 mb-0" role="alert">{{ submitError() }}</p>
             }
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="visible.set(false)" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>

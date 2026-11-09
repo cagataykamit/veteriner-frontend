@@ -21,7 +21,7 @@
 
 @if (error(); as message) {
     <div class="card mb-4">
-        <p class="text-red-500 m-0" role="alert">{{ message }}</p>
+        <p class="text-danger m-0" role="alert">{{ message }}</p>
         <button pButton type="button" class="mt-3" size="small" severity="secondary" (click)="load()"><i class="p-button-icon pi pi-refresh"></i>Tekrar dene</button>
     </div>
 } @else if (loading() && !data()) {
@@ -48,7 +48,7 @@
                         <div
                             class="text-sm mt-2"
                             [class.text-green-600]="kpi.delta?.direction === 'up'"
-                            [class.text-red-500]="kpi.delta?.direction === 'down'"
+                            [class.text-danger]="kpi.delta?.direction === 'down'"
                             [class.text-muted-color]="!kpi.delta || kpi.delta.direction === 'flat'"
                         >
                             @if (kpi.delta?.direction === 'up') {

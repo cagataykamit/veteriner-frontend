@@ -155,7 +155,7 @@ const PLAN_REQUIRED_MESSAGE = 'Bir paket seçin.';
                                     <p class="text-sm text-muted-color m-0 mb-2">{{ passwordPolicyHint }}</p>
                                     <p-password id="password" [(ngModel)]="password" placeholder="Şifre" [toggleMask]="true" class="w-full" [fluid]="true" [feedback]="false" />
                                     @if (passwordFieldError()) {
-                                        <small class="text-red-500 block mt-2">{{ passwordFieldError() }}</small>
+                                        <small class="text-danger block mt-2">{{ passwordFieldError() }}</small>
                                     }
                                 </div>
 

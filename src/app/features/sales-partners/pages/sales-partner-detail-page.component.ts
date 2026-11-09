@@ -93,7 +93,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
             </app-detail-identity-card>
 
             @if (actionError()) {
-                <p class="text-red-500 text-sm mt-0 mb-3" role="alert">{{ actionError() }}</p>
+                <p class="text-danger text-sm mt-0 mb-3" role="alert">{{ actionError() }}</p>
             }
 
             <div class="card">
@@ -231,7 +231,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
                         <input id="paidNote" pInputText [(ngModel)]="paidNote" maxlength="500" placeholder="ör. havale açıklaması" />
                     </div>
                     @if (markPaidError()) {
-                        <p class="text-red-500 text-sm m-0" role="alert">{{ markPaidError() }}</p>
+                        <p class="text-danger text-sm m-0" role="alert">{{ markPaidError() }}</p>
                     }
                     <div class="flex justify-end gap-2">
                         <button pButton type="button" severity="secondary" (click)="markPaidVisible.set(false)" [disabled]="markingPaid()">{{ copy.buttonCancel }}</button>

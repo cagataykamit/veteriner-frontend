@@ -30,12 +30,12 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 <label for="rc-reason" class="block text-sm font-medium text-muted-color mb-2">{{ reasonOptional() ? 'Gerekçe (opsiyonel)' : 'Gerekçe *' }}</label>
                 <textarea id="rc-reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
                 @if (form.controls.reason.invalid && (form.controls.reason.dirty || form.controls.reason.touched)) {
-                    <small class="text-red-500">
+                    <small class="text-danger">
                         {{ reasonOptional() ? 'Gerekçe en çok ' + reasonMax + ' karakter olabilir.' : 'Gerekçe ' + reasonMin + '–' + reasonMax + ' karakter olmalıdır.' }}
                     </small>
                 }
                 @if (submitError()) {
-                    <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
             <ng-template #footer>

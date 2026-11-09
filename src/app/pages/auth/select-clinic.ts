@@ -32,7 +32,7 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
                         @if (loading()) {
                             <p class="m-0 text-center text-muted-color">Klinikler yükleniyor…</p>
                         } @else if (clinics().length === 0) {
-                            <p class="m-0 text-center text-red-500">{{ noClinicsMessage }}</p>
+                            <p class="m-0 text-center text-danger">{{ noClinicsMessage }}</p>
                         } @else {
                             <div class="mx-auto w-full max-w-[25rem]">
                                 <div class="mb-8">
@@ -55,7 +55,7 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
                         }
 
                         @if (error()) {
-                            <p class="mt-4 mb-0 text-center text-red-500" role="alert">{{ error() }}</p>
+                            <p class="mt-4 mb-0 text-center text-danger" role="alert">{{ error() }}</p>
                         }
                     </div>
                 </div>

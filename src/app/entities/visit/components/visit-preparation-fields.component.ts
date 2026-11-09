@@ -63,7 +63,7 @@ const TEMPLATE_PICKER_PAGE_SIZE = 200;
                         class="w-full"
                     />
                     @if (loadError()) {
-                        <small class="block mt-1 text-red-500" role="alert">{{ loadError() }}</small>
+                        <small class="block mt-1 text-danger" role="alert">{{ loadError() }}</small>
                     }
                     @if (templateId()) {
                         @if (estimate(); as text) {

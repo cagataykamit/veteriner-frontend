@@ -28,7 +28,7 @@ import { precheckImportFile } from '@/app/features/imports/utils/import-labels.u
             }
             <input #picker type="file" class="hidden" [accept]="extension()" [attr.aria-label]="label()" (change)="onPick($event)" />
             @if (error()) {
-                <div class="text-sm text-red-500 mt-2" role="alert">{{ error() }}</div>
+                <div class="text-sm text-danger mt-2" role="alert">{{ error() }}</div>
             }
         </div>
     `

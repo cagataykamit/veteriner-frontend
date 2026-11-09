@@ -65,7 +65,7 @@ const MAX_NAME_LENGTH = 100;
                 </button>
             </div>
             @if (error(); as message) {
-                <p class="text-red-500 text-sm mt-2 mb-0" role="alert">{{ message }}</p>
+                <p class="text-danger text-sm mt-2 mb-0" role="alert">{{ message }}</p>
             }
 
             <p-dialog [header]="copy.reportsSavedFilterSave" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(440px, 95vw)' }" [(visible)]="dialogVisible">
@@ -85,7 +85,7 @@ const MAX_NAME_LENGTH = 100;
                     <p class="text-amber-700 dark:text-amber-300 text-sm mt-2 mb-0" role="status">{{ copy.reportsSavedFilterEmptySet }}</p>
                 }
                 @if (dialogError(); as message) {
-                    <p class="text-red-500 text-sm mt-2 mb-0" role="alert">{{ message }}</p>
+                    <p class="text-danger text-sm mt-2 mb-0" role="alert">{{ message }}</p>
                 }
                 <ng-template #footer>
                     <button pButton type="button" severity="secondary" (click)="dialogVisible.set(false)" [disabled]="busy()"><i class="p-button-icon pi pi-times"></i>İptal</button>

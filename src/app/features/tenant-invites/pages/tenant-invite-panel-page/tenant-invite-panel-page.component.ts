@@ -35,7 +35,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
             <app-loading-state message="Klinik ve rol listesi yükleniyor…" />
         } @else if (pageError(); as pe) {
             <div class="card">
-                <p class="text-red-500 m-0" role="alert">{{ pe }}</p>
+                <p class="text-danger m-0" role="alert">{{ pe }}</p>
                 <button pButton type="button" class="mt-3" (click)="reload()"><i class="p-button-icon pi pi-refresh"></i>Yeniden dene</button>
             </div>
         } @else {
@@ -58,7 +58,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             <label for="inviteEmail" class="block text-sm font-medium text-muted-color mb-2">E-posta *</label>
                             <input id="inviteEmail" type="email" pInputText class="w-full" formControlName="email" autocomplete="email" />
                             @if (form.controls.email.invalid && form.controls.email.touched) {
-                                <small class="text-red-500">Geçerli e-posta girin.</small>
+                                <small class="text-danger">Geçerli e-posta girin.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
@@ -72,7 +72,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             @if (clinics().length === 0) {
                                 <small class="text-muted-color">Bu hesap için klinik bulunamadı.</small>
                             } @else if (form.controls.clinicId.invalid && form.controls.clinicId.touched) {
-                                <small class="text-red-500">Klinik seçin.</small>
+                                <small class="text-danger">Klinik seçin.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
@@ -86,21 +86,21 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             @if (operationClaims().length === 0 && !claimsLoadError()) {
                                 <small class="text-muted-color">Rol listesi boş.</small>
                             } @else if (form.controls.operationClaimId.invalid && form.controls.operationClaimId.touched) {
-                                <small class="text-red-500">Rol seçin.</small>
+                                <small class="text-danger">Rol seçin.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="inviteExpires" class="block text-sm font-medium text-muted-color mb-2">Son geçerlilik (isteğe bağlı)</label>
                             <app-date-input inputId="inviteExpires" type="datetime-local" formControlName="expiresAtLocal" [min]="datetimeLocalInputMin" limit="planned" />
                             @if (form.controls.expiresAtLocal.hasError('dateYearInvalid') && form.controls.expiresAtLocal.touched) {
-                                <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                                <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
                             }
                             <small class="text-muted-color">Boş bırakılırsa varsayılan süre uygulanır; son geçerlilik davet oluşunca gösterilir.</small>
                         </div>
                     </div>
 
                     @if (submitError()) {
-                        <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                        <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                     }
                     @if (userLimitReached()) {
                         <a [routerLink]="subscriptionRoute" class="inline-block text-primary mt-2" data-testid="invite-user-limit-link">Paketleri görüntüle</a>
@@ -125,7 +125,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     <div class="flex flex-wrap gap-2">
                         <button pButton type="button" (click)="copyJoinLink()" [disabled]="!joinUrl()"><i class="p-button-icon pi pi-copy"></i>Bağlantıyı kopyala</button>
                         @if (copyFeedback(); as cf) {
-                            <span class="text-sm self-center" [class.text-green-600]="cf === 'ok'" [class.text-red-500]="cf === 'fail'">
+                            <span class="text-sm self-center" [class.text-green-600]="cf === 'ok'" [class.text-danger]="cf === 'fail'">
                                 @if (cf === 'ok') {
                                     Panoya kopyalandı.
                                 } @else {

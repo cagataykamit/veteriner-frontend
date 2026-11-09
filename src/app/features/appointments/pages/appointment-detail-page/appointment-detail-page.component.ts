@@ -108,7 +108,7 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
             </section>
 
             @if (startExamError(); as startError) {
-                <p class="text-red-500 text-sm mt-0 mb-4" role="alert">{{ startError }}</p>
+                <p class="text-danger text-sm mt-0 mb-4" role="alert">{{ startError }}</p>
             }
             @if (canNoShow) {
                 <app-appointment-no-show-dialog [(visible)]="noShowOpen" [appointmentId]="a.id" [mode]="noShowMode()" [subject]="noShowSubject()" (done)="onNoShowDone()" />

@@ -66,7 +66,7 @@ let nextKey = 1;
                 @for (item of visibleItems(); track item.key) {
                     <li class="rounded-border border border-surface-200 dark:border-surface-700 p-2" [attr.data-status]="item.status">
                         <div class="flex flex-wrap items-center gap-2">
-                            <i [class]="item.status === 'done' ? 'pi pi-check-circle text-green-600' : item.status === 'failed' || item.status === 'rejected' ? 'pi pi-exclamation-circle text-red-500' : 'pi pi-file'" aria-hidden="true"></i>
+                            <i [class]="item.status === 'done' ? 'pi pi-check-circle text-green-600' : item.status === 'failed' || item.status === 'rejected' ? 'pi pi-exclamation-circle text-danger' : 'pi pi-file'" aria-hidden="true"></i>
                             <span class="font-medium break-all flex-1 min-w-0">{{ item.name }}</span>
                             <span class="text-xs text-muted-color">{{ size(item.size) }}</span>
                             @if (item.status === 'failed') {
@@ -89,7 +89,7 @@ let nextKey = 1;
                             <p-progressbar [value]="item.progress" [showValue]="true" class="mt-2" [attr.aria-label]="item.name + ' yükleniyor'" />
                         }
                         @if (item.error) {
-                            <small class="text-red-500 block mt-1" role="alert">{{ item.error }}</small>
+                            <small class="text-danger block mt-1" role="alert">{{ item.error }}</small>
                         }
                     </li>
                 }

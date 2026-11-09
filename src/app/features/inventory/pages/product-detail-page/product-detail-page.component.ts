@@ -81,7 +81,7 @@ import { ConfirmationService } from 'primeng/api';
             </app-detail-identity-card>
 
             @if (mutationError()) {
-                <p class="text-red-500 text-sm mb-4 m-0" role="alert">{{ mutationError() }}</p>
+                <p class="text-danger text-sm mb-4 m-0" role="alert">{{ mutationError() }}</p>
             }
 
             <!-- Eylem şeridi: stok işlemi, pasifleştir/aktifleştir (salt okunurda gösterilmez; mevcut davranış). -->

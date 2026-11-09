@@ -61,7 +61,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             </app-detail-identity-card>
 
             @if (actionError()) {
-                <p class="text-red-500 text-sm mt-0 mb-4" role="alert">{{ actionError() }}</p>
+                <p class="text-danger text-sm mt-0 mb-4" role="alert">{{ actionError() }}</p>
             }
 
             <!-- Eylem şeridi: yeniden gönder ve iptal (yetki + salt okunur değilken); salt okunur notu şeritten gelir. -->

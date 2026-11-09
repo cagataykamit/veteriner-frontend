@@ -32,33 +32,33 @@ import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
                         <label for="qc-fullName" class="block text-sm font-medium text-muted-color mb-2">Ad soyad *</label>
                         <input id="qc-fullName" pInputText class="w-full" formControlName="fullName" />
                         @if (fieldMessage('fullName'); as msg) {
-                            <small class="text-red-500">{{ msg }}</small>
+                            <small class="text-danger">{{ msg }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="qc-phone" class="block text-sm font-medium text-muted-color mb-2">Telefon</label>
                         <input id="qc-phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
                         @if (fieldMessage('phone'); as msg) {
-                            <small class="text-red-500">{{ msg }}</small>
+                            <small class="text-danger">{{ msg }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="qc-email" class="block text-sm font-medium text-muted-color mb-2">E-posta</label>
                         <input id="qc-email" type="email" pInputText class="w-full" formControlName="email" />
                         @if (fieldMessage('email'); as msg) {
-                            <small class="text-red-500">{{ msg }}</small>
+                            <small class="text-danger">{{ msg }}</small>
                         }
                     </div>
                     <div class="col-span-12">
                         <label for="qc-address" class="block text-sm font-medium text-muted-color mb-2">Adres</label>
                         <textarea id="qc-address" rows="2" class="w-full p-inputtext p-component" formControlName="address"></textarea>
                         @if (fieldMessage('address'); as msg) {
-                            <small class="text-red-500">{{ msg }}</small>
+                            <small class="text-danger">{{ msg }}</small>
                         }
                     </div>
                 </div>
                 @if (submitError()) {
-                    <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
                 @if (trialLimitError(); as message) {
                     <div class="mt-3"><app-trial-limit-notice [message]="message" /></div>

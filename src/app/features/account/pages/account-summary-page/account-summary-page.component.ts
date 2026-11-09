@@ -83,7 +83,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         @if (summaryLoading()) {
                             <p class="text-muted-color text-sm m-0 py-2">Hesap bilgileri yükleniyor…</p>
                         } @else if (summaryError()) {
-                            <p class="text-red-500 text-sm m-0 py-2" role="alert">{{ summaryError() }}</p>
+                            <p class="text-danger text-sm m-0 py-2" role="alert">{{ summaryError() }}</p>
                         } @else if (summary(); as s) {
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50/50 dark:bg-surface-800/30 p-4 min-w-0">
@@ -129,7 +129,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                                 </div>
                                 <small class="text-muted-color block mt-1"> Hasta kabulünde sorumlu hekim olarak bu ad gösterilir. Boş bırakırsanız e-postanızdan türetilen ad kullanılır. </small>
                                 @if (displayNameError()) {
-                                    <small class="text-red-500 block mt-1" role="alert">{{ displayNameError() }}</small>
+                                    <small class="text-danger block mt-1" role="alert">{{ displayNameError() }}</small>
                                 }
                             </form>
                         }

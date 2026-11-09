@@ -50,7 +50,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
         } @else {
             <div class="card">
                 @if (actionError()) {
-                    <p class="text-red-500 text-sm mt-0 mb-3" role="alert" data-testid="dp-action-error">{{ actionError() }}</p>
+                    <p class="text-danger text-sm mt-0 mb-3" role="alert" data-testid="dp-action-error">{{ actionError() }}</p>
                 }
                 @if (rows().length === 0) {
                     <app-empty-state message="Çift ödeme yok." />

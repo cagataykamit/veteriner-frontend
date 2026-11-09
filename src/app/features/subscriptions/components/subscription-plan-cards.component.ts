@@ -75,7 +75,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
                 </div>
             }
             @if (actionError()) {
-                <p class="text-red-500 mt-3 mb-0 text-sm" role="alert">{{ actionError() }}</p>
+                <p class="text-danger mt-3 mb-0 text-sm" role="alert">{{ actionError() }}</p>
             }
             @if (actionInfo()) {
                 <p class="text-primary mt-3 mb-0 text-sm">{{ actionInfo() }}</p>

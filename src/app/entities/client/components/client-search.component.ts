@@ -58,7 +58,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             <ng-template #empty>
                 <div class="py-1">
                     @if (searchError()) {
-                        <span class="text-red-500" role="alert">{{ searchError() }}</span>
+                        <span class="text-danger" role="alert">{{ searchError() }}</span>
                     } @else {
                         <span>Müşteri bulunamadı</span>
                         @if (canCreate()) {

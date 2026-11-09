@@ -51,7 +51,7 @@ import { copyTextToClipboard } from '@/app/shared/utils/clipboard.utils';
                     <div class="text-xl font-semibold" data-testid="dose-total">{{ totalText() }}</div>
                     <p class="mt-2 mb-0 text-sm" data-testid="dose-formula">{{ r.text }}</p>
                 } @else if (hasInput()) {
-                    <p class="m-0 text-sm text-red-500" role="alert">Değerler 0'dan büyük ve makul aralıkta olmalıdır (kilo ≤ {{ limits.weightKg }}, doz ≤ {{ limits.dosePerKg }}/kg).</p>
+                    <p class="m-0 text-sm text-danger" role="alert">Değerler 0'dan büyük ve makul aralıkta olmalıdır (kilo ≤ {{ limits.weightKg }}, doz ≤ {{ limits.dosePerKg }}/kg).</p>
                 } @else {
                     <p class="m-0 text-sm text-muted-color">Kilo ve dozu girin.</p>
                 }

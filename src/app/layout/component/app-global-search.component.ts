@@ -130,12 +130,12 @@ const KIND_TONE: Readonly<Record<RecentlyViewedKind, string>> = {
                             <p class="m-0 px-1 py-3 text-sm text-muted-color"><i class="pi pi-spin pi-spinner mr-2" aria-hidden="true"></i>Aranıyor…</p>
                         }
                         @case ('error') {
-                            <p class="m-0 px-1 py-3 text-red-500" role="alert">Arama yapılamadı. Bağlantınızı kontrol edip tekrar deneyin.</p>
+                            <p class="m-0 px-1 py-3 text-danger" role="alert">Arama yapılamadı. Bağlantınızı kontrol edip tekrar deneyin.</p>
                         }
                         @case ('ready') {
                             @if (result(); as r) {
                                 @if (r.failedKinds.length) {
-                                    <p class="m-0 px-1 pt-2 text-sm text-red-500" role="alert">{{ failedMessage(r) }}</p>
+                                    <p class="m-0 px-1 pt-2 text-sm text-danger" role="alert">{{ failedMessage(r) }}</p>
                                 }
                                 @if (options().length === 0 && !r.failedKinds.length) {
                                     <div class="px-1 py-5 text-center" data-testid="global-search-no-result">

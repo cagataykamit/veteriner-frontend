@@ -67,9 +67,9 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                         <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
                         <app-client-search inputId="clientId" formControlName="clientId" />
                         @if (apiFieldErrors().clientId) {
-                            <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
                         } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-danger">Zorunlu alan.</small>
                         }
                     </div>
 
@@ -85,10 +85,10 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                                 }
                             </div>
                             @if (creditLimitError(); as err) {
-                                <small class="text-red-500 block mt-1">{{ err }}</small>
+                                <small class="text-danger block mt-1">{{ err }}</small>
                             }
                             @if (creditError()) {
-                                <p class="text-red-500 mt-2 mb-0" role="alert">{{ creditError() }}</p>
+                                <p class="text-danger mt-2 mb-0" role="alert">{{ creditError() }}</p>
                             }
                         </div>
                     }
@@ -100,7 +100,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                         } @else if (balanceLoading()) {
                             <p class="text-sm text-muted-color m-0" role="status">Açık ücretler yükleniyor…</p>
                         } @else if (balanceError()) {
-                            <p class="text-red-500 m-0" role="alert">{{ balanceError() }}</p>
+                            <p class="text-danger m-0" role="alert">{{ balanceError() }}</p>
                         } @else if (openCharges().length === 0) {
                             @if (prepayment()) {
                                 <p class="text-sm m-0" role="status" data-testid="payment-prepayment">
@@ -153,7 +153,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                                                     <button pButton type="button" size="small" severity="secondary" [text]="true" (click)="fillOutstanding(row)">Tamamı</button>
                                                 </div>
                                                 @if (rowError(row); as err) {
-                                                    <small class="text-red-500">{{ err }}</small>
+                                                    <small class="text-danger">{{ err }}</small>
                                                 }
                                             </td>
                                         </tr>
@@ -183,9 +183,9 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                             (input)="onReceivedInput($any($event.target).value)"
                         />
                         @if (receivedError(); as err) {
-                            <small class="text-red-500 block">{{ err }}</small>
+                            <small class="text-danger block">{{ err }}</small>
                         } @else if (apiFieldErrors().amount) {
-                            <small class="text-red-500 block">{{ apiFieldErrors().amount }}</small>
+                            <small class="text-danger block">{{ apiFieldErrors().amount }}</small>
                         } @else if (creditAmount() > 0 && !prepayment()) {
                             <small class="block font-medium" data-testid="payment-overpayment" aria-live="polite">Fazlası ({{ money(creditAmount()) }}) müşteri kredisine yazılır.</small>
                         } @else {
@@ -196,7 +196,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                         <label for="method" class="block text-sm font-medium text-muted-color mb-2">Yöntem *</label>
                         <p-select inputId="method" [options]="methodOptions" formControlName="method" optionLabel="label" optionValue="value" class="w-full" />
                         @if (apiFieldErrors().method) {
-                            <small class="text-red-500">{{ apiFieldErrors().method }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().method }}</small>
                         }
                     </div>
                     <app-cash-register-select fieldClass="col-span-12 md:col-span-6 lg:col-span-3" [clinicId]="activeClinicId" [method]="methodValue()" [(value)]="cashRegisterId" [disabled]="busy()" />
@@ -204,26 +204,26 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                         <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati *</label>
                         <app-date-input inputId="paidAtLocal" type="datetime-local" formControlName="paidAtLocal" [min]="paymentDateMinAllowed" limit="past" />
                         @if (form.controls.paidAtLocal.hasError('dateYearInvalid') && form.controls.paidAtLocal.touched) {
-                            <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                            <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
                         } @else if (form.controls.paidAtLocal.hasError('paymentDateTooFarPast') && form.controls.paidAtLocal.touched) {
-                            <small class="text-red-500 block">{{ paymentDateTooFarPastMessage }}</small>
+                            <small class="text-danger block">{{ paymentDateTooFarPastMessage }}</small>
                         } @else if (apiFieldErrors().paidAtLocal) {
-                            <small class="text-red-500 block">{{ apiFieldErrors().paidAtLocal }}</small>
+                            <small class="text-danger block">{{ apiFieldErrors().paidAtLocal }}</small>
                         } @else if (form.controls.paidAtLocal.hasError('required') && form.controls.paidAtLocal.touched) {
-                            <small class="text-red-500 block">Zorunlu alan.</small>
+                            <small class="text-danger block">Zorunlu alan.</small>
                         }
                     </div>
                     <div class="col-span-12">
                         <label for="note" class="block text-sm font-medium text-muted-color mb-2">Not</label>
                         <textarea id="note" rows="3" class="w-full p-inputtext p-component" formControlName="note"></textarea>
                         @if (apiFieldErrors().note) {
-                            <small class="text-red-500">{{ apiFieldErrors().note }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().note }}</small>
                         }
                     </div>
                 </div>
 
                 @if (submitError()) {
-                    <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">

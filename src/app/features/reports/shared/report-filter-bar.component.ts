@@ -35,7 +35,7 @@ export interface ReportExtraFilter {
                 <app-trial-limit-notice [message]="exportError" />
             } @else {
                 <div class="card mb-4 border-red-200 dark:border-red-800">
-                    <p class="text-red-500 m-0 text-sm" role="alert">{{ exportError }}</p>
+                    <p class="text-danger m-0 text-sm" role="alert">{{ exportError }}</p>
                 </div>
             }
         }

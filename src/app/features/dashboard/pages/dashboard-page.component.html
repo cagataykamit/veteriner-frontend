@@ -168,7 +168,7 @@
                         @if (lowStockLoading()) {
                             <app-loading-state message="Düşük stok bilgileri yükleniyor…" />
                         } @else if (lowStockError()) {
-                            <p class="text-red-500 m-0 text-sm" role="alert">{{ lowStockError() }}</p>
+                            <p class="text-danger m-0 text-sm" role="alert">{{ lowStockError() }}</p>
                         } @else {
                             <ul class="lg:hidden list-none m-0 p-0 flex flex-col gap-3">
                                 @for (row of lowStockRows(); track row.id) {
@@ -264,7 +264,7 @@
             @if (canViewFinance(d) && belowFoldLoaded() && d.finance.error) {
                 <div class="col-span-12">
                     <div class="card mb-0">
-                        <p class="text-red-500 m-0" role="alert">{{ d.finance.error }}</p>
+                        <p class="text-danger m-0" role="alert">{{ d.finance.error }}</p>
                         <p class="text-muted-color text-sm mt-2 mb-0">Finans kartları ve son ödemeler bu yüzden eksik olabilir.</p>
                         <button pButton type="button" class="mt-3" size="small" severity="secondary" (click)="reload()" [attr.aria-label]="'Finans bolumunu tekrar dene'"><i class="p-button-icon pi pi-refresh"></i>Finansı tekrar dene</button>
                     </div>
@@ -312,7 +312,7 @@
             @if (d.summary.error) {
                 <div class="col-span-12">
                     <div class="card mb-0">
-                        <p class="text-red-500 m-0" role="alert">{{ d.summary.error }}</p>
+                        <p class="text-danger m-0" role="alert">{{ d.summary.error }}</p>
                         <p class="text-muted-color text-sm mt-2 mb-0">Üst sayaçlar bu yüzden eksik olabilir.</p>
                         <button pButton type="button" class="mt-3" size="small" severity="secondary" (click)="reload()" [attr.aria-label]="'Ozet bolumunu tekrar dene'"><i class="p-button-icon pi pi-refresh"></i>Özeti tekrar dene</button>
                     </div>
@@ -343,7 +343,7 @@
             } @else if (belowFoldError() && !belowFoldLoaded()) {
                 <div class="col-span-12">
                     <div class="card flex flex-wrap items-center justify-between gap-3">
-                        <p class="m-0 text-sm text-red-500">{{ belowFoldError() }}</p>
+                        <p class="m-0 text-sm text-danger">{{ belowFoldError() }}</p>
                         <button pButton type="button" size="small" severity="secondary" (click)="onManualBelowFoldLoad()"><i class="p-button-icon pi pi-refresh"></i>Tekrar dene</button>
                     </div>
                 </div>
@@ -357,7 +357,7 @@
                         @if (listsLoading()) {
                             <app-loading-state message="Randevu listesi yükleniyor…" />
                         } @else if (d.todayAppointments.error) {
-                            <p class="text-red-500 m-0" role="alert">{{ d.todayAppointments.error }}</p>
+                            <p class="text-danger m-0" role="alert">{{ d.todayAppointments.error }}</p>
                         } @else if (d.todayAppointments.data.length === 0) {
                             <app-empty-state message="Bugün için randevu yok." hint="Tarih filtresi yerel güne göredir." />
                         } @else {
@@ -439,7 +439,7 @@
                         @if (listsLoading()) {
                             <app-loading-state message="Aşı listesi yükleniyor…" />
                         } @else if (d.upcomingVaccinations.error) {
-                            <p class="text-red-500 m-0" role="alert">{{ d.upcomingVaccinations.error }}</p>
+                            <p class="text-danger m-0" role="alert">{{ d.upcomingVaccinations.error }}</p>
                         } @else if (d.upcomingVaccinations.data.length === 0) {
                             <app-empty-state message="Önümüzdeki dönem için uygun aşı kaydı yok." />
                         } @else {
@@ -498,7 +498,7 @@
                         @if (listsLoading()) {
                             <app-loading-state message="Muayene listesi yükleniyor…" />
                         } @else if (d.recentExaminations.error) {
-                            <p class="text-red-500 m-0" role="alert">{{ d.recentExaminations.error }}</p>
+                            <p class="text-danger m-0" role="alert">{{ d.recentExaminations.error }}</p>
                         } @else if (d.recentExaminations.data.length === 0) {
                             <app-empty-state message="Muayene kaydı yok." />
                         } @else {
@@ -548,7 +548,7 @@
                                 <a routerLink="/panel/payments" class="text-primary font-medium no-underline text-sm">Tümü →</a>
                             </div>
                             @if (d.finance.error) {
-                                <p class="text-red-500 m-0" role="alert">{{ d.finance.error }}</p>
+                                <p class="text-danger m-0" role="alert">{{ d.finance.error }}</p>
                                 <button pButton type="button" class="mt-3" size="small" severity="secondary" (click)="reload()"><i class="p-button-icon pi pi-refresh"></i>Finansı tekrar dene</button>
                             } @else if (!d.finance.data || d.finance.data.recentPayments.length === 0) {
                                 <app-empty-state message="Ödeme kaydı yok." hint="İlk ödeme kaydı için ödeme ekranına gidin." />

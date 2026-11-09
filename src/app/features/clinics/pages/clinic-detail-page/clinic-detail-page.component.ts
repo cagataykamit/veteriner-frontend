@@ -147,7 +147,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">Bu işletme salt okunur moddadır; klinik bilgileri güncellenemez.</p>
                 }
                 @if (formError()) {
-                    <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ formError() }}</p>
+                    <p class="text-danger text-sm mb-3 m-0" role="alert">{{ formError() }}</p>
                 }
                 <form [formGroup]="form" (ngSubmit)="onSave()">
                     <div class="grid grid-cols-12 gap-4">
@@ -155,65 +155,65 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                             <label for="clinicName" class="block text-sm font-medium text-muted-color mb-2">Klinik adı *</label>
                             <input id="clinicName" pInputText class="w-full" formControlName="name" autocomplete="organization" />
                             @if (apiFieldErrors().name) {
-                                <small class="text-red-500">{{ apiFieldErrors().name }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().name }}</small>
                             } @else if (form.controls.name.invalid && form.controls.name.touched) {
-                                <small class="text-red-500">Klinik adı zorunludur.</small>
+                                <small class="text-danger">Klinik adı zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-3">
                             <label for="clinicCity" class="block text-sm font-medium text-muted-color mb-2">Şehir *</label>
                             <input id="clinicCity" pInputText class="w-full" formControlName="city" autocomplete="address-level1" />
                             @if (apiFieldErrors().city) {
-                                <small class="text-red-500">{{ apiFieldErrors().city }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().city }}</small>
                             } @else if (form.controls.city.invalid && form.controls.city.touched) {
-                                <small class="text-red-500">Şehir zorunludur.</small>
+                                <small class="text-danger">Şehir zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-3">
                             <label for="clinicDistrict" class="block text-sm font-medium text-muted-color mb-2">İlçe</label>
                             <input id="clinicDistrict" pInputText class="w-full" formControlName="district" autocomplete="address-level2" />
                             @if (apiFieldErrors().district) {
-                                <small class="text-red-500">{{ apiFieldErrors().district }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().district }}</small>
                             } @else if (form.controls.district.invalid && form.controls.district.touched) {
-                                <small class="text-red-500">En fazla {{ districtMax }} karakter.</small>
+                                <small class="text-danger">En fazla {{ districtMax }} karakter.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="clinicPhone" class="block text-sm font-medium text-muted-color mb-2">Telefon</label>
                             <input id="clinicPhone" pInputText class="w-full" formControlName="phone" autocomplete="tel" (blur)="onClinicPhoneBlur()" />
                             @if (apiFieldErrors().phone) {
-                                <small class="text-red-500">{{ apiFieldErrors().phone }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().phone }}</small>
                             } @else if (form.controls.phone.invalid && form.controls.phone.touched) {
-                                <small class="text-red-500">En fazla {{ phoneMax }} karakter.</small>
+                                <small class="text-danger">En fazla {{ phoneMax }} karakter.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="clinicEmail" class="block text-sm font-medium text-muted-color mb-2">E-posta</label>
                             <input id="clinicEmail" pInputText class="w-full" formControlName="email" type="email" autocomplete="email" />
                             @if (apiFieldErrors().email) {
-                                <small class="text-red-500">{{ apiFieldErrors().email }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().email }}</small>
                             } @else if (form.controls.email.hasError('email') && form.controls.email.touched) {
-                                <small class="text-red-500">Geçerli bir e-posta girin.</small>
+                                <small class="text-danger">Geçerli bir e-posta girin.</small>
                             } @else if (form.controls.email.invalid && form.controls.email.touched) {
-                                <small class="text-red-500">En fazla {{ emailMax }} karakter.</small>
+                                <small class="text-danger">En fazla {{ emailMax }} karakter.</small>
                             }
                         </div>
                         <div class="col-span-12">
                             <label for="clinicAddress" class="block text-sm font-medium text-muted-color mb-2">Adres</label>
                             <textarea id="clinicAddress" pTextarea class="w-full" formControlName="address" rows="3"></textarea>
                             @if (apiFieldErrors().address) {
-                                <small class="text-red-500">{{ apiFieldErrors().address }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().address }}</small>
                             } @else if (form.controls.address.invalid && form.controls.address.touched) {
-                                <small class="text-red-500">En fazla {{ addressMax }} karakter.</small>
+                                <small class="text-danger">En fazla {{ addressMax }} karakter.</small>
                             }
                         </div>
                         <div class="col-span-12">
                             <label for="clinicDescription" class="block text-sm font-medium text-muted-color mb-2">Açıklama</label>
                             <textarea id="clinicDescription" pTextarea class="w-full" formControlName="description" rows="4"></textarea>
                             @if (apiFieldErrors().description) {
-                                <small class="text-red-500">{{ apiFieldErrors().description }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().description }}</small>
                             } @else if (form.controls.description.invalid && form.controls.description.touched) {
-                                <small class="text-red-500">En fazla {{ descriptionMax }} karakter.</small>
+                                <small class="text-danger">En fazla {{ descriptionMax }} karakter.</small>
                             }
                         </div>
                     </div>

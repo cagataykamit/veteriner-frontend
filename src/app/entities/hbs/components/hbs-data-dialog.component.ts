@@ -33,7 +33,7 @@ const KIND_TITLE: Readonly<Record<HbsRecordKind, string>> = {
             @if (loading()) {
                 <p class="m-0 text-muted-color">HBS verisi yükleniyor…</p>
             } @else if (loadError()) {
-                <p class="m-0 text-red-500" role="alert">{{ loadError() }}</p>
+                <p class="m-0 text-danger" role="alert">{{ loadError() }}</p>
             } @else if (data(); as d) {
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                     <app-hbs-status-badge [status]="$safeNavigationMigration(entry()?.status)" />
@@ -108,11 +108,11 @@ const KIND_TITLE: Readonly<Record<HbsRecordKind, string>> = {
                             <label for="hbs-reason" class="block text-sm font-medium text-muted-color mb-2">Gerekçe *</label>
                             <textarea id="hbs-reason" rows="2" class="w-full p-inputtext p-component" [formControl]="reason" data-testid="hbs-reason-input"></textarea>
                             @if (reason.invalid && (reason.dirty || reason.touched)) {
-                                <small class="text-red-500">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
+                                <small class="text-danger">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
                             }
                         }
                         @if (saveError()) {
-                            <p class="text-red-500 mt-3 mb-0" role="alert">{{ saveError() }}</p>
+                            <p class="text-danger mt-3 mb-0" role="alert">{{ saveError() }}</p>
                         }
                         <div class="flex flex-wrap justify-end gap-2 mt-3">
                             @if (entry()?.status !== 'NotEntered') {

@@ -30,12 +30,12 @@ import { SelectModule } from 'primeng/select';
                         <label for="qs-code" class="block text-sm font-medium text-muted-color mb-2">Kod *</label>
                         <input id="qs-code" pInputText class="w-full" formControlName="code" autocomplete="off" />
                         @if (apiFieldErrors().code) {
-                            <small class="text-red-500">{{ apiFieldErrors().code }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().code }}</small>
                         } @else if (form.controls.code.invalid && form.controls.code.touched) {
                             @if (form.controls.code.hasError('required')) {
-                                <small class="text-red-500">Kod zorunludur.</small>
+                                <small class="text-danger">Kod zorunludur.</small>
                             } @else if (form.controls.code.hasError('maxlength')) {
-                                <small class="text-red-500">Kod en fazla 32 karakter olabilir.</small>
+                                <small class="text-danger">Kod en fazla 32 karakter olabilir.</small>
                             }
                         }
                     </div>
@@ -43,12 +43,12 @@ import { SelectModule } from 'primeng/select';
                         <label for="qs-name" class="block text-sm font-medium text-muted-color mb-2">Ad *</label>
                         <input id="qs-name" pInputText class="w-full" formControlName="name" />
                         @if (apiFieldErrors().name) {
-                            <small class="text-red-500">{{ apiFieldErrors().name }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().name }}</small>
                         } @else if (form.controls.name.invalid && form.controls.name.touched) {
                             @if (form.controls.name.hasError('required')) {
-                                <small class="text-red-500">Ad zorunludur.</small>
+                                <small class="text-danger">Ad zorunludur.</small>
                             } @else if (form.controls.name.hasError('maxlength')) {
-                                <small class="text-red-500">Ad en fazla 128 karakter olabilir.</small>
+                                <small class="text-danger">Ad en fazla 128 karakter olabilir.</small>
                             }
                         }
                     </div>
@@ -56,25 +56,25 @@ import { SelectModule } from 'primeng/select';
                         <label for="qs-isActive" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
                         <p-select inputId="qs-isActive" formControlName="isActive" [options]="activeOptions" optionLabel="label" optionValue="value" class="w-full" appendTo="body" />
                         @if (apiFieldErrors().isActive) {
-                            <small class="text-red-500">{{ apiFieldErrors().isActive }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().isActive }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="qs-displayOrder" class="block text-sm font-medium text-muted-color mb-2">Sıra *</label>
                         <input id="qs-displayOrder" type="number" min="0" class="w-full p-inputtext p-component" formControlName="displayOrder" />
                         @if (apiFieldErrors().displayOrder) {
-                            <small class="text-red-500">{{ apiFieldErrors().displayOrder }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().displayOrder }}</small>
                         } @else if (form.controls.displayOrder.invalid && form.controls.displayOrder.touched) {
                             @if (form.controls.displayOrder.hasError('required')) {
-                                <small class="text-red-500">Sıra zorunludur.</small>
+                                <small class="text-danger">Sıra zorunludur.</small>
                             } @else if (form.controls.displayOrder.hasError('min')) {
-                                <small class="text-red-500">Sıra 0 veya daha büyük olmalıdır.</small>
+                                <small class="text-danger">Sıra 0 veya daha büyük olmalıdır.</small>
                             }
                         }
                     </div>
                 </div>
                 @if (submitError()) {
-                    <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
             <ng-template #footer>

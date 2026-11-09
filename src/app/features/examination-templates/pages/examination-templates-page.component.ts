@@ -68,7 +68,7 @@ const PAGE_SIZE = 50;
             </div>
 
             @if (listActionError()) {
-                <p class="text-red-500 text-sm mt-0 mb-3" role="alert">{{ listActionError() }}</p>
+                <p class="text-danger text-sm mt-0 mb-3" role="alert">{{ listActionError() }}</p>
             }
 
             @if (loading() && rows().length === 0) {

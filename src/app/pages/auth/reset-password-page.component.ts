@@ -79,10 +79,10 @@ const RESET_PASSWORD_FIELD_MAP: Record<string, ResetPasswordFieldKey> = {
                                         [required]="true"
                                     ></p-password>
                                     @if (apiFieldErrors().newPassword) {
-                                        <small class="text-red-500 block mt-2">{{ apiFieldErrors().newPassword }}</small>
+                                        <small class="text-danger block mt-2">{{ apiFieldErrors().newPassword }}</small>
                                     } @else if (newPasswordCtrl.invalid && (newPasswordCtrl.touched || formSubmitAttempted())) {
                                         @if (passwordPolicyErrorMessage(newPasswordCtrl.errors); as msg) {
-                                            <small class="text-red-500 block mt-2">{{ msg }}</small>
+                                            <small class="text-danger block mt-2">{{ msg }}</small>
                                         }
                                     }
                                 </div>
@@ -102,10 +102,10 @@ const RESET_PASSWORD_FIELD_MAP: Record<string, ResetPasswordFieldKey> = {
                                     ></p-password>
                                     @if (confirmPasswordCtrl.invalid && (confirmPasswordCtrl.touched || formSubmitAttempted())) {
                                         @if (confirmPasswordCtrl.errors?.['required']) {
-                                            <small class="text-red-500 block mt-2">Şifre tekrarı zorunlu</small>
+                                            <small class="text-danger block mt-2">Şifre tekrarı zorunlu</small>
                                         }
                                     } @else if (passwordMismatch() && (confirmPasswordCtrl.touched || formSubmitAttempted())) {
-                                        <small class="text-red-500 block mt-2">{{ passwordMismatchMessage }}</small>
+                                        <small class="text-danger block mt-2">{{ passwordMismatchMessage }}</small>
                                     }
                                 </div>
 

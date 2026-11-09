@@ -92,7 +92,7 @@ interface TextPreviewSection {
                     }
 
                     @if (inactiveLineNames().length > 0) {
-                        <p class="text-red-500 text-sm mt-0 mb-3" role="alert" data-testid="template-inactive-lines">Pasif ürün içerdiği için uygulanamaz: {{ inactiveLineNames().join(', ') }}. Satırı şablondan çıkarın veya ürünü etkinleştirin.</p>
+                        <p class="text-danger text-sm mt-0 mb-3" role="alert" data-testid="template-inactive-lines">Pasif ürün içerdiği için uygulanamaz: {{ inactiveLineNames().join(', ') }}. Satırı şablondan çıkarın veya ürünü etkinleştirin.</p>
                     }
                     @if (reapplyWarning()) {
                         <div class="rounded-border border border-amber-400 p-3 mb-3" role="status" data-testid="template-reapply-warning">
@@ -105,7 +105,7 @@ interface TextPreviewSection {
                     <app-search-input inputId="templateSearch" placeholder="Şablon adı…" ariaLabel="Şablon ara" [(value)]="searchInput" (searchRequested)="load()" />
                 </div>
                 @if (listError()) {
-                    <p class="text-red-500 text-sm m-0" role="alert">{{ listError() }}</p>
+                    <p class="text-danger text-sm m-0" role="alert">{{ listError() }}</p>
                 } @else if (loading() && templates().length === 0) {
                     <p class="text-muted-color text-sm m-0">Şablonlar yükleniyor…</p>
                 } @else if (templates().length === 0) {
@@ -133,7 +133,7 @@ interface TextPreviewSection {
             }
 
             @if (submitError()) {
-                <p class="text-red-500 mt-3 mb-0" role="alert" data-testid="template-apply-error">{{ submitError() }}</p>
+                <p class="text-danger mt-3 mb-0" role="alert" data-testid="template-apply-error">{{ submitError() }}</p>
             }
 
             <ng-template #footer>

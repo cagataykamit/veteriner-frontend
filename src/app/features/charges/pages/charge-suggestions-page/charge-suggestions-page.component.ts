@@ -109,7 +109,7 @@ interface ConvertedRow {
             }
 
             @if (actionError()) {
-                <p class="text-red-500 mt-0 mb-4" role="alert" data-testid="action-error">{{ actionError() }}</p>
+                <p class="text-danger mt-0 mb-4" role="alert" data-testid="action-error">{{ actionError() }}</p>
             }
 
             @if (error()) {

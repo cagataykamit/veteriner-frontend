@@ -208,7 +208,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                     ><i class="p-button-icon" [class]="flow.pendingCancelLoading() ? 'pi pi-spin pi-spinner' : 'pi pi-times'"></i>{{ pendingPlanChangeCancelLabel(s) }}</button>
                                 </div>
                                 @if (flow.pendingCancelError()) {
-                                    <p class="text-red-500 mt-3 mb-0 text-sm">{{ flow.pendingCancelError() }}</p>
+                                    <p class="text-danger mt-3 mb-0 text-sm">{{ flow.pendingCancelError() }}</p>
                                 }
                             }
                         </div>
@@ -277,7 +277,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                                     }
                                 </div>
                                 @if (flow.finalizeError()) {
-                                    <p class="text-red-500 mt-0 mb-3 text-sm" role="alert">{{ flow.finalizeError() }}</p>
+                                    <p class="text-danger mt-0 mb-3 text-sm" role="alert">{{ flow.finalizeError() }}</p>
                                 }
                                 <div class="flex flex-wrap gap-2">
                                     @if (session.checkoutUrl) {

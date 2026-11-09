@@ -64,7 +64,7 @@ type SelectOption = { label: string; value: string };
                         [loading]="clinicsLoading()"
                     />
                     @if (form.controls.clinicId.invalid && form.controls.clinicId.touched) {
-                        <small class="text-red-500">Klinik seçimi zorunludur.</small>
+                        <small class="text-danger">Klinik seçimi zorunludur.</small>
                     }
                 </div>
 
@@ -86,7 +86,7 @@ type SelectOption = { label: string; value: string };
                             [loading]="productsLoading()"
                         />
                         @if (form.controls.productId.invalid && form.controls.productId.touched) {
-                            <small class="text-red-500">Ürün seçimi zorunludur.</small>
+                            <small class="text-danger">Ürün seçimi zorunludur.</small>
                         }
                     </div>
                 }
@@ -104,11 +104,11 @@ type SelectOption = { label: string; value: string };
                     <input id="smcQty" type="number" step="any" class="w-full p-inputtext p-component" formControlName="quantity" />
                     @if (form.controls.quantity.invalid && form.controls.quantity.touched) {
                         @if (form.controls.quantity.errors?.['required']) {
-                            <small class="text-red-500">Miktar zorunludur.</small>
+                            <small class="text-danger">Miktar zorunludur.</small>
                         } @else if (form.controls.quantity.errors?.['min']) {
-                            <small class="text-red-500">Düzeltmede miktar 0 veya üzeri olmalıdır.</small>
+                            <small class="text-danger">Düzeltmede miktar 0 veya üzeri olmalıdır.</small>
                         } @else if (form.controls.quantity.errors?.['minExclusive']) {
-                            <small class="text-red-500">Bu hareket tipinde miktar 0’dan büyük olmalıdır.</small>
+                            <small class="text-danger">Bu hareket tipinde miktar 0’dan büyük olmalıdır.</small>
                         }
                     }
                 </div>
@@ -117,7 +117,7 @@ type SelectOption = { label: string; value: string };
                     <label for="smcUnitCost" class="block text-sm font-medium text-muted-color mb-2">Birim maliyet</label>
                     <input id="smcUnitCost" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="unitCost" />
                     @if (form.controls.unitCost.invalid && form.controls.unitCost.touched) {
-                        <small class="text-red-500">0 veya üzeri geçerli bir değer girin.</small>
+                        <small class="text-danger">0 veya üzeri geçerli bir değer girin.</small>
                     }
                 </div>
 
@@ -134,7 +134,7 @@ type SelectOption = { label: string; value: string };
                     <label for="smcOccurred" class="block text-sm font-medium text-muted-color mb-2">İşlem zamanı</label>
                     <app-date-input inputId="smcOccurred" type="datetime-local" formControlName="occurredAtUtcLocal" [min]="datetimeLocalInputMin" limit="past" />
                     @if (form.controls.occurredAtUtcLocal.hasError('dateYearInvalid') && form.controls.occurredAtUtcLocal.touched) {
-                        <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                        <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
                     }
                     <p class="text-xs text-muted-color mt-1 mb-0">Boş bırakılırsa sunucu varsayılanını kullanır.</p>
                 </div>
@@ -145,7 +145,7 @@ type SelectOption = { label: string; value: string };
                 </div>
 
                 @if (submitError()) {
-                    <p class="text-red-500 text-sm m-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger text-sm m-0" role="alert">{{ submitError() }}</p>
                 }
 
                 <div class="flex flex-wrap justify-end gap-2 mt-2">

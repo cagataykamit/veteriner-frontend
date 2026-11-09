@@ -106,7 +106,7 @@ const HISTORY_DAYS = 30;
             }
 
             @if (loadError(); as err) {
-                <p class="text-red-500 text-sm m-0" role="alert">{{ err }}</p>
+                <p class="text-danger text-sm m-0" role="alert">{{ err }}</p>
             } @else if (day(); as d) {
                 <div class="cash-count-expected" data-testid="cash-count-expected">
                     <span
@@ -258,7 +258,7 @@ const HISTORY_DAYS = 30;
                             }
                         </div>
                         @if (saveError(); as err) {
-                            <p class="text-red-500 text-sm mt-3 mb-0" role="alert">{{ err }}</p>
+                            <p class="text-danger text-sm mt-3 mb-0" role="alert">{{ err }}</p>
                         }
                         <div class="flex flex-wrap gap-2 mt-4">
                             <button pButton type="submit" [disabled]="!canSubmit()" data-testid="cash-count-save">
@@ -277,7 +277,7 @@ const HISTORY_DAYS = 30;
                         <input id="ccVoidReason" type="text" class="w-full p-inputtext p-component" [ngModel]="reason()" (ngModelChange)="reason.set($event)" [attr.maxlength]="reasonMax" />
                         <small class="text-muted-color">Gün yeniden sayılabilir hale gelir; kayıt silinmez. {{ reasonMin }}–{{ reasonMax }} karakter.</small>
                         @if (saveError(); as err) {
-                            <p class="text-red-500 text-sm mt-3 mb-0" role="alert">{{ err }}</p>
+                            <p class="text-danger text-sm mt-3 mb-0" role="alert">{{ err }}</p>
                         }
                         <div class="flex flex-wrap gap-2 mt-3">
                             <button pButton type="button" severity="danger" [disabled]="saving() || !reasonValid()" (click)="submitVoid()" data-testid="cash-count-void-confirm"><i class="p-button-icon pi pi-check"></i>Sayımı iptal et</button>

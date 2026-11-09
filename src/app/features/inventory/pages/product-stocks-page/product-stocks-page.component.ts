@@ -70,7 +70,7 @@ const PRODUCT_STOCK_CSV_HEADERS = ['Ürün', 'SKU', 'Kategori', 'Klinik', 'Kulla
         <div class="card">
             @if (exportError()) {
                 <div class="mb-4 border border-red-200 dark:border-red-800 rounded-border p-3">
-                    <p class="text-red-500 m-0 text-sm" role="alert">{{ exportError() }}</p>
+                    <p class="text-danger m-0 text-sm" role="alert">{{ exportError() }}</p>
                 </div>
             }
 

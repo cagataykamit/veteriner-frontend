@@ -72,7 +72,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; değişiklik kaydedilemez.</p>
                 }
                 @if (selectionError()) {
-                    <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
+                    <p class="text-danger mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
                 <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -81,40 +81,40 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
                             <app-client-search inputId="clientId" formControlName="clientId" />
                             @if (apiFieldErrors().clientId) {
-                                <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
                             } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                                <small class="text-red-500">Müşteri seçimi zorunludur.</small>
+                                <small class="text-danger">Müşteri seçimi zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                             <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                             @if (apiFieldErrors().petId) {
-                                <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().petId }}</small>
                             } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
-                                <small class="text-red-500">Hasta seçimi zorunludur.</small>
+                                <small class="text-danger">Hasta seçimi zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="prescribedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Reçete tarihi / saati *</label>
                             <app-date-input inputId="prescribedAtLocal" type="datetime-local" formControlName="prescribedAtLocal" [min]="prescriptionDateMinAllowed()" limit="past" />
                             @if (form.controls.prescribedAtLocal.hasError('dateYearInvalid') && form.controls.prescribedAtLocal.touched) {
-                                <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                                <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (form.controls.prescribedAtLocal.hasError('prescriptionDateTooFarPast') && form.controls.prescribedAtLocal.touched) {
-                                <small class="text-red-500 block">{{ prescriptionDateTooFarPastMessage }}</small>
+                                <small class="text-danger block">{{ prescriptionDateTooFarPastMessage }}</small>
                             } @else if (apiFieldErrors().prescribedAtLocal) {
-                                <small class="text-red-500 block">{{ apiFieldErrors().prescribedAtLocal }}</small>
+                                <small class="text-danger block">{{ apiFieldErrors().prescribedAtLocal }}</small>
                             } @else if (form.controls.prescribedAtLocal.hasError('required') && form.controls.prescribedAtLocal.touched) {
-                                <small class="text-red-500 block">Reçete tarihi zorunludur.</small>
+                                <small class="text-danger block">Reçete tarihi zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="followUpDate" class="block text-sm font-medium text-muted-color mb-2">Takip tarihi</label>
                             <app-date-input inputId="followUpDate" type="date" formControlName="followUpDate" [min]="dateInputMin" limit="planned" />
                             @if (form.controls.followUpDate.hasError('dateYearInvalid') && form.controls.followUpDate.touched) {
-                                <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                                <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (apiFieldErrors().followUpDate) {
-                                <small class="text-red-500">{{ apiFieldErrors().followUpDate }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().followUpDate }}</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
@@ -135,7 +135,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                 [disabled]="relationSelectsDisabled()"
                             />
                             @if (apiFieldErrors().examinationId) {
-                                <small class="text-red-500">{{ apiFieldErrors().examinationId }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().examinationId }}</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
@@ -156,25 +156,25 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                 [disabled]="relationSelectsDisabled()"
                             />
                             @if (apiFieldErrors().treatmentId) {
-                                <small class="text-red-500">{{ apiFieldErrors().treatmentId }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().treatmentId }}</small>
                             }
                         </div>
                         <div class="col-span-12">
                             <label for="title" class="block text-sm font-medium text-muted-color mb-2">Başlık *</label>
                             <input id="title" type="text" class="w-full p-inputtext p-component" formControlName="title" />
                             @if (apiFieldErrors().title) {
-                                <small class="text-red-500">{{ apiFieldErrors().title }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().title }}</small>
                             } @else if (form.controls.title.invalid && form.controls.title.touched) {
-                                <small class="text-red-500">Başlık zorunludur.</small>
+                                <small class="text-danger">Başlık zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12">
                             <label for="content" class="block text-sm font-medium text-muted-color mb-2">İçerik *</label>
                             <textarea id="content" rows="4" class="w-full p-inputtext p-component" formControlName="content"></textarea>
                             @if (apiFieldErrors().content) {
-                                <small class="text-red-500">{{ apiFieldErrors().content }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().content }}</small>
                             } @else if (form.controls.content.invalid && form.controls.content.touched) {
-                                <small class="text-red-500">İçerik zorunludur.</small>
+                                <small class="text-danger">İçerik zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12">
@@ -184,13 +184,13 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                             <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
                             @if (apiFieldErrors().notes) {
-                                <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().notes }}</small>
                             }
                         </div>
                     </div>
 
                     @if (submitError()) {
-                        <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                        <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">

@@ -43,7 +43,7 @@ const MAX_GRANT = 3;
                     <label for="caCount" class="text-sm font-medium text-muted-color">Ek hak</label>
                     <input id="caCount" pInputText type="number" [min]="minGrant" [max]="maxGrant" step="1" formControlName="additionalChanges" class="w-full" data-testid="ca-count" />
                     @if (form.controls.additionalChanges.invalid && form.controls.additionalChanges.touched) {
-                        <small class="text-red-500">{{ minGrant }} ile {{ maxGrant }} arasında olmalı.</small>
+                        <small class="text-danger">{{ minGrant }} ile {{ maxGrant }} arasında olmalı.</small>
                     }
                 </div>
                 <div>

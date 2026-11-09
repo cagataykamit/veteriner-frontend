@@ -58,12 +58,12 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
                         <p class="m-0 text-sm text-muted-color"><i class="pi pi-spin pi-spinner mr-2" aria-hidden="true"></i>Aranıyor…</p>
                     }
                     @case ('error') {
-                        <p class="m-0 text-red-500" role="alert">Arama yapılamadı. Bağlantınızı kontrol edip tekrar deneyin.</p>
+                        <p class="m-0 text-danger" role="alert">Arama yapılamadı. Bağlantınızı kontrol edip tekrar deneyin.</p>
                     }
                     @case ('ready') {
                         @if (result(); as r) {
                             @if (r.failedKinds.length) {
-                                <p class="m-0 mb-3 text-sm text-red-500" role="alert">{{ failedMessage(r) }}</p>
+                                <p class="m-0 mb-3 text-sm text-danger" role="alert">{{ failedMessage(r) }}</p>
                             }
                             @if (r.patients.length === 0 && r.owners.length === 0) {
                                 <p class="m-0 text-muted-color">"{{ searchedTerm() }}" için sonuç bulunamadı.</p>

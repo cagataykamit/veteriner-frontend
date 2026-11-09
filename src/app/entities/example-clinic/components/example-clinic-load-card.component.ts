@@ -60,7 +60,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         <button pButton type="button" [disabled]="loading()" (click)="load()" data-testid="example-clinic-load-button"><i class="p-button-icon" [class]="loading() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Örnek Veteriner Kliniğini yükle</button>
                     }
                     @if (error()) {
-                        <p class="text-sm mt-3 mb-0" [class.text-red-500]="!blocked()" [class.text-muted-color]="blocked()" role="alert" data-testid="example-clinic-error">{{ error() }}</p>
+                        <p class="text-sm mt-3 mb-0" [class.text-danger]="!blocked()" [class.text-muted-color]="blocked()" role="alert" data-testid="example-clinic-error">{{ error() }}</p>
                     }
                 }
             </div>
@@ -80,7 +80,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                         <li>Kendi eklediğiniz müşteri, hasta ve ürünler etkilenmez.</li>
                     </ul>
                     @if (clearError()) {
-                        <p class="text-red-500 mt-3 mb-0" role="alert" data-testid="example-clinic-clear-error">{{ clearError() }}</p>
+                        <p class="text-danger mt-3 mb-0" role="alert" data-testid="example-clinic-clear-error">{{ clearError() }}</p>
                     }
                 }
                 <ng-template #footer>

@@ -92,7 +92,7 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
             </div>
 
             @if (listActionError()) {
-                <p class="text-red-500 text-sm mt-0 mb-3" role="alert">{{ listActionError() }}</p>
+                <p class="text-danger text-sm mt-0 mb-3" role="alert">{{ listActionError() }}</p>
             }
 
             @if (loading() && rows().length === 0) {
@@ -188,9 +188,9 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
                     <label for="snippetShortcut" class="block text-sm font-medium text-muted-color">Kısayol *</label>
                     <input id="snippetShortcut" pInputText class="w-full" type="text" formControlName="shortcut" autocomplete="off" placeholder="#kusma" [maxlength]="shortcutMax + 1" />
                     @if (dialogForm.controls.shortcut.touched && dialogForm.controls.shortcut.hasError('required')) {
-                        <small class="text-red-500">Kısayol zorunludur.</small>
+                        <small class="text-danger">Kısayol zorunludur.</small>
                     } @else if (dialogForm.controls.shortcut.touched && dialogForm.controls.shortcut.hasError('shortcutFormat')) {
-                        <small class="text-red-500">2–30 karakter; yalnız harf, rakam ve tire (boşluk yok).</small>
+                        <small class="text-danger">2–30 karakter; yalnız harf, rakam ve tire (boşluk yok).</small>
                     } @else {
                         <small class="text-muted-color">Türkçe harfler sadeleşir: #İshal → #ishal.</small>
                     }
@@ -199,14 +199,14 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
                     <label for="snippetTitle" class="block text-sm font-medium text-muted-color">Başlık *</label>
                     <input id="snippetTitle" pInputText class="w-full" type="text" formControlName="title" autocomplete="off" placeholder="Kusma anamnezi" [maxlength]="titleMax" />
                     @if (dialogForm.controls.title.invalid && dialogForm.controls.title.touched) {
-                        <small class="text-red-500">Başlık zorunludur.</small>
+                        <small class="text-danger">Başlık zorunludur.</small>
                     }
                 </div>
                 <div class="flex flex-col gap-1">
                     <label for="snippetBody" class="block text-sm font-medium text-muted-color">Metin *</label>
                     <textarea id="snippetBody" rows="8" class="w-full p-inputtext p-component" formControlName="body" [attr.maxlength]="bodyMax"></textarea>
                     @if (dialogForm.controls.body.invalid && dialogForm.controls.body.touched) {
-                        <small class="text-red-500">Metin zorunludur.</small>
+                        <small class="text-danger">Metin zorunludur.</small>
                     } @else {
                         <small class="text-muted-color">Satır sonları korunur. {{ dialogForm.controls.body.value.length }} / {{ bodyMax }}</small>
                     }
