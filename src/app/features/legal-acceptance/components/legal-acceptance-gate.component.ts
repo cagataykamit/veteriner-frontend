@@ -10,7 +10,7 @@ import { LegalConsentCheckboxComponent } from '@/app/features/legal-acceptance/c
 import type { LegalDocumentVersionDto } from '@/app/entities/legal-document/models/legal-acceptance.model';
 import { LegalAcceptanceService } from '@/app/features/legal-acceptance/services/legal-acceptance.service';
 import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES, LEGAL_VERSION_OUTDATED_CODE } from '@/app/entities/legal-document/utils/legal-acceptance-error.utils';
-import { LEGAL_DOCUMENTS_BY_TYPE, isDraftLegalVersion } from '@/app/entities/legal-document/utils/legal-documents.utils';
+import { LEGAL_DOCUMENTS_BY_TYPE } from '@/app/entities/legal-document/utils/legal-documents.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 /**
@@ -40,7 +40,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                 @for (item of documents(); track item.documentType) {
                     <li>
                         <a [href]="item.path" target="_blank" rel="noopener" class="public-brand-link">{{ item.title }}</a>
-                        <span class="text-muted-color"> · Sürüm {{ item.version }}{{ item.draft ? ' (taslak)' : '' }}</span>
+                        <span class="text-muted-color"> · Sürüm {{ item.version }}</span>
                     </li>
                 }
             </ul>
@@ -71,7 +71,7 @@ export class LegalAcceptanceGateComponent implements OnInit {
         this.pending().map((d) => {
             const doc = LEGAL_DOCUMENTS_BY_TYPE[d.documentType];
 
-            return { documentType: d.documentType, title: doc.shortTitle, path: doc.path, version: d.version, draft: isDraftLegalVersion(d.version) };
+            return { documentType: d.documentType, title: doc.shortTitle, path: doc.path, version: d.version };
         })
     );
 

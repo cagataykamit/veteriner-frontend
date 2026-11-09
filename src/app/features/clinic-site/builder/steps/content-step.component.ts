@@ -159,7 +159,7 @@ const replaceAt = <T>(list: readonly T[], index: number, change: Partial<T>): T[
         <details class="fold">
             <summary>Galeri ({{ c.gallery.length }})<i class="pi pi-angle-down" aria-hidden="true"></i></summary>
             <div class="fold-body">
-                <p class="warn"><i class="pi pi-info-circle" aria-hidden="true"></i><span>Tanınabilir insan olmayan fotoğraflar seçin; hayvan sahibinin iznini alın, önce/sonra görseli kullanmayın. Bu not hukukçu görüşüne kadar taslaktır.</span></p>
+                <p class="warn"><i class="pi pi-info-circle" aria-hidden="true"></i><span>Tanınabilir insan olmayan fotoğraflar seçin; hayvan sahibinin iznini alın, önce/sonra görseli kullanmayın.</span></p>
                 @for (photo of c.gallery; track $index; let i = $index) {
                     <div class="item">
                         <app-w-image label="Fotoğraf değiştir" [reference]="photo.src" (referenceChange)="setGalleryImage(i, $event)" />
