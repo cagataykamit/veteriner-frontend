@@ -55,7 +55,7 @@ const PAGE_SIZE = 20;
             <ng-template #empty>
                 <div class="py-1">
                     @if (searchError()) {
-                        <span class="text-red-500" role="alert">{{ searchError() }}</span>
+                        <span class="text-danger" role="alert">{{ searchError() }}</span>
                     } @else {
                         <span>Hasta bulunamadı</span>
                         @if (canCreate()) {

@@ -123,9 +123,9 @@ function numberFromInput(event: Event): number | null {
                             <app-barcode-scan-button (scanned)="onScanned($event)" />
                         </div>
                         @if (searchError()) {
-                            <small class="text-red-500 block mt-1" role="alert">{{ searchError() }}</small>
+                            <small class="text-danger block mt-1" role="alert">{{ searchError() }}</small>
                         } @else if (cartNotice()) {
-                            <small class="text-red-500 block mt-1" role="alert">{{ cartNotice() }}</small>
+                            <small class="text-danger block mt-1" role="alert">{{ cartNotice() }}</small>
                         }
                         @if (results().length > 0) {
                             <ul id="sale-results" role="listbox" class="list-none m-0 mt-2 p-0 border border-surface rounded-border overflow-hidden" data-testid="sale-results">
@@ -176,7 +176,7 @@ function numberFromInput(event: Event): number | null {
                                         </div>
                                     </div>
                                     @if (v.error) {
-                                        <small class="text-red-500 block mt-2" role="alert">{{ v.error }}</small>
+                                        <small class="text-danger block mt-2" role="alert">{{ v.error }}</small>
                                     }
                                     @if (v.batch; as b) {
                                         <div class="mt-3" data-testid="sale-batch">
@@ -196,7 +196,7 @@ function numberFromInput(event: Event): number | null {
                                             }
                                             <small class="block mt-1 text-muted-color">{{ b.stockText }}</small>
                                             @if (b.hintText) {
-                                                <small class="block mt-1" [class.text-muted-color]="!b.warn" [class.text-red-500]="b.warn" role="status">{{ b.hintText }}</small>
+                                                <small class="block mt-1" [class.text-muted-color]="!b.warn" [class.text-danger]="b.warn" role="status">{{ b.hintText }}</small>
                                             }
                                         </div>
                                     } @else if (v.batchNote) {
@@ -233,7 +233,7 @@ function numberFromInput(event: Event): number | null {
                                     <label for="sale-partial" class="block text-xs font-medium text-muted-color mb-1">Alınan tutar</label>
                                     <input id="sale-partial" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" [value]="partialAmount()" (input)="partialAmount.set(numberFrom($event))" />
                                     @if (paymentErr()) {
-                                        <small class="text-red-500 block mt-1" role="alert">{{ paymentErr() }}</small>
+                                        <small class="text-danger block mt-1" role="alert">{{ paymentErr() }}</small>
                                     }
                                 </div>
                             }
@@ -256,7 +256,7 @@ function numberFromInput(event: Event): number | null {
                         </dl>
 
                         @if (submitError()) {
-                            <p class="text-red-500 mt-3 mb-1" role="alert" data-testid="sale-error">{{ submitError() }}</p>
+                            <p class="text-danger mt-3 mb-1" role="alert" data-testid="sale-error">{{ submitError() }}</p>
                             <small class="text-muted-color block">Aynı sepeti yeniden göndermek güvenlidir; satış iki kez kaydedilmez.</small>
                         }
                         <button pButton type="button" class="mt-4 w-full" [disabled]="!canSubmit() || submitting()" (click)="submit()" data-testid="sale-submit"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Satışı tamamla</button>

@@ -78,7 +78,7 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
                 <label for="kvkkFormText" class="block text-sm font-medium text-muted-color mb-2">{{ info().label }} *</label>
                 <textarea id="kvkkFormText" pTextarea class="w-full font-mono text-sm" rows="16" [formControl]="text" data-testid="kvkk-template-text"></textarea>
                 <div class="flex flex-wrap justify-between gap-2 mt-1 text-sm">
-                    <span class="text-red-500">
+                    <span class="text-danger">
                         @if (text.hasError('required') && text.touched) {
                             Metin boş olamaz.
                         } @else if (text.hasError('maxlength')) {
@@ -108,7 +108,7 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
                 </div>
 
                 @if (saveError()) {
-                    <p class="text-red-500 text-sm mt-4 mb-0" role="alert">{{ saveError() }}</p>
+                    <p class="text-danger text-sm mt-4 mb-0" role="alert">{{ saveError() }}</p>
                 }
                 <div class="mt-4 flex flex-wrap justify-end gap-2">
                     @if (stale()) {

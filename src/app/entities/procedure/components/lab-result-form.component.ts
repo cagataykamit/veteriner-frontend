@@ -44,7 +44,7 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; kayıt oluşturulamaz.</p>
             }
             @if (selectionError()) {
-                <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
+                <p class="text-danger mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
             @if (contextFromExamination()) {
@@ -56,29 +56,29 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                         <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
                         <app-client-search inputId="clientId" formControlName="clientId" />
                         @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-danger">Zorunlu alan.</small>
                         } @else if (apiFieldErrors().clientId) {
-                            <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                         <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                         @if (form.controls.petId.invalid && form.controls.petId.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-danger">Zorunlu alan.</small>
                         } @else if (apiFieldErrors().petId) {
-                            <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().petId }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="resultDateLocal" class="block text-sm font-medium text-muted-color mb-2">Sonuç tarihi / saati</label>
                         <app-date-input inputId="resultDateLocal" type="datetime-local" formControlName="resultDateLocal" [min]="labResultDateMinAllowed()" limit="past" />
                         @if (form.controls.resultDateLocal.hasError('dateYearInvalid') && form.controls.resultDateLocal.touched) {
-                            <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                            <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
                         } @else if (form.controls.resultDateLocal.hasError('labResultDateTooFarPast') && form.controls.resultDateLocal.touched) {
-                            <small class="text-red-500 block">{{ labResultDateTooFarPastMessage }}</small>
+                            <small class="text-danger block">{{ labResultDateTooFarPastMessage }}</small>
                         } @else if (apiFieldErrors().resultDateLocal) {
-                            <small class="text-red-500 block">{{ apiFieldErrors().resultDateLocal }}</small>
+                            <small class="text-danger block">{{ apiFieldErrors().resultDateLocal }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -98,47 +98,47 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                             [loading]="loadingExaminations()"
                         />
                         @if (apiFieldErrors().examinationId) {
-                            <small class="text-red-500">{{ apiFieldErrors().examinationId }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().examinationId }}</small>
                         }
                     </div>
                     <div class="col-span-12">
                         <label for="testName" class="block text-sm font-medium text-muted-color mb-2">Test adı *</label>
                         <input id="testName" type="text" class="w-full p-inputtext p-component" formControlName="testName" />
                         @if (form.controls.testName.invalid && form.controls.testName.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-danger">Zorunlu alan.</small>
                         } @else if (apiFieldErrors().testName) {
-                            <small class="text-red-500">{{ apiFieldErrors().testName }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().testName }}</small>
                         }
                     </div>
                     <div class="col-span-12">
                         <label for="resultText" class="block text-sm font-medium text-muted-color mb-2">Sonuç metni</label>
                         <textarea id="resultText" rows="4" class="w-full p-inputtext p-component" formControlName="resultText"></textarea>
                         @if (form.hasError('labResultResultIncomplete') && (form.controls.resultText.touched || form.controls.resultDateLocal.touched)) {
-                            <small class="text-red-500">{{ resultIncompleteMessage }}</small>
+                            <small class="text-danger">{{ resultIncompleteMessage }}</small>
                         } @else if (apiFieldErrors().resultText) {
-                            <small class="text-red-500">{{ apiFieldErrors().resultText }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().resultText }}</small>
                         }
                     </div>
                     <div class="col-span-12">
                         <label for="interpretation" class="block text-sm font-medium text-muted-color mb-2">Yorum</label>
                         <textarea id="interpretation" rows="3" class="w-full p-inputtext p-component" formControlName="interpretation"></textarea>
                         @if (form.hasError('labResultInterpretationWithoutResult') && form.controls.interpretation.touched) {
-                            <small class="text-red-500">{{ interpretationWithoutResultMessage }}</small>
+                            <small class="text-danger">{{ interpretationWithoutResultMessage }}</small>
                         } @else if (apiFieldErrors().interpretation) {
-                            <small class="text-red-500">{{ apiFieldErrors().interpretation }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().interpretation }}</small>
                         }
                     </div>
                     <div class="col-span-12">
                         <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
                         @if (apiFieldErrors().notes) {
-                            <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().notes }}</small>
                         }
                     </div>
                 </div>
 
                 @if (submitError()) {
-                    <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">

@@ -82,7 +82,7 @@ type ClosingStatus = Extract<DataRequestStaffStatus, 'Completed' | 'Rejected'>;
             </div>
 
             @if (actionError(); as message) {
-                <p class="text-red-500 text-sm mt-0 mb-3" role="alert">{{ message }}</p>
+                <p class="text-danger text-sm mt-0 mb-3" role="alert">{{ message }}</p>
             }
 
             @if (loading()) {
@@ -171,11 +171,11 @@ type ClosingStatus = Extract<DataRequestStaffStatus, 'Completed' | 'Rejected'>;
                             Bu not hasta sahibine e-postayla gönderilir ve portalda talebin yanında görünür. Hayvan sağlığı bilgisi yazmayın; yapılan işlemi ya da ret gerekçesini kısaca açıklayın. ({{ note().length }}/{{ noteMax }})
                         </small>
                         @if (dialogError(); as message) {
-                            <p class="text-red-500 m-0" role="alert">{{ message }}</p>
+                            <p class="text-danger m-0" role="alert">{{ message }}</p>
                         }
                     </div>
                 } @else if (dialogError(); as message) {
-                    <p class="text-red-500 m-0" role="alert">{{ message }}</p>
+                    <p class="text-danger m-0" role="alert">{{ message }}</p>
                 }
             }
             <ng-template #footer>

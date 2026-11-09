@@ -39,7 +39,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 <app-error-state [detail]="whErr" (retry)="retryWorkingHoursLoad()" />
             } @else {
                 @if (whFormError()) {
-                    <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ whFormError() }}</p>
+                    <p class="text-danger text-sm mb-3 m-0" role="alert">{{ whFormError() }}</p>
                 }
                 <div formArrayName="days" class="flex flex-col gap-4">
                     @for (row of whDays.controls; track trackWhRow($index, row); let idx = $index) {

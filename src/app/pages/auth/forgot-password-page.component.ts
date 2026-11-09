@@ -63,12 +63,12 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
                                     <label for="forgotEmail" class="public-auth-label">E-posta</label>
                                     <input pInputText id="forgotEmail" type="email" name="email" #emailCtrl="ngModel" placeholder="E-posta adresiniz" class="public-auth-control" [(ngModel)]="email" required email />
                                     @if (apiFieldErrors().email) {
-                                        <small class="text-red-500 block mt-2">{{ apiFieldErrors().email }}</small>
+                                        <small class="text-danger block mt-2">{{ apiFieldErrors().email }}</small>
                                     } @else if (emailCtrl.invalid && (emailCtrl.touched || formSubmitAttempted())) {
                                         @if (emailCtrl.errors?.['required']) {
-                                            <small class="text-red-500 block mt-2">E-posta zorunlu</small>
+                                            <small class="text-danger block mt-2">E-posta zorunlu</small>
                                         } @else if (emailCtrl.errors?.['email']) {
-                                            <small class="text-red-500 block mt-2">Geçerli bir e-posta girin</small>
+                                            <small class="text-danger block mt-2">Geçerli bir e-posta girin</small>
                                         }
                                     }
                                 </div>

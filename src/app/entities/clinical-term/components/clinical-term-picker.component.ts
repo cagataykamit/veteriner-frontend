@@ -57,7 +57,7 @@ const PLACEHOLDERS: Record<ClinicalTermKind, string> = {
                     <ng-template #empty>
                         <div class="py-1">
                             @if (searchError()) {
-                                <span class="text-red-500" role="alert">{{ searchError() }}</span>
+                                <span class="text-danger" role="alert">{{ searchError() }}</span>
                             } @else {
                                 <span>Sözlükte bulunamadı.</span>
                                 @if (canAdd()) {
@@ -89,7 +89,7 @@ const PLACEHOLDERS: Record<ClinicalTermKind, string> = {
                     </div>
                 }
                 @if (actionError()) {
-                    <small class="text-red-500 block" role="alert">{{ actionError() }}</small>
+                    <small class="text-danger block" role="alert">{{ actionError() }}</small>
                 }
             </div>
         }

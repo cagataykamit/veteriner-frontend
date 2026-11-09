@@ -72,7 +72,7 @@ let openInstance: DateInputComponent | null = null;
             (onClose)="onPanelClose()"
         />
         @if (errorMessage(); as message) {
-            <small class="text-red-500 block" role="alert">{{ message }}</small>
+            <small class="text-danger block" role="alert">{{ message }}</small>
         }
     `
 })

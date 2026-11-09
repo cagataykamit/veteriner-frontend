@@ -168,7 +168,7 @@ const CLINIC_DETAIL_ROUTE = '/panel/settings/clinics';
                             <label for="onlineMaxDays" class="text-sm font-medium text-muted-color">En geç talep (gün sonrası)</label>
                             <input id="onlineMaxDays" pInputText type="number" min="1" max="180" step="1" formControlName="maxAdvanceDays" class="w-full" />
                             @if (settingsForm.controls.maxAdvanceDays.invalid && settingsForm.controls.maxAdvanceDays.touched) {
-                                <small class="text-red-500">1–180 gün arasında olmalıdır.</small>
+                                <small class="text-danger">1–180 gün arasında olmalıdır.</small>
                             }
                         </div>
                         <small class="text-muted-color">Sahibe yalnız müsait saatler gösterilir; bekleyen talepler saati doldurmaz, çakışma onayda denetlenir.</small>

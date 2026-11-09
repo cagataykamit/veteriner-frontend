@@ -52,14 +52,14 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
                         <label for="vr-fullName" class="block text-sm font-medium text-muted-color mb-2">Sahip adı soyadı *</label>
                         <input id="vr-fullName" pInputText class="w-full" [formControl]="clientForm.controls.fullName" autocomplete="off" />
                         @if (clientMessage('fullName'); as msg) {
-                            <small class="text-red-500">{{ msg }}</small>
+                            <small class="text-danger">{{ msg }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="vr-phone" class="block text-sm font-medium text-muted-color mb-2">Telefon *</label>
                         <input id="vr-phone" pInputText class="w-full" inputmode="tel" autocomplete="off" [formControl]="clientForm.controls.phone" />
                         @if (clientMessage('phone'); as msg) {
-                            <small class="text-red-500">{{ msg }}</small>
+                            <small class="text-danger">{{ msg }}</small>
                         }
                     </div>
                 }
@@ -67,7 +67,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
                     <label for="vr-petName" class="block text-sm font-medium text-muted-color mb-2">Hasta adı *</label>
                     <input id="vr-petName" pInputText class="w-full" autocomplete="off" [formControl]="petForm.controls.name" />
                     @if (petForm.controls.name.invalid && petForm.controls.name.touched) {
-                        <small class="text-red-500">Bu alan zorunludur.</small>
+                        <small class="text-danger">Bu alan zorunludur.</small>
                     }
                 </div>
                 <div class="col-span-12 md:col-span-6">
@@ -87,19 +87,19 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
                         appendTo="body"
                     />
                     @if (petForm.controls.speciesId.invalid && petForm.controls.speciesId.touched) {
-                        <small class="text-red-500">Tür seçimi zorunludur.</small>
+                        <small class="text-danger">Tür seçimi zorunludur.</small>
                     }
                 </div>
                 <div class="col-span-12 md:col-span-6">
                     <label for="vr-microchip" class="block text-sm font-medium text-muted-color mb-2">Mikroçip (opsiyonel)</label>
                     <input id="vr-microchip" pInputText class="w-full" autocomplete="off" [formControl]="petForm.controls.microchipNumber" />
                     @if (petForm.controls.microchipNumber.invalid) {
-                        <small class="text-red-500">En fazla 50 karakter olabilir.</small>
+                        <small class="text-danger">En fazla 50 karakter olabilir.</small>
                     }
                 </div>
             </div>
             @if (stepError()) {
-                <p class="text-red-500 mt-3 mb-0" role="alert">{{ stepError() }}</p>
+                <p class="text-danger mt-3 mb-0" role="alert">{{ stepError() }}</p>
             }
             @if (trialLimitError(); as message) {
                 <div class="mt-3"><app-trial-limit-notice [message]="message" /></div>

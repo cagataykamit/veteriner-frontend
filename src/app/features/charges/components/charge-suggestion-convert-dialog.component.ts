@@ -41,21 +41,21 @@ export interface ChargeSuggestionOverrides {
                         <label for="csc-description" class="block text-sm font-medium text-muted-color mb-2">Açıklama *</label>
                         <input id="csc-description" type="text" class="w-full p-inputtext p-component" formControlName="description" [attr.maxlength]="descriptionMaxLength" />
                         @if (form.controls.description.invalid && form.controls.description.touched) {
-                            <small class="text-red-500">Açıklama zorunludur (en fazla {{ descriptionMaxLength }} karakter).</small>
+                            <small class="text-danger">Açıklama zorunludur (en fazla {{ descriptionMaxLength }} karakter).</small>
                         }
                     </div>
                     <div class="col-span-12 sm:col-span-4">
                         <label for="csc-quantity" class="block text-sm font-medium text-muted-color mb-2">Miktar *</label>
                         <input id="csc-quantity" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="quantity" />
                         @if (form.controls.quantity.invalid && form.controls.quantity.touched) {
-                            <small class="text-red-500">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
+                            <small class="text-danger">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
                         }
                     </div>
                     <div class="col-span-12 sm:col-span-4">
                         <label for="csc-unit-price" class="block text-sm font-medium text-muted-color mb-2">Birim fiyat (TRY) *</label>
                         <input id="csc-unit-price" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="unitPrice" />
                         @if (form.controls.unitPrice.invalid && form.controls.unitPrice.touched) {
-                            <small class="text-red-500">0'dan büyük, en fazla {{ unitPriceDecimals }} ondalıklı ve {{ unitPriceMax }} üstünde olmayan bir fiyat girin.</small>
+                            <small class="text-danger">0'dan büyük, en fazla {{ unitPriceDecimals }} ondalıklı ve {{ unitPriceMax }} üstünde olmayan bir fiyat girin.</small>
                         }
                     </div>
                     <div class="col-span-12 sm:col-span-4">
@@ -64,7 +64,7 @@ export interface ChargeSuggestionOverrides {
                     </div>
                 </div>
                 @if (submitError()) {
-                    <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
             <ng-template #footer>

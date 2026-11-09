@@ -146,7 +146,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                 <section class="card mb-0" aria-labelledby="lab-files-title" data-testid="lab-files">
                     <h5 id="lab-files-title" class="mt-0 mb-3">Dosyalar</h5>
                     @if (filesError()) {
-                        <p class="text-red-500 text-sm m-0" role="alert">{{ filesError() }}</p>
+                        <p class="text-danger text-sm m-0" role="alert">{{ filesError() }}</p>
                     } @else {
                         <app-stored-file-gallery
                             [ownerPath]="filesOwner()"

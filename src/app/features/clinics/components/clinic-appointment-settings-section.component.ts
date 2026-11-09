@@ -38,14 +38,14 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 <app-error-state [detail]="apErr" (retry)="retryAppointmentSettingsLoad()" />
             } @else {
                 @if (apSettingsFormError()) {
-                    <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ apSettingsFormError() }}</p>
+                    <p class="text-danger text-sm mb-3 m-0" role="alert">{{ apSettingsFormError() }}</p>
                 }
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-4">
                         <label class="block text-sm font-medium text-muted-color mb-2" for="defaultAppointmentDurationMinutes"> Varsayılan randevu süresi (dakika) </label>
                         <input id="defaultAppointmentDurationMinutes" type="number" class="w-full p-inputtext p-component" formControlName="defaultAppointmentDurationMinutes" min="5" max="240" step="1" />
                         @if (apSettingsForm.controls.defaultAppointmentDurationMinutes.invalid && apSettingsForm.controls.defaultAppointmentDurationMinutes.touched) {
-                            <small class="text-red-500">Varsayılan randevu süresi 5 ile 240 dakika arasında olmalıdır.</small>
+                            <small class="text-danger">Varsayılan randevu süresi 5 ile 240 dakika arasında olmalıdır.</small>
                         }
                     </div>
 
@@ -53,7 +53,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <label class="block text-sm font-medium text-muted-color mb-2" for="slotIntervalMinutes">Randevu başlangıç aralığı (dakika)</label>
                         <input id="slotIntervalMinutes" type="number" class="w-full p-inputtext p-component" formControlName="slotIntervalMinutes" min="5" max="120" step="1" />
                         @if (apSettingsForm.controls.slotIntervalMinutes.invalid && apSettingsForm.controls.slotIntervalMinutes.touched) {
-                            <small class="text-red-500">Randevu başlangıç aralığı 5 ile 120 dakika arasında olmalıdır.</small>
+                            <small class="text-danger">Randevu başlangıç aralığı 5 ile 120 dakika arasında olmalıdır.</small>
                         } @else {
                             <small class="text-muted-color">Randevuların kaç dakikada bir başlatılabileceğini belirler.</small>
                             <small class="block text-muted-color mt-1">Örneğin 15 dakika seçilirse randevular 09:00, 09:15, 09:30 gibi saatlerde başlatılır.</small>

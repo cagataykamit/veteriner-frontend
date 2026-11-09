@@ -56,7 +56,7 @@ export function breakdownRows<T>(
             } @else if (loading()) {
                 <p class="m-0 text-sm text-muted-color">Kırılımlar yükleniyor…</p>
             } @else if (error(); as err) {
-                <p class="m-0 text-sm text-red-500" role="alert">{{ err }}</p>
+                <p class="m-0 text-sm text-danger" role="alert">{{ err }}</p>
             } @else if (data(); as d) {
                 @if (d.current.activity; as a) {
                     <p class="mt-0 mb-4 text-sm" data-testid="perf-activity">

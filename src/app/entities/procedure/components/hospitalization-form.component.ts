@@ -58,7 +58,7 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; kayıt oluşturulamaz.</p>
             }
             @if (selectionError()) {
-                <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
+                <p class="text-danger mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
             @if (contextFromExamination()) {
@@ -73,42 +73,42 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                         <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
                         <app-client-search inputId="clientId" formControlName="clientId" />
                         @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-danger">Zorunlu alan.</small>
                         } @else if (apiFieldErrors().clientId) {
-                            <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                         <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                         @if (form.controls.petId.invalid && form.controls.petId.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-danger">Zorunlu alan.</small>
                         } @else if (apiFieldErrors().petId) {
-                            <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().petId }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="admittedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Yatış tarihi / saati *</label>
                         <app-date-input inputId="admittedAtLocal" type="datetime-local" formControlName="admittedAtLocal" [min]="hospitalizationDateMin" limit="past" />
                         @if (form.controls.admittedAtLocal.hasError('dateYearInvalid') && form.controls.admittedAtLocal.touched) {
-                            <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                            <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
                         } @else if (form.controls.admittedAtLocal.hasError('hospitalizationDateTooFarPast') && form.controls.admittedAtLocal.touched) {
-                            <small class="text-red-500 block">{{ hospitalizationDateTooFarPastMessage }}</small>
+                            <small class="text-danger block">{{ hospitalizationDateTooFarPastMessage }}</small>
                         } @else if (apiFieldErrors().admittedAtLocal) {
-                            <small class="text-red-500 block">{{ apiFieldErrors().admittedAtLocal }}</small>
+                            <small class="text-danger block">{{ apiFieldErrors().admittedAtLocal }}</small>
                         } @else if (form.controls.admittedAtLocal.hasError('required') && form.controls.admittedAtLocal.touched) {
-                            <small class="text-red-500 block">Zorunlu alan.</small>
+                            <small class="text-danger block">Zorunlu alan.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="plannedDischargeAtLocal" class="block text-sm font-medium text-muted-color mb-2">Planlı taburcu</label>
                         <app-date-input inputId="plannedDischargeAtLocal" type="datetime-local" formControlName="plannedDischargeAtLocal" [min]="plannedDischargeMin()" limit="planned" />
                         @if (form.controls.plannedDischargeAtLocal.hasError('dateYearInvalid') && form.controls.plannedDischargeAtLocal.touched) {
-                            <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                            <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
                         } @else if (form.hasError(plannedBeforeAdmissionKey) && !form.controls.plannedDischargeAtLocal.hasError('dateOutOfRange') && form.controls.plannedDischargeAtLocal.touched) {
-                            <small class="text-red-500 block">{{ plannedBeforeAdmissionMessage() }}</small>
+                            <small class="text-danger block">{{ plannedBeforeAdmissionMessage() }}</small>
                         } @else if (apiFieldErrors().plannedDischargeAtLocal) {
-                            <small class="text-red-500">{{ apiFieldErrors().plannedDischargeAtLocal }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().plannedDischargeAtLocal }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -129,7 +129,7 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                             [loading]="loadingExaminations()"
                         />
                         @if (apiFieldErrors().examinationId) {
-                            <small class="text-red-500">{{ apiFieldErrors().examinationId }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().examinationId }}</small>
                         } @else {
                             <small class="text-muted-color">Kesinleşmiş muayeneye yatış bağlanamaz; bu muayeneler pasif listelenir ({{ finalizedHint }}).</small>
                         }
@@ -148,7 +148,7 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                                 class="w-full"
                             />
                             @if (apiFieldErrors().visitId) {
-                                <small class="text-red-500">{{ apiFieldErrors().visitId }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().visitId }}</small>
                             } @else {
                                 <small class="text-muted-color">Boş bırakılırsa bağlı muayenenin gelişi (varsa) kullanılır.</small>
                             }
@@ -158,7 +158,7 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                         <label for="wardId" class="block text-sm font-medium text-muted-color mb-2">Bölüm</label>
                         <p-select inputId="wardId" formControlName="wardId" [options]="wardOptions()" optionLabel="label" optionValue="value" class="w-full" [loading]="loadingWards()" />
                         @if (wardsError()) {
-                            <small class="text-red-500 block">{{ wardsError() }}</small>
+                            <small class="text-danger block">{{ wardsError() }}</small>
                         } @else if (!loadingWards() && wardOptions().length === 1) {
                             <small class="text-muted-color">Bu klinikte tanımlı bölüm yok; Ayarlar → Tanımlar → Yatış konumları.</small>
                         }
@@ -167,9 +167,9 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                         <label for="roomId" class="block text-sm font-medium text-muted-color mb-2">Oda / kafes</label>
                         <p-select inputId="roomId" formControlName="roomId" [options]="roomOptions()" optionLabel="label" optionValue="value" [placeholder]="form.controls.wardId.value ? 'Oda seçin' : 'Önce bölüm seçin'" class="w-full" />
                         @if (apiFieldErrors().roomId) {
-                            <small class="text-red-500">{{ apiFieldErrors().roomId }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().roomId }}</small>
                         } @else if (form.hasError(roomRequiredKey) && form.controls.roomId.touched) {
-                            <small class="text-red-500">Bölüm seçildiyse oda da seçilmelidir.</small>
+                            <small class="text-danger">Bölüm seçildiyse oda da seçilmelidir.</small>
                         } @else if (form.controls.wardId.value && roomOptions().length === 0) {
                             <small class="text-muted-color">Bu bölümde aktif oda yok.</small>
                         }
@@ -178,22 +178,22 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                         <label for="reason" class="block text-sm font-medium text-muted-color mb-2">Yatış nedeni *</label>
                         <textarea id="reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
                         @if (form.controls.reason.invalid && form.controls.reason.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-danger">Zorunlu alan.</small>
                         } @else if (apiFieldErrors().reason) {
-                            <small class="text-red-500">{{ apiFieldErrors().reason }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().reason }}</small>
                         }
                     </div>
                     <div class="col-span-12">
                         <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
                         @if (apiFieldErrors().notes) {
-                            <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().notes }}</small>
                         }
                     </div>
                 </div>
 
                 @if (submitError()) {
-                    <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">

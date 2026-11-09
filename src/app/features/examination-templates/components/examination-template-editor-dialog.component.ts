@@ -72,7 +72,7 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
                     <label for="tplName" class="block text-sm font-medium text-muted-color">Ad *</label>
                     <input id="tplName" pInputText class="w-full" type="text" formControlName="name" autocomplete="off" [maxlength]="nameMax" />
                     @if (form.controls.name.invalid && form.controls.name.touched) {
-                        <small class="text-red-500">Ad zorunludur.</small>
+                        <small class="text-danger">Ad zorunludur.</small>
                     }
                 </div>
                 <div class="flex flex-col gap-1">
@@ -100,7 +100,7 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
                     @if (!canPickProduct) {
                         <p class="text-sm text-muted-color m-0">Ürün listesini görme yetkiniz olmadığı için satır eklenemez.</p>
                     } @else if (productsError()) {
-                        <p class="text-sm text-red-500 m-0">{{ productsError() }}</p>
+                        <p class="text-sm text-danger m-0">{{ productsError() }}</p>
                     }
                     @for (g of lines.controls; track g; let i = $index) {
                         <div
@@ -137,7 +137,7 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
                                 </label>
                                 <input [id]="'tpl-qty-' + i" type="number" step="any" min="0" class="w-full p-inputtext p-component" [formControl]="g.controls.quantity" />
                                 @if (g.controls.quantity.invalid && g.controls.quantity.touched) {
-                                    <small class="text-red-500">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı, en çok {{ quantityMax }}.</small>
+                                    <small class="text-danger">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı, en çok {{ quantityMax }}.</small>
                                 }
                             </div>
                             <div class="col-span-4 md:col-span-2 flex md:pt-5 justify-end">
@@ -149,7 +149,7 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
                         <small class="text-muted-color">En fazla {{ linesMax }} satır eklenebilir.</small>
                     }
                     @if (form.hasError('duplicateProduct')) {
-                        <small class="text-red-500 block" role="alert">Aynı ürün bir kez yer alır; miktarı artırın.</small>
+                        <small class="text-danger block" role="alert">Aynı ürün bir kez yer alır; miktarı artırın.</small>
                     }
                 </div>
                 @if (lines.length > 0) {
@@ -157,14 +157,14 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
                         <label for="tplPackagePrice" class="block text-sm font-medium text-muted-color">Paket fiyatı (TL)</label>
                         <input id="tplPackagePrice" type="number" step="0.01" min="0" class="w-full md:w-60 p-inputtext p-component" [formControl]="form.controls.packagePrice" placeholder="Boş: kalem kalem" />
                         @if (form.controls.packagePrice.invalid) {
-                            <small class="text-red-500">0'dan büyük, en fazla {{ priceDecimals }} ondalıklı, en çok {{ priceMax }}.</small>
+                            <small class="text-danger">0'dan büyük, en fazla {{ priceDecimals }} ondalıklı, en çok {{ priceMax }}.</small>
                         } @else {
                             <small class="text-muted-color">Doluysa paket uygulanınca tek ücret bekleyen kalem bu fiyatla eklenir; satırlar pakete dahildir (stoklu ürün stoktan düşer, ayrıca ücretlenmez). Boşsa her fiyatlı satır ayrı ücretlenir.</small>
                         }
                     </div>
                 }
                 @if (form.hasError('contentRequired') && form.touched) {
-                    <small class="text-red-500" role="alert">Şikâyet, bulgu, plan veya en az bir satır girin.</small>
+                    <small class="text-danger" role="alert">Şikâyet, bulgu, plan veya en az bir satır girin.</small>
                 }
 
                 <div class="flex flex-wrap justify-end gap-2 pt-2">

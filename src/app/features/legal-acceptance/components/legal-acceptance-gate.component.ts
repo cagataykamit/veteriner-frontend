@@ -46,7 +46,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
             </ul>
             <app-legal-consent-checkbox inputId="legalGateConsent" [documents]="documentTypes()" [disabled]="submitting()" [(checked)]="consent" />
             @if (error(); as e) {
-                <p class="legal-acceptance-gate-error text-red-500 text-sm mt-3 mb-0" role="alert">{{ e }}</p>
+                <p class="legal-acceptance-gate-error text-danger text-sm mt-3 mb-0" role="alert">{{ e }}</p>
             }
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" [text]="true" [disabled]="submitting()" (click)="logout()"><i class="p-button-icon pi pi-sign-out"></i>Çıkış yap</button>

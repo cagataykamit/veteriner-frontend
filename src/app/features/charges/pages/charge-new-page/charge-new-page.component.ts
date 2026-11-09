@@ -39,7 +39,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; kayıt oluşturulamaz.</p>
             }
             @if (loadError()) {
-                <p class="text-red-500 mt-0 mb-4" role="alert">{{ loadError() }}</p>
+                <p class="text-danger mt-0 mb-4" role="alert">{{ loadError() }}</p>
             }
             <form [formGroup]="form" (ngSubmit)="onSubmit(canCollectPayment)">
                 <div class="grid grid-cols-12 gap-4">
@@ -47,7 +47,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <label for="chargeClient" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
                         <app-client-search inputId="chargeClient" formControlName="clientId" />
                         @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-red-500">Listeden bir müşteri seçin.</small>
+                            <small class="text-danger">Listeden bir müşteri seçin.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -92,35 +92,35 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <label for="chargeDescription" class="block text-sm font-medium text-muted-color mb-2">Açıklama *</label>
                         <input id="chargeDescription" type="text" class="w-full p-inputtext p-component" formControlName="description" [attr.maxlength]="descriptionMaxLength" placeholder="Örn. Genel muayene, mama satışı" />
                         @if (form.controls.description.invalid && form.controls.description.touched) {
-                            <small class="text-red-500">Açıklama zorunludur (en fazla {{ descriptionMaxLength }} karakter).</small>
+                            <small class="text-danger">Açıklama zorunludur (en fazla {{ descriptionMaxLength }} karakter).</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-4">
                         <label for="chargeQuantity" class="block text-sm font-medium text-muted-color mb-2">Miktar *</label>
                         <input id="chargeQuantity" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="quantity" />
                         @if (form.controls.quantity.invalid && form.controls.quantity.touched) {
-                            <small class="text-red-500">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
+                            <small class="text-danger">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-4">
                         <label for="chargeUnitPrice" class="block text-sm font-medium text-muted-color mb-2">Birim fiyat (TRY) *</label>
                         <input id="chargeUnitPrice" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="unitPrice" />
                         @if (form.controls.unitPrice.invalid && form.controls.unitPrice.touched) {
-                            <small class="text-red-500">0'dan büyük, en fazla {{ unitPriceDecimals }} ondalıklı ve {{ unitPriceMax }} üstünde olmayan bir fiyat girin.</small>
+                            <small class="text-danger">0'dan büyük, en fazla {{ unitPriceDecimals }} ondalıklı ve {{ unitPriceMax }} üstünde olmayan bir fiyat girin.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-4">
                         <span class="block text-sm font-medium text-muted-color mb-2">Tutar</span>
                         <div class="p-inputtext p-component w-full font-semibold" aria-live="polite">{{ amountDisplay() }}</div>
                         @if (amountRoundsToZero()) {
-                            <small class="text-red-500">Tutar sıfıra yuvarlanıyor; miktar veya birim fiyatı artırın.</small>
+                            <small class="text-danger">Tutar sıfıra yuvarlanıyor; miktar veya birim fiyatı artırın.</small>
                         }
                     </div>
                     <app-charge-tax-fields [lineKind]="form.controls.lineKind" [vatRate]="form.controls.vatRate" idPrefix="charge" />
                 </div>
 
                 @if (submitError()) {
-                    <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">

@@ -47,7 +47,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">Bu kurum salt okunur moddadır; kurum adı güncellenemez.</p>
                     }
                     @if (formError()) {
-                        <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ formError() }}</p>
+                        <p class="text-danger text-sm mb-3 m-0" role="alert">{{ formError() }}</p>
                     }
                     <div class="w-full max-w-xl">
                         <form [formGroup]="form" (ngSubmit)="onSave()">
@@ -56,7 +56,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                     <label for="orgTenantName" class="block text-sm font-medium text-muted-color mb-2">Kurum adı *</label>
                                     <input id="orgTenantName" pInputText class="w-full" formControlName="tenantName" autocomplete="organization" />
                                     @if (form.controls.tenantName.invalid && form.controls.tenantName.touched) {
-                                        <small class="text-red-500">Kurum adı en az bir karakter içermelidir.</small>
+                                        <small class="text-danger">Kurum adı en az bir karakter içermelidir.</small>
                                     }
                                 </div>
                                 <button pButton type="submit" class="shrink-0 w-full sm:w-auto" [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>

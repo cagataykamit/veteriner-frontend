@@ -177,11 +177,11 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                         <label for="dischargedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Taburcu tarihi / saati *</label>
                         <app-date-input inputId="dischargedAtLocal" type="datetime-local" formControlName="dischargedAtLocal" [min]="dischargeMin()" limit="past" />
                         @if (dischargeForm.controls.dischargedAtLocal.hasError('dateYearInvalid') && dischargeForm.controls.dischargedAtLocal.touched) {
-                            <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                            <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
                         } @else if (dischargeForm.controls.dischargedAtLocal.hasError('required') && dischargeForm.controls.dischargedAtLocal.touched) {
-                            <small class="text-red-500">Zorunlu.</small>
+                            <small class="text-danger">Zorunlu.</small>
                         } @else if (dischargeFieldErrors().dischargedAtLocal) {
-                            <small class="text-red-500">{{ dischargeFieldErrors().dischargedAtLocal }}</small>
+                            <small class="text-danger">{{ dischargeFieldErrors().dischargedAtLocal }}</small>
                         }
                     </div>
                     <div>
@@ -189,7 +189,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                         <textarea id="dischargeNote" rows="3" class="w-full p-inputtext p-component" formControlName="dischargeNote"></textarea>
                         <small class="text-muted-color">Giriş notunu değiştirmez; hasta sahibine verilecek talimat için “Bakım talimatları” bölümünü kullanın.</small>
                         @if (dischargeFieldErrors().dischargeNote) {
-                            <small class="text-red-500 block">{{ dischargeFieldErrors().dischargeNote }}</small>
+                            <small class="text-danger block">{{ dischargeFieldErrors().dischargeNote }}</small>
                         }
                     </div>
                 </div>
@@ -201,7 +201,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                         </div>
                     </div>
                 } @else if (dischargeSubmitError()) {
-                    <p class="text-red-500 mt-4 mb-0" role="alert">{{ dischargeSubmitError() }}</p>
+                    <p class="text-danger mt-4 mb-0" role="alert">{{ dischargeSubmitError() }}</p>
                 }
                 <div class="flex flex-wrap justify-end gap-2 mt-4">
                     <button pButton type="button" severity="secondary" (click)="dischargeDialogVisible.set(false)" [disabled]="dischargeSubmitting()">Vazgeç</button>

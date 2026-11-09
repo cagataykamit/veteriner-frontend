@@ -44,7 +44,7 @@ const PDF_URL_REVOKE_MS = 60_000;
                             </button>
                         } @else {
                             <button type="button" class="stored-file-thumb" [attr.aria-label]="file.fileName + ' — PDF aç'" (click)="openPdf(file)" data-testid="file-pdf">
-                                <i class="pi pi-file-pdf text-3xl text-red-500" aria-hidden="true"></i>
+                                <i class="pi pi-file-pdf text-3xl text-danger" aria-hidden="true"></i>
                             </button>
                         }
                         <div class="text-xs min-w-0">
@@ -69,7 +69,7 @@ const PDF_URL_REVOKE_MS = 60_000;
             </ul>
         }
         @if (error()) {
-            <p class="text-red-500 text-sm mt-2 mb-0" role="alert">{{ error() }}</p>
+            <p class="text-danger text-sm mt-2 mb-0" role="alert">{{ error() }}</p>
         }
 
         <p-dialog

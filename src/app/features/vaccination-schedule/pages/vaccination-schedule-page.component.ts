@@ -93,7 +93,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                     <p class="text-sm mt-0 mb-3" role="status" data-testid="schedule-notice">{{ n }}</p>
                 }
                 @if (listActionError(); as err) {
-                    <p class="text-red-500 text-sm mt-0 mb-3" role="alert">{{ err }}</p>
+                    <p class="text-danger text-sm mt-0 mb-3" role="alert">{{ err }}</p>
                 }
 
                 @if (loading()) {
@@ -184,7 +184,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                 </div>
                 <small class="text-muted-color -mt-2">{{ formSummary() }}</small>
                 @if (form.invalid && form.touched) {
-                    <small class="text-red-500">Başlangıç 0–{{ limits.maxStartAgeWeeks }} hafta, doz 1–{{ limits.maxDoseCount }}, aralık 1–{{ limits.maxDoseIntervalWeeks }} hafta (birden fazla dozda zorunlu), tekrar 1–{{ limits.maxRepeatIntervalMonths }} ay olmalıdır.</small>
+                    <small class="text-danger">Başlangıç 0–{{ limits.maxStartAgeWeeks }} hafta, doz 1–{{ limits.maxDoseCount }}, aralık 1–{{ limits.maxDoseIntervalWeeks }} hafta (birden fazla dozda zorunlu), tekrar 1–{{ limits.maxRepeatIntervalMonths }} ay olmalıdır.</small>
                 }
                 <div class="flex flex-col gap-1">
                     <label for="itemNotes" class="block text-sm font-medium text-muted-color">Not</label>

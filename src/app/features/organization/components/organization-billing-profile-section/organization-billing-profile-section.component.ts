@@ -57,28 +57,28 @@ const BILLING_PROFILE_HIDDEN_UI_FIELDS = new Set<OrganizationBillingProfileFormF
                             <label for="billingLegalCompanyName" class="block text-sm font-medium text-muted-color mb-2">Resmi firma adı</label>
                             <input id="billingLegalCompanyName" pInputText class="w-full" formControlName="legalCompanyName" autocomplete="organization" />
                             @if (fieldMessage('legalCompanyName'); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         </div>
                         <div>
                             <label for="billingTaxOffice" class="block text-sm font-medium text-muted-color mb-2">Vergi dairesi</label>
                             <input id="billingTaxOffice" pInputText class="w-full" formControlName="taxOffice" autocomplete="off" />
                             @if (fieldMessage('taxOffice'); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         </div>
                         <div>
                             <label for="billingTaxNumber" class="block text-sm font-medium text-muted-color mb-2">Vergi numarası</label>
                             <input id="billingTaxNumber" pInputText class="w-full" formControlName="taxNumber" inputmode="numeric" autocomplete="off" (input)="onTaxNumberInput()" />
                             @if (fieldMessage('taxNumber'); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         </div>
                         <div>
                             <label for="billingCompanyPhone" class="block text-sm font-medium text-muted-color mb-2">Firma telefon numarası</label>
                             <input id="billingCompanyPhone" pInputText class="w-full" formControlName="companyPhone" inputmode="tel" autocomplete="tel" />
                             @if (fieldMessage('companyPhone'); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         </div>
                     </div>
@@ -89,49 +89,49 @@ const BILLING_PROFILE_HIDDEN_UI_FIELDS = new Set<OrganizationBillingProfileFormF
                             <label for="billingInvoiceProvince" class="block text-sm font-medium text-muted-color mb-2">İl</label>
                             <input id="billingInvoiceProvince" pInputText class="w-full" formControlName="invoiceProvince" autocomplete="address-level1" />
                             @if (fieldMessage('invoiceProvince'); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         </div>
                         <div>
                             <label for="billingInvoiceDistrict" class="block text-sm font-medium text-muted-color mb-2">İlçe</label>
                             <input id="billingInvoiceDistrict" pInputText class="w-full" formControlName="invoiceDistrict" autocomplete="address-level2" />
                             @if (fieldMessage('invoiceDistrict'); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         </div>
                         <div>
                             <label for="billingInvoiceNeighborhood" class="block text-sm font-medium text-muted-color mb-2">Mahalle / Semt</label>
                             <input id="billingInvoiceNeighborhood" pInputText class="w-full" formControlName="invoiceNeighborhood" autocomplete="off" />
                             @if (fieldMessage('invoiceNeighborhood'); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         </div>
                         <div>
                             <label for="billingInvoiceStreet" class="block text-sm font-medium text-muted-color mb-2">Sokak / Cadde</label>
                             <input id="billingInvoiceStreet" pInputText class="w-full" formControlName="invoiceStreet" autocomplete="street-address" />
                             @if (fieldMessage('invoiceStreet'); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         </div>
                         <div>
                             <label for="billingInvoiceBuildingName" class="block text-sm font-medium text-muted-color mb-2">Bina adı</label>
                             <input id="billingInvoiceBuildingName" pInputText class="w-full" formControlName="invoiceBuildingName" autocomplete="off" />
                             @if (fieldMessage('invoiceBuildingName'); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         </div>
                         <div>
                             <label for="billingInvoiceBuildingNo" class="block text-sm font-medium text-muted-color mb-2">Bina no</label>
                             <input id="billingInvoiceBuildingNo" pInputText class="w-full" formControlName="invoiceBuildingNo" autocomplete="off" />
                             @if (fieldMessage('invoiceBuildingNo'); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         </div>
                         <div>
                             <label for="billingInvoiceDoorNo" class="block text-sm font-medium text-muted-color mb-2">Kapı no</label>
                             <input id="billingInvoiceDoorNo" pInputText class="w-full" formControlName="invoiceDoorNo" autocomplete="off" />
                             @if (fieldMessage('invoiceDoorNo'); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         </div>
                     </div>

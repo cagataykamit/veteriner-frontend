@@ -38,21 +38,21 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
                         <label for="cc-description" class="block text-sm font-medium text-muted-color mb-2">Açıklama *</label>
                         <input id="cc-description" type="text" class="w-full p-inputtext p-component" formControlName="description" [attr.maxlength]="descriptionMaxLength" />
                         @if (form.controls.description.invalid && form.controls.description.touched) {
-                            <small class="text-red-500">Açıklama zorunludur (en fazla {{ descriptionMaxLength }} karakter).</small>
+                            <small class="text-danger">Açıklama zorunludur (en fazla {{ descriptionMaxLength }} karakter).</small>
                         }
                     </div>
                     <div class="col-span-12 sm:col-span-4">
                         <label for="cc-quantity" class="block text-sm font-medium text-muted-color mb-2">Miktar *</label>
                         <input id="cc-quantity" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="quantity" />
                         @if (form.controls.quantity.invalid && form.controls.quantity.touched) {
-                            <small class="text-red-500">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
+                            <small class="text-danger">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
                         }
                     </div>
                     <div class="col-span-12 sm:col-span-4">
                         <label for="cc-unit-price" class="block text-sm font-medium text-muted-color mb-2">Birim fiyat (TRY) *</label>
                         <input id="cc-unit-price" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="unitPrice" />
                         @if (form.controls.unitPrice.invalid && form.controls.unitPrice.touched) {
-                            <small class="text-red-500">0'dan büyük, en fazla {{ unitPriceDecimals }} ondalıklı ve {{ unitPriceMax }} üstünde olmayan bir fiyat girin.</small>
+                            <small class="text-danger">0'dan büyük, en fazla {{ unitPriceDecimals }} ondalıklı ve {{ unitPriceMax }} üstünde olmayan bir fiyat girin.</small>
                         }
                     </div>
                     <div class="col-span-12 sm:col-span-4">
@@ -64,7 +64,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
                         <label for="cc-reason" class="block text-sm font-medium text-muted-color mb-2">Gerekçe *</label>
                         <textarea id="cc-reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
                         @if (form.controls.reason.invalid && (form.controls.reason.dirty || form.controls.reason.touched)) {
-                            <small class="text-red-500">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
+                            <small class="text-danger">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
                         }
                     </div>
                 </div>
@@ -72,7 +72,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
                     <p class="text-sm text-muted-color mt-3 mb-0" role="note">Açıklama, miktar, birim fiyat, satır türü veya KDV oranından en az biri değişmelidir.</p>
                 }
                 @if (submitError()) {
-                    <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
             <ng-template #footer>

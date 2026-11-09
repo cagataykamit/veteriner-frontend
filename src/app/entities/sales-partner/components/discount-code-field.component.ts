@@ -49,10 +49,10 @@ const DEBOUNCE_MS = 600;
                         <span class="text-green-700 dark:text-green-400 font-medium">{{ note() }}</span>
                     }
                     @case ('invalid') {
-                        <span class="text-red-500">{{ invalidMessage }}</span>
+                        <span class="text-danger">{{ invalidMessage }}</span>
                     }
                     @case ('error') {
-                        <span class="text-red-500">{{ errorMessage() }}</span>
+                        <span class="text-danger">{{ errorMessage() }}</span>
                     }
                 }
             </small>

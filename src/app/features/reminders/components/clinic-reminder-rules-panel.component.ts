@@ -80,7 +80,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     }
                 </div>
                 @if (saveError(); as err) {
-                    <p class="text-red-500 text-sm mt-4 mb-0" role="alert">{{ err }}</p>
+                    <p class="text-danger text-sm mt-4 mb-0" role="alert">{{ err }}</p>
                 }
                 @if (saved()) {
                     <p class="text-sm mt-4 mb-0" role="status">Kaydedildi.</p>
@@ -115,7 +115,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                             }
                         }
                         @if (gateError(); as err) {
-                            <p class="text-red-500 text-sm mt-3 mb-0" role="alert">{{ err }}</p>
+                            <p class="text-danger text-sm mt-3 mb-0" role="alert">{{ err }}</p>
                         }
                     </div>
                 }

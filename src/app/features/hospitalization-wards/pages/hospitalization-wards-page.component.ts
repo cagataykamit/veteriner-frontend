@@ -103,7 +103,7 @@ type DialogTarget =
             </div>
 
             @if (listActionError()) {
-                <p class="text-red-500 text-sm mt-0 mb-3" role="alert">{{ listActionError() }}</p>
+                <p class="text-danger text-sm mt-0 mb-3" role="alert">{{ listActionError() }}</p>
             }
 
             @if (!clinicId()) {
@@ -186,7 +186,7 @@ type DialogTarget =
                     <label for="locationName" class="block text-sm font-medium text-muted-color">Ad *</label>
                     <input id="locationName" pInputText class="w-full" type="text" formControlName="name" autocomplete="off" [maxlength]="nameMax" />
                     @if (dialogForm.controls.name.invalid && dialogForm.controls.name.touched) {
-                        <small class="text-red-500">Ad zorunludur.</small>
+                        <small class="text-danger">Ad zorunludur.</small>
                     }
                     @if (dialogTarget()?.editing) {
                         <small class="text-muted-color">Yeni ad mevcut yatışlarda da görünür; atama anında yazılan konum metni değişmez.</small>

@@ -48,6 +48,14 @@
 }
 
 /*
+ * Hata metni (alan doğrulama mesajı, başarısız işlem uyarısı, borç/eksik tutarı): marka paleti A hata rengi,
+ * PrimeNG preset'indeki danger tonuyla aynı (açık: red-700 ≈ 6.5:1 beyazda, koyu: red-400).
+ */
+@utility text-danger {
+    @apply text-red-700 dark:text-red-400;
+}
+
+/*
  * Görünümü küçük kalan bağlantı/düğmenin (hap, satır içi düğme) dokunma alanını en az `--touch-target` (44 px) yapar;
  * görünmez katman öğeyi ortalar, düzeni değiştirmez. Telefonda kullanılır: `max-sm:touch-hit` (MOBILE-004).
  */

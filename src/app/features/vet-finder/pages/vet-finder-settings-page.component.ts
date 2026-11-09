@@ -142,7 +142,7 @@ const CLINIC_DETAIL_ROUTE = '/panel/settings/clinics';
                         <label for="vetFinderLocation" class="text-sm font-medium text-muted-color">Enlem, boylam</label>
                         <input id="vetFinderLocation" pInputText formControlName="location" placeholder="40.9901, 29.0287" class="w-full" data-testid="vet-finder-location" />
                         @if (locationInvalid()) {
-                            <small class="text-red-500">Koordinat "40.9901, 29.0287" biçiminde ve Türkiye içinde olmalı.</small>
+                            <small class="text-danger">Koordinat "40.9901, 29.0287" biçiminde ve Türkiye içinde olmalı.</small>
                         }
                     </div>
                 </section>

@@ -69,7 +69,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         <label for="productName" class="block text-sm font-medium text-muted-color">Ürün adı *</label>
                         <input id="productName" pInputText class="w-full" type="text" formControlName="name" autocomplete="off" />
                         @if (form.controls.name.invalid && form.controls.name.touched) {
-                            <small class="text-red-500">Ürün adı zorunludur.</small>
+                            <small class="text-danger">Ürün adı zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
@@ -87,7 +87,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         <label for="unit" class="block text-sm font-medium text-muted-color">Birim *</label>
                         <input id="unit" pInputText class="w-full" type="text" formControlName="unit" placeholder="örn. Adet, Kutu" />
                         @if (form.controls.unit.invalid && form.controls.unit.touched) {
-                            <small class="text-red-500">Birim zorunludur.</small>
+                            <small class="text-danger">Birim zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
@@ -95,9 +95,9 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         <input id="unitPrice" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="unitPrice" />
                         @if (form.controls.unitPrice.invalid && form.controls.unitPrice.touched) {
                             @if (form.controls.unitPrice.hasError('required')) {
-                                <small class="text-red-500">Birim fiyat zorunludur.</small>
+                                <small class="text-danger">Birim fiyat zorunludur.</small>
                             } @else if (form.controls.unitPrice.hasError('min')) {
-                                <small class="text-red-500">Birim fiyat 0’dan küçük olamaz.</small>
+                                <small class="text-danger">Birim fiyat 0’dan küçük olamaz.</small>
                             }
                         }
                     </div>
@@ -105,7 +105,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         <label for="currency" class="block text-sm font-medium text-muted-color">Para birimi *</label>
                         <p-select inputId="currency" formControlName="currency" [options]="currencyOptions" optionLabel="label" optionValue="value" class="w-full" />
                         @if (form.controls.currency.invalid && form.controls.currency.touched) {
-                            <small class="text-red-500">Para birimi zorunludur.</small>
+                            <small class="text-danger">Para birimi zorunludur.</small>
                         }
                     </div>
                     <app-product-classification-fields [form]="form" idPrefix="product" />
@@ -116,7 +116,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                 </div>
 
                 @if (submitError()) {
-                    <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">

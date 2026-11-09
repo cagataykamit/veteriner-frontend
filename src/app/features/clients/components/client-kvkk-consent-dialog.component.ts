@@ -32,7 +32,7 @@ import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
                 <label for="kvkk-recorded-on" class="block text-sm font-medium text-muted-color mt-4 mb-2">Form tarihi</label>
                 <input id="kvkk-recorded-on" type="date" class="w-full p-inputtext p-component" [formControl]="recordedOn" [attr.max]="today()" />
                 @if (dateError(); as msg) {
-                    <small class="text-red-500" role="alert">{{ msg }}</small>
+                    <small class="text-danger" role="alert">{{ msg }}</small>
                 }
                 <p class="text-sm text-muted-color mt-3 mb-0" data-testid="kvkk-reminder-note">
                     Ret işaretlenince otomatik hatırlatmalar kapanır ("Hatırlatma istemiyor"). Sonradan Kabul'e geçmek hatırlatmaları açmaz; gerekiyorsa müşteri formunda elle açılır.
@@ -42,7 +42,7 @@ import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
                 }
             }
             @if (submitError()) {
-                <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
+                <p class="text-danger mt-3 mb-0" role="alert">{{ submitError() }}</p>
             }
             <ng-template #footer>
                 @if (canRevert()) {

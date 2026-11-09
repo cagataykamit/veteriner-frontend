@@ -55,7 +55,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                 </ng-template>
                             </p-select>
                             @if (form.controls.action.invalid && form.controls.action.touched) {
-                                <small class="text-red-500">Zorunlu alan.</small>
+                                <small class="text-danger">Zorunlu alan.</small>
                             }
                             @if (selectedAction() === 'Mistaken') {
                                 <p class="text-sm text-muted-color mt-2 mb-0">{{ mistakenDescription }}</p>
@@ -69,12 +69,12 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <label for="vc-reason" class="block text-sm font-medium text-muted-color mb-2">Gerekçe *</label>
                         <textarea id="vc-reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
                         @if (form.controls.reason.invalid && form.controls.reason.touched) {
-                            <small class="text-red-500">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
+                            <small class="text-danger">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
                         }
                     </div>
                 </div>
                 @if (submitError()) {
-                    <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
             <ng-template #footer>

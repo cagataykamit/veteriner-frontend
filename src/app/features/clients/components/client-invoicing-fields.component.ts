@@ -31,7 +31,7 @@ import { CLIENT_PERSON_TYPE_OPTIONS, clientInvoicingFieldErrorMessage } from '@/
                         <label for="invoicingNationalId" class="block text-sm font-medium text-muted-color mb-2">T.C. kimlik no (TCKN)</label>
                         <input id="invoicingNationalId" pInputText class="w-full" formControlName="nationalId" inputmode="numeric" maxlength="11" autocomplete="off" />
                         @if (fieldMessage('nationalId'); as msg) {
-                            <small class="text-red-500" data-testid="invoicing-error-nationalId">{{ msg }}</small>
+                            <small class="text-danger" data-testid="invoicing-error-nationalId">{{ msg }}</small>
                         }
                     </div>
                 }
@@ -41,21 +41,21 @@ import { CLIENT_PERSON_TYPE_OPTIONS, clientInvoicingFieldErrorMessage } from '@/
                         <input id="invoicingTaxNumber" pInputText class="w-full" formControlName="taxNumber" inputmode="numeric" maxlength="11" autocomplete="off" />
                         <small class="block text-muted-color">Şahıs şirketinde sahibinin TCKN'si girilir.</small>
                         @if (fieldMessage('taxNumber'); as msg) {
-                            <small class="text-red-500" data-testid="invoicing-error-taxNumber">{{ msg }}</small>
+                            <small class="text-danger" data-testid="invoicing-error-taxNumber">{{ msg }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="invoicingTaxOffice" class="block text-sm font-medium text-muted-color mb-2">Vergi dairesi</label>
                         <input id="invoicingTaxOffice" pInputText class="w-full" formControlName="taxOffice" />
                         @if (fieldMessage('taxOffice'); as msg) {
-                            <small class="text-red-500">{{ msg }}</small>
+                            <small class="text-danger">{{ msg }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="invoicingLegalName" class="block text-sm font-medium text-muted-color mb-2">Unvan</label>
                         <input id="invoicingLegalName" pInputText class="w-full" formControlName="legalName" autocomplete="organization" />
                         @if (fieldMessage('legalName'); as msg) {
-                            <small class="text-red-500">{{ msg }}</small>
+                            <small class="text-danger">{{ msg }}</small>
                         }
                     </div>
                 }
@@ -63,21 +63,21 @@ import { CLIENT_PERSON_TYPE_OPTIONS, clientInvoicingFieldErrorMessage } from '@/
                     <label for="invoicingProvince" class="block text-sm font-medium text-muted-color mb-2">İl</label>
                     <input id="invoicingProvince" pInputText class="w-full" formControlName="billingProvince" autocomplete="address-level1" />
                     @if (fieldMessage('billingProvince'); as msg) {
-                        <small class="text-red-500">{{ msg }}</small>
+                        <small class="text-danger">{{ msg }}</small>
                     }
                 </div>
                 <div class="col-span-12 md:col-span-6">
                     <label for="invoicingDistrict" class="block text-sm font-medium text-muted-color mb-2">İlçe</label>
                     <input id="invoicingDistrict" pInputText class="w-full" formControlName="billingDistrict" autocomplete="address-level2" />
                     @if (fieldMessage('billingDistrict'); as msg) {
-                        <small class="text-red-500">{{ msg }}</small>
+                        <small class="text-danger">{{ msg }}</small>
                     }
                 </div>
                 <div class="col-span-12">
                     <label for="invoicingAddressLine" class="block text-sm font-medium text-muted-color mb-2">Fatura adresi</label>
                     <input id="invoicingAddressLine" pInputText class="w-full" formControlName="billingAddressLine" autocomplete="street-address" />
                     @if (fieldMessage('billingAddressLine'); as msg) {
-                        <small class="text-red-500">{{ msg }}</small>
+                        <small class="text-danger">{{ msg }}</small>
                     }
                 </div>
             </div>

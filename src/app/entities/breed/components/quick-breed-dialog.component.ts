@@ -34,18 +34,18 @@ import { InputTextModule } from 'primeng/inputtext';
                         <label for="qb-name" class="block text-sm font-medium text-muted-color mb-2">Irk adı *</label>
                         <input id="qb-name" pInputText class="w-full" formControlName="name" />
                         @if (apiFieldErrors().name) {
-                            <small class="text-red-500">{{ apiFieldErrors().name }}</small>
+                            <small class="text-danger">{{ apiFieldErrors().name }}</small>
                         } @else if (form.controls.name.invalid && form.controls.name.touched) {
                             @if (form.controls.name.hasError('required')) {
-                                <small class="text-red-500">Ad zorunludur.</small>
+                                <small class="text-danger">Ad zorunludur.</small>
                             } @else if (form.controls.name.hasError('maxlength')) {
-                                <small class="text-red-500">Ad en fazla 128 karakter olabilir.</small>
+                                <small class="text-danger">Ad en fazla 128 karakter olabilir.</small>
                             }
                         }
                     </div>
                 </div>
                 @if (submitError()) {
-                    <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
             <ng-template #footer>

@@ -72,7 +72,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
                     <textarea id="careInstructionText" rows="8" [attr.maxlength]="textMax" class="w-full p-inputtext p-component" formControlName="text"></textarea>
                     <div class="flex justify-between gap-2">
                         @if (form.controls.text.invalid && form.controls.text.touched) {
-                            <small class="text-red-500">Talimat metni zorunludur (en çok {{ textMax }} karakter).</small>
+                            <small class="text-danger">Talimat metni zorunludur (en çok {{ textMax }} karakter).</small>
                         } @else {
                             <span></span>
                         }
@@ -87,7 +87,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
                             </div>
                         </div>
                     } @else if (submitError()) {
-                        <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                        <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                     }
 
                     <div class="flex flex-wrap justify-end gap-2 mt-4">

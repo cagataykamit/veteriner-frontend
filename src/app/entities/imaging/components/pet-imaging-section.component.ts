@@ -26,7 +26,7 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
             @if (loading()) {
                 <p class="text-sm text-muted-color m-0">Yükleniyor…</p>
             } @else if (error()) {
-                <p class="text-sm text-red-500 m-0" role="alert">{{ error() }}</p>
+                <p class="text-sm text-danger m-0" role="alert">{{ error() }}</p>
             } @else if (items().length === 0) {
                 <p class="text-sm text-muted-color m-0">Görüntüleme kaydı yok.</p>
             } @else {
