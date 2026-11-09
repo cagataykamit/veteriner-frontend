@@ -130,7 +130,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                 </td>
                                 @if (hasRowActions) {
                                     <td class="whitespace-nowrap">
-                                        <div class="flex items-center justify-end gap-1 max-sm:pt-2">
+                                        <div class="flex items-center gap-1 max-sm:justify-end max-sm:pt-2">
                                             @if (ro.mutationBlocked()) {
                                                 <span class="text-muted-color text-sm">Salt okunur</span>
                                             } @else {
