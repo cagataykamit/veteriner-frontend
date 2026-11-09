@@ -4,10 +4,8 @@ import { readMenuCollapsed, writeMenuCollapsed } from './menu-collapsed-state';
 /** `isDesktop()` (> 991 px) ve `_responsive.scss` (min-width: 992px) ile aynı eşik. */
 const DESKTOP_MEDIA_QUERY = '(min-width: 992px)';
 
+/** Tema rengi (preset, birincil, yüzey) burada değil: tek kaynak `core/theme/vetinity-preset.ts`. */
 export interface LayoutConfig {
-    preset: string;
-    primary: string;
-    surface: string | undefined | null;
     darkTheme: boolean;
     menuMode: string;
 }
@@ -16,7 +14,6 @@ interface LayoutState {
     /** Menü masaüstünde simge şeridine daraltılmış (kullanıcı tercihi). */
     staticMenuDesktopInactive: boolean;
     overlayMenuActive: boolean;
-    configSidebarVisible: boolean;
     mobileMenuActive: boolean;
     menuHoverActive: boolean;
     activePath: string | null;
@@ -35,9 +32,6 @@ const LEGACY_DARK_THEME_STORAGE_KEY = 'vetinity.darkTheme';
 })
 export class LayoutService {
     layoutConfig = signal<LayoutConfig>({
-        preset: 'Aura',
-        primary: 'emerald',
-        surface: null,
         darkTheme: false,
         menuMode: 'static'
     });
@@ -45,7 +39,6 @@ export class LayoutService {
     layoutState = signal<LayoutState>({
         staticMenuDesktopInactive: false,
         overlayMenuActive: false,
-        configSidebarVisible: false,
         mobileMenuActive: false,
         menuHoverActive: false,
         activePath: null
@@ -57,10 +50,6 @@ export class LayoutService {
 
     /** Tema düğmesinin erişilebilir adı: düğmenin yapacağı geçişi söyler. */
     themeToggleLabel = computed(() => (this.isDarkTheme() ? 'Açık temaya geç' : 'Koyu temaya geç'));
-
-    getPrimary = computed(() => this.layoutConfig().primary);
-
-    getSurface = computed(() => this.layoutConfig().surface);
 
     isOverlay = computed(() => this.layoutConfig().menuMode === 'overlay');
 
@@ -194,14 +183,6 @@ export class LayoutService {
         } else {
             this.layoutState.update((prev) => ({ ...prev, mobileMenuActive: !this.layoutState().mobileMenuActive }));
         }
-    }
-
-    showConfigSidebar() {
-        this.layoutState.update((prev) => ({ ...prev, configSidebarVisible: true }));
-    }
-
-    hideConfigSidebar() {
-        this.layoutState.update((prev) => ({ ...prev, configSidebarVisible: false }));
     }
 
     isDesktop() {

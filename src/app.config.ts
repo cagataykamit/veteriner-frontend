@@ -2,7 +2,7 @@ import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/
 import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
 import { TitleStrategy, provideRouter, withEnabledBlockingInitialNavigation, withInMemoryScrolling } from '@angular/router';
 import { PageTitleStrategy } from '@/app/core/routing/page-title.strategy';
-import Aura from '@primeuix/themes/aura';
+import { VetinityPreset } from '@/app/core/theme/vetinity-preset';
 import { providePrimeNG } from 'primeng/config';
 import { PRIMENG_TR } from '@/app/core/i18n/primeng-tr';
 import { authInterceptor } from '@/app/core/api/auth.interceptor';
@@ -21,6 +21,6 @@ export const appConfig: ApplicationConfig = {
         provideHttpClient(withFetch(), withInterceptors([authInterceptor, firstWeekGuideInterceptor])),
         provideZonelessChangeDetection(),
         providePanelServiceWorker(),
-        providePrimeNG({ theme: { preset: Aura, options: { darkModeSelector: '.app-dark' } }, translation: PRIMENG_TR, license: PRIMEUI_LICENSE || undefined })
+        providePrimeNG({ theme: { preset: VetinityPreset, options: { darkModeSelector: '.app-dark' } }, translation: PRIMENG_TR, license: PRIMEUI_LICENSE || undefined })
     ]
 };
