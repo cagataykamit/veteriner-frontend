@@ -56,6 +56,14 @@
 }
 
 /*
+ * Açık temada birincil renkli bağlantılar (müşteri/hasta adı, "Ücretler" …) yarı kalın: koyu turkuaz ince yazıda griye kaçar,
+ * kalın harfte renk seçilir. Katmansız kural `font-medium` yardımcısını geçer; koyu temada açık turkuaz zaten belirgin.
+ */
+html:not(.app-dark) a.text-primary {
+    font-weight: 600;
+}
+
+/*
  * Görünümü küçük kalan bağlantı/düğmenin (hap, satır içi düğme) dokunma alanını en az `--touch-target` (44 px) yapar;
  * görünmez katman öğeyi ortalar, düzeni değiştirmez. Telefonda kullanılır: `max-sm:touch-hit` (MOBILE-004).
  */
