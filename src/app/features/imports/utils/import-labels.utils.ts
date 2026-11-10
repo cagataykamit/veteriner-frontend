@@ -303,6 +303,7 @@ const ROLLBACK_REASON_LABELS: Readonly<Record<string, string>> = {
     HasSales: 'Bağlı satış var',
     HasCareInstructions: 'Bağlı bakım talimatı var',
     HasChargeSuggestions: 'Bağlı ücret önerisi var',
+    HasExaminationTemplates: 'Muayene şablonunda kullanılıyor',
     HasOtherVaccinations: 'Elle ya da başka aktarmayla eklenmiş aşı var',
     HasKeptVaccinations: 'Aşılarından bazıları silinemediği için kalıyor',
     ClientModified: 'Müşteri sonradan düzenlenmiş',
