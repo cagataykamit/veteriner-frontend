@@ -24,4 +24,8 @@ describe('panelHomeRoute (ADR-030 eki 2026-11-04)', () => {
         expect(panelHomeRoute(only('Clients.Read', 'Pets.Read'))).toBe('/panel/patients');
         expect(panelHomeRoute(() => false)).toBe('/panel/settings');
     });
+
+    it('kliniksiz platform yöneticisi (yalnız platform_admin) Satış ortakları ile açılır', () => {
+        expect(panelHomeRoute(only('platform_admin'))).toBe('/panel/sales-partners');
+    });
 });
