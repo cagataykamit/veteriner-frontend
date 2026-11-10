@@ -9,7 +9,7 @@ import { ImportJobProgressComponent } from '@/app/features/imports/components/im
 import type { ImportBatchDto, ImportCommitProgressDto, ImportFileFormat, ImportOnErrors, ImportPreviewDto } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
-import { importCommitBlockers, importErrorCode, importErrorMessage, importIssueLabel, importStatusLabel, isEndpointUnavailable, reminderImpactCurrentCount } from '@/app/features/imports/utils/import-labels.utils';
+import { importCommitBlockers, importErrorCode, importErrorMessage, importIssueLabel, importStatusLabel, isEndpointUnavailable, reminderEmailTotal, reminderImpactCurrentCount } from '@/app/features/imports/utils/import-labels.utils';
 import { IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
@@ -54,7 +54,10 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                     </div>
                 }
 
-                <p-message severity="info" class="w-full mb-4"> İçe aktarılan aşılar için hatırlatma e-postası gönderilmez. Hatırlatmaları aktarım bittikten sonra, sayıyı görerek siz açarsınız. </p-message>
+                <p-message severity="info" class="w-full mb-4">
+                    İçe aktarılan aşılar ve randevular için hatırlatma e-postası gönderilmez. Hatırlatmaları aktarım bittikten sonra, sayıyı görerek siz açarsınız. Açık bakiye devir ücreti olarak müşterinin hesabına yazılır; ciroya,
+                    gün sonuna ve kasaya girmez.
+                </p-message>
 
                 @if (unavailable()) {
                     <p-message severity="warn" class="w-full mb-4" role="status"> Uygulama henüz etkin değil. Doğrulama sonucunuz korunuyor ve hiçbir kayıt oluşturulmadı. Özellik açıldığında bu sayfadan devam edebilirsiniz. </p-message>
@@ -97,9 +100,9 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                 <ng-container *ngTemplateOutlet="result" />
 
                 @if (preview(); as p) {
-                    @if (p.summary.vaccinations.total > 0) {
+                    @if (p.summary.vaccinations.total > 0 || p.summary.appointments.total > 0) {
                         <section class="rounded-border border border-surface-200 dark:border-surface-700 p-4 mt-4">
-                            <h6 class="mt-0 mb-2"><i class="pi pi-bell mr-2"></i>Aşı hatırlatmaları</h6>
+                            <h6 class="mt-0 mb-2"><i class="pi pi-bell mr-2"></i>Aşı ve randevu hatırlatmaları</h6>
                             @if (batch().remindersReleasedAtUtc) {
                                 <p class="m-0">Hatırlatmalar {{ date(batch().remindersReleasedAtUtc!) }} tarihinde açıldı. Bu işlem geri alınamaz.</p>
                                 @if (releaseNote()) {
@@ -107,11 +110,15 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                                 }
                             } @else {
                                 <p class="mt-0">
-                                    Şu an hatırlatmalar <strong>kapalıdır</strong>; hiçbir e-posta gitmedi. Açarsanız, {{ p.reminderImpact.reminderWindowDays }} gün içinde vadesi gelen <strong>{{ releaseCount(p) }}</strong> aşı için müşterilere
-                                    e-posta gidebilir; sonraki aşı tarihi yaklaştıkça yenileri de oluşur. Gönderilen e-postalar geri alınamaz; hatırlatmaları açmak da geri alınamaz.
+                                    Şu an hatırlatmalar <strong>kapalıdır</strong>; hiçbir e-posta gitmedi. Açarsanız, yakın zamanda vadesi gelen aşı ve başlayan randevular için müşterilere
+                                    <strong>{{ releaseCount(p) }}</strong> e-posta gidebilir ({{ p.reminderImpact.emailsWithinReminderWindow }} aşı, {{ p.reminderImpact.reminderWindowDays }} gün içinde; {{ p.reminderImpact.appointmentEmailsWithinReminderWindow ?? 0 }} randevu,
+                                    {{ p.reminderImpact.appointmentReminderWindowHours ?? 0 }} saat içinde). Tarihler yaklaştıkça yenileri de oluşur. Gönderilen e-postalar geri alınamaz; hatırlatmaları açmak da geri alınamaz.
                                 </p>
                                 @if (!p.reminderImpact.tenantRemindersEnabled) {
-                                    <p-message severity="info" class="w-full mb-2" role="status">Kliniğinizin aşı hatırlatma ayarı kapalı; açsanız da ayar açılana kadar e-posta gitmez.</p-message>
+                                    <p-message severity="info" class="w-full mb-2" role="status">Kliniğinizin aşı hatırlatma ayarı kapalı; açsanız da ayar açılana kadar aşı e-postası gitmez.</p-message>
+                                }
+                                @if (p.summary.appointments.total > 0 && p.reminderImpact.tenantAppointmentRemindersEnabled === false) {
+                                    <p-message severity="info" class="w-full mb-2" role="status">Kliniğinizin randevu hatırlatma ayarı kapalı; açsanız da ayar açılana kadar randevu e-postası gitmez.</p-message>
                                 }
                                 @if (releaseUnavailable()) {
                                     <p-message severity="warn" class="w-full" role="status">Hatırlatmaları açma özelliği henüz etkin değil.</p-message>
@@ -121,7 +128,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                                     <button pButton type="button" size="small" severity="secondary" (click)="confirmingRelease.set(true)"><i class="p-button-icon pi pi-bell"></i>Hatırlatmaları aç…</button>
                                 } @else {
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span class="text-sm">{{ releaseCount(p) }} aşı için hatırlatma açılsın mı? Bu işlem geri alınamaz.</span>
+                                        <span class="text-sm">{{ releaseCount(p) }} e-postalık hatırlatma açılsın mı? Bu işlem geri alınamaz.</span>
                                         <button pButton type="button" size="small" [disabled]="releaseBusy()" (click)="release(p)">@if (releaseBusy()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Evet, aç</button>
                                         <button pButton type="button" size="small" severity="secondary" (click)="confirmingRelease.set(false)">Vazgeç</button>
                                     </div>
@@ -278,7 +285,7 @@ export class ImportCommitStepComponent {
     }
 
     protected releaseCount(p: ImportPreviewDto): number {
-        return this.releaseCountOverride() ?? p.reminderImpact.emailsWithinReminderWindow;
+        return this.releaseCountOverride() ?? reminderEmailTotal(p.reminderImpact);
     }
 
     protected release(p: ImportPreviewDto): void {

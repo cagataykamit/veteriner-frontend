@@ -1,6 +1,7 @@
-/** Veri içe aktarma sözleşmesi (Veteriner `docs/IMPORT_API_CONTRACT.md`, B1–B5, K13). JSON camelCase. */
+/** Veri içe aktarma sözleşmesi (Veteriner `docs/IMPORT_API_CONTRACT.md`, B1–B5, K13, bölüm 12 tam geçiş). JSON camelCase. */
 
-export type ImportTable = 'customers' | 'pets' | 'vaccinations';
+/** Mantıksal tablolar; sıra doğrulama ve uygulama sırasıdır (§12.1). */
+export type ImportTable = 'customers' | 'pets' | 'vaccinations' | 'clinicalRecords' | 'accountEntries' | 'appointments' | 'products';
 
 export type ImportBatchStatus =
     | 'Uploaded'
@@ -61,11 +62,8 @@ export interface ImportTableSummaryDto {
     failed: number;
 }
 
-export interface ImportSummaryDto {
-    customers: ImportTableSummaryDto;
-    pets: ImportTableSummaryDto;
-    vaccinations: ImportTableSummaryDto;
-}
+/** §12.2: tablo partide olmasa da her anahtar gelir (sayaçlar sıfır). */
+export type ImportSummaryDto = Record<ImportTable, ImportTableSummaryDto>;
 
 export interface ImportColumnDto {
     source: string;
@@ -153,6 +151,13 @@ export interface ImportReminderImpactDto {
     reminderWindowDays: number;
     tenantRemindersEnabled: boolean;
     excludedByDefault: boolean;
+    /** §12.6 randevu alanları; eski sunucuda yok. */
+    futureAppointments?: number;
+    appointmentEmailsWithinReminderWindow?: number;
+    appointmentReminderWindowHours?: number;
+    tenantAppointmentRemindersEnabled?: boolean;
+    /** Aşı + randevu; `release-reminders` onayı bu sayıyla karşılaştırılır (yoksa `emailsWithinReminderWindow`). */
+    totalEmailsWithinReminderWindow?: number;
 }
 
 export interface ImportIssueCountDto {
@@ -239,12 +244,18 @@ export interface ImportReleaseRemindersResultDto {
 }
 
 export type ImportBlockedPolicy = 'Fail' | 'DeleteUnblockedOnly';
-export type ImportRollbackEntity = 'Client' | 'Pet' | 'Vaccination';
+export type ImportRollbackEntity = 'Client' | 'Pet' | 'Vaccination' | 'ClinicalRecord' | 'AccountEntry' | 'Appointment' | 'Product';
 
+/** §12.9: yeni anahtarlar eski sunucuda yok; `openingBalances` devir ücretleridir (müşterinin eki, müşteriyle aynı kararı alır). */
 export interface ImportRollbackCountsDto {
     clients: number;
     pets: number;
     vaccinations: number;
+    clinicalRecords?: number;
+    accountEntries?: number;
+    appointments?: number;
+    products?: number;
+    openingBalances?: number;
 }
 
 /** Engelli kayıt: kişisel veri içermez; kaydı oluşturan satırın tablosu ve numarası. */
