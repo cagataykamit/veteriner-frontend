@@ -141,8 +141,8 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                             <ng-container *ngTemplateOutlet="counts; context: { title: 'Daha önce geri alınan', c: p.rolledBack }" />
                         }
                     </div>
-                    @if (p.kept.matchedClients || p.kept.matchedPets) {
-                        <p class="text-sm text-muted-color mt-0">Sistemde önceden var olup eşleşen {{ p.kept.matchedClients }} müşteri ve {{ p.kept.matchedPets }} hastaya dokunulmaz.</p>
+                    @if (p.kept.matchedClients || p.kept.matchedPets || p.kept.matchedProducts) {
+                        <p class="text-sm text-muted-color mt-0">Sistemde önceden var olup eşleşen {{ p.kept.matchedClients }} müşteri{{ p.kept.matchedProducts ? ', ' + p.kept.matchedPets + ' hasta ve ' + p.kept.matchedProducts + ' ürüne' : ' ve ' + p.kept.matchedPets + ' hastaya' }} dokunulmaz.</p>
                     }
                     @for (w of p.warnings; track w) {
                         <p-message severity="warn" class="w-full mb-2">{{ warningLabel(w) }}</p-message>

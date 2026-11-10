@@ -276,7 +276,7 @@ export interface ImportRollbackPreviewDto {
     blocked: ImportRollbackCountsDto;
     blockedItems: ImportRollbackBlockedItemDto[];
     blockedItemsTruncated: boolean;
-    kept: { matchedClients: number; matchedPets: number };
+    kept: { matchedClients: number; matchedPets: number; matchedProducts?: number };
     rolledBack: ImportRollbackCountsDto;
     remindersAlreadyReleased: boolean;
     warnings: string[];

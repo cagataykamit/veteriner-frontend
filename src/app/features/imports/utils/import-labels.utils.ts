@@ -146,6 +146,7 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.ClinicRequired': 'Bu kayıtlar için klinik seçilmemiş',
     'Imports.CreditBalanceNotImported': 'Alacak (eksi) bakiye aktarılmaz; müşteri bakiyesiz aktarılır',
     'Imports.AmountInvalid': 'Tutar okunamadı veya geçersiz',
+    'Imports.EntryAmountInvalid': 'Tutar okunamadı, sıfır ya da geçersiz; hareket aktarılmaz',
     'Imports.BalanceNotAppliedToExisting': 'Müşteri sistemde zaten var; açık bakiye eklenmez',
     'Imports.BalanceDateIgnored': 'Bakiye tarihi okunamadı; açıklamaya yazılmaz',
     'Imports.DateInFuture': 'Tarih gelecekte',
