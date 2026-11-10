@@ -20,6 +20,8 @@ export interface ChargeVm {
     lineKind: ChargeLineKind;
     /** `null` = klinik varsayılanı. */
     vatRate: number | null;
+    /** Eski programdan aktarılan devir ücreti: ciroya, gün sonuna ve kasaya girmez; bakiyeye girer (ADR-048 T3). */
+    isImported?: boolean;
 }
 
 export interface ChargesPagedVm {

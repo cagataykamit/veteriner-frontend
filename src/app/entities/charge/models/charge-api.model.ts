@@ -29,6 +29,8 @@ export interface ChargeDto {
     lineKind?: string | null;
     /** KDV oranı (%); `null` = klinik varsayılanı. */
     vatRate?: number | null;
+    /** Eski programdan aktarılan devir ücreti (`IMPORT_API_CONTRACT.md` §12.7); eski yanıtta yok → false. */
+    isImported?: boolean | null;
 }
 
 /** `POST/PUT /charges` isteğe bağlı `tax` nesnesi (`INVOICING_IDENTITY_API_CONTRACT.md` §5). */

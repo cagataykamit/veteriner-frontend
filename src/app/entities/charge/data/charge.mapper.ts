@@ -41,7 +41,8 @@ export function mapChargeDtoToVm(dto: ChargeDto): ChargeVm {
         currency: dto.currency?.trim() || 'TRY',
         createdAtUtc: dto.createdAtUtc,
         lineKind: parseChargeLineKind(dto.lineKind),
-        vatRate: dto.vatRate ?? null
+        vatRate: dto.vatRate ?? null,
+        isImported: dto.isImported === true
     };
 }
 

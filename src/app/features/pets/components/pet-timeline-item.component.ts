@@ -7,18 +7,19 @@ import {
     petTimelineAppointmentLink,
     petTimelineEventLink,
     petTimelineExaminationLink,
+    petTimelineIsDateOnly,
     petTimelineStatusLabel,
     petTimelineTreatmentLink,
     petTimelineTypeIcon,
     petTimelineTypeLabel
 } from '@/app/features/pets/utils/pet-timeline.utils';
-import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /** Zaman çizelgesinin tek satırı: tam sayfa ve hasta kartı aynı görünümü kullanır. */
 @Component({
     selector: 'li[appPetTimelineItem]',
     standalone: true,
-    imports: [RouterLink, TrDateTimePipe],
+    imports: [RouterLink, TrDatePipe, TrDateTimePipe],
     host: {
         class: 'flex gap-3 py-3 border-b border-surface-200 dark:border-surface-700 last:border-b-0',
         '[class.opacity-60]': 'item().isVoided'
@@ -28,7 +29,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         <i class="pi {{ icon(item().type) }} text-xl text-primary mt-1" [attr.title]="typeLabel(item().type)" [attr.aria-label]="typeLabel(item().type)" data-testid="type-icon"></i>
         <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-baseline gap-x-2">
-                <span class="text-muted-color text-sm">{{ item().eventAtUtc | trDateTime }}</span>
+                <span class="text-muted-color text-sm">{{ isDateOnly(item().type) ? (item().eventAtUtc | trDate) : (item().eventAtUtc | trDateTime) }}</span>
                 <span class="text-muted-color text-sm">· {{ typeLabel(item().type) }}</span>
                 @if (statusLabel(item()); as status) {
                     <span class="text-sm" data-testid="status">· {{ status }}</span>
@@ -79,4 +80,5 @@ export class PetTimelineItemComponent {
     readonly examinationLink = petTimelineExaminationLink;
     readonly treatmentLink = petTimelineTreatmentLink;
     readonly appointmentLink = petTimelineAppointmentLink;
+    readonly isDateOnly = petTimelineIsDateOnly;
 }

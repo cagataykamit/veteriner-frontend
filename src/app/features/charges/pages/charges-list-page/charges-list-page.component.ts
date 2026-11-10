@@ -115,6 +115,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                     }
                                 </td>
                                 <td data-label="Açıklama">
+                                    @if (row.isImported) {
+                                        <app-status-tag label="Devir" severity="secondary" title="Eski programdan aktarılan açık bakiye; ciroya ve kasaya girmez" data-testid="charge-imported-tag" />
+                                    }
                                     <div class="max-w-[10rem] max-sm:max-w-none max-sm:whitespace-normal max-sm:break-words truncate" [title]="row.description">{{ row.description }}</div>
                                 </td>
                                 <td class="text-right table-stack-phone-hide">{{ row.quantity }}</td>

@@ -21,8 +21,17 @@ export const PET_TIMELINE_TYPES: ReadonlyArray<PetTimelineTypeDefinition> = [
     { value: 'Vaccination', label: 'Aşı', icon: 'pi-shield', detailPath: '/panel/vaccinations' },
     { value: 'Hospitalization', label: 'Yatış', icon: 'pi-building', detailPath: '/panel/hospitalizations' },
     { value: 'Administration', label: 'Uygulama', icon: 'pi-box', detailPath: null },
-    { value: 'Imaging', label: 'Görüntüleme', icon: 'pi-image', detailPath: '/panel/imaging' }
+    { value: 'Imaging', label: 'Görüntüleme', icon: 'pi-image', detailPath: '/panel/imaging' },
+    // Eski programdan aktarılan salt okunur kayıt (ADR-048 T1); ayrı detay sayfası yok, hasta sayfasındaki bölümde tam metni görünür.
+    { value: 'ImportedClinicalRecord', label: 'Eski program kaydı', icon: 'pi-history', detailPath: null }
 ];
+
+/** Saat bilgisi taşımayan (yalnız tarihli) türler; satırda saat gösterilmez. */
+const DATE_ONLY_TYPES: ReadonlySet<string> = new Set(['ImportedClinicalRecord']);
+
+export function petTimelineIsDateOnly(type: string): boolean {
+    return DATE_ONLY_TYPES.has(type);
+}
 
 /** Timeline ucu ödemeyi henüz döndürmez (`types=Payment` → 400); hasta kartında geçmiş özetindeki ödemeler bu türle aynı listeye karışır. */
 export const PET_TIMELINE_PAYMENT_TYPE = 'Payment';
@@ -109,7 +118,7 @@ interface PetCardTimelineFilterDefinition {
 /** Hasta kartındaki tek zaman çizelgesinin süzgeçleri (ADR-020 karar 2d); sıra ekrandaki sıradır. */
 export const PET_CARD_TIMELINE_FILTERS: ReadonlyArray<PetCardTimelineFilterDefinition> = [
     { value: 'all', label: 'Tümü', types: [] },
-    { value: 'examination', label: 'Muayene', types: ['Examination'] },
+    { value: 'examination', label: 'Muayene', types: ['Examination', 'ImportedClinicalRecord'] },
     { value: 'vaccination', label: 'Aşı', types: ['Vaccination'] },
     { value: 'lab', label: 'Lab', types: ['LabResult'] },
     { value: 'imaging', label: 'Görüntüleme', types: ['Imaging'] },
