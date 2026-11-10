@@ -13,7 +13,7 @@ import { RippleModule } from 'primeng/ripple';
 import { RouterLink } from '@angular/router';
 import { AuthService, type ClinicResolutionDecision } from '@/app/core/auth/auth.service';
 import { AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE, authFailureMessage, loginFailureMessage } from '@/app/core/auth/auth-error.utils';
-import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
+import { DEFAULT_PANEL_AFTER_AUTH, panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AUTH_LOGIN_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
@@ -340,6 +340,13 @@ export class Login implements OnInit {
                 const decision = this.auth.resolveClinicDecision(clinics);
 
                 if (decision.kind === 'none') {
+                    if (this.auth.isPlatformAdmin()) {
+                        this.auth.startPlatformOnlySession();
+                        void this.router.navigateByUrl(DEFAULT_PANEL_AFTER_AUTH);
+
+                        return;
+                    }
+
                     this.loginError.set(AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE);
 
                     return;
