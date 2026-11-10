@@ -66,7 +66,7 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
         <!-- 2 Kime göre -->
         <section class="mx-auto max-w-6xl px-4 pt-16 md:px-6 lg:pt-28" aria-labelledby="public-home-audience-title">
             <h2 id="public-home-audience-title" class="public-h2 m-0 text-center">Kime göre?</h2>
-            <p class="public-lead m-0 mx-auto mt-3 max-w-2xl text-center">Türkiye'deki küçük klinik için; büyüyünce şube eklersiniz.</p>
+            <p class="public-lead m-0 mx-auto mt-3 max-w-2xl text-center">Tek hekimli klinikten çok şubeli işletmeye; büyüdükçe şube eklersiniz.</p>
             <div class="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
                 @for (item of audience; track item.title) {
                     <article class="public-card p-6">

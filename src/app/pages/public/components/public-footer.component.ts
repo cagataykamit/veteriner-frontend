@@ -18,7 +18,7 @@ import { PUBLIC_FOOTER_PRODUCT_LINKS, PUBLIC_FOOTER_SUPPORT_LINKS } from '@/app/
                     <div class="md:col-span-5">
                         <img [src]="brand.compactLockupDark" alt="Vetinity" class="h-8 w-auto md:h-9" width="200" height="40" />
                         <p class="public-on-brand-muted m-0 mt-4 max-w-sm text-sm leading-relaxed">
-                            Küçük veteriner klinikleri için bulut klinik programı: gününüz, kayıt defterleriniz ve KVKK evrakınız tek yerde.
+                            Veteriner klinikleri için bulut klinik programı: gününüz, kayıt defterleriniz ve KVKK evrakınız tek yerde.
                         </p>
                     </div>
 

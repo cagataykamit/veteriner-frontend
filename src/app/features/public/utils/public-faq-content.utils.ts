@@ -31,7 +31,7 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
         items: [
             {
                 question: 'Vetinity kimin için?',
-                answer: 'Tek hekimli ya da birkaç kullanıcılı küçük veteriner klinikleri için. Birden fazla şubeniz varsa aynı kurum altında klinik ekleyebilirsiniz.',
+                answer: 'Tek hekimli klinikten çok şubeli işletmeye, her ölçekte veteriner kliniği için. Birden fazla şubeniz varsa aynı kurum altında klinik ekleyebilirsiniz.',
                 homepage: true
             },
             {

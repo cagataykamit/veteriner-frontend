@@ -71,7 +71,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         { path: PUBLIC_PATHS.packages, meta: PUBLIC_PACKAGES_PAGE_META, h1: 'Kliniğinize uygun paketi seçin' },
         { path: PUBLIC_PATHS.faq, meta: PUBLIC_FAQ_PAGE_META, h1: 'Sık sorulan sorular' },
         { path: PUBLIC_PATHS.contact, meta: PUBLIC_CONTACT_PAGE_META, h1: 'Demo isteyin ya da hemen deneyin' },
-        { path: PUBLIC_PATHS.about, meta: PUBLIC_ABOUT_PAGE_META, h1: 'Küçük veteriner klinikleri için, klinikle birlikte' }
+        { path: PUBLIC_PATHS.about, meta: PUBLIC_ABOUT_PAGE_META, h1: 'Veteriner klinikleri için, klinikle birlikte' }
     ];
 
     for (const page of pages) {

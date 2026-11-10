@@ -39,7 +39,7 @@ export const PUBLIC_CONTACT_CARD_ROWS: readonly PublicContactCardRowDef[] = ([
 
 /** Hakkımızda — kısa, doğrulanabilir metin; sayı ve referans uydurulmaz. */
 export const PUBLIC_ABOUT_PARAGRAPHS: readonly string[] = [
-    'Vetinity, Türkiye\'deki küçük veteriner klinikleri için geliştirilen bulut tabanlı bir klinik programıdır. Amacımız kliniğin gününü, gelişten tahsilata, tek ekranda yürütmek ve kayıt defterleri ile KVKK evrakını kendiliğinden tutmaktır.',
+    'Vetinity, Türkiye\'deki veteriner klinikleri için geliştirilen bulut tabanlı bir klinik programıdır. Amacımız kliniğin gününü, gelişten tahsilata, tek ekranda yürütmek ve kayıt defterleri ile KVKK evrakını kendiliğinden tutmaktır.',
     'Ürünü klinik iş akışından yola çıkarak geliştiriyoruz. Yapmadığımız şeyleri açıkça yazarız: SMS hatırlatma, e-Fatura ve online ödeme şu an yoktur; hatırlatmalar e-posta ile gider.',
     'Kayıtlarınız size aittir: istediğinizde kurumunuzun tüm kayıtlarını tek pakette dışa aktarabilirsiniz.'
 ];
