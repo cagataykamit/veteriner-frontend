@@ -13,5 +13,8 @@ export const environment = {
     /** Klinik sitelerinin kökü (`{siteBaseUrl}/k/{adres}`, ADR-045 K6). */
     siteBaseUrl: 'https://staging.vetinity.com',
     /** Staging kendini asıl site saymaz: her tanıtım sayfası noindex (öneri belgesi 6.3). */
-    siteNoindex: true
+    siteNoindex: true,
+    /** Yüzey kökleri (ADR-033): tanıtım ve panel ayrı alt alan adında; boşsa ikisi aynı adreste çalışır. */
+    publicOrigin: '',
+    panelOrigin: ''
 };
