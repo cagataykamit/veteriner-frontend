@@ -7,7 +7,7 @@ export function safePanelReturnUrl(raw: string | null | undefined): string | nul
     return s && s.startsWith('/panel') && !s.startsWith('//') ? s : null;
 }
 
-/** `/panel` rotası izne göre Bugün veya Özet'e yönlendirir (`panelHomeRedirect`). */
+/** `/panel` rotası izne göre Bugün veya Özet'e yönlendirir (`panelHomeGuard`). */
 export const DEFAULT_PANEL_AFTER_AUTH = '/panel';
 
 export function panelReturnUrlOrDefault(raw: string | null | undefined): string {
