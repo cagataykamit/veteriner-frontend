@@ -23,7 +23,7 @@ const batch = (status: ImportBatchDto['status']): ImportBatchDto => ({
     rolledBackAtUtc: null,
     remindersReleasedAtUtc: null,
     payloadPurgedAtUtc: null,
-    summary: { customers: zero, pets: zero, vaccinations: zero }
+    summary: { customers: zero, pets: zero, vaccinations: zero, clinicalRecords: zero, accountEntries: zero, appointments: zero, products: zero }
 });
 
 const preview = (over: Partial<ImportRollbackPreviewDto> = {}): ImportRollbackPreviewDto => ({

@@ -274,6 +274,7 @@ export class ImportUploadPageComponent implements OnInit {
 
                 if (file) form.append(IMPORT_CSV_FIELD[t], file);
             }
+
             if (this.encoding) form.append('encoding', this.encoding);
             if (this.delimiter) form.append('delimiter', this.delimiter);
         }

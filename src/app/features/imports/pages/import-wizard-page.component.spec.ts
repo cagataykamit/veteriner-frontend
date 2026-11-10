@@ -27,7 +27,7 @@ const batch = (status: ImportBatchDto['status'], validationId: string | null = n
     rolledBackAtUtc: null,
     remindersReleasedAtUtc: null,
     payloadPurgedAtUtc: null,
-    summary: { customers, pets: zero, vaccinations: zero },
+    summary: { customers, pets: zero, vaccinations: zero, clinicalRecords: zero, accountEntries: zero, appointments: zero, products: zero },
     tables: []
 });
 
@@ -45,7 +45,7 @@ const progress = (status: ImportBatchDto['status'], processed = 0, leaseActive =
 const preview = (over: Partial<ImportPreviewDto> = {}): ImportPreviewDto => ({
     validationId: 'v-new',
     status: 'Validated',
-    summary: { customers, pets: zero, vaccinations: zero },
+    summary: { customers, pets: zero, vaccinations: zero, clinicalRecords: zero, accountEntries: zero, appointments: zero, products: zero },
     unmappedValues: [],
     reminderImpact: {
         vaccinationsWithDueDate: 0,

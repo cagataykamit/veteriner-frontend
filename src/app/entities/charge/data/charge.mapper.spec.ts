@@ -116,4 +116,9 @@ describe('charge mapper — yazma ve sorgu', () => {
         expect(p.has('petId')).toBe(false);
         expect(p.has('visitId')).toBe(false);
     });
+
+    it('devir ücreti işaretini eşler; eski yanıtta yoksa false (IMPORT_API_CONTRACT 12.7)', () => {
+        expect(mapChargeDtoToVm(dto({ isImported: true })).isImported).toBe(true);
+        expect(mapChargeDtoToVm(dto()).isImported).toBe(false);
+    });
 });
