@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '@/app/core/auth/auth.guard';
-import { panelHomeRedirect } from '@/app/core/routing/panel-home.redirect';
+import { panelHomeGuard } from '@/app/core/routing/panel-home.redirect';
 import { surfaceOriginGuard } from '@/app/core/routing/surface-origin.guard';
 import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { referralCodeRedirect } from '@/app/features/sales-partners/routes/referral-code.redirect';
@@ -78,7 +78,7 @@ export const appRoutes: Routes = [
         loadComponent: () => import('./app/layout/component/app.layout').then((m) => m.AppLayout),
         canActivate: [surfaceOriginGuard('panel'), authGuard],
         children: [
-            { path: '', pathMatch: 'full', redirectTo: panelHomeRedirect },
+            { path: '', pathMatch: 'full', canActivate: [panelHomeGuard], children: [] },
             { path: '', loadChildren: () => import('./app/features/panel/panel.routes') }
         ]
     },

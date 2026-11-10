@@ -1,4 +1,5 @@
 import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { DASHBOARD_ROUTE, firstAccessibleRoute, MANAGER_LEVEL_CLAIM, MENU_GROUPS, SETTINGS_ROUTE, TODAY_ROUTE } from '@/app/core/routing/panel-navigation';
@@ -19,9 +20,13 @@ export function panelHomeRoute(hasClaim: (claim: string) => boolean): string {
     return firstAccessibleRoute(MENU_GROUPS, hasClaim) ?? SETTINGS_ROUTE;
 }
 
-/** `/panel` açılış yönlendirmesi; kural `panelHomeRoute` içindedir. */
-export function panelHomeRedirect(): string {
+/**
+ * `/panel` açılış yönlendirmesi; kural `panelHomeRoute` içindedir. `redirectTo` değil koruma: yönlendirme kuralları korumalardan önce
+ * çalışır, oturumsuz açılışta izinler boş görünür ve hedef Ayarlar olurdu (giriş sonrası `returnUrl` Ayarlar kalırdı). Koruma, panelin
+ * `authGuard`'ından sonra çalışır; oturumsuz kullanıcı `returnUrl=/panel` ile girişe gider ve girişten sonra izinlerine göre açılır.
+ */
+export const panelHomeGuard: CanActivateFn = () => {
     const auth = inject(AuthService);
 
-    return panelHomeRoute((claim) => auth.hasOperationClaim(claim));
-}
+    return inject(Router).parseUrl(panelHomeRoute((claim) => auth.hasOperationClaim(claim)));
+};
