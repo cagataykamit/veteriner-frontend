@@ -13,7 +13,7 @@ describe('panel yönlendirmeleri', () => {
         TestBed.configureTestingModule({
             providers: [
                 provideRouter(appRoutes),
-                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c.toLowerCase()), isAuthenticated: () => true, hasSelectedClinic: () => true, ensureValidAccessToken: () => of(null) } }
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c.toLowerCase()), isAuthenticated: () => true, hasSelectedClinic: () => true, hasPanelContext: () => true, ensureValidAccessToken: () => of(null) } }
             ]
         });
         router = TestBed.inject(Router);

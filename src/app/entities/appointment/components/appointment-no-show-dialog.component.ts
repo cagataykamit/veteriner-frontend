@@ -30,12 +30,12 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 </label>
                 <textarea id="ns-reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
                 @if (form.controls.reason.invalid && form.controls.reason.touched) {
-                    <small class="text-red-500">
+                    <small class="text-danger">
                         {{ reverting() ? 'Gerekçe ' + reasonMin + '–' + reasonMax + ' karakter olmalıdır.' : 'Gerekçe en çok ' + reasonMax + ' karakter olabilir.' }}
                     </small>
                 }
                 @if (submitError()) {
-                    <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
             <ng-template #footer>

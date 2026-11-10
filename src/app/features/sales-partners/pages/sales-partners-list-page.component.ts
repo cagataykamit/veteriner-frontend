@@ -27,7 +27,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
         </app-page-header>
 
         @if (actionError()) {
-            <p class="text-red-500 text-sm mt-0 mb-3" role="alert">{{ actionError() }}</p>
+            <p class="text-danger text-sm mt-0 mb-3" role="alert">{{ actionError() }}</p>
         }
 
         <div class="card">

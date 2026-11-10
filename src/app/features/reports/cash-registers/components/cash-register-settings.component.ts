@@ -75,7 +75,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             </div>
 
             @if (error(); as err) {
-                <p class="text-red-500 text-sm mt-3 mb-0" role="alert">{{ err }}</p>
+                <p class="text-danger text-sm mt-3 mb-0" role="alert">{{ err }}</p>
             }
         </section>
     `

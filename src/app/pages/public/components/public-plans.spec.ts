@@ -4,7 +4,9 @@ import {
     decidedFeatureRows,
     formatPlanPrice,
     formatUserLimit,
-    planHighlights,
+    isPlanDifferenceRow,
+    planAvailabilityText,
+    planCardFeatures,
     planOffer,
     planPriceView,
     planTitlesText,
@@ -51,22 +53,87 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         expect(pricingTermsText()).toBe('Fiyatlar KDV hariç');
         expect(planTitlesText()).toBe('Temel, Profesyonel ve Kurumsal');
         expect(planTitlesWithFeature('multiClinic')).toBe('Kurumsal');
-        expect(planHighlights('basic')).toEqual(['Destek: E-posta']);
-        expect(planHighlights('pro')).toContain('Hasta sahibi portalı');
-        expect(planHighlights('premium')).toContain('Çok klinik yönetimi ve klinikler arası yetki');
     });
 
-    it('özellik tablosu: gruplar sırayla, satır adı tekil; hücreler ADR-035 (fark portal, otomatik hatırlatıcı, çok klinik, destek, özel geliştirme)', () => {
+    it('kartlar (TIER-023): Temel alan alan sayar; üst paketler yalnız bir öncekinden farkı sayar, metin özellik tablosundan', () => {
+        const labels = (slug: 'basic' | 'pro' | 'premium') => planCardFeatures(slug).items.map((i) => i.label);
+        const basicIn = (group: string) => PRICING_FEATURE_ROWS.filter((r) => r.group === group && r.plans.basic === true).length;
+
+        expect(planCardFeatures('basic').lead).toBe('Kapsam:');
+        expect(labels('basic')).toContain(`Klinik: ${basicIn('Klinik')} özellik`);
+        expect(labels('basic')).toContain(`Kayıt ve KVKK: ${basicIn('Kayıt ve KVKK')} özellik`);
+        expect(labels('basic')).toContain('Destek: E-posta');
+
+        expect(planCardFeatures('pro').lead).toBe("Temel'deki her şey, artı:");
+        expect(labels('pro')).toContain('Hasta sahibi portalı');
+        expect(labels('pro')).toContain('Destek: E-posta, öncelikli');
+        expect(labels('pro')).not.toContain('Bugün ekranı ve geliş takibi');
+        expect(labels('pro')).not.toContain('Çok klinik yönetimi ve klinikler arası yetki');
+
+        expect(planCardFeatures('premium').lead).toBe("Profesyonel'deki her şey, artı:");
+        expect(labels('premium')).toEqual([
+            'Şubeler özeti',
+            'Çok klinik yönetimi ve klinikler arası yetki',
+            'API erişimi',
+            'Destek: Özel iletişim, kurulum desteği',
+            'Ücretsiz geçiş desteği',
+            'Size özel geliştirmeler'
+        ]);
+    });
+
+    it('kimin için: her paketin kısa açıklaması var', () => {
+        expect(PRICING_PLAN_DEFS.map((p) => p.description)).toEqual([
+            'Tek hekimli ya da küçük ekipli, tek şubeli klinik',
+            'Büyüyen, birkaç kullanıcılı ve hasta portalı kullanan klinik',
+            'Birden fazla şubesi olan işletme'
+        ]);
+    });
+
+    it('özellik tablosu: gruplar sırayla, satır adı tekil; hücreler ADR-035 ve 2026-11-09 dağılımı', () => {
         const groups = [...new Set(PRICING_FEATURE_ROWS.map((r) => r.group))];
         const labels = PRICING_FEATURE_ROWS.map((r) => r.label);
+        const keys = PRICING_FEATURE_ROWS.flatMap((r) => (r.key ? [r.key] : []));
+        const plansOf = (key: string) => PRICING_FEATURE_ROWS.find((r) => r.key === key)?.plans;
 
-        expect(groups).toEqual(['Klinik', 'Kayıt ve KVKK', 'Para ve stok', 'Hasta sahibi', 'Yönetim', 'Destek']);
+        expect(groups).toEqual(['Klinik', 'Kayıt ve KVKK', 'Para ve stok', 'Web sitesi ve randevu', 'Hasta sahibi', 'Yönetim', 'Destek']);
         expect(new Set(labels).size).toBe(labels.length);
+        expect(new Set(keys).size).toBe(keys.length);
         expect(PRICING_FEATURE_ROWS.length).toBeGreaterThanOrEqual(25);
-        expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.basic === false).map((r) => r.label)).toEqual(['Otomatik hatırlatıcılar', 'Hasta sahibi portalı', 'Portaldan randevu talebi', 'Çok klinik yönetimi ve klinikler arası yetki', 'Size özel geliştirmeler']);
-        expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.pro === false).map((r) => r.label)).toEqual(['Çok klinik yönetimi ve klinikler arası yetki', 'Size özel geliştirmeler']);
+        expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.basic === false).map((r) => r.label)).toEqual([
+            'Bekleme listesi',
+            'Otomatik aşı sihirbazı',
+            'Çoklu kasa ve kasa yönetimi',
+            'Kamerayla barkod okutma',
+            'Otomatik hatırlatıcılar',
+            'Hasta sahibi portalı',
+            'Portaldan randevu talebi',
+            'Gelişmiş raporlar',
+            'Şubeler özeti',
+            'Çok klinik yönetimi ve klinikler arası yetki',
+            'API erişimi',
+            'Ücretsiz geçiş desteği',
+            'Size özel geliştirmeler'
+        ]);
+        expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.pro === false).map((r) => r.label)).toEqual([
+            'Şubeler özeti',
+            'Çok klinik yönetimi ve klinikler arası yetki',
+            'API erişimi',
+            'Ücretsiz geçiş desteği',
+            'Size özel geliştirmeler'
+        ]);
         expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.premium === false)).toEqual([]);
-        expect(PRICING_FEATURE_ROWS.find((r) => r.label === 'Online randevu talebi')?.plans).toEqual({ basic: true, pro: true, premium: true });
+
+        for (const key of ['clinicSite', 'vetFinder', 'onlineBooking', 'reminderReplies', 'dataExport']) {
+            expect(plansOf(key), key).toEqual({ basic: true, pro: true, premium: true });
+        }
+    });
+
+    it('paket etiketi satırdan: tüm paketler, Profesyonel ve üstü, yalnız Kurumsal', () => {
+        expect(planAvailabilityText('clinicSite')).toBe('Tüm paketlerde');
+        expect(planAvailabilityText('cashManagement')).toBe('Profesyonel ve Kurumsal paketlerinde');
+        expect(planAvailabilityText('clinicsOverview')).toBe('Kurumsal paketinde');
+        expect(planTitlesWithFeature('freeMigrationSupport')).toBe('Kurumsal');
+        expect(planAvailabilityText('clinicSite', SAMPLE_ROWS)).toBe('');
     });
 
     it('özellik tablosu ve "Şu an yok": söylenmeyecek iddia yok (ADR-034 karar 6); online randevu artık "yok" listesinde değil', () => {
@@ -75,6 +142,10 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         expect(text).not.toMatch(/mevzuata uygun|KVKK uyumlu|SMS|e-?fatura|mobil uygulama|mağaza|veri merkezi|push|anlık bildirim|yalnızca bizde|en iyi|müşteri sayısı/i);
         expect(PRICING_NOT_AVAILABLE).not.toContain('Online randevu');
         expect(PRICING_NOT_AVAILABLE).toContain('Online ödeme');
+        expect(PRICING_NOT_AVAILABLE.join(' ')).toMatch(/e-Fatura/);
+        expect(PRICING_NOT_AVAILABLE.join(' ')).toMatch(/HBS'e otomatik gönderim/);
+        expect(PRICING_NOT_AVAILABLE.join(' ')).toMatch(/Yapay zekâ/);
+        expect(PRICING_NOT_AVAILABLE.join(' ')).not.toMatch(/mağaza/i);
     });
 
     it('katalogdan paket: kod büyük/küçük harf duyarsız; katalog yükleniyorsa ya da alınamadıysa yok', () => {
@@ -105,10 +176,19 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         expect(formatUserLimit(null)).toBeNull();
     });
 
-    it('öne çıkanlar: pakette olup her pakette olmayan satırlar; karar verilmemiş satır yok sayılır', () => {
-        expect(planHighlights('basic', SAMPLE_ROWS)).toEqual([]);
-        expect(planHighlights('pro', SAMPLE_ROWS)).toEqual(['Yatış takibi']);
+    it('kart maddeleri: ilk paket alan sayısı ve metin hücresi; sonraki paket yalnız farkı; karar verilmemiş satır yok sayılır', () => {
+        expect(planCardFeatures('basic', SAMPLE_ROWS)).toEqual({ lead: 'Kapsam:', items: [{ label: 'Yönetim: 1 özellik' }, { label: 'Hatırlatma: E-posta', badge: undefined }] });
+        expect(planCardFeatures('pro', SAMPLE_ROWS)).toEqual({ lead: "Temel'deki her şey, artı:", items: [{ label: 'Yatış takibi', badge: undefined }] });
+        expect(planCardFeatures('premium', SAMPLE_ROWS)).toEqual({ lead: "Profesyonel'deki her şey, artı:", items: [] });
         expect(decidedFeatureRows(SAMPLE_ROWS).map((r) => r.label)).not.toContain('Karar verilmemiş satır');
+        expect(SAMPLE_ROWS.map(isPlanDifferenceRow)).toEqual([true, false, false, false]);
+    });
+
+    it('satır etiketi (ör. ileride "Eklenti gerekir") karta taşınır', () => {
+        const rows: readonly PricingFeatureRowDef[] = [{ group: 'Yönetim', label: 'Örnek eklenti', badge: 'Eklenti gerekir', plans: { basic: false, pro: true, premium: true } }];
+
+        expect(planCardFeatures('pro', rows).items).toEqual([{ label: 'Örnek eklenti', badge: 'Eklenti gerekir' }]);
+        expect(PRICING_FEATURE_ROWS.filter((r) => r.badge)).toEqual([]);
     });
 
     it('panel abonelik kartı: paket adı aynı veriden', () => {
@@ -163,6 +243,8 @@ describe('PublicPlanCardsComponent', () => {
         expect(pro.textContent).toContain('8 kullanıcı');
         expect(pro.textContent).not.toMatch(/\d+ klinik/i);
         expect(pro.textContent).toContain('Yatış takibi');
+        expect(pro.querySelector('[data-plan-lead]')?.textContent?.trim()).toBe("Temel'deki her şey, artı:");
+        expect(pro.querySelector('[data-plan-audience]')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(`Kimin için: ${PRICING_PLAN_DEFS[1].description}`);
         expect(pro.querySelector('.public-plan-badge')?.textContent?.trim()).toBe('Önerilen');
         expect(pro.querySelector('a.public-btn-primary')).not.toBeNull();
         expect(pro.textContent).not.toMatch(/\/ yıl|hediye/);
@@ -325,6 +407,35 @@ describe('PublicPlanComparisonComponent', () => {
             expect(td.querySelector('.public-plan-compare-yes, .public-plan-compare-no, .sr-only')).toBeNull();
         });
         expect(el.textContent).not.toContain('Karar verilmemiş satır');
+    });
+
+    it('"Sadece farkları göster": varsayılan kapalı; açılınca her pakette aynı satırlar ve boş kalan bant gizlenir', () => {
+        const fixture = TestBed.createComponent(PublicPlanComparisonComponent);
+
+        fixture.componentRef.setInput('pricing', READY);
+        fixture.componentRef.setInput('featureRows', SAMPLE_ROWS);
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+        const toggle = el.querySelector<HTMLInputElement>('[data-only-differences]')!;
+
+        expect(toggle.checked).toBe(false);
+        expect(toggle.getAttribute('role')).toBe('switch');
+        expect(toggle.closest('label')?.textContent?.trim()).toBe('Sadece farkları göster');
+        expect(texts(el, 'tbody th[scope="row"]')).toEqual(['Yatış takibi', 'Roller, izinler ve denetim izi', 'Hatırlatma']);
+
+        toggle.checked = true;
+        toggle.dispatchEvent(new Event('change'));
+        fixture.detectChanges();
+
+        expect(texts(el, 'tbody th[scope="row"]')).toEqual(['Yatış takibi']);
+        expect(texts(el, '[data-group-title]')).toEqual(['Günlük iş']);
+        expect(texts(el, '[data-group-count]')).toEqual(['1 özellik']);
+    });
+
+    it('satır etiketi tabloda satır adının yanında', () => {
+        const el = render(READY, [{ group: 'Yönetim', label: 'Örnek eklenti', badge: 'Eklenti gerekir', plans: { basic: false, pro: true, premium: true } }]);
+
+        expect(el.querySelector('tbody th[scope="row"] [data-row-badge]')?.textContent?.trim()).toBe('Eklenti gerekir');
     });
 
     it('gerçek tablo: caption, sütun ve satır başlıkları', () => {

@@ -35,7 +35,7 @@ const PRICING_FAQ_JSON_LD_ID = 'packages-faq';
         <app-public-page-header
             eyebrow="Paketler"
             title="Kliniğinize uygun paketi seçin"
-            lead="Kayıt defterleri ve KVKK araçları her pakette; fark kullanıcı sayısı, çok klinik ve hasta sahibi portalıdır. Her paketi 14 gün ücretsiz deneyin, kart bilgisi istenmez."
+            lead="Kayıt defterleri, KVKK araçları, klinik web sitesi ve online randevu her pakette; üst paketler kullanıcı sayısını ve ek araçları artırır. Her paketi 14 gün ücretsiz deneyin, kart bilgisi istenmez."
         />
 
         <div class="mx-auto max-w-6xl px-4 md:px-6">

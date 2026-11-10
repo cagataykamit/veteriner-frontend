@@ -66,7 +66,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
         <div class="card">
             <div class="flex flex-col gap-4">
                 @if (listActionError()) {
-                    <p class="text-red-500 text-sm m-0" role="alert">{{ listActionError() }}</p>
+                    <p class="text-danger text-sm m-0" role="alert">{{ listActionError() }}</p>
                 }
                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                     <app-list-header class="mb-3" title="Ürünler" [count]="totalItems()">

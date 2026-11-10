@@ -48,12 +48,12 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                             <label for="code" class="block text-sm font-medium text-muted-color mb-2">Kod *</label>
                             <input id="code" pInputText class="w-full" formControlName="code" />
                             @if (apiFieldErrors().code) {
-                                <small class="text-red-500">{{ apiFieldErrors().code }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().code }}</small>
                             } @else if (form.controls.code.invalid && form.controls.code.touched) {
                                 @if (form.controls.code.hasError('required')) {
-                                    <small class="text-red-500">Kod zorunludur.</small>
+                                    <small class="text-danger">Kod zorunludur.</small>
                                 } @else if (form.controls.code.hasError('maxlength')) {
-                                    <small class="text-red-500">Kod en fazla 32 karakter olabilir.</small>
+                                    <small class="text-danger">Kod en fazla 32 karakter olabilir.</small>
                                 }
                             }
                         </div>
@@ -61,12 +61,12 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                             <label for="name" class="block text-sm font-medium text-muted-color mb-2">Ad *</label>
                             <input id="name" pInputText class="w-full" formControlName="name" />
                             @if (apiFieldErrors().name) {
-                                <small class="text-red-500">{{ apiFieldErrors().name }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().name }}</small>
                             } @else if (form.controls.name.invalid && form.controls.name.touched) {
                                 @if (form.controls.name.hasError('required')) {
-                                    <small class="text-red-500">Ad zorunludur.</small>
+                                    <small class="text-danger">Ad zorunludur.</small>
                                 } @else if (form.controls.name.hasError('maxlength')) {
-                                    <small class="text-red-500">Ad en fazla 128 karakter olabilir.</small>
+                                    <small class="text-danger">Ad en fazla 128 karakter olabilir.</small>
                                 }
                             }
                         </div>
@@ -74,26 +74,26 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                             <label for="isActive" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
                             <p-select inputId="isActive" formControlName="isActive" [options]="activeOptions" optionLabel="label" optionValue="value" class="w-full" />
                             @if (apiFieldErrors().isActive) {
-                                <small class="text-red-500">{{ apiFieldErrors().isActive }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().isActive }}</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="displayOrder" class="block text-sm font-medium text-muted-color mb-2">Sıra *</label>
                             <input id="displayOrder" type="number" min="0" class="w-full p-inputtext p-component" formControlName="displayOrder" />
                             @if (apiFieldErrors().displayOrder) {
-                                <small class="text-red-500">{{ apiFieldErrors().displayOrder }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().displayOrder }}</small>
                             } @else if (form.controls.displayOrder.invalid && form.controls.displayOrder.touched) {
                                 @if (form.controls.displayOrder.hasError('required')) {
-                                    <small class="text-red-500">Sıra zorunludur.</small>
+                                    <small class="text-danger">Sıra zorunludur.</small>
                                 } @else if (form.controls.displayOrder.hasError('min')) {
-                                    <small class="text-red-500">Sıra 0 veya daha büyük olmalıdır.</small>
+                                    <small class="text-danger">Sıra 0 veya daha büyük olmalıdır.</small>
                                 }
                             }
                         </div>
                     </div>
 
                     @if (submitError()) {
-                        <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                        <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">

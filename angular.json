@@ -316,6 +316,7 @@
                             "entry": "projects/site/src/server.ts"
                         },
                         "baseHref": "/k/",
+                        "deployUrl": "/k/",
                         "tsConfig": "projects/site/tsconfig.app.json",
                         "assets": [
                             {

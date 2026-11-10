@@ -50,9 +50,9 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                             }
                             <p-select inputId="speciesId" formControlName="speciesId" [options]="speciesOptions()" optionLabel="label" optionValue="value" placeholder="Tür seçin" [loading]="loadingSpecies()" class="w-full" />
                             @if (apiFieldErrors().speciesId) {
-                                <small class="text-red-500">{{ apiFieldErrors().speciesId }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().speciesId }}</small>
                             } @else if (form.controls.speciesId.invalid && form.controls.speciesId.touched) {
-                                <small class="text-red-500">Tür seçimi zorunludur.</small>
+                                <small class="text-danger">Tür seçimi zorunludur.</small>
                             }
                             @if (canShowQuickSpeciesButton()) {
                                 <div class="mt-2">
@@ -64,12 +64,12 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                             <label for="name" class="block text-sm font-medium text-muted-color mb-2">Ad *</label>
                             <input id="name" pInputText class="w-full" formControlName="name" />
                             @if (apiFieldErrors().name) {
-                                <small class="text-red-500">{{ apiFieldErrors().name }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().name }}</small>
                             } @else if (form.controls.name.invalid && form.controls.name.touched) {
                                 @if (form.controls.name.hasError('required')) {
-                                    <small class="text-red-500">Ad zorunludur.</small>
+                                    <small class="text-danger">Ad zorunludur.</small>
                                 } @else if (form.controls.name.hasError('maxlength')) {
-                                    <small class="text-red-500">Ad en fazla 128 karakter olabilir.</small>
+                                    <small class="text-danger">Ad en fazla 128 karakter olabilir.</small>
                                 }
                             }
                         </div>
@@ -78,14 +78,14 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                                 <label for="isActive" class="block text-sm font-medium text-muted-color mb-2">Durum *</label>
                                 <p-select inputId="isActive" formControlName="isActive" [options]="activeOptions" optionLabel="label" optionValue="value" class="w-full" />
                                 @if (apiFieldErrors().isActive) {
-                                    <small class="text-red-500">{{ apiFieldErrors().isActive }}</small>
+                                    <small class="text-danger">{{ apiFieldErrors().isActive }}</small>
                                 }
                             </div>
                         }
                     </div>
 
                     @if (submitError()) {
-                        <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                        <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">

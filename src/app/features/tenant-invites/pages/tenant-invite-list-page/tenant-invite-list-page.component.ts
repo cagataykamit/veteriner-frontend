@@ -77,7 +77,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         </div>
                     </div>
                     @if (actionError()) {
-                        <p class="text-red-500 text-sm m-0" role="alert">{{ actionError() }}</p>
+                        <p class="text-danger text-sm m-0" role="alert">{{ actionError() }}</p>
                     }
                     @if (displayedRows().length === 0) {
                         <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />

@@ -156,7 +156,7 @@ interface OpenItemRow {
                 <section class="card mb-4" aria-labelledby="eodCashTitle">
                     <h5 id="eodCashTitle" class="mt-0 mb-3">Tahsilat</h5>
                     @if (cashError()) {
-                        <p class="text-red-500 text-sm m-0" role="alert">{{ cashError() }}</p>
+                        <p class="text-danger text-sm m-0" role="alert">{{ cashError() }}</p>
                     } @else if (cash(); as c) {
                         <div class="grid grid-cols-12 gap-4">
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
@@ -269,7 +269,7 @@ interface OpenItemRow {
                         <p class="text-sm text-muted-color mt-0 mb-3" role="note">Açık işler şu anki durumu gösterir; seçilen günün anlık görüntüsü değildir.</p>
                     }
                     @if (openError()) {
-                        <p class="text-red-500 text-sm m-0" role="alert">{{ openError() }}</p>
+                        <p class="text-danger text-sm m-0" role="alert">{{ openError() }}</p>
                     } @else if (openItemsNeedClinic()) {
                         <p class="text-sm text-muted-color m-0">Açık işler tek klinik için hesaplanır. Klinik filtresinden bir klinik seçin.</p>
                     } @else {

@@ -36,15 +36,31 @@
 
 /*
  * Kart içi etiket/değer deseni (klinik özet, kayıt bilgileri, gösterge şeridi; müşteri/hasta/randevu kimlik kartları):
- * - field-label: küçük, büyük harf, birincil koyu yeşil — değerden renkle ayrışır (açık: primary-700 ≈ 5.5:1, koyu: primary-300).
- * - field-empty: boş durum metni ("Yok", "Kayıt yok" …) soluk ve italik; dolu değer koyu/kalın kalır.
+ * - field-label: küçük, büyük harf, birincil koyu turkuaz — değerden renkle ayrışır (açık: primary-700 ≈ 6.9:1, koyu: primary-300).
+ * - field-empty: boş durum metni ("Yok", "Kayıt yok" …) soluk (italik değil); dolu değer koyu/kalın kalır.
  */
 @utility field-label {
     @apply text-xs font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300;
 }
 
 @utility field-empty {
-    @apply text-sm italic text-muted-color;
+    @apply text-sm text-muted-color;
+}
+
+/*
+ * Hata metni (alan doğrulama mesajı, başarısız işlem uyarısı, borç/eksik tutarı): marka paleti A hata rengi,
+ * PrimeNG preset'indeki danger tonuyla aynı (açık: red-700 ≈ 6.5:1 beyazda, koyu: red-400).
+ */
+@utility text-danger {
+    @apply text-red-700 dark:text-red-400;
+}
+
+/*
+ * Açık temada birincil renkli bağlantılar (müşteri/hasta adı, "Ücretler" …) yarı kalın: koyu turkuaz ince yazıda griye kaçar,
+ * kalın harfte renk seçilir. Katmansız kural `font-medium` yardımcısını geçer; koyu temada açık turkuaz zaten belirgin.
+ */
+html:not(.app-dark) a.text-primary {
+    font-weight: 600;
 }
 
 /*

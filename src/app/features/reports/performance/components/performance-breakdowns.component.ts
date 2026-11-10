@@ -56,7 +56,7 @@ export function breakdownRows<T>(
             } @else if (loading()) {
                 <p class="m-0 text-sm text-muted-color">Kırılımlar yükleniyor…</p>
             } @else if (error(); as err) {
-                <p class="m-0 text-sm text-red-500" role="alert">{{ err }}</p>
+                <p class="m-0 text-sm text-danger" role="alert">{{ err }}</p>
             } @else if (data(); as d) {
                 @if (d.current.activity; as a) {
                     <p class="mt-0 mb-4 text-sm" data-testid="perf-activity">
@@ -122,6 +122,7 @@ export class PerformanceBreakdownsComponent {
     readonly data = signal<PerformanceBreakdownsDto | null>(null);
 
     readonly planLocked = computed(() => this.ro.lockedPlanFeature('AdvancedReports') !== null);
+    private readonly planReady = computed(() => this.ro.planFeatureReady('AdvancedReports'));
     readonly comparing = computed(() => this.data()?.previous != null);
 
     readonly tables = computed(() => {
@@ -173,9 +174,9 @@ export class PerformanceBreakdownsComponent {
             const from = this.from();
             const to = this.to();
             const compare = this.compare();
-            const locked = this.planLocked();
+            const ready = this.planReady();
 
-            untracked(() => this.load(from, to, compare, locked));
+            untracked(() => this.load(from, to, compare, ready));
         });
     }
 
@@ -183,10 +184,10 @@ export class PerformanceBreakdownsComponent {
         return amount == null ? '—' : formatMoney(amount, this.data()?.currency ?? 'TRY', 'tr-TR');
     }
 
-    private load(from: string, to: string, compare: boolean, locked: boolean): void {
+    private load(from: string, to: string, compare: boolean, ready: boolean): void {
         this.request?.unsubscribe();
 
-        if (locked || !from || !to) {
+        if (!ready || !from || !to) {
             this.data.set(null);
 
             return;

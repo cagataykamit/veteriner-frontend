@@ -8,7 +8,7 @@
  */
 export const environment = {
     production: true,
-    portalApiBaseUrl: 'https://localhost:7173/api/portal/v1',
+    portalApiBaseUrl: 'https://api.vetinity.com/api/portal/v1',
     portalBaseUrl: 'https://portal.vetinity.com',
     invitePath: '/invite'
 };

@@ -90,7 +90,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 <div class="card mb-4">
                     <h5 class="mt-0 mb-3">{{ copy.tenantMemberRolesSectionTitle }}</h5>
                     @if (roleActionError()) {
-                        <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ roleActionError() }}</p>
+                        <p class="text-danger text-sm mb-3 m-0" role="alert">{{ roleActionError() }}</p>
                     }
                     @if (claimsOptionsError()) {
                         <p class="text-orange-600 dark:text-orange-400 text-sm mb-3 m-0" role="status">{{ claimsOptionsError() }}</p>
@@ -226,7 +226,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 <div class="card mb-4">
                     <h5 class="mt-0 mb-3">Klinik üyelikleri</h5>
                     @if (clinicActionError()) {
-                        <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ clinicActionError() }}</p>
+                        <p class="text-danger text-sm mb-3 m-0" role="alert">{{ clinicActionError() }}</p>
                     }
                     @if (clinicsPickerError()) {
                         <p class="text-orange-600 dark:text-orange-400 text-sm mb-3 m-0" role="status">{{ clinicsPickerError() }}</p>

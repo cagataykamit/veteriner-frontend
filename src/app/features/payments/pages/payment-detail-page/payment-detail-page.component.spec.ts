@@ -20,6 +20,7 @@ const payment: PaymentDetailVm = {
     creditedAmount: 0,
     currency: 'TRY',
     method: 'cash',
+    cashRegisterName: null,
     note: '—',
     paidAtUtc: '2026-10-10T07:00:00Z',
     appointmentId: null,
@@ -90,5 +91,15 @@ describe('PaymentDetailPageComponent — iptal', () => {
         await setup();
         expect(fixture.nativeElement.textContent).toContain('Krediye yazılan');
         expect(fixture.nativeElement.querySelector('[data-testid="payment-credited"]').textContent.replace(/\s/g, '')).toContain('400,00');
+    });
+
+    it('nakit ödemede kasa adı görünür; kasa yoksa (kart, havale) satır yok', async () => {
+        await setup();
+        expect(fixture.nativeElement.querySelector('[data-testid="payment-cash-register"]')).toBeNull();
+
+        TestBed.resetTestingModule();
+        payments.getPaymentById.mockReturnValue(of({ ...payment, cashRegisterName: 'Arka kasa' }));
+        await setup();
+        expect(fixture.nativeElement.querySelector('[data-testid="payment-cash-register"]').textContent.trim()).toBe('Arka kasa');
     });
 });

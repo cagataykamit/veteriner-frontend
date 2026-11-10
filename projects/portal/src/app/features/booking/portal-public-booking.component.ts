@@ -1,10 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, OnInit, signal } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, computed, DestroyRef, ElementRef, inject, input, OnInit, signal, viewChild } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
+import { PORTAL_FRAMED, reportEmbedHeight } from '@portal/app/core/embed/portal-embed';
 import { PORTAL_ERROR_CODES, portalErrorMessage, portalProblemCode } from '@portal/app/core/errors/portal-errors';
 import { PortalResendTimer } from '@portal/app/features/auth/portal-resend-timer';
 import { PortalBrandHeader, PortalFooter } from '@portal/app/layout/portal-brand.component';
@@ -20,6 +21,7 @@ import {
     portalTurkishMobileValidator
 } from '@portal/app/shared/validation/portal-form-rules';
 import { PortalBookingApi, PortalBookingDay, PortalBookingPage, PortalBookingReason } from './portal-booking.api';
+import { accentStyle } from './portal-booking-brand';
 import { PortalBookingReasonStep } from './portal-booking-reason-step.component';
 import { bookingNoteValidators, NOTE_REQUIRED_MESSAGE, PORTAL_BOOKING_LIMITS, pendingLimitMessage, reasonKey } from './portal-booking.rules';
 import { PortalBookingDone, PortalBookingHow, PortalBookingStep, PortalBookingSummaryItem } from './portal-booking-ui.component';
@@ -36,6 +38,9 @@ function slotLabel(slot: string | null): string {
  * Kliniğe özel online randevu bağlantısı (`/randevu/:bookingCode`, ADR-042 K1 ve eki; sözleşme §5). Kimliksizdir: neden ve not → gün/saat →
  * iletişim ve hayvan bilgisi → e-posta doğrulama kodu → talep. Talep kesin randevu değildir; klinik onaylayınca e-posta gelir.
  * Bağlantıdan gelen kişi için hesap ya da müşteri kaydı oluşmaz. Adımlar numaralı kartlarda sırayla açılır.
+ *
+ * Kliniğin sitesindeki logo ve renkle çizilir (APPT-022). Başka bir sitenin içinde açılabilen tek sayfadır (APPT-021, §15):
+ * gömülüyken üst marka başlığı çizilmez, belgeler yeni sekmede açılır ve sayfa yüksekliğini gömen sayfaya bildirir.
  */
 @Component({
     selector: 'portal-public-booking',
@@ -62,6 +67,11 @@ function slotLabel(slot: string | null): string {
 })
 export class PortalPublicBookingComponent implements OnInit {
     private readonly api = inject(PortalBookingApi);
+    private readonly root = viewChild.required<ElementRef<HTMLElement>>('root');
+
+    /** Başka bir sitenin çerçevesinde mi (APPT-021). */
+    readonly embedded = inject(PORTAL_FRAMED);
+    readonly linkTarget = this.embedded ? '_blank' : undefined;
 
     /** Rota parametresi (component input binding). */
     readonly bookingCode = input<string | undefined>();
@@ -90,6 +100,14 @@ export class PortalPublicBookingComponent implements OnInit {
     readonly doneItems = signal<readonly PortalBookingSummaryItem[]>([]);
     readonly timer = new PortalResendTimer(inject(DestroyRef));
 
+    /** Okunur marka rengi sayfa köküne değişken olarak yazılır; okunmayan renkte boş, sayfa Vetinity renklerinde kalır. */
+    readonly accent = computed(() => accentStyle(this.page()?.branding?.accentColor));
+    readonly logoUrl = computed(() => {
+        const code = this.bookingCode()?.trim();
+
+        return code && this.page()?.branding?.hasLogo ? this.api.publicLogoUrl(code) : null;
+    });
+
     readonly selectedReason = computed<PortalBookingReason | null>(() => this.page()?.reasons.find((r) => reasonKey(r) === this.reasonKey()) ?? null);
     readonly slotText = computed(() => slotLabel(this.selectedSlot()));
     readonly preferredSlot = computed(() => {
@@ -111,6 +129,14 @@ export class PortalPublicBookingComponent implements OnInit {
         note: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(PORTAL_BOOKING_LIMITS.note)] }),
         code: new FormControl('', { nonNullable: true, validators: [Validators.required, portalOneTimeCodeValidator()] })
     });
+
+    constructor() {
+        if (this.embedded) {
+            const destroyRef = inject(DestroyRef);
+
+            afterNextRender(() => reportEmbedHeight(this.root().nativeElement, window, destroyRef));
+        }
+    }
 
     ngOnInit(): void {
         this.load();

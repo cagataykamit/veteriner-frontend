@@ -13,7 +13,7 @@ import { RippleModule } from 'primeng/ripple';
 import { RouterLink } from '@angular/router';
 import { AuthService, type ClinicResolutionDecision } from '@/app/core/auth/auth.service';
 import { AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE, authFailureMessage, loginFailureMessage } from '@/app/core/auth/auth-error.utils';
-import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
+import { DEFAULT_PANEL_AFTER_AUTH, panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AUTH_LOGIN_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
@@ -78,12 +78,12 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
                                 <label for="email1" class="public-auth-label">E-posta</label>
                                 <input pInputText id="email1" type="email" name="email" #emailCtrl="ngModel" placeholder="E-posta adresiniz" class="public-auth-control" [(ngModel)]="email" required email />
                                 @if (apiFieldErrors().email) {
-                                    <small class="text-red-500 block mt-2">{{ apiFieldErrors().email }}</small>
+                                    <small class="text-danger block mt-2">{{ apiFieldErrors().email }}</small>
                                 } @else if (emailCtrl.invalid && (emailCtrl.touched || formSubmitAttempted())) {
                                     @if (emailCtrl.errors?.['required']) {
-                                        <small class="text-red-500 block mt-2">E-posta zorunlu</small>
+                                        <small class="text-danger block mt-2">E-posta zorunlu</small>
                                     } @else if (emailCtrl.errors?.['email']) {
-                                        <small class="text-red-500 block mt-2">Geçerli bir e-posta girin</small>
+                                        <small class="text-danger block mt-2">Geçerli bir e-posta girin</small>
                                     }
                                 }
                             </div>
@@ -92,10 +92,10 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
                                 <label for="password1" class="public-auth-label-password">Şifre</label>
                                 <p-password inputId="password1" name="password" #passwordCtrl="ngModel" [(ngModel)]="password" placeholder="Şifreniz" [toggleMask]="true" [fluid]="true" [feedback]="false" [required]="true"></p-password>
                                 @if (apiFieldErrors().password) {
-                                    <small class="text-red-500 block mt-2">{{ apiFieldErrors().password }}</small>
+                                    <small class="text-danger block mt-2">{{ apiFieldErrors().password }}</small>
                                 } @else if (passwordCtrl.invalid && (passwordCtrl.touched || formSubmitAttempted())) {
                                     @if (passwordCtrl.errors?.['required']) {
-                                        <small class="text-red-500 block mt-2">Şifre zorunlu</small>
+                                        <small class="text-danger block mt-2">Şifre zorunlu</small>
                                     }
                                 }
                             </div>
@@ -340,6 +340,13 @@ export class Login implements OnInit {
                 const decision = this.auth.resolveClinicDecision(clinics);
 
                 if (decision.kind === 'none') {
+                    if (this.auth.isPlatformAdmin()) {
+                        this.auth.startPlatformOnlySession();
+                        void this.router.navigateByUrl(DEFAULT_PANEL_AFTER_AUTH);
+
+                        return;
+                    }
+
                     this.loginError.set(AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE);
 
                     return;

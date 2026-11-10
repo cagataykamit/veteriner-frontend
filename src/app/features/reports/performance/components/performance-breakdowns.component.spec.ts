@@ -1,3 +1,4 @@
+import { signal, type WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -30,6 +31,7 @@ describe('PerformanceBreakdownsComponent (TIER-004)', () => {
     let fixture: ComponentFixture<PerformanceBreakdownsComponent>;
     let api: { get: ReturnType<typeof vi.fn> };
     let locked: boolean;
+    let settled: WritableSignal<boolean>;
 
     const el = () => fixture.nativeElement as HTMLElement;
     const q = (id: string) => el().querySelector<HTMLElement>(`[data-testid="${id}"]`);
@@ -41,7 +43,7 @@ describe('PerformanceBreakdownsComponent (TIER-004)', () => {
                 provideRouter([]),
                 { provide: ApiClient, useValue: api },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },
-                { provide: TenantReadOnlyContextService, useValue: { lockedPlanFeature: () => (locked ? { feature: 'AdvancedReports', isEnabled: false, requiredPlanCode: 'Pro' } : null) } }
+                { provide: TenantReadOnlyContextService, useValue: { lockedPlanFeature: () => (locked ? { feature: 'AdvancedReports', isEnabled: false, requiredPlanCode: 'Pro' } : null), planFeatureReady: () => settled() && !locked } }
             ]
         }).compileComponents();
         fixture = TestBed.createComponent(PerformanceBreakdownsComponent);
@@ -54,6 +56,7 @@ describe('PerformanceBreakdownsComponent (TIER-004)', () => {
 
     beforeEach(() => {
         locked = false;
+        settled = signal(true);
         api = { get: vi.fn().mockReturnValue(of(dto())) };
     });
 
@@ -79,6 +82,17 @@ describe('PerformanceBreakdownsComponent (TIER-004)', () => {
 
         expect(api.get).not.toHaveBeenCalled();
         expect(q('plan-upgrade-notice')?.textContent).toContain('Gelişmiş raporlar Profesyonel ve Kurumsal paketlerinde var');
+    });
+
+    it('paket bilgisi gelmeden istek göndermez; gelince bir kez yükler', async () => {
+        settled.set(false);
+        await create();
+        expect(api.get).not.toHaveBeenCalled();
+
+        settled.set(true);
+        fixture.detectChanges();
+        await fixture.whenStable();
+        expect(api.get).toHaveBeenCalledTimes(1);
     });
 
     it('önceki dönemle ciro farkı; önceki dönemde olmayan satır "yeni"', () => {

@@ -38,7 +38,7 @@ describe('WaitlistSlotNoticeComponent (iptalde bekleme listesi bilgisi, TIER-018
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },
                 {
                     provide: TenantReadOnlyContextService,
-                    useValue: { mutationBlocked: () => false, lockedPlanFeature: () => (planLocked ? { feature: 'Waitlist', isEnabled: false, requiredPlanCode: 'Pro' } : null) }
+                    useValue: { mutationBlocked: () => false, lockedPlanFeature: () => (planLocked ? { feature: 'Waitlist', isEnabled: false, requiredPlanCode: 'Pro' } : null), planFeatureReady: () => !planLocked }
                 }
             ]
         }).compileComponents();

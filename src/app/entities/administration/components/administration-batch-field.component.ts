@@ -28,11 +28,11 @@ import type { AdministrationBatchPicker } from '@/app/entities/administration/ut
                 <small class="block mt-1 text-muted-color" data-testid="batch-availability">
                     Kullanılabilir: {{ info.availableText }} {{ info.unit }}
                     @if (info.expiredQuantity > 0) {
-                        <span class="text-red-500"> · süresi geçmiş: {{ info.expiredText }} {{ info.unit }} (kullanılamaz)</span>
+                        <span class="text-danger"> · süresi geçmiş: {{ info.expiredText }} {{ info.unit }} (kullanılamaz)</span>
                     }
                 </small>
                 @if (picker().guide(); as guide) {
-                    <small class="block mt-1" [class.text-muted-color]="!guide.warn" [class.text-red-500]="guide.warn" role="status" data-testid="administration-batch-guide">{{ guide.text }}</small>
+                    <small class="block mt-1" [class.text-muted-color]="!guide.warn" [class.text-danger]="guide.warn" role="status" data-testid="administration-batch-guide">{{ guide.text }}</small>
                 }
             }
         </div>

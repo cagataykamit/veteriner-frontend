@@ -47,7 +47,7 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
                         <p class="m-0 text-muted-color">Davet yükleniyor…</p>
                     } @else if (loadError(); as le) {
                         <h2 class="mt-0 mb-2 text-xl text-surface-900 dark:text-surface-0">Davet açılamadı</h2>
-                        <p class="text-red-500 m-0 mb-4" role="alert">{{ le }}</p>
+                        <p class="text-danger m-0 mb-4" role="alert">{{ le }}</p>
                         <a routerLink="/auth/login" class="public-brand-link no-underline">Giriş sayfasına git</a>
                     } @else if (successMode(); as sm) {
                         <h2 class="mt-0 mb-2 text-xl text-surface-900 dark:text-surface-0">
@@ -139,7 +139,7 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
                                 placeholder="Şifre"
                             />
                             @if (passwordFieldError()) {
-                                <p class="text-red-500 text-sm m-0 mb-3" role="alert">{{ passwordFieldError() }}</p>
+                                <p class="text-danger text-sm m-0 mb-3" role="alert">{{ passwordFieldError() }}</p>
                             }
                             @if (inv.requiredLegalDocuments.length) {
                                 <div class="mb-3">
@@ -171,7 +171,7 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
                         }
 
                         @if (actionError(); as ae) {
-                            <p class="text-red-500 text-sm m-0 mt-4" role="alert">{{ ae }}</p>
+                            <p class="text-danger text-sm m-0 mt-4" role="alert">{{ ae }}</p>
                         }
 
                         <p class="text-center m-0 mt-6 mb-0">

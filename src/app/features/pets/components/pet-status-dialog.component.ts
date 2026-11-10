@@ -43,7 +43,7 @@ interface AppointmentCancelFailure {
         <p-dialog [header]="cancelOutcome() || markingDeceased() ? 'Vefat olarak işaretle' : 'Aktife al'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">
             @if (cancelOutcome(); as o) {
                 <p class="mt-0 mb-2">Hasta vefat olarak işaretlendi.</p>
-                <p class="mt-0 mb-2 text-red-500" role="alert" data-testid="cancel-failures">{{ o.total }} randevudan {{ o.failures.length }} tanesi iptal edilemedi:</p>
+                <p class="mt-0 mb-2 text-danger" role="alert" data-testid="cancel-failures">{{ o.total }} randevudan {{ o.failures.length }} tanesi iptal edilemedi:</p>
                 <ul class="mt-0 mb-0 pl-5 text-sm space-y-1">
                     @for (f of o.failures; track f.appointment.id) {
                         <li>
@@ -90,7 +90,7 @@ interface AppointmentCancelFailure {
                     <label for="pet-deceased-on" class="block text-sm font-medium text-muted-color mb-2">Vefat tarihi (biliniyorsa)</label>
                     <input id="pet-deceased-on" type="date" class="w-full p-inputtext p-component" [formControl]="deceasedOn" [attr.max]="today()" [attr.min]="minDate()" />
                     @if (dateError(); as msg) {
-                        <small class="text-red-500" role="alert">{{ msg }}</small>
+                        <small class="text-danger" role="alert">{{ msg }}</small>
                     }
                 } @else {
                     <p class="mt-0 mb-0">
@@ -102,7 +102,7 @@ interface AppointmentCancelFailure {
                 }
             }
             @if (submitError()) {
-                <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
+                <p class="text-danger mt-3 mb-0" role="alert">{{ submitError() }}</p>
             }
             <ng-template #footer>
                 @if (cancelOutcome()) {

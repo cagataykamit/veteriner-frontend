@@ -49,28 +49,28 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             <label for="fullName" class="block text-sm font-medium text-muted-color mb-2">Ad soyad *</label>
                             <input id="fullName" pInputText class="w-full" formControlName="fullName" />
                             @if (fieldMessage('fullName'); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="phone" class="block text-sm font-medium text-muted-color mb-2">Telefon</label>
                             <input id="phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
                             @if (fieldMessage('phone'); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="email" class="block text-sm font-medium text-muted-color mb-2">E-posta</label>
                             <input id="email" type="email" pInputText class="w-full" formControlName="email" />
                             @if (fieldMessage('email'); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         </div>
                         <div class="col-span-12">
                             <label for="address" class="block text-sm font-medium text-muted-color mb-2">Adres</label>
                             <textarea id="address" rows="2" class="w-full p-inputtext p-component" formControlName="address"></textarea>
                             @if (fieldMessage('address'); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         </div>
                         <div class="col-span-12">
@@ -84,7 +84,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     </div>
 
                     @if (submitError()) {
-                        <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                        <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">

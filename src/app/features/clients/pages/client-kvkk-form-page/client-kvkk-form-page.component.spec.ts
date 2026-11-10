@@ -77,7 +77,7 @@ describe('ClientKvkkFormPageComponent', () => {
     it('varsayılan taslak metinde yazdırmadan önce uyarı; düzenleme bağlantısı yalnız Clinics.Update ile', () => {
         getTemplate.mockReturnValue(of(template({ isDefault: true })));
         create();
-        expect(el().querySelector('[data-testid="kvkk-default-warning"]')?.textContent).toContain('hukuk danışmanınızca onaylanmadan');
+        expect(el().querySelector('[data-testid="kvkk-default-warning"]')?.textContent).toContain('köşeli parantezli alanları');
         expect(el().querySelector('a[href="/panel/settings/kvkk-form"]')).toBeNull();
 
         TestBed.resetTestingModule();

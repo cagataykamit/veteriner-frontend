@@ -74,10 +74,10 @@ const NOTES_MAX_LENGTH = 2000;
                             class="w-full"
                         />
                         @if (form.controls.productId.invalid && form.controls.productId.touched) {
-                            <small class="text-red-500">Ürün seçimi zorunludur.</small>
+                            <small class="text-danger">Ürün seçimi zorunludur.</small>
                         }
                         @if (productsError()) {
-                            <small class="text-red-500 block">{{ productsError() }}</small>
+                            <small class="text-danger block">{{ productsError() }}</small>
                         }
                     </div>
                     <div class="col-span-12 sm:col-span-6">
@@ -89,7 +89,7 @@ const NOTES_MAX_LENGTH = 2000;
                         </label>
                         <input id="ad-quantity" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="quantity" />
                         @if (form.controls.quantity.invalid && form.controls.quantity.dirty) {
-                            <small class="text-red-500">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
+                            <small class="text-danger">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
                         } @else if (unit()) {
                             <small class="text-muted-color">Miktar ürünün stok birimindedir: {{ unit() }}. Örnek: birim "şişe" ise 0,5 yarım şişedir.</small>
                         }
@@ -103,7 +103,7 @@ const NOTES_MAX_LENGTH = 2000;
                         <label for="ad-at" class="block text-sm font-medium text-muted-color mb-2">Uygulama zamanı</label>
                         <app-date-input inputId="ad-at" type="datetime-local" formControlName="administeredAtLocal" />
                         @if (form.controls.administeredAtLocal.hasError('dateYearInvalid') && form.controls.administeredAtLocal.touched) {
-                            <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                            <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
                         } @else {
                             <small class="text-muted-color">Boş bırakılırsa şimdi kaydedilir (en fazla 7 gün geriye).</small>
                         }
@@ -114,7 +114,7 @@ const NOTES_MAX_LENGTH = 2000;
                             <label for="ad-late-reason" class="block text-sm font-medium text-muted-color mb-2">Sonradan ekleme gerekçesi *</label>
                             <textarea id="ad-late-reason" rows="2" class="w-full p-inputtext p-component" formControlName="lateEntryReason" data-testid="late-entry-reason"></textarea>
                             @if (form.controls.lateEntryReason.invalid && form.controls.lateEntryReason.touched) {
-                                <small class="text-red-500">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
+                                <small class="text-danger">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
                             }
                         </div>
                     }
@@ -124,7 +124,7 @@ const NOTES_MAX_LENGTH = 2000;
                     </div>
                 </div>
                 @if (submitError()) {
-                    <p class="text-red-500 mt-3 mb-0" role="alert">{{ submitError() }}</p>
+                    <p class="text-danger mt-3 mb-0" role="alert">{{ submitError() }}</p>
                 }
             </form>
             <ng-template #footer>

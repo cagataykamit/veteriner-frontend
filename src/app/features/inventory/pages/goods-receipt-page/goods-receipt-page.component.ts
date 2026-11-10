@@ -76,7 +76,7 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
                             <label for="grClinic" class="block text-sm font-medium text-muted-color">Klinik *</label>
                             <p-select inputId="grClinic" formControlName="clinicId" [options]="clinicOptions()" optionLabel="label" optionValue="value" placeholder="Klinik seçin" class="w-full" [loading]="clinicsLoading()" />
                             @if (form.controls.clinicId.invalid && form.controls.clinicId.touched) {
-                                <small class="text-red-500">Klinik seçimi zorunludur.</small>
+                                <small class="text-danger">Klinik seçimi zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-8 flex flex-col gap-1">
@@ -117,7 +117,7 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
                                     <input id="grColdChain" pInputText class="w-full" type="text" formControlName="coldChainMonitor" autocomplete="off" [attr.maxlength]="transportMax" />
                                 </div>
                                 @if (form.hasError('dispatchedAfterReceived')) {
-                                    <small class="col-span-12 text-red-500" role="alert">Depo çıkış tarihi geliş / teslim tarihinden sonra olamaz.</small>
+                                    <small class="col-span-12 text-danger" role="alert">Depo çıkış tarihi geliş / teslim tarihinden sonra olamaz.</small>
                                 }
                             </div>
                         }
@@ -132,7 +132,7 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
                             </div>
                         </div>
                         @if (scanNotice(); as notice) {
-                            <p class="text-red-500 text-sm mt-0 mb-2" role="alert" data-testid="gr-scan-notice">{{ notice }}</p>
+                            <p class="text-danger text-sm mt-0 mb-2" role="alert" data-testid="gr-scan-notice">{{ notice }}</p>
                         }
                         <div class="overflow-x-auto">
                             <table class="w-full border-collapse" style="min-width: 52rem" formArrayName="lines">
@@ -177,7 +177,7 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
                                                     </ng-template>
                                                 </p-autocomplete>
                                                 @if (line.controls.product.touched && line.hasError('productMissing')) {
-                                                    <small class="text-red-500">Listeden bir ürün seçin.</small>
+                                                    <small class="text-danger">Listeden bir ürün seçin.</small>
                                                 }
                                             </td>
                                             <td class="p-2">
@@ -252,10 +252,10 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
                     </div>
 
                     @if (submitError(); as err) {
-                        <p class="text-red-500 text-sm m-0" role="alert" data-testid="gr-submit-error">{{ err }}</p>
+                        <p class="text-danger text-sm m-0" role="alert" data-testid="gr-submit-error">{{ err }}</p>
                     }
                     @if (form.invalid && attempted()) {
-                        <p class="text-red-500 text-sm m-0" role="alert">Formda eksik veya hatalı alanlar var; kırmızı işaretli yerleri düzeltin.</p>
+                        <p class="text-danger text-sm m-0" role="alert">Formda eksik veya hatalı alanlar var; kırmızı işaretli yerleri düzeltin.</p>
                     }
 
                     <div class="flex flex-wrap justify-end gap-2">

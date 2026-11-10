@@ -53,8 +53,12 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
                     </div>
                     <p class="m-0 mt-4 text-sm public-on-brand-subtle">{{ trialLine }}</p>
                 </div>
-                <div class="lg:translate-y-12">
+                <div class="relative lg:translate-y-12">
                     <app-public-screenshot shot="bugun" [eager]="true" />
+                    <!-- Telefonda aynı ekran: yalnız geniş ekranda, masaüstü görüntüsünün sol alt köşesine biner -->
+                    <div class="absolute -bottom-10 -left-6 hidden w-[19%] lg:block" data-hero-phone>
+                        <app-public-screenshot shot="telefonBugun" />
+                    </div>
                 </div>
             </div>
         </section>
@@ -62,7 +66,7 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
         <!-- 2 Kime göre -->
         <section class="mx-auto max-w-6xl px-4 pt-16 md:px-6 lg:pt-28" aria-labelledby="public-home-audience-title">
             <h2 id="public-home-audience-title" class="public-h2 m-0 text-center">Kime göre?</h2>
-            <p class="public-lead m-0 mx-auto mt-3 max-w-2xl text-center">Türkiye'deki küçük klinik için; büyüyünce şube eklersiniz.</p>
+            <p class="public-lead m-0 mx-auto mt-3 max-w-2xl text-center">Tek hekimli klinikten çok şubeli işletmeye; büyüdükçe şube eklersiniz.</p>
             <div class="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
                 @for (item of audience; track item.title) {
                     <article class="public-card p-6">
@@ -122,7 +126,7 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
                         </ul>
                         <p class="m-0 mt-3 text-sm text-surface-600 dark:text-surface-300">Yazdırın, Excel'e alın.</p>
                         <div class="mt-5">
-                            <app-public-screenshot shot="asiDefteri" />
+                            <app-public-screenshot shot="kayitDefteri" />
                         </div>
                     </div>
                     <div>

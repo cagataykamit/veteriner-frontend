@@ -27,7 +27,7 @@ const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
                     <label for="spName" class="text-sm font-medium text-muted-color">Ad *</label>
                     <input id="spName" pInputText formControlName="name" autocomplete="off" maxlength="200" />
                     @if (form.controls.name.invalid && form.controls.name.touched) {
-                        <small class="text-red-500">Ad 2–200 karakter olmalı.</small>
+                        <small class="text-danger">Ad 2–200 karakter olmalı.</small>
                     }
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -35,7 +35,7 @@ const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
                         <label for="spEmail" class="text-sm font-medium text-muted-color">E-posta</label>
                         <input id="spEmail" pInputText type="email" formControlName="email" autocomplete="off" maxlength="200" />
                         @if (form.controls.email.invalid && form.controls.email.touched) {
-                            <small class="text-red-500">Geçerli bir e-posta yazın.</small>
+                            <small class="text-danger">Geçerli bir e-posta yazın.</small>
                         }
                     </div>
                     <div class="flex flex-col gap-1">
@@ -48,7 +48,7 @@ const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
                     <input id="spTenant" pInputText formControlName="linkedTenantId" autocomplete="off" placeholder="İsteğe bağlı" />
                     <small class="text-muted-color">Ortak bir klinik işletiyorsa: bu kurum ortağın kodlarını kullanamaz. E-posta da aynı amaçla karşılaştırılır.</small>
                     @if (form.controls.linkedTenantId.invalid && form.controls.linkedTenantId.touched) {
-                        <small class="text-red-500">Kurum kimliği GUID biçiminde olmalı.</small>
+                        <small class="text-danger">Kurum kimliği GUID biçiminde olmalı.</small>
                     }
                 </div>
                 @if (partner()) {

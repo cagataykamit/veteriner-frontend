@@ -67,7 +67,7 @@ const ROW_PAGE_SIZE = 25;
                             <dt class="text-muted-color">Uyarılı</dt>
                             <dd class="m-0 text-right">{{ t.s.warning }}</dd>
                             <dt class="text-muted-color">Hatalı</dt>
-                            <dd class="m-0 text-right" [class.text-red-500]="t.s.error > 0">{{ t.s.error }}</dd>
+                            <dd class="m-0 text-right" [class.text-danger]="t.s.error > 0">{{ t.s.error }}</dd>
                         </dl>
                     </div>
                 }

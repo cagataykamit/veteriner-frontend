@@ -42,7 +42,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                     </div>
                     <div>
                         <dt class="text-muted-color">Hatalı satır</dt>
-                        <dd class="m-0 text-xl font-medium" [class.text-red-500]="totals().error > 0">{{ totals().error }}</dd>
+                        <dd class="m-0 text-xl font-medium" [class.text-danger]="totals().error > 0">{{ totals().error }}</dd>
                     </div>
                 </dl>
 
@@ -153,7 +153,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                             <dt class="text-muted-color">Atlandı</dt>
                             <dd class="m-0 text-right">{{ t.s.skipped }}</dd>
                             <dt class="text-muted-color">Başarısız</dt>
-                            <dd class="m-0 text-right" [class.text-red-500]="t.s.failed > 0">{{ t.s.failed }}</dd>
+                            <dd class="m-0 text-right" [class.text-danger]="t.s.failed > 0">{{ t.s.failed }}</dd>
                         </dl>
                     </div>
                 }

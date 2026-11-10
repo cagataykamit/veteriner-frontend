@@ -4,7 +4,7 @@
  */
 export const environment = {
     production: true,
-    apiBaseUrl: 'https://localhost:7173',
+    apiBaseUrl: 'https://api.vetinity.com',
     /**
      * Swagger `LoginCommand.tenantId` — backend çok kiracılı ise ve zorunlu tutuyorsa tenant GUID.
      * Örnek: '3fa85f64-5717-4562-b3fc-2c963f66afa6'
@@ -13,5 +13,8 @@ export const environment = {
     /** Klinik sitelerinin kökü (`{siteBaseUrl}/k/{adres}`, ADR-045 K6). */
     siteBaseUrl: 'https://vetinity.com',
     /** Tanıtım sayfalarını arama motorlarına kapat (yalnız staging). */
-    siteNoindex: false
+    siteNoindex: false,
+    /** Yüzey kökleri (ADR-033): tanıtım ve panel ayrı alt alan adında; boşsa ikisi aynı adreste çalışır. */
+    publicOrigin: 'https://www.vetinity.com',
+    panelOrigin: 'https://panel.vetinity.com'
 };

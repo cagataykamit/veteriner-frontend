@@ -46,21 +46,21 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                             <label for="demoContactName" class="block font-medium mb-2">Ad soyad *</label>
                             <input pInputText id="demoContactName" name="contactName" class="w-full" autocomplete="name" [maxlength]="limits.contactName" [(ngModel)]="form.contactName" [disabled]="submitting()" [attr.aria-invalid]="!!errors().contactName" />
                             @if (errors().contactName) {
-                                <small class="text-red-500 block mt-1">{{ errors().contactName }}</small>
+                                <small class="text-danger block mt-1">{{ errors().contactName }}</small>
                             }
                         </div>
                         <div>
                             <label for="demoClinicName" class="block font-medium mb-2">Klinik adı *</label>
                             <input pInputText id="demoClinicName" name="clinicName" class="w-full" autocomplete="organization" [maxlength]="limits.clinicName" [(ngModel)]="form.clinicName" [disabled]="submitting()" [attr.aria-invalid]="!!errors().clinicName" />
                             @if (errors().clinicName) {
-                                <small class="text-red-500 block mt-1">{{ errors().clinicName }}</small>
+                                <small class="text-danger block mt-1">{{ errors().clinicName }}</small>
                             }
                         </div>
                         <div>
                             <label for="demoEmail" class="block font-medium mb-2">E-posta *</label>
                             <input pInputText id="demoEmail" name="email" type="email" class="w-full" autocomplete="email" [maxlength]="limits.email" [(ngModel)]="form.email" [disabled]="submitting()" [attr.aria-invalid]="!!errors().email" />
                             @if (errors().email) {
-                                <small class="text-red-500 block mt-1">{{ errors().email }}</small>
+                                <small class="text-danger block mt-1">{{ errors().email }}</small>
                             }
                         </div>
                         <div>
@@ -88,7 +88,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                             }
                         </div>
                         @if (errors().clinicSize) {
-                            <small class="text-red-500 block mt-1">{{ errors().clinicSize }}</small>
+                            <small class="text-danger block mt-1">{{ errors().clinicSize }}</small>
                         }
                     </fieldset>
 
@@ -111,12 +111,12 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
                             >
                         </div>
                         @if (errors().privacyNoticeAccepted) {
-                            <small class="text-red-500 block mt-1">{{ errors().privacyNoticeAccepted }}</small>
+                            <small class="text-danger block mt-1">{{ errors().privacyNoticeAccepted }}</small>
                         }
                     </div>
 
                     @if (formError()) {
-                        <p class="m-0 text-sm text-red-500" role="alert">{{ formError() }}</p>
+                        <p class="m-0 text-sm text-danger" role="alert">{{ formError() }}</p>
                     }
 
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center">

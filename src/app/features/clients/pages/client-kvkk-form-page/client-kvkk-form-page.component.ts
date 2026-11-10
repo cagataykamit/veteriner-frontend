@@ -16,7 +16,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
  * Müşteri kartından "KVKK formu yazdır" (ADR-021 karar 1) ve "Aydınlatma metni yazdır" (ADR-024): aktif kliniğin ilgili şablonu müşteri adı ve
- * bugünün tarihiyle doldurulur, A4 dikey yazdırılır. Tür rota verisinden (`kvkkKind`) gelir. Şablon hâlâ taslak varsayılan metinse yazdırmadan
+ * bugünün tarihiyle doldurulur, A4 dikey yazdırılır. Tür rota verisinden (`kvkkKind`) gelir. Şablon hâlâ varsayılan metinse yazdırmadan
  * önce uyarı gösterilir. Açık rıza formu kâğıtta kalır; sonuç müşteri kartında "Rıza durumunu işaretle" ile kaydedilir.
  */
 @Component({

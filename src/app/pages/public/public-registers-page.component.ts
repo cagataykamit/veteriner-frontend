@@ -2,6 +2,8 @@ import { DOCUMENT } from '@angular/common';
 import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import {
+    PUBLIC_DATA_EXPORT_PLANS,
+    PUBLIC_DATA_EXPORT_POINTS,
     PUBLIC_KVKK_NOTE,
     PUBLIC_KVKK_STEPS,
     PUBLIC_RECORD_SAFETY_ITEMS,
@@ -13,7 +15,7 @@ import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicPageHeaderComponent } from './components/public-page-header.component';
 import { PublicScreenshotComponent } from './components/public-screenshot.component';
 
-/** Defterler ve KVKK (tasarım belgesi 5.3): A defterler tablosu, B KVKK 4 adım, C erişim ve iz. */
+/** Defterler ve KVKK (tasarım belgesi 5.3): A defterler tablosu, B KVKK 4 adım, tüm veriyi dışa aktarma, C erişim ve iz. */
 @Component({
     selector: 'app-public-registers-page',
     standalone: true,
@@ -51,7 +53,7 @@ import { PublicScreenshotComponent } from './components/public-screenshot.compon
                             </tbody>
                         </table>
                     </div>
-                    <app-public-screenshot shot="asiDefteri" />
+                    <app-public-screenshot shot="kayitDefteri" />
                 </div>
                 <p class="public-note m-0 mt-6">{{ registersNote }}</p>
             </section>
@@ -72,6 +74,18 @@ import { PublicScreenshotComponent } from './components/public-screenshot.compon
                     <app-public-screenshot shot="kvkkFormu" />
                 </div>
                 <p class="public-note m-0 mt-6">{{ kvkkNote }}</p>
+            </section>
+
+            <section class="public-section" aria-labelledby="data-export-title">
+                <h2 id="data-export-title" class="public-h2 m-0">Tüm verinizi dışa aktarın</h2>
+                <p class="public-lead m-0 mt-3 max-w-2xl">Kayıtlarınız sizindir: başka bir sisteme geçerken ya da arşiv için hepsini tek pakette alırsınız. {{ dataExportPlans }}.</p>
+                <ul class="m-0 mt-8 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-2" data-testid="data-export-points">
+                    @for (point of dataExportPoints; track point) {
+                        <li class="public-card flex items-start gap-3 p-5 text-sm text-surface-700 dark:text-surface-200">
+                            <i class="pi pi-check mt-0.5 shrink-0 text-[var(--public-accent)]" aria-hidden="true"></i><span>{{ point }}</span>
+                        </li>
+                    }
+                </ul>
             </section>
 
             <section class="public-section" aria-labelledby="access-title">
@@ -101,6 +115,8 @@ export class PublicRegistersPageComponent implements OnInit {
     readonly registersNote = PUBLIC_REGISTERS_NOTE;
     readonly kvkkSteps = PUBLIC_KVKK_STEPS;
     readonly kvkkNote = PUBLIC_KVKK_NOTE;
+    readonly dataExportPoints = PUBLIC_DATA_EXPORT_POINTS;
+    readonly dataExportPlans = PUBLIC_DATA_EXPORT_PLANS;
     readonly accessItems = PUBLIC_RECORD_SAFETY_ITEMS;
 
     ngOnInit(): void {

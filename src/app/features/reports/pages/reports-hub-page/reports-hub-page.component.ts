@@ -19,7 +19,7 @@ import { NavigationCardsComponent } from '@/app/shared/ui/navigation-cards/navig
         <app-page-header title="Raporlar" description="Randevu, klinik ve para raporlarına buradan ulaşın." />
 
         @if (favoriteError(); as message) {
-            <p class="text-red-500 text-sm mt-0 mb-3" role="alert">{{ message }}</p>
+            <p class="text-danger text-sm mt-0 mb-3" role="alert">{{ message }}</p>
         }
 
         @if (favoriteEntries().length > 0) {

@@ -10,7 +10,7 @@ import { appRoutes } from '@/app.routes';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { PUBLIC_CONTACT_CARD_ROWS, PUBLIC_CONTACT_EMAIL } from '@/app/features/public/utils/public-contact-content.utils';
 import { PUBLIC_FAQ_CATEGORIES, PUBLIC_HOME_FAQS, PUBLIC_PACKAGES_FAQ_CATEGORY_ID, publicFaqsOf } from '@/app/features/public/utils/public-faq-content.utils';
-import { PUBLIC_FEATURE_SECTIONS } from '@/app/features/public/utils/public-features-content.utils';
+import { PUBLIC_FEATURE_GROUPS, PUBLIC_FEATURE_SECTIONS } from '@/app/features/public/utils/public-features-content.utils';
 import { PUBLIC_HOME_AUDIENCE, PUBLIC_HOME_DAY_FLOW } from '@/app/features/public/utils/public-home-content.utils';
 import { PUBLIC_NAV_LINKS, PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { PUBLIC_REGISTERS } from '@/app/features/public/utils/public-registers-content.utils';
@@ -71,7 +71,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         { path: PUBLIC_PATHS.packages, meta: PUBLIC_PACKAGES_PAGE_META, h1: 'Kliniğinize uygun paketi seçin' },
         { path: PUBLIC_PATHS.faq, meta: PUBLIC_FAQ_PAGE_META, h1: 'Sık sorulan sorular' },
         { path: PUBLIC_PATHS.contact, meta: PUBLIC_CONTACT_PAGE_META, h1: 'Demo isteyin ya da hemen deneyin' },
-        { path: PUBLIC_PATHS.about, meta: PUBLIC_ABOUT_PAGE_META, h1: 'Küçük veteriner klinikleri için, klinikle birlikte' }
+        { path: PUBLIC_PATHS.about, meta: PUBLIC_ABOUT_PAGE_META, h1: 'Veteriner klinikleri için, klinikle birlikte' }
     ];
 
     for (const page of pages) {
@@ -117,23 +117,36 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(TestBed.inject(Router).url).toBe(PUBLIC_PATHS.packages);
     });
 
-    it('özellikler: altı bölüm, her birinde gerçek ekran görüntüsü (alt metni, boyut, tembel yükleme)', async () => {
+    it('özellikler: altı bölüm ve ekranlı kart grupları, her birinde gerçek ekran görüntüsü (alt metni, boyut, tembel yükleme)', async () => {
         await harness.navigateByUrl(PUBLIC_PATHS.features);
         harness.detectChanges();
 
-        expect(texts('section[id] h2')).toEqual(PUBLIC_FEATURE_SECTIONS.map((s) => s.title));
+        expect(texts('section[id] h2')).toEqual([...PUBLIC_FEATURE_SECTIONS, ...PUBLIC_FEATURE_GROUPS].map((s) => s.title));
+        const shots = [...PUBLIC_FEATURE_SECTIONS.map((s) => s.screenshot), ...PUBLIC_FEATURE_GROUPS.flatMap((g) => (g.shot ? [g.shot.screenshot] : []))];
         const images = Array.from(root().querySelectorAll<HTMLImageElement>('figure.public-shot img.public-shot-img--light'));
 
-        expect(images.map((img) => img.alt)).toEqual(PUBLIC_FEATURE_SECTIONS.map((s) => PUBLIC_SCREENSHOTS[s.screenshot].alt));
+        expect(shots.length).toBeGreaterThan(PUBLIC_FEATURE_SECTIONS.length);
+        expect(images.map((img) => img.alt)).toEqual(shots.map((key) => PUBLIC_SCREENSHOTS[key].alt));
         images.forEach((img, i) => {
-            const def = PUBLIC_SCREENSHOTS[PUBLIC_FEATURE_SECTIONS[i].screenshot];
+            const def = PUBLIC_SCREENSHOTS[shots[i]];
 
             expect(img.getAttribute('src')).toBe(`/marketing/screens/${def.file}-light.webp`);
             expect(img.getAttribute('width')).toBe(String(def.width));
             expect(img.getAttribute('height')).toBe(String(def.height));
             expect(img.getAttribute('loading')).toBe('lazy');
         });
-        expect(root().querySelectorAll('figure.public-shot img.public-shot-img--dark').length).toBe(PUBLIC_FEATURE_SECTIONS.length);
+        expect(root().querySelectorAll('figure.public-shot img.public-shot-img--dark').length).toBe(shots.length);
+    });
+
+    it('özellikler: grup ekranının altyazısı gösterdiği kartın adı ve paketi, özellik tablosundan', async () => {
+        await harness.navigateByUrl(PUBLIC_PATHS.features);
+        harness.detectChanges();
+
+        const caption = (id: string) => root().querySelector(`section#${id} figcaption`)?.textContent?.trim();
+
+        expect(caption('klinik-ici')).toBe('Otomatik aşı sihirbazı · Profesyonel ve Kurumsal paketlerinde');
+        expect(caption('hasta-sahibi')).toBe('Klinik web sitesi · Tüm paketlerde');
+        expect(caption('isletme')).toBe('Gelişmiş raporlar · Profesyonel ve Kurumsal paketlerinde');
     });
 
     it('özellikler: bölüm dizini aynı sayfanın bölümüne gider, ana sayfaya atmaz', async () => {
@@ -142,7 +155,43 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
 
         const hrefs = Array.from(root().querySelectorAll<HTMLAnchorElement>('nav[aria-label="Bölüm dizini"] a')).map((a) => a.getAttribute('href'));
 
-        expect(hrefs).toEqual(PUBLIC_FEATURE_SECTIONS.map((s) => `${PUBLIC_PATHS.features}#${s.id}`));
+        expect(hrefs).toEqual([...PUBLIC_FEATURE_SECTIONS, ...PUBLIC_FEATURE_GROUPS].map((s) => `${PUBLIC_PATHS.features}#${s.id}`));
+    });
+
+    it('özellikler: kart gruplarında paket etiketi özellik tablosundan; abartı yok', async () => {
+        await harness.navigateByUrl(PUBLIC_PATHS.features);
+        harness.detectChanges();
+
+        const cards = Array.from(root().querySelectorAll<HTMLElement>('[data-feature-card]'));
+        const plans = (title: string) => cards.find((c) => c.querySelector('h3')?.textContent?.trim() === title)?.querySelector('[data-feature-plans]')?.textContent?.trim();
+
+        expect(cards.length).toBe(PUBLIC_FEATURE_GROUPS.flatMap((g) => g.cards).length);
+        expect(plans('Klinik web sitesi')).toBe('Tüm paketlerde');
+        expect(plans('Çoklu kasa ve kasa yönetimi')).toBe('Profesyonel ve Kurumsal paketlerinde');
+        expect(plans('Şubeler özeti')).toBe('Kurumsal paketinde');
+        expect(root().textContent).toContain('İYS');
+        expect(root().textContent).not.toMatch(/en iyi|bir numara|yalnızca bizde/i);
+    });
+
+    it('geçiş: kaynak program adımı ve geçiş desteği kutusu (Kurumsal ücretsiz, diğerleri ücretli)', async () => {
+        await harness.navigateByUrl(PUBLIC_PATHS.migration);
+        harness.detectChanges();
+
+        expect(text('.public-timeline-item h2')).toBe('Kaynak programı seçin, dosyanızı yükleyin');
+        const support = root().querySelector('[data-testid="migration-support"]')?.textContent ?? '';
+
+        expect(support).toContain('1 saatlik kurulum görüşmesi');
+        expect(support).toContain('Kurumsal paketinde ücretsiz');
+        expect(support).toContain('e-postayla göndermezsiniz');
+    });
+
+    it('defterler ve KVKK: tüm veriyi dışa aktarma bölümü her pakette', async () => {
+        await harness.navigateByUrl(PUBLIC_PATHS.registersAndKvkk);
+        harness.detectChanges();
+
+        expect(text('#data-export-title')).toBe('Tüm verinizi dışa aktarın');
+        expect(root().querySelector('section[aria-labelledby="data-export-title"]')?.textContent).toContain('Tüm paketlerde');
+        expect(texts('[data-testid="data-export-points"] li').length).toBe(4);
     });
 
     it('iskelet: bölüm bağlantısı üst çubuğun altına kayar, panele dönünce kaydırma payı sıfırlanır', () => {
@@ -274,6 +323,11 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(text('#contact-card-title')).toBe('İletişim bilgileri');
         expect(texts('section[aria-labelledby="contact-card-title"] dt')).toEqual(PUBLIC_CONTACT_CARD_ROWS.map((r) => r.label));
         expect(root().querySelector(`section[aria-labelledby="contact-card-title"] a[href="mailto:${PUBLIC_CONTACT_EMAIL}"]`)?.textContent?.trim()).toBe(PUBLIC_CONTACT_EMAIL!);
+        const whatsapp = root().querySelector<HTMLAnchorElement>('section[aria-labelledby="contact-card-title"] a[href="https://wa.me/905439580091"]');
+
+        expect(whatsapp?.textContent?.trim()).toBe('0543 958 00 91');
+        expect(whatsapp?.getAttribute('target')).toBe('_blank');
+        expect(whatsapp?.getAttribute('rel')).toContain('noopener');
         expect(text('#demo-request-title')).toBe('Canlı demo isteyin');
         expect(root().querySelector('section[aria-labelledby="demo-request-title"] form')).not.toBeNull();
         expect(text('#contact-try-title')).toBe('Kendi verinizle deneyin');
@@ -321,6 +375,10 @@ describe('Ana sayfa (PublicHomePage)', () => {
 
         expect(shot?.alt).toBe(PUBLIC_SCREENSHOTS.bugun.alt);
         expect(shot?.getAttribute('loading')).toBe('eager');
+        const phone = hero.querySelector<HTMLImageElement>('[data-hero-phone] img.public-shot-img--light');
+
+        expect(phone?.alt).toBe(PUBLIC_SCREENSHOTS.telefonBugun.alt);
+        expect(phone?.getAttribute('loading')).toBe('lazy');
     });
 
     it('kime göre: üç kart, hastane yok', () => {

@@ -48,7 +48,7 @@ interface SourceOption {
                             <label class="col-span-12 md:col-span-4 text-sm font-medium" [for]="'map-' + info.table + '-' + f.key">
                                 {{ f.label }}
                                 @if (required(info.table, f.key)) {
-                                    <span class="text-red-500"> *</span>
+                                    <span class="text-danger"> *</span>
                                 }
                                 @if (f.hint) {
                                     <span class="block font-normal text-xs text-muted-color">{{ f.hint }}</span>

@@ -1,5 +1,5 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { catchError, Observable, of, shareReplay, tap } from 'rxjs';
+import { catchError, finalize, Observable, of, shareReplay, tap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { resolveTenantIdFromJwt } from '@/app/core/auth/jwt-tenant.utils';
 import { SUBSCRIPTIONS_MANAGE_CLAIM, SUBSCRIPTIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -17,6 +17,9 @@ export class TenantReadOnlyContextService {
     private readonly tenantAccess = inject(TenantAccessService);
 
     private readonly accessStateSignal = signal<TenantAccessStateVm | null>(null);
+
+    /** access-state isteği sonuçlandı (başarılı ya da hatalı); paket kararı verilebilir. */
+    private readonly accessSettledSignal = signal(false);
 
     /** Abonelik özetinden gelen `canManageSubscription` (banner metni / senkron); erişim durumu access-state’ten. */
     private readonly subscriptionSummaryPatchSignal = signal<{ readonly canManageSubscription: boolean } | null>(null);
@@ -40,6 +43,14 @@ export class TenantReadOnlyContextService {
         const row = this.accessStateSignal()?.planFeatures.find((f) => f.feature === feature);
 
         return row && !row.isEnabled ? row : null;
+    }
+
+    /**
+     * Pakete bağlı veri isteği gönderilebilir mi (TIER-001): paket bilgisi gelene kadar ve özellik kilitliyse `false`; böylece 403
+     * alacak istek hiç gitmez. Bilgi alınamadıysa ya da yüklenemiyorsa `true` (karar sunucuda). Kilit kutusu `lockedPlanFeature`'dan.
+     */
+    planFeatureReady(feature: PlanFeatureCode): boolean {
+        return this.accessSettledSignal() && this.lockedPlanFeature(feature) === null;
     }
 
     /**
@@ -68,6 +79,7 @@ export class TenantReadOnlyContextService {
     ensurePanelTenantAccess(): Observable<TenantAccessStateVm | null> {
         if (!this.canLoadPanelAccessState()) {
             this.accessStateSignal.set(null);
+            this.accessSettledSignal.set(true);
             this.panelTenantAccess$ = null;
             this.panelAccessStreamContextKey = null;
 
@@ -93,6 +105,7 @@ export class TenantReadOnlyContextService {
 
                     return of(null);
                 }),
+                finalize(() => this.accessSettledSignal.set(true)),
                 shareReplay({ bufferSize: 1, refCount: false })
             );
         }

@@ -57,15 +57,15 @@ describe('LegalDocumentPageComponent', () => {
                 expect(page.doc).toBe(doc);
             });
 
-            it('başlık, backend sürümlü satır, taslak bandı ve tüm maddeler görünür', async () => {
+            it('başlık, backend sürümlü satır ve tüm maddeler görünür; taslak bandı yok', async () => {
                 await harness.navigateByUrl(doc.path);
                 flushVersions();
 
                 expect(text('h1')).toBe(doc.title);
                 expect(text('.legal-version-line')).toBe(legalVersionLine(doc, version));
                 expect(text('.legal-version-line')).toContain(`Sürüm: ${version}`);
-                expect(LEGAL_DRAFT_NOTICE).not.toBeNull();
-                expect(text('.legal-draft-notice')).toBe(LEGAL_DRAFT_NOTICE as string);
+                expect(LEGAL_DRAFT_NOTICE).toBeNull();
+                expect(root().querySelector('.legal-draft-notice')).toBeNull();
                 const headings = Array.from(root().querySelectorAll('article h2')).map((h) => h.textContent?.trim());
 
                 expect(headings).toEqual(doc.sections.map((s) => s.heading));
@@ -79,8 +79,8 @@ describe('LegalDocumentPageComponent', () => {
         });
     }
 
-    it('sürüm satırı: 0.x taslak, 1.x taslak değil; sürüm okunamazsa sabit sürüm yazılmaz', () => {
-        expect(legalVersionLine(TERMS_OF_USE_DOCUMENT, '0.1')).toBe(`Sürüm: 0.1 (taslak) · ${TERMS_OF_USE_DOCUMENT.statusLine}`);
+    it('sürüm satırı: taslak etiketi yok; sürüm okunamazsa sabit sürüm yazılmaz', () => {
+        expect(legalVersionLine(TERMS_OF_USE_DOCUMENT, '0.1')).toBe(`Sürüm: 0.1 · ${TERMS_OF_USE_DOCUMENT.statusLine}`);
         expect(legalVersionLine(TERMS_OF_USE_DOCUMENT, '1.0')).toBe(`Sürüm: 1.0 · ${TERMS_OF_USE_DOCUMENT.statusLine}`);
         expect(legalVersionLine(TERMS_OF_USE_DOCUMENT, null)).toBe(TERMS_OF_USE_DOCUMENT.statusLine);
     });

@@ -26,14 +26,14 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
                     <label [for]="idPrefix() + 'Lot'" class="block text-sm font-medium text-muted-color">Seri / lot no{{ required() ? ' *' : '' }}</label>
                     <input [id]="idPrefix() + 'Lot'" pInputText class="w-full" type="text" formControlName="lotNumber" autocomplete="off" [attr.maxlength]="lotMax" [attr.aria-required]="required()" />
                     @if (group().controls.lotNumber.touched && group().controls.lotNumber.hasError('required')) {
-                        <small class="text-red-500">Seri/lot no zorunludur.</small>
+                        <small class="text-danger">Seri/lot no zorunludur.</small>
                     }
                 </div>
                 <div class="col-span-12 sm:col-span-6 flex flex-col gap-1">
                     <label [for]="idPrefix() + 'Expiry'" class="block text-sm font-medium text-muted-color">Son kullanma tarihi (SKT){{ required() ? ' *' : '' }}</label>
                     <app-date-input [inputId]="idPrefix() + 'Expiry'" type="date" formControlName="expiryDate" limit="planned" />
                     @if (group().controls.expiryDate.touched && group().controls.expiryDate.hasError('required')) {
-                        <small class="text-red-500">Son kullanma tarihi zorunludur.</small>
+                        <small class="text-danger">Son kullanma tarihi zorunludur.</small>
                     }
                 </div>
                 @if (expired()) {
@@ -70,7 +70,7 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
                     <app-date-input [inputId]="idPrefix() + 'Dispatched'" type="date" formControlName="dispatchedDate" limit="past" />
                 </div>
                 @if (group().hasError('dispatchedAfterReceived')) {
-                    <small class="col-span-12 text-red-500" role="alert">Depo çıkış tarihi geliş / teslim tarihinden sonra olamaz.</small>
+                    <small class="col-span-12 text-danger" role="alert">Depo çıkış tarihi geliş / teslim tarihinden sonra olamaz.</small>
                 }
                 <div class="col-span-12 flex flex-col gap-1">
                     <label [for]="idPrefix() + 'Transport'" class="block text-sm font-medium text-muted-color">Nakil şekli</label>

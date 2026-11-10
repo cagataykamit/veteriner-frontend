@@ -34,7 +34,7 @@ import { TAX_IDENTITY_MSG_TAXPAYER, TAX_RATE_MSG_INVALID, taxpayerIdentityValida
                 <app-error-state [detail]="err" (retry)="load()" />
             } @else {
                 @if (saveError()) {
-                    <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ saveError() }}</p>
+                    <p class="text-danger text-sm mb-3 m-0" role="alert">{{ saveError() }}</p>
                 }
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -45,7 +45,7 @@ import { TAX_IDENTITY_MSG_TAXPAYER, TAX_RATE_MSG_INVALID, taxpayerIdentityValida
                         <label for="taxIdentityNumber" class="block text-sm font-medium text-muted-color mb-2">VKN / TCKN</label>
                         <input id="taxIdentityNumber" pInputText class="w-full" formControlName="taxIdentityNumber" inputmode="numeric" maxlength="11" autocomplete="off" />
                         @if (showError('taxIdentityNumber')) {
-                            <small class="text-red-500" data-testid="taxpayer-error-identity">{{ identityMessage }}</small>
+                            <small class="text-danger" data-testid="taxpayer-error-identity">{{ identityMessage }}</small>
                         } @else {
                             <small class="text-muted-color">Şirkette 10 haneli VKN, serbest meslekte VKN veya 11 haneli TCKN.</small>
                         }
@@ -74,14 +74,14 @@ import { TAX_IDENTITY_MSG_TAXPAYER, TAX_RATE_MSG_INVALID, taxpayerIdentityValida
                         <label for="defaultVatRate" class="block text-sm font-medium text-muted-color mb-2">Varsayılan KDV oranı (%) *</label>
                         <input id="defaultVatRate" type="number" class="w-full p-inputtext p-component" formControlName="defaultVatRate" min="0" max="100" step="1" />
                         @if (showError('defaultVatRate')) {
-                            <small class="text-red-500" data-testid="taxpayer-error-vat">{{ form.controls.defaultVatRate.errors?.['required'] ? 'Varsayılan KDV oranı zorunludur.' : rateMessage }}</small>
+                            <small class="text-danger" data-testid="taxpayer-error-vat">{{ form.controls.defaultVatRate.errors?.['required'] ? 'Varsayılan KDV oranı zorunludur.' : rateMessage }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="withholdingRate" class="block text-sm font-medium text-muted-color mb-2">Stopaj oranı (%)</label>
                         <input id="withholdingRate" type="number" class="w-full p-inputtext p-component" formControlName="withholdingRate" min="0" max="100" step="1" />
                         @if (showError('withholdingRate')) {
-                            <small class="text-red-500">{{ rateMessage }}</small>
+                            <small class="text-danger">{{ rateMessage }}</small>
                         } @else {
                             <small class="text-muted-color">Serbest meslek için; uygulanmıyorsa boş bırakın.</small>
                         }

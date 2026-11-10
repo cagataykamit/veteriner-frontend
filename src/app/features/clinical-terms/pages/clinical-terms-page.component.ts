@@ -76,7 +76,7 @@ const PAGE_SIZE = 50;
             </div>
 
             @if (listActionError()) {
-                <p class="text-red-500 text-sm mt-0 mb-3" role="alert">{{ listActionError() }}</p>
+                <p class="text-danger text-sm mt-0 mb-3" role="alert">{{ listActionError() }}</p>
             }
 
             @if (loading() && rows().length === 0) {
@@ -166,7 +166,7 @@ const PAGE_SIZE = 50;
                     <label for="termName" class="block text-sm font-medium text-muted-color">Ad *</label>
                     <input id="termName" pInputText class="w-full" type="text" formControlName="name" autocomplete="off" [maxlength]="nameMax" />
                     @if (dialogForm.controls.name.invalid && dialogForm.controls.name.touched) {
-                        <small class="text-red-500">Ad zorunludur.</small>
+                        <small class="text-danger">Ad zorunludur.</small>
                     }
                     @if (editing()) {
                         <small class="text-muted-color">Geçmiş muayene metinleri değişmez.</small>

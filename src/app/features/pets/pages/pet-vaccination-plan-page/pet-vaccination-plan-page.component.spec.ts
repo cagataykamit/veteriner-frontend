@@ -43,7 +43,8 @@ describe('PetVaccinationPlanPageComponent (TIER-005)', () => {
                     provide: TenantReadOnlyContextService,
                     useValue: {
                         mutationBlocked: () => false,
-                        lockedPlanFeature: () => (locked ? { feature: 'VaccinationWizard', isEnabled: false, requiredPlanCode: 'Pro' } : null)
+                        lockedPlanFeature: () => (locked ? { feature: 'VaccinationWizard', isEnabled: false, requiredPlanCode: 'Pro' } : null),
+                        planFeatureReady: () => !locked
                     }
                 }
             ]

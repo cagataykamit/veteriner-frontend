@@ -66,14 +66,14 @@ import {
                             <label [attr.for]="'rx-name-' + i" class="block text-xs font-medium text-muted-color mb-1">Ad {{ g.controls.productId.value ? '' : '*' }}</label>
                             <input [id]="'rx-name-' + i" type="text" class="w-full p-inputtext p-component" [formControl]="g.controls.name" [attr.maxlength]="nameMax" />
                             @if (g.hasError('nameOrProductRequired') && (g.controls.name.touched || g.controls.productId.touched)) {
-                                <small class="text-red-500">İlaç adı yazın veya katalogdan ürün seçin.</small>
+                                <small class="text-danger">İlaç adı yazın veya katalogdan ürün seçin.</small>
                             }
                         </div>
                         <div class="col-span-6 sm:col-span-3">
                             <label [attr.for]="'rx-qty-' + i" class="block text-xs font-medium text-muted-color mb-1">Miktar</label>
                             <input [id]="'rx-qty-' + i" type="number" step="any" min="0" class="w-full p-inputtext p-component" [formControl]="g.controls.quantity" />
                             @if (g.controls.quantity.invalid && g.controls.quantity.touched) {
-                                <small class="text-red-500">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
+                                <small class="text-danger">0'dan büyük, en fazla {{ quantityDecimals }} ondalıklı ve {{ quantityMax }} üstünde olmayan bir miktar girin.</small>
                             }
                         </div>
                         <div class="col-span-6 sm:col-span-3">

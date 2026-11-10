@@ -72,7 +72,7 @@ describe('KvkkFormTemplatePageComponent', () => {
 
         expect(service.getTemplate).toHaveBeenCalledWith('k1', 'consent');
         expect(kindButton('consent').getAttribute('aria-pressed')).toBe('true');
-        expect(el().querySelector('[data-testid="kvkk-default-warning"]')?.textContent).toContain('hukuk danışmanınızca onaylanmadan');
+        expect(el().querySelector('[data-testid="kvkk-default-warning"]')?.textContent).toContain('köşeli parantezli alanları');
         expect(el().querySelector('[data-testid="kvkk-placeholders"]')?.textContent).toContain('Müşterinin adı soyadı');
         expect(el().querySelector('[data-testid="kvkk-placeholders"]')?.textContent).toContain('imza bloğu formda her zaman bulunur');
         expect(el().querySelector('[data-testid="kvkk-template-counter"]')?.textContent).toContain('/ 50');
@@ -129,7 +129,7 @@ describe('KvkkFormTemplatePageComponent', () => {
 
         expect(service.getTemplate).toHaveBeenCalledWith('k1', 'disclosure');
         expect(kindButton('disclosure').getAttribute('aria-pressed')).toBe('true');
-        expect(el().querySelector('[data-testid="kvkk-default-warning"]')?.textContent).toContain('köşeli parantezli alanları doldurun');
+        expect(el().querySelector('[data-testid="kvkk-default-warning"]')?.textContent).toContain('köşeli parantezli alanları');
         expect(el().querySelector('[data-testid="kvkk-placeholders"]')?.textContent).toContain('onay kutusu ve imza bloğu basılmaz');
         expect(el().querySelector('[data-testid="kvkk-form-text"]')?.textContent).toBe('Aydınlatma Örnek Müşteri');
         expect(el().querySelector('[data-testid="kvkk-form-choices"]')).toBeNull();

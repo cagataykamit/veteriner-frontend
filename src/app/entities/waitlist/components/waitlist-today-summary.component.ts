@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { APPOINTMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -27,13 +27,14 @@ import { formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
         }
     `
 })
-export class WaitlistTodaySummaryComponent implements OnInit {
+export class WaitlistTodaySummaryComponent {
     private readonly api = inject(WaitlistService);
     private readonly auth = inject(AuthService);
     private readonly ro = inject(TenantReadOnlyContextService);
 
     protected readonly waitlistRoute = WAITLIST_ROUTE;
     readonly data = signal<WaitlistTodayDto | null>(null);
+    private readonly planReady = computed(() => this.ro.planFeatureReady('Waitlist'));
 
     /** Boşalan ve henüz dolmamış saatler; uyan kişi sayısı saatlerin toplamıdır (aynı kişi birden çok saate uyabilir). */
     readonly line = computed(() => {
@@ -51,10 +52,19 @@ export class WaitlistTodaySummaryComponent implements OnInit {
         return `Bugün iptal edilen ${slots.length} saat (${times}) için bekleme listesinde uygun ${eligible} kişi var.${offerText}`;
     });
 
-    ngOnInit(): void {
+    constructor() {
+        // Paket bilgisi (access-state) gelince karar verilir; gelmeden ya da kilitliyken istek gitmez.
+        effect(() => {
+            if (this.planReady()) {
+                untracked(() => this.load());
+            }
+        });
+    }
+
+    private load(): void {
         const clinicId = this.auth.getClinicId();
 
-        if (!clinicId || this.ro.lockedPlanFeature('Waitlist') || !this.auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM)) {
+        if (!clinicId || !this.auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM)) {
             return;
         }
 

@@ -2,11 +2,12 @@ import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/
 import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
 import { TitleStrategy, provideRouter, withEnabledBlockingInitialNavigation, withInMemoryScrolling } from '@angular/router';
 import { PageTitleStrategy } from '@/app/core/routing/page-title.strategy';
-import Aura from '@primeuix/themes/aura';
+import { VetinityPreset } from '@/app/core/theme/vetinity-preset';
 import { providePrimeNG } from 'primeng/config';
 import { PRIMENG_TR } from '@/app/core/i18n/primeng-tr';
 import { authInterceptor } from '@/app/core/api/auth.interceptor';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
+import { SURFACE_ORIGINS } from '@/app/core/routing/surface-origin.guard';
 import { providePanelServiceWorker } from '@/app/core/pwa/panel-service-worker';
 import { firstWeekGuideInterceptor } from '@/app/entities/first-week-guide/services/first-week-guide.interceptor';
 import { environment } from '@/environments/environment';
@@ -17,10 +18,11 @@ export const appConfig: ApplicationConfig = {
     providers: [
         provideRouter(appRoutes, withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'enabled' }), withEnabledBlockingInitialNavigation()),
         { provide: API_BASE_URL, useValue: environment.apiBaseUrl },
+        { provide: SURFACE_ORIGINS, useValue: { public: environment.publicOrigin, panel: environment.panelOrigin } },
         { provide: TitleStrategy, useExisting: PageTitleStrategy },
         provideHttpClient(withFetch(), withInterceptors([authInterceptor, firstWeekGuideInterceptor])),
         provideZonelessChangeDetection(),
         providePanelServiceWorker(),
-        providePrimeNG({ theme: { preset: Aura, options: { darkModeSelector: '.app-dark' } }, translation: PRIMENG_TR, license: PRIMEUI_LICENSE || undefined })
+        providePrimeNG({ theme: { preset: VetinityPreset, options: { darkModeSelector: '.app-dark' } }, translation: PRIMENG_TR, license: PRIMEUI_LICENSE || undefined })
     ]
 };

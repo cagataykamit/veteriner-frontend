@@ -19,7 +19,8 @@ const row: PaymentListItemVm = {
     amount: 600,
     currency: 'TRY',
     method: 'cash',
-    paidAtUtc: '2026-10-10T07:00:00Z'
+    paidAtUtc: '2026-10-10T07:00:00Z',
+    cashRegisterName: null
 };
 
 describe('PaymentsListPageComponent — iptal', () => {
@@ -97,6 +98,17 @@ describe('PaymentsListPageComponent — iptal', () => {
         expect(iconButton()!.querySelector('i')!.classList).toContain('fa-ban');
         iconButton()!.click();
         expect(fixture.componentInstance.voidSummary()).toContain('Ali Veli');
+    });
+
+    it('Kasa sütunu nakitte kasa adını, nakit dışında tire gösterir; mobil kartta da yazar', async () => {
+        payments.getPayments.mockReturnValue(
+            of({ items: [{ ...row, cashRegisterName: 'Arka kasa' }, { ...row, id: 'p2', method: 'card' }], page: 1, pageSize: 10, totalItems: 2, totalPages: 1 })
+        );
+        await setup();
+        const cells = [...fixture.nativeElement.querySelectorAll('[data-testid="payment-row-cash-register"]')] as HTMLElement[];
+
+        expect(cells.map((c) => c.textContent!.trim())).toEqual(['Arka kasa', '—']);
+        expect(fixture.nativeElement.querySelector('.lg\\:hidden').textContent).toContain('Kasa: Arka kasa');
     });
 
     it('uzun müşteri adı tabloda tek satırda kesilir; tam ad ipucunda kalır', async () => {

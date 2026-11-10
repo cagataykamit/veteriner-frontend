@@ -60,7 +60,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         }
 
         @if (listActionError()) {
-            <p class="text-red-500 text-sm mt-0 mb-3" role="alert">{{ listActionError() }}</p>
+            <p class="text-danger text-sm mt-0 mb-3" role="alert">{{ listActionError() }}</p>
         }
 
         @if (loading()) {
@@ -137,7 +137,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                     <label for="reasonName" class="block text-sm font-medium text-muted-color">Ad *</label>
                     <input id="reasonName" pInputText class="w-full" type="text" formControlName="name" autocomplete="off" [maxlength]="nameMax" />
                     @if (form.controls.name.invalid && form.controls.name.touched) {
-                        <small class="text-red-500">Ad zorunludur.</small>
+                        <small class="text-danger">Ad zorunludur.</small>
                     }
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -145,7 +145,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                         <label for="reasonDuration" class="block text-sm font-medium text-muted-color">Varsayılan süre (dk) *</label>
                         <input id="reasonDuration" pInputText class="w-full" type="number" step="5" [min]="durationMin" [max]="durationMax" formControlName="defaultDurationMinutes" />
                         @if (form.controls.defaultDurationMinutes.invalid && form.controls.defaultDurationMinutes.touched) {
-                            <small class="text-red-500">Süre {{ durationMin }}–{{ durationMax }} dakika olmalıdır.</small>
+                            <small class="text-danger">Süre {{ durationMin }}–{{ durationMax }} dakika olmalıdır.</small>
                         }
                     </div>
                     <div class="flex flex-col gap-1">

@@ -68,7 +68,7 @@ import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments
                     <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; değişiklik kaydedilemez.</p>
                 }
                 @if (selectionError()) {
-                    <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
+                    <p class="text-danger mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
                 <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -77,29 +77,29 @@ import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments
                             <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
                             <app-client-search inputId="clientId" formControlName="clientId" />
                             @if (apiFieldErrors().clientId) {
-                                <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
                             } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                                <small class="text-red-500">Müşteri seçimi zorunludur.</small>
+                                <small class="text-danger">Müşteri seçimi zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                             <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                             @if (apiFieldErrors().petId) {
-                                <small class="text-red-500">{{ apiFieldErrors().petId }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().petId }}</small>
                             } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
-                                <small class="text-red-500">Hasta seçimi zorunludur.</small>
+                                <small class="text-danger">Hasta seçimi zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="scheduledDate" class="block text-sm font-medium text-muted-color mb-2">Randevu tarihi *</label>
                             <app-date-input inputId="scheduledDate" type="date" formControlName="scheduledDate" [min]="dateInputMin" [max]="maxScheduledDate()" />
                             @if (form.controls.scheduledDate.hasError('dateYearInvalid') && form.controls.scheduledDate.touched) {
-                                <small class="text-red-500 block">Yıl 4 haneli olmalıdır.</small>
+                                <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
                             } @else if (apiFieldErrors().scheduledAtLocal) {
-                                <small class="text-red-500">{{ apiFieldErrors().scheduledAtLocal }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().scheduledAtLocal }}</small>
                             } @else if (form.controls.scheduledDate.hasError('required') && form.controls.scheduledDate.touched) {
-                                <small class="text-red-500">Randevu tarihi seçilmelidir.</small>
+                                <small class="text-danger">Randevu tarihi seçilmelidir.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
@@ -117,9 +117,9 @@ import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments
                                 [disabled]="timeOptions().length === 0 || !!workingHoursLoadError()"
                             />
                             @if (form.controls.scheduledTime.invalid && form.controls.scheduledTime.touched) {
-                                <small class="text-red-500">Randevu saati seçilmelidir.</small>
+                                <small class="text-danger">Randevu saati seçilmelidir.</small>
                             } @else if (workingHoursLoadError(); as whErr) {
-                                <small class="text-red-500">{{ whErr }}</small>
+                                <small class="text-danger">{{ whErr }}</small>
                             } @else if (form.controls.scheduledDate.value && timeOptions().length === 0) {
                                 <small class="text-amber-600">Seçilen gün için uygun randevu saati bulunmuyor.</small>
                             }
@@ -131,18 +131,18 @@ import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments
                             <label for="durationMinutes" class="block text-sm font-medium text-muted-color mb-2">Randevu süresi (dakika) *</label>
                             <input id="durationMinutes" type="number" class="w-full p-inputtext p-component" formControlName="durationMinutes" min="5" max="240" step="1" />
                             @if (apiFieldErrors().durationMinutes) {
-                                <small class="text-red-500">{{ apiFieldErrors().durationMinutes }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().durationMinutes }}</small>
                             } @else if (form.controls.durationMinutes.invalid && form.controls.durationMinutes.touched) {
-                                <small class="text-red-500">Randevu süresi 5 ile 240 dakika arasında olmalıdır.</small>
+                                <small class="text-danger">Randevu süresi 5 ile 240 dakika arasında olmalıdır.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="appointmentType" class="block text-sm font-medium text-muted-color mb-2">Randevu Türü *</label>
                             <p-select inputId="appointmentType" formControlName="appointmentType" [options]="typeOptions" optionLabel="label" optionValue="value" placeholder="Randevu Türü seçin" [showClear]="true" class="w-full" />
                             @if (apiFieldErrors().appointmentType) {
-                                <small class="text-red-500">{{ apiFieldErrors().appointmentType }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().appointmentType }}</small>
                             } @else if (form.controls.appointmentType.invalid && form.controls.appointmentType.touched) {
-                                <small class="text-red-500">Randevu Türü seçimi zorunludur.</small>
+                                <small class="text-danger">Randevu Türü seçimi zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
@@ -152,7 +152,7 @@ import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments
                             </div>
                             <small class="block text-muted-color mt-1">Durum bu formdan değiştirilmez; iptal randevu listesinden, tamamlama muayeneyle yapılır.</small>
                             @if (apiFieldErrors().status) {
-                                <small class="block text-red-500">{{ apiFieldErrors().status }}</small>
+                                <small class="block text-danger">{{ apiFieldErrors().status }}</small>
                             }
                         </div>
                         <div class="col-span-12">
@@ -162,15 +162,15 @@ import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments
                             <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                             <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
                             @if (apiFieldErrors().notes) {
-                                <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().notes }}</small>
                             } @else if (form.controls.notes.invalid && form.controls.notes.touched) {
-                                <small class="text-red-500">Notlar en fazla {{ notesMaxLength }} karakter olabilir.</small>
+                                <small class="text-danger">Notlar en fazla {{ notesMaxLength }} karakter olabilir.</small>
                             }
                         </div>
                     </div>
 
                     @if (submitError()) {
-                        <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                        <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">

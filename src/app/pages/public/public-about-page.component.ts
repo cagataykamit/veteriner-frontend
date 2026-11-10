@@ -15,7 +15,7 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
     imports: [RouterLink, PublicPageHeaderComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-public-page-header eyebrow="Hakkımızda" title="Küçük veteriner klinikleri için, klinikle birlikte" />
+        <app-public-page-header eyebrow="Hakkımızda" title="Veteriner klinikleri için, klinikle birlikte" />
 
         <div class="mx-auto max-w-6xl px-4 md:px-6">
             <div class="public-section grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] lg:gap-14">

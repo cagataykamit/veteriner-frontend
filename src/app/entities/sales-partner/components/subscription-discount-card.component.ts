@@ -43,7 +43,7 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
                         <button pButton type="button" class="max-md:self-start md:mt-7" [disabled]="!valid() || applying()" (click)="apply()" data-testid="subscription-discount-apply-button"><i class="p-button-icon" [class]="applying() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Uygula</button>
                     </div>
                     @if (error()) {
-                        <p class="text-red-500 text-sm mt-2 mb-0" role="alert">{{ error() }}</p>
+                        <p class="text-danger text-sm mt-2 mb-0" role="alert">{{ error() }}</p>
                     }
                 </div>
             }

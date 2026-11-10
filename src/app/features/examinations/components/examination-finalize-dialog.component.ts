@@ -33,7 +33,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             }
             <p class="mb-0 text-muted-color">Ekranda gördüğünüz içeriğin son kayıtlı içerik olduğundan emin olun.</p>
             @if (submitError()) {
-                <p class="text-red-500 mt-3 mb-0" role="alert" data-testid="finalize-error">{{ submitError() }}</p>
+                <p class="text-danger mt-3 mb-0" role="alert" data-testid="finalize-error">{{ submitError() }}</p>
             }
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>

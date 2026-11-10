@@ -52,7 +52,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 }
 
                 @if (saveError()) {
-                    <p class="text-red-500 text-sm mt-0 mb-4" role="alert">{{ saveError() }}</p>
+                    <p class="text-danger text-sm mt-0 mb-4" role="alert">{{ saveError() }}</p>
                 }
 
                 <form [formGroup]="form" (ngSubmit)="onSave()">
@@ -65,7 +65,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                             <label class="block text-sm font-medium text-muted-color mb-2">Randevudan kaç saat önce</label>
                             <p-inputnumber formControlName="appointmentReminderHoursBefore" [min]="1" [max]="168" [useGrouping]="false" class="w-full" />
                             @if (form.controls.appointmentReminderHoursBefore.invalid && form.controls.appointmentReminderHoursBefore.touched) {
-                                <small class="text-red-500">Saat değeri 1 ile 168 arasında olmalıdır.</small>
+                                <small class="text-danger">Saat değeri 1 ile 168 arasında olmalıdır.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
@@ -76,7 +76,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                             <label class="block text-sm font-medium text-muted-color mb-2">Aşıdan kaç gün önce</label>
                             <p-inputnumber formControlName="vaccinationReminderDaysBefore" [min]="1" [max]="30" [useGrouping]="false" class="w-full" />
                             @if (form.controls.vaccinationReminderDaysBefore.invalid && form.controls.vaccinationReminderDaysBefore.touched) {
-                                <small class="text-red-500">Gün değeri 1 ile 30 arasında olmalıdır.</small>
+                                <small class="text-danger">Gün değeri 1 ile 30 arasında olmalıdır.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">

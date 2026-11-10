@@ -88,7 +88,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
             } @else {
                 <div class="flex flex-col gap-4">
                     @if (listActionError()) {
-                        <p class="text-red-500 text-sm m-0" role="alert">{{ listActionError() }}</p>
+                        <p class="text-danger text-sm m-0" role="alert">{{ listActionError() }}</p>
                     }
                     <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
                         <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-3 mb-3">
@@ -246,9 +246,9 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                     <input id="catName" pInputText class="w-full" type="text" formControlName="name" autocomplete="off" />
                     @if (dialogForm.controls.name.invalid && dialogForm.controls.name.touched) {
                         @if (dialogForm.controls.name.hasError('required')) {
-                            <small class="text-red-500">Kategori adı zorunludur.</small>
+                            <small class="text-danger">Kategori adı zorunludur.</small>
                         } @else if (dialogForm.controls.name.hasError('maxlength')) {
-                            <small class="text-red-500">Kategori adı en fazla 200 karakter olabilir.</small>
+                            <small class="text-danger">Kategori adı en fazla 200 karakter olabilir.</small>
                         }
                     }
                 </div>
@@ -256,7 +256,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                     <label for="catDesc" class="block text-sm font-medium text-muted-color">Açıklama</label>
                     <textarea id="catDesc" pTextarea rows="3" class="w-full" formControlName="description"></textarea>
                     @if (dialogForm.controls.description.invalid && dialogForm.controls.description.touched) {
-                        <small class="text-red-500">Açıklama en fazla 2000 karakter olabilir.</small>
+                        <small class="text-danger">Açıklama en fazla 2000 karakter olabilir.</small>
                     }
                 </div>
                 <div class="flex flex-wrap justify-end gap-2 pt-2">

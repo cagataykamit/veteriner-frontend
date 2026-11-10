@@ -26,26 +26,27 @@ export interface PublicPageMetaOptions {
 export const PUBLIC_HOME_PAGE_META: PublicPageMetaOptions = {
     title: 'Vetinity — Veteriner klinik programı: günün akışı, kayıt defterleri, KVKK',
     description:
-        'Veteriner kliniğinizin gününü tek ekranda yönetin: geliş, muayene, tahsilat, aşı ve ilaç kayıt defterleri, KVKK formları. 14 gün ücretsiz, kart gerekmez.',
+        'Veteriner kliniğinizin gününü tek ekranda yönetin: geliş, muayene, tahsilat, kayıt defterleri, KVKK formları, klinik web sitesi ve online randevu. 14 gün ücretsiz, kart gerekmez.',
     canonicalPath: PUBLIC_PATHS.home
 };
 
 export const PUBLIC_FEATURES_PAGE_META: PublicPageMetaOptions = {
-    title: 'Özellikler — Gelişten tahsilata bir günün akışı · Vetinity',
-    description: "Randevu ve randevusuz geliş, bekleme sırası, muayene, reçete, stok, tahsilat ve gün sonu: Vetinity'de bir ziyaretin yolculuğu.",
+    title: 'Özellikler — Günün akışı, klinik web sitesi ve online randevu · Vetinity',
+    description:
+        'Geliş, muayene, reçete, stok, tahsilat ve gün sonu; klinik web sitesi, Veteriner bul, online randevu, otomatik hatırlatıcılar, bekleme listesi, kasa yönetimi ve gelişmiş raporlar.',
     canonicalPath: PUBLIC_PATHS.features
 };
 
 export const PUBLIC_REGISTERS_PAGE_META: PublicPageMetaOptions = {
     title: 'Kayıt defterleri ve KVKK — Vetinity',
     description:
-        'Aşı, ilaç, narkotik/psikotropik, muayene ve reçete defterleri otomatik; KVKK aydınlatma ve açık rıza formları, rıza kaydı ve veri kopyası.',
+        'Aşı, ilaç, narkotik/psikotropik, muayene ve reçete defterleri otomatik; KVKK aydınlatma ve açık rıza formları, rıza kaydı ve tüm verinizi dışa aktarma.',
     canonicalPath: PUBLIC_PATHS.registersAndKvkk
 };
 
 export const PUBLIC_MIGRATION_PAGE_META: PublicPageMetaOptions = {
     title: 'Eski programdan geçiş — Vetinity',
-    description: 'Excel veya CSV ile müşteri, hasta ve aşı geçmişinizi aktarın: sütun eşleme, kontrol, geri alma.',
+    description: 'Excel veya CSV ile müşteri, hasta ve aşı geçmişinizi aktarın: kaynak program seçimi, sütun eşleme, kontrol, geri alma ve geçiş desteği.',
     canonicalPath: PUBLIC_PATHS.migration
 };
 
@@ -57,13 +58,13 @@ export const PUBLIC_PACKAGES_PAGE_META: PublicPageMetaOptions = {
 
 export const PUBLIC_FAQ_PAGE_META: PublicPageMetaOptions = {
     title: 'Sık sorulan sorular — Vetinity',
-    description: 'Fiyat, veri güvenliği, geçiş, destek, sözleşme ve deneme hakkında yanıtlar.',
+    description: 'Fiyat, klinik web sitesi, Veteriner bul, veri güvenliği ve dışa aktarma, geçiş, destek ve deneme hakkında yanıtlar.',
     canonicalPath: PUBLIC_PATHS.faq
 };
 
 export const PUBLIC_CONTACT_PAGE_META: PublicPageMetaOptions = {
     title: 'İletişim ve demo talebi — Vetinity',
-    description: 'Demo isteyin, paketleri sorun ya da geçiş dosyanıza birlikte bakalım.',
+    description: 'Demo isteyin, WhatsApp destek hattından yazın, paketleri sorun ya da geçişinize birlikte bakalım.',
     canonicalPath: PUBLIC_PATHS.contact
 };
 

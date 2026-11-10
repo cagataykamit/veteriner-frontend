@@ -90,7 +90,7 @@ function resolveChangePasswordErrorMessage(err: unknown): string {
                         <p-password inputId="currentPassword" formControlName="currentPassword" [toggleMask]="true" [feedback]="false" class="w-full" inputStyleClass="w-full" autocomplete="current-password" />
                         @if (form.controls.currentPassword.invalid && form.controls.currentPassword.touched) {
                             @if (form.controls.currentPassword.errors?.['required']) {
-                                <small class="text-red-500">Mevcut şifre zorunludur.</small>
+                                <small class="text-danger">Mevcut şifre zorunludur.</small>
                             }
                         }
                     </div>
@@ -100,7 +100,7 @@ function resolveChangePasswordErrorMessage(err: unknown): string {
                         <p-password inputId="newPassword" formControlName="newPassword" [toggleMask]="true" [feedback]="false" class="w-full" inputStyleClass="w-full" autocomplete="new-password" />
                         @if (form.controls.newPassword.invalid && form.controls.newPassword.touched) {
                             @if (passwordPolicyErrorMessage(form.controls.newPassword.errors); as msg) {
-                                <small class="text-red-500">{{ msg }}</small>
+                                <small class="text-danger">{{ msg }}</small>
                             }
                         }
                     </div>
@@ -110,10 +110,10 @@ function resolveChangePasswordErrorMessage(err: unknown): string {
                         <p-password inputId="confirmPassword" formControlName="confirmPassword" [toggleMask]="true" [feedback]="false" class="w-full" inputStyleClass="w-full" autocomplete="new-password" />
                         @if (form.controls.confirmPassword.invalid && form.controls.confirmPassword.touched) {
                             @if (form.controls.confirmPassword.errors?.['required']) {
-                                <small class="text-red-500">Şifre tekrarı zorunludur.</small>
+                                <small class="text-danger">Şifre tekrarı zorunludur.</small>
                             }
                         } @else if (form.errors?.['passwordMismatch'] && form.controls.confirmPassword.touched) {
-                            <small class="text-red-500">{{ passwordMismatchMessage }}</small>
+                            <small class="text-danger">{{ passwordMismatchMessage }}</small>
                         }
                     </div>
 

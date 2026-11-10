@@ -55,7 +55,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                             class="w-full"
                         />
                         @if (stockOperationForm.controls.clinicStockRowId.invalid && stockOperationForm.controls.clinicStockRowId.touched) {
-                            <small class="text-red-500">Stok işlemi için klinik seçimi gereklidir.</small>
+                            <small class="text-danger">Stok işlemi için klinik seçimi gereklidir.</small>
                         }
                     </div>
                 }
@@ -112,14 +112,14 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                 <label for="soAmountIn" class="block text-sm font-medium text-muted-color">Giriş miktarı *</label>
                                 <input id="soAmountIn" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="amount" inputmode="decimal" />
                                 @if (stockOperationForm.controls.amount.invalid && stockOperationForm.controls.amount.touched) {
-                                    <small class="text-red-500">Miktar 0’dan büyük olmalıdır.</small>
+                                    <small class="text-danger">Miktar 0’dan büyük olmalıdır.</small>
                                 }
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label for="soUnitCost" class="block text-sm font-medium text-muted-color">Birim maliyet</label>
                                 <input id="soUnitCost" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="unitCost" placeholder="İsteğe bağlı" inputmode="decimal" />
                                 @if (stockOperationForm.controls.unitCost.invalid && stockOperationForm.controls.unitCost.touched) {
-                                    <small class="text-red-500">Birim maliyet 0’dan küçük olamaz.</small>
+                                    <small class="text-danger">Birim maliyet 0’dan küçük olamaz.</small>
                                 }
                             </div>
                             <app-stock-batch-fields [group]="stockOperationForm.controls.batch" [required]="product()?.requiresLotAndExpiry === true" idPrefix="soBatch" />
@@ -127,7 +127,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                 <label for="soNotesIn" class="block text-sm font-medium text-muted-color">Açıklama</label>
                                 <textarea id="soNotesIn" pTextarea rows="3" class="w-full min-h-[4.5rem]" formControlName="notes" placeholder="İsteğe bağlı"></textarea>
                                 @if (stockOperationForm.controls.notes.invalid && stockOperationForm.controls.notes.touched) {
-                                    <small class="text-red-500">En fazla 2000 karakter.</small>
+                                    <small class="text-danger">En fazla 2000 karakter.</small>
                                 }
                             </div>
                         </div>
@@ -138,14 +138,14 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                 <label for="soAmountOut" class="block text-sm font-medium text-muted-color">Çıkış miktarı *</label>
                                 <input id="soAmountOut" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="amount" inputmode="decimal" />
                                 @if (stockOperationForm.controls.amount.invalid && stockOperationForm.controls.amount.touched) {
-                                    <small class="text-red-500">Miktar 0’dan büyük olmalıdır.</small>
+                                    <small class="text-danger">Miktar 0’dan büyük olmalıdır.</small>
                                 }
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label for="soNotesOut" class="block text-sm font-medium text-muted-color">Açıklama</label>
                                 <textarea id="soNotesOut" pTextarea rows="3" class="w-full min-h-[4.5rem]" formControlName="notes" placeholder="İsteğe bağlı"></textarea>
                                 @if (stockOperationForm.controls.notes.invalid && stockOperationForm.controls.notes.touched) {
-                                    <small class="text-red-500">En fazla 2000 karakter.</small>
+                                    <small class="text-danger">En fazla 2000 karakter.</small>
                                 }
                             </div>
                         </div>
@@ -155,14 +155,14 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                             <label for="soMinLevel" class="block text-sm font-medium text-muted-color">Yeni minimum stok *</label>
                             <input id="soMinLevel" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="minimumStockLevel" inputmode="decimal" />
                             @if (stockOperationForm.controls.minimumStockLevel.invalid && stockOperationForm.controls.minimumStockLevel.touched) {
-                                <small class="text-red-500">Minimum stok 0’dan küçük olamaz.</small>
+                                <small class="text-danger">Minimum stok 0’dan küçük olamaz.</small>
                             }
                         </div>
                     }
                 }
 
                 @if (stockOperationSubmitError()) {
-                    <p class="text-red-500 m-0 text-sm leading-relaxed" role="alert">{{ stockOperationSubmitError() }}</p>
+                    <p class="text-danger m-0 text-sm leading-relaxed" role="alert">{{ stockOperationSubmitError() }}</p>
                 }
                 <div class="flex flex-wrap justify-end gap-2 pt-3 mt-1 border-t border-surface-200 dark:border-surface-700">
                     <button pButton type="button" severity="secondary" (click)="closeStockOperationDialog()" [disabled]="stockOperationSubmitting()">{{ copy.buttonCancel }}</button>

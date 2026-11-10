@@ -35,7 +35,7 @@ function addendumText(c: { value: unknown }): { addendumText: true } | null {
                         <label for="ad-reason" class="block text-sm font-medium text-muted-color mb-2">Gerekçe *</label>
                         <textarea id="ad-reason" rows="2" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
                         @if (form.controls.reason.invalid && form.controls.reason.touched) {
-                            <small class="text-red-500">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
+                            <small class="text-danger">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
                         }
                     </div>
                     <div class="col-span-12">
@@ -43,12 +43,12 @@ function addendumText(c: { value: unknown }): { addendumText: true } | null {
                         <textarea id="ad-text" rows="6" class="w-full p-inputtext p-component" formControlName="text"></textarea>
                         <small class="text-muted-color">{{ form.controls.text.value.trim().length }} / {{ textMax }}</small>
                         @if (form.controls.text.invalid && form.controls.text.touched) {
-                            <small class="text-red-500 ml-2">Ek not 1–{{ textMax }} karakter olmalıdır.</small>
+                            <small class="text-danger ml-2">Ek not 1–{{ textMax }} karakter olmalıdır.</small>
                         }
                     </div>
                 </div>
                 @if (submitError()) {
-                    <p class="text-red-500 mt-3 mb-0" role="alert" data-testid="addendum-error">{{ submitError() }}</p>
+                    <p class="text-danger mt-3 mb-0" role="alert" data-testid="addendum-error">{{ submitError() }}</p>
                 }
             </form>
             <ng-template #footer>

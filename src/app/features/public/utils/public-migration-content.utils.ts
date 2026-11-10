@@ -1,7 +1,11 @@
 /**
  * Geçiş sayfası (`/gecis`, tasarım belgesi 5.4) ve ana sayfa "Geçiş" bölümü (3 adım).
  * Kaynak: ADR-019 — müşteri, hasta ve aşı geçmişi aktarılır; muayene ve ödeme geçmişi şimdilik aktarılmaz.
+ * TIER-021: kaynak program seçimi ve geçiş desteği; hazır eşlemeler gerçek dosyayla doğrulanmadığı için "hazır gelir" denmez,
+ * program adı yazılmaz. Ücretsiz olduğu paket özellik tablosundan.
  */
+
+import { planAvailabilityText } from '@/app/entities/subscription/utils/pricing-plan.utils';
 
 export interface PublicMigrationStepDef {
     readonly title: string;
@@ -11,8 +15,8 @@ export interface PublicMigrationStepDef {
 /** Geçiş sayfası dikey zaman çizgisi (5 adım). */
 export const PUBLIC_MIGRATION_STEPS: readonly PublicMigrationStepDef[] = [
     {
-        title: 'Şablonu indirin ya da kendi Excel dosyanızı yükleyin',
-        description: 'Excel veya CSV; eski programınızın dışa aktarımı da olur.'
+        title: 'Kaynak programı seçin, dosyanızı yükleyin',
+        description: 'Şablonumuz ya da eski programınızın Excel veya CSV dışa aktarımı. Seçtiğiniz program için hazır eşleme varsa sütunlar ona göre önerilir.'
     },
     {
         title: 'Sütunları eşleyin',
@@ -41,3 +45,13 @@ export const PUBLIC_MIGRATION_HOME_STEPS: readonly PublicMigrationStepDef[] = [
 
 export const PUBLIC_MIGRATION_INCLUDED: readonly string[] = ['Müşteriler', 'Hastalar', 'Aşı geçmişi'];
 export const PUBLIC_MIGRATION_EXCLUDED: readonly string[] = ['Muayene geçmişi', 'Ödeme geçmişi'];
+
+/** Geçiş desteği kutusu (TIER-021). */
+export const PUBLIC_MIGRATION_SUPPORT_POINTS: readonly string[] = [
+    'Panelden geçiş desteği talebi açarsınız: hangi programdan geldiğiniz, yaklaşık kayıt sayısı, uygun gün ve saatler.',
+    '1 saatlik kurulum görüşmesinde aktarıma ekran paylaşımıyla birlikte bakarız.',
+    'Dosyanızı e-postayla göndermezsiniz; panele kendiniz yüklersiniz.'
+];
+
+/** "Kurumsal paketinde ücretsiz; …" */
+export const PUBLIC_MIGRATION_SUPPORT_PRICE = `${planAvailabilityText('freeMigrationSupport')} ücretsiz; diğer paketlerde ücretlidir, fiyat talebinizden sonra bildirilir.`;

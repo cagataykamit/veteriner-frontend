@@ -54,7 +54,7 @@ type FormKind = 'movement' | 'transfer';
                         <label for="cmTarget" class="block text-sm font-medium text-muted-color mb-2">Hedef kasa *</label>
                         <p-select inputId="cmTarget" name="target" [options]="activeRegisters()" optionLabel="name" optionValue="id" [ngModel]="targetId()" (ngModelChange)="targetId.set($event)" placeholder="Seçin" class="w-full" />
                         @if (sameRegister()) {
-                            <small class="text-red-500">Kaynak ve hedef aynı olamaz.</small>
+                            <small class="text-danger">Kaynak ve hedef aynı olamaz.</small>
                         }
                     </div>
                 }
@@ -91,7 +91,7 @@ type FormKind = 'movement' | 'transfer';
                         <span class="text-sm" role="status">{{ msg }}</span>
                     }
                     @if (error(); as err) {
-                        <span class="text-red-500 text-sm" role="alert">{{ err }}</span>
+                        <span class="text-danger text-sm" role="alert">{{ err }}</span>
                     }
                 </div>
             </form>

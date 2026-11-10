@@ -119,6 +119,23 @@ describe('OnlineBookingSettingsPageComponent', () => {
         expect((el.querySelector('[data-testid="booking-url"]') as HTMLInputElement).value).toBe('https://portal.test/randevu/abcdefghjkmn');
     });
 
+    it('"Sitenize ekleyin" bağlantı varken görünür; talep kapalıysa uyarır (APPT-020/021)', async () => {
+        await create();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(el.querySelector('[data-testid="online-embed"]')).toBeNull();
+
+        service['getSettings'].mockReturnValue(of(settings({ isEnabled: false, bookingCode: 'abcdefghjkmn', bookingUrl: 'https://portal.test/randevu/abcdefghjkmn' })));
+        fixture.componentInstance.reload();
+        fixture.detectChanges();
+
+        const code = el.querySelector('[data-testid="embed-iframe-code"]') as HTMLTextAreaElement;
+
+        expect(el.querySelector('[data-testid="online-embed-closed"]')).not.toBeNull();
+        expect(code.value).toContain('src="https://portal.test/randevu/abcdefghjkmn?kaynak=dis-site"');
+        expect(code.value).toContain('title="Pati: online randevu talebi"');
+    });
+
     it('en yakın saat gösterimi varsayılan açık gelir ve kapatılınca kayda gider (TIER-017)', async () => {
         service['getSettings'].mockReturnValue(of(settings({ isEnabled: true, bookingCode: 'abcdefghjkmn', bookingUrl: 'https://portal.test/randevu/abcdefghjkmn' })));
         await create();

@@ -50,7 +50,7 @@ function istanbulDayStartUtc(date: string): string | null {
                     </div>
                 </div>
                 @if ((form.controls.discountPercent.invalid || form.controls.commissionPercent.invalid) && form.touched) {
-                    <small class="text-red-500">İndirim 0–99,99, komisyon 0–100 arasında girilmeli.</small>
+                    <small class="text-danger">İndirim 0–99,99, komisyon 0–100 arasında girilmeli.</small>
                 }
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="flex flex-col gap-1">

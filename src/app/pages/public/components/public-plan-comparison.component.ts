@@ -1,10 +1,11 @@
-import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import {
     decidedFeatureRows,
     formatPlanPrice,
     formatUserLimit,
+    isPlanDifferenceRow,
     planOffer,
     pricingVatNote,
     PRICING_FEATURE_ROWS,
@@ -27,6 +28,7 @@ interface ComparisonHeadVm {
 interface ComparisonRowVm {
     readonly label: string;
     readonly detail?: string;
+    readonly badge?: string;
     readonly cells: readonly PricingFeatureCell[];
 }
 
@@ -39,7 +41,8 @@ interface ComparisonGroupVm {
  * Paket karşılaştırma tablosu (tasarım belgesi 5.5, ADR-035): lacivert başlık bandında paket adı, aylık fiyat ve kullanıcı sınırı;
  * önerilen paketin sütunu baştan sona vurgulu; her alan numaralı bir bantla açılır. Fiyat ve sınır backend kataloğundan (WEB-007);
  * katalog yokken başlıkta yalnız paket adı kalır. Klinik sınırı backend'de yok, gösterilmez. Gösterilecek özellik satırı yoksa hiç
- * çizilmez. Dar ekranda sütunlar sabit, metin sarar; daha darda yalnız tablo kabı kayar.
+ * çizilmez. Dar ekranda sütunlar sabit, metin sarar; daha darda yalnız tablo kabı kayar. "Sadece farkları göster" (varsayılan
+ * kapalı, TIER-023) her pakette aynı olan satırları gizler; boş kalan alan bandı da gizlenir.
  */
 @Component({
     selector: 'app-public-plan-comparison',
@@ -47,7 +50,20 @@ interface ComparisonGroupVm {
     imports: [RouterLink],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        @if (groups().length > 0) {
+        @if (hasRows()) {
+            <div class="mb-4 flex justify-end">
+                <label class="inline-flex min-h-[44px] cursor-pointer items-center gap-2.5 text-sm font-medium text-surface-800 dark:text-surface-100">
+                    <input
+                        type="checkbox"
+                        role="switch"
+                        class="h-4 w-4 accent-[var(--public-accent)]"
+                        [checked]="onlyDifferences()"
+                        (change)="onlyDifferences.set($any($event.target).checked)"
+                        data-only-differences
+                    />
+                    Sadece farkları göster
+                </label>
+            </div>
             <div class="public-card overflow-x-auto">
                 <table class="public-plan-compare w-full border-collapse text-left text-xs sm:text-sm">
                     <caption class="sr-only">Paket karşılaştırması</caption>
@@ -86,6 +102,9 @@ interface ComparisonGroupVm {
                                 <tr class="public-plan-compare-row">
                                     <th scope="row" class="px-2 py-3 align-top font-medium text-surface-800 sm:px-5 dark:text-surface-100">
                                         {{ row.label }}
+                                        @if (row.badge) {
+                                            <span class="public-plan-badge ml-1 align-middle" data-row-badge>{{ row.badge }}</span>
+                                        }
                                         @if (row.detail) {
                                             <span class="mt-0.5 block text-xs font-normal text-muted-color">{{ row.detail }}</span>
                                         }
@@ -118,6 +137,10 @@ export class PublicPlanComparisonComponent {
 
     readonly paths = PUBLIC_PATHS;
     readonly onRequestText = PRICING_ON_REQUEST_TEXT;
+    /** "Sadece farkları göster" anahtarı; varsayılan kapalı (tüm satırlar). */
+    readonly onlyDifferences = signal(false);
+
+    readonly hasRows = computed(() => decidedFeatureRows(this.featureRows()).length > 0);
 
     readonly vatNote = computed(() => {
         const state = this.pricing();
@@ -140,8 +163,10 @@ export class PublicPlanComparisonComponent {
         const plans = this.plans();
         const byGroup = new Map<string, ComparisonRowVm[]>();
 
-        for (const row of decidedFeatureRows(this.featureRows())) {
-            byGroup.set(row.group, [...(byGroup.get(row.group) ?? []), { label: row.label, detail: row.detail, cells: plans.map((p) => row.plans[p.slug]) }]);
+        const rows = decidedFeatureRows(this.featureRows()).filter((row) => !this.onlyDifferences() || isPlanDifferenceRow(row));
+
+        for (const row of rows) {
+            byGroup.set(row.group, [...(byGroup.get(row.group) ?? []), { label: row.label, detail: row.detail, badge: row.badge, cells: plans.map((p) => row.plans[p.slug]) }]);
         }
 
         return [...byGroup].map(([group, rows]) => ({ group, rows }));

@@ -36,6 +36,8 @@ export class PendingAppointmentRequestsState {
 
     constructor() {
         if (this.canManage) {
+            // Menü sayacı Bugün'ün ilk yanıtını bekler; açılışta talep sayısı iki kez sorgulanmaz.
+            this.badgeFeed.claim('pendingAppointmentRequests');
             inject(DestroyRef).onDestroy(() => this.badgeFeed.release('pendingAppointmentRequests'));
         }
     }

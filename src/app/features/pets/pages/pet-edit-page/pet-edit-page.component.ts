@@ -69,7 +69,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; hasta kaydı güncellenemez.</p>
                 }
                 @if (selectionError()) {
-                    <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
+                    <p class="text-danger mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
                     <div class="grid grid-cols-12 gap-4">
@@ -77,27 +77,27 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
                             <app-client-search inputId="clientId" formControlName="clientId" />
                             @if (apiFieldErrors().clientId) {
-                                <small class="text-red-500">{{ apiFieldErrors().clientId }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
                             } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                                <small class="text-red-500">Müşteri seçimi zorunludur.</small>
+                                <small class="text-danger">Müşteri seçimi zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="name" class="block text-sm font-medium text-muted-color mb-2">Hasta adı *</label>
                             <input id="name" pInputText class="w-full" formControlName="name" />
                             @if (apiFieldErrors().name) {
-                                <small class="text-red-500">{{ apiFieldErrors().name }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().name }}</small>
                             } @else if (form.controls.name.invalid && form.controls.name.touched) {
-                                <small class="text-red-500">Hasta adı zorunludur.</small>
+                                <small class="text-danger">Hasta adı zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="speciesId" class="block text-sm font-medium text-muted-color mb-2">Tür *</label>
                             <p-select inputId="speciesId" formControlName="speciesId" [options]="speciesOptions()" optionLabel="label" optionValue="value" placeholder="Tür seçin" class="w-full" [loading]="loadingSpecies()" [showClear]="true" />
                             @if (apiFieldErrors().speciesId) {
-                                <small class="text-red-500">{{ apiFieldErrors().speciesId }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().speciesId }}</small>
                             } @else if (form.controls.speciesId.invalid && form.controls.speciesId.touched) {
-                                <small class="text-red-500">Tür seçimi zorunludur.</small>
+                                <small class="text-danger">Tür seçimi zorunludur.</small>
                             }
                             @if (canShowQuickSpeciesButton()) {
                                 <div class="mt-2">
@@ -109,7 +109,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             <label for="breedId" class="block text-sm font-medium text-muted-color mb-2">Irk</label>
                             <p-select inputId="breedId" formControlName="breedId" [options]="breedOptions()" optionLabel="label" optionValue="value" placeholder="Irk seçin" class="w-full" [loading]="loadingBreeds()" [showClear]="true" />
                             @if (apiFieldErrors().breedId) {
-                                <small class="text-red-500">{{ apiFieldErrors().breedId }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().breedId }}</small>
                             }
                             @if (hasSpeciesForQuickBreed() && canShowQuickBreedButton()) {
                                 <div class="mt-2">
@@ -121,17 +121,17 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             <label for="gender" class="block text-sm font-medium text-muted-color mb-2">Cinsiyet</label>
                             <p-select inputId="gender" formControlName="gender" [options]="genderOptions" optionLabel="label" optionValue="value" placeholder="Seçin" [showClear]="true" class="w-full" />
                             @if (apiFieldErrors().gender) {
-                                <small class="text-red-500">{{ apiFieldErrors().gender }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().gender }}</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="birthDate" class="block text-sm font-medium text-muted-color mb-2">Doğum tarihi</label>
                             <app-date-input inputId="birthDate" type="date" formControlName="birthDate" [min]="dateInputMin" limit="past" />
                             @if (apiFieldErrors().birthDate) {
-                                <small class="text-red-500">{{ apiFieldErrors().birthDate }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().birthDate }}</small>
                             } @else if (form.controls.birthDate.invalid && form.controls.birthDate.touched) {
                                 @if (form.controls.birthDate.hasError('birthDateInvalid')) {
-                                    <small class="text-red-500">Doğum tarihi geçerli değil.</small>
+                                    <small class="text-danger">Doğum tarihi geçerli değil.</small>
                                 }
                             }
                         </div>
@@ -139,17 +139,17 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             <label for="colorId" class="block text-sm font-medium text-muted-color mb-2">Renk</label>
                             <p-select inputId="colorId" formControlName="colorId" [options]="colorOptions()" optionLabel="label" optionValue="value" placeholder="Renk seçin" class="w-full" [loading]="loadingColors()" [showClear]="true" />
                             @if (apiFieldErrors().colorId) {
-                                <small class="text-red-500">{{ apiFieldErrors().colorId }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().colorId }}</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="weight" class="block text-sm font-medium text-muted-color mb-2">Kilo (kg)</label>
                             <input id="weight" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="weightStr" />
                             @if (apiFieldErrors().weightStr) {
-                                <small class="text-red-500">{{ apiFieldErrors().weightStr }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().weightStr }}</small>
                             } @else if (form.controls.weightStr.invalid && form.controls.weightStr.touched) {
                                 @if (form.controls.weightStr.hasError('weightInvalid')) {
-                                    <small class="text-red-500">Kilo geçerli bir sayı olmalıdır (0–9999 arası).</small>
+                                    <small class="text-danger">Kilo geçerli bir sayı olmalıdır (0–9999 arası).</small>
                                 }
                             }
                         </div>
@@ -157,9 +157,9 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             <label for="microchipNumber" class="block text-sm font-medium text-muted-color mb-2">Çip numarası</label>
                             <input id="microchipNumber" pInputText class="w-full" formControlName="microchipNumber" maxlength="50" />
                             @if (apiFieldErrors().microchipNumber) {
-                                <small class="text-red-500">{{ apiFieldErrors().microchipNumber }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().microchipNumber }}</small>
                             } @else if (form.controls.microchipNumber.invalid && form.controls.microchipNumber.touched) {
-                                <small class="text-red-500">En fazla 50 karakter olabilir.</small>
+                                <small class="text-danger">En fazla 50 karakter olabilir.</small>
                             } @else if (microchipWarning(); as warning) {
                                 <small class="text-amber-700 dark:text-amber-300" data-testid="microchip-warning">{{ warning }}</small>
                             }
@@ -168,27 +168,27 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             <label for="passportOrTagNumber" class="block text-sm font-medium text-muted-color mb-2">Karne / Küpe no</label>
                             <input id="passportOrTagNumber" pInputText class="w-full" formControlName="passportOrTagNumber" maxlength="50" />
                             @if (apiFieldErrors().passportOrTagNumber) {
-                                <small class="text-red-500">{{ apiFieldErrors().passportOrTagNumber }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().passportOrTagNumber }}</small>
                             } @else if (form.controls.passportOrTagNumber.invalid && form.controls.passportOrTagNumber.touched) {
-                                <small class="text-red-500">En fazla 50 karakter olabilir.</small>
+                                <small class="text-danger">En fazla 50 karakter olabilir.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="specialProtocolNumber" class="block text-sm font-medium text-muted-color mb-2">Özel protokol no</label>
                             <input id="specialProtocolNumber" pInputText class="w-full" formControlName="specialProtocolNumber" maxlength="50" />
                             @if (apiFieldErrors().specialProtocolNumber) {
-                                <small class="text-red-500">{{ apiFieldErrors().specialProtocolNumber }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().specialProtocolNumber }}</small>
                             } @else if (form.controls.specialProtocolNumber.invalid && form.controls.specialProtocolNumber.touched) {
-                                <small class="text-red-500">En fazla 50 karakter olabilir.</small>
+                                <small class="text-danger">En fazla 50 karakter olabilir.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="hbsAnimalId" class="block text-sm font-medium text-muted-color mb-2">HBS hayvan kimlik no</label>
                             <input id="hbsAnimalId" pInputText class="w-full" formControlName="hbsAnimalId" maxlength="50" autocomplete="off" />
                             @if (apiFieldErrors().hbsAnimalId) {
-                                <small class="text-red-500">{{ apiFieldErrors().hbsAnimalId }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().hbsAnimalId }}</small>
                             } @else if (form.controls.hbsAnimalId.invalid && form.controls.hbsAnimalId.touched) {
-                                <small class="text-red-500">En fazla 50 karakter olabilir.</small>
+                                <small class="text-danger">En fazla 50 karakter olabilir.</small>
                             } @else {
                                 <small class="text-muted-color">Hayvan Bilgi Sistemi'ndeki kimlik numarası (isteğe bağlı).</small>
                             }
@@ -199,14 +199,14 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                 <label class="text-sm cursor-pointer mb-0" for="isNeutered">Kısırlaştırılmış mı?</label>
                             </div>
                             @if (apiFieldErrors().isNeutered) {
-                                <small class="text-red-500 block w-full">{{ apiFieldErrors().isNeutered }}</small>
+                                <small class="text-danger block w-full">{{ apiFieldErrors().isNeutered }}</small>
                             }
                         </div>
                         <div class="col-span-12">
                             <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                             <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
                             @if (apiFieldErrors().notes) {
-                                <small class="text-red-500">{{ apiFieldErrors().notes }}</small>
+                                <small class="text-danger">{{ apiFieldErrors().notes }}</small>
                             }
                         </div>
                         <div class="col-span-12">
@@ -215,7 +215,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     </div>
 
                     @if (submitError()) {
-                        <p class="text-red-500 mt-4 mb-0" role="alert">{{ submitError() }}</p>
+                        <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">

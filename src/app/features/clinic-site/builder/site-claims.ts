@@ -2,7 +2,7 @@ import type { CopyKey, SiteArticle, SiteFaq, SiteFeature, SiteMember, SiteServic
 
 /**
  * Serbest metindeki reklam sayılabilecek ifadeler (ADR-045 K14): tek kural burası. Uyarır, engellemez; uymak kliniğin sorumluluğundadır.
- * Türkçe karakter ve büyük harf farkı eşleşmeyi atlatmasın diye metin önce sadeleştirilir. Liste ve metinler hukukçu görüşüne kadar taslaktır.
+ * Türkçe karakter ve büyük harf farkı eşleşmeyi atlatmasın diye metin önce sadeleştirilir.
  */
 export interface SiteClaim {
     readonly term: string;

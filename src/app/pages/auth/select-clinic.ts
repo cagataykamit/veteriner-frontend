@@ -9,7 +9,7 @@ import { SelectModule } from 'primeng/select';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE, authFailureMessage } from '@/app/core/auth/auth-error.utils';
-import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
+import { DEFAULT_PANEL_AFTER_AUTH, panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 
 @Component({
@@ -32,7 +32,7 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
                         @if (loading()) {
                             <p class="m-0 text-center text-muted-color">Klinikler yükleniyor…</p>
                         } @else if (clinics().length === 0) {
-                            <p class="m-0 text-center text-red-500">{{ noClinicsMessage }}</p>
+                            <p class="m-0 text-center text-danger">{{ noClinicsMessage }}</p>
                         } @else {
                             <div class="mx-auto w-full max-w-[25rem]">
                                 <div class="mb-8">
@@ -55,7 +55,7 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
                         }
 
                         @if (error()) {
-                            <p class="mt-4 mb-0 text-center text-red-500" role="alert">{{ error() }}</p>
+                            <p class="mt-4 mb-0 text-center text-danger" role="alert">{{ error() }}</p>
                         }
                     </div>
                 </div>
@@ -159,6 +159,13 @@ export class SelectClinicPage implements OnInit {
         const decision = this.auth.resolveClinicDecision(selectable);
 
         if (decision.kind === 'none') {
+            if (this.auth.isPlatformAdmin()) {
+                this.auth.startPlatformOnlySession();
+                void this.router.navigateByUrl(DEFAULT_PANEL_AFTER_AUTH);
+
+                return;
+            }
+
             this.error.set(AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE);
 
             return;

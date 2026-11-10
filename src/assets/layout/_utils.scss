@@ -14,6 +14,11 @@
         margin-bottom: 2rem;
         border-radius: var(--content-border-radius);
 
+        // Açık temada beyaz kart zeminden (#f8fafc) yalnız ~1.05:1 ayrılıyordu; 1 px kenarlık (#e2e8f0) çevreler. Koyu tema değişmez.
+        :root:not([class*='app-dark']) & {
+            border: 1px solid var(--surface-border);
+        }
+
         &:last-child {
             margin-bottom: 0;
         }
@@ -39,10 +44,10 @@
 }
 
 /* Native tarih/saat — kompakt input (date: md:max-w-64, datetime-local: md:max-w-96) yanında satır içi hata kaymasını önler */
-input[type='date'] ~ small.text-red-500,
+input[type='date'] ~ small.text-danger,
 input[type='date'] ~ small.text-amber-600,
-input[type='datetime-local'] ~ small.text-red-500,
-input[type='time'] ~ small.text-red-500 {
+input[type='datetime-local'] ~ small.text-danger,
+input[type='time'] ~ small.text-danger {
     display: block;
     margin-top: 0.25rem;
 }

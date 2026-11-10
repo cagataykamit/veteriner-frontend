@@ -14,7 +14,7 @@ export const authGuard: CanActivateFn = (_route, state) => {
     return auth.ensureValidAccessToken().pipe(
         map(() => {
             if (auth.isAuthenticated()) {
-                if (!auth.hasSelectedClinic()) {
+                if (!auth.hasPanelContext()) {
                     return router.createUrlTree(['/auth/select-clinic'], {
                         queryParams: { returnUrl: panelReturnUrlOrDefault(state.url) }
                     });

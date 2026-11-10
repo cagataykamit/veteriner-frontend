@@ -23,7 +23,7 @@ const REMOVE_FAILED = 'Üye çıkarılamadı. Lütfen tekrar deneyin.';
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Bu kullanıcı kurum üyeliğini kaybedecek. Devam etmek istiyor musunuz?</p>
             @if (error()) {
-                <p class="text-red-500 text-sm mb-3 m-0" role="alert">{{ error() }}</p>
+                <p class="text-danger text-sm mb-3 m-0" role="alert">{{ error() }}</p>
             }
             <div class="flex flex-wrap justify-end gap-2">
                 <button pButton type="button" severity="secondary" [disabled]="busy()" (click)="visible.set(false)">Vazgeç</button>

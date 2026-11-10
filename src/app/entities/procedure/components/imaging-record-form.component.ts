@@ -44,7 +44,7 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; kayıt oluşturulamaz.</p>
             }
             @if (selectionError()) {
-                <p class="text-red-500 mt-0 mb-4" role="alert">{{ selectionError() }}</p>
+                <p class="text-danger mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
             @if (contextFromExamination()) {
                 <p class="text-sm text-muted-color mt-0 mb-4">Bu muayene kaydından bağlam taşındı; müşteri, hasta ve bağlı muayene alanları kilitlidir.</p>
@@ -55,28 +55,28 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                         <label for="imgClientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
                         <app-client-search inputId="imgClientId" formControlName="clientId" />
                         @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-danger">Zorunlu alan.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="imgPetId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                         <app-pet-search inputId="imgPetId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                         @if (form.controls.petId.invalid && form.controls.petId.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-danger">Zorunlu alan.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="imgModality" class="block text-sm font-medium text-muted-color mb-2">Tür *</label>
                         <p-select inputId="imgModality" formControlName="modality" [options]="modalityOptions" optionLabel="label" optionValue="value" placeholder="Görüntüleme türü" class="w-full" />
                         @if (form.controls.modality.invalid && form.controls.modality.touched) {
-                            <small class="text-red-500">Zorunlu alan.</small>
+                            <small class="text-danger">Zorunlu alan.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="imgPerformedAt" class="block text-sm font-medium text-muted-color mb-2">Tarih / saat *</label>
                         <app-date-input inputId="imgPerformedAt" type="datetime-local" formControlName="performedAtLocal" min="1900-01-01T00:00" limit="past" />
                         @if ((form.controls.performedAtLocal.hasError('required') || form.controls.performedAtLocal.hasError('dateYearInvalid')) && form.controls.performedAtLocal.touched) {
-                            <small class="text-red-500">Geçerli bir tarih ve saat girin.</small>
+                            <small class="text-danger">Geçerli bir tarih ve saat girin.</small>
                         }
                     </div>
                     <div class="col-span-12">
@@ -107,13 +107,13 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                         <span class="block text-sm font-medium text-muted-color mb-2">Dosyalar *</span>
                         <app-stored-file-upload [ownerPath]="ownerPath()" [disabled]="submitting() || ro.mutationBlocked()" (uploaded)="onFileUploaded()" />
                         @if (filesMissing()) {
-                            <small class="text-red-500 block mt-1" role="alert">En az bir dosya ekleyin.</small>
+                            <small class="text-danger block mt-1" role="alert">En az bir dosya ekleyin.</small>
                         }
                     </div>
                 </div>
 
                 @if (submitError()) {
-                    <p class="text-red-500 mt-4 mb-0" role="alert" data-testid="imaging-submit-error">{{ submitError() }}</p>
+                    <p class="text-danger mt-4 mb-0" role="alert" data-testid="imaging-submit-error">{{ submitError() }}</p>
                 }
                 @if (recordId(); as id) {
                     <p class="text-sm mt-2 mb-0" role="status">
