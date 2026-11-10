@@ -46,7 +46,7 @@ export const PUBLIC_REGISTERS_PAGE_META: PublicPageMetaOptions = {
 
 export const PUBLIC_MIGRATION_PAGE_META: PublicPageMetaOptions = {
     title: 'Eski programdan geçiş — Vetinity',
-    description: 'Excel veya CSV ile müşteri, hasta ve aşı geçmişinizi aktarın: kaynak program seçimi, sütun eşleme, kontrol, geri alma ve geçiş desteği.',
+    description: 'Excel veya CSV ile müşteri, hasta, aşı ve muayene geçmişinizi, açık bakiyeleri, randevuları ve ürün kartlarını aktarın: kaynak program seçimi, sütun eşleme, kontrol, geri alma ve geçiş desteği.',
     canonicalPath: PUBLIC_PATHS.migration
 };
 

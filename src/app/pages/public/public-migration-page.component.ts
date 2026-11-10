@@ -46,8 +46,8 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
                         <h2 class="m-0 text-base font-semibold text-surface-900 dark:text-surface-0">Aktarılır</h2>
                         <ul class="m-0 mt-3 list-none space-y-2 p-0 text-sm">
                             @for (item of included; track item) {
-                                <li class="flex items-center gap-2 text-surface-700 dark:text-surface-200">
-                                    <i class="pi pi-check text-[var(--public-accent)]" aria-hidden="true"></i>{{ item }}
+                                <li class="flex items-start gap-2 text-surface-700 dark:text-surface-200">
+                                    <i class="pi pi-check mt-0.5 text-[var(--public-accent)]" aria-hidden="true"></i><span>{{ item }}</span>
                                 </li>
                             }
                         </ul>
@@ -56,8 +56,8 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
                         <h2 class="m-0 text-base font-semibold text-surface-900 dark:text-surface-0">Şimdilik aktarılmaz</h2>
                         <ul class="m-0 mt-3 list-none space-y-2 p-0 text-sm">
                             @for (item of excluded; track item) {
-                                <li class="flex items-center gap-2 text-surface-700 dark:text-surface-200">
-                                    <i class="pi pi-minus text-surface-400" aria-hidden="true"></i>{{ item }}
+                                <li class="flex items-start gap-2 text-surface-700 dark:text-surface-200">
+                                    <i class="pi pi-minus mt-0.5 text-surface-400" aria-hidden="true"></i><span>{{ item }}</span>
                                 </li>
                             }
                         </ul>
