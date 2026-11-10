@@ -31,7 +31,7 @@ interface MenuSection {
     providers: [MenuFlyoutService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <ul class="layout-menu layout-menu-scroll">
+        <ul class="layout-menu layout-menu-scroll" [hidden]="!scrollingSections().length">
             @for (section of scrollingSections(); track section.label ?? section.heading) {
                 @if (section.label && rail()) {
                     <li class="layout-menu-divider" role="separator"></li>
@@ -57,7 +57,7 @@ interface MenuSection {
                 }
             }
         </ul>
-        <ul class="layout-menu layout-menu-pinned">
+        <ul class="layout-menu layout-menu-pinned" [class.layout-menu-pinned-alone]="!scrollingSections().length">
             @for (section of pinnedSections(); track section.label ?? section.heading) {
                 <ng-container *ngTemplateOutlet="flatSection; context: { $implicit: section }" />
             }
