@@ -4,9 +4,10 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { type Observable, Subscription } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { IMAGING_READ_CLAIM, PETS_UPDATE_CLAIM, VACCINATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { EXAMINATIONS_READ_CLAIM, IMAGING_READ_CLAIM, PETS_UPDATE_CLAIM, VACCINATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import { PetImagingSectionComponent } from '@/app/entities/imaging/components/pet-imaging-section.component';
+import { PetImportedRecordsSectionComponent } from '@/app/entities/imported-history/components/pet-imported-records-section.component';
 import { PetCardHeaderComponent } from '@/app/features/pets/components/pet-card-header.component';
 import { PetCardTimelineComponent } from '@/app/features/pets/components/pet-card-timeline.component';
 import { PetSummaryCardComponent } from '@/app/features/pets/components/pet-summary-card.component';
@@ -50,6 +51,7 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
         PetCardTimelineComponent,
         PetStatusDialogComponent,
         PetImagingSectionComponent,
+        PetImportedRecordsSectionComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent
     ],
@@ -156,6 +158,11 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
                 @if (canReadImaging && p.ownerId) {
                     <app-pet-imaging-section [petId]="p.id" [clientId]="p.ownerId" />
                 }
+
+                <!-- Eski programdan aktarılan klinik kayıtlar (ADR-048); kaydı olmayan hastada görünmez. -->
+                @if (canReadExaminations) {
+                    <app-pet-imported-records-section [petId]="p.id" />
+                }
             </div>
         }
     `
@@ -169,6 +176,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     private readonly recentlyViewed = inject(RecentlyViewedService);
     readonly ro = inject(TenantReadOnlyContextService);
     readonly canReadImaging = this.auth.hasOperationClaim(IMAGING_READ_CLAIM);
+    readonly canReadExaminations = this.auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM);
 
     /** Yeni oluşturma sonrası kısa onay (query `saved=1`). */
     readonly showSavedBanner = signal(false);

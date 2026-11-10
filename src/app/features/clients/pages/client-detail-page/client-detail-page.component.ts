@@ -43,6 +43,7 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
 import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-detail-row-link.component';
+import { ClientImportedAccountEntriesPanelComponent } from '@/app/entities/imported-history/components/client-imported-account-entries-panel.component';
 
 /**
  * Müşteri kartı — okuma öncelikli 360 görünüm (ADR-020 karar 6, hasta kartıyla aynı ilke): kimlik kartı (iletişim, rıza rozeti, gösterge şeridi),
@@ -65,6 +66,7 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
         ClientPetsPanelComponent,
         ClientPortalAccessPanelComponent,
         ClientCreditsPanelComponent,
+        ClientImportedAccountEntriesPanelComponent,
         PetTodoPanelComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
@@ -257,6 +259,11 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
 
                 <!-- Müşteri kredisi (FIN-005): tam genişlik; kredi yoksa panel kendini gizler. -->
                 <app-client-credits-panel class="empty:hidden" [clientId]="c.id" />
+
+                <!-- Eski programdan aktarılan hesap hareketleri (ADR-048 T4): bilgi amaçlı; hareket yoksa panel kendini gizler. -->
+                @if (canReadCharges) {
+                    <app-client-imported-account-entries-panel class="empty:hidden" [clientId]="c.id" />
+                }
 
                 <!-- 3. satır: portal erişimi | belgeler ve rıza (yarım genişlik, eşit yükseklik) -->
                 <div class="grid grid-cols-12 gap-4">
