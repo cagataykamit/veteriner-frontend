@@ -10,6 +10,7 @@ import type { ExaminationDetailVm } from '@/app/entities/examination/models/exam
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import type { TreatmentEditVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 import { TreatmentFormComponent } from './treatment-form.component';
 
@@ -92,5 +93,67 @@ describe('TreatmentFormComponent — muayene bağlamı', () => {
 
         expect(fixture.componentInstance.form.getRawValue().clientId).toBe('');
         expect(fixture.componentInstance.selectionError()).toContain('uyuşmuyor');
+    });
+});
+
+/** RECORD-004 2. dilim: tedavi kopyası oluşturma formunu doldurur; kayıt normal oluşturma ucundan gider. */
+describe('TreatmentFormComponent — kopya', () => {
+    const source: TreatmentEditVm = {
+        id: 't-src',
+        clinicId: 'c',
+        clientId: 'client-1',
+        petId: 'pet-1',
+        clientName: 'Ali Veli',
+        petName: 'Pamuk',
+        examinationId: 'e-old',
+        treatmentDateUtc: '2026-09-01T07:00:00Z',
+        title: 'Pansuman',
+        description: 'Yara temizliği ve bandaj',
+        notes: 'Eski not',
+        followUpDateInput: '2026-09-08'
+    };
+
+    const setup = (examinations: { id: string; status: string }[]) => {
+        const createTreatment = vi.fn().mockReturnValue(of({ id: 't-new' }));
+
+        TestBed.configureTestingModule({
+            imports: [TreatmentFormComponent],
+            providers: [
+                provideRouter([]),
+                provideHttpClient(withXhr()),
+                provideHttpClientTesting(),
+                { provide: API_BASE_URL, useValue: 'http://api.test' },
+                { provide: ExaminationsService, useValue: { getExaminations: () => of({ items: examinations }) } },
+                { provide: TreatmentsService, useValue: { getTreatmentForEditById: () => of(source), createTreatment } },
+                { provide: ClientSearchService, useValue: { search: () => of([]), getById: () => of({ id: 'client-1', fullName: 'Ali Veli' }) } },
+                { provide: PetsService, useValue: { getPets: () => of({ items: [] }), getPetById: () => of({ id: 'pet-1', name: 'Pamuk' }) } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => true, getClinicName: () => 'K', getClinicId: () => 'c' } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        });
+        const fixture = TestBed.createComponent(TreatmentFormComponent);
+
+        fixture.componentRef.setInput('contextParams', convertToParamMap({ copyFrom: 't-src' }));
+        fixture.detectChanges();
+
+        return { fixture, c: fixture.componentInstance, createTreatment };
+    };
+
+    it('hasta, başlık ve açıklama kopyalanır; tarih, not ve eski muayene bağı kopyalanmaz', () => {
+        const { fixture, c } = setup([{ id: 'e-old', status: 'Finalized' }]);
+
+        expect(c.form.getRawValue()).toEqual(
+            expect.objectContaining({ clientId: 'client-1', petId: 'pet-1', title: 'Pansuman', description: 'Yara temizliği ve bandaj', notes: '', treatmentDateLocal: '', followUpDate: '', examinationId: '' })
+        );
+        expect(c.form.controls.clientId.disabled && c.form.controls.petId.disabled).toBe(true);
+        expect(c.form.controls.examinationId.enabled).toBe(true);
+        fixture.detectChanges();
+        expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="treatment-copy-notice"]')?.textContent).toContain('Pansuman');
+    });
+
+    it('hastanın tek açık muayenesi hedef olarak seçili gelir', () => {
+        const { c } = setup([{ id: 'e-old', status: 'Finalized' }, { id: 'e-open', status: 'Draft' }]);
+
+        expect(c.form.controls.examinationId.value).toBe('e-open');
     });
 });

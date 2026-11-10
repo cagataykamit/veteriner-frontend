@@ -3,6 +3,7 @@ import type {
     ExaminationTemplateDto,
     ExaminationTemplateLineDto
 } from '@/app/entities/examination-template/models/examination-template.model';
+import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, hasAtMostDecimals } from '@/app/entities/charge/utils/charge-amount.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
 /** Şablonda muayeneye eklenecek metin var mı (şikâyet, bulgu, plan). */
@@ -63,6 +64,42 @@ export function templateChargePreview(t: ExaminationTemplateDto): { total: numbe
     const linesTotal = t.lines.reduce((sum, l) => sum + templateLineAmount(l), 0);
 
     return t.packagePrice != null ? { total: t.packagePrice, linesTotal, isPackage: true } : { total: linesTotal, linesTotal, isPackage: false };
+}
+
+/** Uygulama önizlemesinde bir satırın seçimi (EXAM-013): dahil/hariç ve bu uygulamadaki miktar; şablon değişmez. */
+export interface TemplateApplyLineChoice {
+    included: boolean;
+    /** Boş veya geçersizse uygulanamaz (`templateApplyQuantityValid`). */
+    quantity: number | null;
+}
+
+/** Şablonun satırlarıyla başlayan seçim: hepsi dahil, şablondaki miktar. */
+export function templateApplyInitialChoices(t: ExaminationTemplateDto): Record<string, TemplateApplyLineChoice> {
+    return Object.fromEntries(t.lines.map((l) => [l.productId, { included: true, quantity: l.quantity }]));
+}
+
+/** Miktar kuralı şablon satırıyla aynı (sözleşme §12): `> 0`, üst sınır ve ondalık ölçeği. */
+export function templateApplyQuantityValid(quantity: number | null): boolean {
+    return quantity != null && Number.isFinite(quantity) && quantity > 0 && quantity <= CHARGE_QUANTITY_MAX && hasAtMostDecimals(quantity, CHARGE_QUANTITY_MAX_DECIMALS);
+}
+
+/** Uygulanacak satırlar şablondaki sırayla ve seçilen miktarla (önizleme toplamı ve pasif ürün denetimi bunlardan yapılır). */
+export function templateIncludedLines(t: ExaminationTemplateDto, choices: Record<string, TemplateApplyLineChoice>): ExaminationTemplateLineDto[] {
+    return t.lines.filter((l) => choices[l.productId]?.included ?? true).map((l) => ({ ...l, quantity: choices[l.productId]?.quantity ?? 0 }));
+}
+
+/**
+ * Uygula isteğinin `lines` alanı: seçim şablonla aynıysa (hepsi dahil, miktarlar aynı) `undefined` gönderilir ve sunucu bugünkü davranışla
+ * tüm satırları uygular; değilse yalnız dahil satırlar (boş liste yalnız metni uygular).
+ */
+export function templateApplyRequestLines(
+    t: ExaminationTemplateDto,
+    choices: Record<string, TemplateApplyLineChoice>
+): { productId: string; quantity: number }[] | undefined {
+    const included = templateIncludedLines(t, choices);
+    const unchanged = included.length === t.lines.length && included.every((l, i) => l.quantity === t.lines[i].quantity);
+
+    return unchanged ? undefined : included.map((l) => ({ productId: l.productId, quantity: l.quantity }));
 }
 
 /**

@@ -102,4 +102,12 @@ describe('PrescriptionDetailPageComponent — iptal', () => {
         expect(el.querySelector('[data-testid="prescription-late-entry"]')?.textContent).toContain('Kesinleştirmeden sonra eklendi');
         expect(el.textContent).toContain('Kesinleştirmeden sonra yazıldı');
     });
+
+    it('"Kopyasını oluştur" oluşturma formuna kaynak kimliğiyle gider; iptal edilmiş reçetede de vardır (RECORD-004)', () => {
+        const link = (vm: PrescriptionDetailVm) => (render(vm).nativeElement as HTMLElement).querySelector<HTMLAnchorElement>('[data-testid="prescription-copy"]');
+
+        expect(link(base)?.getAttribute('href')).toBe('/panel/prescriptions/new?copyFrom=rx1');
+        TestBed.resetTestingModule();
+        expect(link({ ...base, isCancelled: true })).not.toBeNull();
+    });
 });

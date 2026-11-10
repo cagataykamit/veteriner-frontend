@@ -85,6 +85,14 @@ describe('ExaminationTemplatesService', () => {
         req.flush({ examinationId: 'e1', rowVersion: 'V2', updatedFields: [], administrations: [], services: [] });
     });
 
+    it('satır seçimi verilirse gövdeye lines eklenir (EXAM-013)', () => {
+        service.apply('e1', 't1', 'V1', []).subscribe();
+        const req = http.expectOne('http://api.test/api/v1/examinations/e1/apply-template');
+
+        expect(req.request.body).toEqual({ templateId: 't1', rowVersion: 'V1', lines: [] });
+        req.flush({ examinationId: 'e1', rowVersion: 'V2', updatedFields: [], administrations: [], services: [] });
+    });
+
     it('kod Türkçe mesaja çevrilir; reddedilen satırın productId si ürün adıyla mesaja girer', () => {
         let finalized: ExaminationTemplateError | undefined;
 

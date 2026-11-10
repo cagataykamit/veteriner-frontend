@@ -14,7 +14,8 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { PRESCRIPTIONS_CREATE_CLAIM, PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { recordCopyQueryParams } from '@/app/shared/panel/record-copy.utils';
 import { HbsSectionComponent } from '@/app/entities/hbs/components/hbs-section.component';
 import type { HbsEntryVm } from '@/app/entities/hbs/models/hbs.model';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
@@ -86,6 +87,9 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
                         } @else {
                             <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                         }
+                    }
+                    @if (canCreatePrescription && r.petId && !ro.mutationBlocked()) {
+                        <a [routerLink]="['/panel/prescriptions/new']" [queryParams]="copyQueryParams(r.id)" pButton type="button" class="p-button-outlined p-button-secondary" data-testid="prescription-copy"><i class="pi pi-copy"></i>Kopyasını oluştur</a>
                     }
                     <app-record-history-button resource="prescriptions" [recordId]="r.id" />
                 </ng-container>
@@ -222,6 +226,7 @@ export class PrescriptionDetailPageComponent implements OnInit {
     readonly row = this.loader.value;
     readonly showSavedBanner = signal(false);
     readonly canUpdatePrescription = this.auth.hasOperationClaim(PRESCRIPTIONS_UPDATE_CLAIM);
+    readonly canCreatePrescription = this.auth.hasOperationClaim(PRESCRIPTIONS_CREATE_CLAIM);
     readonly cancelVisible = signal(false);
     protected readonly lateEntryLabel = ADMINISTRATION_LATE_ENTRY_LABEL;
     /** Mapper boş metin için kullandığı EM ile aynı. */
@@ -233,6 +238,9 @@ export class PrescriptionDetailPageComponent implements OnInit {
     ngOnInit(): void {
         this.loader.init();
     }
+
+    /** RECORD-004: kopya oluşturma formunu doldurur; ayrı kopyalama ucu yok. */
+    readonly copyQueryParams = recordCopyQueryParams;
 
     /** HBS geri kaydı klinik içeriği değiştirmez; yalnız HBS alanı güncellenir (sayfa yeniden yüklenmez). */
     onHbsChange(hbs: HbsEntryVm): void {
