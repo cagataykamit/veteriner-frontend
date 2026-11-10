@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '@/app/core/auth/auth.guard';
 import { panelHomeRedirect } from '@/app/core/routing/panel-home.redirect';
+import { surfaceOriginGuard } from '@/app/core/routing/surface-origin.guard';
 import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { referralCodeRedirect } from '@/app/features/sales-partners/routes/referral-code.redirect';
 
@@ -11,6 +12,7 @@ export const appRoutes: Routes = [
     {
         // Tanıtım sitesi ve hukuki metinler: ortak iskelet (üst çubuk + alt bilgi), her sayfa lazy.
         path: '',
+        canActivate: [surfaceOriginGuard('public')],
         loadComponent: () => import('./app/pages/public/public-layout.component').then((m) => m.PublicLayoutComponent),
         children: [
             {
@@ -67,14 +69,14 @@ export const appRoutes: Routes = [
     {
         // Site oluşturucu geniş çalışma alanı ister (ADR-045): panel menüsünün yanında sıkışmasın diye iskeletin dışında, kendi üst çubuğunda panele dönüş bağlantısı var.
         path: 'panel/settings/web-page',
-        canActivate: [authGuard],
+        canActivate: [surfaceOriginGuard('panel'), authGuard],
         loadChildren: () => import('./app/features/clinic-site/routes/clinic-site.routes')
     },
     {
         path: 'panel',
         // Panel iskeleti (üst çubuk, menü, genel arama) yalnız panelde gerekir; ilk pakete girmez.
         loadComponent: () => import('./app/layout/component/app.layout').then((m) => m.AppLayout),
-        canActivate: [authGuard],
+        canActivate: [surfaceOriginGuard('panel'), authGuard],
         children: [
             { path: '', pathMatch: 'full', redirectTo: panelHomeRedirect },
             { path: '', loadChildren: () => import('./app/features/panel/panel.routes') }
@@ -83,9 +85,10 @@ export const appRoutes: Routes = [
     { path: 'notfound', loadComponent: () => import('./app/pages/notfound/notfound').then((m) => m.Notfound) },
     {
         path: 'join/:token',
+        canActivate: [surfaceOriginGuard('panel')],
         loadComponent: () => import('./app/pages/public/join-invite-page.component').then((m) => m.JoinInvitePageComponent)
     },
-    { path: 'auth', loadChildren: () => import('./app/pages/auth/auth.routes') },
+    { path: 'auth', canActivate: [surfaceOriginGuard('panel')], loadChildren: () => import('./app/pages/auth/auth.routes') },
     // Satış ortağı bağlantısı (ADR-037): kodu oturum belleğine alıp kayıt sayfasına yönlendirir.
     { path: 'r/:code', canActivate: [referralCodeRedirect], children: [] },
     { path: '**', redirectTo: '/notfound' }
