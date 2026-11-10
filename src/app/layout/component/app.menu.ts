@@ -61,7 +61,7 @@ interface MenuSection {
             @for (section of pinnedSections(); track section.label ?? section.heading) {
                 <ng-container *ngTemplateOutlet="flatSection; context: { $implicit: section }" />
             }
-            <li appMenuitem [item]="supportItem()" [root]="false"></li>
+            <li appMenuitem class="layout-menu-support" [item]="supportItem()" [root]="false"></li>
         </ul>
 
         <ng-template #flatSection let-section>
@@ -116,7 +116,7 @@ export class AppMenu {
     protected readonly scrollingSections = computed(() => this.sections().filter((s) => !s.pinned));
     protected readonly pinnedSections = computed(() => this.sections().filter((s) => s.pinned));
 
-    /** Destek hattı yetkiye bağlı değildir: her rolde sabit bölümün en altındadır, WhatsApp'ı yeni sekmede açar. */
+    /** Destek hattı yetkiye bağlı değildir: her rolde kenar çubuğunun en altındadır, WhatsApp'ı yeni sekmede açar. */
     protected readonly supportItem = computed<MenuItem>(() => ({
         label: 'WhatsApp destek',
         icon: 'pi pi-fw pi-whatsapp',
