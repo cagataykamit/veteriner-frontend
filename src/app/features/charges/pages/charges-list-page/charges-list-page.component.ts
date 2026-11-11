@@ -148,7 +148,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                                 @if (canCollectPayment && row.outstandingAmount !== 0) {
                                                     <a [routerLink]="['/panel/payments/new']" [queryParams]="paymentQueryParams(row)" pButton size="small" class="p-button-sm mr-1"><i class="pi pi-wallet"></i>Ödeme al</a>
                                                 }
-                                                @if (canIssueDocument && !row.eDocumentId) {
+                                                @if (canIssueDocument && !row.eDocumentId && !row.isImported) {
                                                     <button pButton type="button" size="small" [text]="true" class="mr-1" (click)="openDocument(row)" [attr.data-testid]="'charge-edoc-' + row.id"><i class="p-button-icon pi pi-file-export"></i>Belge kes</button>
                                                 }
                                                 @if (canCorrect && !row.eDocumentId) {
