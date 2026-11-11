@@ -15,12 +15,15 @@ import type { ImportFileFormat, ImportSourceProfileCode, ImportSourceProfileDto,
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
 import { duplicateBatchId, importErrorMessage } from '@/app/features/imports/utils/import-labels.utils';
-import { IMPORT_CSV_FIELD, IMPORT_CSV_TEMPLATE_FILE, IMPORT_TABLE_LABELS, IMPORT_TABLES, needsClinic } from '@/app/features/imports/utils/import-schema.utils';
+import { EVET_UPLOAD_FILES, type EVetUploadSlot, IMPORT_CSV_FIELD, IMPORT_CSV_TEMPLATE_FILE, IMPORT_TABLE_LABELS, IMPORT_TABLES, needsClinic } from '@/app/features/imports/utils/import-schema.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
 import { isTrialLimitError } from '@/app/shared/utils/api-error.utils';
 
 type UploadMode = 'xlsx' | 'csv';
+
+const NO_CSV_FILES: Readonly<Record<ImportTable, File | null>> = { customers: null, pets: null, vaccinations: null, clinicalRecords: null, accountEntries: null, appointments: null, products: null };
+const NO_EVET_FILES: Readonly<Record<EVetUploadSlot, File | null>> = { backup: null, patientReport: null, vaccineReport: null, products: null };
 
 /** Adım 1: şablonu indir, dosyayı yükle. Dosya yalnızca bu istekle sunucuya gider; adreste veya günlükte yer almaz. */
 @Component({
@@ -29,7 +32,7 @@ type UploadMode = 'xlsx' | 'csv';
     imports: [FormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, SelectModule, SelectButtonModule, ImportDropZoneComponent, AppPageHeaderComponent, AppTrialLimitNoticeComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-page-header title="Yeni içe aktarma" description="Adım 1 / 4 · Şablonu indirin, kayıtlarınızı doldurun ve dosyayı yükleyin. Bu adımda hiçbir kayıt oluşmaz.">
+        <app-page-header title="Yeni içe aktarma" [description]="isEVet ? evetDescription : genericDescription">
             <div actions>
                 <a pButton size="small" severity="secondary" [routerLink]="listRoute"><i class="p-button-icon pi pi-arrow-left"></i>Geçmişe dön</a>
             </div>
@@ -45,7 +48,7 @@ type UploadMode = 'xlsx' | 'csv';
                         [(ngModel)]="sourceProfile"
                         optionLabel="label"
                         optionValue="value"
-                        (ngModelChange)="resetAttempt()"
+                        (ngModelChange)="onProfileChange()"
                         class="w-full md:w-96"
                         ariaLabel="Kaynak program"
                         data-testid="import-source-profile"
@@ -62,36 +65,59 @@ type UploadMode = 'xlsx' | 'csv';
                 }
             </section>
 
-            <section class="flex flex-col gap-2">
-                <h6 class="m-0">1. Şablonu indirin</h6>
-                <p class="text-muted-color m-0">
-                    Şablon müşteri, hasta, aşı, klinik geçmiş, hesap hareketi, randevu ve ürün sayfalarını içerir; yalnız elinizde olan sayfaları doldurun. Kendi dosyanızı da yükleyebilirsiniz; sütunları sonraki adımda eşlersiniz.
-                </p>
-                <div class="flex flex-wrap gap-2">
-                    <button pButton type="button" size="small" severity="secondary" [disabled]="templateBusy() === 'xlsx'" (click)="template('xlsx')"><i class="p-button-icon" [class]="templateBusy() === 'xlsx' ? 'pi pi-spin pi-spinner' : 'pi pi-file-excel'"></i>Excel şablonu</button>
-                    @for (t of tables; track t) {
-                        <button pButton type="button" size="small" severity="secondary" [disabled]="templateBusy() === t" (click)="template('csv', t)"><i class="p-button-icon" [class]="templateBusy() === t ? 'pi pi-spin pi-spinner' : 'pi pi-file'"></i>{{ 'CSV: ' + tableLabels[t] }}</button>
-                    }
-                </div>
-            </section>
-
-            <section class="flex flex-col gap-3">
-                <h6 class="m-0">2. Dosyayı yükleyin</h6>
-                <p-selectbutton [options]="modeOptions" [(ngModel)]="mode" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Dosya türü" (ngModelChange)="onModeChange()" />
-
-                @if (mode === 'xlsx') {
-                    <app-import-drop-zone label="Excel dosyası (.xlsx)" extension=".xlsx" [file]="xlsxFile()" (fileChange)="setXlsx($event)" />
-                } @else {
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        @for (t of tables; track t) {
-                            <app-import-drop-zone [label]="tableLabels[t] + ' (.csv)'" extension=".csv" [file]="csvFiles()[t]" (fileChange)="setCsv(t, $event)" />
+            @if (isEVet) {
+                <section class="flex flex-col gap-3" data-testid="import-evet-guide">
+                    <h6 class="m-0">E-vet'ten aktarma</h6>
+                    <p class="text-muted-color m-0">E-vet'te aşağıdaki dosyaları indirin ve buraya yükleyin.</p>
+                    <ol class="m-0 pl-5 flex flex-col gap-2">
+                        @for (f of evetFileDefs; track f.slot) {
+                            <li>
+                                <span class="font-medium">{{ f.menu }}</span> <span class="text-muted-color">({{ f.requirement }})</span>: {{ f.instruction }}
+                                @if (f.caution) {
+                                    <strong>{{ f.caution }}</strong>
+                                }
+                            </li>
+                        }
+                    </ol>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        @for (f of evetFileDefs; track f.slot) {
+                            <app-import-drop-zone [label]="f.label + ' · ' + f.requirement" [extension]="f.extension" [file]="evetFiles()[f.slot]" (fileChange)="setEVet(f.slot, $event)" />
                         }
                     </div>
-                    <p class="text-sm text-muted-color m-0">
-                        En az bir dosya seçin. Hastalar ve hesap hareketleri müşterilere; aşılar, klinik geçmiş ve randevular hastalara dosyalar arasında bağlanır. Ürünler bağımsızdır.
+                    <p class="text-sm text-muted-color m-0">Aktarılacak ve atlanacak kayıtlar nedenleriyle sonraki adımda listelenir; onayınız olmadan hiçbir kayıt oluşmaz.</p>
+                </section>
+            } @else {
+                <section class="flex flex-col gap-2">
+                    <h6 class="m-0">1. Şablonu indirin</h6>
+                    <p class="text-muted-color m-0">
+                        Şablon müşteri, hasta, aşı, klinik geçmiş, hesap hareketi, randevu ve ürün sayfalarını içerir; yalnız elinizde olan sayfaları doldurun. Kendi dosyanızı da yükleyebilirsiniz; sütunları sonraki adımda eşlersiniz.
                     </p>
-                }
-            </section>
+                    <div class="flex flex-wrap gap-2">
+                        <button pButton type="button" size="small" severity="secondary" [disabled]="templateBusy() === 'xlsx'" (click)="template('xlsx')"><i class="p-button-icon" [class]="templateBusy() === 'xlsx' ? 'pi pi-spin pi-spinner' : 'pi pi-file-excel'"></i>Excel şablonu</button>
+                        @for (t of tables; track t) {
+                            <button pButton type="button" size="small" severity="secondary" [disabled]="templateBusy() === t" (click)="template('csv', t)"><i class="p-button-icon" [class]="templateBusy() === t ? 'pi pi-spin pi-spinner' : 'pi pi-file'"></i>{{ 'CSV: ' + tableLabels[t] }}</button>
+                        }
+                    </div>
+                </section>
+
+                <section class="flex flex-col gap-3">
+                    <h6 class="m-0">2. Dosyayı yükleyin</h6>
+                    <p-selectbutton [options]="modeOptions" [(ngModel)]="mode" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Dosya türü" (ngModelChange)="onModeChange()" />
+
+                    @if (mode === 'xlsx') {
+                        <app-import-drop-zone label="Excel dosyası (.xlsx)" extension=".xlsx" [file]="xlsxFile()" (fileChange)="setXlsx($event)" />
+                    } @else {
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            @for (t of tables; track t) {
+                                <app-import-drop-zone [label]="tableLabels[t] + ' (.csv)'" extension=".csv" [file]="csvFiles()[t]" (fileChange)="setCsv(t, $event)" />
+                            }
+                        </div>
+                        <p class="text-sm text-muted-color m-0">
+                            En az bir dosya seçin. Hastalar ve hesap hareketleri müşterilere; aşılar, klinik geçmiş ve randevular hastalara dosyalar arasında bağlanır. Ürünler bağımsızdır.
+                        </p>
+                    }
+                </section>
+            }
 
             <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="flex flex-col gap-1">
@@ -103,18 +129,22 @@ type UploadMode = 'xlsx' | 'csv';
                         optionLabel="label"
                         optionValue="value"
                         placeholder="Klinik seçin"
-                        [showClear]="mode === 'xlsx'"
+                        [showClear]="!clinicRequired && mode === 'xlsx'"
                         [loading]="clinicsLoading()"
                         class="w-full"
                     />
-                    <small class="text-muted-color">Aşı, klinik geçmiş, hesap hareketi, randevu ve açık bakiye bu kliniğe yazılır. Bu sayfalardan biri varsa klinik gereklidir.</small>
+                    @if (isEVet) {
+                        <small class="text-muted-color">Yedekteki aşı, muayene, randevu ve açık bakiye bu kliniğe yazılır.</small>
+                    } @else {
+                        <small class="text-muted-color">Aşı, klinik geçmiş, hesap hareketi, randevu ve açık bakiye bu kliniğe yazılır. Bu sayfalardan biri varsa klinik gereklidir.</small>
+                    }
                 </div>
                 <div class="flex flex-col gap-1">
                     <label for="importName" class="text-sm font-medium">Ad (isteğe bağlı)</label>
                     <input pInputText id="importName" maxlength="100" [(ngModel)]="name" placeholder="Örn. Eski sistem 1. parti" />
                     <small class="text-muted-color">Listede görünür; kişisel veri yazmayın.</small>
                 </div>
-                @if (mode === 'csv') {
+                @if (!isEVet && mode === 'csv') {
                     <div class="flex flex-col gap-1">
                         <label for="importEncoding" class="text-sm font-medium">Karakter kodlaması</label>
                         <p-select inputId="importEncoding" [options]="encodingOptions" [(ngModel)]="encoding" optionLabel="label" optionValue="value" class="w-full" />
@@ -153,6 +183,9 @@ export class ImportUploadPageComponent implements OnInit {
     readonly listRoute = IMPORTS_ROUTE;
     readonly tables = IMPORT_TABLES;
     readonly tableLabels = IMPORT_TABLE_LABELS;
+    readonly evetFileDefs = EVET_UPLOAD_FILES;
+    readonly genericDescription = 'Adım 1 / 4 · Şablonu indirin, kayıtlarınızı doldurun ve dosyayı yükleyin. Bu adımda hiçbir kayıt oluşmaz.';
+    readonly evetDescription = "Adım 1 / 4 · E-vet'ten indirdiğiniz dosyaları yükleyin. Bu adımda hiçbir kayıt oluşmaz.";
     readonly modeOptions = [
         { label: 'Excel (.xlsx)', value: 'xlsx' },
         { label: 'CSV (.csv)', value: 'csv' }
@@ -178,7 +211,9 @@ export class ImportUploadPageComponent implements OnInit {
     delimiter = '';
 
     readonly xlsxFile = signal<File | null>(null);
-    readonly csvFiles = signal<Record<ImportTable, File | null>>({ customers: null, pets: null, vaccinations: null, clinicalRecords: null, accountEntries: null, appointments: null, products: null });
+    readonly csvFiles = signal<Record<ImportTable, File | null>>(NO_CSV_FILES);
+    /** E-vet yolu: yedek zorunlu, raporlar isteğe bağlı (`EVET_UPLOAD_FILES`). */
+    readonly evetFiles = signal<Record<EVetUploadSlot, File | null>>(NO_EVET_FILES);
     readonly clinicOptions = signal<{ label: string; value: string }[]>([]);
     readonly clinicsLoading = signal(false);
     readonly templateBusy = signal<string | null>(null);
@@ -199,14 +234,23 @@ export class ImportUploadPageComponent implements OnInit {
         return this.profiles().find((p) => p.code === this.sourceProfile);
     }
 
+    /** E-vet yedeği aşı, muayene, randevu ve bakiye içerir; ayrı yükleme alanları ve zorunlu klinikle gider. */
+    protected get isEVet(): boolean {
+        return this.sourceProfile === 'EVet';
+    }
+
     private get hasFile(): boolean {
+        if (this.isEVet) {
+            return !!this.evetFiles().backup;
+        }
+
         return this.mode === 'xlsx' ? !!this.xlsxFile() : Object.values(this.csvFiles()).some(Boolean);
     }
 
     protected get clinicRequired(): boolean {
         const files = this.csvFiles();
 
-        return this.mode === 'csv' && needsClinic(IMPORT_TABLES.filter((t) => !!files[t]));
+        return this.isEVet || (this.mode === 'csv' && needsClinic(IMPORT_TABLES.filter((t) => !!files[t])));
     }
 
     protected get canSubmit(): boolean {
@@ -228,6 +272,19 @@ export class ImportUploadPageComponent implements OnInit {
     }
 
     onModeChange(): void {
+        this.resetAttempt();
+    }
+
+    /** Önceki profilin dosyaları yeni profille gönderilmesin diye tüm seçimler temizlenir. */
+    onProfileChange(): void {
+        this.xlsxFile.set(null);
+        this.csvFiles.set(NO_CSV_FILES);
+        this.evetFiles.set(NO_EVET_FILES);
+        this.resetAttempt();
+    }
+
+    setEVet(slot: EVetUploadSlot, file: File | null): void {
+        this.evetFiles.update((cur) => ({ ...cur, [slot]: file }));
         this.resetAttempt();
     }
 
@@ -264,7 +321,15 @@ export class ImportUploadPageComponent implements OnInit {
 
         form.append('requestId', this.requestId);
 
-        if (this.mode === 'xlsx') {
+        if (this.isEVet) {
+            const files = this.evetFiles();
+
+            for (const f of EVET_UPLOAD_FILES) {
+                const file = files[f.slot];
+
+                if (file) form.append(f.field, file);
+            }
+        } else if (this.mode === 'xlsx') {
             form.append('file', this.xlsxFile()!);
         } else {
             const files = this.csvFiles();

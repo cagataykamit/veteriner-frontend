@@ -53,6 +53,64 @@ export const IMPORT_CSV_TEMPLATE_FILE: Readonly<Record<ImportTable, string>> = {
     products: 'vetinity-iceaktar-urunler.csv'
 };
 
+/** E-vet'ten yüklenen dosyalar; yedek zorunlu, raporlar yedeğe eklenir (yedeksiz `Imports.UnsupportedFile`). */
+export type EVetUploadSlot = 'backup' | 'patientReport' | 'vaccineReport' | 'products';
+
+export interface EVetUploadFileDef {
+    readonly slot: EVetUploadSlot;
+    /** Yükleme isteğindeki alan adı. */
+    readonly field: string;
+    readonly extension: '.xlsx' | '.csv';
+    readonly requirement: 'zorunlu' | 'önerilir' | 'isteğe bağlı';
+    /** E-vet'teki menü yolu. */
+    readonly menu: string;
+    readonly instruction: string;
+    /** Kalın gösterilen uyarı. */
+    readonly caution?: string;
+    readonly label: string;
+}
+
+/** Yönerge ve yükleme alanları bu sırayla gösterilir. */
+export const EVET_UPLOAD_FILES: readonly EVetUploadFileDef[] = [
+    {
+        slot: 'backup',
+        field: 'file',
+        extension: '.xlsx',
+        requirement: 'zorunlu',
+        menu: 'Genel > Yedek Al',
+        instruction: "Müşteri Listesi, Hasta Listesi, Randevular ve Muayene Listesi'ni işaretleyip Excel olarak indirin.",
+        caution: "Giriş Bilgileri'ni işaretlemeyin; kullanıcı ve parola bilgisi gerekmez.",
+        label: 'Yedek (.xlsx)'
+    },
+    {
+        slot: 'patientReport',
+        field: 'evetPatientReportFile',
+        extension: '.csv',
+        requirement: 'önerilir',
+        menu: 'Rapor > Hasta Listesi',
+        instruction: 'Csv olarak indirin. Hastaları sahibine kesin bağlar; yüklemezseniz sahip adıyla bağlanır.',
+        label: 'Hasta Listesi (.csv)'
+    },
+    {
+        slot: 'vaccineReport',
+        field: 'evetVaccineReportFile',
+        extension: '.csv',
+        requirement: 'isteğe bağlı',
+        menu: 'Rapor > Resmi > Aşı Bilgi',
+        instruction: "Tarih aralığını 01.01.2020'den bugüne seçip Csv olarak indirin. Aşıların seri numarasını ve ürün adını ekler.",
+        label: 'Aşı Bilgi (.csv)'
+    },
+    {
+        slot: 'products',
+        field: IMPORT_CSV_FIELD.products,
+        extension: '.csv',
+        requirement: 'isteğe bağlı',
+        menu: 'Rapor > Depo > Ürün Listesi',
+        instruction: 'Csv olarak indirin. Pasif ürünler aktarılmaz.',
+        label: 'Ürün Listesi (.csv)'
+    }
+];
+
 /** Klinik seçimi gerektiren tablolar (sözleşme 12.1); yoksa yükleme `Imports.ClinicRequired` döner. */
 export const IMPORT_CLINIC_TABLES: readonly ImportTable[] = ['vaccinations', 'clinicalRecords', 'accountEntries', 'appointments'];
 
