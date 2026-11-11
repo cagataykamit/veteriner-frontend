@@ -22,7 +22,8 @@ const charge: ChargeVm = {
     currency: 'TRY',
     createdAtUtc: '2026-10-10T07:00:00Z',
     lineKind: 'Service',
-    vatRate: null
+    vatRate: null,
+    eDocumentId: null
 };
 
 describe('ChargeCorrectionDialogComponent', () => {

@@ -29,6 +29,8 @@ export interface ChargeDto {
     lineKind?: string | null;
     /** KDV oranı (%); `null` = klinik varsayılanı. */
     vatRate?: number | null;
+    /** Ücretin bağlı olduğu geçerli e-belge (`E_DOCUMENTS_API_CONTRACT.md` §4.7); okunur. */
+    eDocumentId?: string | null;
 }
 
 /** `POST/PUT /charges` isteğe bağlı `tax` nesnesi (`INVOICING_IDENTITY_API_CONTRACT.md` §5). */
