@@ -31,7 +31,7 @@ interface MenuSection {
     providers: [MenuFlyoutService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <ul class="layout-menu layout-menu-scroll">
+        <ul class="layout-menu layout-menu-scroll" [hidden]="!scrollingSections().length">
             @for (section of scrollingSections(); track section.label ?? section.heading) {
                 @if (section.label && rail()) {
                     <li class="layout-menu-divider" role="separator"></li>
@@ -57,11 +57,11 @@ interface MenuSection {
                 }
             }
         </ul>
-        <ul class="layout-menu layout-menu-pinned">
+        <ul class="layout-menu layout-menu-pinned" [class.layout-menu-pinned-alone]="!scrollingSections().length">
             @for (section of pinnedSections(); track section.label ?? section.heading) {
                 <ng-container *ngTemplateOutlet="flatSection; context: { $implicit: section }" />
             }
-            <li appMenuitem [item]="supportItem()" [root]="false"></li>
+            <li appMenuitem class="layout-menu-support" [item]="supportItem()" [root]="false"></li>
         </ul>
 
         <ng-template #flatSection let-section>
@@ -116,7 +116,7 @@ export class AppMenu {
     protected readonly scrollingSections = computed(() => this.sections().filter((s) => !s.pinned));
     protected readonly pinnedSections = computed(() => this.sections().filter((s) => s.pinned));
 
-    /** Destek hattı yetkiye bağlı değildir: her rolde sabit bölümün en altındadır, WhatsApp'ı yeni sekmede açar. */
+    /** Destek hattı yetkiye bağlı değildir: her rolde kenar çubuğunun en altındadır, WhatsApp'ı yeni sekmede açar. */
     protected readonly supportItem = computed<MenuItem>(() => ({
         label: 'WhatsApp destek',
         icon: 'pi pi-fw pi-whatsapp',

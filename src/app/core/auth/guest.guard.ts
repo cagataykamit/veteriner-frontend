@@ -21,7 +21,7 @@ export const guestGuard: CanActivateFn = (route) => {
             const inviteToken = route.queryParamMap.get('inviteToken')?.trim() ?? '';
             const returnUrl = safePanelReturnUrl(route.queryParamMap.get('returnUrl'));
 
-            if (!auth.hasSelectedClinic()) {
+            if (!auth.hasPanelContext()) {
                 return returnUrl
                     ? router.createUrlTree(['/auth/select-clinic'], {
                           queryParams: { returnUrl, ...(inviteToken ? { inviteToken } : {}) }

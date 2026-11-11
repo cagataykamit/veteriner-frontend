@@ -22,6 +22,8 @@ export interface ChargeVm {
     vatRate: number | null;
     /** Eski programdan aktarılan devir ücreti: ciroya, gün sonuna ve kasaya girmez; bakiyeye girer (ADR-048 T3). */
     isImported?: boolean;
+    /** Bağlı geçerli e-belge; `null` = belgesiz. */
+    eDocumentId: string | null;
 }
 
 export interface ChargesPagedVm {

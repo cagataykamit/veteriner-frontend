@@ -10,6 +10,7 @@ import { ClientSearchService } from '@/app/entities/client/services/client-searc
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ClientCreditsService } from '@/app/entities/client-credit/services/client-credits.service';
 import { PaymentsService } from '@/app/entities/payment/services/payments.service';
+import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { parseDateInputValue } from '@/app/shared/forms/date-input/date-input-value.utils';
 import { CashRegistersService } from '@/app/entities/cash-register/services/cash-registers.service';
@@ -59,12 +60,14 @@ describe('PaymentNewPageComponent', () => {
     let router: Router;
     let mutationBlocked: boolean;
     let query: Record<string, string>;
+    let eDocuments: { reminders: ReturnType<typeof vi.fn>; getSettings: ReturnType<typeof vi.fn>; issueFromPayment: ReturnType<typeof vi.fn> };
 
     const setup = async () => {
         await TestBed.configureTestingModule({
             imports: [PaymentNewPageComponent],
             providers: [
                 provideRouter([]),
+                { provide: EDocumentsService, useValue: eDocuments },
                 { provide: PaymentsService, useValue: payments },
                 { provide: ClientsService, useValue: clients },
                 { provide: ClientCreditsService, useValue: credits },
@@ -88,6 +91,11 @@ describe('PaymentNewPageComponent', () => {
     };
 
     beforeEach(() => {
+        eDocuments = {
+            reminders: vi.fn().mockReturnValue(of({ connected: false, undocumentedPaidCount: 0, failedCount: 0 })),
+            getSettings: vi.fn(),
+            issueFromPayment: vi.fn()
+        };
         payments = {
             createPayment: vi.fn().mockName('PaymentsService.createPayment')
         } as unknown as MockedObject<PaymentsService>;
@@ -266,6 +274,36 @@ describe('PaymentNewPageComponent', () => {
         selectClient();
         cmp.fillOutstanding(cmp.openCharges()[1]);
         expect(cmp.total()).toBe(300);
+    });
+
+    it('entegratör bağlıysa "e-Belge kes" ayardan işaretli gelir; ödeme sonrası belge kesilir, sonuç ayrıntıya taşınır', async () => {
+        eDocuments.reminders.mockReturnValue(of({ connected: true, undocumentedPaidCount: 0, failedCount: 0 }));
+        eDocuments.getSettings.mockReturnValue(of({ issueOnPaymentByDefault: true }));
+        eDocuments.issueFromPayment.mockReturnValue(of({ documents: [{ id: 'd1', status: 'Issued' }], skipped: [] }));
+        payments.createPayment.mockReturnValue(of({ id: 'pay1' }));
+        await setup();
+
+        expect(cmp.eDocumentAvailable()).toBe(true);
+        expect(cmp.issueEDocument()).toBe(true);
+        selectClient();
+        cmp.fillOutstanding(cmp.openCharges()[0]);
+        cmp.onSubmit();
+
+        expect(eDocuments.issueFromPayment).toHaveBeenCalledWith('pay1');
+        expect(router.navigate).toHaveBeenCalledWith(['/panel/payments', 'pay1'], { queryParams: { saved: '1', eDocument: 'issued' } });
+    });
+
+    it('belge kesilemezse ödeme yine kaydedilir ve sonuç "failed" olarak taşınır', async () => {
+        eDocuments.reminders.mockReturnValue(of({ connected: true, undocumentedPaidCount: 0, failedCount: 0 }));
+        eDocuments.getSettings.mockReturnValue(of({ issueOnPaymentByDefault: true }));
+        eDocuments.issueFromPayment.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
+        payments.createPayment.mockReturnValue(of({ id: 'pay1' }));
+        await setup();
+        selectClient();
+        cmp.fillOutstanding(cmp.openCharges()[0]);
+        cmp.onSubmit();
+
+        expect(router.navigate).toHaveBeenCalledWith(['/panel/payments', 'pay1'], { queryParams: { saved: '1', eDocument: 'failed' } });
     });
 
     it('isteği requestId, TRY, tahsisler ve toplam tutarla gönderir; ayrıntıya yönlendirir', async () => {

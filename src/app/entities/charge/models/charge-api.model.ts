@@ -31,6 +31,8 @@ export interface ChargeDto {
     vatRate?: number | null;
     /** Eski programdan aktarılan devir ücreti (`IMPORT_API_CONTRACT.md` §12.7); eski yanıtta yok → false. */
     isImported?: boolean | null;
+    /** Ücretin bağlı olduğu geçerli e-belge (`E_DOCUMENTS_API_CONTRACT.md` §4.7); okunur. */
+    eDocumentId?: string | null;
 }
 
 /** `POST/PUT /charges` isteğe bağlı `tax` nesnesi (`INVOICING_IDENTITY_API_CONTRACT.md` §5). */

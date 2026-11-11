@@ -12,6 +12,7 @@ import { AdministrationRouteSiteFieldsComponent } from '@/app/entities/administr
 import { ADMINISTRATION_SITE_MAX, type AdministrationRouteApi } from '@/app/entities/administration/utils/administration-route.utils';
 import { AdministrationsService } from '@/app/entities/administration/services/administrations.service';
 import type { AdministrationCreateResultVm } from '@/app/entities/administration/models/administration-vm.model';
+import type { AdministrationCopyDraft } from '@/app/entities/administration/utils/administration-copy.utils';
 import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/entities/charge/utils/charge-amount.utils';
 import type { ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
@@ -27,6 +28,7 @@ const NOTES_MAX_LENGTH = 2000;
  * Hastaya uygulanan ürünün kaydı (`Administrations.Create`): stok aynı işlemde düşer, yetersiz stok kaydı engeller.
  * Miktar ürünün stok birimindedir (birim dönüşümü yok). Yetki denetimi çağıran bileşende yapılır.
  * `lateEntry` (bağlı muayene kesinleşmiş, ADR-013): gerekçe zorunlu alanı görünür ve `lateEntryReason` olarak gider; taslakta gerekçe sorulmaz.
+ * `prefill` (RECORD-004 "Tekrar uygula"): form önceki uygulamanın ürün, miktar, yol ve bölgesiyle açılır; parti yeniden seçilir.
  */
 @Component({
     selector: 'app-administration-create-dialog',
@@ -34,7 +36,7 @@ const NOTES_MAX_LENGTH = 2000;
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog [header]="lateEntry() ? 'Uygulama kaydet (sonradan ekleme)' : 'Uygulama kaydet'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
+        <p-dialog [header]="(prefill() ? 'Tekrar uygula' : 'Uygulama kaydet') + (lateEntry() ? ' (sonradan ekleme)' : '')" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
             @if (petName()) {
                 <p class="mt-0 mb-1 font-medium">{{ petName() }}</p>
             }
@@ -42,6 +44,15 @@ const NOTES_MAX_LENGTH = 2000;
             @if (lateEntry()) {
                 <p class="mt-0 mb-4 text-sm" role="note" data-testid="late-entry-note">
                     Bu muayene kesinleşmiş. Uygulama, <strong>"Kesinleştirmeden sonra eklendi"</strong> işaretiyle ve gerekçenizle ayrı kayıt olarak eklenir; muayenenin kendisi değişmez.
+                </p>
+            }
+            @if (prefill(); as p) {
+                <p class="mt-0 mb-4 text-sm" role="status" data-testid="administration-repeat-note">
+                    @if (prefillUnavailable()) {
+                        <span class="text-amber-700 dark:text-amber-300">"{{ p.productName }}" artık seçilemiyor (pasif ya da stok takibi yok); başka ürün seçin.</span>
+                    } @else {
+                        Önceki uygulamanın ürünü ve miktarı dolduruldu. Stoktan yeniden düşer; parti yeniden seçilir (önceki parti kopyalanmaz).
+                    }
                 </p>
             }
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -131,6 +142,8 @@ export class AdministrationCreateDialogComponent {
     readonly treatmentId = input<string | null>(null);
     /** Bağlı muayene kesinleşmişse sonradan ekleme: gerekçe zorunlu. */
     readonly lateEntry = input(false);
+    /** "Tekrar uygula" ön dolumu (RECORD-004); `null` = boş form. */
+    readonly prefill = input<AdministrationCopyDraft | null>(null);
     readonly saved = output<AdministrationCreateResultVm>();
 
     private readonly fb = inject(FormBuilder);
@@ -167,6 +180,14 @@ export class AdministrationCreateDialogComponent {
 
     private readonly formValue = toSignal(this.form.valueChanges.pipe(startWith(null)), { initialValue: null });
 
+    private readonly productsReady = signal(false);
+    /** Önceki uygulamanın ürünü bugün seçilebilir listede yok (pasif veya stok takibi kapalı). */
+    readonly prefillUnavailable = computed(() => {
+        const p = this.prefill();
+
+        return !!p && this.productsReady() && !this.products().some((x) => x.id === p.productId);
+    });
+
     readonly productOptions = computed(() => this.products().map((p) => ({ value: p.id, label: p.sku && p.sku !== '—' ? `${p.name} (${p.sku})` : p.name })));
     readonly unit = computed(() => {
         this.formValue();
@@ -191,9 +212,12 @@ export class AdministrationCreateDialogComponent {
             if (this.visible()) {
                 untracked(() => {
                     this.submitError.set(null);
-                    this.form.reset({ productId: '', batchId: '', quantity: null, administeredAtLocal: '', notes: '', lateEntryReason: '', route: null, site: '' });
+                    const p = this.prefill();
+
+                    this.form.reset({ productId: p?.productId ?? '', batchId: '', quantity: p?.quantity ?? null, administeredAtLocal: '', notes: '', lateEntryReason: '', route: p?.route ?? null, site: p?.site ?? '' });
                     this.form.controls.lateEntryReason.setValidators(this.lateEntry() ? reasonLength : null);
                     this.form.controls.lateEntryReason.updateValueAndValidity();
+                    this.dropUnavailablePrefillProduct();
                     this.loadProducts();
                 });
             }
@@ -256,6 +280,13 @@ export class AdministrationCreateDialogComponent {
             });
     }
 
+    /** Seçilemeyen ürün formda gizli değer olarak kalmasın; hekim başka ürün seçer. */
+    private dropUnavailablePrefillProduct(): void {
+        if (this.prefillUnavailable()) {
+            this.form.controls.productId.setValue('');
+        }
+    }
+
     private loadProducts(): void {
         if (this.productsLoaded || this.loadingProducts()) {
             return;
@@ -267,6 +298,8 @@ export class AdministrationCreateDialogComponent {
             next: (r) => {
                 this.products.set(r.items);
                 this.productsLoaded = true;
+                this.productsReady.set(true);
+                this.dropUnavailablePrefillProduct();
                 this.loadingProducts.set(false);
             },
             error: (e: Error) => {

@@ -32,7 +32,8 @@ const created: ChargeVm = {
     currency: 'TRY',
     createdAtUtc: '2026-10-10T07:00:00Z',
     lineKind: 'Service',
-    vatRate: null
+    vatRate: null,
+    eDocumentId: null
 };
 
 const todayItem = (over: Partial<TodayItemVm>): TodayItemVm => ({ key: 'v1', visitId: 'v1', petId: 'p1', petName: 'Pamuk', clientId: 'cl1', arrivedAtUtc: '2026-10-10T07:00:00Z', isVoided: false, ...over }) as TodayItemVm;

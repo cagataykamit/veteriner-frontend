@@ -10,11 +10,13 @@ import { ClientSearchComponent } from '@/app/entities/client/components/client-s
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { PrescriptionItemsEditorComponent } from '@/app/entities/prescription/components/prescription-items-editor.component';
+import type { PrescriptionEditVm } from '@/app/entities/prescription/models/prescription-vm.model';
 import { PrescriptionsService } from '@/app/entities/prescription/services/prescriptions.service';
 import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 import { toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
@@ -95,6 +97,7 @@ describe('Muayeneden hızlı lab istemi ve reçete (EXAM-010)', () => {
                 { provide: TreatmentsService, useValue: { getTreatments: () => of({ items: [] }) } },
                 { provide: ClientsService, useValue: {} },
                 { provide: PetsService, useValue: {} },
+                { provide: ProductService, useValue: {} },
                 { provide: AuthService, useValue: { getClinicId: () => 'clinic-1', getClinicName: () => 'Merkez', hasOperationClaim: () => true } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
@@ -170,5 +173,88 @@ describe('Muayeneden hızlı lab istemi ve reçete (EXAM-010)', () => {
         expect(c.contextFromExamination()).toBe(false);
         expect(c.selectionError()).toContain('uyuşmuyor');
         expect(c.form.getRawValue().examinationId).toBe('');
+    });
+});
+
+/** RECORD-004: "Kopyasını oluştur" oluşturma formunu kaynaktan doldurur; kayıt normal oluşturma ucundan gider. */
+describe('Reçete kopyası (RECORD-004)', () => {
+    const source: PrescriptionEditVm = {
+        id: 'rx-src',
+        clinicId: 'clinic-1',
+        clientId: 'client-1',
+        petId: 'pet-1',
+        clientName: 'Ali Veli',
+        petName: 'Pamuk',
+        examinationId: 'e-old',
+        treatmentId: 't-old',
+        prescribedAtUtc: '2026-09-01T07:00:00Z',
+        title: 'Kronik böbrek',
+        content: 'Diyet ve ilaç',
+        notes: 'Eski not',
+        followUpDateInput: '2026-09-15',
+        items: [
+            { id: 'i1', name: 'Benazepril', productId: 'prod-1', instructions: 'Günde 1', quantity: 2, dose: '1 tablet', unit: 'kutu', lotNumber: 'LOT-9' },
+            { id: 'i2', name: 'Tramadol', productId: 'prod-2', instructions: '', quantity: 1, dose: '', unit: '', lotNumber: '' }
+        ],
+        isCancelled: false
+    };
+
+    const render = (examinations: { id: string; status: string }[]) => {
+        const createPrescription = vi.fn().mockReturnValue(of({ id: 'rx-new' }));
+        const getById = vi.fn((id: string) => of({ id, name: id === 'prod-2' ? 'Tramadol' : 'Benazepril', controlledClass: id === 'prod-2' ? 'Narcotic' : 'None' }));
+
+        TestBed.configureTestingModule({
+            providers: [
+                provideRouter([]),
+                { provide: PrescriptionsService, useValue: { createPrescription, getPrescriptionForEditById: () => of(source) } },
+                { provide: ExaminationsService, useValue: { getExaminations: () => of({ items: examinations }) } },
+                { provide: TreatmentsService, useValue: { getTreatments: () => of({ items: [] }) } },
+                { provide: ClientsService, useValue: {} },
+                { provide: PetsService, useValue: {} },
+                { provide: ProductService, useValue: { getById } },
+                { provide: AuthService, useValue: { getClinicId: () => 'clinic-1', getClinicName: () => 'Merkez', hasOperationClaim: () => true } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        });
+        TestBed.overrideComponent(PrescriptionFormComponent, {
+            remove: { imports: [ClientSearchComponent, PetSearchComponent, PetAlertBannerComponent, PrescriptionItemsEditorComponent] },
+            add: { imports: [StubClientSearchComponent, StubPetSearchComponent, StubPetAlertBannerComponent, StubPrescriptionItemsEditorComponent] }
+        });
+        const fixture = TestBed.createComponent(PrescriptionFormComponent);
+
+        fixture.componentRef.setInput('contextParams', convertToParamMap({ copyFrom: 'rx-src' }));
+        fixture.detectChanges();
+
+        return { fixture, c: fixture.componentInstance, createPrescription };
+    };
+
+    it('hasta ve içerik kopyalanır; lot, tarih, not ve eski muayene bağı kopyalanmaz; kontrollü ilaç uyarısı çıkar', () => {
+        const { fixture, c } = render([{ id: 'e-old', status: 'Finalized' }]);
+        const v = c.form.getRawValue();
+
+        expect(v).toEqual(expect.objectContaining({ clientId: 'client-1', petId: 'pet-1', title: 'Kronik böbrek', content: 'Diyet ve ilaç', notes: '', prescribedAtLocal: '', followUpDate: '', examinationId: '', treatmentId: '' }));
+        expect(c.form.controls.clientId.disabled && c.form.controls.petId.disabled).toBe(true);
+        expect(c.form.controls.examinationId.enabled).toBe(true);
+        expect(v.items.map((i) => [i.id, i.name, i.dose, i.quantity, i.lotNumber])).toEqual([
+            ['', 'Benazepril', '1 tablet', 2, ''],
+            ['', 'Tramadol', '', 1, '']
+        ]);
+        expect(c.form.dirty).toBe(false);
+        expect(c.copyControlledNames()).toEqual(['Tramadol']);
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('[data-testid="prescription-copy-notice"]')?.textContent).toContain('Kronik böbrek');
+        expect(fixture.nativeElement.querySelector('[data-testid="prescription-copy-controlled"]')?.textContent).toContain('Tramadol');
+    });
+
+    it('hastanın tek açık muayenesi hedef olarak seçili gelir; kayıt normal oluşturma ucundan gider', () => {
+        const { c, createPrescription } = render([{ id: 'e-old', status: 'Finalized' }, { id: 'e-open', status: 'Draft' }]);
+
+        expect(c.form.controls.examinationId.value).toBe('e-open');
+        expect(c.isLateEntry()).toBe(false);
+        c.form.patchValue({ prescribedAtLocal: toIstanbulDateTimeLocalInputValue(new Date(Date.now() - 3_600_000).toISOString()) });
+        c.onSubmit();
+
+        expect(createPrescription).toHaveBeenCalledTimes(1);
+        expect(createPrescription.mock.lastCall![0]).toEqual(expect.objectContaining({ petId: 'pet-1', examinationId: 'e-open', title: 'Kronik böbrek' }));
     });
 });

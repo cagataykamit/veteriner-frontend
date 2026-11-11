@@ -6,7 +6,9 @@ import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { CHARGES_CORRECT_CLAIM, CHARGES_CREATE_CLAIM, PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { CHARGES_CORRECT_CLAIM, CHARGES_CREATE_CLAIM, EDOCUMENTS_ISSUE_CLAIM, PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { EDocumentIssueDialogComponent } from '@/app/entities/e-document/components/e-document-issue-dialog.component';
+import type { EDocumentSource } from '@/app/entities/e-document/models/e-document.model';
 import { ChargeCorrectionDialogComponent } from '@/app/features/charges/components/charge-correction-dialog.component';
 import type { ChargeVm } from '@/app/entities/charge/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
@@ -36,6 +38,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         ButtonModule,
         ClientSearchComponent,
         ChargeCorrectionDialogComponent,
+        EDocumentIssueDialogComponent,
         ReasonConfirmDialogComponent,
         AppListHeaderComponent,
         FilterFieldComponent,
@@ -122,7 +125,12 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                 </td>
                                 <td class="text-right table-stack-phone-hide">{{ row.quantity }}</td>
                                 <td class="text-right whitespace-nowrap table-stack-phone-hide">{{ row.unitPrice | money: row.currency || 'TRY' }}</td>
-                                <td class="text-right whitespace-nowrap font-medium" data-label="Tutar">{{ row.amount | money: row.currency || 'TRY' }}</td>
+                                <td class="text-right whitespace-nowrap font-medium" data-label="Tutar">
+                                    {{ row.amount | money: row.currency || 'TRY' }}
+                                    @if (row.eDocumentId) {
+                                        <a routerLink="/panel/e-documents" [queryParams]="{ clientId: row.clientId }" class="block text-xs font-normal no-underline text-primary" title="Bu ücretin e-belgesi var; düzeltmek için önce belgeyi iptal edin.">Belgeli</a>
+                                    }
+                                </td>
                                 <td class="text-right whitespace-nowrap" data-label="Ödenen">{{ row.allocatedAmount | money: row.currency || 'TRY' }}</td>
                                 <td class="text-right whitespace-nowrap" data-label="Kalan">
                                     @if (row.outstandingAmount === 0) {
@@ -140,7 +148,10 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                                 @if (canCollectPayment && row.outstandingAmount !== 0) {
                                                     <a [routerLink]="['/panel/payments/new']" [queryParams]="paymentQueryParams(row)" pButton size="small" class="p-button-sm mr-1"><i class="pi pi-wallet"></i>Ödeme al</a>
                                                 }
-                                                @if (canCorrect) {
+                                                @if (canIssueDocument && !row.eDocumentId) {
+                                                    <button pButton type="button" size="small" [text]="true" class="mr-1" (click)="openDocument(row)" [attr.data-testid]="'charge-edoc-' + row.id"><i class="p-button-icon pi pi-file-export"></i>Belge kes</button>
+                                                }
+                                                @if (canCorrect && !row.eDocumentId) {
                                                     <app-row-action-button action="edit" label="Düzelt" (pressed)="openCorrection(row)" />
                                                     <app-row-action-button action="void" (pressed)="openVoid(row)" />
                                                 }
@@ -155,6 +166,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             }
         </div>
 
+        <app-e-document-issue-dialog [(visible)]="documentVisible" [source]="documentSource()" (changed)="reload()" />
         <app-charge-correction-dialog [(visible)]="correctionVisible" [charge]="actionTarget()" (corrected)="reload()" />
         <app-reason-confirm-dialog
             [(visible)]="voidVisible"
@@ -177,7 +189,11 @@ export class ChargesListPageComponent implements OnInit {
     readonly canCreate = this.auth.hasOperationClaim(CHARGES_CREATE_CLAIM);
     readonly canCorrect = this.auth.hasOperationClaim(CHARGES_CORRECT_CLAIM);
     readonly canCollectPayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
-    readonly hasRowActions = this.canCorrect || this.canCollectPayment;
+    readonly canIssueDocument = this.auth.hasOperationClaim(EDOCUMENTS_ISSUE_CLAIM);
+    readonly hasRowActions = this.canCorrect || this.canCollectPayment || this.canIssueDocument;
+
+    documentVisible = false;
+    readonly documentSource = signal<EDocumentSource | null>(null);
 
     /** Düzeltme veya iptal diyaloğunun açık olduğu satır. */
     readonly actionTarget = signal<ChargeVm | null>(null);
@@ -208,6 +224,12 @@ export class ChargesListPageComponent implements OnInit {
     /** Ödeme formu müşteri ve ücret bağlamıyla açılır; o ücret tam kalan tutarla dolu gelir. */
     paymentQueryParams(row: ChargeVm): Record<string, string> {
         return { clientId: row.clientId, chargeId: row.id, ...(row.visitId ? { visitId: row.visitId } : {}) };
+    }
+
+    /** Belgesiz ücrete e-belge (ADR-036 AK-4 elle "Belge kes"). */
+    openDocument(row: ChargeVm): void {
+        this.documentSource.set({ chargeIds: [row.id] });
+        this.documentVisible = true;
     }
 
     openCorrection(row: ChargeVm): void {

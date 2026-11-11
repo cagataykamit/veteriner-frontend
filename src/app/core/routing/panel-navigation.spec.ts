@@ -82,8 +82,10 @@ describe('panel-navigation', () => {
             ['Bugün', 'waitingVisits'],
             ['Randevular', 'pendingAppointmentRequests'],
             ['Müşteri ve Hasta', 'openPortalDataRequests'],
-            ['Kayıtlar', 'requestedLabResults']
+            ['Kayıtlar', 'requestedLabResults'],
+            ['Para', 'eDocumentReminders']
         ]);
+        expect(entry('Para').tabs!.filter((t) => t.badge).map((t) => [t.label, t.badge])).toEqual([['e-Belgeler', 'eDocumentReminders']]);
         expect(entry('Müşteri ve Hasta').tabs!.filter((t) => t.badge).map((t) => [t.label, t.badge])).toEqual([['Portal gelen kutusu', 'openPortalDataRequests']]);
         expect(entry('Kayıtlar').tabs!.filter((t) => t.badge).map((t) => [t.label, t.badge])).toEqual([['Lab sonuçları', 'requestedLabResults']]);
         expect(entry('Randevular').tabs!.filter((t) => t.badge).map((t) => [t.label, t.badge])).toEqual([['Talepler', 'pendingAppointmentRequests']]);
@@ -108,7 +110,8 @@ describe('panel-navigation', () => {
             ['Ücretler', '/panel/charges'],
             ['Ücret bekleyenler', '/panel/charges/pending'],
             ['Ödemeler', '/panel/payments'],
-            ['Satışlar', '/panel/sales']
+            ['Satışlar', '/panel/sales'],
+            ['e-Belgeler', '/panel/e-documents']
         ]);
         expect(tabs('Stok').map(([l]) => l)).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul']);
         expect(tabs('Kayıtlar').map(([l]) => l)).toEqual(['Muayeneler', 'Tedaviler', 'Reçeteler', 'Aşılar', 'Lab sonuçları', 'Görüntüleme', 'Yatışlar', 'Uygulamalar']);

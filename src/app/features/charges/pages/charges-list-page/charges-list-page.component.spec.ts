@@ -8,6 +8,7 @@ import { ChargesService } from '@/app/features/charges/services/charges.service'
 import { ClientSearchService } from '@/app/entities/client/services/client-search.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ChargesListPageComponent } from './charges-list-page.component';
+import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
 
 const row: ChargeVm = {
     id: 'ch1',
@@ -26,7 +27,8 @@ const row: ChargeVm = {
     currency: 'TRY',
     createdAtUtc: '2026-10-10T07:00:00Z',
     lineKind: 'Service',
-    vatRate: null
+    vatRate: null,
+    eDocumentId: null
 };
 
 const page = (items: ChargeVm[]): ChargesPagedVm => ({ items, page: 1, pageSize: 20, totalItems: items.length, totalPages: 1 });
@@ -42,6 +44,7 @@ describe('ChargesListPageComponent', () => {
         await TestBed.configureTestingModule({
             imports: [ChargesListPageComponent],
             providers: [
+                { provide: EDocumentsService, useValue: { preview: vi.fn() } },
                 provideRouter([]),
                 { provide: ChargesService, useValue: charges },
                 { provide: ClientSearchService, useValue: { search: () => of([]), getById: () => of({ id: 'cl1', fullName: 'Ali Veli', phone: '—', petNames: [], label: 'Ali Veli' }) } },

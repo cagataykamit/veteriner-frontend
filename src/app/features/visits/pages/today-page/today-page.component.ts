@@ -1,5 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, computed, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, OnInit, computed, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import { EDocumentIssueDialogComponent } from '@/app/entities/e-document/components/e-document-issue-dialog.component';
+import type { EDocumentSource } from '@/app/entities/e-document/models/e-document.model';
+import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -17,6 +20,7 @@ import {
     APPOINTMENTS_CREATE_CLAIM,
     APPOINTMENTS_NOSHOW_CLAIM,
     CHARGES_CREATE_CLAIM,
+    EDOCUMENTS_ISSUE_CLAIM,
     EXAMINATIONS_CREATE_CLAIM,
     HOSPITALIZATIONS_READ_CLAIM,
     PAYMENTS_CREATE_CLAIM,
@@ -113,7 +117,8 @@ type TodayScope = 'mine' | 'all';
         PetAlertBadgesComponent,
         PendingAppointmentRequestsChipComponent,
         PendingAppointmentRequestsTilesComponent,
-        AppointmentRequestDetailDialogComponent
+        AppointmentRequestDetailDialogComponent,
+        EDocumentIssueDialogComponent
     ],
     providers: [MessageService, PendingAppointmentRequestsState],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -126,6 +131,8 @@ export class TodayPageComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly messages = inject(MessageService);
     private readonly visitsService = inject(VisitsService);
+    private readonly eDocuments = inject(EDocumentsService);
+    private readonly cdr = inject(ChangeDetectorRef);
     private readonly destroyRef = inject(DestroyRef);
     private readonly menuBadgeFeed = inject(MenuBadgeFeed);
     readonly ro = inject(TenantReadOnlyContextService);
@@ -143,6 +150,10 @@ export class TodayPageComponent implements OnInit {
     readonly canCreateExamination = this.auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM);
     readonly canCollectPayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
     readonly canCreateCharge = this.auth.hasOperationClaim(CHARGES_CREATE_CLAIM);
+    readonly canIssueDocument = this.auth.hasOperationClaim(EDOCUMENTS_ISSUE_CLAIM);
+    /** Ziyaret kapanışında belgesiz ücret varsa e-belge önerisi (ADR-036 AK-4 c). */
+    documentOpen = false;
+    readonly documentSource = signal<EDocumentSource | null>(null);
 
     readonly loading = signal(true);
     /** Bekleyen online talepler; Bugün her yenilendiğinde birlikte yenilenir. */
@@ -529,6 +540,10 @@ export class TodayPageComponent implements OnInit {
                     life: 3000
                 });
                 this.refresh('silent');
+
+                if (kind === 'complete') {
+                    this.suggestDocument(visitId);
+                }
             },
             error: (e: unknown) => {
                 this.setBusy(item.key, false);
@@ -540,6 +555,24 @@ export class TodayPageComponent implements OnInit {
                 });
                 this.refresh('silent');
             }
+        });
+    }
+
+    /** Kapanan ziyaretin belgesiz ücreti varsa ve entegratör bağlıysa belge diyaloğunu açar; aksi hâlde sessiz kalır. */
+    private suggestDocument(visitId: string): void {
+        if (!this.canIssueDocument) {
+            return;
+        }
+
+        this.eDocuments.preview({ visitId }).subscribe({
+            next: (p) => {
+                if (p.connection.status === 'Connected' && p.groups.length > 0) {
+                    this.documentSource.set({ visitId });
+                    this.documentOpen = true;
+                    this.cdr.markForCheck();
+                }
+            },
+            error: () => undefined
         });
     }
 

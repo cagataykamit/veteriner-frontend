@@ -9,6 +9,7 @@ import { ADMINISTRATIONS_CORRECT_CLAIM, ADMINISTRATIONS_CREATE_CLAIM, ADMINISTRA
 import { AdministrationCreateDialogComponent } from '@/app/entities/administration/components/administration-create-dialog.component';
 import { AdministrationRowMarksComponent } from '@/app/entities/administration/components/administration-row-marks.component';
 import { administrationSavedNotice } from '@/app/entities/administration/utils/administration-labels';
+import { administrationCopyDraft, canRepeatAdministration, type AdministrationCopyDraft } from '@/app/entities/administration/utils/administration-copy.utils';
 import { AdministrationVoidDialogComponent } from '@/app/entities/administration/components/administration-void-dialog.component';
 import type { AdministrationCreateResultVm, AdministrationStockOutcome, AdministrationVm } from '@/app/entities/administration/models/administration-vm.model';
 import { AdministrationsService } from '@/app/entities/administration/services/administrations.service';
@@ -21,7 +22,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
 
 /**
- * Muayene veya tedavi bağlamında uygulama kayıtları: liste, "Uygulama ekle" ve gerekçeli iptal.
+ * Muayene veya tedavi bağlamında uygulama kayıtları: liste, "Uygulama ekle", "Tekrar uygula" (RECORD-004; bu bağlama yeni kayıt) ve gerekçeli iptal.
  * Uygulama okuma izni yoksa hiçbir şey çizilmez; yazma düğmeleri izne ve salt okunur kiracı durumuna göre gizlenir.
  */
 @Component({
@@ -54,7 +55,7 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
                             <label for="administrationsShowVoided" class="text-sm cursor-pointer">İptal edilenleri göster</label>
                         </div>
                         @if (canAdd()) {
-                            <button pButton type="button" size="small" data-testid="administration-add" (click)="createVisible = true"><i class="p-button-icon pi pi-plus"></i>Uygulama ekle</button>
+                            <button pButton type="button" size="small" data-testid="administration-add" (click)="openCreate(null)"><i class="p-button-icon pi pi-plus"></i>Uygulama ekle</button>
                         }
                     </div>
                 </div>
@@ -81,8 +82,8 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
                                     <th>Ürün</th>
                                     <th class="text-right">Miktar</th>
                                     <th>Not</th>
-                                    @if (canCorrect) {
-                                        <th style="width: 8rem"></th>
+                                    @if (canCorrect || canAdd()) {
+                                        <th style="width: 11rem"></th>
                                     }
                                 </tr>
                             </ng-template>
@@ -95,11 +96,16 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
                                     </td>
                                     <td class="text-right whitespace-nowrap" data-label="Miktar">{{ row.quantity }} {{ row.unit }}</td>
                                     <td class="break-words" data-label="Not">{{ row.notes || '—' }}</td>
-                                    @if (canCorrect) {
+                                    @if (canCorrect || canAdd()) {
                                         <td class="whitespace-nowrap">
-                                            @if (!row.isVoided && !ro.mutationBlocked()) {
-                                                <app-row-action-button action="void" (pressed)="openVoid(row)" />
-                                            }
+                                            <span class="inline-flex items-center gap-3">
+                                                @if (canAdd() && canRepeat(row)) {
+                                                    <button type="button" class="p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary" data-testid="administration-repeat" (click)="openCreate(row)">Tekrar uygula</button>
+                                                }
+                                                @if (canCorrect && !row.isVoided && !ro.mutationBlocked()) {
+                                                    <app-row-action-button action="void" (pressed)="openVoid(row)" />
+                                                }
+                                            </span>
                                         </td>
                                     }
                                 </tr>
@@ -110,7 +116,7 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
                 }
             </div>
 
-            <app-administration-create-dialog [(visible)]="createVisible" [petId]="petId()" [petName]="petName()" [examinationId]="examinationId()" [treatmentId]="treatmentId()" [lateEntry]="locked()" (saved)="onSaved($event)" />
+            <app-administration-create-dialog [(visible)]="createVisible" [petId]="petId()" [petName]="petName()" [examinationId]="examinationId()" [treatmentId]="treatmentId()" [lateEntry]="locked()" [prefill]="createPrefill()" (saved)="onSaved($event)" />
             <app-administration-void-dialog [(visible)]="voidVisible" [target]="voidTarget()" (voided)="onVoided($event)" />
         }
     `
@@ -146,6 +152,8 @@ export class AdministrationsSectionComponent {
     readonly noticeIsWarning = signal(false);
 
     readonly voidTarget = signal<AdministrationVm | null>(null);
+    readonly createPrefill = signal<AdministrationCopyDraft | null>(null);
+    readonly canRepeat = canRepeatAdministration;
     createVisible = false;
     voidVisible = false;
 
@@ -188,6 +196,12 @@ export class AdministrationsSectionComponent {
     setShowVoided(show: boolean): void {
         this.showVoided.set(show);
         this.reload();
+    }
+
+    /** Boş form ya da "Tekrar uygula" ön dolumu; kayıt bu bölümün bağlamına (muayene/tedavi) yazılır. */
+    openCreate(source: AdministrationVm | null): void {
+        this.createPrefill.set(source ? administrationCopyDraft(source) : null);
+        this.createVisible = true;
     }
 
     openVoid(row: AdministrationVm): void {

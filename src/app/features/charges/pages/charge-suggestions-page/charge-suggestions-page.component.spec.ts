@@ -66,7 +66,8 @@ const convertedResult = (): ChargeCreateResultVm => ({
         currency: 'TRY',
         createdAtUtc: '2026-10-14T08:00:00Z',
         lineKind: 'Product',
-        vatRate: null
+        vatRate: null,
+        eDocumentId: null
     }
 });
 

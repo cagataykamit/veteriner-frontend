@@ -44,6 +44,16 @@ export const ApiEndpoints = {
         kvkkDisclosureTemplate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/kvkk-disclosure-template`,
         /** Mükellef ayarları; GET `Clinics.Read`, PUT `Clinics.Update` (`INVOICING_IDENTITY_API_CONTRACT.md` §3). */
         taxpayerSettings: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/taxpayer-settings`,
+        /** e-belge entegratör bağlantısı; GET `Clinics.Read`, DELETE ve alt uçlar `Clinics.Update` (`E_DOCUMENTS_API_CONTRACT.md` §3). */
+        eDocumentConnection: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/e-document-connection`,
+        /** POST `{ provider }` → `{ authorizationUrl }` (OAuth + PKCE). */
+        eDocumentConnectionAuthorize: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/e-document-connection/authorize`,
+        /** PUT `{ accountId }`; yalnız hesap seçimi beklenirken. */
+        eDocumentConnectionAccount: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/e-document-connection/account`,
+        /** POST; bağlantıyı sınar. */
+        eDocumentConnectionVerify: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/e-document-connection/verify`,
+        /** GET `Clinics.Read`, PUT `Clinics.Update`: otomatik e-belge, gün sonu saati, ödeme ekranı varsayılanı, belge türü özeti. */
+        eDocumentSettings: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/e-document-settings`,
         /** Geliş formundaki sorumlu hekim seçimi (`Visits.Create`). */
         veterinarians: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/veterinarians`
     },
@@ -305,6 +315,27 @@ export const ApiEndpoints = {
         byId: (id: string) => `/api/v1/payments/${encodeURIComponent(id)}`,
         /** POST `{ reason }`; 204 (`Payments.Correct`). */
         void: (id: string) => `/api/v1/payments/${encodeURIComponent(id)}/void`
+    },
+    /** e-belge (e-SMM / e-Arşiv / e-Fatura) — `E_DOCUMENTS_API_CONTRACT.md` §4. */
+    eDocuments: {
+        /** GET liste (`page`, `pageSize`, `clinicId`, `clientId`, `status`, `documentType`, `fromUtc`, `toUtc`); POST belge kes (`EDocuments.Issue`). */
+        list: () => `/api/v1/e-documents`,
+        /** POST `{ clinicId, chargeIds | saleId | visitId }`; belge grupları, alıcı, eksik alanlar. */
+        preview: () => `/api/v1/e-documents/preview`,
+        byId: (id: string) => `/api/v1/e-documents/${encodeURIComponent(id)}`,
+        refresh: (id: string) => `/api/v1/e-documents/${encodeURIComponent(id)}/refresh`,
+        retry: (id: string) => `/api/v1/e-documents/${encodeURIComponent(id)}/retry`,
+        /** POST `{ reason }`. */
+        discard: (id: string) => `/api/v1/e-documents/${encodeURIComponent(id)}/discard`,
+        /** POST `{ reason }` (`EDocuments.Cancel`). */
+        cancel: (id: string) => `/api/v1/e-documents/${encodeURIComponent(id)}/cancel`,
+        pdf: (id: string) => `/api/v1/e-documents/${encodeURIComponent(id)}/pdf`,
+        /** GET belgesiz ücretler (`clinicId`, `clientId`, `visitId`, `fromUtc`, `toUtc`, sayfalı). */
+        undocumentedCharges: () => `/api/v1/e-documents/undocumented-charges`,
+        /** POST `{ paymentId }`: ödemenin karşıladığı tamamen ödenmiş ücretlere belge (`EDocuments.Issue`). */
+        fromPayment: () => `/api/v1/e-documents/from-payment`,
+        /** GET `clinicId`: menü rozeti (`connected`, `undocumentedPaidCount`, `failedCount`). */
+        reminders: () => `/api/v1/e-documents/reminders`
     },
     sales: {
         /** GET: `page`, `pageSize`, `clientId`, `productId`, `fromUtc`, `toUtc`, `includeVoided`, `clinicId` (`Sales.Read`); POST: satış oluştur (`Sales.Create`). */

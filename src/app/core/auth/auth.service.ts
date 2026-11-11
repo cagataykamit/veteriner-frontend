@@ -17,6 +17,7 @@ const ACCESS_TOKEN_KEY = 'veteriner.access_token';
 const REFRESH_TOKEN_KEY = 'veteriner.refresh_token';
 const ACTIVE_CLINIC_ID_KEY = 'veteriner.active_clinic_id';
 const ACTIVE_CLINIC_NAME_KEY = 'veteriner.active_clinic_name';
+const PLATFORM_ONLY_SESSION_KEY = 'veteriner.platform_only_session';
 
 /** Ham API gövdesi — `LoginResultDto` + PascalCase / snake_case varyantları serviste normalize edilir. */
 type LoginResultRaw = Record<string, unknown>;
@@ -33,6 +34,7 @@ export class AuthService {
     private readonly tokenSignal = signal<string | null>(this.readAccessTokenFromStorage());
     private readonly activeClinicIdSignal = signal<string | null>(localStorage.getItem(ACTIVE_CLINIC_ID_KEY));
     private readonly activeClinicNameSignal = signal<string | null>(localStorage.getItem(ACTIVE_CLINIC_NAME_KEY));
+    private readonly platformOnlySessionSignal = signal(localStorage.getItem(PLATFORM_ONLY_SESSION_KEY) === '1');
     private readonly authReadySignal = signal(false);
 
     /**
@@ -80,6 +82,25 @@ export class AuthService {
 
     hasSelectedClinic(): boolean {
         return !!this.getClinicId();
+    }
+
+    /**
+     * Kliniği olmayan platform yöneticisi oturumu (ADR-037): hesap boş "Platform" kiracısına bağlıdır, klinik seçilmez;
+     * panel yalnız platform yönetimi sayfalarıyla açılır. Klinik seçilince ya da oturum kapanınca biter.
+     */
+    isPlatformOnlySession(): boolean {
+        return this.platformOnlySessionSignal() && this.isPlatformAdmin() && !this.hasSelectedClinic();
+    }
+
+    /** Giriş/klinik seçimi kliniksiz platform yöneticisi bulduğunda çağrılır. */
+    startPlatformOnlySession(): void {
+        localStorage.setItem(PLATFORM_ONLY_SESSION_KEY, '1');
+        this.platformOnlySessionSignal.set(true);
+    }
+
+    /** Panel adımı: klinik seçilmiş ya da kliniksiz platform yöneticisi oturumu. */
+    hasPanelContext(): boolean {
+        return this.hasSelectedClinic() || this.isPlatformOnlySession();
     }
 
     /** Giriş yapan kullanıcının kimliği (JWT `sub`); token yoksa `null`. */
@@ -190,6 +211,11 @@ export class AuthService {
         // Platform yöneticisi izin değil, ayrı JWT claim'idir; menü/guard aynı izin listesinden süzebilsin diye burada çözülür.
         if (wanted === PLATFORM_ADMIN_CLAIM) {
             return this.isPlatformAdmin();
+        }
+
+        // Kliniksiz platform oturumunda klinik izinleri yok sayılır: menü, korumalar ve açılış sayfası yalnız platform sayfalarını görür.
+        if (this.isPlatformOnlySession()) {
+            return false;
         }
 
         return this.readOperationClaimsFromCurrentToken().some((c) => c === wanted);
@@ -587,6 +613,7 @@ export class AuthService {
         if (trimmedId) {
             localStorage.setItem(ACTIVE_CLINIC_ID_KEY, trimmedId);
             this.activeClinicIdSignal.set(trimmedId);
+            this.endPlatformOnlySession();
         }
 
         const trimmedName = name?.trim() ?? '';
@@ -602,6 +629,12 @@ export class AuthService {
         localStorage.removeItem(ACTIVE_CLINIC_NAME_KEY);
         this.activeClinicIdSignal.set(null);
         this.activeClinicNameSignal.set(null);
+        this.endPlatformOnlySession();
+    }
+
+    private endPlatformOnlySession(): void {
+        localStorage.removeItem(PLATFORM_ONLY_SESSION_KEY);
+        this.platformOnlySessionSignal.set(false);
     }
 
     private readClinicClaimsFromCurrentToken(): { id: string | null; name: string | null } {

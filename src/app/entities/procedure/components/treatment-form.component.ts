@@ -16,10 +16,12 @@ import { ExaminationsService } from '@/app/entities/examination/services/examina
 import { examinationListItemFromDetail, prescriptionExaminationSelectOption } from '@/app/entities/prescription/utils/prescription-relation-select.utils';
 import { followUpBeforeTreatmentMessage, mapTreatmentUpsertFormToCreateRequest } from '@/app/entities/treatment/data/treatment.mapper';
 import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
+import { treatmentCopyDraft, type TreatmentCopyDraft } from '@/app/entities/treatment/utils/treatment-copy.utils';
 import { type TreatmentUpsertFieldErrors, parseTreatmentUpsertHttpError } from '@/app/entities/treatment/utils/treatment-upsert-validation-parse.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
+import { copyTargetExaminationId, recordCopySourceId } from '@/app/shared/panel/record-copy.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
@@ -45,6 +47,9 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                 <p class="text-danger mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
+            @if (copySourceTitle(); as source) {
+                <p class="text-sm text-muted-color mt-0 mb-4" role="status" data-testid="treatment-copy-notice">"{{ source }}" tedavisinden kopyalandı; kopya yalnız aynı hasta için yazılır. Tarih, not ve muayene bağı kopyalanmaz; kesinleşmiş muayeneye tedavi eklenemez. Gözden geçirip kaydedin.</p>
+            }
             @if (contextFromExamination()) {
                 <p class="text-sm text-muted-color mt-0 mb-4">Bu muayene kaydından bağlam taşındı; müşteri, hasta ve bağlı muayene alanları kilitlidir.</p>
             }
@@ -171,6 +176,9 @@ export class TreatmentFormComponent implements OnInit, HasUnsavedChanges {
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly contextFromExamination = signal(false);
+    /** Kopya (RECORD-004): müşteri ve hasta kaynaktan gelir ve kilitlidir; muayene serbestçe seçilir. */
+    readonly contextFromCopy = signal(false);
+    readonly copySourceTitle = signal<string | null>(null);
     readonly applyingRouteContext = signal(false);
 
     readonly submitting = signal(false);
@@ -243,7 +251,7 @@ export class TreatmentFormComponent implements OnInit, HasUnsavedChanges {
 
             this.loadExaminationsForPet(pid);
         });
-        this.tryApplyExaminationRouteContext();
+        this.tryApplyRouteContexts();
     }
 
     private syncExaminationSelectState(): void {
@@ -251,7 +259,7 @@ export class TreatmentFormComponent implements OnInit, HasUnsavedChanges {
             return;
         }
 
-        const hasPet = !this.form.controls.petId.disabled && !!trimClientIdControlValue(this.form.controls.petId.value);
+        const hasPet = (!this.form.controls.petId.disabled || this.contextFromCopy()) && !!trimClientIdControlValue(this.form.controls.petId.value);
 
         if (!hasPet) {
             this.form.controls.examinationId.disable({ emitEvent: false });
@@ -351,6 +359,50 @@ export class TreatmentFormComponent implements OnInit, HasUnsavedChanges {
         });
     }
 
+    private tryApplyRouteContexts(): void {
+        const copySourceId = recordCopySourceId(this.contextParams());
+
+        if (copySourceId) {
+            this.tryApplyCopyContext(copySourceId);
+
+            return;
+        }
+
+        this.tryApplyExaminationRouteContext();
+    }
+
+    /** Kopya kaynağı oluşturma formunu doldurur (RECORD-004); kayıt hekim kaydedince normal oluşturma ucundan yapılır. */
+    private tryApplyCopyContext(sourceId: string): void {
+        this.applyingRouteContext.set(true);
+        this.selectionError.set(null);
+        this.treatmentsService.getTreatmentForEditById(sourceId).subscribe({
+            next: (source) => {
+                const draft = treatmentCopyDraft(source);
+
+                if (draft) {
+                    this.applyCopyDraft(draft);
+                } else {
+                    this.selectionError.set('Kopyalanacak tedavide hasta bilgisi yok; serbest oluşturma ile devam edebilirsiniz.');
+                }
+
+                this.applyingRouteContext.set(false);
+            },
+            error: () => {
+                this.selectionError.set('Kopyalanacak tedavi yüklenemedi; serbest oluşturma ile devam edebilirsiniz.');
+                this.applyingRouteContext.set(false);
+            }
+        });
+    }
+
+    private applyCopyDraft(draft: TreatmentCopyDraft): void {
+        this.form.patchValue({ clientId: draft.clientId, petId: draft.petId, title: draft.title, description: draft.description }, { emitEvent: false });
+        this.form.controls.clientId.disable({ emitEvent: false });
+        this.form.controls.petId.disable({ emitEvent: false });
+        this.contextFromCopy.set(true);
+        this.copySourceTitle.set(draft.sourceTitle);
+        this.loadExaminationsForPet(draft.petId);
+    }
+
     private tryApplyExaminationRouteContext(): void {
         const ctx = parseExaminationCreateRouteContext(this.contextParams());
 
@@ -422,6 +474,13 @@ export class TreatmentFormComponent implements OnInit, HasUnsavedChanges {
                 this.examinationOptions.set(ex.items.map(prescriptionExaminationSelectOption));
                 this.loadingExaminations.set(false);
                 this.syncExaminationSelectState();
+
+                // Kopyada hedef hastanın açık muayenesidir; kaynağın bağı taşınmaz.
+                const targetId = this.contextFromCopy() && !this.form.controls.examinationId.value.trim() ? copyTargetExaminationId(ex.items) : null;
+
+                if (targetId) {
+                    this.form.controls.examinationId.setValue(targetId);
+                }
             },
             error: (e: unknown) => {
                 if (seq !== this.relationLoadSeq) {

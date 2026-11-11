@@ -35,6 +35,11 @@ app-menu {
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
+
+    // Boşken (kliniksiz platform yöneticisi) yer kaplamaz; `.layout-menu` görüntü kuralı `hidden` özniteliğini ezmesin.
+    &[hidden] {
+        display: none;
+    }
 }
 
 .layout-menu {
@@ -212,6 +217,19 @@ app-menu {
     padding: 0.25rem 0 0.5rem;
     border-top: 1px solid var(--surface-border);
     background-color: var(--surface-overlay);
+
+    // Kayan liste boşsa (ör. kliniksiz platform yöneticisi) sabit bölüm alta itilmez; üstte, çizgisiz başlar. Destek satırı yine en altta kalır.
+    &.layout-menu-pinned-alone {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        margin-top: 0;
+        border-top: 0;
+
+        > .layout-menu-support {
+            margin-top: auto;
+        }
+    }
 }
 
 .layout-submenu-enter-from,
@@ -393,7 +411,13 @@ $menu-fixed-height: calc(6rem + 1px + 2 * #{$menu-edge-padding} + #{$menu-roundi
 }
 
 // WhatsApp destek satırı: ölçüleri diğer satırlarla aynı, yalnız simgesi yeşil. Seçici static kipin simge rengini (0,4,1) geçer.
+// PrimeIcons çizimi FontAwesome simgelerinden küçük kalır: yazı boyutu büyütülür, kutu genişliği `fa-fw` (1.25em × 1rem) ile aynı tutulur ki yazı hizası kaymasın;
+// kutudan taşan çizim iki yana eşit taşar (ortalı kalır).
 .layout-wrapper .layout-sidebar .layout-menu a.layout-menuitem-support .layout-menuitem-icon {
+    display: inline-flex;
+    justify-content: center;
+    width: 1.25rem;
+    font-size: 1.6rem;
     color: var(--p-green-600, #16a34a);
 }
 

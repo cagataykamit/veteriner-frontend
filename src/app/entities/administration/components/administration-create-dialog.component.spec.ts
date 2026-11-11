@@ -280,4 +280,31 @@ describe('AdministrationCreateDialogComponent', () => {
         expect(service.createAdministration).toHaveBeenCalledTimes(1);
         expect(cmp.submitting()).toBe(true);
     });
+
+    describe('"Tekrar uygula" ön dolumu (RECORD-004)', () => {
+        const reopen = (prefill: unknown) => {
+            cmp.visible.set(false);
+            fixture.detectChanges();
+            fixture.componentRef.setInput('prefill', prefill);
+            cmp.visible.set(true);
+            fixture.detectChanges();
+        };
+
+        it('ürün, miktar, yol ve bölge dolar; parti, zaman ve not boş gelir; kayıt bu bağlama yeni istekle gider', () => {
+            reopen({ productId: 'pr1', productName: 'Serum', quantity: 0.5, route: 'Intravenous', site: 'Sol ön bacak' });
+
+            expect(cmp.form.getRawValue()).toEqual(expect.objectContaining({ productId: 'pr1', quantity: 0.5, route: 'Intravenous', site: 'Sol ön bacak', batchId: '', administeredAtLocal: '', notes: '' }));
+            expect(document.body.querySelector('[data-testid="administration-repeat-note"]')?.textContent).toContain('parti yeniden seçilir');
+            cmp.onSubmit();
+            expect(service.createAdministration).toHaveBeenCalledWith(expect.objectContaining({ petId: 'p1', examinationId: 'e1', productId: 'pr1', quantity: 0.5, batchId: null }));
+        });
+
+        it('ürün artık seçilemiyorsa ürün boşalır ve uyarı görünür', () => {
+            reopen({ productId: 'gone', productName: 'Eski serum', quantity: 1, route: null, site: '' });
+
+            expect(cmp.form.controls.productId.value).toBe('');
+            expect(cmp.prefillUnavailable()).toBe(true);
+            expect(document.body.querySelector('[data-testid="administration-repeat-note"]')?.textContent).toContain('Eski serum');
+        });
+    });
 });

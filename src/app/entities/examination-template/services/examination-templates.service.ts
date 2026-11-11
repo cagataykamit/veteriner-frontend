@@ -25,6 +25,7 @@ const EXAMINATION_TEMPLATE_PROBLEM_MESSAGES: Record<string, string> = {
     'ExaminationTemplates.ProductInactive': 'Ürün pasif; satırı çıkarın veya ürünü etkinleştirin.',
     'ExaminationTemplates.Inactive': 'Şablon pasifleştirilmiş; uygulanamaz. Listeden başka bir şablon seçin.',
     'ExaminationTemplates.NotFound': 'Şablon bulunamadı.',
+    'ExaminationTemplates.LineNotInTemplate': 'Şablon bu arada değişmiş; liste yenilendi, şablonu yeniden seçin.',
     [EXAMINATION_FINALIZED_CODE]: 'Bu muayene kesinleştirilmiş; şablon uygulanamaz. İşlem gerekiyorsa sonradan ekleme akışını kullanın.',
     [EXAMINATION_CONCURRENCY_CONFLICT_CODE]: 'Muayene bu arada değişmiş; güncel kayıt yüklendi. Ön izlemeyi kontrol edip tekrar uygulayın.',
     'Examinations.TemplateTextTooLong': 'Şablon metni eklenince muayene metni sınırı aşılıyor; ilgili alanı kısaltıp tekrar deneyin.',
@@ -136,9 +137,10 @@ export class ExaminationTemplatesService {
     }
 
     /** `rowVersion` muayenenin güncel sürümüdür; hepsi ya da hiçbiri (bir satır reddedilirse hiçbir şey yazılmaz). */
-    apply(examinationId: string, templateId: string, rowVersion: string): Observable<ExaminationTemplateApplyResultDto> {
+    /** `lines` (EXAM-013) verilmezse tüm satırlar şablondaki miktarla uygulanır; verilirse yalnız listedekiler, listedeki miktarla. */
+    apply(examinationId: string, templateId: string, rowVersion: string, lines?: { productId: string; quantity: number }[]): Observable<ExaminationTemplateApplyResultDto> {
         return this.api
-            .post<ExaminationTemplateApplyResultDto>(ApiEndpoints.examinations.applyTemplate(examinationId), { templateId, rowVersion })
+            .post<ExaminationTemplateApplyResultDto>(ApiEndpoints.examinations.applyTemplate(examinationId), lines ? { templateId, rowVersion, lines } : { templateId, rowVersion })
             .pipe(toExaminationTemplateError('Şablon uygulanamadı.'));
     }
 }

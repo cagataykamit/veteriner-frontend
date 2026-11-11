@@ -155,7 +155,8 @@ describe('ExaminationTemplateApplyDialogComponent', () => {
         cmp.select(otitis);
         cmp.onSubmit();
         expect(service.apply).toHaveBeenCalledTimes(1);
-        expect(service.apply).toHaveBeenCalledWith('e1', 't1', 'V1');
+        // Seçim şablonla aynı: satır listesi gönderilmez, sunucu bugünkü davranışla tüm satırları uygular.
+        expect(service.apply).toHaveBeenCalledWith('e1', 't1', 'V1', undefined);
         expect(applied).toEqual([{ template: otitis, result }]);
         expect(cmp.visible()).toBe(false);
 
@@ -220,5 +221,85 @@ describe('ExaminationTemplateApplyDialogComponent', () => {
 
         fixture.componentRef.setInput('rowVersion', null);
         expect(cmp.canSubmit()).toBe(false);
+    });
+
+    describe('satır seçimi ve miktar (EXAM-013)', () => {
+        const quantityInput = (i: number) => body().querySelectorAll<HTMLInputElement>('[data-testid="template-line-quantity"]')[i];
+
+        const typeQuantity = (i: number, value: string) => {
+            const input = quantityInput(i);
+
+            input.value = value;
+            input.dispatchEvent(new Event('input'));
+            fixture.detectChanges();
+        };
+
+        it('hariç tutulan satır ve değişen miktar gönderilir; toplam seçili satırlardan hesaplanır', () => {
+            service.apply.mockReturnValue(of(result));
+            cmp.select(otitis);
+            fixture.detectChanges();
+            cmp.setIncluded('s1', false);
+            typeQuantity(1, '2');
+
+            expect(body().querySelector('[data-testid="template-preview-total"]')?.textContent).toContain('180');
+            expect(body().querySelectorAll('[data-testid="template-preview-line"]')[0].textContent).toContain('Hariç');
+            cmp.onSubmit();
+            expect(service.apply).toHaveBeenCalledWith('e1', 't1', 'V1', [{ productId: 'p1', quantity: 2 }]);
+        });
+
+        it('fiyatlı pakette fiyat sabit kalır', () => {
+            cmp.select({ ...otitis, packagePrice: 200 });
+            fixture.detectChanges();
+            cmp.setIncluded('s1', false);
+            typeQuantity(1, '3');
+
+            const total = body().querySelector('[data-testid="template-preview-total"]')?.textContent ?? '';
+
+            expect(total).toContain('Paket fiyatı');
+            expect(total).toContain('200');
+            expect(body().querySelector('[data-testid="template-preview"]')?.textContent).toContain('paket fiyatı aynı kalır');
+        });
+
+        it('geçersiz miktarda uygulanamaz ve satırda hata görünür', () => {
+            cmp.select(otitis);
+            fixture.detectChanges();
+            typeQuantity(1, '0');
+
+            expect(cmp.canSubmit()).toBe(false);
+            expect(body().querySelector('[data-testid="template-line-quantity-error"]')).not.toBeNull();
+            typeQuantity(1, '1.5');
+            expect(cmp.canSubmit()).toBe(true);
+            typeQuantity(1, '1.23456');
+            expect(cmp.canSubmit()).toBe(false);
+        });
+
+        it('hariç tutulan pasif ürün uygulamayı engellemez', () => {
+            cmp.select({ ...otitis, lines: [otitis.lines[0], { ...otitis.lines[1], productIsActive: false }] });
+            fixture.detectChanges();
+            expect(cmp.canSubmit()).toBe(false);
+
+            cmp.setIncluded('p1', false);
+            fixture.detectChanges();
+            expect(body().querySelector('[data-testid="template-inactive-lines"]')).toBeNull();
+            expect(cmp.canSubmit()).toBe(true);
+        });
+
+        it('hiç satır seçilmezse metin varsa yalnız metin uygulanır (boş liste), metin yoksa uygulanamaz', () => {
+            service.apply.mockReturnValue(of(result));
+            cmp.select(otitis);
+            cmp.setIncluded('s1', false);
+            cmp.setIncluded('p1', false);
+            fixture.detectChanges();
+
+            expect(body().querySelector('[data-testid="template-no-lines-selected"]')?.textContent).toContain('yalnız metin');
+            expect(body().querySelector('[data-testid="template-preview-total"]')).toBeNull();
+            cmp.onSubmit();
+            expect(service.apply).toHaveBeenCalledWith('e1', 't1', 'V1', []);
+
+            cmp.select({ ...otitis, visitReason: null, findings: null });
+            cmp.setIncluded('s1', false);
+            cmp.setIncluded('p1', false);
+            expect(cmp.canSubmit()).toBe(false);
+        });
     });
 });

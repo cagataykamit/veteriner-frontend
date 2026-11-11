@@ -7,13 +7,15 @@ import { appRoutes } from '@/app.routes';
 describe('panel yönlendirmeleri', () => {
     let router: Router;
     let claims: Set<string>;
+    let authenticated: boolean;
 
     beforeEach(() => {
+        authenticated = true;
         claims = new Set(['visits.read', 'species.create', 'species.update', 'breeds.create', 'breeds.update', 'productcategories.read']);
         TestBed.configureTestingModule({
             providers: [
                 provideRouter(appRoutes),
-                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c.toLowerCase()), isAuthenticated: () => true, hasSelectedClinic: () => true, ensureValidAccessToken: () => of(null) } }
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c.toLowerCase()), isAuthenticated: () => authenticated, hasSelectedClinic: () => authenticated, hasPanelContext: () => authenticated, ensureValidAccessToken: () => of(null) } }
             ]
         });
         router = TestBed.inject(Router);
@@ -41,6 +43,12 @@ describe('panel yönlendirmeleri', () => {
         expect(await go('/panel')).toBe('/panel/settings');
         claims.add('clients.read');
         expect(await go('/panel')).toBe('/panel/patients');
+    });
+
+    it('oturumsuz /panel açılışı girişe returnUrl=/panel ile gider (izinler bilinmeden Ayarlar seçilmez)', async () => {
+        authenticated = false;
+        claims.clear();
+        expect(await go('/panel')).toBe('/auth/login?returnUrl=%2Fpanel');
     });
 
     it('eski Tür adresi alt yolu ve sorgu parametresiyle yeni adrese yönlenir', async () => {

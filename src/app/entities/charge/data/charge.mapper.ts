@@ -42,7 +42,8 @@ export function mapChargeDtoToVm(dto: ChargeDto): ChargeVm {
         createdAtUtc: dto.createdAtUtc,
         lineKind: parseChargeLineKind(dto.lineKind),
         vatRate: dto.vatRate ?? null,
-        isImported: dto.isImported === true
+        isImported: dto.isImported === true,
+        eDocumentId: dto.eDocumentId ?? null
     };
 }
 

@@ -161,6 +161,35 @@ describe('AuthService', () => {
             auth.setSession({ accessToken: jwt({ platform_admin: ' TRUE ' }), refreshToken: null, expiresAt: null });
             expect(auth.isPlatformAdmin()).toBe(true);
         });
+
+        it('kliniksiz platform oturumu: panel bağlamı var, klinik izinleri yok sayılır, yalnız platform sayfaları açılır', () => {
+            const auth = create();
+
+            auth.setSession({ accessToken: jwt({ platform_admin: true, permissions: ['Visits.Read'] }), refreshToken: null, expiresAt: null });
+            expect(auth.hasPanelContext()).toBe(false);
+            expect(auth.hasOperationClaim('Visits.Read')).toBe(true);
+
+            auth.startPlatformOnlySession();
+            expect(auth.isPlatformOnlySession()).toBe(true);
+            expect(auth.hasPanelContext()).toBe(true);
+            expect(auth.hasOperationClaim('Visits.Read')).toBe(false);
+            expect(auth.hasOperationClaim('platform_admin')).toBe(true);
+        });
+
+        it('platform yöneticisi olmayan hesapta kliniksiz oturum açılmaz; çıkış oturumu bitirir', () => {
+            const auth = create();
+
+            auth.setSession({ accessToken: jwt({ permissions: ['Visits.Read'] }), refreshToken: null, expiresAt: null });
+            auth.startPlatformOnlySession();
+            expect(auth.isPlatformOnlySession()).toBe(false);
+            expect(auth.hasPanelContext()).toBe(false);
+
+            auth.setSession({ accessToken: jwt({ platform_admin: true }), refreshToken: null, expiresAt: null });
+            auth.startPlatformOnlySession();
+            auth.clearSession();
+            auth.setSession({ accessToken: jwt({ platform_admin: true }), refreshToken: null, expiresAt: null });
+            expect(auth.isPlatformOnlySession()).toBe(false);
+        });
     });
 
     describe('süre ve yenileme', () => {
