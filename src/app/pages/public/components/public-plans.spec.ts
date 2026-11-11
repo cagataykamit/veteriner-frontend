@@ -62,11 +62,11 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         expect(planCardFeatures('basic').lead).toBe('Kapsam:');
         expect(labels('basic')).toContain(`Klinik: ${basicIn('Klinik')} özellik`);
         expect(labels('basic')).toContain(`Kayıt ve KVKK: ${basicIn('Kayıt ve KVKK')} özellik`);
-        expect(labels('basic')).toContain('Destek: E-posta');
+        expect(labels('basic')).toContain('Destek: E-posta ve WhatsApp');
 
         expect(planCardFeatures('pro').lead).toBe("Temel'deki her şey, artı:");
         expect(labels('pro')).toContain('Hasta sahibi portalı');
-        expect(labels('pro')).toContain('Destek: E-posta, öncelikli');
+        expect(labels('pro')).toContain('Destek: E-posta ve WhatsApp, öncelikli');
         expect(labels('pro')).not.toContain('Bugün ekranı ve geliş takibi');
         expect(labels('pro')).not.toContain('Çok klinik yönetimi ve klinikler arası yetki');
 
