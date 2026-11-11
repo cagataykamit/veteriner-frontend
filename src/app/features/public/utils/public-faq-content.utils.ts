@@ -132,7 +132,8 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
             },
             {
                 question: 'Ne aktarılır, ne aktarılmaz?',
-                answer: 'Müşteri, hasta ve aşı geçmişi aktarılır. Muayene ve ödeme geçmişi şimdilik aktarılmaz.'
+                answer:
+                    'Müşteriler, hastalar, aşı geçmişi, muayene ve klinik notlar, açık bakiye, eski programdaki hesap hareketleri, gelecek randevular ve ürün/hizmet kartları aktarılır. Klinik notlar, reçete ve laboratuvar sonuçları metin olarak gelir. Hesap hareketleri bilgi amaçlıdır; bakiyenize yalnız açık borç yazılır, ciroya ve kasaya girmez. Belgeler ve görüntüler, stok miktarı, alacak bakiyesi ve geçmiş randevular şimdilik aktarılmaz.'
             },
             {
                 question: 'Geçiş ne kadar sürer?',

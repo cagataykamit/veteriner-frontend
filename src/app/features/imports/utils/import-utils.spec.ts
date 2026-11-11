@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import type { ImportTableInfoDto } from '@/app/features/imports/models/import-api.model';
-import { duplicateBatchId, importCommitBlockers, importErrorMessage, importIssueLabel, isDiscardable, isEndpointUnavailable, isImportJobRunning, reminderImpactCurrentCount, precheckImportFile } from '@/app/features/imports/utils/import-labels.utils';
-import { columnMapsToRequest, fieldLabel, initialColumnMaps, mappingConfidence, missingRequired } from '@/app/features/imports/utils/import-schema.utils';
+import type { ImportReminderImpactDto, ImportTableInfoDto } from '@/app/features/imports/models/import-api.model';
+import { duplicateBatchId, importCommitBlockers, importErrorMessage, importIssueLabel, isDiscardable, isEndpointUnavailable, isImportJobRunning, reminderEmailTotal, reminderImpactCurrentCount, precheckImportFile, rollbackCountsText, rollbackCountsTotal, rollbackReasonLabel } from '@/app/features/imports/utils/import-labels.utils';
+import { columnMapsToRequest, fieldLabel, IMPORT_CSV_FIELD, IMPORT_CSV_TEMPLATE_FILE, IMPORT_TABLES, initialColumnMaps, mappingConfidence, missingRequired, needsClinic } from '@/app/features/imports/utils/import-schema.utils';
 import { IMPORT_VALUE_SKIP, valueChoicesToRequest } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { isTrialLimitError } from '@/app/shared/utils/api-error.utils';
 
@@ -138,5 +138,60 @@ describe('import-labels.utils', () => {
         for (const code of ['Imports.OwnerUnitFailed', 'Imports.MatchedAtCommit', 'Imports.ApplyFailed']) {
             expect(importIssueLabel(code)).not.toBe(code);
         }
+    });
+});
+
+describe('tam geçiş tabloları (sözleşme 12)', () => {
+    it('klinik geçmiş ve randevu hasta bağlantısı ister; hasta no tek başına yeter', () => {
+        expect(missingRequired('clinicalRecords', { Tarih: 'Tarih' })).toEqual(['Hasta no (veya sahip ad soyad + telefon + hasta adı + tür)']);
+        expect(missingRequired('clinicalRecords', { Tarih: 'Tarih', HayvanNo: 'No' })).toEqual([]);
+        expect(missingRequired('appointments', { HayvanNo: 'No' })).toEqual(['Tarih']);
+    });
+
+    it('hesap hareketi müşteri bağlantısı, tarih, işlem türü ve tutar ister', () => {
+        expect(missingRequired('accountEntries', { MusteriNo: 'No', Tarih: 'T' })).toEqual(['İşlem türü', 'Tutar']);
+        expect(missingRequired('accountEntries', { Tarih: 'T', IslemTuru: 'Tür', Tutar: 'Tutar' })).toEqual(['Müşteri no (veya sahip ad soyad + telefon)']);
+        expect(missingRequired('accountEntries', { SahipAdSoyad: 'Ad', SahipTelefon: 'Tel', Tarih: 'T', IslemTuru: 'Tür', Tutar: 'Tutar' })).toEqual([]);
+    });
+
+    it('ürün yalnız ad ister ve kliniğe bağlı değildir', () => {
+        expect(missingRequired('products', {})).toEqual(['Ad']);
+        expect(needsClinic(['customers', 'pets', 'products'])).toBe(false);
+        expect(needsClinic(['customers', 'accountEntries'])).toBe(true);
+        expect(needsClinic(['appointments'])).toBe(true);
+    });
+
+    it('her tablonun CSV alanı ve şablon dosya adı vardır', () => {
+        for (const t of IMPORT_TABLES) {
+            expect(IMPORT_CSV_FIELD[t]).toMatch(/File$/);
+            expect(IMPORT_CSV_TEMPLATE_FILE[t]).toMatch(/^vetinity-iceaktar-.+\.csv$/);
+        }
+
+        expect(IMPORT_CSV_FIELD.clinicalRecords).toBe('clinicalRecordsFile');
+    });
+
+    it('yeni kural ve geri alma kodlarının Türkçe etiketi vardır', () => {
+        for (const code of ['Imports.CreditBalanceNotImported', 'Imports.ClinicalRecordEmpty', 'Imports.PastAppointmentSkipped', 'Imports.EntryKindUnrecognized', 'Imports.CategoryUnmapped']) {
+            expect(importIssueLabel(code)).not.toBe(code);
+        }
+
+        for (const code of ['AppointmentChanged', 'ProductModified', 'HasStock', 'OpeningBalanceChanged', 'HasOtherClinicalRecords']) {
+            expect(rollbackReasonLabel(code)).not.toBe(code);
+        }
+    });
+
+    it('geri alma sayılarında yeni anahtarlar yalnız doluysa yazılır', () => {
+        expect(rollbackCountsText({ clients: 1, pets: 2, vaccinations: 0 })).toBe('1 müşteri · 2 hasta · 0 aşı');
+        expect(rollbackCountsText({ clients: 1, pets: 0, vaccinations: 0, clinicalRecords: 4, openingBalances: 1, products: 0 })).toBe('1 müşteri · 0 hasta · 0 aşı · 4 klinik kayıt · 1 devir bakiyesi');
+        expect(rollbackCountsTotal({ clients: 0, pets: 0, vaccinations: 0, appointments: 3 })).toBe(3);
+    });
+
+    it('hatırlatma onayı aşı + randevu toplamını kullanır; eski yanıtta aşı sayısına düşer', () => {
+        const base = { emailsWithinReminderWindow: 5 } as ImportReminderImpactDto;
+
+        expect(reminderEmailTotal(base)).toBe(5);
+        expect(reminderEmailTotal({ ...base, totalEmailsWithinReminderWindow: 8 })).toBe(8);
+        expect(reminderImpactCurrentCount(problem(409, 'Imports.ReminderImpactChanged', { extensions: { emailsWithinReminderWindow: 3, totalEmailsWithinReminderWindow: 7 } }))).toBe(7);
+        expect(reminderImpactCurrentCount(problem(409, 'Imports.ReminderImpactChanged', { extensions: { emailsWithinReminderWindow: 3 } }))).toBe(3);
     });
 });

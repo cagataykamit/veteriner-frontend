@@ -16,6 +16,7 @@ import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import type { Mock } from 'vitest';
 import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
 import { PetDetailPageComponent } from './pet-detail-page.component';
+import { ImportedHistoryService } from '@/app/entities/imported-history/services/imported-history.service';
 
 const pet: PetDetailVm = {
     petAlerts: NO_PET_ALERTS,
@@ -104,6 +105,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'p1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'k1' } },
                 { provide: RecentlyViewedService, useValue: { record: recordRecent } },
+                { provide: ImportedHistoryService, useValue: { getPetClinicalRecords: () => of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }) } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: AppointmentsService, useValue: { getAppointments: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } },
                 {

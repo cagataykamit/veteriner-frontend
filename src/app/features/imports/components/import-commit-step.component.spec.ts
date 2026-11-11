@@ -22,7 +22,7 @@ const batch = (status: ImportBatchDto['status']): ImportBatchDto => ({
     rolledBackAtUtc: null,
     remindersReleasedAtUtc: null,
     payloadPurgedAtUtc: null,
-    summary: { customers, pets: zero, vaccinations: zero }
+    summary: { customers, pets: zero, vaccinations: zero, clinicalRecords: zero, accountEntries: zero, appointments: zero, products: zero }
 });
 
 const preview = { validationId: 'v1', canCommit: true, blockers: [] } as unknown as ImportPreviewDto;
@@ -30,7 +30,7 @@ const committedPreview = {
     validationId: 'v1',
     canCommit: false,
     blockers: [],
-    summary: { customers, pets: zero, vaccinations: { ...zero, total: 4 } },
+    summary: { customers, pets: zero, vaccinations: { ...zero, total: 4 }, clinicalRecords: zero, accountEntries: zero, appointments: zero, products: zero },
     reminderImpact: { emailsWithinReminderWindow: 5, reminderWindowDays: 30, tenantRemindersEnabled: true },
     issueCounts: [{ code: 'Imports.MatchedAtCommit', severity: 'Info', rowCount: 2 }]
 } as unknown as ImportPreviewDto;
@@ -144,7 +144,7 @@ describe('ImportCommitStepComponent', () => {
         const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
 
         expect(text).toContain('başlatılamıyor');
-        expect(text).toContain('Hastalar müşterilere bağlanamıyor');
+        expect(text).toContain('Hastalar veya hesap hareketleri müşterilere bağlanamıyor');
         expect(text).not.toContain('Uygulama henüz etkin değil');
         expect(stale).toBe(1);
     });
@@ -184,6 +184,22 @@ describe('ImportCommitStepComponent', () => {
         expect(el.textContent).toContain('2 satır');
     });
 
+    it('randevulu partide hatırlatma onayı aşı + randevu toplamıyla gönderilir (sözleşme 12.6)', () => {
+        const withAppointments = {
+            ...committedPreview,
+            summary: { ...committedPreview.summary, appointments: { ...zero, total: 3 } },
+            reminderImpact: { ...committedPreview.reminderImpact, appointmentEmailsWithinReminderWindow: 2, appointmentReminderWindowHours: 24, totalEmailsWithinReminderWindow: 7 }
+        } as ImportPreviewDto;
+
+        imports.releaseReminders.mockReturnValue(of({ batch: committed(), reminderImpact: withAppointments.reminderImpact, alreadyReleased: false, note: null }));
+        const el = create(committed(), { preview: withAppointments });
+
+        expect(el.textContent).toContain('Aşı ve randevu hatırlatmaları');
+        expect(el.textContent).toContain('2 randevu');
+        (fixture.componentInstance as unknown as { release(p: ImportPreviewDto): void }).release(withAppointments);
+        expect(imports.releaseReminders).toHaveBeenCalledWith('b1', 7);
+    });
+
     it('hatırlatma açma: sayı onayıyla gönderir, kiracı notunu gösterir, parti güncellemesini bildirir', () => {
         const released = { ...committed(), remindersReleasedAtUtc: '2026-10-14T09:05:00Z' };
 
@@ -219,7 +235,7 @@ describe('ImportCommitStepComponent', () => {
         cmp.confirmingRelease.set(true);
         cmp.release(committedPreview);
         fixture.detectChanges();
-        expect((fixture.nativeElement as HTMLElement).textContent).toContain('9 aşı için hatırlatma açılsın mı');
+        expect((fixture.nativeElement as HTMLElement).textContent).toContain('9 e-postalık hatırlatma açılsın mı');
         cmp.release(committedPreview);
         expect(vi.mocked(imports.releaseReminders).mock.lastCall).toEqual(['b1', 9]);
     });

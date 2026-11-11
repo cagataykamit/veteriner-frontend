@@ -10,7 +10,9 @@ import {
     petTimelineStatusLabel,
     petTimelineTreatmentLink,
     petTimelineTypeIcon,
-    petTimelineTypeLabel
+    petTimelineTypeLabel,
+    petTimelineIsDateOnly,
+    PET_CARD_TIMELINE_FILTERS
 } from './pet-timeline.utils';
 
 describe('pet-timeline.utils görüntüleme', () => {
@@ -147,5 +149,15 @@ describe('pet timeline yardımcıları', () => {
         expect(petTimelineStatusLabel(base[3])).toBeNull();
         expect(petTimelineTypeIcon('Appointment')).toBe('pi-circle');
         expect(petTimelineTypeIcon('Vaccination')).toBe('pi-shield');
+    });
+
+    it('eski program kaydı kendi etiketiyle, detay bağlantısız ve yalnız tarihli görünür; muayene filtresine girer (ADR-048)', () => {
+        const item = mapPetTimelinePageDtoToVm({ items: [{ type: 'ImportedClinicalRecord', sourceId: 'r1', eventAtUtc: '2024-05-03T09:00:00Z', title: 'Kontrol' }] }).items[0];
+
+        expect(petTimelineTypeLabel('ImportedClinicalRecord')).toBe('Eski program kaydı');
+        expect(petTimelineEventLink(item)).toBeNull();
+        expect(petTimelineIsDateOnly('ImportedClinicalRecord')).toBe(true);
+        expect(petTimelineIsDateOnly('Examination')).toBe(false);
+        expect(PET_CARD_TIMELINE_FILTERS.find((f) => f.value === 'examination')?.types).toContain('ImportedClinicalRecord');
     });
 });

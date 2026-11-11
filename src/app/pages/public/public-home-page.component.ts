@@ -189,7 +189,7 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
                     <h3 class="m-0 text-sm font-semibold uppercase tracking-wide text-muted-color">Aktarılır</h3>
                     <ul class="m-0 mt-2 list-none space-y-1.5 p-0 text-sm text-surface-700 dark:text-surface-200">
                         @for (item of migrationIncluded; track item) {
-                            <li class="flex items-center gap-2"><i class="pi pi-check text-[var(--public-accent)]" aria-hidden="true"></i>{{ item }}</li>
+                            <li class="flex items-start gap-2"><i class="pi pi-check mt-0.5 text-[var(--public-accent)]" aria-hidden="true"></i><span>{{ item }}</span></li>
                         }
                     </ul>
                 </div>
@@ -197,7 +197,7 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
                     <h3 class="m-0 text-sm font-semibold uppercase tracking-wide text-muted-color">Şimdilik aktarılmaz</h3>
                     <ul class="m-0 mt-2 list-none space-y-1.5 p-0 text-sm text-surface-700 dark:text-surface-200">
                         @for (item of migrationExcluded; track item) {
-                            <li class="flex items-center gap-2"><i class="pi pi-minus text-surface-400" aria-hidden="true"></i>{{ item }}</li>
+                            <li class="flex items-start gap-2"><i class="pi pi-minus mt-0.5 text-surface-400" aria-hidden="true"></i><span>{{ item }}</span></li>
                         }
                     </ul>
                 </div>

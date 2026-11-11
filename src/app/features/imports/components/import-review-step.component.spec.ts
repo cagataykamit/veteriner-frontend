@@ -11,7 +11,7 @@ import { VaccineDefinitionsService } from '@/app/entities/vaccine-definition/ser
 
 const zero: ImportTableSummaryDto = { total: 0, valid: 0, warning: 0, error: 0, willCreate: 0, willMatch: 0, willSkip: 0, created: 0, matched: 0, skipped: 0, failed: 0 };
 
-const batch = { id: 'b1', status: 'Validated', summary: { customers: zero, pets: { ...zero, total: 1, error: 1 }, vaccinations: { ...zero, total: 1, error: 1 } } } as unknown as ImportBatchDto;
+const batch = { id: 'b1', status: 'Validated', summary: { customers: zero, pets: { ...zero, total: 1, error: 1 }, vaccinations: { ...zero, total: 1, error: 1 }, clinicalRecords: zero, accountEntries: zero, appointments: zero, products: zero } } as unknown as ImportBatchDto;
 
 const preview = {
     validationId: 'v1',

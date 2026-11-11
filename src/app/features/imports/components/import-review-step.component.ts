@@ -131,6 +131,22 @@ const ROW_PAGE_SIZE = 25;
                 </section>
             }
 
+            @if (p.summary.appointments.total > 0) {
+                <section class="rounded-border border border-surface-200 dark:border-surface-700 p-4 mb-4" data-testid="import-appointment-reminders">
+                    <h6 class="mt-0 mb-2"><i class="pi pi-calendar mr-2"></i>Randevu hatırlatmaları</h6>
+                    <p class="m-0">
+                        Bu aktarmayla <strong>{{ p.reminderImpact.futureAppointments ?? 0 }}</strong> gelecek randevu açılır. Geçmiş tarihli randevular aktarılmaz.
+                        <strong>İçe aktarılan randevular için hatırlatma varsayılan olarak KAPALIDIR;</strong> aşı hatırlatmalarıyla birlikte siz açarsınız.
+                    </p>
+                    <p class="text-sm text-muted-color mb-0 mt-2">
+                        Şu an {{ p.reminderImpact.appointmentReminderWindowHours ?? 0 }} saat içinde başlayan ve e-postalı müşteriye ait {{ p.reminderImpact.appointmentEmailsWithinReminderWindow ?? 0 }} randevu var.
+                        @if (p.reminderImpact.tenantAppointmentRemindersEnabled === false) {
+                            Kurumunuzda randevu hatırlatması kapalı olduğundan açılsa bile e-posta gitmez.
+                        }
+                    </p>
+                </section>
+            }
+
             @if (p.issueCounts.length) {
                 <section class="mb-4">
                     <h6 class="mt-0 mb-2">Sorun özeti</h6>

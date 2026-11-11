@@ -1,7 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import type { ImportBatchStatus, ImportIssueSeverity, ImportJobStatus, ImportRollbackBlockedItemDto, ImportRollbackEntity, ImportTable, ImportValueKind } from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchStatus, ImportIssueSeverity, ImportJobStatus, ImportReminderImpactDto, ImportRollbackBlockedItemDto, ImportRollbackCountsDto, ImportRollbackEntity, ImportTable, ImportValueKind } from '@/app/features/imports/models/import-api.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { IMPORT_TABLE_LABELS } from '@/app/features/imports/utils/import-schema.utils';
 
 export const IMPORT_STATUS_LABELS: Readonly<Record<ImportBatchStatus, string>> = {
     Uploaded: 'Yüklendi',
@@ -130,17 +131,40 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.MatchedExisting': 'Sistemdeki kayıtla eşleşti',
     'Imports.SharedPhone': 'Telefon başka bir müşteriyle ortak',
     'Imports.PossibleDuplicate': 'Aynı adlı müşteri zaten var; ayrı kayıt oluşur',
-    'Imports.OwnerNotFound': 'Hastanın sahibi bulunamadı',
+    'Imports.OwnerNotFound': 'Sahip (müşteri) bulunamadı',
     'Imports.OwnerRowInvalid': 'Sahip satırı hatalı olduğu için aktarılamaz',
-    'Imports.PetNotFound': 'Aşının hastası bulunamadı',
+    'Imports.PetNotFound': 'Satırın hastası bulunamadı',
     'Imports.PetRowInvalid': 'Hasta satırı hatalı olduğu için aktarılamaz',
     'Imports.DuplicateVaccination': 'Aynı aşı zaten kayıtlı; atlanır',
-    'Imports.OwnerLinkUnavailable': 'Hastalar müşterilere bağlanamıyor (müşteri tablosu veya müşteri no eksik)',
-    'Imports.PetLinkUnavailable': 'Aşılar hastalara bağlanamıyor (hasta tablosu veya hasta no eksik)',
+    'Imports.OwnerLinkUnavailable': 'Hastalar veya hesap hareketleri müşterilere bağlanamıyor (müşteri tablosu veya müşteri no eksik)',
+    'Imports.PetLinkUnavailable': 'Aşı, klinik geçmiş veya randevu satırları hastalara bağlanamıyor (hasta tablosu veya hasta no eksik)',
     'Imports.NoImportableRows': 'Aktarılabilecek geçerli satır yok',
     'Imports.OwnerUnitFailed': 'Aynı müşterinin başka bir satırı aktarılamadığı için bu satır da aktarılmadı',
     'Imports.MatchedAtCommit': 'Aktarma sırasında sistemde aynı kayıt bulundu; yeni kayıt açılmadı, mevcutla eşleşti',
-    'Imports.ApplyFailed': 'Kayıt yazılırken bir çakışma oluştu; satır aktarılamadı'
+    'Imports.ApplyFailed': 'Kayıt yazılırken bir çakışma oluştu; satır aktarılamadı',
+    // Tam geçiş (sözleşme 12)
+    'Imports.ClinicRequired': 'Bu kayıtlar için klinik seçilmemiş',
+    'Imports.CreditBalanceNotImported': 'Alacak (eksi) bakiye aktarılmaz; müşteri bakiyesiz aktarılır',
+    'Imports.AmountInvalid': 'Tutar okunamadı veya geçersiz',
+    'Imports.EntryAmountInvalid': 'Tutar okunamadı, sıfır ya da geçersiz; hareket aktarılmaz',
+    'Imports.BalanceNotAppliedToExisting': 'Müşteri sistemde zaten var; açık bakiye eklenmez',
+    'Imports.BalanceDateIgnored': 'Bakiye tarihi okunamadı; açıklamaya yazılmaz',
+    'Imports.DateInFuture': 'Tarih gelecekte',
+    'Imports.RecordBeforeBirth': 'Kayıt, doğum tarihinden önce görünüyor',
+    'Imports.TemperatureInvalid': 'Ateş değeri geçersiz; boş aktarılır',
+    'Imports.ClinicalRecordEmpty': 'Kayıtta hiçbir klinik bilgi yok (şikâyet, bulgu, tanı, tedavi, not…)',
+    'Imports.DuplicateClinicalRecord': 'Aynı klinik kayıt zaten var; atlanır',
+    'Imports.EntryKindUnrecognized': 'İşlem türü tanınmadı (borç veya tahsilat yazın)',
+    'Imports.DuplicateAccountEntry': 'Aynı hesap hareketi zaten var; atlanır',
+    'Imports.TimeInvalid': 'Randevu saati okunamadı',
+    'Imports.DurationInvalid': 'Süre geçersiz; 30 dakika alınır',
+    'Imports.VeterinarianUnmatched': 'Hekim bir kullanıcıyla eşleşmedi; adı nota yazılır',
+    'Imports.ReasonFreeText': 'Randevu nedeni sistemde yok; nota yazılır',
+    'Imports.AppointmentTypeDefaulted': 'Randevu türü tanınmadı; "Diğer" alınır',
+    'Imports.PastAppointmentSkipped': 'Geçmiş randevu; aktarılmaz',
+    'Imports.DuplicateAppointment': 'Aynı randevu zaten var; atlanır',
+    'Imports.ProductKindDefaulted': 'Ürün türü tanınmadı; "Diğer" alınır',
+    'Imports.CategoryUnmapped': 'Kategori sistemde yok; kategorisiz aktarılır'
 };
 
 export function importIssueLabel(code: string, fallback?: string): string {
@@ -152,7 +176,7 @@ const PROBLEM_MESSAGES: Readonly<Record<string, string>> = {
     'Imports.FileTooLarge': 'Dosya çok büyük (en fazla 10 MB).',
     'Imports.TooManyRows': 'Dosyada çok fazla satır var (tabloda en fazla 10.000, toplamda 25.000).',
     'Imports.EmptyFile': 'Dosya boş veya içinde okunacak veri yok.',
-    'Imports.ClinicRequired': 'Aşı kayıtları için klinik seçmelisiniz.',
+    'Imports.ClinicRequired': 'Aşı, klinik geçmiş, hesap hareketi veya randevu kayıtları için klinik seçmelisiniz.',
     'Imports.MappingIncomplete': 'Zorunlu alanlar eşlenmemiş. Eşlemeyi tamamlayın.',
     'Imports.MappingUnknownColumn': 'Eşlemede dosyada olmayan bir sütun var. Sayfayı yenileyip tekrar deneyin.',
     'Imports.MappingSourceReused': 'Aynı sütun iki alana eşlenemez.',
@@ -170,7 +194,7 @@ const PROBLEM_MESSAGES: Readonly<Record<string, string>> = {
     'Imports.HasErrorRows': 'Hatalı satırlar var; bu seçenekle aktarılamaz.',
     'Imports.ReminderImpactChanged': 'E-posta sayısı değişti. Güncel sayıyı görüp tekrar onaylayın.',
     'Imports.CommitBlocked': 'Aktarma şu an başlatılamıyor. Doğrulama sonucundaki engelleri giderip yeniden doğrulayın.',
-    'Imports.AccessDenied': 'Bu işlem için gerekli yetkiniz yok (müşteri, hasta veya aşı ekleme yetkisi). Yöneticinizle görüşün.',
+    'Imports.AccessDenied': 'Bu işlem için gerekli yetkiniz yok (müşteri, hasta, aşı, muayene, ücret, randevu veya ürün ekleme yetkisi). Yöneticinizle görüşün.',
     'Imports.RollbackBlocked': 'Bağlı kaydı olan kayıtlar var; hiçbir şey silinmedi. Aşağıdaki listeye bakın.'
 };
 
@@ -226,11 +250,23 @@ export function importCommitBlockers(err: unknown): string[] {
     return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
 }
 
-/** 409 `Imports.ReminderImpactChanged` yanıtındaki güncel e-posta sayısı. */
+/** 409 `Imports.ReminderImpactChanged` yanıtındaki güncel e-posta sayısı (aşı + randevu; eski sunucuda yalnız aşı). */
 export function reminderImpactCurrentCount(err: unknown): number | null {
+    const isCount = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= 0;
+    const total = importErrorExtension(err, 'totalEmailsWithinReminderWindow');
+
+    if (isCount(total)) {
+        return total;
+    }
+
     const v = importErrorExtension(err, 'emailsWithinReminderWindow');
 
-    return typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : null;
+    return isCount(v) ? v : null;
+}
+
+/** Onaylanacak e-posta sayısı (sözleşme 12.6): aşı + randevu; eski sunucuda yalnız aşı. */
+export function reminderEmailTotal(impact: ImportReminderImpactDto): number {
+    return impact.totalEmailsWithinReminderWindow ?? impact.emailsWithinReminderWindow;
 }
 
 /**
@@ -267,34 +303,67 @@ const ROLLBACK_REASON_LABELS: Readonly<Record<string, string>> = {
     HasSales: 'Bağlı satış var',
     HasCareInstructions: 'Bağlı bakım talimatı var',
     HasChargeSuggestions: 'Bağlı ücret önerisi var',
+    HasExaminationTemplates: 'Muayene şablonunda kullanılıyor',
     HasOtherVaccinations: 'Elle ya da başka aktarmayla eklenmiş aşı var',
     HasKeptVaccinations: 'Aşılarından bazıları silinemediği için kalıyor',
     ClientModified: 'Müşteri sonradan düzenlenmiş',
     HasOtherPets: 'Başka yolla eklenmiş hastası var',
     HasKeptPets: 'Hastalarından bazıları silinemediği için kalıyor',
-    OwnerUnitBlocked: 'Aynı müşterinin başka bir kaydı silinemediği için bırakıldı'
+    OwnerUnitBlocked: 'Aynı müşterinin başka bir kaydı silinemediği için bırakıldı',
+    // Tam geçiş (sözleşme 12.9)
+    AppointmentChanged: 'Randevu sonradan değiştirilmiş veya tamamlanmış',
+    ProductModified: 'Ürün sonradan düzenlenmiş',
+    HasStock: 'Üründe stok veya stok hareketi var',
+    HasVaccineDefinitions: 'Ürüne bağlı aşı tanımı var',
+    HasOtherClinicalRecords: 'Başka aktarmayla eklenmiş klinik geçmiş kaydı var',
+    HasKeptAppointments: 'Randevularından bazıları silinemediği için kalıyor',
+    OpeningBalanceChanged: 'Devir bakiyesine tahsilat bağlanmış veya ücret iptal edilmiş',
+    HasOtherAccountEntries: 'Başka aktarmayla eklenmiş hesap hareketi var'
 };
 
 export function rollbackReasonLabel(code: string): string {
     return ROLLBACK_REASON_LABELS[code] ?? code;
 }
 
+/** Geri alma sayılarının sırası ve birimi; ilk üçü her zaman, yenileri (sözleşme 12.9) yalnız doluysa yazılır. */
+const ROLLBACK_COUNT_PARTS: readonly (readonly [keyof ImportRollbackCountsDto, string, boolean])[] = [
+    ['clients', 'müşteri', true],
+    ['pets', 'hasta', true],
+    ['vaccinations', 'aşı', true],
+    ['clinicalRecords', 'klinik kayıt', false],
+    ['accountEntries', 'hesap hareketi', false],
+    ['appointments', 'randevu', false],
+    ['products', 'ürün', false],
+    ['openingBalances', 'devir bakiyesi', false]
+];
+
+export function rollbackCountsText(c: ImportRollbackCountsDto): string {
+    return ROLLBACK_COUNT_PARTS.filter(([key, , always]) => always || (c[key] ?? 0) > 0)
+        .map(([key, unit]) => `${c[key] ?? 0} ${unit}`)
+        .join(' · ');
+}
+
+export function rollbackCountsTotal(c: ImportRollbackCountsDto): number {
+    return ROLLBACK_COUNT_PARTS.reduce((sum, [key]) => sum + (c[key] ?? 0), 0);
+}
+
 export const ROLLBACK_ENTITY_LABELS: Readonly<Record<ImportRollbackEntity, string>> = {
     Client: 'Müşteri',
     Pet: 'Hasta',
-    Vaccination: 'Aşı'
+    Vaccination: 'Aşı',
+    ClinicalRecord: 'Klinik geçmiş kaydı',
+    AccountEntry: 'Hesap hareketi',
+    Appointment: 'Randevu',
+    Product: 'Ürün'
 };
 
-export const IMPORT_TABLE_LABELS: Readonly<Record<ImportTable, string>> = {
-    customers: 'Müşteriler',
-    pets: 'Hastalar',
-    vaccinations: 'Aşılar'
-};
+/** Tablo adlarının tek kaynağı şema dosyasıdır; geri alma ekranı için buradan da verilir. */
+export { IMPORT_TABLE_LABELS };
 
 /** Geri alma önizlemesi uyarıları (sözleşme 7.11). */
 const ROLLBACK_WARNING_LABELS: Readonly<Record<string, string>> = {
     'Imports.PetEditsNotTracked': 'Hastalarda sonradan yapılan düzenlemeler izlenemiyor; aktarılan hastalar, sonradan düzenlenmiş olsalar bile silinir.',
-    'Imports.RemindersAlreadyReleased': 'Aşı hatırlatmaları açılmış; gönderilmiş e-postalar geri alınamaz.'
+    'Imports.RemindersAlreadyReleased': 'Aşı ve randevu hatırlatmaları açılmış; gönderilmiş e-postalar geri alınamaz.'
 };
 
 export function rollbackWarningLabel(code: string): string {

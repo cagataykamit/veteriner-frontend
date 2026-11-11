@@ -15,7 +15,7 @@ import type { ImportFileFormat, ImportSourceProfileCode, ImportSourceProfileDto,
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
 import { duplicateBatchId, importErrorMessage } from '@/app/features/imports/utils/import-labels.utils';
-import { IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
+import { IMPORT_CSV_FIELD, IMPORT_CSV_TEMPLATE_FILE, IMPORT_TABLE_LABELS, IMPORT_TABLES, needsClinic } from '@/app/features/imports/utils/import-schema.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
 import { isTrialLimitError } from '@/app/shared/utils/api-error.utils';
@@ -64,7 +64,9 @@ type UploadMode = 'xlsx' | 'csv';
 
             <section class="flex flex-col gap-2">
                 <h6 class="m-0">1. Şablonu indirin</h6>
-                <p class="text-muted-color m-0">Şablon müşteri, hasta ve aşı sayfalarını içerir. Kendi dosyanızı da yükleyebilirsiniz; sütunları sonraki adımda eşlersiniz.</p>
+                <p class="text-muted-color m-0">
+                    Şablon müşteri, hasta, aşı, klinik geçmiş, hesap hareketi, randevu ve ürün sayfalarını içerir; yalnız elinizde olan sayfaları doldurun. Kendi dosyanızı da yükleyebilirsiniz; sütunları sonraki adımda eşlersiniz.
+                </p>
                 <div class="flex flex-wrap gap-2">
                     <button pButton type="button" size="small" severity="secondary" [disabled]="templateBusy() === 'xlsx'" (click)="template('xlsx')"><i class="p-button-icon" [class]="templateBusy() === 'xlsx' ? 'pi pi-spin pi-spinner' : 'pi pi-file-excel'"></i>Excel şablonu</button>
                     @for (t of tables; track t) {
@@ -81,11 +83,13 @@ type UploadMode = 'xlsx' | 'csv';
                     <app-import-drop-zone label="Excel dosyası (.xlsx)" extension=".xlsx" [file]="xlsxFile()" (fileChange)="setXlsx($event)" />
                 } @else {
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <app-import-drop-zone label="Müşteriler (.csv)" extension=".csv" [file]="csvFiles().customers" (fileChange)="setCsv('customers', $event)" />
-                        <app-import-drop-zone label="Hastalar (.csv)" extension=".csv" [file]="csvFiles().pets" (fileChange)="setCsv('pets', $event)" />
-                        <app-import-drop-zone label="Aşılar (.csv)" extension=".csv" [file]="csvFiles().vaccinations" (fileChange)="setCsv('vaccinations', $event)" />
+                        @for (t of tables; track t) {
+                            <app-import-drop-zone [label]="tableLabels[t] + ' (.csv)'" extension=".csv" [file]="csvFiles()[t]" (fileChange)="setCsv(t, $event)" />
+                        }
                     </div>
-                    <p class="text-sm text-muted-color m-0">En az bir dosya seçin. Hastalar müşterilere, aşılar hastalara dosyalar arasında bağlanır.</p>
+                    <p class="text-sm text-muted-color m-0">
+                        En az bir dosya seçin. Hastalar ve hesap hareketleri müşterilere; aşılar, klinik geçmiş ve randevular hastalara dosyalar arasında bağlanır. Ürünler bağımsızdır.
+                    </p>
                 }
             </section>
 
@@ -103,7 +107,7 @@ type UploadMode = 'xlsx' | 'csv';
                         [loading]="clinicsLoading()"
                         class="w-full"
                     />
-                    <small class="text-muted-color">Aşı kayıtları bu kliniğe yazılır. Aşı sayfası/dosyası varsa klinik gereklidir.</small>
+                    <small class="text-muted-color">Aşı, klinik geçmiş, hesap hareketi, randevu ve açık bakiye bu kliniğe yazılır. Bu sayfalardan biri varsa klinik gereklidir.</small>
                 </div>
                 <div class="flex flex-col gap-1">
                     <label for="importName" class="text-sm font-medium">Ad (isteğe bağlı)</label>
@@ -174,7 +178,7 @@ export class ImportUploadPageComponent implements OnInit {
     delimiter = '';
 
     readonly xlsxFile = signal<File | null>(null);
-    readonly csvFiles = signal<Record<ImportTable, File | null>>({ customers: null, pets: null, vaccinations: null });
+    readonly csvFiles = signal<Record<ImportTable, File | null>>({ customers: null, pets: null, vaccinations: null, clinicalRecords: null, accountEntries: null, appointments: null, products: null });
     readonly clinicOptions = signal<{ label: string; value: string }[]>([]);
     readonly clinicsLoading = signal(false);
     readonly templateBusy = signal<string | null>(null);
@@ -200,7 +204,9 @@ export class ImportUploadPageComponent implements OnInit {
     }
 
     protected get clinicRequired(): boolean {
-        return this.mode === 'csv' && !!this.csvFiles().vaccinations;
+        const files = this.csvFiles();
+
+        return this.mode === 'csv' && needsClinic(IMPORT_TABLES.filter((t) => !!files[t]));
     }
 
     protected get canSubmit(): boolean {
@@ -240,7 +246,7 @@ export class ImportUploadPageComponent implements OnInit {
         this.imports.downloadTemplate(format, table).subscribe({
             next: (res) => {
                 this.templateBusy.set(null);
-                saveDownload(res, format === 'xlsx' ? 'vetinity-iceaktar-sablon.xlsx' : `vetinity-iceaktar-${table}.csv`);
+                saveDownload(res, format === 'xlsx' || !table ? 'vetinity-iceaktar-sablon.xlsx' : IMPORT_CSV_TEMPLATE_FILE[table]);
             },
             error: (e: unknown) => {
                 this.templateBusy.set(null);
@@ -263,9 +269,12 @@ export class ImportUploadPageComponent implements OnInit {
         } else {
             const files = this.csvFiles();
 
-            if (files.customers) form.append('customersFile', files.customers);
-            if (files.pets) form.append('petsFile', files.pets);
-            if (files.vaccinations) form.append('vaccinationsFile', files.vaccinations);
+            for (const t of IMPORT_TABLES) {
+                const file = files[t];
+
+                if (file) form.append(IMPORT_CSV_FIELD[t], file);
+            }
+
             if (this.encoding) form.append('encoding', this.encoding);
             if (this.delimiter) form.append('delimiter', this.delimiter);
         }

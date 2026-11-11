@@ -10,6 +10,7 @@ import type { ClientBalanceVm } from '@/app/entities/client/models/client-balanc
 import type { ClientDetailVm, ClientPaymentSummaryVm } from '@/app/entities/client/models/client-vm.model';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ClientCreditsService } from '@/app/entities/client-credit/services/client-credits.service';
+import { ImportedHistoryService } from '@/app/entities/imported-history/services/imported-history.service';
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PetCardDataService } from '@/app/entities/patient/services/pet-card-data.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
@@ -99,6 +100,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
                     }
                 },
                 { provide: ClientCreditsService, useValue: { getCredits: () => of([]) } },
+                { provide: ImportedHistoryService, useValue: { getClientAccountEntries: () => of({ items: [], page: 1, pageSize: 20, totalItems: 0, totalPages: 0, totals: { debit: 0, credit: 0 } }) } },
                 { provide: VisitsService, useValue: { getVeterinarians: () => ({ subscribe: () => undefined }) } },
                 { provide: PetsService, useValue: {} }
             ]

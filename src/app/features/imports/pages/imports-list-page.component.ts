@@ -19,6 +19,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { IMPORT_TABLE_UNITS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
 /** Parti geçmişi: durum, tarih, sayılar; taslaklar sürdürülür veya silinir. */
@@ -203,8 +204,7 @@ export class ImportsListPageComponent implements OnInit {
     }
 
     protected countsText(b: ImportBatchDto): string {
-        const s = b.summary;
-        const parts = [s.customers.total ? `${s.customers.total} müşteri` : '', s.pets.total ? `${s.pets.total} hasta` : '', s.vaccinations.total ? `${s.vaccinations.total} aşı` : ''].filter(Boolean);
+        const parts = IMPORT_TABLES.map((t) => (b.summary[t]?.total ? `${b.summary[t].total} ${IMPORT_TABLE_UNITS[t]}` : '')).filter(Boolean);
 
         return parts.length ? parts.join(' · ') : 'Satır bilgisi yok';
     }

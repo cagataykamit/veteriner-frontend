@@ -25,6 +25,8 @@ import {
     isRollbackable,
     isRollbackScreenAvailable,
     rollbackBlockedItems,
+    rollbackCountsText,
+    rollbackCountsTotal,
     rollbackReasonLabel,
     rollbackWarningLabel
 } from '@/app/features/imports/utils/import-labels.utils';
@@ -91,7 +93,7 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
         <ng-template #counts let-title="title" let-c="c">
             <div class="rounded-border border border-surface-200 dark:border-surface-700 p-3 flex-1 basis-56">
                 <div class="text-sm text-muted-color">{{ title }}</div>
-                <div class="mt-1">{{ c.clients }} müşteri · {{ c.pets }} hasta · {{ c.vaccinations }} aşı</div>
+                <div class="mt-1">{{ countsText(c) }}</div>
             </div>
         </ng-template>
 
@@ -139,8 +141,8 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                             <ng-container *ngTemplateOutlet="counts; context: { title: 'Daha önce geri alınan', c: p.rolledBack }" />
                         }
                     </div>
-                    @if (p.kept.matchedClients || p.kept.matchedPets) {
-                        <p class="text-sm text-muted-color mt-0">Sistemde önceden var olup eşleşen {{ p.kept.matchedClients }} müşteri ve {{ p.kept.matchedPets }} hastaya dokunulmaz.</p>
+                    @if (p.kept.matchedClients || p.kept.matchedPets || p.kept.matchedProducts) {
+                        <p class="text-sm text-muted-color mt-0">Sistemde önceden var olup eşleşen {{ p.kept.matchedClients }} müşteri{{ p.kept.matchedProducts ? ', ' + p.kept.matchedPets + ' hasta ve ' + p.kept.matchedProducts + ' ürüne' : ' ve ' + p.kept.matchedPets + ' hastaya' }} dokunulmaz.</p>
                     }
                     @for (w of p.warnings; track w) {
                         <p-message severity="warn" class="w-full mb-2">{{ warningLabel(w) }}</p-message>
@@ -158,7 +160,7 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                 @if (blockedError()) {
                     <h6 class="mb-2">Geri alma durduruldu: şu kayıtlar silinemiyor</h6>
                     @if (blockedError()!.counts) {
-                        <p class="mt-0 text-sm">{{ blockedError()!.counts!.clients }} müşteri · {{ blockedError()!.counts!.pets }} hasta · {{ blockedError()!.counts!.vaccinations }} aşı engelli.</p>
+                        <p class="mt-0 text-sm">{{ countsText(blockedError()!.counts!) }} engelli.</p>
                     }
                     <ng-container *ngTemplateOutlet="items; context: { $implicit: blockedError()!.items, truncated: blockedError()!.items.length >= 50 }" />
                 }
@@ -282,8 +284,10 @@ export class ImportRollbackPageComponent implements OnInit {
         });
     }
 
+    protected countsText = rollbackCountsText;
+
     protected hasAny(c: ImportRollbackCountsDto): boolean {
-        return c.clients + c.pets + c.vaccinations > 0;
+        return rollbackCountsTotal(c) > 0;
     }
 
     private loadPreview(): void {

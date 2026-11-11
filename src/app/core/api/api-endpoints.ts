@@ -200,7 +200,9 @@ export const ApiEndpoints = {
         /** POST `Payments.Correct`; gövde `{ reason, method }`, kalanın tamamı iade (§6). */
         creditRefund: (id: string, creditId: string) => `/api/v1/clients/${encodeURIComponent(id)}/credits/${encodeURIComponent(creditId)}/refund`,
         /** GET `Clients.Read`; `?kind=PortalInvite|AppointmentReminder|VaccinationReminder&targetId=` wa.me bağlantısı (`PORTAL_API_CONTRACT.md` §13.2). */
-        whatsappLink: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/whatsapp-link`
+        whatsappLink: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/whatsapp-link`,
+        /** GET `Charges.Read`; eski programdan aktarılan salt okunur hareketler + `totals` (`IMPORT_API_CONTRACT.md` §12.8); bakiyeyi etkilemez. */
+        importedAccountEntries: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/imported-account-entries`
     },
     pets: {
         /** Query: `Page`, `PageSize`, `Search`, `Sort`, `Order`, `SpeciesId`, `ClientId`, `Status` (+ opsiyonel legacy `Species` — @see docs/BACKEND-INTEGRATION.md). */
@@ -214,7 +216,9 @@ export const ApiEndpoints = {
         /** Hasta kartı "Yapılacaklar" (`docs/PET_OPEN_ITEMS_API_CONTRACT.md`); bölüm bazlı durumlu. */
         openItems: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/open-items`,
         /** Query: `types` (tekrarlı), `fromUtc`, `toUtc`, `clinicId`, `includeVoided`, `limit` (≤50), `cursor` (opak). */
-        timeline: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/timeline`
+        timeline: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/timeline`,
+        /** GET `Examinations.Read`; eski programdan aktarılan salt okunur klinik kayıtlar (`IMPORT_API_CONTRACT.md` §12.8). */
+        importedClinicalRecords: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/imported-clinical-records`
     },
     species: {
         /** Query: opsiyonel `isActive` (`true` → yalnız aktif türler; lookup). Parametre yok → tümü. */

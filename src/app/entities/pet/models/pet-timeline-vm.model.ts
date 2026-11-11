@@ -1,5 +1,5 @@
 /** Backend'in bugün döndürdüğü olay türleri; ödeme sonradan `Payment` olarak eklenecek. */
-export type PetTimelineType = 'Visit' | 'Examination' | 'Treatment' | 'Prescription' | 'LabResult' | 'Vaccination' | 'Hospitalization' | 'Administration' | 'Imaging';
+export type PetTimelineType = 'Visit' | 'Examination' | 'Treatment' | 'Prescription' | 'LabResult' | 'Vaccination' | 'Hospitalization' | 'Administration' | 'Imaging' | 'ImportedClinicalRecord';
 
 export interface PetTimelineItemVm {
     /** Tür + kaynak kimliği (liste `track` anahtarı). */

@@ -48,7 +48,7 @@ export class ImportsService {
         return this.api.get<ImportSourceProfileDto[]>(ApiEndpoints.imports.sourceProfiles());
     }
 
-    /** Multipart yükleme: `file` (XLSX) veya `customersFile`/`petsFile`/`vaccinationsFile` (CSV); isteğe bağlı `sourceProfile`. */
+    /** Multipart yükleme: `file` (XLSX) veya tablo başına CSV alanı (`IMPORT_CSV_FIELD`, sözleşme 12.1); isteğe bağlı `sourceProfile`. */
     createBatch(form: FormData): Observable<ImportBatchDto> {
         return this.api.post<ImportBatchDto>(ApiEndpoints.imports.batches(), form);
     }
@@ -116,7 +116,7 @@ export class ImportsService {
         return this.api.get<ImportCommitProgressDto>(ApiEndpoints.imports.progress(id));
     }
 
-    /** B4: `confirmEmailCount` güncel `emailsWithinReminderWindow` ile aynı olmalı; değilse 409 `Imports.ReminderImpactChanged`. */
+    /** `confirmEmailCount` güncel `totalEmailsWithinReminderWindow` (aşı + randevu, §12.6) ile aynı olmalı; değilse 409 `Imports.ReminderImpactChanged`. */
     releaseReminders(id: string, confirmEmailCount: number): Observable<ImportReleaseRemindersResultDto> {
         return this.api.post<ImportReleaseRemindersResultDto>(ApiEndpoints.imports.releaseReminders(id), { confirmEmailCount });
     }
