@@ -32,6 +32,7 @@ const credit = (id: string, over: Partial<ClientCreditDto> = {}): ClientCreditDt
         { id: 'a1', chargeId: 'ch1', chargeDescription: 'Muayene', amount: 250, createdAtUtc: '2026-10-30T11:00:00Z', reversedAtUtc: null, reverseReason: null },
         { id: 'a2', chargeId: 'ch2', chargeDescription: 'Aşı', amount: 50, createdAtUtc: '2026-10-30T11:05:00Z', reversedAtUtc: '2026-10-30T12:00:00Z', reverseReason: 'Yanlış ücret' }
     ],
+    isImported: false,
     ...over
 });
 
@@ -117,6 +118,19 @@ describe('ClientCreditsPanelComponent (müşteri kartı kredisi)', () => {
         expect(apps[0].textContent).toContain('Muayene');
         expect(apps[1].textContent).toContain('Geri alındı');
         expect(apps[1].textContent).toContain('Yanlış ücret');
+    });
+
+    it('devir alacağı: eski program etiketi, kaynak ödeme bağlantısı yok, iade edilebilir', () => {
+        service.getCredits.mockReturnValue(
+            of([credit('cr9', { source: 'OpeningBalance', sourcePaymentId: null, isImported: true, amount: 500, usedAmount: 0, remainingAmount: 500, applications: [] })])
+        );
+        claims.add('Payments.Correct');
+        setup();
+        const row = el().querySelector('[data-testid="client-credit-row"]') as HTMLElement;
+
+        expect(row.textContent).toContain('Devir alacağı (eski program)');
+        expect(row.textContent).not.toContain('Kaynak ödeme');
+        expect(row.querySelector('[data-testid="client-credit-refund"]')).not.toBeNull();
     });
 
     it('"Kapalıları göster" kapalı kredileri ister; kayıt yoksa bölüm açık kalır', () => {
