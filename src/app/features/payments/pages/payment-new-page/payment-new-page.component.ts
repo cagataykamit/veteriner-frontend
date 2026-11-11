@@ -7,6 +7,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
@@ -37,6 +38,9 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 import { parseDecimalFormInput } from '@/app/shared/utils/decimal-form.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { EDOCUMENTS_ISSUE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
+import { FormsModule } from '@angular/forms';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
@@ -51,7 +55,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
 @Component({
     selector: 'app-payment-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, TableModule, AppPageHeaderComponent, ClientSearchComponent, DateInputComponent, TrDateTimePipe, CashRegisterSelectComponent],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ButtonModule, CheckboxModule, SelectModule, TableModule, AppPageHeaderComponent, ClientSearchComponent, DateInputComponent, TrDateTimePipe, CashRegisterSelectComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Yeni Ödeme" description="Müşterinin açık ücretlerinden hangilerine ne kadar ödeme alındığını girin." />
@@ -226,6 +230,13 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                     <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                 }
 
+                @if (eDocumentAvailable()) {
+                    <div class="flex items-center gap-2 mt-4" data-testid="payment-edoc">
+                        <p-checkbox inputId="paymentIssueEDocument" [binary]="true" [ngModel]="issueEDocument()" (ngModelChange)="issueEDocument.set($event)" [ngModelOptions]="{ standalone: true }" />
+                        <label for="paymentIssueEDocument" class="text-sm">e-Belge kes <span class="text-muted-color">(tamamen ödenen ücretler için)</span></label>
+                    </div>
+                }
+
                 <div class="flex flex-wrap gap-2 mt-4">
                     <button pButton type="submit" [disabled]="!canSubmit() || busy() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                     <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="busy()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
@@ -247,6 +258,10 @@ export class PaymentNewPageComponent implements OnInit {
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
+    private readonly eDocuments = inject(EDocumentsService);
+    /** Ödeme alınca e-belge (ADR-036 AK-4, 2026-11-11): entegratör bağlıysa görünür; varsayılan klinik e-Belge ayarından. */
+    readonly eDocumentAvailable = signal(false);
+    readonly issueEDocument = signal(false);
 
     /** Form başına bir kez üretilir; hata sonrası yeniden denemede de aynı kalır (ikinci ödeme oluşmaz). */
     private readonly requestId = crypto.randomUUID();
@@ -319,6 +334,7 @@ export class PaymentNewPageComponent implements OnInit {
     readonly money = (amount: number | null) => formatMoney(amount, PAYMENT_CURRENCY);
 
     ngOnInit(): void {
+        this.loadEDocumentDefaults();
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         this.form.statusChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.formValid.set(this.form.valid));
         this.form.controls.method.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((m) => this.methodValue.set(m));
@@ -477,7 +493,22 @@ export class PaymentNewPageComponent implements OnInit {
         this.paymentsService.createPayment(payload).subscribe({
             next: ({ id }) => {
                 // Başarıda düğme kilitli kalır (sayfadan çıkılır); aynı requestId ile tekrar kayıt zaten oluşmaz.
-                void this.router.navigate(['/panel/payments', id], { queryParams: { saved: '1' } });
+                if (!this.eDocumentAvailable() || !this.issueEDocument()) {
+                    void this.router.navigate(['/panel/payments', id], { queryParams: { saved: '1' } });
+
+                    return;
+                }
+
+                // Ödeme kaydedildi; belge hatası ödemeyi geri almaz, sonuç detay sayfasında bildirilir.
+                this.eDocuments.issueFromPayment(id).subscribe({
+                    next: (r) => {
+                        const failed = r.skipped.length > 0 || r.documents.some((d) => d.status === 'Failed');
+                        const eDocument = failed ? 'failed' : r.documents.length > 0 ? 'issued' : 'none';
+
+                        void this.router.navigate(['/panel/payments', id], { queryParams: { saved: '1', eDocument } });
+                    },
+                    error: () => void this.router.navigate(['/panel/payments', id], { queryParams: { saved: '1', eDocument: 'failed' } })
+                });
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
@@ -491,6 +522,33 @@ export class PaymentNewPageComponent implements OnInit {
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');
             }
         });
+    }
+
+    /** Entegratör bağlıysa ve belge kesme izni varsa seçenek görünür; varsayılan klinik ayarından. Hata olursa seçenek gizli kalır. */
+    private loadEDocumentDefaults(): void {
+        const clinicId = this.auth.getClinicId()?.trim();
+
+        if (!clinicId || !this.auth.hasOperationClaim(EDOCUMENTS_ISSUE_CLAIM)) {
+            return;
+        }
+
+        this.eDocuments
+            .reminders()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (r) => {
+                    if (!r.connected) {
+                        return;
+                    }
+
+                    this.eDocumentAvailable.set(true);
+                    this.eDocuments
+                        .getSettings(clinicId)
+                        .pipe(takeUntilDestroyed(this.destroyRef))
+                        .subscribe({ next: (s) => this.issueEDocument.set(s.issueOnPaymentByDefault), error: () => undefined });
+                },
+                error: () => undefined
+            });
     }
 
     private handleHttpError(e: HttpErrorResponse): void {

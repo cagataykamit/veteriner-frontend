@@ -48,7 +48,20 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
-            <p class="mb-4 m-0 text-sm font-medium">Ödeme kaydedildi.</p>
+            <p class="mb-4 m-0 text-sm font-medium">
+                Ödeme kaydedildi.
+                @switch (eDocumentOutcome()) {
+                    @case ('issued') {
+                        e-Belge kesildi.
+                    }
+                    @case ('failed') {
+                        <span class="text-danger">e-Belge kesilemedi; <a routerLink="/panel/e-documents" [queryParams]="{ view: 'undocumented' }">belgesiz ücretlerden</a> yeniden deneyin.</span>
+                    }
+                    @case ('none') {
+                        <span class="text-muted-color">Tamamen ödenen belgesiz ücret yok; e-Belge kesilmedi.</span>
+                    }
+                }
+            </p>
         }
 
         @if (loading()) {
@@ -208,6 +221,8 @@ export class PaymentDetailPageComponent implements OnInit {
 
     readonly copy = PANEL_COPY;
     readonly showSavedBanner = signal(false);
+    /** Ödeme ekranında "e-Belge kes" seçildiyse sonucu (`issued` / `failed` / `none`). */
+    readonly eDocumentOutcome = signal<string | null>(null);
     readonly canUpdatePayment = this.auth.hasOperationClaim(PAYMENTS_UPDATE_CLAIM);
     readonly canVoidPayment = this.auth.hasOperationClaim(PAYMENTS_CORRECT_CLAIM);
     voidVisible = false;
@@ -266,9 +281,10 @@ export class PaymentDetailPageComponent implements OnInit {
     ngOnInit(): void {
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {
             this.showSavedBanner.set(true);
+            this.eDocumentOutcome.set(this.route.snapshot.queryParamMap.get('eDocument'));
             void this.router.navigate([], {
                 relativeTo: this.route,
-                queryParams: { saved: null },
+                queryParams: { saved: null, eDocument: null },
                 queryParamsHandling: '',
                 replaceUrl: true
             });

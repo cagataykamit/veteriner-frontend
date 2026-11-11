@@ -65,6 +65,8 @@ export function notificationTargetUrl(
             return { commands: [PORTAL_INBOX_ROUTE], queryParams: { requestId: n.targetId } };
         case 'DataExport':
             return { commands: [DATA_EXPORT_ROUTE] };
+        case 'EDocuments':
+            return { commands: ['/panel/e-documents'], queryParams: { view: 'undocumented' } };
         default:
             return null;
     }

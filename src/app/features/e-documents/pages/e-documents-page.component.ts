@@ -18,6 +18,7 @@ import { EDocumentsService } from '@/app/entities/e-document/services/e-document
 import {
     EDOCUMENT_STATUS_FILTER_OPTIONS,
     EDOCUMENT_TYPE_FILTER_OPTIONS,
+    eDocumentOriginLabel,
     eDocumentStatusLabel,
     eDocumentStatusSeverity,
     eDocumentTypeLabel,
@@ -123,6 +124,9 @@ type View = 'documents' | 'undocumented';
                                         @if (row.isTest) {
                                             <span class="text-xs text-muted-color">(test)</span>
                                         }
+                                        @if (originLabel(row.origin); as origin) {
+                                            <span class="block text-xs text-muted-color">{{ origin }}</span>
+                                        }
                                     </td>
                                     <td data-label="Belge no">{{ row.documentNumber || '—' }}</td>
                                     <td class="text-right whitespace-nowrap font-medium" data-label="Tutar">{{ row.totalAmount | money: 'TRY' }}</td>
@@ -172,12 +176,13 @@ type View = 'documents' | 'undocumented';
                                     <th>Hasta</th>
                                     <th>Açıklama</th>
                                     <th class="text-right">Tutar</th>
+                                    <th>Durum</th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-row>
                                 <tr>
                                     @if (canIssue) {
-                                        <td><p-checkbox [binary]="true" [ngModel]="isSelected(row)" (ngModelChange)="toggle(row, $event)" [inputId]="'edoc-sel-' + row.chargeId" [ariaLabel]="row.description + ' seç'" /></td>
+                                        <td><p-checkbox [binary]="true" [disabled]="!!row.failedDocumentId" [ngModel]="isSelected(row)" (ngModelChange)="toggle(row, $event)" [inputId]="'edoc-sel-' + row.chargeId" [ariaLabel]="row.description + ' seç'" /></td>
                                     }
                                     <td class="whitespace-nowrap" data-label="Tarih">{{ row.createdAtUtc | trDateTime }}</td>
                                     <td data-label="Müşteri"><a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a></td>
@@ -189,6 +194,16 @@ type View = 'documents' | 'undocumented';
                                         }
                                     </td>
                                     <td class="text-right whitespace-nowrap font-medium" data-label="Tutar">{{ row.amount | money: 'TRY' }}</td>
+                                    <td data-label="Durum">
+                                        @if (row.reason) {
+                                            <span class="text-sm" [class.text-danger]="!!row.failedDocumentId">{{ row.reason }}</span>
+                                        } @else {
+                                            <span class="text-sm text-muted-color">Kesilmeye hazır</span>
+                                        }
+                                        @if (row.failedDocumentId && canIssue && !ro.mutationBlocked()) {
+                                            <button pButton type="button" size="small" [text]="true" [disabled]="busyId() === row.failedDocumentId" (click)="retryFailed(row.failedDocumentId)"><i class="p-button-icon pi pi-replay"></i>Yeniden dene</button>
+                                        }
+                                    </td>
                                 </tr>
                             </ng-template>
                         </p-table>
@@ -230,6 +245,7 @@ export class EDocumentsPageComponent implements OnInit {
     protected readonly statusLabel = eDocumentStatusLabel;
     protected readonly statusSeverity = eDocumentStatusSeverity;
     protected readonly pending = isEDocumentPending;
+    protected readonly originLabel = eDocumentOriginLabel;
 
     readonly pageSize = 20;
     readonly view = signal<View>('documents');
@@ -335,6 +351,22 @@ export class EDocumentsPageComponent implements OnInit {
 
     toggle(row: UndocumentedChargeDto, on: boolean): void {
         this.selected.update((list) => (on ? [...list, row] : list.filter((s) => s.chargeId !== row.chargeId)));
+    }
+
+    /** Kesilemeyen belgeyi aynı dış referansla yeniden gönderir (çift belge oluşmaz). */
+    retryFailed(documentId: string): void {
+        this.busyId.set(documentId);
+        this.service.retry(documentId).subscribe({
+            next: (d) => {
+                this.busyId.set(null);
+                this.messages.add({ severity: d.status === 'Failed' ? 'warn' : 'success', summary: eDocumentStatusLabel(d.status), detail: d.lastError?.message, life: 4000 });
+                this.load(this.page());
+            },
+            error: (e: unknown) => {
+                this.busyId.set(null);
+                this.messages.add({ severity: 'error', summary: 'İşlem yapılamadı.', detail: panelHttpFailureMessage(e, 'İşlem yapılamadı.'), life: 6000 });
+            }
+        });
     }
 
     openIssueForSelection(): void {
