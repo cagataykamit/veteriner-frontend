@@ -194,7 +194,7 @@ export const PRICING_FEATURE_ROWS: readonly PricingFeatureRowDef[] = [
     { group: 'Yönetim', label: 'Denetim kaydı', detail: 'Kayıt geçmişi: kim, ne zaman', plans: ALL },
     { group: 'Yönetim', label: 'Çok klinik yönetimi ve klinikler arası yetki', key: 'multiClinic', plans: PREMIUM_ONLY },
     { group: 'Yönetim', label: 'API erişimi', detail: 'Müşteri, hasta, randevu ve aşı listeleri salt okunur', key: 'externalApi', plans: PREMIUM_ONLY },
-    { group: 'Destek', label: 'Destek', plans: { basic: 'E-posta', pro: 'E-posta, öncelikli', premium: 'Özel iletişim, kurulum desteği' } },
+    { group: 'Destek', label: 'Destek', plans: { basic: 'E-posta ve WhatsApp', pro: 'E-posta ve WhatsApp, öncelikli', premium: 'Özel iletişim, kurulum desteği' } },
     {
         group: 'Destek',
         label: 'Ücretsiz geçiş desteği',
