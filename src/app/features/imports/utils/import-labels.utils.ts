@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import type { ImportBatchStatus, ImportIssueSeverity, ImportJobStatus, ImportReminderImpactDto, ImportRollbackBlockedItemDto, ImportRollbackCountsDto, ImportRollbackEntity, ImportTable, ImportValueKind } from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchStatus, ImportIssueSeverity, ImportJobStatus, ImportReminderImpactDto, ImportRollbackBlockedItemDto, ImportRollbackCountsDto, ImportRollbackEntity, ImportSourceProfileCode, ImportTable, ImportValueKind } from '@/app/features/imports/models/import-api.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { IMPORT_TABLE_LABELS } from '@/app/features/imports/utils/import-schema.utils';
@@ -175,6 +175,18 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
 
 export function importIssueLabel(code: string, fallback?: string): string {
     return ISSUE_LABELS[code] ?? fallback ?? code;
+}
+
+/** E-vet yedeğinde geçmiş görevden oluşan klinik geçmiş satırının numarası: bu değer + Randevu Listesi Excel satırı (sözleşme 13.2). */
+export const EVET_TASK_ROW_OFFSET = 1_000_000;
+
+/** Satırın yeri: "Klinik geçmiş · satır 12"; E-vet geçmiş görevinde "Klinik geçmiş · Randevu Listesi satır 245". */
+export function importRowPlace(table: ImportTable, rowNumber: number, sourceProfile?: ImportSourceProfileCode): string {
+    const label = IMPORT_TABLE_LABELS[table] ?? table;
+
+    return sourceProfile === 'EVet' && table === 'clinicalRecords' && rowNumber > EVET_TASK_ROW_OFFSET
+        ? `${label} · Randevu Listesi satır ${rowNumber - EVET_TASK_ROW_OFFSET}`
+        : `${label} · satır ${rowNumber}`;
 }
 
 const PROBLEM_MESSAGES: Readonly<Record<string, string>> = {

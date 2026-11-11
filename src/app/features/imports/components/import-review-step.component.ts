@@ -10,7 +10,7 @@ import { BreedsService } from '@/app/entities/breed/services/breeds.service';
 import type { ImportBatchDto, ImportFileFormat, ImportPreviewDto, ImportRowDto, ImportRowsQuery, ImportTable, ImportUnmappedValueDto, ImportValueKind } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
-import { IMPORT_SEVERITY_LABELS, IMPORT_VALUE_KIND_LABELS, importErrorCode, importErrorMessage, importIssueLabel, importSeverityTag } from '@/app/features/imports/utils/import-labels.utils';
+import { IMPORT_SEVERITY_LABELS, IMPORT_VALUE_KIND_LABELS, importErrorCode, importErrorMessage, importIssueLabel, importRowPlace, importSeverityTag } from '@/app/features/imports/utils/import-labels.utils';
 import { fieldLabel, IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
 import { IMPORT_VALUE_SKIP, type ImportValueChoices, valueChoiceKey } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { PetColorsService } from '@/app/entities/pet/services/pet-colors.service';
@@ -215,7 +215,7 @@ const ROW_PAGE_SIZE = 25;
                             @for (r of rows(); track r.table + r.rowNumber) {
                                 <li class="rounded-border border border-surface-200 dark:border-surface-700 p-3">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span class="font-medium">{{ tableLabels[r.table] }} · satır {{ r.rowNumber }}</span>
+                                        <span class="font-medium">{{ rowPlace(r.table, r.rowNumber, batch().sourceProfile) }}</span>
                                         <app-status-tag [label]="rowStatusLabel(r)" [severity]="rowStatusSeverity(r)" />
                                         @if (actionLabel(r); as a) {
                                             <span class="text-sm text-muted-color">{{ a }}</span>
@@ -271,7 +271,7 @@ export class ImportReviewStepComponent {
     readonly applyValues = output<void>();
 
     protected readonly pageSize = ROW_PAGE_SIZE;
-    protected readonly tableLabels = IMPORT_TABLE_LABELS;
+    protected readonly rowPlace = importRowPlace;
     protected readonly kindLabels = IMPORT_VALUE_KIND_LABELS;
     protected readonly severityLabels = IMPORT_SEVERITY_LABELS;
     protected readonly severityTag = importSeverityTag;
