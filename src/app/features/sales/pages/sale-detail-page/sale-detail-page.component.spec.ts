@@ -8,6 +8,13 @@ import type { SaleDto } from '@/app/features/sales/models/sale-api.model';
 import { SalesService } from '@/app/features/sales/services/sales.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { SaleDetailPageComponent } from './sale-detail-page.component';
+import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
+
+/** e-belge diyaloğu ve bağlantı kartı sayfaya gömülü; gerçek HTTP yerine sessiz taklit. */
+const eDocumentsStub = {
+    preview: () => of({ connection: { status: 'NotConnected', environment: null, providerName: null }, groups: [], skipped: [], missingBuyerFields: [], buyer: null, clientId: '', clientName: '' }),
+    getConnection: () => of({ clinicId: '', status: 'NotConnected', availableProviders: [] })
+};
 
 const dto = (over: Partial<SaleDto> = {}): SaleDto => ({
     id: 's1',
@@ -54,6 +61,7 @@ describe('SaleDetailPageComponent', () => {
         await TestBed.configureTestingModule({
             imports: [SaleDetailPageComponent],
             providers: [
+                { provide: EDocumentsService, useValue: eDocumentsStub },
                 provideRouter([]),
                 { provide: SalesService, useValue: { getSaleById, voidSale } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'c1' } },
@@ -127,6 +135,7 @@ describe('SaleDetailPageComponent', () => {
         await TestBed.configureTestingModule({
             imports: [SaleDetailPageComponent],
             providers: [
+                { provide: EDocumentsService, useValue: eDocumentsStub },
                 provideRouter([]),
                 { provide: SalesService, useValue: { getSaleById } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => false } },
@@ -148,6 +157,7 @@ describe('SaleDetailPageComponent — rota kimliği değişimi', () => {
         await TestBed.configureTestingModule({
             imports: [SaleDetailPageComponent],
             providers: [
+                { provide: EDocumentsService, useValue: eDocumentsStub },
                 provideRouter([]),
                 { provide: SalesService, useValue: { getSaleById } },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true, getClinicId: () => 'c1' } },

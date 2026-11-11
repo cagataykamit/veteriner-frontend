@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { SALES_CORRECT_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { EDOCUMENTS_ISSUE_CLAIM, SALES_CORRECT_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { EDocumentIssueDialogComponent } from '@/app/entities/e-document/components/e-document-issue-dialog.component';
 import { SaleReceiptComponent } from '@/app/features/sales/components/sale-receipt.component';
 import { SaleVoidDialogComponent } from '@/app/features/sales/components/sale-void-dialog.component';
 import type { SaleDetailVm } from '@/app/features/sales/models/sale-vm.model';
@@ -31,7 +32,8 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
         AppErrorStateComponent,
         AppStatusTagComponent,
         SaleReceiptComponent,
-        SaleVoidDialogComponent
+        SaleVoidDialogComponent,
+        EDocumentIssueDialogComponent
     ],
     template: `
         @if (loading()) {
@@ -57,6 +59,9 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                 }
                 <ng-container actions>
                     <button pButton type="button" class="p-button-outlined p-button-secondary" (click)="print()"><i class="p-button-icon pi pi-print"></i>Fişi yazdır</button>
+                    @if (canIssueDocument && !s.isVoided && !ro.mutationBlocked()) {
+                        <button pButton type="button" class="p-button-outlined p-button-secondary" (click)="documentVisible.set(true)" data-testid="sale-edoc"><i class="p-button-icon pi pi-file-export"></i>Belge kes</button>
+                    }
                     @if (canVoid && !s.isVoided && !ro.mutationBlocked()) {
                         <button pButton type="button" severity="danger" [outlined]="true" (click)="voidVisible.set(true)"><i class="p-button-icon pi pi-ban"></i>İptal et</button>
                     }
@@ -99,6 +104,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
             @if (canVoid) {
                 <app-sale-void-dialog [(visible)]="voidVisible" [sale]="s" (voided)="sale.set($event)" />
+                <app-e-document-issue-dialog [visible]="documentVisible()" (visibleChange)="documentVisible.set($event)" [source]="{ saleId: s.id }" />
             }
         }
     `
@@ -120,6 +126,8 @@ export class SaleDetailPageComponent implements OnInit {
     readonly error = this.loader.error;
     readonly sale = this.loader.value;
     readonly voidVisible = signal(false);
+    readonly canIssueDocument = inject(AuthService).hasOperationClaim(EDOCUMENTS_ISSUE_CLAIM);
+    readonly documentVisible = signal(false);
 
     ngOnInit(): void {
         this.loader.init();

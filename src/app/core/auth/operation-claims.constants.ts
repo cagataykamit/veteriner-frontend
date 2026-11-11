@@ -121,6 +121,11 @@ export const SALES_READ_CLAIM = 'Sales.Read' as const;
 export const SALES_CREATE_CLAIM = 'Sales.Create' as const;
 export const SALES_CORRECT_CLAIM = 'Sales.Correct' as const;
 
+/** e-belge (`E_DOCUMENTS_API_CONTRACT.md`): okuma ve PDF; kesme (yeniden dene, vazgeç dahil); iptal. */
+export const EDOCUMENTS_READ_CLAIM = 'EDocuments.Read' as const;
+export const EDOCUMENTS_ISSUE_CLAIM = 'EDocuments.Issue' as const;
+export const EDOCUMENTS_CANCEL_CLAIM = 'EDocuments.Cancel' as const;
+
 export const TREATMENTS_READ_CLAIM ='Treatments.Read' as const;
 export const TREATMENTS_CREATE_CLAIM = 'Treatments.Create' as const;
 export const TREATMENTS_UPDATE_CLAIM = 'Treatments.Update' as const;

@@ -3,9 +3,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, map, merge, Observable, Subscription, switchMap, throttleTime, timer } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { APPOINTMENT_REQUESTS_MANAGE_CLAIM, LAB_RESULTS_READ_CLAIM, OWNER_PORTAL_MANAGE_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { APPOINTMENT_REQUESTS_MANAGE_CLAIM, EDOCUMENTS_ISSUE_CLAIM, LAB_RESULTS_READ_CLAIM, OWNER_PORTAL_MANAGE_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
 import type { MenuBadgeKey } from '@/app/core/routing/panel-navigation';
+import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
 import { LabResultsService } from '@/app/entities/lab-result/services/lab-results.service';
 import { AppointmentRequestStatus } from '@/app/entities/online-booking/models/online-booking.model';
 import { AppointmentRequestsService } from '@/app/entities/online-booking/services/online-booking.service';
@@ -17,7 +18,13 @@ import { countWaitingVisits } from '@/app/entities/visit/utils/visit-today.utils
 const REFRESH_INTERVAL_MS = 60_000;
 const MIN_GAP_MS = 15_000;
 const MAX_BADGE_COUNT = 99;
-const EMPTY_COUNTS: Readonly<Record<MenuBadgeKey, number | null>> = { waitingVisits: null, requestedLabResults: null, pendingAppointmentRequests: null, openPortalDataRequests: null };
+const EMPTY_COUNTS: Readonly<Record<MenuBadgeKey, number | null>> = {
+    waitingVisits: null,
+    requestedLabResults: null,
+    pendingAppointmentRequests: null,
+    openPortalDataRequests: null,
+    eDocumentReminders: null
+};
 
 /** Menü sayaç metni: 0 veya bilinmiyorsa `null` (gizli), 99'dan büyükse `99+`. */
 export function menuBadgeLabel(count: number | null | undefined): string | null {
@@ -41,6 +48,7 @@ export class MenuBadgeService {
     private readonly labResults = inject(LabResultsService);
     private readonly appointmentRequests = inject(AppointmentRequestsService);
     private readonly portalInbox = inject(PortalInboxService);
+    private readonly eDocuments = inject(EDocumentsService);
     private readonly feed = inject(MenuBadgeFeed);
     private readonly injector = inject(Injector);
 
@@ -122,6 +130,10 @@ export class MenuBadgeService {
             () => this.appointmentRequests.list({ status: AppointmentRequestStatus.Pending, page: 1, pageSize: 1 }).pipe(map((page) => page.totalCount))
         );
         this.track('openPortalDataRequests', OWNER_PORTAL_MANAGE_CLAIM, () => this.portalInbox.summary().pipe(map((s) => s.openDataRequestCount)));
+        // Belgesi kesilmemiş ödenmiş ücret + kesilemeyen belge; yalnız belge kesebilenlere ve entegratör bağlıysa (ADR-036 AK-4 hatırlatma).
+        this.track('eDocumentReminders', EDOCUMENTS_ISSUE_CLAIM, () =>
+            this.eDocuments.reminders().pipe(map((r) => (r.connected ? r.undocumentedPaidCount + r.failedCount : 0)))
+        );
     }
 
     private track(key: MenuBadgeKey, claim: string, load: () => Observable<number>): void {

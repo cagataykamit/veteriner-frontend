@@ -20,6 +20,8 @@ export interface ChargeVm {
     lineKind: ChargeLineKind;
     /** `null` = klinik varsayılanı. */
     vatRate: number | null;
+    /** Bağlı geçerli e-belge; `null` = belgesiz. */
+    eDocumentId: string | null;
 }
 
 export interface ChargesPagedVm {

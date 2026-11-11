@@ -17,6 +17,13 @@ import type { CashRegisterDto } from '@/app/entities/cash-register/models/cash-r
 import { CashRegistersService } from '@/app/entities/cash-register/services/cash-registers.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { SaleNewPageComponent } from './sale-new-page.component';
+import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
+
+/** e-belge diyaloğu ve bağlantı kartı sayfaya gömülü; gerçek HTTP yerine sessiz taklit. */
+const eDocumentsStub = {
+    preview: () => of({ connection: { status: 'NotConnected', environment: null, providerName: null }, groups: [], skipped: [], missingBuyerFields: [], buyer: null, clientId: '', clientName: '' }),
+    getConnection: () => of({ clinicId: '', status: 'NotConnected', availableProviders: [] })
+};
 
 const mama: SaleProductVm = {
     id: 'p1',
@@ -105,6 +112,7 @@ describe('SaleNewPageComponent', () => {
         await TestBed.configureTestingModule({
             imports: [SaleNewPageComponent],
             providers: [
+                { provide: EDocumentsService, useValue: eDocumentsStub },
                 provideRouter([]),
                 { provide: SaleProductSearchService, useValue: { search, findByBarcode } },
                 { provide: SalesService, useValue: { createSale } },

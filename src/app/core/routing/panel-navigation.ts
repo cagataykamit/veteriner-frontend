@@ -37,6 +37,7 @@ import {
     PRODUCTS_READ_CLAIM,
     REMINDERS_READ_CLAIM,
     SALES_READ_CLAIM,
+    EDOCUMENTS_READ_CLAIM,
     SPECIES_CREATE_CLAIM,
     SPECIES_UPDATE_CLAIM,
     STOCK_MOVEMENTS_CREATE_CLAIM,
@@ -65,7 +66,7 @@ export interface NavigationEntry {
 }
 
 /** Menüde öğenin yanında bekleyen iş sayısı gösterilen sayaçlar; değerlerini `MenuBadgeService` sağlar. */
-export type MenuBadgeKey = 'waitingVisits' | 'requestedLabResults' | 'pendingAppointmentRequests' | 'openPortalDataRequests';
+export type MenuBadgeKey = 'waitingVisits' | 'requestedLabResults' | 'pendingAppointmentRequests' | 'openPortalDataRequests' | 'eDocumentReminders';
 
 /** Birleşik menü öğesinin sekmesi: mevcut liste sayfasının rotası; yetkisi olmayan sekme görünmez. */
 export interface MenuTab extends NavigationEntry {
@@ -133,6 +134,7 @@ export const PORTAL_INBOX_ROUTE = '/panel/portal-inbox';
 export const CLINIC_PORTAL_SETTINGS_ROUTE = '/panel/settings/owner-portal';
 export const CLINIC_SITE_ROUTE = '/panel/settings/web-page';
 export const VET_FINDER_SETTINGS_ROUTE = '/panel/settings/vet-finder';
+export const E_DOCUMENT_SETTINGS_ROUTE = '/panel/settings/e-documents';
 export const IMPORTS_ROUTE = '/panel/settings/imports';
 /** Geçiş desteği ve kurulum görüşmesi talebi (TIER-021); içe aktarma sayfasından ve abonelik sayfasından açılır. */
 export const MIGRATION_SUPPORT_ROUTE = '/panel/settings/imports/migration-support';
@@ -388,8 +390,9 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
                 { label: 'Ücretler', route: '/panel/charges', claims: [CHARGES_READ_CLAIM] },
                 { label: 'Ücret bekleyenler', route: '/panel/charges/pending', claims: [CHARGES_READ_CLAIM] },
                 { label: 'Ödemeler', route: '/panel/payments', claims: [PAYMENTS_READ_CLAIM] },
-                { label: 'Satışlar', route: '/panel/sales', claims: [SALES_READ_CLAIM] }
-            ]),
+                { label: 'Satışlar', route: '/panel/sales', claims: [SALES_READ_CLAIM] },
+                { label: 'e-Belgeler', route: '/panel/e-documents', claims: [EDOCUMENTS_READ_CLAIM], badge: 'eDocumentReminders' }
+            ], { badge: 'eDocumentReminders', badgeText: 'belgesi kesilmemiş ödenmiş ücret' }),
             tabbedEntry('Stok', 'fa-solid fa-fw fa-boxes-stacked', [
                 { label: 'Ürünler', route: '/panel/products', claims: [PRODUCTS_READ_CLAIM] },
                 { label: 'Stok durumu', route: '/panel/stocks', claims: [PRODUCTS_READ_CLAIM] },
@@ -547,6 +550,13 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 route: VET_FINDER_SETTINGS_ROUTE,
                 claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
                 description: 'Hayvan sahipleri kliniğinizi il, ilçe ve hizmete göre bulsun; listelenmeyi açıp kapatın.'
+            },
+            {
+                label: 'e-Belge',
+                icon: 'pi pi-fw pi-file-export',
+                route: E_DOCUMENT_SETTINGS_ROUTE,
+                claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
+                description: 'e-SMM, e-Arşiv ve e-Fatura: entegratör bağlantısı, belge türleri ve otomatik e-belge.'
             },
             {
                 label: 'Hasta sahibi portalı',
