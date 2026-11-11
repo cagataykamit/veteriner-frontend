@@ -37,6 +37,7 @@ import {
     PRODUCTS_READ_CLAIM,
     REMINDERS_READ_CLAIM,
     SALES_READ_CLAIM,
+    EDOCUMENTS_READ_CLAIM,
     SPECIES_CREATE_CLAIM,
     SPECIES_UPDATE_CLAIM,
     STOCK_MOVEMENTS_CREATE_CLAIM,
@@ -388,7 +389,8 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
                 { label: 'Ücretler', route: '/panel/charges', claims: [CHARGES_READ_CLAIM] },
                 { label: 'Ücret bekleyenler', route: '/panel/charges/pending', claims: [CHARGES_READ_CLAIM] },
                 { label: 'Ödemeler', route: '/panel/payments', claims: [PAYMENTS_READ_CLAIM] },
-                { label: 'Satışlar', route: '/panel/sales', claims: [SALES_READ_CLAIM] }
+                { label: 'Satışlar', route: '/panel/sales', claims: [SALES_READ_CLAIM] },
+                { label: 'e-Belgeler', route: '/panel/e-documents', claims: [EDOCUMENTS_READ_CLAIM] }
             ]),
             tabbedEntry('Stok', 'fa-solid fa-fw fa-boxes-stacked', [
                 { label: 'Ürünler', route: '/panel/products', claims: [PRODUCTS_READ_CLAIM] },

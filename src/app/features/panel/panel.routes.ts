@@ -18,6 +18,7 @@ export default [
     { path: 'payments', loadChildren: () => import('../payments/routes/payments.routes') },
     { path: 'sales', loadChildren: () => import('../sales/routes/sales.routes') },
     { path: 'charges', loadChildren: () => import('../charges/routes/charges.routes') },
+    { path: 'e-documents', loadChildren: () => import('../e-documents/routes/e-documents.routes') },
     { path: 'administrations', loadChildren: () => import('../administrations/routes/administrations.routes') },
     { path: 'products', loadChildren: () => import('../inventory/routes/inventory.routes') },
     { path: 'stocks', loadChildren: () => import('../inventory/routes/product-stocks.routes') },
