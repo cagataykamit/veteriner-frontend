@@ -16,6 +16,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { ClinicAppointmentSettingsSectionComponent } from '@/app/features/clinics/components/clinic-appointment-settings-section.component';
 import { ClinicTaxpayerSettingsSectionComponent } from '@/app/features/clinics/components/clinic-taxpayer-settings-section.component';
+import { ClinicEDocumentConnectionSectionComponent } from '@/app/features/clinics/components/clinic-e-document-connection-section.component';
 import { ClinicWorkingHoursSectionComponent } from '@/app/features/clinics/components/clinic-working-hours-section.component';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { clinicSettingsMutationMessage, isClinicActivateAlreadyActive, isClinicDeactivateAlreadyInactive } from '@/app/features/clinics/utils/clinic-settings-mutation.utils';
@@ -49,7 +50,8 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         AppErrorStateComponent,
         ClinicWorkingHoursSectionComponent,
         ClinicAppointmentSettingsSectionComponent,
-        ClinicTaxpayerSettingsSectionComponent
+        ClinicTaxpayerSettingsSectionComponent,
+        ClinicEDocumentConnectionSectionComponent
     ],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -233,6 +235,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
             @if (canUpdateClinic) {
                 <app-clinic-taxpayer-settings-section [clinicId]="d.id" />
+                <app-clinic-e-document-connection-section [clinicId]="d.id" />
             }
         }
     `

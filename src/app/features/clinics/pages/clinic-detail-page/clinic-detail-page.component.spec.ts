@@ -9,6 +9,13 @@ import { ClinicTaxpayerSettingsService } from '@/app/features/clinics/services/c
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClinicDetailPageComponent } from './clinic-detail-page.component';
+import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
+
+/** e-belge diyaloğu ve bağlantı kartı sayfaya gömülü; gerçek HTTP yerine sessiz taklit. */
+const eDocumentsStub = {
+    preview: () => of({ connection: { status: 'NotConnected', environment: null, providerName: null }, groups: [], skipped: [], missingBuyerFields: [], buyer: null, clientId: '', clientName: '' }),
+    getConnection: () => of({ clinicId: '', status: 'NotConnected', availableProviders: [] })
+};
 
 const DAYS = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
 
@@ -41,13 +48,14 @@ describe('ClinicDetailPageComponent — çalışma saatleri ve randevu varsayıl
         await TestBed.configureTestingModule({
             imports: [ClinicDetailPageComponent],
             providers: [
+                { provide: EDocumentsService, useValue: eDocumentsStub },
                 provideRouter([]),
                 MessageService,
                 { provide: ClinicsService, useValue: clinics },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true, getAccessToken: () => 't' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null } },
                 { provide: ClinicTaxpayerSettingsService, useValue: { get: () => NEVER, update: () => NEVER } },
-                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ clinicId: 'c1' })), snapshot: { paramMap: convertToParamMap({ clinicId: 'c1' }) } } }
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ clinicId: 'c1' })), snapshot: { paramMap: convertToParamMap({ clinicId: 'c1' }), queryParamMap: convertToParamMap({}) } } }
             ]
         }).compileComponents();
         fixture = TestBed.createComponent(ClinicDetailPageComponent);
@@ -143,13 +151,14 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
         TestBed.configureTestingModule({
             imports: [ClinicDetailPageComponent],
             providers: [
+                { provide: EDocumentsService, useValue: eDocumentsStub },
                 provideRouter([]),
                 MessageService,
                 { provide: ClinicsService, useValue: clinics },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getAccessToken: () => 't' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: readOnly, lockedPlanFeature: () => null } },
                 { provide: ClinicTaxpayerSettingsService, useValue: { get: () => NEVER, update: () => NEVER } },
-                { provide: ActivatedRoute, useValue: { paramMap: of(params), snapshot: { paramMap: params } } }
+                { provide: ActivatedRoute, useValue: { paramMap: of(params), snapshot: { paramMap: params, queryParamMap: convertToParamMap({}) } } }
             ]
         });
         fixture = TestBed.createComponent(ClinicDetailPageComponent);
