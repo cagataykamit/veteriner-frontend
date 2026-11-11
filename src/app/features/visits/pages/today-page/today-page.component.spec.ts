@@ -16,6 +16,13 @@ import type { TodayHospitalizationVm, TodayItemVm, TodayVm, VisitVm } from '@/ap
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { WaitlistService } from '@/app/entities/waitlist/services/waitlist.service';
 import { TodayPageComponent } from './today-page.component';
+import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
+
+/** e-belge diyaloğu ve bağlantı kartı sayfaya gömülü; gerçek HTTP yerine sessiz taklit. */
+const eDocumentsStub = {
+    preview: () => of({ connection: { status: 'NotConnected', environment: null, providerName: null }, groups: [], skipped: [], missingBuyerFields: [], buyer: null, clientId: '', clientName: '' }),
+    getConnection: () => of({ clinicId: '', status: 'NotConnected', availableProviders: [] })
+};
 
 /** Göreli süreler ("12 dk", yatış süresi) gerçek saate değil sabit saate göre hesaplanır; describe seviyesindeki fixture'lar koşudan dakikalar önce üretilse de kaymaz. */
 const NOW = new Date('2026-10-10T10:00:00Z');
@@ -103,6 +110,7 @@ describe('TodayPageComponent', () => {
         await TestBed.configureTestingModule({
             imports: [TodayPageComponent],
             providers: [
+                { provide: EDocumentsService, useValue: eDocumentsStub },
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'c1', getUserId: () => 'u1', getAccessToken: () => null } },
@@ -570,6 +578,7 @@ describe('TodayPageComponent', () => {
         await TestBed.configureTestingModule({
             imports: [TodayPageComponent],
             providers: [
+                { provide: EDocumentsService, useValue: eDocumentsStub },
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true, getClinicId: () => 'c1', getUserId: () => 'u1', getAccessToken: () => null } },
@@ -1118,6 +1127,7 @@ describe('TodayPageComponent — Benim hastalarım', () => {
         await TestBed.configureTestingModule({
             imports: [TodayPageComponent],
             providers: [
+                { provide: EDocumentsService, useValue: eDocumentsStub },
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'c1', getUserId: () => 'u1', getAccessToken: () => null } },
@@ -1198,6 +1208,7 @@ describe('TodayPageComponent — Benim hastalarım boş liste', () => {
         await TestBed.configureTestingModule({
             imports: [TodayPageComponent],
             providers: [
+                { provide: EDocumentsService, useValue: eDocumentsStub },
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => c !== 'Visits.None', getClinicId: () => 'c1', getUserId: () => 'u1', getAccessToken: () => null } },

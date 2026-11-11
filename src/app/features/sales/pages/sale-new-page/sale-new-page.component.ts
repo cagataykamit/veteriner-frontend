@@ -7,7 +7,8 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { SALES_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { EDOCUMENTS_ISSUE_CLAIM, SALES_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { EDocumentIssueDialogComponent } from '@/app/entities/e-document/components/e-document-issue-dialog.component';
 import type { ProductStockBatchesVm } from '@/app/entities/inventory/models/stock-batch-vm.model';
 import { StockBatchService } from '@/app/entities/inventory/services/stock-batch.service';
 import { SaleReceiptComponent } from '@/app/features/sales/components/sale-receipt.component';
@@ -69,7 +70,7 @@ function numberFromInput(event: Event): number | null {
     selector: 'app-sale-new-page',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [FormsModule, RouterLink, ButtonModule, SelectModule, SelectButtonModule, ClientSearchComponent, BarcodeScanButtonComponent, AppPageHeaderComponent, SaleReceiptComponent, MoneyPipe, CashRegisterSelectComponent],
+    imports: [FormsModule, RouterLink, ButtonModule, SelectModule, SelectButtonModule, ClientSearchComponent, BarcodeScanButtonComponent, AppPageHeaderComponent, SaleReceiptComponent, MoneyPipe, CashRegisterSelectComponent, EDocumentIssueDialogComponent],
     host: { '(keydown.control.enter)': 'submit()' },
     template: `
         <app-page-header title="Hızlı satış" description="Ürünü okutun ya da arayın; Enter ile sepete ekleyin, Ctrl+Enter ile tamamlayın." />
@@ -85,6 +86,9 @@ function numberFromInput(event: Event): number | null {
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <button pButton type="button" severity="secondary" (click)="print()"><i class="p-button-icon pi pi-print"></i>Fişi yazdır</button>
+                        @if (canIssueDocument) {
+                            <button pButton type="button" severity="secondary" (click)="documentVisible.set(true)" data-testid="sale-done-edoc"><i class="p-button-icon pi pi-file-export"></i>Belge kes</button>
+                        }
                         @if (canReadSales) {
                             <a [routerLink]="['/panel/sales', result.sale.id]" pButton type="button" class="p-button-secondary"><i class="pi pi-external-link"></i>Satış detayı</a>
                         }
@@ -95,6 +99,7 @@ function numberFromInput(event: Event): number | null {
                     <p class="mt-0 mb-4 text-sm" role="status" data-testid="sale-low-stock">Stok minimumun altına indi: {{ lowStockNames().join(', ') }}.</p>
                 }
                 <app-sale-receipt [sale]="result.sale" />
+                <app-e-document-issue-dialog [visible]="documentVisible()" (visibleChange)="documentVisible.set($event)" [source]="{ saleId: result.sale.id }" />
             </div>
         } @else {
             <div class="grid grid-cols-12 gap-6">
@@ -282,6 +287,9 @@ export class SaleNewPageComponent {
     protected readonly methodOptions = METHOD_OPTIONS;
     protected readonly modeOptions = MODE_OPTIONS;
     protected readonly canReadSales = this.auth.hasOperationClaim(SALES_READ_CLAIM);
+    /** Satış kapanışında e-belge önerisi (ADR-036 AK-4 c): kesme elle, tek tıkla. */
+    protected readonly canIssueDocument = this.auth.hasOperationClaim(EDOCUMENTS_ISSUE_CLAIM);
+    protected readonly documentVisible = signal(false);
     protected readonly numberFrom = numberFromInput;
 
     protected readonly term = signal('');

@@ -492,6 +492,7 @@
     <app-appointment-no-show-dialog [(visible)]="noShowOpen" [appointmentId]="noShowItem()?.appointmentId ?? null" [mode]="noShowMode()" [subject]="noShowSubject()" (done)="onNoShowDone()" />
 }
 @if (canCorrect) {
+    <app-e-document-issue-dialog [(visible)]="documentOpen" [source]="documentSource()" header="Ziyaret kapandı: e-belge kes" />
     <app-visit-correction-dialog [(visible)]="correctionOpen" [item]="correctionItem()" (corrected)="onCorrected()" />
     <app-visit-correction-dialog mode="restore" [(visible)]="restoreOpen" [item]="restoreItem()" (corrected)="onRestored()" />
 }
