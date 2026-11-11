@@ -144,7 +144,8 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.ApplyFailed': 'Kayıt yazılırken bir çakışma oluştu; satır aktarılamadı',
     // Tam geçiş (sözleşme 12)
     'Imports.ClinicRequired': 'Bu kayıtlar için klinik seçilmemiş',
-    'Imports.CreditBalanceNotImported': 'Alacak (eksi) bakiye aktarılmaz; müşteri bakiyesiz aktarılır',
+    // Eski partilerde kalan kod; eksi bakiye artık devir alacağı olarak aktarılır (ADR-048 T3).
+    'Imports.CreditBalanceNotImported': 'Alacak (eksi) bakiye aktarılmadı; müşteri bakiyesiz aktarıldı',
     'Imports.AmountInvalid': 'Tutar okunamadı veya geçersiz',
     'Imports.EntryAmountInvalid': 'Tutar okunamadı, sıfır ya da geçersiz; hareket aktarılmaz',
     'Imports.BalanceNotAppliedToExisting': 'Müşteri sistemde zaten var; açık bakiye eklenmez',

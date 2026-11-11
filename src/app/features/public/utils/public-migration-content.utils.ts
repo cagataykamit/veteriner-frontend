@@ -1,7 +1,8 @@
 /**
  * Geçiş sayfası (`/gecis`, tasarım belgesi 5.4) ve ana sayfa "Geçiş" bölümü (3 adım).
  * Kaynak: ADR-019, ADR-048 (tam geçiş) — müşteri, hasta, aşı, klinik geçmiş (metin), açık bakiye, hesap hareketleri (bilgi amaçlı),
- * gelecek randevular, ürün ve hizmet kartları aktarılır; belge/ek, stok miktarı, alacak bakiyesi ve geçmiş randevu aktarılmaz.
+ * gelecek randevular, ürün ve hizmet kartları aktarılır; açık bakiye borç ve alacağı kapsar (devir alacağı, T3). Belge/ek, stok
+ * miktarı ve geçmiş randevu aktarılmaz.
  * TIER-021: kaynak program seçimi ve geçiş desteği; hazır eşlemeler gerçek dosyayla doğrulanmadığı için "hazır gelir" denmez,
  * program adı yazılmaz. Ücretsiz olduğu paket özellik tablosundan.
  */
@@ -48,7 +49,7 @@ export const PUBLIC_MIGRATION_INCLUDED: readonly string[] = [
     'Müşteriler ve hastalar',
     'Aşı geçmişi',
     'Muayene ve klinik notlar (metin olarak)',
-    'Açık bakiye (borç)',
+    'Açık bakiye (borç ve alacak)',
     'Hesap hareketleri (bilgi amaçlı)',
     'Gelecek randevular',
     'Ürün ve hizmet kartları'
@@ -56,7 +57,6 @@ export const PUBLIC_MIGRATION_INCLUDED: readonly string[] = [
 export const PUBLIC_MIGRATION_EXCLUDED: readonly string[] = [
     'Belgeler, ekler ve görüntüler',
     'Stok miktarı (mal kabulle girilir)',
-    'Alacak (fazla ödeme) bakiyesi',
     'Geçmiş randevular',
     'Reçete ve lab sonucu ayrı kayıt olarak (metin olarak gelir)'
 ];

@@ -139,7 +139,7 @@ export const IMPORT_FIELDS: Readonly<Record<ImportTable, readonly ImportFieldDef
         { key: 'Telefon', label: 'Telefon' },
         { key: 'Eposta', label: 'E-posta' },
         { key: 'Adres', label: 'Adres' },
-        { key: 'AcikBakiye', label: 'Açık bakiye (borç)', hint: 'Eski programdaki borç (TL). Yeni müşteri için tek bir devir ücreti açılır; alacak (eksi) tutar aktarılmaz.' },
+        { key: 'AcikBakiye', label: 'Açık bakiye (borç / alacak)', hint: 'Eski programdaki bakiye (TL). Yeni müşteri için artı tutar tek bir devir ücreti, eksi tutar (alacak) tek bir devir alacağı olarak açılır. İkisi de ciroya, kasaya ve gün sonuna girmez.' },
         { key: 'BakiyeTarihi', label: 'Bakiye tarihi', hint: 'Bakiyenin hangi tarihteki durum olduğu; yalnız devir ücretinin açıklamasına yazılır.' },
         { key: 'KimlikNo', label: 'Kimlik / vergi no', hint: 'Fatura bilgisi: 11 haneli T.C. kimlik no veya 10 haneli vergi no. Geçersizse boş kalır.' },
         { key: 'VergiDairesi', label: 'Vergi dairesi' },
