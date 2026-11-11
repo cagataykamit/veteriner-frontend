@@ -152,7 +152,7 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.DateInFuture': 'Tarih gelecekte',
     'Imports.RecordBeforeBirth': 'Kayıt, doğum tarihinden önce görünüyor',
     'Imports.TemperatureInvalid': 'Ateş değeri geçersiz; boş aktarılır',
-    'Imports.ClinicalRecordEmpty': 'Kayıtta hiçbir klinik bilgi yok (şikâyet, bulgu, tanı, tedavi, not…)',
+    'Imports.ClinicalRecordEmpty': 'Kayıtta hiçbir klinik bilgi yok (şikâyet, bulgu, tanı, tedavi, not, kilo, ateş…)',
     'Imports.DuplicateClinicalRecord': 'Aynı klinik kayıt zaten var; atlanır',
     'Imports.EntryKindUnrecognized': 'İşlem türü tanınmadı (borç veya tahsilat yazın)',
     'Imports.DuplicateAccountEntry': 'Aynı hesap hareketi zaten var; atlanır',
@@ -164,7 +164,12 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.PastAppointmentSkipped': 'Geçmiş randevu; aktarılmaz',
     'Imports.DuplicateAppointment': 'Aynı randevu zaten var; atlanır',
     'Imports.ProductKindDefaulted': 'Ürün türü tanınmadı; "Diğer" alınır',
-    'Imports.CategoryUnmapped': 'Kategori sistemde yok; kategorisiz aktarılır'
+    'Imports.CategoryUnmapped': 'Kategori sistemde yok; kategorisiz aktarılır',
+    // E-vet yedeği (sözleşme 13)
+    'Imports.TaxIdInvalid': 'Kimlik / vergi no geçersiz; fatura bilgisi boş aktarılır',
+    'Imports.StatusUnrecognized': 'Durum tanınmadı; aktif aktarılır',
+    'Imports.InactiveClient': 'Eski programda pasif müşteri; hatırlatma gönderilmez',
+    'Imports.DeceasedDateIgnored': 'Vefat tarihi okunamadı veya geçersiz; tarihsiz vefat aktarılır'
 };
 
 export function importIssueLabel(code: string, fallback?: string): string {

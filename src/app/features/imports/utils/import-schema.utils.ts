@@ -140,7 +140,10 @@ export const IMPORT_FIELDS: Readonly<Record<ImportTable, readonly ImportFieldDef
         { key: 'Eposta', label: 'E-posta' },
         { key: 'Adres', label: 'Adres' },
         { key: 'AcikBakiye', label: 'Açık bakiye (borç)', hint: 'Eski programdaki borç (TL). Yeni müşteri için tek bir devir ücreti açılır; alacak (eksi) tutar aktarılmaz.' },
-        { key: 'BakiyeTarihi', label: 'Bakiye tarihi', hint: 'Bakiyenin hangi tarihteki durum olduğu; yalnız devir ücretinin açıklamasına yazılır.' }
+        { key: 'BakiyeTarihi', label: 'Bakiye tarihi', hint: 'Bakiyenin hangi tarihteki durum olduğu; yalnız devir ücretinin açıklamasına yazılır.' },
+        { key: 'KimlikNo', label: 'Kimlik / vergi no', hint: 'Fatura bilgisi: 11 haneli T.C. kimlik no veya 10 haneli vergi no. Geçersizse boş kalır.' },
+        { key: 'VergiDairesi', label: 'Vergi dairesi' },
+        { key: 'Durum', label: 'Durum', hint: 'Aktif veya Pasif. Pasif müşteri aktarılır, hatırlatma gönderilmez.' }
     ],
     pets: [
         { key: 'MusteriNo', label: 'Müşteri no', hint: 'Sahibe bağlantı için tercih edilen alan.' },
@@ -157,6 +160,9 @@ export const IMPORT_FIELDS: Readonly<Record<ImportTable, readonly ImportFieldDef
         { key: 'Renk', label: 'Renk' },
         { key: 'Agirlik', label: 'Ağırlık' },
         { key: 'KarneNo', label: 'Karne no' },
+        { key: 'Alerji', label: 'Alerji', hint: 'Hastaya alerji uyarısı olarak eklenir.' },
+        { key: 'Durum', label: 'Durum', hint: 'Aktif veya Vefat (Ölü).' },
+        { key: 'VefatTarihi', label: 'Vefat tarihi' },
         { key: 'Not', label: 'Not' }
     ],
     vaccinations: [
