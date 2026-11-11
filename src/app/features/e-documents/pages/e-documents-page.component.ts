@@ -7,6 +7,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
+import { ToastModule } from 'primeng/toast';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { EDOCUMENTS_CANCEL_CLAIM, EDOCUMENTS_ISSUE_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -47,6 +48,7 @@ type View = 'documents' | 'undocumented';
     selector: 'app-e-documents-page',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [MessageService],
     imports: [
         FormsModule,
         RouterLink,
@@ -55,6 +57,7 @@ type View = 'documents' | 'undocumented';
         SelectModule,
         SelectButtonModule,
         TableModule,
+        ToastModule,
         ClientSearchComponent,
         EDocumentIssueDialogComponent,
         ReasonConfirmDialogComponent,
@@ -68,11 +71,9 @@ type View = 'documents' | 'undocumented';
         TrDateTimePipe
     ],
     template: `
+        <p-toast position="top-right" />
         <div class="card">
             <app-list-header class="mb-4" title="e-Belgeler" [count]="total()">
-                <app-filter-field label="Görünüm" labelFor="edocView" [active]="false">
-                    <p-selectbutton inputId="edocView" [options]="viewOptions" optionLabel="label" optionValue="value" [ngModel]="view()" (ngModelChange)="setView($event)" [allowEmpty]="false" />
-                </app-filter-field>
                 <app-filter-field label="Müşteri" labelFor="edocClientFilter" [active]="!!clientId">
                     <app-client-search inputId="edocClientFilter" placeholder="Müşteri ara…" [ngModel]="clientId" (ngModelChange)="onClientChange($event)" />
                 </app-filter-field>
@@ -89,6 +90,11 @@ type View = 'documents' | 'undocumented';
                     </button>
                 }
             </app-list-header>
+
+            <div class="mb-4">
+                <p-selectbutton [options]="viewOptions" optionLabel="label" optionValue="value" [ngModel]="view()" (ngModelChange)="setView($event)" [allowEmpty]="false" ariaLabelledBy="edocViewLabel" />
+                <span id="edocViewLabel" class="sr-only">Görünüm</span>
+            </div>
 
             @if (view() === 'undocumented' && selected().length > 0 && !selectionValid()) {
                 <p class="text-sm text-danger mt-0" role="alert">Tek belgede yalnız aynı müşterinin ücretleri olabilir.</p>

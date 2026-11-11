@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { ToastModule } from 'primeng/toast';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { ClinicEDocumentSettingsDto, EDocumentAutoIssueMode } from '@/app/entities/e-document/models/e-document.model';
@@ -38,6 +39,7 @@ const DOCUMENT_LABEL: Record<'ESmm' | 'Invoice', string> = {
         CheckboxModule,
         InputTextModule,
         RadioButtonModule,
+        ToastModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
@@ -45,6 +47,7 @@ const DOCUMENT_LABEL: Record<'ESmm' | 'Invoice', string> = {
     ],
     providers: [MessageService],
     template: `
+        <p-toast position="top-right" />
         <app-page-header title="e-Belge" description="Kliniğin e-SMM, e-Arşiv ve e-Fatura ayarları." />
 
         @if (!clinicId) {
