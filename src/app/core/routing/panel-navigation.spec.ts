@@ -82,8 +82,10 @@ describe('panel-navigation', () => {
             ['Bugün', 'waitingVisits'],
             ['Randevular', 'pendingAppointmentRequests'],
             ['Müşteri ve Hasta', 'openPortalDataRequests'],
-            ['Kayıtlar', 'requestedLabResults']
+            ['Kayıtlar', 'requestedLabResults'],
+            ['Para', 'eDocumentReminders']
         ]);
+        expect(entry('Para').tabs!.filter((t) => t.badge).map((t) => [t.label, t.badge])).toEqual([['e-Belgeler', 'eDocumentReminders']]);
         expect(entry('Müşteri ve Hasta').tabs!.filter((t) => t.badge).map((t) => [t.label, t.badge])).toEqual([['Portal gelen kutusu', 'openPortalDataRequests']]);
         expect(entry('Kayıtlar').tabs!.filter((t) => t.badge).map((t) => [t.label, t.badge])).toEqual([['Lab sonuçları', 'requestedLabResults']]);
         expect(entry('Randevular').tabs!.filter((t) => t.badge).map((t) => [t.label, t.badge])).toEqual([['Talepler', 'pendingAppointmentRequests']]);

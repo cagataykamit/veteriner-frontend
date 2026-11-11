@@ -7,7 +7,7 @@ import type { Observable } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import type { EDocumentConnectionDto } from '@/app/entities/e-document/models/e-document.model';
+import type { EDocumentConnectionDto, EDocumentProviderOption } from '@/app/entities/e-document/models/e-document.model';
 import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -26,24 +26,26 @@ const RETURN_REASONS: Record<string, string> = {
 };
 
 /**
- * Klinik ayarlarındaki "e-belge entegratörü" kartı (ADR-036 AK-1 a): kliniğin kendi Paraşüt hesabı OAuth ile bağlanır
- * (kimlik bilgisi sunucuda şifreli; panele hiç gelmez), durum, hesap seçimi, bağlantı sınaması ve koparma.
- * Yalnız `Clinics.Update` olan kullanıcıya gösterilir (sayfa koşulu).
+ * e-belge entegratörü kartı (ADR-036 AK-1 a): sağlayıcı seçimi ve seçilen sağlayıcının bağlantısı. Sağlayıcı listesi backend'den
+ * gelir; bağlanma yöntemi sağlayıcıya göredir (`OAuth`: entegratörün kendi ekranında onay, şifre Vetinity'ye girilmez). Kimlik
+ * bilgisi sunucuda şifreli kalır, panele hiç gelmez.
  */
 @Component({
-    selector: 'app-clinic-e-document-connection-section',
+    selector: 'app-e-document-connection-card',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [FormsModule, ButtonModule, SelectModule, AppLoadingStateComponent, AppErrorStateComponent, AppStatusTagComponent, TrDateTimePipe],
     template: `
-        <div class="card mb-4" data-testid="clinic-e-document-connection">
+        <div class="card mb-4" data-testid="e-document-connection">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                <h5 class="m-0">e-belge entegratörü</h5>
-                @if (connection(); as c) {
+                <h5 class="m-0">Entegratör</h5>
+                @if (connection()) {
                     <app-status-tag [label]="statusText()" [severity]="statusSeverity()" />
                 }
             </div>
-            <p class="text-sm text-muted-color mt-0 mb-4">e-SMM, e-Arşiv ve e-Fatura kliniğin kendi entegratör hesabıyla kesilir; kontör ücreti entegratörle yaptığınız sözleşmededir. Hesap şifreniz Vetinity'ye girilmez, bağlantı entegratörün kendi ekranında onaylanır.</p>
+            <p class="text-sm text-muted-color mt-0 mb-4">
+                Belgeler kliniğin kendi entegratör hesabıyla kesilir; kontör ücreti entegratörle yaptığınız sözleşmededir. Bağlantı entegratörün kendi ekranında onaylanır, hesap şifreniz Vetinity'ye girilmez.
+            </p>
 
             @if (loading()) {
                 <app-loading-state message="Bağlantı durumu yükleniyor…" />
@@ -54,10 +56,21 @@ const RETURN_REASONS: Record<string, string> = {
                     <p class="text-danger text-sm mt-0 mb-3" role="alert">{{ actionError() }}</p>
                 }
 
-                @if (c.status === 'Connected' || c.status === 'AccountSelectionRequired') {
+                @if (c.status === 'NotConnected' || c.status === 'ReauthorizationRequired') {
+                    <div class="mb-4 max-w-md">
+                        <label for="edocProvider" class="block text-sm font-medium text-muted-color mb-2">Entegratör</label>
+                        <p-select inputId="edocProvider" class="w-full" [options]="providerOptions()" optionLabel="label" optionValue="value" optionDisabled="disabled" [(ngModel)]="selectedProvider" [ngModelOptions]="{ standalone: true }" />
+                        <small class="text-muted-color">Listede olmayan entegratör için destekle iletişime geçin; sağlayıcılar zamanla eklenir.</small>
+                    </div>
+                } @else {
                     <dl class="grid grid-cols-12 gap-x-4 gap-y-2 m-0 text-sm">
-                        <dt class="col-span-12 sm:col-span-4 text-muted-color">Sağlayıcı</dt>
-                        <dd class="col-span-12 sm:col-span-8 m-0">{{ c.providerName }} @if (c.environment === 'Test') {<span class="text-muted-color">(test ortamı)</span>}</dd>
+                        <dt class="col-span-12 sm:col-span-4 text-muted-color">Entegratör</dt>
+                        <dd class="col-span-12 sm:col-span-8 m-0">
+                            {{ c.providerName }}
+                            @if (c.environment === 'Test') {
+                                <span class="text-muted-color">(test ortamı)</span>
+                            }
+                        </dd>
                         @if (c.accountName) {
                             <dt class="col-span-12 sm:col-span-4 text-muted-color">Hesap</dt>
                             <dd class="col-span-12 sm:col-span-8 m-0">{{ c.accountName }}</dd>
@@ -79,8 +92,6 @@ const RETURN_REASONS: Record<string, string> = {
                     </div>
                 } @else if (c.status === 'ReauthorizationRequired') {
                     <p class="text-sm m-0">Entegratör yetkisi sona erdi ({{ c.lastVerificationMessage }}). Belge kesmek için hesabı yeniden bağlayın.</p>
-                } @else if (c.status === 'NotConnected') {
-                    <p class="text-sm m-0">Henüz bağlı bir hesap yok.</p>
                 }
 
                 <div class="mt-4 flex flex-wrap justify-end gap-2">
@@ -90,17 +101,21 @@ const RETURN_REASONS: Record<string, string> = {
                     @if (c.status !== 'NotConnected') {
                         <button pButton type="button" severity="danger" [text]="true" [disabled]="busy() || ro.mutationBlocked()" (click)="disconnect()">Bağlantıyı kopar</button>
                     }
-                    @for (p of connectableProviders(); track p.provider) {
-                        <button pButton type="button" [severity]="c.status === 'Connected' ? 'secondary' : 'primary'" [disabled]="busy() || ro.mutationBlocked() || !p.configured" (click)="connect(p.provider)" [attr.data-testid]="'edoc-connect-' + p.provider">
-                            <i class="p-button-icon pi pi-link"></i>{{ c.status === 'NotConnected' ? p.providerName + ' hesabını bağla' : 'Yeniden bağla' }}
-                        </button>
+                    @if (chosenProvider(); as p) {
+                        @if (p.connectionMethod === 'OAuth') {
+                            <button pButton type="button" [severity]="c.status === 'Connected' ? 'secondary' : 'primary'" [disabled]="busy() || ro.mutationBlocked() || !p.configured" (click)="connect(p.provider)" data-testid="edoc-connect">
+                                <i class="p-button-icon pi pi-link"></i>{{ c.status === 'Connected' ? 'Yeniden bağla' : p.providerName + ' hesabını bağla' }}
+                            </button>
+                        } @else {
+                            <span class="text-sm text-muted-color">Bu entegratörün bağlantı alanları henüz eklenmedi.</span>
+                        }
                     }
                 </div>
             }
         </div>
     `
 })
-export class ClinicEDocumentConnectionSectionComponent implements OnInit {
+export class EDocumentConnectionCardComponent implements OnInit {
     readonly clinicId = input.required<string>();
 
     private readonly service = inject(EDocumentsService);
@@ -116,8 +131,12 @@ export class ClinicEDocumentConnectionSectionComponent implements OnInit {
     readonly busy = signal(false);
     readonly connection = signal<EDocumentConnectionDto | null>(null);
     selectedAccount: string | null = null;
+    selectedProvider: string | null = null;
 
-    readonly connectableProviders = computed(() => this.connection()?.availableProviders ?? []);
+    readonly providerOptions = computed(() =>
+        (this.connection()?.availableProviders ?? []).map((p) => ({ value: p.provider, label: p.configured ? p.providerName : `${p.providerName} (yapılandırılmadı)`, disabled: !p.configured }))
+    );
+
     readonly statusText = computed(() => {
         switch (this.connection()?.status) {
             case 'Connected':
@@ -145,6 +164,19 @@ export class ClinicEDocumentConnectionSectionComponent implements OnInit {
         this.load();
     }
 
+    /** Bağlıyken bağlı sağlayıcı; değilse listeden seçilen (ilk yapılandırılmış varsayılan). */
+    chosenProvider(): EDocumentProviderOption | null {
+        const c = this.connection();
+
+        if (!c) {
+            return null;
+        }
+
+        const code = c.status === 'Connected' || c.status === 'AccountSelectionRequired' ? c.provider : this.selectedProvider;
+
+        return c.availableProviders.find((p) => p.provider === code) ?? null;
+    }
+
     load(): void {
         this.loading.set(true);
         this.loadError.set(null);
@@ -152,10 +184,7 @@ export class ClinicEDocumentConnectionSectionComponent implements OnInit {
             .getConnection(this.clinicId())
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
-                next: (c) => {
-                    this.connection.set(c);
-                    this.loading.set(false);
-                },
+                next: (c) => this.setConnection(c),
                 error: (e: unknown) => {
                     this.loadError.set(panelHttpFailureMessage(e, 'Bağlantı durumu yüklenemedi.'));
                     this.loading.set(false);
@@ -175,7 +204,7 @@ export class ClinicEDocumentConnectionSectionComponent implements OnInit {
 
     selectAccount(): void {
         if (this.selectedAccount) {
-            this.run(this.service.selectAccount(this.clinicId(), this.selectedAccount), (c) => this.connection.set(c), 'Firma bağlanamadı.');
+            this.run(this.service.selectAccount(this.clinicId(), this.selectedAccount), (c) => this.setConnection(c), 'Firma bağlanamadı.');
         }
     }
 
@@ -183,7 +212,7 @@ export class ClinicEDocumentConnectionSectionComponent implements OnInit {
         this.run(
             this.service.verify(this.clinicId()),
             (c) => {
-                this.connection.set(c);
+                this.setConnection(c);
                 this.messages.add({ severity: c.lastVerificationOk ? 'success' : 'warn', summary: 'Bağlantı sınandı', detail: c.lastVerificationMessage ?? undefined, life: 5000 });
             },
             'Bağlantı sınanamadı.'
@@ -192,6 +221,12 @@ export class ClinicEDocumentConnectionSectionComponent implements OnInit {
 
     disconnect(): void {
         this.run(this.service.disconnect(this.clinicId()), () => this.load(), 'Bağlantı koparılamadı.');
+    }
+
+    private setConnection(c: EDocumentConnectionDto): void {
+        this.connection.set(c);
+        this.selectedProvider ??= c.provider ?? c.availableProviders.find((p) => p.configured)?.provider ?? null;
+        this.loading.set(false);
     }
 
     private run<T>(call$: Observable<T>, next: (value: T) => void, fallback: string): void {

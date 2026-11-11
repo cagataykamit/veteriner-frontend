@@ -6,7 +6,7 @@ import { of } from 'rxjs';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { EDocumentConnectionDto } from '@/app/entities/e-document/models/e-document.model';
 import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
-import { ClinicEDocumentConnectionSectionComponent } from './clinic-e-document-connection-section.component';
+import { EDocumentConnectionCardComponent } from './e-document-connection-card.component';
 
 const notConnected: EDocumentConnectionDto = {
     clinicId: 'k1',
@@ -21,10 +21,13 @@ const notConnected: EDocumentConnectionDto = {
     lastVerificationOk: null,
     lastVerificationMessage: null,
     accountChoices: null,
-    availableProviders: [{ provider: 'parasut', providerName: 'Paraşüt', configured: true }]
+    availableProviders: [
+        { provider: 'parasut', providerName: 'Paraşüt', configured: true, connectionMethod: 'OAuth' },
+        { provider: 'diger', providerName: 'Diğer Entegratör', configured: false, connectionMethod: 'Credentials' }
+    ]
 };
 
-describe('ClinicEDocumentConnectionSectionComponent', () => {
+describe('EDocumentConnectionCardComponent', () => {
     let service: MockedObject<EDocumentsService>;
     let messages: MessageService;
 
@@ -37,7 +40,7 @@ describe('ClinicEDocumentConnectionSectionComponent', () => {
             disconnect: vi.fn().mockReturnValue(of(undefined))
         } as unknown as MockedObject<EDocumentsService>;
         TestBed.configureTestingModule({
-            imports: [ClinicEDocumentConnectionSectionComponent],
+            imports: [EDocumentConnectionCardComponent],
             providers: [
                 provideRouter([]),
                 MessageService,
@@ -49,7 +52,7 @@ describe('ClinicEDocumentConnectionSectionComponent', () => {
         messages = TestBed.inject(MessageService);
         vi.spyOn(messages, 'add');
         vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-        const fixture = TestBed.createComponent(ClinicEDocumentConnectionSectionComponent);
+        const fixture = TestBed.createComponent(EDocumentConnectionCardComponent);
 
         fixture.componentRef.setInput('clinicId', 'k1');
         fixture.detectChanges();
@@ -57,11 +60,16 @@ describe('ClinicEDocumentConnectionSectionComponent', () => {
         return fixture;
     };
 
-    it('bağlı değilken sağlayıcı bağlama düğmesi gösterir; kimlik bilgisi alanı yoktur', () => {
+    it('bağlı değilken entegratör seçilir (yapılandırılmamış kapalı) ve bağlama düğmesi görünür; kimlik bilgisi alanı yoktur', () => {
         const fixture = render(notConnected);
         const el = fixture.nativeElement as HTMLElement;
 
-        expect(el.querySelector('[data-testid="edoc-connect-parasut"]')?.textContent).toContain('Paraşüt hesabını bağla');
+        expect(fixture.componentInstance.providerOptions()).toEqual([
+            { value: 'parasut', label: 'Paraşüt', disabled: false },
+            { value: 'diger', label: 'Diğer Entegratör (yapılandırılmadı)', disabled: true }
+        ]);
+        expect(fixture.componentInstance.chosenProvider()?.provider).toBe('parasut');
+        expect(el.querySelector('[data-testid="edoc-connect"]')?.textContent).toContain('Paraşüt hesabını bağla');
         expect(el.querySelector('input[type="password"]')).toBeNull();
         expect(fixture.componentInstance.statusText()).toBe('Bağlı değil');
     });

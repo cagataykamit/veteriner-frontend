@@ -45,6 +45,7 @@ export interface EDocumentDto {
     clientName: string;
     documentType: EDocumentType;
     status: EDocumentStatus;
+    origin: EDocumentOrigin;
     provider: string;
     providerName: string;
     isTest: boolean;
@@ -85,6 +86,7 @@ export interface EDocumentListItemDto {
     issuedAtUtc: string | null;
     isTest: boolean;
     lastErrorMessage: string | null;
+    origin: EDocumentOrigin;
 }
 
 export interface PagedDto<T> {
@@ -122,7 +124,12 @@ export interface UndocumentedChargeDto {
     saleId: string | null;
     description: string;
     amount: number;
+    outstandingAmount: number;
     createdAtUtc: string;
+    /** Ücret kesilemeyen bir belgeye bağlıysa o belge (yeniden dene / vazgeç). */
+    failedDocumentId: string | null;
+    /** Belgenin neden kesilmediği; hazırsa `null`. */
+    reason: string | null;
 }
 
 /** Belge kaynağı: tam olarak biri. */
@@ -145,5 +152,41 @@ export interface EDocumentConnectionDto {
     lastVerificationOk: boolean | null;
     lastVerificationMessage: string | null;
     accountChoices: { accountId: string; accountName: string; taxNumber: string | null }[] | null;
-    availableProviders: { provider: string; providerName: string; configured: boolean }[];
+    availableProviders: EDocumentProviderOption[];
+}
+
+/** `OAuth`: sağlayıcının kendi ekranında onay; `Credentials`: anahtar/kullanıcı alanları (ileride). */
+export interface EDocumentProviderOption {
+    provider: string;
+    providerName: string;
+    configured: boolean;
+    connectionMethod: 'OAuth' | 'Credentials';
+}
+
+export type EDocumentOrigin = 'Manual' | 'Payment' | 'Automatic';
+
+export type EDocumentAutoIssueMode = 'Off' | 'OnPayment' | 'EndOfDay';
+
+export interface ClinicEDocumentSettingsDto {
+    clinicId: string;
+    autoIssueMode: EDocumentAutoIssueMode;
+    /** "SS:dd", İstanbul saati. */
+    endOfDayTime: string;
+    issueOnPaymentByDefault: boolean;
+    autoIssueEnabledAtUtc: string | null;
+    taxpayerType: 'SelfEmployed' | 'Company' | 'Both' | null;
+    /** Hizmet / ürün satırında kesilecek belge: e-SMM ya da fatura (alıcıya göre e-Arşiv / e-Fatura). */
+    serviceDocument: 'ESmm' | 'Invoice' | null;
+    productDocument: 'ESmm' | 'Invoice' | null;
+}
+
+export interface EDocumentRemindersDto {
+    connected: boolean;
+    undocumentedPaidCount: number;
+    failedCount: number;
+}
+
+export interface EDocumentBatchResultDto {
+    documents: EDocumentDto[];
+    skipped: { chargeId: string; code: string; message: string }[];
 }

@@ -5,7 +5,10 @@ import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type {
+    ClinicEDocumentSettingsDto,
+    EDocumentBatchResultDto,
     EDocumentConnectionDto,
+    EDocumentRemindersDto,
     EDocumentDto,
     EDocumentListItemDto,
     EDocumentPreviewDto,
@@ -109,6 +112,27 @@ export class EDocumentsService {
                 fileName: fileNameFromContentDisposition(response.headers.get('content-disposition')) ?? `e-belge-${id}.pdf`
             }))
         );
+    }
+
+    /** Ödeme ekranında "e-Belge kes": ödemenin karşıladığı, tamamen ödenmiş belgesiz ücretlere belge. Ödeme kaydını etkilemez. */
+    issueFromPayment(paymentId: string): Observable<EDocumentBatchResultDto> {
+        return this.api.post<EDocumentBatchResultDto>(ApiEndpoints.eDocuments.fromPayment(), { paymentId });
+    }
+
+    /** Menü rozeti: bağlantıdan sonra ödenmiş belgesiz ücretler ve kesilemeyen belgeler. */
+    reminders(): Observable<EDocumentRemindersDto> {
+        const clinicId = this.clinicId();
+        const params = clinicId ? new HttpParams().set('clinicId', clinicId) : undefined;
+
+        return this.api.get<EDocumentRemindersDto>(ApiEndpoints.eDocuments.reminders(), params);
+    }
+
+    getSettings(clinicId: string): Observable<ClinicEDocumentSettingsDto> {
+        return this.api.get<ClinicEDocumentSettingsDto>(ApiEndpoints.clinics.eDocumentSettings(clinicId));
+    }
+
+    updateSettings(clinicId: string, body: Pick<ClinicEDocumentSettingsDto, 'autoIssueMode' | 'endOfDayTime' | 'issueOnPaymentByDefault'>): Observable<ClinicEDocumentSettingsDto> {
+        return this.api.put<ClinicEDocumentSettingsDto>(ApiEndpoints.clinics.eDocumentSettings(clinicId), body);
     }
 
     getConnection(clinicId: string): Observable<EDocumentConnectionDto> {

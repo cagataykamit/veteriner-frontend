@@ -52,6 +52,8 @@ export const ApiEndpoints = {
         eDocumentConnectionAccount: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/e-document-connection/account`,
         /** POST; bağlantıyı sınar. */
         eDocumentConnectionVerify: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/e-document-connection/verify`,
+        /** GET `Clinics.Read`, PUT `Clinics.Update`: otomatik e-belge, gün sonu saati, ödeme ekranı varsayılanı, belge türü özeti. */
+        eDocumentSettings: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/e-document-settings`,
         /** Geliş formundaki sorumlu hekim seçimi (`Visits.Create`). */
         veterinarians: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/veterinarians`
     },
@@ -325,7 +327,11 @@ export const ApiEndpoints = {
         cancel: (id: string) => `/api/v1/e-documents/${encodeURIComponent(id)}/cancel`,
         pdf: (id: string) => `/api/v1/e-documents/${encodeURIComponent(id)}/pdf`,
         /** GET belgesiz ücretler (`clinicId`, `clientId`, `visitId`, `fromUtc`, `toUtc`, sayfalı). */
-        undocumentedCharges: () => `/api/v1/e-documents/undocumented-charges`
+        undocumentedCharges: () => `/api/v1/e-documents/undocumented-charges`,
+        /** POST `{ paymentId }`: ödemenin karşıladığı tamamen ödenmiş ücretlere belge (`EDocuments.Issue`). */
+        fromPayment: () => `/api/v1/e-documents/from-payment`,
+        /** GET `clinicId`: menü rozeti (`connected`, `undocumentedPaidCount`, `failedCount`). */
+        reminders: () => `/api/v1/e-documents/reminders`
     },
     sales: {
         /** GET: `page`, `pageSize`, `clientId`, `productId`, `fromUtc`, `toUtc`, `includeVoided`, `clinicId` (`Sales.Read`); POST: satış oluştur (`Sales.Create`). */

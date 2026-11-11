@@ -5,7 +5,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { AuthService } from '@/app/core/auth/auth.service';
 import type { EDocumentDto, EDocumentPreviewDto, EDocumentPreviewGroupDto, EDocumentSource } from '@/app/entities/e-document/models/e-document.model';
 import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
 import { eDocumentStatusLabel, eDocumentStatusSeverity, eDocumentTypeLabel, isEDocumentPending } from '@/app/entities/e-document/utils/e-document-labels';
@@ -46,15 +45,13 @@ interface GroupState {
                             <i class="pi pi-link" aria-hidden="true"></i>
                             <span>
                                 e-belge entegratörü bu klinik için bağlı değil.
-                                @if (clinicId(); as cid) {
-                                    <a [routerLink]="['/panel/settings/clinics', cid]" (click)="visible.set(false)">Klinik ayarlarından bağlayın</a>.
-                                }
+                                <a routerLink="/panel/settings/e-documents" (click)="visible.set(false)">Ayarlar › e-Belge</a> sayfasından bağlayın.
                             </span>
                         </div>
                     } @else if (p.connection.environment === 'Test') {
                         <div class="edoc-note" data-testid="e-document-test-env">
                             <i class="pi pi-info-circle" aria-hidden="true"></i>
-                            <span>{{ p.connection.providerName }} test ortamı: kesilen belge gerçek değildir.</span>
+                            <span>Test ortamı: kesilen belge gerçek değildir.</span>
                         </div>
                     }
 
@@ -187,14 +184,12 @@ export class EDocumentIssueDialogComponent {
     readonly changed = output<EDocumentDto>();
 
     private readonly service = inject(EDocumentsService);
-    private readonly auth = inject(AuthService);
 
     readonly loading = signal(false);
     readonly loadError = signal<string | null>(null);
     readonly preview = signal<EDocumentPreviewDto | null>(null);
     readonly groups = signal<GroupState[]>([]);
     readonly anyIssued = computed(() => this.groups().some((g) => g.document !== null));
-    readonly clinicId = computed(() => this.auth.getClinicId()?.trim() || null);
 
     note = '';
 

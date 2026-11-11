@@ -1,4 +1,4 @@
-import type { EDocumentStatus, EDocumentType } from '@/app/entities/e-document/models/e-document.model';
+import type { EDocumentOrigin, EDocumentStatus, EDocumentType } from '@/app/entities/e-document/models/e-document.model';
 
 export type EDocumentTagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
 
@@ -35,6 +35,18 @@ export function eDocumentStatusLabel(status: EDocumentStatus): string {
 
 export function eDocumentStatusSeverity(status: EDocumentStatus): EDocumentTagSeverity {
     return STATUS[status]?.severity ?? 'secondary';
+}
+
+/** Belgeyi kimin başlattığı; elle kesilen için etiket yok. */
+export function eDocumentOriginLabel(origin: EDocumentOrigin | null | undefined): string | null {
+    switch (origin) {
+        case 'Automatic':
+            return 'Otomatik';
+        case 'Payment':
+            return 'Ödemeden';
+        default:
+            return null;
+    }
 }
 
 /** Sağlayıcı sonucu bekleyen durumlar: kullanıcı "Yenile" ile hemen sorabilir. */
