@@ -185,6 +185,20 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(support).toContain('e-postayla göndermezsiniz');
     });
 
+    it('geçiş: aktarılır / aktarılmaz listeleri geçiş sayfasında ve ana sayfada aynı', async () => {
+        const included = ['Müşteri ve hasta notları', 'Geçmiş işlem ve kontroller (dışa aktarımda varsa, klinik geçmişe not olarak)', 'Açık bakiye (borç ve alacak)', 'Ürün ve hizmet kartları (fiyat, KDV oranı ve alış fiyatıyla)'];
+        const excluded = 'Geçmiş randevular randevu olarak (yapılan işler klinik geçmişe not olarak gelir)';
+
+        for (const path of [PUBLIC_PATHS.migration, PUBLIC_PATHS.home]) {
+            await harness.navigateByUrl(path);
+            harness.detectChanges();
+            const items = texts('li span');
+
+            expect(items).toEqual(expect.arrayContaining([...included, excluded]));
+            expect(root().textContent).not.toMatch(/alacak \(fazla ödeme\)|alacak bakiyesi/i);
+        }
+    });
+
     it('defterler ve KVKK: tüm veriyi dışa aktarma bölümü her pakette', async () => {
         await harness.navigateByUrl(PUBLIC_PATHS.registersAndKvkk);
         harness.detectChanges();
