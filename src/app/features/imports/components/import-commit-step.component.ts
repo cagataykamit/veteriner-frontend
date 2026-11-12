@@ -41,16 +41,16 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                         <dd class="m-0 text-xl font-medium">{{ totals().willSkip }}</dd>
                     </div>
                     <div>
-                        <dt class="text-muted-color">Hatalı satır</dt>
-                        <dd class="m-0 text-xl font-medium" [class.text-danger]="totals().error > 0">{{ totals().error }}</dd>
+                        <dt class="text-muted-color">Aktarılmayacak (eksik bilgi)</dt>
+                        <dd class="m-0 text-xl font-medium">{{ totals().error }}</dd>
                     </div>
                 </dl>
 
                 @if (totals().error > 0) {
                     <div class="flex flex-col gap-1 mb-4">
-                        <label for="importOnErrors" class="text-sm font-medium">Hatalı satırlar</label>
+                        <label for="importOnErrors" class="text-sm font-medium">Eksik bilgili satırlar</label>
                         <p-select inputId="importOnErrors" [options]="onErrorsOptions" optionLabel="label" optionValue="value" [(ngModel)]="onErrors" class="w-full md:w-[28rem]" />
-                        <small class="text-muted-color">Hatalı satırlar hata raporunda kalır; düzeltilmiş dosyayı sonradan yeni içe aktarma olarak yükleyebilirsiniz.</small>
+                        <small class="text-muted-color">Bu satırlar indirilebilir listede kalır; eski programda düzeltip sonradan yeni içe aktarma olarak yükleyebilirsiniz.</small>
                     </div>
                 }
 
@@ -202,8 +202,8 @@ export class ImportCommitStepComponent {
     readonly previewStale = output<void>();
 
     protected readonly onErrorsOptions: { label: string; value: ImportOnErrors }[] = [
-        { label: 'Hatalı satırları atla, kalanını aktar (önerilen)', value: 'SkipErrorRows' },
-        { label: 'Hatalı satır varsa hiçbir şey aktarma', value: 'FailIfAny' }
+        { label: 'Eksik bilgili satırları atla, kalanını aktar (önerilen)', value: 'SkipErrorRows' },
+        { label: 'Eksik bilgili satır varsa hiçbir şey aktarma', value: 'FailIfAny' }
     ];
     protected onErrors: ImportOnErrors = 'SkipErrorRows';
     protected confirmed = false;
