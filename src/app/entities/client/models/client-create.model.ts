@@ -15,6 +15,8 @@ export interface CreateClientRequest {
     remindersOptedOut?: boolean;
     /** Fatura kimliği (ADR-036); verilmezse gövdeye girmez (PUT'ta değer korunur). */
     invoicingIdentity?: ClientInvoicingIdentityDto;
+    /** İç not; verilmezse gövdeye girmez (PUT'ta değer korunur), `""` temizler. */
+    notes?: string;
 }
 
 /**

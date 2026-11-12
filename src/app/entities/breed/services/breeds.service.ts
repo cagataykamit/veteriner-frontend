@@ -31,7 +31,9 @@ export class BreedsService {
             activeOnly: options?.activeOnly,
             speciesId: options?.speciesId,
             search: options?.search,
-            ...(options?.panelList === true ? { page: 1, pageSize: BREEDS_PANEL_LIST_PAGE_SIZE } : {})
+            // Sayfa boyutu gönderilmezse sunucu ilk 20 kaydı verir; seçim listeleri tam listeyi ister (sunucu tavanı 200).
+            page: 1,
+            pageSize: BREEDS_PANEL_LIST_PAGE_SIZE
         });
 
         return this.api.get<unknown>(ApiEndpoints.breeds.list(), params).pipe(

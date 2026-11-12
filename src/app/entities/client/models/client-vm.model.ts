@@ -27,6 +27,8 @@ export interface ClientDetailVm {
     invoicing: ClientInvoicingSummaryVm | null;
     /** Rıza işareti için kayıt sürümü; okunamazsa `null` (işaretleme kapalı). */
     rowVersion: string | null;
+    /** Kliniğin iç notu (satır sonları korunur); boşsa `null`. */
+    notes: string | null;
 }
 
 /** Müşteri kartındaki "Fatura bilgileri" satırı; TCKN/VKN yalnız maskeli gelir. */

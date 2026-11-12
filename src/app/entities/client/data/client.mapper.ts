@@ -123,7 +123,8 @@ export function mapClientUpsertFormValueToCreateRequest(value: ClientUpsertFormV
         email: value.email.trim() || undefined,
         address: value.address.trim() || undefined,
         preferredContactChannel: value.preferredContactChannel,
-        remindersOptedOut: value.remindersOptedOut
+        remindersOptedOut: value.remindersOptedOut,
+        notes: value.notes.trim()
     };
 }
 
@@ -143,7 +144,8 @@ export function mapCreateClientToApiBody(req: CreateClientRequest): ClientUpsert
         address,
         ...(req.preferredContactChannel !== undefined ? { preferredContactChannel: req.preferredContactChannel } : {}),
         ...(req.remindersOptedOut !== undefined ? { remindersOptedOut: req.remindersOptedOut } : {}),
-        ...(req.invoicingIdentity !== undefined ? { invoicingIdentity: req.invoicingIdentity } : {})
+        ...(req.invoicingIdentity !== undefined ? { invoicingIdentity: req.invoicingIdentity } : {}),
+        ...(req.notes !== undefined ? { notes: req.notes.trim() } : {})
     };
 }
 
@@ -279,6 +281,7 @@ export function mapClientDetailDtoToVm(dto: ClientDetailDto): ClientDetailVm {
         updatedAtUtc: dto.updatedAtUtc ?? null,
         preferredContactChannel: parseClientContactChannel(dto.preferredContactChannel),
         invoicing: mapClientInvoicingSummaryDtoToVm(dto.invoicing),
+        notes: trimmedOrNull(dto.notes),
         ...mapClientKvkkConsentDtoToVm(dto)
     };
 }

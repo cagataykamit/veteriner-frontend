@@ -133,7 +133,7 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
             {
                 question: 'Ne aktarılır, ne aktarılmaz?',
                 answer:
-                    'Müşteriler, hastalar, aşı geçmişi, muayene ve klinik notlar, açık bakiye, eski programdaki hesap hareketleri, gelecek randevular ve ürün/hizmet kartları aktarılır. Klinik notlar, reçete ve laboratuvar sonuçları metin olarak gelir. Hesap hareketleri bilgi amaçlıdır; bakiyenize yalnız açık borç yazılır, ciroya ve kasaya girmez. Belgeler ve görüntüler, stok miktarı, alacak bakiyesi ve geçmiş randevular şimdilik aktarılmaz.'
+                    'Müşteriler ve hastalar (notlarıyla), aşı geçmişi, muayene ve klinik notlar, açık bakiye (borç ve alacak), eski programdaki hesap hareketleri, gelecek randevular ve ürün/hizmet kartları (fiyat, KDV oranı ve alış fiyatıyla) aktarılır. Klinik notlar, reçete ve laboratuvar sonuçları metin olarak gelir; dışa aktarımda geçmiş işlem ve kontroller varsa klinik geçmişe not olarak eklenir. Hesap hareketleri bilgi amaçlıdır; bakiyenize yalnız açık bakiye borç ya da alacak olarak yazılır, ciroya ve kasaya girmez. Belgeler ve görüntüler, stok miktarı ve geçmiş randevular (randevu olarak) şimdilik aktarılmaz.'
             },
             {
                 question: 'Geçiş ne kadar sürer?',

@@ -1,8 +1,9 @@
 /**
- * Müşteri kredisi ve mahsup — `CLIENT_CREDIT_API_CONTRACT.md` §4–§7 (FIN-005). Kredi yalnız alınan paradan doğar
- * (fazla ödeme ya da avans); enum alanları metin gelir ve ekranda olduğu gibi etiketlenir (VM'e çevrilmez).
+ * Müşteri kredisi ve mahsup — `CLIENT_CREDIT_API_CONTRACT.md` §4–§7 (FIN-005). Kredi alınan paradan doğar (fazla ödeme ya da
+ * avans) ya da içe aktarmada eski programdan devreden alacaktır (§13, `OpeningBalance`; kaynak ödemesi yoktur). Enum alanları
+ * metin gelir ve ekranda olduğu gibi etiketlenir (VM'e çevrilmez).
  */
-export type ClientCreditSource = 'Overpayment' | 'Prepayment';
+export type ClientCreditSource = 'Overpayment' | 'Prepayment' | 'OpeningBalance';
 
 /** Sunucu hesaplar: `Open` kalanı olan, `Used` tamamı mahsup edilmiş, `Refunded` iade edilmiş, `Voided` kaynak ödemeyle iptal. */
 export type ClientCreditStatus = 'Open' | 'Used' | 'Refunded' | 'Voided';
@@ -23,7 +24,8 @@ export interface ClientCreditDto {
     id: string;
     clinicId: string;
     clientId: string;
-    sourcePaymentId: string;
+    /** Devir alacağında `null` (kaynak ödeme yok). */
+    sourcePaymentId: string | null;
     source: ClientCreditSource;
     status: ClientCreditStatus;
     amount: number;
@@ -38,6 +40,8 @@ export interface ClientCreditDto {
     refundReason: string | null;
     voidedAtUtc: string | null;
     applications: ClientCreditApplicationItemDto[];
+    /** İçe aktarmanın açtığı devir alacağı (ADR-048 T3). */
+    isImported: boolean;
 }
 
 export interface ClientCreditApplyLine {

@@ -129,6 +129,14 @@ import { ConfirmationService } from 'primeng/api';
                                 <dt>Kategori</dt>
                                 <dd [class]="p.categoryName === emptyMark ? 'field-empty' : 'font-medium'">{{ p.categoryName }}</dd>
                             </div>
+                            <div>
+                                <dt>KDV oranı</dt>
+                                <dd class="font-medium" data-testid="product-vat-rate">{{ p.vatRateLabel }}</dd>
+                            </div>
+                            <div>
+                                <dt title="Bilgi amaçlıdır; stok değeri ve ücret hesabında kullanılmaz.">Alış fiyatı (bilgi amaçlı)</dt>
+                                <dd [class]="p.purchasePriceText === emptyMark ? 'field-empty' : 'font-medium tabular-nums'" data-testid="product-purchase-price">{{ p.purchasePriceText }}</dd>
+                            </div>
                         </dl>
                     </div>
                     <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-4">

@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import type { ImportBatchStatus, ImportIssueSeverity, ImportJobStatus, ImportReminderImpactDto, ImportRollbackBlockedItemDto, ImportRollbackCountsDto, ImportRollbackEntity, ImportTable, ImportValueKind } from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchStatus, ImportIssueSeverity, ImportJobStatus, ImportReminderImpactDto, ImportRollbackBlockedItemDto, ImportRollbackCountsDto, ImportRollbackEntity, ImportSourceProfileCode, ImportTable, ImportValueKind } from '@/app/features/imports/models/import-api.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { IMPORT_TABLE_LABELS } from '@/app/features/imports/utils/import-schema.utils';
@@ -144,7 +144,8 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.ApplyFailed': 'Kayıt yazılırken bir çakışma oluştu; satır aktarılamadı',
     // Tam geçiş (sözleşme 12)
     'Imports.ClinicRequired': 'Bu kayıtlar için klinik seçilmemiş',
-    'Imports.CreditBalanceNotImported': 'Alacak (eksi) bakiye aktarılmaz; müşteri bakiyesiz aktarılır',
+    // Eski partilerde kalan kod; eksi bakiye artık devir alacağı olarak aktarılır (ADR-048 T3).
+    'Imports.CreditBalanceNotImported': 'Alacak (eksi) bakiye aktarılmadı; müşteri bakiyesiz aktarıldı',
     'Imports.AmountInvalid': 'Tutar okunamadı veya geçersiz',
     'Imports.EntryAmountInvalid': 'Tutar okunamadı, sıfır ya da geçersiz; hareket aktarılmaz',
     'Imports.BalanceNotAppliedToExisting': 'Müşteri sistemde zaten var; açık bakiye eklenmez',
@@ -152,7 +153,7 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.DateInFuture': 'Tarih gelecekte',
     'Imports.RecordBeforeBirth': 'Kayıt, doğum tarihinden önce görünüyor',
     'Imports.TemperatureInvalid': 'Ateş değeri geçersiz; boş aktarılır',
-    'Imports.ClinicalRecordEmpty': 'Kayıtta hiçbir klinik bilgi yok (şikâyet, bulgu, tanı, tedavi, not…)',
+    'Imports.ClinicalRecordEmpty': 'Kayıtta hiçbir klinik bilgi yok (şikâyet, bulgu, tanı, tedavi, not, kilo, ateş…)',
     'Imports.DuplicateClinicalRecord': 'Aynı klinik kayıt zaten var; atlanır',
     'Imports.EntryKindUnrecognized': 'İşlem türü tanınmadı (borç veya tahsilat yazın)',
     'Imports.DuplicateAccountEntry': 'Aynı hesap hareketi zaten var; atlanır',
@@ -164,11 +165,31 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.PastAppointmentSkipped': 'Geçmiş randevu; aktarılmaz',
     'Imports.DuplicateAppointment': 'Aynı randevu zaten var; atlanır',
     'Imports.ProductKindDefaulted': 'Ürün türü tanınmadı; "Diğer" alınır',
-    'Imports.CategoryUnmapped': 'Kategori sistemde yok; kategorisiz aktarılır'
+    'Imports.CategoryUnmapped': 'Kategori sistemde yok; kategorisiz aktarılır',
+    // E-vet yedeği (sözleşme 13)
+    'Imports.TaxIdInvalid': 'Kimlik / vergi no geçersiz; fatura bilgisi boş aktarılır',
+    'Imports.StatusUnrecognized': 'Durum tanınmadı; aktif aktarılır',
+    'Imports.InactiveClient': 'Eski programda pasif müşteri; hatırlatma gönderilmez',
+    'Imports.DeceasedDateIgnored': 'Vefat tarihi okunamadı veya geçersiz; tarihsiz vefat aktarılır',
+    // Eksik alanlar (sözleşme 0, 2026-11-12)
+    'Imports.VatRateInvalid': 'KDV oranı okunamadı; ürün klinik varsayılan KDV oranıyla aktarılır',
+    'Imports.PurchasePriceInvalid': 'Alış fiyatı okunamadı; boş aktarılır'
 };
 
 export function importIssueLabel(code: string, fallback?: string): string {
     return ISSUE_LABELS[code] ?? fallback ?? code;
+}
+
+/** E-vet yedeğinde geçmiş görevden oluşan klinik geçmiş satırının numarası: bu değer + Randevu Listesi Excel satırı (sözleşme 13.2). */
+export const EVET_TASK_ROW_OFFSET = 1_000_000;
+
+/** Satırın yeri: "Klinik geçmiş · satır 12"; E-vet geçmiş görevinde "Klinik geçmiş · Randevu Listesi satır 245". */
+export function importRowPlace(table: ImportTable, rowNumber: number, sourceProfile?: ImportSourceProfileCode): string {
+    const label = IMPORT_TABLE_LABELS[table] ?? table;
+
+    return sourceProfile === 'EVet' && table === 'clinicalRecords' && rowNumber > EVET_TASK_ROW_OFFSET
+        ? `${label} · Randevu Listesi satır ${rowNumber - EVET_TASK_ROW_OFFSET}`
+        : `${label} · satır ${rowNumber}`;
 }
 
 const PROBLEM_MESSAGES: Readonly<Record<string, string>> = {

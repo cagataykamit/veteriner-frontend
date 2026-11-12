@@ -16,4 +16,8 @@ export interface ProductUpsertFormValue {
     presentationForm: string;
     packaging: string;
     manufacturer: string;
+    /** `null` = klinik varsayılanı. */
+    vatRate: number | null;
+    /** Bilgi amaçlı; boş = `null`. */
+    purchasePrice: number | null;
 }

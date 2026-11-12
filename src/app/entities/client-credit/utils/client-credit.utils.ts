@@ -3,7 +3,8 @@ import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-ta
 
 const SOURCE_LABELS: Record<ClientCreditSource, string> = {
     Overpayment: 'Fazla ödeme',
-    Prepayment: 'Avans'
+    Prepayment: 'Avans',
+    OpeningBalance: 'Devir alacağı (eski program)'
 };
 
 const STATUS_LABELS: Record<ClientCreditStatus, { label: string; severity: StatusTagSeverity }> = {

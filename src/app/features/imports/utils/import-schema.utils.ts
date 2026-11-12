@@ -53,6 +53,64 @@ export const IMPORT_CSV_TEMPLATE_FILE: Readonly<Record<ImportTable, string>> = {
     products: 'vetinity-iceaktar-urunler.csv'
 };
 
+/** E-vet'ten yüklenen dosyalar; yedek zorunlu, raporlar yedeğe eklenir (yedeksiz `Imports.UnsupportedFile`). */
+export type EVetUploadSlot = 'backup' | 'patientReport' | 'vaccineReport' | 'products';
+
+export interface EVetUploadFileDef {
+    readonly slot: EVetUploadSlot;
+    /** Yükleme isteğindeki alan adı. */
+    readonly field: string;
+    readonly extension: '.xlsx' | '.csv';
+    readonly requirement: 'zorunlu' | 'önerilir' | 'isteğe bağlı';
+    /** E-vet'teki menü yolu. */
+    readonly menu: string;
+    readonly instruction: string;
+    /** Kalın gösterilen uyarı. */
+    readonly caution?: string;
+    readonly label: string;
+}
+
+/** Yönerge ve yükleme alanları bu sırayla gösterilir. */
+export const EVET_UPLOAD_FILES: readonly EVetUploadFileDef[] = [
+    {
+        slot: 'backup',
+        field: 'file',
+        extension: '.xlsx',
+        requirement: 'zorunlu',
+        menu: 'Genel > Yedek Al',
+        instruction: "Müşteri Listesi, Hasta Listesi, Randevular ve Muayene Listesi'ni işaretleyip Excel olarak indirin.",
+        caution: "Giriş Bilgileri'ni işaretlemeyin; kullanıcı ve parola bilgisi gerekmez.",
+        label: 'Yedek (.xlsx)'
+    },
+    {
+        slot: 'patientReport',
+        field: 'evetPatientReportFile',
+        extension: '.csv',
+        requirement: 'önerilir',
+        menu: 'Rapor > Hasta Listesi',
+        instruction: 'Csv olarak indirin. Hastaları sahibine kesin bağlar; yüklemezseniz sahip adıyla bağlanır.',
+        label: 'Hasta Listesi (.csv)'
+    },
+    {
+        slot: 'vaccineReport',
+        field: 'evetVaccineReportFile',
+        extension: '.csv',
+        requirement: 'isteğe bağlı',
+        menu: 'Rapor > Resmi > Aşı Bilgi',
+        instruction: "Tarih aralığını 01.01.2020'den bugüne seçip Csv olarak indirin. Aşıların seri numarasını ve ürün adını ekler.",
+        label: 'Aşı Bilgi (.csv)'
+    },
+    {
+        slot: 'products',
+        field: IMPORT_CSV_FIELD.products,
+        extension: '.csv',
+        requirement: 'isteğe bağlı',
+        menu: 'Rapor > Depo > Ürün Listesi',
+        instruction: 'Csv olarak indirin. Pasif ürünler aktarılmaz.',
+        label: 'Ürün Listesi (.csv)'
+    }
+];
+
 /** Klinik seçimi gerektiren tablolar (sözleşme 12.1); yoksa yükleme `Imports.ClinicRequired` döner. */
 export const IMPORT_CLINIC_TABLES: readonly ImportTable[] = ['vaccinations', 'clinicalRecords', 'accountEntries', 'appointments'];
 
@@ -81,8 +139,12 @@ export const IMPORT_FIELDS: Readonly<Record<ImportTable, readonly ImportFieldDef
         { key: 'Telefon', label: 'Telefon' },
         { key: 'Eposta', label: 'E-posta' },
         { key: 'Adres', label: 'Adres' },
-        { key: 'AcikBakiye', label: 'Açık bakiye (borç)', hint: 'Eski programdaki borç (TL). Yeni müşteri için tek bir devir ücreti açılır; alacak (eksi) tutar aktarılmaz.' },
-        { key: 'BakiyeTarihi', label: 'Bakiye tarihi', hint: 'Bakiyenin hangi tarihteki durum olduğu; yalnız devir ücretinin açıklamasına yazılır.' }
+        { key: 'AcikBakiye', label: 'Açık bakiye (borç / alacak)', hint: 'Eski programdaki bakiye (TL). Yeni müşteri için artı tutar tek bir devir ücreti, eksi tutar (alacak) tek bir devir alacağı olarak açılır. İkisi de ciroya, kasaya ve gün sonuna girmez.' },
+        { key: 'BakiyeTarihi', label: 'Bakiye tarihi', hint: 'Bakiyenin hangi tarihteki durum olduğu; yalnız devir ücretinin açıklamasına yazılır.' },
+        { key: 'KimlikNo', label: 'Kimlik / vergi no', hint: 'Fatura bilgisi: 11 haneli T.C. kimlik no veya 10 haneli vergi no. Geçersizse boş kalır.' },
+        { key: 'VergiDairesi', label: 'Vergi dairesi' },
+        { key: 'Durum', label: 'Durum', hint: 'Aktif veya Pasif. Pasif müşteri aktarılır, hatırlatma gönderilmez.' },
+        { key: 'Not', label: 'Not', hint: 'Kliniğin iç notu (en çok 4000 karakter); yalnız yeni müşteriye yazılır, sahip portalında görünmez.' }
     ],
     pets: [
         { key: 'MusteriNo', label: 'Müşteri no', hint: 'Sahibe bağlantı için tercih edilen alan.' },
@@ -99,6 +161,9 @@ export const IMPORT_FIELDS: Readonly<Record<ImportTable, readonly ImportFieldDef
         { key: 'Renk', label: 'Renk' },
         { key: 'Agirlik', label: 'Ağırlık' },
         { key: 'KarneNo', label: 'Karne no' },
+        { key: 'Alerji', label: 'Alerji', hint: 'Hastaya alerji uyarısı olarak eklenir.' },
+        { key: 'Durum', label: 'Durum', hint: 'Aktif veya Vefat (Ölü).' },
+        { key: 'VefatTarihi', label: 'Vefat tarihi' },
         { key: 'Not', label: 'Not' }
     ],
     vaccinations: [
@@ -154,6 +219,8 @@ export const IMPORT_FIELDS: Readonly<Record<ImportTable, readonly ImportFieldDef
         { key: 'Kategori', label: 'Kategori' },
         { key: 'Birim', label: 'Birim' },
         { key: 'SatisFiyati', label: 'Satış fiyatı' },
+        { key: 'KdvOrani', label: 'KDV oranı', hint: '20, %20 veya 18,5 gibi. Boşsa ya da okunamazsa klinik varsayılanı kullanılır.' },
+        { key: 'AlisFiyati', label: 'Alış fiyatı', hint: 'Birim alış fiyatı (TL), bilgi amaçlıdır; stok değeri ve ücret hesabında kullanılmaz. 0 boş sayılır.' },
         { key: 'Barkod', label: 'Barkod' },
         { key: 'StokKodu', label: 'Stok kodu' },
         { key: 'Uretici', label: 'Üretici' },

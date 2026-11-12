@@ -47,6 +47,10 @@ export interface ProductDetailVm {
     unit: string;
     unitPriceText: string;
     currency: string;
+    /** "Klinik varsayılanı" ya da "%20". */
+    vatRateLabel: string;
+    /** Bilgi amaçlı alış fiyatı (TL); boşsa "—". */
+    purchasePriceText: string;
     isActive: boolean;
     statusLabel: string;
     statusSeverity: StatusTagSeverity;

@@ -20,6 +20,7 @@ const client: ClientDetailVm = {
     remindersOptedOut: false,
     kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null, templateVersion: null, templateHash: null },
     invoicing: null,
+    notes: null,
     rowVersion: 'rv1'
 };
 
@@ -53,6 +54,16 @@ describe('ClientCardHeaderComponent', () => {
         });
 
         expect(el.querySelector('[data-testid="client-invoicing-summary"]')?.textContent?.trim()).toBe('Kurumsal · Örnek Ltd. · VKN 123*****90 · Kadıköy VD · Kadıköy / İstanbul');
+    });
+
+    it('iç not: satır sonları korunarak gösterilir; boşsa bölüm yok', () => {
+        expect(render({}).querySelector('[data-testid="client-notes"]')).toBeNull();
+        TestBed.resetTestingModule();
+
+        const text = render({ client: { ...client, notes: 'Kedi taşıma çantasıyla gelir.\nÖdemeyi ay sonunda yapar.' } }).querySelector('[data-testid="client-notes-text"]') as HTMLElement;
+
+        expect(text.textContent).toBe('Kedi taşıma çantasıyla gelir.\nÖdemeyi ay sonunda yapar.');
+        expect(text.classList).toContain('whitespace-pre-line');
     });
 
     const render = (inputs: {

@@ -31,6 +31,7 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
  * KVKK açık rıza (ADR-021) rozet + ayrıntı: durum, form tarihi, işaretleyen ve işaretleme anındaki metin sürümü (ADR-032); işaretleme eylemi sayfanın "Belgeler ve rıza" kartındadır.
  * Portal rozeti etiketi sayfadan gelir (`portalChip`, durum "Portal erişimi" panelinde okunur).
  * "Fatura bilgileri" satırı (ADR-036): kişi türü, unvan, TCKN/VKN yalnız maskeli, vergi dairesi ve fatura adresi.
+ * Kliniğin iç notu (varsa) satır sonları korunarak en altta; portalda gösterilmez.
  */
 @Component({
     selector: 'app-client-card-header',
@@ -120,6 +121,12 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
                             <span class="text-muted-color"><i class="pi pi-id-card mr-1" aria-hidden="true"></i>Fatura bilgileri:</span>
                             <span class="font-medium break-words" data-testid="client-invoicing-summary">{{ summary }}</span>
                         </p>
+                    }
+                    @if (client().notes; as notes) {
+                        <div class="mt-2 text-sm" aria-label="Not" data-testid="client-notes">
+                            <span class="text-muted-color"><i class="pi pi-comment mr-1" aria-hidden="true"></i>Not:</span>
+                            <p class="m-0 mt-1 whitespace-pre-line break-words" data-testid="client-notes-text">{{ notes }}</p>
+                        </div>
                     }
                 </div>
                 <div class="flex flex-wrap gap-2 items-center w-full @md:w-auto @md:ml-auto">

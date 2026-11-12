@@ -16,7 +16,8 @@ export function createClientUpsertFormGroup(fb: FormBuilder): ClientUpsertFormGr
         email: fb.nonNullable.control('', clientUpsertFieldValidators('email')),
         address: fb.nonNullable.control('', clientUpsertFieldValidators('address')),
         preferredContactChannel: fb.nonNullable.control<ClientContactChannel>('None'),
-        remindersOptedOut: fb.nonNullable.control(false)
+        remindersOptedOut: fb.nonNullable.control(false),
+        notes: fb.nonNullable.control('', clientUpsertFieldValidators('notes'))
     });
 }
 

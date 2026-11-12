@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { ImportReminderImpactDto, ImportTableInfoDto } from '@/app/features/imports/models/import-api.model';
-import { duplicateBatchId, importCommitBlockers, importErrorMessage, importIssueLabel, isDiscardable, isEndpointUnavailable, isImportJobRunning, reminderEmailTotal, reminderImpactCurrentCount, precheckImportFile, rollbackCountsText, rollbackCountsTotal, rollbackReasonLabel } from '@/app/features/imports/utils/import-labels.utils';
+import { duplicateBatchId, importCommitBlockers, importErrorMessage, importIssueLabel, importRowPlace, isDiscardable, isEndpointUnavailable, isImportJobRunning, reminderEmailTotal, reminderImpactCurrentCount, precheckImportFile, rollbackCountsText, rollbackCountsTotal, rollbackReasonLabel } from '@/app/features/imports/utils/import-labels.utils';
 import { columnMapsToRequest, fieldLabel, IMPORT_CSV_FIELD, IMPORT_CSV_TEMPLATE_FILE, IMPORT_TABLES, initialColumnMaps, mappingConfidence, missingRequired, needsClinic } from '@/app/features/imports/utils/import-schema.utils';
 import { IMPORT_VALUE_SKIP, valueChoicesToRequest } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { isTrialLimitError } from '@/app/shared/utils/api-error.utils';
@@ -80,6 +80,13 @@ describe('import-labels.utils', () => {
     it('bilinen kodlar sade Türkçe, bilinmeyen kod yedek metinle gösterilir', () => {
         expect(importIssueLabel('Imports.SpeciesUnmapped')).toBe('Tür sistemde bulunamadı');
         expect(importIssueLabel('Imports.Bilinmeyen', 'Sunucu mesajı')).toBe('Sunucu mesajı');
+    });
+
+    it('satır yeri: E-vet geçmiş görevinden gelen klinik geçmiş satırı Randevu Listesi satırıyla gösterilir', () => {
+        expect(importRowPlace('clinicalRecords', 12, 'EVet')).toBe('Klinik geçmiş · satır 12');
+        expect(importRowPlace('clinicalRecords', 1_000_245, 'EVet')).toBe('Klinik geçmiş · Randevu Listesi satır 245');
+        expect(importRowPlace('clinicalRecords', 1_000_245, 'Generic')).toBe('Klinik geçmiş · satır 1000245');
+        expect(importRowPlace('pets', 1_000_245, 'EVet')).toBe('Hastalar · satır 1000245');
     });
 
     it('arka plan işi süren durumlar: doğrulama, uygulama, geri alma; Validating taslak olsa da silinemez', () => {
@@ -168,6 +175,14 @@ describe('tam geçiş tabloları (sözleşme 12)', () => {
         }
 
         expect(IMPORT_CSV_FIELD.clinicalRecords).toBe('clinicalRecordsFile');
+    });
+
+    it('eksik alanlar (2026-11-12): müşteri notu, ürün KDV oranı ve alış fiyatı etiketli; yeni uyarı kodları Türkçe', () => {
+        expect(fieldLabel('customers', 'Not')).toBe('Not');
+        expect(fieldLabel('products', 'KdvOrani')).toBe('KDV oranı');
+        expect(fieldLabel('products', 'AlisFiyati')).toBe('Alış fiyatı');
+        expect(importIssueLabel('Imports.VatRateInvalid')).toBe('KDV oranı okunamadı; ürün klinik varsayılan KDV oranıyla aktarılır');
+        expect(importIssueLabel('Imports.PurchasePriceInvalid')).toBe('Alış fiyatı okunamadı; boş aktarılır');
     });
 
     it('yeni kural ve geri alma kodlarının Türkçe etiketi vardır', () => {

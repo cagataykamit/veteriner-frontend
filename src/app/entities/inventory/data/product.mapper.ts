@@ -16,6 +16,7 @@ import {
     productKindLabel,
     productRequiresLotAndExpiry
 } from '@/app/entities/inventory/utils/product-classification.utils';
+import { chargeVatRateLabel } from '@/app/entities/charge/utils/charge-tax.utils';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatMoney } from '@/app/shared/utils/money.utils';
@@ -79,20 +80,28 @@ export function mapProductUpsertFormValueToCreateRequest(value: ProductUpsertFor
         pharmacologicalForm: service ? null : optionalTrimmedOrNull(value.pharmacologicalForm),
         presentationForm: service ? null : optionalTrimmedOrNull(value.presentationForm),
         packaging: service ? null : optionalTrimmedOrNull(value.packaging),
-        manufacturer: service ? null : optionalTrimmedOrNull(value.manufacturer)
+        manufacturer: service ? null : optionalTrimmedOrNull(value.manufacturer),
+        vatRate: value.vatRate ?? null,
+        purchasePrice: value.purchasePrice ?? null
     };
 }
 
-/** Sözleşme §2: PUT'ta `null` dokunmaz; boşaltılan metin alanı `""` ile temizlenir. */
+/**
+ * Sözleşme §2: PUT'ta `null` dokunmaz; boşaltılan metin alanı `""` ile temizlenir.
+ * §2.1: boş KDV oranı / alış fiyatı `clear…: true` ile temizlenir (değer `null` kalır).
+ */
 export function mapProductUpsertFormValueToUpdateRequest(value: ProductUpsertFormValue): UpdateProductRequest {
     const service = value.kind === 'Service';
+    const create = mapProductUpsertFormValueToCreateRequest(value);
 
     return {
-        ...mapProductUpsertFormValueToCreateRequest(value),
+        ...create,
         pharmacologicalForm: service ? '' : value.pharmacologicalForm.trim(),
         presentationForm: service ? '' : value.presentationForm.trim(),
         packaging: service ? '' : value.packaging.trim(),
-        manufacturer: service ? '' : value.manufacturer.trim()
+        manufacturer: service ? '' : value.manufacturer.trim(),
+        clearVatRate: create.vatRate == null,
+        clearPurchasePrice: create.purchasePrice == null
     };
 }
 
@@ -113,7 +122,9 @@ export function mapProductDtoToUpsertFormValue(dto: ProductDto): ProductUpsertFo
         pharmacologicalForm: dto.pharmacologicalForm?.trim() ?? '',
         presentationForm: dto.presentationForm?.trim() ?? '',
         packaging: dto.packaging?.trim() ?? '',
-        manufacturer: dto.manufacturer?.trim() ?? ''
+        manufacturer: dto.manufacturer?.trim() ?? '',
+        vatRate: num(dto.vatRate),
+        purchasePrice: num(dto.purchasePrice)
     };
 }
 
@@ -193,6 +204,8 @@ export function mapProductDtoToDetailVm(dto: ProductDto): ProductDetailVm {
         unit: str(dto.unit),
         unitPriceText: formatMoney(unitPrice, currency),
         currency,
+        vatRateLabel: chargeVatRateLabel(num(dto.vatRate)),
+        purchasePriceText: formatMoney(num(dto.purchasePrice), 'TRY'),
         isActive,
         statusLabel: productActiveLabel(isActive),
         statusSeverity: productActiveSeverity(isActive)

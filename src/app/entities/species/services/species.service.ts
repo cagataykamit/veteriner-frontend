@@ -23,13 +23,14 @@ export class SpeciesService {
     /**
      * GET `/api/v1/species`.
      * `activeOnly: true` → istek **`isActive=true`** query ile gider (sunucu filtreler); istemci tarafında tekrar filtre yok.
-     * Parametresiz / `activeOnly` yok → tam liste (panel tür listesi).
+     * Her çağrı tam listeyi ister (sayfa 1, sunucu tavanı 200): sayfa boyutu gönderilmezse sunucu ilk 20 kaydı verir ve
+     * seçim listelerinde "Diğer" gibi türler görünmez.
      */
     getSpeciesList(options?: { activeOnly?: boolean; panelList?: boolean }): Observable<SpeciesListItemVm[]> {
         const params = speciesListQueryToHttpParams(
             options?.panelList === true
                 ? { page: 1, pageSize: SPECIES_PANEL_LIST_PAGE_SIZE }
-                : { activeOnly: options?.activeOnly }
+                : { activeOnly: options?.activeOnly, page: 1, pageSize: SPECIES_PANEL_LIST_PAGE_SIZE }
         );
 
         return this.api.get<unknown>(ApiEndpoints.species.list(), params).pipe(
