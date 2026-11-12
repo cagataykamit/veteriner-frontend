@@ -62,7 +62,7 @@ describe('PublicTopbarComponent', () => {
 
         expect(menuButton.getAttribute('aria-expanded')).toBe('true');
         expect(menu.getAttribute('role')).toBe('dialog');
-        expect(Array.from(menu.querySelectorAll('nav > ul > li > a, nav > ul > li > button')).map((a) => a.textContent?.trim())).toEqual(
+        expect(Array.from(menu.querySelectorAll('nav > ul > li > a')).map((a) => a.textContent?.trim())).toEqual(
             PUBLIC_NAV_ITEMS.map((l) => l.label)
         );
         expect(menu.querySelector(`a[href="${PUBLIC_VET_FINDER_HREF}"]`)?.textContent?.trim()).toBe('Veteriner bul');
@@ -104,48 +104,13 @@ describe('PublicTopbarComponent', () => {
         expect(document.activeElement).toBe(last);
     });
 
-    it('masaüstü: Özellikler tıklamayla açılır; ilk öğe klinik web sitesi ve açıklaması, alt öğeler bölüm çıpalarına gider', () => {
-        const { fixture, host } = setup();
-        const button = host.querySelector<HTMLButtonElement>('button[aria-controls="public-nav-dropdown"]')!;
+    it('masaüstü: menü öğeleri düz bağlantıdır, açılır alt menü yok; Özellikler /ozellikler sayfasına gider', () => {
+        const { host } = setup();
+        const links = Array.from(host.querySelectorAll<HTMLAnchorElement>('header nav > ul > li > a'));
 
-        expect(button.textContent?.trim()).toBe('Özellikler');
-        expect(button.getAttribute('aria-expanded')).toBe('false');
-        expect(host.querySelector('#public-nav-dropdown')).toBeNull();
-
-        button.click();
-        fixture.detectChanges();
-
-        const panel = host.querySelector<HTMLElement>('#public-nav-dropdown')!;
-        const links = Array.from(panel.querySelectorAll<HTMLAnchorElement>('a'));
-        const children = PUBLIC_NAV_ITEMS.find((i) => i.children)!.children!;
-
-        expect(button.getAttribute('aria-expanded')).toBe('true');
-        expect(links.map((a) => a.querySelector('span')?.textContent?.trim())).toEqual(children.map((c) => c.label));
-        expect(links[0].getAttribute('href')).toBe('/ozellikler#hasta-sahibi');
-        expect(links[0].textContent).toContain("Hasta sahibi sizi Veteriner bul'da da bulur");
-        expect(links[links.length - 1].getAttribute('href')).toBe('/ozellikler');
-    });
-
-    it('masaüstü: Escape açılır menüyü kapatıp odağı düğmeye döndürür, dışarı tıklama kapatır', () => {
-        const { fixture, host } = setup();
-        const button = host.querySelector<HTMLButtonElement>('button[aria-controls="public-nav-dropdown"]')!;
-
-        button.click();
-        fixture.detectChanges();
-        host.querySelector<HTMLAnchorElement>('#public-nav-dropdown a')!.focus();
-        host.querySelector('#public-nav-dropdown')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-        fixture.detectChanges();
-
-        expect(host.querySelector('#public-nav-dropdown')).toBeNull();
-        expect(button.getAttribute('aria-expanded')).toBe('false');
-        expect(document.activeElement).toBe(button);
-
-        button.click();
-        fixture.detectChanges();
-        document.body.click();
-        fixture.detectChanges();
-
-        expect(host.querySelector('#public-nav-dropdown')).toBeNull();
+        expect(links.map((a) => a.textContent?.trim())).toEqual(PUBLIC_NAV_ITEMS.map((l) => l.label));
+        expect(links[0].getAttribute('href')).toBe('/ozellikler');
+        expect(host.querySelector('header nav button')).toBeNull();
     });
 
     it('Veteriner bul masaüstünde düz bağlantıdır (ayrı sunucu, Angular rotası değil), düğme değildir', () => {
@@ -156,23 +121,5 @@ describe('PublicTopbarComponent', () => {
         expect(link.querySelector('i.pi-map-marker')).not.toBeNull();
         expect(link.classList.contains('public-btn')).toBe(false);
         expect(link.closest('nav')).toBeNull();
-    });
-
-    it('mobil: Özellikler akordeonu kapalı başlar, açılınca alt bağlantılar görünür', async () => {
-        const { fixture, host, menuButton } = setup();
-
-        menuButton.click();
-        fixture.detectChanges();
-        await flush(fixture);
-        const toggle = host.querySelector<HTMLButtonElement>('button[aria-controls="public-mobile-submenu"]')!;
-
-        expect(toggle.getAttribute('aria-expanded')).toBe('false');
-        expect(host.querySelector('#public-mobile-submenu')).toBeNull();
-
-        toggle.click();
-        fixture.detectChanges();
-
-        expect(toggle.getAttribute('aria-expanded')).toBe('true');
-        expect(host.querySelector('#public-mobile-submenu a')?.getAttribute('href')).toBe('/ozellikler#hasta-sahibi');
     });
 });
