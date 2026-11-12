@@ -76,6 +76,15 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         <div class="col-span-12">
                             <app-client-contact-preference-fields [form]="form" />
                         </div>
+                        <div class="col-span-12">
+                            <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Not</label>
+                            <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
+                            @if (fieldMessage('notes'); as msg) {
+                                <small class="text-danger">{{ msg }}</small>
+                            } @else {
+                                <small class="text-muted-color">Kliniğin iç notudur; sahip portalında görünmez.</small>
+                            }
+                        </div>
                         @if (invoicingLoaded()) {
                             <div class="col-span-12">
                                 <app-client-invoicing-fields [form]="invoicingForm" [open]="invoicingOpen()" [apiErrors]="invoicingApiErrors()" />
@@ -182,7 +191,8 @@ export class ClientEditPageComponent implements OnInit {
                     email: client.email === '—' ? '' : client.email,
                     address: client.address === '—' ? '' : client.address,
                     preferredContactChannel: client.preferredContactChannel,
-                    remindersOptedOut: client.remindersOptedOut
+                    remindersOptedOut: client.remindersOptedOut,
+                    notes: client.notes ?? ''
                 });
                 this.loading.set(false);
                 this.loadInvoicing(id);

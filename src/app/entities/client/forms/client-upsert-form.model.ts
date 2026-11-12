@@ -3,7 +3,7 @@ import type { ClientCreateFormFieldKey } from '@/app/entities/client/utils/clien
 
 export type { ClientCreateFormFieldKey as ClientUpsertFormFieldKey };
 
-/** Yeni müşteri / düzenleme / hızlı modal — ortak form değeri. İletişim tercihi yalnız yeni/düzenle sayfasında gösterilir; hızlı modal varsayılanı gönderir. */
+/** Yeni müşteri / düzenleme / hızlı modal — ortak form değeri. İletişim tercihi ve not yalnız yeni/düzenle sayfasında gösterilir; hızlı modal varsayılanı gönderir. */
 export interface ClientUpsertFormValue {
     fullName: string;
     phone: string;
@@ -11,11 +11,14 @@ export interface ClientUpsertFormValue {
     address: string;
     preferredContactChannel: ClientContactChannel;
     remindersOptedOut: boolean;
+    /** Kliniğin iç notu; portala açılmaz. */
+    notes: string;
 }
 
 export const CLIENT_UPSERT_FORM_FIELDS: readonly ClientCreateFormFieldKey[] = [
     'fullName',
     'phone',
     'email',
-    'address'
+    'address',
+    'notes'
 ] as const;

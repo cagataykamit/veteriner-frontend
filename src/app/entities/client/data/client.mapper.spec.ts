@@ -84,7 +84,8 @@ describe('client.mapper iletişim tercihi (ADR-020 S5)', () => {
             email: '',
             address: '',
             preferredContactChannel: 'None',
-            remindersOptedOut: false
+            remindersOptedOut: false,
+            notes: ''
         });
 
         expect(mapCreateClientToApiBody(fromForm)).toEqual(expect.objectContaining({ fullName: 'Ali Veli', preferredContactChannel: 'None', remindersOptedOut: false }));
@@ -93,5 +94,21 @@ describe('client.mapper iletişim tercihi (ADR-020 S5)', () => {
 
         expect('preferredContactChannel' in body).toBe(false);
         expect('remindersOptedOut' in body).toBe(false);
+    });
+});
+
+describe('client.mapper iç not (§2.1)', () => {
+    const formValue = (notes: string) => ({ fullName: 'Ali Veli', phone: '', email: '', address: '', preferredContactChannel: 'None' as const, remindersOptedOut: false, notes });
+
+    it('gövde: form notu kenarları kırpılarak gider; boşaltılan not "" (PUT temizler); istekte yoksa gövdeye girmez (dokunma)', () => {
+        expect(mapCreateClientToApiBody(mapClientUpsertFormValueToCreateRequest(formValue('  Sabah arar.\nKedi çantayla gelir.  '))).notes).toBe('Sabah arar.\nKedi çantayla gelir.');
+        expect(mapCreateClientToApiBody(mapClientUpsertFormValueToCreateRequest(formValue('   '))).notes).toBe('');
+        expect('notes' in mapCreateClientToApiBody({ fullName: 'Ali Veli' })).toBe(false);
+    });
+
+    it('detay: not satır sonlarıyla okunur; boş ya da yoksa null', () => {
+        expect(mapClientDetailDtoToVm({ id: 'c1', tenantId: 't1', notes: 'Satır 1\nSatır 2' }).notes).toBe('Satır 1\nSatır 2');
+        expect(mapClientDetailDtoToVm({ id: 'c1', tenantId: 't1', notes: '  ' }).notes).toBeNull();
+        expect(mapClientDetailDtoToVm({ id: 'c1', tenantId: 't1' }).notes).toBeNull();
     });
 });

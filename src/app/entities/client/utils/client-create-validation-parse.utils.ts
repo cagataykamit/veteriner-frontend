@@ -10,7 +10,7 @@ const FALLBACK_GENERIC = 'Kayıt sırasında hata oluştu.';
 const SUMMARY_FIELD_ERRORS = 'Lütfen hatalı alanları düzeltin.';
 
 /** Client create form kontrol adlarıyla hizalı. */
-export type ClientCreateFormFieldKey = 'fullName' | 'phone' | 'email' | 'address';
+export type ClientCreateFormFieldKey = 'fullName' | 'phone' | 'email' | 'address' | 'notes';
 
 export type ClientCreateFieldErrors = Partial<Record<ClientCreateFormFieldKey, string>>;
 
@@ -36,7 +36,8 @@ const FIELD_MAP: Record<string, ClientCreateFormFieldKey> = {
     name: 'fullName',
     adsoyad: 'fullName',
     address: 'address',
-    adres: 'address'
+    adres: 'address',
+    notes: 'notes'
 };
 
 /** Yaygın İngilizce doğrulama metinlerini Türkçe ürün diline yaklaştır (opsiyonel). */

@@ -7,7 +7,7 @@ import { PetsService } from '@/app/entities/pet/services/pets.service';
 
 const client = (id: string, fullName: string, phone = '905321234567') => ({ id, fullName, phone, email: '', createdAtUtc: null });
 const pet = (id: string, name: string, clientId: string | null) => ({ id, name, clientId, speciesId: null, speciesName: 'Kedi', breed: '', colorName: '', weight: '' });
-const noKvkk = { kvkkConsent: { status: 'None' as const, recordedOn: null, recordedByName: null, templateVersion: null, templateHash: null }, invoicing: null, rowVersion: null };
+const noKvkk = { kvkkConsent: { status: 'None' as const, recordedOn: null, recordedByName: null, templateVersion: null, templateHash: null }, invoicing: null, rowVersion: null, notes: null };
 const paged = <T>(items: T[]) => of({ items, page: 1, pageSize: 10, totalItems: items.length, totalPages: 1 });
 
 describe('ClientSearchService', () => {

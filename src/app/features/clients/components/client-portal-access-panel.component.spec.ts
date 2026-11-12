@@ -23,6 +23,7 @@ const client: ClientDetailVm = {
     remindersOptedOut: false,
     kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null, templateVersion: null, templateHash: null },
     invoicing: null,
+    notes: null,
     rowVersion: 'rv1'
 };
 
