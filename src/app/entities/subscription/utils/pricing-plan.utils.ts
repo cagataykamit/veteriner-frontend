@@ -166,7 +166,7 @@ export const PRICING_FEATURE_ROWS: readonly PricingFeatureRowDef[] = [
     { group: 'Para ve stok', label: 'Mal kabul, parti ve son kullanma tarihi', plans: ALL },
     { group: 'Para ve stok', label: 'Kamerayla barkod okutma', detail: 'Telefon kamerasıyla mal kabulde, satışta ve ürün aramasında', key: 'mobileBarcode', plans: PRO_AND_UP },
     { group: 'Para ve stok', label: 'Muayenesiz doğrudan satış', plans: ALL },
-    { group: 'Web sitesi ve randevu', label: 'Klinik web sitesi', detail: 'Sihirbazla çok sayfalı site; yayından önce önizleme', key: 'clinicSite', plans: ALL },
+    { group: 'Web sitesi ve randevu', label: 'Klinik web sitesi', detail: 'Panelden kendiniz yaparsınız: dört hazır tasarım, sihirbazla çok sayfalı site, yayından önce önizleme', key: 'clinicSite', plans: ALL },
     { group: 'Web sitesi ve randevu', label: "Veteriner bul'da listelenme", detail: 'İl ve ilçeye göre; isteğe bağlı ve ücretsiz', key: 'vetFinder', plans: ALL },
     {
         group: 'Web sitesi ve randevu',

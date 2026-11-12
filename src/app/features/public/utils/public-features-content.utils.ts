@@ -113,7 +113,7 @@ export const PUBLIC_FEATURE_GROUPS: readonly PublicFeatureGroupDef[] = [
         cards: [
             {
                 title: 'Klinik web sitesi',
-                description: 'Sihirbazla adım adım çok sayfalı site: hekimler, hizmetler, saatler, iletişim. Yayından önce önizlersiniz; fotoğrafınız yoksa temsili görsel kullanılır.',
+                description: 'Kliniğinizin sitesini panelden kendiniz yaparsınız. Dört hazır tasarımdan birini seçersiniz; bölümlerin görünümünü ayrı ayrı değiştirebilirsiniz. Hekimler, hizmetler, saatler ve iletişim sayfaları sihirbazla adım adım hazırlanır. Yayından önce önizlersiniz; fotoğrafınız yoksa temsili görsel kullanılır.',
                 icon: 'pi pi-globe',
                 planRow: 'clinicSite'
             },
