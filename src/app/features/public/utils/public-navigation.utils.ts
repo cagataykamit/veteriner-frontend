@@ -21,35 +21,11 @@ export const PUBLIC_VET_FINDER_LABEL = 'Veteriner bul';
 export interface PublicNavLinkDef {
     readonly label: string;
     readonly routerLink: string;
-    /** Sayfa içi bölüm kimliği (ör. `/ozellikler#gelis`). */
-    readonly fragment?: string;
-    /** Açılır menüde etiketin altındaki kısa açıklama. */
-    readonly description?: string;
 }
 
-export interface PublicNavItemDef extends PublicNavLinkDef {
-    /** Varsa öğe açılır menüdür; `routerLink` son alt öğe ("Tüm …") olarak da listelenir. */
-    readonly children?: readonly PublicNavLinkDef[];
-}
-
-/** Özellikler açılır menüsü: /ozellikler bölüm kimlikleri (`public-features-content.utils.ts`). */
-const PUBLIC_FEATURE_NAV_CHILDREN: readonly PublicNavLinkDef[] = [
-    {
-        label: 'Klinik web siteniz ve online randevu',
-        routerLink: PUBLIC_PATHS.features,
-        fragment: 'hasta-sahibi',
-        description: "Hasta sahibi sizi Veteriner bul'da da bulur"
-    },
-    { label: 'Geliş ve muayene', routerLink: PUBLIC_PATHS.features, fragment: 'gelis' },
-    { label: 'Tahsilat ve stok', routerLink: PUBLIC_PATHS.features, fragment: 'tahsilat' },
-    { label: 'Raporlar ve gün sonu', routerLink: PUBLIC_PATHS.features, fragment: 'raporlar' },
-    { label: 'Klinik içi araçlar', routerLink: PUBLIC_PATHS.features, fragment: 'klinik-ici' },
-    { label: 'Tüm özellikler', routerLink: PUBLIC_PATHS.features }
-];
-
-/** Üst çubuk: Özellikler ▾ · Defterler ve KVKK · Geçiş · Paketler · İletişim. SSS alt bilgide. */
-export const PUBLIC_NAV_ITEMS: readonly PublicNavItemDef[] = [
-    { label: 'Özellikler', routerLink: PUBLIC_PATHS.features, children: PUBLIC_FEATURE_NAV_CHILDREN },
+/** Üst çubuk: Özellikler · Defterler ve KVKK · Geçiş · Paketler · İletişim; açılır alt menü yok. SSS alt bilgide. */
+export const PUBLIC_NAV_ITEMS: readonly PublicNavLinkDef[] = [
+    { label: 'Özellikler', routerLink: PUBLIC_PATHS.features },
     { label: 'Defterler ve KVKK', routerLink: PUBLIC_PATHS.registersAndKvkk },
     { label: 'Geçiş', routerLink: PUBLIC_PATHS.migration },
     { label: 'Paketler', routerLink: PUBLIC_PATHS.packages },
