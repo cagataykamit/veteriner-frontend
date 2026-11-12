@@ -72,7 +72,7 @@ const NO_EVET_FILES: Readonly<Record<EVetUploadSlot, File | null>> = { backup: n
                     <ol class="m-0 pl-5 flex flex-col gap-2">
                         @for (f of evetFileDefs; track f.slot) {
                             <li>
-                                <span class="font-medium">{{ f.menu }}</span> <span class="text-muted-color">({{ f.requirement }})</span>: {{ f.instruction }}
+                                <span class="font-semibold">{{ f.label }}</span> · <span class="font-medium">{{ f.menu }}</span> <span class="text-muted-color">({{ f.requirement }})</span>: {{ f.instruction }}
                                 @if (f.caution) {
                                     <strong>{{ f.caution }}</strong>
                                 }
@@ -81,7 +81,7 @@ const NO_EVET_FILES: Readonly<Record<EVetUploadSlot, File | null>> = { backup: n
                     </ol>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         @for (f of evetFileDefs; track f.slot) {
-                            <app-import-drop-zone [label]="f.label + ' · ' + f.requirement" [extension]="f.extension" [file]="evetFiles()[f.slot]" (fileChange)="setEVet(f.slot, $event)" />
+                            <app-import-drop-zone [label]="f.label + ' · ' + f.requirement" [description]="f.contents" [extension]="f.extension" [file]="evetFiles()[f.slot]" (fileChange)="setEVet(f.slot, $event)" />
                         }
                     </div>
                     <p class="text-sm text-muted-color m-0">Aktarılacak ve atlanacak kayıtlar nedenleriyle sonraki adımda listelenir; onayınız olmadan hiçbir kayıt oluşmaz.</p>
