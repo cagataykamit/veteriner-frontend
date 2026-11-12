@@ -27,6 +27,25 @@ const notConnected: EDocumentConnectionDto = {
     ]
 };
 
+const keyProviders: EDocumentConnectionDto['availableProviders'] = [
+    { provider: 'anahtarli', providerName: 'Anahtarlı Entegratör', configured: true, connectionMethod: 'Credentials' },
+    { provider: 'parasut', providerName: 'Paraşüt', configured: true, connectionMethod: 'OAuth' }
+];
+
+const connectedWithKey: EDocumentConnectionDto = {
+    ...notConnected,
+    status: 'Connected',
+    provider: 'anahtarli',
+    providerName: 'Anahtarlı Entegratör',
+    environment: 'Test',
+    accountId: '1234567801',
+    accountName: 'Test Kurum',
+    lastVerifiedAtUtc: '2026-11-12T00:00:00Z',
+    lastVerificationOk: true,
+    lastVerificationMessage: 'Bağlantı çalışıyor.',
+    availableProviders: keyProviders
+};
+
 describe('EDocumentConnectionCardComponent', () => {
     let service: MockedObject<EDocumentsService>;
     let messages: MessageService;
@@ -35,6 +54,7 @@ describe('EDocumentConnectionCardComponent', () => {
         service = {
             getConnection: vi.fn().mockReturnValue(of(dto)),
             authorize: vi.fn().mockReturnValue(of('https://id-staging.parasut.test/auth')),
+            connectWithCredentials: vi.fn().mockReturnValue(of(connectedWithKey)),
             verify: vi.fn(),
             selectAccount: vi.fn(),
             disconnect: vi.fn().mockReturnValue(of(undefined))
@@ -89,6 +109,36 @@ describe('EDocumentConnectionCardComponent', () => {
 
         expect(messages.add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error', detail: 'Yetkilendirme entegratör ekranında onaylanmadı.' }));
         expect(TestBed.inject(Router).navigate).toHaveBeenCalled();
+    });
+
+    it('anahtarla bağlanan entegratör seçilince anahtar alanı çıkar; bağlanınca anahtar sunucuya gider ve alan temizlenir', () => {
+        const fixture = render({ ...notConnected, availableProviders: keyProviders });
+        const card = fixture.componentInstance;
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(card.chosenProvider()?.provider).toBe('anahtarli');
+
+        expect(el.querySelector('input[type="password"]')).not.toBeNull();
+        expect(el.querySelector('[data-testid="edoc-connect"]')).toBeNull();
+
+        card.apiKey = '  gizli-anahtar  ';
+        card.connectWithKey('anahtarli');
+        fixture.detectChanges();
+
+        expect(service.connectWithCredentials).toHaveBeenCalledWith('k1', 'anahtarli', 'gizli-anahtar');
+        expect(card.apiKey).toBe('');
+        expect(card.statusText()).toBe('Bağlı');
+        expect(el.querySelector('input[type="password"]')).toBeNull();
+        expect(el.querySelector('[data-testid="edoc-change-key"]')).not.toBeNull();
+    });
+
+    it('anahtarla bağlıyken "Anahtarı değiştir" alanı açar', () => {
+        const fixture = render(connectedWithKey);
+
+        fixture.componentInstance.keyFormOpen.set(true);
+        fixture.detectChanges();
+
+        expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="edoc-key-form"]')).not.toBeNull();
     });
 
     it('bağlı ve sınaması başarısızsa "Sorunlu" gösterir', () => {
