@@ -184,7 +184,8 @@ export function vetFinderHead(state: VetFinderRequestState): VetFinderHead {
 
     return {
         title: `${heading} | Vetinity`,
-        heading,
+        // Kök sayfa hasta sahibini karşılar; sekme başlığı ve il/ilçe/hizmet sayfalarının başlığı arama kalıbında kalır.
+        heading: place || service ? heading : 'Yakınınızdaki veteriner kliniğini bulun',
         description: `${where} Vetinity'de listelenen ${what ? `${what} ` : ''}${count}veteriner kliniği: adres, telefon, çalışma saatleri ve online randevu talebi.`,
         canonical: `${origin}${vetFinderHref(canonicalRoute)}`,
         indexable: list.indexable && !route.openNow && route.page === 1 && !(route.service && !route.district)

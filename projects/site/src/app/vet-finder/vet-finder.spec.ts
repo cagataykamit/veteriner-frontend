@@ -138,6 +138,14 @@ describe('vetFinderHead', () => {
         expect(vetFinderHead(state({ status: 'notfound', list: null })).indexable).toBe(false);
         expect(vetFinderHead(state({ status: 'unavailable', list: null, regions: null })).heading).toBe('Liste şu anda açılamıyor');
     });
+
+    it('kök sayfanın başlığı hasta sahibini karşılar; sekme başlığı arama kalıbında kalır', () => {
+        const root = vetFinderHead(state({ route: { city: null, district: null, service: null, openNow: false, page: 1 }, list: list({ city: null, district: null }) }));
+
+        expect(root.heading).toBe('Yakınınızdaki veteriner kliniğini bulun');
+        expect(root.title).toBe('Veteriner klinikleri | Vetinity');
+        expect(vetFinderHead(state({ list: list({ city: null, district: null, service: { key: 'asi', name: 'Aşı' } }) })).heading).toBe('Aşı · Veteriner klinikleri');
+    });
 });
 
 describe('Veteriner bul site haritası ve robots', () => {
@@ -235,6 +243,55 @@ describe('VetFinderPageComponent', () => {
 
         expect(host.querySelector('.vf-empty a[href="/veteriner/istanbul/kadikoy/cerrahi"]')).not.toBeNull();
         expect(host.querySelector('.vf-empty a[href="/veteriner/istanbul/uskudar"]')?.textContent).toContain('Filtreleri kaldır');
+        expect(host.querySelector('.vf-empty h2')?.textContent).toBe('Bu filtrelere uyan klinik yok');
         expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex, follow');
+    });
+
+    it('il ve ilçe seçicileri gerçek bağlantıdır; seçili yer işaretlidir, "şu an açık" filtreyi adrese yazar', async () => {
+        const { host } = await render(state());
+        const picks = Array.from(host.querySelectorAll('details.vf-pick'));
+        const links = (pick: Element) => Array.from(pick.querySelectorAll<HTMLAnchorElement>('a')).map((a) => `${a.getAttribute('href')}${a.getAttribute('aria-current') ? '*' : ''}`);
+
+        expect(picks.map((p) => p.querySelector('strong')?.textContent)).toEqual(['İstanbul', 'Kadıköy']);
+        expect(links(picks[0])).toEqual(['/veteriner', '/veteriner/istanbul*']);
+        expect(links(picks[1])).toEqual(['/veteriner/istanbul', '/veteriner/istanbul/kadikoy*', '/veteriner/istanbul/uskudar']);
+        expect(host.querySelector('a.vf-toggle')?.getAttribute('href')).toBe('/veteriner/istanbul/kadikoy?acik=1');
+        expect(host.querySelector('.vf-count')?.textContent).toBe('3 klinik');
+        expect(host.querySelector('.vf-services a.vf-chip')?.getAttribute('href')).toBe('/veteriner/istanbul/kadikoy/asi');
+    });
+
+    it('dışarı tıklama ve Escape açık seçiciyi kapatır', async () => {
+        const { host } = await render(state());
+        const pick = host.querySelector<HTMLDetailsElement>('details.vf-pick')!;
+
+        pick.open = true;
+        pick.querySelector('.vf-pick-menu')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        expect(pick.open).toBe(true);
+
+        document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        expect(pick.open).toBe(false);
+
+        pick.open = true;
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        expect(pick.open).toBe(false);
+    });
+
+    it('hiç klinik listelenmiyorsa seçici, filtre ve sayı yoktur; durum söylenir, kliniğe çağrı yapılır', async () => {
+        const { host } = await render(
+            state({
+                route: { city: null, district: null, service: null, openNow: false, page: 1 },
+                regions: { ...REGIONS, totalClinics: 0, cities: [] },
+                list: list({ city: null, district: null, total: 0, clinics: [], indexable: false })
+            })
+        );
+
+        expect(host.querySelector('h1')?.textContent).toBe('Yakınınızdaki veteriner kliniğini bulun');
+        expect(host.querySelector('.vf-finder')).toBeNull();
+        expect(host.querySelector('.vf-services')).toBeNull();
+        expect(host.querySelector('.vf-count')).toBeNull();
+        expect(host.querySelector('.vf-empty h2')?.textContent).toBe('Klinikler listelenmeye başlıyor');
+        expect(host.querySelector('.vf-clinic a')?.getAttribute('href')).toBe('/');
+        expect(host.querySelector('.vf-top-clinic a')?.getAttribute('href')).toBe('/ozellikler#hasta-sahibi');
+        expect(host.textContent).not.toMatch(/\b0 klinik/);
     });
 });
