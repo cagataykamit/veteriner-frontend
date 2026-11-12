@@ -2,18 +2,25 @@ import { DOCUMENT } from '@angular/common';
 import { Component, computed, DestroyRef, ElementRef, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationStart, Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { filter } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
-import { PUBLIC_MAIN_CONTENT_ID, PUBLIC_NAV_LINKS } from '@/app/features/public/utils/public-navigation.utils';
+import {
+    PUBLIC_MAIN_CONTENT_ID,
+    PUBLIC_NAV_ITEMS,
+    PUBLIC_VET_FINDER_HREF,
+    PUBLIC_VET_FINDER_LABEL
+} from '@/app/features/public/utils/public-navigation.utils';
 import { LayoutService } from '@/app/layout/service/layout.service';
 
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
- * Herkese açık üst çubuk: masaüstünde (≥992 px) bağlantılar ve düğmeler, altında logo + hamburger.
- * Mobil menü tam ekran açılır; odak içeride kalır, Escape ile kapanır, rota değişince kapanır.
+ * Herkese açık üst çubuk: masaüstünde (≥1200 px, `xl`) bağlantılar ve düğmeler, altında logo + hamburger.
+ * 992–1199 px arasında beş öğe, Veteriner bul ve iki düğme tek satıra sığmadığı için eşik `lg` değil `xl`.
+ * Menü öğeleri düz bağlantıdır; açılır alt menü yok (kullanıcı kararı 2026-11-12). Mobil menü tam ekran açılır; odak
+ * içeride kalır, Escape ile kapanır, rota değişince kapanır. Veteriner bul hasta sahibine yöneliktir: klinik menüsünden
+ * ayrı, sağda ikincil bağlantı.
  */
 @Component({
     selector: 'app-public-topbar',
@@ -44,19 +51,30 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
                     />
                 </a>
 
-                <nav class="hidden min-w-0 flex-1 items-center justify-center gap-x-1 lg:flex" aria-label="Ana navigasyon">
-                    @for (link of navLinks; track link.label) {
-                        <a
-                            [routerLink]="link.routerLink"
-                            routerLinkActive="router-link-active"
-                            class="public-topbar-nav-link inline-flex min-h-[44px] items-center whitespace-nowrap px-2 text-sm xl:px-3 font-medium text-surface-700 no-underline dark:text-surface-300"
-                        >
-                            {{ link.label }}
-                        </a>
-                    }
+                <nav class="hidden min-w-0 flex-1 items-center justify-center xl:flex" aria-label="Ana navigasyon">
+                    <ul class="m-0 flex list-none items-center p-0">
+                        @for (item of navItems; track item.label) {
+                            <li>
+                                <a
+                                    [routerLink]="item.routerLink"
+                                    routerLinkActive="router-link-active"
+                                    class="public-topbar-nav-link inline-flex min-h-[44px] items-center whitespace-nowrap px-2 text-sm 2xl:px-3 font-medium text-surface-700 no-underline dark:text-surface-300"
+                                >
+                                    {{ item.label }}
+                                </a>
+                            </li>
+                        }
+                    </ul>
                 </nav>
 
-                <div class="hidden items-center gap-2 lg:flex">
+                <div class="hidden items-center gap-2 xl:flex">
+                    <a
+                        [href]="vetFinderHref"
+                        class="public-vet-finder-link inline-flex min-h-[44px] items-center gap-1.5 whitespace-nowrap px-1 text-sm font-medium no-underline"
+                    >
+                        <i class="pi pi-map-marker" aria-hidden="true"></i>{{ vetFinderLabel }}
+                    </a>
+                    <span class="public-topbar-divider h-6 w-px" aria-hidden="true"></span>
                     <a routerLink="/auth/login" class="public-btn public-btn-ghost">Giriş yap</a>
                     <a routerLink="/auth/signup" class="public-btn public-btn-primary">Ücretsiz dene</a>
                     <button
@@ -72,7 +90,7 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
                     ><i [class]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"></i></button>
                 </div>
 
-                <div class="flex items-center gap-1 lg:hidden">
+                <div class="flex items-center gap-1 xl:hidden">
                     <button
                         pButton
                         pRipple
@@ -103,7 +121,7 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
             <div
                 #mobileMenu
                 id="public-mobile-menu"
-                class="public-mobile-menu fixed inset-0 z-50 flex flex-col bg-surface-0 dark:bg-surface-950 lg:hidden"
+                class="public-mobile-menu fixed inset-0 z-50 flex flex-col bg-surface-0 dark:bg-surface-950 xl:hidden"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Menü"
@@ -127,14 +145,14 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
 
                 <nav class="flex-1 overflow-y-auto px-4 pt-2" aria-label="Ana navigasyon">
                     <ul class="m-0 list-none p-0">
-                        @for (link of navLinks; track link.label) {
+                        @for (item of navItems; track item.label) {
                             <li>
                                 <a
-                                    [routerLink]="link.routerLink"
+                                    [routerLink]="item.routerLink"
                                     class="public-mobile-menu-link flex min-h-[48px] items-center border-b border-surface-200 text-lg font-semibold text-surface-900 no-underline dark:border-surface-800 dark:text-surface-0"
                                     (click)="closeMenu()"
                                 >
-                                    {{ link.label }}
+                                    {{ item.label }}
                                 </a>
                             </li>
                         }
@@ -142,6 +160,13 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
                 </nav>
 
                 <div class="flex flex-col gap-3 px-4 pb-6 pt-4">
+                    <a
+                        [href]="vetFinderHref"
+                        class="public-vet-finder-link public-mobile-menu-link inline-flex min-h-[48px] items-center justify-center gap-2 text-base font-medium no-underline"
+                        (click)="closeMenu()"
+                    >
+                        <i class="pi pi-map-marker" aria-hidden="true"></i>{{ vetFinderLabel }}
+                    </a>
                     <a routerLink="/auth/login" class="public-btn public-btn-secondary w-full !min-h-[48px]" (click)="closeMenu()">Giriş yap</a>
                     <a routerLink="/auth/signup" class="public-btn public-btn-primary w-full !min-h-[48px]" (click)="closeMenu()">Ücretsiz dene</a>
                 </div>
@@ -157,9 +182,12 @@ export class PublicTopbarComponent {
     private readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
     private readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('closeButton');
     private readonly mobileMenu = viewChild<ElementRef<HTMLElement>>('mobileMenu');
+    private readonly router = inject(Router);
 
     readonly brand = VETINITY_BRAND_LOGOS;
-    readonly navLinks = PUBLIC_NAV_LINKS;
+    readonly navItems = PUBLIC_NAV_ITEMS;
+    readonly vetFinderHref = PUBLIC_VET_FINDER_HREF;
+    readonly vetFinderLabel = PUBLIC_VET_FINDER_LABEL;
     readonly mainContentId = PUBLIC_MAIN_CONTENT_ID;
 
     readonly isDarkTheme = computed(() => this.layoutService.layoutConfig().darkTheme);
@@ -168,12 +196,11 @@ export class PublicTopbarComponent {
     readonly menuOpen = signal(false);
 
     constructor() {
-        inject(Router)
-            .events.pipe(
-                filter((e) => e instanceof NavigationStart),
-                takeUntilDestroyed(this.destroyRef)
-            )
-            .subscribe(() => this.closeMenu());
+        this.router.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((e) => {
+            if (e instanceof NavigationStart) {
+                this.closeMenu();
+            }
+        });
         this.destroyRef.onDestroy(() => this.setBodyScrollLocked(false));
     }
 

@@ -12,7 +12,7 @@ import { PUBLIC_CONTACT_CARD_ROWS, PUBLIC_CONTACT_EMAIL } from '@/app/features/p
 import { PUBLIC_FAQ_CATEGORIES, PUBLIC_HOME_FAQS, PUBLIC_PACKAGES_FAQ_CATEGORY_ID, publicFaqsOf } from '@/app/features/public/utils/public-faq-content.utils';
 import { PUBLIC_FEATURE_GROUPS, PUBLIC_FEATURE_SECTIONS } from '@/app/features/public/utils/public-features-content.utils';
 import { PUBLIC_HOME_AUDIENCE, PUBLIC_HOME_DAY_FLOW } from '@/app/features/public/utils/public-home-content.utils';
-import { PUBLIC_NAV_LINKS, PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
+import { PUBLIC_NAV_ITEMS, PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { PUBLIC_REGISTERS } from '@/app/features/public/utils/public-registers-content.utils';
 import { PUBLIC_SCREENSHOTS } from '@/app/features/public/utils/public-screenshots.utils';
 import { PRICING_FEATURE_ROWS, PRICING_NOT_AVAILABLE, PRICING_ON_REQUEST_TEXT, PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
@@ -67,7 +67,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         { path: PUBLIC_PATHS.home, meta: PUBLIC_HOME_PAGE_META, h1: 'Veteriner kliniğinizin günü tek ekranda' },
         { path: PUBLIC_PATHS.features, meta: PUBLIC_FEATURES_PAGE_META, h1: 'Gelişten tahsilata bir günün akışı' },
         { path: PUBLIC_PATHS.registersAndKvkk, meta: PUBLIC_REGISTERS_PAGE_META, h1: 'Defterleriniz ve KVKK evrakınız kendiliğinden tutulur' },
-        { path: PUBLIC_PATHS.migration, meta: PUBLIC_MIGRATION_PAGE_META, h1: 'Eski programdan geçiş yarım gün' },
+        { path: PUBLIC_PATHS.migration, meta: PUBLIC_MIGRATION_PAGE_META, h1: 'Eski programdan kayıtlarınızla geçin' },
         { path: PUBLIC_PATHS.packages, meta: PUBLIC_PACKAGES_PAGE_META, h1: 'Kliniğinize uygun paketi seçin' },
         { path: PUBLIC_PATHS.faq, meta: PUBLIC_FAQ_PAGE_META, h1: 'Sık sorulan sorular' },
         { path: PUBLIC_PATHS.contact, meta: PUBLIC_CONTACT_PAGE_META, h1: 'Demo isteyin ya da hemen deneyin' },
@@ -83,7 +83,9 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
             expect(TestBed.inject(Title).getTitle()).toBe(page.meta.title);
             expect(texts('h1')).toEqual([page.h1]);
             expect(root().querySelector('main#icerik')).not.toBeNull();
-            expect(texts('header nav[aria-label="Ana navigasyon"] a')).toEqual(PUBLIC_NAV_LINKS.map((l) => l.label));
+            expect(texts('header nav[aria-label="Ana navigasyon"] > ul > li > a, header nav[aria-label="Ana navigasyon"] > ul > li > button')).toEqual(
+                PUBLIC_NAV_ITEMS.map((l) => l.label)
+            );
             expect(root().querySelector('footer a[href="/gizlilik"]')).not.toBeNull();
         });
 
@@ -371,7 +373,7 @@ describe('Ana sayfa (PublicHomePage)', () => {
             'Bir günün akışı',
             "Türkiye'ye özgü",
             'Kayıtlarınız güvende ve dürüst',
-            'Eski programdan geçiş yarım gün',
+            'Eski programdan kayıtlarınızla geçin',
             'Paketler',
             'Sık sorulan sorular',
             '14 gün ücretsiz deneyin'

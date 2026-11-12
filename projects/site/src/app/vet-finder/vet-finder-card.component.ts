@@ -15,19 +15,24 @@ import { type VetFinderCard, vetFinderBookingHref } from './vet-finder-state';
         @let c = card();
         <article class="vf-card" [attr.data-key]="c.key">
             <header class="vf-card-head">
-                <h2 class="vf-card-name">{{ c.name }}</h2>
+                <h3 class="vf-card-name">{{ c.name }}</h3>
                 <span class="vf-status" [class.is-open]="c.isOpenNow">{{ c.isOpenNow ? 'Şu an açık' : 'Şu an kapalı' }}</span>
             </header>
-            <p class="vf-card-place">
-                {{ place() }}
-                @if (distance(); as km) {
-                    <span class="vf-distance">· {{ km }} km</span>
-                }
-            </p>
-            @if (c.address) {
-                <p class="vf-card-address">{{ c.address }}</p>
-            }
-            <p class="vf-card-hours">{{ statusLine() }}</p>
+            <div class="vf-card-meta">
+                <p>
+                    <i class="pi pi-map-marker" aria-hidden="true"></i>
+                    <span>
+                        {{ place() }}
+                        @if (distance(); as km) {
+                            <span class="vf-distance">· {{ km }} km</span>
+                        }
+                        @if (c.address) {
+                            <span class="vf-card-address">{{ c.address }}</span>
+                        }
+                    </span>
+                </p>
+                <p><i class="pi pi-clock" aria-hidden="true"></i>{{ statusLine() }}</p>
+            </div>
             @if (c.services.length) {
                 <ul class="vf-tags" aria-label="Hizmetler">
                     @for (service of c.services; track service.key) {
@@ -37,8 +42,8 @@ import { type VetFinderCard, vetFinderBookingHref } from './vet-finder-state';
             }
             @if (nextSlot(); as slot) {
                 <p class="vf-slot">
-                    <span>Talep için en yakın saat</span>
-                    <a [href]="slot.href" [attr.aria-label]="slot.label" rel="nofollow">{{ slot.day }} {{ slot.time }}</a>
+                    <span>En yakın randevu saati</span>
+                    <a [href]="slot.href" [attr.aria-label]="slot.label" rel="nofollow">{{ slot.day }} {{ slot.time }} <i class="pi pi-arrow-right" aria-hidden="true"></i></a>
                 </p>
             }
             <div class="vf-actions">
@@ -46,10 +51,10 @@ import { type VetFinderCard, vetFinderBookingHref } from './vet-finder-state';
                     <a class="vf-btn vf-btn-primary" [href]="href" rel="nofollow">Randevu talebi</a>
                 }
                 @if (telHref(); as tel) {
-                    <a class="vf-btn" [href]="tel">Ara</a>
+                    <a class="vf-btn" [href]="tel"><i class="pi pi-phone" aria-hidden="true"></i>Ara</a>
                 }
                 @if (c.sitePath) {
-                    <a class="vf-btn" [href]="c.sitePath">Web sitesi</a>
+                    <a class="vf-btn" [href]="c.sitePath"><i class="pi pi-globe" aria-hidden="true"></i>Web sitesi</a>
                 }
             </div>
             @if (hours().length) {

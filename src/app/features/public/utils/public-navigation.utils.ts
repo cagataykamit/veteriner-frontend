@@ -11,18 +11,24 @@ export const PUBLIC_PATHS = {
     about: '/hakkimizda'
 } as const;
 
+/**
+ * Veteriner bul (ADR-047): hasta sahibine yönelik sayfa ayrı `site` projesinden (sunucu tarafı) sunulur,
+ * Angular yönlendiricisinde yoktur; bu yüzden `routerLink` değil düz `href` ile açılır.
+ */
+export const PUBLIC_VET_FINDER_HREF = '/veteriner';
+export const PUBLIC_VET_FINDER_LABEL = 'Veteriner bul';
+
 export interface PublicNavLinkDef {
     readonly label: string;
     readonly routerLink: string;
 }
 
-/** Üst çubuk: Özellikler · Defterler ve KVKK · Geçiş · Paketler · SSS · İletişim. */
-export const PUBLIC_NAV_LINKS: readonly PublicNavLinkDef[] = [
+/** Üst çubuk: Özellikler · Defterler ve KVKK · Geçiş · Paketler · İletişim; açılır alt menü yok. SSS alt bilgide. */
+export const PUBLIC_NAV_ITEMS: readonly PublicNavLinkDef[] = [
     { label: 'Özellikler', routerLink: PUBLIC_PATHS.features },
     { label: 'Defterler ve KVKK', routerLink: PUBLIC_PATHS.registersAndKvkk },
     { label: 'Geçiş', routerLink: PUBLIC_PATHS.migration },
     { label: 'Paketler', routerLink: PUBLIC_PATHS.packages },
-    { label: 'SSS', routerLink: PUBLIC_PATHS.faq },
     { label: 'İletişim', routerLink: PUBLIC_PATHS.contact }
 ];
 

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { PUBLIC_NAV_LINKS } from '@/app/features/public/utils/public-navigation.utils';
+import { PUBLIC_NAV_ITEMS, PUBLIC_VET_FINDER_HREF } from '@/app/features/public/utils/public-navigation.utils';
 import { PublicTopbarComponent } from './public-topbar.component';
 
 describe('PublicTopbarComponent', () => {
@@ -62,7 +62,10 @@ describe('PublicTopbarComponent', () => {
 
         expect(menuButton.getAttribute('aria-expanded')).toBe('true');
         expect(menu.getAttribute('role')).toBe('dialog');
-        expect(Array.from(menu.querySelectorAll('nav a')).map((a) => a.textContent?.trim())).toEqual(PUBLIC_NAV_LINKS.map((l) => l.label));
+        expect(Array.from(menu.querySelectorAll('nav > ul > li > a')).map((a) => a.textContent?.trim())).toEqual(
+            PUBLIC_NAV_ITEMS.map((l) => l.label)
+        );
+        expect(menu.querySelector(`a[href="${PUBLIC_VET_FINDER_HREF}"]`)?.textContent?.trim()).toBe('Veteriner bul');
         expect(document.activeElement).toBe(menu.querySelector('button[aria-label="Menüyü kapat"]'));
         expect(document.body.style.overflow).toBe('hidden');
     });
@@ -99,5 +102,24 @@ describe('PublicTopbarComponent', () => {
 
         menu.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true }));
         expect(document.activeElement).toBe(last);
+    });
+
+    it('masaüstü: menü öğeleri düz bağlantıdır, açılır alt menü yok; Özellikler /ozellikler sayfasına gider', () => {
+        const { host } = setup();
+        const links = Array.from(host.querySelectorAll<HTMLAnchorElement>('header nav > ul > li > a'));
+
+        expect(links.map((a) => a.textContent?.trim())).toEqual(PUBLIC_NAV_ITEMS.map((l) => l.label));
+        expect(links[0].getAttribute('href')).toBe('/ozellikler');
+        expect(host.querySelector('header nav button')).toBeNull();
+    });
+
+    it('Veteriner bul masaüstünde düz bağlantıdır (ayrı sunucu, Angular rotası değil), düğme değildir', () => {
+        const { host } = setup();
+        const link = host.querySelector<HTMLAnchorElement>(`header a[href="${PUBLIC_VET_FINDER_HREF}"]`)!;
+
+        expect(link.textContent?.trim()).toBe('Veteriner bul');
+        expect(link.querySelector('i.pi-map-marker')).not.toBeNull();
+        expect(link.classList.contains('public-btn')).toBe(false);
+        expect(link.closest('nav')).toBeNull();
     });
 });

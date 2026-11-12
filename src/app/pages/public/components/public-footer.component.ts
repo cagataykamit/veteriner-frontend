@@ -3,7 +3,12 @@ import { RouterLink } from '@angular/router';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 import { DATA_PROCESSING_AGREEMENT_DOCUMENT, PUBLIC_LEGAL_LINKS } from '@/app/entities/legal-document/utils/legal-documents.utils';
 import { PUBLIC_CONTACT_EMAIL, PUBLIC_LEGAL_ENTITY_NAME } from '@/app/features/public/utils/public-contact-content.utils';
-import { PUBLIC_FOOTER_PRODUCT_LINKS, PUBLIC_FOOTER_SUPPORT_LINKS } from '@/app/features/public/utils/public-navigation.utils';
+import {
+    PUBLIC_FOOTER_PRODUCT_LINKS,
+    PUBLIC_FOOTER_SUPPORT_LINKS,
+    PUBLIC_VET_FINDER_HREF,
+    PUBLIC_VET_FINDER_LABEL
+} from '@/app/features/public/utils/public-navigation.utils';
 
 /** Alt bilgi (tasarım belgesi bölüm 4): lacivert zemin, 4 sütun; altta © yıl, tüzel kişi adı (AK-6) ve e-posta. */
 @Component({
@@ -29,6 +34,8 @@ import { PUBLIC_FOOTER_PRODUCT_LINKS, PUBLIC_FOOTER_SUPPORT_LINKS } from '@/app/
                                 @for (link of productLinks; track link.routerLink) {
                                     <li><a [routerLink]="link.routerLink" class="public-footer-link">{{ link.label }}</a></li>
                                 }
+                                <!-- Hasta sahibine yönelik sayfa ayrı sunucuda; Angular rotası değil -->
+                                <li><a [href]="vetFinderHref" class="public-footer-link">{{ vetFinderLabel }}</a></li>
                             </ul>
                         </div>
                         <div>
@@ -68,6 +75,8 @@ export class PublicFooterComponent {
     readonly year = new Date().getFullYear();
     readonly productLinks = PUBLIC_FOOTER_PRODUCT_LINKS;
     readonly supportLinks = PUBLIC_FOOTER_SUPPORT_LINKS;
+    readonly vetFinderHref = PUBLIC_VET_FINDER_HREF;
+    readonly vetFinderLabel = PUBLIC_VET_FINDER_LABEL;
     /** Gizlilik, kullanım şartları ve veri işleme sözleşmesi. */
     readonly legalLinks = [...PUBLIC_LEGAL_LINKS, DATA_PROCESSING_AGREEMENT_DOCUMENT];
     readonly legalEntityName = PUBLIC_LEGAL_ENTITY_NAME;
