@@ -26,6 +26,10 @@ export interface ProductDto {
     packaging?: string | null;
     /** Üretici firma (RECORD-005); tedarikçiden ayrıdır. */
     manufacturer?: string | null;
+    /** KDV oranı (%); `null` = klinik varsayılanı (`BATCH_STOCK_API_CONTRACT.md` §2.1). */
+    vatRate?: number | string | null;
+    /** Birim alış fiyatı (TL), bilgi amaçlı: stok değeri ve ücret hesabı okumaz. */
+    purchasePrice?: number | string | null;
 }
 
 export interface ProductDtoPagedResult {
@@ -53,13 +57,21 @@ export interface CreateProductRequest {
     presentationForm: string | null;
     packaging: string | null;
     manufacturer: string | null;
+    /** `null` = klinik varsayılanı (POST); PUT'ta `null` dokunmaz, temizlemek için `clearVatRate`. */
+    vatRate: number | null;
+    /** PUT'ta `null` dokunmaz, temizlemek için `clearPurchasePrice`. */
+    purchasePrice: number | null;
 }
 
 /**
  * PUT /products/{id} gövdesi.
  * Kimlik yol parametresinde; gövdede `id` beklenmediği varsayımıyla (backend command ile teyit).
+ * `clear…: true` ilgili değeri temizler; değerle birlikte gönderilirse `Products.Validation` (§2.1).
  */
-export type UpdateProductRequest = CreateProductRequest;
+export type UpdateProductRequest = CreateProductRequest & {
+    clearVatRate: boolean;
+    clearPurchasePrice: boolean;
+};
 
 /** GET /product-categories satırı */
 export interface ProductCategoryDto {

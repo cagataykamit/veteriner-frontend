@@ -21,8 +21,8 @@ import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { ProductClassificationFieldsComponent } from '@/app/features/inventory/components/product-classification-fields/product-classification-fields.component';
-import type { ProductKindApi } from '@/app/entities/inventory/models/product-api.model';
-import { productKindFromApi } from '@/app/entities/inventory/utils/product-classification.utils';
+import { ProductTaxFieldsComponent } from '@/app/features/inventory/components/product-tax-fields/product-tax-fields.component';
+import type { ProductDto, ProductKindApi } from '@/app/entities/inventory/models/product-api.model';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -31,7 +31,7 @@ import { EMPTY, map, switchMap } from 'rxjs';
 @Component({
     selector: 'app-product-edit-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, BarcodeScanButtonComponent, ProductClassificationFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, BarcodeScanButtonComponent, ProductTaxFieldsComponent, ProductClassificationFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [categoryLink]="productId() ? ['/panel/products', productId()!] : ['/panel/products']" categoryLinkLabel="Ürün detayına dön" title="Ürünü düzenle" description="Ürün kartını güncelleyin." />
@@ -121,6 +121,7 @@ import { EMPTY, map, switchMap } from 'rxjs';
                                 <small class="text-danger">Para birimi zorunludur.</small>
                             }
                         </div>
+                        <app-product-tax-fields [form]="form" idPrefix="productEdit" [currentVatRate]="originalVatRate()" />
                         <app-product-classification-fields [form]="form" idPrefix="productEdit" [originalKind]="originalKind()" />
                         <div class="col-span-12 flex flex-col gap-1">
                             <label for="descriptionEdit" class="block text-sm font-medium text-muted-color">Açıklama</label>
@@ -166,6 +167,8 @@ export class ProductEditPageComponent implements OnInit {
     readonly productId = signal<string | null>(null);
     /** Kaydın yüklendiği andaki türü; hizmete/hizmetten çevrilemez. */
     readonly originalKind = signal<ProductKindApi | null>(null);
+    /** Kayıtlı KDV oranı; seçenek listesinde yoksa (ör. içe aktarılmış %18) listeye eklenir. */
+    readonly originalVatRate = signal<number | null>(null);
 
     readonly currencyOptions = [
         { label: 'TRY', value: 'TRY' },
@@ -211,8 +214,7 @@ export class ProductEditPageComponent implements OnInit {
             .subscribe({
                 next: ({ id, dto }) => {
                     this.productId.set(id);
-                    this.form.reset(mapProductDtoToUpsertFormValue(dto));
-                    this.originalKind.set(productKindFromApi(dto.kind));
+                    this.applyLoaded(dto);
                     this.loading.set(false);
                 },
                 error: (e: unknown) => {
@@ -233,8 +235,7 @@ export class ProductEditPageComponent implements OnInit {
         this.loadError.set(null);
         this.productService.getDtoById(id).subscribe({
             next: (dto) => {
-                this.form.reset(mapProductDtoToUpsertFormValue(dto));
-                this.originalKind.set(productKindFromApi(dto.kind));
+                this.applyLoaded(dto);
                 this.loading.set(false);
             },
             error: (e: unknown) => {
@@ -242,6 +243,14 @@ export class ProductEditPageComponent implements OnInit {
                 this.loading.set(false);
             }
         });
+    }
+
+    private applyLoaded(dto: ProductDto): void {
+        const value = mapProductDtoToUpsertFormValue(dto);
+
+        this.form.reset(value);
+        this.originalKind.set(value.kind);
+        this.originalVatRate.set(value.vatRate);
     }
 
     goDetail(): void {
@@ -278,7 +287,9 @@ export class ProductEditPageComponent implements OnInit {
             pharmacologicalForm: raw.pharmacologicalForm,
             presentationForm: raw.presentationForm,
             packaging: raw.packaging,
-            manufacturer: raw.manufacturer
+            manufacturer: raw.manufacturer,
+            vatRate: raw.vatRate,
+            purchasePrice: raw.purchasePrice
         };
 
         this.submitting.set(true);

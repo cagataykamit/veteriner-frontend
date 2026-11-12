@@ -18,6 +18,7 @@ import { PRODUCT_CATEGORIES_ROUTE } from '@/app/core/routing/panel-navigation';
 import { PRODUCT_CATEGORIES_CREATE_CLAIM, PRODUCT_CATEGORIES_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { ProductClassificationFieldsComponent } from '@/app/features/inventory/components/product-classification-fields/product-classification-fields.component';
+import { ProductTaxFieldsComponent } from '@/app/features/inventory/components/product-tax-fields/product-tax-fields.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -25,7 +26,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 @Component({
     selector: 'app-product-create-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, BarcodeScanButtonComponent, ProductClassificationFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, BarcodeScanButtonComponent, ProductTaxFieldsComponent, ProductClassificationFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/products" categoryLinkLabel="Ürün listesine dön" title="Yeni ürün" description="Ürün kartı oluşturun." />
@@ -108,6 +109,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                             <small class="text-danger">Para birimi zorunludur.</small>
                         }
                     </div>
+                    <app-product-tax-fields [form]="form" idPrefix="product" />
                     <app-product-classification-fields [form]="form" idPrefix="product" />
                     <div class="col-span-12 flex flex-col gap-1">
                         <label for="description" class="block text-sm font-medium text-muted-color">Açıklama</label>
@@ -199,7 +201,9 @@ export class ProductCreatePageComponent implements OnInit {
             pharmacologicalForm: raw.pharmacologicalForm,
             presentationForm: raw.presentationForm,
             packaging: raw.packaging,
-            manufacturer: raw.manufacturer
+            manufacturer: raw.manufacturer,
+            vatRate: raw.vatRate,
+            purchasePrice: raw.purchasePrice
         };
 
         this.submitting.set(true);

@@ -35,6 +35,8 @@ const product = (over: Partial<ProductDetailVm> = {}): ProductDetailVm => ({
     unit: 'Adet',
     unitPriceText: '₺120,00',
     currency: 'TRY',
+    vatRateLabel: 'Klinik varsayılanı',
+    purchasePriceText: '—',
     isActive: true,
     statusLabel: 'Aktif',
     statusSeverity: 'success',
@@ -230,6 +232,15 @@ describe('ProductDetailPageComponent', () => {
             expect(l).toContain('Pasifleştir');
             expect(l).not.toContain('Aktifleştir');
             expect(l.filter((x) => x === 'Stok işlemi').length).toBe(3);
+        });
+
+        it('KDV oranı ve bilgi amaçlı alış fiyatı kutucukları', () => {
+            products.getById.mockReturnValue(of(product({ vatRateLabel: '%10', purchasePriceText: '₺80,00' })));
+            render();
+
+            expect(el().querySelector('[data-testid="product-vat-rate"]')?.textContent?.trim()).toBe('%10');
+            expect(el().querySelector('[data-testid="product-purchase-price"]')?.textContent?.trim()).toBe('₺80,00');
+            expect(text()).toContain('Alış fiyatı (bilgi amaçlı)');
         });
 
         it('klinik stok tablosu ve parti kartı', () => {
