@@ -4,19 +4,21 @@ import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { PUBLIC_FEATURE_GROUPS, PUBLIC_FEATURE_SECTIONS, publicFeatureCardPlans, publicFeatureGroupShotCaption } from '@/app/features/public/utils/public-features-content.utils';
 import { PUBLIC_FEATURES_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
+import { PUBLIC_SITE_SHOWCASE } from '@/app/features/public/utils/public-site-showcase-content.utils';
 import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicPageHeaderComponent } from './components/public-page-header.component';
 import { PublicScreenshotComponent } from './components/public-screenshot.component';
+import { PublicSiteShowcaseComponent } from './components/public-site-showcase.component';
 
 /**
- * Özellikler (tasarım belgesi 5.2): 6 bölüm, metin + ekran dönüşümlü; ardından gün akışı dışındaki işler kart gruplarında
- * (kartta paket etiketi; grubun ekranı varsa kartların altında, altyazıda kartın adı ve paketi). Masaüstünde yapışkan bölüm
- * dizini ikisini de listeler.
+ * Özellikler (tasarım belgesi 5.2): 6 bölüm, metin + ekran dönüşümlü; ardından klinik web sitesi vitrini ve gün akışı dışındaki
+ * işler kart gruplarında (kartta paket etiketi; grubun ekranı varsa kartların altında, altyazıda kartın adı ve paketi).
+ * Masaüstünde yapışkan bölüm dizini hepsini listeler.
  */
 @Component({
     selector: 'app-public-features-page',
     standalone: true,
-    imports: [RouterLink, PublicPageHeaderComponent, PublicScreenshotComponent, PublicCtaComponent],
+    imports: [RouterLink, PublicPageHeaderComponent, PublicScreenshotComponent, PublicSiteShowcaseComponent, PublicCtaComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-public-page-header
@@ -59,6 +61,10 @@ import { PublicScreenshotComponent } from './components/public-screenshot.compon
                     </section>
                 }
 
+                <section [id]="showcase.id" class="public-section scroll-mt-24" [attr.aria-labelledby]="'feature-' + showcase.id">
+                    <app-public-site-showcase [headingId]="'feature-' + showcase.id" />
+                </section>
+
                 @for (group of groups; track group.id) {
                     <section [id]="group.id" class="public-section scroll-mt-24" [attr.aria-labelledby]="'feature-' + group.id">
                         <h2 [id]="'feature-' + group.id" class="public-h2 m-0">{{ group.title }}</h2>
@@ -93,7 +99,12 @@ export class PublicFeaturesPageComponent implements OnInit {
 
     readonly sections = PUBLIC_FEATURE_SECTIONS;
     readonly groups = PUBLIC_FEATURE_GROUPS;
-    readonly index = [...PUBLIC_FEATURE_SECTIONS, ...PUBLIC_FEATURE_GROUPS].map(({ id, title }) => ({ id, title }));
+    readonly showcase = PUBLIC_SITE_SHOWCASE;
+    readonly index = [
+        ...PUBLIC_FEATURE_SECTIONS.map(({ id, title }) => ({ id, title })),
+        { id: PUBLIC_SITE_SHOWCASE.id, title: PUBLIC_SITE_SHOWCASE.indexTitle },
+        ...PUBLIC_FEATURE_GROUPS.map(({ id, title }) => ({ id, title }))
+    ];
     readonly plansOf = publicFeatureCardPlans;
     readonly shotCaptionOf = publicFeatureGroupShotCaption;
 

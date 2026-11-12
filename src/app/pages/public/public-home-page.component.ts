@@ -27,15 +27,16 @@ import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicPlanCardsComponent } from './components/public-plan-cards.component';
 import { PublicFaqListComponent } from './components/public-faq-list.component';
 import { PublicScreenshotComponent } from './components/public-screenshot.component';
+import { PublicSiteShowcaseComponent } from './components/public-site-showcase.component';
 
 const HOME_FAQ_JSON_LD_ID = 'home-faq';
 const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
 
-/** Ana sayfa omurgası (tasarım belgesi 5.1, ADR-035): kahraman, kime göre, bir günün akışı, Türkiye'ye özgü, kayıt güvenliği, geçiş, paketler, SSS, çağrı. */
+/** Ana sayfa omurgası (tasarım belgesi 5.1, ADR-035): kahraman, kime göre, bir günün akışı, Türkiye'ye özgü, kayıt güvenliği, klinik web sitesi, geçiş, paketler, SSS, çağrı. */
 @Component({
     selector: 'app-public-home-page',
     standalone: true,
-    imports: [RouterLink, PublicScreenshotComponent, PublicPlanCardsComponent, PublicFaqListComponent, PublicCtaComponent],
+    imports: [RouterLink, PublicScreenshotComponent, PublicSiteShowcaseComponent, PublicPlanCardsComponent, PublicFaqListComponent, PublicCtaComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <!-- 1 Kahraman: gradient kenardan kenara, sol metin, sağ ekran -->
@@ -170,6 +171,11 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
                     </ul>
                 </div>
             </div>
+        </section>
+
+        <!-- Klinik web sitesi: dört tasarım, ayrıntısı Özellikler'de -->
+        <section class="mx-auto max-w-6xl px-4 pt-20 md:px-6 lg:pt-28" aria-labelledby="public-home-site-title">
+            <app-public-site-showcase [compact]="true" headingId="public-home-site-title" />
         </section>
 
         <!-- 6 Geçiş: 3 adım + aktarılır/aktarılmaz -->
