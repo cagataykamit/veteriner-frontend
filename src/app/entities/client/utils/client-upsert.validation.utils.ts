@@ -11,7 +11,7 @@ export const CLIENT_UPSERT_FIELD_MAX = {
     email: 254,
     address: 500,
     /** `Client.MaxNotesLength` (`PET_STATUS_CLIENT_CONTACT_API_CONTRACT.md` §2.1). */
-    notes: 2000
+    notes: 4000
 } as const satisfies Partial<Record<ClientCreateFormFieldKey, number>>;
 
 export const CLIENT_UPSERT_FULL_NAME_MIN = 2;

@@ -75,12 +75,12 @@ describe('ClientEditPageComponent iç not', () => {
         expect(clients.updateClient).toHaveBeenCalledWith('c1', expect.objectContaining({ notes: '' }));
     });
 
-    it('2000 karakteri aşan not kaydı engeller', () => {
+    it('4000 karakteri aşan not kaydı engeller', () => {
         render(client({ notes: null }));
-        typeNotes('a'.repeat(2001));
+        typeNotes('a'.repeat(4001));
         submit();
 
-        expect(el().textContent).toContain('En fazla 2000 karakter olabilir.');
+        expect(el().textContent).toContain('En fazla 4000 karakter olabilir.');
         expect(clients.updateClient).not.toHaveBeenCalled();
     });
 });

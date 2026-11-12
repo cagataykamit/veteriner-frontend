@@ -50,7 +50,7 @@ export interface ClientDetailDto {
     rowVersion?: string | null;
     /** Fatura kimliği, TCKN/VKN maskeli (`INVOICING_IDENTITY_API_CONTRACT.md` §2); eski yanıtta yok. */
     invoicing?: ClientInvoicingSummaryDto | null;
-    /** Kliniğin iç notu (≤ 2000, `PET_STATUS_CLIENT_CONTACT_API_CONTRACT.md` §2.1); yalnız detayda döner, portala açılmaz. */
+    /** Kliniğin iç notu (≤ 4000, `PET_STATUS_CLIENT_CONTACT_API_CONTRACT.md` §2.1); yalnız detayda döner, portala açılmaz. */
     notes?: string | null;
 }
 

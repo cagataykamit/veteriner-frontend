@@ -144,7 +144,7 @@ export const IMPORT_FIELDS: Readonly<Record<ImportTable, readonly ImportFieldDef
         { key: 'KimlikNo', label: 'Kimlik / vergi no', hint: 'Fatura bilgisi: 11 haneli T.C. kimlik no veya 10 haneli vergi no. Geçersizse boş kalır.' },
         { key: 'VergiDairesi', label: 'Vergi dairesi' },
         { key: 'Durum', label: 'Durum', hint: 'Aktif veya Pasif. Pasif müşteri aktarılır, hatırlatma gönderilmez.' },
-        { key: 'Not', label: 'Not', hint: 'Kliniğin iç notu (en çok 2000 karakter); yalnız yeni müşteriye yazılır, sahip portalında görünmez.' }
+        { key: 'Not', label: 'Not', hint: 'Kliniğin iç notu (en çok 4000 karakter); yalnız yeni müşteriye yazılır, sahip portalında görünmez.' }
     ],
     pets: [
         { key: 'MusteriNo', label: 'Müşteri no', hint: 'Sahibe bağlantı için tercih edilen alan.' },
