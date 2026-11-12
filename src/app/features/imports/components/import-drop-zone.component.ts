@@ -10,20 +10,29 @@ import { precheckImportFile } from '@/app/features/imports/utils/import-labels.u
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div
-            class="rounded-border border-2 border-dashed p-4 text-center transition-colors"
+            class="rounded-border border-2 p-4 text-center transition-colors"
+            [class.border-dashed]="!file()"
             [class.border-primary]="dragging()"
-            [class.border-surface-300]="!dragging()"
-            [class.dark:border-surface-600]="!dragging()"
+            [class.border-surface-300]="!dragging() && !file()"
+            [class.dark:border-surface-600]="!dragging() && !file()"
+            [class.border-green-600]="!dragging() && !!file()"
+            [class.bg-green-50]="!!file()"
+            [class.dark:border-green-500]="!dragging() && !!file()"
+            [class.dark:bg-green-950/30]="!!file()"
+            [attr.data-selected]="file() ? 'true' : null"
             (dragover)="onDragOver($event)"
             (dragleave)="dragging.set(false)"
             (drop)="onDrop($event)"
         >
-            <div class="font-medium mb-1">{{ label() }}</div>
+            <div class="font-medium">{{ label() }}</div>
+            @if (description(); as d) {
+                <div class="text-sm text-muted-color">{{ d }}</div>
+            }
             @if (file(); as f) {
-                <div class="text-sm break-words mb-2"><i class="pi pi-file mr-1"></i>{{ f.name }} ({{ sizeText() }})</div>
+                <div class="text-sm break-words my-2"><i class="pi pi-check-circle mr-1 text-green-700 dark:text-green-400"></i>{{ f.name }} ({{ sizeText() }})</div>
                 <button pButton type="button" size="small" severity="secondary" (click)="clear()"><i class="p-button-icon pi pi-times"></i>Dosyayı kaldır</button>
             } @else {
-                <div class="text-sm text-muted-color mb-2">{{ hint() }}</div>
+                <div class="text-sm text-muted-color my-2">{{ hint() }}</div>
                 <button pButton type="button" size="small" severity="secondary" (click)="picker.click()"><i class="p-button-icon pi pi-upload"></i>Dosya seç</button>
             }
             <input #picker type="file" class="hidden" [accept]="extension()" [attr.aria-label]="label()" (change)="onPick($event)" />
@@ -35,6 +44,8 @@ import { precheckImportFile } from '@/app/features/imports/utils/import-labels.u
 })
 export class ImportDropZoneComponent {
     readonly label = input.required<string>();
+    /** Dosyadan ne geldiği; dosya seçildikten sonra da görünür. */
+    readonly description = input<string | null>(null);
     readonly hint = input('Dosyayı buraya bırakın veya seçin (en fazla 10 MB).');
     readonly extension = input.required<'.xlsx' | '.csv'>();
     readonly file = input<File | null>(null);

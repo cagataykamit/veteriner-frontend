@@ -68,6 +68,8 @@ export interface EVetUploadFileDef {
     /** Kalın gösterilen uyarı. */
     readonly caution?: string;
     readonly label: string;
+    /** Bu dosyadan ne geldiği; yükleme alanında görünür. */
+    readonly contents: string;
 }
 
 /** Yönerge ve yükleme alanları bu sırayla gösterilir. */
@@ -78,9 +80,10 @@ export const EVET_UPLOAD_FILES: readonly EVetUploadFileDef[] = [
         extension: '.xlsx',
         requirement: 'zorunlu',
         menu: 'Genel > Yedek Al',
-        instruction: "Müşteri Listesi, Hasta Listesi, Randevular ve Muayene Listesi'ni işaretleyip Excel olarak indirin.",
+        instruction: "Müşteri Listesi, Hasta Listesi, Randevular ve Muayene Listesi'ni işaretleyip Excel olarak indirin. Müşteriler bu yedekten gelir; ayrı müşteri dosyası gerekmez.",
         caution: "Giriş Bilgileri'ni işaretlemeyin; kullanıcı ve parola bilgisi gerekmez.",
-        label: 'Yedek (.xlsx)'
+        label: 'E-vet yedeği (.xlsx)',
+        contents: 'Müşteri, hasta, randevu ve muayene kayıtları'
     },
     {
         slot: 'patientReport',
@@ -89,7 +92,8 @@ export const EVET_UPLOAD_FILES: readonly EVetUploadFileDef[] = [
         requirement: 'önerilir',
         menu: 'Rapor > Hasta Listesi',
         instruction: 'Csv olarak indirin. Hastaları sahibine kesin bağlar; yüklemezseniz sahip adıyla bağlanır.',
-        label: 'Hasta Listesi (.csv)'
+        label: 'Hasta Listesi (.csv)',
+        contents: 'Hastaların sahibine kesin bağlantısı'
     },
     {
         slot: 'vaccineReport',
@@ -97,8 +101,9 @@ export const EVET_UPLOAD_FILES: readonly EVetUploadFileDef[] = [
         extension: '.csv',
         requirement: 'isteğe bağlı',
         menu: 'Rapor > Resmi > Aşı Bilgi',
-        instruction: "Tarih aralığını 01.01.2020'den bugüne seçip Csv olarak indirin. Aşıların seri numarasını ve ürün adını ekler.",
-        label: 'Aşı Bilgi (.csv)'
+        instruction: "Tarih aralığını E-vet'i kullanmaya başladığınız tarihten bugüne seçip Csv olarak indirin. Aşıların seri numarasını ve ürün adını ekler.",
+        label: 'Aşı Bilgi (.csv)',
+        contents: 'Aşıların seri numarası ve ürün adı'
     },
     {
         slot: 'products',
@@ -107,7 +112,8 @@ export const EVET_UPLOAD_FILES: readonly EVetUploadFileDef[] = [
         requirement: 'isteğe bağlı',
         menu: 'Rapor > Depo > Ürün Listesi',
         instruction: 'Csv olarak indirin. Pasif ürünler aktarılmaz.',
-        label: 'Ürün Listesi (.csv)'
+        label: 'Ürün Listesi (.csv)',
+        contents: 'Ürün kartları, fiyat ve KDV oranı'
     }
 ];
 

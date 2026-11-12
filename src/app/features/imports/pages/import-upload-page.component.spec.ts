@@ -111,14 +111,16 @@ describe('ImportUploadPageComponent', () => {
         expect(guide).toContain("Giriş Bilgileri'ni işaretlemeyin");
         expect(guide).toContain('Rapor > Hasta Listesi');
         expect(guide).toContain('Rapor > Resmi > Aşı Bilgi');
-        expect(guide).toContain("01.01.2020'den bugüne");
+        expect(guide).toContain("E-vet'i kullanmaya başladığınız tarihten bugüne");
+        expect(guide).toContain('Müşteriler bu yedekten gelir');
         expect(guide).toContain('Rapor > Depo > Ürün Listesi');
         expect(guide).toContain('onayınız olmadan hiçbir kayıt oluşmaz');
 
         const zones = Array.from(el.querySelectorAll('app-import-drop-zone')).map((z) => z.textContent ?? '');
 
         expect(zones.length).toBe(4);
-        expect(zones[0]).toContain('Yedek (.xlsx) · zorunlu');
+        expect(zones[0]).toContain('E-vet yedeği (.xlsx) · zorunlu');
+        expect(zones[0]).toContain('Müşteri, hasta, randevu ve muayene kayıtları');
         expect(zones[1]).toContain('Hasta Listesi (.csv) · önerilir');
 
         expect(text()).not.toContain('1. Şablonu indirin');

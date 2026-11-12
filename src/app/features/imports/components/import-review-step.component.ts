@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
@@ -10,7 +11,7 @@ import { BreedsService } from '@/app/entities/breed/services/breeds.service';
 import type { ImportBatchDto, ImportFileFormat, ImportPreviewDto, ImportRowDto, ImportRowsQuery, ImportTable, ImportUnmappedValueDto, ImportValueKind } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
-import { IMPORT_SEVERITY_LABELS, IMPORT_VALUE_KIND_LABELS, importErrorCode, importErrorMessage, importIssueLabel, importRowPlace, importSeverityTag } from '@/app/features/imports/utils/import-labels.utils';
+import { IMPORT_ISSUE_GROUPS, IMPORT_ROW_STATUS_LABELS, IMPORT_VALUE_KIND_LABELS, importErrorCode, importErrorMessage, importIssueLabel, importRowPlace } from '@/app/features/imports/utils/import-labels.utils';
 import { fieldLabel, IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
 import { IMPORT_VALUE_SKIP, type ImportValueChoices, valueChoiceKey } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { PetColorsService } from '@/app/entities/pet/services/pet-colors.service';
@@ -26,7 +27,7 @@ const ROW_PAGE_SIZE = 25;
 @Component({
     selector: 'app-import-review-step',
     standalone: true,
-    imports: [FormsModule, ButtonModule, MessageModule, Paginator, SelectModule, AppEmptyStateComponent, AppStatusTagComponent],
+    imports: [NgTemplateOutlet, FormsModule, ButtonModule, MessageModule, Paginator, SelectModule, AppEmptyStateComponent, AppStatusTagComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (preview(); as p) {
@@ -35,9 +36,15 @@ const ROW_PAGE_SIZE = 25;
             } @else if (p.status === 'ValidationFailed') {
                 <p-message severity="error" class="w-full mb-4" role="alert">Doğrulama tamamlanamadı. Aşağıdaki nedenleri giderip yeniden doğrulayın.</p-message>
             } @else if (p.canCommit) {
-                <p-message severity="success" class="w-full mb-4">Doğrulama tamamlandı. Henüz hiçbir kayıt oluşturulmadı; aşağıdaki sonucu inceleyip onay adımına geçebilirsiniz.</p-message>
+                <p-message severity="success" class="w-full mb-4" data-testid="import-review-ready">
+                    Doğrulama tamamlandı: <strong>{{ totals(p).importable }}</strong> kayıt aktarılmaya hazır.
+                    @if (totals(p).notImported > 0) {
+                        {{ totals(p).notImported }} satır boş, tekrar ya da eksik bilgili olduğu için aktarılmayacak; nedenleri aşağıda.
+                    }
+                    Henüz hiçbir kayıt oluşturulmadı.
+                </p-message>
             } @else {
-                <p-message severity="warn" class="w-full mb-4">Doğrulama tamamlandı ancak aktarmaya geçmeden önce çözülmesi gereken konular var.</p-message>
+                <p-message severity="warn" class="w-full mb-4">Doğrulama tamamlandı. Aktarmaya geçmeden önce aşağıdaki eşleşmeyen değerleri seçin.</p-message>
             }
 
             @if (p.blockers.length) {
@@ -59,15 +66,13 @@ const ROW_PAGE_SIZE = 25;
                         </div>
                         <dl class="grid grid-cols-2 gap-x-3 gap-y-1 m-0 text-sm">
                             <dt class="text-muted-color">Oluşturulacak</dt>
-                            <dd class="m-0 text-right">{{ t.s.willCreate }}</dd>
-                            <dt class="text-muted-color">Mevcutla eşleşecek</dt>
-                            <dd class="m-0 text-right">{{ t.s.willMatch }}</dd>
-                            <dt class="text-muted-color">Atlanacak</dt>
-                            <dd class="m-0 text-right">{{ t.s.willSkip }}</dd>
-                            <dt class="text-muted-color">Uyarılı</dt>
-                            <dd class="m-0 text-right">{{ t.s.warning }}</dd>
-                            <dt class="text-muted-color">Hatalı</dt>
-                            <dd class="m-0 text-right" [class.text-danger]="t.s.error > 0">{{ t.s.error }}</dd>
+                            <dd class="m-0 text-right font-medium">{{ t.s.willCreate }}</dd>
+                            @if (t.s.willMatch > 0) {
+                                <dt class="text-muted-color">Mevcutla eşleşecek</dt>
+                                <dd class="m-0 text-right">{{ t.s.willMatch }}</dd>
+                            }
+                            <dt class="text-muted-color">Aktarılmayacak</dt>
+                            <dd class="m-0 text-right">{{ t.s.willSkip + t.s.error }}</dd>
                         </dl>
                     </div>
                 }
@@ -75,36 +80,54 @@ const ROW_PAGE_SIZE = 25;
 
             @if (p.unmappedValues.length) {
                 <section class="rounded-border border border-surface-200 dark:border-surface-700 p-4 mb-4">
-                    <h6 class="mt-0 mb-1">Eşlenemeyen değerler</h6>
-                    <p class="text-sm text-muted-color mt-0">Bu değerler sistemde bulunamadı. Mevcut bir tanıma eşleyin veya bu değerli satırları atlayın. Yeni tür ya da aşı tanımı oluşturmak için önce Ayarlar > Tanımlar bölümünü kullanın.</p>
-                    <div class="flex flex-col gap-3">
-                        @for (u of p.unmappedValues; track u.kind + '|' + u.source) {
-                            <div class="grid grid-cols-12 gap-2 items-center">
-                                <div class="col-span-12 md:col-span-5 min-w-0">
-                                    <app-status-tag [label]="kindLabels[u.kind]" [severity]="u.blocking ? 'danger' : 'secondary'" />
-                                    <span class="font-medium break-words ml-2">{{ u.source }}</span>
-                                    <span class="block text-xs text-muted-color">{{ u.rowCount }} satırda{{ u.blocking ? ' · aktarmayı engeller' : ' · eşlenmezse metin olarak aktarılır' }}</span>
-                                </div>
-                                <div class="col-span-12 md:col-span-7">
-                                    <p-select
-                                        [options]="catalogOptions(u)"
-                                        optionLabel="label"
-                                        optionValue="value"
-                                        placeholder="Karşılık seçin"
-                                        [filter]="true"
-                                        filterBy="label"
-                                        [showClear]="true"
-                                        [disabled]="!canManage()"
-                                        [loading]="catalogLoading()[u.kind]"
-                                        [ngModel]="choices()[choiceKey(u)] || null"
-                                        (ngModelChange)="setChoice(u, $event)"
-                                        class="w-full"
-                                        [ariaLabel]="u.source + ' için karşılık'"
-                                    />
-                                </div>
+                    @if (requiredValues(p).length) {
+                        <h6 class="mt-0 mb-1">Seçmeniz gereken değerler</h6>
+                        <p class="text-sm text-muted-color mt-0">Bu tür ve aşı adları sistemde bulunamadı. Her biri için karşılığını seçin ya da "Bu değeri atla" deyin; seçmeden aktarma başlamaz.</p>
+                        <div class="flex flex-col gap-3" data-testid="import-required-values">
+                            @for (u of requiredValues(p); track u.kind + '|' + u.source) {
+                                <ng-container *ngTemplateOutlet="valueRow; context: { $implicit: u }" />
+                            }
+                        </div>
+                    }
+                    @if (optionalValues(p).length) {
+                        <details class="text-sm" [class.mt-4]="requiredValues(p).length > 0" data-testid="import-optional-values">
+                            <summary class="cursor-pointer select-none">
+                                <span class="font-medium">{{ optionalValues(p).length }} ırk ve renk adı</span>
+                                <span class="text-muted-color"> hastaların kartına yazıldığı gibi aktarılacak; eşlemek isterseniz açın (isteğe bağlı).</span>
+                            </summary>
+                            <div class="flex flex-col gap-3 mt-3">
+                                @for (u of optionalValues(p); track u.kind + '|' + u.source) {
+                                    <ng-container *ngTemplateOutlet="valueRow; context: { $implicit: u }" />
+                                }
                             </div>
-                        }
-                    </div>
+                        </details>
+                    }
+                    <ng-template #valueRow let-u>
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <div class="col-span-12 md:col-span-5 min-w-0">
+                                <app-status-tag [label]="kindLabels[u.kind]" severity="secondary" />
+                                <span class="font-medium break-words ml-2">{{ u.source }}</span>
+                                <span class="block text-xs text-muted-color">{{ u.rowCount }} satırda</span>
+                            </div>
+                            <div class="col-span-12 md:col-span-7">
+                                <p-select
+                                    [options]="catalogOptions(u)"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    placeholder="Karşılık seçin"
+                                    [filter]="true"
+                                    filterBy="label"
+                                    [showClear]="true"
+                                    [disabled]="!canManage()"
+                                    [loading]="catalogLoading()[u.kind]"
+                                    [ngModel]="choices()[choiceKey(u)] || null"
+                                    (ngModelChange)="setChoice(u, $event)"
+                                    class="w-full"
+                                    [ariaLabel]="u.source + ' için karşılık'"
+                                />
+                            </div>
+                        </div>
+                    </ng-template>
                     @if (canManage()) {
                         <div class="mt-4 flex flex-wrap items-center gap-2">
                             <button pButton type="button" [disabled]="!hasChoices() || busy()" (click)="applyValues.emit()"><i class="p-button-icon" [class]="busy() ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"></i>Eşlemeleri uygula ve yeniden doğrula</button>
@@ -148,29 +171,42 @@ const ROW_PAGE_SIZE = 25;
             }
 
             @if (p.issueCounts.length) {
-                <section class="mb-4">
-                    <h6 class="mt-0 mb-2">Sorun özeti</h6>
-                    <div class="flex flex-wrap gap-2">
-                        @for (i of p.issueCounts; track i.code + i.severity) {
-                            <button
-                                type="button"
-                                class="rounded-border border border-surface-200 dark:border-surface-700 px-3 py-2 text-sm bg-transparent text-color cursor-pointer text-left flex items-center gap-2"
-                                [class.border-primary]="codeFilter() === i.code"
-                                (click)="filterByCode(i.code)"
-                                [attr.aria-pressed]="codeFilter() === i.code"
-                            >
-                                <app-status-tag [label]="severityLabels[i.severity]" [severity]="severityTag(i.severity)" />
-                                {{ issueLabel(i.code) }} · {{ i.rowCount }} satır
-                            </button>
-                        }
-                    </div>
+                <section class="mb-4 flex flex-col gap-3" data-testid="import-issue-groups">
+                    @for (g of issueGroups(p); track g.severity) {
+                        <details class="rounded-border border border-surface-200 dark:border-surface-700 px-4 py-3" [open]="g.severity === 'Error'">
+                            <summary class="cursor-pointer select-none">
+                                <span class="font-medium">{{ g.title }}</span>
+                                <span class="text-muted-color text-sm"> · {{ g.hint }}</span>
+                            </summary>
+                            <div class="flex flex-wrap gap-2 mt-3">
+                                @for (i of g.items; track i.code) {
+                                    <button
+                                        type="button"
+                                        class="rounded-border border border-surface-200 dark:border-surface-700 px-3 py-2 text-sm bg-transparent text-color cursor-pointer text-left"
+                                        [class.border-primary]="codeFilter() === i.code"
+                                        (click)="filterByCode(i.code)"
+                                        [attr.aria-pressed]="codeFilter() === i.code"
+                                    >
+                                        {{ issueLabel(i.code) }} · {{ i.rowCount }} satır
+                                    </button>
+                                }
+                            </div>
+                            @if (g.severity === 'Error') {
+                                <div class="flex flex-wrap gap-2 mt-3">
+                                    <button pButton type="button" size="small" severity="secondary" [disabled]="reportBusy() === 'xlsx'" (click)="downloadReport('xlsx')"><i class="p-button-icon" [class]="reportBusy() === 'xlsx' ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Listeyi indir (Excel)</button>
+                                    <button pButton type="button" size="small" severity="secondary" [disabled]="reportBusy() === 'csv'" (click)="downloadReport('csv')"><i class="p-button-icon" [class]="reportBusy() === 'csv' ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>CSV</button>
+                                </div>
+                            }
+                        </details>
+                    }
                 </section>
             }
 
             @if (!p.payloadPurged) {
-                <section class="mb-4">
+                <details class="mb-4" [open]="!!codeFilter()" data-testid="import-rows">
+                    <summary class="cursor-pointer select-none font-medium mb-3">Satır satır incele</summary>
                     <div class="flex flex-wrap items-end justify-between gap-3 mb-3">
-                        <h6 class="m-0">Satırlar</h6>
+                        <span class="text-sm text-muted-color">Yukarıdaki bir nedene tıklayınca yalnız o satırlar listelenir.</span>
                         <div class="flex flex-wrap gap-2 items-end">
                             <p-select
                                 [options]="tableOptions"
@@ -181,7 +217,7 @@ const ROW_PAGE_SIZE = 25;
                                 placeholder="Tüm tablolar"
                                 [showClear]="true"
                                 class="w-44"
-                                ariaLabel="Tablo süzgeci"
+                                ariaLabel="Tablo filtresi"
                             />
                             <p-select
                                 [options]="statusOptions"
@@ -192,14 +228,10 @@ const ROW_PAGE_SIZE = 25;
                                 placeholder="Tüm durumlar"
                                 [showClear]="true"
                                 class="w-40"
-                                ariaLabel="Durum süzgeci"
+                                ariaLabel="Durum filtresi"
                             />
                             @if (codeFilter()) {
                                 <button pButton type="button" size="small" severity="secondary" (click)="filterByCode(null)"><i class="p-button-icon pi pi-times"></i>{{ issueLabel(codeFilter()!) }}</button>
-                            }
-                            @if (hasErrors(p)) {
-                                <button pButton type="button" size="small" severity="secondary" [disabled]="reportBusy() === 'xlsx'" (click)="downloadReport('xlsx')"><i class="p-button-icon" [class]="reportBusy() === 'xlsx' ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Hata raporu (Excel)</button>
-                                <button pButton type="button" size="small" severity="secondary" [disabled]="reportBusy() === 'csv'" (click)="downloadReport('csv')"><i class="p-button-icon" [class]="reportBusy() === 'csv' ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>CSV</button>
                             }
                         </div>
                     </div>
@@ -209,7 +241,7 @@ const ROW_PAGE_SIZE = 25;
                     } @else if (rowsLoading() && rows().length === 0) {
                         <p class="text-muted-color">Satırlar yükleniyor…</p>
                     } @else if (rows().length === 0) {
-                        <app-empty-state message="Bu süzgece uyan satır yok." />
+                        <app-empty-state message="Bu filtreye uyan satır yok." />
                     } @else {
                         <ul class="list-none p-0 m-0 flex flex-col gap-2" [class.opacity-60]="rowsLoading()" [attr.aria-busy]="rowsLoading()">
                             @for (r of rows(); track r.table + r.rowNumber) {
@@ -249,7 +281,7 @@ const ROW_PAGE_SIZE = 25;
                         </ul>
                         <p-paginator [rows]="pageSize" [first]="(page() - 1) * pageSize" [totalRecords]="totalRows()" (onPageChange)="onPage($event)" />
                     }
-                </section>
+                </details>
             } @else {
                 <p-message severity="info" class="w-full mb-4">Satır verisi saklama süresi sonunda silindi; yalnızca sayılar görüntülenebilir.</p-message>
             }
@@ -273,14 +305,8 @@ export class ImportReviewStepComponent {
     protected readonly pageSize = ROW_PAGE_SIZE;
     protected readonly rowPlace = importRowPlace;
     protected readonly kindLabels = IMPORT_VALUE_KIND_LABELS;
-    protected readonly severityLabels = IMPORT_SEVERITY_LABELS;
-    protected readonly severityTag = importSeverityTag;
     protected readonly tableOptions = IMPORT_TABLES.map((t) => ({ value: t, label: IMPORT_TABLE_LABELS[t] }));
-    protected readonly statusOptions = [
-        { value: 'Error', label: 'Hatalı' },
-        { value: 'Warning', label: 'Uyarılı' },
-        { value: 'Valid', label: 'Geçerli' }
-    ];
+    protected readonly statusOptions = (['Error', 'Warning', 'Valid'] as const).map((value) => ({ value, label: IMPORT_ROW_STATUS_LABELS[value] }));
 
     protected readonly tableFilter = signal<ImportTable | null>(null);
     protected readonly statusFilter = signal<'Valid' | 'Warning' | 'Error' | null>(null);
@@ -317,8 +343,25 @@ export class ImportReviewStepComponent {
         return IMPORT_TABLES.filter((t) => p.summary[t].total > 0).map((t) => ({ key: t, label: IMPORT_TABLE_LABELS[t], s: p.summary[t] }));
     }
 
-    protected hasErrors(p: ImportPreviewDto): boolean {
-        return IMPORT_TABLES.some((t) => p.summary[t].error > 0);
+    /** Aktarılacak (oluşturulacak + eşleşecek) ve aktarılmayacak (atlanacak + hatalı) satır toplamları. */
+    protected totals(p: ImportPreviewDto): { importable: number; notImported: number } {
+        return IMPORT_TABLES.reduce(
+            (acc, t) => ({ importable: acc.importable + p.summary[t].willCreate + p.summary[t].willMatch, notImported: acc.notImported + p.summary[t].willSkip + p.summary[t].error }),
+            { importable: 0, notImported: 0 }
+        );
+    }
+
+    /** Aktarmayı engelleyen (tür, aşı) değerler önce ve açık; ırk ve renk isteğe bağlıdır, kapalı bölümde. */
+    protected requiredValues(p: ImportPreviewDto): ImportUnmappedValueDto[] {
+        return p.unmappedValues.filter((u) => u.blocking);
+    }
+
+    protected optionalValues(p: ImportPreviewDto): ImportUnmappedValueDto[] {
+        return p.unmappedValues.filter((u) => !u.blocking);
+    }
+
+    protected issueGroups(p: ImportPreviewDto) {
+        return IMPORT_ISSUE_GROUPS.map((g) => ({ ...g, items: p.issueCounts.filter((i) => i.severity === g.severity) })).filter((g) => g.items.length > 0);
     }
 
     protected choiceKey(u: ImportUnmappedValueDto): string {
@@ -366,11 +409,13 @@ export class ImportReviewStepComponent {
     }
 
     protected rowStatusLabel(r: ImportRowDto): string {
-        return r.validation.status === 'Error' ? 'Hatalı' : r.validation.status === 'Warning' ? 'Uyarılı' : r.validation.status === 'Valid' ? 'Geçerli' : 'Bekliyor';
+        const status = r.validation.status;
+
+        return status === 'Error' || status === 'Warning' || status === 'Valid' ? IMPORT_ROW_STATUS_LABELS[status] : 'Bekliyor';
     }
 
     protected rowStatusSeverity(r: ImportRowDto) {
-        return r.validation.status === 'Error' ? 'danger' : r.validation.status === 'Warning' ? 'warn' : ('success' as const);
+        return r.validation.status === 'Error' ? 'secondary' : r.validation.status === 'Warning' ? 'warn' : ('success' as const);
     }
 
     protected actionLabel(r: ImportRowDto): string | null {

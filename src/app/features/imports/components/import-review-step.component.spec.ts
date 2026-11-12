@@ -97,4 +97,66 @@ describe('ImportReviewStepComponent', () => {
         fixture.detectChanges();
         expect(text()).toContain('(Hasta adı)');
     });
+
+    describe('sade sonuç', () => {
+        const ready = {
+            ...preview,
+            canCommit: true,
+            summary: {
+                ...batch.summary,
+                customers: { ...zero, total: 10, valid: 8, error: 1, willCreate: 8, willSkip: 1 },
+                clinicalRecords: { ...zero, total: 5, valid: 3, willCreate: 3, willSkip: 2 }
+            },
+            unmappedValues: [
+                { kind: 'vaccine', source: 'UYUZ TEDAVİSİ', rowCount: 4, blocking: true },
+                { kind: 'breed', source: 'Sarman', rowCount: 9, blocking: false }
+            ],
+            issueCounts: [
+                { code: 'Imports.PetNotFound', severity: 'Error', rowCount: 1 },
+                { code: 'Imports.PhoneInvalid', severity: 'Warning', rowCount: 2 },
+                { code: 'Imports.ClinicalRecordEmpty', severity: 'Info', rowCount: 2 }
+            ]
+        } as unknown as ImportPreviewDto;
+
+        function render(): HTMLElement {
+            imports.getRows.mockReturnValue(of({ items: [], totalItems: 0 } as unknown as ImportRowPageDto));
+            TestBed.overrideProvider(VaccineDefinitionsService, { useValue: { getVaccineDefinitions: () => of({ items: [] }) } });
+            TestBed.overrideProvider(BreedsService, { useValue: { getBreedList: () => of([]) } });
+            fixture = TestBed.createComponent(ImportReviewStepComponent);
+            fixture.componentRef.setInput('batch', batch);
+            fixture.componentRef.setInput('preview', ready);
+            fixture.componentRef.setInput('choices', {});
+            fixture.detectChanges();
+            fixture.detectChanges();
+
+            return fixture.nativeElement as HTMLElement;
+        }
+
+        it('kaç kaydın aktarılacağını ve aktarılmayacağını söyler; kırmızı "Hatalı" satırı yoktur', () => {
+            const el = render();
+
+            expect(el.querySelector('[data-testid="import-review-ready"]')?.textContent).toContain('11 kayıt aktarılmaya hazır');
+            expect(el.querySelector('[data-testid="import-review-ready"]')?.textContent).toContain('6 satır');
+            expect(el.textContent).not.toContain('Hatalı');
+            expect(el.textContent).toContain('Aktarılmayacak');
+        });
+
+        it('engelleyen değerler açıkta, ırk ve renk kapalı isteğe bağlı bölümde', () => {
+            const el = render();
+
+            expect(el.querySelector('[data-testid="import-required-values"]')?.textContent).toContain('UYUZ TEDAVİSİ');
+            const optional = el.querySelector<HTMLDetailsElement>('[data-testid="import-optional-values"]');
+
+            expect(optional?.open).toBe(false);
+            expect(optional?.textContent).toContain('Sarman');
+        });
+
+        it('nedenler üç grupta: aktarılmayacak açık, göz atılacak ve bilgi kapalı', () => {
+            const groups = Array.from(render().querySelectorAll<HTMLDetailsElement>('[data-testid="import-issue-groups"] details'));
+
+            expect(groups.map((g) => g.querySelector('summary')?.textContent?.trim().split(' · ')[0])).toEqual(['Aktarılmayacak satırlar', 'Aktarılacak, göz atmanız önerilenler', 'Bilgi notları']);
+            expect(groups.map((g) => g.open)).toEqual([true, false, false]);
+            expect(groups[0].textContent).toContain('Listeyi indir');
+        });
+    });
 });

@@ -6,6 +6,7 @@ describe('speciesEmoji', () => {
         expect(speciesEmoji('KEDİ')).toBe('🐈');
         expect(speciesEmoji('  Kuş ')).toBe('🐦');
         expect(speciesEmoji('Gine Domuzu')).toBe('🐹');
+        expect(speciesEmoji('Kobay (Gine Domuzu)')).toBe('🐹');
         expect(speciesEmoji('Sığır')).toBe('🐄');
     });
 

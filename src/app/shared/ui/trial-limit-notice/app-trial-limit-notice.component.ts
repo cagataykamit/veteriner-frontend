@@ -15,10 +15,10 @@ import { TRIAL_LIMIT_ACTION_LABEL } from '@/app/shared/utils/api-error.utils';
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [RouterLink],
     template: `
-        <div class="card mb-4 border-amber-200 dark:border-amber-800" role="alert" data-testid="trial-limit-notice">
+        <div class="mb-4 rounded-border border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-700 dark:bg-amber-950/40" role="alert" data-testid="trial-limit-notice">
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                <i class="pi pi-lock text-amber-600 dark:text-amber-300" aria-hidden="true"></i>
-                <span class="text-amber-800 dark:text-amber-200 m-0">{{ message() }}</span>
+                <i class="pi pi-lock text-amber-700 dark:text-amber-300" aria-hidden="true"></i>
+                <span class="text-surface-900 dark:text-surface-0 font-medium m-0">{{ message() }}</span>
                 @if (canOpenSubscription()) {
                     <a [routerLink]="subscriptionRoute" class="text-primary font-medium no-underline whitespace-nowrap" data-testid="trial-limit-subscription-link">
                         {{ actionLabel }} <i class="pi pi-arrow-right text-xs" aria-hidden="true"></i>
