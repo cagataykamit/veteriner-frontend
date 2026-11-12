@@ -1,6 +1,8 @@
 /* Klinik sitesinin global stili: yazı tipleri ve motorun kullandığı ikonlar bizim sunucudan gelir (ADR-045 K12). Üçüncü taraf bağlantı yok. */
 @import '../../site-engine/src/styles/site-fonts.css';
 @import 'primeicons/primeicons.css';
+/* Veteriner bul tanıtım sitesinin yazı tipini kullanır (Inter); dosyalar `unicode-range` ile bölünmüştür, klinik sitelerinde inmez. */
+@import '@fontsource-variable/inter/wght.css';
 @import './vet-finder.css';
 
 html,

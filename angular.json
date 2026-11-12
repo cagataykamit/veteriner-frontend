@@ -323,6 +323,11 @@
                                 "glob": "*.webp",
                                 "input": "projects/site-engine/stock/photos",
                                 "output": "_stock"
+                            },
+                            {
+                                "glob": "vetinity-compact*.svg",
+                                "input": "src/assets/brand/vetinity",
+                                "output": "_brand"
                             }
                         ],
                         "styles": ["projects/site/src/styles.css"],
