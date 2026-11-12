@@ -105,7 +105,7 @@ const ROW_PAGE_SIZE = 25;
                     <ng-template #valueRow let-u>
                         <div class="grid grid-cols-12 gap-2 items-center">
                             <div class="col-span-12 md:col-span-5 min-w-0">
-                                <app-status-tag [label]="kindLabels[u.kind]" severity="secondary" />
+                                <app-status-tag [label]="kindLabel(u)" severity="secondary" />
                                 <span class="font-medium break-words ml-2">{{ u.source }}</span>
                                 <span class="block text-xs text-muted-color">{{ u.rowCount }} satırda</span>
                             </div>
@@ -119,7 +119,7 @@ const ROW_PAGE_SIZE = 25;
                                     filterBy="label"
                                     [showClear]="true"
                                     [disabled]="!canManage()"
-                                    [loading]="catalogLoading()[u.kind]"
+                                    [loading]="isCatalogLoading(u)"
                                     [ngModel]="choices()[choiceKey(u)] || null"
                                     (ngModelChange)="setChoice(u, $event)"
                                     class="w-full"
@@ -362,6 +362,15 @@ export class ImportReviewStepComponent {
 
     protected issueGroups(p: ImportPreviewDto) {
         return IMPORT_ISSUE_GROUPS.map((g) => ({ ...g, items: p.issueCounts.filter((i) => i.severity === g.severity) })).filter((g) => g.items.length > 0);
+    }
+
+    /** Ortak satır şablonu (`ng-template`) değeri tipsiz aldığı için alanlara tipli yardımcıyla erişilir. */
+    protected kindLabel(u: ImportUnmappedValueDto): string {
+        return this.kindLabels[u.kind];
+    }
+
+    protected isCatalogLoading(u: ImportUnmappedValueDto): boolean {
+        return !!this.catalogLoading()[u.kind];
     }
 
     protected choiceKey(u: ImportUnmappedValueDto): string {
