@@ -79,7 +79,7 @@ const DOCUMENT_LABEL: Record<'ESmm' | 'Invoice', string> = {
 
                 <div class="card mb-4" data-testid="e-document-automation">
                     <h5 class="mt-0 mb-2">Otomatik e-belge</h5>
-                    <p class="text-sm text-muted-color mt-0 mb-4">Tamamen ödenmiş ücretlerin belgesi kendiliğinden kesilir. Her belge entegratör sözleşmenizdeki kontörden düşer. Yalnız bu ayar açıldıktan sonra yazılan ücretler kesilir; eski ücretler toplu kesilmez.</p>
+                    <p class="text-sm text-muted-color mt-0 mb-4">Tamamen ödenmiş ücretlerin belgesi kendiliğinden kesilir. Her belge entegratör sözleşmenizdeki kontörden düşer. Yalnız ayar açıkken ödemesi tamamlanan ücretler kesilir; açtığınızda zaten ödenmiş eski ücretler geriye dönük kesilmez.</p>
 
                     @if (s.autoIssuePausedAtUtc && s.autoIssueMode !== 'Off') {
                         <p-message severity="warn" class="w-full mb-4" role="alert" data-testid="edoc-auto-paused">
