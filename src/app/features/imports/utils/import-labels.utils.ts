@@ -84,15 +84,19 @@ export const IMPORT_VALUE_KIND_LABELS: Readonly<Record<ImportValueKind, string>>
     color: 'Renk'
 };
 
-export const IMPORT_SEVERITY_LABELS: Readonly<Record<ImportIssueSeverity, string>> = {
-    Info: 'Bilgi',
-    Warning: 'Uyarı',
-    Error: 'Hata'
-};
+/** Doğrulama sonucundaki neden grupları: kliniğe "hata" değil, satırın ne olacağı söylenir (aktarılmaz / aktarılır ama bakın / bilgi). */
+export const IMPORT_ISSUE_GROUPS: readonly { severity: ImportIssueSeverity; title: string; hint: string }[] = [
+    { severity: 'Error', title: 'Aktarılmayacak satırlar', hint: 'eksik ya da tutarsız bilgi; listesini indirip eski programda düzeltebilirsiniz' },
+    { severity: 'Warning', title: 'Aktarılacak, göz atmanız önerilenler', hint: 'kayıt gelir; bir alanı boş ya da düzeltilmiş gelir' },
+    { severity: 'Info', title: 'Bilgi notları', hint: 'bir şey yapmanız gerekmez' }
+];
 
-export function importSeverityTag(severity: string): StatusTagSeverity {
-    return severity === 'Error' ? 'danger' : severity === 'Warning' ? 'warn' : 'info';
-}
+/** Satır durumunun kliniğe gösterilen adı (`Error` satır aktarılmaz; uyarılı satır aktarılır). */
+export const IMPORT_ROW_STATUS_LABELS: Readonly<Record<'Valid' | 'Warning' | 'Error', string>> = {
+    Error: 'Aktarılmayacak',
+    Warning: 'Göz atın',
+    Valid: 'Geçerli'
+};
 
 /** Satır sorunu ve dosya düzeyi neden kodları için sade Türkçe etiketler (sözleşme 6.4). */
 const ISSUE_LABELS: Readonly<Record<string, string>> = {
@@ -153,7 +157,7 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.DateInFuture': 'Tarih gelecekte',
     'Imports.RecordBeforeBirth': 'Kayıt, doğum tarihinden önce görünüyor',
     'Imports.TemperatureInvalid': 'Ateş değeri geçersiz; boş aktarılır',
-    'Imports.ClinicalRecordEmpty': 'Kayıtta hiçbir klinik bilgi yok (şikâyet, bulgu, tanı, tedavi, not, kilo, ateş…)',
+    'Imports.ClinicalRecordEmpty': 'Boş muayene satırı (aktarılacak bilgi yok); atlanır',
     'Imports.DuplicateClinicalRecord': 'Aynı klinik kayıt zaten var; atlanır',
     'Imports.EntryKindUnrecognized': 'İşlem türü tanınmadı (borç veya tahsilat yazın)',
     'Imports.DuplicateAccountEntry': 'Aynı hesap hareketi zaten var; atlanır',
