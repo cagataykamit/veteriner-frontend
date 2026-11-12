@@ -9,7 +9,7 @@ const SPECIES_EMOJI: ReadonlyArray<readonly [names: readonly string[], emoji: st
     [['kuş', 'papağan', 'muhabbet kuşu', 'kanarya', 'bird'], '🐦'],
     [['tavşan', 'rabbit'], '🐇'],
     [['gine domuzu', 'kobay (gine domuzu)', 'hamster', 'çinçilla', 'kobay', 'fare', 'sıçan'], '🐹'],
-    [['gelincik', 'kirpi'], '🦔'],
+    [['ferret (gelincik)', 'ferret', 'gelincik', 'kirpi'], '🦔'],
     [['kaplumbağa'], '🐢'],
     [['kertenkele', 'sürüngen', 'iguana'], '🦎'],
     [['yılan'], '🐍'],
