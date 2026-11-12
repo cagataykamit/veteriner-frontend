@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { PUBLIC_NAV_LINKS } from '@/app/features/public/utils/public-navigation.utils';
+import { PUBLIC_NAV_ITEMS, PUBLIC_VET_FINDER_HREF } from '@/app/features/public/utils/public-navigation.utils';
 import { PublicTopbarComponent } from './public-topbar.component';
 
 describe('PublicTopbarComponent', () => {
@@ -62,7 +62,10 @@ describe('PublicTopbarComponent', () => {
 
         expect(menuButton.getAttribute('aria-expanded')).toBe('true');
         expect(menu.getAttribute('role')).toBe('dialog');
-        expect(Array.from(menu.querySelectorAll('nav a')).map((a) => a.textContent?.trim())).toEqual(PUBLIC_NAV_LINKS.map((l) => l.label));
+        expect(Array.from(menu.querySelectorAll('nav > ul > li > a, nav > ul > li > button')).map((a) => a.textContent?.trim())).toEqual(
+            PUBLIC_NAV_ITEMS.map((l) => l.label)
+        );
+        expect(menu.querySelector(`a[href="${PUBLIC_VET_FINDER_HREF}"]`)?.textContent?.trim()).toBe('Veteriner bul');
         expect(document.activeElement).toBe(menu.querySelector('button[aria-label="Menüyü kapat"]'));
         expect(document.body.style.overflow).toBe('hidden');
     });
@@ -99,5 +102,77 @@ describe('PublicTopbarComponent', () => {
 
         menu.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true }));
         expect(document.activeElement).toBe(last);
+    });
+
+    it('masaüstü: Özellikler tıklamayla açılır; ilk öğe klinik web sitesi ve açıklaması, alt öğeler bölüm çıpalarına gider', () => {
+        const { fixture, host } = setup();
+        const button = host.querySelector<HTMLButtonElement>('button[aria-controls="public-nav-dropdown"]')!;
+
+        expect(button.textContent?.trim()).toBe('Özellikler');
+        expect(button.getAttribute('aria-expanded')).toBe('false');
+        expect(host.querySelector('#public-nav-dropdown')).toBeNull();
+
+        button.click();
+        fixture.detectChanges();
+
+        const panel = host.querySelector<HTMLElement>('#public-nav-dropdown')!;
+        const links = Array.from(panel.querySelectorAll<HTMLAnchorElement>('a'));
+        const children = PUBLIC_NAV_ITEMS.find((i) => i.children)!.children!;
+
+        expect(button.getAttribute('aria-expanded')).toBe('true');
+        expect(links.map((a) => a.querySelector('span')?.textContent?.trim())).toEqual(children.map((c) => c.label));
+        expect(links[0].getAttribute('href')).toBe('/ozellikler#hasta-sahibi');
+        expect(links[0].textContent).toContain("Hasta sahibi sizi Veteriner bul'da da bulur");
+        expect(links[links.length - 1].getAttribute('href')).toBe('/ozellikler');
+    });
+
+    it('masaüstü: Escape açılır menüyü kapatıp odağı düğmeye döndürür, dışarı tıklama kapatır', () => {
+        const { fixture, host } = setup();
+        const button = host.querySelector<HTMLButtonElement>('button[aria-controls="public-nav-dropdown"]')!;
+
+        button.click();
+        fixture.detectChanges();
+        host.querySelector<HTMLAnchorElement>('#public-nav-dropdown a')!.focus();
+        host.querySelector('#public-nav-dropdown')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        fixture.detectChanges();
+
+        expect(host.querySelector('#public-nav-dropdown')).toBeNull();
+        expect(button.getAttribute('aria-expanded')).toBe('false');
+        expect(document.activeElement).toBe(button);
+
+        button.click();
+        fixture.detectChanges();
+        document.body.click();
+        fixture.detectChanges();
+
+        expect(host.querySelector('#public-nav-dropdown')).toBeNull();
+    });
+
+    it('Veteriner bul masaüstünde düz bağlantıdır (ayrı sunucu, Angular rotası değil), düğme değildir', () => {
+        const { host } = setup();
+        const link = host.querySelector<HTMLAnchorElement>(`header a[href="${PUBLIC_VET_FINDER_HREF}"]`)!;
+
+        expect(link.textContent?.trim()).toBe('Veteriner bul');
+        expect(link.querySelector('i.pi-map-marker')).not.toBeNull();
+        expect(link.classList.contains('public-btn')).toBe(false);
+        expect(link.closest('nav')).toBeNull();
+    });
+
+    it('mobil: Özellikler akordeonu kapalı başlar, açılınca alt bağlantılar görünür', async () => {
+        const { fixture, host, menuButton } = setup();
+
+        menuButton.click();
+        fixture.detectChanges();
+        await flush(fixture);
+        const toggle = host.querySelector<HTMLButtonElement>('button[aria-controls="public-mobile-submenu"]')!;
+
+        expect(toggle.getAttribute('aria-expanded')).toBe('false');
+        expect(host.querySelector('#public-mobile-submenu')).toBeNull();
+
+        toggle.click();
+        fixture.detectChanges();
+
+        expect(toggle.getAttribute('aria-expanded')).toBe('true');
+        expect(host.querySelector('#public-mobile-submenu a')?.getAttribute('href')).toBe('/ozellikler#hasta-sahibi');
     });
 });
