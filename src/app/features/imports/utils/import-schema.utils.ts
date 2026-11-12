@@ -143,7 +143,8 @@ export const IMPORT_FIELDS: Readonly<Record<ImportTable, readonly ImportFieldDef
         { key: 'BakiyeTarihi', label: 'Bakiye tarihi', hint: 'Bakiyenin hangi tarihteki durum olduğu; yalnız devir ücretinin açıklamasına yazılır.' },
         { key: 'KimlikNo', label: 'Kimlik / vergi no', hint: 'Fatura bilgisi: 11 haneli T.C. kimlik no veya 10 haneli vergi no. Geçersizse boş kalır.' },
         { key: 'VergiDairesi', label: 'Vergi dairesi' },
-        { key: 'Durum', label: 'Durum', hint: 'Aktif veya Pasif. Pasif müşteri aktarılır, hatırlatma gönderilmez.' }
+        { key: 'Durum', label: 'Durum', hint: 'Aktif veya Pasif. Pasif müşteri aktarılır, hatırlatma gönderilmez.' },
+        { key: 'Not', label: 'Not', hint: 'Kliniğin iç notu (en çok 2000 karakter); yalnız yeni müşteriye yazılır, sahip portalında görünmez.' }
     ],
     pets: [
         { key: 'MusteriNo', label: 'Müşteri no', hint: 'Sahibe bağlantı için tercih edilen alan.' },
@@ -218,6 +219,8 @@ export const IMPORT_FIELDS: Readonly<Record<ImportTable, readonly ImportFieldDef
         { key: 'Kategori', label: 'Kategori' },
         { key: 'Birim', label: 'Birim' },
         { key: 'SatisFiyati', label: 'Satış fiyatı' },
+        { key: 'KdvOrani', label: 'KDV oranı', hint: '20, %20 veya 18,5 gibi. Boşsa ya da okunamazsa klinik varsayılanı kullanılır.' },
+        { key: 'AlisFiyati', label: 'Alış fiyatı', hint: 'Birim alış fiyatı (TL), bilgi amaçlıdır; stok değeri ve ücret hesabında kullanılmaz. 0 boş sayılır.' },
         { key: 'Barkod', label: 'Barkod' },
         { key: 'StokKodu', label: 'Stok kodu' },
         { key: 'Uretici', label: 'Üretici' },

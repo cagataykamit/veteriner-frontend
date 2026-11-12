@@ -177,6 +177,14 @@ describe('tam geçiş tabloları (sözleşme 12)', () => {
         expect(IMPORT_CSV_FIELD.clinicalRecords).toBe('clinicalRecordsFile');
     });
 
+    it('eksik alanlar (2026-11-12): müşteri notu, ürün KDV oranı ve alış fiyatı etiketli; yeni uyarı kodları Türkçe', () => {
+        expect(fieldLabel('customers', 'Not')).toBe('Not');
+        expect(fieldLabel('products', 'KdvOrani')).toBe('KDV oranı');
+        expect(fieldLabel('products', 'AlisFiyati')).toBe('Alış fiyatı');
+        expect(importIssueLabel('Imports.VatRateInvalid')).toBe('KDV oranı okunamadı; ürün klinik varsayılan KDV oranıyla aktarılır');
+        expect(importIssueLabel('Imports.PurchasePriceInvalid')).toBe('Alış fiyatı okunamadı; boş aktarılır');
+    });
+
     it('yeni kural ve geri alma kodlarının Türkçe etiketi vardır', () => {
         for (const code of ['Imports.CreditBalanceNotImported', 'Imports.ClinicalRecordEmpty', 'Imports.PastAppointmentSkipped', 'Imports.EntryKindUnrecognized', 'Imports.CategoryUnmapped']) {
             expect(importIssueLabel(code)).not.toBe(code);

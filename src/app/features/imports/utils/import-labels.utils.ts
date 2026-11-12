@@ -170,7 +170,10 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.TaxIdInvalid': 'Kimlik / vergi no geçersiz; fatura bilgisi boş aktarılır',
     'Imports.StatusUnrecognized': 'Durum tanınmadı; aktif aktarılır',
     'Imports.InactiveClient': 'Eski programda pasif müşteri; hatırlatma gönderilmez',
-    'Imports.DeceasedDateIgnored': 'Vefat tarihi okunamadı veya geçersiz; tarihsiz vefat aktarılır'
+    'Imports.DeceasedDateIgnored': 'Vefat tarihi okunamadı veya geçersiz; tarihsiz vefat aktarılır',
+    // Eksik alanlar (sözleşme 0, 2026-11-12)
+    'Imports.VatRateInvalid': 'KDV oranı okunamadı; ürün klinik varsayılan KDV oranıyla aktarılır',
+    'Imports.PurchasePriceInvalid': 'Alış fiyatı okunamadı; boş aktarılır'
 };
 
 export function importIssueLabel(code: string, fallback?: string): string {
