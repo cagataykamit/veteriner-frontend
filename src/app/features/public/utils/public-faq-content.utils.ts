@@ -137,7 +137,7 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
             },
             {
                 question: 'Geçiş ne kadar sürer?',
-                answer: 'Dosya hazırsa yükleme ve kontrol aynı gün biter; aktarım arka planda çalışır.'
+                answer: 'Süre dosyanızın büyüklüğüne bağlıdır. Yükleme ve kontrolü ekranda siz yaparsınız; aktarım arka planda çalışır, bu sırada çalışmaya devam edersiniz.'
             },
             {
                 question: 'Geçişte yardım alabilir miyim?',
