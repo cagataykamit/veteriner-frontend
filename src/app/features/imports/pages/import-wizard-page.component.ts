@@ -104,8 +104,19 @@ const STEPS: readonly { n: number; label: string }[] = [
                 @if (!canManage) {
                     <p-message severity="info" class="w-full mb-4">Bu içe aktarmayı yalnızca görüntüleyebilirsiniz.</p-message>
                 }
-                @for (w of warnings(); track w.code + w.message) {
-                    <p-message severity="warn" class="w-full mb-2">{{ w.message }}</p-message>
+                @if (warnings().length > 0) {
+                    <details class="card mb-4 py-3" data-testid="import-upload-notes">
+                        <summary class="cursor-pointer select-none flex items-center gap-2 font-medium">
+                            <i class="pi pi-info-circle text-primary" aria-hidden="true"></i>
+                            Dosya okunurken {{ warnings().length }} not çıktı
+                            <span class="text-sm font-normal text-muted-color">· göster / gizle</span>
+                        </summary>
+                        <ul class="m-0 mt-3 pl-5 flex flex-col gap-2 text-sm text-surface-700 dark:text-surface-200">
+                            @for (w of warnings(); track w.code + w.message) {
+                                <li>{{ w.message }}</li>
+                            }
+                        </ul>
+                    </details>
                 }
                 @if (error()) {
                     <p-message severity="error" class="w-full mb-4" role="alert">{{ error() }}</p-message>

@@ -116,6 +116,18 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
         vi.useRealTimers();
     });
 
+    it('yükleme notları ayrı uyarı kutuları yerine tek, kapalı açılır kartta listelenir', () => {
+        history.replaceState({ warnings: [{ table: 'pets', code: 'A', message: 'Birinci not' }, { table: 'products', code: 'B', message: 'İkinci not' }] }, '');
+        const el = create(batch('Uploaded'));
+        history.replaceState(null, '');
+        const notes = el.querySelector<HTMLDetailsElement>('[data-testid="import-upload-notes"]');
+
+        expect(notes?.open).toBe(false);
+        expect(notes?.querySelector('summary')?.textContent).toContain('Dosya okunurken 2 not çıktı');
+        expect(notes?.querySelectorAll('li').length).toBe(2);
+        expect(el.querySelectorAll('p-message[severity="warn"]').length).toBe(0);
+    });
+
     it('Doğrula: istek hemen döner, ilerleme gösterilir; Validated olunca parti ve önizleme okunur, validationId oradan gelir', () => {
         const el = create(batch('Mapped'));
 
