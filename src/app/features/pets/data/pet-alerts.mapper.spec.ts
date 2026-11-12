@@ -9,6 +9,7 @@ const form = (over: Partial<PetUpsertFormValue> = {}): PetUpsertFormValue => ({
     gender: '',
     birthDate: '',
     colorId: '',
+    patternId: '',
     weightStr: '',
     microchipNumber: '',
     passportOrTagNumber: '',

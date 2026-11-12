@@ -26,6 +26,8 @@ export interface PetDetailVm {
     gender: string;
     birthDate: string | null;
     colorName: string;
+    /** Kürk deseni adı; yoksa `—`. */
+    patternName: string;
     weight: string;
     microchipNumber: string;
     passportOrTagNumber: string;
@@ -172,6 +174,9 @@ export interface PetEditVm {
     colorId: string;
     /** Katalogda yoksa seçici etiketi (sentetik seçenek). */
     colorName: string | null;
+    patternId: string;
+    /** Katalogda yoksa (pasif desen) seçici etiketi. */
+    patternName: string | null;
     weightStr: string;
     microchipNumber: string;
     passportOrTagNumber: string;

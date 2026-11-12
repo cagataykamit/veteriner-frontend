@@ -16,6 +16,7 @@ export type PetCreateFormFieldKey =
     | 'gender'
     | 'birthDate'
     | 'colorId'
+    | 'patternId'
     | 'weightStr'
     | 'microchipNumber'
     | 'passportOrTagNumber'
@@ -49,6 +50,8 @@ const FIELD_MAP: Record<string, PetCreateFormFieldKey> = {
     birthdateutc: 'birthDate',
     color: 'colorId',
     colorid: 'colorId',
+    pattern: 'patternId',
+    patternid: 'patternId',
     weight: 'weightStr',
     microchipnumber: 'microchipNumber',
     passportortagnumber: 'passportOrTagNumber',

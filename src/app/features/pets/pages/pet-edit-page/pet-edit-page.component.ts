@@ -143,6 +143,13 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
+                            <label for="patternId" class="block text-sm font-medium text-muted-color mb-2">Desen</label>
+                            <p-select inputId="patternId" formControlName="patternId" [options]="patternOptions()" optionLabel="label" optionValue="value" placeholder="Desen seçin (tekir, kaplan çizgili…)" class="w-full" [loading]="loadingColors()" [showClear]="true" />
+                            @if (apiFieldErrors().patternId) {
+                                <small class="text-danger">{{ apiFieldErrors().patternId }}</small>
+                            }
+                        </div>
+                        <div class="col-span-12 md:col-span-6">
                             <label for="weight" class="block text-sm font-medium text-muted-color mb-2">Kilo (kg)</label>
                             <input id="weight" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="weightStr" />
                             @if (apiFieldErrors().weightStr) {
@@ -262,6 +269,7 @@ export class PetEditPageComponent implements OnInit {
     readonly speciesOptions = signal<SelectOption[]>([]);
     readonly breedOptions = signal<SelectOption[]>([]);
     readonly colorOptions = signal<SelectOption[]>([]);
+    readonly patternOptions = signal<SelectOption[]>([]);
     readonly apiFieldErrors = signal<PetCreateFieldErrors>({});
 
     readonly quickSpeciesOpen = signal(false);
@@ -281,7 +289,7 @@ export class PetEditPageComponent implements OnInit {
     }
 
     constructor() {
-        const fields: PetCreateFormFieldKey[] = ['clientId', 'name', 'speciesId', 'breedId', 'gender', 'birthDate', 'colorId', 'weightStr', 'microchipNumber', 'passportOrTagNumber', 'specialProtocolNumber', 'hbsAnimalId', 'isNeutered', 'notes'];
+        const fields: PetCreateFormFieldKey[] = ['clientId', 'name', 'speciesId', 'breedId', 'gender', 'birthDate', 'colorId', 'patternId', 'weightStr', 'microchipNumber', 'passportOrTagNumber', 'specialProtocolNumber', 'hbsAnimalId', 'isNeutered', 'notes'];
 
         for (const f of fields) {
             const control = this.form.controls[f] as AbstractControl;
@@ -357,6 +365,7 @@ export class PetEditPageComponent implements OnInit {
                         gender: pet.gender,
                         birthDate: pet.birthDateInput,
                         colorId: pet.colorId,
+                        patternId: pet.patternId,
                         weightStr: pet.weightStr,
                         microchipNumber: pet.microchipNumber,
                         passportOrTagNumber: pet.passportOrTagNumber,
@@ -370,6 +379,7 @@ export class PetEditPageComponent implements OnInit {
                     { emitEvent: false }
                 );
                 this.mergeColorOptionFromCache();
+                this.mergePatternOptionFromCache();
 
                 if (pet.speciesId) {
                     this.loadBreedsForSpecies(pet.speciesId, pet.breedId);
@@ -476,10 +486,12 @@ export class PetEditPageComponent implements OnInit {
     private loadPetColors(): void {
         this.loadingColors.set(true);
         this.selectionError.set(null);
-        this.petColorsService.getPetColors().subscribe({
-            next: (items) => {
-                this.colorOptions.set(items);
+        this.petColorsService.getCoatOptions().subscribe({
+            next: ({ colors, patterns }) => {
+                this.colorOptions.set(colors);
+                this.patternOptions.set(patterns);
                 this.mergeColorOptionFromCache();
+                this.mergePatternOptionFromCache();
                 this.loadingColors.set(false);
             },
             error: (e: unknown) => {
@@ -585,6 +597,17 @@ export class PetEditPageComponent implements OnInit {
         }
 
         this.colorOptions.set([{ value: cid, label }, ...opts]);
+    }
+
+    /** Hastadaki desen katalogda pasifse (listede yoksa) detaydan gelen etiketle seçenek ekle. */
+    private mergePatternOptionFromCache(): void {
+        const pid = this.editVmCache?.patternId?.trim();
+
+        if (!pid || this.patternOptions().some((o) => o.value === pid)) {
+            return;
+        }
+
+        this.patternOptions.set([{ value: pid, label: this.editVmCache?.patternName?.trim() || pid }, ...this.patternOptions()]);
     }
 
     /** API’deki ırk, tür listesinde yoksa detaydan gelen etiketle seçenek ekle. */

@@ -21,6 +21,7 @@ export function createPetUpsertFormGroup(fb: FormBuilder): PetUpsertFormGroup {
         gender: fb.nonNullable.control(''),
         birthDate: fb.nonNullable.control('', petBirthDateValidator()),
         colorId: fb.nonNullable.control(''),
+        patternId: fb.nonNullable.control(''),
         weightStr: fb.nonNullable.control<string | number>('', petWeightStrValidator()),
         microchipNumber: fb.nonNullable.control('', Validators.maxLength(50)),
         passportOrTagNumber: fb.nonNullable.control('', Validators.maxLength(50)),

@@ -11,6 +11,8 @@ export interface PetUpsertFormValue {
     gender: string;
     birthDate: string;
     colorId: string;
+    /** Kürk deseni (tekir, kaplan çizgili…); renk kataloğunun `kind = Pattern` satırı. */
+    patternId: string;
     /** `type="number"` ile bazen `number` döner. */
     weightStr: string | number;
     microchipNumber: string;

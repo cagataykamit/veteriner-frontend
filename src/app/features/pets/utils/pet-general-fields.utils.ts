@@ -20,6 +20,7 @@ export function buildPetGeneralFields(pet: PetDetailVm): PetGeneralFields {
         { label: 'Cins', value: pet.breed },
         { label: 'Cinsiyet', value: petGenderLabel(pet.gender) },
         { label: 'Renk', value: pet.colorName },
+        { label: 'Desen', value: pet.patternName },
         { label: 'Ağırlık', value: pet.weight },
         { label: 'Çip numarası', value: pet.microchipNumber },
         { label: 'Karne / Küpe no', value: pet.passportOrTagNumber },

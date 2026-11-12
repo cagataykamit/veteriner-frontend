@@ -280,6 +280,7 @@ export function mapPetUpsertFormToCreateRequest(
         gender: v.gender.trim() || undefined,
         birthDateInput: birthRaw || undefined,
         colorId: v.colorId.trim() || undefined,
+        patternId: v.patternId.trim() || undefined,
         weight: wNum,
         microchipNumber: microchipRaw || undefined,
         passportOrTagNumber: passportRaw || undefined,
@@ -349,6 +350,12 @@ export function mapCreatePetToApiBody(req: CreatePetRequest): PetCreateRequestDt
 
     if (colorId) {
         body.colorId = colorId;
+    }
+
+    const patternId = req.patternId?.trim();
+
+    if (patternId) {
+        body.patternId = patternId;
     }
 
     if (req.weight != null && !Number.isNaN(Number(req.weight))) {
@@ -473,6 +480,7 @@ export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
         gender: canonicalGenderRaw(dto),
         birthDate: canonicalPetBirthDateRead(dto),
         colorName: canonicalColorDisplayName(dto),
+        patternName: str(firstTrimmed(dto.patternName, readDtoString(dto, ['PatternName']))),
         weight: weightStr,
         microchipNumber: str(canonicalPetIdentityString(dto, 'microchipNumber', 'MicrochipNumber')),
         passportOrTagNumber: str(canonicalPetIdentityString(dto, 'passportOrTagNumber', 'PassportOrTagNumber')),
@@ -547,6 +555,8 @@ export function mapPetDetailDtoToEditVm(dto: PetDetailDto): PetEditVm {
         colorName:
             firstTrimmed(dto.colorName, readDtoString(dto, ['ColorName']), dto.color, readDtoString(dto, ['Color'])) ??
             null,
+        patternId: firstTrimmed(dto.patternId, readDtoString(dto, ['PatternId'])) ?? '',
+        patternName: firstTrimmed(dto.patternName, readDtoString(dto, ['PatternName'])) ?? null,
         weightStr,
         microchipNumber: canonicalPetIdentityString(dto, 'microchipNumber', 'MicrochipNumber'),
         passportOrTagNumber: canonicalPetIdentityString(dto, 'passportOrTagNumber', 'PassportOrTagNumber'),

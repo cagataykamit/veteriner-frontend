@@ -7,6 +7,7 @@ const pet = (over: Partial<PetDetailVm>): PetDetailVm =>
         breed: '—',
         gender: '',
         colorName: '—',
+        patternName: '—',
         weight: '12',
         microchipNumber: '',
         passportOrTagNumber: '—',
@@ -21,12 +22,12 @@ describe('buildPetGeneralFields', () => {
         const { filled, empty } = buildPetGeneralFields(pet({}));
 
         expect(filled.map((f) => f.label)).toEqual(['Tür', 'Ağırlık', 'Kısırlaştırılmış mı?']);
-        expect(empty.map((f) => f.label)).toEqual(['Cins', 'Cinsiyet', 'Renk', 'Çip numarası', 'Karne / Küpe no', 'Özel protokol no', 'HBS kimlik no']);
+        expect(empty.map((f) => f.label)).toEqual(['Cins', 'Cinsiyet', 'Renk', 'Desen', 'Çip numarası', 'Karne / Küpe no', 'Özel protokol no', 'HBS kimlik no']);
     });
 
     it('hepsi doluysa boş liste yoktur', () => {
         const { empty } = buildPetGeneralFields(
-            pet({ breed: 'Golden', gender: 'Male', colorName: 'Sarı', microchipNumber: '1', passportOrTagNumber: '2', specialProtocolNumber: '3', hbsAnimalId: 'TR-1' })
+            pet({ breed: 'Golden', gender: 'Male', colorName: 'Sarı', patternName: 'Tekir (Tabby)', microchipNumber: '1', passportOrTagNumber: '2', specialProtocolNumber: '3', hbsAnimalId: 'TR-1' })
         );
 
         expect(empty.length).toBe(0);

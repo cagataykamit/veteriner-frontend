@@ -48,6 +48,9 @@ export interface PetDetailDto {
     colorName?: string | null;
     /** Eski okuma yedeği. */
     color?: string | null;
+    /** Kürk deseni (renk kataloğunun `kind = Pattern` satırı). */
+    patternId?: string | null;
+    patternName?: string | null;
     weight?: number | null;
     microchipNumber?: string | null;
     passportOrTagNumber?: string | null;
@@ -203,6 +206,7 @@ export interface PetCreateRequestDto {
     /** DateOnly (yyyy-MM-dd) */
     birthDate?: string | null;
     colorId?: string | null;
+    patternId?: string | null;
     weight?: number | null;
     microchipNumber?: string | null;
     passportOrTagNumber?: string | null;

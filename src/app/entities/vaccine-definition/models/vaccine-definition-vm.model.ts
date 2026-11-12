@@ -9,4 +9,8 @@ export interface VaccineDefinitionListItemVm {
     defaultNextDueDays: number | null;
     isCore: boolean;
     isActive: boolean;
+    /** Klinik sınıf (WSAVA 2024 / ESCCAP); `null` sınıfsız. */
+    category: VaccineCategory | null;
 }
+
+export type VaccineCategory = 'Core' | 'NonCore' | 'NotRecommended' | 'ParasiteControl';
