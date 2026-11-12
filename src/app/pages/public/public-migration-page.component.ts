@@ -23,7 +23,7 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
     template: `
         <app-public-page-header
             eyebrow="Geçiş"
-            title="Eski programdan geçiş yarım gün"
+            title="Eski programdan kayıtlarınızla geçin"
             lead="Excel ya da CSV dosyanızı yükleyin, sütunları eşleyin, kontrol edin, aktarın. Yanlış giderse geri alın."
         />
 

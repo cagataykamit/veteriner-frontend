@@ -45,7 +45,7 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
                     <p class="public-eyebrow m-0 mb-4 !text-[var(--vetinity-soft-teal)]">Veteriner klinikleri için</p>
                     <h1 id="public-home-hero-title" class="public-h1 public-on-brand-text m-0">Veteriner kliniğinizin günü tek ekranda</h1>
                     <p class="m-0 mt-5 max-w-xl text-base leading-relaxed public-on-brand-muted md:text-lg">
-                        Geliş, bekleme, muayene, tahsilat ve kayıt defterleri aynı yerde. Kâğıt, Excel ya da eski programdan yarım günde geçin.
+                        Geliş, bekleme, muayene, tahsilat ve kayıt defterleri aynı yerde. Kâğıt, Excel ya da eski programdaki kayıtlarınızı da getirin.
                     </p>
                     <div class="mt-7 flex flex-col gap-3 sm:flex-row">
                         <a routerLink="/auth/signup" class="public-btn public-btn-on-dark w-full sm:w-auto">Ücretsiz dene</a>
@@ -174,7 +174,7 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
 
         <!-- 6 Geçiş: 3 adım + aktarılır/aktarılmaz -->
         <section class="mx-auto max-w-6xl px-4 pt-20 md:px-6 lg:pt-28" aria-labelledby="public-home-migration-title">
-            <h2 id="public-home-migration-title" class="public-h2 m-0">Eski programdan geçiş yarım gün</h2>
+            <h2 id="public-home-migration-title" class="public-h2 m-0">Eski programdan kayıtlarınızla geçin</h2>
             <ol class="m-0 mt-8 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-3">
                 @for (step of migrationSteps; track step.title; let i = $index) {
                     <li class="public-card p-5">

@@ -67,7 +67,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         { path: PUBLIC_PATHS.home, meta: PUBLIC_HOME_PAGE_META, h1: 'Veteriner kliniğinizin günü tek ekranda' },
         { path: PUBLIC_PATHS.features, meta: PUBLIC_FEATURES_PAGE_META, h1: 'Gelişten tahsilata bir günün akışı' },
         { path: PUBLIC_PATHS.registersAndKvkk, meta: PUBLIC_REGISTERS_PAGE_META, h1: 'Defterleriniz ve KVKK evrakınız kendiliğinden tutulur' },
-        { path: PUBLIC_PATHS.migration, meta: PUBLIC_MIGRATION_PAGE_META, h1: 'Eski programdan geçiş yarım gün' },
+        { path: PUBLIC_PATHS.migration, meta: PUBLIC_MIGRATION_PAGE_META, h1: 'Eski programdan kayıtlarınızla geçin' },
         { path: PUBLIC_PATHS.packages, meta: PUBLIC_PACKAGES_PAGE_META, h1: 'Kliniğinize uygun paketi seçin' },
         { path: PUBLIC_PATHS.faq, meta: PUBLIC_FAQ_PAGE_META, h1: 'Sık sorulan sorular' },
         { path: PUBLIC_PATHS.contact, meta: PUBLIC_CONTACT_PAGE_META, h1: 'Demo isteyin ya da hemen deneyin' },
@@ -357,7 +357,7 @@ describe('Ana sayfa (PublicHomePage)', () => {
             'Bir günün akışı',
             "Türkiye'ye özgü",
             'Kayıtlarınız güvende ve dürüst',
-            'Eski programdan geçiş yarım gün',
+            'Eski programdan kayıtlarınızla geçin',
             'Paketler',
             'Sık sorulan sorular',
             '14 gün ücretsiz deneyin'
