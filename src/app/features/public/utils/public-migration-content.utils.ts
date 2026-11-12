@@ -60,7 +60,7 @@ export const PUBLIC_MIGRATION_INCLUDED: readonly string[] = [
 export const PUBLIC_MIGRATION_EXCLUDED: readonly string[] = [
     'Belgeler, ekler ve görüntüler',
     'Stok miktarı (mal kabulle girilir)',
-    'Geçmiş randevular randevu olarak (yapılan işler klinik geçmişe not olarak gelir)',
+    'Geçmiş randevular (randevu olarak)',
     'Reçete ve lab sonucu ayrı kayıt olarak (metin olarak gelir)'
 ];
 

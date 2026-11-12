@@ -187,7 +187,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
 
     it('geçiş: aktarılır / aktarılmaz listeleri geçiş sayfasında ve ana sayfada aynı', async () => {
         const included = ['Müşteri ve hasta notları', 'Geçmiş işlem ve kontroller (dışa aktarımda varsa, klinik geçmişe not olarak)', 'Açık bakiye (borç ve alacak)', 'Ürün ve hizmet kartları (fiyat, KDV oranı ve alış fiyatıyla)'];
-        const excluded = 'Geçmiş randevular randevu olarak (yapılan işler klinik geçmişe not olarak gelir)';
+        const excluded = 'Geçmiş randevular (randevu olarak)';
 
         for (const path of [PUBLIC_PATHS.migration, PUBLIC_PATHS.home]) {
             await harness.navigateByUrl(path);
