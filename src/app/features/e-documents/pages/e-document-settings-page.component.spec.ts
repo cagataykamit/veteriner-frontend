@@ -16,15 +16,17 @@ const settings: ClinicEDocumentSettingsDto = {
     autoIssueEnabledAtUtc: null,
     taxpayerType: 'Both',
     serviceDocument: 'ESmm',
-    productDocument: 'Invoice'
+    productDocument: 'Invoice',
+    autoIssuePausedAtUtc: null,
+    autoIssuePauseReason: null
 };
 
 describe('EDocumentSettingsPageComponent', () => {
     let service: MockedObject<EDocumentsService>;
 
-    const render = (query: Record<string, string> = {}) => {
+    const render = (query: Record<string, string> = {}, current: ClinicEDocumentSettingsDto = settings) => {
         service = {
-            getSettings: vi.fn().mockReturnValue(of(settings)),
+            getSettings: vi.fn().mockReturnValue(of(current)),
             updateSettings: vi.fn().mockImplementation((_id: string, body: object) => of({ ...settings, ...body })),
             getConnection: vi.fn().mockReturnValue(of({ clinicId: 'k1', status: 'NotConnected', availableProviders: [] }))
         } as unknown as MockedObject<EDocumentsService>;
@@ -72,5 +74,24 @@ describe('EDocumentSettingsPageComponent', () => {
 
         expect(service.updateSettings).toHaveBeenCalledWith('aktif', { autoIssueMode: 'OnPayment', endOfDayTime: '23:00', issueOnPaymentByDefault: true });
         expect(cmp.dirty()).toBe(false);
+    });
+
+    it('otomatik kesme durduysa nedeni ve Sürdür düğmesi görünür; Sürdür ayarı kaydedip uyarıyı kaldırır', () => {
+        const paused: ClinicEDocumentSettingsDto = {
+            ...settings,
+            autoIssueMode: 'OnPayment',
+            autoIssuePausedAtUtc: '2026-11-12T10:00:00Z',
+            autoIssuePauseReason: 'Nilvera kontörü bitti.'
+        };
+        const fixture = render({}, paused);
+        const host = fixture.nativeElement as HTMLElement;
+
+        expect(host.querySelector('[data-testid="edoc-auto-paused"]')?.textContent).toContain('Nilvera kontörü bitti.');
+        service.updateSettings.mockReturnValue(of({ ...paused, autoIssuePausedAtUtc: null, autoIssuePauseReason: null }));
+        (host.querySelector('[data-testid="edoc-auto-resume"]') as HTMLButtonElement).click();
+        fixture.detectChanges();
+
+        expect(service.updateSettings).toHaveBeenCalledWith('aktif', { autoIssueMode: 'OnPayment', endOfDayTime: '23:00', issueOnPaymentByDefault: false });
+        expect(host.querySelector('[data-testid="edoc-auto-paused"]')).toBeNull();
     });
 });

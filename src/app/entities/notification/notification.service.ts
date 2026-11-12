@@ -22,7 +22,13 @@ export enum UserNotificationType {
     /** Tüm veri dışa aktarma paketi hazır (`DATA_EXPORT_API_CONTRACT.md` §7); yalnız talep edene. */
     DataExportReady = 6,
     /** Tüm veri dışa aktarma paketi hazırlanamadı. */
-    DataExportFailed = 7
+    DataExportFailed = 7,
+    /** Gün sonu e-belge özeti (`E_DOCUMENTS_API_CONTRACT.md` §4.10). */
+    EDocumentsDailySummary = 8,
+    /** Otomatik e-belge kalıcı bir entegratör sorunuyla durdu; Ayarlar › e-Belge'den sürdürülür. */
+    EDocumentsAutoIssuePaused = 9,
+    /** Belgesi kesilmiş ücretin ödemesi iptal edildi; belge kendiliğinden iptal edilmez. */
+    EDocumentPaymentVoided = 10
 }
 
 export const USER_NOTIFICATION_TYPE_LABELS: Record<UserNotificationType, string> = {
@@ -33,7 +39,10 @@ export const USER_NOTIFICATION_TYPE_LABELS: Record<UserNotificationType, string>
     [UserNotificationType.AppointmentCancelledByOwner]: 'Sahip randevuyu iptal etti',
     [UserNotificationType.WaitlistOfferAccepted]: 'Bekleme listesinden randevu',
     [UserNotificationType.DataExportReady]: 'Veri paketi hazır',
-    [UserNotificationType.DataExportFailed]: 'Veri paketi hazırlanamadı'
+    [UserNotificationType.DataExportFailed]: 'Veri paketi hazırlanamadı',
+    [UserNotificationType.EDocumentsDailySummary]: 'Gün sonu e-belge özeti',
+    [UserNotificationType.EDocumentsAutoIssuePaused]: 'Otomatik e-belge durdu',
+    [UserNotificationType.EDocumentPaymentVoided]: 'Ödemesi iptal edilen e-belge'
 };
 
 export interface UserNotificationVm {
@@ -67,6 +76,10 @@ export function notificationTargetUrl(
             return { commands: [DATA_EXPORT_ROUTE] };
         case 'EDocuments':
             return { commands: ['/panel/e-documents'], queryParams: { view: 'undocumented' } };
+        case 'EDocument':
+            return { commands: ['/panel/e-documents'] };
+        case 'EDocumentSettings':
+            return { commands: ['/panel/settings/e-documents'] };
         default:
             return null;
     }
