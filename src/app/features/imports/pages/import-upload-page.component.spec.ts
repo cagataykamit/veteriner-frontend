@@ -109,8 +109,8 @@ describe('ImportUploadPageComponent', () => {
         expect(el.querySelectorAll('[data-testid="import-evet-guide"] li').length).toBe(4);
         expect(guide).toContain('Genel > Yedek Al');
         expect(guide).toContain("Giriş Bilgileri'ni işaretlemeyin");
-        expect(guide).toContain('Rapor > Hasta Listesi');
-        expect(guide).toContain('Rapor > Resmi > Aşı Bilgi');
+        expect(guide).toContain('Rapor > Genel > Hasta Listesi');
+        expect(guide).toContain('Rapor > Resmi > Aşı Bilgisi');
         expect(guide).toContain("E-vet'i kullanmaya başladığınız tarihten bugüne");
         expect(guide).toContain('Müşteriler bu yedekten gelir');
         expect(guide).toContain('Rapor > Depo > Ürün Listesi');
