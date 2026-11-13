@@ -90,7 +90,7 @@ export const EVET_UPLOAD_FILES: readonly EVetUploadFileDef[] = [
         field: 'evetPatientReportFile',
         extension: '.csv',
         requirement: 'önerilir',
-        menu: 'Rapor > Hasta Listesi',
+        menu: 'Rapor > Genel > Hasta Listesi',
         instruction: 'Csv olarak indirin. Hastaları sahibine kesin bağlar; yüklemezseniz sahip adıyla bağlanır.',
         label: 'Hasta Listesi (.csv)',
         contents: 'Hastaların sahibine kesin bağlantısı'
@@ -100,9 +100,9 @@ export const EVET_UPLOAD_FILES: readonly EVetUploadFileDef[] = [
         field: 'evetVaccineReportFile',
         extension: '.csv',
         requirement: 'isteğe bağlı',
-        menu: 'Rapor > Resmi > Aşı Bilgi',
+        menu: 'Rapor > Resmi > Aşı Bilgisi',
         instruction: "Tarih aralığını E-vet'i kullanmaya başladığınız tarihten bugüne seçip Csv olarak indirin. Aşıların seri numarasını ve ürün adını ekler.",
-        label: 'Aşı Bilgi (.csv)',
+        label: 'Aşı Bilgisi (.csv)',
         contents: 'Aşıların seri numarası ve ürün adı'
     },
     {
