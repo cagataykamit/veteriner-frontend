@@ -14,7 +14,9 @@ import { PUBLIC_FEATURE_GROUPS, PUBLIC_FEATURE_SECTIONS } from '@/app/features/p
 import { PUBLIC_HOME_AUDIENCE, PUBLIC_HOME_DAY_FLOW } from '@/app/features/public/utils/public-home-content.utils';
 import { PUBLIC_NAV_ITEMS, PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { PUBLIC_REGISTERS } from '@/app/features/public/utils/public-registers-content.utils';
-import { PUBLIC_SCREENSHOTS } from '@/app/features/public/utils/public-screenshots.utils';
+import { PUBLIC_SCREENSHOTS, type PublicScreenshotKey } from '@/app/features/public/utils/public-screenshots.utils';
+import { PUBLIC_SITE_DESIGNS, PUBLIC_SITE_SHOWCASE, publicSiteDesignSrc } from '@/app/features/public/utils/public-site-showcase-content.utils';
+import { SITE_CONCEPTS } from '@site-engine';
 import { PRICING_FEATURE_ROWS, PRICING_NOT_AVAILABLE, PRICING_ON_REQUEST_TEXT, PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import type { PublicSubscriptionPlanCatalogDto } from '@/app/features/public/models/public-plan-catalog-api.model';
 import { PUBLIC_ABOUT_PAGE_META, PUBLIC_CONTACT_PAGE_META, PUBLIC_FAQ_PAGE_META, PUBLIC_FEATURES_PAGE_META, PUBLIC_HOME_PAGE_META, PUBLIC_LOGO_PATH, PUBLIC_MIGRATION_PAGE_META, PUBLIC_OG_IMAGE_PATH, PUBLIC_PACKAGES_PAGE_META, PUBLIC_REGISTERS_PAGE_META, PUBLIC_SITE_ORIGIN, publicOrganizationJsonLd } from '@/app/features/public/utils/public-seo.utils';
@@ -123,8 +125,8 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         await harness.navigateByUrl(PUBLIC_PATHS.features);
         harness.detectChanges();
 
-        expect(texts('section[id] h2')).toEqual([...PUBLIC_FEATURE_SECTIONS, ...PUBLIC_FEATURE_GROUPS].map((s) => s.title));
-        const shots = [...PUBLIC_FEATURE_SECTIONS.map((s) => s.screenshot), ...PUBLIC_FEATURE_GROUPS.flatMap((g) => (g.shot ? [g.shot.screenshot] : []))];
+        expect(texts('section[id] h2')).toEqual([...PUBLIC_FEATURE_SECTIONS, PUBLIC_SITE_SHOWCASE, ...PUBLIC_FEATURE_GROUPS].map((s) => s.title));
+        const shots: PublicScreenshotKey[] = [...PUBLIC_FEATURE_SECTIONS.map((s) => s.screenshot), 'klinikSitesi', ...PUBLIC_FEATURE_GROUPS.flatMap((g) => (g.shot ? [g.shot.screenshot] : []))];
         const images = Array.from(root().querySelectorAll<HTMLImageElement>('figure.public-shot img.public-shot-img--light'));
 
         expect(shots.length).toBeGreaterThan(PUBLIC_FEATURE_SECTIONS.length);
@@ -147,7 +149,8 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         const caption = (id: string) => root().querySelector(`section#${id} figcaption`)?.textContent?.trim();
 
         expect(caption('klinik-ici')).toBe('Otomatik aşı sihirbazı · Profesyonel ve Kurumsal paketlerinde');
-        expect(caption('hasta-sahibi')).toBe('Klinik web sitesi · Tüm paketlerde');
+        // Klinik sitesinin ekranı artık vitrinde; grubun kendi ekranı yok.
+        expect(caption('hasta-sahibi')).toBeUndefined();
         expect(caption('isletme')).toBe('Gelişmiş raporlar · Profesyonel ve Kurumsal paketlerinde');
     });
 
@@ -157,7 +160,33 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
 
         const hrefs = Array.from(root().querySelectorAll<HTMLAnchorElement>('nav[aria-label="Bölüm dizini"] a')).map((a) => a.getAttribute('href'));
 
-        expect(hrefs).toEqual([...PUBLIC_FEATURE_SECTIONS, ...PUBLIC_FEATURE_GROUPS].map((s) => `${PUBLIC_PATHS.features}#${s.id}`));
+        expect(hrefs).toEqual([...PUBLIC_FEATURE_SECTIONS, PUBLIC_SITE_SHOWCASE, ...PUBLIC_FEATURE_GROUPS].map((s) => `${PUBLIC_PATHS.features}#${s.id}`));
+    });
+
+    it('özellikler: klinik web sitesi vitrini kendi bölümünde; dört tasarım, yedi adım, sihirbaz ekranı ve bağlantılar', async () => {
+        await harness.navigateByUrl(PUBLIC_PATHS.features);
+        harness.detectChanges();
+
+        const section = root().querySelector<HTMLElement>(`section#${PUBLIC_SITE_SHOWCASE.id}`)!;
+        const designs = Array.from(section.querySelectorAll<HTMLImageElement>('[data-site-designs] img'));
+
+        expect(section.querySelector('h2')?.textContent?.trim()).toBe('Kliniğinizin kendi web sitesi');
+        expect(section.querySelector('[data-site-showcase-plans]')?.textContent?.trim()).toBe('Tüm paketlerde');
+        expect(designs.map((img) => img.getAttribute('src'))).toEqual(['modern', 'premium', 'friendly', 'nature'].map((key) => `/marketing/sites/klinik-sitesi-${key}.webp`));
+        designs.forEach((img, i) => {
+            expect(img.alt).toBe(PUBLIC_SITE_DESIGNS[i].alt);
+            expect(img.getAttribute('width')).toBe('1280');
+            expect(img.getAttribute('height')).toBe('800');
+            expect(img.getAttribute('loading')).toBe('lazy');
+        });
+        // Tasarım adları sihirbazdaki adlarla aynı (site motoru tek kaynak).
+        expect(PUBLIC_SITE_DESIGNS.map((d) => [d.key, d.name])).toEqual(SITE_CONCEPTS.map((c) => [c.key, c.name]));
+        expect(Array.from(section.querySelectorAll('[data-site-steps] strong')).map((el) => el.textContent?.trim())).toEqual(['Klinik', 'Marka', 'Tasarım', 'Sayfalar', 'İçerik', 'SEO', 'Yayın']);
+        expect(section.querySelector('figure.public-shot figcaption')?.textContent).toBeTruthy();
+        expect(section.querySelector('img.public-shot-img--light')?.getAttribute('alt')).toBe(PUBLIC_SCREENSHOTS.klinikSitesi.alt);
+        expect(section.querySelector('[data-site-links] a')?.getAttribute('href')).toBe('/veteriner');
+        expect(section.querySelector('[data-site-address-note]')?.textContent).toContain('Kendi alan adınızı bağlamak şu an yoktur');
+        expect(section.textContent).not.toMatch(/en iyi|bir numara|yalnızca bizde|dakikada|saniyede/i);
     });
 
     it('özellikler: kart gruplarında paket etiketi özellik tablosundan; abartı yok', async () => {
@@ -367,17 +396,27 @@ describe('Ana sayfa (PublicHomePage)', () => {
     const root = (): HTMLElement => harness.fixture.nativeElement as HTMLElement;
     const texts = (selector: string): string[] => Array.from(root().querySelectorAll(selector)).map((el) => (el.textContent ?? '').trim());
 
-    it('bölümler sırayla: kime göre, akış, Türkiye, güvenlik, geçiş, paketler, SSS, çağrı', () => {
+    it('bölümler sırayla: kime göre, akış, Türkiye, güvenlik, klinik web sitesi, geçiş, paketler, SSS, çağrı', () => {
         expect(texts('main section h2')).toEqual([
             'Kime göre?',
             'Bir günün akışı',
             "Türkiye'ye özgü",
             'Kayıtlarınız güvende ve dürüst',
+            PUBLIC_SITE_SHOWCASE.homeTitle,
             'Eski programdan kayıtlarınızla geçin',
             'Paketler',
             'Sık sorulan sorular',
             '14 gün ücretsiz deneyin'
         ]);
+    });
+
+    it('klinik web sitesi kısa hali: dört tasarım görseli ve Özellikler bölümüne bağlantı; adım ve sihirbaz ekranı yok', () => {
+        const section = root().querySelector<HTMLElement>('section[aria-labelledby="public-home-site-title"]')!;
+
+        expect(Array.from(section.querySelectorAll('[data-site-designs] img')).map((img) => img.getAttribute('src'))).toEqual(PUBLIC_SITE_DESIGNS.map(publicSiteDesignSrc));
+        expect(section.querySelector('a.public-brand-link')?.getAttribute('href')).toBe(`${PUBLIC_PATHS.features}#${PUBLIC_SITE_SHOWCASE.id}`);
+        expect(section.querySelector('[data-site-steps]')).toBeNull();
+        expect(section.querySelector('figure.public-shot img.public-shot-img--light')).toBeNull();
     });
 
     it('kahraman: iki düğme (deneme ve demo) ve deneme satırı; sahte önizleme yok', () => {

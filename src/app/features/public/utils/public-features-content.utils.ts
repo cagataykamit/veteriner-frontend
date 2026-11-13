@@ -113,7 +113,7 @@ export const PUBLIC_FEATURE_GROUPS: readonly PublicFeatureGroupDef[] = [
         cards: [
             {
                 title: 'Klinik web sitesi',
-                description: 'Kliniğinizin sitesini panelden kendiniz yaparsınız. Dört hazır tasarımdan birini seçersiniz; bölümlerin görünümünü ayrı ayrı değiştirebilirsiniz. Hekimler, hizmetler, saatler ve iletişim sayfaları sihirbazla adım adım hazırlanır. Yayından önce önizlersiniz; fotoğrafınız yoksa temsili görsel kullanılır.',
+                description: 'Panelden kendiniz kurarsınız: dört hazır tasarım, çok sayfalı site, yayından önce önizleme. Fotoğrafınız yoksa temsili görsel kullanılır. Tasarımlar ve adımlar bir üstteki bölümde.',
                 icon: 'pi pi-globe',
                 planRow: 'clinicSite'
             },
@@ -148,8 +148,7 @@ export const PUBLIC_FEATURE_GROUPS: readonly PublicFeatureGroupDef[] = [
                 icon: 'pi pi-list',
                 planRow: 'waitlist'
             }
-        ],
-        shot: { screenshot: 'klinikSitesi', planRow: 'clinicSite' }
+        ]
     },
     {
         id: 'klinik-ici',
