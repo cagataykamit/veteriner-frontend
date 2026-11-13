@@ -108,23 +108,24 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.DateInvalid': 'Tarih okunamadı',
     'Imports.DateFormatAmbiguous': 'Tarih biçimi belirsiz (gg.aa.yyyy kullanın)',
     'Imports.DateOutOfRange': 'Tarih kabul edilen aralığın dışında',
-    'Pets.BirthDateInFuture': 'Doğum tarihi gelecekte',
+    'Pets.BirthDateInFuture': 'Doğum tarihi gelecekte; doğum tarihsiz aktarılır',
     'Imports.BirthDateImplausible': 'Doğum tarihi çok eski',
+    'Imports.BirthDateIgnored': 'Doğum tarihi okunamadı; doğum tarihsiz aktarılır',
     'Vaccinations.AppliedAtMustNotBeFuture': 'Uygulama tarihi gelecekte',
     'Vaccinations.DueAtMustBeAfterAppliedAt': 'Sonraki aşı tarihi uygulama tarihinden sonra olmalı',
     'Vaccinations.DueTooFarInFuture': 'Sonraki aşı tarihi 5 yıldan uzak',
     'Imports.AppliedBeforeBirth': 'Aşı, doğum tarihinden önce görünüyor',
-    'Imports.MicrochipInvalid': 'Mikroçip numarası geçersiz',
-    'Imports.MicrochipScientificNotation': 'Mikroçip bilimsel gösterimde (hücreyi metin yapın)',
+    'Imports.MicrochipInvalid': 'Mikroçip numarası geçersiz; nota yazılır',
+    'Imports.MicrochipScientificNotation': 'Mikroçip bilimsel gösterimde; mikroçipsiz aktarılır (hücreyi metin yapın)',
     'Imports.MicrochipLength': 'Mikroçip 15 haneli değil',
     'Imports.MicrochipConflict': 'Aynı mikroçip başka bir hastada var',
     'Imports.SpeciesUnmapped': 'Tür sistemde bulunamadı',
     'Imports.VaccineUnmapped': 'Aşı adı sistemde bulunamadı',
-    'Imports.ValueSkipped': 'Değer bilinçli olarak atlandı',
-    'Imports.ParentSkipped': 'Bağlı olduğu satır atlandığı için atlandı',
+    'Imports.ValueSkipped': 'Atladığınız değer (ör. tür); satır atlanır',
+    'Imports.ParentSkipped': 'Bağlı olduğu hasta atlandığı için atlanır',
     'Imports.BreedFreeText': 'Irk sistemde yok; metin olarak aktarılır',
     'Imports.ColorFreeText': 'Renk sistemde yok; nota eklenir',
-    'Pets.BreedSpeciesMismatch': 'Seçilen ırk bu türe ait değil',
+    'Pets.BreedSpeciesMismatch': 'Seçilen ırk bu türe ait değil; ırk metin olarak aktarılır',
     'VaccineDefinitions.InvalidSpecies': 'Seçilen aşı bu türe uygun değil',
     'Imports.GenderUnrecognized': 'Cinsiyet tanınmadı',
     'Imports.NeuteredUnrecognized': 'Kısır değeri tanınmadı',
@@ -136,9 +137,10 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.SharedPhone': 'Telefon başka bir müşteriyle ortak',
     'Imports.PossibleDuplicate': 'Aynı adlı müşteri zaten var; ayrı kayıt oluşur',
     'Imports.OwnerNotFound': 'Sahip (müşteri) bulunamadı',
-    'Imports.OwnerRowInvalid': 'Sahip satırı hatalı olduğu için aktarılamaz',
+    'Imports.OwnerlessPetSkipped': 'Sahibi ve kaydı olmayan hasta (eski programda müşteri kartı silinmiş); atlanır',
+    'Imports.OwnerRowInvalid': 'Sahibi aktarılamadığı için aktarılamaz',
     'Imports.PetNotFound': 'Satırın hastası bulunamadı',
-    'Imports.PetRowInvalid': 'Hasta satırı hatalı olduğu için aktarılamaz',
+    'Imports.PetRowInvalid': 'Hastası aktarılamadığı için aktarılamaz',
     'Imports.DuplicateVaccination': 'Aynı aşı zaten kayıtlı; atlanır',
     'Imports.OwnerLinkUnavailable': 'Hastalar veya hesap hareketleri müşterilere bağlanamıyor (müşteri tablosu veya müşteri no eksik)',
     'Imports.PetLinkUnavailable': 'Aşı, klinik geçmiş veya randevu satırları hastalara bağlanamıyor (hasta tablosu veya hasta no eksik)',
@@ -184,8 +186,8 @@ export function importIssueLabel(code: string, fallback?: string): string {
     return ISSUE_LABELS[code] ?? fallback ?? code;
 }
 
-/** Sunucu mesajı satıra özgü ayrıntı taşıyan kodlar (çakışan satır ya da sistemdeki kayıt; sözleşme 6.4, K10). */
-const ISSUE_DETAIL_CODES: ReadonlySet<string> = new Set(['Imports.MicrochipConflict', 'Imports.DuplicateInFile']);
+/** Sunucu mesajı satıra özgü ayrıntı taşıyan kodlar: çakışan satır, sistemdeki kayıt ya da zincirleme düşen satırın asıl nedeni (sözleşme 6.4). */
+const ISSUE_DETAIL_CODES: ReadonlySet<string> = new Set(['Imports.MicrochipConflict', 'Imports.DuplicateInFile', 'Imports.OwnerRowInvalid', 'Imports.PetRowInvalid', 'Imports.PetNotFound']);
 
 /** Satır listesinde etiketin altında gösterilecek ayrıntı: yalnız ayrıntı taşıyan kodlarda ve etiketten farklıysa. */
 export function importIssueDetail(code: string, message?: string | null): string | null {

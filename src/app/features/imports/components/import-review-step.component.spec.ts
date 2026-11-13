@@ -78,6 +78,7 @@ describe('ImportReviewStepComponent', () => {
             ...row('pets', 'Mikrocip'),
             issues: [{ severity: 'Error', code: 'Imports.MicrochipConflict', field: 'Mikrocip', message: 'Aynı mikroçip 14. satırdaki başka bir hastada da var.' }]
         } as unknown as ImportRowDto;
+
         imports.getRows.mockReturnValue(of({ items: [conflict, row('pets', 'HayvanAdi')], totalItems: 2 } as unknown as ImportRowPageDto));
         fixture = TestBed.createComponent(ImportReviewStepComponent);
         fixture.componentRef.setInput('batch', batch);
@@ -150,13 +151,33 @@ describe('ImportReviewStepComponent', () => {
             return fixture.nativeElement as HTMLElement;
         }
 
-        it('kaç kaydın aktarılacağını ve aktarılmayacağını söyler; kırmızı "Hatalı" satırı yoktur', () => {
+        it('aktarılacak, bilerek atlanacak ve hatalı satırları ayrı söyler', () => {
+            const el = render();
+            const ready = (el.querySelector('[data-testid="import-review-ready"]')?.textContent ?? '').replace(/\s+/g, ' ');
+
+            expect(ready).toContain('11 kayıt aktarılmaya hazır');
+            expect(ready).toContain('3 satır bilerek atlanacak');
+            expect(ready).toContain('3 satır eksik ya da tutarsız bilgi yüzünden aktarılmayacak');
+            expect(el.textContent).toContain('Atlanacak');
+            expect(el.textContent).toContain('Hatalı');
+        });
+
+        it('tablo kartında aktarılmayacak satırların nedenlerini sayısıyla gösterir', () => {
+            ready.notImportedReasons = [
+                { table: 'clinicalRecords', kind: 'Skipped', code: 'Imports.ClinicalRecordEmpty', rowCount: 2 },
+                { table: 'customers', kind: 'Skipped', code: 'Imports.DuplicateInFile', rowCount: 1 },
+                { table: 'customers', kind: 'Error', code: 'Imports.NameTooShort', rowCount: 1 }
+            ];
             const el = render();
 
-            expect(el.querySelector('[data-testid="import-review-ready"]')?.textContent).toContain('11 kayıt aktarılmaya hazır');
-            expect(el.querySelector('[data-testid="import-review-ready"]')?.textContent).toContain('6 satır');
-            expect(el.textContent).not.toContain('Hatalı');
-            expect(el.textContent).toContain('Aktarılmayacak');
+            delete ready.notImportedReasons;
+
+            const lists = Array.from(el.querySelectorAll('[data-testid="import-table-reasons"]')).map((l) => l.textContent?.replace(/\s+/g, ' ').trim());
+
+            expect(lists).toHaveLength(2);
+            expect(lists[0]).toContain('Atlanacak · 1: Dosyada aynı kayıt daha önce geçiyor');
+            expect(lists[0]).toContain('Hatalı · 1:');
+            expect(lists[1]).toContain('Atlanacak · 2: Boş muayene satırı');
         });
 
         it('engelleyen değerler açıkta, ırk ve renk kapalı isteğe bağlı bölümde', () => {

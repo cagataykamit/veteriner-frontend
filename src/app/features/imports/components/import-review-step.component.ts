@@ -8,7 +8,7 @@ import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
 import { map, Observable } from 'rxjs';
 import { BreedsService } from '@/app/entities/breed/services/breeds.service';
-import type { ImportBatchDto, ImportFileFormat, ImportPreviewDto, ImportRowDto, ImportRowsQuery, ImportTable, ImportUnmappedValueDto, ImportValueKind } from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchDto, ImportFileFormat, ImportNotImportedReasonDto, ImportPreviewDto, ImportRowDto, ImportRowsQuery, ImportTable, ImportUnmappedValueDto, ImportValueKind } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
 import { IMPORT_ISSUE_GROUPS, IMPORT_ROW_STATUS_LABELS, IMPORT_VALUE_KIND_LABELS, importErrorCode, importErrorMessage, importIssueDetail, importIssueLabel, importRowPlace } from '@/app/features/imports/utils/import-labels.utils';
@@ -38,8 +38,14 @@ const ROW_PAGE_SIZE = 25;
             } @else if (p.canCommit) {
                 <p-message severity="success" class="w-full mb-4" data-testid="import-review-ready">
                     Doğrulama tamamlandı: <strong>{{ totals(p).importable }}</strong> kayıt aktarılmaya hazır.
-                    @if (totals(p).notImported > 0) {
-                        {{ totals(p).notImported }} satır boş, tekrar ya da eksik bilgili olduğu için aktarılmayacak; nedenleri aşağıda.
+                    @if (totals(p).skipped > 0) {
+                        {{ totals(p).skipped }} satır bilerek atlanacak (boş, tekrar ya da atladığınız değer).
+                    }
+                    @if (totals(p).errors > 0) {
+                        {{ totals(p).errors }} satır eksik ya da tutarsız bilgi yüzünden aktarılmayacak.
+                    }
+                    @if (totals(p).skipped + totals(p).errors > 0) {
+                        Nedenleri tablo kartlarında ve aşağıda.
                     }
                     Henüz hiçbir kayıt oluşturulmadı.
                 </p-message>
@@ -71,9 +77,24 @@ const ROW_PAGE_SIZE = 25;
                                 <dt class="text-muted-color">Mevcutla eşleşecek</dt>
                                 <dd class="m-0 text-right">{{ t.s.willMatch }}</dd>
                             }
-                            <dt class="text-muted-color">Aktarılmayacak</dt>
-                            <dd class="m-0 text-right">{{ t.s.willSkip + t.s.error }}</dd>
+                            @if (t.s.willSkip > 0) {
+                                <dt class="text-muted-color">Atlanacak</dt>
+                                <dd class="m-0 text-right">{{ t.s.willSkip }}</dd>
+                            }
+                            @if (t.s.error > 0) {
+                                <dt class="text-muted-color">Hatalı</dt>
+                                <dd class="m-0 text-right">{{ t.s.error }}</dd>
+                            }
                         </dl>
+                        @if (reasonsOf(p, t.key); as reasons) {
+                            @if (reasons.length) {
+                                <ul class="list-none p-0 m-0 mt-2 text-xs text-muted-color flex flex-col gap-1" data-testid="import-table-reasons">
+                                    @for (r of reasons; track r.kind + r.code) {
+                                        <li>{{ r.kind === 'Error' ? 'Hatalı' : 'Atlanacak' }} · {{ r.rowCount }}: {{ issueLabel(r.code) }}</li>
+                                    }
+                                </ul>
+                            }
+                        }
                     </div>
                 }
             </section>
@@ -347,12 +368,21 @@ export class ImportReviewStepComponent {
         return IMPORT_TABLES.filter((t) => p.summary[t].total > 0).map((t) => ({ key: t, label: IMPORT_TABLE_LABELS[t], s: p.summary[t] }));
     }
 
-    /** Aktarılacak (oluşturulacak + eşleşecek) ve aktarılmayacak (atlanacak + hatalı) satır toplamları. */
-    protected totals(p: ImportPreviewDto): { importable: number; notImported: number } {
+    /** Aktarılacak (oluşturulacak + eşleşecek), bilerek atlanacak ve hatalı satır toplamları. */
+    protected totals(p: ImportPreviewDto): { importable: number; skipped: number; errors: number } {
         return IMPORT_TABLES.reduce(
-            (acc, t) => ({ importable: acc.importable + p.summary[t].willCreate + p.summary[t].willMatch, notImported: acc.notImported + p.summary[t].willSkip + p.summary[t].error }),
-            { importable: 0, notImported: 0 }
+            (acc, t) => ({
+                importable: acc.importable + p.summary[t].willCreate + p.summary[t].willMatch,
+                skipped: acc.skipped + p.summary[t].willSkip,
+                errors: acc.errors + p.summary[t].error
+            }),
+            { importable: 0, skipped: 0, errors: 0 }
         );
+    }
+
+    /** Tablonun aktarılmayacak satır nedenleri (sunucu sırasıyla: önce atlanan, sonra hatalı; satır sayısı azalan). */
+    protected reasonsOf(p: ImportPreviewDto, table: ImportTable): ImportNotImportedReasonDto[] {
+        return (p.notImportedReasons ?? []).filter((r) => r.table === table);
     }
 
     /** Aktarmayı engelleyen (tür, aşı) değerler önce ve açık; ırk ve renk isteğe bağlıdır, kapalı bölümde. */
