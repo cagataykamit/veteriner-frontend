@@ -427,6 +427,8 @@ label.portal-option {
     display: inline-flex;
     align-items: center;
     gap: 0.75rem;
+    min-width: 0;
+    max-width: 100%;
     min-height: var(--portal-touch);
     color: inherit;
     text-decoration: none;
@@ -434,6 +436,14 @@ label.portal-option {
 
 .portal-brand:has(> .portal-header-action) {
     padding-inline: 6.5rem;
+}
+
+/* Dar ekranda ad ortalanmaz: sol pay da ada kalır, yalnız sağda "Değiştir" payı (ad iki satıra bölünmesin). */
+@media (max-width: 30rem) {
+    .portal-brand:has(> .portal-header-action) {
+        justify-content: flex-start;
+        padding-inline: 0 6.5rem;
+    }
 }
 
 .portal-brand > .portal-header-action {
@@ -472,11 +482,15 @@ label.portal-option {
     object-fit: contain;
 }
 
+/* Ad tek satır; sığmayan uzun adın sonu üç noktayla kısalır, tam ad `title`'da. */
 .portal-brand-name {
+    min-width: 0;
+    overflow: hidden;
     font-weight: 700;
     font-size: 1.0625rem;
     color: var(--vetinity-navy);
-    overflow-wrap: anywhere;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .portal-shell-header {

@@ -21,7 +21,7 @@ import { PORTAL_PRIVACY_PATH, PORTAL_TERMS_PATH } from '@portal/app/features/leg
                     } @else {
                         <span class="portal-brand-badge" aria-hidden="true">{{ initial() }}</span>
                     }
-                    <span class="portal-brand-name">{{ name }}</span>
+                    <span class="portal-brand-name" [title]="name">{{ name }}</span>
                 } @else {
                     <img class="portal-brand-logo" src="icons/icon-192.png" alt="" width="40" height="40" />
                     <span class="portal-brand-name">Vetinity</span>
