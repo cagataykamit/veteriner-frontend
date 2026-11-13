@@ -72,7 +72,7 @@ interface GroupState {
                             <div class="edoc-note edoc-note--warn" role="alert" data-testid="e-document-missing-buyer">
                                 <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
                                 <span>
-                                    Kurumsal müşterinin vergi numarası eksik.
+                                    {{ missingBuyerText(p.missingBuyerFields) }}
                                     <a [routerLink]="['/panel/clients', p.clientId, 'edit']" (click)="visible.set(false)">Fatura bilgilerini tamamlayın</a>.
                                 </span>
                             </div>
@@ -198,6 +198,11 @@ export class EDocumentIssueDialogComponent {
     protected readonly statusSeverity = eDocumentStatusSeverity;
     protected readonly pending = isEDocumentPending;
 
+    /** Eksik alıcı alanı: bireyselde ad + soyad, kurumsalda vergi numarası (kural backend'de). */
+    missingBuyerText(missing: string[]): string {
+        return missing.includes('fullName') ? 'Müşterinin adı ve soyadı birlikte yazılmamış.' : 'Kurumsal müşterinin vergi numarası eksik.';
+    }
+
     canIssue(p: EDocumentPreviewDto): boolean {
         return p.connection.status === 'Connected' && p.buyer !== null;
     }
@@ -289,7 +294,9 @@ export class EDocumentIssueDialogComponent {
 /** Eksik alıcı alanı (`missingFields`) ve bağlantı hatası Türkçe ve eyleme dönük gösterilir. */
 export function issueErrorMessage(e: unknown): string {
     if (e instanceof HttpErrorResponse && Array.isArray(e.error?.missingFields) && e.error.missingFields.length > 0) {
-        return 'Müşterinin fatura bilgileri eksik (vergi numarası); müşteri kaydını tamamlayıp tekrar deneyin.';
+        return e.error.missingFields.includes('fullName')
+            ? 'Müşterinin adı ve soyadı birlikte yazılmamış; müşteri adını düzeltip tekrar deneyin.'
+            : 'Müşterinin fatura bilgileri eksik (vergi numarası); müşteri kaydını tamamlayıp tekrar deneyin.';
     }
 
     return panelHttpFailureMessage(e, 'Belge kesilemedi.');

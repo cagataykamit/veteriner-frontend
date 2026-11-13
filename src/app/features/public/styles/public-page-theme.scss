@@ -362,6 +362,59 @@ html.public-site-root {
     color: var(--p-surface-200);
 }
 
+/* —— Klinik web sitesi vitrini: açık teal yüzeyde çerçeveli bölüm —— */
+.public-page .public-site-showcase {
+    padding: 1.5rem 1.25rem;
+    border: 1px solid var(--public-border);
+    border-radius: var(--public-radius-shot);
+    background: var(--vetinity-bg-soft);
+}
+
+@media (min-width: 768px) {
+    .public-page .public-site-showcase {
+        padding: 2.5rem;
+    }
+}
+
+.app-dark .public-page .public-site-showcase {
+    background: color-mix(in srgb, var(--vetinity-teal) 8%, #0b1220);
+}
+
+/* Tasarım görselinin üstünde sitenin adresi: bunun bir web sitesi olduğunu söyler; tarayıcı düğmesi taklidi yok */
+.public-page .public-site-design-address {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    overflow: hidden;
+    border-bottom: 1px solid var(--public-border);
+    color: var(--p-surface-600);
+    font-size: 0.8125rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.public-page .public-site-design-address .pi {
+    color: var(--public-accent-text);
+    font-size: 0.8125rem;
+}
+
+.app-dark .public-page .public-site-design-address {
+    color: var(--p-surface-300);
+}
+
+.public-page .public-site-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr));
+    gap: 0.75rem;
+}
+
+.public-page .public-site-steps .public-timeline-marker {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.875rem;
+}
+
 /* Düğmeler: birincil lacivert zemin + beyaz metin; ikincil beyaz zemin + lacivert çerçeve (teal üstünde beyaz metin yok) */
 .public-page .public-btn {
     display: inline-flex;

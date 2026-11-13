@@ -145,6 +145,10 @@ export class EDocumentsService {
             .pipe(map((r) => r.authorizationUrl));
     }
 
+    connectWithCredentials(clinicId: string, provider: string, apiKey: string): Observable<EDocumentConnectionDto> {
+        return this.api.post<EDocumentConnectionDto>(ApiEndpoints.clinics.eDocumentConnectionCredentials(clinicId), { provider, apiKey });
+    }
+
     selectAccount(clinicId: string, accountId: string): Observable<EDocumentConnectionDto> {
         return this.api.put<EDocumentConnectionDto>(ApiEndpoints.clinics.eDocumentConnectionAccount(clinicId), { accountId });
     }
