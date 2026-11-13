@@ -47,4 +47,6 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 13+: anlık bildirim izni; yalnız kullanıcı "Anlık bildirim"i açınca istenir (MOBILE-002). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

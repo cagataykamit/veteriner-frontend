@@ -387,6 +387,32 @@ label.portal-option {
     text-align: center;
 }
 
+/* Mobil uygulama kilidi (MOBILE-002): içeriğin tamamını kapatır, çentik ve alt çubuk payı alır. */
+.portal-app-lock {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: calc(var(--portal-gutter) + env(safe-area-inset-top)) calc(var(--portal-gutter) + env(safe-area-inset-right))
+        calc(var(--portal-gutter) + env(safe-area-inset-bottom)) calc(var(--portal-gutter) + env(safe-area-inset-left));
+    background: var(--portal-bg);
+
+    .portal-card {
+        width: 100%;
+        max-width: 24rem;
+    }
+
+    .portal-actions {
+        justify-content: center;
+    }
+}
+
+.portal-app-lock-logo {
+    justify-self: center;
+    border-radius: 1rem;
+}
+
 /* Marka başlığı, alt bilgi, alt gezinme. Klinik adı ortada; "Değiştir" sağ kenarda, ad ona binmesin diye iki yanda eşit pay. */
 .portal-brand {
     position: relative;

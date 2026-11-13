@@ -66,5 +66,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Uygulama kilidini açtıysanız Vetinity'yi Face ID ile açmanız için kullanılır.</string>
 </dict>
 </plist>

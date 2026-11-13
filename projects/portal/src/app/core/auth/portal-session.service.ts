@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, defer, finalize, firstValueFrom, map, Observable, of, shareReplay, switchMap, tap, throwError } from 'rxjs';
+import { catchError, defer, finalize, firstValueFrom, from, map, Observable, of, shareReplay, switchMap, tap, throwError } from 'rxjs';
 import { PortalPushRegistration } from '@portal/app/core/push/portal-push-registration';
 import { PortalAuthApi } from './portal-auth.api';
 import type { PortalAuthTokens, PortalLink, PortalMe, PortalSessionStatus } from './portal-auth.models';
@@ -74,7 +74,7 @@ export class PortalSessionService {
 
     /** Giriş/davet kabulü sonrası: token'ları sakla, `/me` yükle. */
     startSession(tokens: PortalAuthTokens): Observable<PortalMe> {
-        this.tokens.save(tokens);
+        void this.tokens.save(tokens);
         this.acceptanceClearedSignal.set(false);
 
         return this.loadMe();
@@ -184,7 +184,8 @@ export class PortalSessionService {
 
         return firstValueFrom(
             this.authApi.refresh(refreshToken).pipe(
-                tap((tokens) => this.tokens.save(tokens)),
+                // Dönen anahtar kalıcı depoya yazılmadan devam edilmez: eski anahtar sunucuda geçersizdir.
+                switchMap((tokens) => from(this.tokens.save(tokens)).pipe(map(() => tokens))),
                 catchError((err: unknown) => {
                     if (isRefreshRejected(err)) {
                         this.endLocalSession();
