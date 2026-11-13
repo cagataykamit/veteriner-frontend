@@ -18,6 +18,7 @@ import type { VaccinationEditVm } from '@/app/entities/vaccination/models/vaccin
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
 import { VaccineDefinitionsService } from '@/app/entities/vaccine-definition/services/vaccine-definitions.service';
 import type { VaccineDefinitionListItemVm } from '@/app/entities/vaccine-definition/models/vaccine-definition-vm.model';
+import { groupVaccineDefinitionOptions } from '@/app/entities/vaccine-definition/utils/vaccine-category.utils';
 import { type VaccinationUpsertFieldErrors, type VaccinationUpsertFormFieldKey, parseVaccinationUpsertHttpError } from '@/app/entities/vaccination/utils/vaccination-upsert-validation-parse.utils';
 import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/entities/vaccination/utils/vaccination-status.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
@@ -118,6 +119,9 @@ import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTime
                                 inputId="vaccineDefinitionId"
                                 formControlName="vaccineDefinitionId"
                                 [options]="vaccineDefinitionOptions()"
+                                [group]="true"
+                                optionGroupLabel="label"
+                                optionGroupChildren="items"
                                 optionLabel="label"
                                 optionValue="value"
                                 [placeholder]="copy.vaccinationVaccinePlaceholder"
@@ -255,7 +259,7 @@ export class VaccinationEditPageComponent implements OnInit {
     readonly vaccineDefinitionRows = signal<VaccineDefinitionListItemVm[]>([]);
     readonly legacyMissingVaccineDefinition = signal(false);
 
-    readonly vaccineDefinitionOptions = computed(() => this.vaccineDefinitionRows().map((d) => ({ label: d.name, value: d.id })));
+    readonly vaccineDefinitionOptions = computed(() => groupVaccineDefinitionOptions(this.vaccineDefinitionRows()));
 
     private vaccinationId = '';
     /** GET /vaccinations/:id — dropdown’larda eksik etiketleri tamamlamak için önbellek. */

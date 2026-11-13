@@ -194,6 +194,7 @@ export class QuickPetDialogComponent {
             gender: '',
             birthDate: '',
             colorId: '',
+            patternId: '',
             weightStr: '',
             notes: ''
         });

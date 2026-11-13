@@ -28,6 +28,7 @@ const pet: PetDetailVm = {
     gender: 'female',
     birthDate: null,
     colorName: '—',
+    patternName: '—',
     weight: '—',
     microchipNumber: '—',
     passportOrTagNumber: '—',

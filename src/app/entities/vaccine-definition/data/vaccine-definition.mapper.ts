@@ -1,6 +1,7 @@
 import { HttpParams } from '@angular/common/http';
 import type { VaccineDefinitionDto, VaccineDefinitionDtoPagedResult } from '@/app/entities/vaccine-definition/models/vaccine-definition-api.model';
 import type { VaccineDefinitionListItemVm } from '@/app/entities/vaccine-definition/models/vaccine-definition-vm.model';
+import { parseVaccineCategory } from '@/app/entities/vaccine-definition/utils/vaccine-category.utils';
 
 function firstTrimmed(...vals: Array<string | null | undefined>): string | null {
     for (const v of vals) {
@@ -41,7 +42,8 @@ export function mapVaccineDefinitionDtoToVm(dto: VaccineDefinitionDto): VaccineD
                 ? dto.defaultNextDueDays
                 : null,
         isCore: typeof dto.isCore === 'boolean' ? dto.isCore : readDtoString(dto, ['IsCore']) === 'true',
-        isActive: typeof dto.isActive === 'boolean' ? dto.isActive : readDtoString(dto, ['IsActive']) !== 'false'
+        isActive: typeof dto.isActive === 'boolean' ? dto.isActive : readDtoString(dto, ['IsActive']) !== 'false',
+        category: parseVaccineCategory(dto.category ?? readDtoString(dto, ['Category']))
     };
 }
 

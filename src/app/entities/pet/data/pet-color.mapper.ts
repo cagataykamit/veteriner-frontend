@@ -1,4 +1,4 @@
-import type { PetColorListItemDto } from '@/app/entities/pet/models/pet-color-api.model';
+import type { PetColorKind, PetColorListItemDto } from '@/app/entities/pet/models/pet-color-api.model';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 
 function pickPetColorId(o: Record<string, unknown>): string | null {
@@ -37,7 +37,12 @@ function normalizePetColorLike(v: unknown): PetColorListItemDto {
               ? (o['ColorName'] as string)
               : null;
 
-    return { id, name, colorName };
+    return { id, name, colorName, kind: readPetColorKind(o['kind'] ?? o['Kind']) };
+}
+
+/** `Pattern` (ya da 2) desen; diğer her değer renk sayılır (eski yanıt alanı göndermez). */
+function readPetColorKind(v: unknown): PetColorKind {
+    return v === 'Pattern' || v === 2 ? 'Pattern' : 'Color';
 }
 
 function extractPetColorListItems(raw: unknown): PetColorListItemDto[] {
@@ -86,4 +91,20 @@ export function mapPetColorListResponseToSelectOptions(raw: unknown): SelectOpti
     const items = extractPetColorListItems(raw);
 
     return items.map((dto) => ({ value: dto.id, label: labelForPetColor(dto) }));
+}
+
+/** Hasta formu için renk ve desen seçenekleri ayrı (FIFe EMS: renk ile desen ayrı alanlardır). */
+export interface PetCoatOptions {
+    colors: SelectOption[];
+    patterns: SelectOption[];
+}
+
+export function mapPetColorListResponseToCoatOptions(raw: unknown): PetCoatOptions {
+    const items = extractPetColorListItems(raw);
+    const toOption = (dto: PetColorListItemDto): SelectOption => ({ value: dto.id, label: labelForPetColor(dto) });
+
+    return {
+        colors: items.filter((dto) => dto.kind !== 'Pattern').map(toOption),
+        patterns: items.filter((dto) => dto.kind === 'Pattern').map(toOption)
+    };
 }

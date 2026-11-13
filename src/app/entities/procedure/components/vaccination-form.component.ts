@@ -24,6 +24,7 @@ import type { CreateVaccinationRequest } from '@/app/entities/vaccination/models
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
 import { VaccineDefinitionsService } from '@/app/entities/vaccine-definition/services/vaccine-definitions.service';
 import type { VaccineDefinitionListItemVm } from '@/app/entities/vaccine-definition/models/vaccine-definition-vm.model';
+import { groupVaccineDefinitionOptions } from '@/app/entities/vaccine-definition/utils/vaccine-category.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { parseVaccinationCreateRouteContext, type VaccinationCreateRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
@@ -119,6 +120,9 @@ export interface VaccinationSavedEvent {
                             inputId="vaccineDefinitionId"
                             formControlName="vaccineDefinitionId"
                             [options]="vaccineDefinitionOptions()"
+                            [group]="true"
+                            optionGroupLabel="label"
+                            optionGroupChildren="items"
                             optionLabel="label"
                             optionValue="value"
                             [placeholder]="copy.vaccinationVaccinePlaceholder"
@@ -314,7 +318,7 @@ export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
     readonly vaccineDefinitionsError = signal<string | null>(null);
     readonly vaccineDefinitionRows = signal<VaccineDefinitionListItemVm[]>([]);
 
-    readonly vaccineDefinitionOptions = computed(() => this.vaccineDefinitionRows().map((d) => ({ label: d.name, value: d.id })));
+    readonly vaccineDefinitionOptions = computed(() => groupVaccineDefinitionOptions(this.vaccineDefinitionRows()));
 
     readonly statusOptions = [...VACCINATION_WRITE_STATUS_OPTIONS];
 

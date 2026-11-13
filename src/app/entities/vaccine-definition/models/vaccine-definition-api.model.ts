@@ -10,8 +10,11 @@ export interface VaccineDefinitionDto {
     code: string;
     description?: string | null;
     defaultNextDueDays?: number | null;
+    /** Sistem satırı kilidi (klinik değiştiremez); klinik sınıf için `category`. */
     isCore: boolean;
     isActive: boolean;
+    /** WSAVA sınıfı ya da antiparaziter; eski yanıtta ve sınıfsız tanımda yok. */
+    category?: string | null;
 }
 
 export interface VaccineDefinitionDtoPagedResult {

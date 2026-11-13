@@ -19,6 +19,8 @@ export interface CreatePetRequest {
     birthDateInput?: string;
     /** Ref-data PetColors kimliği — boşsa gönderilmez */
     colorId?: string;
+    /** Renk kataloğunda desen satırı (`kind = Pattern`) — boşsa gönderilmez */
+    patternId?: string;
     weight?: number | null;
     microchipNumber?: string;
     passportOrTagNumber?: string;
