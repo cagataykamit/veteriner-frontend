@@ -41,4 +41,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         config.delegateClass = SceneDelegate.self
         return config
     }
+
+    // Anlık bildirim (MOBILE-002): APNs kaydı Capacitor push eklentisine iletilir. Backend FCM ile gönderdiği için
+    // mağaza öncesi bu jeton Firebase Messaging ile FCM jetonuna çevrilmeli (docs/PORTAL_MOBIL_PAKET.md §4.5).
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: deviceToken)
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
+    }
 }

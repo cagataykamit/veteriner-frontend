@@ -38,8 +38,12 @@ const config: CapacitorConfig = {
             insetsHandling: 'native',
             style: 'LIGHT',
             initialViewportFitValueHint: 'cover'
+        },
+        // Anlık bildirim (MOBILE-002): iOS'ta uygulama açıkken gelen bildirim de gösterilir. Android'de uygulama açıkken
+        // bildirim çubuğa düşmez; dokunma davranışı `PortalNativePush`'ta.
+        PushNotifications: {
+            presentationOptions: ['badge', 'sound', 'alert']
         }
-        // v1 (ADR-031 K7, AK-6 — v0 dışı): `@capacitor/push-notifications` ayarı ve biyometrik kilit eklentisi buraya eklenir.
     }
 };
 
