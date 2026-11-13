@@ -184,6 +184,16 @@ export function importIssueLabel(code: string, fallback?: string): string {
     return ISSUE_LABELS[code] ?? fallback ?? code;
 }
 
+/** Sunucu mesajı satıra özgü ayrıntı taşıyan kodlar (çakışan satır ya da sistemdeki kayıt; sözleşme 6.4, K10). */
+const ISSUE_DETAIL_CODES: ReadonlySet<string> = new Set(['Imports.MicrochipConflict', 'Imports.DuplicateInFile']);
+
+/** Satır listesinde etiketin altında gösterilecek ayrıntı: yalnız ayrıntı taşıyan kodlarda ve etiketten farklıysa. */
+export function importIssueDetail(code: string, message?: string | null): string | null {
+    const text = message?.trim();
+
+    return text && ISSUE_DETAIL_CODES.has(code) && text !== importIssueLabel(code) ? text : null;
+}
+
 /** E-vet yedeğinde geçmiş görevden oluşan klinik geçmiş satırının numarası: bu değer + Randevu Listesi Excel satırı (sözleşme 13.2). */
 export const EVET_TASK_ROW_OFFSET = 1_000_000;
 

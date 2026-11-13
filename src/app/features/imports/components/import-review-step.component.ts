@@ -11,7 +11,7 @@ import { BreedsService } from '@/app/entities/breed/services/breeds.service';
 import type { ImportBatchDto, ImportFileFormat, ImportPreviewDto, ImportRowDto, ImportRowsQuery, ImportTable, ImportUnmappedValueDto, ImportValueKind } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
-import { IMPORT_ISSUE_GROUPS, IMPORT_ROW_STATUS_LABELS, IMPORT_VALUE_KIND_LABELS, importErrorCode, importErrorMessage, importIssueLabel, importRowPlace } from '@/app/features/imports/utils/import-labels.utils';
+import { IMPORT_ISSUE_GROUPS, IMPORT_ROW_STATUS_LABELS, IMPORT_VALUE_KIND_LABELS, importErrorCode, importErrorMessage, importIssueDetail, importIssueLabel, importRowPlace } from '@/app/features/imports/utils/import-labels.utils';
 import { fieldLabel, IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
 import { IMPORT_VALUE_SKIP, type ImportValueChoices, valueChoiceKey } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { PetColorsService } from '@/app/entities/pet/services/pet-colors.service';
@@ -261,6 +261,9 @@ const ROW_PAGE_SIZE = 25;
                                                     @if (i.field) {
                                                         <span class="text-muted-color"> ({{ fieldLabel(r.table, i.field) }})</span>
                                                     }
+                                                    @if (issueDetail(i.code, i.message); as d) {
+                                                        <span class="block text-muted-color" data-testid="import-issue-detail">{{ d }}</span>
+                                                    }
                                                 </li>
                                             }
                                         </ul>
@@ -336,6 +339,7 @@ export class ImportReviewStepComponent {
     }
 
     protected issueLabel = importIssueLabel;
+    protected issueDetail = importIssueDetail;
     /** Sorun alanı API anahtarıdır (`HayvanAdi`); kullanıcıya eşleme ekranındaki etiket gösterilir (ADR-022). */
     protected fieldLabel = fieldLabel;
 

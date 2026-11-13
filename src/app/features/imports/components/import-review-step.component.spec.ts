@@ -73,6 +73,24 @@ describe('ImportReviewStepComponent', () => {
         expect(text).not.toContain('HayvanNo');
     });
 
+    it('mikroçip çakışmasında hangi satırla çakıştığını etiketin altında gösterir', () => {
+        const conflict = {
+            ...row('pets', 'Mikrocip'),
+            issues: [{ severity: 'Error', code: 'Imports.MicrochipConflict', field: 'Mikrocip', message: 'Aynı mikroçip 14. satırdaki başka bir hastada da var.' }]
+        } as unknown as ImportRowDto;
+        imports.getRows.mockReturnValue(of({ items: [conflict, row('pets', 'HayvanAdi')], totalItems: 2 } as unknown as ImportRowPageDto));
+        fixture = TestBed.createComponent(ImportReviewStepComponent);
+        fixture.componentRef.setInput('batch', batch);
+        fixture.componentRef.setInput('preview', preview);
+        fixture.componentRef.setInput('choices', {});
+        fixture.detectChanges();
+        fixture.detectChanges();
+
+        const details = (fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="import-issue-detail"]');
+
+        expect(Array.from(details).map((d) => d.textContent?.trim())).toEqual(['Aynı mikroçip 14. satırdaki başka bir hastada da var.']);
+    });
+
     it('süzgeç değişince satırlar yerinde kalır; "yükleniyor" yalnız ilk yüklemede görünür (alttaki düğmeler zıplamaz)', () => {
         imports.getRows.mockReturnValue(of({ items: [row('pets', 'HayvanAdi')], totalItems: 1 } as unknown as ImportRowPageDto));
         fixture = TestBed.createComponent(ImportReviewStepComponent);
