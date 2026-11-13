@@ -176,6 +176,16 @@ export interface ImportPreviewDto {
     canCommit: boolean;
     blockers: string[];
     payloadPurged: boolean;
+    /** Tablo başına aktarılmayacak satırların nedeni (sözleşme 7.6, 2026-11-14); eski sunucu yanıtında yoktur. */
+    notImportedReasons?: ImportNotImportedReasonDto[];
+}
+
+/** Aktarılmayacak satırın nedeni: `Skipped` bilerek atlanan, `Error` hatalı; satır başına bir neden sayılır. */
+export interface ImportNotImportedReasonDto {
+    table: ImportTable;
+    kind: 'Skipped' | 'Error';
+    code: string;
+    rowCount: number;
 }
 
 export interface ImportRowIssueDto {

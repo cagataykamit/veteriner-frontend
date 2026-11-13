@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { ImportReminderImpactDto, ImportTableInfoDto } from '@/app/features/imports/models/import-api.model';
-import { duplicateBatchId, importCommitBlockers, importErrorMessage, importIssueLabel, importRowPlace, isDiscardable, isEndpointUnavailable, isImportJobRunning, reminderEmailTotal, reminderImpactCurrentCount, precheckImportFile, rollbackCountsText, rollbackCountsTotal, rollbackReasonLabel } from '@/app/features/imports/utils/import-labels.utils';
+import { duplicateBatchId, importCommitBlockers, importErrorMessage, importIssueDetail, importIssueLabel, importRowPlace, isDiscardable, isEndpointUnavailable, isImportJobRunning, reminderEmailTotal, reminderImpactCurrentCount, precheckImportFile, rollbackCountsText, rollbackCountsTotal, rollbackReasonLabel } from '@/app/features/imports/utils/import-labels.utils';
 import { columnMapsToRequest, fieldLabel, IMPORT_CSV_FIELD, IMPORT_CSV_TEMPLATE_FILE, IMPORT_TABLES, initialColumnMaps, mappingConfidence, missingRequired, needsClinic } from '@/app/features/imports/utils/import-schema.utils';
 import { IMPORT_VALUE_SKIP, valueChoicesToRequest } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { isTrialLimitError } from '@/app/shared/utils/api-error.utils';
@@ -80,6 +80,15 @@ describe('import-labels.utils', () => {
     it('bilinen kodlar sade Türkçe, bilinmeyen kod yedek metinle gösterilir', () => {
         expect(importIssueLabel('Imports.SpeciesUnmapped')).toBe('Tür sistemde bulunamadı');
         expect(importIssueLabel('Imports.Bilinmeyen', 'Sunucu mesajı')).toBe('Sunucu mesajı');
+    });
+
+    it('ayrıntı yalnız çakışan satırı söyleyen kodlarda ve etiketten farklıysa gösterilir', () => {
+        expect(importIssueDetail('Imports.MicrochipConflict', 'Aynı mikroçip kayıtlı başka bir hastada var.')).toBe('Aynı mikroçip kayıtlı başka bir hastada var.');
+        expect(importIssueDetail('Imports.DuplicateInFile', 'Aynı hasta 12. satırda da var; bu satır atlanacak.')).toBe('Aynı hasta 12. satırda da var; bu satır atlanacak.');
+        expect(importIssueDetail('Imports.MicrochipConflict', 'Aynı mikroçip başka bir hastada var')).toBeNull();
+        expect(importIssueDetail('Imports.RequiredMissing', 'Zorunlu alan boş.')).toBeNull();
+        expect(importIssueDetail('Imports.MicrochipConflict', null)).toBeNull();
+        expect(importIssueDetail('Pets.BirthDateInFuture', 'Doğum tarihi gelecekte; hasta doğum tarihsiz aktarılacak. Dosyadaki değer (01.01.2027) hastanın notuna yazılacak.')).toContain('01.01.2027');
     });
 
     it('satır yeri: E-vet geçmiş görevinden gelen klinik geçmiş satırı Randevu Listesi satırıyla gösterilir', () => {
