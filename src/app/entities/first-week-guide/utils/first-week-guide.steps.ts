@@ -33,6 +33,9 @@ interface DoneRequest {
 /** Tek cümlelik adım; `label` ve `route` ilgili ekranın bağlantısıdır, izin yoksa adım görünmez. */
 export interface FirstWeekGuideStep extends NavigationEntry {
     readonly key: string;
+    /** Adım hapında ve başlıkta görünen kısa ad. */
+    readonly title: string;
+    readonly icon: string;
     readonly text: string;
     /** Yoksa adım yalnız elle işaretlenir. */
     readonly doneWhen?: readonly DoneRequest[];
@@ -49,6 +52,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
     frontDesk: [
         {
             key: 'client',
+            title: 'İlk müşteri',
+            icon: 'pi pi-user-plus',
             text: 'İlk hasta sahibini kaydedin; telefon numarası zorunludur.',
             label: 'Yeni müşteri',
             route: '/panel/clients/new',
@@ -57,6 +62,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'appointment',
+            title: 'İlk randevu',
+            icon: 'pi pi-calendar-plus',
             text: 'Boş bir saate ilk randevuyu verin.',
             label: 'Yeni randevu',
             route: '/panel/appointments/new',
@@ -65,6 +72,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'visit',
+            title: 'Geliş kaydı',
+            icon: 'pi pi-sign-in',
             text: 'Hasta gelince Planlı randevulardaki Geldi düğmesiyle ya da Randevusuz geliş ile geliş kaydı açın.',
             label: 'Bugün',
             route: TODAY_ROUTE,
@@ -73,6 +82,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'charge',
+            title: 'Ücret yazma',
+            icon: 'pi pi-receipt',
             text: 'Yapılan iş için müşteriye ücret yazın; ücret tek başına ödeme sayılmaz.',
             label: 'Yeni ücret',
             route: '/panel/charges/new',
@@ -81,6 +92,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'payment',
+            title: 'Ödeme alma',
+            icon: 'pi pi-wallet',
             text: 'Ödemeyi Bugün satırındaki ⋯ → Ödeme al ile ya da Ödemeler sayfasından alıp açık ücrete bağlayın.',
             label: 'Yeni ödeme',
             route: '/panel/payments/new',
@@ -89,6 +102,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'reminderLogs',
+            title: 'Hatırlatma geçmişi',
+            icon: 'pi pi-history',
             text: 'Hasta sahiplerine giden randevu ve aşı hatırlatmalarını Hatırlatma Geçmişi’nde kontrol edin.',
             label: 'Hatırlatma Geçmişi',
             route: '/panel/settings/reminders/logs',
@@ -96,6 +111,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'endOfDay',
+            title: 'Gün sonu',
+            icon: 'pi pi-chart-bar',
             text: 'Gün sonunda açık kalan gelişleri ve ödenmemiş ücretleri Gün sonu raporunda kontrol edin.',
             label: 'Gün sonu',
             route: END_OF_DAY_ROUTE,
@@ -106,6 +123,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
     veterinarian: [
         {
             key: 'visitStart',
+            title: 'Bakımı başlat',
+            icon: 'pi pi-play',
             text: 'Bugün’de “Benim hastalarım” ile size atanan hastaları görün ve Başlat ile bakımı başlatın.',
             label: 'Bugün',
             route: TODAY_ROUTE,
@@ -114,6 +133,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'examination',
+            title: 'İlk muayene',
+            icon: 'pi pi-file-edit',
             text: 'Bugün satırındaki Muayene aç ile ilk muayeneyi açın; hasta yeniden seçilmez.',
             label: 'Yeni muayene',
             route: '/panel/examinations/new',
@@ -122,6 +143,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'snippet',
+            title: 'Metin parçası',
+            icon: 'pi pi-hashtag',
             text: 'Muayene metninde # yazıp hazır metin parçası ekleyin; sık yazdığınız cümleyi kendi parçanız yapın.',
             label: 'Metin parçaları',
             route: CLINICAL_SNIPPETS_ROUTE,
@@ -130,6 +153,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'finalize',
+            title: 'Kesinleştirme',
+            icon: 'pi pi-check-square',
             text: 'Muayeneyi Kesinleştir ile kapatın; sonradan yalnız gerekçeli ek not eklenir.',
             label: 'Muayeneler',
             route: '/panel/examinations',
@@ -138,6 +163,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'vaccination',
+            title: 'Aşı kaydı',
+            icon: 'pi pi-shield',
             text: 'Uygulanan aşıyı muayene ayrıntısındaki Aşı Oluştur ile kaydedin.',
             label: 'Yeni aşı',
             route: '/panel/vaccinations/new',
@@ -146,6 +173,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'prescription',
+            title: 'Reçete',
+            icon: 'pi pi-file',
             text: 'Reçeteyi yazın; reçete stoktan düşmez, klinikte uygulanan ürün Uygulama olarak girilir.',
             label: 'Yeni reçete',
             route: '/panel/prescriptions/new',
@@ -154,6 +183,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'visitComplete',
+            title: 'Gelişi tamamla',
+            icon: 'pi pi-flag',
             text: 'Gün sonunda Devam ediyor’daki gelişleri Tamamla ile kapatın, taslakta kalan muayeneleri kesinleştirin.',
             label: 'Bugün',
             route: TODAY_ROUTE,
@@ -164,6 +195,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
     manager: [
         {
             key: 'invite',
+            title: 'Personel daveti',
+            icon: 'pi pi-user-plus',
             text: 'Personeli davet edip rolünü seçin: ön büro için Sekreter, hekim için Veteriner.',
             label: 'Davet oluştur',
             route: '/panel/settings/invites',
@@ -172,6 +205,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'workingHours',
+            title: 'Çalışma saatleri',
+            icon: 'pi pi-clock',
             text: 'Kliniğin ayrıntısından çalışma saatlerini girin; randevu formundaki saat seçenekleri buradan gelir.',
             label: 'Klinikler',
             route: '/panel/settings/clinics',
@@ -180,6 +215,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'services',
+            title: 'Hizmet fiyatları',
+            icon: 'pi pi-tag',
             text: 'Muayene, aşı ve işlem ücretlerinizi türü Hizmet olan ürün olarak fiyatıyla girin.',
             label: 'Yeni ürün',
             route: '/panel/products/new',
@@ -188,6 +225,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'import',
+            title: 'Eski kayıtlar',
+            icon: 'pi pi-upload',
             text: 'Eski sistemdeki müşteri, hasta ve aşı kayıtlarını Excel ya da CSV ile içe aktarın.',
             label: 'Veri içe aktarma',
             route: IMPORTS_ROUTE,
@@ -196,6 +235,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'reminderSettings',
+            title: 'Hatırlatma ayarı',
+            icon: 'pi pi-bell',
             text: 'Randevu ve aşı hatırlatmalarının ne zaman gideceğini hatırlatma ayarlarında kontrol edin.',
             label: 'Hatırlatmalar',
             route: '/panel/settings/reminders',
@@ -204,6 +245,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'visit',
+            title: 'Geliş kaydı',
+            icon: 'pi pi-sign-in',
             text: 'Bugün ekranında bir geliş kaydı açarak ön büronun günlük akışını bir kez deneyin.',
             label: 'Bugün',
             route: TODAY_ROUTE,
@@ -212,6 +255,8 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
         },
         {
             key: 'endOfDay',
+            title: 'Gün sonu',
+            icon: 'pi pi-chart-bar',
             text: 'Günün ücret, tahsilat ve açık işlerini Gün sonu raporunda kontrol edin.',
             label: 'Gün sonu',
             route: END_OF_DAY_ROUTE,
