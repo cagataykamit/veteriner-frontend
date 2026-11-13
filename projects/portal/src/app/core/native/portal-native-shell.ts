@@ -6,6 +6,7 @@ import { SystemBars, SystemBarsStyle, type SystemBarsStyleOptions } from '@capac
 import { SplashScreen, type SplashScreenPlugin } from '@capacitor/splash-screen';
 import { filter, take } from 'rxjs';
 import { environment } from '@portal/environments/environment';
+import { PortalNativePush } from '@portal/app/core/push/portal-native-push';
 import { isPortalNativePlatform, portalBackButtonAction, portalDeepLinkPath } from './portal-native';
 
 /** Kullanılan yerel eklenti yüzeyi; spec'lerde sahte nesneyle değiştirilir. */
@@ -72,11 +73,12 @@ export class PortalNativeShell {
     }
 }
 
-/** Yalnız yerel platformda `PortalNativeShell`'i başlatır; tarayıcı derlemesinde etkisizdir. */
+/** Yalnız yerel platformda kabuğu ve push davranışını başlatır; tarayıcı derlemesinde etkisizdir. */
 export function providePortalNativeShell(): EnvironmentProviders {
     return provideAppInitializer(() => {
         if (isPortalNativePlatform()) {
             inject(PortalNativeShell).start();
+            inject(PortalNativePush).start();
         }
     });
 }

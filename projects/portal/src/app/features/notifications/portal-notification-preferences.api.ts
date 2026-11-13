@@ -2,7 +2,6 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { PortalApiClient } from '@portal/app/core/api/portal-api.client';
 import { PORTAL_ENDPOINTS } from '@portal/app/core/api/portal-endpoints';
-import type { PortalPushPlatform } from '@portal/app/core/push/portal-push-device';
 
 /** `GET/PUT /me/notification-preferences` (sözleşme §10.1, §14.4): hesap düzeyi push tercihi. */
 export interface PortalAccountNotificationPreferences {
@@ -43,11 +42,6 @@ export class PortalNotificationPreferencesApi {
 
     updateAccount(pushEnabled: boolean): Observable<PortalAccountNotificationPreferences> {
         return this.api.put<PortalAccountNotificationPreferences>(PORTAL_ENDPOINTS.myNotificationPreferences, { pushEnabled });
-    }
-
-    /** §14.2: bu cihazın jetonunu kaydeder ya da yeniler (idempotent; push tercihi kapalıysa 409 `Portal.Push.Disabled`). */
-    registerPushDevice(platform: PortalPushPlatform, token: string): Observable<void> {
-        return this.api.put<void>(PORTAL_ENDPOINTS.myPushDevices, { platform, token });
     }
 
     getLink(linkId: string): Observable<PortalLinkNotificationPreferences> {

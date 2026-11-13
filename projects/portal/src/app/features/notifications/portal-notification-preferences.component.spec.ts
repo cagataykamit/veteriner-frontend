@@ -93,7 +93,7 @@ describe('PortalNotificationPreferencesComponent (bildirim tercihleri)', () => {
         const deviceUrl = url('me/push-devices');
 
         function fakeDevice(obtainToken: () => Promise<string>): PortalPushDevice {
-            return { supported: true, platform: 'Android' as PortalPushPlatform, obtainToken };
+            return { supported: true, platform: 'Android' as PortalPushPlatform, obtainToken, silentToken: () => Promise.resolve(null) };
         }
 
         it('sağlayıcı varken tarayıcı jeton üretemiyorsa açıklama görünür, cihaz kaydı istenmez', async () => {

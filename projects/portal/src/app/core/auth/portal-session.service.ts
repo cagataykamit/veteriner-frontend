@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, defer, finalize, firstValueFrom, map, Observable, of, shareReplay, switchMap, tap, throwError } from 'rxjs';
+import { PortalPushRegistration } from '@portal/app/core/push/portal-push-registration';
 import { PortalAuthApi } from './portal-auth.api';
 import type { PortalAuthTokens, PortalLink, PortalMe, PortalSessionStatus } from './portal-auth.models';
 import { PortalTokenStore } from './portal-token.store';
@@ -30,6 +31,7 @@ export class PortalSessionService {
     private readonly authApi = inject(PortalAuthApi);
     private readonly tokens = inject(PortalTokenStore);
     private readonly router = inject(Router);
+    private readonly pushRegistration = inject(PortalPushRegistration);
 
     private readonly statusSignal = signal<PortalSessionStatus>('unknown');
     private readonly meSignal = signal<PortalMe | null>(null);
@@ -117,9 +119,13 @@ export class PortalSessionService {
         this.tokens.setActiveLinkId(linkId);
     }
 
-    /** Bu cihazdan çıkış; sunucu çağrısı başarısız olsa da yerel oturum silinir. */
+    /**
+     * Bu cihazdan çıkış; sunucu çağrısı başarısız olsa da yerel oturum silinir. Önce bu cihazın push jetonu kaldırılır
+     * (§14.3): çıkış yapılan telefona bildirim gitmesin. Jeton kaldırma oturum gerektirdiği için çıkıştan önce yapılır.
+     */
     logout(): Observable<void> {
-        return this.authApi.logout(this.tokens.refreshToken()).pipe(
+        return this.pushRegistration.revokeThisDevice().pipe(
+            switchMap(() => this.authApi.logout(this.tokens.refreshToken())),
             catchError(() => of(undefined)),
             map(() => this.endLocalSession())
         );

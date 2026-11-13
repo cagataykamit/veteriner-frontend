@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { MessageModule } from 'primeng/message';
-import { from, Observable, Subscription, switchMap } from 'rxjs';
+import { Observable, Subscription, switchMap } from 'rxjs';
 import { isClinicPortalClosed } from '@portal/app/core/auth/portal-auth.models';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { portalErrorMessage } from '@portal/app/core/errors/portal-errors';
 import { PortalPushDevice } from '@portal/app/core/push/portal-push-device';
+import { PortalPushRegistration } from '@portal/app/core/push/portal-push-registration';
 import { portalLoad } from '@portal/app/shared/data/portal-load';
 import { formatPortalDate } from '@portal/app/shared/format/portal-date';
 import { PortalErrorState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
@@ -141,6 +142,7 @@ export class PortalNotificationPreferencesComponent {
     private readonly session = inject(PortalSessionService);
     private readonly api = inject(PortalNotificationPreferencesApi);
     private readonly pushDevice = inject(PortalPushDevice);
+    private readonly pushRegistration = inject(PortalPushRegistration);
 
     readonly account = portalLoad<PortalAccountNotificationPreferences>();
     readonly link = portalLoad<PortalLinkNotificationPreferences>();
@@ -240,11 +242,9 @@ export class PortalNotificationPreferencesComponent {
             return;
         }
 
-        from(this.pushDevice.obtainToken())
-            .pipe(
-                switchMap((token) => this.api.registerPushDevice(this.pushDevice.platform, token)),
-                switchMap(() => this.api.getAccount())
-            )
+        this.pushRegistration
+            .registerWithPermission()
+            .pipe(switchMap(() => this.api.getAccount()))
             .subscribe({
                 next: (fresh) => this.account.data.set(fresh),
                 error: () => this.deviceError.set('Bu cihaz için bildirim izni alınamadı. Cihaz ayarlarından bildirimlere izin verip anahtarı kapatıp yeniden açın.')
