@@ -48,6 +48,8 @@ export const ApiEndpoints = {
         eDocumentConnection: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/e-document-connection`,
         /** POST `{ provider }` → `{ authorizationUrl }` (OAuth + PKCE). */
         eDocumentConnectionAuthorize: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/e-document-connection/authorize`,
+        /** POST `{ provider, apiKey }` → bağlantı; API anahtarıyla bağlanan entegratör (anahtar yanıtta dönmez). */
+        eDocumentConnectionCredentials: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/e-document-connection/credentials`,
         /** PUT `{ accountId }`; yalnız hesap seçimi beklenirken. */
         eDocumentConnectionAccount: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/e-document-connection/account`,
         /** POST; bağlantıyı sınar. */

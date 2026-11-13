@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import type { Observable } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { EDocumentConnectionDto, EDocumentProviderOption } from '@/app/entities/e-document/models/e-document.model';
@@ -34,7 +35,7 @@ const RETURN_REASONS: Record<string, string> = {
     selector: 'app-e-document-connection-card',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [FormsModule, ButtonModule, SelectModule, AppLoadingStateComponent, AppErrorStateComponent, AppStatusTagComponent, TrDateTimePipe],
+    imports: [FormsModule, ButtonModule, InputTextModule, SelectModule, AppLoadingStateComponent, AppErrorStateComponent, AppStatusTagComponent, TrDateTimePipe],
     template: `
         <div class="card mb-4" data-testid="e-document-connection">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -44,7 +45,7 @@ const RETURN_REASONS: Record<string, string> = {
                 }
             </div>
             <p class="text-sm text-muted-color mt-0 mb-4">
-                Belgeler kliniğin kendi entegratör hesabıyla kesilir; kontör ücreti entegratörle yaptığınız sözleşmededir. Bağlantı entegratörün kendi ekranında onaylanır, hesap şifreniz Vetinity'ye girilmez.
+                Belgeler kliniğin kendi entegratör hesabıyla kesilir; kontör ücreti entegratörle yaptığınız sözleşmededir. Hesap şifreniz Vetinity'ye girilmez: bağlantı ya entegratörün kendi ekranında onaylanır ya da entegratörde ürettiğiniz API anahtarıyla kurulur.
             </p>
 
             @if (loading()) {
@@ -106,11 +107,31 @@ const RETURN_REASONS: Record<string, string> = {
                             <button pButton type="button" [severity]="c.status === 'Connected' ? 'secondary' : 'primary'" [disabled]="busy() || ro.mutationBlocked() || !p.configured" (click)="connect(p.provider)" data-testid="edoc-connect">
                                 <i class="p-button-icon pi pi-link"></i>{{ c.status === 'Connected' ? 'Yeniden bağla' : p.providerName + ' hesabını bağla' }}
                             </button>
-                        } @else {
-                            <span class="text-sm text-muted-color">Bu entegratörün bağlantı alanları henüz eklenmedi.</span>
+                        } @else if (c.status === 'Connected' && !keyFormOpen()) {
+                            <button pButton type="button" severity="secondary" [disabled]="busy() || ro.mutationBlocked() || !p.configured" (click)="keyFormOpen.set(true)" data-testid="edoc-change-key">
+                                <i class="p-button-icon pi pi-key"></i>Anahtarı değiştir
+                            </button>
                         }
                     }
                 </div>
+
+                @if (chosenProvider(); as p) {
+                    @if (p.connectionMethod === 'Credentials' && (c.status !== 'Connected' || keyFormOpen())) {
+                        <form class="mt-4 flex flex-wrap items-end gap-2" (ngSubmit)="connectWithKey(p.provider)" data-testid="edoc-key-form">
+                            <div class="grow min-w-[16rem]">
+                                <label for="edocApiKey" class="block text-sm font-medium text-muted-color mb-2">{{ p.providerName }} API anahtarı</label>
+                                <input pInputText id="edocApiKey" name="apiKey" type="password" class="w-full" autocomplete="off" spellcheck="false" [(ngModel)]="apiKey" [disabled]="busy() || ro.mutationBlocked() || !p.configured" />
+                                <small class="text-muted-color">Anahtarı {{ p.providerName }} portalının API tanımları ekranında üretip buraya yapıştırın. Anahtar şifreli saklanır, bir daha gösterilmez.</small>
+                            </div>
+                            @if (keyFormOpen()) {
+                                <button pButton type="button" severity="secondary" [text]="true" [disabled]="busy()" (click)="closeKeyForm()">Vazgeç</button>
+                            }
+                            <button pButton type="submit" [disabled]="!apiKey.trim() || busy() || ro.mutationBlocked() || !p.configured" data-testid="edoc-key-connect">
+                                <i class="p-button-icon pi pi-link"></i>Bağla ve sına
+                            </button>
+                        </form>
+                    }
+                }
             }
         </div>
     `
@@ -130,8 +151,10 @@ export class EDocumentConnectionCardComponent implements OnInit {
     readonly actionError = signal<string | null>(null);
     readonly busy = signal(false);
     readonly connection = signal<EDocumentConnectionDto | null>(null);
+    readonly keyFormOpen = signal(false);
     selectedAccount: string | null = null;
     selectedProvider: string | null = null;
+    apiKey = '';
 
     readonly providerOptions = computed(() =>
         (this.connection()?.availableProviders ?? []).map((p) => ({ value: p.provider, label: p.configured ? p.providerName : `${p.providerName} (yapılandırılmadı)`, disabled: !p.configured }))
@@ -200,6 +223,30 @@ export class EDocumentConnectionCardComponent implements OnInit {
     /** Tarayıcıyı entegratörün yetki ekranına götürür (testte gözlenebilir olsun diye ayrı). */
     openAuthorization(url: string): void {
         window.location.assign(url);
+    }
+
+    /** API anahtarıyla bağlanma: anahtar sunucuda sınanır; başarıda alan temizlenir (anahtar panelde tutulmaz). */
+    connectWithKey(provider: string): void {
+        const key = this.apiKey.trim();
+
+        if (!key) {
+            return;
+        }
+
+        this.run(
+            this.service.connectWithCredentials(this.clinicId(), provider, key),
+            (c) => {
+                this.closeKeyForm();
+                this.setConnection(c);
+                this.messages.add({ severity: c.lastVerificationOk === false ? 'warn' : 'success', summary: 'Entegratör bağlandı', detail: c.lastVerificationMessage ?? undefined, life: 5000 });
+            },
+            'Entegratör bağlanamadı.'
+        );
+    }
+
+    closeKeyForm(): void {
+        this.apiKey = '';
+        this.keyFormOpen.set(false);
     }
 
     selectAccount(): void {

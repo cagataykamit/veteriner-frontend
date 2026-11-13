@@ -26,7 +26,10 @@ const TYPE_ICONS: Record<UserNotificationType, { icon: string; tone: string }> =
     [UserNotificationType.AppointmentCancelledByOwner]: { icon: 'pi pi-calendar-times', tone: 'text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-950/40' },
     [UserNotificationType.WaitlistOfferAccepted]: { icon: 'pi pi-calendar-plus', tone: 'text-green-700 bg-green-50 dark:text-green-300 dark:bg-green-950/40' },
     [UserNotificationType.DataExportReady]: { icon: 'pi pi-download', tone: 'text-green-700 bg-green-50 dark:text-green-300 dark:bg-green-950/40' },
-    [UserNotificationType.DataExportFailed]: { icon: 'pi pi-exclamation-triangle', tone: 'text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-950/40' }
+    [UserNotificationType.DataExportFailed]: { icon: 'pi pi-exclamation-triangle', tone: 'text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-950/40' },
+    [UserNotificationType.EDocumentsDailySummary]: { icon: 'pi pi-receipt', tone: 'text-primary bg-primary-50 dark:bg-primary-950/40' },
+    [UserNotificationType.EDocumentsAutoIssuePaused]: { icon: 'pi pi-pause-circle', tone: 'text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-950/40' },
+    [UserNotificationType.EDocumentPaymentVoided]: { icon: 'pi pi-exclamation-triangle', tone: 'text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-950/40' }
 };
 const FALLBACK_ICON = { icon: 'pi pi-bell', tone: 'text-muted-color bg-surface-100 dark:bg-surface-800' };
 

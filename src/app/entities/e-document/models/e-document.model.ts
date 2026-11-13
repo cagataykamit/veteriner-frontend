@@ -178,6 +178,9 @@ export interface ClinicEDocumentSettingsDto {
     /** Hizmet / ürün satırında kesilecek belge: e-SMM ya da fatura (alıcıya göre e-Arşiv / e-Fatura). */
     serviceDocument: 'ESmm' | 'Invoice' | null;
     productDocument: 'ESmm' | 'Invoice' | null;
+    /** Otomatik kesme kalıcı bir entegratör sorunuyla (yetki, kontör, bağlantı) durduysa an; ayar kaydedilince sürer. */
+    autoIssuePausedAtUtc: string | null;
+    autoIssuePauseReason: string | null;
 }
 
 export interface EDocumentRemindersDto {

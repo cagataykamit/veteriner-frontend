@@ -6,6 +6,7 @@ import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
+import { MessageModule } from 'primeng/message';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -38,6 +39,7 @@ const DOCUMENT_LABEL: Record<'ESmm' | 'Invoice', string> = {
         ButtonModule,
         CheckboxModule,
         InputTextModule,
+        MessageModule,
         RadioButtonModule,
         ToastModule,
         AppPageHeaderComponent,
@@ -77,7 +79,18 @@ const DOCUMENT_LABEL: Record<'ESmm' | 'Invoice', string> = {
 
                 <div class="card mb-4" data-testid="e-document-automation">
                     <h5 class="mt-0 mb-2">Otomatik e-belge</h5>
-                    <p class="text-sm text-muted-color mt-0 mb-4">Tamamen ödenmiş ücretlerin belgesi kendiliğinden kesilir. Her belge entegratör sözleşmenizdeki kontörden düşer. Yalnız bu ayar açıldıktan sonra yazılan ücretler kesilir; eski ücretler toplu kesilmez.</p>
+                    <p class="text-sm text-muted-color mt-0 mb-4">Tamamen ödenmiş ücretlerin belgesi kendiliğinden kesilir. Her belge entegratör sözleşmenizdeki kontörden düşer. Yalnız ayar açıkken ödemesi tamamlanan ücretler kesilir; açtığınızda zaten ödenmiş eski ücretler geriye dönük kesilmez.</p>
+
+                    @if (s.autoIssuePausedAtUtc && s.autoIssueMode !== 'Off') {
+                        <p-message severity="warn" class="w-full mb-4" role="alert" data-testid="edoc-auto-paused">
+                            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full">
+                                <span class="text-sm"><span class="font-medium">Otomatik e-belge durdu.</span> {{ s.autoIssuePauseReason }} Bu sürede ödenen ücretler belgesiz bekliyor; sorunu giderip sürdürünce kesilir.</span>
+                                <button pButton type="button" size="small" [disabled]="saving() || ro.mutationBlocked()" (click)="save()" data-testid="edoc-auto-resume">
+                                    <i class="p-button-icon pi pi-play"></i>Sürdür
+                                </button>
+                            </div>
+                        </p-message>
+                    }
 
                     <div class="flex flex-col gap-3" role="radiogroup" aria-label="Otomatik e-belge">
                         @for (option of modeOptions; track option.value) {

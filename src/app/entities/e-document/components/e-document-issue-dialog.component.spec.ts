@@ -86,6 +86,16 @@ describe('EDocumentIssueDialogComponent', () => {
         expect(issueErrorMessage(error)).toContain('vergi numarası');
     });
 
+    it('bireysel alıcının ad + soyadı eksikse bunu söyler (diyalog ve kesme hatası)', () => {
+        const cmp = render({ ...preview, buyer: null, missingBuyerFields: ['fullName'] }).componentInstance;
+        const error = new HttpErrorResponse({ status: 400, error: { code: 'EDocuments.BuyerIdentityMissing', missingFields: ['fullName'] } });
+
+        expect(cmp.canIssue(cmp.preview()!)).toBe(false);
+        expect(cmp.missingBuyerText(cmp.preview()!.missingBuyerFields)).toContain('adı ve soyadı');
+        expect(cmp.missingBuyerText(['taxNumber'])).toContain('vergi numarası');
+        expect(issueErrorMessage(error)).toContain('adı ve soyadı');
+    });
+
     it('kesme hatası grupta gösterilir, diğer grup etkilenmez', () => {
         const fixture = render();
         const cmp = fixture.componentInstance;
