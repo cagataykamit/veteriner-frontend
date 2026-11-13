@@ -16,12 +16,20 @@ const STATUS: Record<EDocumentStatus, { label: string; severity: EDocumentTagSev
     Discarded: { label: 'Vazgeçildi', severity: 'secondary' },
     CancelRequested: { label: 'İptal ediliyor', severity: 'warn' },
     Cancelled: { label: 'İptal edildi', severity: 'secondary' },
-    CancelRejected: { label: 'İptal reddedildi', severity: 'danger' }
+    CancelRejected: { label: 'İptal reddedildi', severity: 'danger' },
+    RejectedByBuyer: { label: 'Alıcı reddetti', severity: 'danger' }
 };
 
-export const EDOCUMENT_STATUS_FILTER_OPTIONS = (Object.keys(STATUS) as EDocumentStatus[])
-    .filter((s) => s !== 'Draft')
-    .map((value) => ({ value, label: STATUS[value].label }));
+/**
+ * Kesilmiş e-Fatura uygulamadan iptal edilemediğinde gösterilen düzeltme yolu (vergi tavsiyesi değildir; ADR-036, 2026-11-13).
+ * Gün sayısı backend kuralıyla aynı (`EDocumentRules.BuyerAnswerWindowDays`, DOĞRULANMADI).
+ */
+export const EINVOICE_CORRECTION_GUIDE =
+    'Kesilmiş e-Fatura buradan iptal edilemez. Ticari senaryoda alıcı faturayı 8 gün içinde sistem üzerinden reddedebilir; ' +
+    'temel senaryoda itiraz KEP, noter veya GİB e-Fatura İptal/İtiraz Portalı üzerinden yapılır; ya da alıcı iade faturası keser. ' +
+    'Ardından doğru fatura yeniden kesilir. Uygulama için mali müşavirinize danışın.';
+
+export const EDOCUMENT_STATUS_FILTER_OPTIONS = (Object.keys(STATUS) as EDocumentStatus[]).filter((s) => s !== 'Draft').map((value) => ({ value, label: STATUS[value].label }));
 
 export const EDOCUMENT_TYPE_FILTER_OPTIONS = (Object.keys(TYPE_LABELS) as EDocumentType[]).map((value) => ({ value, label: TYPE_LABELS[value] }));
 

@@ -19,6 +19,7 @@ import { EDocumentsService } from '@/app/entities/e-document/services/e-document
 import {
     EDOCUMENT_STATUS_FILTER_OPTIONS,
     EDOCUMENT_TYPE_FILTER_OPTIONS,
+    EINVOICE_CORRECTION_GUIDE,
     eDocumentOriginLabel,
     eDocumentStatusLabel,
     eDocumentStatusSeverity,
@@ -26,7 +27,7 @@ import {
     isEDocumentPending
 } from '@/app/entities/e-document/utils/e-document-labels';
 import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
-import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
@@ -68,6 +69,7 @@ type View = 'documents' | 'undocumented';
         AppErrorStateComponent,
         AppStatusTagComponent,
         MoneyPipe,
+        TrDatePipe,
         TrDateTimePipe
     ],
     template: `
@@ -109,7 +111,18 @@ type View = 'documents' | 'undocumented';
                     <app-empty-state message="Henüz e-belge yok." hint="Ücret listesinden, satıştan veya 'Belgesiz ücretler' görünümünden belge kesebilirsiniz." />
                 } @else {
                     <div class="overflow-x-auto table-stack-phone">
-                        <p-table size="small" [value]="documents()" [lazy]="true" [paginator]="true" [rows]="pageSize" [first]="(page() - 1) * pageSize" [totalRecords]="total()" [loading]="loading()" (onLazyLoad)="onLazyLoad($event)" [tableStyle]="{ 'min-width': '56rem' }">
+                        <p-table
+                            size="small"
+                            [value]="documents()"
+                            [lazy]="true"
+                            [paginator]="true"
+                            [rows]="pageSize"
+                            [first]="(page() - 1) * pageSize"
+                            [totalRecords]="total()"
+                            [loading]="loading()"
+                            (onLazyLoad)="onLazyLoad($event)"
+                            [tableStyle]="{ 'min-width': '56rem' }"
+                        >
                             <ng-template #header>
                                 <tr class="whitespace-nowrap">
                                     <th>Tarih</th>
@@ -124,7 +137,9 @@ type View = 'documents' | 'undocumented';
                             <ng-template #body let-row>
                                 <tr [attr.data-testid]="'edoc-row-' + row.id">
                                     <td class="whitespace-nowrap" data-label="Tarih">{{ row.createdAtUtc | trDateTime }}</td>
-                                    <td data-label="Müşteri"><a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a></td>
+                                    <td data-label="Müşteri">
+                                        <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
+                                    </td>
                                     <td data-label="Tür">
                                         {{ typeLabel(row.documentType) }}
                                         @if (row.isTest) {
@@ -141,6 +156,15 @@ type View = 'documents' | 'undocumented';
                                         @if (row.lastErrorMessage && row.status !== 'Issued') {
                                             <div class="text-xs text-danger mt-1 max-w-[16rem] whitespace-normal">{{ row.lastErrorMessage }}</div>
                                         }
+                                        @if (row.status === 'Issued' && row.buyerAnswerDueUtc) {
+                                            <div class="text-xs text-muted-color mt-1" data-testid="edoc-awaiting-answer">Alıcı yanıtı bekleniyor · {{ row.buyerAnswerDueUtc | trDate }}</div>
+                                        }
+                                        @if (row.status === 'RejectedByBuyer') {
+                                            <div class="text-xs text-danger mt-1 max-w-[16rem] whitespace-normal">{{ row.buyerRejectionReason || 'Alıcı gerekçe yazmadı.' }} Ücretler yeniden belgelenebilir.</div>
+                                        }
+                                        @if (showsCorrectionGuide(row) && guideRowId() === row.id) {
+                                            <p class="text-xs text-muted-color mt-2 mb-0 max-w-[22rem] whitespace-normal" role="note" data-testid="edoc-einvoice-guide">{{ correctionGuide }}</p>
+                                        }
                                     </td>
                                     <td class="whitespace-nowrap">
                                         <div class="flex items-center gap-1 flex-wrap">
@@ -155,8 +179,13 @@ type View = 'documents' | 'undocumented';
                                                     <button pButton type="button" size="small" [text]="true" [disabled]="busyId() === row.id" (click)="act(row, 'retry')"><i class="p-button-icon pi pi-replay"></i>Yeniden dene</button>
                                                     <button pButton type="button" size="small" [text]="true" severity="secondary" (click)="openReason(row, 'discard')">Vazgeç</button>
                                                 }
-                                                @if (canCancel && (row.status === 'Issued' || row.status === 'CancelRejected')) {
+                                                @if (canCancel && row.canCancel) {
                                                     <button pButton type="button" size="small" [text]="true" severity="danger" (click)="openReason(row, 'cancel')">İptal et</button>
+                                                }
+                                                @if (showsCorrectionGuide(row)) {
+                                                    <button pButton type="button" size="small" [text]="true" severity="secondary" [attr.aria-expanded]="guideRowId() === row.id" (click)="toggleGuide(row)" data-testid="edoc-einvoice-guide-toggle">
+                                                        <i class="p-button-icon pi pi-info-circle"></i>İptal edilemez · nasıl düzeltilir?
+                                                    </button>
                                                 }
                                             }
                                         </div>
@@ -171,7 +200,18 @@ type View = 'documents' | 'undocumented';
                     <app-empty-state message="Belgesi kesilmemiş ücret yok." />
                 } @else {
                     <div class="overflow-x-auto table-stack-phone">
-                        <p-table size="small" [value]="charges()" [lazy]="true" [paginator]="true" [rows]="pageSize" [first]="(page() - 1) * pageSize" [totalRecords]="total()" [loading]="loading()" (onLazyLoad)="onLazyLoad($event)" [tableStyle]="{ 'min-width': '48rem' }">
+                        <p-table
+                            size="small"
+                            [value]="charges()"
+                            [lazy]="true"
+                            [paginator]="true"
+                            [rows]="pageSize"
+                            [first]="(page() - 1) * pageSize"
+                            [totalRecords]="total()"
+                            [loading]="loading()"
+                            (onLazyLoad)="onLazyLoad($event)"
+                            [tableStyle]="{ 'min-width': '48rem' }"
+                        >
                             <ng-template #header>
                                 <tr class="whitespace-nowrap">
                                     @if (canIssue) {
@@ -188,10 +228,21 @@ type View = 'documents' | 'undocumented';
                             <ng-template #body let-row>
                                 <tr>
                                     @if (canIssue) {
-                                        <td><p-checkbox [binary]="true" [disabled]="!!row.failedDocumentId" [ngModel]="isSelected(row)" (ngModelChange)="toggle(row, $event)" [inputId]="'edoc-sel-' + row.chargeId" [ariaLabel]="row.description + ' seç'" /></td>
+                                        <td>
+                                            <p-checkbox
+                                                [binary]="true"
+                                                [disabled]="!!row.failedDocumentId"
+                                                [ngModel]="isSelected(row)"
+                                                (ngModelChange)="toggle(row, $event)"
+                                                [inputId]="'edoc-sel-' + row.chargeId"
+                                                [ariaLabel]="row.description + ' seç'"
+                                            />
+                                        </td>
                                     }
                                     <td class="whitespace-nowrap" data-label="Tarih">{{ row.createdAtUtc | trDateTime }}</td>
-                                    <td data-label="Müşteri"><a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a></td>
+                                    <td data-label="Müşteri">
+                                        <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
+                                    </td>
                                     <td data-label="Hasta">{{ row.petName || '—' }}</td>
                                     <td data-label="Açıklama">
                                         {{ row.description }}
@@ -207,7 +258,9 @@ type View = 'documents' | 'undocumented';
                                             <span class="text-sm text-muted-color">Kesilmeye hazır</span>
                                         }
                                         @if (row.failedDocumentId && canIssue && !ro.mutationBlocked()) {
-                                            <button pButton type="button" size="small" [text]="true" [disabled]="busyId() === row.failedDocumentId" (click)="retryFailed(row.failedDocumentId)"><i class="p-button-icon pi pi-replay"></i>Yeniden dene</button>
+                                            <button pButton type="button" size="small" [text]="true" [disabled]="busyId() === row.failedDocumentId" (click)="retryFailed(row.failedDocumentId)">
+                                                <i class="p-button-icon pi pi-replay"></i>Yeniden dene
+                                            </button>
                                         }
                                     </td>
                                 </tr>
@@ -284,8 +337,7 @@ export class EDocumentsPageComponent implements OnInit {
 
         return d ? `${d.clientName} · ${eDocumentTypeLabel(d.documentType)} ${d.documentNumber ?? ''} · ${formatMoney(d.totalAmount, 'TRY')}` : null;
     });
-    readonly reasonAction = (reason: string) =>
-        this.reasonMode() === 'cancel' ? this.service.cancel(this.reasonTarget()!.id, reason) : this.service.discard(this.reasonTarget()!.id, reason);
+    readonly reasonAction = (reason: string) => (this.reasonMode() === 'cancel' ? this.service.cancel(this.reasonTarget()!.id, reason) : this.service.discard(this.reasonTarget()!.id, reason));
 
     ngOnInit(): void {
         const query = this.route.snapshot.queryParamMap;
@@ -381,7 +433,19 @@ export class EDocumentsPageComponent implements OnInit {
     }
 
     hasPdf(row: EDocumentListItemDto): boolean {
-        return !!row.documentNumber && (row.status === 'Issued' || row.status === 'CancelRequested' || row.status === 'CancelRejected' || row.status === 'Cancelled');
+        return !!row.documentNumber && (row.status === 'Issued' || row.status === 'CancelRequested' || row.status === 'CancelRejected' || row.status === 'Cancelled' || row.status === 'RejectedByBuyer');
+    }
+
+    protected readonly correctionGuide = EINVOICE_CORRECTION_GUIDE;
+    readonly guideRowId = signal<string | null>(null);
+
+    /** Kesilmiş e-Fatura uygulamadan iptal edilemiyor: düzeltme yolu açıklaması gösterilir. */
+    showsCorrectionGuide(row: EDocumentListItemDto): boolean {
+        return row.documentType === 'EInvoice' && (row.status === 'Issued' || row.status === 'CancelRejected') && !row.canCancel;
+    }
+
+    toggleGuide(row: EDocumentListItemDto): void {
+        this.guideRowId.update((id) => (id === row.id ? null : row.id));
     }
 
     act(row: EDocumentListItemDto, action: 'refresh' | 'retry'): void {
