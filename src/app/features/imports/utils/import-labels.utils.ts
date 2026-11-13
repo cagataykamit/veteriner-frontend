@@ -186,8 +186,25 @@ export function importIssueLabel(code: string, fallback?: string): string {
     return ISSUE_LABELS[code] ?? fallback ?? code;
 }
 
-/** Sunucu mesajı satıra özgü ayrıntı taşıyan kodlar: çakışan satır, sistemdeki kayıt ya da zincirleme düşen satırın asıl nedeni (sözleşme 6.4). */
-const ISSUE_DETAIL_CODES: ReadonlySet<string> = new Set(['Imports.MicrochipConflict', 'Imports.DuplicateInFile', 'Imports.OwnerRowInvalid', 'Imports.PetRowInvalid', 'Imports.PetNotFound']);
+/** Sunucu mesajı satıra özgü ayrıntı taşıyan kodlar: çakışan satır, sistemdeki kayıt, zincirleme düşen satırın asıl nedeni ya da alınmayan dosya değeri (sözleşme 6.4). */
+const ISSUE_DETAIL_CODES: ReadonlySet<string> = new Set([
+    'Imports.MicrochipConflict',
+    'Imports.DuplicateInFile',
+    'Imports.OwnerRowInvalid',
+    'Imports.PetRowInvalid',
+    'Imports.PetNotFound',
+    // Alınmayan alan değeri: mesaj dosyadaki değeri söyler (değer hastanın / kaydın notuna yazılır).
+    'Pets.BirthDateInFuture',
+    'Imports.BirthDateIgnored',
+    'Imports.GenderUnrecognized',
+    'Imports.NeuteredUnrecognized',
+    'Imports.StatusUnrecognized',
+    'Imports.WeightInvalid',
+    'Imports.TemperatureInvalid',
+    'Imports.DeceasedDateIgnored',
+    'Imports.MicrochipInvalid',
+    'Imports.MicrochipScientificNotation'
+]);
 
 /** Satır listesinde etiketin altında gösterilecek ayrıntı: yalnız ayrıntı taşıyan kodlarda ve etiketten farklıysa. */
 export function importIssueDetail(code: string, message?: string | null): string | null {

@@ -88,6 +88,7 @@ describe('import-labels.utils', () => {
         expect(importIssueDetail('Imports.MicrochipConflict', 'Aynı mikroçip başka bir hastada var')).toBeNull();
         expect(importIssueDetail('Imports.RequiredMissing', 'Zorunlu alan boş.')).toBeNull();
         expect(importIssueDetail('Imports.MicrochipConflict', null)).toBeNull();
+        expect(importIssueDetail('Pets.BirthDateInFuture', 'Doğum tarihi gelecekte; hasta doğum tarihsiz aktarılacak. Dosyadaki değer (01.01.2027) hastanın notuna yazılacak.')).toContain('01.01.2027');
     });
 
     it('satır yeri: E-vet geçmiş görevinden gelen klinik geçmiş satırı Randevu Listesi satırıyla gösterilir', () => {
