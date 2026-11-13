@@ -5,7 +5,7 @@
 
 export type EDocumentType = 'ESmm' | 'EArchive' | 'EInvoice';
 
-export type EDocumentStatus = 'Draft' | 'Sending' | 'Issued' | 'Failed' | 'Discarded' | 'CancelRequested' | 'Cancelled' | 'CancelRejected';
+export type EDocumentStatus = 'Draft' | 'Sending' | 'Issued' | 'Failed' | 'Discarded' | 'CancelRequested' | 'Cancelled' | 'CancelRejected' | 'RejectedByBuyer';
 
 export type EDocumentConnectionStatus = 'NotConnected' | 'Connected' | 'AccountSelectionRequired' | 'ReauthorizationRequired';
 
@@ -71,6 +71,10 @@ export interface EDocumentDto {
     discardReason: string | null;
     lastError: EDocumentErrorDto | null;
     attemptCount: number;
+    /** Ticari e-Faturada alıcının kabul / red yanıtı bu ana kadar beklenir; `null` = beklenen yanıt yok. */
+    buyerAnswerDueUtc?: string | null;
+    buyerRejectedAtUtc?: string | null;
+    buyerRejectionReason?: string | null;
 }
 
 export interface EDocumentListItemDto {
@@ -87,6 +91,10 @@ export interface EDocumentListItemDto {
     isTest: boolean;
     lastErrorMessage: string | null;
     origin: EDocumentOrigin;
+    /** Sunucu kuralı: durum, süre ve entegratörün bu türü API'den iptal edebilmesi (Nilvera'da e-Fatura iptali yok). */
+    canCancel?: boolean;
+    buyerAnswerDueUtc?: string | null;
+    buyerRejectionReason?: string | null;
 }
 
 export interface PagedDto<T> {

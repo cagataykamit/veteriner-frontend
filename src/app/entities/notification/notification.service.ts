@@ -28,7 +28,9 @@ export enum UserNotificationType {
     /** Otomatik e-belge kalıcı bir entegratör sorunuyla durdu; Ayarlar › e-Belge'den sürdürülür. */
     EDocumentsAutoIssuePaused = 9,
     /** Belgesi kesilmiş ücretin ödemesi iptal edildi; belge kendiliğinden iptal edilmez. */
-    EDocumentPaymentVoided = 10
+    EDocumentPaymentVoided = 10,
+    /** Ticari e-Fatura alıcı tarafından reddedildi; ücretler yeniden belgelenebilir. */
+    EDocumentRejectedByBuyer = 11
 }
 
 export const USER_NOTIFICATION_TYPE_LABELS: Record<UserNotificationType, string> = {
@@ -42,7 +44,8 @@ export const USER_NOTIFICATION_TYPE_LABELS: Record<UserNotificationType, string>
     [UserNotificationType.DataExportFailed]: 'Veri paketi hazırlanamadı',
     [UserNotificationType.EDocumentsDailySummary]: 'Gün sonu e-belge özeti',
     [UserNotificationType.EDocumentsAutoIssuePaused]: 'Otomatik e-belge durdu',
-    [UserNotificationType.EDocumentPaymentVoided]: 'Ödemesi iptal edilen e-belge'
+    [UserNotificationType.EDocumentPaymentVoided]: 'Ödemesi iptal edilen e-belge',
+    [UserNotificationType.EDocumentRejectedByBuyer]: 'Alıcı e-Faturayı reddetti'
 };
 
 export interface UserNotificationVm {

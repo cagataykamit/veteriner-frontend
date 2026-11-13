@@ -29,7 +29,8 @@ const TYPE_ICONS: Record<UserNotificationType, { icon: string; tone: string }> =
     [UserNotificationType.DataExportFailed]: { icon: 'pi pi-exclamation-triangle', tone: 'text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-950/40' },
     [UserNotificationType.EDocumentsDailySummary]: { icon: 'pi pi-receipt', tone: 'text-primary bg-primary-50 dark:bg-primary-950/40' },
     [UserNotificationType.EDocumentsAutoIssuePaused]: { icon: 'pi pi-pause-circle', tone: 'text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-950/40' },
-    [UserNotificationType.EDocumentPaymentVoided]: { icon: 'pi pi-exclamation-triangle', tone: 'text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-950/40' }
+    [UserNotificationType.EDocumentPaymentVoided]: { icon: 'pi pi-exclamation-triangle', tone: 'text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-950/40' },
+    [UserNotificationType.EDocumentRejectedByBuyer]: { icon: 'pi pi-times-circle', tone: 'text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-950/40' }
 };
 const FALLBACK_ICON = { icon: 'pi pi-bell', tone: 'text-muted-color bg-surface-100 dark:bg-surface-800' };
 
