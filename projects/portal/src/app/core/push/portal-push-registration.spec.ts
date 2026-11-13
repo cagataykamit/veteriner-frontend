@@ -33,6 +33,7 @@ describe('PortalPushRegistration', () => {
         const done = firstValueFrom(registration.registerWithPermission());
 
         const req = await expectOneSoon(http, `${BASE}/me/push-devices`);
+
         expect(req.request.method).toBe('PUT');
         expect(req.request.body).toEqual({ platform: 'Android', token: 'fcm-1' });
         req.flush(null, { status: 204, statusText: 'No Content' });
@@ -66,11 +67,13 @@ describe('PortalPushRegistration', () => {
     it('çıkışta kayıtlı jetonu kaldırır; hata çıkışı engellemez', async () => {
         const registration = setup();
         const registered = firstValueFrom(registration.syncThisDevice());
+
         (await expectOneSoon(http, `${BASE}/me/push-devices`)).flush(null, { status: 204, statusText: 'No Content' });
         await registered;
 
         const revoked = firstValueFrom(registration.revokeThisDevice());
         const req = await expectOneSoon(http, `${BASE}/me/push-devices/revoke`);
+
         expect(req.request.body).toEqual({ token: 'fcm-1' });
         req.flush('hata', { status: 500, statusText: 'Server Error' });
 

@@ -65,6 +65,7 @@ export class CapacitorPortalPushDevice extends PortalPushDevice {
             return await token;
         } finally {
             clearTimeout(timer);
+
             for (const handle of handles) {
                 void handle.then((h) => h.remove()).catch(() => undefined);
             }

@@ -55,6 +55,7 @@ describe('PortalNativePush', () => {
 
     it('bildirime dokununca türün ekranını açar; dinleyici bir kez eklenir', async () => {
         const push = TestBed.inject(PortalNativePush);
+
         push.start();
         push.start();
 
@@ -62,6 +63,7 @@ describe('PortalNativePush', () => {
         listeners.get('pushNotificationActionPerformed')!({ actionId: 'tap', notification: { data: { type: 'DebtReminder' } } });
 
         const router = TestBed.inject(Router);
+
         await waitFor(() => router.url === '/balance');
     });
 
