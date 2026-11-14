@@ -107,6 +107,7 @@ import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTime
                         <div class="col-span-12 md:col-span-6">
                             <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                             <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
+                            <small class="text-muted-color block mt-1" data-testid="subject-locked">Hasta değiştirilemez; yanlış hastaya girildiyse kaydı gerekçeyle iptal edip doğru hastaya yeni kayıt açın.</small>
                             @if (apiFieldErrors().petId) {
                                 <small class="text-danger">{{ apiFieldErrors().petId }}</small>
                             } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
@@ -405,6 +406,10 @@ export class VaccinationEditPageComponent implements OnInit {
                 } else {
                     this.form.controls.petId.disable({ emitEvent: false });
                 }
+
+                // Kaydın hastası ve kliniği değişmez (ADR-043 AK-10); muayene bağı aynı hasta içinde değişebilir.
+                this.form.controls.clientId.disable({ emitEvent: false });
+                this.form.controls.petId.disable({ emitEvent: false });
 
                 this.linkedAdministrationId.set(x.administrationId);
 
