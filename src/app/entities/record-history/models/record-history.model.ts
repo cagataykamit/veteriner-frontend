@@ -6,7 +6,8 @@ export type RecordHistoryResource =
     | 'vaccinations'
     | 'lab-results'
     | 'administrations'
-    | 'hospitalizations';
+    | 'hospitalizations'
+    | 'imaging-records';
 
 export type RecordChangeKind = 'Created' | 'Updated' | 'Deleted';
 

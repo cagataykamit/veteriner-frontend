@@ -1,5 +1,6 @@
 import type { RecordChangeDto, RecordChangeKind, RecordChangeVm, RecordFieldChangeDto, RecordFieldChangeVm } from '@/app/entities/record-history/models/record-history.model';
 import { administrationRouteFromApi, administrationRouteLabel } from '@/app/entities/administration/utils/administration-route.utils';
+import { imagingModalityLabel } from '@/app/entities/imaging/utils/imaging.utils';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
 const KIND_LABELS: Record<RecordChangeKind, string> = {
@@ -75,6 +76,11 @@ const FIELD_LABELS: Record<string, string> = {
     VoidStockOutcome: 'İptal stok sonucu',
     AddedAfterFinalization: 'Kesinleştirmeden sonra eklendi',
     LateEntryReason: 'Sonradan ekleme gerekçesi',
+    // Görüntüleme (ADR-043 K5); tür değerinin etiketi `imagingModalityLabel`da (bkz. fieldValueText).
+    PerformedAtUtc: 'Görüntüleme tarihi',
+    Modality: 'Görüntüleme türü',
+    ClinicalNote: 'Klinik not',
+    AddedAfterExaminationFinalization: 'Kesinleştirmeden sonra eklendi',
     // RECORD-005; yol değerinin etiketi `administrationRouteLabel`da (bkz. fieldValueText).
     Route: 'Uygulama yolu',
     Site: 'Uygulama bölgesi'
@@ -135,8 +141,12 @@ export function recordValueText(value: string | null): string {
     return VALUE_LABELS[value] ?? value;
 }
 
-/** Alanına göre değer metni: uygulama yolu kendi etiketinden, diğerleri genel kuraldan. */
+/** Alanına göre değer metni: uygulama yolu ve görüntüleme türü kendi etiketinden, diğerleri genel kuraldan. */
 function fieldValueText(field: string, value: string | null): string {
+    if (field === 'Modality' && value) {
+        return imagingModalityLabel(value);
+    }
+
     return (field === 'Route' && administrationRouteLabel(administrationRouteFromApi(value))) || recordValueText(value);
 }
 

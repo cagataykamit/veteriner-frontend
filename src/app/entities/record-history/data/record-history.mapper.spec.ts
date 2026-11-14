@@ -55,4 +55,18 @@ describe('record-history.mapper', () => {
         expect(vm.changes[0]).toEqual({ label: 'Uygulama yolu', oldText: '—', newText: expect.stringContaining('(IM)') });
         expect(vm.changes[1]).toEqual({ label: 'Uygulama yolu', oldText: 'Bilinmeyen', newText: '—' });
     });
+
+    it('görüntüleme türünü ve alanlarını Türkçe gösterir (ADR-043 K5)', () => {
+        const vm = mapRecordChangeDtoToVm({
+            id: 'c3',
+            kind: 'Updated',
+            occurredAtUtc: '2026-11-14T09:15:00Z',
+            actorUserId: 'u1',
+            actorName: 'Dr. Test',
+            changes: [{ field: 'Modality', oldValue: 'XRay', newValue: 'Ultrasound' }, { field: 'ClinicalNote', oldValue: null, newValue: 'Not' }]
+        });
+
+        expect(vm.changes[0]).toEqual({ label: 'Görüntüleme türü', oldText: 'Röntgen', newText: 'Ultrason' });
+        expect(vm.changes[1].label).toBe('Klinik not');
+    });
 });
