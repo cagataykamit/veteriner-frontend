@@ -6,12 +6,13 @@ import { isClinicPortalClosed, type PortalLink } from '@portal/app/core/auth/por
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { portalErrorMessage } from '@portal/app/core/errors/portal-errors';
 import { PortalNotificationPreferencesComponent } from '@portal/app/features/notifications/portal-notification-preferences.component';
+import { PortalAppLockSetting } from './portal-app-lock-setting.component';
 
-/** Hesabım: oturum bilgisi, klinik değiştirme, bildirim tercihleri (§10), veri talebine geçiş (§11), çıkış, tüm cihazlardan çıkış (sözleşme §5.7) ve hesap silmeye geçiş (§5.10). */
+/** Hesabım: oturum bilgisi, klinik değiştirme, bildirim tercihleri (§10), uygulama kilidi (yalnız mobil uygulama), veri talebine geçiş (§11), çıkış, tüm cihazlardan çıkış (sözleşme §5.7) ve hesap silmeye geçiş (§5.10). */
 @Component({
     selector: 'portal-account',
     standalone: true,
-    imports: [RouterLink, ButtonModule, MessageModule, PortalNotificationPreferencesComponent],
+    imports: [RouterLink, ButtonModule, MessageModule, PortalNotificationPreferencesComponent, PortalAppLockSetting],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="portal-stack">
@@ -29,6 +30,8 @@ import { PortalNotificationPreferencesComponent } from '@portal/app/features/not
             }
 
             <portal-notification-preferences />
+
+            <portal-app-lock-setting />
 
             @if (session.activeLink(); as link) {
                 @if (!isClosed(link)) {

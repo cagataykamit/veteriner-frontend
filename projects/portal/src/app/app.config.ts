@@ -10,6 +10,8 @@ import { PORTAL_API_BASE_URL } from './core/api/portal-api.client';
 import { portalAuthInterceptor } from './core/api/portal-auth.interceptor';
 import { isPortalNativePlatform, portalServiceWorkerEnabled } from './core/native/portal-native';
 import { providePortalNativeShell } from './core/native/portal-native-shell';
+import { CapacitorPortalPushDevice } from './core/push/capacitor-portal-push-device';
+import { PortalPushDevice } from './core/push/portal-push-device';
 import { portalRoutes } from './app.routes';
 
 export const portalAppConfig: ApplicationConfig = {
@@ -25,6 +27,8 @@ export const portalAppConfig: ApplicationConfig = {
             enabled: portalServiceWorkerEnabled(isDevMode(), isPortalNativePlatform()),
             registrationStrategy: 'registerWhenStable:30000'
         }),
-        providePortalNativeShell()
+        providePortalNativeShell(),
+        // Mağaza paketinde push jetonu Capacitor eklentisinden gelir; tarayıcıda varsayılan (jeton üretmez) kalır.
+        ...(isPortalNativePlatform() ? [{ provide: PortalPushDevice, useFactory: () => new CapacitorPortalPushDevice() }] : [])
     ]
 };

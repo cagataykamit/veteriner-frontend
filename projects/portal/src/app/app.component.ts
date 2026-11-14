@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { isEmbeddableRoute, PORTAL_FRAMED } from './core/embed/portal-embed';
+import { isPortalNativePlatform } from './core/native/portal-native';
+import { PortalAppLockScreen } from './core/native/portal-app-lock-screen.component';
 import { PortalNetworkStatus } from './core/network/portal-network-status.service';
 
 /**
@@ -11,7 +13,7 @@ import { PortalNetworkStatus } from './core/network/portal-network-status.servic
 @Component({
     selector: 'portal-root',
     standalone: true,
-    imports: [RouterOutlet],
+    imports: [RouterOutlet, PortalAppLockScreen],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (frameBlocked()) {
@@ -32,11 +34,16 @@ import { PortalNetworkStatus } from './core/network/portal-network-status.servic
                 </div>
             }
             <router-outlet />
+            @if (native) {
+                <portal-app-lock-screen />
+            }
         }
     `
 })
 export class PortalAppComponent {
     protected readonly network = inject(PortalNetworkStatus);
+    /** Uygulama kilidi yalnız mağaza paketinde (MOBILE-002). */
+    protected readonly native = isPortalNativePlatform();
     private readonly router = inject(Router);
     private readonly framed = inject(PORTAL_FRAMED);
 
