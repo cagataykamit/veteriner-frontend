@@ -25,6 +25,7 @@ import { HbsSectionComponent } from '@/app/entities/hbs/components/hbs-section.c
 import type { HbsEntryVm } from '@/app/entities/hbs/models/hbs.model';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
+import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 
 @Component({
     selector: 'app-vaccination-detail-page',
@@ -42,6 +43,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
         AppErrorStateComponent,
         AppStatusTagComponent,
         HbsSectionComponent,
+        ReasonConfirmDialogComponent,
         TrDateTimePipe
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -66,13 +68,29 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
             <app-detail-identity-card icon="pi pi-shield" [title]="v.vaccineName" [subtitle]="headerDate(v)" [meta]="'Oluşturulma: ' + (v.createdAtUtc | trDateTime) + ' · Güncellenme: ' + (v.updatedAtUtc | trDateTime)" ariaLabel="Aşı kimliği" testId="vaccination-identity-card">
                 <app-status-tag badges [label]="statusLabel(v.status)" [severity]="statusSeverity(v.status)" />
                 <app-detail-subject-line [petId]="v.petId" [petName]="v.petName" [clientId]="v.clientId" [clientName]="v.clientName" />
+                @if (v.status === 2) {
+                    <p class="m-0 mt-3 inline-flex items-start gap-2 rounded-border border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="status" data-testid="vaccination-cancelled">
+                        <i class="pi pi-ban text-xs mt-1" aria-hidden="true"></i>
+                        @if (v.cancelledAtUtc) {
+                            <span><span class="font-medium">İptal edildi</span> · {{ v.cancelledAtUtc | trDateTime }}<span class="block whitespace-pre-wrap">Gerekçe: {{ v.cancelReason ?? '—' }}</span></span>
+                        } @else {
+                            <span><span class="font-medium">İptal edildi</span><span class="block">Bağlı uygulama iptal edildi; gerekçe uygulama kaydındadır.</span></span>
+                        }
+                    </p>
+                }
                 <ng-container actions>
-                    @if (canUpdateVaccination && !ro.mutationBlocked()) {
-                        <a [routerLink]="['/panel/vaccinations', v.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
-                    } @else if (canUpdateVaccination && ro.mutationBlocked()) {
-                        <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                    @if (v.status !== 2) {
+                        @if (canUpdateVaccination && !ro.mutationBlocked()) {
+                            <a [routerLink]="['/panel/vaccinations', v.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
+                        } @else if (canUpdateVaccination && ro.mutationBlocked()) {
+                            <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                        }
                     }
                     <app-record-history-button resource="vaccinations" [recordId]="v.id" />
+                    <!-- Uygulamaya bağlı aşı, stok sonucu seçilerek uygulama iptaliyle iptal edilir (ADR-013); burada eylem yok. -->
+                    @if (v.status !== 2 && !v.linkedAdministration && canCancelVaccination && !ro.mutationBlocked()) {
+                        <button pButton type="button" class="p-button-danger p-button-outlined" (click)="cancelVisible.set(true)" data-testid="vaccination-cancel"><i class="pi pi-ban"></i>İptal et</button>
+                    }
                 </ng-container>
                 <!-- Her if bloğunda tek kök öğe: çok köklü blok [stat] yuvasına değil varsayılan yuvaya yansır. -->
                 <div stat>
@@ -168,6 +186,17 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                 <app-hbs-section kind="vaccination" [recordId]="v.id" [entry]="v.hbs" [canEdit]="canUpdateHbs && !ro.mutationBlocked()" (entryChange)="onHbsChange($event)" />
             </div>
         }
+
+        <app-reason-confirm-dialog
+            [(visible)]="cancelVisible"
+            header="Aşı kaydını iptal et"
+            [summary]="cancelSummary()"
+            description="İptal edilen kayıt silinmez; zaman çizelgesinde ve hatırlatmalarda varsayılan olarak gizlenir. Geri alınamaz."
+            confirmLabel="Kaydı iptal et"
+            failureFallback="Aşı kaydı iptal edilemedi."
+            [execute]="cancelVaccination"
+            (confirmed)="reload()"
+        />
     `
 })
 export class VaccinationDetailPageComponent implements OnInit {
@@ -207,6 +236,18 @@ export class VaccinationDetailPageComponent implements OnInit {
     readonly statusSeverity = vaccinationStatusSeverity;
     /** HBS (ATS) geri kaydı yalnız `Vaccinations.Update` ister; kesinleşmiş muayeneye bağlı aşıda da açıktır. */
     readonly canUpdateHbs = this.auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM);
+    /** Gerekçeli iptal yalnız `Vaccinations.Update` ister (ADR-043 AK-3). */
+    readonly canCancelVaccination = this.auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM);
+
+    readonly cancelVisible = signal(false);
+    protected readonly cancelSummary = computed(() => {
+        const v = this.vac();
+
+        return v ? `${v.vaccineName} · ${v.petName}` : null;
+    });
+
+    /** Ekranın açıldığı sürümle; çakışmada sunucunun mesajı diyalogda kalır. */
+    protected readonly cancelVaccination = (reason: string) => this.vaccinationsService.cancelVaccination(this.vac()!.id, reason, this.vac()!.rowVersion);
 
     /** HBS geri kaydı klinik içeriği değiştirmez; yalnız HBS alanı güncellenir. */
     onHbsChange(hbs: HbsEntryVm): void {

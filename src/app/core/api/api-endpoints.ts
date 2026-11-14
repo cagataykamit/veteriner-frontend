@@ -270,7 +270,9 @@ export const ApiEndpoints = {
         /** GET HBS ATS hazır verisi (`Vaccinations.Read`; `HBS_ASSISTANT_API_CONTRACT.md` §4). */
         hbsData: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}/hbs-data`,
         /** PATCH ATS geri kaydı `{ status, referenceNumber, notRequiredReason }` (`Vaccinations.Update`; §5). */
-        hbs: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}/hbs`
+        hbs: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}/hbs`,
+        /** Gerekçeli iptal (ADR-043 AK-3; `VACCINATIONS_API_CONTRACT.md` §3). */
+        cancel: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}/cancel`
     },
     /** FAZ 14C — aşı kataloğu; query: `Page`, `PageSize`, `search`, `speciesId`, `includeInactive`. */
     /** Veri içe aktarma (ADR-019); sözleşme: Veteriner `docs/IMPORT_API_CONTRACT.md`. */

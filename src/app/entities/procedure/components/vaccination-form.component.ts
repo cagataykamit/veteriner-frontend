@@ -193,17 +193,7 @@ export interface VaccinationSavedEvent {
                             }
                         </div>
                     }
-                    @if (statusNum() === 2) {
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="nextDueDateCancelled" class="block text-sm font-medium text-muted-color mb-2">Planlı / sonraki tarih (opsiyonel)</label>
-                            <app-date-input inputId="nextDueDateCancelled" type="datetime-local" formControlName="nextDueDate" [min]="datetimeLocalInputMin" limit="planned" />
-                            @if (form.controls.nextDueDate.hasError('dateYearInvalid') && form.controls.nextDueDate.touched) {
-                                <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
-                            } @else if (apiFieldErrors().nextDueDate) {
-                                <small class="text-danger">{{ apiFieldErrors().nextDueDate }}</small>
-                            }
-                        </div>
-                    }
+
                     @if (canStock && statusNum() === 1) {
                         <div class="col-span-12 md:col-span-6" data-testid="vaccine-product">
                             <label for="productId" class="block text-sm font-medium text-muted-color mb-2">Aşı ürünü (stoktan düşer)</label>
@@ -544,7 +534,7 @@ export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
         const v = this.form.getRawValue();
         const status = Number(v.status);
 
-        if (!Number.isFinite(status) || ![0, 1, 2].includes(status)) {
+        if (!Number.isFinite(status) || ![0, 1].includes(status)) {
             this.submitError.set('Geçerli bir durum seçin.');
 
             return;

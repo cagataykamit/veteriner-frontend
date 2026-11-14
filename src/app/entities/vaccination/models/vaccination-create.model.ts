@@ -41,4 +41,6 @@ export interface UpdateVaccinationRequest {
     /** Tam değiştirme (PUT): formdaki mevcut değer geri gönderilir. */
     route?: AdministrationRouteApi | null;
     site?: string | null;
+    /** Ekranın açıldığı sürüm (zorunlu). */
+    rowVersion: string;
 }

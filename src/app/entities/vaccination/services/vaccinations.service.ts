@@ -13,7 +13,7 @@ import {
     mapVaccinationDetailDtoToVm,
     vaccinationsQueryToHttpParams
 } from '@/app/entities/vaccination/data/vaccination.mapper';
-import type { VaccinationDetailDto, VaccinationListItemDtoPagedResult } from '@/app/entities/vaccination/models/vaccination-api.model';
+import type { VaccinationCancelRequestDto, VaccinationDetailDto, VaccinationListItemDtoPagedResult } from '@/app/entities/vaccination/models/vaccination-api.model';
 import type { CreateVaccinationRequest, UpdateVaccinationRequest } from '@/app/entities/vaccination/models/vaccination-create.model';
 import type { VaccinationsListQuery } from '@/app/entities/vaccination/models/vaccination-query.model';
 import type {
@@ -154,6 +154,18 @@ export class VaccinationsService {
                     err instanceof Error ? err : new Error('Aşı kaydı güncellenemedi.')
                 );
             })
+        );
+    }
+
+    /** Gerekçeli iptal (`Vaccinations.Update`, ADR-043 AK-3); `rowVersion`: ekranın açıldığı sürüm. Hatalar Türkçe `Error` olarak iletilir. */
+    cancelVaccination(id: string, reason: string, rowVersion: string): Observable<void> {
+        const body: VaccinationCancelRequestDto = { reason: reason.trim(), rowVersion };
+
+        return this.api.post<unknown>(ApiEndpoints.vaccinations.cancel(id), body).pipe(
+            map(() => void 0),
+            catchError((err: unknown) =>
+                throwError(() => (err instanceof HttpErrorResponse ? new Error(messageFromHttpError(err, 'Aşı kaydı iptal edilemedi.')) : err instanceof Error ? err : new Error('Aşı kaydı iptal edilemedi.')))
+            )
         );
     }
 }
