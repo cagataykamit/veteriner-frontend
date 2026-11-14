@@ -11,4 +11,6 @@ export interface CreateTreatmentRequest {
     description: string;
     notes?: string | null;
     followUpDateUtc?: string | null;
+    /** Yalnız PUT: ekranın açıldığı sürüm (zorunlu, ADR-043 K5). */
+    rowVersion?: string;
 }

@@ -69,6 +69,8 @@ export interface ExaminationRelatedSummaryDto {
 }
 
 export interface ExaminationRelatedTreatmentItemDto {
+    /** ADR-043 AK-2: iptal edilen tedavi özette kalır, işaretlenir. */
+    isCancelled?: boolean | null;
     id: string;
     treatmentDateUtc?: string | null;
     clinicId?: string | null;
@@ -83,6 +85,8 @@ export interface ExaminationRelatedPrescriptionItemDto {
     clinicName?: string | null;
     title?: string | null;
     treatmentId?: string | null;
+    isCancelled?: boolean | null;
+    addedAfterFinalization?: boolean | null;
 }
 
 export interface ExaminationRelatedLabResultItemDto {

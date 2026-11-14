@@ -88,11 +88,28 @@ export interface ProcedureRowVm {
     cancelled?: boolean;
 }
 
-/** İlgili özetten tek işlem listesi; eski kayıt önce, tarihsiz sonda. İptal edilen aşı, görüntüleme ve yatış gizlenmez, silik gösterilir. */
+/** İlgili özetten tek işlem listesi; eski kayıt önce, tarihsiz sonda. İptal edilen kayıt gizlenmez, silik ve "İptal" etiketiyle gösterilir. */
 export function buildProcedureRows(summary: ExaminationRelatedSummaryVm | null): ProcedureRowVm[] {
     const rows: ProcedureRowVm[] = [
-        ...(summary?.treatments ?? []).map((r) => ({ kind: 'treatment' as const, id: r.id, atUtc: r.treatmentDateUtc, title: r.title, detail: null })),
-        ...(summary?.prescriptions ?? []).map((r) => ({ kind: 'prescription' as const, id: r.id, atUtc: r.prescribedAtUtc, title: r.title, detail: null })),
+        ...(summary?.treatments ?? []).map((r) => ({
+            kind: 'treatment' as const,
+            id: r.id,
+            atUtc: r.treatmentDateUtc,
+            title: r.title,
+            detail: null,
+            stateLabel: r.isCancelled ? 'İptal' : null,
+            cancelled: r.isCancelled === true
+        })),
+        ...(summary?.prescriptions ?? []).map((r) => ({
+            kind: 'prescription' as const,
+            id: r.id,
+            atUtc: r.prescribedAtUtc,
+            title: r.title,
+            detail: null,
+            stateLabel: r.isCancelled ? 'İptal' : null,
+            cancelled: r.isCancelled === true,
+            addedAfterFinalization: r.addedAfterFinalization === true
+        })),
         ...(summary?.labResults ?? []).map((r) => ({
             kind: 'lab' as const,
             id: r.id,

@@ -30,6 +30,11 @@ export interface TreatmentDetailVm {
     followUpDateUtc: string | null;
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
+    /** Yazma çağrılarına aynen geri gönderilir. */
+    rowVersion: string;
+    /** Gerekçeli iptal (ADR-043 AK-2): iptal edilen tedavi değiştirilemez. */
+    cancelledAtUtc: string | null;
+    cancelReason: string | null;
 }
 
 export interface TreatmentEditVm {
@@ -45,4 +50,6 @@ export interface TreatmentEditVm {
     description: string;
     notes: string;
     followUpDateInput: string;
+    rowVersion: string;
+    isCancelled: boolean;
 }

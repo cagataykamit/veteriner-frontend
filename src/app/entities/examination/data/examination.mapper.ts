@@ -367,7 +367,8 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
                     treatmentDateUtc: relatedSafeTrim(x.treatmentDateUtc),
                     clinicId: x.clinicId?.trim() ? x.clinicId.trim() : null,
                     clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null,
-                    title: str(x.title)
+                    title: str(x.title),
+                    isCancelled: x.isCancelled === true
                 };
             })
             .filter((x): x is NonNullable<typeof x> => x != null),
@@ -385,7 +386,9 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
                     clinicId: x.clinicId?.trim() ? x.clinicId.trim() : null,
                     clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null,
                     title: str(x.title),
-                    treatmentId: x.treatmentId?.trim() ? x.treatmentId.trim() : null
+                    treatmentId: x.treatmentId?.trim() ? x.treatmentId.trim() : null,
+                    isCancelled: x.isCancelled === true,
+                    addedAfterFinalization: x.addedAfterFinalization === true
                 };
             })
             .filter((x): x is NonNullable<typeof x> => x != null),

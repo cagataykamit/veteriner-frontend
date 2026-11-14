@@ -42,6 +42,11 @@ export interface TreatmentDetailDto {
     followUpDateUtc?: string | null;
     createdAtUtc?: string | null;
     updatedAtUtc?: string | null;
+    /** Eşzamanlılık sürümü (ADR-043 K5); PUT ve iptale aynen geri gönderilir. */
+    rowVersion?: string | null;
+    /** Gerekçeli iptal (ADR-043 AK-2). */
+    cancelledAtUtc?: string | null;
+    cancelReason?: string | null;
 }
 
 /** POST / PUT body — alan adları API ile uyumlu. */
@@ -54,4 +59,6 @@ export interface TreatmentWriteRequestDto {
     description: string;
     notes?: string | null;
     followUpDateUtc?: string | null;
+    /** Yalnız PUT; GET'ten alınan sürüm (zorunlu, `TREATMENTS_API_CONTRACT.md` §1). */
+    rowVersion?: string;
 }

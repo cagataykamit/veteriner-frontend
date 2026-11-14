@@ -401,7 +401,9 @@ export const ApiEndpoints = {
     treatments: {
         /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/treatments`,
-        byId: (id: string) => `/api/v1/treatments/${encodeURIComponent(id)}`
+        byId: (id: string) => `/api/v1/treatments/${encodeURIComponent(id)}`,
+        /** Gerekçeli iptal (ADR-043 AK-2; `TREATMENTS_API_CONTRACT.md` §2). */
+        cancel: (id: string) => `/api/v1/treatments/${encodeURIComponent(id)}/cancel`
     },
     prescriptions: {
         /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `Sort`, `Order` (+ `clinicId`, `PetId`). */

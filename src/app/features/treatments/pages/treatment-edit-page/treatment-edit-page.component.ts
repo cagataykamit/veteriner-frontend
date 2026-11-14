@@ -304,6 +304,14 @@ export class TreatmentEditPageComponent implements OnInit {
         this.treatmentsService.getTreatmentForEditById(this.treatmentId).subscribe({
             next: (x) => {
                 this.editVmCache = x;
+
+                if (x.isCancelled) {
+                    this.loadError.set('İptal edilmiş tedavi kaydı değiştirilemez.');
+                    this.loading.set(false);
+
+                    return;
+                }
+
                 this.form.patchValue(
                     {
                         clientId: x.clientId,
@@ -382,16 +390,19 @@ export class TreatmentEditPageComponent implements OnInit {
             return;
         }
 
-        const payload = mapTreatmentUpsertFormToCreateRequest({
-            clinicId,
-            petId: v.petId,
-            treatmentDateUtc,
-            title: v.title,
-            description: v.description,
-            notes: v.notes,
-            followUpDateUtc,
-            examinationId: v.examinationId
-        });
+        const payload = {
+            ...mapTreatmentUpsertFormToCreateRequest({
+                clinicId,
+                petId: v.petId,
+                treatmentDateUtc,
+                title: v.title,
+                description: v.description,
+                notes: v.notes,
+                followUpDateUtc,
+                examinationId: v.examinationId
+            }),
+            rowVersion: this.editVmCache?.rowVersion ?? ''
+        };
 
         this.submitting.set(true);
         this.treatmentsService.updateTreatment(this.treatmentId, payload).subscribe({

@@ -61,6 +61,8 @@ export interface ExaminationRelatedTreatmentItemVm {
     clinicId: string | null;
     clinicName: string | null;
     title: string;
+    /** İptal edilen tedavi (ADR-043 AK-2) özette kalır, silik gösterilir. */
+    isCancelled?: boolean;
 }
 
 export interface ExaminationRelatedPrescriptionItemVm {
@@ -70,6 +72,10 @@ export interface ExaminationRelatedPrescriptionItemVm {
     clinicName: string | null;
     title: string;
     treatmentId: string | null;
+    /** İptal edilen reçete (RECORD-008) özette kalır, silik gösterilir. */
+    isCancelled?: boolean;
+    /** Kesinleşmiş muayeneye sonradan eklendi (ADR-013 eki). */
+    addedAfterFinalization?: boolean;
 }
 
 export interface ExaminationRelatedLabResultItemVm {

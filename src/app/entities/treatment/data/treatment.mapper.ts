@@ -128,7 +128,10 @@ export function mapTreatmentDetailDtoToVm(dto: TreatmentDetailDto): TreatmentDet
         notes: canonicalNotes(dto),
         followUpDateUtc: canonicalFollowUp(dto),
         createdAtUtc: canonicalCreatedAt(dto),
-        updatedAtUtc: canonicalUpdatedAt(dto)
+        updatedAtUtc: canonicalUpdatedAt(dto),
+        rowVersion: firstTrimmed(dto.rowVersion) ?? '',
+        cancelledAtUtc: firstTrimmed(dto.cancelledAtUtc),
+        cancelReason: firstTrimmed(dto.cancelReason)
     };
 }
 
@@ -150,7 +153,9 @@ export function mapTreatmentDetailDtoToEditVm(dto: TreatmentDetailDto): Treatmen
         title: firstTrimmed(dto.title, readDtoString(dto, ['Title'])) ?? '',
         description: firstTrimmed(dto.description, readDtoString(dto, ['Description'])) ?? '',
         notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes', 'Note'])) ?? '',
-        followUpDateInput: followUpDateToInput(canonicalFollowUp(dto))
+        followUpDateInput: followUpDateToInput(canonicalFollowUp(dto)),
+        rowVersion: firstTrimmed(dto.rowVersion) ?? '',
+        isCancelled: !!firstTrimmed(dto.cancelledAtUtc)
     };
 }
 
@@ -265,6 +270,10 @@ export function mapCreateTreatmentToApiBody(req: CreateTreatmentRequest): Treatm
 
     if (ex) {
         dto.examinationId = ex;
+    }
+
+    if (req.rowVersion) {
+        dto.rowVersion = req.rowVersion;
     }
 
     return dto;

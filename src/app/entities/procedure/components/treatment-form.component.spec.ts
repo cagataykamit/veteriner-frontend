@@ -110,7 +110,9 @@ describe('TreatmentFormComponent — kopya', () => {
         title: 'Pansuman',
         description: 'Yara temizliği ve bandaj',
         notes: 'Eski not',
-        followUpDateInput: '2026-09-08'
+        followUpDateInput: '2026-09-08',
+        rowVersion: '',
+        isCancelled: false
     };
 
     const setup = (examinations: { id: string; status: string }[]) => {

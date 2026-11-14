@@ -79,6 +79,20 @@ describe('buildProcedureRows', () => {
         expect(rows[2].detail).toBe('Yorum bekliyor');
     });
 
+    it('iptal edilen tedavi ve reçete gizlenmez; silik ve İptal etiketli, sonradan eklenen reçete rozetli', () => {
+        const rows = buildProcedureRows(
+            summary({
+                treatments: [{ id: 't1', treatmentDateUtc: '2026-10-08T08:00:00Z', clinicId: null, clinicName: null, title: 'Serum', isCancelled: true }],
+                prescriptions: [{ id: 'r1', prescribedAtUtc: '2026-10-08T09:00:00Z', clinicId: null, clinicName: null, title: 'Reçete', treatmentId: null, isCancelled: false, addedAfterFinalization: true }]
+            })
+        );
+
+        expect(rows.map((r) => [r.id, r.stateLabel ?? null, !!r.cancelled, !!r.addedAfterFinalization])).toEqual([
+            ['t1', 'İptal', true, false],
+            ['r1', null, false, true]
+        ]);
+    });
+
     it('iptal edilen yatış gizlenmez; İptal etiketiyle silik gösterilir (ADR-043 AK-5)', () => {
         const rows = buildProcedureRows(
             summary({
