@@ -79,6 +79,22 @@ describe('buildProcedureRows', () => {
         expect(rows[2].detail).toBe('Yorum bekliyor');
     });
 
+    it('iptal edilen yatış gizlenmez; İptal etiketiyle silik gösterilir (ADR-043 AK-5)', () => {
+        const rows = buildProcedureRows(
+            summary({
+                hospitalizations: [
+                    { id: 'h1', admittedAtUtc: '2026-10-08T09:00:00Z', clinicId: null, clinicName: null, reason: 'Gözlem', dischargedAtUtc: null, isActive: true, isCancelled: false },
+                    { id: 'h2', admittedAtUtc: '2026-10-08T10:00:00Z', clinicId: null, clinicName: null, reason: 'Yanlış', dischargedAtUtc: null, isActive: false, isCancelled: true }
+                ]
+            })
+        );
+
+        expect(rows.map((r) => [r.id, r.detail, r.stateLabel ?? null, !!r.cancelled])).toEqual([
+            ['h1', 'Aktif yatış', null, false],
+            ['h2', null, 'İptal', true]
+        ]);
+    });
+
     it('aşıları özetten okur: uygulanan etiketsiz, planlı Planlı, iptal İptal (gizlenmez)', () => {
         const rows = buildProcedureRows(
             summary({

@@ -91,6 +91,7 @@ export interface ExaminationRelatedHospitalizationItemVm {
     reason: string;
     dischargedAtUtc: string | null;
     isActive: boolean;
+    isCancelled: boolean;
 }
 
 export type ExaminationRelatedVaccinationStatus = 'Scheduled' | 'Applied' | 'Cancelled';

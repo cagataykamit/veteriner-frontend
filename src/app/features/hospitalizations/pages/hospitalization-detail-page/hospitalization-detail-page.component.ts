@@ -18,6 +18,7 @@ import { AppDetailActionBarComponent } from '@/app/shared/ui/detail-action-bar/a
 import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
 import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-line/app-detail-subject-line.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
@@ -50,6 +51,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         AppErrorStateComponent,
         DateInputComponent,
         CareInstructionsSectionComponent,
+        ReasonConfirmDialogComponent,
         TrDateTimePipe
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -72,12 +74,18 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
 
             <!-- Kimlik kartı: yatış nedeni + durum rozeti, yatış tarihi, kayıt satırı, hasta/sahip ve konum; sağda Düzenle ve geçmiş; gösterge şeridi. -->
             <app-detail-identity-card icon="pi pi-building" [title]="r.reason" [subtitle]="r.admittedAtUtc | trDateTime" [meta]="'Oluşturulma: ' + (r.createdAtUtc | trDateTime) + ' · Güncellenme: ' + (r.updatedAtUtc | trDateTime)" ariaLabel="Yatış kimliği" testId="hospitalization-identity-card">
-                <app-status-tag badges [label]="r.isActive ? 'Aktif yatış' : 'Taburcu'" [severity]="r.isActive ? 'warn' : 'secondary'" />
+                <app-status-tag badges [label]="r.isCancelled ? 'İptal' : r.isActive ? 'Aktif yatış' : 'Taburcu'" [severity]="r.isCancelled ? 'danger' : r.isActive ? 'warn' : 'secondary'" />
                 <app-detail-subject-line [petId]="r.petId" [petName]="r.petName" [clientId]="r.clientId" [clientName]="r.clientName">
                     @if (r.locationLabel) {
                         <span class="min-w-0"><span class="text-muted-color">Konum:</span> <span class="font-medium" data-testid="hospitalization-location">{{ r.locationLabel }}</span></span>
                     }
                 </app-detail-subject-line>
+                @if (r.isCancelled) {
+                    <p class="m-0 mt-3 inline-flex items-start gap-2 rounded-border border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="status" data-testid="hospitalization-cancelled">
+                        <i class="pi pi-ban text-xs mt-1" aria-hidden="true"></i>
+                        <span><span class="font-medium">İptal edildi</span> · {{ r.cancelledAtUtc | trDateTime }}<span class="block whitespace-pre-wrap">Gerekçe: {{ r.cancelReason ?? '—' }}</span></span>
+                    </p>
+                }
                 <ng-container actions>
                     @if (r.isActive && canUpdateHospitalization) {
                         @if (!ro.mutationBlocked()) {
@@ -87,6 +95,9 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                         }
                     }
                     <app-record-history-button resource="hospitalizations" [recordId]="r.id" />
+                    @if (!r.isCancelled && canUpdateHospitalization && !ro.mutationBlocked()) {
+                        <button pButton type="button" class="p-button-danger p-button-outlined" (click)="cancelVisible.set(true)" data-testid="hospitalization-cancel"><i class="pi pi-ban"></i>İptal et</button>
+                    }
                 </ng-container>
                 <div stat>
                     <dt>Yatış</dt>
@@ -169,6 +180,17 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
             </div>
         }
 
+        <app-reason-confirm-dialog
+            [(visible)]="cancelVisible"
+            header="Yatışı iptal et"
+            [summary]="cancelSummary()"
+            description="Yanlış açılan yatış içindir; taburcu yerine kullanılmaz. İptal edilen yatış silinmez, etkin yatış sayılmaz ve listelerde varsayılan olarak gizlenir. Geri alınamaz."
+            confirmLabel="Yatışı iptal et"
+            failureFallback="Yatış iptal edilemedi."
+            [execute]="cancelHospitalization"
+            (confirmed)="reload()"
+        />
+
         <p-dialog header="Taburcu işlemi" [modal]="true" [(visible)]="dischargeDialogVisible" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [focusOnShow]="false" (onHide)="onDischargeDialogHide()">
             <p class="text-sm text-muted-color mt-0 mb-4">Taburcu tarihi ve saati zorunludur. İşlem sonrası kayıt kapatılır.</p>
             <form [formGroup]="dischargeForm" (ngSubmit)="onDischargeSubmit()">
@@ -236,6 +258,16 @@ export class HospitalizationDetailPageComponent implements OnInit {
     readonly row = this.loader.value;
     readonly savedMessage = signal<string | null>(null);
     readonly showDischargedBanner = signal(false);
+
+    readonly cancelVisible = signal(false);
+    protected readonly cancelSummary = computed(() => {
+        const r = this.row();
+
+        return r ? `${r.reason} · ${r.petName}` : null;
+    });
+
+    /** Gerekçeli iptal; ekranın açıldığı sürümle (çakışmada backend 409 mesajı diyalogda kalır). */
+    protected readonly cancelHospitalization = (reason: string) => this.hospitalizationsService.cancelHospitalization(this.row()!.id, reason, this.row()!.rowVersion);
 
     readonly dischargeDialogVisible = signal(false);
     readonly dischargeSubmitting = signal(false);
@@ -354,6 +386,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
     private resetForRoute(id: string | null): void {
         this.savedMessage.set(id ? (SAVED_MESSAGES[this.route.snapshot.queryParamMap.get('saved') ?? ''] ?? null) : null);
         this.showDischargedBanner.set(false);
+        this.cancelVisible.set(false);
         this.dischargeDialogVisible.set(false);
         this.onDischargeDialogHide();
     }

@@ -446,7 +446,9 @@ export const ApiEndpoints = {
         /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil, yatış zamanı), `Sort`, `Order` (+ `clinicId`, `PetId`, `ActiveOnly`). */
         list: () => `/api/v1/hospitalizations`,
         byId: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}`,
-        discharge: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/discharge`
+        discharge: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/discharge`,
+        /** Gerekçeli iptal (ADR-043 AK-5; HOSPITALIZATION_MODEL_API_CONTRACT.md §11). */
+        cancel: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/cancel`
     },
     /** Klinik tanımlı yatış bölümleri ve altındaki oda/kafesler (HOSPITALIZATION_MODEL_API_CONTRACT.md §10.2). */
     /** Randevu nedenleri (ADR-042 K2; Veteriner `docs/ONLINE_APPOINTMENT_API_CONTRACT.md` §2): GET randevu planlama yetkisi, yazma `Clinics.Update`. */

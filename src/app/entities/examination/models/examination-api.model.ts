@@ -128,6 +128,8 @@ export interface ExaminationRelatedHospitalizationItemDto {
     reason?: string | null;
     dischargedAtUtc?: string | null;
     isActive?: boolean | null;
+    /** ADR-043 AK-5: iptal edilen yatış özette kalır, işaretlenir. */
+    isCancelled?: boolean | null;
 }
 
 export interface ExaminationRelatedPaymentItemDto {

@@ -427,7 +427,8 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
                     clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null,
                     reason: str(x.reason),
                     dischargedAtUtc,
-                    isActive
+                    isActive,
+                    isCancelled: x.isCancelled === true
                 };
             })
             .filter((x): x is NonNullable<typeof x> => x != null),

@@ -14,6 +14,7 @@ import {
     hospitalizationsQueryToHttpParams
 } from '@/app/entities/hospitalization/data/hospitalization.mapper';
 import type {
+    HospitalizationCancelRequestDto,
     HospitalizationDetailDto,
     HospitalizationListItemDtoPagedResult,
     HospitalizationWriteResultDto
@@ -209,6 +210,18 @@ export class HospitalizationsService {
 
                 return throwError(() => (err instanceof Error ? err : new Error('Taburcu işlemi yapılamadı.')));
             })
+        );
+    }
+
+    /** Gerekçeli iptal (`Hospitalizations.Update`, ADR-043 AK-5); `rowVersion`: ekranın açıldığı sürüm. Hatalar Türkçe `Error` olarak iletilir. */
+    cancelHospitalization(id: string, reason: string, rowVersion: string): Observable<HospitalizationWriteResult> {
+        const body: HospitalizationCancelRequestDto = { reason: reason.trim(), rowVersion };
+
+        return this.api.post<HospitalizationWriteResultDto>(ApiEndpoints.hospitalizations.cancel(id), body).pipe(
+            map((dto) => mapHospitalizationWriteResultDto(dto, id)),
+            catchError((err: unknown) =>
+                throwError(() => (err instanceof HttpErrorResponse ? new Error(messageFromHttpError(err, 'Yatış iptal edilemedi.')) : err instanceof Error ? err : new Error('Yatış iptal edilemedi.')))
+            )
         );
     }
 }
