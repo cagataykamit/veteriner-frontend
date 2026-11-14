@@ -83,6 +83,9 @@ export interface VaccinationDetailDto {
     /** Gerekçeli iptal (ADR-043 AK-3); uygulama iptaliyle iptal edilen aşıda boş. */
     cancelledAtUtc?: string | null;
     cancelReason?: string | null;
+    /** Kesinleşmiş muayeneye sonradan eklendi (ADR-043 AK-6). */
+    addedAfterFinalization?: boolean | null;
+    lateEntryReason?: string | null;
 }
 
 /** POST /vaccinations/{id}/cancel gövdesi; `rowVersion` zorunlu. */
@@ -112,6 +115,8 @@ export interface VaccinationCreateRequestDto {
     /** RECORD-005; aşı kaydında tutulur (bağlı uygulamada değil). */
     route?: string | null;
     site?: string | null;
+    /** Bağlı muayene kesinleşmişse zorunlu (5–500; `VACCINATIONS_API_CONTRACT.md` §5); yalnız POST. */
+    lateEntryReason?: string | null;
 }
 
 export interface VaccinationUpdateRequestDto {

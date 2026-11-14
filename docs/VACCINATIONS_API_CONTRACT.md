@@ -47,3 +47,15 @@ Kural tek yerde: `Vaccination.EnsureStatusTransition`.
 ## 4) Okuma etkisi
 
 Değişmedi: iptal edilen aşı zaman çizelgesinde varsayılan gizli (`includeVoided=true` ile gelir), listede `status` ile görünür, hatırlatma ve HBS takibine girmez. Hasta sahibi portalı iptal edilen aşıyı geçmişte `Cancelled` olarak gösterir (`PORTAL_API_CONTRACT.md`, değişmedi).
+
+## 5) Kesinleşmiş muayeneye aşı (ADR-043 AK-6, ADR-013 Ek 2) `[DEĞİŞTİ]`
+
+- `POST /vaccinations` kesinleşmiş muayeneye artık reddedilmez (önce 409 `Examinations.Finalized`). Gövdede `[YENİ]` `lateEntryReason` (5–500) zorunludur; yoksa 400 `Vaccinations.LateEntryReasonRequired`. Ürünlü ve ürünsüz aşıda aynı kural; ürünlü aşıda gerekçe bağlı uygulama kaydına da yazılır.
+- Muayene açıksa `lateEntryReason` yok sayılır.
+- Mevcut aşı kilidi değişmedi: kesinleşmiş muayeneye bağlı aşı `PUT` ile değiştirilemez; düzeltme gerekçeli iptal (ürünlüde uygulama iptali) + yeni kayıttır.
+- `GET /vaccinations/{id}`, muayene özeti ve zaman çizelgesi `[YENİ]` `addedAfterFinalization` taşır (detayda `lateEntryReason` da).
+- Migration `AddTreatmentAndVaccinationLateEntry`.
+
+## Güncellemede hasta ve klinik değişmez (ADR-043 AK-10) `[DEĞİŞTİ]`
+
+Kaydın hastası ve kliniği oluşturulduktan sonra değişmez (ADR-043 K6 / AK-10, 2026-11-14; kural `RecordSubjectRule`). `PUT` gövdesindeki `petId` ya da `clinicId` kayıttakinden farklıysa 400 `Vaccinations.SubjectChangeNotAllowed`. Yanlış hasta için kayıt gerekçeyle iptal edilir ve doğru hastaya yeni kayıt açılır. Muayene bağı aynı hasta içinde değişebilir (kilit kuralına tabi).

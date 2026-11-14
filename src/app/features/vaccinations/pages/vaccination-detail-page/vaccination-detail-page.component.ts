@@ -26,6 +26,7 @@ import type { HbsEntryVm } from '@/app/entities/hbs/models/hbs.model';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
+import { ADMINISTRATION_LATE_ENTRY_LABEL } from '@/app/entities/administration/utils/administration-labels';
 
 @Component({
     selector: 'app-vaccination-detail-page',
@@ -67,6 +68,9 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
             <!-- Kimlik kartı: aşı adı + durum rozeti, tarih, kayıt satırı, hasta/sahip; sağda Düzenle ve geçmiş; gösterge şeridi (tarihler, yol/bölge, muayene). -->
             <app-detail-identity-card icon="pi pi-shield" [title]="v.vaccineName" [subtitle]="headerDate(v)" [meta]="'Oluşturulma: ' + (v.createdAtUtc | trDateTime) + ' · Güncellenme: ' + (v.updatedAtUtc | trDateTime)" ariaLabel="Aşı kimliği" testId="vaccination-identity-card">
                 <app-status-tag badges [label]="statusLabel(v.status)" [severity]="statusSeverity(v.status)" />
+                @if (v.addedAfterFinalization) {
+                    <span badges data-testid="vaccination-late-entry" [title]="v.lateEntryReason ? 'Gerekçe: ' + v.lateEntryReason : null"><app-status-tag [label]="lateEntryLabel" severity="warn" /></span>
+                }
                 <app-detail-subject-line [petId]="v.petId" [petName]="v.petName" [clientId]="v.clientId" [clientName]="v.clientName" />
                 @if (v.status === 2) {
                     <p class="m-0 mt-3 inline-flex items-start gap-2 rounded-border border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="status" data-testid="vaccination-cancelled">
@@ -77,6 +81,9 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
                             <span><span class="font-medium">İptal edildi</span><span class="block">Bağlı uygulama iptal edildi; gerekçe uygulama kaydındadır.</span></span>
                         }
                     </p>
+                }
+                @if (v.addedAfterFinalization && v.lateEntryReason) {
+                    <p class="m-0 mt-2 text-sm text-muted-color">Geç kayıt gerekçesi: {{ v.lateEntryReason }}</p>
                 }
                 <ng-container actions>
                     @if (v.status !== 2) {
@@ -239,6 +246,7 @@ export class VaccinationDetailPageComponent implements OnInit {
     /** Gerekçeli iptal yalnız `Vaccinations.Update` ister (ADR-043 AK-3). */
     readonly canCancelVaccination = this.auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM);
 
+    protected readonly lateEntryLabel = ADMINISTRATION_LATE_ENTRY_LABEL;
     readonly cancelVisible = signal(false);
     protected readonly cancelSummary = computed(() => {
         const v = this.vac();

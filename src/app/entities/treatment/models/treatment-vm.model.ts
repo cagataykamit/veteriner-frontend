@@ -35,6 +35,9 @@ export interface TreatmentDetailVm {
     /** Gerekçeli iptal (ADR-043 AK-2): iptal edilen tedavi değiştirilemez. */
     cancelledAtUtc: string | null;
     cancelReason: string | null;
+    /** Kesinleşmiş muayeneye sonradan eklendi; gerekçesi `lateEntryReason` (ADR-043 AK-6). */
+    addedAfterFinalization: boolean;
+    lateEntryReason: string | null;
 }
 
 export interface TreatmentEditVm {

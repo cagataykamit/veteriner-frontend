@@ -368,7 +368,8 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
                     clinicId: x.clinicId?.trim() ? x.clinicId.trim() : null,
                     clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null,
                     title: str(x.title),
-                    isCancelled: x.isCancelled === true
+                    isCancelled: x.isCancelled === true,
+                    addedAfterFinalization: x.addedAfterFinalization === true
                 };
             })
             .filter((x): x is NonNullable<typeof x> => x != null),
@@ -408,7 +409,8 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
                     testName: str(x.testName),
                     status: parseLabResultStatus(x.status),
                     requestedAtUtc: relatedSafeTrim(x.requestedAtUtc),
-                    awaitingInterpretation: x.awaitingInterpretation === true
+                    awaitingInterpretation: x.awaitingInterpretation === true,
+                    addedAfterFinalization: x.addedAfterFinalization === true
                 };
             })
             .filter((x): x is NonNullable<typeof x> => x != null),
@@ -450,7 +452,8 @@ export function mapExaminationRelatedSummaryDtoToVm(dto: ExaminationRelatedSumma
                     appliedAtUtc: relatedSafeTrim(x.appliedAtUtc),
                     dueAtUtc: relatedSafeTrim(x.dueAtUtc),
                     clinicId: x.clinicId?.trim() ? x.clinicId.trim() : null,
-                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null
+                    clinicName: x.clinicName?.trim() ? x.clinicName.trim() : null,
+                    addedAfterFinalization: x.addedAfterFinalization === true
                 };
             })
             .filter((x): x is NonNullable<typeof x> => x != null),

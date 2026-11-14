@@ -47,6 +47,9 @@ export interface TreatmentDetailDto {
     /** Gerekçeli iptal (ADR-043 AK-2). */
     cancelledAtUtc?: string | null;
     cancelReason?: string | null;
+    /** Kesinleşmiş muayeneye sonradan eklendi (ADR-043 AK-6). */
+    addedAfterFinalization?: boolean | null;
+    lateEntryReason?: string | null;
 }
 
 /** POST / PUT body — alan adları API ile uyumlu. */
@@ -61,4 +64,6 @@ export interface TreatmentWriteRequestDto {
     followUpDateUtc?: string | null;
     /** Yalnız PUT; GET'ten alınan sürüm (zorunlu, `TREATMENTS_API_CONTRACT.md` §1). */
     rowVersion?: string;
+    /** Bağlı muayene kesinleşmişse zorunlu (5–500, sonradan ekleme, §4); yalnız POST. */
+    lateEntryReason?: string | null;
 }

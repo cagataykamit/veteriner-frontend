@@ -58,6 +58,9 @@ export interface VaccinationDetailVm {
     rowVersion: string;
     cancelledAtUtc: string | null;
     cancelReason: string | null;
+    /** Kesinleşmiş muayeneye sonradan eklendi; gerekçesi `lateEntryReason` (ADR-043 AK-6). */
+    addedAfterFinalization: boolean;
+    lateEntryReason: string | null;
 }
 
 /** POST /vaccinations sonucu: ürünlü kayıtta uygulama ve kalan stok da döner (`stockResult`), ürünsüzde `null`. */

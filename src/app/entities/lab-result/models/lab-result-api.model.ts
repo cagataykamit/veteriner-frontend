@@ -56,6 +56,8 @@ export interface LabResultDetailDto {
     cancelReason?: string | null;
     /** Base64; PUT ve cancel'da geri gönderilir. */
     rowVersion?: string | null;
+    /** Kesinleşmiş muayeneye sonradan eklendi (ADR-043 AK-4; rozet, gerekçe yok). */
+    addedAfterFinalization?: boolean | null;
 }
 
 /**

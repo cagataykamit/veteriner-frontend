@@ -21,6 +21,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { ADMINISTRATION_LATE_ENTRY_LABEL } from '@/app/entities/administration/utils/administration-labels';
 
 @Component({
     selector: 'app-treatment-detail-page',
@@ -63,12 +64,18 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                 @if (r.cancelledAtUtc) {
                     <app-status-tag badges label="İptal" severity="danger" />
                 }
+                @if (r.addedAfterFinalization) {
+                    <span badges data-testid="treatment-late-entry" [title]="r.lateEntryReason ? 'Gerekçe: ' + r.lateEntryReason : null"><app-status-tag [label]="lateEntryLabel" severity="warn" /></span>
+                }
                 <app-detail-subject-line [petId]="r.petId" [petName]="r.petName" [clientId]="r.clientId" [clientName]="r.clientName" />
                 @if (r.cancelledAtUtc) {
                     <p class="m-0 mt-3 inline-flex items-start gap-2 rounded-border border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="status" data-testid="treatment-cancelled">
                         <i class="pi pi-ban text-xs mt-1" aria-hidden="true"></i>
                         <span><span class="font-medium">İptal edildi</span> · {{ r.cancelledAtUtc | trDateTime }}<span class="block whitespace-pre-wrap">Gerekçe: {{ r.cancelReason ?? '—' }}</span></span>
                     </p>
+                }
+                @if (r.addedAfterFinalization && r.lateEntryReason) {
+                    <p class="m-0 mt-2 text-sm text-muted-color">Geç kayıt gerekçesi: {{ r.lateEntryReason }}</p>
                 }
                 <ng-container actions>
                     @if (!r.cancelledAtUtc) {
@@ -187,6 +194,7 @@ export class TreatmentDetailPageComponent implements OnInit {
     readonly showSavedBanner = signal(false);
     readonly canUpdateTreatment = this.auth.hasOperationClaim(TREATMENTS_UPDATE_CLAIM);
 
+    protected readonly lateEntryLabel = ADMINISTRATION_LATE_ENTRY_LABEL;
     readonly cancelVisible = signal(false);
     protected readonly cancelSummary = computed(() => {
         const r = this.row();

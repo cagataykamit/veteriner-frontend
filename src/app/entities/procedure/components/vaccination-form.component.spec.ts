@@ -1,3 +1,4 @@
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -64,6 +65,7 @@ describe('VaccinationFormComponent — aşı + stoktan düşen uygulama', () => 
                 { provide: VaccineDefinitionsService, useValue: { getVaccineDefinitions: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } },
                 { provide: ClientsService, useValue: {} },
                 { provide: PetsService, useValue: { getPetById: () => of({}) } },
+                { provide: ExaminationsService, useValue: { getExaminationById: () => of({ status: 'Draft' }) } },
                 { provide: ProductService, useValue: { getProducts: () => of({ items: [product('pr1', 'Nobivac', 'Vaccine'), product('pr2', 'Serum', 'Other')], page: 1, pageSize: 200, totalItems: 2, totalPages: 1 }) } },
                 { provide: StockBatchService, useValue: { getByProduct: () => of(null) } },
                 { provide: AuthService, useValue: { getClinicId: () => 'c1', getClinicName: () => 'Klinik', hasOperationClaim: () => canStock } },

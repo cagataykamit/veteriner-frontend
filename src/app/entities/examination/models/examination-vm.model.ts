@@ -63,6 +63,8 @@ export interface ExaminationRelatedTreatmentItemVm {
     title: string;
     /** İptal edilen tedavi (ADR-043 AK-2) özette kalır, silik gösterilir. */
     isCancelled?: boolean;
+    /** Kesinleşmiş muayeneye sonradan eklendi (ADR-043 AK-6). */
+    addedAfterFinalization?: boolean;
 }
 
 export interface ExaminationRelatedPrescriptionItemVm {
@@ -87,6 +89,8 @@ export interface ExaminationRelatedLabResultItemVm {
     status: LabResultStatus | null;
     requestedAtUtc: string | null;
     awaitingInterpretation: boolean;
+    /** Kesinleşmiş muayeneye sonradan eklendi (ADR-043 AK-4). */
+    addedAfterFinalization?: boolean;
 }
 
 export interface ExaminationRelatedHospitalizationItemVm {
@@ -110,6 +114,8 @@ export interface ExaminationRelatedVaccinationItemVm {
     dueAtUtc: string | null;
     clinicId: string | null;
     clinicName: string | null;
+    /** Kesinleşmiş muayeneye sonradan eklendi (ADR-043 AK-6). */
+    addedAfterFinalization?: boolean;
 }
 
 export interface ExaminationRelatedImagingItemVm {

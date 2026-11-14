@@ -191,7 +191,9 @@ export function mapVaccinationDetailDtoToVm(dto: VaccinationDetailDto): Vaccinat
         site: firstTrimmed(dto.site),
         rowVersion: firstTrimmed(dto.rowVersion) ?? '',
         cancelledAtUtc: firstTrimmed(dto.cancelledAtUtc),
-        cancelReason: firstTrimmed(dto.cancelReason)
+        cancelReason: firstTrimmed(dto.cancelReason),
+        addedAfterFinalization: dto.addedAfterFinalization === true,
+        lateEntryReason: firstTrimmed(dto.lateEntryReason)
     };
 }
 
@@ -251,6 +253,7 @@ export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): Va
         notes,
         route: req.route ?? null,
         site: req.site?.trim() ? req.site.trim() : null,
+        ...(req.lateEntryReason?.trim() ? { lateEntryReason: req.lateEntryReason.trim() } : {}),
         ...(productId
             ? {
                   productId,

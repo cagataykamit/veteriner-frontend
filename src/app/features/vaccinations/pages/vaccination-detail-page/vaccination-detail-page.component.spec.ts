@@ -43,7 +43,9 @@ const vm = (examinationId: string | null, linkedAdministration: VaccinationDetai
     site: 'Boyun arkası',
     rowVersion: 'V1',
     cancelledAtUtc: null,
-    cancelReason: null
+    cancelReason: null,
+    addedAfterFinalization: false,
+    lateEntryReason: null
 });
 
 describe('VaccinationDetailPageComponent — muayene bağlantısı', () => {

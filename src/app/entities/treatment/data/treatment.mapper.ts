@@ -131,7 +131,9 @@ export function mapTreatmentDetailDtoToVm(dto: TreatmentDetailDto): TreatmentDet
         updatedAtUtc: canonicalUpdatedAt(dto),
         rowVersion: firstTrimmed(dto.rowVersion) ?? '',
         cancelledAtUtc: firstTrimmed(dto.cancelledAtUtc),
-        cancelReason: firstTrimmed(dto.cancelReason)
+        cancelReason: firstTrimmed(dto.cancelReason),
+        addedAfterFinalization: dto.addedAfterFinalization === true,
+        lateEntryReason: firstTrimmed(dto.lateEntryReason)
     };
 }
 
@@ -274,6 +276,12 @@ export function mapCreateTreatmentToApiBody(req: CreateTreatmentRequest): Treatm
 
     if (req.rowVersion) {
         dto.rowVersion = req.rowVersion;
+    }
+
+    const lateEntryReason = req.lateEntryReason?.trim();
+
+    if (lateEntryReason) {
+        dto.lateEntryReason = lateEntryReason;
     }
 
     return dto;

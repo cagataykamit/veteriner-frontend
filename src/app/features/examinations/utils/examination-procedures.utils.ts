@@ -25,22 +25,25 @@ export const PROCEDURE_ROUTE_SEGMENT: Record<ProcedureKind, string> = {
     hospitalization: 'hospitalizations'
 };
 
-/** Kesinleşmiş muayenede kilit nedeni (ADR-013); düğme ve kesinleştirme onayı aynı metni kullanır. */
+/** Kesinleşmiş muayenede ekleme kuralının özeti (ADR-043 K3, ADR-013 Ek 2); kesinleştirme onayı bu metni gösterir. */
 export const FINALIZED_LOCK_MESSAGE =
-    'Muayene kesinleşti: tedavi ve aşı eklenemez; reçete ve uygulama yalnız gerekçeyle, ek not her zaman eklenebilir.';
+    'Muayene kesinleşti: tedavi, reçete, aşı ve uygulama yalnız gerekçeyle "sonradan eklendi" olarak eklenir; lab ve görüntüleme serbesttir, ek not her zaman eklenebilir.';
 
 export const READ_ONLY_TENANT_MESSAGE = 'İşletme salt okunur modda; kayıt oluşturulamaz.';
 
-/** Kesinleşmiş muayeneye reçete zorunlu gerekçeyle "kesinleştirmeden sonra eklendi" olarak yazılır (ADR-013 eki, RECORD-008); gerekçe alanı formda. */
-export const FINALIZED_PRESCRIPTION_NOTE = 'Kesinleşmiş muayeneye reçete gerekçeyle, "sonradan eklendi" olarak yazılır.';
+/** Kesinleşmiş muayeneye tedavi edici kayıt (reçete, tedavi, aşı) zorunlu gerekçeyle "kesinleştirmeden sonra eklendi" olarak yazılır (ADR-043 AK-6); gerekçe alanı formda. */
+export const FINALIZED_LATE_ENTRY_NOTE = 'Kesinleşmiş muayeneye gerekçeyle, "sonradan eklendi" olarak yazılır.';
+
+/** Tedavi edici kayıt türleri: kesinleşmiş muayeneye gerekçeli geç kayıtla eklenir. Kural backend'de (ADR-043 K3); burada yalnız ipucu metni seçilir. */
+const LATE_ENTRY_KINDS: readonly ProcedureKind[] = ['treatment', 'prescription', 'vaccination'];
 
 export const FINALIZED_HOSPITALIZATION_NOTE = 'Kesinleşmiş muayeneye bağlanmaz; yatış muayenesiz başlatılır.';
 
 /** Kesinleşmiş muayeneye görüntüleme bağlamak yeni (ek) kayıt sayılır (ADR-013 uyumu; IMAGING_API_CONTRACT.md §1). */
 export const FINALIZED_IMAGING_NOTE = 'Kesinleşmiş muayeneye görüntüleme yeni (ek) kayıt olarak eklenir.';
 
-/** Kesinleşmiş muayeneye eklenemeyen türler. Lab sonucu serbest, yatış muayeneye bağlanmadan başlar; reçete gerekçeyle eklenir (ADR-013 eki, RECORD-008). */
-const LOCKED_WHEN_FINALIZED: readonly ProcedureKind[] = ['treatment', 'vaccination'];
+/** Kesinleşmiş muayeneye lab istemi yeni (ek) kayıt olarak eklenir ve rozet taşır (ADR-043 AK-4). */
+export const FINALIZED_LAB_NOTE = 'Kesinleşmiş muayeneye lab istemi yeni (ek) kayıt olarak eklenir.';
 
 export interface ProcedureAddState {
     disabled: boolean;
@@ -55,12 +58,12 @@ export function procedureAddState(kind: ProcedureKind, ctx: { finalized: boolean
         return { disabled: true, reason: READ_ONLY_TENANT_MESSAGE, note: null };
     }
 
-    if (ctx.finalized && LOCKED_WHEN_FINALIZED.includes(kind)) {
-        return { disabled: true, reason: FINALIZED_LOCK_MESSAGE, note: null };
+    if (ctx.finalized && LATE_ENTRY_KINDS.includes(kind)) {
+        return { disabled: false, reason: null, note: FINALIZED_LATE_ENTRY_NOTE };
     }
 
-    if (ctx.finalized && kind === 'prescription') {
-        return { disabled: false, reason: null, note: FINALIZED_PRESCRIPTION_NOTE };
+    if (ctx.finalized && kind === 'lab') {
+        return { disabled: false, reason: null, note: FINALIZED_LAB_NOTE };
     }
 
     if (ctx.finalized && kind === 'imaging') {
@@ -98,7 +101,8 @@ export function buildProcedureRows(summary: ExaminationRelatedSummaryVm | null):
             title: r.title,
             detail: null,
             stateLabel: r.isCancelled ? 'İptal' : null,
-            cancelled: r.isCancelled === true
+            cancelled: r.isCancelled === true,
+            addedAfterFinalization: r.addedAfterFinalization === true
         })),
         ...(summary?.prescriptions ?? []).map((r) => ({
             kind: 'prescription' as const,
@@ -115,7 +119,8 @@ export function buildProcedureRows(summary: ExaminationRelatedSummaryVm | null):
             id: r.id,
             atUtc: r.resultDateUtc ?? r.requestedAtUtc,
             title: r.testName,
-            detail: r.awaitingInterpretation ? 'Yorum bekliyor' : null
+            detail: r.awaitingInterpretation ? 'Yorum bekliyor' : null,
+            addedAfterFinalization: r.addedAfterFinalization === true
         })),
         ...(summary?.hospitalizations ?? []).map((r) => ({
             kind: 'hospitalization' as const,
@@ -143,7 +148,8 @@ export function buildProcedureRows(summary: ExaminationRelatedSummaryVm | null):
             title: r.vaccineName,
             detail: null,
             stateLabel: r.status === 'Cancelled' ? 'İptal' : r.status === 'Scheduled' ? 'Planlı' : null,
-            cancelled: r.status === 'Cancelled'
+            cancelled: r.status === 'Cancelled',
+            addedAfterFinalization: r.addedAfterFinalization === true
         }))
     ];
 

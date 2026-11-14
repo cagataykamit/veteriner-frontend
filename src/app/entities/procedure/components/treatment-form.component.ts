@@ -29,6 +29,7 @@ import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, eff
 import { TREATMENT_DATE_TOO_FAR_PAST_MESSAGE, treatmentDateNotTooFarPastValidator, treatmentDateTimeLocalMinAllowed } from '@/app/entities/treatment/utils/treatment-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
 
 @Component({
     selector: 'app-treatment-form',
@@ -48,7 +49,7 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
             @if (copySourceTitle(); as source) {
-                <p class="text-sm text-muted-color mt-0 mb-4" role="status" data-testid="treatment-copy-notice">"{{ source }}" tedavisinden kopyalandı; kopya yalnız aynı hasta için yazılır. Tarih, not ve muayene bağı kopyalanmaz; kesinleşmiş muayeneye tedavi eklenemez. Gözden geçirip kaydedin.</p>
+                <p class="text-sm text-muted-color mt-0 mb-4" role="status" data-testid="treatment-copy-notice">"{{ source }}" tedavisinden kopyalandı; kopya yalnız aynı hasta için yazılır. Tarih, not ve muayene bağı kopyalanmaz; kesinleşmiş muayeneye tedavi gerekçeyle "sonradan eklendi" olarak yazılır. Gözden geçirip kaydedin.</p>
             }
             @if (contextFromExamination()) {
                 <p class="text-sm text-muted-color mt-0 mb-4">Bu muayene kaydından bağlam taşındı; müşteri, hasta ve bağlı muayene alanları kilitlidir.</p>
@@ -131,6 +132,17 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                             <small class="text-danger">{{ apiFieldErrors().notes }}</small>
                         }
                     </div>
+                    @if (isLateEntry()) {
+                        <div class="col-span-12" data-testid="treatment-late-entry">
+                            <label for="lateEntryReason" class="block text-sm font-medium text-muted-color mb-2">Sonradan ekleme gerekçesi *</label>
+                            <textarea id="lateEntryReason" rows="2" class="w-full p-inputtext p-component" formControlName="lateEntryReason"></textarea>
+                            @if (lateEntryReasonInvalid()) {
+                                <small class="text-danger">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
+                            } @else {
+                                <small class="text-muted-color">Bağlı muayene kesinleşmiş; tedavi "kesinleştirmeden sonra eklendi" olarak kaydedilir, muayene metni değişmez.</small>
+                            }
+                        </div>
+                    }
                     <div class="col-span-12 md:col-span-6">
                         <label for="followUpDate" class="block text-sm font-medium text-muted-color mb-2">Takip tarihi</label>
                         <app-date-input inputId="followUpDate" type="date" formControlName="followUpDate" [min]="dateInputMin" limit="planned" />
@@ -198,7 +210,8 @@ export class TreatmentFormComponent implements OnInit, HasUnsavedChanges {
         followUpDate: ['', dateYearRangeValidator()],
         title: ['', Validators.required],
         description: ['', Validators.required],
-        notes: ['']
+        notes: [''],
+        lateEntryReason: ['']
     });
 
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
@@ -277,6 +290,24 @@ export class TreatmentFormComponent implements OnInit, HasUnsavedChanges {
         this.cancelled.emit();
     }
 
+    /** Seçilebilir muayenelerden kesinleşmiş olanlar: seçilirse tedavi gerekçeli "sonradan ekleme" olur (ADR-043 AK-6). */
+    private readonly finalizedExaminationIds = signal<ReadonlySet<string>>(new Set());
+    protected readonly reasonMin = REASON_MIN;
+    protected readonly reasonMax = REASON_MAX;
+
+    /** Bağlı muayene kesinleşmiş mi (kilitli muayene alanı da değer taşır). */
+    isLateEntry(): boolean {
+        const examinationId = this.form.controls.examinationId.value.trim();
+
+        return !!examinationId && this.finalizedExaminationIds().has(examinationId);
+    }
+
+    lateEntryReasonInvalid(): boolean {
+        const c = this.form.controls.lateEntryReason;
+
+        return c.touched && reasonLength(c) !== null;
+    }
+
     treatmentDateMinAllowed(): string {
         return effectiveDateTimeLocalInputMin(treatmentDateTimeLocalMinAllowed());
     }
@@ -285,7 +316,7 @@ export class TreatmentFormComponent implements OnInit, HasUnsavedChanges {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
 
-        if (this.form.invalid) {
+        if (this.form.invalid || (this.isLateEntry() && reasonLength(this.form.controls.lateEntryReason) !== null)) {
             this.form.markAllAsTouched();
 
             return;
@@ -325,16 +356,19 @@ export class TreatmentFormComponent implements OnInit, HasUnsavedChanges {
             return;
         }
 
-        const payload = mapTreatmentUpsertFormToCreateRequest({
-            clinicId,
-            petId: v.petId,
-            treatmentDateUtc,
-            title: v.title,
-            description: v.description,
-            notes: v.notes,
-            followUpDateUtc,
-            examinationId: v.examinationId
-        });
+        const payload = {
+            ...mapTreatmentUpsertFormToCreateRequest({
+                clinicId,
+                petId: v.petId,
+                treatmentDateUtc,
+                title: v.title,
+                description: v.description,
+                notes: v.notes,
+                followUpDateUtc,
+                examinationId: v.examinationId
+            }),
+            lateEntryReason: this.isLateEntry() ? v.lateEntryReason : null
+        };
 
         this.submitting.set(true);
         this.treatmentsService.createTreatment(payload).subscribe({
@@ -441,9 +475,7 @@ export class TreatmentFormComponent implements OnInit, HasUnsavedChanges {
                 this.form.controls.examinationId.disable({ emitEvent: false });
                 this.contextFromExamination.set(true);
 
-                if (ex.status === 'Finalized') {
-                    this.selectionError.set('Bu muayene kesinleştirilmiş; tedavi eklenemez. Gerekirse muayeneye ek not ekleyin.');
-                }
+                this.finalizedExaminationIds.set(ex.status === 'Finalized' ? new Set([ex.id]) : new Set());
 
                 this.loadingExaminations.set(false);
                 this.applyingRouteContext.set(false);
@@ -472,6 +504,7 @@ export class TreatmentFormComponent implements OnInit, HasUnsavedChanges {
                 }
 
                 this.examinationOptions.set(ex.items.map(prescriptionExaminationSelectOption));
+                this.finalizedExaminationIds.set(new Set(ex.items.filter((e) => e.status === 'Finalized').map((e) => e.id)));
                 this.loadingExaminations.set(false);
                 this.syncExaminationSelectState();
 
