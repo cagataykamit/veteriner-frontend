@@ -40,7 +40,12 @@ const vm = (examinationId: string | null, linkedAdministration: VaccinationDetai
     linkedAdministration,
     hbs: { status: 'NotEntered', referenceNumber: null, notRequiredReason: null, markedAtUtc: null, markedByName: null, isTracked: true },
     route: 'Subcutaneous',
-    site: 'Boyun arkası'
+    site: 'Boyun arkası',
+    rowVersion: 'V1',
+    cancelledAtUtc: null,
+    cancelReason: null,
+    addedAfterFinalization: false,
+    lateEntryReason: null
 });
 
 describe('VaccinationDetailPageComponent — muayene bağlantısı', () => {
@@ -121,6 +126,50 @@ describe('VaccinationDetailPageComponent — Düzenle', () => {
 
     it('yalnız Vaccinations.Update varsa görünmez (rota /notfound verirdi)', () => {
         expect(editLink([VACCINATIONS_UPDATE_CLAIM])).toBeNull();
+    });
+});
+
+describe('VaccinationDetailPageComponent — gerekçeli iptal (ADR-043 AK-3)', () => {
+    const render = (v: VaccinationDetailVm, cancelVaccination = vi.fn(() => of(void 0))) => {
+        TestBed.configureTestingModule({
+            imports: [VaccinationDetailPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: RecordHistoryService, useValue: { getHistory: () => of([]) } },
+                { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) }, paramMap: of(convertToParamMap({ id: 'v1' })) } },
+                { provide: VaccinationsService, useValue: { getVaccinationById: () => of(v), cancelVaccination } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => c === VACCINATIONS_UPDATE_CLAIM } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: HbsService, useValue: hbsMock }
+            ]
+        });
+        const fixture = TestBed.createComponent(VaccinationDetailPageComponent);
+
+        fixture.detectChanges();
+
+        return { el: fixture.nativeElement as HTMLElement, page: fixture.componentInstance as unknown as { cancelVaccination: (reason: string) => unknown } };
+    };
+
+    it('ürünsüz aşıda İptal et görünür; iptal ekranın sürümüyle gider', () => {
+        const cancelVaccination = vi.fn(() => of(void 0));
+        const { el, page } = render(vm(null), cancelVaccination);
+
+        expect(el.querySelector('[data-testid="vaccination-cancel"]')).not.toBeNull();
+        page.cancelVaccination('Yanlış hastaya girildi');
+        expect(cancelVaccination).toHaveBeenCalledWith('v1', 'Yanlış hastaya girildi', 'V1');
+    });
+
+    it('uygulamaya bağlı aşıda İptal et yok (iptal uygulama iptaliyle)', () => {
+        expect(render(vm(null, linked)).el.querySelector('[data-testid="vaccination-cancel"]')).toBeNull();
+    });
+
+    it('iptal edilmiş aşıda gerekçe bandı görünür; İptal et ve Düzenle yok', () => {
+        const { el } = render({ ...vm(null), status: 2, appliedAtUtc: null, cancelledAtUtc: '2026-11-14T09:00:00Z', cancelReason: 'Yanlış hasta' });
+
+        expect(el.querySelector('[data-testid="vaccination-cancelled"]')?.textContent).toContain('Yanlış hasta');
+        expect(el.querySelector('[data-testid="vaccination-cancel"]')).toBeNull();
+        expect(el.querySelector('a[href="/panel/vaccinations/v1/edit"]')).toBeNull();
     });
 });
 

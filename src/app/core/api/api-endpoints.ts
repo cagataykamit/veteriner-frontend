@@ -270,7 +270,9 @@ export const ApiEndpoints = {
         /** GET HBS ATS hazır verisi (`Vaccinations.Read`; `HBS_ASSISTANT_API_CONTRACT.md` §4). */
         hbsData: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}/hbs-data`,
         /** PATCH ATS geri kaydı `{ status, referenceNumber, notRequiredReason }` (`Vaccinations.Update`; §5). */
-        hbs: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}/hbs`
+        hbs: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}/hbs`,
+        /** Gerekçeli iptal (ADR-043 AK-3; `VACCINATIONS_API_CONTRACT.md` §3). */
+        cancel: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}/cancel`
     },
     /** FAZ 14C — aşı kataloğu; query: `Page`, `PageSize`, `search`, `speciesId`, `includeInactive`. */
     /** Veri içe aktarma (ADR-019); sözleşme: Veteriner `docs/IMPORT_API_CONTRACT.md`. */
@@ -399,7 +401,9 @@ export const ApiEndpoints = {
     treatments: {
         /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `Sort`, `Order` (+ `clinicId`, `PetId`). */
         list: () => `/api/v1/treatments`,
-        byId: (id: string) => `/api/v1/treatments/${encodeURIComponent(id)}`
+        byId: (id: string) => `/api/v1/treatments/${encodeURIComponent(id)}`,
+        /** Gerekçeli iptal (ADR-043 AK-2; `TREATMENTS_API_CONTRACT.md` §2). */
+        cancel: (id: string) => `/api/v1/treatments/${encodeURIComponent(id)}/cancel`
     },
     prescriptions: {
         /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `Sort`, `Order` (+ `clinicId`, `PetId`). */
@@ -446,7 +450,9 @@ export const ApiEndpoints = {
         /** Query: `Page`, `PageSize`, `Search`, `dateFromUtc`, `dateToUtc` (iki uç dahil, yatış zamanı), `Sort`, `Order` (+ `clinicId`, `PetId`, `ActiveOnly`). */
         list: () => `/api/v1/hospitalizations`,
         byId: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}`,
-        discharge: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/discharge`
+        discharge: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/discharge`,
+        /** Gerekçeli iptal (ADR-043 AK-5; HOSPITALIZATION_MODEL_API_CONTRACT.md §11). */
+        cancel: (id: string) => `/api/v1/hospitalizations/${encodeURIComponent(id)}/cancel`
     },
     /** Klinik tanımlı yatış bölümleri ve altındaki oda/kafesler (HOSPITALIZATION_MODEL_API_CONTRACT.md §10.2). */
     /** Randevu nedenleri (ADR-042 K2; Veteriner `docs/ONLINE_APPOINTMENT_API_CONTRACT.md` §2): GET randevu planlama yetkisi, yazma `Clinics.Update`. */

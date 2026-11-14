@@ -83,6 +83,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         <div class="col-span-12 md:col-span-6">
                             <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                             <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
+                            <small class="text-muted-color block mt-1" data-testid="subject-locked">Hasta değiştirilemez; yanlış hastaya girildiyse kaydı gerekçeyle iptal edip doğru hastaya yeni kayıt açın.</small>
                             @if (apiFieldErrors().petId) {
                                 <small class="text-danger">{{ apiFieldErrors().petId }}</small>
                             } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
@@ -295,7 +296,7 @@ export class TreatmentEditPageComponent implements OnInit {
     }
 
     examinationSelectDisabled(): boolean {
-        return this.form.controls.petId.disabled || !trimClientIdControlValue(this.form.controls.petId.value);
+        return !trimClientIdControlValue(this.form.controls.petId.value);
     }
 
     reload(): void {
@@ -304,6 +305,14 @@ export class TreatmentEditPageComponent implements OnInit {
         this.treatmentsService.getTreatmentForEditById(this.treatmentId).subscribe({
             next: (x) => {
                 this.editVmCache = x;
+
+                if (x.isCancelled) {
+                    this.loadError.set('İptal edilmiş tedavi kaydı değiştirilemez.');
+                    this.loading.set(false);
+
+                    return;
+                }
+
                 this.form.patchValue(
                     {
                         clientId: x.clientId,
@@ -324,6 +333,10 @@ export class TreatmentEditPageComponent implements OnInit {
                 } else {
                     this.form.controls.petId.disable({ emitEvent: false });
                 }
+
+                // Kaydın hastası ve kliniği değişmez (ADR-043 AK-10); muayene bağı aynı hasta içinde değişebilir.
+                this.form.controls.clientId.disable({ emitEvent: false });
+                this.form.controls.petId.disable({ emitEvent: false });
 
                 this.loading.set(false);
             },
@@ -382,16 +395,19 @@ export class TreatmentEditPageComponent implements OnInit {
             return;
         }
 
-        const payload = mapTreatmentUpsertFormToCreateRequest({
-            clinicId,
-            petId: v.petId,
-            treatmentDateUtc,
-            title: v.title,
-            description: v.description,
-            notes: v.notes,
-            followUpDateUtc,
-            examinationId: v.examinationId
-        });
+        const payload = {
+            ...mapTreatmentUpsertFormToCreateRequest({
+                clinicId,
+                petId: v.petId,
+                treatmentDateUtc,
+                title: v.title,
+                description: v.description,
+                notes: v.notes,
+                followUpDateUtc,
+                examinationId: v.examinationId
+            }),
+            rowVersion: this.editVmCache?.rowVersion ?? ''
+        };
 
         this.submitting.set(true);
         this.treatmentsService.updateTreatment(this.treatmentId, payload).subscribe({

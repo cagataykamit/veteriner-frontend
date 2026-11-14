@@ -1,5 +1,5 @@
 import type { ExaminationRelatedSummaryVm } from '@/app/entities/examination/models/examination-vm.model';
-import { buildProcedureRows, FINALIZED_IMAGING_NOTE, FINALIZED_LOCK_MESSAGE, FINALIZED_PRESCRIPTION_NOTE, finalizeChecklist, finalizeWarnings, procedureAddState, READ_ONLY_TENANT_MESSAGE, type ProcedureKind } from './examination-procedures.utils';
+import { buildProcedureRows, FINALIZED_IMAGING_NOTE, FINALIZED_LAB_NOTE, FINALIZED_LATE_ENTRY_NOTE, finalizeChecklist, finalizeWarnings, procedureAddState, READ_ONLY_TENANT_MESSAGE, type ProcedureKind } from './examination-procedures.utils';
 
 const summary = (over: Partial<ExaminationRelatedSummaryVm> = {}): ExaminationRelatedSummaryVm => ({
     examinationId: 'e1',
@@ -27,23 +27,14 @@ describe('procedureAddState', () => {
         }
     });
 
-    it('kesinleşmiş muayenede tedavi ve aşı kilit nedeniyle kapanır', () => {
-        for (const kind of ['treatment', 'vaccination'] as ProcedureKind[]) {
-            const s = procedureAddState(kind, { ...open, finalized: true });
-
-            expect(s.disabled, kind).toBe(true);
-            expect(s.reason, kind).toBe(FINALIZED_LOCK_MESSAGE);
+    it('kesinleşmiş muayenede tedavi, reçete ve aşı açıktır; gerekçeyle sonradan eklendiği söylenir (ADR-043 AK-6)', () => {
+        for (const kind of ['treatment', 'prescription', 'vaccination'] as ProcedureKind[]) {
+            expect(procedureAddState(kind, { ...open, finalized: true }), kind).toEqual({ disabled: false, reason: null, note: FINALIZED_LATE_ENTRY_NOTE });
         }
     });
 
-    it('kesinleşmiş muayenede reçete açıktır; gerekçeyle sonradan eklendiği söylenir (ADR-013 eki, RECORD-008)', () => {
-        const s = procedureAddState('prescription', { ...open, finalized: true });
-
-        expect(s).toEqual({ disabled: false, reason: null, note: FINALIZED_PRESCRIPTION_NOTE });
-    });
-
-    it('kesinleşmiş muayenede lab açık, yatış açık ama muayeneye bağlanmaz notu taşır', () => {
-        expect(procedureAddState('lab', { ...open, finalized: true }).disabled).toBe(false);
+    it('kesinleşmiş muayenede lab açık (ek kayıt notu), yatış açık ama muayeneye bağlanmaz notu taşır', () => {
+        expect(procedureAddState('lab', { ...open, finalized: true })).toEqual({ disabled: false, reason: null, note: FINALIZED_LAB_NOTE });
         const h = procedureAddState('hospitalization', { ...open, finalized: true });
 
         expect(h.disabled).toBe(false);
@@ -77,6 +68,52 @@ describe('buildProcedureRows', () => {
 
         expect(rows.map((r) => r.id)).toEqual(['r1', 't1', 'l1']);
         expect(rows[2].detail).toBe('Yorum bekliyor');
+    });
+
+    it('iptal edilen tedavi ve reçete gizlenmez; silik ve İptal etiketli, sonradan eklenen reçete rozetli', () => {
+        const rows = buildProcedureRows(
+            summary({
+                treatments: [{ id: 't1', treatmentDateUtc: '2026-10-08T08:00:00Z', clinicId: null, clinicName: null, title: 'Serum', isCancelled: true }],
+                prescriptions: [{ id: 'r1', prescribedAtUtc: '2026-10-08T09:00:00Z', clinicId: null, clinicName: null, title: 'Reçete', treatmentId: null, isCancelled: false, addedAfterFinalization: true }]
+            })
+        );
+
+        expect(rows.map((r) => [r.id, r.stateLabel ?? null, !!r.cancelled, !!r.addedAfterFinalization])).toEqual([
+            ['t1', 'İptal', true, false],
+            ['r1', null, false, true]
+        ]);
+    });
+
+    it('sonradan eklenen tedavi, aşı ve lab rozetlidir (ADR-043 AK-6, AK-4)', () => {
+        const rows = buildProcedureRows(
+            summary({
+                treatments: [{ id: 't1', treatmentDateUtc: '2026-10-08T08:00:00Z', clinicId: null, clinicName: null, title: 'Serum', addedAfterFinalization: true }],
+                vaccinations: [{ id: 'v1', vaccineName: 'Kuduz', status: 'Applied', appliedAtUtc: '2026-10-08T09:00:00Z', dueAtUtc: null, clinicId: null, clinicName: null, addedAfterFinalization: true }],
+                labResults: [{ id: 'l1', resultDateUtc: null, requestedAtUtc: '2026-10-08T10:00:00Z', clinicId: null, clinicName: null, testName: 'Kan', status: null, awaitingInterpretation: false, addedAfterFinalization: true }]
+            })
+        );
+
+        expect(rows.map((r) => [r.id, !!r.addedAfterFinalization])).toEqual([
+            ['t1', true],
+            ['v1', true],
+            ['l1', true]
+        ]);
+    });
+
+    it('iptal edilen yatış gizlenmez; İptal etiketiyle silik gösterilir (ADR-043 AK-5)', () => {
+        const rows = buildProcedureRows(
+            summary({
+                hospitalizations: [
+                    { id: 'h1', admittedAtUtc: '2026-10-08T09:00:00Z', clinicId: null, clinicName: null, reason: 'Gözlem', dischargedAtUtc: null, isActive: true, isCancelled: false },
+                    { id: 'h2', admittedAtUtc: '2026-10-08T10:00:00Z', clinicId: null, clinicName: null, reason: 'Yanlış', dischargedAtUtc: null, isActive: false, isCancelled: true }
+                ]
+            })
+        );
+
+        expect(rows.map((r) => [r.id, r.detail, r.stateLabel ?? null, !!r.cancelled])).toEqual([
+            ['h1', 'Aktif yatış', null, false],
+            ['h2', null, 'İptal', true]
+        ]);
     });
 
     it('aşıları özetten okur: uygulanan etiketsiz, planlı Planlı, iptal İptal (gizlenmez)', () => {

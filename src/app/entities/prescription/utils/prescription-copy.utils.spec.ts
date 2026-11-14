@@ -16,7 +16,8 @@ const source: PrescriptionEditVm = {
     notes: 'Not',
     followUpDateInput: '2026-11-06',
     items: [{ id: 'i1', name: 'Amoksisilin', productId: 'prod-1', instructions: '2x1', quantity: 1, dose: '1 tablet', unit: 'kutu', lotNumber: 'LOT-1' }],
-    isCancelled: true
+    isCancelled: true,
+    rowVersion: ''
 };
 
 describe('prescriptionCopyDraft (RECORD-004)', () => {

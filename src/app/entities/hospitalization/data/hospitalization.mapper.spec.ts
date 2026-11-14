@@ -3,6 +3,7 @@ import {
     hospitalizationsQueryToHttpParams,
     mapCreateHospitalizationToApiBody,
     mapHospitalizationDetailDtoToEditVm,
+    mapHospitalizationDetailDtoToVm,
     mapHospitalizationListItemDtoToVm,
     mapHospitalizationUpsertFormToCreateRequest
 } from '@/app/entities/hospitalization/data/hospitalization.mapper';
@@ -28,6 +29,14 @@ describe('hospitalization mapper — konum (HOSP-002)', () => {
     it('oda var ama adlar gelmezse konum metnine düşer; yalnız bölüm adı gelirse o yazılır', () => {
         expect(hospitalizationLocationLabel({ roomId: 'r1', roomName: null, wardName: null, location: 'Metin' })).toBe('Metin');
         expect(hospitalizationLocationLabel({ roomId: 'r1', roomName: null, wardName: 'Kedi servisi', location: '' })).toBe('Kedi servisi');
+    });
+
+    it('iptal alanları detay VM\'e taşınır; iptal zamanı yoksa iptal değildir (ADR-043 AK-5)', () => {
+        const cancelled = mapHospitalizationDetailDtoToVm({ id: 'h1', isActive: false, cancelledAtUtc: '2026-11-14T09:00:00Z', cancelReason: 'Yanlış hasta' });
+        const open = mapHospitalizationDetailDtoToVm({ id: 'h2', isActive: true });
+
+        expect(cancelled).toEqual(expect.objectContaining({ isCancelled: true, isActive: false, cancelledAtUtc: '2026-11-14T09:00:00Z', cancelReason: 'Yanlış hasta' }));
+        expect(open).toEqual(expect.objectContaining({ isCancelled: false, cancelledAtUtc: null, cancelReason: null }));
     });
 
     it('düzenleme VM roomId taşır; oda yoksa boş metin', () => {

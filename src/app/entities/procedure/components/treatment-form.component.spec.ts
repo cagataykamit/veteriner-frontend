@@ -68,14 +68,16 @@ describe('TreatmentFormComponent — muayene bağlamı', () => {
         expect(fixture.componentInstance.contextFromExamination()).toBe(true);
     });
 
-    it('kesinleşmiş muayene bağlamıyla açılınca kilit uyarısı formun üstünde, Kaydet öncesinde görünür', () => {
+    it('kesinleşmiş muayene bağlamıyla açılınca kilit uyarısı yok; sonradan ekleme gerekçesi istenir (ADR-043 AK-6)', () => {
         const { fixture } = setup({ clientId: 'client-1', petId: 'pet-1', examinationId: 'e1' }, { ...exam, status: 'Finalized' } as ExaminationDetailVm);
 
         fixture.detectChanges();
 
-        const alert = (fixture.nativeElement as HTMLElement).querySelector('[role="alert"]');
+        const el = fixture.nativeElement as HTMLElement;
 
-        expect(alert?.textContent).toContain('kesinleştirilmiş');
+        expect(el.querySelector('[role="alert"]')).toBeNull();
+        expect(fixture.componentInstance.isLateEntry()).toBe(true);
+        expect(el.querySelector('[data-testid="treatment-late-entry"]')).not.toBeNull();
     });
 
     it('bağlamsız açılışta form boş kalır ve muayene çağrısı yapılmaz', () => {
@@ -110,7 +112,9 @@ describe('TreatmentFormComponent — kopya', () => {
         title: 'Pansuman',
         description: 'Yara temizliği ve bandaj',
         notes: 'Eski not',
-        followUpDateInput: '2026-09-08'
+        followUpDateInput: '2026-09-08',
+        rowVersion: '',
+        isCancelled: false
     };
 
     const setup = (examinations: { id: string; status: string }[]) => {

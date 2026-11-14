@@ -69,13 +69,18 @@ export interface VaccinationWriteStatusOption {
     readonly value: VaccinationStatusEnum;
 }
 
+/** Formda seçilebilen durumlar: iptal ayrı, gerekçeli eylemdir (ADR-043 AK-3; `VACCINATIONS_API_CONTRACT.md` §1). */
 export const VACCINATION_WRITE_STATUS_OPTIONS = [
     { label: 'Planlandı', value: 0 },
-    { label: 'Uygulandı', value: 1 },
-    { label: 'İptal', value: 2 }
+    { label: 'Uygulandı', value: 1 }
 ] as const satisfies ReadonlyArray<VaccinationWriteStatusOption>;
 
 export type VaccinationWriteStatus = (typeof VACCINATION_WRITE_STATUS_OPTIONS)[number]['value'];
+
+/** Düzenlemede seçilebilen durumlar: uygulanmış aşı planlıya dönmez (sunucu `Vaccinations.InvalidStatusTransition` ile reddeder). */
+export function vaccinationEditStatusOptions(current: number | null | undefined): VaccinationWriteStatusOption[] {
+    return current === 1 ? VACCINATION_WRITE_STATUS_OPTIONS.filter((o) => o.value === 1) : [...VACCINATION_WRITE_STATUS_OPTIONS];
+}
 
 export function vaccinationStatusSeverity(status: string | number | null | undefined): StatusTagSeverity {
     const parsed = parseVaccinationStatusRawToEnum(status);

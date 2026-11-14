@@ -26,6 +26,8 @@ export interface CreateVaccinationRequest {
     /** RECORD-005; aşı kaydında tutulur. */
     route?: AdministrationRouteApi | null;
     site?: string | null;
+    /** Bağlı muayene kesinleşmişse zorunlu gerekçe (sonradan ekleme, ADR-043 AK-6); ürünlü aşıda uygulamaya da yazılır. */
+    lateEntryReason?: string | null;
 }
 
 export interface UpdateVaccinationRequest {
@@ -41,4 +43,6 @@ export interface UpdateVaccinationRequest {
     /** Tam değiştirme (PUT): formdaki mevcut değer geri gönderilir. */
     route?: AdministrationRouteApi | null;
     site?: string | null;
+    /** Ekranın açıldığı sürüm (zorunlu). */
+    rowVersion: string;
 }

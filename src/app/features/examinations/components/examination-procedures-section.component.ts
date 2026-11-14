@@ -81,8 +81,8 @@ const ADD_ICON: Record<ProcedureKind, string> = {
                 }
             </div>
             @if (canAddAny() && addHint(); as hint) {
-                <p class="text-sm text-muted-color mt-0 mb-1" role="note" [attr.data-testid]="lockReasons().length > 0 ? 'procedure-lock-reason' : 'procedure-add-note'">
-                    @if (lockReasons().length > 0) {
+                <p class="text-sm text-muted-color mt-0 mb-1" role="note" [attr.data-testid]="lockReasons().length > 0 || finalized() ? 'procedure-lock-reason' : 'procedure-add-note'">
+                    @if (lockReasons().length > 0 || finalized()) {
                         <i class="pi pi-lock text-xs mr-1"></i>
                     }
                     {{ hint }}
@@ -204,10 +204,16 @@ export class ExaminationProceduresSectionComponent {
 
         return [...new Set(notes.filter((n): n is string => !!n))];
     });
-    /** Kilit nedeni ve ek notlar tek satırda; ayrı paragraflar bölümü kalabalıklaştırıyordu. */
-    readonly addHint = computed(() => [...this.lockReasons(), ...this.addNotes()].join(' '));
-    /** Kesinleşme kalıcıdır: o yüzden kapalı kalan türlerin düğmesi çizilmez (salt okunur geçicidir, düğme kilitli kalır). */
-    readonly shownKinds = computed(() => this.visibleKinds().filter((k) => this.state(k).reason !== FINALIZED_LOCK_MESSAGE));
+    readonly finalized = computed(() => this.exam().status === 'Finalized');
+    /**
+     * Kilit nedeni ve ek notlar tek satırda; ayrı paragraflar bölümü kalabalıklaştırıyordu. Kesinleşmiş muayenede tür notları yerine
+     * kuralın tek cümlelik özeti gösterilir (ADR-043 K3); türe özgü ayrıntı (gerekçe alanı) formdadır.
+     */
+    readonly addHint = computed(() =>
+        this.lockReasons().length > 0 ? this.lockReasons().join(' ') : this.finalized() ? FINALIZED_LOCK_MESSAGE : this.addNotes().join(' ')
+    );
+    /** Kesinleşmiş muayenede kalıcı olarak kapalı tür kalmadı (ADR-043 K3); kilitli düğmeler (salt okunur, bağlamsız) nedeniyle görünür. */
+    readonly shownKinds = this.visibleKinds;
 
     readonly lateEntryLabel = IMAGING_ADDED_AFTER_FINALIZATION_LABEL;
     readonly label = (kind: ProcedureKind) => PROCEDURE_LABEL[kind];
@@ -215,7 +221,7 @@ export class ExaminationProceduresSectionComponent {
     readonly routeSegment = (kind: ProcedureKind) => PROCEDURE_ROUTE_SEGMENT[kind];
 
     state(kind: ProcedureKind) {
-        const base = procedureAddState(kind, { finalized: this.exam().status === 'Finalized', mutationBlocked: this.ro.mutationBlocked() });
+        const base = procedureAddState(kind, { finalized: this.finalized(), mutationBlocked: this.ro.mutationBlocked() });
 
         return !this.hasContext() && !base.disabled ? { disabled: true, reason: 'Muayenede müşteri veya hasta bilgisi yok; işlem eklenemez.', note: null } : base;
     }

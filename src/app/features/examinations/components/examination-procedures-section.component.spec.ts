@@ -172,13 +172,13 @@ describe('ExaminationProceduresSectionComponent', () => {
         expect(el.querySelector('app-empty-state')).toBeNull();
     });
 
-    it('kesinleşmiş muayenede kilitli türü açmaz ve neden gösterilir', () => {
+    it('kesinleşmiş muayenede tedavi gerekçeli geç kayıt için açılır; kural özeti gösterilir (ADR-043 AK-6)', () => {
         const el = create({ ...exam, status: 'Finalized' } as ExaminationDetailVm);
 
         cmp.open('treatment');
         fixture.detectChanges();
 
-        expect(cmp.drawerVisible()).toBe(false);
+        expect(cmp.drawerVisible()).toBe(true);
         expect(el.querySelector('[data-testid="procedure-lock-reason"]')?.textContent).toContain('Muayene kesinleşti');
     });
 

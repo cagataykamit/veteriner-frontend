@@ -38,3 +38,29 @@ describe('TreatmentDetailPageComponent — rota kimliği değişimi', () => {
         expect(page.showSavedBanner()).toBe(false);
     });
 });
+
+describe('TreatmentDetailPageComponent — gerekçeli iptal (ADR-043 AK-2)', () => {
+    it('iptal ekranın açıldığı sürüm ve gerekçeyle gönderilir', () => {
+        const cancelTreatment = vi.fn(() => of(void 0));
+
+        TestBed.configureTestingModule({
+            imports: [TreatmentDetailPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 't1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
+                { provide: TreatmentsService, useValue: { getTreatmentById: () => of({ id: 't1', title: 'Pansuman', petName: 'Pamuk', rowVersion: 'V1' } as TreatmentDetailVm), cancelTreatment } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        });
+        TestBed.overrideTemplate(TreatmentDetailPageComponent, '');
+        const fixture = TestBed.createComponent(TreatmentDetailPageComponent);
+        const page = fixture.componentInstance as unknown as { cancelSummary: () => string | null; cancelTreatment: (reason: string) => unknown };
+
+        fixture.detectChanges();
+        expect(page.cancelSummary()).toBe('Pansuman · Pamuk');
+        page.cancelTreatment('Yanlış hastaya girildi');
+
+        expect(cancelTreatment).toHaveBeenCalledWith('t1', 'Yanlış hastaya girildi', 'V1');
+    });
+});

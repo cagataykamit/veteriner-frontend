@@ -163,6 +163,16 @@ export class TreatmentsService {
             })
         );
     }
+
+    /** Gerekçeli iptal (`Treatments.Update`, ADR-043 AK-2); `rowVersion`: ekranın açıldığı sürüm. Hatalar Türkçe `Error` olarak iletilir. */
+    cancelTreatment(id: string, reason: string, rowVersion: string): Observable<void> {
+        return this.api.post<unknown>(ApiEndpoints.treatments.cancel(id), { reason: reason.trim(), rowVersion }).pipe(
+            map(() => void 0),
+            catchError((err: unknown) =>
+                throwError(() => (err instanceof HttpErrorResponse ? new Error(messageFromHttpError(err, 'Tedavi iptal edilemedi.')) : err instanceof Error ? err : new Error('Tedavi iptal edilemedi.')))
+            )
+        );
+    }
 }
 
 function extractCreatedTreatmentIdFromPostResponse(body: unknown): string | null {

@@ -8,6 +8,7 @@ import { ImagingRecordsService } from '@/app/entities/imaging/services/imaging-r
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { StoredFilesService } from '@/app/shared/files/stored-files.service';
+import { RecordHistoryService } from '@/app/entities/record-history/services/record-history.service';
 import { ImagingDetailPageComponent } from './imaging-detail-page.component';
 
 const vm = (status: ImagingRecordStatus): ImagingRecordDetailVm => ({
@@ -40,6 +41,7 @@ describe('ImagingDetailPageComponent — izin görünürlüğü ve önizleme', (
             imports: [ImagingDetailPageComponent],
             providers: [
                 provideRouter([]),
+                { provide: RecordHistoryService, useValue: { getHistory: () => of([]) } },
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'r1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
                 { provide: ImagingRecordsService, useValue: { getById: () => of(vm(status)), filesOwner: (id: string) => `/api/v1/imaging-records/${id}` } },
                 { provide: StoredFilesService, useValue: { accessUrl: () => of('https://api/signed/f1') } },
@@ -98,6 +100,7 @@ describe('ImagingDetailPageComponent — rota kimliği değişimi', () => {
             imports: [ImagingDetailPageComponent],
             providers: [
                 provideRouter([]),
+                { provide: RecordHistoryService, useValue: { getHistory: () => of([]) } },
                 { provide: ActivatedRoute, useValue: route },
                 { provide: ImagingRecordsService, useValue: { getById, filesOwner: (id: string) => `/api/v1/imaging-records/${id}` } },
                 { provide: StoredFilesService, useValue: { accessUrl: () => of('https://api/signed/f1') } },

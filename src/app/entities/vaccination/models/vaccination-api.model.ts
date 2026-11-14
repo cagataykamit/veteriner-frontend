@@ -78,6 +78,20 @@ export interface VaccinationDetailDto {
     /** Uygulama yolu/bölgesi (RECORD-005). */
     route?: string | null;
     site?: string | null;
+    /** Eşzamanlılık sürümü (ADR-043 K5); PUT ve iptale aynen geri gönderilir. */
+    rowVersion?: string | null;
+    /** Gerekçeli iptal (ADR-043 AK-3); uygulama iptaliyle iptal edilen aşıda boş. */
+    cancelledAtUtc?: string | null;
+    cancelReason?: string | null;
+    /** Kesinleşmiş muayeneye sonradan eklendi (ADR-043 AK-6). */
+    addedAfterFinalization?: boolean | null;
+    lateEntryReason?: string | null;
+}
+
+/** POST /vaccinations/{id}/cancel gövdesi; `rowVersion` zorunlu. */
+export interface VaccinationCancelRequestDto {
+    reason: string;
+    rowVersion: string;
 }
 
 /**
@@ -101,6 +115,8 @@ export interface VaccinationCreateRequestDto {
     /** RECORD-005; aşı kaydında tutulur (bağlı uygulamada değil). */
     route?: string | null;
     site?: string | null;
+    /** Bağlı muayene kesinleşmişse zorunlu (5–500; `VACCINATIONS_API_CONTRACT.md` §5); yalnız POST. */
+    lateEntryReason?: string | null;
 }
 
 export interface VaccinationUpdateRequestDto {
@@ -116,6 +132,8 @@ export interface VaccinationUpdateRequestDto {
     /** Tam değiştirme: gönderilmezse sunucu temizler. */
     route?: string | null;
     site?: string | null;
+    /** GET'ten alınan sürüm; zorunlu (VACCINATIONS_API_CONTRACT.md §2). */
+    rowVersion: string;
 }
 
 /** GET /vaccinations/{id} → `administration` (`ADMINISTRATIONS_API_CONTRACT.md` §9.4). */

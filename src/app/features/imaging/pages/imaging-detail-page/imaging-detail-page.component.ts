@@ -21,6 +21,7 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
+import { RecordHistoryButtonComponent } from '@/app/entities/record-history/components/record-history-button.component';
 
 const SAVED_MESSAGES: Record<string, string> = { created: 'Görüntüleme kaydedildi.' };
 
@@ -45,6 +46,7 @@ const SAVED_MESSAGES: Record<string, string> = { created: 'Görüntüleme kayded
         StoredFileGalleryComponent,
         StoredFileUploadComponent,
         ImagingCancelDialogComponent,
+        RecordHistoryButtonComponent,
         TrDateTimePipe
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -77,6 +79,9 @@ const SAVED_MESSAGES: Record<string, string> = { created: 'Görüntüleme kayded
                         <span><span class="font-medium">İptal edildi</span> · {{ r.cancelledAtUtc | trDateTime }}<span class="block whitespace-pre-wrap">Gerekçe: {{ r.cancelReason ?? '—' }}</span></span>
                     </p>
                 }
+                <ng-container actions>
+                    <app-record-history-button resource="imaging-records" [recordId]="r.id" />
+                </ng-container>
                 <div stat>
                     <dt>Tarih</dt>
                     <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ r.performedAtUtc | trDateTime }}</dd>

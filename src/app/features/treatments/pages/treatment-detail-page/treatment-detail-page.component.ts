@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AdministrationsSectionComponent } from '@/app/entities/administration/components/administrations-section.component';
@@ -19,6 +19,9 @@ import { TREATMENTS_CREATE_CLAIM, TREATMENTS_UPDATE_CLAIM } from '@/app/core/aut
 import { recordCopyQueryParams } from '@/app/shared/panel/record-copy.utils';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
+import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { ADMINISTRATION_LATE_ENTRY_LABEL } from '@/app/entities/administration/utils/administration-labels';
 
 @Component({
     selector: 'app-treatment-detail-page',
@@ -36,6 +39,8 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
         PetAlertBannerComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
+        ReasonConfirmDialogComponent,
+        AppStatusTagComponent,
         TrDatePipe,
         TrDateTimePipe
     ],
@@ -56,17 +61,37 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 
             <!-- Kimlik kartı (müşteri/hasta kartıyla aynı dil): başlık, tedavi tarihi, kayıt satırı, hasta/sahip; sağda Düzenle ve geçmiş; gösterge şeridi. -->
             <app-detail-identity-card icon="pi pi-heart" [title]="r.title" [subtitle]="r.treatmentDateUtc | trDateTime" [meta]="'Oluşturulma: ' + (r.createdAtUtc | trDateTime) + ' · Güncellenme: ' + (r.updatedAtUtc | trDateTime)" ariaLabel="Tedavi kimliği" testId="treatment-identity-card">
+                @if (r.cancelledAtUtc) {
+                    <app-status-tag badges label="İptal" severity="danger" />
+                }
+                @if (r.addedAfterFinalization) {
+                    <span badges data-testid="treatment-late-entry" [title]="r.lateEntryReason ? 'Gerekçe: ' + r.lateEntryReason : null"><app-status-tag [label]="lateEntryLabel" severity="warn" /></span>
+                }
                 <app-detail-subject-line [petId]="r.petId" [petName]="r.petName" [clientId]="r.clientId" [clientName]="r.clientName" />
+                @if (r.cancelledAtUtc) {
+                    <p class="m-0 mt-3 inline-flex items-start gap-2 rounded-border border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="status" data-testid="treatment-cancelled">
+                        <i class="pi pi-ban text-xs mt-1" aria-hidden="true"></i>
+                        <span><span class="font-medium">İptal edildi</span> · {{ r.cancelledAtUtc | trDateTime }}<span class="block whitespace-pre-wrap">Gerekçe: {{ r.cancelReason ?? '—' }}</span></span>
+                    </p>
+                }
+                @if (r.addedAfterFinalization && r.lateEntryReason) {
+                    <p class="m-0 mt-2 text-sm text-muted-color">Geç kayıt gerekçesi: {{ r.lateEntryReason }}</p>
+                }
                 <ng-container actions>
-                    @if (canUpdateTreatment && !ro.mutationBlocked()) {
-                        <a [routerLink]="['/panel/treatments', r.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
-                    } @else if (canUpdateTreatment && ro.mutationBlocked()) {
-                        <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                    @if (!r.cancelledAtUtc) {
+                        @if (canUpdateTreatment && !ro.mutationBlocked()) {
+                            <a [routerLink]="['/panel/treatments', r.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
+                        } @else if (canUpdateTreatment && ro.mutationBlocked()) {
+                            <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                        }
                     }
                     @if (canCreateTreatment && r.petId && !ro.mutationBlocked()) {
                         <a [routerLink]="['/panel/treatments/new']" [queryParams]="copyQueryParams(r.id)" pButton type="button" class="p-button-outlined p-button-secondary" data-testid="treatment-copy"><i class="pi pi-copy"></i>Kopyasını oluştur</a>
                     }
                     <app-record-history-button resource="treatments" [recordId]="r.id" />
+                    @if (!r.cancelledAtUtc && canUpdateTreatment && !ro.mutationBlocked()) {
+                        <button pButton type="button" class="p-button-danger p-button-outlined" (click)="cancelVisible.set(true)" data-testid="treatment-cancel"><i class="pi pi-ban"></i>İptal et</button>
+                    }
                 </ng-container>
                 <div stat>
                     <dt>Tedavi tarihi</dt>
@@ -96,7 +121,7 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
             <app-pet-alert-banner [petId]="r.petId" />
 
             <!-- Eylem şeridi: reçete ve ödeme; salt okunurda kilitli. -->
-            @if (canUpdateTreatment && r.clientId?.trim() && r.petId?.trim()) {
+            @if (!r.cancelledAtUtc && canUpdateTreatment && r.clientId?.trim() && r.petId?.trim()) {
                 <app-detail-action-bar ariaLabel="Tedavi eylemleri">
                     @if (!ro.mutationBlocked()) {
                         <a [routerLink]="['/panel/prescriptions/new']" [queryParams]="prescriptionCreateQueryParams()" pButton type="button" class="p-button-primary"><i class="pi pi-file-edit"></i>Reçete Oluştur</a>
@@ -137,6 +162,17 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
                 }
             </div>
         }
+
+        <app-reason-confirm-dialog
+            [(visible)]="cancelVisible"
+            header="Tedaviyi iptal et"
+            [summary]="cancelSummary()"
+            description="Tedaviye bağlı iptal edilmemiş reçete ya da uygulama varsa önce onlar iptal edilmelidir. İptal edilen tedavi silinmez; listelerde varsayılan olarak gizlenir, kayıt defterinde işaretli kalır. Geri alınamaz."
+            confirmLabel="Tedaviyi iptal et"
+            failureFallback="Tedavi iptal edilemedi."
+            [execute]="cancelTreatment"
+            (confirmed)="reload()"
+        />
     `
 })
 export class TreatmentDetailPageComponent implements OnInit {
@@ -157,6 +193,17 @@ export class TreatmentDetailPageComponent implements OnInit {
     readonly row = this.loader.value;
     readonly showSavedBanner = signal(false);
     readonly canUpdateTreatment = this.auth.hasOperationClaim(TREATMENTS_UPDATE_CLAIM);
+
+    protected readonly lateEntryLabel = ADMINISTRATION_LATE_ENTRY_LABEL;
+    readonly cancelVisible = signal(false);
+    protected readonly cancelSummary = computed(() => {
+        const r = this.row();
+
+        return r ? `${r.title} · ${r.petName}` : null;
+    });
+
+    /** Ekranın açıldığı sürümle; bağlı etkin reçete/uygulama ya da çakışmada sunucunun mesajı diyalogda kalır. */
+    protected readonly cancelTreatment = (reason: string) => this.treatmentsService.cancelTreatment(this.row()!.id, reason, this.row()!.rowVersion);
     readonly canCreateTreatment = this.auth.hasOperationClaim(TREATMENTS_CREATE_CLAIM);
     /** RECORD-004: kopya oluşturma formunu doldurur; ayrı kopyalama ucu yok. */
     readonly copyQueryParams = recordCopyQueryParams;

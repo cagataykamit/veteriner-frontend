@@ -48,6 +48,10 @@ export interface HospitalizationDetailVm {
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
     isActive: boolean;
+    /** Gerekçeli iptal (ADR-043 AK-5): iptal edilen yatış değiştirilemez ve etkin sayılmaz. */
+    isCancelled: boolean;
+    cancelledAtUtc: string | null;
+    cancelReason: string | null;
     /** Yazma çağrılarına aynen geri gönderilir. */
     rowVersion: string;
 }

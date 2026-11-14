@@ -188,7 +188,12 @@ export function mapVaccinationDetailDtoToVm(dto: VaccinationDetailDto): Vaccinat
         linkedAdministration: mapLinkedAdministration(dto),
         hbs: mapHbsEntryDtoToVm(dto.hbs),
         route: administrationRouteFromApi(dto.route),
-        site: firstTrimmed(dto.site)
+        site: firstTrimmed(dto.site),
+        rowVersion: firstTrimmed(dto.rowVersion) ?? '',
+        cancelledAtUtc: firstTrimmed(dto.cancelledAtUtc),
+        cancelReason: firstTrimmed(dto.cancelReason),
+        addedAfterFinalization: dto.addedAfterFinalization === true,
+        lateEntryReason: firstTrimmed(dto.lateEntryReason)
     };
 }
 
@@ -212,7 +217,8 @@ export function mapVaccinationDetailDtoToEditVm(dto: VaccinationDetailDto): Vacc
         notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes'])) ?? '',
         administrationId: linkedAdministrationSource(dto)?.administrationId.trim() ?? null,
         route: administrationRouteFromApi(dto.route),
-        site: firstTrimmed(dto.site) ?? ''
+        site: firstTrimmed(dto.site) ?? '',
+        rowVersion: firstTrimmed(dto.rowVersion) ?? ''
     };
 }
 
@@ -247,6 +253,7 @@ export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): Va
         notes,
         route: req.route ?? null,
         site: req.site?.trim() ? req.site.trim() : null,
+        ...(req.lateEntryReason?.trim() ? { lateEntryReason: req.lateEntryReason.trim() } : {}),
         ...(productId
             ? {
                   productId,
@@ -283,7 +290,8 @@ export function mapUpdateVaccinationToApiBody(routeId: string, req: UpdateVaccin
         dueAtUtc: req.dueAtUtc?.trim() ? req.dueAtUtc.trim() : null,
         notes: req.notes?.trim() ? req.notes.trim() : null,
         route: req.route ?? null,
-        site: req.site?.trim() ? req.site.trim() : null
+        site: req.site?.trim() ? req.site.trim() : null,
+        rowVersion: req.rowVersion
     };
 }
 

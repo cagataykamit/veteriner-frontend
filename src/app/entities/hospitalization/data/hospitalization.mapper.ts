@@ -230,8 +230,15 @@ export function mapHospitalizationDetailDtoToVm(dto: HospitalizationDetailDto): 
         createdAtUtc: canonicalCreatedAt(dto),
         updatedAtUtc: canonicalUpdatedAt(dto),
         isActive: canonicalIsActive(dto),
+        ...canonicalCancellation(dto),
         rowVersion: canonicalRowVersion(dto)
     };
+}
+
+function canonicalCancellation(dto: HospitalizationDetailDto): Pick<HospitalizationDetailVm, 'isCancelled' | 'cancelledAtUtc' | 'cancelReason'> {
+    const cancelledAtUtc = firstTrimmed(dto.cancelledAtUtc, readDtoString(dto, ['CancelledAtUtc']));
+
+    return { isCancelled: !!cancelledAtUtc, cancelledAtUtc, cancelReason: firstTrimmed(dto.cancelReason, readDtoString(dto, ['CancelReason'])) };
 }
 
 export function mapHospitalizationDetailDtoToEditVm(dto: HospitalizationDetailDto): HospitalizationEditVm {

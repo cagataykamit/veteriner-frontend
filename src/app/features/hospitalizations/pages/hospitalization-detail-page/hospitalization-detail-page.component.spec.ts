@@ -50,3 +50,36 @@ describe('HospitalizationDetailPageComponent — rota kimliği değişimi', () =
         expect(service.dischargeHospitalization).toHaveBeenCalledWith('h2', expect.objectContaining({ rowVersion: 'V-h2' }));
     });
 });
+
+describe('HospitalizationDetailPageComponent — gerekçeli iptal (ADR-043 AK-5)', () => {
+    it('iptal ekranın açıldığı sürümle ve gerekçeyle gönderilir', () => {
+        const service = {
+            getHospitalizationById: vi.fn((id: string) => of({ id, reason: 'Gözlem', petName: 'Pamuk', rowVersion: 'V1', isCancelled: false } as HospitalizationDetailVm)),
+            cancelHospitalization: vi.fn(() => of({ id: 'h1', rowVersion: 'V2' }))
+        };
+
+        TestBed.configureTestingModule({
+            imports: [HospitalizationDetailPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'h1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
+                { provide: HospitalizationsService, useValue: service },
+                { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        });
+        TestBed.overrideTemplate(HospitalizationDetailPageComponent, '');
+        const fixture = TestBed.createComponent(HospitalizationDetailPageComponent);
+        const page = fixture.componentInstance as unknown as {
+            cancelSummary: () => string | null;
+            cancelHospitalization: (reason: string) => unknown;
+        };
+
+        fixture.detectChanges();
+        expect(page.cancelSummary()).toBe('Gözlem · Pamuk');
+
+        page.cancelHospitalization('Yanlış hastaya açıldı');
+
+        expect(service.cancelHospitalization).toHaveBeenCalledWith('h1', 'Yanlış hastaya açıldı', 'V1');
+    });
+});

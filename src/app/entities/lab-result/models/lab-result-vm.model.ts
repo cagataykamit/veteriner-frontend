@@ -42,6 +42,8 @@ export interface LabResultDetailVm {
     cancelledAtUtc: string | null;
     cancelReason: string | null;
     rowVersion: string;
+    /** Kesinleşmiş muayeneye sonradan eklendi (ADR-043 AK-4). */
+    addedAfterFinalization?: boolean;
 }
 
 export interface LabResultEditVm {

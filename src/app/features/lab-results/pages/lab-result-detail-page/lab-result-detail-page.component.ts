@@ -1,3 +1,5 @@
+import { ADMINISTRATION_LATE_ENTRY_LABEL } from '@/app/entities/administration/utils/administration-labels';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -46,6 +48,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         LabResultCancelDialogComponent,
         StoredFileGalleryComponent,
         StoredFileUploadComponent,
+        AppStatusTagComponent,
         TrDateTimePipe
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -66,6 +69,9 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
             <!-- Kimlik kartı: test adı + durum rozetleri, sonuç tarihi, kayıt satırı, hasta/sahip, iptal notu; sağda Düzenle/Sonuç gir, geçmiş ve İptal et (tek eylem şeridi gerekmez); gösterge şeridi. -->
             <app-detail-identity-card icon="pi pi-chart-bar" [title]="r.testName" [subtitle]="r.resultDateUtc ? (r.resultDateUtc | trDateTime) : ''" [meta]="'Oluşturulma: ' + (r.createdAtUtc | trDateTime) + ' · Güncellenme: ' + (r.updatedAtUtc | trDateTime)" ariaLabel="Lab sonucu kimliği" testId="lab-result-identity-card">
                 <app-lab-result-status-badges badges [status]="r.status" [awaitingInterpretation]="r.awaitingInterpretation" />
+                @if (r.addedAfterFinalization) {
+                    <span badges data-testid="lab-result-late-entry"><app-status-tag [label]="lateEntryLabel" severity="warn" /></span>
+                }
                 <app-detail-subject-line [petId]="r.petId" [petName]="r.petName" [clientId]="r.clientId" [clientName]="r.clientName" />
                 @if (r.status === 'Cancelled') {
                     <p class="m-0 mt-3 inline-flex items-start gap-2 rounded-border border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="status">
@@ -185,6 +191,7 @@ export class LabResultDetailPageComponent implements OnInit {
     readonly error = this.loader.error;
     readonly row = this.loader.value;
     readonly savedMessage = signal<string | null>(null);
+    protected readonly lateEntryLabel = ADMINISTRATION_LATE_ENTRY_LABEL;
     readonly cancelVisible = signal(false);
     readonly canUpdateLabResult = this.auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM);
     /** Mapper boş metin için kullandığı EM ile aynı. */

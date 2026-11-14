@@ -133,7 +133,8 @@ export function mapLabResultDetailDtoToVm(dto: LabResultDetailDto): LabResultDet
         updatedAtUtc: canonicalUpdatedAt(dto),
         cancelledAtUtc: firstTrimmed(dto.cancelledAtUtc),
         cancelReason: firstTrimmed(dto.cancelReason),
-        rowVersion: firstTrimmed(dto.rowVersion) ?? ''
+        rowVersion: firstTrimmed(dto.rowVersion) ?? '',
+        addedAfterFinalization: dto.addedAfterFinalization === true
     };
 }
 

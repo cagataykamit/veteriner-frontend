@@ -22,6 +22,8 @@ export interface HospitalizationListItemDto {
     roomId?: string | null;
     roomName?: string | null;
     wardName?: string | null;
+    /** ADR-043 AK-5: yalnız `includeCancelled=true` ile gelen iptal edilmiş yatışta `true`. */
+    isCancelled?: boolean | null;
 }
 
 export interface HospitalizationListItemDtoPagedResult {
@@ -56,6 +58,15 @@ export interface HospitalizationDetailDto {
     roomId?: string | null;
     roomName?: string | null;
     wardName?: string | null;
+    /** Gerekçeli iptal (ADR-043 AK-5); iptal edilmemişse `null`. */
+    cancelledAtUtc?: string | null;
+    cancelReason?: string | null;
+}
+
+/** POST /hospitalizations/{id}/cancel gövdesi; `rowVersion` zorunlu. */
+export interface HospitalizationCancelRequestDto {
+    reason: string;
+    rowVersion: string;
 }
 
 /** POST create / PUT update body — API ile uyumlu. */

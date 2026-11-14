@@ -20,7 +20,7 @@ import { VaccineDefinitionsService } from '@/app/entities/vaccine-definition/ser
 import type { VaccineDefinitionListItemVm } from '@/app/entities/vaccine-definition/models/vaccine-definition-vm.model';
 import { groupVaccineDefinitionOptions } from '@/app/entities/vaccine-definition/utils/vaccine-category.utils';
 import { type VaccinationUpsertFieldErrors, type VaccinationUpsertFormFieldKey, parseVaccinationUpsertHttpError } from '@/app/entities/vaccination/utils/vaccination-upsert-validation-parse.utils';
-import { VACCINATION_WRITE_STATUS_OPTIONS } from '@/app/entities/vaccination/utils/vaccination-status.utils';
+import { vaccinationEditStatusOptions, type VaccinationWriteStatusOption } from '@/app/entities/vaccination/utils/vaccination-status.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -107,6 +107,7 @@ import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTime
                         <div class="col-span-12 md:col-span-6">
                             <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                             <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
+                            <small class="text-muted-color block mt-1" data-testid="subject-locked">Hasta değiştirilemez; yanlış hastaya girildiyse kaydı gerekçeyle iptal edip doğru hastaya yeni kayıt açın.</small>
                             @if (apiFieldErrors().petId) {
                                 <small class="text-danger">{{ apiFieldErrors().petId }}</small>
                             } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
@@ -197,17 +198,7 @@ import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTime
                                 }
                             </div>
                         }
-                        @if (statusNum() === 2) {
-                            <div class="col-span-12 md:col-span-6">
-                                <label for="nextDueDateCancelled" class="block text-sm font-medium text-muted-color mb-2">Planlı / sonraki tarih (opsiyonel)</label>
-                                <app-date-input inputId="nextDueDateCancelled" type="datetime-local" formControlName="nextDueDate" [min]="datetimeLocalInputMin" limit="planned" />
-                                @if (form.controls.nextDueDate.hasError('dateYearInvalid') && form.controls.nextDueDate.touched) {
-                                    <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
-                                } @else if (apiFieldErrors().nextDueDate) {
-                                    <small class="text-danger">{{ apiFieldErrors().nextDueDate }}</small>
-                                }
-                            </div>
-                        }
+
                         <app-administration-route-site-fields idPrefix="vac-edit" [routeControl]="form.controls.route" [siteControl]="form.controls.site" />
                         <div class="col-span-12">
                             <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
@@ -268,7 +259,8 @@ export class VaccinationEditPageComponent implements OnInit {
     /** Son bilinen durum — yalnızca kullanıcı `status` değiştirdiğinde tarih reseti için. */
     private lastStatusForDateTransition: number | null = null;
 
-    readonly statusOptions = [...VACCINATION_WRITE_STATUS_OPTIONS];
+    /** Kayıtlı duruma göre: uygulanmış aşı planlıya dönmez; iptal ayrı eylemdir (detay sayfası). */
+    statusOptions: VaccinationWriteStatusOption[] = vaccinationEditStatusOptions(null);
 
     readonly form = this.fb.nonNullable.group(
         {
@@ -378,6 +370,15 @@ export class VaccinationEditPageComponent implements OnInit {
         this.vaccinationsService.getVaccinationForEditById(this.vaccinationId).subscribe({
             next: (x) => {
                 this.editVmCache = x;
+
+                if (x.status === 2) {
+                    this.loadError.set('İptal edilmiş aşı kaydı değiştirilemez.');
+                    this.loading.set(false);
+
+                    return;
+                }
+
+                this.statusOptions = vaccinationEditStatusOptions(x.status);
                 this.legacyMissingVaccineDefinition.set(!(x.vaccineDefinitionId ?? '').trim());
                 const st = this.normalizeStatusNum(x.status ?? 0);
                 const appliedForm = st === 1 ? toIstanbulDateTimeLocalInputValue(x.appliedAtUtc) : '';
@@ -405,6 +406,10 @@ export class VaccinationEditPageComponent implements OnInit {
                 } else {
                     this.form.controls.petId.disable({ emitEvent: false });
                 }
+
+                // Kaydın hastası ve kliniği değişmez (ADR-043 AK-10); muayene bağı aynı hasta içinde değişebilir.
+                this.form.controls.clientId.disable({ emitEvent: false });
+                this.form.controls.petId.disable({ emitEvent: false });
 
                 this.linkedAdministrationId.set(x.administrationId);
 
@@ -437,7 +442,7 @@ export class VaccinationEditPageComponent implements OnInit {
         const v = this.form.getRawValue();
         const status = Number(v.status);
 
-        if (!Number.isFinite(status) || ![0, 1, 2].includes(status)) {
+        if (!Number.isFinite(status) || ![0, 1].includes(status)) {
             this.submitError.set('Geçerli bir durum seçin.');
 
             return;
@@ -470,7 +475,8 @@ export class VaccinationEditPageComponent implements OnInit {
             status,
             notes: v.notes.trim() || null,
             route: v.route,
-            site: v.site
+            site: v.site,
+            rowVersion: this.editVmCache?.rowVersion ?? ''
         };
 
         this.submitting.set(true);

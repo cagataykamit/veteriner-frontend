@@ -46,6 +46,8 @@ import {
 } from '@/app/entities/vaccination/utils/vaccination-upsert-date-submit.utils';
 import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
+import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 
 const LAST_VACCINE_PRODUCT_KEY = 'vetinity.vaccine.lastProductId';
 
@@ -193,17 +195,7 @@ export interface VaccinationSavedEvent {
                             }
                         </div>
                     }
-                    @if (statusNum() === 2) {
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="nextDueDateCancelled" class="block text-sm font-medium text-muted-color mb-2">Planlı / sonraki tarih (opsiyonel)</label>
-                            <app-date-input inputId="nextDueDateCancelled" type="datetime-local" formControlName="nextDueDate" [min]="datetimeLocalInputMin" limit="planned" />
-                            @if (form.controls.nextDueDate.hasError('dateYearInvalid') && form.controls.nextDueDate.touched) {
-                                <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
-                            } @else if (apiFieldErrors().nextDueDate) {
-                                <small class="text-danger">{{ apiFieldErrors().nextDueDate }}</small>
-                            }
-                        </div>
-                    }
+
                     @if (canStock && statusNum() === 1) {
                         <div class="col-span-12 md:col-span-6" data-testid="vaccine-product">
                             <label for="productId" class="block text-sm font-medium text-muted-color mb-2">Aşı ürünü (stoktan düşer)</label>
@@ -263,6 +255,17 @@ export interface VaccinationSavedEvent {
                             <small class="text-danger">{{ apiFieldErrors().notes }}</small>
                         }
                     </div>
+                    @if (examinationFinalized()) {
+                        <div class="col-span-12" data-testid="vaccination-late-entry">
+                            <label for="lateEntryReason" class="block text-sm font-medium text-muted-color mb-2">Sonradan ekleme gerekçesi *</label>
+                            <textarea id="lateEntryReason" rows="2" class="w-full p-inputtext p-component" formControlName="lateEntryReason"></textarea>
+                            @if (lateEntryReasonInvalid()) {
+                                <small class="text-danger">Gerekçe {{ reasonMin }}–{{ reasonMax }} karakter olmalıdır.</small>
+                            } @else {
+                                <small class="text-muted-color">Bağlı muayene kesinleşmiş; aşı "kesinleştirmeden sonra eklendi" olarak kaydedilir, muayene metni değişmez.</small>
+                            }
+                        </div>
+                    }
                 </div>
 
                 @if (submitError()) {
@@ -293,6 +296,18 @@ export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
     private readonly vaccineDefinitionsService = inject(VaccineDefinitionsService);
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
+    private readonly examinationsService = inject(ExaminationsService);
+
+    /** Bağlamdaki muayene kesinleşmişse aşı gerekçeli "sonradan ekleme" olur (ADR-043 AK-6). */
+    readonly examinationFinalized = signal(false);
+    protected readonly reasonMin = REASON_MIN;
+    protected readonly reasonMax = REASON_MAX;
+
+    lateEntryReasonInvalid(): boolean {
+        const c = this.form.controls.lateEntryReason;
+
+        return c.touched && reasonLength(c) !== null;
+    }
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
     private readonly productService = inject(ProductService);
@@ -348,6 +363,7 @@ export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
             appliedAtLocal: [''],
             nextDueDate: [''],
             notes: [''],
+            lateEntryReason: [''],
             /** Boş = ürünsüz (yalnız aşı kaydı). */
             productId: [''],
             /** Boş = otomatik (sunucu FEFO ile seçer). */
@@ -535,7 +551,7 @@ export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
         this.submitError.set(null);
         this.apiFieldErrors.set({});
 
-        if (this.form.invalid) {
+        if (this.form.invalid || (this.examinationFinalized() && reasonLength(this.form.controls.lateEntryReason) !== null)) {
             this.form.markAllAsTouched();
 
             return;
@@ -544,7 +560,7 @@ export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
         const v = this.form.getRawValue();
         const status = Number(v.status);
 
-        if (!Number.isFinite(status) || ![0, 1, 2].includes(status)) {
+        if (!Number.isFinite(status) || ![0, 1].includes(status)) {
             this.submitError.set('Geçerli bir durum seçin.');
 
             return;
@@ -578,6 +594,7 @@ export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
             notes: v.notes.trim() || null,
             route: v.route,
             site: v.site,
+            lateEntryReason: this.examinationFinalized() ? v.lateEntryReason : null,
             ...(productId && status === 1 ? { productId, quantity: v.quantity, batchId: v.batchId || null, requestId: this.requestId } : {})
         };
 
@@ -639,6 +656,7 @@ export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
                 }
 
                 this.routeExaminationId = ctx.examinationId;
+                this.loadExaminationFinalized(ctx.examinationId);
                 this.form.patchValue({ clientId: ctx.clientId, petId: ctx.petId }, { emitEvent: false });
                 this.form.controls.clientId.disable({ emitEvent: false });
                 this.form.controls.petId.disable({ emitEvent: false });
@@ -650,6 +668,20 @@ export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
                 this.selectionError.set('Bağlam hastası yüklenemedi.');
                 this.applyingRouteContext.set(false);
             }
+        });
+    }
+
+    private loadExaminationFinalized(examinationId: string | null): void {
+        this.examinationFinalized.set(false);
+
+        if (!examinationId) {
+            return;
+        }
+
+        this.examinationsService.getExaminationById(examinationId).subscribe({
+            next: (ex) => this.examinationFinalized.set(ex.status === 'Finalized'),
+            // Bilinemezse sunucu gerekçe ister (`Vaccinations.LateEntryReasonRequired`) ve hata gösterilir.
+            error: () => this.examinationFinalized.set(false)
         });
     }
 

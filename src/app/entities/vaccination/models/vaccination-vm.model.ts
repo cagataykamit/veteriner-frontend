@@ -55,6 +55,12 @@ export interface VaccinationDetailVm {
     /** Uygulama yolu/bölgesi (RECORD-005). */
     route: AdministrationRouteApi | null;
     site: string | null;
+    rowVersion: string;
+    cancelledAtUtc: string | null;
+    cancelReason: string | null;
+    /** Kesinleşmiş muayeneye sonradan eklendi; gerekçesi `lateEntryReason` (ADR-043 AK-6). */
+    addedAfterFinalization: boolean;
+    lateEntryReason: string | null;
 }
 
 /** POST /vaccinations sonucu: ürünlü kayıtta uygulama ve kalan stok da döner (`stockResult`), ürünsüzde `null`. */
@@ -86,4 +92,6 @@ export interface VaccinationEditVm {
     administrationId: string | null;
     route: AdministrationRouteApi | null;
     site: string;
+    /** Yazma çağrılarına aynen geri gönderilir. */
+    rowVersion: string;
 }
