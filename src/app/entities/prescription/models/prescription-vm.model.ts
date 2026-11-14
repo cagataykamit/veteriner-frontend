@@ -48,6 +48,7 @@ export interface PrescriptionDetailVm {
     /** Kesinleşmiş muayeneye sonradan eklendi; gerekçesi `lateEntryReason`. */
     addedAfterFinalization: boolean;
     lateEntryReason: string | null;
+    rowVersion: string;
 }
 
 export interface PrescriptionEditVm {
@@ -67,6 +68,8 @@ export interface PrescriptionEditVm {
     items: PrescriptionItemVm[];
     /** İptal edilmiş reçete düzenlenemez (RECORD-008). */
     isCancelled: boolean;
+    /** Yazma çağrılarına aynen geri gönderilir. */
+    rowVersion: string;
 }
 
 export interface PrescriptionItemVm {

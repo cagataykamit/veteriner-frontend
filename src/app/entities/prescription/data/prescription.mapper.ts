@@ -180,7 +180,8 @@ export function mapPrescriptionDetailDtoToVm(dto: PrescriptionDetailDto): Prescr
         cancelledByName: firstTrimmed(dto.cancelledByName),
         cancelReason: firstTrimmed(dto.cancelReason),
         addedAfterFinalization: dto.addedAfterFinalization === true,
-        lateEntryReason: firstTrimmed(dto.lateEntryReason)
+        lateEntryReason: firstTrimmed(dto.lateEntryReason),
+        rowVersion: firstTrimmed(dto.rowVersion) ?? ''
     };
 }
 
@@ -204,7 +205,8 @@ export function mapPrescriptionDetailDtoToEditVm(dto: PrescriptionDetailDto): Pr
         notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes', 'Note'])) ?? '',
         followUpDateInput: followUpDateToInput(canonicalFollowUp(dto)),
         items: mapPrescriptionItemDtosToVm(dto.items),
-        isCancelled: dto.status === PRESCRIPTION_CANCELLED_STATUS
+        isCancelled: dto.status === PRESCRIPTION_CANCELLED_STATUS,
+        rowVersion: firstTrimmed(dto.rowVersion) ?? ''
     };
 }
 
@@ -325,6 +327,10 @@ export function mapCreatePrescriptionToApiBody(req: CreatePrescriptionRequest): 
 
     if (tr) {
         dto.treatmentId = tr;
+    }
+
+    if (req.rowVersion) {
+        dto.rowVersion = req.rowVersion;
     }
 
     if (req.items !== undefined) {

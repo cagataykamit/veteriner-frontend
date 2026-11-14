@@ -84,6 +84,8 @@ export interface PrescriptionDetailDto {
     cancelledAtUtc?: string | null;
     cancelledByName?: string | null;
     cancelReason?: string | null;
+    /** Eşzamanlılık sürümü (ADR-043 K5); PUT ve iptale aynen geri gönderilir. */
+    rowVersion?: string | null;
     addedAfterFinalization?: boolean | null;
     lateEntryReason?: string | null;
 }
@@ -103,4 +105,6 @@ export interface PrescriptionWriteRequestDto {
     items?: PrescriptionItemWriteDto[] | null;
     /** Bağlı muayene kesinleşmişse zorunlu (5–500, sonradan ekleme); yalnız POST. */
     lateEntryReason?: string | null;
+    /** Yalnız PUT; GET'ten alınan sürüm (zorunlu, `PRESCRIPTION_ITEMS_API_CONTRACT.md` §9). */
+    rowVersion?: string;
 }

@@ -74,4 +74,9 @@ describe('prescription mapper — iptal, sonradan ekleme, kararlı satır kimli�
         expect(body).not.toHaveProperty('lateEntryReason');
         expect(mapCreatePrescriptionToApiBody({ ...base, lateEntryReason: ' Sonra yazıldı ' }).lateEntryReason).toBe('Sonra yazıldı');
     });
+
+    it('sürüm yalnız verildiğinde (PUT) gövdeye girer (ADR-043 K5)', () => {
+        expect(mapCreatePrescriptionToApiBody(base)).not.toHaveProperty('rowVersion');
+        expect(mapCreatePrescriptionToApiBody({ ...base, rowVersion: 'V1' }).rowVersion).toBe('V1');
+    });
 });

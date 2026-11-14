@@ -196,7 +196,8 @@ describe('Reçete kopyası (RECORD-004)', () => {
             { id: 'i1', name: 'Benazepril', productId: 'prod-1', instructions: 'Günde 1', quantity: 2, dose: '1 tablet', unit: 'kutu', lotNumber: 'LOT-9' },
             { id: 'i2', name: 'Tramadol', productId: 'prod-2', instructions: '', quantity: 1, dose: '', unit: '', lotNumber: '' }
         ],
-        isCancelled: false
+        isCancelled: false,
+        rowVersion: ''
     };
 
     const render = (examinations: { id: string; status: string }[]) => {

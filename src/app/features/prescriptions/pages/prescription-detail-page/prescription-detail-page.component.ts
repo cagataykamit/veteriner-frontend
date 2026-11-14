@@ -233,7 +233,7 @@ export class PrescriptionDetailPageComponent implements OnInit {
     readonly emptyMark = '—';
 
     /** Gerekçeli iptal (RECORD-008); diyalog her açılışta güncel kaydın kimliğini kullanır. */
-    readonly cancelPrescription = (reason: string) => this.prescriptionsService.cancelPrescription(this.row()!.id, reason);
+    readonly cancelPrescription = (reason: string) => this.prescriptionsService.cancelPrescription(this.row()!.id, reason, this.row()!.rowVersion);
 
     ngOnInit(): void {
         this.loader.init();

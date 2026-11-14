@@ -455,18 +455,21 @@ export class PrescriptionEditPageComponent implements OnInit {
             return;
         }
 
-        const payload = mapPrescriptionUpsertFormToCreateRequest({
-            clinicId,
-            petId: v.petId,
-            examinationId: v.examinationId,
-            treatmentId: v.treatmentId,
-            prescribedAtUtc,
-            title: v.title,
-            content: v.content,
-            notes: v.notes,
-            items: prescriptionItemsFormToInputs(this.form.controls.items),
-            followUpDateUtc
-        });
+        const payload = {
+            ...mapPrescriptionUpsertFormToCreateRequest({
+                clinicId,
+                petId: v.petId,
+                examinationId: v.examinationId,
+                treatmentId: v.treatmentId,
+                prescribedAtUtc,
+                title: v.title,
+                content: v.content,
+                notes: v.notes,
+                items: prescriptionItemsFormToInputs(this.form.controls.items),
+                followUpDateUtc
+            }),
+            rowVersion: this.editVmCache?.rowVersion ?? ''
+        };
 
         this.submitting.set(true);
         this.prescriptionsService.updatePrescription(this.prescriptionId, payload).subscribe({

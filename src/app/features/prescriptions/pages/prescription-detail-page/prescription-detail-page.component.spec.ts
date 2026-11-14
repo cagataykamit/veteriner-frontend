@@ -48,7 +48,7 @@ describe('PrescriptionDetailPageComponent — iptal', () => {
         id: 'rx1', clinicId: 'c1', petId: 'p1', petName: 'Pamuk', clientId: 'cl1', clientName: 'Ali Veli', examinationId: null, treatmentId: null,
         prescribedAtUtc: '2026-10-30T07:00:00Z', title: 'Antibiyotik', content: 'İçerik', notes: '—', followUpDateUtc: null, createdAtUtc: null,
         updatedAtUtc: null, items: [], hbs: null, isCancelled: false, cancelledAtUtc: null, cancelledByName: null, cancelReason: null,
-        addedAfterFinalization: false, lateEntryReason: null
+        addedAfterFinalization: false, lateEntryReason: null, rowVersion: 'V1'
     };
 
     const render = (vm: PrescriptionDetailVm, cancelPrescription = vi.fn(() => of(undefined))) => {
@@ -82,7 +82,7 @@ describe('PrescriptionDetailPageComponent — iptal', () => {
 
         expect(buttons(fixture.nativeElement)).toEqual(expect.arrayContaining(['Düzenle', 'İptal et']));
         fixture.componentInstance.cancelPrescription('Yanlış hastaya yazıldı').subscribe();
-        expect(cancelPrescription).toHaveBeenCalledWith('rx1', 'Yanlış hastaya yazıldı');
+        expect(cancelPrescription).toHaveBeenCalledWith('rx1', 'Yanlış hastaya yazıldı', 'V1');
     });
 
     it('iptal edilmiş reçetede düzenleme/iptal yok; iptal gerekçesi görünür', () => {

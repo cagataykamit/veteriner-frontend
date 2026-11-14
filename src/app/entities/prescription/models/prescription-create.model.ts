@@ -29,4 +29,6 @@ export interface CreatePrescriptionRequest {
     items?: PrescriptionItemInput[];
     /** Bağlı muayene kesinleşmişse zorunlu gerekçe (sonradan ekleme, RECORD-008); yalnız oluşturmada. */
     lateEntryReason?: string | null;
+    /** Yalnız PUT: ekranın açıldığı sürüm (zorunlu, ADR-043 K5). */
+    rowVersion?: string;
 }
