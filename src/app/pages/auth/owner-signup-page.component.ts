@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -16,6 +16,10 @@ import { mapPublicOwnerSignupFormToRequest } from '@/app/features/public/data/pu
 import { PublicOwnerSignupService } from '@/app/features/public/services/public-owner-signup.service';
 import { ExampleClinicSummaryComponent } from '@/app/entities/example-clinic/components/example-clinic-summary.component';
 import { publicOwnerSignupFailureMessage } from '@/app/features/public/utils/public-owner-signup-error.utils';
+import { SignupEmailVerificationComponent } from '@/app/features/public/components/signup-email-verification.component';
+import type { SignupEmailVerification } from '@/app/features/public/models/trial-signup.model';
+import { TrialSignupService } from '@/app/features/public/services/trial-signup.service';
+import { isTaxIdentityFormat, TAX_IDENTITY_INVALID_MESSAGE, TRIAL_SIGNUP_CODE_MESSAGES, trialSignupErrorCode } from '@/app/features/public/utils/trial-signup.utils';
 import { defByApiCode, formatUserLimit, parsePlanQueryParam, planOffer, planPriceView, PRICING_PLAN_DEFS, type PricingPlanDef } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import { PublicPlanCatalogService } from '@/app/features/public/services/public-plan-catalog.service';
 import { AUTH_SIGNUP_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
@@ -34,11 +38,15 @@ import { clearPendingDiscountCode, DISCOUNT_CODE_QUERY_PARAM, discountNoteText, 
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 const PLAN_REQUIRED_MESSAGE = 'Bir paket seçin.';
+const EMAIL_REQUIRED_MESSAGE = TRIAL_SIGNUP_CODE_MESSAGES['SignupEmail.VerificationRequired'];
+/** Kaydın reddettiği e-posta doğrulaması: bileşen baştan başlar (`TRIAL_SIGNUP_ABUSE_API_CONTRACT.md` §5). */
+const EMAIL_RESET_CODES = new Set(['SignupEmail.VerificationRequired', 'SignupIdentity.DuplicateEmail', 'Users.DuplicateEmail']);
+const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'SignupIdentity.Validation.TaxIdentityRequired']);
 
 @Component({
     selector: 'app-owner-signup-page',
     standalone: true,
-    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RadioButtonModule, RippleModule, RouterLink, PublicLegalLinksComponent, LegalConsentCheckboxComponent, DiscountCodeFieldComponent, ExampleClinicSummaryComponent, TrDatePipe],
+    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RadioButtonModule, RippleModule, RouterLink, PublicLegalLinksComponent, LegalConsentCheckboxComponent, DiscountCodeFieldComponent, ExampleClinicSummaryComponent, SignupEmailVerificationComponent, TrDatePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden py-8">
@@ -146,9 +154,27 @@ const PLAN_REQUIRED_MESSAGE = 'Bir paket seçin.';
                                 </div>
 
                                 <div>
-                                    <label for="email" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Yetkili e-posta *</label>
-                                    <input pInputText id="email" type="email" class="w-full" [(ngModel)]="email" autocomplete="email" />
+                                    <label for="taxIdentityNumber" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Vergi numarası ya da TC kimlik no{{ taxIdentityRequired() ? ' *' : '' }}</label>
+                                    <input
+                                        pInputText
+                                        id="taxIdentityNumber"
+                                        type="text"
+                                        inputmode="numeric"
+                                        maxlength="11"
+                                        class="w-full"
+                                        [ngModel]="taxIdentityNumber"
+                                        (ngModelChange)="onTaxIdentityChange($event)"
+                                        [attr.aria-invalid]="taxIdentityError() ? true : null"
+                                        aria-describedby="taxIdentityHint"
+                                        data-testid="signup-tax-identity"
+                                    />
+                                    <small id="taxIdentityHint" class="block text-muted-color mt-1">Her işletme bir kez ücretsiz deneyebilir; ücretli plana geçerseniz faturanız bu bilgiyle kesilir. Şahıs işletmeleri TC kimlik numarası girebilir.</small>
+                                    @if (taxIdentityError(); as error) {
+                                        <small class="text-danger block mt-1" role="alert">{{ error }}</small>
+                                    }
                                 </div>
+
+                                <app-signup-email-verification [disabled]="submitting()" [turnstileSiteKey]="turnstileSiteKey()" (verifiedChange)="onEmailVerified($event)" />
 
                                 <div>
                                     <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Şifre *</label>
@@ -221,6 +247,7 @@ export class OwnerSignupPageComponent implements OnInit {
     private readonly document = inject(DOCUMENT);
     private readonly legal = inject(LegalAcceptanceService);
     private readonly planCatalog = inject(PublicPlanCatalogService);
+    private readonly trialSignup = inject(TrialSignupService);
 
     /** Kayıt olan klinik yöneticisidir: sunucunun yayımladığı tüm belgeler (ADR-029 madde 4). */
     private readonly legalVersions = signal<LegalDocumentVersionDto[] | null>(null);
@@ -251,8 +278,17 @@ export class OwnerSignupPageComponent implements OnInit {
     tenantName = '';
     clinicName = '';
     clinicCity = '';
-    email = '';
     password = '';
+    taxIdentityNumber = '';
+
+    /** Doğrulanan e-posta ve kayıt jetonu (TRIAL-001); doğrulanmadan kayıt gönderilmez. */
+    readonly emailVerification = signal<SignupEmailVerification | null>(null);
+    private readonly emailField = viewChild(SignupEmailVerificationComponent);
+
+    /** Sunucu ayarları (tek kaynak): vergi numarası zorunluluğu ve Turnstile site anahtarı. Yüklenemezse zorunlu varsayılır. */
+    readonly taxIdentityRequired = signal(true);
+    readonly turnstileSiteKey = signal<string | null>(null);
+    readonly taxIdentityError = signal<string | null>(null);
 
     /** Satış ortağı kodu (ADR-037): `/r/:kod` bağlantısından (URL `kod` ya da oturum belleği) gelir ya da elle girilir. */
     readonly discountCode = signal(normalizeDiscountCodeInput(this.route.snapshot.queryParamMap.get(DISCOUNT_CODE_QUERY_PARAM) ?? readPendingDiscountCode()));
@@ -276,6 +312,16 @@ export class OwnerSignupPageComponent implements OnInit {
         removeOrphanedPrimeMenuPopupsFromBody(this.document);
         this.loadLegalVersions(false);
         this.planCatalog.ensureLoaded();
+        this.trialSignup
+            .settings()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (settings) => {
+                    this.taxIdentityRequired.set(settings.taxIdentityNumberRequired);
+                    this.turnstileSiteKey.set(settings.turnstileSiteKey);
+                },
+                error: () => this.formError.set('Kayıt ayarları yüklenemedi. Sayfayı yenileyip tekrar deneyin.')
+            });
         this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((q) => {
             if (this.successResult()) {
                 return;
@@ -316,10 +362,9 @@ export class OwnerSignupPageComponent implements OnInit {
         const tenantName = this.tenantName?.trim() ?? '';
         const clinicName = this.clinicName?.trim() ?? '';
         const clinicCity = this.clinicCity?.trim() ?? '';
-        const email = this.email?.trim() ?? '';
         const password = this.password ?? '';
 
-        if (!tenantName || !clinicName || !clinicCity || !email || !password) {
+        if (!tenantName || !clinicName || !clinicCity || !password) {
             this.formError.set('Tüm zorunlu alanları doldurun.');
 
             if (!password) {
@@ -352,6 +397,24 @@ export class OwnerSignupPageComponent implements OnInit {
             return;
         }
 
+        const verification = this.emailVerification();
+
+        if (!verification) {
+            this.formError.set(EMAIL_REQUIRED_MESSAGE);
+
+            return;
+        }
+
+        const taxIdentityNumber = this.taxIdentityNumber.trim();
+
+        if ((taxIdentityNumber || this.taxIdentityRequired()) && !isTaxIdentityFormat(taxIdentityNumber)) {
+            this.taxIdentityError.set(TAX_IDENTITY_INVALID_MESSAGE);
+            this.formError.set(TAX_IDENTITY_INVALID_MESSAGE);
+
+            return;
+        }
+
+        const email = verification.email;
         const body = mapPublicOwnerSignupFormToRequest({
             planCode: plan.apiCode,
             tenantName,
@@ -361,7 +424,9 @@ export class OwnerSignupPageComponent implements OnInit {
             password,
             acceptedLegalDocuments: legalVersions,
             discountCode: this.discountCode(),
-            startMode: this.startMode()
+            startMode: this.startMode(),
+            emailVerificationToken: verification.token,
+            taxIdentityNumber
         });
 
         this.submitting.set(true);
@@ -375,7 +440,18 @@ export class OwnerSignupPageComponent implements OnInit {
                     clearPendingDiscountCode();
                 },
                 error: (err: unknown) => {
-                    this.formError.set(publicOwnerSignupFailureMessage(err));
+                    const message = publicOwnerSignupFailureMessage(err);
+                    const code = trialSignupErrorCode(err);
+
+                    this.formError.set(message);
+
+                    if (code && EMAIL_RESET_CODES.has(code)) {
+                        this.emailField()?.reset(message);
+                    }
+
+                    if (code && TAX_IDENTITY_CODES.has(code)) {
+                        this.taxIdentityError.set(message);
+                    }
 
                     if (isLegalVersionOutdatedError(err)) {
                         this.legalConsent.set(false);
@@ -383,6 +459,19 @@ export class OwnerSignupPageComponent implements OnInit {
                     }
                 }
             });
+    }
+
+    onEmailVerified(value: SignupEmailVerification | null): void {
+        this.emailVerification.set(value);
+
+        if (value && this.formError() === EMAIL_REQUIRED_MESSAGE) {
+            this.formError.set(null);
+        }
+    }
+
+    onTaxIdentityChange(value: string): void {
+        this.taxIdentityNumber = (value ?? '').replace(/\D/g, '').slice(0, 11);
+        this.taxIdentityError.set(null);
     }
 
     /** Görünen ve gönderilen sürüm backend'den (tek kaynak); 409 sonrası yenilenir. */

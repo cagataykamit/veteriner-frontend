@@ -708,6 +708,12 @@ export const ApiEndpoints = {
     },
     public: {
         ownerSignup: () => `/api/v1/public/owner-signup`,
+        /** Anonim: vergi numarası zorunluluğu ve Turnstile site anahtarı (`TRIAL_SIGNUP_ABUSE_API_CONTRACT.md` §1). */
+        ownerSignupSettings: () => `/api/v1/public/owner-signup/settings`,
+        /** Anonim, Turnstile + hız sınırlı: deneme kaydı e-posta kodu gönder (§2). */
+        signupEmailCode: () => `/api/v1/public/owner-signup/email-code`,
+        /** Anonim, hız sınırlı: kodu doğrula, kayıt jetonu al (§2). */
+        signupEmailVerify: () => `/api/v1/public/owner-signup/email-code/verify`,
         /** Anonim, hız sınırlı: satış ortağı kodu doğrulama; geçersizde tek tip yanıt. */
         validateDiscountCode: () => `/api/v1/public/discount-codes/validate`,
         /** Anonim: hukuki belgelerin güncel sürümleri (`LEGAL_ACCEPTANCE_API_CONTRACT.md` §3). */
