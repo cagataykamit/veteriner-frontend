@@ -51,6 +51,7 @@ import {
     VISITS_CORRECT_CLAIM,
     VISITS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
+import type { PlanFeatureCode } from '@/app/core/tenant/models/tenant-access-state-vm.model';
 
 /**
  * Panel gezinti kaydı: kenar menü, Ayarlar ve Tanımlar sayfaları öğe, rota ve izin bilgisini buradan okur.
@@ -65,11 +66,19 @@ export interface NavigationEntry {
     readonly requireAllClaims?: boolean;
 }
 
+/**
+ * Sayfanın tamamı pakete bağlıysa özelliği (TIER-001): paket kapalıyken sekme ve kart kilit simgesiyle, "Üst pakette" ipucuyla
+ * görünür ve açılır (sayfada "üst pakete geç" kutusu çıkar). İzin kuralı ayrıdır: yetkisi olmayan öğe yine gizlidir.
+ */
+export interface PlanGatedEntry {
+    readonly planFeature?: PlanFeatureCode;
+}
+
 /** Menüde öğenin yanında bekleyen iş sayısı gösterilen sayaçlar; değerlerini `MenuBadgeService` sağlar. */
 export type MenuBadgeKey = 'waitingVisits' | 'requestedLabResults' | 'pendingAppointmentRequests' | 'openPortalDataRequests' | 'eDocumentReminders';
 
 /** Birleşik menü öğesinin sekmesi: mevcut liste sayfasının rotası; yetkisi olmayan sekme görünmez. */
-export interface MenuTab extends NavigationEntry {
+export interface MenuTab extends NavigationEntry, PlanGatedEntry {
     readonly badge?: MenuBadgeKey;
     /** Sekme adı listeyi adlandırmıyorsa (Ara, Liste) başlık üstündeki geri bağlantısında yazılan liste adı. */
     readonly listLabel?: string;
@@ -101,7 +110,7 @@ export interface MenuGroup {
     readonly pinned?: boolean;
 }
 
-export interface CardEntry extends NavigationEntry {
+export interface CardEntry extends NavigationEntry, PlanGatedEntry {
     readonly icon: string;
     readonly description: string;
 }
@@ -171,6 +180,7 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
                 route: `${REPORTS_ROUTE}/clinics-overview`,
                 // İşletme performansıyla aynı yönetici düzeyi koşulu; paket kilidi (Kurumsal) sayfada gösterilir.
                 claims: [VISITS_CORRECT_CLAIM],
+                planFeature: 'ClinicsOverview',
                 description: 'Tüm şubelerin cirosu, tahsilatı, açık alacağı ve iş yükü yan yana.'
             }
         ]
@@ -221,6 +231,7 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
                 icon: 'pi pi-fw pi-box',
                 route: `${REPORTS_ROUTE}/cash-registers`,
                 claims: [CASH_REGISTERS_READ_CLAIM],
+                planFeature: 'CashManagement',
                 description: 'Kasa hareketleri, kasaya giriş/çıkış, kasalar arası aktarım ve kasa tanımları.'
             },
             {
@@ -342,7 +353,7 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
                         badge: 'pendingAppointmentRequests'
                     },
                     // Bekleme listesi (TIER-018): boşalan saat randevu işinin parçası; Randevular'ın sekmesi (ADR-004).
-                    { label: 'Bekleme listesi', route: WAITLIST_ROUTE, claims: [APPOINTMENTS_READ_CLAIM] }
+                    { label: 'Bekleme listesi', route: WAITLIST_ROUTE, claims: [APPOINTMENTS_READ_CLAIM], planFeature: 'Waitlist' }
                 ],
                 { badge: 'pendingAppointmentRequests', badgeText: 'bekleyen online randevu talebi' }
             )
@@ -496,6 +507,7 @@ export const DEFINITION_ENTRIES: readonly CardEntry[] = [
         route: VACCINATION_SCHEDULE_ROUTE,
         // Öneriyi hasta kartında hekim kullanır; kart takvimi yönetebilene görünür (sözlük kartıyla aynı ilke). Paket kilidi sayfadadır.
         claims: [VACCINE_DEFINITIONS_UPDATE_CLAIM],
+        planFeature: 'VaccinationWizard',
         description: 'Türe göre aşıların başlangıç haftası, doz sayısı ve tekrarı; hasta kartında aşı planı önerisi buradan çıkar.'
     }
 ];
@@ -517,6 +529,7 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 icon: 'pi pi-fw pi-wrench',
                 route: CUSTOM_DEVELOPMENT_ROUTE,
                 claims: [CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM],
+                planFeature: 'CustomDevelopment',
                 description: 'Vetinity içindeki ekran, rapor ve çıktılar için düzenleme talebi açın, durumunu izleyin.'
             }
         ]
@@ -565,6 +578,7 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 icon: 'pi pi-mobile',
                 route: CLINIC_PORTAL_SETTINGS_ROUTE,
                 claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
+                planFeature: 'OwnerPortal',
                 description: 'Portalı klinik için açıp kapatma ve hasta sahibine giden bildirimlerin kanalları.'
             },
             { label: 'Organizasyon Ayarları', icon: 'pi pi-fw pi-building', route: '/panel/settings/organization', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Kurum ve fatura bilgileri.' },
@@ -607,6 +621,7 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 icon: 'pi pi-fw pi-key',
                 route: API_ACCESS_ROUTE,
                 claims: [API_KEYS_MANAGE_CLAIM],
+                planFeature: 'ExternalApi',
                 description: 'Kendi yazılımınızın kayıtları okuması için kliniğe özel anahtar oluşturun ve iptal edin.'
             },
             {

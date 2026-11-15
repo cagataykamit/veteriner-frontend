@@ -7,6 +7,9 @@ import { TenantAccessService } from '@/app/core/tenant/tenant-access.service';
 import type { PlanFeatureCode, TenantAccessStateVm, TenantPlanFeatureVm } from '@/app/core/tenant/models/tenant-access-state-vm.model';
 import type { SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
 
+/** Paket dışı sekme ve kartın kısa ipucu (O7); sayfa açılınca "üst pakete geç" kutusu ayrıntıyı verir. */
+export const PLAN_LOCK_HINT = 'Üst pakette';
+
 /**
  * Panel genelinde kiracı salt okunur bilgisi — `GET .../tenants/{id}/access-state`.
  * Abonelik özeti (`subscription-summary`) yalnızca abonelik sayfası / ilgili servislerde kullanılır.
@@ -43,6 +46,11 @@ export class TenantReadOnlyContextService {
         const row = this.accessStateSignal()?.planFeatures.find((f) => f.feature === feature);
 
         return row && !row.isEnabled ? row : null;
+    }
+
+    /** Menü sekmesi ve kartta kilit ipucu: özellik paket yüzünden kapalıysa {@link PLAN_LOCK_HINT}, değilse `null`. */
+    planLockHint(feature: PlanFeatureCode | undefined): string | null {
+        return feature && this.lockedPlanFeature(feature) ? PLAN_LOCK_HINT : null;
     }
 
     /**

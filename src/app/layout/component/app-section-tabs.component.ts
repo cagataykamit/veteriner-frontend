@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { MENU_GROUPS, tabsForUrl, type MenuBadgeKey } from '@/app/core/routing/panel-navigation';
 import { MenuBadgeService, menuBadgeLabel } from '@/app/layout/service/menu-badge.service';
 
@@ -27,8 +28,12 @@ import { MenuBadgeService, menuBadgeLabel } from '@/app/layout/service/menu-badg
                         [class.border-transparent]="tab !== v.active"
                         [class.text-muted-color]="tab !== v.active"
                         [attr.aria-current]="tab === v.active ? 'page' : null"
+                        [attr.title]="ro.planLockHint(tab.planFeature)"
                     >
                         {{ tab.label }}
+                        @if (ro.planLockHint(tab.planFeature); as hint) {
+                            <i class="pi pi-lock text-sm text-muted-color" aria-hidden="true"></i><span class="sr-only"> ({{ hint }})</span>
+                        }
                         @if (badge(tab.badge); as count) {
                             <span class="ml-1 text-sm">({{ count }}<span class="sr-only"> bekleyen</span>)</span>
                         }
@@ -42,6 +47,7 @@ export class AppSectionTabsComponent {
     private readonly auth = inject(AuthService);
     private readonly router = inject(Router);
     private readonly badges = inject(MenuBadgeService);
+    protected readonly ro = inject(TenantReadOnlyContextService);
 
     private readonly url = signal(this.router.url);
 

@@ -7,6 +7,7 @@ import { filter } from 'rxjs';
 import { AppMenuitem } from './app.menuitem';
 import { readMenuGroupPreferences, writeMenuGroupPreferences } from './menu-group-state';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { supportWhatsAppUrl } from '@/app/core/support/vetinity-support.constants';
 import { LayoutService } from '@/app/layout/service/layout.service';
 import { MenuBadgeService, menuBadgeLabel } from '@/app/layout/service/menu-badge.service';
@@ -81,6 +82,7 @@ export class AppMenu {
     private readonly router = inject(Router);
     private readonly badges = inject(MenuBadgeService);
     private readonly flyout = inject(MenuFlyoutService);
+    private readonly ro = inject(TenantReadOnlyContextService);
 
     /** Simge şeridinde tüm öğeler görünür; grup başlıkları ince ayırıcıya dönüşür. */
     protected readonly rail = inject(LayoutService).isMenuRail;
@@ -144,7 +146,13 @@ export class AppMenu {
     private flyoutTabs(entry: MenuEntry, url: string, hasClaim: (claim: string) => boolean): MenuFlyoutTab[] | undefined {
         const flyout = flyoutTabsFor(entry, url, hasClaim);
 
-        return flyout?.tabs.map((tab) => ({ label: tab.label, route: tab.route, badge: this.badgeLabel(tab.badge), active: tab === flyout.active }));
+        return flyout?.tabs.map((tab) => ({
+            label: tab.label,
+            route: tab.route,
+            badge: this.badgeLabel(tab.badge),
+            active: tab === flyout.active,
+            lockHint: this.ro.planLockHint(tab.planFeature)
+        }));
     }
 
     private badgeLabel(key: MenuBadgeKey | undefined): string | null {
