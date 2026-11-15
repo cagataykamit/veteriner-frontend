@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { map } from 'rxjs';
+import { map, tap } from 'rxjs';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -11,10 +11,13 @@ import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { VACCINE_DEFINITIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { SPECIES_CREATE_CLAIM, VACCINE_DEFINITIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { DEFINITIONS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
+import { createSpeciesByName } from '@/app/entities/species/utils/species-inline-create.utils';
+import { type InlineCreateConfig, InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { AppPlanUpgradeNoticeComponent } from '@/app/entities/subscription/components/app-plan-upgrade-notice.component';
 import type { VaccineDefinitionListItemVm } from '@/app/entities/vaccine-definition/models/vaccine-definition-vm.model';
 import { VaccineDefinitionsService } from '@/app/entities/vaccine-definition/services/vaccine-definitions.service';
@@ -55,7 +58,9 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         AppPlanUpgradeNoticeComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppLoadingStateComponent
+        AppLoadingStateComponent,
+        InlineCreateDirective,
+        InlineCreateOptionComponent
     ],
     providers: [ConfirmationService],
     template: `
@@ -154,7 +159,9 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="flex flex-col gap-1">
                         <label for="itemSpecies" class="block text-sm font-medium text-muted-color">Tür *</label>
-                        <p-select inputId="itemSpecies" [options]="speciesOptions()" formControlName="speciesId" optionLabel="label" optionValue="value" placeholder="Seçin" class="w-full" (onChange)="form.controls.vaccineDefinitionId.setValue('')" />
+                        <p-select inputId="itemSpecies" [options]="speciesOptions()" formControlName="speciesId" optionLabel="label" optionValue="value" placeholder="Seçin" [filter]="true" filterBy="label" filterPlaceholder="Ara…" [appInlineCreate]="speciesCreate()" class="w-full" (onChange)="form.controls.vaccineDefinitionId.setValue('')">
+                            <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                        </p-select>
                     </div>
                     <div class="flex flex-col gap-1">
                         <label for="itemVaccine" class="block text-sm font-medium text-muted-color">Aşı *</label>
@@ -220,6 +227,11 @@ export class VaccinationSchedulePageComponent implements OnInit {
 
     readonly items = signal<VaccinationScheduleItemDto[]>([]);
     readonly speciesOptions = signal<SelectOption[]>([]);
+    /** Aranan tür yoksa adıyla eklenir ve seçilir (O1). */
+    readonly speciesCreate = computed<InlineCreateConfig>(() => ({
+        canCreate: this.auth.hasOperationClaim(SPECIES_CREATE_CLAIM) && !this.ro.mutationBlocked(),
+        create: (name) => createSpeciesByName(this.speciesService, name).pipe(tap((id) => this.speciesOptions.update((o) => [...o, { value: id, label: name.trim() }])))
+    }));
     readonly vaccineList = signal<readonly VaccineDefinitionListItemVm[]>([]);
     readonly speciesFilter = signal('');
     readonly loading = signal(true);

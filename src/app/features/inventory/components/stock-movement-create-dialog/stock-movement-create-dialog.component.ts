@@ -17,6 +17,10 @@ import { ProductService } from '@/app/entities/inventory/services/product.servic
 import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { PRODUCTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { QuickProductDialogComponent, type QuickProductCreated } from '@/app/entities/inventory/components/quick-product-dialog.component';
+import { type InlineCreateConfig, InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { DATETIME_LOCAL_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
@@ -25,7 +29,7 @@ type SelectOption = { label: string; value: string };
 @Component({
     selector: 'app-stock-movement-create-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent, StockBatchFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent, StockBatchFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Stok hareketi ekle" [modal]="true" [visible]="visible()" (visibleChange)="onVisibleChange($event)" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
@@ -84,7 +88,10 @@ type SelectOption = { label: string; value: string };
                             [showClear]="true"
                             class="w-full"
                             [loading]="productsLoading()"
-                        />
+                            [appInlineCreate]="productCreate()"
+                        >
+                            <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                        </p-select>
                         @if (form.controls.productId.invalid && form.controls.productId.touched) {
                             <small class="text-danger">Ürün seçimi zorunludur.</small>
                         }
@@ -154,6 +161,7 @@ type SelectOption = { label: string; value: string };
                 </div>
             </form>
         </p-dialog>
+        <app-quick-product-dialog [(visible)]="quickProductOpen" [initialName]="quickProductName()" [kinds]="stockKinds" (productCreated)="onQuickProductCreated($event)" />
     `
 })
 export class StockMovementCreateDialogComponent {
@@ -189,6 +197,18 @@ export class StockMovementCreateDialogComponent {
 
     readonly clinicOptions = signal<SelectOption[]>([]);
     readonly productOptions = signal<SelectOption[]>([]);
+    readonly quickProductOpen = signal(false);
+    readonly quickProductName = signal('');
+    /** Stok hareketi yalnız stok takipli ürünle olur; hızlı üründe Hizmet sunulmaz. */
+    readonly stockKinds = ['Other', 'Medicine', 'Vaccine'] as const;
+    /** Aranan ürün yoksa küçük ürün diyaloğu açılır (O1). */
+    readonly productCreate = computed<InlineCreateConfig>(() => ({
+        canCreate: this.auth.hasOperationClaim(PRODUCTS_CREATE_CLAIM) && !this.ro.mutationBlocked(),
+        openDialog: (name) => {
+            this.quickProductName.set(name);
+            this.quickProductOpen.set(true);
+        }
+    }));
 
     readonly clinicsLoading = signal(false);
     readonly productsLoading = signal(false);
@@ -235,6 +255,12 @@ export class StockMovementCreateDialogComponent {
         if (!next) {
             this.submitError.set(null);
         }
+    }
+
+    onQuickProductCreated(product: QuickProductCreated): void {
+        this.productOptions.update((o) => [...o, { label: product.name, value: product.id }]);
+        this.form.controls.productId.setValue(product.id);
+        this.form.controls.productId.markAsDirty();
     }
 
     onCancel(): void {
