@@ -61,7 +61,7 @@ describe('ExaminationWorkspacePageComponent (Bugün / Visit bağlamı)', () => {
                         snapshot: { paramMap: convertToParamMap({}), queryParamMap: convertToParamMap(query), routeConfig: { path: 'new' } }
                     }
                 },
-                { provide: AuthService, useValue: { getClinicName: () => 'Klinik', getClinicId: () => 'clinic-1', hasOperationClaim: () => true } },
+                { provide: AuthService, useValue: { getClinicName: () => 'Klinik', getClinicId: () => 'clinic-1', getUserId: () => 'user-1', hasOperationClaim: () => true } },
                 { provide: AppointmentsService, useValue: {} },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: PetsService, useValue: { getPetById: () => of({ name: 'Pamuk', speciesName: 'Kedi', breed: 'Van', birthDate: null }), getPetSummary: () => EMPTY } },

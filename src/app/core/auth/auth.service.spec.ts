@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of, Subject, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
+import { readSessionDraft, sessionDraftKey, writeSessionDraft } from '@/app/shared/utils/session-draft.storage';
 import { AuthService } from './auth.service';
 
 const ACCESS = 'veteriner.access_token';
@@ -390,6 +391,19 @@ describe('AuthService', () => {
             auth.logout();
             expectCleared(auth);
             expect(api.post).not.toHaveBeenCalled();
+        });
+
+        it('çıkış tarayıcı taslaklarını siler; oturumun sona ermesi (clearSession) silmez (B3)', () => {
+            const auth = signedIn();
+            const key = sessionDraftKey('muayene', 'u1');
+
+            writeSessionDraft(key, { anamnesis: 'x' });
+            auth.clearSession();
+            expect(readSessionDraft(key)).not.toBeNull();
+
+            auth.logout();
+            expect(readSessionDraft(key)).toBeNull();
+            sessionStorage.clear();
         });
 
         it('logoutCurrentSession: sunucuya yenileme anahtarıyla gider, yanıtı normalize eder, sonra temizler', async () => {
