@@ -8,6 +8,7 @@ import type { AppointmentListItemVm } from '@/app/entities/appointment/models/ap
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { isLastRowAction, isRightAfterDetail, rowDangerActions, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
+import { WaitlistService } from '@/app/entities/waitlist/services/waitlist.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppointmentsListPageComponent } from './appointments-list-page.component';
 
@@ -167,6 +168,7 @@ describe('AppointmentsListPageComponent — satırda İptal', () => {
 
     let getAppointments: Mock;
     let cancelAppointment: Mock;
+    let revertCancellation: Mock;
 
     const create = (
         claims: string[],
@@ -182,15 +184,20 @@ describe('AppointmentsListPageComponent — satırda İptal', () => {
         cancelAppointment = vi
             .fn()
             .mockName('cancelAppointment')
+            .mockReturnValue(of({ undoWindowSeconds: 10 }));
+        revertCancellation = vi
+            .fn()
+            .mockName('revertCancellation')
             .mockReturnValue(of(void 0));
         TestBed.configureTestingModule({
             imports: [AppointmentsListPageComponent],
             providers: [
                 provideRouter([]),
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } },
-                { provide: AppointmentsService, useValue: { getAppointments, cancelAppointment } },
+                { provide: AppointmentsService, useValue: { getAppointments, cancelAppointment, revertCancellation } },
+                { provide: WaitlistService, useValue: { slot: () => of(null) } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => !!opts.mutationBlocked } }
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => !!opts.mutationBlocked, planFeatureReady: () => false } }
             ]
         });
         const fixture = TestBed.createComponent(AppointmentsListPageComponent);
@@ -241,7 +248,7 @@ describe('AppointmentsListPageComponent — satırda İptal', () => {
         expect(dialog.visible()).toBe(true);
         expect(dialog.reasonOptional()).toBe(true);
         expect(dialog.summary()).toContain('Pamuk · Ali Veli · 16.10.2026');
-        expect(dialog.description()).toContain('geri alınamaz');
+        expect(dialog.description()).toContain('Geri al');
         expect(cancelAppointment).not.toHaveBeenCalled();
 
         getAppointments.mockClear();
@@ -253,6 +260,30 @@ describe('AppointmentsListPageComponent — satırda İptal', () => {
         expect(cancelAppointment).toHaveBeenCalledWith('a1', 'Sahibi aradı');
         expect(getAppointments).toHaveBeenCalledTimes(1);
         expect(dialog.visible()).toBe(false);
+    });
+
+    it('iptalden sonra "Geri al" bandı süreyle görünür; geri alınca liste yenilenir ve bekleme listesi bilgisi kalkar', () => {
+        const { fixture, el } = create([APPOINTMENTS_CANCEL_CLAIM]);
+
+        rowDangerActions(el)[0].click();
+        fixture.detectChanges();
+        dialogOf(fixture).onSubmit();
+        fixture.detectChanges();
+
+        const undo = el.querySelector<HTMLButtonElement>('[data-testid="appointment-cancel-undo-button"]');
+
+        expect(el.querySelector('[data-testid="appointment-cancel-undo"]')?.textContent).toContain('Randevu iptal edildi.');
+        expect(undo?.textContent).toContain('Geri al (10)');
+        expect(fixture.componentInstance.lastCancelledId()).toBe('a1');
+
+        getAppointments.mockClear();
+        undo!.click();
+        fixture.detectChanges();
+
+        expect(revertCancellation).toHaveBeenCalledWith('a1');
+        expect(getAppointments).toHaveBeenCalledTimes(1);
+        expect(fixture.componentInstance.lastCancelledId()).toBeNull();
+        expect(el.querySelector('[data-testid="appointment-cancel-undo"]')?.textContent).toContain('İptal geri alındı.');
     });
 
     it('mobil karttan açılıp vazgeçilirse servis çağrılmaz ve liste yenilenmez', () => {

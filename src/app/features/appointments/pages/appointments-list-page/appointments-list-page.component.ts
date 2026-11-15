@@ -18,6 +18,8 @@ import type { AppointmentListItemVm } from '@/app/entities/appointment/models/ap
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { AppointmentCancelDialogComponent } from '@/app/features/appointments/components/appointment-cancel-dialog.component';
 import { WaitlistSlotNoticeComponent } from '@/app/entities/waitlist/components/waitlist-slot-notice.component';
+import { AppointmentCancelUndoComponent } from '@/app/features/appointments/components/appointment-cancel-undo.component';
+import type { AppointmentCancelResult } from '@/app/entities/appointment/services/appointments.service';
 import { appointmentStatusLabel, appointmentStatusSeverity, canCancelAppointment } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { appointmentTypeDisplayLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
 import { CLEAR_APPOINTMENTS_LIST_LINK_QUERY, readAppointmentsListLinkFilters } from '@/app/entities/appointment/utils/appointments-list-link.utils';
@@ -67,7 +69,8 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
         SearchInputComponent,
         AppRowActionButtonComponent,
         AppointmentCancelDialogComponent,
-        WaitlistSlotNoticeComponent
+        WaitlistSlotNoticeComponent,
+        AppointmentCancelUndoComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -112,7 +115,10 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                         </app-filter-field>
                     </div>
                 </div>
-                <!-- Bekleme listesi (TIER-018): iptal edilen saat için "uygun X kişi var"; uyan kimse yoksa çizilmez. -->
+                <!-- İptal bildirimi + "Geri al"; ardından bekleme listesi (TIER-018): "uygun X kişi var", uyan kimse yoksa çizilmez. -->
+                @if (lastCancel(); as c) {
+                    <div class="mb-3"><app-appointment-cancel-undo [appointmentId]="c.id" [undoWindowSeconds]="c.undoWindowSeconds" (reverted)="onCancelReverted()" /></div>
+                }
                 @if (lastCancelledId(); as cancelledId) {
                     <div class="mb-3"><app-waitlist-slot-notice [appointmentId]="cancelledId" /></div>
                 }
@@ -251,7 +257,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
         </div>
 
         @if (cancelTarget(); as target) {
-            <app-appointment-cancel-dialog [(visible)]="cancelVisible" [target]="target" (cancelled)="onCancelled(target.id)" />
+            <app-appointment-cancel-dialog [(visible)]="cancelVisible" [target]="target" (cancelled)="onCancelled(target.id, $event)" />
         }
     `
 })
@@ -361,7 +367,9 @@ export class AppointmentsListPageComponent implements OnInit {
     /** İptal diyaloğunun açık olduğu satır. */
     readonly cancelTarget = signal<AppointmentListItemVm | null>(null);
     readonly cancelVisible = signal(false);
-    /** Son iptal edilen randevu: bekleme listesi bilgisi gösterilir. */
+    /** Son iptal: "Geri al" bandı. */
+    readonly lastCancel = signal<{ id: string; undoWindowSeconds: number } | null>(null);
+    /** Son iptal edilen randevu: bekleme listesi bilgisi gösterilir (iptal geri alınınca kalkar). */
     readonly lastCancelledId = signal<string | null>(null);
 
     ngOnInit(): void {
@@ -422,8 +430,14 @@ export class AppointmentsListPageComponent implements OnInit {
         this.list.reload();
     }
 
-    onCancelled(appointmentId: string): void {
+    onCancelled(appointmentId: string, result: AppointmentCancelResult): void {
+        this.lastCancel.set({ id: appointmentId, undoWindowSeconds: result.undoWindowSeconds });
         this.lastCancelledId.set(appointmentId);
+        this.reload();
+    }
+
+    onCancelReverted(): void {
+        this.lastCancelledId.set(null);
         this.reload();
     }
 
