@@ -7,6 +7,7 @@ import { Component, computed, DestroyRef, effect, inject, OnInit, signal, Change
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, type ParamMap, Router } from '@angular/router';
+import type { Subscription } from 'rxjs';
 import { injectReturnTarget } from '@/app/shared/utils/return-target.utils';
 import { prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
 import { ButtonModule } from 'primeng/button';
@@ -200,6 +201,8 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
      */
     readonly availability = signal<StaffAvailabilityDayVm[] | null>(null);
     private availabilitySettled = false;
+    /** Neden hızlı değişirse önceki yanıt sonrakini ezmesin. */
+    private availabilitySub?: Subscription;
     private readonly selectedVetId = signal<string | null>(null);
     readonly slotDays = computed(() => toSlotPickerDays(this.availability() ?? [], this.selectedVetId()));
     /** Önden seçilen gün/saat; kullanıcı değiştirmediyse hekim ya da neden değişince ilk boş saate kaydırılır. */
@@ -588,7 +591,8 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
             return;
         }
 
-        this.bookingApi.availability(clinicId, this.form.controls.reasonId.value?.trim() || null, istanbulTodayYmd(), APPOINTMENT_PREFILL_LOOKAHEAD_DAYS).subscribe({
+        this.availabilitySub?.unsubscribe();
+        this.availabilitySub = this.bookingApi.availability(clinicId, this.form.controls.reasonId.value?.trim() || null, istanbulTodayYmd(), APPOINTMENT_PREFILL_LOOKAHEAD_DAYS).subscribe({
             next: (days) => this.settleAvailability(days),
             error: () => this.settleAvailability(null)
         });
