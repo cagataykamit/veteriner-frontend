@@ -59,9 +59,9 @@ export interface DraftClaim extends SiteClaim {
 }
 
 const COPY_WHERE: Readonly<Record<CopyKey, string>> = {
-    heroEyebrow: 'Hero üst satırı',
-    heroTitle: 'Hero başlığı',
-    heroText: 'Hero açıklaması',
+    heroEyebrow: 'Giriş bölümü üst satırı',
+    heroTitle: 'Giriş bölümü başlığı',
+    heroText: 'Giriş bölümü açıklaması',
     ctaPrimary: 'Ana düğme',
     ctaSecondary: 'İkinci düğme',
     aboutTitle: 'Tanıtım başlığı',

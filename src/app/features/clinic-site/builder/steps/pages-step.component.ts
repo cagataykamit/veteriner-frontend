@@ -37,7 +37,7 @@ import { WIZARD_STYLES } from '@/app/features/clinic-site/builder/wizard-kit';
 
         <section class="group">
             <h3 class="group-title">Ana sayfa bölümleri</h3>
-            <p class="hint">Navigasyon, hero ve footer sabit. Diğerlerini açıp kapatın, okla sıralayın. Boş bölüm sitede görünmez.</p>
+            <p class="hint">Üst menü, giriş bölümü ve alt bilgi sabit. Diğerlerini açıp kapatın, okla sıralayın. Boş bölüm sitede görünmez.</p>
             <ol class="list">
                 @for (section of sections(); track section.type; let first = $first; let last = $last; let i = $index) {
                     <li class="row sec" [class.is-off]="!section.on">

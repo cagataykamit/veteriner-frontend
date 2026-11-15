@@ -172,7 +172,7 @@ const FONTS_LINK_ID = 'site-fonts-css';
                     </div>
                     <footer class="nav">
                         <button type="button" class="wbtn ghost" [disabled]="step() === 0" (click)="go(step() - 1)">Geri</button>
-                        <button type="button" class="wbtn next main" [disabled]="step() === steps.length - 1" (click)="go(step() + 1)">Devam Et<i class="pi pi-arrow-right" aria-hidden="true"></i></button>
+                        <button type="button" class="wbtn next main" [disabled]="step() === steps.length - 1" (click)="go(step() + 1)">Devam et<i class="pi pi-arrow-right" aria-hidden="true"></i></button>
                     </footer>
                 </section>
 

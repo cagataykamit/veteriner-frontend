@@ -217,8 +217,8 @@ export const PAGE_DEFS: readonly { readonly key: PageKey; readonly label: string
 ];
 
 export const HOME_SECTION_LABELS: Readonly<Record<SectionType, string>> = {
-    nav: 'Navigasyon',
-    hero: 'Hero',
+    nav: 'Üst menü',
+    hero: 'Giriş bölümü',
     about: 'Klinik tanıtımı',
     services: 'Hizmetler',
     team: 'Hekimler',
@@ -226,5 +226,5 @@ export const HOME_SECTION_LABELS: Readonly<Record<SectionType, string>> = {
     gallery: 'Fotoğraf galerisi',
     guide: 'Sağlık rehberi',
     contact: 'İletişim ve harita',
-    footer: 'Footer'
+    footer: 'Alt bilgi'
 };
