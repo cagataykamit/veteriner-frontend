@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import type { ImportReminderImpactDto, ImportTableInfoDto } from '@/app/features/imports/models/import-api.model';
 import { duplicateBatchId, importCommitBlockers, importErrorMessage, importIssueDetail, importIssueLabel, importRowPlace, isDiscardable, isEndpointUnavailable, isImportJobRunning, reminderEmailTotal, reminderImpactCurrentCount, precheckImportFile, rollbackCountsText, rollbackCountsTotal, rollbackReasonLabel } from '@/app/features/imports/utils/import-labels.utils';
 import { columnMapsToRequest, fieldLabel, IMPORT_CSV_FIELD, IMPORT_CSV_TEMPLATE_FILE, IMPORT_TABLES, initialColumnMaps, mappingConfidence, missingRequired, needsClinic } from '@/app/features/imports/utils/import-schema.utils';
-import { IMPORT_VALUE_SKIP, valueChoicesToRequest } from '@/app/features/imports/utils/import-value-mapping.utils';
+import { IMPORT_PET_MERGE_PREFIX, IMPORT_VALUE_SKIP, petCandidateLabel, petChoicesToRequest, valueChoicesToRequest } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { isTrialLimitError } from '@/app/shared/utils/api-error.utils';
 
 const customers: ImportTableInfoDto = {
@@ -73,6 +73,27 @@ describe('import-value-mapping.utils', () => {
             { kind: 'species', source: 'Kopek', targetId: 'id-1' },
             { kind: 'vaccine', source: 'A|B', targetId: null }
         ]);
+    });
+    it('belirsiz hasta seçimleri değer eşlemesine değil petChoices alanına gider', () => {
+        const choices = {
+            'species|Kopek': 'id-1',
+            'pet|Belirsiz: 1 / 2': '2',
+            'pet|Belirsiz: 3 / 4': IMPORT_VALUE_SKIP,
+            'pet|Belirsiz: 5 / 6': IMPORT_PET_MERGE_PREFIX + '5'
+        };
+
+        expect(valueChoicesToRequest(choices)).toEqual([{ kind: 'species', source: 'Kopek', targetId: 'id-1' }]);
+        expect(petChoicesToRequest(choices)).toEqual([
+            { reference: 'Belirsiz: 1 / 2', petNo: '2', merge: false },
+            { reference: 'Belirsiz: 3 / 4', petNo: null, merge: false },
+            { reference: 'Belirsiz: 5 / 6', petNo: '5', merge: true }
+        ]);
+    });
+
+    it('aday hasta metni ayırt edici bilgileri taşır', () => {
+        expect(
+            petCandidateLabel({ petNo: '904', rowNumber: 5, name: 'Zeytin', ownerName: null, species: 'Kedi', breed: null, color: 'Beyaz', gender: 'Dişi', birthDate: '2021-01-05', status: null, registeredOn: '01.06.2023' })
+        ).toBe("Zeytin (E-vet 904) · Kedi · Beyaz · Dişi · doğum 05.01.2021 · E-vet'e kayıt 01.06.2023");
     });
 });
 

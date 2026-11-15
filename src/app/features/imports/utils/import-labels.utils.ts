@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import type { ImportBatchStatus, ImportIssueSeverity, ImportJobStatus, ImportReminderImpactDto, ImportRollbackBlockedItemDto, ImportRollbackCountsDto, ImportRollbackEntity, ImportSourceProfileCode, ImportTable, ImportValueKind } from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchStatus, ImportIssueSeverity, ImportRowStatusFilter, ImportJobStatus, ImportReminderImpactDto, ImportRollbackBlockedItemDto, ImportRollbackCountsDto, ImportRollbackEntity, ImportSourceProfileCode, ImportTable, ImportValueKind } from '@/app/features/imports/models/import-api.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { IMPORT_TABLE_LABELS } from '@/app/features/imports/utils/import-schema.utils';
@@ -81,7 +81,8 @@ export const IMPORT_VALUE_KIND_LABELS: Readonly<Record<ImportValueKind, string>>
     species: 'Tür',
     breed: 'Irk',
     vaccine: 'Aşı',
-    color: 'Renk'
+    color: 'Renk',
+    pet: 'Hasta'
 };
 
 /** Doğrulama sonucundaki neden grupları: kliniğe "hata" değil, satırın ne olacağı söylenir (aktarılmaz / aktarılır ama bakın / bilgi). */
@@ -92,8 +93,10 @@ export const IMPORT_ISSUE_GROUPS: readonly { severity: ImportIssueSeverity; titl
 ];
 
 /** Satır durumunun kliniğe gösterilen adı (`Error` satır aktarılmaz; uyarılı satır aktarılır). */
-export const IMPORT_ROW_STATUS_LABELS: Readonly<Record<'Valid' | 'Warning' | 'Error', string>> = {
-    Error: 'Aktarılmayacak',
+/** Satır durumu ve satır listesi filtresi etiketleri; `WillSkip` bilerek atlanacak satırlar. */
+export const IMPORT_ROW_STATUS_LABELS: Readonly<Record<ImportRowStatusFilter, string>> = {
+    Error: 'Hatalı',
+    WillSkip: 'Atlanacak',
     Warning: 'Göz atın',
     Valid: 'Geçerli'
 };
@@ -101,6 +104,8 @@ export const IMPORT_ROW_STATUS_LABELS: Readonly<Record<'Valid' | 'Warning' | 'Er
 /** Satır sorunu ve dosya düzeyi neden kodları için sade Türkçe etiketler (sözleşme 6.4). */
 const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.RequiredMissing': 'Zorunlu alan boş',
+    'Imports.ShortNameCustomerKept': 'Ad çok kısa; yer tutucu adla aktarılır, kontrol edin',
+    'Imports.ShortNameCustomerSkipped': 'Adı çok kısa ve bağlı kaydı olmayan müşteri (deneme kaydı); atlanır',
     'Imports.NameTooShort': 'Ad çok kısa',
     'Imports.FieldTooLong': 'Alan çok uzun',
     'Imports.PhoneInvalid': 'Telefon geçerli değil; telefonsuz aktarılır',
@@ -138,6 +143,9 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.PossibleDuplicate': 'Aynı adlı müşteri zaten var; ayrı kayıt oluşur',
     'Imports.OwnerNotFound': 'Sahip (müşteri) bulunamadı',
     'Imports.OwnerlessPetSkipped': 'Sahibi ve kaydı olmayan hasta (eski programda müşteri kartı silinmiş); atlanır',
+    'Imports.AmbiguousPet': 'Kayıtların hangi hastaya ait olduğu seçilmedi (aynı sahipte aynı adlı birden çok hasta)',
+    'Imports.AmbiguousPetSkipped': 'Hangi hastaya ait olduğu sorusunda "atla" seçildi; atlanır',
+    'Imports.PetMergedByChoice': 'Seçiminizle aynı adlı öbür hastayla tek hasta sayıldı; ayrı aktarılmaz',
     'Imports.OwnerRowInvalid': 'Sahibi aktarılamadığı için aktarılamaz',
     'Imports.PetNotFound': 'Satırın hastası bulunamadı',
     'Imports.PetRowInvalid': 'Hastası aktarılamadığı için aktarılamaz',

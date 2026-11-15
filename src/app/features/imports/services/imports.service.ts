@@ -1,6 +1,6 @@
-import { HttpParams, HttpResponse } from '@angular/common/http';
+import { HttpEventType, HttpParams, HttpResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { filter, map, Observable } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import type {
@@ -18,7 +18,8 @@ import type {
     ImportRowPageDto,
     ImportRowsQuery,
     ImportSourceProfileDto,
-    ImportTable
+    ImportTable,
+    ImportUploadEvent
 } from '@/app/features/imports/models/import-api.model';
 
 /**
@@ -48,9 +49,20 @@ export class ImportsService {
         return this.api.get<ImportSourceProfileDto[]>(ApiEndpoints.imports.sourceProfiles());
     }
 
-    /** Multipart yükleme: `file` (XLSX) veya tablo başına CSV alanı (`IMPORT_CSV_FIELD`, sözleşme 12.1); isteğe bağlı `sourceProfile`. */
-    createBatch(form: FormData): Observable<ImportBatchDto> {
-        return this.api.post<ImportBatchDto>(ApiEndpoints.imports.batches(), form);
+    /**
+     * Multipart yükleme: `file` (XLSX) veya tablo başına CSV alanı (`IMPORT_CSV_FIELD`, sözleşme 12.1); isteğe bağlı `sourceProfile`.
+     * Gönderim yüzdesi (`progress`) ve sunucu yanıtı (`done`) olayları; gönderim bitince sunucu dosyayı okur ve dönüştürür
+     * (büyük E-vet yedeğinde onlarca saniye). Hatalar HttpErrorResponse olarak iletilir.
+     */
+    createBatch(form: FormData): Observable<ImportUploadEvent> {
+        return this.api.upload<ImportBatchDto>(ApiEndpoints.imports.batches(), form).pipe(
+            filter((e) => e.type === HttpEventType.UploadProgress || e.type === HttpEventType.Response),
+            map((e): ImportUploadEvent =>
+                e.type === HttpEventType.UploadProgress
+                    ? { type: 'progress', percent: e.total ? Math.min(100, Math.round((e.loaded / e.total) * 100)) : 0 }
+                    : { type: 'done', batch: (e as HttpResponse<ImportBatchDto>).body! }
+            )
+        );
     }
 
     saveMapping(id: string, body: ImportMappingRequestDto): Observable<ImportBatchDto> {
@@ -88,8 +100,17 @@ export class ImportsService {
         return this.api.get<ImportRowPageDto>(ApiEndpoints.imports.rows(id), params);
     }
 
-    downloadErrorReport(id: string, format: ImportFileFormat): Observable<HttpResponse<Blob>> {
-        return this.api.getBlob(ApiEndpoints.imports.errors(id), new HttpParams().set('format', format));
+    /** Hata raporu; `skipped` ile bilerek atlanacak satırlar (isteğe bağlı tek neden kodu, sözleşme 7.8). */
+    downloadErrorReport(id: string, format: ImportFileFormat, skipped?: { code?: string | null }): Observable<HttpResponse<Blob>> {
+        let params = new HttpParams().set('format', format);
+
+        if (skipped) {
+            params = params.set('rows', 'skipped');
+
+            if (skipped.code) params = params.set('code', skipped.code);
+        }
+
+        return this.api.getBlob(ApiEndpoints.imports.errors(id), params);
     }
 
     downloadTemplate(format: ImportFileFormat, table?: ImportTable): Observable<HttpResponse<Blob>> {

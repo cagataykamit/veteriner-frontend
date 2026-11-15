@@ -15,7 +15,7 @@ import { ImportsService } from '@/app/features/imports/services/imports.service'
 import { importErrorCode, importErrorMessage, importStatusLabel, importStatusSeverity, isDiscardable, isImportJobRunning, isPreviewable } from '@/app/features/imports/utils/import-labels.utils';
 import { IMPORT_POLL_CONNECTION_MESSAGE, pollImportProgress } from '@/app/features/imports/utils/import-progress-poll.utils';
 import { columnMapsToRequest, initialColumnMaps, type ImportColumnMaps } from '@/app/features/imports/utils/import-schema.utils';
-import { type ImportValueChoices, valueChoicesToRequest } from '@/app/features/imports/utils/import-value-mapping.utils';
+import { type ImportValueChoices, petChoicesToRequest, valueChoicesToRequest } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -272,7 +272,8 @@ export class ImportWizardPageComponent implements OnInit {
                 .saveMapping(b.id, {
                     columns: columnMapsToRequest(this.maps(), b.tables ?? []),
                     valueMappings: valueChoicesToRequest(this.choices()),
-                    options: { onDuplicateClient: this.duplicateMode() }
+                    options: { onDuplicateClient: this.duplicateMode() },
+                    petChoices: petChoicesToRequest(this.choices())
                 })
                 .pipe(switchMap(() => this.imports.validate(b.id))),
             'Eşleme kaydedilemedi veya doğrulama başlatılamadı.'

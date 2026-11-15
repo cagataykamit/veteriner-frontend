@@ -1,4 +1,5 @@
 import type { MockedObject } from 'vitest';
+import { HttpResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject } from 'rxjs';
 import { BreedsService } from '@/app/entities/breed/services/breeds.service';
@@ -180,6 +181,26 @@ describe('ImportReviewStepComponent', () => {
             expect(lists[1]).toContain('Atlanacak · 2: Boş muayene satırı');
         });
 
+        it('atlanan nedene tıklanınca o satırlar listelenir ve atlananlar indirilebilir', () => {
+            ready.notImportedReasons = [{ table: 'clinicalRecords', kind: 'Skipped', code: 'Imports.ClinicalRecordEmpty', rowCount: 2 }];
+            const el = render();
+
+            delete ready.notImportedReasons;
+            imports.getRows.mockClear();
+            el.querySelector<HTMLButtonElement>('[data-testid="import-table-reasons"] button')!.click();
+            fixture.detectChanges();
+
+            expect(imports.getRows).toHaveBeenLastCalledWith('b1', expect.objectContaining({ table: 'clinicalRecords', status: 'WillSkip', code: 'Imports.ClinicalRecordEmpty' }));
+            expect(el.querySelector<HTMLDetailsElement>('[data-testid="import-rows"]')?.open).toBe(true);
+
+            imports.downloadErrorReport.mockReturnValue(of(new HttpResponse<Blob>({ body: new Blob(['x']) })));
+            const download = Array.from(el.querySelectorAll<HTMLButtonElement>('[data-testid="import-skipped-download"] button')).find((b) => b.textContent?.includes('Excel'))!;
+
+            download.click();
+
+            expect(imports.downloadErrorReport).toHaveBeenCalledWith('b1', 'xlsx', { code: 'Imports.ClinicalRecordEmpty' });
+        });
+
         it('engelleyen değerler açıkta, ırk ve renk kapalı isteğe bağlı bölümde', () => {
             const el = render();
 
@@ -188,6 +209,28 @@ describe('ImportReviewStepComponent', () => {
 
             expect(optional?.open).toBe(false);
             expect(optional?.textContent).toContain('Sarman');
+        });
+
+        it('aynı adlı hastalar için kayıtların hangisine ait olduğunu adaylarla sorar', () => {
+            const before = { unmappedValues: ready.unmappedValues, petCandidates: ready.petCandidates };
+            const candidate = { ownerName: 'Ayşe Yılmaz', species: 'Kedi', breed: null, color: null, gender: null, birthDate: null, status: null, registeredOn: null };
+
+            ready.unmappedValues = [{ kind: 'pet', source: 'Belirsiz: 903 / 904', rowCount: 3, blocking: true }];
+            ready.petCandidates = [
+                { ...candidate, petNo: '903', rowNumber: 4, name: 'Zeytin', color: 'Siyah' },
+                { ...candidate, petNo: '904', rowNumber: 5, name: 'Zeytin (E-vet 904)', color: 'Beyaz' }
+            ];
+            const el = render();
+            const component = fixture.componentInstance as unknown as { catalogOptions(u: unknown): { label: string; value: string }[] };
+            const options = component.catalogOptions(ready.unmappedValues[0]).map((o) => o.value);
+
+            Object.assign(ready, before);
+
+            const required = el.querySelector('[data-testid="import-required-values"]')?.textContent ?? '';
+
+            expect(required).toContain("Ayşe Yılmaz: 'Zeytin' adlı 2 hasta");
+            expect(required).toContain('3 aşı / muayene kaydı hangisine ait?');
+            expect(options).toEqual(['903', '904', 'merge:903', 'merge:904', '__skip__']);
         });
 
         it('nedenler üç grupta: aktarılmayacak açık, göz atılacak ve bilgi kapalı', () => {

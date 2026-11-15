@@ -128,6 +128,15 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
         expect(el.querySelectorAll('p-message[severity="warn"]').length).toBe(0);
     });
 
+    it('sayfa yenilenince (yükleme notu olmadan) parti durumundan kalınan adım açılır', () => {
+        history.replaceState(null, '');
+
+        expect(text(create(batch('Uploaded')))).toContain('Adım 2 · Sütun eşleme');
+        fixture.destroy();
+        TestBed.resetTestingModule();
+        expect(text(create(batch('Validated')))).toContain('Adım 3 · Doğrulama sonucu');
+    });
+
     it('Doğrula: istek hemen döner, ilerleme gösterilir; Validated olunca parti ve önizleme okunur, validationId oradan gelir', () => {
         const el = create(batch('Mapped'));
 
