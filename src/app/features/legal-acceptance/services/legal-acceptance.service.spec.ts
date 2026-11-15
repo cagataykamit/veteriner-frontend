@@ -40,6 +40,21 @@ describe('LegalAcceptanceService', () => {
         http.expectOne('http://api.test/api/v1/public/legal-documents').flush([]);
     });
 
+    it('panel açılışında durum önceden okunur ve bir kez verilir; hata paneli engellemez (H18)', () => {
+        let resolved = 0;
+
+        service.prefetchMyStatus().subscribe(() => resolved++);
+        http.expectOne('http://api.test/api/v1/me/legal-acceptances').flush({ requiresAcceptance: true, pendingDocuments: [{ documentType: 'Terms', version: '1.0' }] });
+        expect(resolved).toBe(1);
+        expect(service.takePrefetchedStatus()?.requiresAcceptance).toBe(true);
+        expect(service.takePrefetchedStatus()).toBeNull();
+
+        service.prefetchMyStatus().subscribe(() => resolved++);
+        http.expectOne('http://api.test/api/v1/me/legal-acceptances').flush(null, { status: 500, statusText: 'err' });
+        expect(resolved).toBe(2);
+        expect(service.takePrefetchedStatus()).toBeNull();
+    });
+
     it('bekleyen durum GET, kabul POST ile gönderilir', () => {
         service.getMyStatus().subscribe();
         http.expectOne('http://api.test/api/v1/me/legal-acceptances').flush({ requiresAcceptance: false, pendingDocuments: [] });

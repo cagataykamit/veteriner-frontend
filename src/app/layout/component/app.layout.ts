@@ -30,8 +30,8 @@ import { LegalAcceptanceGateComponent } from '@/app/features/legal-acceptance/co
             <app-footer></app-footer>
         </div>
         <div class="layout-mask"></div>
-        <!-- Bekleyen hukuki kabul penceresi (ADR-029); ilk paketi büyütmemek için ayrı parça. -->
-        @defer {
+        <!-- Bekleyen hukuki kabul penceresi (ADR-029); ilk paketi büyütmemek için ayrı parça. Durum rota çözülürken okunur, parça hemen yüklenir (H18). -->
+        @defer (on immediate) {
             <app-legal-acceptance-gate />
         }
     </div> `

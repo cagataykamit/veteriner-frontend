@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '@/app/core/auth/auth.guard';
+import { legalStatusResolver } from '@/app/features/legal-acceptance/legal-status.resolver';
 import { panelHomeGuard } from '@/app/core/routing/panel-home.redirect';
 import { surfaceOriginGuard } from '@/app/core/routing/surface-origin.guard';
 import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
@@ -77,6 +78,7 @@ export const appRoutes: Routes = [
         // Panel iskeleti (üst çubuk, menü, genel arama) yalnız panelde gerekir; ilk pakete girmez.
         loadComponent: () => import('./app/layout/component/app.layout').then((m) => m.AppLayout),
         canActivate: [surfaceOriginGuard('panel'), authGuard],
+        resolve: { legalStatus: legalStatusResolver },
         children: [
             { path: '', pathMatch: 'full', canActivate: [panelHomeGuard], children: [] },
             { path: '', loadChildren: () => import('./app/features/panel/panel.routes') }

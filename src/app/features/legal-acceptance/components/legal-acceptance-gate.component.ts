@@ -76,6 +76,15 @@ export class LegalAcceptanceGateComponent implements OnInit {
     );
 
     ngOnInit(): void {
+        // Panel rotası durumu önceden okuduysa pencere hemen çıkar (H18); okuyamadıysa burada okunur.
+        const prefetched = this.legal.takePrefetchedStatus();
+
+        if (prefetched) {
+            this.applyPending(prefetched.requiresAcceptance ? (prefetched.pendingDocuments ?? []) : []);
+
+            return;
+        }
+
         this.loadStatus();
     }
 
