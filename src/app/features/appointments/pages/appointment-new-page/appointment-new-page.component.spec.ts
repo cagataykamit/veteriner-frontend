@@ -23,7 +23,7 @@ const day = (dayOfWeek: number, isClosed = false): ClinicWorkingHourVm => ({
 describe('AppointmentNewPageComponent — varsayılanlar (H1)', () => {
     afterEach(() => vi.useRealTimers());
 
-    const create = (hours: ClinicWorkingHourVm[]) => {
+    const create = (hours: ClinicWorkingHourVm[], query: Record<string, string> = {}) => {
         TestBed.configureTestingModule({
             imports: [AppointmentNewPageComponent],
             providers: [
@@ -31,7 +31,7 @@ describe('AppointmentNewPageComponent — varsayılanlar (H1)', () => {
                 provideHttpClient(withXhr()),
                 provideHttpClientTesting(),
                 { provide: API_BASE_URL, useValue: 'http://api.test' },
-                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } },
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } },
                 { provide: AuthService, useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez', getUserId: () => 'u1', hasOperationClaim: () => true } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: ClinicsService, useValue: { getWorkingHours: () => of(hours), getAppointmentSettings: () => of({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 30 }) } }
@@ -43,6 +43,19 @@ describe('AppointmentNewPageComponent — varsayılanlar (H1)', () => {
 
         return fixture.componentInstance;
     };
+
+    it('takvimden gelen tarih, saat ve hekim formu doldurur; ilk uygun saat önerisi yapılmaz', () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date('2026-11-16T10:10:00+03:00'));
+        const cmp = create(
+            [0, 1, 2, 3, 4, 5, 6].map((d) => day(d)),
+            { date: '2026-11-18', time: '14:00', vet: 'v2' }
+        );
+
+        expect(cmp.form.controls.scheduledDate.value).toBe('2026-11-18');
+        expect(cmp.form.controls.scheduledTime.value).toBe('14:00');
+        expect(cmp.form.controls.veterinarianUserId.value).toBe('v2');
+    });
 
     it('tür Muayene seçili gelir', () => {
         const cmp = create([0, 1, 2, 3, 4, 5, 6].map((d) => day(d)));

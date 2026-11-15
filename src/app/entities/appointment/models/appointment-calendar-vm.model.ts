@@ -20,6 +20,9 @@ export interface AppointmentCalendarItemVm {
     appointmentTypeLabel: string;
     petName: string;
     clientName: string;
+    veterinarianUserId: string | null;
+    /** Hekimin görünen adı; hekimsiz ya da ad yoksa boş. */
+    veterinarianName: string;
 }
 
 export interface AppointmentCalendarDayGroupVm {

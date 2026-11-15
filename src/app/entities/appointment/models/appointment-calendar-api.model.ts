@@ -10,6 +10,9 @@ export interface AppointmentCalendarItemDto {
     appointmentType?: string | number | null;
     petName?: string | null;
     clientName?: string | null;
+    /** Randevunun hekimi; hekimsizse boş (takvimde "Hekim seçilmedi" sütunu). */
+    veterinarianUserId?: string | null;
+    veterinarianName?: string | null;
 }
 
 export interface AppointmentCalendarQuery {

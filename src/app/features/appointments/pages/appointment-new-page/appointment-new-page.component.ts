@@ -6,7 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, effect, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, type ParamMap, Router } from '@angular/router';
 import { prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -288,6 +288,7 @@ export class AppointmentNewPageComponent implements OnInit {
             }
         }
 
+        this.prefillScheduleFromRoute(query);
         this.syncScheduledTimeDisabledState();
     }
 
@@ -468,6 +469,28 @@ export class AppointmentNewPageComponent implements OnInit {
         }
 
         control.enable({ emitEvent: false });
+    }
+
+    /**
+     * Takvimde boş hücre / boş saat: `date` (yyyy-MM-dd), `time` (HH:mm) ve `vet` (hekim kimliği) formu doldurur. Tarih geldiyse "ilk
+     * uygun saat" önerisi yapılmaz; saat, o günün seçeneklerinde yoksa saat seçimi boş kalır.
+     */
+    private prefillScheduleFromRoute(query: ParamMap): void {
+        const date = query.get('date')?.trim() ?? '';
+        const time = query.get('time')?.trim() ?? '';
+        const vet = query.get('vet')?.trim() ?? '';
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            this.form.controls.scheduledDate.setValue(date);
+
+            if (/^\d{2}:\d{2}$/.test(time)) {
+                this.form.controls.scheduledTime.setValue(time);
+            }
+        }
+
+        if (vet) {
+            this.form.controls.veterinarianUserId.setValue(vet);
+        }
     }
 
     /** Seçilen gün uygun değilse önerilen ilk uygun gün ve saat. */
