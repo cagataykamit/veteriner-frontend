@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import type { ImportReminderImpactDto, ImportTableInfoDto } from '@/app/features/imports/models/import-api.model';
 import { duplicateBatchId, importCommitBlockers, importErrorMessage, importIssueDetail, importIssueLabel, importRowPlace, isDiscardable, isEndpointUnavailable, isImportJobRunning, reminderEmailTotal, reminderImpactCurrentCount, precheckImportFile, rollbackCountsText, rollbackCountsTotal, rollbackReasonLabel } from '@/app/features/imports/utils/import-labels.utils';
 import { columnMapsToRequest, fieldLabel, IMPORT_CSV_FIELD, IMPORT_CSV_TEMPLATE_FILE, IMPORT_TABLES, initialColumnMaps, mappingConfidence, missingRequired, needsClinic } from '@/app/features/imports/utils/import-schema.utils';
-import { IMPORT_PET_MERGE_PREFIX, IMPORT_VALUE_SKIP, petCandidateLabel, petChoicesToRequest, valueChoicesToRequest } from '@/app/features/imports/utils/import-value-mapping.utils';
+import { IMPORT_PET_MERGE_PREFIX, IMPORT_VALUE_SKIP, petCandidateLabel, petChoicesToRequest, petDisplayName, petMergeConflict, petRowLabel, valueChoicesToRequest } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { isTrialLimitError } from '@/app/shared/utils/api-error.utils';
 
 const customers: ImportTableInfoDto = {
@@ -95,12 +95,41 @@ describe('import-value-mapping.utils', () => {
             petCandidateLabel({ petNo: '904', rowNumber: 5, name: 'Zeytin', ownerName: null, species: 'Kedi', breed: null, color: 'Beyaz', gender: 'Dişi', birthDate: '2021-01-05', status: null, registeredOn: '01.06.2023' })
         ).toBe("Zeytin (E-vet 904) · Kedi · Beyaz · Dişi · doğum 05.01.2021 · E-vet'e kayıt 01.06.2023");
     });
+
+    it('adına E-vet numarası eklenmiş adayda numara bir kez yazılır', () => {
+        const c = { petNo: '614', rowNumber: 5, name: 'Portakal (E-vet 614)', ownerName: null, species: null, breed: null, color: null, gender: null, birthDate: null, status: null, registeredOn: null };
+
+        expect(petCandidateLabel(c)).toBe('Portakal (E-vet 614)');
+        expect(petDisplayName({ ...c, name: null })).toBe('Adsız (E-vet 614)');
+    });
+
+    it('aynı hayvan engeli: tür farkı seçeneği kaldırır, ırk/cinsiyet farkı yazılır, bilinmeyen değer fark sayılmaz', () => {
+        const c = { petNo: '1', rowNumber: 1, name: null, ownerName: null, species: 'Kedi', breed: 'Tekir', color: null, gender: 'Dişi', birthDate: null, status: null, registeredOn: null };
+
+        expect(petMergeConflict([c, { ...c, species: 'Köpek' }])).toBe('species');
+        expect(petMergeConflict([c, { ...c, gender: 'Erkek' }])).toBe('looks');
+        expect(petMergeConflict([c, { ...c, species: ' kedi ', breed: null, gender: null }])).toBeNull();
+    });
+
+    it('belirsiz grup kaydı tek satırda tarih, tür ve kısa özetle yazılır', () => {
+        const row = { reference: 'Belirsiz: 1 / 2', table: 'appointments', rowNumber: 1, date: '2026-12-01', title: 'Kontrol', summary: 'Dikiş alma' };
+
+        expect(petRowLabel(row)).toBe('01.12.2026 · Randevu (Kontrol): Dikiş alma');
+        expect(petRowLabel({ ...row, table: 'vaccinations', title: 'KUDUZ', summary: null })).toBe('01.12.2026 · Aşı: KUDUZ');
+    });
 });
 
 describe('import-labels.utils', () => {
     it('bilinen kodlar sade Türkçe, bilinmeyen kod yedek metinle gösterilir', () => {
         expect(importIssueLabel('Imports.SpeciesUnmapped')).toBe('Tür sistemde bulunamadı');
         expect(importIssueLabel('Imports.Bilinmeyen', 'Sunucu mesajı')).toBe('Sunucu mesajı');
+    });
+
+    it('klinik kayıtta geliş ve iki ayrı mükerrer nedeni ayrı metinle görünür', () => {
+        expect(importIssueLabel('Imports.ClinicalRecordArrival')).toBe('Boş muayene satırı geliş olarak aktarılacak');
+        expect(importIssueLabel('Imports.BlankExaminationSameDay')).toBe('Aynı gün başka kaydı var; geliş o kayıtla görünüyor');
+        expect(importIssueLabel('Imports.DuplicateClinicalRecord')).toBe('Dosyada aynı satır iki kez var; biri aktarılıyor');
+        expect(importIssueLabel('Imports.ClinicalRecordImportedBefore')).toBe('Bu kayıt daha önceki bir aktarmada geldi; tekrar eklenmiyor');
     });
 
     it('ayrıntı yalnız çakışan satırı söyleyen kodlarda ve etiketten farklıysa gösterilir', () => {
