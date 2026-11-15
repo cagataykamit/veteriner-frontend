@@ -37,6 +37,8 @@ export const PORTAL_ERROR_CODES = {
     waitlistOfferNotFound: 'WaitlistOfferLinks.NotFound',
     waitlistOfferSlotTaken: 'WaitlistOffers.SlotTaken',
     waitlistOfferConflict: 'WaitlistOffers.ConcurrencyConflict',
+    humanVerificationFailed: 'HumanVerification.Failed',
+    humanVerificationUnavailable: 'HumanVerification.Unavailable',
     validation: 'Validation.FluentValidation'
 } as const;
 
@@ -78,6 +80,8 @@ export const PORTAL_ERROR_MESSAGES: Readonly<Record<string, string>> = {
     [C.waitlistOfferSlotTaken]: 'Bu saat bu arada doldu; randevu oluşturulamadı. Bekleme listesindeki yeriniz korunuyor.',
     [C.waitlistOfferConflict]: 'Teklif bu sırada yanıtlandı. Sayfayı yenileyip tekrar bakın.',
     [C.pushDisabled]: 'Anlık bildirim tercihiniz kapalı; önce bildirimleri açın.',
+    [C.humanVerificationFailed]: 'Güvenlik doğrulaması tamamlanamadı. Sayfayı yenileyip yeniden deneyin.',
+    [C.humanVerificationUnavailable]: 'Güvenlik doğrulaması şu an yapılamıyor. Lütfen biraz sonra yeniden deneyin.',
     [C.validation]: 'Girdiğiniz bilgileri kontrol edin.'
 };
 

@@ -86,6 +86,10 @@
                 </div>
             }
 
+            @if (method() === 'code') {
+                <portal-turnstile [siteKey]="turnstileSiteKey()" [action]="turnstileAction" (tokenChange)="turnstileToken.set($event)" />
+            }
+
             @if (error(); as message) {
                 <p-message severity="error" role="alert">{{ message }}</p-message>
             }
