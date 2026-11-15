@@ -87,7 +87,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                         </app-filter-field>
                         <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canExportStockMovements()) {
-                            <button pButton type="button" actions severity="help" (click)="exportCsv()" [disabled]="loading() || exporting()"><i class="p-button-icon" [class]="exporting() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Dışa aktar</button>
+                            <button pButton type="button" actions severity="secondary" (click)="exportCsv()" [disabled]="loading() || exporting()"><i class="p-button-icon" [class]="exporting() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Dışa aktar</button>
                         }
                         @if (canCreateStockMovement && !ro.mutationBlocked()) {
                             <button actions pButton type="button" class="p-button-primary" (click)="createDialogOpen.set(true)"><i class="pi pi-plus"></i>Yeni stok hareketi</button>
