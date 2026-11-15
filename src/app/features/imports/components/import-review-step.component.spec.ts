@@ -193,7 +193,7 @@ describe('ImportReviewStepComponent', () => {
 
             expect(skipped).toContain('Bilerek atlanacak 3 satır');
             expect(skipped).toContain('Boş muayene satırı');
-            expect(skipped).toContain('İçinde aktarılacak bilgi yok; sorun değil.');
+            expect(skipped).toContain('İçinde bilgi yok ve hastası ya da tarihi okunamadı; sorun değil.');
 
             const errors = text(q(el, 'import-errors'));
 

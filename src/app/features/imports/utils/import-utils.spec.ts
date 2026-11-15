@@ -125,6 +125,13 @@ describe('import-labels.utils', () => {
         expect(importIssueLabel('Imports.Bilinmeyen', 'Sunucu mesajı')).toBe('Sunucu mesajı');
     });
 
+    it('klinik kayıtta geliş ve iki ayrı mükerrer nedeni ayrı metinle görünür', () => {
+        expect(importIssueLabel('Imports.ClinicalRecordArrival')).toBe('Boş muayene satırı geliş olarak aktarılacak');
+        expect(importIssueLabel('Imports.BlankExaminationSameDay')).toBe('Aynı gün başka kaydı var; geliş o kayıtla görünüyor');
+        expect(importIssueLabel('Imports.DuplicateClinicalRecord')).toBe('Dosyada aynı satır iki kez var; biri aktarılıyor');
+        expect(importIssueLabel('Imports.ClinicalRecordImportedBefore')).toBe('Bu kayıt daha önceki bir aktarmada geldi; tekrar eklenmiyor');
+    });
+
     it('ayrıntı yalnız çakışan satırı söyleyen kodlarda ve etiketten farklıysa gösterilir', () => {
         expect(importIssueDetail('Imports.MicrochipConflict', 'Aynı mikroçip kayıtlı başka bir hastada var.')).toBe('Aynı mikroçip kayıtlı başka bir hastada var.');
         expect(importIssueDetail('Imports.DuplicateInFile', 'Aynı hasta 12. satırda da var; bu satır atlanacak.')).toBe('Aynı hasta 12. satırda da var; bu satır atlanacak.');
