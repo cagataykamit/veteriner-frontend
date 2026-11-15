@@ -14,7 +14,17 @@ import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.com
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import type { InlineCreateConfig } from '@/app/shared/forms/inline-create/inline-create.directive';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+
+/**
+ * Stoktan düşen akışlarda (uygulama, aşı, hızlı satış) yerinde ürün eklenmez: yeni ürünün stoğu yoktur, kayıt "yetersiz stok"la düşer (O1).
+ * Seçicinin boş durumu kullanıcıyı doğru ekrana yönlendirir.
+ */
+export const STOCKED_PRODUCT_INLINE_CREATE: InlineCreateConfig = {
+    canCreate: false,
+    unavailableReason: 'Burada yalnız stoktaki ürün seçilir. Yeni ürünü Mal kabul ekranında stoğa girin.'
+};
 
 export interface QuickProductCreated {
     readonly id: string;

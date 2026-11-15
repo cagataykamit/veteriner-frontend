@@ -40,7 +40,7 @@ export const INLINE_CREATE_NO_PERMISSION = 'Eklemek için yöneticinize başvuru
                     <small class="block text-muted-color">Arama kutusuna adını yazıp ekleyebilirsiniz.</small>
                 }
             } @else {
-                <small class="block text-muted-color">{{ noPermission }}</small>
+                <small class="block text-muted-color">{{ inline.appInlineCreate().unavailableReason ?? noPermission }}</small>
             }
             @if (inline.error(); as message) {
                 <small class="block text-danger" role="alert">{{ message }}</small>

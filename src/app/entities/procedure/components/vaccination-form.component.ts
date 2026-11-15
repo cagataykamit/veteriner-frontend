@@ -19,6 +19,9 @@ import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidato
 import type { ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { ADMINISTRATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { STOCKED_PRODUCT_INLINE_CREATE } from '@/app/entities/inventory/components/quick-product-dialog.component';
+import { InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import type { CreateVaccinationRequest } from '@/app/entities/vaccination/models/vaccination-create.model';
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
@@ -77,7 +80,7 @@ export interface VaccinationSavedEvent {
     selector: 'app-vaccination-form',
     standalone: true,
     providers: [{ provide: HAS_UNSAVED_CHANGES, useExisting: forwardRef(() => VaccinationFormComponent) }],
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-pet-alert-banner [petId]="form.controls.petId.value" />
@@ -211,8 +214,11 @@ export interface VaccinationSavedEvent {
                                 filterBy="label"
                                 [showClear]="true"
                                 [loading]="productsLoading()"
+                                [appInlineCreate]="stockedProductOnly"
                                 class="w-full"
-                            />
+                            >
+                                <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                            </p-select>
                             @if (lastProduct(); as last) {
                                 @if (!form.controls.productId.value) {
                                     <button type="button" class="p-button p-button-text p-button-sm p-0 mt-1" data-testid="last-product" (click)="useLastProduct(last.value)">Son kullanılan: {{ last.label }}</button>
@@ -221,7 +227,7 @@ export interface VaccinationSavedEvent {
                             @if (productsError()) {
                                 <small class="text-danger block">{{ productsError() }}</small>
                             } @else if (!productsLoading() && productOptions().length === 0) {
-                                <small class="text-muted-color block">Aşı türünde ürün yok; ürün tanımında tür "Aşı" seçilmelidir.</small>
+                                <small class="text-muted-color block">Stokta aşı ürünü yok; aşıyı Mal kabul ekranında stoğa girin. Ürün seçmeden yalnız aşı kaydı yapılabilir.</small>
                             }
                         </div>
                         @if (form.controls.productId.value) {
@@ -345,6 +351,7 @@ export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
     readonly productsLoading = signal(false);
     readonly productsError = signal<string | null>(null);
     private readonly products = signal<ProductListItemVm[]>([]);
+    readonly stockedProductOnly = STOCKED_PRODUCT_INLINE_CREATE;
     readonly productOptions = computed(() => this.products().map((p) => ({ value: p.id, label: p.sku && p.sku !== '—' ? `${p.name} (${p.sku})` : p.name })));
     private readonly lastProductId = signal<string | null>(readLastVaccineProductId());
     /** Hekim için hızlı yol: son kullanılan aşı ürünü (yalnız bir tıkla seçilir, kendiliğinden stok düşmez). */

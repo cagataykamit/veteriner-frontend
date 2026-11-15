@@ -2,7 +2,8 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
 import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { tap } from 'rxjs';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -20,6 +21,9 @@ import type { PetEditVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PetColorsService } from '@/app/entities/pet/services/pet-colors.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
+import { createSpeciesByName } from '@/app/entities/species/utils/species-inline-create.utils';
+import { type InlineCreateConfig, InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { type PetCreateFieldErrors, type PetCreateFormFieldKey, parsePetCreateHttpError } from '@/app/entities/pet/utils/pet-create-validation-parse.utils';
 import { petMicrochipFormatWarning } from '@/app/features/pets/utils/pet-microchip.utils';
 import { PET_GENDER_FORM_OPTIONS } from '@/app/entities/pet/utils/pet-status.utils';
@@ -52,7 +56,9 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
         QuickSpeciesDialogComponent,
         QuickBreedDialogComponent,
         ClientSearchComponent,
-        DateInputComponent
+        DateInputComponent,
+        InlineCreateDirective,
+        InlineCreateOptionComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -94,7 +100,9 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="speciesId" class="block text-sm font-medium text-muted-color mb-2">Tür *</label>
-                            <p-select inputId="speciesId" formControlName="speciesId" [options]="speciesOptions()" optionLabel="label" optionValue="value" placeholder="Tür seçin" class="w-full" [loading]="loadingSpecies()" [showClear]="true" />
+                            <p-select inputId="speciesId" formControlName="speciesId" [options]="speciesOptions()" optionLabel="label" optionValue="value" placeholder="Tür seçin" class="w-full" [loading]="loadingSpecies()" [showClear]="true" [filter]="true" filterBy="label" filterPlaceholder="Ara…" [appInlineCreate]="speciesCreate()">
+                                <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                            </p-select>
                             @if (apiFieldErrors().speciesId) {
                                 <small class="text-danger">{{ apiFieldErrors().speciesId }}</small>
                             } @else if (form.controls.speciesId.invalid && form.controls.speciesId.touched) {
@@ -108,7 +116,7 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="breedId" class="block text-sm font-medium text-muted-color mb-2">Irk</label>
-                            <p-select inputId="breedId" formControlName="breedId" [options]="breedOptions()" optionLabel="label" optionValue="value" placeholder="Irk seçin" class="w-full" [loading]="loadingBreeds()" [showClear]="true" />
+                            <p-select inputId="breedId" formControlName="breedId" [options]="breedOptions()" optionLabel="label" optionValue="value" placeholder="Irk seçin" class="w-full" [loading]="loadingBreeds()" [showClear]="true" [filter]="true" filterBy="label" filterPlaceholder="Ara…" />
                             @if (apiFieldErrors().breedId) {
                                 <small class="text-danger">{{ apiFieldErrors().breedId }}</small>
                             }
@@ -138,14 +146,14 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="colorId" class="block text-sm font-medium text-muted-color mb-2">Renk</label>
-                            <p-select inputId="colorId" formControlName="colorId" [options]="colorOptions()" optionLabel="label" optionValue="value" placeholder="Renk seçin" class="w-full" [loading]="loadingColors()" [showClear]="true" />
+                            <p-select inputId="colorId" formControlName="colorId" [options]="colorOptions()" optionLabel="label" optionValue="value" placeholder="Renk seçin" class="w-full" [loading]="loadingColors()" [showClear]="true" [filter]="true" filterBy="label" filterPlaceholder="Ara…" />
                             @if (apiFieldErrors().colorId) {
                                 <small class="text-danger">{{ apiFieldErrors().colorId }}</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="patternId" class="block text-sm font-medium text-muted-color mb-2">Desen</label>
-                            <p-select inputId="patternId" formControlName="patternId" [options]="patternOptions()" optionLabel="label" optionValue="value" placeholder="Desen seçin (tekir, kaplan çizgili…)" class="w-full" [loading]="loadingColors()" [showClear]="true" />
+                            <p-select inputId="patternId" formControlName="patternId" [options]="patternOptions()" optionLabel="label" optionValue="value" placeholder="Desen seçin (tekir, kaplan çizgili…)" class="w-full" [loading]="loadingColors()" [showClear]="true" [filter]="true" filterBy="label" filterPlaceholder="Ara…" />
                             @if (apiFieldErrors().patternId) {
                                 <small class="text-danger">{{ apiFieldErrors().patternId }}</small>
                             }
@@ -268,6 +276,11 @@ export class PetEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly loadingBreeds = signal(false);
     readonly loadingColors = signal(false);
     readonly speciesOptions = signal<SelectOption[]>([]);
+    /** Aranan tür yoksa adıyla eklenir ve seçilir (O1). */
+    readonly speciesCreate = computed<InlineCreateConfig>(() => ({
+        canCreate: this.canShowQuickSpeciesButton(),
+        create: (name) => createSpeciesByName(this.speciesService, name).pipe(tap((id) => this.speciesOptions.update((o) => [...o, { value: id, label: name.trim() }])))
+    }));
     readonly breedOptions = signal<SelectOption[]>([]);
     readonly colorOptions = signal<SelectOption[]>([]);
     readonly patternOptions = signal<SelectOption[]>([]);

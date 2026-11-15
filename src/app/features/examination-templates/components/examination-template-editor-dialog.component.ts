@@ -8,7 +8,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PRODUCTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { PRODUCTS_CREATE_CLAIM, PRODUCTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { QuickProductDialogComponent, type QuickProductCreated } from '@/app/entities/inventory/components/quick-product-dialog.component';
+import { type InlineCreateConfig, InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, CHARGE_UNIT_PRICE_MAX, CHARGE_UNIT_PRICE_MAX_DECIMALS, chargeNumberValidator } from '@/app/entities/charge/utils/charge-amount.utils';
 import {
     EXAMINATION_TEMPLATE_LINES_MAX,
@@ -60,7 +64,7 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
 @Component({
     selector: 'app-examination-template-editor-dialog',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, DialogModule, InputTextModule, MessageModule, SelectModule],
+    imports: [ReactiveFormsModule, ButtonModule, DialogModule, InputTextModule, MessageModule, SelectModule, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="header()" [modal]="true" [visible]="visible()" (visibleChange)="visible.set($event)" [closable]="!submitting()" [style]="{ width: 'min(48rem, 95vw)' }" [draggable]="false">
@@ -121,9 +125,12 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
                                     [filter]="true"
                                     filterBy="label"
                                     [loading]="loadingProducts()"
+                                    [appInlineCreate]="productCreate()"
                                     appendTo="body"
                                     class="w-full"
-                                />
+                                >
+                                    <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                                </p-select>
                                 @if (inactiveNote(g); as note) {
                                     <small class="text-amber-700 dark:text-amber-300 block">{{ note }}</small>
                                 }
@@ -173,6 +180,7 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
                 </div>
             </form>
         </p-dialog>
+        <app-quick-product-dialog [(visible)]="quickProductOpen" [initialName]="quickProductName()" [kinds]="lineKinds" (productCreated)="onQuickProductCreated($event)" />
     `
 })
 export class ExaminationTemplateEditorDialogComponent {
@@ -188,6 +196,7 @@ export class ExaminationTemplateEditorDialogComponent {
     private readonly templates = inject(ExaminationTemplatesService);
     private readonly productService = inject(ProductService);
     private readonly auth = inject(AuthService);
+    private readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
     protected readonly nameMax = EXAMINATION_TEMPLATE_NAME_MAX;
@@ -209,6 +218,20 @@ export class ExaminationTemplateEditorDialogComponent {
     readonly productsError = signal<string | null>(null);
     private readonly products = signal<ProductListItemVm[]>([]);
     private productsLoaded = false;
+    readonly quickProductOpen = signal(false);
+    readonly quickProductName = signal('');
+    /** Şablon satırı hizmet de olabilir. */
+    readonly lineKinds = ['Service', 'Medicine', 'Vaccine', 'Other'] as const;
+    private quickProductTarget: AbstractControl | null = null;
+    /** Aranan ürün/hizmet yoksa küçük ürün diyaloğu açılır; yeni kayıt o satıra yazılır (O1). */
+    readonly productCreate = computed<InlineCreateConfig>(() => ({
+        canCreate: this.auth.hasOperationClaim(PRODUCTS_CREATE_CLAIM) && !this.ro.mutationBlocked(),
+        openDialog: (name, control) => {
+            this.quickProductTarget = control;
+            this.quickProductName.set(name);
+            this.quickProductOpen.set(true);
+        }
+    }));
 
     readonly form = this.fb.nonNullable.group(
         {
@@ -376,7 +399,19 @@ export class ExaminationTemplateEditorDialogComponent {
         return this.products().find((p) => p.id === productId)?.name ?? this.sourceLine(productId)?.productName ?? null;
     }
 
-    private loadProducts(): void {
+    /** Yeni ürün katalog listesine girsin diye liste yenilenir; seçim yenilemeden sonra yazılır (birim ve fiyat oradan gelir). */
+    onQuickProductCreated(product: QuickProductCreated): void {
+        const control = this.quickProductTarget;
+
+        this.quickProductTarget = null;
+        this.productsLoaded = false;
+        this.loadProducts(() => {
+            control?.setValue(product.id);
+            control?.markAsDirty();
+        });
+    }
+
+    private loadProducts(then?: () => void): void {
         if (!this.canPickProduct || this.productsLoaded || this.loadingProducts()) {
             return;
         }
@@ -388,6 +423,7 @@ export class ExaminationTemplateEditorDialogComponent {
                 this.products.set(r.items);
                 this.productsLoaded = true;
                 this.loadingProducts.set(false);
+                then?.();
             },
             error: (e: unknown) => {
                 this.productsError.set(e instanceof Error ? e.message : 'Ürün listesi yüklenemedi.');

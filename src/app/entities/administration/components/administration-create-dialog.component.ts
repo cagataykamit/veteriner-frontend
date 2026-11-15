@@ -16,6 +16,9 @@ import type { AdministrationCopyDraft } from '@/app/entities/administration/util
 import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/entities/charge/utils/charge-amount.utils';
 import type { ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
+import { STOCKED_PRODUCT_INLINE_CREATE } from '@/app/entities/inventory/components/quick-product-dialog.component';
+import { InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
@@ -33,7 +36,7 @@ const NOTES_MAX_LENGTH = 2000;
 @Component({
     selector: 'app-administration-create-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="(prefill() ? 'Tekrar uygula' : 'Uygulama kaydet') + (lateEntry() ? ' (sonradan ekleme)' : '')" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
@@ -70,9 +73,12 @@ const NOTES_MAX_LENGTH = 2000;
                             filterPlaceholder="Ara…"
                             filterBy="label"
                             [loading]="loadingProducts()"
+                            [appInlineCreate]="stockedProductOnly"
                             appendTo="body"
                             class="w-full"
-                        />
+                        >
+                            <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                        </p-select>
                         @if (form.controls.productId.invalid && form.controls.productId.touched) {
                             <small class="text-danger">Ürün seçimi zorunludur.</small>
                         }
@@ -136,6 +142,7 @@ const NOTES_MAX_LENGTH = 2000;
 })
 export class AdministrationCreateDialogComponent {
     readonly visible = model(false);
+    readonly stockedProductOnly = STOCKED_PRODUCT_INLINE_CREATE;
     readonly petId = input.required<string>();
     readonly petName = input<string | null>(null);
     readonly examinationId = input<string | null>(null);

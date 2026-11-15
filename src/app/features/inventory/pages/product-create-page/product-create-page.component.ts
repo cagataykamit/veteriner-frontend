@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -10,11 +10,13 @@ import { mapProductCategoryListItemVmToSelectOption } from '@/app/features/inven
 import { createProductUpsertFormGroup } from '@/app/features/inventory/forms/product-upsert-form.factory';
 import type { ProductUpsertFormValue } from '@/app/entities/inventory/models/product-upsert-form.model';
 import { ProductCategoryService } from '@/app/features/inventory/services/product-category.service';
+import { productCategoryInlineCreate } from '@/app/features/inventory/utils/product-category-inline-create.utils';
+import { InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { BarcodeScanButtonComponent } from '@/app/entities/inventory/components/barcode-scan-button.component';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PRODUCT_CATEGORIES_ROUTE } from '@/app/core/routing/panel-navigation';
 import { PRODUCT_CATEGORIES_CREATE_CLAIM, PRODUCT_CATEGORIES_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { ProductClassificationFieldsComponent } from '@/app/features/inventory/components/product-classification-fields/product-classification-fields.component';
@@ -28,7 +30,7 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
 @Component({
     selector: 'app-product-create-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, BarcodeScanButtonComponent, ProductTaxFieldsComponent, ProductClassificationFieldsComponent, FocusFirstFieldDirective],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, BarcodeScanButtonComponent, ProductTaxFieldsComponent, ProductClassificationFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, FocusFirstFieldDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/products" categoryLinkLabel="Ürün listesine dön" title="Yeni ürün" description="Ürün kartı oluşturun." />
@@ -56,16 +58,12 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
                                 filterPlaceholder="Ara…"
                                 filterBy="label"
                                 [showClear]="true"
+                                [appInlineCreate]="categoryCreate()"
                                 class="w-full"
-                            />
-                            @if (categoriesLoaded() && categoryOptions().length === 0 && !categoryLoadHint()) {
-                                <p class="text-muted-color text-sm mt-1 mb-0" role="status">
-                                    Henüz ürün kategorisi yok. Kategori eklemek için Kategoriler ekranını kullanabilirsiniz.
-                                    @if (canCreateCategories) {
-                                        <a [routerLink]="categoriesRoute" class="text-primary font-medium no-underline ms-1">Kategori ekle</a>
-                                    }
-                                </p>
-                            }
+                            >
+                                <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                                <ng-template #empty><app-inline-create-option emptyText="Henüz ürün kategorisi yok." /></ng-template>
+                            </p-select>
                         </div>
                     }
                     <div [class]="canReadCategories ? 'col-span-12 md:col-span-6 flex flex-col gap-1' : 'col-span-12 flex flex-col gap-1'">
@@ -133,7 +131,6 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
 })
 export class ProductCreatePageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
-    readonly categoriesRoute = PRODUCT_CATEGORIES_ROUTE;
 
     private readonly fb = inject(FormBuilder);
     private readonly router = inject(Router);
@@ -145,6 +142,8 @@ export class ProductCreatePageComponent implements OnInit, HasUnsavedChanges {
     readonly canReadCategories = this.auth.hasOperationClaim(PRODUCT_CATEGORIES_READ_CLAIM);
     readonly canCreateCategories = this.auth.hasOperationClaim(PRODUCT_CATEGORIES_CREATE_CLAIM);
     readonly categoryOptions = signal<SelectOption[]>([]);
+    /** Aranan kategori yoksa adıyla eklenir ve seçilir (O1). */
+    readonly categoryCreate = computed(() => productCategoryInlineCreate(this.categoryService, this.canCreateCategories && !this.ro.mutationBlocked(), this.categoryOptions));
     readonly categoryLoadHint = signal<string | null>(null);
     readonly categoriesLoaded = signal(false);
 

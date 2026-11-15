@@ -148,7 +148,7 @@ function numberFromInput(event: Event): number | null {
                                 }
                             </ul>
                         } @else if (term().trim() && !searching() && !searchError()) {
-                            <small class="text-muted-color block mt-1">Satılabilir ürün bulunamadı. Aşı ve kontrollü ürünler satışta yer almaz.</small>
+                            <small class="text-muted-color block mt-1">Satılabilir ürün bulunamadı. Aşı ve kontrollü ürünler satışta yer almaz; yeni ürünü Mal kabul ekranında stoğa girin.</small>
                         }
                     </div>
 

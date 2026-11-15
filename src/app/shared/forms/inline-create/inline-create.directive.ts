@@ -1,5 +1,5 @@
 import { DestroyRef, Directive, inject, input, signal } from '@angular/core';
-import { NgControl } from '@angular/forms';
+import { type AbstractControl, NgControl } from '@angular/forms';
 import type { Observable } from 'rxjs';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Select } from 'primeng/select';
@@ -13,7 +13,10 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 export interface InlineCreateConfig {
     canCreate: boolean;
     create?: (name: string) => Observable<unknown>;
-    openDialog?: (name: string) => void;
+    /** `control`: seçicinin kontrolü; satır satır seçicilerde (ör. mal kabul) seçim o satıra yazılır. */
+    openDialog?: (name: string, control: AbstractControl | null) => void;
+    /** Bu akışta ekleme anlamsızsa (ör. stoksuz ürün stoktan düşülemez) yetki cümlesi yerine yazılacak neden ve yol. */
+    unavailableReason?: string;
 }
 
 /**
@@ -70,7 +73,7 @@ export class InlineCreateDirective {
 
         if (config.openDialog) {
             this.closePanel();
-            config.openDialog(name);
+            config.openDialog(name, this.ngControl?.control ?? null);
 
             return;
         }
