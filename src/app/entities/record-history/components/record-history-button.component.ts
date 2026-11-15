@@ -1,6 +1,7 @@
 import { Component, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import type { RecordChangeVm, RecordHistoryResource } from '@/app/entities/record-history/models/record-history.model';
 import { RecordHistoryService } from '@/app/entities/record-history/services/record-history.service';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -16,7 +17,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-record-history-button',
     standalone: true,
-    imports: [ButtonModule, DialogModule, AppEmptyStateComponent, AppErrorStateComponent, AppLoadingStateComponent, TrDateTimePipe],
+    imports: [ButtonModule, DialogModule, DialogFocusReturnDirective, AppEmptyStateComponent, AppErrorStateComponent, AppLoadingStateComponent, TrDateTimePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <button pButton type="button" class="p-button-secondary" data-testid="record-history-open" (click)="open()"><i class="pi pi-history"></i>Değişiklikleri gör</button>

@@ -218,7 +218,8 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         cmp.form.controls.weightKg.setValue(null);
 
         expect(cmp.form.hasError('partialVitalClear')).toBe(true);
-        expect(cmp.saveDisabled()).toBe(true);
+        // Kaydet açık kalır (O3); gönderimi işleyici engeller.
+        expect(cmp.saveDisabled()).toBe(false);
         cmp.onSubmit();
         expect(service.updateExamination).not.toHaveBeenCalled();
     });
@@ -335,6 +336,37 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         expect(cmp.form.valid).toBe(true);
         cmp.form.controls.visitReason.setValue('   ');
         expect(cmp.form.controls.visitReason.valid).toBe(false);
+    });
+
+    it('yüklenen kayıt temizdir; kullanıcı yazınca kaydedilmemiş değişiklik var, başarılı kayıtta yönlenmeden önce temizlenir (O2)', () => {
+        expect(cmp.hasUnsavedChanges()).toBe(false);
+        typeNote('yeni anamnez');
+        cmp.form.controls.anamnesis.markAsDirty();
+        expect(cmp.hasUnsavedChanges()).toBe(true);
+        let dirtyAtNavigate: boolean | undefined;
+
+        navigate.mockImplementation(() => {
+            dirtyAtNavigate = cmp.hasUnsavedChanges();
+
+            return Promise.resolve(true);
+        });
+        service.updateExamination.mockReturnValue(of({ id: 'e1', rowVersion: 'V2' }));
+        cmp.onSubmit();
+
+        expect(navigate).toHaveBeenCalledWith(['/panel/examinations', 'e1'], { queryParams: { saved: '1' } });
+        expect(dirtyAtNavigate).toBe(false);
+    });
+
+    it('kayıt hatasında (409) değişiklik korunur; "güncel kaydı yükle" formu temizler (O2)', () => {
+        service.updateExamination.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
+        typeNote('yeni anamnez');
+        cmp.form.controls.anamnesis.markAsDirty();
+        cmp.onSubmit();
+        expect(cmp.hasUnsavedChanges()).toBe(true);
+
+        cmp.discardAndReload();
+
+        expect(cmp.hasUnsavedChanges()).toBe(false);
     });
 
     it('doz hesabı planın sonuna yeni satır olarak eklenir ve form kirlenir', () => {

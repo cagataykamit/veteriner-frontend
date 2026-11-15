@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { VisitPreparationFieldsComponent } from '@/app/entities/visit/components/visit-preparation-fields.component';
 import type { TodayItemVm, VisitVm } from '@/app/entities/visit/models/visit-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
@@ -13,7 +14,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-visit-preparation-dialog',
     standalone: true,
-    imports: [DialogModule, ButtonModule, VisitPreparationFieldsComponent],
+    imports: [DialogModule, DialogFocusReturnDirective, ButtonModule, VisitPreparationFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Hazırlığı düzenle" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">

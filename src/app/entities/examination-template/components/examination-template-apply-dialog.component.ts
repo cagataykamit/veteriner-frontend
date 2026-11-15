@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import type { ExaminationTemplateApplyResultDto, ExaminationTemplateDto, ExaminationTemplateLineDto } from '@/app/entities/examination-template/models/examination-template.model';
 import { EXAMINATION_CONCURRENCY_CONFLICT_CODE, EXAMINATION_FINALIZED_CODE, ExaminationTemplateError, ExaminationTemplatesService } from '@/app/entities/examination-template/services/examination-templates.service';
 import {
@@ -49,7 +50,7 @@ interface TextPreviewSection {
 @Component({
     selector: 'app-examination-template-apply-dialog',
     standalone: true,
-    imports: [FormsModule, DialogModule, ButtonModule, CheckboxModule, SearchInputComponent, AppStatusTagComponent],
+    imports: [FormsModule, DialogModule, DialogFocusReturnDirective, ButtonModule, CheckboxModule, SearchInputComponent, AppStatusTagComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Şablon uygula" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(44rem, 95vw)' }" [(visible)]="visible">

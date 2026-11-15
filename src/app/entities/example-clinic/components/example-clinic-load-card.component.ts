@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { TODAY_ROUTE } from '@/app/core/routing/panel-navigation';
 import { ExampleClinicSummaryComponent } from '@/app/entities/example-clinic/components/example-clinic-summary.component';
 import { exampleClinicDeactivatedProducts, exampleClinicOtherRecords, exampleClinicSummaryShortText } from '@/app/entities/example-clinic/data/example-clinic.mapper';
@@ -18,7 +19,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 @Component({
     selector: 'app-example-clinic-load-card',
     standalone: true,
-    imports: [ButtonModule, DialogModule, RouterLink, ExampleClinicSummaryComponent],
+    imports: [ButtonModule, DialogModule, DialogFocusReturnDirective, RouterLink, ExampleClinicSummaryComponent],
     // Gösterilecek bir şey yoksa ızgarada boş satır (aralık) bırakmasın.
     host: { '[class.hidden]': '!visible()' },
     changeDetection: ChangeDetectionStrategy.OnPush,

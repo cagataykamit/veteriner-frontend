@@ -1,20 +1,25 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { map } from 'rxjs';
+import { map, tap } from 'rxjs';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { VACCINE_DEFINITIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { SPECIES_CREATE_CLAIM, VACCINE_DEFINITIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { DEFINITIONS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
+import { createSpeciesByName } from '@/app/entities/species/utils/species-inline-create.utils';
+import { type InlineCreateConfig, InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { AppPlanUpgradeNoticeComponent } from '@/app/entities/subscription/components/app-plan-upgrade-notice.component';
 import type { VaccineDefinitionListItemVm } from '@/app/entities/vaccine-definition/models/vaccine-definition-vm.model';
 import { VaccineDefinitionsService } from '@/app/entities/vaccine-definition/services/vaccine-definitions.service';
@@ -31,6 +36,8 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 /**
  * Aşı takvimi (TIER-005, `VACCINATION_SCHEDULE_API_CONTRACT.md` §2), Tanımlar altında: tür + aşı satırları; hasta kartındaki
@@ -46,7 +53,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         ReactiveFormsModule,
         ButtonModule,
         ConfirmDialogModule,
-        DialogModule,
+        DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective,
         InputTextModule,
         MessageModule,
         SelectModule,
@@ -55,7 +62,11 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         AppPlanUpgradeNoticeComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppLoadingStateComponent
+        AppLoadingStateComponent,
+        InlineCreateDirective,
+        InlineCreateOptionComponent,
+        FormSubmitDirective,
+        FormErrorSummaryComponent
     ],
     providers: [ConfirmationService],
     template: `
@@ -146,15 +157,18 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
             }
         </div>
 
-        <p-dialog [header]="editing() ? 'Takvim satırını düzenle' : 'Yeni takvim satırı'" [modal]="true" [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [style]="{ width: 'min(34rem, 95vw)' }" [draggable]="false">
-            <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+        <p-dialog [appUnsavedChanges]="form.dirty" [header]="editing() ? 'Takvim satırını düzenle' : 'Yeni takvim satırı'" [modal]="true" [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [style]="{ width: 'min(34rem, 95vw)' }" [draggable]="false">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+                <app-form-error-summary />
                 @if (dialogError(); as err) {
                     <p-message severity="error" class="w-full" role="alert">{{ err }}</p-message>
                 }
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="flex flex-col gap-1">
                         <label for="itemSpecies" class="block text-sm font-medium text-muted-color">Tür *</label>
-                        <p-select inputId="itemSpecies" [options]="speciesOptions()" formControlName="speciesId" optionLabel="label" optionValue="value" placeholder="Seçin" class="w-full" (onChange)="form.controls.vaccineDefinitionId.setValue('')" />
+                        <p-select inputId="itemSpecies" [options]="speciesOptions()" formControlName="speciesId" optionLabel="label" optionValue="value" placeholder="Seçin" [filter]="true" filterBy="label" filterPlaceholder="Ara…" [appInlineCreate]="speciesCreate()" class="w-full" (onChange)="form.controls.vaccineDefinitionId.setValue('')">
+                            <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                        </p-select>
                     </div>
                     <div class="flex flex-col gap-1">
                         <label for="itemVaccine" class="block text-sm font-medium text-muted-color">Aşı *</label>
@@ -192,7 +206,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                 </div>
                 <div class="flex flex-wrap justify-end gap-2 pt-2">
                     <button pButton type="button" severity="secondary" (click)="dialogVisible.set(false)" [disabled]="submitting()">{{ copy.buttonCancel }}</button>
-                    <button pButton type="submit" data-testid="schedule-save" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                    <button pButton type="submit" data-testid="schedule-save" [disabled]="submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                 </div>
             </form>
         </p-dialog>
@@ -220,6 +234,11 @@ export class VaccinationSchedulePageComponent implements OnInit {
 
     readonly items = signal<VaccinationScheduleItemDto[]>([]);
     readonly speciesOptions = signal<SelectOption[]>([]);
+    /** Aranan tür yoksa adıyla eklenir ve seçilir (O1). */
+    readonly speciesCreate = computed<InlineCreateConfig>(() => ({
+        canCreate: this.auth.hasOperationClaim(SPECIES_CREATE_CLAIM) && !this.ro.mutationBlocked(),
+        create: (name) => createSpeciesByName(this.speciesService, name).pipe(tap((id) => this.speciesOptions.update((o) => [...o, { value: id, label: name.trim() }])))
+    }));
     readonly vaccineList = signal<readonly VaccineDefinitionListItemVm[]>([]);
     readonly speciesFilter = signal('');
     readonly loading = signal(true);

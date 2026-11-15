@@ -67,9 +67,9 @@ export class ProductCategoryService {
         );
     }
 
-    create(body: CreateProductCategoryRequest): Observable<void> {
-        return this.api.post<unknown>(ApiEndpoints.productCategories.create(), body).pipe(
-            map(() => undefined),
+    /** Sunucu 201 ile oluşan kategoriyi döndürür; yerinde eklemede seçmek için kullanılır (O1). */
+    create(body: CreateProductCategoryRequest): Observable<ProductCategoryDto> {
+        return this.api.post<ProductCategoryDto>(ApiEndpoints.productCategories.create(), body).pipe(
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(productCategoryMutationMessage(err, 'Kategori oluşturulamadı.')))
             )

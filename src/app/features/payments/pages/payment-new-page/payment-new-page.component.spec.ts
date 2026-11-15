@@ -516,4 +516,57 @@ describe('PaymentNewPageComponent', () => {
             expect(fixture.nativeElement.textContent).toContain('Zorunlu alan');
         });
     });
+
+    describe('kaydedilmemiş değişiklik (O2)', () => {
+        it('bağlamdan dolan müşteri ve tutar kaydedilmemiş sayılmaz', async () => {
+            query = { clientId: 'cl1', examinationId: 'ex1' };
+            clients.getClientBalance.mockReturnValue(of(balance([openCharge('ch1', { examinationId: 'ex1' })])));
+            await setup();
+
+            expect(cmp.allocations()).toEqual([{ chargeId: 'ch1', amount: 600 }]);
+            expect(cmp.hasUnsavedChanges()).toBe(false);
+        });
+
+        it('formda olmayan tutar girişi de kaydedilmemiş sayılır', async () => {
+            await setup();
+            cmp.form.controls.clientId.setValue('cl1');
+            fixture.detectChanges();
+            expect(cmp.hasUnsavedChanges()).toBe(false);
+
+            cmp.onAmountInput(cmp.openCharges()[0], '400');
+
+            expect(cmp.hasUnsavedChanges()).toBe(true);
+        });
+
+        it('kayıt başarılıysa yönlenmeden önce temiz sayılır', async () => {
+            payments.createPayment.mockReturnValue(of({ id: 'pay1' }));
+            await setup();
+            selectClient();
+            cmp.form.controls.note.markAsDirty();
+            cmp.onAmountInput(cmp.openCharges()[0], '400');
+            expect(cmp.hasUnsavedChanges()).toBe(true);
+            let dirtyAtNavigate: boolean | undefined;
+
+            vi.mocked(router.navigate).mockImplementation(() => {
+                dirtyAtNavigate = cmp.hasUnsavedChanges();
+
+                return Promise.resolve(true);
+            });
+            cmp.onSubmit();
+
+            expect(router.navigate).toHaveBeenCalledWith(['/panel/payments', 'pay1'], { queryParams: { saved: '1' } });
+            expect(dirtyAtNavigate).toBe(false);
+        });
+
+        it('kayıt hatasında değişiklik korunur', async () => {
+            payments.createPayment.mockReturnValue(throwError(() => new Error('Sunucu hatası')));
+            await setup();
+            selectClient();
+            cmp.form.controls.note.markAsDirty();
+            cmp.onAmountInput(cmp.openCharges()[0], '400');
+            cmp.onSubmit();
+
+            expect(cmp.hasUnsavedChanges()).toBe(true);
+        });
+    });
 });

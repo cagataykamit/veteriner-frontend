@@ -20,11 +20,13 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { dateTimeLocalInputToIsoUtc, formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 @Component({
     selector: 'app-tenant-invite-panel-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, AppPageHeaderComponent, AppLoadingStateComponent, DateInputComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, AppPageHeaderComponent, AppLoadingStateComponent, DateInputComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Kullanıcı daveti" description="Kuruma katılım için e-posta daveti oluşturun; davet edilen kullanıcı paket seçmez.">
@@ -52,7 +54,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 
             <div class="card mb-4">
                 <h5 class="mt-0 mb-4">Davet oluştur</h5>
-                <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()">
+                    <app-form-error-summary />
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
                             <label for="inviteEmail" class="block text-sm font-medium text-muted-color mb-2">E-posta *</label>
@@ -107,7 +110,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <button pButton type="submit" [disabled]="form.invalid || submitting() || clinics().length === 0 || operationClaims().length === 0 || !canManageTenantAccess()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-send'"></i>Davet oluştur</button>
+                        <button pButton type="submit" [disabled]="submitting() || clinics().length === 0 || operationClaims().length === 0 || !canManageTenantAccess()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-send'"></i>Davet oluştur</button>
                     </div>
                 </form>
             </div>

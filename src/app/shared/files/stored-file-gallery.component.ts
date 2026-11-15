@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, injec
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { finalize } from 'rxjs';
 import type { StoredFileVm } from '@/app/shared/files/stored-file.model';
 import { formatFileSize } from '@/app/shared/files/stored-file.utils';
@@ -20,7 +21,7 @@ const PDF_URL_REVOKE_MS = 60_000;
     selector: 'app-stored-file-gallery',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [ButtonModule, DialogModule],
+    imports: [ButtonModule, DialogModule, DialogFocusReturnDirective],
     template: `
         @if (files().length === 0) {
             <p class="text-sm text-muted-color m-0" data-testid="file-gallery-empty">{{ emptyText() }}</p>

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -10,11 +10,13 @@ import { mapProductCategoryListItemVmToSelectOption } from '@/app/features/inven
 import { createProductUpsertFormGroup } from '@/app/features/inventory/forms/product-upsert-form.factory';
 import type { ProductUpsertFormValue } from '@/app/entities/inventory/models/product-upsert-form.model';
 import { ProductCategoryService } from '@/app/features/inventory/services/product-category.service';
+import { productCategoryInlineCreate } from '@/app/features/inventory/utils/product-category-inline-create.utils';
+import { InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { BarcodeScanButtonComponent } from '@/app/entities/inventory/components/barcode-scan-button.component';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PRODUCT_CATEGORIES_ROUTE } from '@/app/core/routing/panel-navigation';
 import { PRODUCT_CATEGORIES_CREATE_CLAIM, PRODUCT_CATEGORIES_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { ProductClassificationFieldsComponent } from '@/app/features/inventory/components/product-classification-fields/product-classification-fields.component';
@@ -23,11 +25,15 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
 
 @Component({
     selector: 'app-product-create-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, BarcodeScanButtonComponent, ProductTaxFieldsComponent, ProductClassificationFieldsComponent, FocusFirstFieldDirective],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, BarcodeScanButtonComponent, ProductTaxFieldsComponent, ProductClassificationFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/products" categoryLinkLabel="Ürün listesine dön" title="Yeni ürün" description="Ürün kartı oluşturun." />
@@ -39,7 +45,8 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
             @if (canReadCategories && categoryLoadHint()) {
                 <p class="text-muted-color text-sm mt-0 mb-4" role="status">{{ categoryLoadHint() }}</p>
             }
-            <form appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form appFormSubmit appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit()">
+                <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
                     @if (canReadCategories) {
                         <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
@@ -55,16 +62,12 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
                                 filterPlaceholder="Ara…"
                                 filterBy="label"
                                 [showClear]="true"
+                                [appInlineCreate]="categoryCreate()"
                                 class="w-full"
-                            />
-                            @if (categoriesLoaded() && categoryOptions().length === 0 && !categoryLoadHint()) {
-                                <p class="text-muted-color text-sm mt-1 mb-0" role="status">
-                                    Henüz ürün kategorisi yok. Kategori eklemek için Kategoriler ekranını kullanabilirsiniz.
-                                    @if (canCreateCategories) {
-                                        <a [routerLink]="categoriesRoute" class="text-primary font-medium no-underline ms-1">Kategori ekle</a>
-                                    }
-                                </p>
-                            }
+                            >
+                                <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                                <ng-template #empty><app-inline-create-option emptyText="Henüz ürün kategorisi yok." /></ng-template>
+                            </p-select>
                         </div>
                     }
                     <div [class]="canReadCategories ? 'col-span-12 md:col-span-6 flex flex-col gap-1' : 'col-span-12 flex flex-col gap-1'">
@@ -85,13 +88,9 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
                             <app-barcode-scan-button (scanned)="form.controls.barcode.setValue($event)" />
                         </div>
                     </div>
-                    <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
-                        <label for="unit" class="block text-sm font-medium text-muted-color">Birim *</label>
+                    <app-form-field class="col-span-12 md:col-span-4" label="Birim" fieldId="unit" [error]="form.controls.unit.invalid && form.controls.unit.touched ? 'Birim zorunludur.' : null" [required]="true">
                         <input id="unit" pInputText class="w-full" type="text" formControlName="unit" placeholder="örn. Adet, Kutu" />
-                        @if (form.controls.unit.invalid && form.controls.unit.touched) {
-                            <small class="text-danger">Birim zorunludur.</small>
-                        }
-                    </div>
+                    </app-form-field>
                     <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
                         <label for="unitPrice" class="block text-sm font-medium text-muted-color">Birim fiyat *</label>
                         <input id="unitPrice" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="unitPrice" />
@@ -103,13 +102,9 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
                             }
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
-                        <label for="currency" class="block text-sm font-medium text-muted-color">Para birimi *</label>
+                    <app-form-field class="col-span-12 md:col-span-4" label="Para birimi" fieldId="currency" [error]="form.controls.currency.invalid && form.controls.currency.touched ? 'Para birimi zorunludur.' : null" [required]="true">
                         <p-select inputId="currency" formControlName="currency" [options]="currencyOptions" optionLabel="label" optionValue="value" class="w-full" />
-                        @if (form.controls.currency.invalid && form.controls.currency.touched) {
-                            <small class="text-danger">Para birimi zorunludur.</small>
-                        }
-                    </div>
+                    </app-form-field>
                     <app-product-tax-fields [form]="form" idPrefix="product" />
                     <app-product-classification-fields [form]="form" idPrefix="product" />
                     <div class="col-span-12 flex flex-col gap-1">
@@ -123,16 +118,15 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <button pButton type="submit" [disabled]="form.invalid || submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                    <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                     <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>
         </div>
     `
 })
-export class ProductCreatePageComponent implements OnInit {
+export class ProductCreatePageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
-    readonly categoriesRoute = PRODUCT_CATEGORIES_ROUTE;
 
     private readonly fb = inject(FormBuilder);
     private readonly router = inject(Router);
@@ -144,6 +138,8 @@ export class ProductCreatePageComponent implements OnInit {
     readonly canReadCategories = this.auth.hasOperationClaim(PRODUCT_CATEGORIES_READ_CLAIM);
     readonly canCreateCategories = this.auth.hasOperationClaim(PRODUCT_CATEGORIES_CREATE_CLAIM);
     readonly categoryOptions = signal<SelectOption[]>([]);
+    /** Aranan kategori yoksa adıyla eklenir ve seçilir (O1). */
+    readonly categoryCreate = computed(() => productCategoryInlineCreate(this.categoryService, this.canCreateCategories && !this.ro.mutationBlocked(), this.categoryOptions));
     readonly categoryLoadHint = signal<string | null>(null);
     readonly categoriesLoaded = signal(false);
 
@@ -174,6 +170,10 @@ export class ProductCreatePageComponent implements OnInit {
                 this.categoriesLoaded.set(true);
             }
         });
+    }
+
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
     }
 
     goList(): void {
@@ -212,6 +212,7 @@ export class ProductCreatePageComponent implements OnInit {
         this.productService.createFromFormValue(value).subscribe({
             next: (id) => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
 
                 if (id?.trim()) {
                     void this.router.navigate(['/panel/products', id.trim()], { queryParams: { saved: '1' } });

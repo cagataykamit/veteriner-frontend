@@ -21,11 +21,13 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { OrganizationBillingProfileSectionComponent } from '@/app/features/organization/components/organization-billing-profile-section/organization-billing-profile-section.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 @Component({
     selector: 'app-organization-settings-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, OrganizationBillingProfileSectionComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, OrganizationBillingProfileSectionComponent, FormSubmitDirective, FormErrorSummaryComponent],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -50,7 +52,8 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <p class="text-danger text-sm mb-3 m-0" role="alert">{{ formError() }}</p>
                     }
                     <div class="w-full max-w-xl">
-                        <form [formGroup]="form" (ngSubmit)="onSave()">
+                        <form appFormSubmit [formGroup]="form" (ngSubmit)="onSave()">
+                            <app-form-error-summary />
                             <div class="flex flex-col sm:flex-row sm:items-end gap-3">
                                 <div class="flex-1 min-w-0">
                                     <label for="orgTenantName" class="block text-sm font-medium text-muted-color mb-2">Kurum adı *</label>
@@ -59,7 +62,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                         <small class="text-danger">Kurum adı en az bir karakter içermelidir.</small>
                                     }
                                 </div>
-                                <button pButton type="submit" class="shrink-0 w-full sm:w-auto" [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
+                                <button pButton type="submit" class="shrink-0 w-full sm:w-auto" [disabled]="saving() || !canManageTenantAccess() || !form.dirty"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
                             </div>
                         </form>
 

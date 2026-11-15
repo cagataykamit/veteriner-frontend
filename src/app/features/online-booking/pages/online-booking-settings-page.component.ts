@@ -39,6 +39,8 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 /** En erken talep süresi seçenekleri (dakika). */
 export const MIN_LEAD_OPTIONS: { label: string; value: number }[] = [
@@ -80,7 +82,9 @@ export const MIN_LEAD_OPTIONS: { label: string; value: number }[] = [
         AppStatusTagComponent,
         AppointmentReasonsManagerComponent,
         OnlineBookingEmbedComponent,
-        OnlineBookingPreviewComponent
+        OnlineBookingPreviewComponent,
+        FormSubmitDirective,
+        FormErrorSummaryComponent
     ],
     providers: [ConfirmationService],
     template: `
@@ -141,7 +145,8 @@ export const MIN_LEAD_OPTIONS: { label: string; value: number }[] = [
 
                 <section class="card col-span-12 lg:col-span-6 mb-0" aria-labelledby="onlineSettingsTitle">
                     <h5 id="onlineSettingsTitle" class="mt-0">3. Talep alma</h5>
-                    <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()" class="flex flex-col gap-4">
+                    <form appFormSubmit [formGroup]="settingsForm" (ngSubmit)="saveSettings()" class="flex flex-col gap-4">
+                        <app-form-error-summary />
                         @if (settingsMessage()) {
                             <p-message [severity]="settingsMessageSeverity()" class="w-full" role="status">{{ settingsMessage() }}</p-message>
                         }
@@ -180,7 +185,7 @@ export const MIN_LEAD_OPTIONS: { label: string; value: number }[] = [
                         </div>
                         @if (canWrite()) {
                             <div class="flex justify-end">
-                                <button pButton type="submit" [disabled]="settingsForm.invalid || settingsUnchanged() || saving()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                                <button pButton type="submit" [disabled]="settingsUnchanged() || saving()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                             </div>
                         }
                     </form>
@@ -226,7 +231,8 @@ export const MIN_LEAD_OPTIONS: { label: string; value: number }[] = [
                     @if (templateMessage()) {
                         <p-message [severity]="templateMessageSeverity()" class="w-full mb-3" role="status">{{ templateMessage() }}</p-message>
                     }
-                    <form [formGroup]="templateForm" (ngSubmit)="saveTemplate()" class="flex flex-col gap-4">
+                    <form appFormSubmit [formGroup]="templateForm" (ngSubmit)="saveTemplate()" class="flex flex-col gap-4">
+                        <app-form-error-summary />
                         <div class="flex items-center gap-2">
                             <app-status-tag [label]="currentTemplate()?.isDefault ? 'Vetinity varsayılanı' : 'Kliniğe özel'" [severity]="currentTemplate()?.isDefault ? 'secondary' : 'info'" />
                         </div>
@@ -246,10 +252,10 @@ export const MIN_LEAD_OPTIONS: { label: string; value: number }[] = [
                             </div>
                         }
                         <div class="flex flex-wrap justify-end gap-2">
-                            <button pButton type="button" severity="secondary" [disabled]="templateForm.invalid || templateBusy()" (click)="previewTemplate()"><i class="pi pi-eye"></i>Önizle</button>
+                            <button pButton type="button" severity="secondary" [disabled]="templateBusy()" (click)="previewTemplate()"><i class="pi pi-eye"></i>Önizle</button>
                             @if (canWrite()) {
                                 <button pButton type="button" severity="secondary" [outlined]="true" [disabled]="templateBusy() || currentTemplate()?.isDefault" (click)="resetTemplate()">Varsayılana dön</button>
-                                <button pButton type="submit" [disabled]="templateForm.invalid || templateForm.pristine || templateBusy()"><i class="pi pi-check"></i>{{ copy.buttonSave }}</button>
+                                <button pButton type="submit" [disabled]="templateForm.pristine || templateBusy()"><i class="pi pi-check"></i>{{ copy.buttonSave }}</button>
                             }
                         </div>
                     </form>
@@ -476,7 +482,7 @@ export class OnlineBookingSettingsPageComponent implements OnInit {
     }
 
     saveTemplate(): void {
-        if (!this.canWrite()) {
+        if (!this.canWrite() || this.templateForm.invalid) {
             return;
         }
 

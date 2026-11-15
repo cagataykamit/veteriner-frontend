@@ -2,7 +2,8 @@ import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.com
 import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { tap } from 'rxjs';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -20,6 +21,9 @@ import type { PetEditVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PetColorsService } from '@/app/entities/pet/services/pet-colors.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
+import { createSpeciesByName } from '@/app/entities/species/utils/species-inline-create.utils';
+import { type InlineCreateConfig, InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { type PetCreateFieldErrors, type PetCreateFormFieldKey, parsePetCreateHttpError } from '@/app/entities/pet/utils/pet-create-validation-parse.utils';
 import { petMicrochipFormatWarning } from '@/app/features/pets/utils/pet-microchip.utils';
 import { PET_GENDER_FORM_OPTIONS } from '@/app/entities/pet/utils/pet-status.utils';
@@ -33,6 +37,10 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { DATE_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
 
 @Component({
     selector: 'app-pet-edit-page',
@@ -51,7 +59,11 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         QuickSpeciesDialogComponent,
         QuickBreedDialogComponent,
         ClientSearchComponent,
-        DateInputComponent
+        DateInputComponent,
+        InlineCreateDirective,
+        InlineCreateOptionComponent,
+        FormFieldComponent, FormSubmitDirective,
+        FormErrorSummaryComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -71,29 +83,20 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                 @if (selectionError()) {
                     <p class="text-danger mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
-                <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()">
+                    <app-form-error-summary />
                     <div class="grid grid-cols-12 gap-4">
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
+                        <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="clientId" [error]="apiFieldErrors().clientId ? apiFieldErrors().clientId : form.controls.clientId.invalid && form.controls.clientId.touched ? 'Müşteri seçimi zorunludur.' : null" [required]="true">
                             <app-client-search inputId="clientId" formControlName="clientId" />
-                            @if (apiFieldErrors().clientId) {
-                                <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
-                            } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                                <small class="text-danger">Müşteri seçimi zorunludur.</small>
-                            }
-                        </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="name" class="block text-sm font-medium text-muted-color mb-2">Hasta adı *</label>
+                        </app-form-field>
+                        <app-form-field class="col-span-12 md:col-span-6" label="Hasta adı" fieldId="name" [error]="apiFieldErrors().name ? apiFieldErrors().name : form.controls.name.invalid && form.controls.name.touched ? 'Hasta adı zorunludur.' : null" [required]="true">
                             <input id="name" pInputText class="w-full" formControlName="name" />
-                            @if (apiFieldErrors().name) {
-                                <small class="text-danger">{{ apiFieldErrors().name }}</small>
-                            } @else if (form.controls.name.invalid && form.controls.name.touched) {
-                                <small class="text-danger">Hasta adı zorunludur.</small>
-                            }
-                        </div>
+                        </app-form-field>
                         <div class="col-span-12 md:col-span-6">
                             <label for="speciesId" class="block text-sm font-medium text-muted-color mb-2">Tür *</label>
-                            <p-select inputId="speciesId" formControlName="speciesId" [options]="speciesOptions()" optionLabel="label" optionValue="value" placeholder="Tür seçin" class="w-full" [loading]="loadingSpecies()" [showClear]="true" />
+                            <p-select inputId="speciesId" formControlName="speciesId" [options]="speciesOptions()" optionLabel="label" optionValue="value" placeholder="Tür seçin" class="w-full" [loading]="loadingSpecies()" [showClear]="true" [filter]="true" filterBy="label" filterPlaceholder="Ara…" [appInlineCreate]="speciesCreate()">
+                                <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                            </p-select>
                             @if (apiFieldErrors().speciesId) {
                                 <small class="text-danger">{{ apiFieldErrors().speciesId }}</small>
                             } @else if (form.controls.speciesId.invalid && form.controls.speciesId.touched) {
@@ -107,7 +110,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="breedId" class="block text-sm font-medium text-muted-color mb-2">Irk</label>
-                            <p-select inputId="breedId" formControlName="breedId" [options]="breedOptions()" optionLabel="label" optionValue="value" placeholder="Irk seçin" class="w-full" [loading]="loadingBreeds()" [showClear]="true" />
+                            <p-select inputId="breedId" formControlName="breedId" [options]="breedOptions()" optionLabel="label" optionValue="value" placeholder="Irk seçin" class="w-full" [loading]="loadingBreeds()" [showClear]="true" [filter]="true" filterBy="label" filterPlaceholder="Ara…" />
                             @if (apiFieldErrors().breedId) {
                                 <small class="text-danger">{{ apiFieldErrors().breedId }}</small>
                             }
@@ -117,13 +120,9 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                 </div>
                             }
                         </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="gender" class="block text-sm font-medium text-muted-color mb-2">Cinsiyet</label>
+                        <app-form-field class="col-span-12 md:col-span-6" label="Cinsiyet" fieldId="gender" [error]="apiFieldErrors().gender ? apiFieldErrors().gender : null">
                             <p-select inputId="gender" formControlName="gender" [options]="genderOptions" optionLabel="label" optionValue="value" placeholder="Seçin" [showClear]="true" class="w-full" />
-                            @if (apiFieldErrors().gender) {
-                                <small class="text-danger">{{ apiFieldErrors().gender }}</small>
-                            }
-                        </div>
+                        </app-form-field>
                         <div class="col-span-12 md:col-span-6">
                             <label for="birthDate" class="block text-sm font-medium text-muted-color mb-2">Doğum tarihi</label>
                             <app-date-input inputId="birthDate" type="date" formControlName="birthDate" [min]="dateInputMin" limit="past" />
@@ -135,20 +134,12 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                 }
                             }
                         </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="colorId" class="block text-sm font-medium text-muted-color mb-2">Renk</label>
-                            <p-select inputId="colorId" formControlName="colorId" [options]="colorOptions()" optionLabel="label" optionValue="value" placeholder="Renk seçin" class="w-full" [loading]="loadingColors()" [showClear]="true" />
-                            @if (apiFieldErrors().colorId) {
-                                <small class="text-danger">{{ apiFieldErrors().colorId }}</small>
-                            }
-                        </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="patternId" class="block text-sm font-medium text-muted-color mb-2">Desen</label>
-                            <p-select inputId="patternId" formControlName="patternId" [options]="patternOptions()" optionLabel="label" optionValue="value" placeholder="Desen seçin (tekir, kaplan çizgili…)" class="w-full" [loading]="loadingColors()" [showClear]="true" />
-                            @if (apiFieldErrors().patternId) {
-                                <small class="text-danger">{{ apiFieldErrors().patternId }}</small>
-                            }
-                        </div>
+                        <app-form-field class="col-span-12 md:col-span-6" label="Renk" fieldId="colorId" [error]="apiFieldErrors().colorId ? apiFieldErrors().colorId : null">
+                            <p-select inputId="colorId" formControlName="colorId" [options]="colorOptions()" optionLabel="label" optionValue="value" placeholder="Renk seçin" class="w-full" [loading]="loadingColors()" [showClear]="true" [filter]="true" filterBy="label" filterPlaceholder="Ara…" />
+                        </app-form-field>
+                        <app-form-field class="col-span-12 md:col-span-6" label="Desen" fieldId="patternId" [error]="apiFieldErrors().patternId ? apiFieldErrors().patternId : null">
+                            <p-select inputId="patternId" formControlName="patternId" [options]="patternOptions()" optionLabel="label" optionValue="value" placeholder="Desen seçin (tekir, kaplan çizgili…)" class="w-full" [loading]="loadingColors()" [showClear]="true" [filter]="true" filterBy="label" filterPlaceholder="Ara…" />
+                        </app-form-field>
                         <div class="col-span-12 md:col-span-6">
                             <label for="weight" class="block text-sm font-medium text-muted-color mb-2">Kilo (kg)</label>
                             <input id="weight" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="weightStr" />
@@ -171,35 +162,15 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                 <small class="text-amber-700 dark:text-amber-300" data-testid="microchip-warning">{{ warning }}</small>
                             }
                         </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="passportOrTagNumber" class="block text-sm font-medium text-muted-color mb-2">Karne / Küpe no</label>
+                        <app-form-field class="col-span-12 md:col-span-6" label="Karne / Küpe no" fieldId="passportOrTagNumber" [error]="apiFieldErrors().passportOrTagNumber ? apiFieldErrors().passportOrTagNumber : form.controls.passportOrTagNumber.invalid && form.controls.passportOrTagNumber.touched ? 'En fazla 50 karakter olabilir.' : null">
                             <input id="passportOrTagNumber" pInputText class="w-full" formControlName="passportOrTagNumber" maxlength="50" />
-                            @if (apiFieldErrors().passportOrTagNumber) {
-                                <small class="text-danger">{{ apiFieldErrors().passportOrTagNumber }}</small>
-                            } @else if (form.controls.passportOrTagNumber.invalid && form.controls.passportOrTagNumber.touched) {
-                                <small class="text-danger">En fazla 50 karakter olabilir.</small>
-                            }
-                        </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="specialProtocolNumber" class="block text-sm font-medium text-muted-color mb-2">Özel protokol no</label>
+                        </app-form-field>
+                        <app-form-field class="col-span-12 md:col-span-6" label="Özel protokol no" fieldId="specialProtocolNumber" [error]="apiFieldErrors().specialProtocolNumber ? apiFieldErrors().specialProtocolNumber : form.controls.specialProtocolNumber.invalid && form.controls.specialProtocolNumber.touched ? 'En fazla 50 karakter olabilir.' : null">
                             <input id="specialProtocolNumber" pInputText class="w-full" formControlName="specialProtocolNumber" maxlength="50" />
-                            @if (apiFieldErrors().specialProtocolNumber) {
-                                <small class="text-danger">{{ apiFieldErrors().specialProtocolNumber }}</small>
-                            } @else if (form.controls.specialProtocolNumber.invalid && form.controls.specialProtocolNumber.touched) {
-                                <small class="text-danger">En fazla 50 karakter olabilir.</small>
-                            }
-                        </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="hbsAnimalId" class="block text-sm font-medium text-muted-color mb-2">HBS hayvan kimlik no</label>
+                        </app-form-field>
+                        <app-form-field class="col-span-12 md:col-span-6" label="HBS hayvan kimlik no" fieldId="hbsAnimalId" [error]="apiFieldErrors().hbsAnimalId ? apiFieldErrors().hbsAnimalId : form.controls.hbsAnimalId.invalid && form.controls.hbsAnimalId.touched ? 'En fazla 50 karakter olabilir.' : null" hint="Hayvan Bilgi Sistemi'ndeki kimlik numarası (isteğe bağlı).">
                             <input id="hbsAnimalId" pInputText class="w-full" formControlName="hbsAnimalId" maxlength="50" autocomplete="off" />
-                            @if (apiFieldErrors().hbsAnimalId) {
-                                <small class="text-danger">{{ apiFieldErrors().hbsAnimalId }}</small>
-                            } @else if (form.controls.hbsAnimalId.invalid && form.controls.hbsAnimalId.touched) {
-                                <small class="text-danger">En fazla 50 karakter olabilir.</small>
-                            } @else {
-                                <small class="text-muted-color">Hayvan Bilgi Sistemi'ndeki kimlik numarası (isteğe bağlı).</small>
-                            }
-                        </div>
+                        </app-form-field>
                         <div class="col-span-12 md:col-span-6 flex items-end">
                             <div class="flex items-center gap-2 pb-2">
                                 <p-checkbox formControlName="isNeutered" [binary]="true" inputId="isNeutered" />
@@ -209,13 +180,9 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                                 <small class="text-danger block w-full">{{ apiFieldErrors().isNeutered }}</small>
                             }
                         </div>
-                        <div class="col-span-12">
-                            <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
+                        <app-form-field class="col-span-12" label="Notlar" fieldId="notes" [error]="apiFieldErrors().notes ? apiFieldErrors().notes : null">
                             <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
-                            @if (apiFieldErrors().notes) {
-                                <small class="text-danger">{{ apiFieldErrors().notes }}</small>
-                            }
-                        </div>
+                        </app-form-field>
                         <div class="col-span-12">
                             <app-pet-alert-fields [form]="form" />
                         </div>
@@ -226,7 +193,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <button pButton type="submit" [disabled]="form.invalid || submitting() || loadingSpecies() || loadingBreeds() || loadingColors() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                        <button pButton type="submit" [disabled]="submitting() || loadingSpecies() || loadingBreeds() || loadingColors() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                         <button pButton type="button" severity="secondary" (click)="goDetail()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>
@@ -237,7 +204,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         }
     `
 })
-export class PetEditPageComponent implements OnInit {
+export class PetEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly dateInputMin = DATE_INPUT_MIN;
 
@@ -267,6 +234,11 @@ export class PetEditPageComponent implements OnInit {
     readonly loadingBreeds = signal(false);
     readonly loadingColors = signal(false);
     readonly speciesOptions = signal<SelectOption[]>([]);
+    /** Aranan tür yoksa adıyla eklenir ve seçilir (O1). */
+    readonly speciesCreate = computed<InlineCreateConfig>(() => ({
+        canCreate: this.canShowQuickSpeciesButton(),
+        create: (name) => createSpeciesByName(this.speciesService, name).pipe(tap((id) => this.speciesOptions.update((o) => [...o, { value: id, label: name.trim() }])))
+    }));
     readonly breedOptions = signal<SelectOption[]>([]);
     readonly colorOptions = signal<SelectOption[]>([]);
     readonly patternOptions = signal<SelectOption[]>([]);
@@ -347,6 +319,10 @@ export class PetEditPageComponent implements OnInit {
         this.loadPetColors();
         this.reload();
         this.syncBreedIdControlDisabledState();
+    }
+
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
     }
 
     reload(): void {
@@ -464,6 +440,7 @@ export class PetEditPageComponent implements OnInit {
         this.petsService.updatePet(this.petId, payload).subscribe({
             next: () => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/pets', this.petId], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

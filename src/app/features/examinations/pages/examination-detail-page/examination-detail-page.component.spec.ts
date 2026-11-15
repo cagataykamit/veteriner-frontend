@@ -2,6 +2,7 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import type { Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { of, EMPTY } from 'rxjs';
@@ -19,6 +20,7 @@ import { DetailRelatedSummariesService } from '@/app/entities/patient/services/d
 import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
 import { ExaminationTemplatesService } from '@/app/entities/examination-template/services/examination-templates.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
+import { ExaminationProceduresSectionComponent } from '@/app/features/examinations/components/examination-procedures-section.component';
 import { ExaminationDetailPageComponent } from './examination-detail-page.component';
 
 const recentlyViewed = { record: vi.fn() };
@@ -274,6 +276,15 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
 
         expect(has(el, 'procedure-lock-reason')).toBe(false);
         expect(el.querySelector('a[href*="/panel/treatments/new"]')).toBeNull();
+    });
+
+    it('işlem yan panelindeki form kirliyse sayfa kaydedilmemiş değişiklik bildirir (O2)', async () => {
+        const { fixture } = await setup(detailVm, ADD_CLAIMS);
+        const section = fixture.debugElement.query(By.directive(ExaminationProceduresSectionComponent)).componentInstance as ExaminationProceduresSectionComponent;
+
+        expect(fixture.componentInstance.hasUnsavedChanges()).toBe(false);
+        vi.spyOn(section, 'hasUnsavedChanges').mockReturnValue(true);
+        expect(fixture.componentInstance.hasUnsavedChanges()).toBe(true);
     });
 
     it('işlem ekleme düğmeleri yalnız ilgili Create yetkisiyle görünür', async () => {

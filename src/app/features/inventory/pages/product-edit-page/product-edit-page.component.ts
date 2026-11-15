@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -11,11 +11,13 @@ import { mapProductDtoToUpsertFormValue } from '@/app/entities/inventory/data/pr
 import { createProductUpsertFormGroup } from '@/app/features/inventory/forms/product-upsert-form.factory';
 import type { ProductUpsertFormValue } from '@/app/entities/inventory/models/product-upsert-form.model';
 import { ProductCategoryService } from '@/app/features/inventory/services/product-category.service';
+import { productCategoryInlineCreate } from '@/app/features/inventory/utils/product-category-inline-create.utils';
+import { InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { BarcodeScanButtonComponent } from '@/app/entities/inventory/components/barcode-scan-button.component';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PRODUCT_CATEGORIES_ROUTE } from '@/app/core/routing/panel-navigation';
 import { PRODUCT_CATEGORIES_CREATE_CLAIM, PRODUCT_CATEGORIES_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -27,11 +29,15 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { EMPTY, map, switchMap } from 'rxjs';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
 
 @Component({
     selector: 'app-product-edit-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, BarcodeScanButtonComponent, ProductTaxFieldsComponent, ProductClassificationFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, BarcodeScanButtonComponent, ProductTaxFieldsComponent, ProductClassificationFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [categoryLink]="productId() ? ['/panel/products', productId()!] : ['/panel/products']" categoryLinkLabel="Ürün detayına dön" title="Ürünü düzenle" description="Ürün kartını güncelleyin." />
@@ -50,7 +56,8 @@ import { EMPTY, map, switchMap } from 'rxjs';
                 @if (canReadCategories && categoryLoadHint()) {
                     <p class="text-muted-color text-sm mt-0 mb-4" role="status">{{ categoryLoadHint() }}</p>
                 }
-                <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()">
+                    <app-form-error-summary />
                     <div class="grid grid-cols-12 gap-4">
                         @if (canReadCategories) {
                             <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
@@ -66,16 +73,12 @@ import { EMPTY, map, switchMap } from 'rxjs';
                                     filterPlaceholder="Ara…"
                                     filterBy="label"
                                     [showClear]="true"
+                                    [appInlineCreate]="categoryCreate()"
                                     class="w-full"
-                                />
-                                @if (categoriesLoaded() && categoryOptions().length === 0 && !categoryLoadHint()) {
-                                    <p class="text-muted-color text-sm mt-1 mb-0" role="status">
-                                        Henüz ürün kategorisi yok. Kategori eklemek için Kategoriler ekranını kullanabilirsiniz.
-                                        @if (canCreateCategories) {
-                                            <a [routerLink]="categoriesRoute" class="text-primary font-medium no-underline ms-1">Kategori ekle</a>
-                                        }
-                                    </p>
-                                }
+                                >
+                                    <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                                    <ng-template #empty><app-inline-create-option emptyText="Henüz ürün kategorisi yok." /></ng-template>
+                                </p-select>
                             </div>
                         }
                         <div [class]="canReadCategories ? 'col-span-12 md:col-span-6 flex flex-col gap-1' : 'col-span-12 flex flex-col gap-1'">
@@ -96,13 +99,9 @@ import { EMPTY, map, switchMap } from 'rxjs';
                                 <app-barcode-scan-button (scanned)="form.controls.barcode.setValue($event)" />
                             </div>
                         </div>
-                        <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
-                            <label for="unitEdit" class="block text-sm font-medium text-muted-color">Birim *</label>
+                        <app-form-field class="col-span-12 md:col-span-4" label="Birim" fieldId="unitEdit" [error]="form.controls.unit.invalid && form.controls.unit.touched ? 'Birim zorunludur.' : null" [required]="true">
                             <input id="unitEdit" pInputText class="w-full" type="text" formControlName="unit" />
-                            @if (form.controls.unit.invalid && form.controls.unit.touched) {
-                                <small class="text-danger">Birim zorunludur.</small>
-                            }
-                        </div>
+                        </app-form-field>
                         <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
                             <label for="unitPriceEdit" class="block text-sm font-medium text-muted-color">Birim fiyat *</label>
                             <input id="unitPriceEdit" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="unitPrice" />
@@ -114,13 +113,9 @@ import { EMPTY, map, switchMap } from 'rxjs';
                                 }
                             }
                         </div>
-                        <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
-                            <label for="currencyEdit" class="block text-sm font-medium text-muted-color">Para birimi *</label>
+                        <app-form-field class="col-span-12 md:col-span-4" label="Para birimi" fieldId="currencyEdit" [error]="form.controls.currency.invalid && form.controls.currency.touched ? 'Para birimi zorunludur.' : null" [required]="true">
                             <p-select inputId="currencyEdit" formControlName="currency" [options]="currencyOptions" optionLabel="label" optionValue="value" class="w-full" />
-                            @if (form.controls.currency.invalid && form.controls.currency.touched) {
-                                <small class="text-danger">Para birimi zorunludur.</small>
-                            }
-                        </div>
+                        </app-form-field>
                         <app-product-tax-fields [form]="form" idPrefix="productEdit" [currentVatRate]="originalVatRate()" />
                         <app-product-classification-fields [form]="form" idPrefix="productEdit" [originalKind]="originalKind()" />
                         <div class="col-span-12 flex flex-col gap-1">
@@ -134,7 +129,7 @@ import { EMPTY, map, switchMap } from 'rxjs';
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <button pButton type="submit" [disabled]="form.invalid || submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                        <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                         <button pButton type="button" severity="secondary" (click)="goDetail()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>
@@ -142,9 +137,8 @@ import { EMPTY, map, switchMap } from 'rxjs';
         }
     `
 })
-export class ProductEditPageComponent implements OnInit {
+export class ProductEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
-    readonly categoriesRoute = PRODUCT_CATEGORIES_ROUTE;
 
     private readonly fb = inject(FormBuilder);
     private readonly route = inject(ActivatedRoute);
@@ -157,6 +151,8 @@ export class ProductEditPageComponent implements OnInit {
     readonly canReadCategories = this.auth.hasOperationClaim(PRODUCT_CATEGORIES_READ_CLAIM);
     readonly canCreateCategories = this.auth.hasOperationClaim(PRODUCT_CATEGORIES_CREATE_CLAIM);
     readonly categoryOptions = signal<SelectOption[]>([]);
+    /** Aranan kategori yoksa adıyla eklenir ve seçilir (O1). */
+    readonly categoryCreate = computed(() => productCategoryInlineCreate(this.categoryService, this.canCreateCategories && !this.ro.mutationBlocked(), this.categoryOptions));
     readonly categoryLoadHint = signal<string | null>(null);
     readonly categoriesLoaded = signal(false);
 
@@ -222,6 +218,10 @@ export class ProductEditPageComponent implements OnInit {
                     this.loading.set(false);
                 }
             });
+    }
+
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
     }
 
     reload(): void {
@@ -297,6 +297,7 @@ export class ProductEditPageComponent implements OnInit {
         this.productService.updateFromFormValue(id, value).subscribe({
             next: () => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/products', id], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

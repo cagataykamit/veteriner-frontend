@@ -5,6 +5,8 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { TableModule } from 'primeng/table';
@@ -25,6 +27,8 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 /**
  * Bir kliniğin randevu nedenleri (APPT-005/006/007; ADR-042 K2 ve eki): liste, ekleme/düzenleme, pasife alma ve sonda sistemin
@@ -41,7 +45,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         ButtonModule,
         CheckboxModule,
         ConfirmDialogModule,
-        DialogModule,
+        DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective,
         InputTextModule,
         MessageModule,
         TableModule,
@@ -49,7 +53,9 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        FormSubmitDirective,
+        FormErrorSummaryComponent
     ],
     providers: [ConfirmationService],
     template: `
@@ -128,8 +134,9 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
             </div>
         }
 
-        <p-dialog [header]="editing() ? 'Nedeni düzenle' : 'Yeni neden'" [modal]="true" [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false">
-            <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+        <p-dialog [appUnsavedChanges]="form.dirty" [header]="editing() ? 'Nedeni düzenle' : 'Yeni neden'" [modal]="true" [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+                <app-form-error-summary />
                 @if (dialogError()) {
                     <p-message severity="error" class="w-full" role="alert">{{ dialogError() }}</p-message>
                 }
@@ -176,7 +183,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                 </fieldset>
                 <div class="flex flex-wrap justify-end gap-2 pt-2">
                     <button pButton type="button" severity="secondary" (click)="dialogVisible.set(false)" [disabled]="submitting()">{{ copy.buttonCancel }}</button>
-                    <button pButton type="submit" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                    <button pButton type="submit" [disabled]="submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                 </div>
             </form>
         </p-dialog>

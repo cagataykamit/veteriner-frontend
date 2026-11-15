@@ -1,11 +1,17 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { map } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { CASH_MOVEMENT_DESCRIPTION_MAX, CASH_MOVEMENT_MAX_AMOUNT, type CashMovementCategoryDto, type CashMovementDirection, type CashRegisterDto } from '@/app/entities/cash-register/models/cash-register.model';
 import { CashRegistersService } from '@/app/entities/cash-register/services/cash-registers.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { CASH_REGISTERS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { type InlineCreateConfig, InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
@@ -20,7 +26,7 @@ type FormKind = 'movement' | 'transfer';
     selector: 'app-cash-movement-forms',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [FormsModule, ButtonModule, InputNumberModule, SelectModule, SelectButtonModule, DateInputComponent],
+    imports: [FormsModule, ButtonModule, InputNumberModule, SelectModule, SelectButtonModule, DateInputComponent, InlineCreateDirective, InlineCreateOptionComponent],
     template: `
         <section class="card mb-4" aria-labelledby="cashMovementTitle" data-testid="cash-movement-forms">
             <div class="flex flex-wrap items-center gap-3 mb-3">
@@ -40,10 +46,10 @@ type FormKind = 'movement' | 'transfer';
                     </div>
                     <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                         <label for="cmCategory" class="block text-sm font-medium text-muted-color mb-2">Gelir/gider türü *</label>
-                        <p-select inputId="cmCategory" name="category" [options]="activeCategories()" optionLabel="name" optionValue="id" [ngModel]="effectiveCategoryId()" (ngModelChange)="categoryId.set($event)" placeholder="Seçin" class="w-full" />
-                        @if (activeCategories().length === 0) {
-                            <small class="text-muted-color">Önce Kasa ayarlarından bir tür ekleyin.</small>
-                        }
+                        <p-select inputId="cmCategory" name="category" [options]="activeCategories()" optionLabel="name" optionValue="id" [ngModel]="effectiveCategoryId()" (ngModelChange)="categoryId.set($event)" placeholder="Seçin" [filter]="true" filterBy="name" filterPlaceholder="Ara…" [appInlineCreate]="categoryCreate()" class="w-full">
+                            <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                            <ng-template #empty><app-inline-create-option emptyText="Henüz gelir/gider türü yok." /></ng-template>
+                        </p-select>
                     </div>
                 } @else {
                     <div class="col-span-12 sm:col-span-6 lg:col-span-3">
@@ -106,6 +112,10 @@ export class CashMovementFormsComponent {
     readonly changed = output<void>();
 
     private readonly service = inject(CashRegistersService);
+    private readonly auth = inject(AuthService);
+    private readonly ro = inject(TenantReadOnlyContextService);
+    /** Yerinde eklenen türler; üst sayfa listeyi yenileyince aynı kayıt bir kez görünür. */
+    private readonly createdCategories = signal<CashMovementCategoryDto[]>([]);
 
     protected readonly maxAmount = CASH_MOVEMENT_MAX_AMOUNT;
     protected readonly descriptionMax = CASH_MOVEMENT_DESCRIPTION_MAX;
@@ -131,7 +141,25 @@ export class CashMovementFormsComponent {
     readonly error = signal<string | null>(null);
 
     readonly activeRegisters = computed(() => this.registers().filter((r) => r.isActive));
-    readonly activeCategories = computed(() => this.categories().filter((c) => c.isActive));
+    readonly activeCategories = computed(() => {
+        const given = this.categories();
+        const extra = this.createdCategories().filter((c) => !given.some((g) => g.id === c.id));
+
+        return [...given, ...extra].filter((c) => c.isActive);
+    });
+    /** Aranan gelir/gider türü yoksa adıyla eklenir ve seçilir (O1). */
+    readonly categoryCreate = computed<InlineCreateConfig>(() => ({
+        canCreate: this.auth.hasOperationClaim(CASH_REGISTERS_MANAGE_CLAIM) && !this.ro.mutationBlocked(),
+        create: (name) =>
+            this.service.createCategory(name.trim()).pipe(
+                map((category) => {
+                    this.createdCategories.update((c) => [...c, category]);
+                    this.categoryId.set(category.id);
+
+                    return category.id;
+                })
+            )
+    }));
     readonly sameRegister = computed(() => !!this.targetId() && this.effectiveRegisterId() === this.targetId());
     readonly effectiveRegisterId = computed(() => this.registerId() ?? this.activeRegisters().find((r) => r.isMain)?.id ?? null);
     /** Tek gelir/gider türü varsa o seçili gelir (H1). */

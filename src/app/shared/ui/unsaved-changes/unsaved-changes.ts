@@ -1,9 +1,9 @@
 import { InjectionToken } from '@angular/core';
-import type { ConfirmationService } from 'primeng/api';
 
 /**
- * Kapanmadan önce "kaydedilmemiş değişiklik" sorusu gereken gömülü formların ortak yüzü.
- * Form kendini `HAS_UNSAVED_CHANGES` ile sunar; kapatan taraf (yan panel, diyalog) tek kuralla sorar.
+ * Kaydedilmemiş değişikliği olan formların ortak yüzü (O2).
+ * Sayfa bileşeni bunu uygularsa rota koruması (`unsavedChangesGuard`) ve sekme kapatma uyarısı (`beforeunload`) aynı kuraldan sorar;
+ * gömülü form kendini `HAS_UNSAVED_CHANGES` ile sunar, kapatan taraf (yan panel, diyalog) aynı soruyu sorar.
  */
 export interface HasUnsavedChanges {
     hasUnsavedChanges(): boolean;
@@ -11,29 +11,17 @@ export interface HasUnsavedChanges {
 
 export const HAS_UNSAVED_CHANGES = new InjectionToken<HasUnsavedChanges>('HAS_UNSAVED_CHANGES');
 
-/** Onay metni: KVKK şablonu ve diğer "kaydedilmemiş değişiklik" uyarılarıyla aynı dil. */
+/** Tek soru metni: sayfadan çıkış, sekme kapatma ve dolu diyalog/panel kapanışı aynı dili kullanır. */
 export const UNSAVED_CHANGES_CONFIRM = {
     header: 'Kaydedilmemiş değişiklik',
-    message: 'Girdiğiniz bilgiler kaydedilmedi, kapatılsın mı?',
-    acceptLabel: 'Kapat',
-    rejectLabel: 'Vazgeç'
+    message: 'Kaydedilmemiş değişiklikler var. Çıkılsın mı?',
+    stayLabel: 'Sayfada kal',
+    leaveLabel: 'Kaydetmeden çık'
 } as const;
 
-/**
- * Tek kapanış kuralı: değişiklik yoksa hemen kapatır; varsa onay sorar — "Kapat" kapatır, "Vazgeç" açık bırakır ve bilgi korunur.
- * Dışarı tıklama, Esc, çarpı ve İptal hepsi bu kuraldan geçer.
- */
-export function closeWithUnsavedChangesCheck(confirmation: ConfirmationService, hasChanges: boolean, close: () => void): void {
-    if (!hasChanges) {
-        close();
+/** Bileşen `HasUnsavedChanges` uyguluyor ve şu an kaydedilmemiş değişikliği var mı. */
+export function hasPendingUnsavedChanges(component: unknown): boolean {
+    const candidate = component as Partial<HasUnsavedChanges> | null | undefined;
 
-        return;
-    }
-
-    confirmation.confirm({
-        ...UNSAVED_CHANGES_CONFIRM,
-        icon: 'pi pi-exclamation-triangle',
-        rejectButtonStyleClass: 'p-button-secondary',
-        accept: close
-    });
+    return typeof candidate?.hasUnsavedChanges === 'function' && candidate.hasUnsavedChanges();
 }

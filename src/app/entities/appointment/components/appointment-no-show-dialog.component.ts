@@ -3,9 +3,13 @@ import { Component, computed, effect, inject, input, model, output, signal, untr
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 /**
  * Randevu "Gelmedi" (`Appointments.NoShow`): `mark` onayla (gerekçe opsiyonel, en çok 500), `revert` geri al (gerekçe zorunlu 5–500).
@@ -14,17 +18,18 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-appointment-no-show-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog [header]="reverting() ? 'Gelmedi işaretini geri al' : 'Gelmedi olarak işaretle'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">
+        <p-dialog [appUnsavedChanges]="form.dirty" [header]="reverting() ? 'Gelmedi işaretini geri al' : 'Gelmedi olarak işaretle'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">
             @if (subject()) {
                 <p class="mt-0 mb-4 font-medium">{{ subject() }}</p>
             }
             @if (!reverting()) {
                 <p class="mt-0 mb-3 text-muted-color">Hasta randevuya gelmedi olarak işaretlenecek. Hasta sonradan gelirse geliş kaydı açıldığında randevu otomatik planlı duruma döner.</p>
             }
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" id="appointment-no-show-form">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()" id="appointment-no-show-form">
+                <app-form-error-summary />
                 <label for="ns-reason" class="block text-sm font-medium text-muted-color mb-2">
                     {{ reverting() ? 'Gerekçe *' : 'Gerekçe (isteğe bağlı)' }}
                 </label>
@@ -40,7 +45,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
-                <button pButton type="submit" form="appointment-no-show-form" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ reverting() ? 'Geri al' : 'Gelmedi işaretle' }}</button>
+                <button pButton type="submit" form="appointment-no-show-form" [disabled]="submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ reverting() ? 'Geri al' : 'Gelmedi işaretle' }}</button>
             </ng-template>
         </p-dialog>
     `

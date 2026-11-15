@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, input, model, output, signal, viewChild } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { type BarcodeDetectorLike, createBarcodeDetector } from '@/app/shared/barcode/barcode-detector.loader';
 import { BARCODE_CAMERA_FAILURE_MESSAGES, type BarcodeCameraFailure, barcodeCameraFailureFromError, barcodeCameraUnavailableReason, normalizeScannedBarcode } from '@/app/shared/barcode/barcode-scan.utils';
@@ -16,7 +17,7 @@ const SCAN_INTERVAL_MS = 250;
 @Component({
     selector: 'app-barcode-camera-dialog',
     standalone: true,
-    imports: [DialogModule, ButtonModule, InputTextModule],
+    imports: [DialogModule, DialogFocusReturnDirective, ButtonModule, InputTextModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="header()" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(480px, 95vw)' }" [(visible)]="visible" (onShow)="start()" (onHide)="stop()">

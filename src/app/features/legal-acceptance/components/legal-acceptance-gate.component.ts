@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { LegalConsentCheckboxComponent } from '@/app/features/legal-acceptance/components/legal-consent-checkbox.component';
 import type { LegalDocumentVersionDto } from '@/app/entities/legal-document/models/legal-acceptance.model';
@@ -20,7 +21,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-legal-acceptance-gate',
     standalone: true,
-    imports: [DialogModule, ButtonModule, LegalConsentCheckboxComponent],
+    imports: [DialogModule, DialogFocusReturnDirective, ButtonModule, LegalConsentCheckboxComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog

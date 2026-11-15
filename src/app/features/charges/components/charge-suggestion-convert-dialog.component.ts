@@ -6,10 +6,14 @@ import type { Observable } from 'rxjs';
 import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import type { ChargeSuggestionVm } from '@/app/entities/charge/models/charge-suggestion-vm.model';
 import { CHARGE_DESCRIPTION_MAX_LENGTH, CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, CHARGE_UNIT_PRICE_MAX, CHARGE_UNIT_PRICE_MAX_DECIMALS, chargeNumberValidator, computeChargeAmount } from '@/app/entities/charge/utils/charge-amount.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 /** Çevirmede kalemden farklı olan alanlar; değişmeyen alan gönderilmez (sunucu kalemdeki değeri kullanır). */
 export interface ChargeSuggestionOverrides {
@@ -25,17 +29,18 @@ export interface ChargeSuggestionOverrides {
 @Component({
     selector: 'app-charge-suggestion-convert-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Ücrete çevir" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
+        <p-dialog [appUnsavedChanges]="form.dirty" header="Ücrete çevir" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
             @if (suggestion(); as s) {
                 <p class="mt-0 mb-1 font-medium">{{ s.clientName }} · {{ s.petName }}</p>
                 @if (s.suggestedUnitPrice === null) {
                     <p class="mt-0 mb-4 text-sm text-muted-color">Katalogda bu kalem için fiyat yok; birim fiyatı girin.</p>
                 }
             }
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" id="charge-suggestion-convert-form">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()" id="charge-suggestion-convert-form">
+                <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12">
                         <label for="csc-description" class="block text-sm font-medium text-muted-color mb-2">Açıklama *</label>
@@ -69,7 +74,7 @@ export interface ChargeSuggestionOverrides {
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
-                <button pButton type="submit" form="charge-suggestion-convert-form" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Ücrete çevir</button>
+                <button pButton type="submit" form="charge-suggestion-convert-form" [disabled]="submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Ücrete çevir</button>
             </ng-template>
         </p-dialog>
     `

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } 
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
@@ -60,7 +61,7 @@ const FILTER_OPTIONS: { value: AdminCustomDevelopmentFilter; label: string }[] =
     imports: [
         FormsModule,
         ButtonModule,
-        DialogModule,
+        DialogModule, DialogFocusReturnDirective,
         MessageModule,
         SelectModule,
         TextareaModule,

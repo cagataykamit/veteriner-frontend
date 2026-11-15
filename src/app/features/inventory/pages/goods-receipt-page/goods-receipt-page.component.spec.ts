@@ -40,7 +40,7 @@ describe('GoodsReceiptPageComponent', () => {
                 { provide: ProductService, useValue: products },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null } },
                 { provide: ClinicsService, useValue: { listClinics: () => of([{ id: 'c1', name: 'Merkez', isActive: true }]) } },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez' } },
+                { provide: AuthService, useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez', hasOperationClaim: () => false } },
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } }
             ]
         }).compileComponents();

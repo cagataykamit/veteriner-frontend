@@ -32,6 +32,9 @@ import { dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/ap
 import { LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE, labResultDateNotTooFarPastValidator, labResultDateTimeLocalMinAllowed } from '@/app/entities/lab-result/utils/lab-result-date-validation.utils';
 import { LAB_RESULT_INCOMPLETE_MESSAGE, LAB_RESULT_INTERPRETATION_WITHOUT_RESULT_MESSAGE, labResultResultFieldsValidator } from '@/app/entities/lab-result/utils/lab-result-form.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 @Component({
     selector: 'app-lab-result-edit-page',
@@ -48,7 +51,9 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         AppErrorStateComponent,
         ClientSearchComponent,
         PetSearchComponent,
-        DateInputComponent
+        DateInputComponent,
+        FormSubmitDirective,
+        FormErrorSummaryComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -78,7 +83,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                 @if (examinationFinalized()) {
                     <p class="text-sm text-muted-color mt-0 mb-4" role="status" data-testid="finalized-identity-locked">Bağlı muayene kesinleşmiş; müşteri, hasta, bağlı muayene ve test adı değiştirilemez. Sonuç, yorum ve notlar düzenlenebilir.</p>
                 }
-                <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()">
+                    <app-form-error-summary />
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
                             <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
@@ -179,7 +185,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <button pButton type="submit" [disabled]="form.invalid || submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                        <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                         <button pButton type="button" severity="secondary" (click)="goDetail()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>
@@ -187,7 +193,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         }
     `
 })
-export class LabResultEditPageComponent implements OnInit {
+export class LabResultEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly labResultDateTooFarPastMessage = LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE;
     protected readonly resultIncompleteMessage = LAB_RESULT_INCOMPLETE_MESSAGE;
@@ -319,6 +325,10 @@ export class LabResultEditPageComponent implements OnInit {
         this.reload();
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     examinationSelectDisabled(): boolean {
         return this.examinationFinalized() || !trimClientIdControlValue(this.form.controls.petId.value);
     }
@@ -370,6 +380,8 @@ export class LabResultEditPageComponent implements OnInit {
                 // Kaydın hastası ve kliniği değişmez (ADR-043 AK-10); muayene bağı aynı hasta içinde değişebilir.
                 this.form.controls.clientId.disable({ emitEvent: false });
                 this.form.controls.petId.disable({ emitEvent: false });
+                // Çakışmada "Yazdıklarımı atıp güncel kaydı yükle" de buradan geçer: form sunucu kaydına döner.
+                this.form.markAsPristine();
 
                 this.loading.set(false);
                 this.lockIdentityWhenExaminationFinalized(x.examinationId);
@@ -452,6 +464,7 @@ export class LabResultEditPageComponent implements OnInit {
         this.labResultsService.updateLabResult(this.labResultId, payload).subscribe({
             next: () => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/lab-results', this.labResultId], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

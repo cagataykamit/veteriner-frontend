@@ -11,6 +11,7 @@ import { TreatmentEditPageComponent } from '@/app/features/treatments/pages/trea
 import { TreatmentNewPageComponent } from '@/app/features/treatments/pages/treatment-new-page/treatment-new-page.component';
 import { TreatmentsListPageComponent } from '@/app/features/treatments/pages/treatments-list-page/treatments-list-page.component';
 import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
+import { unsavedChangesGuard } from '@/app/shared/ui/unsaved-changes/unsaved-changes.guard';
 
 export default [
     {
@@ -31,7 +32,8 @@ export default [
 
             return auth.hasOperationClaim(TREATMENTS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: TreatmentNewPageComponent
+        component: TreatmentNewPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id/edit',
@@ -41,7 +43,8 @@ export default [
 
             return auth.hasOperationClaim(TREATMENTS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: TreatmentEditPageComponent
+        component: TreatmentEditPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id',

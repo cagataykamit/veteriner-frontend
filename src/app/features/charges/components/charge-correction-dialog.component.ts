@@ -5,6 +5,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import type { ChargeVm } from '@/app/entities/charge/models/charge-vm.model';
 import { ChargeTaxFieldsComponent } from '@/app/features/charges/components/charge-tax-fields.component';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
@@ -14,6 +16,8 @@ import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 /**
  * Ücret düzeltmesi (`Charges.Correct`): açıklama, miktar, birim fiyat, satır türü ve KDV oranı (ADR-036). Gerekçe zorunlu; yeni tutar tahsis edilen tutarın altına inemez (sunucu 409 verir).
@@ -22,17 +26,18 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 @Component({
     selector: 'app-charge-correction-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, ChargeTaxFieldsComponent, MoneyPipe],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, ChargeTaxFieldsComponent, MoneyPipe, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Ücreti düzelt" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
+        <p-dialog [appUnsavedChanges]="form.dirty" header="Ücreti düzelt" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
             @if (charge(); as c) {
                 <p class="mt-0 mb-1 font-medium">{{ c.clientName }}</p>
                 @if (c.allocatedAmount) {
                     <p class="mt-0 mb-4 text-sm text-muted-color">Bu ücrete {{ c.allocatedAmount | money: c.currency }} ödeme bağlı; yeni tutar bunun altına inemez.</p>
                 }
             }
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" id="charge-correction-form">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()" id="charge-correction-form">
+                <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12">
                         <label for="cc-description" class="block text-sm font-medium text-muted-color mb-2">Açıklama *</label>
@@ -77,7 +82,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
-                <button pButton type="submit" form="charge-correction-form" [disabled]="form.invalid || unchanged() || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Düzeltmeyi kaydet</button>
+                <button pButton type="submit" form="charge-correction-form" [disabled]="unchanged() || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Düzeltmeyi kaydet</button>
             </ng-template>
         </p-dialog>
     `

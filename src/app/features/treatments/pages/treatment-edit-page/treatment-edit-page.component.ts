@@ -31,6 +31,9 @@ import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtc
 import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import { TREATMENT_DATE_TOO_FAR_PAST_MESSAGE, treatmentDateNotTooFarPastValidator, treatmentDateTimeLocalMinAllowed } from '@/app/entities/treatment/utils/treatment-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 @Component({
     selector: 'app-treatment-edit-page',
@@ -47,7 +50,9 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         AppErrorStateComponent,
         ClientSearchComponent,
         PetSearchComponent,
-        DateInputComponent
+        DateInputComponent,
+        FormSubmitDirective,
+        FormErrorSummaryComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -69,7 +74,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     <p class="text-danger mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
                 <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
-                <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()">
+                    <app-form-error-summary />
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
                             <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
@@ -165,7 +171,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <button pButton type="submit" [disabled]="form.invalid || submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                        <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                         <button pButton type="button" severity="secondary" (click)="goDetail()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>
@@ -173,7 +179,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         }
     `
 })
-export class TreatmentEditPageComponent implements OnInit {
+export class TreatmentEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly dateInputMin = DATE_INPUT_MIN;
     protected readonly treatmentDateTooFarPastMessage = TREATMENT_DATE_TOO_FAR_PAST_MESSAGE;
@@ -295,6 +301,10 @@ export class TreatmentEditPageComponent implements OnInit {
         this.reload();
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     examinationSelectDisabled(): boolean {
         return !trimClientIdControlValue(this.form.controls.petId.value);
     }
@@ -413,6 +423,7 @@ export class TreatmentEditPageComponent implements OnInit {
         this.treatmentsService.updateTreatment(this.treatmentId, payload).subscribe({
             next: () => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/treatments', this.treatmentId], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

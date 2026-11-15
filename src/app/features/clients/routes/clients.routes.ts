@@ -13,6 +13,7 @@ import { ClientKvkkFormPageComponent } from '@/app/features/clients/pages/client
 import { ClientNewPageComponent } from '@/app/features/clients/pages/client-new-page/client-new-page.component';
 import { ClientsListPageComponent } from '@/app/features/clients/pages/clients-list-page/clients-list-page.component';
 import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
+import { unsavedChangesGuard } from '@/app/shared/ui/unsaved-changes/unsaved-changes.guard';
 
 export default [
     {
@@ -33,7 +34,8 @@ export default [
 
             return auth.hasOperationClaim(CLIENTS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: ClientNewPageComponent
+        component: ClientNewPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id/edit',
@@ -43,7 +45,8 @@ export default [
 
             return auth.hasOperationClaim(CLIENTS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: ClientEditPageComponent
+        component: ClientEditPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id/kvkk-form',

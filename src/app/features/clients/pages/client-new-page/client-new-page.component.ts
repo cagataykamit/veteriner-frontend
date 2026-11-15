@@ -22,58 +22,41 @@ import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice
 import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
 import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
 import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-format.directive';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
 
 @Component({
     selector: 'app-client-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent, AppTrialLimitNoticeComponent, FocusFirstFieldDirective, PhoneFormatDirective],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent, AppTrialLimitNoticeComponent, FocusFirstFieldDirective, PhoneFormatDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" title="Yeni müşteri" description="Müşteri kaydı oluşturun." />
 
         <div class="card">
-            <form appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form appFormSubmit appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit()">
+                <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="fullName" class="block text-sm font-medium text-muted-color mb-2">Ad soyad *</label>
+                    <app-form-field class="col-span-12 md:col-span-6" label="Ad soyad" fieldId="fullName" [error]="fieldMessage('fullName')" [required]="true">
                         <input id="fullName" pInputText class="w-full" formControlName="fullName" />
-                        @if (fieldMessage('fullName'); as msg) {
-                            <small class="text-danger">{{ msg }}</small>
-                        }
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="phone" class="block text-sm font-medium text-muted-color mb-2">Telefon *</label>
+                    </app-form-field>
+                    <app-form-field class="col-span-12 md:col-span-6" label="Telefon" fieldId="phone" [error]="fieldMessage('phone')" [required]="true">
                         <input appPhoneFormat id="phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
-                        @if (fieldMessage('phone'); as msg) {
-                            <small class="text-danger">{{ msg }}</small>
-                        }
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="email" class="block text-sm font-medium text-muted-color mb-2">E-posta</label>
+                    </app-form-field>
+                    <app-form-field class="col-span-12 md:col-span-6" label="E-posta" fieldId="email" [error]="fieldMessage('email')">
                         <input id="email" type="email" pInputText class="w-full" formControlName="email" />
-                        @if (fieldMessage('email'); as msg) {
-                            <small class="text-danger">{{ msg }}</small>
-                        }
-                    </div>
-                    <div class="col-span-12">
-                        <label for="address" class="block text-sm font-medium text-muted-color mb-2">Adres</label>
+                    </app-form-field>
+                    <app-form-field class="col-span-12" label="Adres" fieldId="address" [error]="fieldMessage('address')">
                         <textarea id="address" rows="2" class="w-full p-inputtext p-component" formControlName="address"></textarea>
-                        @if (fieldMessage('address'); as msg) {
-                            <small class="text-danger">{{ msg }}</small>
-                        }
-                    </div>
+                    </app-form-field>
                     <div class="col-span-12">
                         <app-client-contact-preference-fields [form]="form" />
                     </div>
-                    <div class="col-span-12">
-                        <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Not</label>
+                    <app-form-field class="col-span-12" label="Not" fieldId="notes" [error]="fieldMessage('notes')" hint="Kliniğin iç notudur; sahip portalında görünmez.">
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
-                        @if (fieldMessage('notes'); as msg) {
-                            <small class="text-danger">{{ msg }}</small>
-                        } @else {
-                            <small class="text-muted-color">Kliniğin iç notudur; sahip portalında görünmez.</small>
-                        }
-                    </div>
+                    </app-form-field>
                     <div class="col-span-12">
                         <app-client-invoicing-fields [form]="invoicingForm" [open]="invoicingOpen()" [apiErrors]="invoicingApiErrors()" />
                     </div>
@@ -87,14 +70,14 @@ import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-form
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <button pButton type="submit" [disabled]="form.invalid || invoicingForm.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                    <button pButton type="submit" [disabled]="submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                     <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>
         </div>
     `
 })
-export class ClientNewPageComponent {
+export class ClientNewPageComponent implements HasUnsavedChanges {
     readonly copy = PANEL_COPY;
 
     private readonly fb = inject(FormBuilder);
@@ -127,6 +110,10 @@ export class ClientNewPageComponent {
                 }
             });
         }
+    }
+
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty || this.invoicingForm.dirty;
     }
 
     fieldMessage(field: ClientCreateFormFieldKey): string | null {
@@ -173,6 +160,8 @@ export class ClientNewPageComponent {
         this.clientsService.createClient(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
+                this.invoicingForm.markAsPristine();
                 void this.router.navigate(['/panel/clients', id], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

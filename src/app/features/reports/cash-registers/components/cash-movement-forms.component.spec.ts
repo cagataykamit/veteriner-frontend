@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { CashRegistersService } from '@/app/entities/cash-register/services/cash-registers.service';
 import { CashMovementFormsComponent } from './cash-movement-forms.component';
 
@@ -11,7 +13,11 @@ describe('CashMovementFormsComponent — tek tür önden seçili (H1)', () => {
 
         TestBed.configureTestingModule({
             imports: [CashMovementFormsComponent],
-            providers: [{ provide: CashRegistersService, useValue: { createMovement, createTransfer: vi.fn() } }]
+            providers: [
+                { provide: CashRegistersService, useValue: { createMovement, createTransfer: vi.fn() } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => false } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
         });
         const fixture = TestBed.createComponent(CashMovementFormsComponent);
 

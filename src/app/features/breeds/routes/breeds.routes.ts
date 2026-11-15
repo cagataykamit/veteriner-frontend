@@ -5,6 +5,7 @@ import { BREEDS_CREATE_CLAIM, BREEDS_UPDATE_CLAIM } from '@/app/core/auth/operat
 import { BreedFormPageComponent } from '@/app/features/breeds/pages/breed-form-page/breed-form-page.component';
 import { BreedsListPageComponent } from '@/app/features/breeds/pages/breeds-list-page/breeds-list-page.component';
 import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
+import { unsavedChangesGuard } from '@/app/shared/ui/unsaved-changes/unsaved-changes.guard';
 
 export default [
     {
@@ -31,7 +32,8 @@ export default [
                 return auth.hasOperationClaim(BREEDS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
             }
         ],
-        component: BreedFormPageComponent
+        component: BreedFormPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id/edit',
@@ -43,6 +45,7 @@ export default [
                 return auth.hasOperationClaim(BREEDS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
             }
         ],
-        component: BreedFormPageComponent
+        component: BreedFormPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     }
 ] as Routes;

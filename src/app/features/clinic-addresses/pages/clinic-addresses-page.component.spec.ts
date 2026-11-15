@@ -41,9 +41,17 @@ describe('ClinicAddressesPageComponent', () => {
 
     const text = (): string => (fixture.nativeElement as HTMLElement).textContent ?? '';
 
-    it('varsayılan ek hak 1, adres boşken gönderilemez', () => {
+    it('varsayılan ek hak 1, adres boşken gönderilemez (Kaydet açık, eksik gösterilir)', async () => {
         expect(fixture.componentInstance.form.getRawValue().additionalChanges).toBe(1);
-        expect((fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('[data-testid="ca-submit"]')?.disabled).toBe(true);
+        const button = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('[data-testid="ca-submit"]')!;
+
+        expect(button.disabled).toBe(false);
+        button.click();
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        http.expectNone(URL);
+        expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="form-error-summary"]')).not.toBeNull();
     });
 
     it('onaydan sonra sözleşmedeki gövdeyle gönderir, yeni kalan hakkı gösterir; adres kırpılıp küçültülür', async () => {

@@ -6,6 +6,7 @@ import { ImagingDetailPageComponent } from '@/app/features/imaging/pages/imaging
 import { ImagingListPageComponent } from '@/app/features/imaging/pages/imaging-list-page/imaging-list-page.component';
 import { ImagingNewPageComponent } from '@/app/features/imaging/pages/imaging-new-page/imaging-new-page.component';
 import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
+import { unsavedChangesGuard } from '@/app/shared/ui/unsaved-changes/unsaved-changes.guard';
 
 function requireClaim(claim: string) {
     return () => {
@@ -17,6 +18,6 @@ function requireClaim(claim: string) {
 
 export default [
     { path: '', canActivate: [requireClaim(IMAGING_READ_CLAIM)], component: ImagingListPageComponent },
-    { path: 'new', canActivate: [requireClaim(IMAGING_CREATE_CLAIM)], component: ImagingNewPageComponent },
+    { path: 'new', canActivate: [requireClaim(IMAGING_CREATE_CLAIM)], component: ImagingNewPageComponent, canDeactivate: [unsavedChangesGuard] },
     { path: ':id', canActivate: [requireClaim(IMAGING_READ_CLAIM)], component: ImagingDetailPageComponent }
 ] as Routes;

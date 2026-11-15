@@ -6,6 +6,7 @@ import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { catchError, concatMap, from, map, type Observable, of, type Subscription, switchMap, toArray } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { APPOINTMENTS_CANCEL_CLAIM, APPOINTMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -37,7 +38,7 @@ interface AppointmentCancelFailure {
 @Component({
     selector: 'app-pet-status-dialog',
     standalone: true,
-    imports: [ReactiveFormsModule, RouterLink, DialogModule, ButtonModule, CheckboxModule],
+    imports: [ReactiveFormsModule, RouterLink, DialogModule, DialogFocusReturnDirective, ButtonModule, CheckboxModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="cancelOutcome() || markingDeceased() ? 'Vefat olarak işaretle' : 'Aktife al'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">

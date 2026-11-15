@@ -12,7 +12,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { CLINICS_UPDATE_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { mapHospitalizationUpsertFormToCreateRequest } from '@/app/entities/hospitalization/data/hospitalization.mapper';
@@ -22,6 +22,9 @@ import { type HospitalizationUpsertFieldErrors, type HospitalizationUpsertFormFi
 import { hospitalizationExaminationOption, hospitalizationVisitOptions, type HospitalizationRelationOption } from '@/app/entities/hospitalization/utils/hospitalization-relation-select.utils';
 import type { HospitalizationWardVm } from '@/app/entities/hospitalization-ward/models/hospitalization-ward-vm.model';
 import { HospitalizationWardsService } from '@/app/entities/hospitalization-ward/services/hospitalization-wards.service';
+import { hospitalizationRoomInlineCreate, hospitalizationWardInlineCreate } from '@/app/entities/hospitalization/utils/hospitalization-location-inline-create.utils';
+import { InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import {
     HOSPITALIZATION_ROOM_REQUIRED_ERROR_KEY,
     hospitalizationRoomOptions,
@@ -53,6 +56,9 @@ import {
     plannedDischargeNotBeforeAdmissionValidator
 } from '@/app/entities/hospitalization/utils/hospitalization-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 @Component({
     selector: 'app-hospitalization-edit-page',
@@ -70,7 +76,11 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         AppErrorStateComponent,
         ClientSearchComponent,
         PetSearchComponent,
-        DateInputComponent
+        DateInputComponent,
+        InlineCreateDirective,
+        InlineCreateOptionComponent,
+        FormSubmitDirective,
+        FormErrorSummaryComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -102,7 +112,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         Bağlı muayene kesinleşmiş; yatışın muayene bağı değiştirilemez veya kaldırılamaz. Neden, not, konum, geliş ve planlı taburcu düzenlenebilir.
                     </p>
                 }
-                <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()">
+                    <app-form-error-summary />
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
                             <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
@@ -190,7 +201,9 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         }
                         <div class="col-span-12 md:col-span-6">
                             <label for="wardId" class="block text-sm font-medium text-muted-color mb-2">Bölüm</label>
-                            <p-select inputId="wardId" formControlName="wardId" [options]="wardOptions()" optionLabel="label" optionValue="value" class="w-full" [loading]="loadingWards()" />
+                            <p-select inputId="wardId" formControlName="wardId" [options]="wardOptions()" optionLabel="label" optionValue="value" class="w-full" [loading]="loadingWards()" [filter]="true" filterBy="label" filterPlaceholder="Ara…" [appInlineCreate]="wardCreate()">
+                            <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                        </p-select>
                             @if (wardsError()) {
                                 <small class="text-danger block">{{ wardsError() }}</small>
                             } @else if (legacyLocation()) {
@@ -199,7 +212,10 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="roomId" class="block text-sm font-medium text-muted-color mb-2">Oda / kafes</label>
-                            <p-select inputId="roomId" formControlName="roomId" [options]="roomOptions()" optionLabel="label" optionValue="value" [placeholder]="form.controls.wardId.value ? 'Oda seçin' : 'Önce bölüm seçin'" class="w-full" />
+                            <p-select inputId="roomId" formControlName="roomId" [options]="roomOptions()" optionLabel="label" optionValue="value" [placeholder]="form.controls.wardId.value ? 'Oda seçin' : 'Önce bölüm seçin'" class="w-full" [filter]="true" filterBy="label" filterPlaceholder="Ara…" [appInlineCreate]="roomCreate()">
+                            <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                            <ng-template #empty><app-inline-create-option [emptyText]="form.controls.wardId.value ? 'Bu bölümde oda yok.' : 'Önce bölüm seçin.'" /></ng-template>
+                        </p-select>
                             @if (apiFieldErrors().roomId) {
                                 <small class="text-danger">{{ apiFieldErrors().roomId }}</small>
                             } @else if (form.hasError(roomRequiredKey) && form.controls.roomId.touched) {
@@ -238,7 +254,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <button pButton type="submit" [disabled]="form.invalid || submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                        <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                         <button pButton type="button" severity="secondary" (click)="goDetail()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>
@@ -246,7 +262,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         }
     `
 })
-export class HospitalizationEditPageComponent implements OnInit {
+export class HospitalizationEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
     protected readonly hospitalizationDateTooFarPastMessage = HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE;
@@ -296,6 +312,10 @@ export class HospitalizationEditPageComponent implements OnInit {
     readonly legacyLocation = signal('');
     readonly wardOptions = computed(() => hospitalizationWardOptions(this.wards(), this.loadedRoomId()));
     readonly roomOptions = computed(() => hospitalizationRoomOptions(this.wards(), this.selectedWardId(), this.loadedRoomId()));
+    /** Aranan bölüm ya da oda yoksa adıyla eklenir ve seçilir (O1); konum tanımı klinik ayarı yetkisi ister. */
+    private readonly canCreateLocation = computed(() => this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) && !this.ro.mutationBlocked());
+    readonly wardCreate = computed(() => hospitalizationWardInlineCreate(this.wardsService, this.auth.getClinicId()?.trim() ?? '', this.wards, this.canCreateLocation()));
+    readonly roomCreate = computed(() => hospitalizationRoomInlineCreate(this.wardsService, this.auth.getClinicId()?.trim() ?? '', this.selectedWardId(), this.wards, this.canCreateLocation()));
     protected readonly roomRequiredKey = HOSPITALIZATION_ROOM_REQUIRED_ERROR_KEY;
     private rowVersion = '';
     private relationLoadSeq = 0;
@@ -412,6 +432,10 @@ export class HospitalizationEditPageComponent implements OnInit {
         this.reload();
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     examinationSelectDisabled(): boolean {
         return this.examinationFinalized() || !trimClientIdControlValue(this.form.controls.petId.value);
     }
@@ -462,6 +486,8 @@ export class HospitalizationEditPageComponent implements OnInit {
                 // Kaydın hastası ve kliniği değişmez (ADR-043 AK-10); muayene bağı aynı hasta içinde değişebilir.
                 this.form.controls.clientId.disable({ emitEvent: false });
                 this.form.controls.petId.disable({ emitEvent: false });
+                // Çakışmada "Yazdıklarımı atıp güncel kaydı yükle" de buradan geçer: form sunucu kaydına döner.
+                this.form.markAsPristine();
 
                 this.loading.set(false);
             },
@@ -535,6 +561,7 @@ export class HospitalizationEditPageComponent implements OnInit {
         this.hospitalizationsService.updateHospitalization(this.hospitalizationId, payload).subscribe({
             next: () => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/hospitalizations', this.hospitalizationId], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

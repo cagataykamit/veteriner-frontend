@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { SelectModule } from 'primeng/select';
 import { calculateDose, DOSE_LIMITS, DOSE_UNIT_OPTIONS, type DoseUnit } from '@/app/entities/procedure/utils/dose-calculation.utils';
 import { copyTextToClipboard } from '@/app/shared/utils/clipboard.utils';
@@ -16,7 +17,7 @@ import { copyTextToClipboard } from '@/app/shared/utils/clipboard.utils';
 @Component({
     selector: 'app-dose-calculator',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, DialogModule, SelectModule],
+    imports: [ReactiveFormsModule, ButtonModule, DialogModule, DialogFocusReturnDirective, SelectModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <button pButton type="button" class="p-button-secondary p-button-sm" data-testid="dose-calculator-open" (click)="open()"><i class="pi pi-calculator"></i>Doz hesapla</button>

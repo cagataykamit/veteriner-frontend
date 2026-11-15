@@ -5,6 +5,8 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { TableModule } from 'primeng/table';
@@ -28,6 +30,8 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { SearchInputComponent } from '@/app/shared/ui/search-input/search-input.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 const PAGE_SIZE = 50;
 
@@ -51,7 +55,7 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
         ButtonModule,
         CheckboxModule,
         ConfirmDialogModule,
-        DialogModule,
+        DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective,
         InputTextModule,
         MessageModule,
         TableModule,
@@ -60,7 +64,9 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
         AppEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
-        SearchInputComponent
+        SearchInputComponent,
+        FormSubmitDirective,
+        FormErrorSummaryComponent
     ],
     providers: [ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -169,7 +175,7 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
             }
         </div>
 
-        <p-dialog
+        <p-dialog [appUnsavedChanges]="dialogForm.dirty"
             [header]="editing() ? 'Metin parçasını düzenle' : 'Yeni metin parçası'"
             [modal]="true"
             [visible]="dialogVisible()"
@@ -177,7 +183,8 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
             [style]="{ width: 'min(40rem, 95vw)' }"
             [draggable]="false"
         >
-            <form [formGroup]="dialogForm" (ngSubmit)="submitDialog()" class="flex flex-col gap-4">
+            <form appFormSubmit [formGroup]="dialogForm" (ngSubmit)="submitDialog()" class="flex flex-col gap-4">
+                <app-form-error-summary />
                 <p class="m-0 text-sm text-muted-color">
                     Muayene metin alanında # yazıp kısayolu seçince metin imlecin olduğu yere eklenir. Muayene şablonundan farkı: kayıt ya da ücret üretmez, yalnız metin ekler.
                 </p>
@@ -216,7 +223,7 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
                 </div>
                 <div class="flex flex-wrap justify-end gap-2 pt-2">
                     <button pButton type="button" severity="secondary" (click)="dialogVisible.set(false)" [disabled]="submitting()">{{ copy.buttonCancel }}</button>
-                    <button pButton type="submit" [disabled]="dialogForm.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                    <button pButton type="submit" [disabled]="submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                 </div>
             </form>
         </p-dialog>

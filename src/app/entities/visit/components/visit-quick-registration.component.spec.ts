@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
@@ -58,7 +59,9 @@ describe('VisitQuickRegistrationComponent', () => {
             providers: [
                 { provide: ClientsService, useValue: clients },
                 { provide: PetsService, useValue: pets },
-                { provide: SpeciesService, useValue: { getSpeciesList: () => of([{ id: 's1', name: 'Kedi' }]) } }
+                { provide: SpeciesService, useValue: { getSpeciesList: () => of([{ id: 's1', name: 'Kedi' }]) } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => false } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
         });
     });

@@ -1,13 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, input, output, signal, model, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, DestroyRef, inject, input, output, signal, model, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { tap } from 'rxjs';
 import { mapPetUpsertFormToCreateRequest } from '@/app/entities/pet/data/pet.mapper';
 import { createPetUpsertFormGroup, getPetUpsertFormValue, type PetUpsertFormGroup } from '@/app/entities/pet/forms/pet-upsert-form.factory';
 import { BreedsService } from '@/app/entities/breed/services/breeds.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
+import { createSpeciesByName } from '@/app/entities/species/utils/species-inline-create.utils';
+import { type InlineCreateConfig, InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { type PetCreateFieldErrors, type PetCreateFormFieldKey, parsePetCreateHttpError } from '@/app/entities/pet/utils/pet-create-validation-parse.utils';
 import { PET_GENDER_FORM_OPTIONS } from '@/app/entities/pet/utils/pet-status.utils';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
@@ -15,12 +19,16 @@ import { messageFromHttpError, trialLimitMessage } from '@/app/shared/utils/api-
 import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick-breed-dialog.component';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { BREEDS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { BREEDS_CREATE_CLAIM, SPECIES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 /**
  * Seçili müşteri için tam sayfa ayrılmadan hayvan oluşturma (`mapPetUpsertFormToCreateRequest` ile aynı write hattı).
@@ -28,14 +36,15 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 @Component({
     selector: 'app-quick-pet-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, SelectModule, QuickBreedDialogComponent, AppTrialLimitNoticeComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, InputTextModule, SelectModule, QuickBreedDialogComponent, AppTrialLimitNoticeComponent, InlineCreateDirective, InlineCreateOptionComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Yeni hasta" [modal]="true" [dismissableMask]="form.pristine" [style]="{ width: 'min(560px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onDialogShow()">
+        <p-dialog [appUnsavedChanges]="form.dirty" header="Yeni hasta" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(560px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onDialogShow()">
             @if (selectionError()) {
                 <p class="text-danger mt-0 mb-3" role="alert">{{ selectionError() }}</p>
             }
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" id="quick-pet-form">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()" id="quick-pet-form">
+                <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
                         <label for="qp-name" class="block text-sm font-medium text-muted-color mb-2">Hasta adı *</label>
@@ -58,8 +67,14 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             class="w-full"
                             [loading]="loadingSpecies()"
                             [showClear]="true"
+                            [filter]="true"
+                            filterBy="label"
+                            filterPlaceholder="Ara…"
+                            [appInlineCreate]="speciesCreate()"
                             appendTo="body"
-                        />
+                        >
+                            <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                        </p-select>
                         @if (apiFieldErrors().speciesId) {
                             <small class="text-danger">{{ apiFieldErrors().speciesId }}</small>
                         } @else if (form.controls.speciesId.invalid && form.controls.speciesId.touched) {
@@ -78,6 +93,9 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             class="w-full"
                             [loading]="loadingBreeds()"
                             [showClear]="true"
+                            [filter]="true"
+                            filterBy="label"
+                            filterPlaceholder="Ara…"
                             appendTo="body"
                         />
                         @if (apiFieldErrors().breedId) {
@@ -106,7 +124,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
-                <button pButton type="submit" form="quick-pet-form" [disabled]="form.invalid || submitting() || !ownerClientIdTrimmed()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
+                <button pButton type="submit" form="quick-pet-form" [disabled]="submitting() || !ownerClientIdTrimmed()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
             </ng-template>
         </p-dialog>
 
@@ -131,6 +149,11 @@ export class QuickPetDialogComponent {
     private readonly ro = inject(TenantReadOnlyContextService);
     /** Irk oluşturma yetkisi yoksa (ya da salt okunurda) "Bu tür için yeni ırk" görünmez; basıp hata almasın (H19). */
     readonly canShowQuickBreedButton = (): boolean => this.auth.hasOperationClaim(BREEDS_CREATE_CLAIM) && !this.ro.mutationBlocked();
+    /** Aranan tür yoksa adıyla eklenir ve seçilir (O1). */
+    readonly speciesCreate = computed<InlineCreateConfig>(() => ({
+        canCreate: this.auth.hasOperationClaim(SPECIES_CREATE_CLAIM) && !this.ro.mutationBlocked(),
+        create: (name) => createSpeciesByName(this.speciesService, name).pipe(tap((id) => this.speciesOptions.update((o) => [...o, { value: id, label: name.trim() }])))
+    }));
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);

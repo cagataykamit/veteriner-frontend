@@ -5,12 +5,16 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { SelectModule } from 'primeng/select';
 import type { TodayItemVm, VisitCorrectionAction, VisitVm } from '@/app/entities/visit/models/visit-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { careStatusLabel, correctionActionOptions } from '@/app/entities/visit/utils/visit-status.utils';
 import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 /**
  * Geliş düzeltmesi (`Visits.Correct`): durumu geri/ileri al veya yanlış geliş olarak işaretle. Gerekçe zorunlu. `mode="restore"` ile yanlış gelişi geri alır (aynı gerekçe kuralı).
@@ -19,10 +23,10 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-visit-correction-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, SelectModule, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog
+        <p-dialog [appUnsavedChanges]="form.dirty"
             [header]="restoring() ? 'Yanlış gelişi geri al' : 'Geliş düzeltmesi'"
             [modal]="true"
             [dismissableMask]="!submitting()"
@@ -39,7 +43,8 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     }
                 </p>
             }
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" id="visit-correction-form">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()" id="visit-correction-form">
+                <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
                     @if (!restoring()) {
                         <div class="col-span-12">
@@ -79,7 +84,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
-                <button pButton type="submit" form="visit-correction-form" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ restoring() ? 'Geri al' : 'Düzeltmeyi kaydet' }}</button>
+                <button pButton type="submit" form="visit-correction-form" [disabled]="submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ restoring() ? 'Geri al' : 'Düzeltmeyi kaydet' }}</button>
             </ng-template>
         </p-dialog>
     `

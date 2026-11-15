@@ -8,6 +8,8 @@ import { MessageModule } from 'primeng/message';
 import { ClinicAddressesService } from '@/app/features/clinic-addresses/services/clinic-addresses.service';
 import type { ClinicSiteStateDto } from '@/app/features/clinic-site/models/clinic-site.model';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 const MIN_GRANT = 1;
 const MAX_GRANT = 3;
@@ -19,7 +21,7 @@ const MAX_GRANT = 3;
 @Component({
     selector: 'app-clinic-addresses-page',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, ConfirmDialogModule, InputTextModule, MessageModule, AppPageHeaderComponent],
+    imports: [ReactiveFormsModule, ButtonModule, ConfirmDialogModule, InputTextModule, MessageModule, AppPageHeaderComponent, FormSubmitDirective, FormErrorSummaryComponent],
     providers: [ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -27,7 +29,8 @@ const MAX_GRANT = 3;
         <app-page-header title="Klinik adresleri" description="Yayınlanmış site adresini en çok 3 kez değiştirebilir. Hakkı biten kliniğe buradan ek hak verilir. Yalnız Vetinity platform yöneticisi görür." />
 
         <div class="card">
-            <form [formGroup]="form" (ngSubmit)="confirmGrant()" class="flex flex-col gap-4 w-full md:max-w-md">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="confirmGrant()" class="flex flex-col gap-4 w-full md:max-w-md">
+                <app-form-error-summary />
                 @if (error(); as message) {
                     <p-message severity="error" class="w-full" role="alert" data-testid="ca-error">{{ message }}</p-message>
                 }
@@ -47,7 +50,7 @@ const MAX_GRANT = 3;
                     }
                 </div>
                 <div>
-                    <button pButton type="submit" [disabled]="form.invalid || saving()" data-testid="ca-submit"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>Hak ver</button>
+                    <button pButton type="submit" [disabled]="saving()" data-testid="ca-submit"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>Hak ver</button>
                 </div>
             </form>
         </div>

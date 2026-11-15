@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { type AbstractControl, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { catchError, of, startWith, Subject, switchMap } from 'rxjs';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
@@ -9,6 +9,10 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { PRODUCTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { QuickProductDialogComponent, type QuickProductCreated } from '@/app/entities/inventory/components/quick-product-dialog.component';
+import { type InlineCreateConfig, InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { mapGoodsReceiptFormToRequest } from '@/app/features/inventory/data/goods-receipt.mapper';
 import { createGoodsReceiptFormGroup, createGoodsReceiptLineGroup, type GoodsReceiptLineGroup } from '@/app/features/inventory/forms/goods-receipt-form.factory';
@@ -23,6 +27,7 @@ import { goodsReceiptTotalCost } from '@/app/features/inventory/utils/goods-rece
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 type SelectOption = { label: string; value: string };
 
@@ -39,7 +44,7 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
 @Component({
     selector: 'app-goods-receipt-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, AutoCompleteModule, BarcodeScanButtonComponent, DateInputComponent, AppListHeaderComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, AutoCompleteModule, BarcodeScanButtonComponent, DateInputComponent, AppListHeaderComponent, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card">
@@ -164,9 +169,11 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
                                                     [autoHighlight]="true"
                                                     [fluid]="true"
                                                     placeholder="Barkod veya ürün adı"
-                                                    emptyMessage="Eşleşen ürün bulunamadı."
+                                                    [showEmptyMessage]="true"
+                                                    [appInlineCreate]="productCreate()"
                                                     appendTo="body"
                                                 >
+                                                    <ng-template #empty><app-inline-create-option /></ng-template>
                                                     <ng-template #item let-p>
                                                         <div class="flex flex-col">
                                                             <span>{{ p.label }}</span>
@@ -264,9 +271,10 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
                 </form>
             }
         </div>
+        <app-quick-product-dialog [(visible)]="quickProductOpen" [initialName]="quickProductName()" [kinds]="stockKinds" (productCreated)="onQuickProductCreated($event)" />
     `
 })
-export class GoodsReceiptPageComponent implements OnInit {
+export class GoodsReceiptPageComponent implements OnInit, HasUnsavedChanges {
     private readonly fb = inject(FormBuilder);
     private readonly route = inject(ActivatedRoute);
     private readonly auth = inject(AuthService);
@@ -287,6 +295,20 @@ export class GoodsReceiptPageComponent implements OnInit {
     readonly clinicOptions = signal<SelectOption[]>([]);
     readonly clinicsLoading = signal(false);
     readonly suggestions = signal<GoodsReceiptProductPick[]>([]);
+    readonly quickProductOpen = signal(false);
+    readonly quickProductName = signal('');
+    /** Mal kabul yalnız stok takipli ürünle olur; hızlı üründe Hizmet sunulmaz. */
+    readonly stockKinds = ['Other', 'Medicine', 'Vaccine'] as const;
+    private quickProductTarget: AbstractControl | null = null;
+    /** Aranan ürün yoksa küçük ürün diyaloğu açılır; yeni ürün o satıra yazılır (O1). Yeni ürün en sık burada gelir. */
+    readonly productCreate = computed<InlineCreateConfig>(() => ({
+        canCreate: this.auth.hasOperationClaim(PRODUCTS_CREATE_CLAIM) && !this.ro.mutationBlocked(),
+        openDialog: (name, control) => {
+            this.quickProductTarget = control;
+            this.quickProductName.set(name);
+            this.quickProductOpen.set(true);
+        }
+    }));
     readonly submitting = signal(false);
     readonly attempted = signal(false);
     readonly submitError = signal<string | null>(null);
@@ -328,6 +350,19 @@ export class GoodsReceiptPageComponent implements OnInit {
         }
     }
 
+    /** Satır ekleme/silme ve barkodla gelen ürün programla yazılır; onlar da kirli işaretlenir. */
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
+    onQuickProductCreated(product: QuickProductCreated): void {
+        const control = this.quickProductTarget;
+
+        this.quickProductTarget = null;
+        control?.setValue({ id: product.id, label: product.name, barcode: '', requiresLotAndExpiry: false } satisfies GoodsReceiptProductPick);
+        control?.markAsDirty();
+    }
+
     onProductSearch(event: AutoCompleteCompleteEvent): void {
         const term = event.query.trim();
 
@@ -360,6 +395,7 @@ export class GoodsReceiptPageComponent implements OnInit {
                 }
 
                 line.patchValue({ product: toProductPick(p) });
+                line.markAsDirty();
                 const index = this.lines.controls.indexOf(line);
 
                 setTimeout(() => document.querySelector<HTMLInputElement>(`[data-testid="gr-row-${index}"] input[formcontrolname="quantity"]`)?.focus());
@@ -376,6 +412,7 @@ export class GoodsReceiptPageComponent implements OnInit {
         const line = createGoodsReceiptLineGroup(this.fb);
 
         this.lines.push(line);
+        this.lines.markAsDirty();
 
         return line;
     }
@@ -383,6 +420,7 @@ export class GoodsReceiptPageComponent implements OnInit {
     removeLine(index: number): void {
         if (this.lines.length > 1) {
             this.lines.removeAt(index);
+            this.lines.markAsDirty();
             this.lineErrors.set({});
         }
     }
@@ -458,6 +496,7 @@ export class GoodsReceiptPageComponent implements OnInit {
         this.goodsReceipts.create(mapGoodsReceiptFormToRequest(this.form, this.requestId)).subscribe({
             next: (r) => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 this.result.set(r);
             },
             error: (e: unknown) => {

@@ -317,7 +317,11 @@ describe('ProductDetailPageComponent', () => {
             expect(t).toContain('Birim maliyet');
             expect(t).toContain('Seri / lot no');
             expect(labels(dialog()!)).toContain('Vazgeç');
-            expect(findButton(dialog()!, 'Kaydet').disabled).toBe(true);
+            // Kaydet boş formda da açık (O3); basınca eksikler gösterilir, istek gitmez.
+            expect(findButton(dialog()!, 'Kaydet').disabled).toBe(false);
+            findButton(dialog()!, 'Kaydet').click();
+            fixture.detectChanges();
+            expect(movements.create).not.toHaveBeenCalled();
         });
 
         it('stok girişi kaydedilir, diyalog kapanır ve stoklar yenilenir', () => {

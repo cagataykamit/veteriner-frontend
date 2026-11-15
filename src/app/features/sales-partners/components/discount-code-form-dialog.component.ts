@@ -2,6 +2,8 @@ import { Component, effect, inject, input, model, output, signal, untracked, Cha
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
@@ -10,6 +12,8 @@ import { SalesPartnersService } from '@/app/features/sales-partners/services/sal
 import { normalizeDiscountCodeInput } from '@/app/entities/sales-partner/utils/discount-code.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { fromIstanbulDateAndTimeToUtcIso, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 /** İstanbul gününün başlangıcı (UTC ISO); boş tarih `null`. */
 function istanbulDayStartUtc(date: string): string | null {
@@ -23,11 +27,12 @@ function istanbulDayStartUtc(date: string): string | null {
 @Component({
     selector: 'app-discount-code-form-dialog',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, DialogModule, InputNumberModule, InputTextModule, MessageModule],
+    imports: [ReactiveFormsModule, ButtonModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, InputNumberModule, InputTextModule, MessageModule, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog [header]="code() ? 'Kodu düzenle' : 'Yeni kod'" [modal]="true" [(visible)]="visible" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
-            <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+        <p-dialog [appUnsavedChanges]="form.dirty" [header]="code() ? 'Kodu düzenle' : 'Yeni kod'" [modal]="true" [(visible)]="visible" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+                <app-form-error-summary />
                 @if (error()) {
                     <p-message severity="error" class="w-full" role="alert">{{ error() }}</p-message>
                 }

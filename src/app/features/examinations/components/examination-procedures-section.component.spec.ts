@@ -3,7 +3,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
-import { type Confirmation, ConfirmationService } from 'primeng/api';
+import { UnsavedChangesService } from '@/app/shared/ui/unsaved-changes/unsaved-changes.service';
 import { TreatmentFormComponent } from '@/app/entities/procedure/components/treatment-form.component';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -207,15 +207,17 @@ describe('ExaminationProceduresSectionComponent', () => {
     });
 
     describe('yan panel kapanışı (tek kural: kaydedilmemiş değişiklik onayı)', () => {
+        /** Ortak soru taklidi: `answer(true)` "Kaydetmeden çık", `answer(false)` "Sayfada kal". */
         const confirmSpy = () => {
-            let captured: Confirmation | null = null;
-            const spy = vi.spyOn(fixture.debugElement.injector.get(ConfirmationService), 'confirm').mockImplementation((c: Confirmation) => {
-                captured = c;
+            let resolve: (leave: boolean) => void = () => undefined;
+            const spy = vi.spyOn(TestBed.inject(UnsavedChangesService), 'confirmLeave').mockImplementation(() => new Promise<boolean>((r) => (resolve = r)));
+            const answer = async (leave: boolean) => {
+                resolve(leave);
+                await new Promise((r) => setTimeout(r));
+                fixture.detectChanges();
+            };
 
-                return fixture.debugElement.injector.get(ConfirmationService);
-            });
-
-            return { spy, captured: () => captured as Confirmation | null };
+            return { spy, answer };
         };
 
         const treatmentForm = () => fixture.debugElement.query(By.directive(TreatmentFormComponent)).componentInstance as TreatmentFormComponent;
@@ -257,9 +259,9 @@ describe('ExaminationProceduresSectionComponent', () => {
             expect(cmp.drawerVisible()).toBe(false);
         });
 
-        it('kirli formda onay sorulur; Kapat kapatır', () => {
+        it('kirli formda sorulur; "Kaydetmeden çık" kapatır', async () => {
             create();
-            const { spy, captured } = confirmSpy();
+            const { spy, answer } = confirmSpy();
 
             cmp.open('treatment');
             fixture.detectChanges();
@@ -270,19 +272,17 @@ describe('ExaminationProceduresSectionComponent', () => {
             fixture.detectChanges();
 
             expect(spy).toHaveBeenCalledTimes(1);
-            expect(captured()?.header).toBe('Kaydedilmemiş değişiklik');
-            expect(captured()?.message).toBe('Girdiğiniz bilgiler kaydedilmedi, kapatılsın mı?');
             expect(cmp.drawerVisible()).toBe(true);
+            expect(cmp.hasUnsavedChanges()).toBe(true);
 
-            captured()!.accept!();
-            fixture.detectChanges();
+            await answer(true);
 
             expect(cmp.drawerVisible()).toBe(false);
         });
 
-        it('Vazgeç paneli açık bırakır ve girilen bilgi korunur', () => {
+        it('"Sayfada kal" paneli açık bırakır ve girilen bilgi korunur', async () => {
             create();
-            const { captured } = confirmSpy();
+            const { answer } = confirmSpy();
 
             cmp.open('treatment');
             fixture.detectChanges();
@@ -291,8 +291,7 @@ describe('ExaminationProceduresSectionComponent', () => {
 
             treatmentForm().cancel();
             fixture.detectChanges();
-            captured()!.reject?.();
-            fixture.detectChanges();
+            await answer(false);
 
             expect(cmp.drawerVisible()).toBe(true);
             expect(treatmentForm().form.controls.title.value).toBe('Serum');

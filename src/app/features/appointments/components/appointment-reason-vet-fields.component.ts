@@ -1,12 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { map } from 'rxjs';
 import { SelectModule } from 'primeng/select';
+import { CLINICS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { type InlineCreateConfig, InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import type { AppointmentReasonVm } from '@/app/entities/online-booking/models/online-booking.model';
 import { AppointmentReasonsService } from '@/app/entities/online-booking/services/online-booking.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { findVeterinarianUserId } from '@/app/entities/visit/data/visit.mapper';
 import type { VeterinarianVm } from '@/app/entities/visit/models/visit-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
+
+const INLINE_REASON_DURATION_MINUTES = 30;
 
 /**
  * Randevu formunda neden ve hekim (ADR-042 K2/K3): neden seçilince nedenin süresi önerilir (zorunlu değil, değiştirilebilir).
@@ -17,13 +24,16 @@ import { VisitsService } from '@/app/entities/visit/services/visits.service';
     selector: 'app-appointment-reason-vet-fields',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [ReactiveFormsModule, SelectModule],
+    imports: [ReactiveFormsModule, SelectModule, InlineCreateDirective, InlineCreateOptionComponent],
     template: `
         <div class="grid grid-cols-12 gap-4">
-            @if (reasonOptions().length > 0) {
+            @if (reasonOptions().length > 0 || reasonCreate().canCreate) {
                 <div class="col-span-12 md:col-span-6">
                     <label for="appointmentReason" class="block text-sm font-medium text-muted-color mb-2">Randevu nedeni</label>
-                    <p-select inputId="appointmentReason" [formControl]="reasonControl()" [options]="reasonOptions()" optionLabel="label" optionValue="value" placeholder="Neden seçin (isteğe bağlı)" [showClear]="true" class="w-full" (onChange)="onReasonChange($event.value)" />
+                    <p-select inputId="appointmentReason" [formControl]="reasonControl()" [options]="reasonOptions()" optionLabel="label" optionValue="value" placeholder="Neden seçin (isteğe bağlı)" [showClear]="true" [filter]="true" filterBy="label" filterPlaceholder="Ara…" [appInlineCreate]="reasonCreate()" class="w-full" (onChange)="onReasonChange($event.value)">
+                        <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                        <ng-template #empty><app-inline-create-option emptyText="Henüz randevu nedeni yok." /></ng-template>
+                    </p-select>
                     <small class="text-muted-color">Seçilen nedenin süresi randevu süresine önerilir.</small>
                 </div>
             }
@@ -49,6 +59,7 @@ export class AppointmentReasonVetFieldsComponent {
     private readonly reasonsService = inject(AppointmentReasonsService);
     private readonly visits = inject(VisitsService);
     private readonly auth = inject(AuthService);
+    private readonly ro = inject(TenantReadOnlyContextService);
 
     readonly reasons = signal<AppointmentReasonVm[]>([]);
     readonly vets = signal<VeterinarianVm[]>([]);
@@ -57,6 +68,26 @@ export class AppointmentReasonVetFieldsComponent {
             .filter((r) => r.isActive || r.id === this.keepReasonId())
             .map((r) => ({ value: r.id, label: `${r.name} (${r.defaultDurationMinutes} dk)${r.isActive ? '' : ' — pasif'}` }))
     );
+    /**
+     * Aranan neden yoksa adıyla eklenir ve seçilir (O1). Süre neden ekranının varsayılanıdır (30 dk); yerinde eklenen neden
+     * online randevuda görünmez, açmak neden ekranından bilinçli yapılır.
+     */
+    readonly reasonCreate = computed<InlineCreateConfig>(() => {
+        const clinicId = this.clinicId()?.trim() ?? '';
+
+        return {
+            canCreate: !!clinicId && this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) && !this.ro.mutationBlocked(),
+            create: (name) =>
+                this.reasonsService.create(clinicId, { name: name.trim(), defaultDurationMinutes: INLINE_REASON_DURATION_MINUTES, isOnlineBookable: false, sortOrder: null, veterinarianUserIds: [] }).pipe(
+                    map((reason) => {
+                        this.reasons.update((r) => [...r, reason]);
+                        this.durationSuggested.emit(reason.defaultDurationMinutes);
+
+                        return reason.id;
+                    })
+                )
+        };
+    });
     readonly vetOptions = computed(() => this.vets().map((v) => ({ value: v.userId, label: v.name })));
 
     constructor() {

@@ -56,6 +56,7 @@ import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
 import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/patient/services/recently-viewed.service';
 import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
 import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-detail-row-link.component';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 /** Kayıt metin bölümleri sırası; vital satırı `findings` ile `assessment` arasına girer. */
 const RECORD_TEXT_SECTIONS: readonly {
@@ -329,7 +330,7 @@ const RECORD_TEXT_SECTIONS: readonly {
         }
     `
 })
-export class ExaminationDetailPageComponent implements OnInit {
+export class ExaminationDetailPageComponent implements OnInit, HasUnsavedChanges {
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     private readonly examinationsService = inject(ExaminationsService);
@@ -506,6 +507,11 @@ export class ExaminationDetailPageComponent implements OnInit {
             detail: 'Muayene kesinleştirildi.'
         });
         this.examinationsService.getExaminationById(result.id).subscribe({ next: (x) => this.exam.set(x), error: () => undefined });
+    }
+
+    /** İşlem yan panelindeki form kirliyse sayfadan çıkışta sorulur (O2). */
+    hasUnsavedChanges(): boolean {
+        return this.procedures()?.hasUnsavedChanges() ?? false;
     }
 
     ngOnInit(): void {

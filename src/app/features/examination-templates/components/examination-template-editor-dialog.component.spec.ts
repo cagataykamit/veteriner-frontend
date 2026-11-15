@@ -2,6 +2,7 @@ import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { ExaminationTemplateDto } from '@/app/entities/examination-template/models/examination-template.model';
 import { ExaminationTemplateError, ExaminationTemplatesService } from '@/app/entities/examination-template/services/examination-templates.service';
 import type { ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
@@ -39,7 +40,8 @@ describe('ExaminationTemplateEditorDialogComponent', () => {
             providers: [
                 { provide: ExaminationTemplatesService, useValue: templates },
                 { provide: ProductService, useValue: products },
-                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } }
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
         }).compileComponents();
         fixture = TestBed.createComponent(ExaminationTemplateEditorDialogComponent);

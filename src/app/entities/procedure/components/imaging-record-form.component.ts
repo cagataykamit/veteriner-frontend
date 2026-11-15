@@ -243,6 +243,7 @@ export class ImagingRecordFormComponent implements OnInit, HasUnsavedChanges {
                 return;
             }
 
+            this.form.markAsPristine();
             this.saved.emit(id);
         } finally {
             this.submitting.set(false);
@@ -259,6 +260,7 @@ export class ImagingRecordFormComponent implements OnInit, HasUnsavedChanges {
         }
 
         this.submitError.set(null);
+        this.form.markAsPristine();
         this.saved.emit(id);
     }
 

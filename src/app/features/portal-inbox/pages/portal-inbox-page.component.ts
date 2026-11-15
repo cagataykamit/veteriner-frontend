@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TextareaModule } from 'primeng/textarea';
@@ -49,7 +50,7 @@ type ClosingStatus = Extract<DataRequestStaffStatus, 'Completed' | 'Rejected'>;
         FormsModule,
         RouterLink,
         ButtonModule,
-        DialogModule,
+        DialogModule, DialogFocusReturnDirective,
         SelectModule,
         TableModule,
         TextareaModule,

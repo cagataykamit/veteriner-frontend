@@ -5,6 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { catchError, debounceTime, of, Subject, switchMap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
@@ -70,7 +71,7 @@ const KIND_TONE: Readonly<Record<RecentlyViewedKind, string>> = {
 @Component({
     selector: 'app-global-search',
     standalone: true,
-    imports: [CommonModule, RouterModule, ButtonModule, DialogModule, IconFieldModule, InputIconModule, InputTextModule],
+    imports: [CommonModule, RouterModule, ButtonModule, DialogModule, DialogFocusReturnDirective, IconFieldModule, InputIconModule, InputTextModule],
     host: { '(document:keydown)': 'onDocumentKeydown($event)' },
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `

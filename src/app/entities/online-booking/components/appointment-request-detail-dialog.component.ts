@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { RadioButtonModule } from 'primeng/radiobutton';
@@ -53,7 +54,7 @@ type Mode = 'view' | 'approve' | 'reject';
         NgTemplateOutlet,
         RouterLink,
         ButtonModule,
-        DialogModule,
+        DialogModule, DialogFocusReturnDirective,
         InputTextModule,
         MessageModule,
         RadioButtonModule,

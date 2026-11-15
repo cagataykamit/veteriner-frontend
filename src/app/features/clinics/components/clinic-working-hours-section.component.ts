@@ -52,20 +52,20 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                 <label class="text-sm m-0 cursor-pointer" [for]="'whClosed' + idx">Kapalı</label>
                             </div>
                             <div class="col-span-6 md:col-span-2">
-                                <label class="block text-xs text-muted-color mb-1">Açılış</label>
-                                <app-date-input type="time" formControlName="opensAt" />
+                                <label class="block text-xs text-muted-color mb-1" [for]="'whOpens' + idx"><span class="sr-only">{{ row.get('dayLabel')?.value }} </span>Açılış</label>
+                                <app-date-input type="time" formControlName="opensAt" [inputId]="'whOpens' + idx" />
                             </div>
                             <div class="col-span-6 md:col-span-2">
-                                <label class="block text-xs text-muted-color mb-1">Kapanış</label>
-                                <app-date-input type="time" formControlName="closesAt" />
+                                <label class="block text-xs text-muted-color mb-1" [for]="'whCloses' + idx"><span class="sr-only">{{ row.get('dayLabel')?.value }} </span>Kapanış</label>
+                                <app-date-input type="time" formControlName="closesAt" [inputId]="'whCloses' + idx" />
                             </div>
                             <div class="col-span-6 md:col-span-2">
-                                <label class="block text-xs text-muted-color mb-1">Mola başlangıç</label>
-                                <app-date-input type="time" formControlName="breakStartsAt" />
+                                <label class="block text-xs text-muted-color mb-1" [for]="'whBreakStart' + idx"><span class="sr-only">{{ row.get('dayLabel')?.value }} </span>Mola başlangıç</label>
+                                <app-date-input type="time" formControlName="breakStartsAt" [inputId]="'whBreakStart' + idx" />
                             </div>
                             <div class="col-span-6 md:col-span-2">
-                                <label class="block text-xs text-muted-color mb-1">Mola bitiş</label>
-                                <app-date-input type="time" formControlName="breakEndsAt" />
+                                <label class="block text-xs text-muted-color mb-1" [for]="'whBreakEnd' + idx"><span class="sr-only">{{ row.get('dayLabel')?.value }} </span>Mola bitiş</label>
+                                <app-date-input type="time" formControlName="breakEndsAt" [inputId]="'whBreakEnd' + idx" />
                             </div>
                         </div>
                     }

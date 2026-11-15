@@ -6,6 +6,8 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { catchError, of, startWith, switchMap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { SelectModule } from 'primeng/select';
 import { StockBatchFieldsComponent } from '@/app/features/inventory/components/stock-batch-fields/stock-batch-fields.component';
 import { syncStockBatchGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
@@ -17,18 +19,24 @@ import { ProductService } from '@/app/entities/inventory/services/product.servic
 import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { PRODUCTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { QuickProductDialogComponent, type QuickProductCreated } from '@/app/entities/inventory/components/quick-product-dialog.component';
+import { type InlineCreateConfig, InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { DATETIME_LOCAL_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 type SelectOption = { label: string; value: string };
 
 @Component({
     selector: 'app-stock-movement-create-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent, StockBatchFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, SelectModule, DateInputComponent, StockBatchFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Stok hareketi ekle" [modal]="true" [visible]="visible()" (visibleChange)="onVisibleChange($event)" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
+        <p-dialog [appUnsavedChanges]="form.dirty" header="Stok hareketi ekle" [modal]="true" [visible]="visible()" (visibleChange)="onVisibleChange($event)" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
             @if (ro.mutationBlocked()) {
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; stok hareketi oluşturulamaz.</p>
             }
@@ -47,7 +55,8 @@ type SelectOption = { label: string; value: string };
                 <p class="text-muted-color text-sm mt-0 mb-4" role="alert">{{ productsLoadError() }}</p>
             }
 
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+                <app-form-error-summary />
                 <div>
                     <label for="smcClinic" class="block text-sm font-medium text-muted-color mb-2">Klinik *</label>
                     <p-select
@@ -84,7 +93,10 @@ type SelectOption = { label: string; value: string };
                             [showClear]="true"
                             class="w-full"
                             [loading]="productsLoading()"
-                        />
+                            [appInlineCreate]="productCreate()"
+                        >
+                            <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                        </p-select>
                         @if (form.controls.productId.invalid && form.controls.productId.touched) {
                             <small class="text-danger">Ürün seçimi zorunludur.</small>
                         }
@@ -154,6 +166,7 @@ type SelectOption = { label: string; value: string };
                 </div>
             </form>
         </p-dialog>
+        <app-quick-product-dialog [(visible)]="quickProductOpen" [initialName]="quickProductName()" [kinds]="stockKinds" (productCreated)="onQuickProductCreated($event)" />
     `
 })
 export class StockMovementCreateDialogComponent {
@@ -189,6 +202,18 @@ export class StockMovementCreateDialogComponent {
 
     readonly clinicOptions = signal<SelectOption[]>([]);
     readonly productOptions = signal<SelectOption[]>([]);
+    readonly quickProductOpen = signal(false);
+    readonly quickProductName = signal('');
+    /** Stok hareketi yalnız stok takipli ürünle olur; hızlı üründe Hizmet sunulmaz. */
+    readonly stockKinds = ['Other', 'Medicine', 'Vaccine'] as const;
+    /** Aranan ürün yoksa küçük ürün diyaloğu açılır (O1). */
+    readonly productCreate = computed<InlineCreateConfig>(() => ({
+        canCreate: this.auth.hasOperationClaim(PRODUCTS_CREATE_CLAIM) && !this.ro.mutationBlocked(),
+        openDialog: (name) => {
+            this.quickProductName.set(name);
+            this.quickProductOpen.set(true);
+        }
+    }));
 
     readonly clinicsLoading = signal(false);
     readonly productsLoading = signal(false);
@@ -235,6 +260,12 @@ export class StockMovementCreateDialogComponent {
         if (!next) {
             this.submitError.set(null);
         }
+    }
+
+    onQuickProductCreated(product: QuickProductCreated): void {
+        this.productOptions.update((o) => [...o, { label: product.name, value: product.id }]);
+        this.form.controls.productId.setValue(product.id);
+        this.form.controls.productId.markAsDirty();
     }
 
     onCancel(): void {

@@ -5,6 +5,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { merge, startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { SelectModule } from 'primeng/select';
 import { AdministrationBatchFieldComponent } from '@/app/entities/administration/components/administration-batch-field.component';
 import { createAdministrationBatchPicker } from '@/app/entities/administration/utils/administration-batch-picker';
@@ -16,11 +18,16 @@ import type { AdministrationCopyDraft } from '@/app/entities/administration/util
 import { CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, chargeNumberValidator } from '@/app/entities/charge/utils/charge-amount.utils';
 import type { ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
+import { STOCKED_PRODUCT_INLINE_CREATE } from '@/app/entities/inventory/components/quick-product-dialog.component';
+import { InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
 import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 const NOTES_MAX_LENGTH = 2000;
 
@@ -33,10 +40,10 @@ const NOTES_MAX_LENGTH = 2000;
 @Component({
     selector: 'app-administration-create-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, SelectModule, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog [header]="(prefill() ? 'Tekrar uygula' : 'Uygulama kaydet') + (lateEntry() ? ' (sonradan ekleme)' : '')" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
+        <p-dialog [appUnsavedChanges]="form.dirty" [header]="(prefill() ? 'Tekrar uygula' : 'Uygulama kaydet') + (lateEntry() ? ' (sonradan ekleme)' : '')" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
             @if (petName()) {
                 <p class="mt-0 mb-1 font-medium">{{ petName() }}</p>
             }
@@ -55,7 +62,8 @@ const NOTES_MAX_LENGTH = 2000;
                     }
                 </p>
             }
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" id="administration-create-form">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()" id="administration-create-form">
+                <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12">
                         <label for="ad-product" class="block text-sm font-medium text-muted-color mb-2">Ürün *</label>
@@ -70,9 +78,12 @@ const NOTES_MAX_LENGTH = 2000;
                             filterPlaceholder="Ara…"
                             filterBy="label"
                             [loading]="loadingProducts()"
+                            [appInlineCreate]="stockedProductOnly"
                             appendTo="body"
                             class="w-full"
-                        />
+                        >
+                            <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                        </p-select>
                         @if (form.controls.productId.invalid && form.controls.productId.touched) {
                             <small class="text-danger">Ürün seçimi zorunludur.</small>
                         }
@@ -129,13 +140,14 @@ const NOTES_MAX_LENGTH = 2000;
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
-                <button pButton type="submit" form="administration-create-form" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet ve stoktan düş</button>
+                <button pButton type="submit" form="administration-create-form" [disabled]="submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet ve stoktan düş</button>
             </ng-template>
         </p-dialog>
     `
 })
 export class AdministrationCreateDialogComponent {
     readonly visible = model(false);
+    readonly stockedProductOnly = STOCKED_PRODUCT_INLINE_CREATE;
     readonly petId = input.required<string>();
     readonly petName = input<string | null>(null);
     readonly examinationId = input<string | null>(null);

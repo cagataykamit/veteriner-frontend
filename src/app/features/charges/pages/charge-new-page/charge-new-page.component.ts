@@ -26,11 +26,15 @@ import { formatUtcIsoAsLocalDateTimeDisplay, formatUtcIsoAsLocalTimeDisplay, toI
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
 
 @Component({
     selector: 'app-charge-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent, ChargeTaxFieldsComponent, FocusFirstFieldDirective],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent, ChargeTaxFieldsComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/charges" categoryLinkLabel="Ücret listesine dön" title="Yeni ücret" description="Müşteriye ücret satırı ekleyin. Ücret ödeme sayılmaz." />
@@ -42,15 +46,12 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
             @if (loadError()) {
                 <p class="text-danger mt-0 mb-4" role="alert">{{ loadError() }}</p>
             }
-            <form appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit(canCollectPayment)">
+            <form appFormSubmit #formSubmit="appFormSubmit" appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit(canCollectPayment)">
+                <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="chargeClient" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
+                    <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="chargeClient" [error]="form.controls.clientId.invalid && form.controls.clientId.touched ? 'Listeden bir müşteri seçin.' : null" [required]="true">
                         <app-client-search inputId="chargeClient" formControlName="clientId" />
-                        @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-danger">Listeden bir müşteri seçin.</small>
-                        }
-                    </div>
+                    </app-form-field>
                     <div class="col-span-12 md:col-span-6">
                         <label for="chargePet" class="block text-sm font-medium text-muted-color mb-2">Hasta</label>
                         <app-pet-search inputId="chargePet" formControlName="petId" [clientId]="form.controls.clientId.value" />
@@ -128,10 +129,10 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
                     <button
                         pButton
                         type="submit"
-                        [disabled]="form.invalid || amountPreview() === null || submitting() || ro.mutationBlocked()"
+                        [disabled]="submitting() || ro.mutationBlocked()"
                     ><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : (canCollectPayment ? 'pi pi-wallet' : 'pi pi-check')"></i>{{ canCollectPayment ? 'Kaydet ve ödemeyi şimdi al' : copy.buttonSave }}</button>
                     @if (canCollectPayment) {
-                        <button pButton type="button" severity="secondary" (click)="onSubmit(false)" [disabled]="form.invalid || amountPreview() === null || submitting() || ro.mutationBlocked()"><i class="p-button-icon pi pi-check"></i>{{ copy.buttonSave }}</button>
+                        <button pButton type="button" severity="secondary" (click)="formSubmit.revealIssues() || onSubmit(false)" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon pi pi-check"></i>{{ copy.buttonSave }}</button>
                     }
                     <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
@@ -139,7 +140,7 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
         </div>
     `
 })
-export class ChargeNewPageComponent implements OnInit {
+export class ChargeNewPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly descriptionMaxLength = CHARGE_DESCRIPTION_MAX_LENGTH;
     protected readonly quantityMax = CHARGE_QUANTITY_MAX;
@@ -307,6 +308,10 @@ export class ChargeNewPageComponent implements OnInit {
         this.form.controls.examinationId.setValue(examinationId, { emitEvent: false });
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     goList(): void {
         const clientId = trimClientIdControlValue(this.form.controls.clientId.value);
 
@@ -350,6 +355,8 @@ export class ChargeNewPageComponent implements OnInit {
                 next: (r) => {
                     // Başarıda düğme kilitli kalır (sayfadan çıkılır); aynı requestId ile tekrar kayıt zaten oluşmaz.
                     const { id: chargeId, clientId, visitId, examinationId } = r.charge;
+
+                    this.form.markAsPristine();
 
                     if (thenCollectPayment) {
                         void this.router.navigate(['/panel/payments/new'], {

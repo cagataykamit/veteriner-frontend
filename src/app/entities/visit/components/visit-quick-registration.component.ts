@@ -1,7 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, input, OnInit, output, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, input, OnInit, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { tap } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { SPECIES_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -15,6 +19,9 @@ import { createPetUpsertFormGroup, getPetUpsertFormValue } from '@/app/entities/
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { parsePetCreateHttpError } from '@/app/entities/pet/utils/pet-create-validation-parse.utils';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
+import { createSpeciesByName } from '@/app/entities/species/utils/species-inline-create.utils';
+import { type InlineCreateConfig, InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
+import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import type { PetSuggestion } from '@/app/entities/visit/models/visit-vm.model';
 import { splitSearchTermForRegistration } from '@/app/entities/visit/utils/visit-registration.utils';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
@@ -38,7 +45,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
 @Component({
     selector: 'app-visit-quick-registration',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppTrialLimitNoticeComponent, PhoneFormatDirective],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppTrialLimitNoticeComponent, PhoneFormatDirective, InlineCreateDirective, InlineCreateOptionComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4" aria-label="Hızlı kayıt" (keydown.enter)="onEnter($event)">
@@ -85,8 +92,11 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
                         filterBy="label"
                         class="w-full"
                         [loading]="loadingSpecies()"
+                        [appInlineCreate]="speciesCreate()"
                         appendTo="body"
-                    />
+                    >
+                        <ng-template #emptyfilter><app-inline-create-option /></ng-template>
+                    </p-select>
                     @if (petForm.controls.speciesId.invalid && petForm.controls.speciesId.touched) {
                         <small class="text-danger">Tür seçimi zorunludur.</small>
                     }
@@ -125,6 +135,8 @@ export class VisitQuickRegistrationComponent implements OnInit {
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
     private readonly speciesService = inject(SpeciesService);
+    private readonly auth = inject(AuthService);
+    private readonly ro = inject(TenantReadOnlyContextService);
 
     readonly clientForm = createClientUpsertFormGroup(this.fb);
     readonly petForm = createPetUpsertFormGroup(this.fb);
@@ -138,6 +150,11 @@ export class VisitQuickRegistrationComponent implements OnInit {
     readonly duplicateClient = signal(false);
     readonly apiClientErrors = signal<ClientCreateFieldErrors>({});
     readonly speciesOptions = signal<SelectOption[]>([]);
+    /** Aranan tür yoksa adıyla eklenir ve seçilir (O1). */
+    readonly speciesCreate = computed<InlineCreateConfig>(() => ({
+        canCreate: this.auth.hasOperationClaim(SPECIES_CREATE_CLAIM) && !this.ro.mutationBlocked(),
+        create: (name) => createSpeciesByName(this.speciesService, name).pipe(tap((id) => this.speciesOptions.update((o) => [...o, { value: id, label: name.trim() }])))
+    }));
     readonly loadingSpecies = signal(false);
 
     ngOnInit(): void {

@@ -44,6 +44,10 @@ import { FormsModule } from '@angular/forms';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
 
 /** Açık tutar bu arada değişti: güncel bakiye yeniden okunur, aynı `requestId` ile tekrar denemek güvenlidir. */
 const STALE_BALANCE_CODES = new Set(['PaymentAllocations.ExceedsOutstanding', 'Payments.ConcurrencyConflict']);
@@ -56,7 +60,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
 @Component({
     selector: 'app-payment-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ButtonModule, CheckboxModule, SelectModule, TableModule, AppPageHeaderComponent, ClientSearchComponent, DateInputComponent, TrDateTimePipe, CashRegisterSelectComponent, FocusFirstFieldDirective],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ButtonModule, CheckboxModule, SelectModule, TableModule, AppPageHeaderComponent, ClientSearchComponent, DateInputComponent, TrDateTimePipe, CashRegisterSelectComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Yeni ödeme" description="Müşterinin açık ücretlerinden hangilerine ne kadar ödeme alındığını girin." />
@@ -66,17 +70,12 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; kayıt oluşturulamaz.</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
-            <form appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form appFormSubmit appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit()">
+                <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
+                    <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="clientId" [error]="apiFieldErrors().clientId ? apiFieldErrors().clientId : form.controls.clientId.invalid && form.controls.clientId.touched ? 'Zorunlu alan.' : null" [required]="true">
                         <app-client-search inputId="clientId" formControlName="clientId" />
-                        @if (apiFieldErrors().clientId) {
-                            <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
-                        } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-danger">Zorunlu alan.</small>
-                        }
-                    </div>
+                    </app-form-field>
 
                     @if (clientSelected() && !balanceLoading() && !balanceError() && creditBalance() > 0) {
                         <div class="col-span-12" data-testid="payment-credit">
@@ -203,34 +202,16 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                             <small class="text-muted-color block">{{ prepayment() ? 'Tamamı müşteri kredisine yazılır; yalnız ₺.' : 'Boş bırakılırsa seçilen ücretlerin toplamı alınır; yalnız ₺.' }}</small>
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-6 lg:col-span-3">
-                        <label for="method" class="block text-sm font-medium text-muted-color mb-2">Yöntem *</label>
+                    <app-form-field class="col-span-12 md:col-span-6 lg:col-span-3" label="Yöntem" fieldId="method" [error]="apiFieldErrors().method ? apiFieldErrors().method : null" [required]="true">
                         <p-select inputId="method" [options]="methodOptions" formControlName="method" optionLabel="label" optionValue="value" class="w-full" />
-                        @if (apiFieldErrors().method) {
-                            <small class="text-danger">{{ apiFieldErrors().method }}</small>
-                        }
-                    </div>
+                    </app-form-field>
                     <app-cash-register-select fieldClass="col-span-12 md:col-span-6 lg:col-span-3" [clinicId]="activeClinicId" [method]="methodValue()" [(value)]="cashRegisterId" [disabled]="busy()" />
-                    <div class="col-span-12 md:col-span-6 lg:col-span-3">
-                        <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati *</label>
+                    <app-form-field class="col-span-12 md:col-span-6 lg:col-span-3" label="Ödeme tarihi / saati" fieldId="paidAtLocal" [error]="form.controls.paidAtLocal.hasError('dateYearInvalid') && form.controls.paidAtLocal.touched ? 'Yıl 4 haneli olmalıdır.' : form.controls.paidAtLocal.hasError('paymentDateTooFarPast') && form.controls.paidAtLocal.touched ? paymentDateTooFarPastMessage : apiFieldErrors().paidAtLocal ? apiFieldErrors().paidAtLocal : form.controls.paidAtLocal.hasError('required') && form.controls.paidAtLocal.touched ? 'Zorunlu alan.' : null" [required]="true">
                         <app-date-input inputId="paidAtLocal" type="datetime-local" formControlName="paidAtLocal" [min]="paymentDateMinAllowed" limit="past" />
-                        @if (form.controls.paidAtLocal.hasError('dateYearInvalid') && form.controls.paidAtLocal.touched) {
-                            <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
-                        } @else if (form.controls.paidAtLocal.hasError('paymentDateTooFarPast') && form.controls.paidAtLocal.touched) {
-                            <small class="text-danger block">{{ paymentDateTooFarPastMessage }}</small>
-                        } @else if (apiFieldErrors().paidAtLocal) {
-                            <small class="text-danger block">{{ apiFieldErrors().paidAtLocal }}</small>
-                        } @else if (form.controls.paidAtLocal.hasError('required') && form.controls.paidAtLocal.touched) {
-                            <small class="text-danger block">Zorunlu alan.</small>
-                        }
-                    </div>
-                    <div class="col-span-12">
-                        <label for="note" class="block text-sm font-medium text-muted-color mb-2">Not</label>
+                    </app-form-field>
+                    <app-form-field class="col-span-12" label="Not" fieldId="note" [error]="apiFieldErrors().note ? apiFieldErrors().note : null">
                         <textarea id="note" rows="3" class="w-full p-inputtext p-component" formControlName="note"></textarea>
-                        @if (apiFieldErrors().note) {
-                            <small class="text-danger">{{ apiFieldErrors().note }}</small>
-                        }
-                    </div>
+                    </app-form-field>
                 </div>
 
                 @if (submitError()) {
@@ -245,14 +226,14 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <button pButton type="submit" [disabled]="!canSubmit() || busy() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                    <button pButton type="submit" [disabled]="busy() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                     <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="busy()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>
         </div>
     `
 })
-export class PaymentNewPageComponent implements OnInit {
+export class PaymentNewPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly paymentDateTooFarPastMessage = PAYMENT_DATE_TOO_FAR_PAST_MESSAGE;
 
@@ -295,6 +276,8 @@ export class PaymentNewPageComponent implements OnInit {
     /** Aktif kliniğin açık ücretleri (başka klinik ücretine tahsis edilemez). */
     readonly openCharges = signal<ClientOpenChargeVm[]>([]);
     private readonly amounts = signal<Record<string, number | null>>({});
+    /** Tutar satırları, alınan tutar ve avans seçimi formda değil; kullanıcı değiştirdiyse kaydedilmemiş sayılır (bağlamdan dolan tutar sayılmaz). */
+    private allocationEdited = false;
 
     readonly allocations = computed(() => buildAllocations(this.openCharges(), this.amounts()));
     readonly total = computed(() => allocationTotal(this.allocations()));
@@ -374,6 +357,10 @@ export class PaymentNewPageComponent implements OnInit {
         this.applyRouteContext();
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty || this.allocationEdited;
+    }
+
     goList(): void {
         void this.router.navigate(['/panel/payments']);
     }
@@ -383,14 +370,17 @@ export class PaymentNewPageComponent implements OnInit {
     }
 
     onAmountInput(row: ClientOpenChargeVm, raw: string): void {
+        this.allocationEdited = true;
         this.amounts.update((a) => ({ ...a, [row.chargeId]: parseDecimalFormInput(raw) }));
     }
 
     fillAllOutstanding(): void {
+        this.allocationEdited = true;
         this.amounts.set(Object.fromEntries(this.openCharges().map((c) => [c.chargeId, c.outstandingAmount])));
     }
 
     fillOutstanding(row: ClientOpenChargeVm): void {
+        this.allocationEdited = true;
         this.amounts.update((a) => ({ ...a, [row.chargeId]: row.outstandingAmount }));
     }
 
@@ -399,10 +389,12 @@ export class PaymentNewPageComponent implements OnInit {
     }
 
     onReceivedInput(raw: string): void {
+        this.allocationEdited = true;
         this.receivedInput.set(parseDecimalFormInput(raw));
     }
 
     setPrepayment(on: boolean): void {
+        this.allocationEdited = true;
         this.prepayment.set(on);
         this.receivedInput.set(null);
         this.submitError.set(null);
@@ -422,6 +414,7 @@ export class PaymentNewPageComponent implements OnInit {
         this.clientCreditsService.applyCredit(clientId, this.creditRequestId, this.allocations()).subscribe({
             next: () => {
                 // Başarıda düğme kilitli kalır (sayfadan çıkılır); aynı requestId ile tekrar mahsup zaten yazılmaz.
+                this.markSaved();
                 void this.router.navigate(['/panel/clients', clientId], { queryParams: { creditApplied: '1' } });
             },
             error: (e: unknown) => {
@@ -506,6 +499,8 @@ export class PaymentNewPageComponent implements OnInit {
         this.paymentsService.createPayment(payload).subscribe({
             next: ({ id }) => {
                 // Başarıda düğme kilitli kalır (sayfadan çıkılır); aynı requestId ile tekrar kayıt zaten oluşmaz.
+                this.markSaved();
+
                 if (!this.eDocumentAvailable() || !this.issueEDocument()) {
                     void this.router.navigate(['/panel/payments', id], { queryParams: { saved: '1' } });
 
@@ -535,6 +530,11 @@ export class PaymentNewPageComponent implements OnInit {
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');
             }
         });
+    }
+
+    private markSaved(): void {
+        this.form.markAsPristine();
+        this.allocationEdited = false;
     }
 
     /** Entegratör bağlıysa ve belge kesme izni varsa seçenek görünür; varsayılan klinik ayarından. Hata olursa seçenek gizli kalır. */

@@ -6,6 +6,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { CareInstructionsSectionComponent } from '@/app/entities/care-instruction/components/care-instructions-section.component';
 import type { HospitalizationDetailVm } from '@/app/entities/hospitalization/models/hospitalization-vm.model';
 import { HospitalizationsService } from '@/app/entities/hospitalization/services/hospitalizations.service';
@@ -27,6 +29,8 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { HOSPITALIZATIONS_DISCHARGE_CLAIM, HOSPITALIZATIONS_UPDATE_CLAIM, PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 /** Düzenleme/oluşturma sonrası dönülen sayfada gösterilen kısa onay (query `saved`). */
 const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', created: 'Kayıt oluşturuldu.' };
@@ -39,7 +43,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         RouterLink,
         ReactiveFormsModule,
         ButtonModule,
-        DialogModule,
+        DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective,
         AppPageHeaderComponent,
         AppDetailIdentityCardComponent,
         AppDetailActionBarComponent,
@@ -52,7 +56,9 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         DateInputComponent,
         CareInstructionsSectionComponent,
         ReasonConfirmDialogComponent,
-        TrDateTimePipe
+        TrDateTimePipe,
+        FormSubmitDirective,
+        FormErrorSummaryComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -191,9 +197,10 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
             (confirmed)="reload()"
         />
 
-        <p-dialog header="Taburcu işlemi" [modal]="true" [(visible)]="dischargeDialogVisible" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [focusOnShow]="false" (onHide)="onDischargeDialogHide()">
+        <p-dialog [appUnsavedChanges]="dischargeForm.dirty" header="Taburcu işlemi" [modal]="true" [(visible)]="dischargeDialogVisible" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [focusOnShow]="false" (onHide)="onDischargeDialogHide()">
             <p class="text-sm text-muted-color mt-0 mb-4">Taburcu tarihi ve saati zorunludur. İşlem sonrası kayıt kapatılır.</p>
-            <form [formGroup]="dischargeForm" (ngSubmit)="onDischargeSubmit()">
+            <form appFormSubmit [formGroup]="dischargeForm" (ngSubmit)="onDischargeSubmit()">
+                <app-form-error-summary />
                 <div class="flex flex-col gap-4">
                     <div>
                         <label for="dischargedAtLocal" class="block text-sm font-medium text-muted-color mb-2">Taburcu tarihi / saati *</label>

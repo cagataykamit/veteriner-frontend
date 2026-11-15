@@ -7,6 +7,8 @@ import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocompl
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { SelectModule } from 'primeng/select';
 import { catchError, forkJoin, map, Observable, of, Subject, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -22,6 +24,8 @@ import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { CLIENT_PHONE_DISPLAY_PLACEHOLDER, formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 const PET_SEARCH_PAGE_SIZE = 10;
 
@@ -41,14 +45,15 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
 @Component({
     selector: 'app-visit-arrival-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, AutoCompleteModule, CheckboxModule, VisitQuickRegistrationComponent, VisitPreparationFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, SelectModule, AutoCompleteModule, CheckboxModule, VisitQuickRegistrationComponent, VisitPreparationFieldsComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog [header]="appointment() ? 'Hasta geldi' : 'Randevusuz geliş'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
+        <p-dialog [appUnsavedChanges]="form.dirty" [header]="appointment() ? 'Hasta geldi' : 'Randevusuz geliş'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
             @if (loadError()) {
                 <p class="text-danger mt-0 mb-3" role="alert">{{ loadError() }}</p>
             }
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" id="visit-arrival-form">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()" id="visit-arrival-form">
+                <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
                     @if (appointment(); as appt) {
                         <div class="col-span-12">
@@ -132,7 +137,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
-                <button pButton type="submit" form="visit-arrival-form" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ appointment() ? 'Geldi olarak kaydet' : 'Kaydet' }}</button>
+                <button pButton type="submit" form="visit-arrival-form" [disabled]="submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ appointment() ? 'Geldi olarak kaydet' : 'Kaydet' }}</button>
             </ng-template>
         </p-dialog>
     `

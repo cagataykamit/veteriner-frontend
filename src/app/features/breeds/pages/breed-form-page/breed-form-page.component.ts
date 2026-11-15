@@ -21,11 +21,14 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 @Component({
     selector: 'app-breed-form-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, QuickSpeciesDialogComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, QuickSpeciesDialogComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (editing() && loading()) {
@@ -41,7 +44,8 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                 @if (ro.mutationBlocked()) {
                     <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; ırk kaydı güncellenemez veya oluşturulamaz.</p>
                 }
-                <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()">
+                    <app-form-error-summary />
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
                             <label for="speciesId" class="block text-sm font-medium text-muted-color mb-2">Tür *</label>
@@ -92,7 +96,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                         <button
                             pButton
                             type="submit"
-                            [disabled]="form.invalid || submitting() || loading() || loadingSpecies() || ro.mutationBlocked() || submitting() || loading()"
+                            [disabled]="submitting() || loading() || loadingSpecies() || ro.mutationBlocked() || submitting() || loading()"
                         ><i class="p-button-icon" [class]="submitting() || loading() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                         <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
@@ -103,7 +107,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         }
     `
 })
-export class BreedFormPageComponent implements OnInit {
+export class BreedFormPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     readonly breedsRoute = BREEDS_ROUTE;
     private readonly fb = inject(FormBuilder);
@@ -154,6 +158,10 @@ export class BreedFormPageComponent implements OnInit {
         this.editing.set(true);
         this.currentId.set(id);
         this.reloadBreedRecord();
+    }
+
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
     }
 
     reloadBreedRecord(): void {
@@ -220,6 +228,7 @@ export class BreedFormPageComponent implements OnInit {
             this.breedsService.updateBreed(this.currentId()!, payload).subscribe({
                 next: () => {
                     this.submitting.set(false);
+                    this.form.markAsPristine();
                     void this.router.navigate([BREEDS_ROUTE]);
                 },
                 error: (e: unknown) => this.onSubmitError(e)
@@ -236,6 +245,7 @@ export class BreedFormPageComponent implements OnInit {
         this.breedsService.createBreed(createPayload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate([BREEDS_ROUTE, id, 'edit'], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => this.onSubmitError(e)

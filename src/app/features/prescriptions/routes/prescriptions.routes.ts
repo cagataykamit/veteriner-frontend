@@ -11,6 +11,7 @@ import { PrescriptionEditPageComponent } from '@/app/features/prescriptions/page
 import { PrescriptionNewPageComponent } from '@/app/features/prescriptions/pages/prescription-new-page/prescription-new-page.component';
 import { PrescriptionsListPageComponent } from '@/app/features/prescriptions/pages/prescriptions-list-page/prescriptions-list-page.component';
 import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
+import { unsavedChangesGuard } from '@/app/shared/ui/unsaved-changes/unsaved-changes.guard';
 
 export default [
     {
@@ -31,7 +32,8 @@ export default [
 
             return auth.hasOperationClaim(PRESCRIPTIONS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: PrescriptionNewPageComponent
+        component: PrescriptionNewPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id/edit',
@@ -41,7 +43,8 @@ export default [
 
             return auth.hasOperationClaim(PRESCRIPTIONS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: PrescriptionEditPageComponent
+        component: PrescriptionEditPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id',
