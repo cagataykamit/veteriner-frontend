@@ -132,7 +132,19 @@ describe('AppTopbar açılır paneller (aynı anda tek panel)', () => {
 
         expect(panel.querySelector('[data-testid="user-panel-name"]')!.textContent).toContain('Dr. Ayşe Yılmaz');
         expect(Array.from(panel.querySelectorAll('.layout-topbar-panel-group')).map((g) => g.textContent!.trim())).toEqual(['Hesap', 'Oturum']);
-        expect(Array.from(panel.querySelectorAll('.layout-topbar-panel-row')).map((r) => r.textContent!.trim())).toEqual(['Hesabım', 'Çıkış yap', 'Tüm oturumları kapat']);
+        expect(Array.from(panel.querySelectorAll('.layout-topbar-panel-row')).map((r) => r.textContent!.trim())).toEqual(['Hesabım', 'Kısayollar', 'Çıkış yap', 'Tüm oturumları kapat']);
+    });
+
+    it('"Kısayollar" klavye kısayolları listesini açar (O8)', async () => {
+        await click(triggers.user());
+        const row = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-testid="user-panel"] .layout-topbar-panel-row')).find((r) => r.textContent!.trim() === 'Kısayollar')!;
+
+        await click(row);
+
+        const list = document.querySelector('[data-testid="keyboard-shortcuts"]') as HTMLElement;
+
+        expect(list.textContent).toContain('Ctrl');
+        expect(list.textContent).toContain('Açık formu ya da diyaloğu kaydet');
     });
 
     it('Bugün’ü gören kullanıcıda "İlk hafta rehberi" rehberi yeniden açar ve Bugün’e gider', async () => {

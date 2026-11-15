@@ -16,6 +16,7 @@ import { resolveAccountAvatarInitials, resolveAccountDisplayName } from '@/app/f
 import { AppClinicSwitcher } from './app-clinic-switcher.component';
 import { AppGlobalSearch } from './app-global-search.component';
 import { AppNotificationBell } from './app-notification-bell.component';
+import { AppKeyboardShortcutsDialogComponent } from './app-keyboard-shortcuts-dialog.component';
 import { LayoutService } from '@/app/layout/service/layout.service';
 
 /**
@@ -25,7 +26,7 @@ import { LayoutService } from '@/app/layout/service/layout.service';
 @Component({
     selector: 'app-topbar',
     standalone: true,
-    imports: [RouterModule, CommonModule, AppClinicSwitcher, AppGlobalSearch, AppNotificationBell, PopoverModule, ButtonModule, ConfirmDialogModule],
+    imports: [RouterModule, CommonModule, AppClinicSwitcher, AppGlobalSearch, AppNotificationBell, PopoverModule, ButtonModule, ConfirmDialogModule, AppKeyboardShortcutsDialogComponent],
     providers: [ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: ` <div class="layout-topbar">
@@ -104,7 +105,8 @@ import { LayoutService } from '@/app/layout/service/layout.service';
                 </div>
             </div>
         </div>
-        <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />`
+        <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
+        <app-keyboard-shortcuts-dialog [(visible)]="shortcutsOpen" />`
 })
 export class AppTopbar implements OnInit {
     readonly logoAlt = 'Vetinity';
@@ -130,6 +132,7 @@ export class AppTopbar implements OnInit {
     readonly initials = resolveAccountAvatarInitials;
 
     userMenuGroups: { label: string; items: MenuItem[] }[] = [];
+    readonly shortcutsOpen = signal(false);
 
     ngOnInit(): void {
         const accountItems: MenuItem[] = [{ label: 'Hesabım', icon: 'pi pi-user', routerLink: ['/panel/settings/account'] }];
@@ -138,6 +141,8 @@ export class AppTopbar implements OnInit {
         if (firstWeekGuideRole((claim) => this.auth.hasOperationClaim(claim))) {
             accountItems.push({ label: 'İlk hafta rehberi', icon: 'pi pi-list-check', command: () => this.openFirstWeekGuide() });
         }
+
+        accountItems.push({ label: 'Kısayollar', icon: 'pi pi-th-large', command: () => this.shortcutsOpen.set(true) });
 
         this.userMenuGroups = [
             { label: 'Hesap', items: accountItems },
