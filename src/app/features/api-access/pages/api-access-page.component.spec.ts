@@ -76,7 +76,7 @@ describe('ApiAccessPageComponent', () => {
 
         expect(rows.length).toBe(2);
         expect(rows[0].textContent).toContain('vtk_testtest_••••••••');
-        expect(rows[0].textContent).toContain('Müşteriler, Hayvanlar');
+        expect(rows[0].textContent).toContain('Müşteriler, Hastalar');
         expect(rows[0].textContent).toContain('Etkin');
         expect(rows[0].textContent).toContain('Kullanılmadı');
         expect(rows[1].textContent).toContain('İptal edildi');

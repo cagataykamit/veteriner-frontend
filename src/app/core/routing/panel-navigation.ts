@@ -551,7 +551,7 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 icon: 'pi pi-fw pi-map-marker',
                 route: VET_FINDER_SETTINGS_ROUTE,
                 claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
-                description: 'Hayvan sahipleri kliniğinizi il, ilçe ve hizmete göre bulsun; listelenmeyi açıp kapatın.'
+                description: 'Hasta sahipleri kliniğinizi il, ilçe ve hizmete göre bulsun; listelenmeyi açıp kapatın.'
             },
             {
                 label: 'e-Belge',

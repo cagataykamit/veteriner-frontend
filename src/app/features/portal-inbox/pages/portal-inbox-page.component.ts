@@ -168,7 +168,7 @@ type ClosingStatus = Extract<DataRequestStaffStatus, 'Completed' | 'Rejected'>;
                         <label for="dataRequestNote" class="text-sm font-medium">Yanıt notu *</label>
                         <textarea id="dataRequestNote" pTextarea rows="5" [maxlength]="noteMax" [ngModel]="note()" (ngModelChange)="note.set($event)" class="w-full" data-testid="data-request-note"></textarea>
                         <small class="text-muted-color" data-testid="data-request-note-hint">
-                            Bu not hasta sahibine e-postayla gönderilir ve portalda talebin yanında görünür. Hayvan sağlığı bilgisi yazmayın; yapılan işlemi ya da ret gerekçesini kısaca açıklayın. ({{ note().length }}/{{ noteMax }})
+                            Bu not hasta sahibine e-postayla gönderilir ve portalda talebin yanında görünür. Hastanın sağlık bilgisini yazmayın; yapılan işlemi ya da ret gerekçesini kısaca açıklayın. ({{ note().length }}/{{ noteMax }})
                         </small>
                         @if (dialogError(); as message) {
                             <p class="text-danger m-0" role="alert">{{ message }}</p>

@@ -41,7 +41,7 @@ export const CLINIC_REMINDER_RULE_TEXT: Readonly<Record<ClinicReminderRuleType, 
         title: 'Kontrol muayenesi',
         before: 'Kontrol tarihinden',
         after: 'gün önce',
-        detail: 'Tedavide kontrol tarihi yazılıysa hasta sahibine gider. Hayvanın planlı randevusu varsa gitmez.'
+        detail: 'Tedavide kontrol tarihi yazılıysa hasta sahibine gider. Hastanın planlı randevusu varsa gitmez.'
     },
     Debt: {
         title: 'Ödenmemiş bakiye',

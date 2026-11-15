@@ -2,7 +2,7 @@ import type { ApiKeyScope } from '@/app/entities/api-key/models/api-key.model';
 
 const SCOPE_LABELS: Readonly<Record<ApiKeyScope, string>> = {
     'clients:read': 'Müşteriler',
-    'pets:read': 'Hayvanlar',
+    'pets:read': 'Hastalar',
     'appointments:read': 'Randevular',
     'vaccinations:read': 'Aşılar'
 };
