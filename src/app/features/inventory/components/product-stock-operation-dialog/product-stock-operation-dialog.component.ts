@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { SelectModule } from 'primeng/select';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TextareaModule } from 'primeng/textarea';
@@ -33,7 +34,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-product-stock-operation-dialog',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, DialogModule, SelectModule, SelectButtonModule, TextareaModule, StockBatchFieldsComponent],
+    imports: [ReactiveFormsModule, ButtonModule, DialogModule, DialogFocusReturnDirective, SelectModule, SelectButtonModule, TextareaModule, StockBatchFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Stok işlemi" [modal]="true" [visible]="stockOperationDialogOpen()" (visibleChange)="onStockOperationDialogVisibleChange($event)" [style]="{ width: 'min(36rem, 95vw)' }" [draggable]="false">

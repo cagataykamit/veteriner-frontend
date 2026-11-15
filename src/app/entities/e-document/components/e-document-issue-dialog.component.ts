@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import type { EDocumentDto, EDocumentPreviewDto, EDocumentPreviewGroupDto, EDocumentSource } from '@/app/entities/e-document/models/e-document.model';
 import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
@@ -31,7 +32,7 @@ interface GroupState {
     selector: 'app-e-document-issue-dialog',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [FormsModule, RouterLink, ButtonModule, DialogModule, InputTextModule, AppStatusTagComponent, AppLoadingStateComponent, MoneyPipe],
+    imports: [FormsModule, RouterLink, ButtonModule, DialogModule, DialogFocusReturnDirective, InputTextModule, AppStatusTagComponent, AppLoadingStateComponent, MoneyPipe],
     template: `
         <p-dialog [header]="header()" [modal]="true" [dismissableMask]="!busy() && !note.trim()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible" (onShow)="load()" (onHide)="onHide()">
             @if (loading()) {

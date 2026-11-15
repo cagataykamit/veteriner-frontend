@@ -7,6 +7,7 @@ import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocompl
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { SelectModule } from 'primeng/select';
 import { catchError, forkJoin, map, Observable, of, Subject, switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -41,7 +42,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
 @Component({
     selector: 'app-visit-arrival-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, AutoCompleteModule, CheckboxModule, VisitQuickRegistrationComponent, VisitPreparationFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogFocusReturnDirective, ButtonModule, SelectModule, AutoCompleteModule, CheckboxModule, VisitQuickRegistrationComponent, VisitPreparationFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="appointment() ? 'Hasta geldi' : 'Randevusuz geliş'" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">

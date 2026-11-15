@@ -6,6 +6,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { catchError, of, startWith, switchMap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { SelectModule } from 'primeng/select';
 import { StockBatchFieldsComponent } from '@/app/features/inventory/components/stock-batch-fields/stock-batch-fields.component';
 import { syncStockBatchGroup } from '@/app/features/inventory/forms/stock-batch-form.factory';
@@ -29,7 +30,7 @@ type SelectOption = { label: string; value: string };
 @Component({
     selector: 'app-stock-movement-create-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent, StockBatchFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogFocusReturnDirective, ButtonModule, SelectModule, DateInputComponent, StockBatchFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Stok hareketi ekle" [modal]="true" [visible]="visible()" (visibleChange)="onVisibleChange($event)" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">

@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import type { ClientDetailVm, ClientKvkkConsentUpdateResult } from '@/app/entities/client/models/client-vm.model';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
@@ -19,7 +20,7 @@ import { toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 @Component({
     selector: 'app-client-kvkk-consent-dialog',
     standalone: true,
-    imports: [ReactiveFormsModule, DialogModule, ButtonModule, SelectButtonModule],
+    imports: [ReactiveFormsModule, DialogModule, DialogFocusReturnDirective, ButtonModule, SelectButtonModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="KVKK rıza durumunu işaretle" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">

@@ -19,6 +19,7 @@ import { messageFromHttpError, trialLimitMessage } from '@/app/shared/utils/api-
 import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick-breed-dialog.component';
@@ -32,7 +33,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 @Component({
     selector: 'app-quick-pet-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, SelectModule, QuickBreedDialogComponent, AppTrialLimitNoticeComponent, InlineCreateDirective, InlineCreateOptionComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogFocusReturnDirective, ButtonModule, InputTextModule, SelectModule, QuickBreedDialogComponent, AppTrialLimitNoticeComponent, InlineCreateDirective, InlineCreateOptionComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Yeni hasta" [modal]="true" [dismissableMask]="form.pristine" [style]="{ width: 'min(560px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onDialogShow()">

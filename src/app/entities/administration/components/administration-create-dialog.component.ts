@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { merge, startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { SelectModule } from 'primeng/select';
 import { AdministrationBatchFieldComponent } from '@/app/entities/administration/components/administration-batch-field.component';
 import { createAdministrationBatchPicker } from '@/app/entities/administration/utils/administration-batch-picker';
@@ -36,7 +37,7 @@ const NOTES_MAX_LENGTH = 2000;
 @Component({
     selector: 'app-administration-create-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, SelectModule, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogFocusReturnDirective, ButtonModule, SelectModule, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="(prefill() ? 'Tekrar uygula' : 'Uygulama kaydet') + (lateEntry() ? ' (sonradan ekleme)' : '')" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">

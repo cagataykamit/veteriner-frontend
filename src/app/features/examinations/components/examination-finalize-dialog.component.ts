@@ -1,6 +1,7 @@
 import { Component, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import type { ExaminationFinalizeResultVm } from '@/app/entities/examination/models/examination-vm.model';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -13,7 +14,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-examination-finalize-dialog',
     standalone: true,
-    imports: [DialogModule, ButtonModule],
+    imports: [DialogModule, DialogFocusReturnDirective, ButtonModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Muayeneyi kesinleştir" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">

@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, effect, inject, input, model, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { TenantMembersService } from '@/app/features/tenant-members/services/tenant-members.service';
 import { memberRemoveMessage } from '@/app/features/tenant-members/utils/tenant-member-remove-mutation.utils';
 
@@ -14,7 +15,7 @@ const REMOVE_FAILED = 'Üye çıkarılamadı. Lütfen tekrar deneyin.';
 @Component({
     selector: 'app-tenant-member-remove-dialog',
     standalone: true,
-    imports: [ButtonModule, DialogModule],
+    imports: [ButtonModule, DialogModule, DialogFocusReturnDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Üyeyi kurumdan çıkar" [modal]="true" [draggable]="false" [dismissableMask]="!busy()" [closable]="!busy()" [style]="{ width: 'min(32rem, 95vw)' }" [(visible)]="visible">

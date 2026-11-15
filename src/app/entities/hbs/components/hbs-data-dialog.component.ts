@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, model, output, signal, untr
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { TooltipModule } from 'primeng/tooltip';
 import { HbsStatusBadgeComponent } from '@/app/entities/hbs/components/hbs-status-badge.component';
 import type { HbsDataDto, HbsDataFieldDto, HbsEntryStatus, HbsEntryVm, HbsRecordKind } from '@/app/entities/hbs/models/hbs.model';
@@ -26,7 +27,7 @@ const KIND_TITLE: Readonly<Record<HbsRecordKind, string>> = {
 @Component({
     selector: 'app-hbs-data-dialog',
     standalone: true,
-    imports: [ReactiveFormsModule, DialogModule, ButtonModule, TooltipModule, HbsStatusBadgeComponent],
+    imports: [ReactiveFormsModule, DialogModule, DialogFocusReturnDirective, ButtonModule, TooltipModule, HbsStatusBadgeComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="title()" [modal]="true" [dismissableMask]="!saving()" [closable]="!saving()" [style]="{ width: 'min(720px, 95vw)' }" [(visible)]="visible">

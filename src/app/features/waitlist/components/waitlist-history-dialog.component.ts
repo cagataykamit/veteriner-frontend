@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, model, signal, untracked } from '@angular/core';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import type { WaitlistEntryDetailDto } from '@/app/entities/waitlist/models/waitlist.model';
 import { WaitlistService } from '@/app/entities/waitlist/services/waitlist.service';
 import { waitlistEventLabel } from '@/app/entities/waitlist/utils/waitlist-labels.utils';
@@ -13,7 +14,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
     selector: 'app-waitlist-history-dialog',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [DialogModule, AppLoadingStateComponent, AppErrorStateComponent],
+    imports: [DialogModule, DialogFocusReturnDirective, AppLoadingStateComponent, AppErrorStateComponent],
     template: `
         <p-dialog header="Kayıt geçmişi" [(visible)]="visible" [modal]="true" [style]="{ width: '32rem' }" [breakpoints]="{ '640px': '95vw' }">
             @if (loading()) {

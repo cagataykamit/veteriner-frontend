@@ -2,6 +2,7 @@ import { Component, effect, inject, input, model, output, signal, untracked, Cha
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
@@ -23,7 +24,7 @@ function istanbulDayStartUtc(date: string): string | null {
 @Component({
     selector: 'app-discount-code-form-dialog',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, DialogModule, InputNumberModule, InputTextModule, MessageModule],
+    imports: [ReactiveFormsModule, ButtonModule, DialogModule, DialogFocusReturnDirective, InputNumberModule, InputTextModule, MessageModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="code() ? 'Kodu düzenle' : 'Yeni kod'" [modal]="true" [(visible)]="visible" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">

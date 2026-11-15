@@ -4,6 +4,7 @@ import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { SelectButtonModule } from 'primeng/selectbutton';
@@ -37,7 +38,7 @@ const PAGE_SIZE = 50;
         ReactiveFormsModule,
         ButtonModule,
         ConfirmDialogModule,
-        DialogModule,
+        DialogModule, DialogFocusReturnDirective,
         InputTextModule,
         MessageModule,
         SelectButtonModule,

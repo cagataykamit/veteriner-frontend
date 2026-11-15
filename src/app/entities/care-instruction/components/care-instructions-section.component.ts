@@ -4,6 +4,7 @@ import { Component, computed, effect, inject, input, signal, untracked, ChangeDe
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CARE_INSTRUCTIONS_CREATE_CLAIM, CARE_INSTRUCTIONS_READ_CLAIM, CARE_INSTRUCTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { CARE_INSTRUCTION_TEXT_MAX, type CareInstructionVm } from '@/app/entities/care-instruction/models/care-instruction-vm.model';
@@ -25,7 +26,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
 @Component({
     selector: 'app-care-instructions-section',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, DialogModule, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent, TrDateTimePipe],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, DialogModule, DialogFocusReturnDirective, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent, TrDateTimePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (canRead) {

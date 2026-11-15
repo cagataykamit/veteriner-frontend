@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
@@ -34,7 +35,7 @@ function localDate(offsetDays = 0): string {
     selector: 'app-waitlist-entry-dialog',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [FormsModule, ButtonModule, CheckboxModule, DialogModule, MessageModule, SelectModule, TextareaModule, ClientSearchComponent, PetSearchComponent, DateInputComponent],
+    imports: [FormsModule, ButtonModule, CheckboxModule, DialogModule, DialogFocusReturnDirective, MessageModule, SelectModule, TextareaModule, ClientSearchComponent, PetSearchComponent, DateInputComponent],
     template: `
         <p-dialog header="Bekleme listesine ekle" [(visible)]="visible" [modal]="true" [style]="{ width: '40rem' }" [breakpoints]="{ '640px': '95vw' }" (onHide)="reset()">
             <form class="flex flex-col gap-3" (ngSubmit)="save()">

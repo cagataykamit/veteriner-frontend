@@ -6,6 +6,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { CareInstructionsSectionComponent } from '@/app/entities/care-instruction/components/care-instructions-section.component';
 import type { HospitalizationDetailVm } from '@/app/entities/hospitalization/models/hospitalization-vm.model';
 import { HospitalizationsService } from '@/app/entities/hospitalization/services/hospitalizations.service';
@@ -39,7 +40,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         RouterLink,
         ReactiveFormsModule,
         ButtonModule,
-        DialogModule,
+        DialogModule, DialogFocusReturnDirective,
         AppPageHeaderComponent,
         AppDetailIdentityCardComponent,
         AppDetailActionBarComponent,

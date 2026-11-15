@@ -6,6 +6,7 @@ import type { Observable } from 'rxjs';
 import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import type { ChargeSuggestionVm } from '@/app/entities/charge/models/charge-suggestion-vm.model';
 import { CHARGE_DESCRIPTION_MAX_LENGTH, CHARGE_QUANTITY_MAX, CHARGE_QUANTITY_MAX_DECIMALS, CHARGE_UNIT_PRICE_MAX, CHARGE_UNIT_PRICE_MAX_DECIMALS, chargeNumberValidator, computeChargeAmount } from '@/app/entities/charge/utils/charge-amount.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -25,7 +26,7 @@ export interface ChargeSuggestionOverrides {
 @Component({
     selector: 'app-charge-suggestion-convert-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogFocusReturnDirective, ButtonModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Ücrete çevir" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">

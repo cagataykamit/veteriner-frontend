@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { forkJoin, type Observable } from 'rxjs';
@@ -35,7 +36,7 @@ const STATUS_SEVERITY: Readonly<Record<CommissionStatus, StatusTagSeverity>> = {
         FormsModule,
         ButtonModule,
         CheckboxModule,
-        DialogModule,
+        DialogModule, DialogFocusReturnDirective,
         InputTextModule,
         TableModule,
         AppPageHeaderComponent,

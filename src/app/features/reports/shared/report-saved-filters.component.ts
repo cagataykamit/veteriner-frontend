@@ -5,6 +5,7 @@ import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -24,7 +25,7 @@ const MAX_NAME_LENGTH = 100;
 @Component({
     selector: 'app-report-saved-filters',
     standalone: true,
-    imports: [FormsModule, ButtonModule, SelectModule, DialogModule, InputTextModule, ConfirmDialogModule, FilterFieldComponent],
+    imports: [FormsModule, ButtonModule, SelectModule, DialogModule, DialogFocusReturnDirective, InputTextModule, ConfirmDialogModule, FilterFieldComponent],
     providers: [ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `

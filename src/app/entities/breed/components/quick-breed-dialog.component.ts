@@ -10,6 +10,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 
 /**
@@ -18,7 +19,7 @@ import { InputTextModule } from 'primeng/inputtext';
 @Component({
     selector: 'app-quick-breed-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogFocusReturnDirective, ButtonModule, InputTextModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Yeni ırk" [modal]="true" [dismissableMask]="form.pristine" [style]="{ width: 'min(440px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onShow()">

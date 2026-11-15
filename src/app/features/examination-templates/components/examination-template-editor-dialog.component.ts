@@ -4,6 +4,7 @@ import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, Reacti
 import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
@@ -64,7 +65,7 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
 @Component({
     selector: 'app-examination-template-editor-dialog',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, DialogModule, InputTextModule, MessageModule, SelectModule, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent],
+    imports: [ReactiveFormsModule, ButtonModule, DialogModule, DialogFocusReturnDirective, InputTextModule, MessageModule, SelectModule, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [header]="header()" [modal]="true" [visible]="visible()" (visibleChange)="visible.set($event)" [closable]="!submitting()" [style]="{ width: 'min(48rem, 95vw)' }" [draggable]="false">

@@ -5,6 +5,7 @@ import type { Observable } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
@@ -49,7 +50,7 @@ type DialogTarget =
         ReactiveFormsModule,
         ButtonModule,
         ConfirmDialogModule,
-        DialogModule,
+        DialogModule, DialogFocusReturnDirective,
         InputTextModule,
         MessageModule,
         SelectModule,
