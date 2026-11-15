@@ -13,6 +13,8 @@ import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TodayItemVm } from '@/app/entities/visit/models/visit-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
+import type { ChargeCatalogItemVm } from '@/app/entities/inventory/models/product-vm.model';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { ChargeNewPageComponent } from './charge-new-page.component';
 
 const created: ChargeVm = {
@@ -66,6 +68,7 @@ describe('ChargeNewPageComponent', () => {
     let getExaminations: (q: ExamQuery) => Observable<{
         items: ExamItem[];
     }>;
+    let catalog: (term: string) => Observable<ChargeCatalogItemVm[]> = () => of([]);
 
     const setup = async () => {
         await TestBed.configureTestingModule({
@@ -98,6 +101,7 @@ describe('ChargeNewPageComponent', () => {
                             })
                     }
                 },
+                { provide: ProductService, useValue: { searchChargeCatalog: (term: string) => catalog(term) } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'c1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } },
                 {
@@ -335,6 +339,80 @@ describe('ChargeNewPageComponent', () => {
         queryExaminationId = 'ex-yok';
         await setup();
         expect(cmp.form.controls.examinationId.value).toBe('');
+    });
+
+    it('seçili hastanın bugün tek gelişi varsa geliş kendiliğinden seçilir; kullanıcı kaldırırsa yeniden seçilmez (O10)', async () => {
+        await setup();
+        fill({ petId: 'p2' });
+
+        expect(cmp.form.controls.visitId.value).toBe('v2');
+
+        cmp.form.controls.visitId.setValue('');
+        fixture.detectChanges();
+        expect(cmp.form.controls.visitId.value).toBe('');
+    });
+
+    describe('açıklama önerisi (O10)', () => {
+        const muayene: ChargeCatalogItemVm = { id: 's1', name: 'Genel muayene', kind: 'Service', unitPrice: 900, unitPriceText: '₺900,00', vatRate: 8 };
+        const mama: ChargeCatalogItemVm = { id: 'p1', name: 'Kedi maması 2 kg', kind: 'Other', unitPrice: 450, unitPriceText: '₺450,00', vatRate: null };
+        let terms: string[];
+
+        beforeEach(() => {
+            vi.useFakeTimers();
+            terms = [];
+            catalog = (term) => {
+                terms.push(term);
+
+                return of([muayene, mama]);
+            };
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+            catalog = () => of([]);
+        });
+
+        const type = (text: string) => {
+            cmp.form.controls.description.setValue(text);
+            vi.advanceTimersByTime(300);
+            fixture.detectChanges();
+        };
+
+        it('iki harften sonra hizmet ve ürün önerir; seçilince açıklama, fiyat, KDV ve satır türü dolar', async () => {
+            await setup();
+            type('m');
+            expect(terms).toEqual([]);
+
+            type('mua');
+            const items = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('[data-testid="charge-catalog-item"]');
+
+            expect(terms).toEqual(['mua']);
+            expect(items).toHaveLength(2);
+
+            items[0].click();
+            fixture.detectChanges();
+            expect(cmp.form.getRawValue()).toEqual(expect.objectContaining({ description: 'Genel muayene', unitPrice: 900, vatRate: 8, lineKind: 'Service', quantity: 1 }));
+            expect(cmp.pickedVatRate()).toBe(8);
+            expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="charge-catalog-suggestions"]')).toBeNull();
+            expect(cmp.form.dirty).toBe(true);
+
+            vi.advanceTimersByTime(300);
+            expect(terms).toEqual(['mua']);
+        });
+
+        it('ürün seçilince satır türü Ürün olur; serbest metin önerisiz de kaydedilebilir kalır', async () => {
+            await setup();
+            type('kedi');
+            cmp.pickCatalogItem(mama);
+
+            expect(cmp.form.controls.lineKind.value).toBe('Product');
+            expect(cmp.form.controls.vatRate.value).toBeNull();
+
+            catalog = () => of([]);
+            type('Özel pansuman');
+            expect(cmp.catalogSuggestions()).toEqual([]);
+            expect(cmp.form.controls.description.value).toBe('Özel pansuman');
+        });
     });
 
     it('müşteri değişince hayvan, geliş ve muayene seçimi sıfırlanır', async () => {

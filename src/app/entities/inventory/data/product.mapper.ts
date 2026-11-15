@@ -8,7 +8,7 @@ import type {
 } from '@/app/entities/inventory/models/product-api.model';
 import type { ProductCategoriesListQuery, ProductsListQuery } from '@/app/entities/inventory/models/product-query.model';
 import type { ProductUpsertFormValue } from '@/app/entities/inventory/models/product-upsert-form.model';
-import type { ProductDetailVm, ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
+import type { ChargeCatalogItemVm, ProductDetailVm, ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
 import {
     productControlledClassFromApi,
     productControlledClassLabel,
@@ -174,6 +174,19 @@ export function mapProductDtoToListVm(dto: ProductDto): ProductListItemVm {
         isActive,
         statusLabel: productActiveLabel(isActive),
         statusSeverity: productActiveSeverity(isActive)
+    };
+}
+
+export function mapProductDtoToChargeCatalogItem(dto: ProductDto): ChargeCatalogItemVm {
+    const unitPrice = num(dto.unitPrice);
+
+    return {
+        id: dto.id,
+        name: dto.name?.trim() ?? '',
+        kind: productKindFromApi(dto.kind),
+        unitPrice,
+        unitPriceText: formatMoney(unitPrice, currencyCode(dto)),
+        vatRate: num(dto.vatRate)
     };
 }
 

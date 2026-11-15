@@ -18,6 +18,17 @@ export interface ProductListItemVm {
     statusSeverity: StatusTagSeverity;
 }
 
+/** Ücret formundaki açıklama önerisi (O10): ücret satırını dolduran alanlar; fiyat ve KDV sayısal. */
+export interface ChargeCatalogItemVm {
+    readonly id: string;
+    readonly name: string;
+    readonly kind: ProductKindApi;
+    readonly unitPrice: number | null;
+    readonly unitPriceText: string;
+    /** `null` = klinik varsayılanı. */
+    readonly vatRate: number | null;
+}
+
 export interface ProductCategoryListItemVm {
     id: string;
     name: string;
