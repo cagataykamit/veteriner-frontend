@@ -98,6 +98,24 @@ describe('PortalLoginComponent (kod ve parola girişi)', () => {
         expect(router.navigateByUrl).toHaveBeenCalledWith('/', { replaceUrl: true });
     });
 
+    it('kod istenince odak kod alanına geçer; 6 hane girilince kendiliğinden doğrular (H16)', async () => {
+        api.requestCode.mockReturnValue(of(undefined));
+        api.verifyCode.mockReturnValue(of(testTokens(1)));
+        typeInto(el, '#login-email', 'ayse@example.com');
+        await click('Kod gönder');
+
+        expect(document.activeElement?.id).toBe('login-code');
+
+        typeInto(el, '#login-code', '12345');
+        await settle();
+        expect(api.verifyCode).not.toHaveBeenCalled();
+
+        typeInto(el, '#login-code', '123456');
+        await settle();
+        expect(api.verifyCode).toHaveBeenCalledOnce();
+        expect(api.verifyCode).toHaveBeenCalledWith('ayse@example.com', '123456');
+    });
+
     it('yanlış kodda kod/kilit ayrımı yapmayan mesaj gösterir', async () => {
         api.requestCode.mockReturnValue(of(undefined));
         api.verifyCode.mockReturnValue(throwError(() => problem(401, PORTAL_ERROR_CODES.invalidCredentials)));

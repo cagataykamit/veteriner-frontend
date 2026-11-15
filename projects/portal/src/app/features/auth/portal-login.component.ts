@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, signal, viewChild } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, input, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize, Observable, switchMap } from 'rxjs';
@@ -25,6 +25,8 @@ export const LOGIN_CODE_INVALID_MESSAGE =
 export const LOGIN_PASSWORD_INVALID_MESSAGE =
     'E-posta veya parola hatalı. Çok sayıda hatalı denemeden sonra giriş geçici olarak kilitlenir; kodla giriş yapabilir ya da parolanızı sıfırlayabilirsiniz.';
 export const PORTAL_ACCOUNT_DELETED_MESSAGE = 'Hesabınız silindi. Silme onayı e-posta adresinize gönderildi.';
+const ONE_TIME_CODE_LENGTH = 6;
+
 export const LOGIN_CODE_SENT_MESSAGE = 'Bu e-posta adresiyle bir hesap varsa 6 haneli giriş kodu gönderildi. Kod 10 dakika geçerlidir.';
 
 /**
@@ -60,6 +62,7 @@ export class PortalLoginComponent {
     readonly turnstileToken = signal<string | null>(null);
     readonly turnstileAction = PORTAL_TURNSTILE_ACTIONS.signInCode;
     private readonly turnstile = viewChild(PortalTurnstileComponent);
+    private readonly codeInput = viewChild<ElementRef<HTMLInputElement>>('codeInput');
 
     readonly expiredMessage = computed(() => (this.reason() === 'expired' ? PORTAL_ERROR_MESSAGES[PORTAL_ERROR_CODES.invalidRefreshToken] : null));
     readonly deletedMessage = computed(() => (this.reason() === 'deleted' ? PORTAL_ACCOUNT_DELETED_MESSAGE : null));
@@ -70,6 +73,16 @@ export class PortalLoginComponent {
         code: new FormControl('', { nonNullable: true, validators: [Validators.required, portalOneTimeCodeValidator()] }),
         password: new FormControl('', { nonNullable: true, validators: Validators.required })
     });
+
+    constructor() {
+        // Kod istenince odak kod alanına geçer; 6 hane girilince kendiliğinden doğrulanır (H16).
+        effect(() => this.codeInput()?.nativeElement.focus());
+        this.form.controls.code.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
+            if (this.method() === 'code' && this.codeSent() && !this.busy() && normalizeOneTimeCode(value).length === ONE_TIME_CODE_LENGTH && this.form.controls.code.valid) {
+                this.verifyCode();
+            }
+        });
+    }
 
     selectMethod(method: LoginMethod): void {
         if (this.method() === method) {
