@@ -36,6 +36,7 @@ import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
 
 @Component({
     selector: 'app-appointment-edit-page',
@@ -54,7 +55,7 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
         DateInputComponent,
         AppStatusTagComponent,
         AppointmentReasonVetFieldsComponent,
-        FormSubmitDirective,
+        FormFieldComponent, FormSubmitDirective,
         FormErrorSummaryComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -79,35 +80,15 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                 <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()">
                     <app-form-error-summary />
                     <div class="grid grid-cols-12 gap-4">
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
+                        <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="clientId" [error]="apiFieldErrors().clientId ? apiFieldErrors().clientId : form.controls.clientId.invalid && form.controls.clientId.touched ? 'Müşteri seçimi zorunludur.' : null" [required]="true">
                             <app-client-search inputId="clientId" formControlName="clientId" />
-                            @if (apiFieldErrors().clientId) {
-                                <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
-                            } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                                <small class="text-danger">Müşteri seçimi zorunludur.</small>
-                            }
-                        </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
+                        </app-form-field>
+                        <app-form-field class="col-span-12 md:col-span-6" label="Hasta" fieldId="petId" [error]="apiFieldErrors().petId ? apiFieldErrors().petId : form.controls.petId.invalid && form.controls.petId.touched ? 'Hasta seçimi zorunludur.' : null" [required]="true">
                             <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
-                            @if (apiFieldErrors().petId) {
-                                <small class="text-danger">{{ apiFieldErrors().petId }}</small>
-                            } @else if (form.controls.petId.invalid && form.controls.petId.touched) {
-                                <small class="text-danger">Hasta seçimi zorunludur.</small>
-                            }
-                        </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="scheduledDate" class="block text-sm font-medium text-muted-color mb-2">Randevu tarihi *</label>
+                        </app-form-field>
+                        <app-form-field class="col-span-12 md:col-span-6" label="Randevu tarihi" fieldId="scheduledDate" [error]="form.controls.scheduledDate.hasError('dateYearInvalid') && form.controls.scheduledDate.touched ? 'Yıl 4 haneli olmalıdır.' : apiFieldErrors().scheduledAtLocal ? apiFieldErrors().scheduledAtLocal : form.controls.scheduledDate.hasError('required') && form.controls.scheduledDate.touched ? 'Randevu tarihi seçilmelidir.' : null" [required]="true">
                             <app-date-input inputId="scheduledDate" type="date" formControlName="scheduledDate" [min]="dateInputMin" [max]="maxScheduledDate()" />
-                            @if (form.controls.scheduledDate.hasError('dateYearInvalid') && form.controls.scheduledDate.touched) {
-                                <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
-                            } @else if (apiFieldErrors().scheduledAtLocal) {
-                                <small class="text-danger">{{ apiFieldErrors().scheduledAtLocal }}</small>
-                            } @else if (form.controls.scheduledDate.hasError('required') && form.controls.scheduledDate.touched) {
-                                <small class="text-danger">Randevu tarihi seçilmelidir.</small>
-                            }
-                        </div>
+                        </app-form-field>
                         <div class="col-span-12 md:col-span-6">
                             <label for="scheduledTime" class="block text-sm font-medium text-muted-color mb-2">Randevu saati *</label>
                             <p-select
@@ -133,24 +114,12 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                                 <small class="block text-muted-color mt-1">Bu klinikte randevular {{ startIntervalMinutes }} dakikalık aralıklarla başlatılır.</small>
                             }
                         </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="durationMinutes" class="block text-sm font-medium text-muted-color mb-2">Randevu süresi (dakika) *</label>
+                        <app-form-field class="col-span-12 md:col-span-6" label="Randevu süresi (dakika)" fieldId="durationMinutes" [error]="apiFieldErrors().durationMinutes ? apiFieldErrors().durationMinutes : form.controls.durationMinutes.invalid && form.controls.durationMinutes.touched ? 'Randevu süresi 5 ile 240 dakika arasında olmalıdır.' : null" [required]="true">
                             <input id="durationMinutes" type="number" class="w-full p-inputtext p-component" formControlName="durationMinutes" min="5" max="240" step="1" />
-                            @if (apiFieldErrors().durationMinutes) {
-                                <small class="text-danger">{{ apiFieldErrors().durationMinutes }}</small>
-                            } @else if (form.controls.durationMinutes.invalid && form.controls.durationMinutes.touched) {
-                                <small class="text-danger">Randevu süresi 5 ile 240 dakika arasında olmalıdır.</small>
-                            }
-                        </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="appointmentType" class="block text-sm font-medium text-muted-color mb-2">Randevu türü *</label>
+                        </app-form-field>
+                        <app-form-field class="col-span-12 md:col-span-6" label="Randevu türü" fieldId="appointmentType" [error]="apiFieldErrors().appointmentType ? apiFieldErrors().appointmentType : form.controls.appointmentType.invalid && form.controls.appointmentType.touched ? 'Randevu türü seçimi zorunludur.' : null" [required]="true">
                             <p-select inputId="appointmentType" formControlName="appointmentType" [options]="typeOptions" optionLabel="label" optionValue="value" placeholder="Randevu türü seçin" [showClear]="true" class="w-full" />
-                            @if (apiFieldErrors().appointmentType) {
-                                <small class="text-danger">{{ apiFieldErrors().appointmentType }}</small>
-                            } @else if (form.controls.appointmentType.invalid && form.controls.appointmentType.touched) {
-                                <small class="text-danger">Randevu türü seçimi zorunludur.</small>
-                            }
-                        </div>
+                        </app-form-field>
                         <div class="col-span-12 md:col-span-6">
                             <span id="statusLabel" class="block text-sm font-medium text-muted-color mb-2">Durum</span>
                             <div class="flex min-h-10 items-center" role="group" aria-labelledby="statusLabel" data-testid="appointment-status">

@@ -28,11 +28,12 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
 
 @Component({
     selector: 'app-product-create-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, BarcodeScanButtonComponent, ProductTaxFieldsComponent, ProductClassificationFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, FocusFirstFieldDirective, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, BarcodeScanButtonComponent, ProductTaxFieldsComponent, ProductClassificationFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/products" categoryLinkLabel="Ürün listesine dön" title="Yeni ürün" description="Ürün kartı oluşturun." />
@@ -87,13 +88,9 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                             <app-barcode-scan-button (scanned)="form.controls.barcode.setValue($event)" />
                         </div>
                     </div>
-                    <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
-                        <label for="unit" class="block text-sm font-medium text-muted-color">Birim *</label>
+                    <app-form-field class="col-span-12 md:col-span-4" label="Birim" fieldId="unit" [error]="form.controls.unit.invalid && form.controls.unit.touched ? 'Birim zorunludur.' : null" [required]="true">
                         <input id="unit" pInputText class="w-full" type="text" formControlName="unit" placeholder="örn. Adet, Kutu" />
-                        @if (form.controls.unit.invalid && form.controls.unit.touched) {
-                            <small class="text-danger">Birim zorunludur.</small>
-                        }
-                    </div>
+                    </app-form-field>
                     <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
                         <label for="unitPrice" class="block text-sm font-medium text-muted-color">Birim fiyat *</label>
                         <input id="unitPrice" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="unitPrice" />
@@ -105,13 +102,9 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                             }
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
-                        <label for="currency" class="block text-sm font-medium text-muted-color">Para birimi *</label>
+                    <app-form-field class="col-span-12 md:col-span-4" label="Para birimi" fieldId="currency" [error]="form.controls.currency.invalid && form.controls.currency.touched ? 'Para birimi zorunludur.' : null" [required]="true">
                         <p-select inputId="currency" formControlName="currency" [options]="currencyOptions" optionLabel="label" optionValue="value" class="w-full" />
-                        @if (form.controls.currency.invalid && form.controls.currency.touched) {
-                            <small class="text-danger">Para birimi zorunludur.</small>
-                        }
-                    </div>
+                    </app-form-field>
                     <app-product-tax-fields [form]="form" idPrefix="product" />
                     <app-product-classification-fields [form]="form" idPrefix="product" />
                     <div class="col-span-12 flex flex-col gap-1">

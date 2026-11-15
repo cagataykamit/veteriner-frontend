@@ -47,6 +47,7 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
 
 /** Açık tutar bu arada değişti: güncel bakiye yeniden okunur, aynı `requestId` ile tekrar denemek güvenlidir. */
 const STALE_BALANCE_CODES = new Set(['PaymentAllocations.ExceedsOutstanding', 'Payments.ConcurrencyConflict']);
@@ -59,7 +60,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
 @Component({
     selector: 'app-payment-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ButtonModule, CheckboxModule, SelectModule, TableModule, AppPageHeaderComponent, ClientSearchComponent, DateInputComponent, TrDateTimePipe, CashRegisterSelectComponent, FocusFirstFieldDirective, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ButtonModule, CheckboxModule, SelectModule, TableModule, AppPageHeaderComponent, ClientSearchComponent, DateInputComponent, TrDateTimePipe, CashRegisterSelectComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Yeni ödeme" description="Müşterinin açık ücretlerinden hangilerine ne kadar ödeme alındığını girin." />
@@ -72,15 +73,9 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
             <form appFormSubmit appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit()">
                 <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
+                    <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="clientId" [error]="apiFieldErrors().clientId ? apiFieldErrors().clientId : form.controls.clientId.invalid && form.controls.clientId.touched ? 'Zorunlu alan.' : null" [required]="true">
                         <app-client-search inputId="clientId" formControlName="clientId" />
-                        @if (apiFieldErrors().clientId) {
-                            <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
-                        } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-danger">Zorunlu alan.</small>
-                        }
-                    </div>
+                    </app-form-field>
 
                     @if (clientSelected() && !balanceLoading() && !balanceError() && creditBalance() > 0) {
                         <div class="col-span-12" data-testid="payment-credit">
@@ -207,34 +202,16 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                             <small class="text-muted-color block">{{ prepayment() ? 'Tamamı müşteri kredisine yazılır; yalnız ₺.' : 'Boş bırakılırsa seçilen ücretlerin toplamı alınır; yalnız ₺.' }}</small>
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-6 lg:col-span-3">
-                        <label for="method" class="block text-sm font-medium text-muted-color mb-2">Yöntem *</label>
+                    <app-form-field class="col-span-12 md:col-span-6 lg:col-span-3" label="Yöntem" fieldId="method" [error]="apiFieldErrors().method ? apiFieldErrors().method : null" [required]="true">
                         <p-select inputId="method" [options]="methodOptions" formControlName="method" optionLabel="label" optionValue="value" class="w-full" />
-                        @if (apiFieldErrors().method) {
-                            <small class="text-danger">{{ apiFieldErrors().method }}</small>
-                        }
-                    </div>
+                    </app-form-field>
                     <app-cash-register-select fieldClass="col-span-12 md:col-span-6 lg:col-span-3" [clinicId]="activeClinicId" [method]="methodValue()" [(value)]="cashRegisterId" [disabled]="busy()" />
-                    <div class="col-span-12 md:col-span-6 lg:col-span-3">
-                        <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati *</label>
+                    <app-form-field class="col-span-12 md:col-span-6 lg:col-span-3" label="Ödeme tarihi / saati" fieldId="paidAtLocal" [error]="form.controls.paidAtLocal.hasError('dateYearInvalid') && form.controls.paidAtLocal.touched ? 'Yıl 4 haneli olmalıdır.' : form.controls.paidAtLocal.hasError('paymentDateTooFarPast') && form.controls.paidAtLocal.touched ? paymentDateTooFarPastMessage : apiFieldErrors().paidAtLocal ? apiFieldErrors().paidAtLocal : form.controls.paidAtLocal.hasError('required') && form.controls.paidAtLocal.touched ? 'Zorunlu alan.' : null" [required]="true">
                         <app-date-input inputId="paidAtLocal" type="datetime-local" formControlName="paidAtLocal" [min]="paymentDateMinAllowed" limit="past" />
-                        @if (form.controls.paidAtLocal.hasError('dateYearInvalid') && form.controls.paidAtLocal.touched) {
-                            <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
-                        } @else if (form.controls.paidAtLocal.hasError('paymentDateTooFarPast') && form.controls.paidAtLocal.touched) {
-                            <small class="text-danger block">{{ paymentDateTooFarPastMessage }}</small>
-                        } @else if (apiFieldErrors().paidAtLocal) {
-                            <small class="text-danger block">{{ apiFieldErrors().paidAtLocal }}</small>
-                        } @else if (form.controls.paidAtLocal.hasError('required') && form.controls.paidAtLocal.touched) {
-                            <small class="text-danger block">Zorunlu alan.</small>
-                        }
-                    </div>
-                    <div class="col-span-12">
-                        <label for="note" class="block text-sm font-medium text-muted-color mb-2">Not</label>
+                    </app-form-field>
+                    <app-form-field class="col-span-12" label="Not" fieldId="note" [error]="apiFieldErrors().note ? apiFieldErrors().note : null">
                         <textarea id="note" rows="3" class="w-full p-inputtext p-component" formControlName="note"></textarea>
-                        @if (apiFieldErrors().note) {
-                            <small class="text-danger">{{ apiFieldErrors().note }}</small>
-                        }
-                    </div>
+                    </app-form-field>
                 </div>
 
                 @if (submitError()) {

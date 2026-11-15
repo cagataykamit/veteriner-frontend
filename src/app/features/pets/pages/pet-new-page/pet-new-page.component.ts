@@ -39,6 +39,7 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
 
 @Component({
     selector: 'app-pet-new-page',
@@ -60,7 +61,7 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
         AppTrialLimitNoticeComponent,
         InlineCreateDirective,
         InlineCreateOptionComponent,
-        FormSubmitDirective,
+        FormFieldComponent, FormSubmitDirective,
         FormErrorSummaryComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -77,24 +78,12 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
             <form appFormSubmit appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit()">
                 <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
+                    <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="clientId" [error]="apiFieldErrors().clientId ? apiFieldErrors().clientId : form.controls.clientId.invalid && form.controls.clientId.touched ? 'Müşteri seçimi zorunludur.' : null" [required]="true">
                         <app-client-search inputId="clientId" formControlName="clientId" />
-                        @if (apiFieldErrors().clientId) {
-                            <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
-                        } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-danger">Müşteri seçimi zorunludur.</small>
-                        }
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="name" class="block text-sm font-medium text-muted-color mb-2">Hasta adı *</label>
+                    </app-form-field>
+                    <app-form-field class="col-span-12 md:col-span-6" label="Hasta adı" fieldId="name" [error]="apiFieldErrors().name ? apiFieldErrors().name : form.controls.name.invalid && form.controls.name.touched ? 'Hasta adı zorunludur.' : null" [required]="true">
                         <input id="name" pInputText class="w-full" formControlName="name" />
-                        @if (apiFieldErrors().name) {
-                            <small class="text-danger">{{ apiFieldErrors().name }}</small>
-                        } @else if (form.controls.name.invalid && form.controls.name.touched) {
-                            <small class="text-danger">Hasta adı zorunludur.</small>
-                        }
-                    </div>
+                    </app-form-field>
                     <div class="col-span-12 md:col-span-6">
                         <label for="speciesId" class="block text-sm font-medium text-muted-color mb-2">Tür *</label>
                         <p-select inputId="speciesId" formControlName="speciesId" [options]="speciesOptions()" optionLabel="label" optionValue="value" placeholder="Tür seçin" class="w-full" [loading]="loadingSpecies()" [showClear]="true" [filter]="true" filterBy="label" filterPlaceholder="Ara…" [appInlineCreate]="speciesCreate()">
@@ -137,13 +126,9 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                             </div>
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="gender" class="block text-sm font-medium text-muted-color mb-2">Cinsiyet</label>
+                    <app-form-field class="col-span-12 md:col-span-6" label="Cinsiyet" fieldId="gender" [error]="apiFieldErrors().gender ? apiFieldErrors().gender : null">
                         <p-select inputId="gender" formControlName="gender" [options]="genderOptions" optionLabel="label" optionValue="value" placeholder="Seçin" [showClear]="true" class="w-full" />
-                        @if (apiFieldErrors().gender) {
-                            <small class="text-danger">{{ apiFieldErrors().gender }}</small>
-                        }
-                    </div>
+                    </app-form-field>
                     <div class="col-span-12 md:col-span-6">
                         <label for="birthDate" class="block text-sm font-medium text-muted-color mb-2">Doğum tarihi</label>
                         <app-date-input inputId="birthDate" type="date" formControlName="birthDate" [min]="dateInputMin" limit="past" />
@@ -155,20 +140,12 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                             }
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="colorId" class="block text-sm font-medium text-muted-color mb-2">Renk</label>
+                    <app-form-field class="col-span-12 md:col-span-6" label="Renk" fieldId="colorId" [error]="apiFieldErrors().colorId ? apiFieldErrors().colorId : null">
                         <p-select inputId="colorId" formControlName="colorId" [options]="colorOptions()" optionLabel="label" optionValue="value" placeholder="Renk seçin" class="w-full" [loading]="loadingColors()" [showClear]="true" [filter]="true" filterBy="label" filterPlaceholder="Ara…" />
-                        @if (apiFieldErrors().colorId) {
-                            <small class="text-danger">{{ apiFieldErrors().colorId }}</small>
-                        }
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="patternId" class="block text-sm font-medium text-muted-color mb-2">Desen</label>
+                    </app-form-field>
+                    <app-form-field class="col-span-12 md:col-span-6" label="Desen" fieldId="patternId" [error]="apiFieldErrors().patternId ? apiFieldErrors().patternId : null">
                         <p-select inputId="patternId" formControlName="patternId" [options]="patternOptions()" optionLabel="label" optionValue="value" placeholder="Desen seçin (tekir, kaplan çizgili…)" class="w-full" [loading]="loadingColors()" [showClear]="true" [filter]="true" filterBy="label" filterPlaceholder="Ara…" />
-                        @if (apiFieldErrors().patternId) {
-                            <small class="text-danger">{{ apiFieldErrors().patternId }}</small>
-                        }
-                    </div>
+                    </app-form-field>
                     <div class="col-span-12 md:col-span-6">
                         <label for="weight" class="block text-sm font-medium text-muted-color mb-2">Kilo (kg)</label>
                         <input id="weight" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="weightStr" />
@@ -191,35 +168,15 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                             <small class="text-amber-700 dark:text-amber-300" data-testid="microchip-warning">{{ warning }}</small>
                         }
                     </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="passportOrTagNumber" class="block text-sm font-medium text-muted-color mb-2">Karne / Küpe no</label>
+                    <app-form-field class="col-span-12 md:col-span-6" label="Karne / Küpe no" fieldId="passportOrTagNumber" [error]="apiFieldErrors().passportOrTagNumber ? apiFieldErrors().passportOrTagNumber : form.controls.passportOrTagNumber.invalid && form.controls.passportOrTagNumber.touched ? 'En fazla 50 karakter olabilir.' : null">
                         <input id="passportOrTagNumber" pInputText class="w-full" formControlName="passportOrTagNumber" maxlength="50" />
-                        @if (apiFieldErrors().passportOrTagNumber) {
-                            <small class="text-danger">{{ apiFieldErrors().passportOrTagNumber }}</small>
-                        } @else if (form.controls.passportOrTagNumber.invalid && form.controls.passportOrTagNumber.touched) {
-                            <small class="text-danger">En fazla 50 karakter olabilir.</small>
-                        }
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="specialProtocolNumber" class="block text-sm font-medium text-muted-color mb-2">Özel protokol no</label>
+                    </app-form-field>
+                    <app-form-field class="col-span-12 md:col-span-6" label="Özel protokol no" fieldId="specialProtocolNumber" [error]="apiFieldErrors().specialProtocolNumber ? apiFieldErrors().specialProtocolNumber : form.controls.specialProtocolNumber.invalid && form.controls.specialProtocolNumber.touched ? 'En fazla 50 karakter olabilir.' : null">
                         <input id="specialProtocolNumber" pInputText class="w-full" formControlName="specialProtocolNumber" maxlength="50" />
-                        @if (apiFieldErrors().specialProtocolNumber) {
-                            <small class="text-danger">{{ apiFieldErrors().specialProtocolNumber }}</small>
-                        } @else if (form.controls.specialProtocolNumber.invalid && form.controls.specialProtocolNumber.touched) {
-                            <small class="text-danger">En fazla 50 karakter olabilir.</small>
-                        }
-                    </div>
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="hbsAnimalId" class="block text-sm font-medium text-muted-color mb-2">HBS hayvan kimlik no</label>
+                    </app-form-field>
+                    <app-form-field class="col-span-12 md:col-span-6" label="HBS hayvan kimlik no" fieldId="hbsAnimalId" [error]="apiFieldErrors().hbsAnimalId ? apiFieldErrors().hbsAnimalId : form.controls.hbsAnimalId.invalid && form.controls.hbsAnimalId.touched ? 'En fazla 50 karakter olabilir.' : null" hint="Hayvan Bilgi Sistemi'ndeki kimlik numarası (isteğe bağlı).">
                         <input id="hbsAnimalId" pInputText class="w-full" formControlName="hbsAnimalId" maxlength="50" autocomplete="off" />
-                        @if (apiFieldErrors().hbsAnimalId) {
-                            <small class="text-danger">{{ apiFieldErrors().hbsAnimalId }}</small>
-                        } @else if (form.controls.hbsAnimalId.invalid && form.controls.hbsAnimalId.touched) {
-                            <small class="text-danger">En fazla 50 karakter olabilir.</small>
-                        } @else {
-                            <small class="text-muted-color">Hayvan Bilgi Sistemi'ndeki kimlik numarası (isteğe bağlı).</small>
-                        }
-                    </div>
+                    </app-form-field>
                     <div class="col-span-12 md:col-span-6 flex items-end">
                         <div class="flex items-center gap-2 pb-2">
                             <p-checkbox formControlName="isNeutered" [binary]="true" inputId="isNeutered" />
@@ -229,13 +186,9 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                             <small class="text-danger block w-full">{{ apiFieldErrors().isNeutered }}</small>
                         }
                     </div>
-                    <div class="col-span-12">
-                        <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
+                    <app-form-field class="col-span-12" label="Notlar" fieldId="notes" [error]="apiFieldErrors().notes ? apiFieldErrors().notes : null">
                         <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
-                        @if (apiFieldErrors().notes) {
-                            <small class="text-danger">{{ apiFieldErrors().notes }}</small>
-                        }
-                    </div>
+                    </app-form-field>
                     <div class="col-span-12">
                         <app-pet-alert-fields [form]="form" />
                     </div>

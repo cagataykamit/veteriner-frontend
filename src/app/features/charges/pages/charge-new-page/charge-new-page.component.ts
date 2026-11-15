@@ -29,11 +29,12 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
 
 @Component({
     selector: 'app-charge-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent, ChargeTaxFieldsComponent, FocusFirstFieldDirective, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent, ChargeTaxFieldsComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/charges" categoryLinkLabel="Ücret listesine dön" title="Yeni ücret" description="Müşteriye ücret satırı ekleyin. Ücret ödeme sayılmaz." />
@@ -48,13 +49,9 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
             <form appFormSubmit #formSubmit="appFormSubmit" appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit(canCollectPayment)">
                 <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-12 md:col-span-6">
-                        <label for="chargeClient" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
+                    <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="chargeClient" [error]="form.controls.clientId.invalid && form.controls.clientId.touched ? 'Listeden bir müşteri seçin.' : null" [required]="true">
                         <app-client-search inputId="chargeClient" formControlName="clientId" />
-                        @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-danger">Listeden bir müşteri seçin.</small>
-                        }
-                    </div>
+                    </app-form-field>
                     <div class="col-span-12 md:col-span-6">
                         <label for="chargePet" class="block text-sm font-medium text-muted-color mb-2">Hasta</label>
                         <app-pet-search inputId="chargePet" formControlName="petId" [clientId]="form.controls.clientId.value" />

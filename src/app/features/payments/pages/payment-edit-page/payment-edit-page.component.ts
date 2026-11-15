@@ -31,11 +31,12 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
 
 @Component({
     selector: 'app-payment-edit-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (loading()) {
@@ -58,65 +59,27 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                 <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()">
                     <app-form-error-summary />
                     <div class="grid grid-cols-12 gap-4">
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
+                        <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="clientId" [error]="apiFieldErrors().clientId ? apiFieldErrors().clientId : form.controls.clientId.invalid && form.controls.clientId.touched ? 'Müşteri seçimi zorunludur.' : null" [required]="true">
                             <app-client-search inputId="clientId" formControlName="clientId" />
-                            @if (apiFieldErrors().clientId) {
-                                <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
-                            } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                                <small class="text-danger">Müşteri seçimi zorunludur.</small>
-                            }
-                        </div>
-                        <div class="col-span-12 md:col-span-6">
-                            <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta</label>
+                        </app-form-field>
+                        <app-form-field class="col-span-12 md:col-span-6" label="Hasta" fieldId="petId" [error]="apiFieldErrors().petId ? apiFieldErrors().petId : null">
                             <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
-                            @if (apiFieldErrors().petId) {
-                                <small class="text-danger">{{ apiFieldErrors().petId }}</small>
-                            }
-                        </div>
-                        <div class="col-span-12 md:col-span-4">
-                            <label for="amount" class="block text-sm font-medium text-muted-color mb-2">Tutar *</label>
+                        </app-form-field>
+                        <app-form-field class="col-span-12 md:col-span-4" label="Tutar" fieldId="amount" [error]="apiFieldErrors().amount ? apiFieldErrors().amount : form.controls.amount.invalid && form.controls.amount.touched ? 'Geçerli tutar girin.' : null" [required]="true">
                             <input id="amount" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="amount" />
-                            @if (apiFieldErrors().amount) {
-                                <small class="text-danger">{{ apiFieldErrors().amount }}</small>
-                            } @else if (form.controls.amount.invalid && form.controls.amount.touched) {
-                                <small class="text-danger">Geçerli tutar girin.</small>
-                            }
-                        </div>
-                        <div class="col-span-12 md:col-span-4">
-                            <label for="currency" class="block text-sm font-medium text-muted-color mb-2">Para birimi *</label>
+                        </app-form-field>
+                        <app-form-field class="col-span-12 md:col-span-4" label="Para birimi" fieldId="currency" [error]="apiFieldErrors().currency ? apiFieldErrors().currency : null" [required]="true">
                             <p-select inputId="currency" [options]="currencyOptions" formControlName="currency" optionLabel="label" optionValue="value" class="w-full" />
-                            @if (apiFieldErrors().currency) {
-                                <small class="text-danger">{{ apiFieldErrors().currency }}</small>
-                            }
-                        </div>
-                        <div class="col-span-12 md:col-span-4">
-                            <label for="method" class="block text-sm font-medium text-muted-color mb-2">Yöntem *</label>
+                        </app-form-field>
+                        <app-form-field class="col-span-12 md:col-span-4" label="Yöntem" fieldId="method" [error]="apiFieldErrors().method ? apiFieldErrors().method : null" [required]="true">
                             <p-select inputId="method" [options]="methodOptions" formControlName="method" optionLabel="label" optionValue="value" class="w-full" />
-                            @if (apiFieldErrors().method) {
-                                <small class="text-danger">{{ apiFieldErrors().method }}</small>
-                            }
-                        </div>
-                        <div class="col-span-12 md:col-span-4">
-                            <label for="paidAtLocal" class="block text-sm font-medium text-muted-color mb-2">Ödeme tarihi / saati *</label>
+                        </app-form-field>
+                        <app-form-field class="col-span-12 md:col-span-4" label="Ödeme tarihi / saati" fieldId="paidAtLocal" [error]="form.controls.paidAtLocal.hasError('dateYearInvalid') && form.controls.paidAtLocal.touched ? 'Yıl 4 haneli olmalıdır.' : form.controls.paidAtLocal.hasError('paymentDateTooFarPast') && form.controls.paidAtLocal.touched ? paymentDateTooFarPastMessage : apiFieldErrors().paidAtLocal ? apiFieldErrors().paidAtLocal : form.controls.paidAtLocal.hasError('required') && form.controls.paidAtLocal.touched ? 'Zorunlu alan.' : null" [required]="true">
                             <app-date-input inputId="paidAtLocal" type="datetime-local" formControlName="paidAtLocal" [min]="paymentDateMinAllowed" limit="past" />
-                            @if (form.controls.paidAtLocal.hasError('dateYearInvalid') && form.controls.paidAtLocal.touched) {
-                                <small class="text-danger block">Yıl 4 haneli olmalıdır.</small>
-                            } @else if (form.controls.paidAtLocal.hasError('paymentDateTooFarPast') && form.controls.paidAtLocal.touched) {
-                                <small class="text-danger block">{{ paymentDateTooFarPastMessage }}</small>
-                            } @else if (apiFieldErrors().paidAtLocal) {
-                                <small class="text-danger block">{{ apiFieldErrors().paidAtLocal }}</small>
-                            } @else if (form.controls.paidAtLocal.hasError('required') && form.controls.paidAtLocal.touched) {
-                                <small class="text-danger block">Zorunlu alan.</small>
-                            }
-                        </div>
-                        <div class="col-span-12">
-                            <label for="note" class="block text-sm font-medium text-muted-color mb-2">Not</label>
+                        </app-form-field>
+                        <app-form-field class="col-span-12" label="Not" fieldId="note" [error]="apiFieldErrors().note ? apiFieldErrors().note : null">
                             <textarea id="note" rows="3" class="w-full p-inputtext p-component" formControlName="note"></textarea>
-                            @if (apiFieldErrors().note) {
-                                <small class="text-danger">{{ apiFieldErrors().note }}</small>
-                            }
-                        </div>
+                        </app-form-field>
                     </div>
 
                     @if (submitError()) {

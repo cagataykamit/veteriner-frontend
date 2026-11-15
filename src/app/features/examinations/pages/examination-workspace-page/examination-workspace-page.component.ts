@@ -40,6 +40,7 @@ import { toIstanbulDateTimeInputParts, toIstanbulDateTimeLocalInputValue } from 
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
 
 function requiredTrimmed(c: AbstractControl): ValidationErrors | null {
     return typeof c.value === 'string' && c.value.trim() ? null : { required: true };
@@ -93,7 +94,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
         ClinicalTermPickerComponent,
         ClinicalSnippetTriggerDirective,
         DoseCalculatorComponent,
-        FormSubmitDirective,
+        FormFieldComponent, FormSubmitDirective,
         FormErrorSummaryComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
