@@ -25,11 +25,12 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { formatUtcIsoAsLocalDateTimeDisplay, formatUtcIsoAsLocalTimeDisplay, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
 
 @Component({
     selector: 'app-charge-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent, ChargeTaxFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent, ChargeTaxFieldsComponent, FocusFirstFieldDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/charges" categoryLinkLabel="Ücret listesine dön" title="Yeni ücret" description="Müşteriye ücret satırı ekleyin. Ücret ödeme sayılmaz." />
@@ -41,7 +42,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             @if (loadError()) {
                 <p class="text-danger mt-0 mb-4" role="alert">{{ loadError() }}</p>
             }
-            <form [formGroup]="form" (ngSubmit)="onSubmit(canCollectPayment)">
+            <form appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit(canCollectPayment)">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
                         <label for="chargeClient" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>

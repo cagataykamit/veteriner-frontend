@@ -20,17 +20,18 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
 import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
+import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
 
 @Component({
     selector: 'app-client-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent, AppTrialLimitNoticeComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent, AppTrialLimitNoticeComponent, FocusFirstFieldDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" title="Yeni müşteri" description="Müşteri kaydı oluşturun." />
 
         <div class="card">
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
                         <label for="fullName" class="block text-sm font-medium text-muted-color mb-2">Ad soyad *</label>

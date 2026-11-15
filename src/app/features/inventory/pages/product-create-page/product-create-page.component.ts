@@ -22,11 +22,12 @@ import { ProductTaxFieldsComponent } from '@/app/features/inventory/components/p
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
 
 @Component({
     selector: 'app-product-create-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, BarcodeScanButtonComponent, ProductTaxFieldsComponent, ProductClassificationFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, BarcodeScanButtonComponent, ProductTaxFieldsComponent, ProductClassificationFieldsComponent, FocusFirstFieldDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/products" categoryLinkLabel="Ürün listesine dön" title="Yeni ürün" description="Ürün kartı oluşturun." />
@@ -38,7 +39,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
             @if (canReadCategories && categoryLoadHint()) {
                 <p class="text-muted-color text-sm mt-0 mb-4" role="status">{{ categoryLoadHint() }}</p>
             }
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     @if (canReadCategories) {
                         <div class="col-span-12 md:col-span-6 flex flex-col gap-1">

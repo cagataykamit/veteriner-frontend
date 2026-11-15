@@ -17,15 +17,16 @@ import { LegalAcceptanceGateComponent } from '@/app/features/legal-acceptance/co
     imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter, AppReadOnlyBannerComponent, AppSectionTabsComponent, LegalAcceptanceGateComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `<div class="layout-wrapper" [ngClass]="containerClass()">
+        <a class="layout-skip-link" href="#panel-main" (click)="skipToMain($event)">İçeriğe geç</a>
         <div #primePanelOverlayHost class="layout-prime-panel-overlay-host"></div>
         <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>
         <div class="layout-main-container">
-            <div class="layout-main">
+            <main #main id="panel-main" class="layout-main" tabindex="-1">
                 <app-read-only-banner />
                 <app-section-tabs />
                 <router-outlet></router-outlet>
-            </div>
+            </main>
             <app-footer></app-footer>
         </div>
         <div class="layout-mask"></div>
@@ -41,6 +42,7 @@ export class AppLayout {
     private readonly tenantReadOnlyContext = inject(TenantReadOnlyContextService);
     private readonly destroyRef = inject(DestroyRef);
     private readonly primePanelOverlayHostEl = viewChild<ElementRef<HTMLElement>>('primePanelOverlayHost');
+    private readonly mainEl = viewChild<ElementRef<HTMLElement>>('main');
 
     constructor() {
         this.tenantReadOnlyContext.loadForPanel();
@@ -79,4 +81,10 @@ export class AppLayout {
             'layout-mobile-active': state.mobileMenuActive
         };
     });
+
+    /** "İçeriğe geç": adres değişmeden odak sayfa içeriğine geçer (menü ve üst çubuk atlanır). */
+    skipToMain(event: Event): void {
+        event.preventDefault();
+        this.mainEl()?.nativeElement.focus();
+    }
 }
