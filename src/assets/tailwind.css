@@ -7,6 +7,16 @@
 
 @custom-variant dark (&:where([class*="app-dark"], [class*="app-dark"] *));
 
+/* Dokunarak kullanılan ekran (O5): telefon genişliği ya da parmakla kullanılan cihaz; SCSS karşılığı `@include touch`. */
+@custom-variant touch {
+  @media (max-width: 575px) {
+    @slot;
+  }
+  @media (pointer: coarse) {
+    @slot;
+  }
+}
+
 @theme {
   --breakpoint-*: initial;
   --breakpoint-sm: 576px;
@@ -14,6 +24,9 @@
   --breakpoint-lg: 992px;
   --breakpoint-xl: 1200px;
   --breakpoint-2xl: 1920px;
+
+  /* Ekrandaki en küçük yazı 12 px (O5; kök 14 px, Tailwind varsayılanı 10,5 px): rozet, küçük not, alan etiketi. */
+  --text-xs: 0.8572rem;
 }
 
 /*
@@ -65,7 +78,7 @@ html:not(.app-dark) a.text-primary {
 
 /*
  * Görünümü küçük kalan bağlantı/düğmenin (hap, satır içi düğme) dokunma alanını en az `--touch-target` (44 px) yapar;
- * görünmez katman öğeyi ortalar, düzeni değiştirmez. Telefonda kullanılır: `max-sm:touch-hit` (MOBILE-004).
+ * görünmez katman öğeyi ortalar, düzeni değiştirmez. Dokunmatik ekranda kullanılır: `touch:touch-hit` (MOBILE-004, O5).
  */
 @utility touch-hit {
     position: relative;

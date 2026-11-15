@@ -39,7 +39,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
                         <ng-container [ngTemplateOutlet]="card" [ngTemplateOutletContext]="{ $implicit: entry, padded: true }" />
                         <button
                             type="button"
-                            class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full border-0 bg-transparent cursor-pointer hover:bg-emphasis"
+                            class="touch:touch-hit absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full border-0 bg-transparent cursor-pointer hover:bg-emphasis"
                             [class.text-amber-500]="isFavorite"
                             [class.text-muted-color]="!isFavorite"
                             [attr.aria-pressed]="isFavorite"

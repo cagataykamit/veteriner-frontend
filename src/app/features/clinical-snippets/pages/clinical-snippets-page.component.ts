@@ -146,14 +146,14 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
                                     @if (!ro.mutationBlocked()) {
                                         <div class="flex flex-wrap gap-x-3 gap-y-1 items-center max-sm:pt-2 max-sm:gap-x-5">
                                             @if (canUpdate) {
-                                                <button type="button" class="max-sm:touch-hit p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50" [disabled]="mutatingId() !== null" (click)="openEdit(row)">
+                                                <button type="button" class="touch:touch-hit p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50" [disabled]="mutatingId() !== null" (click)="openEdit(row)">
                                                     Düzenle
                                                 </button>
                                             }
                                             @if (canDeactivate && row.isActive) {
                                                 <button
                                                     type="button"
-                                                    class="max-sm:touch-hit p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-red-600 dark:text-red-400 disabled:opacity-50"
+                                                    class="touch:touch-hit p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-red-600 dark:text-red-400 disabled:opacity-50"
                                                     [disabled]="mutatingId() !== null"
                                                     (click)="confirmDeactivate(row)"
                                                 >
@@ -161,7 +161,7 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
                                                 </button>
                                             }
                                             @if (canDeactivate && !row.isActive) {
-                                                <button type="button" class="max-sm:touch-hit p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50" [disabled]="mutatingId() !== null" (click)="setActive(row, true)">
+                                                <button type="button" class="touch:touch-hit p-0 m-0 border-none bg-transparent cursor-pointer text-sm font-medium text-primary disabled:opacity-50" [disabled]="mutatingId() !== null" (click)="setActive(row, true)">
                                                     Etkinleştir
                                                 </button>
                                             }

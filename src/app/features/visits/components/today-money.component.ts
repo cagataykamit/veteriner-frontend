@@ -17,11 +17,11 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
     template: `
         @for (chip of chips(); track chip.key) {
             @if (chip.reviewable) {
-                <button type="button" class="p-0 border-0 bg-transparent cursor-pointer rounded-border max-sm:touch-hit" [attr.title]="chip.title + ' — Ücretlendir'" [attr.aria-label]="chip.label + ', Ücretlendir'" (click)="review.emit()">
+                <button type="button" class="p-0 border-0 bg-transparent cursor-pointer rounded-border touch:touch-hit" [attr.title]="chip.title + ' — Ücretlendir'" [attr.aria-label]="chip.label + ', Ücretlendir'" (click)="review.emit()">
                     <p-tag [value]="chip.label" [severity]="chip.severity" [icon]="chip.icon" />
                 </button>
             } @else if (chip.payable && canPay()) {
-                <button type="button" class="p-0 border-0 bg-transparent cursor-pointer rounded-border max-sm:touch-hit" [attr.title]="chip.title + ' — ödeme al'" [attr.aria-label]="chip.label + ', ödeme al'" (click)="pay.emit()">
+                <button type="button" class="p-0 border-0 bg-transparent cursor-pointer rounded-border touch:touch-hit" [attr.title]="chip.title + ' — ödeme al'" [attr.aria-label]="chip.label + ', ödeme al'" (click)="pay.emit()">
                     <p-tag [value]="chip.label" [severity]="chip.severity" [icon]="chip.icon" />
                 </button>
             } @else {
@@ -39,7 +39,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
             @if (canPay()) {
                 <button
                     type="button"
-                    class="w-full text-left text-sm font-medium text-amber-700 dark:text-amber-300 mt-1 whitespace-normal p-0 border-0 bg-transparent cursor-pointer underline max-sm:touch-hit"
+                    class="w-full text-left text-sm font-medium text-amber-700 dark:text-amber-300 mt-1 whitespace-normal p-0 border-0 bg-transparent cursor-pointer underline touch:touch-hit"
                     data-testid="today-client-debt-pay"
                     [attr.aria-label]="'Müşteri borcu ' + (item().clientOutstandingAmount | money) + ', ödeme al'"
                     (click)="pay.emit()"

@@ -20,3 +20,13 @@
         @content;
     }
 }
+
+/*
+ * Dokunarak kullanılan ekran (O5): telefon genişliği ya da birincil işaretçisi parmak olan cihaz (tablet, dokunmatik ekran).
+ * Dokunma hedefi kuralları buradadır; fareli dar pencere masaüstü yoğunluğunda kalır. Şablonlarda karşılığı `touch:`.
+ */
+@mixin touch() {
+    @media (max-width: 575px), (pointer: coarse) {
+        @content;
+    }
+}
