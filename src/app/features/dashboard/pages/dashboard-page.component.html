@@ -188,8 +188,8 @@
                                             <app-status-tag [label]="row.statusLabel" [severity]="row.statusSeverity" />
                                         </div>
                                         @if (row.productId) {
-                                            <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
-                                                <a [routerLink]="['/panel/products', row.productId]" class="text-primary font-medium no-underline text-sm inline-flex py-1">Detay →</a>
+                                            <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 flex justify-end">
+                                                <app-row-action-button action="detail" [link]="['/panel/products', row.productId]" />
                                             </div>
                                         }
                                     </li>
@@ -224,7 +224,7 @@
                                             </td>
                                             <td>
                                                 @if (row.productId) {
-                                                    <a [routerLink]="['/panel/products', row.productId]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                                    <app-row-action-button action="detail" [link]="['/panel/products', row.productId]" />
                                                 }
                                             </td>
                                         </tr>
@@ -382,8 +382,8 @@
                                         <div class="flex flex-wrap items-center gap-2">
                                             <app-status-tag [label]="apptStatusLabel(row.status)" [severity]="apptStatusSeverity(row.status)" />
                                         </div>
-                                        <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
-                                            <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm inline-flex py-1">Detay →</a>
+                                        <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 flex justify-end">
+                                            <app-row-action-button action="detail" [link]="['/panel/appointments', row.id]" />
                                         </div>
                                     </li>
                                 }
@@ -420,7 +420,7 @@
                                                 <app-status-tag [label]="apptStatusLabel(row.status)" [severity]="apptStatusSeverity(row.status)" />
                                             </td>
                                             <td>
-                                                <a [routerLink]="['/panel/appointments', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                                <app-row-action-button action="detail" [link]="['/panel/appointments', row.id]" />
                                             </td>
                                         </tr>
                                     </ng-template>
@@ -455,8 +455,8 @@
                                                 {{ row.petName }}
                                             }
                                         </div>
-                                        <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
-                                            <a [routerLink]="['/panel/vaccinations', row.id]" class="text-primary font-medium no-underline text-sm inline-flex py-1">Detay →</a>
+                                        <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 flex justify-end">
+                                            <app-row-action-button action="detail" [link]="['/panel/vaccinations', row.id]" />
                                         </div>
                                     </li>
                                 }
@@ -508,8 +508,8 @@
                                         <div class="text-muted-color text-sm break-words">{{ row.examinedAtUtc | trDateTime }}</div>
                                         <div class="min-w-0 break-words font-medium text-surface-900 dark:text-surface-0">{{ row.petName }}</div>
                                         <div class="min-w-0 break-words text-sm text-surface-700 dark:text-surface-200">{{ row.clientName }}</div>
-                                        <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
-                                            <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm inline-flex py-1">Detay →</a>
+                                        <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 flex justify-end">
+                                            <app-row-action-button action="detail" [link]="['/panel/examinations', row.id]" />
                                         </div>
                                     </li>
                                 }
@@ -530,7 +530,7 @@
                                             <td>{{ row.petName }}</td>
                                             <td>{{ row.clientName }}</td>
                                             <td>
-                                                <a [routerLink]="['/panel/examinations', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                                <app-row-action-button action="detail" [link]="['/panel/examinations', row.id]" />
                                             </td>
                                         </tr>
                                     </ng-template>
@@ -575,8 +575,8 @@
                                             }
                                             <div class="min-w-0 break-words text-surface-900 dark:text-surface-0 font-medium">{{ money(row.amount, row.currency) }}</div>
                                             <div class="text-sm text-muted-color break-words">{{ payMethodLabel(row.method) }}</div>
-                                            <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700">
-                                                <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm inline-flex py-1">Detay →</a>
+                                            <div class="mt-2 pt-2 border-t border-surface-200 dark:border-surface-700 flex justify-end">
+                                                <app-row-action-button action="detail" [link]="['/panel/payments', row.id]" />
                                             </div>
                                         </li>
                                     }
@@ -613,7 +613,7 @@
                                                 <td>{{ money(row.amount, row.currency) }}</td>
                                                 <td>{{ payMethodLabel(row.method) }}</td>
                                                 <td>
-                                                    <a [routerLink]="['/panel/payments', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                                    <app-row-action-button action="detail" [link]="['/panel/payments', row.id]" />
                                                 </td>
                                             </tr>
                                         </ng-template>
@@ -651,7 +651,7 @@
                                             <td class="font-medium">{{ row.fullName ?? '—' }}</td>
                                             <td>{{ formatClientPhoneForDisplay(row.phone) }}</td>
                                             <td>
-                                                <a [routerLink]="['/panel/clients', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                                <app-row-action-button action="detail" [link]="['/panel/clients', row.id]" />
                                             </td>
                                         </tr>
                                     </ng-template>
@@ -676,7 +676,7 @@
                                             <td class="font-medium">{{ row.name ?? '—' }}</td>
                                             <td>{{ petSpeciesText(row) }}</td>
                                             <td>
-                                                <a [routerLink]="['/panel/pets', row.id]" class="text-primary font-medium no-underline text-sm">Detay</a>
+                                                <app-row-action-button action="detail" [link]="['/panel/pets', row.id]" />
                                             </td>
                                         </tr>
                                     </ng-template>
