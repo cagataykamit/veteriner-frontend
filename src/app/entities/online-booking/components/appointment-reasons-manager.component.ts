@@ -27,6 +27,8 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 /**
  * Bir kliniğin randevu nedenleri (APPT-005/006/007; ADR-042 K2 ve eki): liste, ekleme/düzenleme, pasife alma ve sonda sistemin
@@ -51,7 +53,9 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        FormSubmitDirective,
+        FormErrorSummaryComponent
     ],
     providers: [ConfirmationService],
     template: `
@@ -131,7 +135,8 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         }
 
         <p-dialog [appUnsavedChanges]="form.dirty" [header]="editing() ? 'Nedeni düzenle' : 'Yeni neden'" [modal]="true" [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false">
-            <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+                <app-form-error-summary />
                 @if (dialogError()) {
                     <p-message severity="error" class="w-full" role="alert">{{ dialogError() }}</p-message>
                 }
@@ -178,7 +183,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                 </fieldset>
                 <div class="flex flex-wrap justify-end gap-2 pt-2">
                     <button pButton type="button" severity="secondary" (click)="dialogVisible.set(false)" [disabled]="submitting()">{{ copy.buttonCancel }}</button>
-                    <button pButton type="submit" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                    <button pButton type="submit" [disabled]="submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                 </div>
             </form>
         </p-dialog>

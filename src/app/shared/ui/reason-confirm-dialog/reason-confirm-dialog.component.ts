@@ -9,6 +9,10 @@ import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/d
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+
+let nextReasonFormId = 0;
 
 /**
  * Gerekçe girilen onay diyaloğu (iptal gibi geri alınamaz işlemler). `execute` çağrıyı yapar; başarıda `confirmed`, hatada Türkçe mesaj diyalogda kalır.
@@ -17,7 +21,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-reason-confirm-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [appUnsavedChanges]="form.dirty" [header]="header()" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible">
@@ -28,7 +32,8 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 <p class="mt-0 mb-4 text-sm text-muted-color">{{ description() }}</p>
             }
             <ng-content />
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form appFormSubmit [id]="formId" [formGroup]="form" (ngSubmit)="onSubmit()">
+                <app-form-error-summary />
                 <label for="rc-reason" class="block text-sm font-medium text-muted-color mb-2">{{ reasonOptional() ? 'Gerekçe (isteğe bağlı)' : 'Gerekçe *' }}</label>
                 <textarea id="rc-reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
                 @if (form.controls.reason.invalid && (form.controls.reason.dirty || form.controls.reason.touched)) {
@@ -42,7 +47,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
-                <button pButton type="button" severity="danger" [disabled]="form.invalid || submitting()" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ confirmLabel() }}</button>
+                <button pButton type="submit" [attr.form]="formId" severity="danger" [disabled]="submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ confirmLabel() }}</button>
             </ng-template>
         </p-dialog>
     `
@@ -68,6 +73,8 @@ export class ReasonConfirmDialogComponent {
     protected readonly reasonMax = REASON_MAX;
 
     readonly submitting = signal(false);
+    /** Kayıt düğmesi diyalog altlığında; form kimliğiyle bağlanır (aynı sayfada birden çok diyalog olabilir). */
+    protected readonly formId = `reason-confirm-${++nextReasonFormId}`;
     readonly submitError = signal<string | null>(null);
 
     readonly form = this.fb.nonNullable.group({ reason: ['', reasonLength] });

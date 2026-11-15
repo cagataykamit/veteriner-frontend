@@ -20,11 +20,13 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 @Component({
     selector: 'app-reminder-settings-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputNumberModule, ToggleSwitchModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, ClinicReminderRulesPanelComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputNumberModule, ToggleSwitchModule, ToastModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, ClinicReminderRulesPanelComponent, FormSubmitDirective, FormErrorSummaryComponent],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -55,7 +57,8 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     <p class="text-danger text-sm mt-0 mb-4" role="alert">{{ saveError() }}</p>
                 }
 
-                <form [formGroup]="form" (ngSubmit)="onSave()">
+                <form appFormSubmit [formGroup]="form" (ngSubmit)="onSave()">
+                    <app-form-error-summary />
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
                             <label class="block text-sm font-medium text-muted-color mb-2">Randevu hatırlatmaları aktif</label>
@@ -86,7 +89,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     </div>
 
                     <div class="mt-4">
-                        <button pButton type="submit" [disabled]="form.invalid || saving() || formDisabled() || !form.dirty"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
+                        <button pButton type="submit" [disabled]="saving() || formDisabled() || !form.dirty"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
                     </div>
                 </form>
             </div>

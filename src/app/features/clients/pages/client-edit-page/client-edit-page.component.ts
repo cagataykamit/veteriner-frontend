@@ -25,11 +25,13 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-format.directive';
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 @Component({
     selector: 'app-client-edit-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, PhoneFormatDirective],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, PhoneFormatDirective, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (loading()) {
@@ -45,7 +47,8 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
                 @if (ro.mutationBlocked()) {
                     <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; müşteri kaydı güncellenemez.</p>
                 }
-                <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()">
+                    <app-form-error-summary />
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
                             <label for="fullName" class="block text-sm font-medium text-muted-color mb-2">Ad soyad *</label>

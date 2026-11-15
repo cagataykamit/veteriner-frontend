@@ -19,6 +19,8 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { parseValidationHttpError } from '@/app/shared/utils/validation-error-parse.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 const BILLING_PROFILE_SAVE_FALLBACK = 'Firma / fatura bilgileri kaydedilemedi.';
 const BILLING_PROFILE_LOAD_FALLBACK = 'Firma / fatura bilgileri alınamadı.';
@@ -29,7 +31,7 @@ const BILLING_PROFILE_HIDDEN_UI_FIELDS = new Set<OrganizationBillingProfileFormF
 @Component({
     selector: 'app-organization-billing-profile-section',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, AppLoadingStateComponent, AppErrorStateComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, AppLoadingStateComponent, AppErrorStateComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card mb-0">
@@ -50,7 +52,8 @@ const BILLING_PROFILE_HIDDEN_UI_FIELDS = new Set<OrganizationBillingProfileFormF
                     <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">Bu bilgileri düzenleme yetkiniz yok.</p>
                 }
 
-                <form [formGroup]="form" (ngSubmit)="onSave()">
+                <form appFormSubmit [formGroup]="form" (ngSubmit)="onSave()">
+                    <app-form-error-summary />
                     <h6 class="mt-0 mb-3 text-sm font-semibold text-surface-900 dark:text-surface-0">Firma Bilgileri</h6>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-3">
                         <div>
@@ -137,7 +140,7 @@ const BILLING_PROFILE_HIDDEN_UI_FIELDS = new Set<OrganizationBillingProfileFormF
                     </div>
 
                     <div class="flex justify-end mt-5 pt-4 mb-0 border-t border-surface-200 dark:border-surface-700">
-                        <button pButton type="submit" [disabled]="form.invalid || saving() || !canManageTenantAccess() || !form.dirty"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
+                        <button pButton type="submit" [disabled]="saving() || !canManageTenantAccess() || !form.dirty"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
                     </div>
                 </form>
             }

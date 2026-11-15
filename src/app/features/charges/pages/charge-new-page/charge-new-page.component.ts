@@ -27,11 +27,13 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 @Component({
     selector: 'app-charge-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent, ChargeTaxFieldsComponent, FocusFirstFieldDirective],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent, ChargeTaxFieldsComponent, FocusFirstFieldDirective, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/charges" categoryLinkLabel="Ücret listesine dön" title="Yeni ücret" description="Müşteriye ücret satırı ekleyin. Ücret ödeme sayılmaz." />
@@ -43,7 +45,8 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
             @if (loadError()) {
                 <p class="text-danger mt-0 mb-4" role="alert">{{ loadError() }}</p>
             }
-            <form appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit(canCollectPayment)">
+            <form appFormSubmit #formSubmit="appFormSubmit" appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit(canCollectPayment)">
+                <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
                         <label for="chargeClient" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
@@ -129,10 +132,10 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
                     <button
                         pButton
                         type="submit"
-                        [disabled]="form.invalid || amountPreview() === null || submitting() || ro.mutationBlocked()"
+                        [disabled]="submitting() || ro.mutationBlocked()"
                     ><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : (canCollectPayment ? 'pi pi-wallet' : 'pi pi-check')"></i>{{ canCollectPayment ? 'Kaydet ve ödemeyi şimdi al' : copy.buttonSave }}</button>
                     @if (canCollectPayment) {
-                        <button pButton type="button" severity="secondary" (click)="onSubmit(false)" [disabled]="form.invalid || amountPreview() === null || submitting() || ro.mutationBlocked()"><i class="p-button-icon pi pi-check"></i>{{ copy.buttonSave }}</button>
+                        <button pButton type="button" severity="secondary" (click)="formSubmit.revealIssues() || onSubmit(false)" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon pi pi-check"></i>{{ copy.buttonSave }}</button>
                     }
                     <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>

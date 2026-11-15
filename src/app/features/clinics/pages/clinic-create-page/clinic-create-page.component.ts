@@ -20,11 +20,13 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { AppPlanUpgradeNoticeComponent } from '@/app/entities/subscription/components/app-plan-upgrade-notice.component';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 @Component({
     selector: 'app-clinic-create-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, TextareaModule, ToastModule, AppPageHeaderComponent, AppPlanUpgradeNoticeComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, TextareaModule, ToastModule, AppPageHeaderComponent, AppPlanUpgradeNoticeComponent, FormSubmitDirective, FormErrorSummaryComponent],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -48,7 +50,8 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
             @if (formError()) {
                 <p class="text-danger text-sm mb-3 m-0" role="alert">{{ formError() }}</p>
             }
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()">
+                <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
                         <label for="newClinicName" class="block text-sm font-medium text-muted-color mb-2">Klinik adı *</label>
@@ -117,7 +120,7 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
                     </div>
                 </div>
                 <div class="mt-4 mb-0 flex flex-wrap gap-2">
-                    <button pButton type="submit" [disabled]="form.invalid || submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
+                    <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
                     <button pButton type="button" severity="secondary" [disabled]="submitting()" (click)="onCancel()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
                 </div>
             </form>

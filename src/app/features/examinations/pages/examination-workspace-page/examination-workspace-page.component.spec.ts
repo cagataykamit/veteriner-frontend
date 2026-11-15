@@ -218,7 +218,8 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         cmp.form.controls.weightKg.setValue(null);
 
         expect(cmp.form.hasError('partialVitalClear')).toBe(true);
-        expect(cmp.saveDisabled()).toBe(true);
+        // Kaydet açık kalır (O3); gönderimi işleyici engeller.
+        expect(cmp.saveDisabled()).toBe(false);
         cmp.onSubmit();
         expect(service.updateExamination).not.toHaveBeenCalled();
     });

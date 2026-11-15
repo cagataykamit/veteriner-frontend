@@ -18,6 +18,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
 import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
 import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-format.directive';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 /**
  * Randevu / muayene formlarında tam sayfa ayrılmadan müşteri oluşturma (create contract ile aynı).
@@ -26,11 +28,12 @@ import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-form
 @Component({
     selector: 'app-quick-client-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, InputTextModule, AppTrialLimitNoticeComponent, PhoneFormatDirective],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, InputTextModule, AppTrialLimitNoticeComponent, PhoneFormatDirective, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [appUnsavedChanges]="form.dirty" header="Yeni müşteri ekle" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible" (onShow)="onShow()">
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" id="quick-client-form">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()" id="quick-client-form">
+                <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
                         <label for="qc-fullName" class="block text-sm font-medium text-muted-color mb-2">Ad soyad *</label>
@@ -70,7 +73,7 @@ import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-form
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
-                <button pButton type="submit" form="quick-client-form" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Müşteriyi kaydet</button>
+                <button pButton type="submit" form="quick-client-form" [disabled]="submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Müşteriyi kaydet</button>
             </ng-template>
         </p-dialog>
     `

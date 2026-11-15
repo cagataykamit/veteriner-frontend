@@ -17,6 +17,8 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { messageFromHttpError, panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
 
@@ -27,7 +29,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
 @Component({
     selector: 'app-care-instructions-section',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent, TrDateTimePipe],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent, TrDateTimePipe, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (canRead) {
@@ -69,7 +71,8 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
             </div>
 
             <p-dialog [appUnsavedChanges]="form.dirty" [header]="editing() ? 'Bakım talimatını düzenle' : 'Bakım talimatı ekle'" [modal]="true" [(visible)]="dialogVisible" [style]="{ width: 'min(36rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
-                <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()">
+                    <app-form-error-summary />
                     <label for="careInstructionText" class="block text-sm font-medium text-muted-color mb-2">Talimat metni *</label>
                     <textarea id="careInstructionText" rows="8" [attr.maxlength]="textMax" class="w-full p-inputtext p-component" formControlName="text"></textarea>
                     <div class="flex justify-between gap-2">
@@ -94,7 +97,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
 
                     <div class="flex flex-wrap justify-end gap-2 mt-4">
                         <button pButton type="button" severity="secondary" (click)="dialogVisible.set(false)" [disabled]="submitting()">Vazgeç</button>
-                        <button pButton type="submit" [disabled]="form.invalid || ro.mutationBlocked() || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
+                        <button pButton type="submit" [disabled]="ro.mutationBlocked() || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
                     </div>
                 </form>
             </p-dialog>

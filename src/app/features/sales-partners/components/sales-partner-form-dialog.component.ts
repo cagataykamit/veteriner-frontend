@@ -10,6 +10,8 @@ import { MessageModule } from 'primeng/message';
 import type { SalesPartnerDto } from '@/app/entities/sales-partner/models/sales-partner.model';
 import { SalesPartnersService } from '@/app/features/sales-partners/services/sales-partners.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -17,11 +19,12 @@ const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 @Component({
     selector: 'app-sales-partner-form-dialog',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, CheckboxModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, InputTextModule, MessageModule],
+    imports: [ReactiveFormsModule, ButtonModule, CheckboxModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, InputTextModule, MessageModule, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [appUnsavedChanges]="form.dirty" [header]="partner() ? 'Satış ortağını düzenle' : 'Yeni satış ortağı'" [modal]="true" [(visible)]="visible" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
-            <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+                <app-form-error-summary />
                 @if (error()) {
                     <p-message severity="error" class="w-full" role="alert">{{ error() }}</p-message>
                 }

@@ -88,7 +88,8 @@
                     <app-examination-patient-context [petId]="pid" [excludeExaminationId]="isEdit ? examinationId : null" />
                 </aside>
             }
-            <form class="col-span-12 min-w-0" [ngClass]="{ '@4xl:col-span-8': !!contextPetId() }" [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form appFormSubmit class="col-span-12 min-w-0" [ngClass]="{ '@4xl:col-span-8': !!contextPetId() }" [formGroup]="form" (ngSubmit)="onSubmit()">
+                <app-form-error-summary />
                 <div class="card mb-4">
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">

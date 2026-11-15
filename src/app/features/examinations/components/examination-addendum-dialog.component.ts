@@ -8,6 +8,8 @@ import type { ExaminationAddendumVm } from '@/app/entities/examination/models/ex
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 export const ADDENDUM_TEXT_MAX = 4000;
 
@@ -26,12 +28,13 @@ function addendumText(c: { value: unknown }): { addendumText: true } | null {
 @Component({
     selector: 'app-examination-addendum-dialog',
     standalone: true,
-    imports: [ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule],
+    imports: [ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [appUnsavedChanges]="form.dirty" header="Ek not ekle" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(620px, 95vw)' }" [(visible)]="visible">
             <p class="mt-0 text-muted-color">Ek not kalıcıdır; eklendikten sonra düzenlenemez veya silinemez. İlk muayene metni değişmez.</p>
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" id="examination-addendum-form">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()" id="examination-addendum-form">
+                <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12">
                         <label for="ad-reason" class="block text-sm font-medium text-muted-color mb-2">Gerekçe *</label>
@@ -55,7 +58,7 @@ function addendumText(c: { value: unknown }): { addendumText: true } | null {
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
-                <button pButton type="submit" form="examination-addendum-form" [disabled]="form.invalid || submitting()" data-testid="addendum-submit"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Ek notu kaydet</button>
+                <button pButton type="submit" form="examination-addendum-form" [disabled]="submitting()" data-testid="addendum-submit"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Ek notu kaydet</button>
             </ng-template>
         </p-dialog>
     `

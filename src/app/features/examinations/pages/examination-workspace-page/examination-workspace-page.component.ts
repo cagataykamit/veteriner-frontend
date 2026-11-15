@@ -38,6 +38,8 @@ import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/util
 import { DATE_INPUT_MIN, dateYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { toIstanbulDateTimeInputParts, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 function requiredTrimmed(c: AbstractControl): ValidationErrors | null {
     return typeof c.value === 'string' && c.value.trim() ? null : { required: true };
@@ -90,7 +92,9 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
         DateInputComponent,
         ClinicalTermPickerComponent,
         ClinicalSnippetTriggerDirective,
-        DoseCalculatorComponent
+        DoseCalculatorComponent,
+        FormSubmitDirective,
+        FormErrorSummaryComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './examination-workspace-page.component.html'
@@ -226,7 +230,8 @@ export class ExaminationWorkspacePageComponent implements OnInit, HasUnsavedChan
     }
 
     saveDisabled(): boolean {
-        return this.form.invalid || (!this.isEdit && (this.selectionForm.invalid || this.applyingRouteContext())) || this.finalized() || this.submitting() || this.ro.mutationBlocked();
+        // Eksik alan düğmeyi kapatmaz; Kaydet eksikleri gösterir (O3).
+        return (!this.isEdit && this.applyingRouteContext()) || this.finalized() || this.submitting() || this.ro.mutationBlocked();
     }
 
     /** Yan paneldeki hasta bağlamı için hayvan: düzenlemede kayıttan, oluşturmada seçimden (seçilmeden panel yok). */

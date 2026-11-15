@@ -25,13 +25,15 @@ import { type InlineCreateConfig, InlineCreateDirective } from '@/app/shared/for
 import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { DATETIME_LOCAL_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 type SelectOption = { label: string; value: string };
 
 @Component({
     selector: 'app-stock-movement-create-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, SelectModule, DateInputComponent, StockBatchFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, SelectModule, DateInputComponent, StockBatchFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [appUnsavedChanges]="form.dirty" header="Stok hareketi ekle" [modal]="true" [visible]="visible()" (visibleChange)="onVisibleChange($event)" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
@@ -53,7 +55,8 @@ type SelectOption = { label: string; value: string };
                 <p class="text-muted-color text-sm mt-0 mb-4" role="alert">{{ productsLoadError() }}</p>
             }
 
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+                <app-form-error-summary />
                 <div>
                     <label for="smcClinic" class="block text-sm font-medium text-muted-color mb-2">Klinik *</label>
                     <p-select

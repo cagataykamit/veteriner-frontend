@@ -274,7 +274,10 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
 
         type('#clinicDistrict', 'a'.repeat(101));
         await settle();
-        expect(button('Kaydet').disabled).toBe(true);
+        // Kaydet açık kalır (O3); geçersiz ilçe gönderilmez, eksik özeti çıkar.
+        await click('Kaydet');
+        expect(clinics['updateClinicFromForm']).not.toHaveBeenCalled();
+        expect(text()).toContain('alan eksik ya da hatalı');
 
         type('#clinicDistrict', 'Üsküdar');
         await settle();

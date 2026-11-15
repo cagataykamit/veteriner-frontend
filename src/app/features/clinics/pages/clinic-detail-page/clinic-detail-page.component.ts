@@ -31,6 +31,8 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { formatClinicPhoneForDisplay, formatClinicPhoneForInput } from '@/app/entities/clinic/utils/clinic-phone-format.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 @Component({
     selector: 'app-clinic-detail-page',
@@ -51,7 +53,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         AppErrorStateComponent,
         ClinicWorkingHoursSectionComponent,
         ClinicAppointmentSettingsSectionComponent,
-        ClinicTaxpayerSettingsSectionComponent
+        ClinicTaxpayerSettingsSectionComponent,
+        FormSubmitDirective,
+        FormErrorSummaryComponent
     ],
     providers: [MessageService, ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -151,7 +155,8 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 @if (formError()) {
                     <p class="text-danger text-sm mb-3 m-0" role="alert">{{ formError() }}</p>
                 }
-                <form [formGroup]="form" (ngSubmit)="onSave()">
+                <form appFormSubmit [formGroup]="form" (ngSubmit)="onSave()">
+                    <app-form-error-summary />
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
                             <label for="clinicName" class="block text-sm font-medium text-muted-color mb-2">Klinik adı *</label>
@@ -220,7 +225,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         </div>
                     </div>
                     <div class="mt-4 mb-0">
-                        <button pButton type="submit" [disabled]="form.invalid || form.pristine || saving() || ro.mutationBlocked() || busyDeactivate() || busyActivate()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
+                        <button pButton type="submit" [disabled]="form.pristine || saving() || ro.mutationBlocked() || busyDeactivate() || busyActivate()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
                     </div>
                 </form>
             </div>

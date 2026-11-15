@@ -27,6 +27,8 @@ import { getAcknowledgeExpiredRequest, getStockBatchRequest, syncStockBatchGroup
 import { StockMovementService } from '@/app/features/inventory/services/stock-movement.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 /**
  * Ürün detayı stok işlemi diyaloğu: stok girişi, çıkışı ve minimum stok. Sayfa `openForRow` / `openFromHeader` ile açar;
@@ -35,11 +37,12 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-product-stock-operation-dialog',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, SelectModule, SelectButtonModule, TextareaModule, StockBatchFieldsComponent],
+    imports: [ReactiveFormsModule, ButtonModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, SelectModule, SelectButtonModule, TextareaModule, StockBatchFieldsComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [appUnsavedChanges]="stockOperationForm.dirty" header="Stok işlemi" [modal]="true" [visible]="stockOperationDialogOpen()" (visibleChange)="onStockOperationDialogVisibleChange($event)" [style]="{ width: 'min(36rem, 95vw)' }" [draggable]="false">
-            <form [formGroup]="stockOperationForm" (ngSubmit)="onStockOperationSubmit()" class="flex flex-col gap-4">
+            <form appFormSubmit [formGroup]="stockOperationForm" (ngSubmit)="onStockOperationSubmit()" class="flex flex-col gap-4">
+                <app-form-error-summary />
                 @if (showStockClinicPicker()) {
                     <div class="flex flex-col gap-1">
                         <label for="soClinicPick" class="block text-sm font-medium text-muted-color">Klinik *</label>
@@ -171,7 +174,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     <button
                         pButton
                         type="submit"
-                        [disabled]="stockOperationForm.invalid || stockOperationSubmitting() || ro.mutationBlocked() || stockOperationPickIncomplete()"
+                        [disabled]="stockOperationSubmitting() || ro.mutationBlocked() || stockOperationPickIncomplete()"
                     ><i class="p-button-icon" [class]="stockOperationSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                 </div>
             </form>

@@ -13,6 +13,8 @@ import { DialogModule } from 'primeng/dialog';
 import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 /**
  * Hayvan quick-create içinde, seçili türe yeni ırk eklemek (POST gövdesi: speciesId + name).
@@ -20,7 +22,7 @@ import { InputTextModule } from 'primeng/inputtext';
 @Component({
     selector: 'app-quick-breed-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, InputTextModule],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, InputTextModule, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [appUnsavedChanges]="form.dirty" header="Yeni ırk" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(440px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onShow()">
@@ -30,7 +32,8 @@ import { InputTextModule } from 'primeng/inputtext';
             @if (speciesLabel().trim()) {
                 <p class="text-sm text-muted-color mt-0 mb-3">{{ speciesLabel() }}</p>
             }
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" id="quick-breed-form">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()" id="quick-breed-form">
+                <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12">
                         <label for="qb-name" class="block text-sm font-medium text-muted-color mb-2">Irk adı *</label>
@@ -52,7 +55,7 @@ import { InputTextModule } from 'primeng/inputtext';
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
-                <button pButton type="submit" form="quick-breed-form" [disabled]="form.invalid || submitting() || !speciesIdContext() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
+                <button pButton type="submit" form="quick-breed-form" [disabled]="submitting() || !speciesIdContext() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
             </ng-template>
         </p-dialog>
     `

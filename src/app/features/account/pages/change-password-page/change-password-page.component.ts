@@ -13,6 +13,8 @@ import { AccountService } from '@/app/features/account/services/account.service'
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { extractRawValidationErrors, firstStringMessage, parseValidationFieldErrors } from '@/app/shared/utils/validation-error-parse.utils';
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 type ChangePasswordFieldKey = 'currentPassword' | 'newPassword' | 'confirmPassword';
 
@@ -69,7 +71,7 @@ function resolveChangePasswordErrorMessage(err: unknown): string {
 @Component({
     selector: 'app-change-password-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, PasswordModule, ToastModule],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, PasswordModule, ToastModule, FormSubmitDirective, FormErrorSummaryComponent],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -85,7 +87,8 @@ function resolveChangePasswordErrorMessage(err: unknown): string {
                     </p>
                 </div>
 
-                <form [formGroup]="form" (ngSubmit)="onSubmit()" class="mx-auto mt-10 w-full max-w-2xl">
+                <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()" class="mx-auto mt-10 w-full max-w-2xl">
+                    <app-form-error-summary />
                     <div class="mb-5">
                         <label for="currentPassword" class="block text-sm font-medium text-muted-color mb-2">Mevcut şifre *</label>
                         <p-password inputId="currentPassword" formControlName="currentPassword" [toggleMask]="true" [feedback]="false" class="w-full" inputStyleClass="w-full" autocomplete="current-password" />
@@ -118,7 +121,7 @@ function resolveChangePasswordErrorMessage(err: unknown): string {
                         }
                     </div>
 
-                    <button pButton type="submit" class="w-full" [disabled]="form.invalid || saving()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
+                    <button pButton type="submit" class="w-full" [disabled]="saving()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
                 </form>
             </div>
         </div>

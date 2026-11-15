@@ -32,6 +32,8 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 type CategoriesListState = {
     search: string;
@@ -65,7 +67,9 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
         AppStatusTagComponent,
         FilterFieldComponent,
         SearchInputComponent,
-        AppRowActionButtonComponent
+        AppRowActionButtonComponent,
+        FormSubmitDirective,
+        FormErrorSummaryComponent
     ],
     providers: [ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -239,7 +243,8 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
         </div>
 
         <p-dialog [appUnsavedChanges]="dialogForm.dirty" [header]="dialogHeader()" [modal]="true" [visible]="dialogVisible()" (visibleChange)="onDialogVisibleChange($event)" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false">
-            <form [formGroup]="dialogForm" (ngSubmit)="submitDialog()" class="flex flex-col gap-4">
+            <form appFormSubmit [formGroup]="dialogForm" (ngSubmit)="submitDialog()" class="flex flex-col gap-4">
+                <app-form-error-summary />
                 @if (dialogError()) {
                     <p-message severity="error" class="w-full" role="alert">{{ dialogError() }}</p-message>
                 }
@@ -263,7 +268,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                 </div>
                 <div class="flex flex-wrap justify-end gap-2 pt-2">
                     <button pButton type="button" severity="secondary" (click)="closeDialog()" [disabled]="dialogSubmitting()">{{ copy.buttonCancel }}</button>
-                    <button pButton type="submit" [disabled]="dialogForm.invalid || dialogSubmitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="dialogSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ dialogSubmitLabel() }}</button>
+                    <button pButton type="submit" [disabled]="dialogSubmitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="dialogSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ dialogSubmitLabel() }}</button>
                 </div>
             </form>
         </p-dialog>

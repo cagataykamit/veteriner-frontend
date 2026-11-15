@@ -36,6 +36,8 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 /**
  * Aşı takvimi (TIER-005, `VACCINATION_SCHEDULE_API_CONTRACT.md` §2), Tanımlar altında: tür + aşı satırları; hasta kartındaki
@@ -62,7 +64,9 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         AppErrorStateComponent,
         AppLoadingStateComponent,
         InlineCreateDirective,
-        InlineCreateOptionComponent
+        InlineCreateOptionComponent,
+        FormSubmitDirective,
+        FormErrorSummaryComponent
     ],
     providers: [ConfirmationService],
     template: `
@@ -154,7 +158,8 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         </div>
 
         <p-dialog [appUnsavedChanges]="form.dirty" [header]="editing() ? 'Takvim satırını düzenle' : 'Yeni takvim satırı'" [modal]="true" [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [style]="{ width: 'min(34rem, 95vw)' }" [draggable]="false">
-            <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+                <app-form-error-summary />
                 @if (dialogError(); as err) {
                     <p-message severity="error" class="w-full" role="alert">{{ err }}</p-message>
                 }
@@ -201,7 +206,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                 </div>
                 <div class="flex flex-wrap justify-end gap-2 pt-2">
                     <button pButton type="button" severity="secondary" (click)="dialogVisible.set(false)" [disabled]="submitting()">{{ copy.buttonCancel }}</button>
-                    <button pButton type="submit" data-testid="schedule-save" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                    <button pButton type="submit" data-testid="schedule-save" [disabled]="submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                 </div>
             </form>
         </p-dialog>

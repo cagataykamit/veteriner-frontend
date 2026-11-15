@@ -81,6 +81,16 @@ export class FormSubmitDirective {
         form.requestSubmit();
     }
 
+    /**
+     * Gönderimden bağımsız tetikleme: formun dışındaki ikinci kayıt düğmesi (ör. "Kaydet" yanında "Kaydet ve ödeme al") eksikleri
+     * aynı yolla gösterir. Form geçersizse `true` döner.
+     */
+    revealIssues(): boolean {
+        this.onSubmit();
+
+        return this.formGroup.form.invalid;
+    }
+
     private onSubmit(): void {
         const form = this.formGroup.form;
 

@@ -30,6 +30,8 @@ import type { ProductListItemVm } from '@/app/entities/inventory/models/product-
 import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { isStockTrackedKind } from '@/app/entities/inventory/utils/product-classification.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
+import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
 export type ExaminationTemplateEditorMode = 'create' | 'edit' | 'copy';
 
@@ -66,11 +68,12 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
 @Component({
     selector: 'app-examination-template-editor-dialog',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, InputTextModule, MessageModule, SelectModule, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent],
+    imports: [ReactiveFormsModule, ButtonModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, InputTextModule, MessageModule, SelectModule, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent, FormSubmitDirective, FormErrorSummaryComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [appUnsavedChanges]="form.dirty" [header]="header()" [modal]="true" [visible]="visible()" (visibleChange)="visible.set($event)" [closable]="!submitting()" [style]="{ width: 'min(48rem, 95vw)' }" [draggable]="false">
-            <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+            <form appFormSubmit [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+                <app-form-error-summary />
                 @if (submitError()) {
                     <p-message severity="error" class="w-full" role="alert">{{ submitError() }}</p-message>
                 }
@@ -178,7 +181,7 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
 
                 <div class="flex flex-wrap justify-end gap-2 pt-2">
                     <button pButton type="button" severity="secondary" (click)="visible.set(false)" [disabled]="submitting()">{{ copy.buttonCancel }}</button>
-                    <button pButton type="submit" [disabled]="form.invalid || submitting()" data-testid="template-save"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                    <button pButton type="submit" [disabled]="submitting()" data-testid="template-save"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                 </div>
             </form>
         </p-dialog>
