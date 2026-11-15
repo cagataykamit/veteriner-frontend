@@ -162,7 +162,8 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
         expect(fixture.componentInstance.batch()?.validationId).toBe('v-new');
         expect(fixture.componentInstance.step()).toBe(3);
         expect(text(el)).not.toContain('Satırlar doğrulanıyor');
-        expect(text(el)).toContain('Doğrulama tamamlandı');
+        expect(text(el)).toContain('Her şey hazır');
+        expect(text(el)).toContain('Onaylamadan hiçbir kayıt oluşmaz.');
 
         advance(IMPORT_PROGRESS_POLL_MS * 3);
         expect(imports.getProgress).toHaveBeenCalledTimes(2);
@@ -176,7 +177,8 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
         imports.getBatch.mockReturnValue(of(batch('ValidationFailed')));
         advance(0);
 
-        expect(text(el)).toContain('beklenmeyen bir sorun');
+        expect(text(el)).toContain('Beklenmeyen bir sorun');
+        expect(el.querySelector('[data-testid="import-next-hint"]')?.textContent?.trim()).toBe('Önce yeniden doğrulayın.');
         const retry = Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Yeniden doğrula'));
 
         expect(retry).toBeDefined();

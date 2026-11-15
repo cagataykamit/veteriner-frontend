@@ -1,5 +1,16 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import type { ImportBatchStatus, ImportIssueSeverity, ImportRowStatusFilter, ImportJobStatus, ImportReminderImpactDto, ImportRollbackBlockedItemDto, ImportRollbackCountsDto, ImportRollbackEntity, ImportSourceProfileCode, ImportTable, ImportValueKind } from '@/app/features/imports/models/import-api.model';
+import type {
+    ImportBatchStatus,
+    ImportRowStatusFilter,
+    ImportJobStatus,
+    ImportReminderImpactDto,
+    ImportRollbackBlockedItemDto,
+    ImportRollbackCountsDto,
+    ImportRollbackEntity,
+    ImportSourceProfileCode,
+    ImportTable,
+    ImportValueKind
+} from '@/app/features/imports/models/import-api.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { IMPORT_TABLE_LABELS } from '@/app/features/imports/utils/import-schema.utils';
@@ -85,28 +96,23 @@ export const IMPORT_VALUE_KIND_LABELS: Readonly<Record<ImportValueKind, string>>
     pet: 'Hasta'
 };
 
-/** Doğrulama sonucundaki neden grupları: kliniğe "hata" değil, satırın ne olacağı söylenir (aktarılmaz / aktarılır ama bakın / bilgi). */
-export const IMPORT_ISSUE_GROUPS: readonly { severity: ImportIssueSeverity; title: string; hint: string }[] = [
-    { severity: 'Error', title: 'Aktarılmayacak satırlar', hint: 'eksik ya da tutarsız bilgi; listesini indirip eski programda düzeltebilirsiniz' },
-    { severity: 'Warning', title: 'Aktarılacak, göz atmanız önerilenler', hint: 'kayıt gelir; bir alanı boş ya da düzeltilmiş gelir' },
-    { severity: 'Info', title: 'Bilgi notları', hint: 'bir şey yapmanız gerekmez' }
-];
-
-/** Satır durumunun kliniğe gösterilen adı (`Error` satır aktarılmaz; uyarılı satır aktarılır). */
-/** Satır durumu ve satır listesi filtresi etiketleri; `WillSkip` bilerek atlanacak satırlar. */
+/** Satır durumu ve satır listesi filtresi etiketleri; doğrulama sonucunun üç sonucuyla aynı ad (`Error` aktarılmaz, `WillSkip` bilerek atlanır, uyarılı satır aktarılır). */
 export const IMPORT_ROW_STATUS_LABELS: Readonly<Record<ImportRowStatusFilter, string>> = {
-    Error: 'Hatalı',
-    WillSkip: 'Atlanacak',
-    Warning: 'Göz atın',
-    Valid: 'Geçerli'
+    Error: 'Aktarılamayacak',
+    WillSkip: 'Bilerek atlanacak',
+    Warning: 'Aktarılacak, göz atın',
+    Valid: 'Aktarılacak'
 };
 
-/** Satır sorunu ve dosya düzeyi neden kodları için sade Türkçe etiketler (sözleşme 6.4). */
-const ISSUE_LABELS: Readonly<Record<string, string>> = {
-    'Imports.RequiredMissing': 'Zorunlu alan boş',
+/**
+ * Satır sorunu ve dosya düzeyi neden kodları için sade Türkçe metinler (sözleşme 6.4): etiket ya da [etiket, açıklama].
+ * Açıklama, doğrulama sonucundaki neden listesinde etiketin altında görünür; ne olacağını ya da ne yapılacağını tek cümleyle söyler.
+ */
+const ISSUE_TEXTS: Readonly<Record<string, string | readonly [label: string, note: string]>> = {
+    'Imports.RequiredMissing': ['Zorunlu alan boş', 'Ad gibi zorunlu bir alan dosyada boş.'],
     'Imports.ShortNameCustomerKept': 'Ad çok kısa; yer tutucu adla aktarılır, kontrol edin',
     'Imports.ShortNameCustomerSkipped': 'Adı çok kısa ve bağlı kaydı olmayan müşteri (deneme kaydı); atlanır',
-    'Imports.NameTooShort': 'Ad çok kısa',
+    'Imports.NameTooShort': ['Ad çok kısa', 'Ad en az iki harf olmalı.'],
     'Imports.FieldTooLong': 'Alan çok uzun',
     'Imports.PhoneInvalid': 'Telefon geçerli değil; telefonsuz aktarılır',
     'Imports.EmailInvalid': 'E-posta geçerli değil; e-postasız aktarılır',
@@ -124,9 +130,9 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.MicrochipScientificNotation': 'Mikroçip bilimsel gösterimde; mikroçipsiz aktarılır (hücreyi metin yapın)',
     'Imports.MicrochipLength': 'Mikroçip 15 haneli değil',
     'Imports.MicrochipConflict': 'Aynı mikroçip başka bir hastada var',
-    'Imports.SpeciesUnmapped': 'Tür sistemde bulunamadı',
-    'Imports.VaccineUnmapped': 'Aşı adı sistemde bulunamadı',
-    'Imports.ValueSkipped': 'Atladığınız değer (ör. tür); satır atlanır',
+    'Imports.SpeciesUnmapped': ['Tür sistemde bulunamadı', 'Yukarıda karşılığını seçince düzelir.'],
+    'Imports.VaccineUnmapped': ['Aşı adı sistemde bulunamadı', 'Yukarıda karşılığını seçince düzelir.'],
+    'Imports.ValueSkipped': ['Atladığınız değer (ör. tür); satır atlanır', '"Atla" dediğiniz tür ya da aşıya bağlı satırlar.'],
     'Imports.ParentSkipped': 'Bağlı olduğu hasta atlandığı için atlanır',
     'Imports.BreedFreeText': 'Irk sistemde yok; metin olarak aktarılır',
     'Imports.ColorFreeText': 'Renk sistemde yok; nota eklenir',
@@ -136,23 +142,23 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.NeuteredUnrecognized': 'Kısır değeri tanınmadı',
     'Imports.WeightInvalid': 'Ağırlık geçersiz; boş aktarılır',
     'Imports.DuplicateReference': 'Müşteri veya hasta numarası dosyada tekrar ediyor',
-    'Imports.DuplicateInFile': 'Dosyada aynı kayıt daha önce geçiyor',
+    'Imports.DuplicateInFile': ['Dosyada aynı kayıt daha önce geçiyor', 'Bir kez aktarılır; tekrarı atlanır.'],
     'Imports.DuplicateClient': 'Aynı müşteri sistemde zaten var',
     'Imports.MatchedExisting': 'Sistemdeki kayıtla eşleşti',
     'Imports.SharedPhone': 'Telefon başka bir müşteriyle ortak',
     'Imports.PossibleDuplicate': 'Aynı adlı müşteri zaten var; ayrı kayıt oluşur',
     'Imports.OwnerNotFound': 'Sahip (müşteri) bulunamadı',
     'Imports.OwnerlessPetSkipped': 'Sahibi ve kaydı olmayan hasta (eski programda müşteri kartı silinmiş); atlanır',
-    'Imports.AmbiguousPet': 'Kayıtların hangi hastaya ait olduğu seçilmedi (aynı sahipte aynı adlı birden çok hasta)',
+    'Imports.AmbiguousPet': ['Kayıtların hangi hastaya ait olduğu seçilmedi (aynı sahipte aynı adlı birden çok hasta)', 'Yukarıda seçim yapınca düzelir.'],
     'Imports.AmbiguousPetSkipped': 'Hangi hastaya ait olduğu sorusunda "atla" seçildi; atlanır',
     'Imports.PetMergedByChoice': 'Seçiminizle aynı adlı öbür hastayla tek hasta sayıldı; ayrı aktarılmaz',
-    'Imports.OwnerRowInvalid': 'Sahibi aktarılamadığı için aktarılamaz',
-    'Imports.PetNotFound': 'Satırın hastası bulunamadı',
-    'Imports.PetRowInvalid': 'Hastası aktarılamadığı için aktarılamaz',
+    'Imports.OwnerRowInvalid': ['Sahibi aktarılamadığı için aktarılamaz', 'Önce müşteri satırı düzeltilmeli.'],
+    'Imports.PetNotFound': ['Satırın hastası bulunamadı', 'Hasta dosyada yok ya da aynı sahipte aynı adlı birden çok hasta var.'],
+    'Imports.PetRowInvalid': ['Hastası aktarılamadığı için aktarılamaz', 'Önce hasta satırı düzeltilmeli.'],
     'Imports.DuplicateVaccination': 'Aynı aşı zaten kayıtlı; atlanır',
-    'Imports.OwnerLinkUnavailable': 'Hastalar veya hesap hareketleri müşterilere bağlanamıyor (müşteri tablosu veya müşteri no eksik)',
-    'Imports.PetLinkUnavailable': 'Aşı, klinik geçmiş veya randevu satırları hastalara bağlanamıyor (hasta tablosu veya hasta no eksik)',
-    'Imports.NoImportableRows': 'Aktarılabilecek geçerli satır yok',
+    'Imports.OwnerLinkUnavailable': ['Hastalar veya hesap hareketleri müşterilere bağlanamıyor (müşteri tablosu veya müşteri no eksik)', 'Eşleme adımında müşteri no sütununu seçin.'],
+    'Imports.PetLinkUnavailable': ['Aşı, klinik geçmiş veya randevu satırları hastalara bağlanamıyor (hasta tablosu veya hasta no eksik)', 'Eşleme adımında hasta no sütununu seçin.'],
+    'Imports.NoImportableRows': ['Aktarılabilecek geçerli satır yok', 'Dosyadaki satırların hiçbiri aktarılabilir değil; nedenleri aşağıda.'],
     'Imports.OwnerUnitFailed': 'Aynı müşterinin başka bir satırı aktarılamadığı için bu satır da aktarılmadı',
     'Imports.MatchedAtCommit': 'Aktarma sırasında sistemde aynı kayıt bulundu; yeni kayıt açılmadı, mevcutla eşleşti',
     'Imports.ApplyFailed': 'Kayıt yazılırken bir çakışma oluştu; satır aktarılamadı',
@@ -164,10 +170,10 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.EntryAmountInvalid': 'Tutar okunamadı, sıfır ya da geçersiz; hareket aktarılmaz',
     'Imports.BalanceNotAppliedToExisting': 'Müşteri sistemde zaten var; açık bakiye eklenmez',
     'Imports.BalanceDateIgnored': 'Bakiye tarihi okunamadı; açıklamaya yazılmaz',
-    'Imports.DateInFuture': 'Tarih gelecekte',
+    'Imports.DateInFuture': ['Tarih gelecekte', 'Yapılmış bir işlemin tarihi ileri olamaz.'],
     'Imports.RecordBeforeBirth': 'Kayıt, doğum tarihinden önce görünüyor',
     'Imports.TemperatureInvalid': 'Ateş değeri geçersiz; boş aktarılır',
-    'Imports.ClinicalRecordEmpty': 'Boş muayene satırı (aktarılacak bilgi yok); atlanır',
+    'Imports.ClinicalRecordEmpty': ['Boş muayene satırı', 'İçinde aktarılacak bilgi yok; sorun değil.'],
     'Imports.DuplicateClinicalRecord': 'Aynı klinik kayıt zaten var; atlanır',
     'Imports.EntryKindUnrecognized': 'İşlem türü tanınmadı (borç veya tahsilat yazın)',
     'Imports.DuplicateAccountEntry': 'Aynı hesap hareketi zaten var; atlanır',
@@ -176,7 +182,7 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.VeterinarianUnmatched': 'Hekim bir kullanıcıyla eşleşmedi; adı nota yazılır',
     'Imports.ReasonFreeText': 'Randevu nedeni sistemde yok; nota yazılır',
     'Imports.AppointmentTypeDefaulted': 'Randevu türü tanınmadı; "Diğer" alınır',
-    'Imports.PastAppointmentSkipped': 'Geçmiş randevu; aktarılmaz',
+    'Imports.PastAppointmentSkipped': ['Geçmiş randevu; aktarılmaz', 'Yalnız gelecek randevular aktarılır.'],
     'Imports.DuplicateAppointment': 'Aynı randevu zaten var; atlanır',
     'Imports.ProductKindDefaulted': 'Ürün türü tanınmadı; "Diğer" alınır',
     'Imports.CategoryUnmapped': 'Kategori sistemde yok; kategorisiz aktarılır',
@@ -191,7 +197,16 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
 };
 
 export function importIssueLabel(code: string, fallback?: string): string {
-    return ISSUE_LABELS[code] ?? fallback ?? code;
+    const text = ISSUE_TEXTS[code];
+
+    return (typeof text === 'string' ? text : text?.[0]) ?? fallback ?? code;
+}
+
+/** Neden listesinde etiketin altındaki tek cümlelik açıklama; yoksa null. */
+export function importIssueNote(code: string): string | null {
+    const text = ISSUE_TEXTS[code];
+
+    return typeof text === 'string' || !text ? null : text[1];
 }
 
 /** Sunucu mesajı satıra özgü ayrıntı taşıyan kodlar: çakışan satır, sistemdeki kayıt, zincirleme düşen satırın asıl nedeni ya da alınmayan dosya değeri (sözleşme 6.4). */
@@ -228,9 +243,7 @@ export const EVET_TASK_ROW_OFFSET = 1_000_000;
 export function importRowPlace(table: ImportTable, rowNumber: number, sourceProfile?: ImportSourceProfileCode): string {
     const label = IMPORT_TABLE_LABELS[table] ?? table;
 
-    return sourceProfile === 'EVet' && table === 'clinicalRecords' && rowNumber > EVET_TASK_ROW_OFFSET
-        ? `${label} · Randevu Listesi satır ${rowNumber - EVET_TASK_ROW_OFFSET}`
-        : `${label} · satır ${rowNumber}`;
+    return sourceProfile === 'EVet' && table === 'clinicalRecords' && rowNumber > EVET_TASK_ROW_OFFSET ? `${label} · Randevu Listesi satır ${rowNumber - EVET_TASK_ROW_OFFSET}` : `${label} · satır ${rowNumber}`;
 }
 
 const PROBLEM_MESSAGES: Readonly<Record<string, string>> = {
