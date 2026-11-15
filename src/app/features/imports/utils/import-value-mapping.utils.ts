@@ -1,4 +1,4 @@
-import type { ImportPetCandidateDto, ImportPetChoiceDto, ImportValueKind, ImportValueMappingDto } from '@/app/features/imports/models/import-api.model';
+import type { ImportPetCandidateDto, ImportPetChoiceDto, ImportPetRowDto, ImportValueKind, ImportValueMappingDto } from '@/app/features/imports/models/import-api.model';
 
 /** "Bu değeri atla" seçimi; hedef kimliği yerine kullanılır, istekte `targetId: null` olur. */
 export const IMPORT_VALUE_SKIP = '__skip__';
@@ -42,20 +42,50 @@ export function ambiguousPetNos(reference: string): string[] {
     return reference.startsWith(prefix) ? reference.slice(prefix.length).split(' / ') : [];
 }
 
+/**
+ * Adayın adı ve E-vet numarası bir kez: aynı adlı hastalar ayrılırken adına numara eklenmiş olabilir (`Portakal (E-vet 614)`),
+ * o zaman yeniden eklenmez.
+ */
+export function petDisplayName(c: ImportPetCandidateDto): string {
+    const name = c.name ?? 'Adsız';
+
+    return /\(E-vet [^)]*\)\s*$/.test(name) ? name : `${name} (E-vet ${c.petNo})`;
+}
+
 /** Adayın seçenek metni: ad, tür, ırk, renk, doğum, durum ve E-vet kaydı. */
 export function petCandidateLabel(c: ImportPetCandidateDto): string {
-    const birth = /^(\d{4})-(\d{2})-(\d{2})$/.exec(c.birthDate ?? '');
-    const parts = [
-        c.species,
-        c.breed,
-        c.color,
-        c.gender,
-        birth ? `doğum ${birth[3]}.${birth[2]}.${birth[1]}` : c.birthDate ? `doğum ${c.birthDate}` : null,
-        c.status,
-        c.registeredOn ? `E-vet'e kayıt ${c.registeredOn}` : null
-    ].filter(Boolean);
+    const parts = [c.species, c.breed, c.color, c.gender, c.birthDate ? `doğum ${isoDayLabel(c.birthDate)}` : null, c.status, c.registeredOn ? `E-vet'e kayıt ${c.registeredOn}` : null].filter(Boolean);
 
-    return `${c.name ?? 'Adsız'} (E-vet ${c.petNo})${parts.length ? ' · ' + parts.join(' · ') : ''}`;
+    return `${petDisplayName(c)}${parts.length ? ' · ' + parts.join(' · ') : ''}`;
+}
+
+/**
+ * Adayların "aynı hayvan" sayılmasına engel farkı: `species` türleri farklı (aynı hayvan olamaz, seçenek sunulmaz), `looks` ırk ya
+ * da cinsiyet farklı (seçenek farkı yazılarak en sonda); bilinmeyen değer fark sayılmaz.
+ */
+export function petMergeConflict(candidates: readonly ImportPetCandidateDto[]): 'species' | 'looks' | null {
+    const differs = (pick: (c: ImportPetCandidateDto) => string | null) => new Set(candidates.map((c) => pick(c)?.trim().toLocaleLowerCase('tr')).filter((v) => !!v)).size > 1;
+
+    if (differs((c) => c.species)) {
+        return 'species';
+    }
+
+    return differs((c) => c.breed) || differs((c) => c.gender) ? 'looks' : null;
+}
+
+/** Belirsiz grubun kaydı tek satırda: `12.10.2024 · Aşı: KUDUZ`, `01.03.2024 · Muayene: İştahsızlık`. */
+export function petRowLabel(r: ImportPetRowDto): string {
+    const date = r.date ? isoDayLabel(r.date) : 'Tarihsiz';
+    const title = r.table === 'vaccinations' ? `Aşı: ${r.title ?? 'adsız'}` : r.table === 'appointments' ? `Randevu${r.title ? ' (' + r.title + ')' : ''}` : (r.title ?? 'Kayıt');
+
+    return `${date} · ${title}${r.summary ? (r.table === 'vaccinations' ? ' · ' : ': ') + r.summary : ''}`;
+}
+
+/** `yyyy-aa-gg` → `gg.aa.yyyy`; başka biçim olduğu gibi. */
+function isoDayLabel(value: string): string {
+    const day = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+
+    return day ? `${day[3]}.${day[2]}.${day[1]}` : value;
 }
 
 function entries(choices: ImportValueChoices): { kind: ImportValueKind; source: string; target: string }[] {
