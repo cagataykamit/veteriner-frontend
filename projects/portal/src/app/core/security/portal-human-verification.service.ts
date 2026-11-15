@@ -6,7 +6,8 @@ import { PORTAL_ENDPOINTS } from '@portal/app/core/api/portal-endpoints';
 /** `GET /api/portal/v1/human-verification` (`TRIAL_SIGNUP_ABUSE_API_CONTRACT.md` §4). */
 export interface PortalHumanVerificationSettings {
     turnstileSiteKey: string | null;
-    portalSignInProtected: boolean;
+    /** Giriş kodu, parola sıfırlama ve online randevu kodu korunuyor mu (`Turnstile:EnforcePortal`). */
+    portalProtected: boolean;
 }
 
 /** Widget jetonu henüz yokken (doğrulama sürüyor) kod istenirse. */
@@ -27,17 +28,12 @@ export const PORTAL_TURNSTILE_ACTIONS = {
 export class PortalHumanVerificationService {
     private readonly api = inject(PortalApiClient);
     private readonly settings$ = this.api.get<PortalHumanVerificationSettings>(PORTAL_ENDPOINTS.humanVerification).pipe(
-        catchError(() => of<PortalHumanVerificationSettings>({ turnstileSiteKey: null, portalSignInProtected: false })),
+        catchError(() => of<PortalHumanVerificationSettings>({ turnstileSiteKey: null, portalProtected: false })),
         shareReplay({ bufferSize: 1, refCount: false })
     );
 
-    /** Giriş ve parola sıfırlama kodu için site anahtarı; portal girişi korunmuyorsa `null`. */
-    signInSiteKey(): Observable<string | null> {
-        return this.settings$.pipe(map((s) => (s.portalSignInProtected ? s.turnstileSiteKey : null)));
-    }
-
-    /** Online randevu e-posta kodu için site anahtarı (her zaman korunur). */
-    bookingSiteKey(): Observable<string | null> {
-        return this.settings$.pipe(map((s) => s.turnstileSiteKey));
+    /** Giriş, parola sıfırlama ve online randevu kodu için site anahtarı; korunmuyorsa ya da anahtar girilmemişse `null` (widget yok). */
+    siteKey(): Observable<string | null> {
+        return this.settings$.pipe(map((s) => (s.portalProtected ? s.turnstileSiteKey : null)));
     }
 }

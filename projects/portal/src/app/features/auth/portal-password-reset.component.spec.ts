@@ -27,7 +27,7 @@ describe('PortalPasswordResetComponent', () => {
         api.requestPasswordReset.mockReturnValue(of(undefined));
         await TestBed.configureTestingModule({
             imports: [PortalPasswordResetComponent],
-            providers: [provideRouter([]), { provide: PortalAuthApi, useValue: api }, { provide: PortalHumanVerificationService, useValue: { signInSiteKey: () => of(null), bookingSiteKey: () => of(null) } }]
+            providers: [provideRouter([]), { provide: PortalAuthApi, useValue: api }, { provide: PortalHumanVerificationService, useValue: { siteKey: () => of(null) } }]
         }).compileComponents();
         fixture = TestBed.createComponent(PortalPasswordResetComponent);
         el = fixture.nativeElement;

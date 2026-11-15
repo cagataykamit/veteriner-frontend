@@ -105,8 +105,8 @@ export class PortalPublicBookingComponent implements OnInit {
     readonly doneItems = signal<readonly PortalBookingSummaryItem[]>([]);
     readonly timer = new PortalResendTimer(inject(DestroyRef));
 
-    /** İnsan doğrulaması (Turnstile, her zaman): site anahtarı sunucudan; boşsa widget yok ve kod jetonsuz istenir. */
-    readonly turnstileSiteKey = toSignal(inject(PortalHumanVerificationService).bookingSiteKey(), { initialValue: null });
+    /** İnsan doğrulaması (Turnstile): site anahtarı sunucudan; boşsa widget yok ve kod jetonsuz istenir. */
+    readonly turnstileSiteKey = toSignal(inject(PortalHumanVerificationService).siteKey(), { initialValue: null });
     readonly turnstileToken = signal<string | null>(null);
     readonly turnstileAction = PORTAL_TURNSTILE_ACTIONS.bookingCode;
     private readonly turnstile = viewChild(PortalTurnstileComponent);

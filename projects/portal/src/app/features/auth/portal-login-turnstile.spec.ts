@@ -21,7 +21,7 @@ describe('PortalLoginComponent insan doğrulaması (Turnstile)', () => {
                 provideRouter([]),
                 { provide: PortalAuthApi, useValue: api },
                 { provide: PortalSessionService, useValue: {} },
-                { provide: PortalHumanVerificationService, useValue: { signInSiteKey: () => of('site-anahtari'), bookingSiteKey: () => of('site-anahtari') } }
+                { provide: PortalHumanVerificationService, useValue: { siteKey: () => of('site-anahtari') } }
             ]
         }).compileComponents();
         fixture = TestBed.createComponent(PortalLoginComponent);

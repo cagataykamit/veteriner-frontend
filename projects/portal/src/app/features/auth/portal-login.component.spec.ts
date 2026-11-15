@@ -44,7 +44,7 @@ describe('PortalLoginComponent (kod ve parola girişi)', () => {
         session.startSession.mockReturnValue(of(TEST_ME));
         await TestBed.configureTestingModule({
             imports: [PortalLoginComponent],
-            providers: [provideRouter([]), { provide: PortalAuthApi, useValue: api }, { provide: PortalSessionService, useValue: session }, { provide: PortalHumanVerificationService, useValue: { signInSiteKey: () => of(null), bookingSiteKey: () => of(null) } }]
+            providers: [provideRouter([]), { provide: PortalAuthApi, useValue: api }, { provide: PortalSessionService, useValue: session }, { provide: PortalHumanVerificationService, useValue: { siteKey: () => of(null) } }]
         }).compileComponents();
         router = TestBed.inject(Router);
         vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);

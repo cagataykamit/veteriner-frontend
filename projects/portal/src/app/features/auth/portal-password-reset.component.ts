@@ -53,7 +53,7 @@ export class PortalPasswordResetComponent {
     readonly resend = new PortalResendTimer(inject(DestroyRef));
 
     /** İnsan doğrulaması (Turnstile): site anahtarı sunucudan; boşsa widget yok ve kod jetonsuz istenir. */
-    readonly turnstileSiteKey = toSignal(inject(PortalHumanVerificationService).signInSiteKey(), { initialValue: null });
+    readonly turnstileSiteKey = toSignal(inject(PortalHumanVerificationService).siteKey(), { initialValue: null });
     readonly turnstileToken = signal<string | null>(null);
     readonly turnstileAction = PORTAL_TURNSTILE_ACTIONS.passwordReset;
     private readonly turnstile = viewChild(PortalTurnstileComponent);

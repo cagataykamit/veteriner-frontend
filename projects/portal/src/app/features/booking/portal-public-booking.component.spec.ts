@@ -71,7 +71,7 @@ describe('PortalPublicBookingComponent (kliniğe özel bağlantı)', () => {
         await TestBed.configureTestingModule({
             imports: [PortalPublicBookingComponent],
             // Test koşucusu sayfayı çerçevede açar; gömülü görünüm yalnız kendi testlerinde açılır.
-            providers: [provideRouter([]), { provide: PortalBookingApi, useValue: api }, { provide: PORTAL_FRAMED, useValue: false }, { provide: PortalHumanVerificationService, useValue: { signInSiteKey: () => of(null), bookingSiteKey: () => of(null) } }]
+            providers: [provideRouter([]), { provide: PortalBookingApi, useValue: api }, { provide: PORTAL_FRAMED, useValue: false }, { provide: PortalHumanVerificationService, useValue: { siteKey: () => of(null) } }]
         }).compileComponents();
     });
 
