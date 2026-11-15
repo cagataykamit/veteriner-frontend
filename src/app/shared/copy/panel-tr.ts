@@ -5,6 +5,10 @@
 export const PANEL_COPY = {
     listEmptyMessage: 'Kayıt bulunamadı.',
     listEmptyHint: 'Arama veya filtreleri değiştirerek tekrar deneyin.',
+    /** Liste boş ve filtre/arama uygulanmış (`app-list-empty-state`) */
+    listFilteredEmptyMessage: 'Bu aramaya uyan kayıt yok.',
+    listFilteredEmptyHint: 'Filtreleri temizleyerek tüm kayıtları görebilirsiniz.',
+    buttonClearFilters: 'Filtreleri temizle',
     /** `settings/clinics` — API scope’a göre liste boş olabilir */
     clinicsListEmptyMessage: 'Görüntüleme yetkiniz olan klinik bulunmuyor.',
     clinicsListEmptyHint: 'Atama veya ek yetki için kurum yöneticinize başvurun.',

@@ -11,7 +11,7 @@ import { BREEDS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { BREEDS_CREATE_CLAIM, BREEDS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { BreedsService } from '@/app/entities/breed/services/breeds.service';
 import type { BreedListItemVm } from '@/app/entities/breed/models/breed-vm.model';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -33,7 +33,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         InputTextModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
+        AppListEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
         SearchInputComponent,
@@ -76,7 +76,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         </div>
                     </div>
                     @if (breedRows().length === 0) {
-                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                        <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz ırk tanımı yok." [createLabel]="canCreateBreed() && !ro.mutationBlocked() ? 'Yeni ırk ekle' : null" [createLink]="breedsRoute + '/new'" (clear)="clearSearch()" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
                             <p-table [value]="breedRows()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20, 50]" [tableStyle]="{ 'min-width': '56rem' }">
@@ -163,6 +163,11 @@ export class BreedsListPageComponent implements OnInit {
     applySearch(): void {
         this.appliedSearch.set(this.searchDraft.trim());
         this.reload();
+    }
+
+    /** Boş listede "uyan kayıt yok" mu "henüz yok" mu gösterileceği. */
+    hasActiveFilters(): boolean {
+        return !!this.appliedSearch();
     }
 
     clearSearch(): void {

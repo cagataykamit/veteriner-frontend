@@ -18,7 +18,7 @@ import { VaccinationsService } from '@/app/entities/vaccination/services/vaccina
 import { vaccinationStatusLabel, vaccinationStatusSeverity } from '@/app/entities/vaccination/utils/vaccination-status.utils';
 import { CLEAR_VACCINATIONS_LIST_LINK_QUERY, readVaccinationsListLinkFilters } from '@/app/entities/vaccination/utils/vaccinations-list-link.utils';
 import { canOpenVaccinationEdit } from '@/app/entities/vaccination/utils/vaccination-access.utils';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
@@ -60,7 +60,7 @@ const RECEIVING_CARE_ONLY = 'true';
         SelectModule,
         AppListHeaderComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
+        AppListEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
         DateInputComponent,
@@ -147,7 +147,7 @@ const RECEIVING_CARE_ONLY = 'true';
                     <app-error-state [detail]="error()!" (retry)="reload()" />
                 } @else {
                     @if (displayedRows().length === 0) {
-                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                        <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz aşı kaydı yok." emptyHint="Aşılar muayene sırasında ya da hasta sayfasından eklenir." (clear)="resetFilters()" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
                             <p-table
@@ -459,6 +459,11 @@ export class VaccinationsListPageComponent implements OnInit {
 
         this.syncVaccinationsListQueryParams();
         this.list.loadFirstPage();
+    }
+
+    /** Boş listede "uyan kayıt yok" mu "henüz yok" mu gösterileceği. */
+    hasActiveFilters(): boolean {
+        return this.isSearchActive() || this.isStatusActive() || this.isReceivingCareActive() || !!this.hbsStatusFilter || this.isFromDateActive() || this.isToDateActive();
     }
 
     resetFilters(): void {

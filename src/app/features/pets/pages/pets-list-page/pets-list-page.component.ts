@@ -18,7 +18,7 @@ import { PET_LIFE_STATUS_FILTER_OPTIONS, PET_LIST_DEFAULT_STATUS, parsePetListSt
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { speciesEmoji } from '@/app/shared/utils/species-icon.utils';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
@@ -53,7 +53,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         SelectModule,
         AppListHeaderComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
+        AppListEmptyStateComponent,
         AppErrorStateComponent,
         AppContextFilterChipComponent,
         FilterFieldComponent,
@@ -107,7 +107,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                     <app-error-state [detail]="error()!" (retry)="reload()" />
                 } @else {
                     @if (displayedRows().length === 0) {
-                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                        <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz hasta yok." [createLabel]="canCreatePet && !ro.mutationBlocked() ? 'İlk hastayı ekle' : null" [createLink]="'/panel/pets/new'" (clear)="resetFilters()" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
                             <p-table
@@ -338,6 +338,11 @@ export class PetsListPageComponent implements OnInit {
         this.activeSpeciesId.set(this.speciesIdInput.trim());
         this.activeStatus.set(this.statusInput ?? PET_LIST_DEFAULT_STATUS);
         this.list.loadFirstPage();
+    }
+
+    /** Boş listede "uyan kayıt yok" mu "henüz yok" mu gösterileceği. */
+    hasActiveFilters(): boolean {
+        return this.isSearchActive() || this.isSpeciesActive() || this.isStatusActive();
     }
 
     resetFilters(): void {

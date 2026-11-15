@@ -18,7 +18,7 @@ import { ProductService } from '@/app/entities/inventory/services/product.servic
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PRODUCTS_CREATE_CLAIM, PRODUCTS_DEACTIVATE_CLAIM, PRODUCTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
@@ -52,7 +52,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
         SelectModule,
         AppListHeaderComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
+        AppListEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
         FilterFieldComponent,
@@ -106,7 +106,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                     <app-error-state [detail]="error()!" (retry)="reload()" />
                 } @else {
                     @if (displayedRows().length === 0) {
-                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                        <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz ürün yok." [createLabel]="canCreateProduct && !ro.mutationBlocked() ? 'İlk ürünü ekle' : null" [createLink]="'/panel/products/new'" (clear)="resetFilters()" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
                             <p-table
@@ -342,6 +342,11 @@ export class ProductListPageComponent implements OnInit {
             },
             error: (e: Error) => this.listActionError.set(panelHttpFailureMessage(e, 'Ürün aranamadı.'))
         });
+    }
+
+    /** Boş listede "uyan kayıt yok" mu "henüz yok" mu gösterileceği. */
+    hasActiveFilters(): boolean {
+        return this.isSearchActive() || this.isActiveFilterApplied();
     }
 
     resetFilters(): void {

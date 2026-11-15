@@ -11,7 +11,7 @@ import { TableModule } from 'primeng/table';
 import { ListPageState } from '@/app/shared/list/list-page-state';
 import type { ClientListItemVm } from '@/app/entities/client/models/client-vm.model';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
@@ -44,7 +44,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
         InputTextModule,
         AppListHeaderComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
+        AppListEmptyStateComponent,
         AppErrorStateComponent,
         FilterFieldComponent,
         SearchInputComponent,
@@ -72,7 +72,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                     <app-loading-state message="Müşteri listesi yükleniyor…" />
                 } @else {
                     @if (displayedRows().length === 0) {
-                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                        <app-list-empty-state [filtered]="isSearchActive()" emptyMessage="Henüz müşteri yok." [createLabel]="canCreateClient && !ro.mutationBlocked() ? 'İlk müşteriyi ekle' : null" [createLink]="'/panel/clients/new'" (clear)="resetFilters()" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
                             <p-table

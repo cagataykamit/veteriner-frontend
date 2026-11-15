@@ -13,7 +13,7 @@ import { ListPageState } from '@/app/shared/list/list-page-state';
 import type { TenantInviteListItemVm } from '@/app/entities/tenant-invite/models/tenant-invite-vm.model';
 import { TenantInvitesService } from '@/app/entities/tenant-invite/services/tenant-invites.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -37,7 +37,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         InputTextModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
+        AppListEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
         SearchInputComponent,
@@ -80,7 +80,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <p class="text-danger text-sm m-0" role="alert">{{ actionError() }}</p>
                     }
                     @if (displayedRows().length === 0) {
-                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                        <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz davet yok." [createLabel]="canManageTenantAccess() ? 'Davet oluştur' : null" [createLink]="'/panel/settings/invites'" (clear)="resetFilters()" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
                             <p-table
@@ -237,6 +237,11 @@ export class TenantInviteListPageComponent implements OnInit {
         this.actionError.set(null);
         this.activeSearch.set(this.searchInput.trim());
         this.list.loadFirstPage();
+    }
+
+    /** Boş listede "uyan kayıt yok" mu "henüz yok" mu gösterileceği. */
+    hasActiveFilters(): boolean {
+        return !!this.activeSearch();
     }
 
     resetFilters(): void {

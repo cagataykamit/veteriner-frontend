@@ -19,7 +19,7 @@ import { StockMovementService } from '@/app/features/inventory/services/stock-mo
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { STOCK_MOVEMENTS_CREATE_CLAIM, STOCK_MOVEMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -56,7 +56,7 @@ type ProductStockMovementsListState = {
         StockMovementCreateDialogComponent,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
+        AppListEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
         DateInputComponent
@@ -128,7 +128,7 @@ type ProductStockMovementsListState = {
                     </div>
 
                     @if (displayedRows().length === 0) {
-                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                        <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Bu ürün için henüz stok hareketi yok." [createLabel]="canCreateStockMovement && !ro.mutationBlocked() ? 'Stok hareketi ekle' : null" (create)="createDialogOpen.set(true)" (clear)="resetFilters()" />
                     } @else {
                         <div class="hidden xl:block overflow-x-auto">
                             <p-table
@@ -356,6 +356,11 @@ export class ProductStockMovementsPageComponent implements OnInit {
         if (this.canLoad()) {
             this.list.loadFirstPage();
         }
+    }
+
+    /** Boş listede "uyan kayıt yok" mu "henüz yok" mu gösterileceği. */
+    hasActiveFilters(): boolean {
+        return this.movementTypeActive() || this.isFromActive() || this.isToActive();
     }
 
     resetFilters(): void {
