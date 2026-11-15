@@ -1,8 +1,6 @@
 import { Component, computed, HostListener, inject, input, output, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { convertToParamMap } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { ConfirmationService } from 'primeng/api';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Drawer, DrawerModule } from 'primeng/drawer';
 import { ZIndexUtils } from 'primeng/utils';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -20,7 +18,8 @@ import { VaccinationFormComponent, type VaccinationSavedEvent } from '@/app/enti
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
-import { closeWithUnsavedChangesCheck, HAS_UNSAVED_CHANGES } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { HAS_UNSAVED_CHANGES } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { UnsavedChangesService } from '@/app/shared/ui/unsaved-changes/unsaved-changes.service';
 import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-detail-row-link.component';
 
 const CREATE_CLAIM: Record<ProcedureKind, string> = {
@@ -50,12 +49,10 @@ const ADD_ICON: Record<ProcedureKind, string> = {
 @Component({
     selector: 'app-examination-procedures-section',
     standalone: true,
-    providers: [ConfirmationService],
     imports: [
         AppDetailRowLinkComponent,
         ButtonModule,
         DrawerModule,
-        ConfirmDialogModule,
         AppErrorStateComponent,
         AppStatusTagComponent,
         TreatmentFormComponent,
@@ -154,7 +151,6 @@ const ADD_ICON: Record<ProcedureKind, string> = {
                 }
             }
         </p-drawer>
-        <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
     `
 })
 export class ExaminationProceduresSectionComponent {
@@ -168,7 +164,7 @@ export class ExaminationProceduresSectionComponent {
 
     private readonly auth = inject(AuthService);
     private readonly ro = inject(TenantReadOnlyContextService);
-    private readonly confirmation = inject(ConfirmationService);
+    private readonly unsavedChanges = inject(UnsavedChangesService);
 
     private readonly drawer = viewChild(Drawer);
     /** Panelde açık olan gömülü form; "kirli mi" bilgisini ortak token üzerinden verir. */
@@ -235,13 +231,18 @@ export class ExaminationProceduresSectionComponent {
         this.drawerVisible.set(true);
     }
 
-    /** Kapanış isteği (dışarı tıklama, Esc, çarpı, İptal): değişiklik yoksa kapanır, varsa onay sorulur; "Vazgeç" paneli ve bilgiyi korur. */
+    /** Kapanış isteği (dışarı tıklama, Esc, çarpı, İptal): değişiklik yoksa kapanır, varsa sorulur; "Sayfada kal" paneli ve bilgiyi korur. */
     requestClose(): void {
         if (!this.drawerVisible()) {
             return;
         }
 
-        closeWithUnsavedChangesCheck(this.confirmation, this.activeForm()?.hasUnsavedChanges() ?? false, () => this.close());
+        this.unsavedChanges.closeWithCheck(this.hasUnsavedChanges(), () => this.close());
+    }
+
+    /** Açık paneldeki formda kaydedilmemiş bilgi var mı; üst sayfa da çıkış korumasında buna bakar (O2). */
+    hasUnsavedChanges(): boolean {
+        return this.drawerVisible() && (this.activeForm()?.hasUnsavedChanges() ?? false);
     }
 
     /** Dışarı tıklama: panel maskesi gövdeye eklenir, o yüzden belge düzeyinde yakalanır. */

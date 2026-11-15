@@ -10,11 +10,13 @@ import { AppReadOnlyBannerComponent } from './app-read-only-banner.component';
 import { AppSectionTabsComponent } from './app-section-tabs.component';
 import { LayoutService } from '@/app/layout/service/layout.service';
 import { LegalAcceptanceGateComponent } from '@/app/features/legal-acceptance/components/legal-acceptance-gate.component';
+import { UnsavedChangesDialogComponent } from '@/app/shared/ui/unsaved-changes/unsaved-changes-dialog.component';
+import { UnsavedChangesService } from '@/app/shared/ui/unsaved-changes/unsaved-changes.service';
 
 @Component({
     selector: 'app-layout',
     standalone: true,
-    imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter, AppReadOnlyBannerComponent, AppSectionTabsComponent, LegalAcceptanceGateComponent],
+    imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter, AppReadOnlyBannerComponent, AppSectionTabsComponent, LegalAcceptanceGateComponent, UnsavedChangesDialogComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `<div class="layout-wrapper" [ngClass]="containerClass()">
         <a class="layout-skip-link" href="#panel-main" (click)="skipToMain($event)">İçeriğe geç</a>
@@ -25,11 +27,13 @@ import { LegalAcceptanceGateComponent } from '@/app/features/legal-acceptance/co
             <main #main id="panel-main" class="layout-main" tabindex="-1">
                 <app-read-only-banner />
                 <app-section-tabs />
-                <router-outlet></router-outlet>
+                <!-- Açık sayfa, sekme kapatma uyarısı için izlenir (O2). -->
+                <router-outlet (activate)="unsavedChanges.setActivePage($event)" (deactivate)="unsavedChanges.clearActivePage($event)"></router-outlet>
             </main>
             <app-footer></app-footer>
         </div>
         <div class="layout-mask"></div>
+        <app-unsaved-changes-dialog />
         <!-- Bekleyen hukuki kabul penceresi (ADR-029); ilk paketi büyütmemek için ayrı parça. Durum rota çözülürken okunur, parça hemen yüklenir (H18). -->
         @defer (on immediate) {
             <app-legal-acceptance-gate />
@@ -39,6 +43,7 @@ import { LegalAcceptanceGateComponent } from '@/app/features/legal-acceptance/co
 export class AppLayout {
     layoutService = inject(LayoutService);
     private readonly auth = inject(AuthService);
+    protected readonly unsavedChanges = inject(UnsavedChangesService);
     private readonly tenantReadOnlyContext = inject(TenantReadOnlyContextService);
     private readonly destroyRef = inject(DestroyRef);
     private readonly primePanelOverlayHostEl = viewChild<ElementRef<HTMLElement>>('primePanelOverlayHost');
