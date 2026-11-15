@@ -34,6 +34,11 @@ export function isUnhelpfulProblemText(s: string): boolean {
         return true;
     }
 
+    // Backend iş kuralı hatasında metin boşsa yazdığı İngilizce yer tutucu (ResultExtensions).
+    if (/^a business rule was violated\.?$/i.test(t)) {
+        return true;
+    }
+
     return false;
 }
 
@@ -354,7 +359,8 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
 
         const title = typeof body.title === 'string' ? body.title.trim() : '';
 
-        if (title && !isUnhelpfulProblemText(title)) {
+        // Kodlu hatada başlık genel durum adıdır ("İş kuralı ihlali", "Çakışma"); aşağıda destek kodlu metin verilir.
+        if (title && !code && !isUnhelpfulProblemText(title)) {
             return title;
         }
     }
@@ -373,8 +379,14 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
 
     const fromStatus = panelHttpStatusUserMessage(err.status);
 
-    if (fromStatus) {
+    // Kodlu iş kuralı hatasında (400/422) genel "veri işlenemedi" yerine destek kodlu metin; bağlantı, oturum, yetki gibi durumlar kendi metniyle.
+    if (fromStatus && !(code && (err.status === 400 || err.status === 422))) {
         return fromStatus;
+    }
+
+    // Kodlu ama kullanıcıya söylenecek metni olmayan hata: genel metin ve destek için kod (O4).
+    if (code) {
+        return unmappedProblemUserMessage(code);
     }
 
     if (err.message?.trim() && !isUnhelpfulProblemText(err.message)) {
@@ -382,6 +394,13 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     }
 
     return fallback;
+}
+
+/** Ekranın ve genel tabloların bilmediği, metni de olmayan hata kodu: kullanıcı ne olduğunu ve desteğe ne söyleyeceğini bilsin. */
+export const UNMAPPED_PROBLEM_MESSAGE = 'İşlem yapılamadı. Sorun sürerse destekle iletişime geçin.';
+
+export function unmappedProblemUserMessage(code: string): string {
+    return `${UNMAPPED_PROBLEM_MESSAGE} (Destek kodu: ${code})`;
 }
 
 /** Rapor 403 toparlama: gövde + Angular mesajından küçük harf metin. */
