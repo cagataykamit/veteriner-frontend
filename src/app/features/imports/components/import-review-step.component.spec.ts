@@ -12,7 +12,11 @@ import { VaccineDefinitionsService } from '@/app/entities/vaccine-definition/ser
 
 const zero: ImportTableSummaryDto = { total: 0, valid: 0, warning: 0, error: 0, willCreate: 0, willMatch: 0, willSkip: 0, created: 0, matched: 0, skipped: 0, failed: 0 };
 
-const batch = { id: 'b1', status: 'Validated', summary: { customers: zero, pets: { ...zero, total: 1, error: 1 }, vaccinations: { ...zero, total: 1, error: 1 }, clinicalRecords: zero, accountEntries: zero, appointments: zero, products: zero } } as unknown as ImportBatchDto;
+const batch = {
+    id: 'b1',
+    status: 'Validated',
+    summary: { customers: zero, pets: { ...zero, total: 1, error: 1 }, vaccinations: { ...zero, total: 1, error: 1 }, clinicalRecords: zero, accountEntries: zero, appointments: zero, products: zero }
+} as unknown as ImportBatchDto;
 
 const preview = {
     validationId: 'v1',
@@ -93,7 +97,7 @@ describe('ImportReviewStepComponent', () => {
         expect(Array.from(details).map((d) => d.textContent?.trim())).toEqual(['Aynı mikroçip 14. satırdaki başka bir hastada da var.']);
     });
 
-    it('süzgeç değişince satırlar yerinde kalır; "yükleniyor" yalnız ilk yüklemede görünür (alttaki düğmeler zıplamaz)', () => {
+    it('filtre değişince satırlar yerinde kalır; "yükleniyor" yalnız ilk yüklemede görünür (alttaki düğmeler zıplamaz)', () => {
         imports.getRows.mockReturnValue(of({ items: [row('pets', 'HayvanAdi')], totalItems: 1 } as unknown as ImportRowPageDto));
         fixture = TestBed.createComponent(ImportReviewStepComponent);
         fixture.componentRef.setInput('batch', batch);
@@ -118,127 +122,251 @@ describe('ImportReviewStepComponent', () => {
         expect(text()).toContain('(Hasta adı)');
     });
 
-    describe('sade sonuç', () => {
-        const ready = {
-            ...preview,
-            canCommit: true,
-            summary: {
-                ...batch.summary,
-                customers: { ...zero, total: 10, valid: 8, error: 1, willCreate: 8, willSkip: 1 },
-                clinicalRecords: { ...zero, total: 5, valid: 3, willCreate: 3, willSkip: 2 }
-            },
-            unmappedValues: [
-                { kind: 'vaccine', source: 'UYUZ TEDAVİSİ', rowCount: 4, blocking: true },
-                { kind: 'breed', source: 'Sarman', rowCount: 9, blocking: false }
-            ],
-            issueCounts: [
-                { code: 'Imports.PetNotFound', severity: 'Error', rowCount: 1 },
-                { code: 'Imports.PhoneInvalid', severity: 'Warning', rowCount: 2 },
-                { code: 'Imports.ClinicalRecordEmpty', severity: 'Info', rowCount: 2 }
-            ]
-        } as unknown as ImportPreviewDto;
+    describe('A kurgusu: sonuç, seçim ve katlanan ayrıntılar', () => {
+        const ready = (over: Partial<ImportPreviewDto> = {}): ImportPreviewDto =>
+            ({
+                ...preview,
+                canCommit: true,
+                summary: {
+                    ...batch.summary,
+                    customers: { ...zero, total: 10, valid: 8, error: 1, willCreate: 8, willSkip: 1 },
+                    clinicalRecords: { ...zero, total: 5, valid: 3, willCreate: 3, willSkip: 2 }
+                },
+                unmappedValues: [{ kind: 'breed', source: 'Sarman', rowCount: 9, blocking: false }],
+                issueCounts: [
+                    { code: 'Imports.PetNotFound', severity: 'Error', rowCount: 1 },
+                    { code: 'Imports.PhoneInvalid', severity: 'Warning', rowCount: 2 },
+                    { code: 'Imports.ClinicalRecordEmpty', severity: 'Info', rowCount: 2 },
+                    { code: 'Imports.InactiveClient', severity: 'Info', rowCount: 4 }
+                ],
+                notImportedReasons: [
+                    { table: 'customers', kind: 'Skipped', code: 'Imports.DuplicateInFile', rowCount: 1 },
+                    { table: 'customers', kind: 'Error', code: 'Imports.NameTooShort', rowCount: 1 },
+                    { table: 'clinicalRecords', kind: 'Skipped', code: 'Imports.ClinicalRecordEmpty', rowCount: 2 },
+                    { table: 'pets', kind: 'Error', code: 'Imports.PetNotFound', rowCount: 1 },
+                    { table: 'vaccinations', kind: 'Error', code: 'Imports.PetNotFound', rowCount: 1 }
+                ],
+                ...over
+            }) as ImportPreviewDto;
 
-        function render(): HTMLElement {
+        function render(p: ImportPreviewDto, canManage = true): HTMLElement {
             imports.getRows.mockReturnValue(of({ items: [], totalItems: 0 } as unknown as ImportRowPageDto));
             TestBed.overrideProvider(VaccineDefinitionsService, { useValue: { getVaccineDefinitions: () => of({ items: [] }) } });
+            TestBed.overrideProvider(SpeciesService, { useValue: { getSpeciesList: () => of([]) } });
             TestBed.overrideProvider(BreedsService, { useValue: { getBreedList: () => of([]) } });
             fixture = TestBed.createComponent(ImportReviewStepComponent);
             fixture.componentRef.setInput('batch', batch);
-            fixture.componentRef.setInput('preview', ready);
+            fixture.componentRef.setInput('preview', p);
             fixture.componentRef.setInput('choices', {});
+            fixture.componentRef.setInput('canManage', canManage);
             fixture.detectChanges();
             fixture.detectChanges();
 
             return fixture.nativeElement as HTMLElement;
         }
 
-        it('aktarılacak, bilerek atlanacak ve hatalı satırları ayrı söyler', () => {
-            const el = render();
-            const ready = (el.querySelector('[data-testid="import-review-ready"]')?.textContent ?? '').replace(/\s+/g, ' ');
+        const text = (el: Element | null | undefined) => (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
+        const q = (el: HTMLElement, id: string) => el.querySelector<HTMLElement>(`[data-testid="${id}"]`);
 
-            expect(ready).toContain('11 kayıt aktarılmaya hazır');
-            expect(ready).toContain('3 satır bilerek atlanacak');
-            expect(ready).toContain('3 satır eksik ya da tutarsız bilgi yüzünden aktarılmayacak');
-            expect(el.textContent).toContain('Atlanacak');
-            expect(el.textContent).toContain('Hatalı');
+        it('üstte tek cümlelik sonuç ve üç sonuç: aktarılacak, bilerek atlanacak, aktarılamayacak', () => {
+            const el = render(ready());
+
+            expect(text(q(el, 'import-review-title'))).toBe('Aktarmaya hazır');
+            expect(text(q(el, 'import-review-summary'))).toContain('17 satırdan 11 kayıt aktarılacak');
+
+            const totals = text(q(el, 'import-review-totals'));
+
+            expect(totals).toMatch(/Aktarılacak ?11/);
+            expect(totals).toContain('Bilerek atlanacak');
+            expect(totals).toContain('Boş ya da tekrar; kayıp değil.');
+            expect(totals).toContain('Aktarılamayacak');
         });
 
-        it('tablo kartında aktarılmayacak satırların nedenlerini sayısıyla gösterir', () => {
-            ready.notImportedReasons = [
-                { table: 'clinicalRecords', kind: 'Skipped', code: 'Imports.ClinicalRecordEmpty', rowCount: 2 },
-                { table: 'customers', kind: 'Skipped', code: 'Imports.DuplicateInFile', rowCount: 1 },
-                { table: 'customers', kind: 'Error', code: 'Imports.NameTooShort', rowCount: 1 }
-            ];
-            const el = render();
+        it('ayrıntılar katlı başlar; nedenler tablolar arasında toplanır ve açıklamasıyla gösterilir', () => {
+            const el = render(ready());
 
-            delete ready.notImportedReasons;
+            for (const id of ['import-importable', 'import-skipped', 'import-errors', 'import-attention', 'import-info', 'import-optional-values', 'import-rows']) {
+                expect(el.querySelector<HTMLDetailsElement>(`[data-testid="${id}"]`)?.open).toBe(false);
+            }
 
-            const lists = Array.from(el.querySelectorAll('[data-testid="import-table-reasons"]')).map((l) => l.textContent?.replace(/\s+/g, ' ').trim());
+            const skipped = text(q(el, 'import-skipped'));
 
-            expect(lists).toHaveLength(2);
-            expect(lists[0]).toContain('Atlanacak · 1: Dosyada aynı kayıt daha önce geçiyor');
-            expect(lists[0]).toContain('Hatalı · 1:');
-            expect(lists[1]).toContain('Atlanacak · 2: Boş muayene satırı');
+            expect(skipped).toContain('Bilerek atlanacak 3 satır');
+            expect(skipped).toContain('Boş muayene satırı');
+            expect(skipped).toContain('İçinde aktarılacak bilgi yok; sorun değil.');
+
+            const errors = text(q(el, 'import-errors'));
+
+            expect(errors).toContain('Aktarılamayacak 3 satır');
+            expect(errors).toMatch(/Satırın hastası bulunamadı.*2/);
+            expect(errors).toContain('Listeyi indir');
         });
 
-        it('atlanan nedene tıklanınca o satırlar listelenir ve atlananlar indirilebilir', () => {
-            ready.notImportedReasons = [{ table: 'clinicalRecords', kind: 'Skipped', code: 'Imports.ClinicalRecordEmpty', rowCount: 2 }];
-            const el = render();
+        it('bilgi notları atlanma nedenini tekrarlamaz', () => {
+            const info = text(q(render(ready()), 'import-info'));
 
-            delete ready.notImportedReasons;
+            expect(info).toContain('Eski programda pasif müşteri');
+            expect(info).not.toContain('Boş muayene');
+        });
+
+        it('atlanan nedene tıklanınca o tablonun o satırları açılır ve yalnız o neden indirilebilir', () => {
+            const el = render(ready());
+            const reason = Array.from(q(el, 'import-skipped')!.querySelectorAll<HTMLButtonElement>('[data-testid="import-reason-list"] button')).find((b) => b.textContent?.includes('Boş muayene'))!;
+
             imports.getRows.mockClear();
-            el.querySelector<HTMLButtonElement>('[data-testid="import-table-reasons"] button')!.click();
+            reason.click();
             fixture.detectChanges();
 
             expect(imports.getRows).toHaveBeenLastCalledWith('b1', expect.objectContaining({ table: 'clinicalRecords', status: 'WillSkip', code: 'Imports.ClinicalRecordEmpty' }));
             expect(el.querySelector<HTMLDetailsElement>('[data-testid="import-rows"]')?.open).toBe(true);
 
             imports.downloadErrorReport.mockReturnValue(of(new HttpResponse<Blob>({ body: new Blob(['x']) })));
-            const download = Array.from(el.querySelectorAll<HTMLButtonElement>('[data-testid="import-skipped-download"] button')).find((b) => b.textContent?.includes('Excel'))!;
-
-            download.click();
+            Array.from(q(el, 'import-skipped-download')!.querySelectorAll<HTMLButtonElement>('button'))
+                .find((b) => b.textContent?.includes('Excel'))!
+                .click();
 
             expect(imports.downloadErrorReport).toHaveBeenCalledWith('b1', 'xlsx', { code: 'Imports.ClinicalRecordEmpty' });
         });
 
-        it('engelleyen değerler açıkta, ırk ve renk kapalı isteğe bağlı bölümde', () => {
-            const el = render();
+        it('birden çok tablodaki nedende tablo filtresi konmaz', () => {
+            const el = render(ready());
+            const reason = Array.from(q(el, 'import-errors')!.querySelectorAll<HTMLButtonElement>('[data-testid="import-reason-list"] button')).find((b) => b.textContent?.includes('hastası bulunamadı'))!;
 
-            expect(el.querySelector('[data-testid="import-required-values"]')?.textContent).toContain('UYUZ TEDAVİSİ');
-            const optional = el.querySelector<HTMLDetailsElement>('[data-testid="import-optional-values"]');
+            imports.getRows.mockClear();
+            reason.click();
 
-            expect(optional?.open).toBe(false);
-            expect(optional?.textContent).toContain('Sarman');
+            expect(imports.getRows).toHaveBeenLastCalledWith('b1', expect.objectContaining({ table: undefined, status: 'Error', code: 'Imports.PetNotFound' }));
+        });
+
+        it('atlananların hepsi neden seçmeden indirilebilir', () => {
+            const el = render(ready());
+
+            imports.downloadErrorReport.mockReturnValue(of(new HttpResponse<Blob>({ body: new Blob(['x']) })));
+            Array.from(q(el, 'import-skipped')!.querySelectorAll<HTMLButtonElement>('button'))
+                .find((b) => b.textContent?.includes('Atlananları indir'))!
+                .click();
+
+            expect(imports.downloadErrorReport).toHaveBeenCalledWith('b1', 'xlsx', { code: null });
+        });
+
+        it('aktarılacak tablosunda tablo adına tıklanınca o tablonun bütün satırları açılır', () => {
+            const el = render(ready());
+            const button = Array.from(q(el, 'import-importable')!.querySelectorAll<HTMLButtonElement>('tbody button')).find((b) => b.textContent?.includes('Klinik geçmiş'))!;
+
+            imports.getRows.mockClear();
+            button.click();
+            fixture.detectChanges();
+
+            expect(imports.getRows).toHaveBeenLastCalledWith('b1', expect.objectContaining({ table: 'clinicalRecords', status: undefined, code: undefined }));
+            expect(el.querySelector<HTMLDetailsElement>('[data-testid="import-rows"]')?.open).toBe(true);
+        });
+
+        it('seçim bekleyen değerler en üstte; "Atla" seçimi kaydeder ve geri alınabilir', () => {
+            const el = render(
+                ready({
+                    canCommit: false,
+                    blockers: ['Imports.VaccineUnmapped'],
+                    unmappedValues: [
+                        { kind: 'vaccine', source: 'UYUZ TEDAVİSİ', rowCount: 4, blocking: true },
+                        { kind: 'breed', source: 'Sarman', rowCount: 9, blocking: false }
+                    ]
+                })
+            );
+
+            expect(text(q(el, 'import-review-title'))).toBe('Aktarmadan önce 1 seçim yapın');
+
+            const required = q(el, 'import-required-values')!;
+
+            expect(text(required)).toContain('UYUZ TEDAVİSİ');
+            expect(text(required)).toContain('1 değer seçim bekliyor.');
+            expect(q(el, 'import-blockers')).toBeNull();
+
+            Array.from(required.querySelectorAll<HTMLButtonElement>('button'))
+                .find((b) => b.textContent?.trim() === 'Atla')!
+                .click();
+            fixture.detectChanges();
+
+            expect(fixture.componentInstance.choices()).toEqual({ 'vaccine|UYUZ TEDAVİSİ': '__skip__' });
+            expect(text(q(el, 'import-value-skipped'))).toBe('Atlanacak; bu satırlar aktarılmaz.');
+            expect((q(el, 'import-apply-values') as HTMLButtonElement | null)?.disabled).toBe(false);
+
+            Array.from(required.querySelectorAll<HTMLButtonElement>('button'))
+                .find((b) => b.textContent?.trim() === 'Geri al')!
+                .click();
+            fixture.detectChanges();
+
+            expect(fixture.componentInstance.choices()).toEqual({});
+            expect(q(el, 'import-optional-values')?.textContent).toContain('Sarman');
+        });
+
+        it('yetkisiz kullanıcı seçim yapamaz', () => {
+            const el = render(ready({ canCommit: false, blockers: ['Imports.SpeciesUnmapped'], unmappedValues: [{ kind: 'species', source: 'ARABA', rowCount: 3, blocking: true }] }), false);
+            const buttons = Array.from(q(el, 'import-required-values')!.querySelectorAll('button')).map((b) => b.textContent?.trim());
+
+            expect(buttons).not.toContain('Atla');
+            expect(q(el, 'import-apply-values')).toBeNull();
         });
 
         it('aynı adlı hastalar için kayıtların hangisine ait olduğunu adaylarla sorar', () => {
-            const before = { unmappedValues: ready.unmappedValues, petCandidates: ready.petCandidates };
             const candidate = { ownerName: 'Ayşe Yılmaz', species: 'Kedi', breed: null, color: null, gender: null, birthDate: null, status: null, registeredOn: null };
-
-            ready.unmappedValues = [{ kind: 'pet', source: 'Belirsiz: 903 / 904', rowCount: 3, blocking: true }];
-            ready.petCandidates = [
-                { ...candidate, petNo: '903', rowNumber: 4, name: 'Zeytin', color: 'Siyah' },
-                { ...candidate, petNo: '904', rowNumber: 5, name: 'Zeytin (E-vet 904)', color: 'Beyaz' }
-            ];
-            const el = render();
+            const p = ready({
+                canCommit: false,
+                blockers: ['Imports.AmbiguousPet'],
+                unmappedValues: [{ kind: 'pet', source: 'Belirsiz: 903 / 904', rowCount: 3, blocking: true }],
+                petCandidates: [
+                    { ...candidate, petNo: '903', rowNumber: 4, name: 'Zeytin', color: 'Siyah' },
+                    { ...candidate, petNo: '904', rowNumber: 5, name: 'Zeytin (E-vet 904)', color: 'Beyaz' }
+                ]
+            });
+            const el = render(p);
             const component = fixture.componentInstance as unknown as { catalogOptions(u: unknown): { label: string; value: string }[] };
-            const options = component.catalogOptions(ready.unmappedValues[0]).map((o) => o.value);
-
-            Object.assign(ready, before);
-
-            const required = el.querySelector('[data-testid="import-required-values"]')?.textContent ?? '';
+            const required = text(q(el, 'import-required-values'));
 
             expect(required).toContain("Ayşe Yılmaz: 'Zeytin' adlı 2 hasta");
             expect(required).toContain('3 aşı / muayene kaydı hangisine ait?');
-            expect(options).toEqual(['903', '904', 'merge:903', 'merge:904', '__skip__']);
+            expect(required).toContain('Atla');
+            expect(component.catalogOptions(p.unmappedValues[0]).map((o) => o.value)).toEqual(['903', '904', 'merge:903', 'merge:904']);
         });
 
-        it('nedenler üç grupta: aktarılmayacak açık, göz atılacak ve bilgi kapalı', () => {
-            const groups = Array.from(render().querySelectorAll<HTMLDetailsElement>('[data-testid="import-issue-groups"] details'));
+        it('sıfır sorunda "Her şey hazır"; atlanan ve aktarılamayan bölümü çıkmaz', () => {
+            const el = render(
+                ready({
+                    summary: { ...batch.summary, pets: { ...zero, total: 4, valid: 4, willCreate: 4 }, vaccinations: { ...zero, total: 6, valid: 6, willCreate: 6 } },
+                    unmappedValues: [],
+                    issueCounts: [],
+                    notImportedReasons: []
+                })
+            );
 
-            expect(groups.map((g) => g.querySelector('summary')?.textContent?.trim().split(' · ')[0])).toEqual(['Aktarılmayacak satırlar', 'Aktarılacak, göz atmanız önerilenler', 'Bilgi notları']);
-            expect(groups.map((g) => g.open)).toEqual([true, false, false]);
-            expect(groups[0].textContent).toContain('Listeyi indir');
+            expect(text(q(el, 'import-review-title'))).toBe('Her şey hazır');
+            expect(text(q(el, 'import-review-summary'))).toContain('10 satırın tamamı aktarılacak');
+            expect(q(el, 'import-skipped')).toBeNull();
+            expect(q(el, 'import-errors')).toBeNull();
+            expect(q(el, 'import-required-values')).toBeNull();
+        });
+
+        it('dosya düzeyi engel sonuç kutusunda nedeni ve yapılacak işiyle gösterilir', () => {
+            const el = render(ready({ status: 'ValidationFailed', canCommit: false, blockers: ['Imports.PetLinkUnavailable'] }));
+
+            expect(text(q(el, 'import-review-title'))).toBe('Bu dosya bu hâliyle aktarılamıyor');
+            expect(text(q(el, 'import-blockers'))).toContain('Eşleme adımında hasta no sütununu seçin.');
+            expect(q(el, 'import-review-summary')?.getAttribute('role')).toBe('alert');
+        });
+
+        it('hatırlatma tek not: kapalı gelir; sayılar isteyene açılır', () => {
+            const el = render(
+                ready({
+                    summary: { ...batch.summary, vaccinations: { ...zero, total: 5, valid: 5, willCreate: 5 }, appointments: { ...zero, total: 2, valid: 2, willCreate: 2 } },
+                    reminderImpact: { ...preview.reminderImpact, vaccinationsWithFutureDueDate: 947, vaccinationsWithPastDueDate: 4790, emailsWithinReminderWindow: 2, futureAppointments: 57, tenantRemindersEnabled: false }
+                })
+            );
+            const note = q(el, 'import-reminders')!;
+
+            expect(text(note)).toContain('Hatırlatmalar kapalı gelir');
+            expect(note.querySelector('details')?.open).toBe(false);
+            expect(text(note)).toContain('947 ileri tarihli aşının');
+            expect(text(note)).toContain('57 gelecek randevunun');
+            expect(text(note)).toContain('Kliniğinizde aşı hatırlatması kapalı');
         });
     });
 });
