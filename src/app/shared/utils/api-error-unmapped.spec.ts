@@ -18,4 +18,18 @@ describe('api-error: eşlenmemiş kod (O4)', () => {
         expect(messageFromHttpError(problem(403, null, 'Things.Forbidden'))).toBe('Bu işlem için yetkiniz yok.');
         expect(messageFromHttpError(new HttpErrorResponse({ status: 500, error: {} }), 'Kayıt oluşturulamadı.')).toBe('Kayıt oluşturulamadı.');
     });
+
+    it('sunucu hatasında (5xx) sunucu metni gösterilmez; genel metin ve kod', () => {
+        expect(messageFromHttpError(problem(500, 'Object reference not set to an instance of an object.', 'Things.Crashed'))).toBe(`${UNMAPPED_PROBLEM_MESSAGE} (Destek kodu: Things.Crashed)`);
+    });
+
+    it('kodsuz sunucu hatasında destek kodu olarak izleme kimliği verilir', () => {
+        const err = new HttpErrorResponse({ status: 500, error: { title: 'Sunucu hatası', detail: 'NullReferenceException', correlationId: 'cid-42' } });
+
+        expect(messageFromHttpError(err)).toBe(`${UNMAPPED_PROBLEM_MESSAGE} (Destek kodu: cid-42)`);
+    });
+
+    it('teknik bağlam kodunda (Context.*) sunucu metni gösterilmez', () => {
+        expect(messageFromHttpError(problem(403, 'JWT tenant_id ile sorgu tenantId farklı.', 'Context.TenantConflict'))).toBe(`${UNMAPPED_PROBLEM_MESSAGE} (Destek kodu: Context.TenantConflict)`);
+    });
 });

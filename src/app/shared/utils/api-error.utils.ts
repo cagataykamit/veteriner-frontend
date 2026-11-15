@@ -350,7 +350,15 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
 
     const body = err.error as ProblemDetails | string | null | undefined;
 
-    if (body && typeof body === 'object') {
+    // O4: eşlenmemiş kodda sunucunun iş kuralı metni gösterilir (backend Türkçe yazar). Sunucu hatası (5xx) ya da teknik
+    // bağlam kodu (`Context.*`) metni kullanıcıya göre değildir: genel metin ve destek kodu.
+    if (isTechnicalProblem(err.status, code)) {
+        const supportCode = code ?? readSupportIdFromHttp(err);
+
+        if (supportCode) {
+            return unmappedProblemUserMessage(supportCode);
+        }
+    } else if (body && typeof body === 'object') {
         const detail = typeof body.detail === 'string' ? body.detail.trim() : '';
 
         if (detail && !isUnhelpfulProblemText(detail)) {
@@ -363,9 +371,7 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
         if (title && !code && !isUnhelpfulProblemText(title)) {
             return title;
         }
-    }
-
-    if (typeof body === 'string') {
+    } else if (typeof body === 'string') {
         const t = body.trim();
 
         if (t && !isUnhelpfulProblemText(t)) {
@@ -394,6 +400,35 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     }
 
     return fallback;
+}
+
+/** Kullanıcıya gösterilmeyecek teknik hata kodlarının önekleri (ör. `Context.TenantConflict`: oturum/klinik bağlamı uyuşmazlığı). */
+const TECHNICAL_PROBLEM_CODE_PREFIXES = ['Context.'];
+
+/** Sunucu hatası (5xx) ya da teknik koddan gelen hata: sunucu metni gösterilmez (O4). */
+function isTechnicalProblem(status: number, code: string | null): boolean {
+    return status >= 500 || (!!code && TECHNICAL_PROBLEM_CODE_PREFIXES.some((prefix) => code.startsWith(prefix)));
+}
+
+/** Kodsuz sunucu hatasında desteğin kaydı bulacağı kimlik (ProblemDetails `correlationId` / `traceId`). */
+function readSupportIdFromHttp(err: HttpErrorResponse): string | null {
+    const body = err.error as unknown;
+
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+        return null;
+    }
+
+    const o = body as Record<string, unknown>;
+
+    for (const key of ['correlationId', 'traceId']) {
+        const v = o[key];
+
+        if (typeof v === 'string' && v.trim()) {
+            return v.trim();
+        }
+    }
+
+    return null;
 }
 
 /** Ekranın ve genel tabloların bilmediği, metni de olmayan hata kodu: kullanıcı ne olduğunu ve desteğe ne söyleyeceğini bilsin. */
