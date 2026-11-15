@@ -198,7 +198,7 @@ describe('buildPetTodo', () => {
         expect(blocked.items.every((i) => i.action.label === 'Aç')).toBe(true);
     });
 
-    it('aşı kataloğu okuma izni yoksa Uygula gösterilmez (düzenleme rotası /notfound verirdi), kayıt açılır', () => {
+    it('aşı kataloğu okuma izni yoksa Uygula gösterilmez (düzenleme rotası yetkiniz yok ekranı verirdi), kayıt açılır', () => {
         const items = openItems({ vaccinations: vaccinations([{ id: 'v1', dueAtUtc: '2026-10-04T09:00:00Z' }]) });
 
         expect(buildPetTodo(items, ctx(['Vaccinations.Update'])).items[0].action).toEqual({ label: 'Aç', route: ['/panel/vaccinations', 'v1'] });

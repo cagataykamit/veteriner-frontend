@@ -75,5 +75,6 @@ export default [
     { path: 'lab-results', loadChildren: () => import('../lab-results/routes/lab-results.routes') },
     { path: 'imaging', loadChildren: () => import('../imaging/routes/imaging.routes') },
     { path: 'hospitalizations', loadChildren: () => import('../hospitalizations/routes/hospitalizations.routes') },
+    { path: 'forbidden', title: 'Yetkiniz yok', loadComponent: () => import('./pages/panel-forbidden.component').then((m) => m.PanelForbiddenComponent) },
     { path: '**', title: 'Sayfa bulunamadı', loadComponent: () => import('./pages/panel-notfound.component').then((m) => m.PanelNotfoundComponent) }
 ] as Routes;

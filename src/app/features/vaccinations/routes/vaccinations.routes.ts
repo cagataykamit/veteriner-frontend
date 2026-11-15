@@ -11,6 +11,7 @@ import { VaccinationEditPageComponent } from '@/app/features/vaccinations/pages/
 import { VaccinationNewPageComponent } from '@/app/features/vaccinations/pages/vaccination-new-page/vaccination-new-page.component';
 import { VaccinationsListPageComponent } from '@/app/features/vaccinations/pages/vaccinations-list-page/vaccinations-list-page.component';
 import { canOpenVaccinationEdit } from '@/app/entities/vaccination/utils/vaccination-access.utils';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 export default [
     {
@@ -19,7 +20,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(VACCINATIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(VACCINATIONS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: VaccinationsListPageComponent
     },
@@ -31,7 +32,7 @@ export default [
 
             return auth.hasOperationClaim(VACCINATIONS_CREATE_CLAIM) && auth.hasOperationClaim(VACCINE_DEFINITIONS_READ_CLAIM)
                 ? true
-                : router.createUrlTree(['/notfound']);
+                : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: VaccinationNewPageComponent
     },
@@ -41,7 +42,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return canOpenVaccinationEdit((c) => auth.hasOperationClaim(c)) ? true : router.createUrlTree(['/notfound']);
+            return canOpenVaccinationEdit((c) => auth.hasOperationClaim(c)) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: VaccinationEditPageComponent
     },
@@ -51,7 +52,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(VACCINATIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(VACCINATIONS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: VaccinationDetailPageComponent
     }

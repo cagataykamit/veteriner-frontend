@@ -15,24 +15,25 @@ import {
     VISITS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import { MANAGER_LEVEL_CLAIM, REPORT_SECTIONS } from '@/app/core/routing/panel-navigation';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
-/** İzinlerden herhangi biri varsa geçer; yoksa `/notfound`. */
+/** İzinlerden herhangi biri varsa geçer; yoksa yetkiniz yok ekranı. */
 function requireAnyClaim(claims: readonly string[]): CanActivateFn {
     return () => {
         const auth = inject(AuthService);
         const router = inject(Router);
 
-        return claims.some((c) => auth.hasOperationClaim(c)) ? true : router.createUrlTree(['/notfound']);
+        return claims.some((c) => auth.hasOperationClaim(c)) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
     };
 }
 
-/** İzinlerin hepsi birlikte gerekir (hayvan/sahip verisi taşıyan defterler); yoksa `/notfound`. */
+/** İzinlerin hepsi birlikte gerekir (hayvan/sahip verisi taşıyan defterler); yoksa yetkiniz yok ekranı. */
 function requireAllClaims(claims: readonly string[]): CanActivateFn {
     return () => {
         const auth = inject(AuthService);
         const router = inject(Router);
 
-        return claims.every((c) => auth.hasOperationClaim(c)) ? true : router.createUrlTree(['/notfound']);
+        return claims.every((c) => auth.hasOperationClaim(c)) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
     };
 }
 

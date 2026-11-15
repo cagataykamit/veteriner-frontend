@@ -12,6 +12,7 @@ import { AppointmentEditPageComponent } from '@/app/features/appointments/pages/
 import { AppointmentsCalendarPageComponent } from '@/app/features/appointments/pages/appointments-calendar-page/appointments-calendar-page.component';
 import { AppointmentNewPageComponent } from '@/app/features/appointments/pages/appointment-new-page/appointment-new-page.component';
 import { AppointmentsListPageComponent } from '@/app/features/appointments/pages/appointments-list-page/appointments-list-page.component';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 export default [
     {
@@ -20,7 +21,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: AppointmentsListPageComponent
     },
@@ -30,7 +31,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: AppointmentsCalendarPageComponent
     },
@@ -40,7 +41,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(APPOINTMENT_REQUESTS_MANAGE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(APPOINTMENT_REQUESTS_MANAGE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         loadComponent: () => import('@/app/features/appointment-requests/pages/appointment-requests-page.component').then((m) => m.AppointmentRequestsPageComponent)
     },
@@ -51,7 +52,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         loadComponent: () => import('@/app/features/waitlist/pages/waitlist-page.component').then((m) => m.WaitlistPageComponent)
     },
@@ -61,7 +62,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(APPOINTMENTS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(APPOINTMENTS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: AppointmentNewPageComponent
     },
@@ -71,7 +72,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: AppointmentEditPageComponent
     },
@@ -81,7 +82,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(APPOINTMENTS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: AppointmentDetailPageComponent
     }

@@ -3,6 +3,7 @@ import { Router, Routes } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { DATA_EXPORT_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { DataExportPageComponent } from '@/app/features/data-export/pages/data-export-page.component';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 /** Ayarlar > Verimi dışa aktar (`DATA_EXPORT_API_CONTRACT.md` §2): yalnız `DataExport.Manage` (Admin, Owner). */
 export default [
@@ -14,7 +15,7 @@ export default [
                 const auth = inject(AuthService);
                 const router = inject(Router);
 
-                return auth.hasOperationClaim(DATA_EXPORT_MANAGE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+                return auth.hasOperationClaim(DATA_EXPORT_MANAGE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
             }
         ],
         component: DataExportPageComponent

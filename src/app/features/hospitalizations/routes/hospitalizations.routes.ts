@@ -10,6 +10,7 @@ import { HospitalizationDetailPageComponent } from '@/app/features/hospitalizati
 import { HospitalizationEditPageComponent } from '@/app/features/hospitalizations/pages/hospitalization-edit-page/hospitalization-edit-page.component';
 import { HospitalizationNewPageComponent } from '@/app/features/hospitalizations/pages/hospitalization-new-page/hospitalization-new-page.component';
 import { HospitalizationsListPageComponent } from '@/app/features/hospitalizations/pages/hospitalizations-list-page/hospitalizations-list-page.component';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 export default [
     {
@@ -18,7 +19,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(HOSPITALIZATIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(HOSPITALIZATIONS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: HospitalizationsListPageComponent
     },
@@ -28,7 +29,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(HOSPITALIZATIONS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(HOSPITALIZATIONS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: HospitalizationNewPageComponent
     },
@@ -38,7 +39,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(HOSPITALIZATIONS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(HOSPITALIZATIONS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: HospitalizationEditPageComponent
     },
@@ -48,7 +49,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(HOSPITALIZATIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(HOSPITALIZATIONS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: HospitalizationDetailPageComponent
     }

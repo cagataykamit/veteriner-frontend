@@ -10,6 +10,7 @@ import { PaymentDetailPageComponent } from '@/app/features/payments/pages/paymen
 import { PaymentEditPageComponent } from '@/app/features/payments/pages/payment-edit-page/payment-edit-page.component';
 import { PaymentNewPageComponent } from '@/app/features/payments/pages/payment-new-page/payment-new-page.component';
 import { PaymentsListPageComponent } from '@/app/features/payments/pages/payments-list-page/payments-list-page.component';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 export default [
     {
@@ -18,7 +19,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(PAYMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(PAYMENTS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: PaymentsListPageComponent
     },
@@ -28,7 +29,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: PaymentNewPageComponent
     },
@@ -38,7 +39,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(PAYMENTS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(PAYMENTS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: PaymentEditPageComponent
     },
@@ -48,7 +49,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(PAYMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(PAYMENTS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: PaymentDetailPageComponent
     }

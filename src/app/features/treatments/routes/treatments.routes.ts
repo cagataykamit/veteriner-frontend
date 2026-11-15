@@ -10,6 +10,7 @@ import { TreatmentDetailPageComponent } from '@/app/features/treatments/pages/tr
 import { TreatmentEditPageComponent } from '@/app/features/treatments/pages/treatment-edit-page/treatment-edit-page.component';
 import { TreatmentNewPageComponent } from '@/app/features/treatments/pages/treatment-new-page/treatment-new-page.component';
 import { TreatmentsListPageComponent } from '@/app/features/treatments/pages/treatments-list-page/treatments-list-page.component';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 export default [
     {
@@ -18,7 +19,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(TREATMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(TREATMENTS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: TreatmentsListPageComponent
     },
@@ -28,7 +29,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(TREATMENTS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(TREATMENTS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: TreatmentNewPageComponent
     },
@@ -38,7 +39,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(TREATMENTS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(TREATMENTS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: TreatmentEditPageComponent
     },
@@ -48,7 +49,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(TREATMENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(TREATMENTS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: TreatmentDetailPageComponent
     }

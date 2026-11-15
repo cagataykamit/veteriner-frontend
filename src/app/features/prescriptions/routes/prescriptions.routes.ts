@@ -10,6 +10,7 @@ import { PrescriptionDetailPageComponent } from '@/app/features/prescriptions/pa
 import { PrescriptionEditPageComponent } from '@/app/features/prescriptions/pages/prescription-edit-page/prescription-edit-page.component';
 import { PrescriptionNewPageComponent } from '@/app/features/prescriptions/pages/prescription-new-page/prescription-new-page.component';
 import { PrescriptionsListPageComponent } from '@/app/features/prescriptions/pages/prescriptions-list-page/prescriptions-list-page.component';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 export default [
     {
@@ -18,7 +19,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(PRESCRIPTIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(PRESCRIPTIONS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: PrescriptionsListPageComponent
     },
@@ -28,7 +29,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(PRESCRIPTIONS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(PRESCRIPTIONS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: PrescriptionNewPageComponent
     },
@@ -38,7 +39,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(PRESCRIPTIONS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(PRESCRIPTIONS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: PrescriptionEditPageComponent
     },
@@ -48,7 +49,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(PRESCRIPTIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(PRESCRIPTIONS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: PrescriptionDetailPageComponent
     }

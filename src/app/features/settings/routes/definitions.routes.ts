@@ -3,6 +3,7 @@ import { Router, Routes } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { DEFINITION_ENTRIES, visibleEntries } from '@/app/core/routing/panel-navigation';
 import { DefinitionsPageComponent } from '@/app/features/settings/pages/definitions-page.component';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 export default [
     {
@@ -14,7 +15,7 @@ export default [
                 const router = inject(Router);
                 const ok = visibleEntries(DEFINITION_ENTRIES, (claim) => auth.hasOperationClaim(claim)).length > 0;
 
-                return ok ? true : router.createUrlTree(['/notfound']);
+                return ok ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
             }
         ],
         component: DefinitionsPageComponent
