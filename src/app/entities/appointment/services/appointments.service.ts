@@ -16,7 +16,7 @@ import {
     appointmentCalendarQueryToHttpParams,
     mapAppointmentCalendarItemsToVm
 } from '@/app/entities/appointment/data/appointment-calendar.mapper';
-import type { AppointmentDetailDto, AppointmentListItemDtoPagedResult } from '@/app/entities/appointment/models/appointment-api.model';
+import type { AppointmentCancelResultDto, AppointmentDetailDto, AppointmentListItemDtoPagedResult } from '@/app/entities/appointment/models/appointment-api.model';
 import type {
     AppointmentCalendarItemDto,
     AppointmentCalendarQuery
@@ -26,6 +26,11 @@ import type { AppointmentsListQuery } from '@/app/entities/appointment/models/ap
 import type { AppointmentDetailVm, AppointmentEditVm, AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+
+/** İptal sonucu: `undoWindowSeconds` > 0 ise "Geri al" bu süre gösterilir. */
+export interface AppointmentCancelResult {
+    undoWindowSeconds: number;
+}
 
 export interface AppointmentsPagedVm {
     items: AppointmentListItemVm[];
@@ -128,11 +133,21 @@ export class AppointmentsService {
         );
     }
 
-    /** `Appointments.Cancel`. PUT ile durum geçişi kapatıldı; iptal kendi ucuyla yapılır. Gerekçe opsiyonel (en çok 500). */
-    cancelAppointment(id: string, reason?: string): Observable<void> {
+    /**
+     * `Appointments.Cancel`. PUT ile durum geçişi kapatıldı; iptal kendi ucuyla yapılır. Gerekçe opsiyonel (en çok 500).
+     * Yanıttaki süre kadar "Geri al" gösterilir; süre sunucudadır, yanıtta yoksa 0 (geri alma sunulmaz).
+     */
+    cancelAppointment(id: string, reason?: string): Observable<AppointmentCancelResult> {
         const trimmed = reason?.trim();
 
-        return this.postTransition(ApiEndpoints.appointments.cancel(id), trimmed ? { reason: trimmed } : {}, 'Randevu iptal edilemedi.');
+        return this.postCommand<AppointmentCancelResultDto | null>(ApiEndpoints.appointments.cancel(id), trimmed ? { reason: trimmed } : {}, 'Randevu iptal edilemedi.').pipe(
+            map((dto) => ({ undoWindowSeconds: Math.max(0, Math.floor(dto?.undoWindowSeconds ?? 0)) }))
+        );
+    }
+
+    /** `Appointments.Cancel`; iptalden kısa süre sonra `Cancelled → Scheduled` ("Geri al"). */
+    revertCancellation(id: string): Observable<void> {
+        return this.postTransition(ApiEndpoints.appointments.cancelRevert(id), {}, 'İptal geri alınamadı.');
     }
 
     /** `Appointments.Complete`. */
@@ -170,8 +185,11 @@ export class AppointmentsService {
     }
 
     private postTransition(path: string, body: object, fallback: string): Observable<void> {
-        return this.api.post<unknown>(path, body).pipe(
-            map(() => void 0),
+        return this.postCommand<unknown>(path, body, fallback).pipe(map(() => void 0));
+    }
+
+    private postCommand<T>(path: string, body: object, fallback: string): Observable<T> {
+        return this.api.post<T>(path, body).pipe(
             catchError((err: unknown) =>
                 throwError(() => (err instanceof HttpErrorResponse ? new Error(messageFromHttpError(err, fallback)) : err))
             )
