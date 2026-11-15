@@ -69,6 +69,7 @@ export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
             heading: '2. Hangi verileri işleriz',
             items: [
                 'Hesap: ad, soyad, e-posta, telefon, rol ve yetkiler, klinik adı ve bilgileri, parola (yalnız geri döndürülemez özet olarak).',
+                'Telefon doğrulaması: deneme kaydında cep telefonu numarası, numaraya gönderilen tek kullanımlık kodun doğrulanma kaydı (kod yalnız geri döndürülemez özet olarak) ve kod isteğinin IP adresi özeti.',
                 'Abonelik ve ödeme: paket, fatura bilgileri, ödeme durumu. Kart bilgileri bizde saklanmaz; ödeme altyapısı sağlayıcısı (iyzico) tarafından işlenir.',
                 'Kullanım ve güvenlik: giriş kayıtları, IP adresi, tarayıcı/cihaz bilgisi, işlem (denetim) kayıtları, hata kayıtları.',
                 'İletişim: destek talepleri ve yazışmalar.',
@@ -78,19 +79,19 @@ export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
         {
             heading: '3. Amaçlar ve hukuki sebepler',
             paragraphs: [
-                'Hesabın açılması, hizmetin sunulması ve güvenliği (sözleşmenin ifası); faturalandırma ve yasal kayıtlar (hukuki yükümlülük); hizmet duyuruları ve destek (sözleşmenin ifası, meşru menfaat); suistimal ve güvenlik olaylarının önlenmesi (meşru menfaat); hakların korunması (hakkın tesisi); açık rıza gerektiren iletişimler yalnız rıza ile.'
+                'Hesabın açılması, hizmetin sunulması ve güvenliği (sözleşmenin ifası); faturalandırma ve yasal kayıtlar (hukuki yükümlülük); hizmet duyuruları ve destek (sözleşmenin ifası, meşru menfaat); suistimal ve güvenlik olaylarının önlenmesi (meşru menfaat); hakların korunması (hakkın tesisi); açık rıza gerektiren iletişimler yalnız rıza ile. Deneme kaydında cep telefonu, numaraya SMS ile gönderilen tek kullanımlık kodla doğrulanır ve aynı numarayla birden fazla deneme hesabı açılması önlenir (sözleşmenin kurulması; suistimalin önlenmesinde meşru menfaat). Bu SMS yalnız doğrulama içindir, ticari ileti değildir.'
             ]
         },
         {
             heading: '4. Aktarım',
             paragraphs: [
-                'Barındırma ve altyapı, ödeme (iyzico), e-posta/SMS gönderimi, destek ve muhasebe/hukuk danışmanlığı sağlayıcılarına; mevzuatın zorunlu kıldığı hallerde yetkili kurumlara. [Yurt dışına aktarım varsa: sağlayıcı, ülke ve Kanun m.9 mekanizması buraya yazılır.] Verileriniz satılmaz.'
+                'Barındırma ve altyapı, ödeme (iyzico), e-posta ve SMS gönderimi (doğrulama kodu dahil), destek ve muhasebe/hukuk danışmanlığı sağlayıcılarına; mevzuatın zorunlu kıldığı hallerde yetkili kurumlara. [Yurt dışına aktarım varsa: sağlayıcı, ülke ve Kanun m.9 mekanizması buraya yazılır.] Verileriniz satılmaz.'
             ]
         },
         {
             heading: '5. Saklama',
             paragraphs: [
-                'Hesap açık olduğu sürece ve sonrasında yasal zamanaşımı/saklama yükümlülükleri (örneğin vergi ve ticari defter belgeleri için 10 yıl) bitene kadar; ardından silinir, yok edilir veya anonimleştirilir. Ayrıntı: saklama ve imha politikası.'
+                'Hesap açık olduğu sürece ve sonrasında yasal zamanaşımı/saklama yükümlülükleri (örneğin vergi ve ticari defter belgeleri için 10 yıl) bitene kadar; ardından silinir, yok edilir veya anonimleştirilir. Deneme kaydında doğrulanan telefon numarası ve doğrulama kaydı, aynı numarayla yeniden deneme hesabı açılmasını önlemek için hesap kapandıktan sonra da saklanır. Ayrıntı: saklama ve imha politikası.'
             ]
         },
         {
