@@ -7,11 +7,9 @@
                 <portal-skeleton [rows]="3" message="Talep sayfası yükleniyor…" />
             }
             @case ('closed') {
-                <portal-empty-state
-                    title="Kliniğiniz online randevu talebi almıyor"
-                    message="Randevu için kliniğinizi telefonla arayabilirsiniz."
-                    icon="fa-calendar-xmark"
-                />
+                <portal-empty-state title="Kliniğiniz online randevu talebi almıyor" message="Randevu için kliniğinize başvurun." icon="fa-calendar-xmark">
+                    <portal-clinic-actions />
+                </portal-empty-state>
             }
             @case ('error') {
                 <portal-error-state [message]="loadError()" (retry)="load()" />

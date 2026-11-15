@@ -98,6 +98,15 @@ describe('PortalHomeComponent (ana ekran)', () => {
         expect(seeAll.getAttribute('href')).toBe('/pets');
     });
 
+    it('ana eylem üstte: randevu talebi; gecikmiş aşı eylemi hayvanı ve aşı nedenini taşır (H7)', async () => {
+        await create();
+        await respondAll();
+
+        expect(el.querySelector('[data-testid=home-main-action] [data-testid=clinic-action-request]')?.getAttribute('href')).toBe('/appointments/requests/new');
+        expect(el.querySelector('[data-testid=home-vaccine-action] [data-testid=clinic-action-request]')?.getAttribute('href')).toBe(`/appointments/requests/new?petId=${PET_PAMUK.petId}&reason=vaccine`);
+        expect(el.textContent).not.toContain('kliniğinizi arayabilirsiniz');
+    });
+
     it('borç yoksa "Borcunuz yok"; gecikmiş aşı yoksa sıradaki aşı sakin kartta', async () => {
         await create();
         http.expectOne(url(`links/${LINK_MERKEZ.linkId}/pets`)).flush([PET_PAMUK]);

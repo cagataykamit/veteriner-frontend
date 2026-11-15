@@ -1,4 +1,5 @@
 import { signal, WritableSignal } from '@angular/core';
+import { of } from 'rxjs';
 import { TestBed } from '@angular/core/testing';
 import type { PortalPage } from '@portal/app/core/api/portal-page';
 import type { PortalLink, PortalMe } from '@portal/app/core/auth/portal-auth.models';
@@ -6,6 +7,7 @@ import { PortalSessionService } from '@portal/app/core/auth/portal-session.servi
 import type { PortalAppointment } from '@portal/app/features/appointments/portal-appointments.api';
 import type { PortalBalance, PortalPayment } from '@portal/app/features/balance/portal-balance.api';
 import type { PortalClinic } from '@portal/app/features/clinic/portal-clinic.api';
+import { PortalClinicContact, PortalClinicContactService } from '@portal/app/features/clinic/portal-clinic-contact.service';
 import type { PortalPet, PortalPetDetail, PortalPetVaccinations } from '@portal/app/features/pets/portal-pets.api';
 import { configurePortalHttp, TEST_ME } from './portal-testing';
 
@@ -124,11 +126,21 @@ export function createSessionStub(links: readonly PortalLink[] = [LINK_MERKEZ]):
 }
 
 /** Sayfa spec'leri: gerçek API servisleri + `HttpTestingController`, oturum sahtesi. */
-export function configurePortalPage(component: unknown, session: PortalSessionStub): void {
+/** Ana eylem kartı (`portal-clinic-actions`) için klinik iletişimi; sayfa testleri kendi HTTP isteklerine odaklansın diye sabit döner. */
+export const CONTACT_OPEN: PortalClinicContact = { phone: '0312 555 00 00', bookingOpen: true };
+
+export function contactServiceStub(contact: PortalClinicContact = CONTACT_OPEN): Pick<PortalClinicContactService, 'contact'> {
+    return { contact: () => of(contact) };
+}
+
+export function configurePortalPage(component: unknown, session: PortalSessionStub, contact: PortalClinicContact = CONTACT_OPEN): void {
     configurePortalHttp();
     TestBed.configureTestingModule({
         imports: [component as never],
-        providers: [{ provide: PortalSessionService, useValue: session }]
+        providers: [
+            { provide: PortalSessionService, useValue: session },
+            { provide: PortalClinicContactService, useValue: contactServiceStub(contact) }
+        ]
     });
 }
 

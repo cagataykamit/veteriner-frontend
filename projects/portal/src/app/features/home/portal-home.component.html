@@ -2,6 +2,8 @@
     <h1 class="portal-title">{{ greeting() }}</h1>
 
     @if (session.activeLink(); as link) {
+        <portal-clinic-actions data-testid="home-main-action" />
+
         <a class="portal-tile" routerLink="/clinic" data-testid="home-clinic">
             <span class="portal-brand-badge" aria-hidden="true">{{ clinicInitial() }}</span>
             <span class="portal-tile-body">
@@ -65,11 +67,11 @@
                                 @if (v.overdue.length > 1) {
                                     {{ v.overdue.length - 1 }} gecikmiş aşı daha var.
                                 }
-                                Randevu için kliniğinizi arayabilirsiniz.
                             </span>
                         </span>
                         <i class="fa-solid fa-chevron-right portal-tile-chevron" aria-hidden="true"></i>
                     </a>
+                    <portal-clinic-actions [petId]="v.overdue[0].petId" reason="vaccine" data-testid="home-vaccine-action" />
                 } @else {
                     <a class="portal-tile" [routerLink]="vaccineLink()" data-testid="home-vaccine">
                         <span class="portal-tile-icon" aria-hidden="true"><i class="fa-solid fa-syringe"></i></span>

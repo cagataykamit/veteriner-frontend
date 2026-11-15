@@ -1,7 +1,6 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -12,11 +11,12 @@ import { isDeceased, PortalPet, PortalPetsApi } from '@portal/app/features/pets/
 import { formatPortalDay, formatPortalTime, formatPortalWeekday } from '@portal/app/shared/format/portal-date';
 import { PORTAL_PHONE_INVALID_MESSAGE, portalRequiredText, portalTurkishMobileValidator } from '@portal/app/shared/validation/portal-form-rules';
 import { PortalEmptyState, PortalErrorState, PortalLoadingState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
-import { PortalBookingApi, PortalBookingDay, PortalBookingPage, PortalBookingReason } from './portal-booking.api';
+import { isBookingClosed, PortalBookingApi, PortalBookingDay, PortalBookingPage, PortalBookingReason } from './portal-booking.api';
 import { PortalBookingReasonStep } from './portal-booking-reason-step.component';
 import { PortalBookingDone, PortalBookingHow, PortalBookingStep, PortalBookingSummaryItem } from './portal-booking-ui.component';
-import { bookingNoteValidators, NOTE_REQUIRED_MESSAGE, PORTAL_BOOKING_LIMITS, pendingLimitMessage, reasonKey } from './portal-booking.rules';
+import { bookingNoteValidators, NOTE_REQUIRED_MESSAGE, PORTAL_BOOKING_LIMITS, pendingLimitMessage, reasonKey, vaccineReason } from './portal-booking.rules';
 import { PortalSlotPicker } from './portal-slot-picker.component';
+import { PortalClinicActions } from '@portal/app/features/clinic/portal-clinic-actions.component';
 
 type PageState = 'loading' | 'closed' | 'error' | 'ready' | 'done';
 type AvailabilityState = 'idle' | 'loading' | 'ready' | 'error';
@@ -39,6 +39,7 @@ export const NEW_PET_OPTION = 'new';
         InputTextModule,
         MessageModule,
         PortalBookingDone,
+        PortalClinicActions,
         PortalBookingHow,
         PortalBookingReasonStep,
         PortalBookingStep,
@@ -56,6 +57,7 @@ export class PortalAppointmentRequestComponent {
     protected readonly session = inject(PortalSessionService);
     private readonly api = inject(PortalBookingApi);
     private readonly petsApi = inject(PortalPetsApi);
+    private readonly route = inject(ActivatedRoute);
 
     readonly limits = PORTAL_BOOKING_LIMITS;
     readonly newPetOption = NEW_PET_OPTION;
@@ -129,6 +131,7 @@ export class PortalAppointmentRequestComponent {
                 this.page.set(page);
                 this.pets.set(pets);
                 this.state.set('ready');
+                this.applyPrefill(page);
             },
             error: (err: unknown) => {
                 if (isBookingClosed(err)) {
@@ -141,6 +144,27 @@ export class PortalAppointmentRequestComponent {
                 this.state.set('error');
             }
         });
+    }
+
+    /**
+     * Önden seçim (H7, H16): adres çubuğundaki `petId` (gecikmiş aşı kartından) ya da tek aktif hayvan seçili gelir;
+     * `reason=vaccine` aşı nedenini seçer. Kullanıcı hepsini değiştirebilir.
+     */
+    private applyPrefill(page: PortalBookingPage): void {
+        const query = this.route.snapshot.queryParamMap;
+        const active = this.activePets();
+        const wanted = query.get('petId');
+        const petId = active.find((p) => p.petId === wanted)?.petId ?? (active.length === 1 ? active[0].petId : null);
+
+        if (petId) {
+            this.form.controls.pet.setValue(petId);
+        }
+
+        const reason = query.get('reason') === 'vaccine' ? vaccineReason(page.reasons) : null;
+
+        if (reason) {
+            this.selectReason(reasonKey(reason));
+        }
     }
 
     selectReason(key: string): void {
@@ -283,9 +307,4 @@ export class PortalAppointmentRequestComponent {
 
         this.submitError.set(code === PORTAL_ERROR_CODES.pendingLimitReached ? pendingLimitMessage(this.page()?.maxPendingRequests) : portalErrorMessage(err));
     }
-}
-
-/** Klinik online talep almıyor (404 `OnlineBooking.NotFound`). */
-export function isBookingClosed(err: unknown): boolean {
-    return err instanceof HttpErrorResponse && err.status === 404 && portalProblemCode(err) === PORTAL_ERROR_CODES.onlineBookingNotFound;
 }

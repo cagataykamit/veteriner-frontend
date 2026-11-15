@@ -1,15 +1,19 @@
 import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { PORTAL_ERROR_CODES } from '@portal/app/core/errors/portal-errors';
 import { PortalPetsApi } from '@portal/app/features/pets/portal-pets.api';
-import { createSessionStub, PET_BONCUK, PET_PAMUK } from '@portal/app/testing/portal-fixtures';
+import { PortalClinicContactService } from '@portal/app/features/clinic/portal-clinic-contact.service';
+import { contactServiceStub, createSessionStub, PET_BONCUK, PET_PAMUK } from '@portal/app/testing/portal-fixtures';
 import { buttonByText, problem, typeInto } from '@portal/app/testing/portal-testing';
 import { PortalAppointmentRequestComponent } from './portal-appointment-request.component';
 import { PortalBookingApi } from './portal-booking.api';
 import { BOOKING_DAYS, BOOKING_PAGE, SLOT_MON_0900 } from './portal-booking.fixtures';
+
+/** İkinci etkin hayvan: tek hayvan önden seçilmesin diye (H16). */
+const PET_ZEYTIN = { ...PET_PAMUK, petId: 'pet-zeytin', name: 'Zeytin' };
 
 describe('PortalAppointmentRequestComponent (oturumlu talep)', () => {
     let fixture: ComponentFixture<PortalAppointmentRequestComponent>;
@@ -61,7 +65,8 @@ describe('PortalAppointmentRequestComponent (oturumlu talep)', () => {
                 provideRouter([]),
                 { provide: PortalBookingApi, useValue: api },
                 { provide: PortalPetsApi, useValue: pets },
-                { provide: PortalSessionService, useValue: createSessionStub() }
+                { provide: PortalSessionService, useValue: createSessionStub() },
+                { provide: PortalClinicContactService, useValue: contactServiceStub({ phone: '0232 000 00 00', bookingOpen: false }) }
             ]
         }).compileComponents();
     });
@@ -163,7 +168,9 @@ describe('PortalAppointmentRequestComponent (oturumlu talep)', () => {
         api.linkPage.mockReturnValue(of({ ...BOOKING_PAGE, clinicPhone: null }));
         await create();
 
-        expect(el.querySelector('[data-testid=booking-urgent]')?.textContent).toContain('kliniği telefonla arayın');
+        // Telefon yoksa "telefonla arayın" denmez (H9).
+        expect(el.querySelector('[data-testid=booking-urgent]')?.textContent).not.toContain('telefonla arayın');
+        expect(el.querySelector('[data-testid=booking-urgent]')?.textContent).toContain('acil servisine başvurun');
         expect(el.querySelector('[data-testid=booking-urgent] .urgent-phone')).toBeNull();
     });
 
@@ -187,7 +194,39 @@ describe('PortalAppointmentRequestComponent (oturumlu talep)', () => {
         expect(api.createLinkRequest).toHaveBeenCalledWith('link-1', expect.objectContaining({ petId: null, petName: 'Minnoş', petSpecies: 'Kedi', petBreed: null }));
     });
 
+    describe('önden seçim (H7, H16)', () => {
+        const withQuery = (query: Record<string, string>) =>
+            TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } });
+
+        it('gecikmiş aşı kartından: hayvan ve aşı nedeni seçili açılır, saatler o neden için yüklenir', async () => {
+            pets.pets.mockReturnValue(of([PET_PAMUK, PET_ZEYTIN]));
+            withQuery({ petId: PET_ZEYTIN.petId, reason: 'vaccine' });
+            await create();
+
+            expect(fixture.componentInstance.reasonKey()).toBe('reason-1');
+            expect(api.linkAvailability).toHaveBeenCalledWith('link-1', 'reason-1');
+            expect(fixture.componentInstance.form.controls.pet.value).toBe(PET_ZEYTIN.petId);
+        });
+
+        it('tek etkin hayvan seçili gelir; neden kullanıcıya kalır', async () => {
+            withQuery({});
+            await create();
+
+            expect(fixture.componentInstance.form.controls.pet.value).toBe(PET_PAMUK.petId);
+            expect(fixture.componentInstance.reasonKey()).toBeNull();
+        });
+
+        it('adres çubuğundaki hayvan listede yoksa ve birden çok hayvan varsa seçim yapılmaz', async () => {
+            pets.pets.mockReturnValue(of([PET_PAMUK, PET_ZEYTIN]));
+            withQuery({ petId: 'baska' });
+            await create();
+
+            expect(fixture.componentInstance.form.controls.pet.value).toBe('');
+        });
+    });
+
     it('hayvan seçilmeden gönderilmez', async () => {
+        pets.pets.mockReturnValue(of([PET_PAMUK, PET_ZEYTIN]));
         await create();
         await chooseReasonAndSlot();
         buttonByText(el, 'Talebi gönder')!.click();
@@ -203,6 +242,8 @@ describe('PortalAppointmentRequestComponent (oturumlu talep)', () => {
 
         expect(el.textContent).toContain('Kliniğiniz online randevu talebi almıyor');
         expect(buttonByText(el, 'Talebi gönder')).toBeUndefined();
+        // H9: telefon varsa arama düğmesi.
+        expect(el.querySelector('[data-testid=clinic-action-call]')?.getAttribute('href')).toBe('tel:02320000000');
     });
 
     it('bekleyen talep sınırı mesajı', async () => {
