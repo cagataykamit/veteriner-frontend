@@ -45,7 +45,7 @@ import { PublicSiteShowcaseComponent } from './components/public-site-showcase.c
             <nav class="ps-route" aria-label="Bölüm dizini">
                 <ol class="ps-list">
                     @for (item of index; track item.id; let i = $index) {
-                        <li [class]="toneOf(i)">
+                        <li [class]="item.tone">
                             <a
                                 [routerLink]="[]"
                                 [fragment]="item.id"
@@ -62,7 +62,7 @@ import { PublicSiteShowcaseComponent } from './components/public-site-showcase.c
 
             <div class="ps-stack">
                 @for (section of sections; track section.id; let i = $index) {
-                    <section [id]="section.id" data-section-spy [class]="'ps-panel ps-feature ' + toneOf(i)" [attr.aria-labelledby]="'feature-' + section.id">
+                    <section [id]="section.id" data-section-spy [class]="'ps-panel ps-feature ' + toneById[section.id]" [attr.aria-labelledby]="'feature-' + section.id">
                         <header class="ps-feature-head">
                             <span class="ps-bubble ps-bubble--big" aria-hidden="true">{{ i + 1 }}</span>
                             <div>
@@ -84,12 +84,12 @@ import { PublicSiteShowcaseComponent } from './components/public-site-showcase.c
                     </section>
                 }
 
-                <section [id]="showcase.id" data-section-spy class="ps-panel ps-feature--plain ps-tone-mint" [attr.aria-labelledby]="'feature-' + showcase.id">
+                <section [id]="showcase.id" data-section-spy [class]="'ps-panel ps-feature--plain ' + toneById[showcase.id]" [attr.aria-labelledby]="'feature-' + showcase.id">
                     <app-public-site-showcase [headingId]="'feature-' + showcase.id" />
                 </section>
 
                 @for (group of groups; track group.id; let g = $index) {
-                    <section [id]="group.id" data-section-spy [class]="'ps-group ' + toneOf(g + 1)" [attr.aria-labelledby]="'feature-' + group.id">
+                    <section [id]="group.id" data-section-spy [class]="'ps-group ' + toneById[group.id]" [attr.aria-labelledby]="'feature-' + group.id">
                         <header class="ps-feature-head">
                             <span class="ps-bubble ps-bubble--big" aria-hidden="true">{{ noOf(group.id) }}</span>
                             <div>
@@ -127,11 +127,13 @@ export class PublicFeaturesPageComponent implements OnInit {
     readonly sections = PUBLIC_FEATURE_SECTIONS;
     readonly groups = PUBLIC_FEATURE_GROUPS;
     readonly showcase = PUBLIC_SITE_SHOWCASE;
+    /** Dizin ve her bölümün tonu: altı adım sırayla dört tonu döner, vitrin nane, kart grupları gökten başlar. Panel ve dizin noktası aynı tonu buradan alır. */
     readonly index = [
-        ...PUBLIC_FEATURE_SECTIONS.map(({ id, title }) => ({ id, title })),
-        { id: PUBLIC_SITE_SHOWCASE.id, title: PUBLIC_SITE_SHOWCASE.indexTitle },
-        ...PUBLIC_FEATURE_GROUPS.map(({ id, title }) => ({ id, title }))
+        ...PUBLIC_FEATURE_SECTIONS.map(({ id, title }, i) => ({ id, title, tone: publicSiteToneClass(i) })),
+        { id: PUBLIC_SITE_SHOWCASE.id, title: PUBLIC_SITE_SHOWCASE.indexTitle, tone: publicSiteToneClass(0) },
+        ...PUBLIC_FEATURE_GROUPS.map(({ id, title }, g) => ({ id, title, tone: publicSiteToneClass(g + 1) }))
     ];
+    readonly toneById: Readonly<Record<string, string>> = Object.fromEntries(this.index.map((item) => [item.id, item.tone]));
     readonly plansOf = publicFeatureCardPlans;
     readonly shotCaptionOf = publicFeatureGroupShotCaption;
     readonly visuals = PUBLIC_FEATURE_VISUALS;
