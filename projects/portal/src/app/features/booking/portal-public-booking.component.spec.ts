@@ -8,6 +8,7 @@ import { buttonByText, problem, typeInto } from '@portal/app/testing/portal-test
 import { PortalBookingApi } from './portal-booking.api';
 import { BOOKING_DAYS, BOOKING_PAGE, SLOT_MON_0900, SLOT_MON_0930 } from './portal-booking.fixtures';
 import { PortalPublicBookingComponent } from './portal-public-booking.component';
+import { PortalHumanVerificationService } from '@portal/app/core/security/portal-human-verification.service';
 
 describe('PortalPublicBookingComponent (kliniğe özel bağlantı)', () => {
     let fixture: ComponentFixture<PortalPublicBookingComponent>;
@@ -70,7 +71,7 @@ describe('PortalPublicBookingComponent (kliniğe özel bağlantı)', () => {
         await TestBed.configureTestingModule({
             imports: [PortalPublicBookingComponent],
             // Test koşucusu sayfayı çerçevede açar; gömülü görünüm yalnız kendi testlerinde açılır.
-            providers: [provideRouter([]), { provide: PortalBookingApi, useValue: api }, { provide: PORTAL_FRAMED, useValue: false }]
+            providers: [provideRouter([]), { provide: PortalBookingApi, useValue: api }, { provide: PORTAL_FRAMED, useValue: false }, { provide: PortalHumanVerificationService, useValue: { signInSiteKey: () => of(null), bookingSiteKey: () => of(null) } }]
         }).compileComponents();
     });
 
@@ -224,7 +225,7 @@ describe('PortalPublicBookingComponent (kliniğe özel bağlantı)', () => {
 
         await fillAndSendCode();
 
-        expect(api.requestPublicCode).toHaveBeenCalledWith('k7m2p9xq4r8t', 'ayse@example.com');
+        expect(api.requestPublicCode).toHaveBeenCalledWith('k7m2p9xq4r8t', 'ayse@example.com', null);
         expect(buttonByText(el, 'Kodu tekrar gönder')!.disabled).toBe(true);
         expect(el.querySelector('[data-testid=booking-privacy] a')?.getAttribute('href')).toBe('/legal/privacy');
 

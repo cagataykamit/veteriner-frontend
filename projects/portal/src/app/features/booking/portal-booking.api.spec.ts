@@ -46,7 +46,7 @@ describe('PortalBookingApi (online randevu talebi uçları)', () => {
         const codeReq = http.expectOne('/api/portal/v1/booking/kod/verification-code');
 
         expect(codeReq.request.method).toBe('POST');
-        expect(codeReq.request.body).toEqual({ email: 'a@example.com' });
+        expect(codeReq.request.body).toEqual({ email: 'a@example.com', turnstileToken: null });
         codeReq.flush(null, { status: 204, statusText: 'No Content' });
 
         void firstValueFrom(

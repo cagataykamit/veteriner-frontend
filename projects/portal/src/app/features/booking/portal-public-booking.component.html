@@ -127,6 +127,8 @@
                                 <p class="portal-field-hint">Talebiniz bu adrese gelen kodla doğrulanır; klinik yanıtı da bu adrese gelir.</p>
                             </div>
 
+                            <portal-turnstile [siteKey]="turnstileSiteKey()" [action]="turnstileAction" (tokenChange)="turnstileToken.set($event)" />
+
                             @if (codeSent()) {
                                 <p class="booking-sent" role="status">
                                     <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
