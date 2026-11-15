@@ -18,4 +18,8 @@ export interface PublicOwnerSignupFormValue {
     /** Boş ise gönderilmez. */
     readonly discountCode: string;
     readonly startMode: OnboardingStartMode;
+    /** E-posta kodu doğrulamasından dönen jeton (TRIAL-001). */
+    readonly emailVerificationToken: string;
+    /** VKN ya da TCKN; boşsa gönderilmez (zorunluluk sunucu ayarında). */
+    readonly taxIdentityNumber: string;
 }

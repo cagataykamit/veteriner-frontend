@@ -128,8 +128,9 @@ export class PortalBookingApi {
         return this.api.get<PortalBookingDay[]>(PORTAL_ENDPOINTS.publicBookingAvailability(code), availabilityParams(reasonId));
     }
 
-    requestPublicCode(code: string, email: string): Observable<void> {
-        return this.api.post<void>(PORTAL_ENDPOINTS.publicBookingCode(code), { email });
+    /** @param turnstileToken İnsan doğrulaması jetonu (her zaman korunur). */
+    requestPublicCode(code: string, email: string, turnstileToken: string | null = null): Observable<void> {
+        return this.api.post<void>(PORTAL_ENDPOINTS.publicBookingCode(code), { email, turnstileToken });
     }
 
     createPublicRequest(code: string, body: PortalPublicBookingRequest): Observable<PortalAppointmentRequestCreated> {

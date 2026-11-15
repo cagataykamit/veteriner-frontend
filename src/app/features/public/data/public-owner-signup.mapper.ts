@@ -4,6 +4,7 @@ import type { PublicOwnerSignupFormValue } from '@/app/features/public/models/pu
 /** Form -> `POST /public/owner-signup` gövdesi; seçim bayrağa yalnız burada çevrilir. */
 export function mapPublicOwnerSignupFormToRequest(form: PublicOwnerSignupFormValue): PublicOwnerSignupRequestDto {
     const discountCode = form.discountCode.trim();
+    const taxIdentityNumber = form.taxIdentityNumber.trim();
 
     return {
         planCode: form.planCode,
@@ -15,6 +16,8 @@ export function mapPublicOwnerSignupFormToRequest(form: PublicOwnerSignupFormVal
         acceptedLegalDocuments: form.acceptedLegalDocuments,
         // Kod sunucuda yeniden doğrulanır; anlık doğrulama yalnız bilgi amaçlıdır (geçersizse kayıt tek tip hatayla döner).
         ...(discountCode ? { discountCode } : {}),
-        startWithExampleClinic: form.startMode === 'example'
+        startWithExampleClinic: form.startMode === 'example',
+        emailVerificationToken: form.emailVerificationToken,
+        ...(taxIdentityNumber ? { taxIdentityNumber } : {})
     };
 }

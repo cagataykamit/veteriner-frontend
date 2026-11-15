@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, viewChild } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { finalize } from 'rxjs';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -17,6 +19,8 @@ import {
     portalPasswordsMatch,
     portalStrongPasswordValidator
 } from '@portal/app/shared/validation/portal-form-rules';
+import { HUMAN_CHECK_PENDING_MESSAGE, PORTAL_TURNSTILE_ACTIONS, PortalHumanVerificationService } from '@portal/app/core/security/portal-human-verification.service';
+import { PortalTurnstileComponent } from '@portal/app/shared/ui/portal-turnstile.component';
 import { PortalResendTimer } from './portal-resend-timer';
 
 type ResetStep = 'request' | 'confirm' | 'done';
@@ -35,7 +39,7 @@ const RESET_ERROR_OVERRIDES = {
 @Component({
     selector: 'portal-password-reset',
     standalone: true,
-    imports: [ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, PortalBrandHeader, PortalFooter],
+    imports: [ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, PortalBrandHeader, PortalFooter, PortalTurnstileComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './portal-password-reset.component.html'
 })
@@ -47,6 +51,12 @@ export class PortalPasswordResetComponent {
     readonly submitted = signal(false);
     readonly error = signal<string | null>(null);
     readonly resend = new PortalResendTimer(inject(DestroyRef));
+
+    /** İnsan doğrulaması (Turnstile): site anahtarı sunucudan; boşsa widget yok ve kod jetonsuz istenir. */
+    readonly turnstileSiteKey = toSignal(inject(PortalHumanVerificationService).siteKey(), { initialValue: null });
+    readonly turnstileToken = signal<string | null>(null);
+    readonly turnstileAction = PORTAL_TURNSTILE_ACTIONS.passwordReset;
+    private readonly turnstile = viewChild(PortalTurnstileComponent);
 
     readonly codeSentMessage = RESET_CODE_SENT_MESSAGE;
     readonly passwordHint = PORTAL_PASSWORD_HINT;
@@ -89,9 +99,19 @@ export class PortalPasswordResetComponent {
             return;
         }
 
+        if (this.turnstileSiteKey() && !this.turnstileToken()) {
+            this.error.set(HUMAN_CHECK_PENDING_MESSAGE);
+
+            return;
+        }
+
         this.busy.set(true);
         this.error.set(null);
-        this.authApi.requestPasswordReset(this.email.value.trim()).subscribe({
+        // Turnstile jetonu tek kullanımlık: her istekten sonra yenilenir.
+        this.authApi
+            .requestPasswordReset(this.email.value.trim(), this.turnstileToken())
+            .pipe(finalize(() => this.turnstile()?.reset()))
+            .subscribe({
             next: () => {
                 this.busy.set(false);
                 this.submitted.set(false);

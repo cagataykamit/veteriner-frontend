@@ -9,8 +9,9 @@ import type { PortalAuthTokens, PortalMe } from './portal-auth.models';
 export class PortalAuthApi {
     private readonly api = inject(PortalApiClient);
 
-    requestCode(email: string): Observable<void> {
-        return this.api.post<void>(PORTAL_ENDPOINTS.requestCode, { email });
+    /** @param turnstileToken İnsan doğrulaması jetonu (portal girişi korunuyorsa zorunlu). */
+    requestCode(email: string, turnstileToken: string | null = null): Observable<void> {
+        return this.api.post<void>(PORTAL_ENDPOINTS.requestCode, { email, turnstileToken });
     }
 
     verifyCode(email: string, oneTimeCode: string): Observable<PortalAuthTokens> {
@@ -21,8 +22,8 @@ export class PortalAuthApi {
         return this.api.post<PortalAuthTokens>(PORTAL_ENDPOINTS.login, { email, password });
     }
 
-    requestPasswordReset(email: string): Observable<void> {
-        return this.api.post<void>(PORTAL_ENDPOINTS.passwordReset, { email });
+    requestPasswordReset(email: string, turnstileToken: string | null = null): Observable<void> {
+        return this.api.post<void>(PORTAL_ENDPOINTS.passwordReset, { email, turnstileToken });
     }
 
     confirmPasswordReset(email: string, oneTimeCode: string, newPassword: string): Observable<void> {

@@ -7,6 +7,7 @@ import { PortalSessionService } from '@portal/app/core/auth/portal-session.servi
 import { PORTAL_ERROR_CODES, PORTAL_RATE_LIMIT_MESSAGE } from '@portal/app/core/errors/portal-errors';
 import { buttonByText, problem, TEST_ME, testTokens, typeInto } from '@portal/app/testing/portal-testing';
 import { LOGIN_CODE_INVALID_MESSAGE, LOGIN_CODE_SENT_MESSAGE, LOGIN_PASSWORD_INVALID_MESSAGE, PortalLoginComponent } from './portal-login.component';
+import { PortalHumanVerificationService } from '@portal/app/core/security/portal-human-verification.service';
 
 describe('PortalLoginComponent (kod ve parola girişi)', () => {
     let fixture: ComponentFixture<PortalLoginComponent>;
@@ -43,7 +44,7 @@ describe('PortalLoginComponent (kod ve parola girişi)', () => {
         session.startSession.mockReturnValue(of(TEST_ME));
         await TestBed.configureTestingModule({
             imports: [PortalLoginComponent],
-            providers: [provideRouter([]), { provide: PortalAuthApi, useValue: api }, { provide: PortalSessionService, useValue: session }]
+            providers: [provideRouter([]), { provide: PortalAuthApi, useValue: api }, { provide: PortalSessionService, useValue: session }, { provide: PortalHumanVerificationService, useValue: { siteKey: () => of(null) } }]
         }).compileComponents();
         router = TestBed.inject(Router);
         vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
@@ -71,7 +72,7 @@ describe('PortalLoginComponent (kod ve parola girişi)', () => {
         typeInto(el, '#login-email', ' ayse@example.com ');
         await click('Kod gönder');
 
-        expect(api.requestCode).toHaveBeenCalledWith('ayse@example.com');
+        expect(api.requestCode).toHaveBeenCalledWith('ayse@example.com', null);
         expect(el.textContent).toContain(LOGIN_CODE_SENT_MESSAGE);
         expect(el.querySelector('#login-code')).not.toBeNull();
         expect(buttonByText(el, 'Kodu tekrar gönder')?.disabled).toBe(true);

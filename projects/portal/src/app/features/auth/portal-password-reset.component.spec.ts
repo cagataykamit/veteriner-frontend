@@ -6,6 +6,7 @@ import { PortalAuthApi } from '@portal/app/core/auth/portal-auth.api';
 import { PORTAL_ERROR_CODES } from '@portal/app/core/errors/portal-errors';
 import { buttonByText, problem, typeInto } from '@portal/app/testing/portal-testing';
 import { PortalPasswordResetComponent, RESET_CODE_SENT_MESSAGE } from './portal-password-reset.component';
+import { PortalHumanVerificationService } from '@portal/app/core/security/portal-human-verification.service';
 
 describe('PortalPasswordResetComponent', () => {
     let fixture: ComponentFixture<PortalPasswordResetComponent>;
@@ -26,7 +27,7 @@ describe('PortalPasswordResetComponent', () => {
         api.requestPasswordReset.mockReturnValue(of(undefined));
         await TestBed.configureTestingModule({
             imports: [PortalPasswordResetComponent],
-            providers: [provideRouter([]), { provide: PortalAuthApi, useValue: api }]
+            providers: [provideRouter([]), { provide: PortalAuthApi, useValue: api }, { provide: PortalHumanVerificationService, useValue: { siteKey: () => of(null) } }]
         }).compileComponents();
         fixture = TestBed.createComponent(PortalPasswordResetComponent);
         el = fixture.nativeElement;
@@ -44,7 +45,7 @@ describe('PortalPasswordResetComponent', () => {
     it('kod isteği hesap varlığını ele vermez ve onay adımına geçer', async () => {
         await toConfirmStep();
 
-        expect(api.requestPasswordReset).toHaveBeenCalledWith('ayse@example.com');
+        expect(api.requestPasswordReset).toHaveBeenCalledWith('ayse@example.com', null);
         expect(el.textContent).toContain(RESET_CODE_SENT_MESSAGE);
         expect(el.querySelector('#reset-code')).not.toBeNull();
     });

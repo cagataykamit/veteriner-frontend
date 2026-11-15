@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, signal, viewChild } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { Observable, switchMap } from 'rxjs';
+import { finalize, Observable, switchMap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
@@ -12,6 +13,8 @@ import { PortalSessionService } from '@portal/app/core/auth/portal-session.servi
 import { PORTAL_ERROR_CODES, PORTAL_ERROR_MESSAGES, portalErrorMessage } from '@portal/app/core/errors/portal-errors';
 import { PortalBrandHeader, PortalFooter } from '@portal/app/layout/portal-brand.component';
 import { normalizeOneTimeCode, portalEmailValidators, portalFieldError, portalOneTimeCodeValidator } from '@portal/app/shared/validation/portal-form-rules';
+import { HUMAN_CHECK_PENDING_MESSAGE, PORTAL_TURNSTILE_ACTIONS, PortalHumanVerificationService } from '@portal/app/core/security/portal-human-verification.service';
+import { PortalTurnstileComponent } from '@portal/app/shared/ui/portal-turnstile.component';
 import { PortalResendTimer } from './portal-resend-timer';
 
 type LoginMethod = 'code' | 'password';
@@ -31,7 +34,7 @@ export const LOGIN_CODE_SENT_MESSAGE = 'Bu e-posta adresiyle bir hesap varsa 6 h
 @Component({
     selector: 'portal-login',
     standalone: true,
-    imports: [ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, PortalBrandHeader, PortalFooter],
+    imports: [ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, PortalBrandHeader, PortalFooter, PortalTurnstileComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './portal-login.component.html'
 })
@@ -51,6 +54,12 @@ export class PortalLoginComponent {
     readonly error = signal<string | null>(null);
     readonly info = signal<string | null>(null);
     readonly resend = new PortalResendTimer(inject(DestroyRef));
+
+    /** İnsan doğrulaması (Turnstile): site anahtarı sunucudan; boşsa widget yok ve kod jetonsuz istenir. */
+    readonly turnstileSiteKey = toSignal(inject(PortalHumanVerificationService).siteKey(), { initialValue: null });
+    readonly turnstileToken = signal<string | null>(null);
+    readonly turnstileAction = PORTAL_TURNSTILE_ACTIONS.signInCode;
+    private readonly turnstile = viewChild(PortalTurnstileComponent);
 
     readonly expiredMessage = computed(() => (this.reason() === 'expired' ? PORTAL_ERROR_MESSAGES[PORTAL_ERROR_CODES.invalidRefreshToken] : null));
     readonly deletedMessage = computed(() => (this.reason() === 'deleted' ? PORTAL_ACCOUNT_DELETED_MESSAGE : null));
@@ -101,7 +110,16 @@ export class PortalLoginComponent {
             return;
         }
 
-        this.run(this.authApi.requestCode(this.email()), () => {
+        if (this.turnstileSiteKey() && !this.turnstileToken()) {
+            this.error.set(HUMAN_CHECK_PENDING_MESSAGE);
+
+            return;
+        }
+
+        // Turnstile jetonu tek kullanımlık: her istekten sonra yenilenir.
+        const request = this.authApi.requestCode(this.email(), this.turnstileToken()).pipe(finalize(() => this.turnstile()?.reset()));
+
+        this.run(request, () => {
             this.codeSent.set(true);
             this.submitted.set(false);
             this.info.set(LOGIN_CODE_SENT_MESSAGE);

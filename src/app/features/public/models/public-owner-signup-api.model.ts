@@ -14,6 +14,10 @@ export interface PublicOwnerSignupRequestDto {
     discountCode?: string;
     /** Örnek Veteriner Kliniğini kayıtla aynı işlemde yükle (ADR-002); eksikse sunucu `false` sayar. */
     startWithExampleClinic: boolean;
+    /** Zorunlu; `email-code/verify` yanıtındaki tek kullanımlık jeton (`TRIAL_SIGNUP_ABUSE_API_CONTRACT.md` §3). */
+    emailVerificationToken: string;
+    /** VKN (10) ya da TCKN (11 hane); bir numarayla tek deneme. Zorunluluğu `GET /public/owner-signup/settings` söyler. */
+    taxIdentityNumber?: string;
 }
 
 /** Kayıtta kullanılan ortak kodu özeti; ortak bilgisi içermez. */

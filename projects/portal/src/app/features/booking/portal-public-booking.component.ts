@@ -1,16 +1,20 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { afterNextRender, ChangeDetectionStrategy, Component, computed, DestroyRef, ElementRef, inject, input, OnInit, signal, viewChild } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { PORTAL_FRAMED, reportEmbedHeight } from '@portal/app/core/embed/portal-embed';
 import { PORTAL_ERROR_CODES, portalErrorMessage, portalProblemCode } from '@portal/app/core/errors/portal-errors';
+import { HUMAN_CHECK_PENDING_MESSAGE, PORTAL_TURNSTILE_ACTIONS, PortalHumanVerificationService } from '@portal/app/core/security/portal-human-verification.service';
 import { PortalResendTimer } from '@portal/app/features/auth/portal-resend-timer';
 import { PortalBrandHeader, PortalFooter } from '@portal/app/layout/portal-brand.component';
 import { formatPortalDay, formatPortalTime, formatPortalWeekday } from '@portal/app/shared/format/portal-date';
 import { PortalErrorState, PortalLoadingState } from '@portal/app/shared/ui/portal-states.component';
+import { PortalTurnstileComponent } from '@portal/app/shared/ui/portal-turnstile.component';
 import {
     normalizeOneTimeCode,
     PORTAL_PHONE_INVALID_MESSAGE,
@@ -59,7 +63,8 @@ function slotLabel(slot: string | null): string {
         PortalFooter,
         PortalLoadingState,
         PortalErrorState,
-        PortalSlotPicker
+        PortalSlotPicker,
+        PortalTurnstileComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './portal-public-booking.component.html',
@@ -99,6 +104,12 @@ export class PortalPublicBookingComponent implements OnInit {
     readonly submitted = signal(false);
     readonly doneItems = signal<readonly PortalBookingSummaryItem[]>([]);
     readonly timer = new PortalResendTimer(inject(DestroyRef));
+
+    /** İnsan doğrulaması (Turnstile): site anahtarı sunucudan; boşsa widget yok ve kod jetonsuz istenir. */
+    readonly turnstileSiteKey = toSignal(inject(PortalHumanVerificationService).siteKey(), { initialValue: null });
+    readonly turnstileToken = signal<string | null>(null);
+    readonly turnstileAction = PORTAL_TURNSTILE_ACTIONS.bookingCode;
+    private readonly turnstile = viewChild(PortalTurnstileComponent);
 
     /** Okunur marka rengi sayfa köküne değişken olarak yazılır; okunmayan renkte boş, sayfa Vetinity renklerinde kalır. */
     readonly accent = computed(() => accentStyle(this.page()?.branding?.accentColor));
@@ -218,9 +229,19 @@ export class PortalPublicBookingComponent implements OnInit {
             return;
         }
 
+        if (this.turnstileSiteKey() && !this.turnstileToken()) {
+            this.codeError.set(HUMAN_CHECK_PENDING_MESSAGE);
+
+            return;
+        }
+
         this.sendingCode.set(true);
         this.codeError.set(null);
-        this.api.requestPublicCode(code, email.value.trim()).subscribe({
+        // Turnstile jetonu tek kullanımlık: her istekten sonra yenilenir.
+        this.api
+            .requestPublicCode(code, email.value.trim(), this.turnstileToken())
+            .pipe(finalize(() => this.turnstile()?.reset()))
+            .subscribe({
             next: () => {
                 this.sendingCode.set(false);
                 this.codeSent.set(true);

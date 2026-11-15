@@ -6,6 +6,8 @@ const booking = (code: string) => `booking/${encodeURIComponent(code)}`;
  */
 export const PORTAL_ENDPOINTS = {
     legalDocuments: 'legal-documents',
+    // İnsan doğrulaması ayarları (Turnstile site anahtarı; TRIAL_SIGNUP_ABUSE_API_CONTRACT.md §4)
+    humanVerification: 'human-verification',
     invite: (token: string) => `invites/${encodeURIComponent(token)}`,
     acceptInvite: (token: string) => `invites/${encodeURIComponent(token)}/accept`,
     requestCode: 'auth/code',
@@ -68,6 +70,7 @@ export const PORTAL_ENDPOINTS = {
 /** Anonim uçlar (sözleşme §7 "Anonim"): Bearer eklenmez, 401'de yenileme denenmez. */
 const ANONYMOUS_EXACT = new Set<string>([
     PORTAL_ENDPOINTS.legalDocuments,
+    PORTAL_ENDPOINTS.humanVerification,
     PORTAL_ENDPOINTS.requestCode,
     PORTAL_ENDPOINTS.verifyCode,
     PORTAL_ENDPOINTS.login,
