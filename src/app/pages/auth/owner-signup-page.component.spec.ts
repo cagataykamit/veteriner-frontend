@@ -13,6 +13,8 @@ import { PublicPlanCatalogService } from '@/app/features/public/services/public-
 import { PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import { DiscountCodesService } from '@/app/entities/sales-partner/services/discount-codes.service';
 import { PENDING_DISCOUNT_CODE_KEY } from '@/app/entities/sales-partner/utils/discount-code.utils';
+import { SignupPhoneVerificationService } from '@/app/features/public/services/signup-phone-verification.service';
+import { SIGNUP_PHONE_CODE_MESSAGES } from '@/app/features/public/utils/signup-phone-verification.utils';
 import { OwnerSignupPageComponent } from './owner-signup-page.component';
 
 const VERSIONS: LegalDocumentVersionDto[] = [
@@ -59,7 +61,7 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
 
         await TestBed.configureTestingModule({
             imports: [OwnerSignupPageComponent],
-            providers: [provideRouter([]), { provide: PublicOwnerSignupService, useValue: signup }, { provide: LegalAcceptanceService, useValue: legal }, { provide: DiscountCodesService, useValue: discountCodes }, { provide: PublicPlanCatalogService, useValue: { state: signal({ status: 'error' }), ensureLoaded: vi.fn() } }]
+            providers: [provideRouter([]), { provide: PublicOwnerSignupService, useValue: signup }, { provide: LegalAcceptanceService, useValue: legal }, { provide: DiscountCodesService, useValue: discountCodes }, { provide: SignupPhoneVerificationService, useValue: { requestCode: vi.fn(), verifyCode: vi.fn() } },{ provide: PublicPlanCatalogService, useValue: { state: signal({ status: 'error' }), ensureLoaded: vi.fn() } }]
         }).compileComponents();
 
         fixture = TestBed.createComponent(OwnerSignupPageComponent);
@@ -72,6 +74,7 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
         cmp.email = 'sahip@example.com';
         cmp.password = 'Abc12345!';
         cmp.selectPlan(PRICING_PLAN_DEFS[0]);
+        cmp.onPhoneVerified({ mobilePhone: '0532 123 45 67', token: 'jeton' });
     });
 
     it('üç belgeye bağlantılı tek onay kutusu gösterir', () => {
@@ -103,7 +106,40 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
 
         expect(body.acceptedLegalDocuments).toEqual(VERSIONS);
         expect(body.discountCode).toBeUndefined();
+        expect(body.mobilePhone).toBe('0532 123 45 67');
+        expect(body.phoneVerificationToken).toBe('jeton');
         expect(cmp.successResult()).toEqual(RESULT);
+    });
+
+    describe('telefon doğrulaması (TRIAL-001)', () => {
+        it('telefon alanı formda gösterilir', () => {
+            expect(host().querySelector('[data-testid="signup-phone-input"]')).not.toBeNull();
+        });
+
+        it('doğrulanmamış telefonla istek atılmaz ve mesaj gösterilir', () => {
+            cmp.onPhoneVerified(null);
+            cmp.legalConsent.set(true);
+
+            cmp.submit();
+
+            expect(signup.signup).not.toHaveBeenCalled();
+            expect(cmp.formError()).toBe(SIGNUP_PHONE_CODE_MESSAGES['SignupPhone.VerificationRequired']);
+
+            cmp.onPhoneVerified({ mobilePhone: '05321234567', token: 't' });
+
+            expect(cmp.formError()).toBeNull();
+        });
+
+        it('aynı numarayla ikinci deneme: sade mesaj gösterilir ve doğrulama sıfırlanır', () => {
+            const duplicate = new HttpErrorResponse({ status: 409, error: { code: 'SignupPhone.DuplicateTrial' } });
+
+            signup.signup.mockReturnValue(throwError(() => duplicate));
+            cmp.legalConsent.set(true);
+            cmp.submit();
+
+            expect(cmp.formError()).toBe('Bu telefon numarasıyla daha önce deneme hesabı açılmış.');
+            expect(cmp.phoneVerification()).toBeNull();
+        });
     });
 
     describe('örnek klinik seçimi (ADR-002, TRIAL-002)', () => {
