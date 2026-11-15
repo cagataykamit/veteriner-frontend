@@ -1,11 +1,11 @@
 import type { SiteColors, SiteDesign, WorkingDay } from '../model/site.model';
 import { emptyContent, forbiddenCopy, patchClinic, sampleConfig } from '../testing/site-sample';
 import { contrast } from './site-color.utils';
-import { designFromConcept, SITE_CONCEPTS } from './site-concepts';
+import { designFromConcept, SITE_CONCEPTS, SITE_PALETTES } from './site-concepts';
 import { SITE_FONTS } from './site-fonts';
 import { clinicStatus, hoursGroups, nextSlotDays } from './site-hours';
 import { safeHref, safeImageSrc, socialLinks } from './site-links';
-import { buildSiteTokens } from './site-tokens';
+import { buildSiteTokens, colorWarnings } from './site-tokens';
 import { buildSiteVm, memberInitials, whatsappNumber } from './site-vm';
 import record from '../../stock/KAYNAKLAR.json';
 import { isStockPhoto, STOCK_GALLERY, STOCK_LIBRARY, STOCK_PHOTOS, stockArticlePhoto, stockSectionPhoto, stockServicePhoto, stockSharePhoto } from './stock-photos';
@@ -208,6 +208,14 @@ describe('token sözleşmesi', () => {
             }
         });
     }
+
+    it('hazır paletler (konseptler dahil) sihirbazda kontrast uyarısı vermez', () => {
+        for (const palette of SITE_PALETTES) {
+            const design: SiteDesign = { ...designFromConcept(SITE_CONCEPTS[0]), colors: palette.colors, ground: palette.ground };
+
+            expect(colorWarnings(design), palette.name).toEqual([]);
+        }
+    });
 
     it('zayıf renk seçilince de metin okunur kalır', () => {
         const colors: SiteColors = { primary: '#ffff00', secondary: '#fefefe', accent: '#f0f0f0' };

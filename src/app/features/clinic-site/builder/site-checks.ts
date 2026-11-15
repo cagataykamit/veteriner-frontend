@@ -36,7 +36,7 @@ export function seoChecks(config: SiteConfig): readonly SiteCheck[] {
     return [
         { label: 'SEO başlığı', ok: title.length >= 10 && title.length <= 60, detail: `${title.length} karakter (10–60 önerilir).` },
         { label: 'Meta açıklama', ok: description.length >= 50 && description.length <= 160, detail: `${description.length} karakter (50–160 önerilir).` },
-        { label: 'Paylaşım görseli', ok: true, detail: config.seo.ogImage ? 'Yüklendi.' : config.content.heroImage ? 'Hero fotoğrafı kullanılır.' : 'Hazır fotoğraf kullanılır.' },
+        { label: 'Paylaşım görseli', ok: true, detail: config.seo.ogImage ? 'Yüklendi.' : config.content.heroImage ? 'Giriş bölümü fotoğrafı kullanılır.' : 'Hazır fotoğraf kullanılır.' },
         { label: 'Site simgesi (favicon)', ok: !!config.seo.favicon || !!config.content.clinic.logo, detail: config.seo.favicon ? 'Yüklendi.' : config.content.clinic.logo ? 'Logo kullanılır.' : 'Yüklenmedi.' }
     ];
 }

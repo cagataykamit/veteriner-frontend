@@ -25,9 +25,9 @@ const ALL_SECTIONS: readonly SectionType[] = ['nav', 'hero', 'about', 'services'
 export const SITE_CONCEPTS: readonly SiteConcept[] = [
     {
         key: 'modern',
-        name: 'Modern Veterinary',
+        name: 'Modern',
         idea: 'Beyaz zemin, dev tipografi, ince çizgiler. Bir mimarlık bürosunun kataloğu gibi: süs yok, ölçü var.',
-        colors: { primary: '#0f4c81', secondary: '#5b7083', accent: '#e4572e' },
+        colors: { primary: '#0f4c81', secondary: '#5b7083', accent: '#d4451b' },
         ground: 'beyaz',
         headFont: 'instrument',
         bodyFont: 'instrument',
@@ -56,7 +56,7 @@ export const SITE_CONCEPTS: readonly SiteConcept[] = [
     },
     {
         key: 'premium',
-        name: 'Premium Clinic',
+        name: 'Zarif',
         idea: 'Gece zemini, pirinç rengi ince çizgiler, iri tırnaklı yazı. Bir galeri afişi ve menü kartı gibi: sakin ve özenli.',
         colors: { primary: '#c7a66b', secondary: '#7d6f5c', accent: '#c7a66b' },
         ground: 'gece',
@@ -87,7 +87,7 @@ export const SITE_CONCEPTS: readonly SiteConcept[] = [
     },
     {
         key: 'friendly',
-        name: 'Friendly Pet Care',
+        name: 'Samimi',
         idea: 'Sıcak krem zemin, dolgun renk blokları, buzdolabına iliştirilmiş fotoğraflar. Mahalle veterineriyle sohbet eder gibi.',
         colors: { primary: '#c8401f', secondary: '#f2b233', accent: '#0f6b62' },
         ground: 'krem',
@@ -118,9 +118,9 @@ export const SITE_CONCEPTS: readonly SiteConcept[] = [
     },
     {
         key: 'nature',
-        name: 'Nature & Wellness',
+        name: 'Doğal',
         idea: 'Adaçayı zemin, kemerli pencereler, italik tırnaklı yazı, bol boşluk. Bir sera gibi ferah; acelesi olmayan bir ritim.',
-        colors: { primary: '#2f4a36', secondary: '#8a9a6b', accent: '#a9582f' },
+        colors: { primary: '#2f4a36', secondary: '#8a9a6b', accent: '#a8582f' },
         ground: 'adacayi',
         headFont: 'newsreader',
         bodyFont: 'karla',
@@ -147,6 +147,19 @@ export const SITE_CONCEPTS: readonly SiteConcept[] = [
             contactText: 'Sorularınız için bizi arayabilirsiniz.'
         }
     }
+];
+
+/** Sihirbazın hazır paleti: renk ve zemin; konseptin bölüm ve yazılarına dokunmaz. */
+export interface SitePalette {
+    readonly name: string;
+    readonly colors: SiteColors;
+    readonly ground: GroundKey;
+}
+
+/** Her konseptin kendi paleti (renkler tek yerde, konseptte), ardından konsepte bağlı olmayan ek palet. Hepsi zeminde 4.5:1 geçer (spec korur). */
+export const SITE_PALETTES: readonly SitePalette[] = [
+    ...SITE_CONCEPTS.map(({ name, colors, ground }) => ({ name, colors, ground })),
+    { name: 'Yalın', colors: { primary: '#1f2328', secondary: '#8b8f94', accent: '#95663c' }, ground: 'kagit' }
 ];
 
 export function conceptByKey(key: string): SiteConcept {

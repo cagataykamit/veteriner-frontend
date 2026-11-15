@@ -99,7 +99,7 @@ type ProductStockMovementsListState = {
                             <div class="flex flex-wrap gap-2 shrink-0">
                                 <button pButton type="button" severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                                 @if (canExportStockMovements()) {
-                                    <button pButton type="button" severity="help" (click)="exportCsv()" [disabled]="loading() || exporting()"><i class="p-button-icon" [class]="exporting() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Dışa aktar</button>
+                                    <button pButton type="button" severity="secondary" (click)="exportCsv()" [disabled]="loading() || exporting()"><i class="p-button-icon" [class]="exporting() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Dışa aktar</button>
                                 }
                             </div>
                         </div>
