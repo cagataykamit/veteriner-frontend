@@ -23,11 +23,12 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-format.directive';
 
 @Component({
     selector: 'app-client-edit-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, PhoneFormatDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (loading()) {
@@ -54,7 +55,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                         </div>
                         <div class="col-span-12 md:col-span-6">
                             <label for="phone" class="block text-sm font-medium text-muted-color mb-2">Telefon</label>
-                            <input id="phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
+                            <input appPhoneFormat id="phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
                             @if (fieldMessage('phone'); as msg) {
                                 <small class="text-danger">{{ msg }}</small>
                             }

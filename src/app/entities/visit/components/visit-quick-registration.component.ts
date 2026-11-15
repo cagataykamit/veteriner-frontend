@@ -20,6 +20,7 @@ import { splitSearchTermForRegistration } from '@/app/entities/visit/utils/visit
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
 import { panelHttpFailureMessage, problemCodeFromHttpError, trialLimitMessage } from '@/app/shared/utils/api-error.utils';
+import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-format.directive';
 
 export interface RegistrationOwner {
     id: string;
@@ -37,7 +38,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
 @Component({
     selector: 'app-visit-quick-registration',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppTrialLimitNoticeComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppTrialLimitNoticeComponent, PhoneFormatDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4" aria-label="Hızlı kayıt" (keydown.enter)="onEnter($event)">
@@ -57,7 +58,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="vr-phone" class="block text-sm font-medium text-muted-color mb-2">Telefon *</label>
-                        <input id="vr-phone" pInputText class="w-full" inputmode="tel" autocomplete="off" [formControl]="clientForm.controls.phone" />
+                        <input appPhoneFormat id="vr-phone" pInputText class="w-full" inputmode="tel" autocomplete="off" [formControl]="clientForm.controls.phone" />
                         @if (clientMessage('phone'); as msg) {
                             <small class="text-danger">{{ msg }}</small>
                         }

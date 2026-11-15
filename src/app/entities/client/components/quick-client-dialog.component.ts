@@ -15,6 +15,7 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
 import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
+import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-format.directive';
 
 /**
  * Randevu / muayene formlarında tam sayfa ayrılmadan müşteri oluşturma (create contract ile aynı).
@@ -23,7 +24,7 @@ import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-quick-client-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, AppTrialLimitNoticeComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, AppTrialLimitNoticeComponent, PhoneFormatDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog header="Yeni müşteri ekle" [modal]="true" [dismissableMask]="form.pristine" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible" (onShow)="onShow()">
@@ -38,7 +39,7 @@ import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="qc-phone" class="block text-sm font-medium text-muted-color mb-2">Telefon</label>
-                        <input id="qc-phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
+                        <input appPhoneFormat id="qc-phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
                         @if (fieldMessage('phone'); as msg) {
                             <small class="text-danger">{{ msg }}</small>
                         }

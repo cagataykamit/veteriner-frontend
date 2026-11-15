@@ -21,11 +21,12 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
 import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
 import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
+import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-format.directive';
 
 @Component({
     selector: 'app-client-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent, AppTrialLimitNoticeComponent, FocusFirstFieldDirective],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent, AppTrialLimitNoticeComponent, FocusFirstFieldDirective, PhoneFormatDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" title="Yeni müşteri" description="Müşteri kaydı oluşturun." />
@@ -42,7 +43,7 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="phone" class="block text-sm font-medium text-muted-color mb-2">Telefon</label>
-                        <input id="phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
+                        <input appPhoneFormat id="phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
                         @if (fieldMessage('phone'); as msg) {
                             <small class="text-danger">{{ msg }}</small>
                         }

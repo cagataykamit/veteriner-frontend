@@ -1,6 +1,7 @@
 import { AbstractControl, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import type { ClientCreateFormFieldKey } from '@/app/entities/client/utils/client-create-validation-parse.utils';
 import {
+    CLIENT_CREATE_PHONE_MSG_INVALID,
     isValidTurkishMobileDigits,
     turkishMobilePhoneValidator
 } from '@/app/entities/client/utils/client-create-phone.utils';
@@ -18,7 +19,7 @@ export const CLIENT_UPSERT_FULL_NAME_MIN = 2;
 
 export const CLIENT_UPSERT_MSG_REQUIRED = 'Bu alan zorunludur.';
 export const CLIENT_UPSERT_MSG_MIN_LENGTH = 'En az 2 karakter olmalıdır.';
-export const CLIENT_UPSERT_MSG_PHONE_INVALID = 'Geçerli bir telefon numarası girin.';
+export const CLIENT_UPSERT_MSG_PHONE_INVALID = CLIENT_CREATE_PHONE_MSG_INVALID;
 export const CLIENT_UPSERT_MSG_EMAIL_INVALID = 'Geçerli bir e-posta adresi girin.';
 
 export function clientUpsertMaxLengthMessage(field: ClientCreateFormFieldKey): string | null {
