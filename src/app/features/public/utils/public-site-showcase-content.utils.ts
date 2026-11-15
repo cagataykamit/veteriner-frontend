@@ -45,27 +45,27 @@ export const PUBLIC_SITE_DESIGN_SIZE = { width: 1280, height: 800 } as const;
 export const PUBLIC_SITE_DESIGNS: readonly PublicSiteDesignDef[] = [
     {
         key: 'modern',
-        name: 'Modern Veterinary',
+        name: 'Modern',
         note: 'Beyaz zemin, iri başlıklar, ince çizgiler.',
-        alt: 'Modern Veterinary tasarımıyla örnek klinik sitesi: beyaz zeminde büyük başlık, lacivert randevu düğmesi ve kırmızı fularlı köpek fotoğrafı'
+        alt: 'Modern tasarımla örnek klinik sitesi: beyaz zeminde büyük başlık, lacivert randevu düğmesi ve kırmızı fularlı köpek fotoğrafı'
     },
     {
         key: 'premium',
-        name: 'Premium Clinic',
+        name: 'Zarif',
         note: 'Koyu zemin, pirinç rengi çizgiler, tırnaklı yazı.',
-        alt: 'Premium Clinic tasarımıyla örnek klinik sitesi: koyu zeminde siyah beyaz kedi fotoğrafı, tırnaklı büyük başlık ve pirinç rengi randevu düğmesi'
+        alt: 'Zarif tasarımla örnek klinik sitesi: koyu zeminde siyah beyaz kedi fotoğrafı, tırnaklı büyük başlık ve pirinç rengi randevu düğmesi'
     },
     {
         key: 'friendly',
-        name: 'Friendly Pet Care',
+        name: 'Samimi',
         note: 'Krem zemin, dolgun renkler, yuvarlak köşeler.',
-        alt: 'Friendly Pet Care tasarımıyla örnek klinik sitesi: krem zeminde kalın başlık, turuncu randevu düğmesi ve gülümseyen golden retriever fotoğrafı'
+        alt: 'Samimi tasarımla örnek klinik sitesi: krem zeminde kalın başlık, turuncu randevu düğmesi ve gülümseyen golden retriever fotoğrafı'
     },
     {
         key: 'nature',
-        name: 'Nature & Wellness',
+        name: 'Doğal',
         note: 'Adaçayı yeşili zemin, kemerli fotoğraflar, bol boşluk.',
-        alt: 'Nature & Wellness tasarımıyla örnek klinik sitesi: açık yeşil zeminde italik başlık, koyu yeşil randevu düğmesi ve kemerli çerçevede kızıl tüylü köpek fotoğrafı'
+        alt: 'Doğal tasarımla örnek klinik sitesi: açık yeşil zeminde italik başlık, koyu yeşil randevu düğmesi ve kemerli çerçevede kızıl tüylü köpek fotoğrafı'
     }
 ];
 

@@ -113,7 +113,7 @@ describe('SiteBuilderPageComponent', () => {
 
     it('boş görsel alanında hazır fotoğraf görünür, yükleme tek tıktadır (K7)', async () => {
         const fixture = await contentStep();
-        const hero = imageField(fixture, 'Hero fotoğrafı yükle');
+        const hero = imageField(fixture, 'Giriş bölümü fotoğrafı yükle');
 
         expect(hero.querySelector('img')?.getAttribute('src')).toBe('_stock/bandana.webp');
         expect(hero.textContent).toContain('Hazır fotoğraf, değiştirebilirsiniz.');
@@ -124,14 +124,14 @@ describe('SiteBuilderPageComponent', () => {
     it('seçili konseptin karesi görünür', async () => {
         const fixture = await contentStep(defaultStoredConfig('premium'));
 
-        expect(imageField(fixture, 'Hero fotoğrafı yükle').querySelector('img')?.getAttribute('src')).toBe('_stock/tuxedo-dark.webp');
+        expect(imageField(fixture, 'Giriş bölümü fotoğrafı yükle').querySelector('img')?.getAttribute('src')).toBe('_stock/tuxedo-dark.webp');
         expect(imageField(fixture, 'Bölüm fotoğrafı yükle').querySelector('img')?.getAttribute('src')).toBe('_stock/siamese-dark.webp');
     });
 
     it('klinik yüklediyse hazır fotoğraf görünmez; kaldırılabileceği ve neyin döneceği söylenir', async () => {
         const stored = defaultStoredConfig();
         const fixture = await contentStep({ ...stored, content: { ...stored.content, heroImage: { src: 'site-image:a1', alt: 'Klinik' } } });
-        const hero = imageField(fixture, 'Hero fotoğrafı yükle');
+        const hero = imageField(fixture, 'Giriş bölümü fotoğrafı yükle');
 
         expect(hero.querySelector('img')?.getAttribute('src')).not.toContain('_stock/');
         expect(hero.textContent).toContain('Kaldırırsanız hazır fotoğraf döner.');

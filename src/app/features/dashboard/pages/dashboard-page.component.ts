@@ -15,6 +15,7 @@ import { paymentMethodLabel } from '@/app/entities/payment/utils/payment-method.
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { AppStatusTagComponent, type StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateTimeDisplay, localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
 import { singleDayAppointmentsLinkQuery } from '@/app/entities/appointment/utils/appointments-list-link.utils';
@@ -45,6 +46,7 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppStatusTagComponent,
+        AppRowActionButtonComponent,
         DashboardMiniTrendChartComponent,
         VisitArrivalDialogComponent,
         TrDatePipe,

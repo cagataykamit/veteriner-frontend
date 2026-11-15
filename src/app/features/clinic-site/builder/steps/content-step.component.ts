@@ -21,7 +21,7 @@ const SERVICE_SUGGESTIONS: readonly string[] = ['Genel muayene', 'Aşı ve koruy
 
 const COPY_GROUPS: readonly { readonly title: string; readonly fields: readonly { readonly key: CopyKey; readonly label: string; readonly rows?: number }[] }[] = [
     {
-        title: 'Hero ve düğmeler',
+        title: 'Giriş bölümü ve düğmeler',
         fields: [
             { key: 'heroEyebrow', label: 'Üst satır' },
             { key: 'heroTitle', label: 'Başlık', rows: 2 },
@@ -76,8 +76,8 @@ const replaceAt = <T>(list: readonly T[], index: number, change: Partial<T>): T[
                     }
                     @if (first) {
                         <div>
-                            <p class="mini">Hero fotoğrafı</p>
-                            <app-w-image label="Hero fotoğrafı yükle" [reference]="c.heroImage?.src ?? null" [stock]="sectionStock('hero')" (referenceChange)="setHero($event)" />
+                            <p class="mini">Giriş bölümü fotoğrafı</p>
+                            <app-w-image label="Giriş bölümü fotoğrafı yükle" [reference]="c.heroImage?.src ?? null" [stock]="sectionStock('hero')" (referenceChange)="setHero($event)" />
                         </div>
                         <div>
                             <p class="mini">Tanıtım fotoğrafı</p>

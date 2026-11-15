@@ -54,7 +54,7 @@ const CLINIC_DETAIL_ROUTE = '/panel/settings/clinics';
             [categoryLink]="settingsRoute"
             categoryLinkLabel="Ayarlar"
             title="Veteriner bul"
-            description="Hayvan sahipleri kliniğinizi il, ilçe ve hizmete göre Vetinity'nin Veteriner bul sayfalarında bulur. Listelenmek ücretsizdir; istediğiniz an kapatırsınız, kapatınca hemen listeden çıkar."
+            description="Hasta sahipleri kliniğinizi il, ilçe ve hizmete göre Vetinity'nin Veteriner bul sayfalarında bulur. Listelenmek ücretsizdir; istediğiniz an kapatırsınız, kapatınca hemen listeden çıkar."
         />
 
         @if (ro.mutationBlocked()) {
@@ -121,7 +121,7 @@ const CLINIC_DETAIL_ROUTE = '/panel/settings/clinics';
 
                 <section class="card col-span-12 lg:col-span-6 mb-0" aria-labelledby="vetFinderServicesTitle">
                     <h5 id="vetFinderServicesTitle" class="mt-0 mb-1">Hizmetler</h5>
-                    <p class="text-sm text-muted-color mt-0 mb-3">Hayvan sahipleri hizmete göre filtreler. Yalnız kliniğinizde verilen hizmetleri seçin.</p>
+                    <p class="text-sm text-muted-color mt-0 mb-3">Hasta sahipleri hizmete göre filtreler. Yalnız kliniğinizde verilen hizmetleri seçin.</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" formGroupName="services">
                         @for (service of l.availableServices; track service.key) {
                             <div class="flex items-center gap-2">

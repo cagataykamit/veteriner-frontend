@@ -39,7 +39,7 @@ describe('findClaims (K14)', () => {
             content: { ...stored.content, copy: { ...stored.content.copy, heroTitle: 'En iyi klinik' }, services: [{ slug: 's', title: 'Aşı', summary: 'Ücretsiz', body: '', image: null }] }
         });
 
-        expect(claims).toEqual(expect.arrayContaining([expect.objectContaining({ where: 'Hero başlığı', step: 4 }), expect.objectContaining({ where: 'Hizmetler: Aşı', term: 'ucretsiz' })]));
+        expect(claims).toEqual(expect.arrayContaining([expect.objectContaining({ where: 'Giriş bölümü başlığı', step: 4 }), expect.objectContaining({ where: 'Hizmetler: Aşı', term: 'ucretsiz' })]));
     });
 });
 
@@ -47,8 +47,8 @@ describe('yayın kontrolleri', () => {
     it('yazılmamış metinler hazır cümle olarak söylenir (K14)', () => {
         const stored = defaultStoredConfig();
 
-        expect(defaultCopyLabels(stored)).toContain('Hero başlığı');
-        expect(defaultCopyLabels({ ...stored, content: { ...stored.content, copy: { ...stored.content.copy, heroTitle: 'Başlık' } } })).not.toContain('Hero başlığı');
+        expect(defaultCopyLabels(stored)).toContain('Giriş bölümü başlığı');
+        expect(defaultCopyLabels({ ...stored, content: { ...stored.content, copy: { ...stored.content.copy, heroTitle: 'Başlık' } } })).not.toContain('Giriş bölümü başlığı');
     });
 
     it('zorunlu listeyi kopyalamaz: ad, telefon, adres ve saat uyarıda yoktur (K9)', () => {

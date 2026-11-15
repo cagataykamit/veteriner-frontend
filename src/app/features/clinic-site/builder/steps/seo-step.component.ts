@@ -20,7 +20,7 @@ import { environment } from '@/environments/environment';
             <app-site-address />
             <div>
                 <p class="mini">Paylaşım görseli (OG)</p>
-                <app-w-image label="Paylaşım görseli yükle" [reference]="s.ogImage" emptyText="Boşsa hero fotoğrafı kullanılır." [stock]="shareStock()" (referenceChange)="set('ogImage', $event)" />
+                <app-w-image label="Paylaşım görseli yükle" [reference]="s.ogImage" emptyText="Boşsa giriş bölümü fotoğrafı kullanılır." [stock]="shareStock()" (referenceChange)="set('ogImage', $event)" />
             </div>
             <div>
                 <p class="mini">Site simgesi (favicon)</p>

@@ -1,16 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { type CharacterKey, colorWarnings, GROUNDS, type GroundKey, isHex, RADIUS_OPTIONS, SITE_FONTS, type SiteColors } from '@site-engine';
+import { type CharacterKey, colorWarnings, GROUNDS, type GroundKey, isHex, RADIUS_OPTIONS, SITE_FONTS, SITE_PALETTES, type SiteColors, type SitePalette } from '@site-engine';
 import { type DesignSuggestion, suggestDesign } from '@/app/features/clinic-site/builder/design-suggest';
 import { SiteBuilderStore } from '@/app/features/clinic-site/builder/site-builder.store';
 import { WIZARD_STYLES } from '@/app/features/clinic-site/builder/wizard-kit';
-
-const PALETTES: readonly { readonly name: string; readonly colors: SiteColors; readonly ground: GroundKey }[] = [
-    { name: 'Modern Medical', colors: { primary: '#0f4c81', secondary: '#5b7083', accent: '#e4572e' }, ground: 'beyaz' },
-    { name: 'Natural & Organic', colors: { primary: '#2f4a36', secondary: '#8a9a6b', accent: '#a9582f' }, ground: 'adacayi' },
-    { name: 'Premium Veterinary', colors: { primary: '#c7a66b', secondary: '#7d6f5c', accent: '#c7a66b' }, ground: 'gece' },
-    { name: 'Warm & Friendly', colors: { primary: '#c8401f', secondary: '#f2b233', accent: '#0f6b62' }, ground: 'krem' },
-    { name: 'Minimal & Elegant', colors: { primary: '#1f2328', secondary: '#8b8f94', accent: '#9c6b3f' }, ground: 'kagit' }
-];
 
 const CHARACTERS: readonly { readonly key: CharacterKey; readonly label: string }[] = [
     { key: 'sade', label: 'Sade ve net' },
@@ -382,7 +374,7 @@ export class BrandStepComponent {
     protected readonly warnings = computed(() => colorWarnings(this.design()));
     protected readonly suggestion = signal<DesignSuggestion | null>(null);
 
-    protected readonly palettes = PALETTES;
+    protected readonly palettes = SITE_PALETTES;
     protected readonly characters = CHARACTERS;
     protected readonly colorFields = COLOR_FIELDS;
     protected readonly grounds = GROUNDS;
@@ -394,13 +386,13 @@ export class BrandStepComponent {
         return GROUNDS.find((ground) => ground.key === key)!.bg;
     }
 
-    protected isPalette(palette: (typeof PALETTES)[number]): boolean {
+    protected isPalette(palette: SitePalette): boolean {
         const { colors, ground } = this.design();
 
         return ground === palette.ground && colors.primary === palette.colors.primary && colors.secondary === palette.colors.secondary && colors.accent === palette.colors.accent;
     }
 
-    protected pickPalette(palette: (typeof PALETTES)[number]): void {
+    protected pickPalette(palette: SitePalette): void {
         this.store.patchDesign({ colors: palette.colors, ground: palette.ground });
     }
 
