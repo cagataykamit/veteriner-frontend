@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, DestroyRef, inject, OnInit, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -16,9 +16,6 @@ import { mapPublicOwnerSignupFormToRequest } from '@/app/features/public/data/pu
 import { PublicOwnerSignupService } from '@/app/features/public/services/public-owner-signup.service';
 import { ExampleClinicSummaryComponent } from '@/app/entities/example-clinic/components/example-clinic-summary.component';
 import { publicOwnerSignupFailureMessage } from '@/app/features/public/utils/public-owner-signup-error.utils';
-import { SignupPhoneVerificationComponent } from '@/app/features/public/components/signup-phone-verification.component';
-import type { SignupPhoneVerification } from '@/app/features/public/models/signup-phone-verification.model';
-import { SIGNUP_PHONE_CODE_MESSAGES, signupPhoneErrorCode } from '@/app/features/public/utils/signup-phone-verification.utils';
 import { defByApiCode, formatUserLimit, parsePlanQueryParam, planOffer, planPriceView, PRICING_PLAN_DEFS, type PricingPlanDef } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import { PublicPlanCatalogService } from '@/app/features/public/services/public-plan-catalog.service';
 import { AUTH_SIGNUP_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
@@ -37,14 +34,11 @@ import { clearPendingDiscountCode, DISCOUNT_CODE_QUERY_PARAM, discountNoteText, 
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 const PLAN_REQUIRED_MESSAGE = 'Bir paket seçin.';
-const PHONE_REQUIRED_MESSAGE = SIGNUP_PHONE_CODE_MESSAGES['SignupPhone.VerificationRequired'];
-/** Kaydın reddettiği telefon doğrulaması: bileşen baştan başlar (`TRIAL_PHONE_VERIFICATION_API_CONTRACT.md` §4). */
-const PHONE_RESET_CODES = new Set(['SignupPhone.VerificationRequired', 'SignupPhone.DuplicateTrial']);
 
 @Component({
     selector: 'app-owner-signup-page',
     standalone: true,
-    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RadioButtonModule, RippleModule, RouterLink, PublicLegalLinksComponent, LegalConsentCheckboxComponent, DiscountCodeFieldComponent, ExampleClinicSummaryComponent, SignupPhoneVerificationComponent, TrDatePipe],
+    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RadioButtonModule, RippleModule, RouterLink, PublicLegalLinksComponent, LegalConsentCheckboxComponent, DiscountCodeFieldComponent, ExampleClinicSummaryComponent, TrDatePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden py-8">
@@ -155,8 +149,6 @@ const PHONE_RESET_CODES = new Set(['SignupPhone.VerificationRequired', 'SignupPh
                                     <label for="email" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Yetkili e-posta *</label>
                                     <input pInputText id="email" type="email" class="w-full" [(ngModel)]="email" autocomplete="email" />
                                 </div>
-
-                                <app-signup-phone-verification [disabled]="submitting()" (verifiedChange)="onPhoneVerified($event)" />
 
                                 <div>
                                     <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Şifre *</label>
@@ -274,10 +266,6 @@ export class OwnerSignupPageComponent implements OnInit {
         return this.startMode() === mode ? 'border-primary' : 'border-surface-200 dark:border-surface-700';
     }
 
-    /** Doğrulanan cep telefonu ve kayıt jetonu (TRIAL-001); doğrulanmadan kayıt gönderilmez. */
-    readonly phoneVerification = signal<SignupPhoneVerification | null>(null);
-    private readonly phoneField = viewChild(SignupPhoneVerificationComponent);
-
     readonly submitting = signal(false);
     readonly formError = signal<string | null>(null);
     readonly passwordFieldError = signal<string | null>(null);
@@ -364,14 +352,6 @@ export class OwnerSignupPageComponent implements OnInit {
             return;
         }
 
-        const phone = this.phoneVerification();
-
-        if (!phone) {
-            this.formError.set(PHONE_REQUIRED_MESSAGE);
-
-            return;
-        }
-
         const body = mapPublicOwnerSignupFormToRequest({
             planCode: plan.apiCode,
             tenantName,
@@ -381,9 +361,7 @@ export class OwnerSignupPageComponent implements OnInit {
             password,
             acceptedLegalDocuments: legalVersions,
             discountCode: this.discountCode(),
-            startMode: this.startMode(),
-            mobilePhone: phone.mobilePhone,
-            phoneVerificationToken: phone.token
+            startMode: this.startMode()
         });
 
         this.submitting.set(true);
@@ -397,14 +375,7 @@ export class OwnerSignupPageComponent implements OnInit {
                     clearPendingDiscountCode();
                 },
                 error: (err: unknown) => {
-                    const message = publicOwnerSignupFailureMessage(err);
-                    const code = signupPhoneErrorCode(err);
-
-                    this.formError.set(message);
-
-                    if (code && PHONE_RESET_CODES.has(code)) {
-                        this.phoneField()?.reset(message);
-                    }
+                    this.formError.set(publicOwnerSignupFailureMessage(err));
 
                     if (isLegalVersionOutdatedError(err)) {
                         this.legalConsent.set(false);
@@ -420,14 +391,6 @@ export class OwnerSignupPageComponent implements OnInit {
             next: (versions) => this.legalVersions.set(versions),
             error: () => this.legalVersions.set(null)
         });
-    }
-
-    onPhoneVerified(value: SignupPhoneVerification | null): void {
-        this.phoneVerification.set(value);
-
-        if (value && this.formError() === PHONE_REQUIRED_MESSAGE) {
-            this.formError.set(null);
-        }
     }
 
     successPlanTitle(res: PublicOwnerSignupResultDto): string {

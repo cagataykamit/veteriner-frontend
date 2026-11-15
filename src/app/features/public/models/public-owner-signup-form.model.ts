@@ -18,7 +18,4 @@ export interface PublicOwnerSignupFormValue {
     /** Boş ise gönderilmez. */
     readonly discountCode: string;
     readonly startMode: OnboardingStartMode;
-    /** Doğrulanan cep telefonu ve kod doğrulamasından dönen jeton (TRIAL-001). */
-    readonly mobilePhone: string;
-    readonly phoneVerificationToken: string;
 }

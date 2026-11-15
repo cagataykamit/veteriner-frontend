@@ -14,10 +14,6 @@ export interface PublicOwnerSignupRequestDto {
     discountCode?: string;
     /** Örnek Veteriner Kliniğini kayıtla aynı işlemde yükle (ADR-002); eksikse sunucu `false` sayar. */
     startWithExampleClinic: boolean;
-    /** Zorunlu cep telefonu; kodu doğrulanan numara (`TRIAL_PHONE_VERIFICATION_API_CONTRACT.md` §4). */
-    mobilePhone: string;
-    /** `phone-code/verify` yanıtındaki tek kullanımlık jeton. */
-    phoneVerificationToken: string;
 }
 
 /** Kayıtta kullanılan ortak kodu özeti; ortak bilgisi içermez. */

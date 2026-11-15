@@ -3,7 +3,6 @@ import type { ProblemDetails } from '@/app/shared/models/problem-details.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/app/entities/legal-document/utils/legal-acceptance-error.utils';
 import { DISCOUNT_CODE_INVALID_MESSAGE } from '@/app/entities/sales-partner/utils/discount-code.utils';
-import { SIGNUP_PHONE_CODE_MESSAGES } from '@/app/features/public/utils/signup-phone-verification.utils';
 
 const PUBLIC_OWNER_SIGNUP_CODE_MESSAGES: Record<string, string> = {
     ...LEGAL_ACCEPTANCE_CODE_MESSAGES,
@@ -12,8 +11,7 @@ const PUBLIC_OWNER_SIGNUP_CODE_MESSAGES: Record<string, string> = {
     'Tenants.DuplicateName': 'Bu kurum adı zaten kullanılıyor.',
     'Clinics.DuplicateName': 'Bu klinik adı bu kurumda zaten kullanılıyor.',
     'Auth.AdminClaimMissing': 'Yönetici yetkisi atanamadı. Lütfen destek ile iletişime geçin.',
-    'DiscountCodes.Invalid': DISCOUNT_CODE_INVALID_MESSAGE,
-    ...SIGNUP_PHONE_CODE_MESSAGES
+    'DiscountCodes.Invalid': DISCOUNT_CODE_INVALID_MESSAGE
 };
 
 /**
