@@ -29,6 +29,20 @@ import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.const
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
+type LabResultsListState = {
+    search: string;
+    fromDate: string;
+    toDate: string;
+    status: string;
+    page: number;
+    pageSize: number;
+};
+
+const LAB_RESULTS_LIST_STATE_KEY = 'panel:lab-results:listState';
+
+const parseLabResultStatusFilter = (raw: unknown): LabResultStatus | '' =>
+    LAB_RESULT_STATUS_FILTER_OPTIONS.find((o) => o.value === raw)?.value ?? '';
+
 @Component({
     selector: 'app-lab-results-list-page',
     standalone: true,
@@ -241,7 +255,28 @@ export class LabResultsListPageComponent implements OnInit {
                     toDate: this.activeToDate() || undefined,
                     status: this.activeStatus() || undefined
                 }),
-        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}|${this.activeFromDate().trim()}|${this.activeToDate().trim()}|${this.activeStatus()}|${this.contextPetId()}`
+        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}|${this.activeFromDate().trim()}|${this.activeToDate().trim()}|${this.activeStatus()}|${this.contextPetId()}`,
+        persist: {
+            key: LAB_RESULTS_LIST_STATE_KEY,
+            save: (): Omit<LabResultsListState, 'page' | 'pageSize'> => ({
+                search: this.searchInput.trim(),
+                fromDate: this.fromDateInput.trim(),
+                toDate: this.toDateInput.trim(),
+                status: this.activeStatus()
+            }),
+            restore: (state) => {
+                const parsed = state as Partial<LabResultsListState>;
+
+                this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
+                this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
+                this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
+                this.statusInput = parseLabResultStatusFilter(parsed.status);
+                this.activeSearch.set(this.searchInput.trim());
+                this.activeFromDate.set(this.fromDateInput.trim());
+                this.activeToDate.set(this.toDateInput.trim());
+                this.activeStatus.set(this.statusInput);
+            }
+        }
     });
 
     readonly loading = this.list.loading;
@@ -283,6 +318,10 @@ export class LabResultsListPageComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        if (!this.list.restore()) {
+            this.list.goToFirstPage();
+        }
+
         this.list.startInitialLoad();
     }
 
@@ -320,7 +359,7 @@ export class LabResultsListPageComponent implements OnInit {
         this.activeToDate.set('');
         this.activeStatus.set('');
         this.statusInput = '';
-        this.list.loadFirstPage();
+        this.list.resetToFirstPage();
     }
 
     clearContextFilter(): void {
