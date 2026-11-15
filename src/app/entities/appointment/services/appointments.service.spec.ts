@@ -42,6 +42,34 @@ describe('AppointmentsService — durum geçişleri', () => {
         req.flush(null, { status: 204, statusText: 'No Content' });
     });
 
+    it('iptal yanıtındaki geri alma süresi döner; yanıtta yoksa 0', () => {
+        const results: unknown[] = [];
+
+        service.cancelAppointment('a1').subscribe((r) => results.push(r));
+        http.expectOne('http://api.test/api/v1/appointments/a1/cancel').flush({ undoWindowSeconds: 10 });
+        service.cancelAppointment('a1').subscribe((r) => results.push(r));
+        http.expectOne('http://api.test/api/v1/appointments/a1/cancel').flush(null, { status: 204, statusText: 'No Content' });
+
+        expect(results).toEqual([{ undoWindowSeconds: 10 }, { undoWindowSeconds: 0 }]);
+    });
+
+    it('iptali geri alma kendi ucuna gider; 409 sunucu metniyle döner', () => {
+        let message = '';
+
+        service.revertCancellation('a1').subscribe();
+        const ok = http.expectOne('http://api.test/api/v1/appointments/a1/cancel/revert');
+
+        expect(ok.request.method).toBe('POST');
+        ok.flush(null, { status: 204, statusText: 'No Content' });
+        service.revertCancellation('a1').subscribe({ error: (e: Error) => (message = e.message) });
+        http.expectOne('http://api.test/api/v1/appointments/a1/cancel/revert').flush(
+            { status: 409, detail: 'Geri alma süresi doldu. Randevuyu yeniden oluşturun.', extensions: { code: 'Appointments.CancellationUndoExpired' } },
+            { status: 409, statusText: 'Conflict' }
+        );
+
+        expect(message).toBe('Geri alma süresi doldu. Randevuyu yeniden oluşturun.');
+    });
+
     it('iptal ve tamamlama kendi uçlarına gider', () => {
         service.cancelAppointment('a1').subscribe();
         const cancel = http.expectOne('http://api.test/api/v1/appointments/a1/cancel');

@@ -112,3 +112,8 @@ export interface AppointmentUpdateRequestDto {
     reasonId?: string | null;
     veterinarianUserId?: string | null;
 }
+
+/** `POST /appointments/{id}/cancel` yanıtı: "Geri al" bu süre kadar gösterilir (süre sunucuda tek yerde). */
+export interface AppointmentCancelResultDto {
+    undoWindowSeconds?: number | null;
+}

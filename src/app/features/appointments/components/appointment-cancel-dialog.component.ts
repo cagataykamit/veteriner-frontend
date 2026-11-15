@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input, model, output } from '@angular/core';
-import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
+import { tap } from 'rxjs';
+import { type AppointmentCancelResult, AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 
@@ -13,7 +14,8 @@ export interface AppointmentCancelTarget {
 
 /**
  * Randevu iptali (`Appointments.Cancel`, `POST …/cancel`); gerekçe opsiyonel (en çok 500), yazılırsa sunucu randevu notuna ekler.
- * Sunucuda iptalden geri dönüş ucu yoktur. Yetki ve durum (`canCancelAppointment`) denetimi çağıran bileşende yapılır.
+ * Başarıda `cancelled` sunucunun "Geri al" süresini taşır (APPOINTMENT_CANCEL_UNDO_API_CONTRACT.md); bandı çağıran gösterir.
+ * Yetki ve durum (`canCancelAppointment`) denetimi çağıran bileşende yapılır.
  */
 @Component({
     selector: 'app-appointment-cancel-dialog',
@@ -25,19 +27,19 @@ export interface AppointmentCancelTarget {
             [(visible)]="visible"
             header="Randevuyu iptal et"
             [summary]="summary()"
-            description="Randevu iptal edilecek; iptal geri alınamaz. Gerekçe yazarsanız randevu notlarına eklenir."
+            description="Randevu iptal edilecek. Birkaç saniye içinde Geri al ile vazgeçebilirsiniz. Gerekçe yazarsanız randevu notlarına eklenir."
             confirmLabel="Randevuyu iptal et"
             failureFallback="Randevu iptal edilemedi."
             [reasonOptional]="true"
             [execute]="execute"
-            (confirmed)="cancelled.emit()"
+            (confirmed)="cancelled.emit(lastResult ?? { undoWindowSeconds: 0 })"
         />
     `
 })
 export class AppointmentCancelDialogComponent {
     readonly visible = model(false);
     readonly target = input<AppointmentCancelTarget | null>(null);
-    readonly cancelled = output<void>();
+    readonly cancelled = output<AppointmentCancelResult>();
 
     private readonly appointmentsService = inject(AppointmentsService);
 
@@ -53,5 +55,8 @@ export class AppointmentCancelDialogComponent {
         return [t.petName, t.clientName, when].filter((x) => !!x).join(' · ');
     }
 
-    protected readonly execute = (reason: string) => this.appointmentsService.cancelAppointment(this.target()!.id, reason);
+    /** Son başarılı iptalin sonucu; `confirmed` olayında dışarı verilir. */
+    protected lastResult: AppointmentCancelResult | null = null;
+
+    protected readonly execute = (reason: string) => this.appointmentsService.cancelAppointment(this.target()!.id, reason).pipe(tap((result) => (this.lastResult = result)));
 }

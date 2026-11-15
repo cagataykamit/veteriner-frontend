@@ -242,6 +242,8 @@ export const ApiEndpoints = {
         calendar: () => `/api/v1/appointments/calendar`,
         byId: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}`,
         cancel: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}/cancel`,
+        /** İptali kısa süre içinde geri alır ("Geri al"; APPOINTMENT_CANCEL_UNDO_API_CONTRACT.md). */
+        cancelRevert: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}/cancel/revert`,
         complete: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}/complete`,
         noShow: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}/no-show`,
         noShowRevert: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}/no-show/revert`
