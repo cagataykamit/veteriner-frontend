@@ -81,7 +81,8 @@ export const IMPORT_VALUE_KIND_LABELS: Readonly<Record<ImportValueKind, string>>
     species: 'Tür',
     breed: 'Irk',
     vaccine: 'Aşı',
-    color: 'Renk'
+    color: 'Renk',
+    pet: 'Hasta'
 };
 
 /** Doğrulama sonucundaki neden grupları: kliniğe "hata" değil, satırın ne olacağı söylenir (aktarılmaz / aktarılır ama bakın / bilgi). */
@@ -138,6 +139,9 @@ const ISSUE_LABELS: Readonly<Record<string, string>> = {
     'Imports.PossibleDuplicate': 'Aynı adlı müşteri zaten var; ayrı kayıt oluşur',
     'Imports.OwnerNotFound': 'Sahip (müşteri) bulunamadı',
     'Imports.OwnerlessPetSkipped': 'Sahibi ve kaydı olmayan hasta (eski programda müşteri kartı silinmiş); atlanır',
+    'Imports.AmbiguousPet': 'Kayıtların hangi hastaya ait olduğu seçilmedi (aynı sahipte aynı adlı birden çok hasta)',
+    'Imports.AmbiguousPetSkipped': 'Hangi hastaya ait olduğu sorusunda "atla" seçildi; atlanır',
+    'Imports.PetMergedByChoice': 'Seçiminizle aynı adlı öbür hastayla tek hasta sayıldı; ayrı aktarılmaz',
     'Imports.OwnerRowInvalid': 'Sahibi aktarılamadığı için aktarılamaz',
     'Imports.PetNotFound': 'Satırın hastası bulunamadı',
     'Imports.PetRowInvalid': 'Hastası aktarılamadığı için aktarılamaz',

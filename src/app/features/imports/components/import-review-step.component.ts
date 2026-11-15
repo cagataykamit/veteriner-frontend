@@ -6,14 +6,14 @@ import { MessageModule } from 'primeng/message';
 import { Paginator } from 'primeng/paginator';
 import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
-import { map, Observable } from 'rxjs';
+import { map, Observable, of } from 'rxjs';
 import { BreedsService } from '@/app/entities/breed/services/breeds.service';
-import type { ImportBatchDto, ImportFileFormat, ImportNotImportedReasonDto, ImportPreviewDto, ImportRowDto, ImportRowsQuery, ImportTable, ImportUnmappedValueDto, ImportValueKind } from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchDto, ImportFileFormat, ImportNotImportedReasonDto, ImportPetCandidateDto, ImportPreviewDto, ImportRowDto, ImportRowsQuery, ImportTable, ImportUnmappedValueDto, ImportValueKind } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
 import { IMPORT_ISSUE_GROUPS, IMPORT_ROW_STATUS_LABELS, IMPORT_VALUE_KIND_LABELS, importErrorCode, importErrorMessage, importIssueDetail, importIssueLabel, importRowPlace } from '@/app/features/imports/utils/import-labels.utils';
 import { fieldLabel, IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
-import { IMPORT_VALUE_SKIP, type ImportValueChoices, valueChoiceKey } from '@/app/features/imports/utils/import-value-mapping.utils';
+import { ambiguousPetNos, IMPORT_PET_MERGE_PREFIX, IMPORT_VALUE_SKIP, type ImportValueChoices, petCandidateLabel, valueChoiceKey } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { PetColorsService } from '@/app/entities/pet/services/pet-colors.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { VaccineDefinitionsService } from '@/app/entities/vaccine-definition/services/vaccine-definitions.service';
@@ -103,7 +103,9 @@ const ROW_PAGE_SIZE = 25;
                 <section class="rounded-border border border-surface-200 dark:border-surface-700 p-4 mb-4">
                     @if (requiredValues(p).length) {
                         <h6 class="mt-0 mb-1">Seçmeniz gereken değerler</h6>
-                        <p class="text-sm text-muted-color mt-0">Bu tür ve aşı adları sistemde bulunamadı. Her biri için karşılığını seçin ya da "Bu değeri atla" deyin; seçmeden aktarma başlamaz.</p>
+                        <p class="text-sm text-muted-color mt-0">
+                            Bu tür ve aşı adları sistemde bulunamadı ya da kayıtların aynı adlı hastalardan hangisine ait olduğu ayırt edilemedi. Her biri için karşılığını seçin ya da atlayın; seçmeden aktarma başlamaz.
+                        </p>
                         <div class="flex flex-col gap-3" data-testid="import-required-values">
                             @for (u of requiredValues(p); track u.kind + '|' + u.source) {
                                 <ng-container *ngTemplateOutlet="valueRow; context: { $implicit: u }" />
@@ -127,8 +129,8 @@ const ROW_PAGE_SIZE = 25;
                         <div class="grid grid-cols-12 gap-2 items-center">
                             <div class="col-span-12 md:col-span-5 min-w-0">
                                 <app-status-tag [label]="kindLabel(u)" severity="secondary" />
-                                <span class="font-medium break-words ml-2">{{ u.source }}</span>
-                                <span class="block text-xs text-muted-color">{{ u.rowCount }} satırda</span>
+                                <span class="font-medium break-words ml-2">{{ valueTitle(u) }}</span>
+                                <span class="block text-xs text-muted-color">{{ u.kind === 'pet' ? u.rowCount + ' aşı / muayene kaydı hangisine ait?' : u.rowCount + ' satırda' }}</span>
                             </div>
                             <div class="col-span-12 md:col-span-7">
                                 <p-select
@@ -412,7 +414,37 @@ export class ImportReviewStepComponent {
     }
 
     protected catalogOptions(u: ImportUnmappedValueDto): SelectOption[] {
+        if (u.kind === 'pet') {
+            const candidates = this.petCandidates(u);
+
+            return [
+                ...candidates.map((c) => ({ label: petCandidateLabel(c), value: c.petNo })),
+                ...candidates.map((c) => ({ label: `İkisi aynı hayvan: tek hasta say (${c.name ?? 'Adsız'}, E-vet ${c.petNo} olarak)`, value: IMPORT_PET_MERGE_PREFIX + c.petNo })),
+                { label: 'Bu kayıtları atla', value: IMPORT_VALUE_SKIP }
+            ];
+        }
+
         return [{ label: 'Bu değeri atla', value: IMPORT_VALUE_SKIP }, ...(this.catalogs()[u.kind] ?? [])];
+    }
+
+    /** Değer satırının başlığı; belirsiz hasta grubunda "<sahip>: '<ad>' adlı N hasta" sorusu (sözleşme 13.4). */
+    protected valueTitle(u: ImportUnmappedValueDto): string {
+        if (u.kind !== 'pet') {
+            return u.source;
+        }
+
+        const candidates = this.petCandidates(u);
+        const first = candidates[0];
+
+        return first ? `${first.ownerName ?? 'Sahip'}: '${first.name ?? ''}' adlı ${candidates.length} hasta` : u.source;
+    }
+
+    private petCandidates(u: ImportUnmappedValueDto): ImportPetCandidateDto[] {
+        const all = this.preview()?.petCandidates ?? [];
+
+        return ambiguousPetNos(u.source)
+            .map((no) => all.find((c) => c.petNo === no))
+            .filter((c): c is ImportPetCandidateDto => !!c);
     }
 
     protected setChoice(u: ImportUnmappedValueDto, target: string | null): void {
@@ -524,7 +556,7 @@ export class ImportReviewStepComponent {
 
     /** Eşlenemeyen değerlerin türlerine ait katalog listeleri bir kez yüklenir. */
     private loadCatalogs(): void {
-        const kinds = new Set((this.preview()?.unmappedValues ?? []).map((u) => u.kind));
+        const kinds = new Set((this.preview()?.unmappedValues ?? []).map((u) => u.kind).filter((k) => k !== 'pet'));
 
         for (const kind of kinds) {
             if (this.catalogs()[kind] || this.catalogLoading()[kind]) {
@@ -552,6 +584,8 @@ export class ImportReviewStepComponent {
                 return this.breedsService.getBreedList({ activeOnly: true }).pipe(map((list) => list.map((b) => ({ label: `${b.speciesName} · ${b.name}`, value: b.id }))));
             case 'color':
                 return this.colorsService.getPetColors();
+            case 'pet':
+                return of([]);
         }
     }
 }

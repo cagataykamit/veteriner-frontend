@@ -43,7 +43,8 @@ export interface ImportSourceProfileDto {
     mappings: ImportProfileMappingDto[];
 }
 export type ImportIssueSeverity = 'Info' | 'Warning' | 'Error';
-export type ImportValueKind = 'species' | 'breed' | 'vaccine' | 'color';
+/** `pet`: ayırt edilemeyen hasta grubu (yalnız `unmappedValues`'ta; seçim `petChoices` ile, sözleşme 13.4). */
+export type ImportValueKind = 'species' | 'breed' | 'vaccine' | 'color' | 'pet';
 export type ImportDuplicateClientMode = 'Match' | 'Skip' | 'Error';
 export type ImportOnErrors = 'SkipErrorRows' | 'FailIfAny';
 export type ImportFileFormat = 'xlsx' | 'csv';
@@ -132,10 +133,33 @@ export interface ImportValueMappingDto {
     targetId: string | null;
 }
 
+/** Belirsiz hasta grubu seçimi (sözleşme 13.4): `petNo` null ise grubun kayıtları atlanır; `merge` adaylar tek hasta. */
+export interface ImportPetChoiceDto {
+    reference: string;
+    petNo: string | null;
+    merge: boolean;
+}
+
 export interface ImportMappingRequestDto {
     columns: Partial<Record<ImportTable, Record<string, string>>>;
     valueMappings: ImportValueMappingDto[];
     options: { onDuplicateClient: ImportDuplicateClientMode };
+    petChoices?: ImportPetChoiceDto[];
+}
+
+/** Belirsiz grubun aday hastası; değerler dosyadaki yazımla. */
+export interface ImportPetCandidateDto {
+    petNo: string;
+    rowNumber: number;
+    name: string | null;
+    ownerName: string | null;
+    species: string | null;
+    breed: string | null;
+    color: string | null;
+    gender: string | null;
+    birthDate: string | null;
+    status: string | null;
+    registeredOn: string | null;
 }
 
 export interface ImportUnmappedValueDto {
@@ -181,6 +205,8 @@ export interface ImportPreviewDto {
     payloadPurged: boolean;
     /** Tablo başına aktarılmayacak satırların nedeni (sözleşme 7.6, 2026-11-14); eski sunucu yanıtında yoktur. */
     notImportedReasons?: ImportNotImportedReasonDto[];
+    /** Belirsiz hasta gruplarının adayları (sözleşme 13.4); eski sunucu yanıtında yoktur. */
+    petCandidates?: ImportPetCandidateDto[];
 }
 
 /** Aktarılmayacak satırın nedeni: `Skipped` bilerek atlanan, `Error` hatalı; satır başına bir neden sayılır. */

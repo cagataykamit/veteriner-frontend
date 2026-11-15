@@ -190,6 +190,28 @@ describe('ImportReviewStepComponent', () => {
             expect(optional?.textContent).toContain('Sarman');
         });
 
+        it('aynı adlı hastalar için kayıtların hangisine ait olduğunu adaylarla sorar', () => {
+            const before = { unmappedValues: ready.unmappedValues, petCandidates: ready.petCandidates };
+            const candidate = { ownerName: 'Ayşe Yılmaz', species: 'Kedi', breed: null, color: null, gender: null, birthDate: null, status: null, registeredOn: null };
+
+            ready.unmappedValues = [{ kind: 'pet', source: 'Belirsiz: 903 / 904', rowCount: 3, blocking: true }];
+            ready.petCandidates = [
+                { ...candidate, petNo: '903', rowNumber: 4, name: 'Zeytin', color: 'Siyah' },
+                { ...candidate, petNo: '904', rowNumber: 5, name: 'Zeytin (E-vet 904)', color: 'Beyaz' }
+            ];
+            const el = render();
+            const component = fixture.componentInstance as unknown as { catalogOptions(u: unknown): { label: string; value: string }[] };
+            const options = component.catalogOptions(ready.unmappedValues[0]).map((o) => o.value);
+
+            Object.assign(ready, before);
+
+            const required = el.querySelector('[data-testid="import-required-values"]')?.textContent ?? '';
+
+            expect(required).toContain("Ayşe Yılmaz: 'Zeytin' adlı 2 hasta");
+            expect(required).toContain('3 aşı / muayene kaydı hangisine ait?');
+            expect(options).toEqual(['903', '904', 'merge:903', 'merge:904', '__skip__']);
+        });
+
         it('nedenler üç grupta: aktarılmayacak açık, göz atılacak ve bilgi kapalı', () => {
             const groups = Array.from(render().querySelectorAll<HTMLDetailsElement>('[data-testid="import-issue-groups"] details'));
 
