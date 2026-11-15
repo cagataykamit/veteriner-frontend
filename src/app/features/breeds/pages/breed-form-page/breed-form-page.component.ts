@@ -24,11 +24,12 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 @Component({
     selector: 'app-breed-form-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, QuickSpeciesDialogComponent, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, QuickSpeciesDialogComponent, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (editing() && loading()) {
@@ -96,7 +97,7 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                         <button
                             pButton
                             type="submit"
-                            [disabled]="submitting() || loading() || loadingSpecies() || ro.mutationBlocked() || submitting() || loading()"
+                            [disabled]="submitting() || loading() || loadingSpecies() || ro.mutationBlocked() || submitting() || loading()" appReadOnlyReason
                         ><i class="p-button-icon" [class]="submitting() || loading() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                         <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>

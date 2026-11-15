@@ -19,6 +19,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
 
@@ -29,7 +30,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
 @Component({
     selector: 'app-care-instructions-section',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent, TrDateTimePipe, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent, TrDateTimePipe, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (canRead) {
@@ -97,7 +98,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
 
                     <div class="flex flex-wrap justify-end gap-2 mt-4">
                         <button pButton type="button" severity="secondary" (click)="dialogVisible.set(false)" [disabled]="submitting()">Vazgeç</button>
-                        <button pButton type="submit" [disabled]="ro.mutationBlocked() || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
+                        <button pButton type="submit" [disabled]="ro.mutationBlocked() || submitting()" appReadOnlyReason><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
                     </div>
                 </form>
             </p-dialog>

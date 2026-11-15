@@ -3,7 +3,7 @@
     <div actions class="flex flex-wrap gap-2">
         <button pButton type="button" severity="secondary" (click)="refresh('silent')"><i class="p-button-icon pi pi-refresh"></i>{{ copy.buttonRefresh }}</button>
         @if (canCreateVisit) {
-            <button pButton type="button" [disabled]="ro.mutationBlocked()" (click)="openWalkInArrival()"><i class="p-button-icon pi pi-plus"></i>Randevusuz geliş</button>
+            <button pButton type="button" [disabled]="ro.mutationBlocked()" appReadOnlyReason (click)="openWalkInArrival()"><i class="p-button-icon pi pi-plus"></i>Randevusuz geliş</button>
         }
         @if (canCreateAppointment) {
             <a routerLink="/panel/appointments/new" pButton type="button" class="p-button-secondary" data-testid="today-new-appointment"><i class="pi pi-calendar-plus"></i>Yeni randevu</a>

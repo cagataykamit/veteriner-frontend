@@ -21,7 +21,7 @@
                         <a routerLink="/panel/appointments/new" pButton type="button" class="p-button-sm"><i class="pi pi-plus"></i>Yeni randevu</a>
                     }
                     @if (canCreateVisit) {
-                        <button pButton type="button" class="p-button-sm" [disabled]="ro.mutationBlocked()" (click)="walkInOpen.set(true)"><i class="pi pi-user-plus"></i>Randevusuz geliş</button>
+                        <button pButton type="button" class="p-button-sm" [disabled]="ro.mutationBlocked()" appReadOnlyReason (click)="walkInOpen.set(true)"><i class="pi pi-user-plus"></i>Randevusuz geliş</button>
                     }
                     @if (canOpenClients()) {
                         <a routerLink="/panel/clients" pButton type="button" severity="secondary" class="p-button-sm"><i class="pi pi-users"></i>Müşteriler</a>

@@ -33,6 +33,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 @Component({
     selector: 'app-clinic-detail-page',
@@ -55,7 +56,8 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
         ClinicAppointmentSettingsSectionComponent,
         ClinicTaxpayerSettingsSectionComponent,
         FormSubmitDirective,
-        FormErrorSummaryComponent
+        FormErrorSummaryComponent,
+        ReadOnlyReasonDirective
     ],
     providers: [MessageService, ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -225,7 +227,7 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                         </div>
                     </div>
                     <div class="mt-4 mb-0">
-                        <button pButton type="submit" [disabled]="form.pristine || saving() || ro.mutationBlocked() || busyDeactivate() || busyActivate()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
+                        <button pButton type="submit" [disabled]="form.pristine || saving() || ro.mutationBlocked() || busyDeactivate() || busyActivate()" appReadOnlyReason><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
                     </div>
                 </form>
             </div>

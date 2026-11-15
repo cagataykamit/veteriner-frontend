@@ -16,6 +16,7 @@ import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-
 import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import type { InlineCreateConfig } from '@/app/shared/forms/inline-create/inline-create.directive';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 /**
  * Stoktan düşen akışlarda (uygulama, aşı, hızlı satış) yerinde ürün eklenmez: yeni ürünün stoğu yoktur, kayıt "yetersiz stok"la düşer (O1).
@@ -53,7 +54,8 @@ export interface QuickProductCreated {
         FormSubmitDirective,
         FormErrorSummaryComponent,
         DialogFocusReturnDirective,
-        DialogUnsavedChangesDirective
+        DialogUnsavedChangesDirective,
+        ReadOnlyReasonDirective
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -83,7 +85,7 @@ export interface QuickProductCreated {
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="visible.set(false)" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
-                <button pButton type="submit" form="quick-product-form" data-testid="quick-product-save" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                <button pButton type="submit" form="quick-product-form" data-testid="quick-product-save" [disabled]="submitting() || ro.mutationBlocked()" appReadOnlyReason><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
             </ng-template>
         </p-dialog>
     `

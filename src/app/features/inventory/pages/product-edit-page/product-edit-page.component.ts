@@ -33,11 +33,12 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 @Component({
     selector: 'app-product-edit-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, BarcodeScanButtonComponent, ProductTaxFieldsComponent, ProductClassificationFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, TextareaModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, BarcodeScanButtonComponent, ProductTaxFieldsComponent, ProductClassificationFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [categoryLink]="productId() ? ['/panel/products', productId()!] : ['/panel/products']" categoryLinkLabel="Ürün detayına dön" title="Ürünü düzenle" description="Ürün kartını güncelleyin." />
@@ -129,7 +130,7 @@ import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.com
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                        <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()" appReadOnlyReason><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                         <button pButton type="button" severity="secondary" (click)="goDetail()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>

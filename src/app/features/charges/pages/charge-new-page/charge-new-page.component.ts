@@ -31,11 +31,12 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 @Component({
     selector: 'app-charge-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent, ChargeTaxFieldsComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent, ChargeTaxFieldsComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/charges" categoryLinkLabel="Ücret listesine dön" title="Yeni ücret" description="Müşteriye ücret satırı ekleyin. Ücret ödeme sayılmaz." />
@@ -130,7 +131,7 @@ import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.com
                     <button
                         pButton
                         type="submit"
-                        [disabled]="submitting() || ro.mutationBlocked()"
+                        [disabled]="submitting() || ro.mutationBlocked()" appReadOnlyReason
                     ><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : (canCollectPayment ? 'pi pi-wallet' : 'pi pi-check')"></i>{{ canCollectPayment ? 'Kaydet ve ödemeyi şimdi al' : copy.buttonSave }}</button>
                     @if (canCollectPayment) {
                         <button pButton type="button" severity="secondary" (click)="formSubmit.revealIssues() || onSubmit(false)" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon pi pi-check"></i>{{ copy.buttonSave }}</button>

@@ -46,6 +46,7 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 /** İlk uygun randevu günü en fazla bu kadar gün ileride aranır. */
 const APPOINTMENT_PREFILL_LOOKAHEAD_DAYS = 14;
@@ -59,7 +60,7 @@ interface AppointmentSlot {
 @Component({
     selector: 'app-appointment-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AppointmentReasonVetFieldsComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AppointmentReasonVetFieldsComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/appointments" categoryLinkLabel="Randevu listesine dön" title="Yeni randevu" description="Randevu kaydı oluşturun." />
@@ -138,7 +139,7 @@ interface AppointmentSlot {
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked() || timeOptions().length === 0 || !!workingHoursLoadError()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
+                    <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked() || timeOptions().length === 0 || !!workingHoursLoadError()" appReadOnlyReason><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
                     <button pButton type="button" severity="secondary" (click)="goBack()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
                 </div>
             </form>

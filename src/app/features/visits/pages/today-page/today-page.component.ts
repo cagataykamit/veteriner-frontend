@@ -76,6 +76,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 /** Resepsiyon ve hekimin aynı kuyruğu güncel görmesi için otomatik yenileme aralığı. */
 const REFRESH_INTERVAL_MS = 30_000;
@@ -119,7 +120,8 @@ type TodayScope = 'mine' | 'all';
         PendingAppointmentRequestsChipComponent,
         PendingAppointmentRequestsTilesComponent,
         AppointmentRequestDetailDialogComponent,
-        EDocumentIssueDialogComponent
+        EDocumentIssueDialogComponent,
+        ReadOnlyReasonDirective
     ],
     providers: [MessageService, PendingAppointmentRequestsState],
     changeDetection: ChangeDetectionStrategy.OnPush,

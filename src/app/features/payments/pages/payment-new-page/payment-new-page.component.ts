@@ -49,6 +49,7 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 /** Açık tutar bu arada değişti: güncel bakiye yeniden okunur, aynı `requestId` ile tekrar denemek güvenlidir. */
 const STALE_BALANCE_CODES = new Set(['PaymentAllocations.ExceedsOutstanding', 'Payments.ConcurrencyConflict']);
@@ -61,7 +62,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
 @Component({
     selector: 'app-payment-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ButtonModule, CheckboxModule, SelectModule, TableModule, AppPageHeaderComponent, ClientSearchComponent, DateInputComponent, TrDateTimePipe, CashRegisterSelectComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ButtonModule, CheckboxModule, SelectModule, TableModule, AppPageHeaderComponent, ClientSearchComponent, DateInputComponent, TrDateTimePipe, CashRegisterSelectComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Yeni ödeme" description="Müşterinin açık ücretlerinden hangilerine ne kadar ödeme alındığını girin." />
@@ -227,7 +228,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <button pButton type="submit" [disabled]="busy() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                    <button pButton type="submit" [disabled]="busy() || ro.mutationBlocked()" appReadOnlyReason><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                     <button pButton type="button" severity="secondary" (click)="goBack()" [disabled]="busy()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>

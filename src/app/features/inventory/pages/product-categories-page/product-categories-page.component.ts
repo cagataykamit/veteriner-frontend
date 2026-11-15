@@ -34,6 +34,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 type CategoriesListState = {
     search: string;
@@ -69,7 +70,8 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
         SearchInputComponent,
         AppRowActionButtonComponent,
         FormSubmitDirective,
-        FormErrorSummaryComponent
+        FormErrorSummaryComponent,
+        ReadOnlyReasonDirective
     ],
     providers: [ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -268,7 +270,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                 </div>
                 <div class="flex flex-wrap justify-end gap-2 pt-2">
                     <button pButton type="button" severity="secondary" (click)="closeDialog()" [disabled]="dialogSubmitting()">{{ copy.buttonCancel }}</button>
-                    <button pButton type="submit" [disabled]="dialogSubmitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="dialogSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ dialogSubmitLabel() }}</button>
+                    <button pButton type="submit" [disabled]="dialogSubmitting() || ro.mutationBlocked()" appReadOnlyReason><i class="p-button-icon" [class]="dialogSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ dialogSubmitLabel() }}</button>
                 </div>
             </form>
         </p-dialog>

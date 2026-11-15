@@ -54,6 +54,7 @@ import { ExaminationsService } from '@/app/entities/examination/services/examina
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 const LAST_VACCINE_PRODUCT_KEY = 'vetinity.vaccine.lastProductId';
 
@@ -83,7 +84,7 @@ export interface VaccinationSavedEvent {
     selector: 'app-vaccination-form',
     standalone: true,
     providers: [{ provide: HAS_UNSAVED_CHANGES, useExisting: forwardRef(() => VaccinationFormComponent) }],
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-pet-alert-banner [petId]="form.controls.petId.value" />
@@ -233,7 +234,7 @@ export interface VaccinationSavedEvent {
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <button pButton type="submit" [disabled]="submitting() || applyingRouteContext() || vaccineDefinitionsLoading() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                    <button pButton type="submit" [disabled]="submitting() || applyingRouteContext() || vaccineDefinitionsLoading() || ro.mutationBlocked()" appReadOnlyReason><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                     <button pButton type="button" severity="secondary" (click)="cancel()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>

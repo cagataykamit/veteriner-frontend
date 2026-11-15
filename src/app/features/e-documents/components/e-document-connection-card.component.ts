@@ -15,6 +15,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppStatusTagComponent, type StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 /** OAuth dönüşündeki `reason` kodlarının kullanıcı metni (backend E_DOCUMENTS_API_CONTRACT §3.3). */
 const RETURN_REASONS: Record<string, string> = {
@@ -35,7 +36,7 @@ const RETURN_REASONS: Record<string, string> = {
     selector: 'app-e-document-connection-card',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [FormsModule, ButtonModule, InputTextModule, SelectModule, AppLoadingStateComponent, AppErrorStateComponent, AppStatusTagComponent, TrDateTimePipe],
+    imports: [FormsModule, ButtonModule, InputTextModule, SelectModule, AppLoadingStateComponent, AppErrorStateComponent, AppStatusTagComponent, TrDateTimePipe, ReadOnlyReasonDirective],
     template: `
         <div class="card mb-4" data-testid="e-document-connection">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -89,7 +90,7 @@ const RETURN_REASONS: Record<string, string> = {
                             <label for="edocAccount" class="block text-sm font-medium text-muted-color mb-2">Bağlanacak firma</label>
                             <p-select inputId="edocAccount" class="w-full" [options]="c.accountChoices ?? []" optionLabel="accountName" optionValue="accountId" [(ngModel)]="selectedAccount" [ngModelOptions]="{ standalone: true }" placeholder="Firma seçin" />
                         </div>
-                        <button pButton type="button" [disabled]="!selectedAccount || busy() || ro.mutationBlocked()" (click)="selectAccount()">Firmayı bağla</button>
+                        <button pButton type="button" [disabled]="!selectedAccount || busy() || ro.mutationBlocked()" appReadOnlyReason (click)="selectAccount()">Firmayı bağla</button>
                     </div>
                 } @else if (c.status === 'ReauthorizationRequired') {
                     <p class="text-sm m-0">Entegratör yetkisi sona erdi ({{ c.lastVerificationMessage }}). Belge kesmek için hesabı yeniden bağlayın.</p>
@@ -104,7 +105,7 @@ const RETURN_REASONS: Record<string, string> = {
                     }
                     @if (chosenProvider(); as p) {
                         @if (p.connectionMethod === 'OAuth') {
-                            <button pButton type="button" [severity]="c.status === 'Connected' ? 'secondary' : 'primary'" [disabled]="busy() || ro.mutationBlocked() || !p.configured" (click)="connect(p.provider)" data-testid="edoc-connect">
+                            <button pButton type="button" [severity]="c.status === 'Connected' ? 'secondary' : 'primary'" [disabled]="busy() || ro.mutationBlocked() || !p.configured" appReadOnlyReason (click)="connect(p.provider)" data-testid="edoc-connect">
                                 <i class="p-button-icon pi pi-link"></i>{{ c.status === 'Connected' ? 'Yeniden bağla' : p.providerName + ' hesabını bağla' }}
                             </button>
                         } @else if (c.status === 'Connected' && !keyFormOpen()) {
@@ -126,7 +127,7 @@ const RETURN_REASONS: Record<string, string> = {
                             @if (keyFormOpen()) {
                                 <button pButton type="button" severity="secondary" [text]="true" [disabled]="busy()" (click)="closeKeyForm()">Vazgeç</button>
                             }
-                            <button pButton type="submit" [disabled]="!apiKey.trim() || busy() || ro.mutationBlocked() || !p.configured" data-testid="edoc-key-connect">
+                            <button pButton type="submit" [disabled]="!apiKey.trim() || busy() || ro.mutationBlocked() || !p.configured" appReadOnlyReason data-testid="edoc-key-connect">
                                 <i class="p-button-icon pi pi-link"></i>Bağla ve sına
                             </button>
                         </form>

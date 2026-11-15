@@ -18,6 +18,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 const DOCUMENT_LABEL: Record<'ESmm' | 'Invoice', string> = {
     ESmm: 'e-SMM (serbest meslek makbuzu)',
@@ -45,7 +46,8 @@ const DOCUMENT_LABEL: Record<'ESmm' | 'Invoice', string> = {
         AppPageHeaderComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
-        EDocumentConnectionCardComponent
+        EDocumentConnectionCardComponent,
+        ReadOnlyReasonDirective
     ],
     providers: [MessageService],
     template: `
@@ -85,7 +87,7 @@ const DOCUMENT_LABEL: Record<'ESmm' | 'Invoice', string> = {
                         <p-message severity="warn" class="w-full mb-4" role="alert" data-testid="edoc-auto-paused">
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full">
                                 <span class="text-sm"><span class="font-medium">Otomatik e-belge durdu.</span> {{ s.autoIssuePauseReason }} Bu sürede ödenen ücretler belgesiz bekliyor; sorunu giderip sürdürünce kesilir.</span>
-                                <button pButton type="button" size="small" [disabled]="saving() || ro.mutationBlocked()" (click)="save()" data-testid="edoc-auto-resume">
+                                <button pButton type="button" size="small" [disabled]="saving() || ro.mutationBlocked()" appReadOnlyReason (click)="save()" data-testid="edoc-auto-resume">
                                     <i class="p-button-icon pi pi-play"></i>Sürdür
                                 </button>
                             </div>
@@ -119,7 +121,7 @@ const DOCUMENT_LABEL: Record<'ESmm' | 'Invoice', string> = {
                         <p class="text-danger text-sm mt-3 mb-0" role="alert">{{ saveError() }}</p>
                     }
                     <div class="mt-4 flex justify-end">
-                        <button pButton type="button" [disabled]="!dirty() || saving() || ro.mutationBlocked()" (click)="save()" data-testid="edoc-settings-save">
+                        <button pButton type="button" [disabled]="!dirty() || saving() || ro.mutationBlocked()" appReadOnlyReason (click)="save()" data-testid="edoc-settings-save">
                             <i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet
                         </button>
                     </div>
