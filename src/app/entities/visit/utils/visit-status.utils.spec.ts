@@ -220,7 +220,7 @@ describe('canToggleUrgency', () => {
 
 describe('geliş hazırlığı (CHECKIN-001/002)', () => {
     it('Hazırlığı düzenle yalnız açık Visit te ve Visits.Update ile; tamamlanmış, yanlış işaretli ve planlı satırda yok', () => {
-        const perms = { canUpdateVisit: true, canNoShow: false, canCorrect: false, canCollectPayment: false, canCreateCharge: false };
+        const perms = { canUpdateVisit: true, canNoShow: false, canCorrect: false, canCollectPayment: false, canCreateCharge: false, canCreateAppointment: false };
         const keys = (i: TodayItemVm, p = perms) => todaySecondaryActions(i, todayItemActions(i), p).map((a) => a.key);
 
         expect(keys(item({ careStatus: 'Waiting' }))).toEqual(['editPreparation']);
@@ -266,7 +266,7 @@ describe('Gelmedi (NoShow) satırı', () => {
 });
 
 describe('satır eylem düzeni (görünür / menü)', () => {
-    const all = { canUpdateVisit: true, canNoShow: true, canCorrect: true, canCollectPayment: false, canCreateCharge: false };
+    const all = { canUpdateVisit: true, canNoShow: true, canCorrect: true, canCollectPayment: false, canCreateCharge: false, canCreateAppointment: false };
     const now = new Date('2026-10-10T10:00:00Z');
     const secondary = (i: TodayItemVm, perms = all) => todaySecondaryActions(i, todayItemActions(i, now), perms).map((a) => a.key);
     const urgency = (i: TodayItemVm, perms = all) => todayUrgencyToggle(i, todayItemActions(i, now), perms);
@@ -310,6 +310,14 @@ describe('satır eylem düzeni (görünür / menü)', () => {
         expect(secondary(item(), { ...charge, canCollectPayment: true })).toEqual(['addCharge', 'collectPayment', 'editPreparation', 'correct']);
         expect(secondary(item(), all)).toEqual(['editPreparation', 'correct']);
         expect(secondary(item({ isVoided: true }), charge)).toEqual(['restore']);
+    });
+
+    it("Randevu al: gelişi olan satırda Ödeme al'dan sonra; planlı ve yanlış işaretli satırda yok (O9)", () => {
+        const book = { ...all, canCreateAppointment: true, canCollectPayment: true };
+
+        expect(secondary(item(), book)).toEqual(['collectPayment', 'bookAppointment', 'editPreparation', 'correct']);
+        expect(secondary(planned, { ...all, canCreateAppointment: true })).toEqual(['markNoShow']);
+        expect(secondary(item({ isVoided: true }), book)).toEqual(['restore']);
     });
 
     it('planlı ve gelmedi satırları', () => {

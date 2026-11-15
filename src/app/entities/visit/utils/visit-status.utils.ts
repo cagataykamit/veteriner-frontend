@@ -288,7 +288,7 @@ export function todayReasonText(item: Pick<TodayItemVm, 'arrivalReason' | 'appoi
     return item.arrivalReason ?? item.appointmentReasonName;
 }
 
-export type TodaySecondaryActionKey = 'markNoShow' | 'revertNoShow' | 'correct' | 'restore' | 'collectPayment' | 'addCharge' | 'editPreparation';
+export type TodaySecondaryActionKey = 'markNoShow' | 'revertNoShow' | 'correct' | 'restore' | 'collectPayment' | 'addCharge' | 'bookAppointment' | 'editPreparation';
 
 export interface TodaySecondaryAction {
     key: TodaySecondaryActionKey;
@@ -302,6 +302,7 @@ export interface TodayRowPermissions {
     canCorrect: boolean;
     canCollectPayment: boolean;
     canCreateCharge: boolean;
+    canCreateAppointment: boolean;
 }
 
 /**
@@ -317,6 +318,11 @@ export function todaySecondaryActions(item: TodayItemVm, actions: TodayItemActio
 
     if (perms.canCollectPayment && !item.isVoided) {
         out.push({ key: 'collectPayment', label: 'Ödeme al', icon: 'pi pi-wallet' });
+    }
+
+    // Gelişin sonunda kontrol/aşı tekrarı için sonraki randevu (O9); planlı satırın randevusu zaten vardır.
+    if (perms.canCreateAppointment && item.visitId && !item.isVoided) {
+        out.push({ key: 'bookAppointment', label: 'Randevu al', icon: 'pi pi-calendar-plus' });
     }
 
     if (perms.canUpdateVisit && actions.canEditPreparation) {
