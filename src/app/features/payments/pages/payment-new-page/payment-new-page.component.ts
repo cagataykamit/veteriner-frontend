@@ -31,7 +31,7 @@ import { type PaymentUpsertFieldErrors, parsePaymentUpsertHttpError } from '@/ap
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError, panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
+import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import { PAYMENT_DATE_TOO_FAR_PAST_MESSAGE, paymentDateNotTooFarPastValidator, paymentDateTimeLocalMinAllowed } from '@/app/features/payments/utils/payment-date-validation.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
@@ -122,6 +122,12 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                                 </button>
                             }
                         } @else {
+                            <div class="flex flex-wrap items-center gap-3 mb-2">
+                                <span class="font-medium" data-testid="payment-total-outstanding">Toplam borç {{ money(totalOutstanding()) }}</span>
+                                <button pButton type="button" size="small" severity="secondary" [outlined]="true" (click)="fillAllOutstanding()" data-testid="payment-fill-all">
+                                    <i class="p-button-icon pi pi-check-square"></i>Tamamını al
+                                </button>
+                            </div>
                             <div class="overflow-x-auto table-stack-phone">
                                 <p-table [value]="openCharges()" dataKey="chargeId" size="small" [tableStyle]="{ 'min-width': '44rem' }">
                                     <ng-template #header>
@@ -291,6 +297,8 @@ export class PaymentNewPageComponent implements OnInit {
 
     readonly allocations = computed(() => buildAllocations(this.openCharges(), this.amounts()));
     readonly total = computed(() => allocationTotal(this.allocations()));
+    /** Açık ücretlerin kalanı toplamı (tek tıkla tamamını alma, H2). */
+    readonly totalOutstanding = computed(() => this.openCharges().reduce((sum, c) => sum + c.outstandingAmount, 0));
     private readonly hasRowErrors = computed(() => this.openCharges().some((c) => this.rowError(c) !== null));
     private readonly formValid = signal(false);
 
@@ -327,7 +335,7 @@ export class PaymentNewPageComponent implements OnInit {
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         method: ['cash', Validators.required],
-        paidAtLocal: ['', [Validators.required, dateTimeYearRangeValidator(), paymentDateNotTooFarPastValidator()]],
+        paidAtLocal: [toIstanbulDateTimeLocalInputValue(new Date().toISOString()), [Validators.required, dateTimeYearRangeValidator(), paymentDateNotTooFarPastValidator()]],
         note: ['']
     });
 
@@ -375,6 +383,10 @@ export class PaymentNewPageComponent implements OnInit {
 
     onAmountInput(row: ClientOpenChargeVm, raw: string): void {
         this.amounts.update((a) => ({ ...a, [row.chargeId]: parseDecimalFormInput(raw) }));
+    }
+
+    fillAllOutstanding(): void {
+        this.amounts.set(Object.fromEntries(this.openCharges().map((c) => [c.chargeId, c.outstandingAmount])));
     }
 
     fillOutstanding(row: ClientOpenChargeVm): void {

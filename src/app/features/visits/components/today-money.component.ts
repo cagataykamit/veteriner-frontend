@@ -6,7 +6,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 
 /**
  * Bugün satırı: hesaplanan açık iş çipleri (renk + simge + metin), ziyaretin ücret / ödenen / kalan tutarı ve müşterinin toplam borcu.
- * Değerler yoksa (yetkisiz veya planlı satır) hiçbir şey göstermez. Ödemesi açık çip, `canPay` ise ödemeye geçiş düğmesidir; "Ücret bekliyor" çipi Ücretlendir ekranına götürür.
+ * Değerler yoksa (yetkisiz veya planlı satır) hiçbir şey göstermez. Ödemesi açık çip ve müşteri borcu, `canPay` ise ödemeye geçiş düğmesidir; "Ücret bekliyor" çipi Ücretlendir ekranına götürür.
  */
 @Component({
     selector: 'app-today-money',
@@ -36,7 +36,19 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
             </div>
         }
         @if ((item().clientOutstandingAmount ?? 0) > 0) {
-            <div class="w-full text-sm font-medium text-amber-700 dark:text-amber-300 mt-1 whitespace-normal">Müşteri borcu {{ item().clientOutstandingAmount | money }}</div>
+            @if (canPay()) {
+                <button
+                    type="button"
+                    class="w-full text-left text-sm font-medium text-amber-700 dark:text-amber-300 mt-1 whitespace-normal p-0 border-0 bg-transparent cursor-pointer underline max-sm:touch-hit"
+                    data-testid="today-client-debt-pay"
+                    [attr.aria-label]="'Müşteri borcu ' + (item().clientOutstandingAmount | money) + ', ödeme al'"
+                    (click)="pay.emit()"
+                >
+                    Müşteri borcu {{ item().clientOutstandingAmount | money }}
+                </button>
+            } @else {
+                <div class="w-full text-sm font-medium text-amber-700 dark:text-amber-300 mt-1 whitespace-normal">Müşteri borcu {{ item().clientOutstandingAmount | money }}</div>
+            }
         }
     `
 })

@@ -118,6 +118,22 @@ describe('PaymentNewPageComponent', () => {
         expect(cmp.openCharges().map((c) => c.chargeId)).toEqual(['ch1']);
     });
 
+    it('toplam borç yazar; Tamamını al tüm açık ücretleri kalanıyla doldurur (H2)', async () => {
+        await setup();
+        selectClient();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(cmp.totalOutstanding()).toBe(900);
+        expect(el.querySelector('[data-testid="payment-total-outstanding"]')?.textContent).toContain('900');
+        (el.querySelector('[data-testid="payment-fill-all"]') as HTMLButtonElement).click();
+        expect(cmp.total()).toBe(900);
+    });
+
+    it('ödeme tarihi şimdi gelir (H2)', async () => {
+        await setup();
+        expect(cmp.form.controls.paidAtLocal.value.slice(0, 10)).toBe(toIstanbulDateTimeLocalInputValue(new Date().toISOString()).slice(0, 10));
+    });
+
     it('alınan tutar boşsa ödeme tutarı tahsis toplamıdır; para birimi alanı yoktur', async () => {
         await setup();
         selectClient();
@@ -492,6 +508,8 @@ describe('PaymentNewPageComponent', () => {
 
         it('boş bırakılınca "Zorunlu alan" görünür', async () => {
             await setup();
+            // Tarih şimdi gelir (H2); kullanıcı silerse zorunlu uyarısı görünür.
+            cmp.form.controls.paidAtLocal.setValue('');
             cmp.form.controls.paidAtLocal.markAsTouched();
             fixture.detectChanges();
 
