@@ -85,7 +85,8 @@ export function clientUpsertFieldValidators(field: ClientCreateFormFieldKey): Va
                 Validators.maxLength(CLIENT_UPSERT_FIELD_MAX.fullName)
             ];
         case 'phone':
-            return [turkishMobilePhoneValidator()];
+            // Telefon zorunlu (H17); backend Create/Update/QuickRegister doğrulamasıyla aynı. İçe aktarma bu kuralın dışında.
+            return [trimmedRequired(), turkishMobilePhoneValidator()];
         case 'email':
             return [Validators.maxLength(CLIENT_UPSERT_FIELD_MAX.email), clientOptionalEmailValidator()];
         case 'address':

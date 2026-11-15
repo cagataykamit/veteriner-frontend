@@ -38,7 +38,7 @@ import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-form
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="qc-phone" class="block text-sm font-medium text-muted-color mb-2">Telefon</label>
+                        <label for="qc-phone" class="block text-sm font-medium text-muted-color mb-2">Telefon *</label>
                         <input appPhoneFormat id="qc-phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
                         @if (fieldMessage('phone'); as msg) {
                             <small class="text-danger">{{ msg }}</small>

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, input, OnInit, output, signal, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -33,7 +33,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
 /**
  * Randevusuz gelişte kayıtsız hasta kaydı (Visit'i üst diyalog açar).
  * Yeni müşteri: tek işlemli `POST /clients/quick-register` (yarım kayıt oluşmaz). Kayıtlı sahibe hayvan: `POST /pets`.
- * Form doğrulamaları mevcut müşteri/hayvan upsert factory'lerinden gelir; burada yalnızca telefon zorunlu eklenir.
+ * Form doğrulamaları mevcut müşteri/hayvan upsert factory'lerinden gelir (telefon zorunlu dahil).
  */
 @Component({
     selector: 'app-visit-quick-registration',
@@ -139,12 +139,6 @@ export class VisitQuickRegistrationComponent implements OnInit {
     readonly apiClientErrors = signal<ClientCreateFieldErrors>({});
     readonly speciesOptions = signal<SelectOption[]>([]);
     readonly loadingSpecies = signal(false);
-
-    constructor() {
-        // Bu akışta telefon zorunlu (mevcut müşteri formunda opsiyonel; kural yalnızca burada eklenir).
-        this.clientForm.controls.phone.addValidators(Validators.required);
-        this.clientForm.controls.phone.updateValueAndValidity({ emitEvent: false });
-    }
 
     ngOnInit(): void {
         this.owner.set(this.existingOwner());

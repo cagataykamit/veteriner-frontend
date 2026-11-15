@@ -54,7 +54,7 @@ import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-form
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label for="phone" class="block text-sm font-medium text-muted-color mb-2">Telefon</label>
+                            <label for="phone" class="block text-sm font-medium text-muted-color mb-2">Telefon *</label>
                             <input appPhoneFormat id="phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
                             @if (fieldMessage('phone'); as msg) {
                                 <small class="text-danger">{{ msg }}</small>
@@ -98,7 +98,7 @@ import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-form
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <button pButton type="submit" [disabled]="form.invalid || invoicingForm.invalid || submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                        <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                         <button pButton type="button" severity="secondary" (click)="goDetail()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>
