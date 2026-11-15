@@ -279,6 +279,12 @@ const REQUIREMENT_TONE: Readonly<Record<EVetUploadFileDef['requirement'], string
 
                                     <app-import-drop-zone [label]="f.label" [description]="f.contents" [extension]="f.extension" [file]="evetFiles()[f.slot]" (fileChange)="setEVet(f.slot, $event)" />
 
+                                    @if (f.slot === 'backup') {
+                                        <p class="m-0 flex gap-2 text-sm text-muted-color" data-testid="import-evet-ambiguous-hint">
+                                            <i class="pi pi-info-circle mt-0.5" aria-hidden="true"></i>Aynı müşterinin aynı adlı iki hayvanı varsa Vetinity çoğunu tür, tarih ve kiloya bakarak kendisi ayırır; kalanları size sorar.
+                                        </p>
+                                    }
+
                                     <div class="flex flex-wrap items-center gap-2">
                                         <button pButton type="button" severity="secondary" data-testid="import-back" (click)="go(index() - 1)"><i class="p-button-icon pi pi-arrow-left"></i>Geri</button>
                                         @if (evetFiles()[f.slot]) {

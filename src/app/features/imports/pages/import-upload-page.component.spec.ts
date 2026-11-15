@@ -201,6 +201,7 @@ describe('ImportUploadPageComponent', () => {
         expect(q<HTMLButtonElement>('import-next')?.disabled).toBe(true);
         expect(q('import-skip')).toBeNull();
         expect(el.querySelector('label[for="importEncoding"]')).toBeNull();
+        expect(q('import-evet-ambiguous-hint')?.textContent?.trim()).toBe('Aynı müşterinin aynı adlı iki hayvanı varsa Vetinity çoğunu tür, tarih ve kiloya bakarak kendisi ayırır; kalanları size sorar.');
 
         page.setEVet('backup', file('ornek-yedek.xlsx'));
         fixture.detectChanges();
@@ -208,6 +209,7 @@ describe('ImportUploadPageComponent', () => {
 
         expect(q('import-file-counter')?.textContent).toBe('Dosya 2 / 4');
         expect(text()).toContain('Hasta Listesi (.csv)');
+        expect(q('import-evet-ambiguous-hint')).toBeNull();
         expect(menu()).toBe('Menü yolu: Rapor > Genel > Hasta Listesi');
 
         click('import-skip');
