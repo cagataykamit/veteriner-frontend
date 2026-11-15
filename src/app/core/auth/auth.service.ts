@@ -12,6 +12,7 @@ import type {
     SessionTokens
 } from '@/app/core/auth/auth.models';
 import { PLATFORM_ADMIN_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { clearAllSessionDrafts } from '@/app/shared/utils/session-draft.storage';
 
 const ACCESS_TOKEN_KEY = 'veteriner.access_token';
 const REFRESH_TOKEN_KEY = 'veteriner.refresh_token';
@@ -375,9 +376,9 @@ export class AuthService {
         this.clearMyClinicsCache();
     }
 
-    /** `clearSession` ile aynı — kullanıcı çıkışı. */
+    /** Kullanıcı çıkışı: oturum ve tarayıcı taslakları silinir (oturum süresinin dolması taslakları silmez, B3). */
     logout(): void {
-        this.clearSession();
+        this.endUserSession();
     }
 
     /** Backend logout endpoint'i + typed response normalize + local session clear. */
@@ -385,7 +386,7 @@ export class AuthService {
         const rt = this.getRefreshToken()?.trim() ?? '';
 
         if (!rt) {
-            this.clearSession();
+            this.endUserSession();
 
             return of({ success: true });
         }
@@ -394,7 +395,7 @@ export class AuthService {
 
         return this.api.post<unknown>(ApiEndpoints.auth.logout(), body).pipe(
             map((raw) => this.mapAuthOperationResponse(raw)),
-            tap(() => this.clearSession())
+            tap(() => this.endUserSession())
         );
     }
 
@@ -403,7 +404,7 @@ export class AuthService {
         const rt = this.getRefreshToken()?.trim() ?? '';
 
         if (!rt) {
-            this.clearSession();
+            this.endUserSession();
 
             return of({ success: true });
         }
@@ -412,8 +413,13 @@ export class AuthService {
 
         return this.api.post<unknown>(ApiEndpoints.auth.logoutAll(), body).pipe(
             map((raw) => this.mapAuthOperationResponse(raw)),
-            tap(() => this.clearSession())
+            tap(() => this.endUserSession())
         );
+    }
+
+    private endUserSession(): void {
+        this.clearSession();
+        clearAllSessionDrafts();
     }
 
     private persistFromTokens(tokens: SessionTokens): void {
