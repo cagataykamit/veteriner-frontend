@@ -193,7 +193,7 @@ describe('ImportReviewStepComponent', () => {
 
             expect(skipped).toContain('Bilerek atlanacak 3 satır');
             expect(skipped).toContain('Boş muayene satırı');
-            expect(skipped).toContain('İçinde aktarılacak bilgi yok; sorun değil.');
+            expect(skipped).toContain('İçinde bilgi yok ve hastası ya da tarihi okunamadı; sorun değil.');
 
             const errors = text(q(el, 'import-errors'));
 
@@ -321,11 +321,56 @@ describe('ImportReviewStepComponent', () => {
             const el = render(p);
             const component = fixture.componentInstance as unknown as { catalogOptions(u: unknown): { label: string; value: string }[] };
             const required = text(q(el, 'import-required-values'));
+            const options = component.catalogOptions(p.unmappedValues[0]);
 
             expect(required).toContain("Ayşe Yılmaz: 'Zeytin' adlı 2 hasta");
             expect(required).toContain('3 aşı / muayene kaydı hangisine ait?');
             expect(required).toContain('Atla');
-            expect(component.catalogOptions(p.unmappedValues[0]).map((o) => o.value)).toEqual(['903', '904', 'merge:903', 'merge:904']);
+            expect(options.map((o) => o.value)).toEqual(['903', '904', 'merge:903', 'merge:904']);
+            expect(options[1].label).toBe('Zeytin (E-vet 904) · Kedi · Beyaz');
+            expect(options[3].label).toBe('İkisi aynı hayvan: Zeytin (E-vet 904) olarak tek hasta say');
+        });
+
+        it('belirsiz grubun kayıtlarını gösterir; türü farklı adaylarda "aynı hayvan" sunmaz, ırk farkını yazar', () => {
+            const candidate = { ownerName: 'Ayşe Yılmaz', breed: null, color: null, gender: null, birthDate: null, status: null, registeredOn: null };
+            const cat = { ...candidate, species: 'Kedi', name: 'Boncuk' };
+            const p = ready({
+                canCommit: false,
+                blockers: ['Imports.AmbiguousPet'],
+                unmappedValues: [
+                    { kind: 'pet', source: 'Belirsiz: 1 / 2', rowCount: 7, blocking: true },
+                    { kind: 'pet', source: 'Belirsiz: 3 / 4', rowCount: 1, blocking: true }
+                ],
+                petCandidates: [
+                    { ...cat, petNo: '1', rowNumber: 1 },
+                    { ...cat, petNo: '2', rowNumber: 2, species: 'Köpek' },
+                    { ...cat, petNo: '3', rowNumber: 3, breed: 'Tekir' },
+                    { ...cat, petNo: '4', rowNumber: 4, breed: 'Sarman' }
+                ],
+                petRows: [
+                    { reference: 'Belirsiz: 1 / 2', table: 'vaccinations', rowNumber: 5, date: '2024-10-12', title: 'İÇ PARAZİT', summary: null },
+                    { reference: 'Belirsiz: 1 / 2', table: 'clinicalRecords', rowNumber: 6, date: '2024-10-13', title: 'Muayene', summary: 'Kusma ve ishal' },
+                    { reference: 'Belirsiz: 3 / 4', table: 'clinicalRecords', rowNumber: 7, date: null, title: 'Kısırlaştırma', summary: null }
+                ]
+            });
+            const el = render(p);
+            const component = fixture.componentInstance as unknown as { catalogOptions(u: unknown): { label: string; value: string }[] };
+            const rows = Array.from(el.querySelectorAll('[data-testid="import-pet-rows"]')).map((r) => text(r));
+            const required = text(q(el, 'import-required-values'));
+
+            expect(rows[0]).toContain('12.10.2024 · Aşı: İÇ PARAZİT');
+            expect(rows[0]).toContain('13.10.2024 · Muayene: Kusma ve ishal');
+            expect(rows[1]).toContain('Tarihsiz · Kısırlaştırma');
+            expect(required).toContain('ve 5 kayıt daha');
+            expect(required).toContain('Bu kayıtlar hangisine ait?');
+            expect(required).toContain('Bu kayıt hangisine ait?');
+            expect(component.catalogOptions(p.unmappedValues[0]).map((o) => o.value)).toEqual(['1', '2']);
+            expect(
+                component
+                    .catalogOptions(p.unmappedValues[1])
+                    .map((o) => o.label)
+                    .slice(2)
+            ).toEqual(['İkisi aynı hayvan (ırk ya da cinsiyet farklı): Boncuk (E-vet 3) olarak tek hasta say', 'İkisi aynı hayvan (ırk ya da cinsiyet farklı): Boncuk (E-vet 4) olarak tek hasta say']);
         });
 
         it('sıfır sorunda "Her şey hazır"; atlanan ve aktarılamayan bölümü çıkmaz', () => {

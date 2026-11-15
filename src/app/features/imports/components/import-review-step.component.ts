@@ -40,7 +40,7 @@ import {
     reviewTotals
 } from '@/app/features/imports/utils/import-review.utils';
 import { fieldLabel, IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
-import { ambiguousPetNos, IMPORT_PET_MERGE_PREFIX, IMPORT_VALUE_SKIP, type ImportValueChoices, petCandidateLabel, valueChoiceKey } from '@/app/features/imports/utils/import-value-mapping.utils';
+import { ambiguousPetNos, IMPORT_PET_MERGE_PREFIX, IMPORT_VALUE_SKIP, type ImportValueChoices, petCandidateLabel, petDisplayName, petMergeConflict, petRowLabel, valueChoiceKey } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { PetColorsService } from '@/app/entities/pet/services/pet-colors.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { VaccineDefinitionsService } from '@/app/entities/vaccine-definition/services/vaccine-definitions.service';
@@ -475,6 +475,16 @@ const OUTCOME_DOT: Readonly<Record<ImportOutcome | 'attention' | 'info', string>
                             <span class="text-xs font-semibold uppercase tracking-wide text-muted-color shrink-0">{{ kindLabel(u) }}</span>
                             <span class="font-semibold break-words min-w-0">{{ valueTitle(u) }}</span>
                         </div>
+                        @if (petRowLabels(u); as rows) {
+                            <ul class="mt-1 text-sm list-none p-0 m-0" data-testid="import-pet-rows">
+                                @for (row of rows; track $index) {
+                                    <li class="break-words">{{ row }}</li>
+                                }
+                            </ul>
+                            @if (u.rowCount > rows.length) {
+                                <div class="text-sm text-muted-color">ve {{ u.rowCount - rows.length }} kayıt daha</div>
+                            }
+                        }
                         <div class="text-sm text-muted-color">{{ valueRowsText(u) }}</div>
                     </div>
                     <div class="flex items-center gap-2 md:flex-1 min-w-0">
@@ -641,7 +651,11 @@ export class ImportReviewStepComponent {
     }
 
     protected valueRowsText(u: ImportUnmappedValueDto): string {
-        return u.kind === 'pet' ? `${formatCount(u.rowCount)} aşı / muayene kaydı hangisine ait?` : `${formatCount(u.rowCount)} satırda`;
+        if (u.kind !== 'pet') {
+            return `${formatCount(u.rowCount)} satırda`;
+        }
+
+        return this.petRowLabels(u) ? (u.rowCount > 1 ? 'Bu kayıtlar hangisine ait?' : 'Bu kayıt hangisine ait?') : `${formatCount(u.rowCount)} aşı / muayene kaydı hangisine ait?`;
     }
 
     protected isCatalogLoading(u: ImportUnmappedValueDto): boolean {
@@ -660,11 +674,13 @@ export class ImportReviewStepComponent {
     protected catalogOptions(u: ImportUnmappedValueDto): SelectOption[] {
         if (u.kind === 'pet') {
             const candidates = this.petCandidates(u);
+            // Aynı hayvan seçenekleri adaylardan sonra; türü farklı adaylarda sunulmaz, ırk/cinsiyet farkı yazılır.
+            const conflict = petMergeConflict(candidates);
+            const same = candidates.length > 2 ? 'Hepsi aynı hayvan' : 'İkisi aynı hayvan';
+            const note = conflict === 'looks' ? ' (ırk ya da cinsiyet farklı)' : '';
+            const merges = conflict === 'species' ? [] : candidates.map((c) => ({ label: `${same}${note}: ${petDisplayName(c)} olarak tek hasta say`, value: IMPORT_PET_MERGE_PREFIX + c.petNo }));
 
-            return [
-                ...candidates.map((c) => ({ label: petCandidateLabel(c), value: c.petNo })),
-                ...candidates.map((c) => ({ label: `İkisi aynı hayvan: tek hasta say (${c.name ?? 'Adsız'}, E-vet ${c.petNo} olarak)`, value: IMPORT_PET_MERGE_PREFIX + c.petNo }))
-            ];
+            return [...candidates.map((c) => ({ label: petCandidateLabel(c), value: c.petNo })), ...merges];
         }
 
         return this.catalogs()[u.kind] ?? [];
@@ -680,6 +696,17 @@ export class ImportReviewStepComponent {
         const first = candidates[0];
 
         return first ? `${first.ownerName ?? 'Müşteri'}: '${first.name ?? ''}' adlı ${candidates.length} hasta` : u.source;
+    }
+
+    /** Belirsiz grubun kayıtları (grup başına ilk birkaçı); başka türde ya da bilgi yoksa null. */
+    protected petRowLabels(u: ImportUnmappedValueDto): string[] | null {
+        if (u.kind !== 'pet') {
+            return null;
+        }
+
+        const rows = (this.preview()?.petRows ?? []).filter((r) => r.reference === u.source).map(petRowLabel);
+
+        return rows.length ? rows : null;
     }
 
     private petCandidates(u: ImportUnmappedValueDto): ImportPetCandidateDto[] {

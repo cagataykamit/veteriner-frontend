@@ -1,5 +1,4 @@
 import type { MockedObject } from 'vitest';
-import { ChangeDetectorRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { provideRouter, Router } from '@angular/router';
@@ -38,26 +37,36 @@ const uploaded: ImportBatchDto = {
 
 const file = (name: string) => new File(['ornek'], name);
 
+interface Setup {
+    profiles?: ImportSourceProfileDto[] | 'error';
+    clinics?: { id: string; name: string; isActive: boolean }[];
+    clinicId?: string | null;
+    drafts?: ImportBatchDto[];
+    support?: boolean;
+}
+
 describe('ImportUploadPageComponent', () => {
     let fixture: ComponentFixture<ImportUploadPageComponent>;
     let page: ImportUploadPageComponent;
     let el: HTMLElement;
     let imports: MockedObject<ImportsService>;
 
-    function create(): void {
+    function create(setup: Setup = {}): void {
+        const drafts = setup.drafts ?? [];
+
         imports = {
-            getSourceProfiles: vi.fn().mockReturnValue(of(profiles)),
+            getSourceProfiles: vi.fn().mockReturnValue(setup.profiles === 'error' ? throwError(() => new Error('yok')) : of(setup.profiles ?? profiles)),
             createBatch: vi.fn().mockReturnValue(of({ type: 'progress', percent: 100 }, { type: 'done', batch: uploaded })),
-            listBatches: vi.fn().mockReturnValue(of({ items: [], page: 1, pageSize: 20, totalItems: 0, totalPages: 0 })),
-            downloadTemplate: vi.fn()
+            listBatches: vi.fn().mockReturnValue(of({ items: drafts, page: 1, pageSize: 20, totalItems: drafts.length, totalPages: 1 })),
+            downloadTemplate: vi.fn().mockReturnValue(new Subject())
         } as unknown as MockedObject<ImportsService>;
         TestBed.configureTestingModule({
             imports: [ImportUploadPageComponent],
             providers: [
                 provideRouter([]),
                 { provide: ImportsService, useValue: imports },
-                { provide: ClinicsService, useValue: { listClinics: () => of([{ id: 'c1', name: 'Merkez Klinik', isActive: true }]) } },
-                { provide: AuthService, useValue: { hasOperationClaim: () => false, getClinicId: () => null } }
+                { provide: ClinicsService, useValue: { listClinics: () => of(setup.clinics ?? [{ id: 'c1', name: 'Merkez Klinik', isActive: true }]) } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => setup.support ?? false, getClinicId: () => setup.clinicId ?? null } }
             ]
         });
         vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
@@ -67,34 +76,62 @@ describe('ImportUploadPageComponent', () => {
         fixture.detectChanges();
     }
 
-    /** Alanlar sinyal değil; OnPush görünümü elle işaretlenir. */
-    function render(): void {
-        fixture.debugElement.injector.get(ChangeDetectorRef).markForCheck();
+    const text = () => (el.textContent ?? '').replace(/\s+/g, ' ');
+    const q = <T extends HTMLElement = HTMLElement>(id: string) => el.querySelector<T>(`[data-testid="${id}"]`);
+
+    const click = (id: string) => {
+        q(id)!.click();
         fixture.detectChanges();
-    }
+    };
 
-    function selectProfile(code: ImportSourceProfileCode): void {
-        page.sourceProfile = code;
-        page.onProfileChange();
-        render();
-    }
+    const choose = (code: ImportSourceProfileCode) => {
+        el.querySelector<HTMLButtonElement>(`[data-profile="${code}"]`)!.click();
+        fixture.detectChanges();
+    };
 
-    const text = () => el.textContent ?? '';
-    const submitButton = () => Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Yükle ve eşlemeye geç'))!;
+    const submitButton = () => q<HTMLButtonElement>('import-submit')!;
     const sentForm = () => imports.createBatch.mock.calls[0][0] as FormData;
     const sentKeys = () => Array.from(sentForm().keys());
 
-    beforeEach(() => create());
+    it('ilk ekran yalnız programı sorar: adı bilinenler önce, "Programım listede yok" sonda', () => {
+        create();
 
-    it('Genel: şablon ve Excel/CSV seçimi görünür; Excel klinik olmadan "file" ile gider, profil gönderilmez', () => {
-        expect(text()).toContain('1. Şablonu indirin');
-        expect(el.querySelector('p-selectbutton')).not.toBeNull();
-        expect(el.querySelector('[data-testid="import-evet-guide"]')).toBeNull();
+        const options = Array.from(el.querySelectorAll<HTMLButtonElement>('[data-testid="import-source-profile"] button'));
+
+        expect(text()).toContain('Hangi programdan geliyorsunuz?');
+        expect(options.map((o) => o.dataset['profile'])).toEqual(['Kolayvet', 'EVet', 'Generic']);
+        expect(options[2].textContent).toContain('Programım listede yok');
+        expect(options[2].textContent).toContain('Genel Excel / CSV · Genel');
+        expect(options[1].textContent).toContain('E-vet yedeği');
+        expect(el.querySelector('app-import-drop-zone')).toBeNull();
+        expect(submitButton()).toBeNull();
+        expect(q('import-migration-support-link')).toBeNull();
+    });
+
+    it('geçiş desteği yetkisi varsa program ekranında bağlantısı görünür', () => {
+        create({ support: true });
+
+        expect(q('import-migration-support-link')?.textContent).toContain('geçiş desteği isteyin');
+    });
+
+    it('Genel: dosya ve gönderme tek ekranda; şablon ve CSV ikinci planda; Excel klinik olmadan "file" ile gider, profil gönderilmez', () => {
+        create();
+        choose('Generic');
+
+        expect(text()).toContain('Dosyanızı yükleyin');
+        expect(q('import-generic-guide')?.textContent).toContain('Nereden alacağım?');
+        expect(q('import-template-xlsx')?.textContent).toContain('Boş Excel şablonunu indirin');
+        expect(el.querySelectorAll('app-import-drop-zone').length).toBe(1);
+        expect(q('import-csv')).toBeNull();
+        expect(q('import-evet-guide')).toBeNull();
         expect(submitButton().disabled).toBe(true);
+        expect(q('import-submit-hint')?.textContent).toBe('Önce dosyanızı seçin.');
+        expect(q('import-roadmap')?.textContent).toContain('Yükledikten sonra ne olacak?');
 
         page.setXlsx(file('ornek-musteriler.xlsx'));
-        render();
+        fixture.detectChanges();
         expect(submitButton().disabled).toBe(false);
+        expect(q('import-submit-hint')?.textContent).toBe('Bu adımda hiçbir kayıt oluşmaz.');
 
         submitButton().click();
 
@@ -103,67 +140,154 @@ describe('ImportUploadPageComponent', () => {
         expect((sentForm().get('file') as File).name).toBe('ornek-musteriler.xlsx');
     });
 
-    it('E-vet: şablon yerine yönerge ve 4 yükleme alanı görünür; klinik zorunlu, kodlama ve ayırıcı yok', () => {
-        page.mode = 'csv';
-        selectProfile('EVet');
+    it('Genel CSV: yedi alan, şablonlar, kodlama ve ayırıcı; klinik isteyen liste varsa klinik zorunlu', () => {
+        create();
+        choose('Generic');
+        click('import-mode-csv');
 
-        const guide = el.querySelector('[data-testid="import-evet-guide"]')?.textContent ?? '';
+        expect(el.querySelectorAll('[data-testid="import-csv"] app-import-drop-zone').length).toBe(7);
+        expect(el.querySelector('label[for="importEncoding"]')).not.toBeNull();
+        expect(el.querySelector('label[for="importDelimiter"]')).not.toBeNull();
+        expect(q('import-submit-hint')?.textContent).toBe('Önce en az bir CSV dosyası seçin.');
 
-        expect(el.querySelectorAll('[data-testid="import-evet-guide"] li').length).toBe(4);
-        expect(guide).toContain('Genel > Yedek Al');
-        expect(guide).toContain("Giriş Bilgileri'ni işaretlemeyin");
-        expect(guide).toContain('Rapor > Genel > Hasta Listesi');
-        expect(guide).toContain('Rapor > Resmi > Aşı Bilgisi');
-        expect(guide).toContain("E-vet'i kullanmaya başladığınız tarihten bugüne");
-        expect(guide).toContain('Müşteriler bu yedekten gelir');
-        expect(guide).toContain('Rapor > Depo > Ürün Listesi');
-        expect(guide).toContain('onayınız olmadan hiçbir kayıt oluşmaz');
+        page.setCsv('customers', file('musteriler.csv'));
+        fixture.detectChanges();
+        expect(submitButton().disabled).toBe(false);
 
-        const zones = Array.from(el.querySelectorAll('app-import-drop-zone')).map((z) => z.textContent ?? '');
-
-        expect(zones.length).toBe(4);
-        expect(zones[0]).toContain('E-vet yedeği (.xlsx) · zorunlu');
-        expect(zones[0]).toContain('Müşteri, hasta, randevu ve muayene kayıtları');
-        expect(zones[1]).toContain('Hasta Listesi (.csv) · önerilir');
-
-        expect(text()).not.toContain('1. Şablonu indirin');
-        expect(el.querySelector('p-selectbutton')).toBeNull();
-        expect(el.querySelector('label[for="importEncoding"]')).toBeNull();
-        expect(el.querySelector('label[for="importDelimiter"]')).toBeNull();
+        page.setCsv('vaccinations', file('asilar.csv'));
+        fixture.detectChanges();
+        expect(submitButton().disabled).toBe(true);
+        expect(q('import-submit-hint')?.textContent).toBe('Kayıtların yazılacağı kliniği seçin.');
         expect(el.querySelector('label[for="importClinic"]')?.textContent).toContain('(zorunlu)');
+
+        page.clinicId.set('c1');
+        page.encoding.set('windows-1254');
+        page.delimiter.set(';');
+        fixture.detectChanges();
+        submitButton().click();
+
+        expect(sentKeys()).toEqual(['requestId', 'customersFile', 'vaccinationsFile', 'encoding', 'delimiter', 'clinicId', 'name']);
     });
 
-    it('E-vet: yedek ve klinik birlikte seçilmeden yüklenemez', () => {
-        selectProfile('EVet');
-        expect(submitButton().disabled).toBe(true);
+    it('Kolayvet: genel yoldan gider; başlıkta program adı, profil notu ve "sourceProfile" ile', () => {
+        create();
+        choose('Kolayvet');
 
-        page.setEVet('patientReport', file('ornek-hasta-listesi.csv'));
-        page.clinicId = 'c1';
-        render();
-        expect(submitButton().disabled).toBe(true);
+        expect(text()).toContain('Kolayvet dosyanızı yükleyin');
+        expect(q('import-source-profile-note')?.textContent).toBe('Kolayvet dışa aktarımı');
 
-        page.clinicId = null;
+        page.setXlsx(file('kolayvet.xlsx'));
+        fixture.detectChanges();
+        submitButton().click();
+
+        expect(sentKeys()).toEqual(['requestId', 'file', 'name', 'sourceProfile']);
+        expect(sentForm().get('sourceProfile')).toBe('Kolayvet');
+    });
+
+    it('E-vet: her dosya ayrı ekranda; nereden alınacağı menü yoluyla yazar, sayaç dosyaları sayar', () => {
+        create();
+        choose('EVet');
+
+        const guide = () => (q('import-evet-guide')?.textContent ?? '').replace(/\s+/g, ' ');
+        const menu = () => q('import-evet-guide')?.querySelector('[aria-label]')?.getAttribute('aria-label');
+
+        expect(q('import-file-counter')?.textContent).toBe('Dosya 1 / 4');
+        expect(text()).toContain('E-vet yedeği (.xlsx)');
+        expect(text()).toContain('zorunlu');
+        expect(menu()).toBe('Menü yolu: Genel > Yedek Al');
+        expect(guide()).toContain('Müşteriler bu yedekten gelir');
+        expect(guide()).toContain("Giriş Bilgileri'ni işaretlemeyin");
+        expect(el.querySelectorAll('app-import-drop-zone').length).toBe(1);
+        expect(q<HTMLButtonElement>('import-next')?.disabled).toBe(true);
+        expect(q('import-skip')).toBeNull();
+        expect(el.querySelector('label[for="importEncoding"]')).toBeNull();
+        expect(q('import-evet-ambiguous-hint')?.textContent?.trim()).toBe('Aynı müşterinin aynı adlı iki hayvanı varsa Vetinity çoğunu tür, tarih ve kiloya bakarak kendisi ayırır; kalanları size sorar.');
+
         page.setEVet('backup', file('ornek-yedek.xlsx'));
-        render();
+        fixture.detectChanges();
+        click('import-next');
+
+        expect(q('import-file-counter')?.textContent).toBe('Dosya 2 / 4');
+        expect(text()).toContain('Hasta Listesi (.csv)');
+        expect(q('import-evet-ambiguous-hint')).toBeNull();
+        expect(menu()).toBe('Menü yolu: Rapor > Genel > Hasta Listesi');
+
+        click('import-skip');
+        expect(menu()).toBe('Menü yolu: Rapor > Resmi > Aşı Bilgisi');
+        expect(guide()).toContain("E-vet'i kullanmaya başladığınız tarihten bugüne");
+
+        click('import-skip');
+        expect(q('import-file-counter')?.textContent).toBe('Dosya 4 / 4');
+        expect(menu()).toBe('Menü yolu: Rapor > Depo > Ürün Listesi');
+
+        click('import-skip');
+        expect(text()).toContain('Hazırsınız: gönderelim mi?');
+        expect(q('import-file-counter')).toBeNull();
+    });
+
+    it('E-vet özeti: yüklenen ve yüklenmeyen dosyaları gösterir; "Ekle" o dosyanın ekranına götürür', () => {
+        create({ clinicId: 'c1' });
+        choose('EVet');
+        page.setEVet('backup', file('ornek-yedek.xlsx'));
+        fixture.detectChanges();
+        click('import-next');
+        click('import-skip');
+        click('import-skip');
+        click('import-skip');
+
+        const rows = Array.from(q('import-evet-summary')!.querySelectorAll('li')).map((li) => (li.textContent ?? '').replace(/\s+/g, ' ').trim());
+
+        expect(rows[0]).toContain('ornek-yedek.xlsx');
+        expect(rows[0]).toContain('Değiştir');
+        expect(rows[1]).toContain('Yüklenmeyecek');
+        expect(rows[1]).toContain('Ekle');
+        expect(q('import-clinic-info')?.textContent).toContain('Merkez Klinik');
+        expect(submitButton().disabled).toBe(false);
+
+        q('import-evet-summary')!.querySelectorAll<HTMLButtonElement>('button')[1].click();
+        fixture.detectChanges();
+
+        expect(q('import-file-counter')?.textContent).toBe('Dosya 2 / 4');
+    });
+
+    it('E-vet: yedek ve klinik birlikte seçilmeden yüklenemez; nedeni düğmenin yanında yazar', () => {
+        create();
+        choose('EVet');
+        page.setEVet('patientReport', file('ornek-hasta-listesi.csv'));
+        page.clinicId.set('c1');
+        page.submit();
+        expect(imports.createBatch).not.toHaveBeenCalled();
+
+        page.clinicId.set(null);
+        page.setEVet('backup', file('ornek-yedek.xlsx'));
+        fixture.detectChanges();
+        click('import-next');
+        click('import-next');
+        click('import-skip');
+        click('import-skip');
+
         expect(submitButton().disabled).toBe(true);
+        expect(q('import-submit-hint')?.textContent).toBe('Kayıtların yazılacağı kliniği seçin.');
+        expect(el.querySelector('label[for="importClinic"]')?.textContent).toContain('(zorunlu)');
 
         page.submit();
         expect(imports.createBatch).not.toHaveBeenCalled();
 
-        page.clinicId = 'c1';
-        render();
+        page.clinicId.set('c1');
+        fixture.detectChanges();
         expect(submitButton().disabled).toBe(false);
     });
 
     it('E-vet: yalnız dolu dosyalar sözleşme alan adlarıyla gider; kodlama ve ayırıcı gönderilmez, uyarılar sihirbaza taşınır', () => {
-        page.mode = 'csv';
-        page.encoding = 'utf-8';
-        page.delimiter = ';';
-        selectProfile('EVet');
+        create();
+        page.setMode('csv');
+        page.encoding.set('utf-8');
+        page.delimiter.set(';');
+        choose('EVet');
         page.setEVet('backup', file('ornek-yedek.xlsx'));
         page.setEVet('patientReport', file('ornek-hasta-listesi.csv'));
-        page.clinicId = 'c1';
-        page.name = ' E-vet geçişi ';
+        page.clinicId.set('c1');
+        page.name.set(' E-vet geçişi ');
 
         page.submit();
 
@@ -177,12 +301,13 @@ describe('ImportUploadPageComponent', () => {
     });
 
     it('E-vet: dört dosyanın tamamı ayrı alanlarla gider', () => {
-        selectProfile('EVet');
+        create();
+        choose('EVet');
         page.setEVet('backup', file('ornek-yedek.xlsx'));
         page.setEVet('patientReport', file('ornek-hasta-listesi.csv'));
         page.setEVet('vaccineReport', file('ornek-asi-bilgi.csv'));
         page.setEVet('products', file('ornek-urun-listesi.csv'));
-        page.clinicId = 'c1';
+        page.clinicId.set('c1');
 
         page.submit();
 
@@ -190,87 +315,139 @@ describe('ImportUploadPageComponent', () => {
         expect((sentForm().get('productsFile') as File).name).toBe('ornek-urun-listesi.csv');
     });
 
-    it('gönderim yüzdesini, sonra sunucuda işlendiğini ve sayfa kapansa da sürdüğünü söyler', () => {
+    it('klinik: tek klinik seçiliyse bilgi satırı, değilse seçim; ad bağlantıyla açılır', () => {
+        create({ clinicId: 'c1' });
+        choose('Generic');
+
+        expect(q('import-clinic-info')?.textContent).toContain('Kayıtlar Merkez Klinik kliniğine yazılır.');
+        expect(el.querySelector('label[for="importClinic"]')).toBeNull();
+        expect(el.querySelector('#importName')).toBeNull();
+
+        click('import-name-open');
+        expect(el.querySelector('#importName')).not.toBeNull();
+
+        TestBed.resetTestingModule();
+        create({
+            clinicId: 'c1',
+            clinics: [
+                { id: 'c1', name: 'Merkez Klinik', isActive: true },
+                { id: 'c2', name: 'Sahil Şubesi', isActive: true }
+            ]
+        });
+        choose('Generic');
+
+        expect(q('import-clinic-info')).toBeNull();
+        expect(el.querySelector('label[for="importClinic"]')?.textContent).not.toContain('(zorunlu)');
+    });
+
+    it('gönderim yüzdesini, sonra sunucuda okunduğunu ve sayfa kapansa da sürdüğünü söyler', () => {
         const events = new Subject<ImportUploadEvent>();
 
+        create();
+        choose('Generic');
         imports.createBatch.mockReturnValue(events);
         page.setXlsx(file('ornek.xlsx'));
-        render();
+        fixture.detectChanges();
         submitButton().click();
         events.next({ type: 'progress', percent: 42 });
-        render();
-        const progress = () => el.querySelector('[data-testid="import-upload-progress"]')?.textContent ?? '';
+        fixture.detectChanges();
+        const progress = () => (q('import-upload-progress')?.textContent ?? '').replace(/\s+/g, ' ');
 
         expect(progress()).toContain('Dosyalar gönderiliyor… %42');
         expect(progress()).toContain('bu sayfada kalın');
+        expect(submitButton()).toBeNull();
 
         events.next({ type: 'progress', percent: 100 });
-        render();
+        fixture.detectChanges();
 
-        expect(progress()).toContain('sunucuda okunuyor ve dönüştürülüyor');
+        expect(progress()).toContain('Dosyalar gönderildi');
+        expect(progress()).toContain('Dosyalar okunuyor ve dönüştürülüyor');
         expect(progress()).toContain('Sayfayı kapatsanız da işlem sürer');
 
         events.next({ type: 'done', batch: uploaded });
-        render();
+        fixture.detectChanges();
 
-        expect(el.querySelector('[data-testid="import-upload-progress"]')).toBeNull();
+        expect(q('import-upload-progress')).toBeNull();
         expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith([IMPORTS_ROUTE, 'b1'], expect.anything());
     });
 
-    it('yarım kalmış içe aktarmaları kaldığı yerden devam için listeler; bitmiş olanları göstermez', () => {
-        TestBed.resetTestingModule();
-        create();
-        imports.listBatches.mockReturnValue(
-            of({
-                items: [
-                    { ...uploaded, id: 'd1', name: 'backup.xlsx', status: 'Validated' },
-                    { ...uploaded, id: 'd2', name: 'eski.xlsx', status: 'Committed' }
-                ],
-                page: 1,
-                pageSize: 20,
-                totalItems: 2,
-                totalPages: 1
-            })
-        );
-        page.ngOnInit();
-        render();
+    it('yarım kalmış içe aktarmaları program ekranının üstünde, devam bağlantısıyla gösterir; bitmiş olanları göstermez', () => {
+        create({
+            drafts: [
+                { ...uploaded, id: 'd1', name: 'backup.xlsx', status: 'Validated' },
+                { ...uploaded, id: 'd2', name: 'eski.xlsx', status: 'Committed' }
+            ]
+        });
 
-        const drafts = el.querySelector('[data-testid="import-open-drafts"]')?.textContent ?? '';
+        const drafts = q('import-open-drafts');
 
-        expect(drafts).toContain('backup.xlsx');
-        expect(drafts).toContain('Doğrulandı');
-        expect(drafts).not.toContain('eski.xlsx');
+        expect(drafts?.textContent).toContain('Yarım kalan aktarmanız var');
+        expect(drafts?.textContent).toContain('backup.xlsx');
+        expect(drafts?.textContent).toContain('Doğrulandı');
+        expect(drafts?.textContent).not.toContain('eski.xlsx');
+        expect(drafts?.querySelector('a')?.getAttribute('href')).toContain('d1');
+        expect(text()).toContain('Ya da yeni bir aktarma başlatın');
     });
 
     it('aynı dosya zaten yüklüyse o içe aktarmaya bağlantı verir', () => {
-        imports.createBatch.mockReturnValue(
-            throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.DuplicateFile', detail: 'Aynı dosya zaten yüklenmiş.', extensions: { batchId: 'b9' } } }))
-        );
+        create();
+        choose('Generic');
+        imports.createBatch.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.DuplicateFile', detail: 'Aynı dosya zaten yüklenmiş.', extensions: { batchId: 'b9' } } })));
         page.setXlsx(file('ornek.xlsx'));
-        render();
+        fixture.detectChanges();
         submitButton().click();
-        render();
+        fixture.detectChanges();
 
-        const duplicate = el.querySelector('[data-testid="import-duplicate"]');
+        const duplicate = q('import-duplicate');
 
         expect(duplicate?.textContent).toContain('Bu dosya zaten yüklendi');
         expect(duplicate?.querySelector('a')?.getAttribute('href')).toContain('b9');
     });
 
-    it('profil değişince dosya seçimleri ve deneme durumu sıfırlanır; Kolayvet şablon akışına döner', () => {
+    it('program değişince dosya seçimleri ve deneme durumu sıfırlanır', () => {
+        create();
+        choose('Generic');
         page.setXlsx(file('ornek.xlsx'));
         page.error.set('Dosya yüklenemedi.');
-        selectProfile('EVet');
+        fixture.detectChanges();
+        click('import-back');
+        choose('EVet');
 
         expect(page.xlsxFile()).toBeNull();
         expect(page.error()).toBeNull();
 
         page.setEVet('backup', file('ornek-yedek.xlsx'));
-        selectProfile('Kolayvet');
+        fixture.detectChanges();
+        click('import-back');
+        choose('Kolayvet');
 
         expect(Object.values(page.evetFiles()).every((f) => f === null)).toBe(true);
-        expect(text()).toContain('1. Şablonu indirin');
-        expect(el.querySelector('[data-testid="import-evet-guide"]')).toBeNull();
-        expect(el.querySelector('label[for="importClinic"]')?.textContent).not.toContain('(zorunlu)');
+        expect(q('import-evet-guide')).toBeNull();
+        expect(text()).toContain('Kolayvet dosyanızı yükleyin');
+    });
+
+    it('aynı program yeniden seçilirse dosyalar korunur', () => {
+        create();
+        choose('EVet');
+        page.setEVet('backup', file('ornek-yedek.xlsx'));
+        fixture.detectChanges();
+        click('import-back');
+        choose('EVet');
+
+        expect(page.evetFiles().backup?.name).toBe('ornek-yedek.xlsx');
+    });
+
+    it('program listesi gelmezse soru sorulmaz; genel yol doğrudan açılır', () => {
+        create({ profiles: 'error' });
+
+        expect(q('import-source-profile')).toBeNull();
+        expect(text()).toContain('Dosyanızı yükleyin');
+        expect(q('import-back')).toBeNull();
+
+        page.setXlsx(file('ornek.xlsx'));
+        fixture.detectChanges();
+        submitButton().click();
+
+        expect(sentKeys()).toEqual(['requestId', 'file', 'name']);
     });
 });

@@ -51,7 +51,7 @@ describe('import-review.utils', () => {
             ['Imports.PetNotFound', 8, ['pets', 'vaccinations']],
             ['Imports.NameTooShort', 4, ['customers']]
         ]);
-        expect(notImportedReasons(p, 'Skipped')[0]).toEqual({ code: 'Imports.ClinicalRecordEmpty', label: 'Boş muayene satırı', note: 'İçinde aktarılacak bilgi yok; sorun değil.', rowCount: 100, tables: ['clinicalRecords'] });
+        expect(notImportedReasons(p, 'Skipped')[0]).toEqual({ code: 'Imports.ClinicalRecordEmpty', label: 'Boş muayene satırı', note: 'İçinde bilgi yok ve hastası ya da tarihi okunamadı; sorun değil.', rowCount: 100, tables: ['clinicalRecords'] });
     });
 
     it('bilgi notları atlanma nedeni olarak gösterilen kodu tekrarlamaz', () => {

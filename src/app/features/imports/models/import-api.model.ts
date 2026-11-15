@@ -162,6 +162,17 @@ export interface ImportPetCandidateDto {
     registeredOn: string | null;
 }
 
+/** Belirsiz grubun kaydı (sözleşme 13.4; grup başına ilk birkaç satır): aşıda aşı adı, muayenede kayıt türü ve kısa özet. */
+export interface ImportPetRowDto {
+    reference: string;
+    table: string;
+    rowNumber: number;
+    /** `yyyy-aa-gg` (dosyadaki yazımla). */
+    date: string | null;
+    title: string | null;
+    summary: string | null;
+}
+
 export interface ImportUnmappedValueDto {
     kind: ImportValueKind;
     source: string;
@@ -207,6 +218,8 @@ export interface ImportPreviewDto {
     notImportedReasons?: ImportNotImportedReasonDto[];
     /** Belirsiz hasta gruplarının adayları (sözleşme 13.4); eski sunucu yanıtında yoktur. */
     petCandidates?: ImportPetCandidateDto[];
+    /** Belirsiz hasta gruplarının kayıtları (sözleşme 13.4, 2026-11-16); eski sunucu yanıtında yoktur. */
+    petRows?: ImportPetRowDto[];
 }
 
 /** Aktarılmayacak satırın nedeni: `Skipped` bilerek atlanan, `Error` hatalı; satır başına bir neden sayılır. */
