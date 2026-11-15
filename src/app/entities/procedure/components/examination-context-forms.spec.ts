@@ -229,11 +229,11 @@ describe('Reçete kopyası (RECORD-004)', () => {
         return { fixture, c: fixture.componentInstance, createPrescription };
     };
 
-    it('hasta ve içerik kopyalanır; lot, tarih, not ve eski muayene bağı kopyalanmaz; kontrollü ilaç uyarısı çıkar', () => {
+    it('hasta ve içerik kopyalanır; lot, tarih (bugün gelir), not ve eski muayene bağı kopyalanmaz; kontrollü ilaç uyarısı çıkar', () => {
         const { fixture, c } = render([{ id: 'e-old', status: 'Finalized' }]);
         const v = c.form.getRawValue();
 
-        expect(v).toEqual(expect.objectContaining({ clientId: 'client-1', petId: 'pet-1', title: 'Kronik böbrek', content: 'Diyet ve ilaç', notes: '', prescribedAtLocal: '', followUpDate: '', examinationId: '', treatmentId: '' }));
+        expect(v).toEqual(expect.objectContaining({ clientId: 'client-1', petId: 'pet-1', title: 'Kronik böbrek', content: 'Diyet ve ilaç', notes: '', prescribedAtLocal: expect.stringMatching('^' + toIstanbulDateTimeLocalInputValue(new Date().toISOString()).slice(0, 10)), followUpDate: '', examinationId: '', treatmentId: '' }));
         expect(c.form.controls.clientId.disabled && c.form.controls.petId.disabled).toBe(true);
         expect(c.form.controls.examinationId.enabled).toBe(true);
         expect(v.items.map((i) => [i.id, i.name, i.dose, i.quantity, i.lotNumber])).toEqual([

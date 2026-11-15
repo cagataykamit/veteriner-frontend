@@ -12,6 +12,7 @@ import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TreatmentEditVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
+import { toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { TreatmentFormComponent } from './treatment-form.component';
 
 const exam = {
@@ -88,6 +89,8 @@ describe('TreatmentFormComponent — muayene bağlamı', () => {
         expect(raw.clientId).toBe('');
         expect(raw.examinationId).toBe('');
         expect(fixture.componentInstance.contextFromExamination()).toBe(false);
+        // H1: tedavi tarihi şimdi gelir (değiştirilebilir).
+        expect(raw.treatmentDateLocal.slice(0, 10)).toBe(toIstanbulDateTimeLocalInputValue(new Date().toISOString()).slice(0, 10));
     });
 
     it('adres çubuğu bağlamı muayeneyle uyuşmazsa form doldurulmaz ve uyarı gösterilir', () => {
@@ -143,11 +146,11 @@ describe('TreatmentFormComponent — kopya', () => {
         return { fixture, c: fixture.componentInstance, createTreatment };
     };
 
-    it('hasta, başlık ve açıklama kopyalanır; tarih, not ve eski muayene bağı kopyalanmaz', () => {
+    it('hasta, başlık ve açıklama kopyalanır; tarih (bugün gelir), not ve eski muayene bağı kopyalanmaz', () => {
         const { fixture, c } = setup([{ id: 'e-old', status: 'Finalized' }]);
 
         expect(c.form.getRawValue()).toEqual(
-            expect.objectContaining({ clientId: 'client-1', petId: 'pet-1', title: 'Pansuman', description: 'Yara temizliği ve bandaj', notes: '', treatmentDateLocal: '', followUpDate: '', examinationId: '' })
+            expect.objectContaining({ clientId: 'client-1', petId: 'pet-1', title: 'Pansuman', description: 'Yara temizliği ve bandaj', notes: '', treatmentDateLocal: expect.stringMatching('^' + toIstanbulDateTimeLocalInputValue(new Date().toISOString()).slice(0, 10)), followUpDate: '', examinationId: '' })
         );
         expect(c.form.controls.clientId.disabled && c.form.controls.petId.disabled).toBe(true);
         expect(c.form.controls.examinationId.enabled).toBe(true);

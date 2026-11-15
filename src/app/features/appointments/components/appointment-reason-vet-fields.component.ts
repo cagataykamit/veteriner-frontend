@@ -3,6 +3,8 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import type { AppointmentReasonVm } from '@/app/entities/online-booking/models/online-booking.model';
 import { AppointmentReasonsService } from '@/app/entities/online-booking/services/online-booking.service';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { findVeterinarianUserId } from '@/app/entities/visit/data/visit.mapper';
 import type { VeterinarianVm } from '@/app/entities/visit/models/visit-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 
@@ -40,10 +42,13 @@ export class AppointmentReasonVetFieldsComponent {
     readonly vetControl = input.required<FormControl<string | null>>();
     /** Mevcut randevunun nedeni; pasif olsa da seçenek olarak kalır. */
     readonly keepReasonId = input<string | null>(null);
+    /** Yeni randevu: hekim boşsa oturumdaki kullanıcı hekim listesindeyse o seçilir (geliş diyaloğundaki kural). */
+    readonly preselectSelf = input(false);
     readonly durationSuggested = output<number>();
 
     private readonly reasonsService = inject(AppointmentReasonsService);
     private readonly visits = inject(VisitsService);
+    private readonly auth = inject(AuthService);
 
     readonly reasons = signal<AppointmentReasonVm[]>([]);
     readonly vets = signal<VeterinarianVm[]>([]);
@@ -63,8 +68,21 @@ export class AppointmentReasonVetFieldsComponent {
             }
 
             this.reasonsService.list(clinicId).subscribe({ next: (r) => this.reasons.set(r), error: () => this.reasons.set([]) });
-            this.visits.getVeterinarians(clinicId).subscribe({ next: (v) => this.vets.set(v), error: () => this.vets.set([]) });
+            this.visits.getVeterinarians(clinicId).subscribe({ next: (v) => this.onVetsLoaded(v), error: () => this.vets.set([]) });
         });
+    }
+
+    private onVetsLoaded(vets: VeterinarianVm[]): void {
+        this.vets.set(vets);
+        const control = this.vetControl();
+
+        if (this.preselectSelf() && !control.value) {
+            const self = findVeterinarianUserId(vets, this.auth.getUserId());
+
+            if (self) {
+                control.setValue(self);
+            }
+        }
     }
 
     onReasonChange(reasonId: string | null): void {

@@ -33,7 +33,7 @@ import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/
 import { parseExaminationCreateRouteContext, parseTreatmentPrescriptionRouteContext, type TreatmentPrescriptionRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
-import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
+import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import { PRESCRIPTION_DATE_TOO_FAR_PAST_MESSAGE, prescriptionDateNotTooFarPastValidator, prescriptionDateTimeLocalMinAllowed } from '@/app/entities/prescription/utils/prescription-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -256,7 +256,7 @@ export class PrescriptionFormComponent implements OnInit, HasUnsavedChanges {
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
-        prescribedAtLocal: ['', [Validators.required, dateTimeYearRangeValidator(), prescriptionDateNotTooFarPastValidator()]],
+        prescribedAtLocal: [toIstanbulDateTimeLocalInputValue(new Date().toISOString()), [Validators.required, dateTimeYearRangeValidator(), prescriptionDateNotTooFarPastValidator()]],
         followUpDate: ['', dateYearRangeValidator()],
         examinationId: [''],
         treatmentId: [''],

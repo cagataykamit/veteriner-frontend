@@ -113,10 +113,17 @@ export class PetSearchComponent implements ControlValueAccessor {
                 takeUntilDestroyed(this.destroyRef)
             )
             .subscribe((items) => this.suggestions.set(items));
-        // Sahip değişince eski sahibin hayvan önerileri atılır (değer sıfırlamayı form yapar).
+        // Sahip değişince eski sahibin hayvan önerileri atılır (değer sıfırlamayı form yapar); tek hastası varsa o seçilir.
         effect(() => {
-            this.clientId();
-            untracked(() => this.suggestions.set([]));
+            const clientId = this.clientId().trim();
+
+            untracked(() => {
+                this.suggestions.set([]);
+
+                if (clientId && this.requireClient()) {
+                    this.preselectSinglePet(clientId);
+                }
+            });
         });
     }
 
@@ -199,6 +206,29 @@ export class PetSearchComponent implements ControlValueAccessor {
                 return of([] as PetSearchResult[]);
             })
         );
+    }
+
+    /** Tek hastası olan müşteri seçilince hasta önden seçilir (H1); seçim varsa ya da alan kapalıysa dokunulmaz. */
+    private preselectSinglePet(clientId: string): void {
+        const status = this.activeOnly() ? 'Active' : undefined;
+
+        this.pets
+            .getPets({ page: 1, pageSize: 2, clientId, status })
+            .pipe(
+                catchError(() => of(null)),
+                takeUntilDestroyed(this.destroyRef)
+            )
+            .subscribe((r) => {
+                if (!r || r.totalItems !== 1 || this.selectedId || this.disabled() || this.clientId().trim() !== clientId) {
+                    return;
+                }
+
+                const items = r.items.some((p) => (p.clientId ?? '').trim()) ? filterPetsByClientId(r.items, clientId) : r.items;
+
+                if (items.length === 1) {
+                    this.onModelChange({ id: items[0].id, label: petSelectLabel(items[0]) });
+                }
+            });
     }
 
     private resolve(id: string, done: (p: PetSearchResult) => void): void {

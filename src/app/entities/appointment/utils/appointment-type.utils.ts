@@ -8,6 +8,8 @@ export type BackendAppointmentType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export const APPOINTMENT_TYPE_ENUM_MIN = 0;
 export const APPOINTMENT_TYPE_ENUM_MAX = 6;
+/** Yeni randevu formunda önden seçili tür: Muayene. */
+export const APPOINTMENT_TYPE_DEFAULT: BackendAppointmentType = 0;
 
 interface AppointmentTypeEnumDef {
     readonly value: BackendAppointmentType;
