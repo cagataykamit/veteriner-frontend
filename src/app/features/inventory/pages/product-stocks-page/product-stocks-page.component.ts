@@ -31,6 +31,7 @@ import { triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
 import { fetchAllInventoryCsvExportPages$, InventoryCsvExportRowLimitError } from '@/app/features/inventory/utils/inventory-csv-export-pagination.utils';
 import type { Observable } from 'rxjs';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { RowLinkDirective } from '@/app/shared/ui/row-link/row-link.directive';
 
 type StocksListState = {
     search: string;
@@ -48,6 +49,7 @@ const PRODUCT_STOCK_CSV_HEADERS = ['Ürün', 'SKU', 'Kategori', 'Klinik', 'Kulla
     selector: 'app-product-stocks-page',
     standalone: true,
     imports: [
+        RowLinkDirective,
         CommonModule,
         FormsModule,
         RouterLink,
@@ -159,7 +161,7 @@ const PRODUCT_STOCK_CSV_HEADERS = ['Ürün', 'SKU', 'Kategori', 'Klinik', 'Kulla
                                     </tr>
                                 </ng-template>
                                 <ng-template #body let-row>
-                                    <tr>
+                                    <tr [appRowLink]="row.productId ? ['/panel/products', row.productId] : null">
                                         <td class="font-medium max-w-[14rem] break-words">{{ row.productName }}</td>
                                         <td>{{ row.productSkuText }}</td>
                                         <td>{{ row.productCategoryName }}</td>
@@ -192,7 +194,7 @@ const PRODUCT_STOCK_CSV_HEADERS = ['Ürün', 'SKU', 'Kategori', 'Klinik', 'Kulla
 
                         <div class="lg:hidden space-y-3">
                             @for (row of displayedRows(); track row.id) {
-                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
+                                <div [appRowLink]="row.productId ? ['/panel/products', row.productId] : null" class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                                     <div class="text-base font-semibold text-surface-900 dark:text-surface-0 mb-1 break-words">{{ row.productName }}</div>
                                     <div class="text-sm text-muted-color mb-2">SKU: {{ row.productSkuText }}</div>
                                     <div class="text-sm text-muted-color mb-2 break-words">Kategori: {{ row.productCategoryName }}</div>

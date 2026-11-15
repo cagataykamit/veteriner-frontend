@@ -38,6 +38,13 @@ export function formatDateDisplay(value: string | Date | null | undefined, local
     return formatInstantInIstanbul(value, DATE_OPTIONS, locale);
 }
 
+/** Gün adıyla tarih: "Pazartesi, 02.11.2026" (takvim gün başlıkları). Değer yoksa "—". */
+export function formatWeekdayDateDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
+    const date = formatDateDisplay(value, locale);
+
+    return date === '—' ? date : `${formatInstantInIstanbul(value, { weekday: 'long' }, locale)}, ${date}`;
+}
+
 export function formatTimeDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
     return formatInstantInIstanbul(value, TIME_OPTIONS, locale);
 }

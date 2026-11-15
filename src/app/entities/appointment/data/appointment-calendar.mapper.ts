@@ -14,7 +14,7 @@ import type {
 } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { appointmentTypeLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
-import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay, formatWeekdayDateDisplay, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
 
@@ -117,7 +117,7 @@ export function groupCalendarItemsByDay(items: readonly AppointmentCalendarItemV
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([dateKey, dayItems]) => ({
             dateKey,
-            dateLabel: formatUtcIsoAsLocalDateDisplay(dayItems[0]?.scheduledAtUtc ?? null),
+            dateLabel: formatWeekdayDateDisplay(dayItems[0]?.scheduledAtUtc ?? null),
             items: dayItems
         }));
 }

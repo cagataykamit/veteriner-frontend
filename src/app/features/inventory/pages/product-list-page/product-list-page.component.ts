@@ -27,6 +27,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { ConfirmationService } from 'primeng/api';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { RowLinkDirective } from '@/app/shared/ui/row-link/row-link.directive';
 
 type ProductsListState = {
     search: string;
@@ -41,6 +42,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
     selector: 'app-product-list-page',
     standalone: true,
     imports: [
+        RowLinkDirective,
         CommonModule,
         FormsModule,
         RouterLink,
@@ -135,7 +137,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                     </tr>
                                 </ng-template>
                                 <ng-template #body let-row>
-                                    <tr>
+                                    <tr [appRowLink]="['/panel/products', row.id]">
                                         <td class="font-medium">{{ row.name }}</td>
                                         <td>{{ row.sku }}</td>
                                         <td>{{ row.categoryName }}</td>
@@ -174,7 +176,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
 
                         <div class="lg:hidden space-y-3">
                             @for (row of displayedRows(); track row.id) {
-                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
+                                <div [appRowLink]="['/panel/products', row.id]" class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                                     <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
                                         <a [routerLink]="['/panel/products', row.id]" class="text-primary no-underline break-words">{{ row.name }}</a>
                                     </div>

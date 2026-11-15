@@ -22,6 +22,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { CLIENTS_CREATE_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { RowLinkDirective } from '@/app/shared/ui/row-link/row-link.directive';
 
 type ClientsListState = {
     search: string;
@@ -35,6 +36,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
     selector: 'app-clients-list-page',
     standalone: true,
     imports: [
+        RowLinkDirective,
         CommonModule,
         FormsModule,
         RouterLink,
@@ -100,7 +102,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                                     </tr>
                                 </ng-template>
                                 <ng-template #body let-row>
-                                    <tr>
+                                    <tr [appRowLink]="['/panel/clients', row.id]">
                                         <td class="font-medium"><a [routerLink]="['/panel/clients', row.id]" class="text-primary no-underline">{{ row.fullName }}</a></td>
                                         <td>{{ formatClientPhoneForDisplay(row.phone) }}</td>
                                         <td>{{ row.email }}</td>
@@ -122,7 +124,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
 
                         <div class="lg:hidden space-y-3">
                             @for (row of displayedRows(); track row.id) {
-                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
+                                <div [appRowLink]="['/panel/clients', row.id]" class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                                     <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
                                         <a [routerLink]="['/panel/clients', row.id]" class="text-primary no-underline break-words">{{ row.fullName }}</a>
                                     </div>

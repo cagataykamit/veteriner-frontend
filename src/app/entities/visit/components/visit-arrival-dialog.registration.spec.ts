@@ -126,7 +126,7 @@ describe('VisitArrivalDialogComponent (hızlı kayıt entegrasyonu)', () => {
         visits.createVisit.mockReturnValue(throwError(() => new Error('Sunucu hatası.')));
         cmp.onRegistered(registeredPet);
 
-        expect(cmp.submitError()).toBe("Kayıt tamamlandı, ancak geliş kaydı oluşturulamadı: Sunucu hatası. Yeniden denemek için Kaydet'e basın.");
+        expect(cmp.submitError()).toBe("Kayıt tamamlandı, ancak geliş kaydı oluşturulamadı: Sunucu hatası. Tekrar denemek için Kaydet'e basın.");
         expect(cmp.form.controls.pet.value).toEqual(registeredPet);
 
         visits.createVisit.mockReturnValue(of(visitResult));

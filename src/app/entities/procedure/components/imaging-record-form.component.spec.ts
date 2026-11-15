@@ -125,7 +125,7 @@ describe('ImagingRecordFormComponent — hata korumalı kayıt ve yükleme (L6)'
         expect(saved).toEqual(['r1']);
     });
 
-    it('kuyruktaki "Yeniden dene" başarılı olunca hata kalkar ve kayıt tamamlanır', async () => {
+    it('kuyruktaki "Tekrar dene" başarılı olunca hata kalkar ve kayıt tamamlanır', async () => {
         const { c, uploader, fixture } = setup();
         const saved: string[] = [];
 

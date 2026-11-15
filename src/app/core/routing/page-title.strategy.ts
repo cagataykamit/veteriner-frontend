@@ -23,6 +23,8 @@ const PANEL_PAGE_TITLES: ReadonlyArray<readonly [string, string]> = [
     ['e-documents', 'e-Belgeler'],
     ['settings/e-documents', 'e-Belge'],
     ['payments', 'Ödemeler'],
+    ['sales', 'Satışlar'],
+    ['sales/new', 'Hızlı satış'],
     ['products', 'Ürünler'],
     ['stocks', 'Stok durumu'],
     ['stock-movements', 'Stok hareketleri'],

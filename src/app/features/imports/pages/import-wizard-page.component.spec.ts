@@ -233,7 +233,7 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
         expect(text(el)).toContain('Bağlantı sorunu');
 
         imports.getProgress.mockReturnValue(of(progress('Validating', 90)));
-        const retry = Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Yeniden dene'));
+        const retry = Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Tekrar dene'));
 
         retry!.click();
         advance(0);

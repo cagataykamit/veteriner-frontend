@@ -69,7 +69,7 @@ describe('StoredFileUploadComponent — yükleme kuyruğu', () => {
         expect(uploaded.map((f) => f.id)).toEqual(['f1']);
     });
 
-    it('hata alan dosya kuyrukta kalır ve "Yeniden dene" ile tekrar gönderilir', async () => {
+    it('hata alan dosya kuyrukta kalır ve "Tekrar dene" ile tekrar gönderilir', async () => {
         const fixture = create('/api/v1/lab-results/l1');
         const c = fixture.componentInstance;
 
@@ -79,7 +79,7 @@ describe('StoredFileUploadComponent — yükleme kuyruğu', () => {
         expect(await c.uploadPending('/api/v1/lab-results/l1')).toBe(1);
         fixture.detectChanges();
         expect(c.items()[0].status).toBe('failed');
-        expect((fixture.nativeElement as HTMLElement).textContent).toContain('Yeniden dene');
+        expect((fixture.nativeElement as HTMLElement).textContent).toContain('Tekrar dene');
         expect((fixture.nativeElement as HTMLElement).textContent).toContain('kullanılamıyor');
 
         const ok = new Subject<StoredFileUploadEvent>();

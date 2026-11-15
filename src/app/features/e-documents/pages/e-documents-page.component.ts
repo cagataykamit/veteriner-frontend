@@ -176,7 +176,7 @@ type View = 'documents' | 'undocumented';
                                             }
                                             @if (!ro.mutationBlocked()) {
                                                 @if (canIssue && row.status === 'Failed') {
-                                                    <button pButton type="button" size="small" [text]="true" [disabled]="busyId() === row.id" (click)="act(row, 'retry')"><i class="p-button-icon pi pi-replay"></i>Yeniden dene</button>
+                                                    <button pButton type="button" size="small" [text]="true" [disabled]="busyId() === row.id" (click)="act(row, 'retry')"><i class="p-button-icon pi pi-replay"></i>Tekrar dene</button>
                                                     <button pButton type="button" size="small" [text]="true" severity="secondary" (click)="openReason(row, 'discard')">Geçersiz say</button>
                                                 }
                                                 @if (canCancel && row.canCancel) {
@@ -259,7 +259,7 @@ type View = 'documents' | 'undocumented';
                                         }
                                         @if (row.failedDocumentId && canIssue && !ro.mutationBlocked()) {
                                             <button pButton type="button" size="small" [text]="true" [disabled]="busyId() === row.failedDocumentId" (click)="retryFailed(row.failedDocumentId)">
-                                                <i class="p-button-icon pi pi-replay"></i>Yeniden dene
+                                                <i class="p-button-icon pi pi-replay"></i>Tekrar dene
                                             </button>
                                         }
                                     </td>

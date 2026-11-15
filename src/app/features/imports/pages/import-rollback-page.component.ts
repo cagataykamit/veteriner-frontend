@@ -110,7 +110,7 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                     @if (pollError()) {
                         <p-message severity="warn" class="w-full mt-2" role="alert">
                             {{ pollError() }}
-                            <button pButton type="button" size="small" severity="secondary" class="ml-2" (click)="startPolling(b.id)"><i class="p-button-icon pi pi-refresh"></i>Yeniden dene</button>
+                            <button pButton type="button" size="small" severity="secondary" class="ml-2" (click)="startPolling(b.id)"><i class="p-button-icon pi pi-refresh"></i>Tekrar dene</button>
                         </p-message>
                     }
                 } @else if (!screenAvailable()) {

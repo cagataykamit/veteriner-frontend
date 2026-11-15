@@ -296,7 +296,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
         }
     }
 
-    /** Randevu iptali sonrası (sonraki randevu açık işlerdedir) ve Yapılacaklar'da "Yeniden dene"; okumadır, salt okunur kiracıda da çalışır. */
+    /** Randevu iptali sonrası (sonraki randevu açık işlerdedir) ve Yapılacaklar'da "Tekrar dene"; okumadır, salt okunur kiracıda da çalışır. */
     reloadOpenItems(): void {
         if (this.loader.id) {
             this.loadOpenItems(this.loader.id);

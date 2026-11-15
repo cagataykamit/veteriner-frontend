@@ -492,7 +492,7 @@ function panelHttpStatusUserMessage(status: number): string | null {
             return 'İstek zaman aşımına uğradı. Lütfen tekrar deneyin.';
         case 502:
         case 503:
-            return 'Ödeme veya abonelik hizmeti geçici olarak yanıt veremedi. Lütfen kısa süre sonra tekrar deneyin.';
+            return 'Sunucu geçici olarak yanıt veremedi. Lütfen kısa süre sonra tekrar deneyin.';
         case 409:
             return null;
         case 415:

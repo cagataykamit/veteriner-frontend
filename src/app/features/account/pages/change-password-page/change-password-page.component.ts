@@ -156,6 +156,8 @@ export class ChangePasswordPageComponent {
             this.messages.add({
                 severity: 'error',
                 summary: 'Hata',
+                // Hata bildirimi kapatılana kadar kalır; 3 sn içinde okunmadan kaybolmasın (H19).
+                sticky: true,
                 detail: SAME_PASSWORD_MESSAGE
             });
 
@@ -174,6 +176,7 @@ export class ChangePasswordPageComponent {
                     this.messages.add({
                         severity: 'error',
                         summary: 'Hata',
+                        sticky: true,
                         detail: resolveChangePasswordErrorMessage(err)
                     });
                 }

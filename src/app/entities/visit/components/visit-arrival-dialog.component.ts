@@ -314,7 +314,7 @@ export class VisitArrivalDialogComponent {
                 this.submitting.set(false);
                 const message = panelHttpFailureMessage(e, 'Geliş kaydı oluşturulamadı.');
 
-                this.submitError.set(request.petId && request.petId === this.registeredPetId ? `Kayıt tamamlandı, ancak geliş kaydı oluşturulamadı: ${message} Yeniden denemek için Kaydet'e basın.` : message);
+                this.submitError.set(request.petId && request.petId === this.registeredPetId ? `Kayıt tamamlandı, ancak geliş kaydı oluşturulamadı: ${message} Tekrar denemek için Kaydet'e basın.` : message);
             }
         });
     }

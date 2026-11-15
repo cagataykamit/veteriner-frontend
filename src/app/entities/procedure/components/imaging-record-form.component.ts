@@ -27,7 +27,7 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
 
 /**
  * Yeni görüntüleme kaydı (ADR-007; IMAGING_API_CONTRACT.md §4/§5). Sıra (L6): önce kayıt (JSON), sonra dosyalar tek tek yüklenir.
- * Bir dosya yüklenemezse kayıt ve girilen metin korunur, yalnız o dosya "Yeniden dene" ile gönderilir; tekrar "Kaydet" yeni kayıt
+ * Bir dosya yüklenemezse kayıt ve girilen metin korunur, yalnız o dosya "Tekrar dene" ile gönderilir; tekrar "Kaydet" yeni kayıt
  * açmaz. Muayeneden açılınca müşteri, hasta ve muayene kilitlidir; kesinleşmiş muayeneye bağlamak yeni (ek) kayıt sayılır.
  */
 @Component({
@@ -249,7 +249,7 @@ export class ImagingRecordFormComponent implements OnInit, HasUnsavedChanges {
         }
     }
 
-    /** Kuyruktaki "Yeniden dene" ile gönderim formdan geçmez; son dosya da tamamlanınca hata kalkar ve kayıt tamamlanır. */
+    /** Kuyruktaki "Tekrar dene" ile gönderim formdan geçmez; son dosya da tamamlanınca hata kalkar ve kayıt tamamlanır. */
     onFileUploaded(): void {
         const id = this.recordId();
         const uploader = this.uploader();

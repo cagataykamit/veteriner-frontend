@@ -18,6 +18,9 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick-breed-dialog.component';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { BREEDS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 /**
  * Seçili müşteri için tam sayfa ayrılmadan hayvan oluşturma (`mapPetUpsertFormToCreateRequest` ile aynı write hattı).
@@ -80,7 +83,7 @@ import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick
                         @if (apiFieldErrors().breedId) {
                             <small class="text-danger">{{ apiFieldErrors().breedId }}</small>
                         }
-                        @if (hasSpeciesForQuickBreed()) {
+                        @if (hasSpeciesForQuickBreed() && canShowQuickBreedButton()) {
                             <div class="mt-2">
                                 <button pButton type="button" [text]="true" class="p-0" (click)="quickBreedOpen.set(true)"><i class="p-button-icon pi pi-plus"></i>Bu tür için yeni ırk</button>
                             </div>
@@ -124,6 +127,10 @@ export class QuickPetDialogComponent {
     private readonly speciesService = inject(SpeciesService);
     private readonly breedsService = inject(BreedsService);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly auth = inject(AuthService);
+    private readonly ro = inject(TenantReadOnlyContextService);
+    /** Irk oluşturma yetkisi yoksa (ya da salt okunurda) "Bu tür için yeni ırk" görünmez; basıp hata almasın (H19). */
+    readonly canShowQuickBreedButton = (): boolean => this.auth.hasOperationClaim(BREEDS_CREATE_CLAIM) && !this.ro.mutationBlocked();
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);

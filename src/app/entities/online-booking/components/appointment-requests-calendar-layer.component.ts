@@ -21,7 +21,7 @@ export const CALENDAR_REQUEST_LAYER_STORAGE_KEY = 'vetinity.calendar.showRequest
     template: `
         <section class="mb-4" aria-label="Bekleyen randevu talepleri" data-testid="calendar-request-layer">
             <div class="flex flex-wrap items-center gap-2">
-                <button pButton type="button" size="small" [severity]="visible() ? undefined : 'secondary'" [outlined]="!visible()" (click)="toggle()" [attr.aria-pressed]="visible()">
+                <button pButton type="button" size="small" [severity]="visible() && items().length > 0 ? undefined : 'secondary'" [outlined]="!visible() || items().length === 0" (click)="toggle()" [attr.aria-pressed]="visible()">
                     <i class="pi" [class.pi-eye]="visible()" [class.pi-eye-slash]="!visible()"></i>Bekleyen talepler ({{ items().length }})
                 </button>
                 @if (visible() && items().length > 0) {
