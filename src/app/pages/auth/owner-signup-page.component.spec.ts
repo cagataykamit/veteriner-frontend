@@ -13,6 +13,8 @@ import { PublicPlanCatalogService } from '@/app/features/public/services/public-
 import { PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import { DiscountCodesService } from '@/app/entities/sales-partner/services/discount-codes.service';
 import { PENDING_DISCOUNT_CODE_KEY } from '@/app/entities/sales-partner/utils/discount-code.utils';
+import { TrialSignupService } from '@/app/features/public/services/trial-signup.service';
+import { TRIAL_SIGNUP_CODE_MESSAGES } from '@/app/features/public/utils/trial-signup.utils';
 import { OwnerSignupPageComponent } from './owner-signup-page.component';
 
 const VERSIONS: LegalDocumentVersionDto[] = [
@@ -53,13 +55,18 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
         legal.refreshCurrentVersions.mockReturnValue(of(VERSIONS));
 
         sessionStorage.removeItem(PENDING_DISCOUNT_CODE_KEY);
+        const trialSignup = {
+            settings: vi.fn().mockReturnValue(of({ taxIdentityNumberRequired: true, turnstileSiteKey: null })),
+            requestEmailCode: vi.fn(),
+            verifyEmailCode: vi.fn()
+        };
         const discountCodes = {
             validate: vi.fn().mockName('DiscountCodesService.validate')
         };
 
         await TestBed.configureTestingModule({
             imports: [OwnerSignupPageComponent],
-            providers: [provideRouter([]), { provide: PublicOwnerSignupService, useValue: signup }, { provide: LegalAcceptanceService, useValue: legal }, { provide: DiscountCodesService, useValue: discountCodes }, { provide: PublicPlanCatalogService, useValue: { state: signal({ status: 'error' }), ensureLoaded: vi.fn() } }]
+            providers: [provideRouter([]), { provide: PublicOwnerSignupService, useValue: signup }, { provide: LegalAcceptanceService, useValue: legal }, { provide: DiscountCodesService, useValue: discountCodes }, { provide: TrialSignupService, useValue: trialSignup }, { provide: PublicPlanCatalogService, useValue: { state: signal({ status: 'error' }), ensureLoaded: vi.fn() } }]
         }).compileComponents();
 
         fixture = TestBed.createComponent(OwnerSignupPageComponent);
@@ -69,7 +76,8 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
         cmp.tenantName = 'Pati Kurum';
         cmp.clinicName = 'Pati Klinik';
         cmp.clinicCity = 'Ankara';
-        cmp.email = 'sahip@example.com';
+        cmp.onEmailVerified({ email: 'sahip@example.com', token: 'jeton' });
+        cmp.taxIdentityNumber = '1234567890';
         cmp.password = 'Abc12345!';
         cmp.selectPlan(PRICING_PLAN_DEFS[0]);
     });
@@ -103,7 +111,47 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
 
         expect(body.acceptedLegalDocuments).toEqual(VERSIONS);
         expect(body.discountCode).toBeUndefined();
+        expect(body.emailVerificationToken).toBe('jeton');
+        expect(body.taxIdentityNumber).toBe('1234567890');
+        expect(body.email).toBe('sahip@example.com');
         expect(cmp.successResult()).toEqual(RESULT);
+    });
+
+    describe('tek deneme kuralı (TRIAL-001)', () => {
+        it('vergi numarası alanı ve not gösterilir', () => {
+            expect(host().querySelector('[data-testid="signup-tax-identity"]')).not.toBeNull();
+            expect(host().textContent).toContain('Her işletme bir kez ücretsiz deneyebilir; ücretli plana geçerseniz faturanız bu bilgiyle kesilir. Şahıs işletmeleri TC kimlik numarası girebilir.');
+        });
+
+        it('e-posta doğrulanmadan istek atılmaz', () => {
+            cmp.onEmailVerified(null);
+            cmp.legalConsent.set(true);
+
+            cmp.submit();
+
+            expect(signup.signup).not.toHaveBeenCalled();
+            expect(cmp.formError()).toBe(TRIAL_SIGNUP_CODE_MESSAGES['SignupEmail.VerificationRequired']);
+        });
+
+        it('zorunluyken vergi numarası boş ya da biçimsizse istek atılmaz', () => {
+            cmp.legalConsent.set(true);
+            cmp.onTaxIdentityChange('12a34');
+
+            cmp.submit();
+
+            expect(signup.signup).not.toHaveBeenCalled();
+            expect(cmp.taxIdentityError()).toBe(TRIAL_SIGNUP_CODE_MESSAGES['SignupIdentity.Validation.TaxIdentityRequired']);
+        });
+
+        it('aynı vergi numarasıyla ikinci deneme: sade mesaj alanın altında gösterilir', () => {
+            signup.signup.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'SignupIdentity.DuplicateTaxIdentity' } })));
+            cmp.legalConsent.set(true);
+
+            cmp.submit();
+
+            expect(cmp.formError()).toBe('Bu vergi numarasıyla daha önce deneme hesabı açılmış.');
+            expect(cmp.taxIdentityError()).toBe('Bu vergi numarasıyla daha önce deneme hesabı açılmış.');
+        });
     });
 
     describe('örnek klinik seçimi (ADR-002, TRIAL-002)', () => {

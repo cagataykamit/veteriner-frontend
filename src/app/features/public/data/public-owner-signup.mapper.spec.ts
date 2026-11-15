@@ -10,7 +10,9 @@ const FORM: PublicOwnerSignupFormValue = {
     password: 'Abc12345!',
     acceptedLegalDocuments: [{ documentType: 'Terms', version: '0.1' }],
     discountCode: '',
-    startMode: 'example'
+    startMode: 'example',
+    emailVerificationToken: 'jeton',
+    taxIdentityNumber: ' 1234567890 '
 };
 
 describe('public-owner-signup.mapper (TRIAL-002)', () => {
@@ -23,6 +25,8 @@ describe('public-owner-signup.mapper (TRIAL-002)', () => {
         expect(body.password).toBe('Abc12345!');
         expect(body.acceptedLegalDocuments).toEqual(FORM.acceptedLegalDocuments);
         expect('discountCode' in body).toBe(false);
+        expect(body.emailVerificationToken).toBe('jeton');
+        expect(body.taxIdentityNumber).toBe('1234567890');
     });
 
     it('boş klinik seçiminde bayrak false; ortak kodu varsa gövdeye eklenir', () => {
@@ -30,5 +34,6 @@ describe('public-owner-signup.mapper (TRIAL-002)', () => {
 
         expect(body.startWithExampleClinic).toBe(false);
         expect(body.discountCode).toBe('ISIK10');
+        expect('taxIdentityNumber' in mapPublicOwnerSignupFormToRequest({ ...FORM, taxIdentityNumber: ' ' })).toBe(false);
     });
 });
