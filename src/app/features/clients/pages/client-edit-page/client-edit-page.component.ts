@@ -24,6 +24,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-format.directive';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-client-edit-page',
@@ -106,7 +107,7 @@ import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-form
         }
     `
 })
-export class ClientEditPageComponent implements OnInit {
+export class ClientEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
 
     private readonly fb = inject(FormBuilder);
@@ -156,6 +157,10 @@ export class ClientEditPageComponent implements OnInit {
 
         this.currentId.set(id);
         this.reload();
+    }
+
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty || this.invoicingForm.dirty;
     }
 
     fieldMessage(field: ClientCreateFormFieldKey): string | null {
@@ -242,6 +247,8 @@ export class ClientEditPageComponent implements OnInit {
         this.clientsService.updateClient(this.currentId()!, payload).subscribe({
             next: () => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
+                this.invoicingForm.markAsPristine();
                 void this.router.navigate(['/panel/clients', this.currentId()!], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

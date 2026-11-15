@@ -32,6 +32,7 @@ import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice
 import { DATE_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-pet-new-page',
@@ -242,7 +243,7 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
         <app-quick-breed-dialog [(visible)]="quickBreedOpen" [speciesId]="quickBreedSpeciesId()" [speciesLabel]="quickBreedSpeciesLabelForDialog()" (breedCreated)="onQuickBreedCreated($event)" />
     `
 })
-export class PetNewPageComponent implements OnInit {
+export class PetNewPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly dateInputMin = DATE_INPUT_MIN;
 
@@ -332,6 +333,10 @@ export class PetNewPageComponent implements OnInit {
         }
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     goList(): void {
         void this.router.navigate(['/panel/pets']);
     }
@@ -398,6 +403,7 @@ export class PetNewPageComponent implements OnInit {
         this.petsService.createPet(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/pets', id], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

@@ -320,6 +320,7 @@ export class LabResultFormComponent implements OnInit, HasUnsavedChanges {
         this.labResultsService.createLabResult(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 this.saved.emit(id);
             },
             error: (e: unknown) => {

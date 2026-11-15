@@ -23,6 +23,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-product-create-page',
@@ -130,7 +131,7 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
         </div>
     `
 })
-export class ProductCreatePageComponent implements OnInit {
+export class ProductCreatePageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     readonly categoriesRoute = PRODUCT_CATEGORIES_ROUTE;
 
@@ -176,6 +177,10 @@ export class ProductCreatePageComponent implements OnInit {
         });
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     goList(): void {
         void this.router.navigateByUrl('/panel/products');
     }
@@ -212,6 +217,7 @@ export class ProductCreatePageComponent implements OnInit {
         this.productService.createFromFormValue(value).subscribe({
             next: (id) => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
 
                 if (id?.trim()) {
                     void this.router.navigate(['/panel/products', id.trim()], { queryParams: { saved: '1' } });

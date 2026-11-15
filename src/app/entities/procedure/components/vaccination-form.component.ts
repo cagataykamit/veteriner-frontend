@@ -607,6 +607,7 @@ export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
                     writeLastVaccineProductId(payload.productId);
                 }
 
+                this.form.markAsPristine();
                 this.saved.emit({ id, stockNotice: stockResult ? administrationSavedNotice(stockResult, 'Aşı') : undefined });
             },
             error: (e: unknown) => {

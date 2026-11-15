@@ -13,6 +13,7 @@ import { AppointmentsCalendarPageComponent } from '@/app/features/appointments/p
 import { AppointmentNewPageComponent } from '@/app/features/appointments/pages/appointment-new-page/appointment-new-page.component';
 import { AppointmentsListPageComponent } from '@/app/features/appointments/pages/appointments-list-page/appointments-list-page.component';
 import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
+import { unsavedChangesGuard } from '@/app/shared/ui/unsaved-changes/unsaved-changes.guard';
 
 export default [
     {
@@ -64,7 +65,8 @@ export default [
 
             return auth.hasOperationClaim(APPOINTMENTS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: AppointmentNewPageComponent
+        component: AppointmentNewPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id/edit',
@@ -74,7 +76,8 @@ export default [
 
             return auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: AppointmentEditPageComponent
+        component: AppointmentEditPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id',

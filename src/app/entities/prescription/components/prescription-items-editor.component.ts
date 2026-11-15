@@ -134,14 +134,17 @@ export class PrescriptionItemsEditorComponent implements OnInit {
         });
     }
 
+    // Satır ekleme/silme dizi değerini değiştirir ama Angular kirli işaretlemez; kaydedilmemiş değişiklik sorusu (O2) bunu görmeli.
     addRow(): void {
         if (this.items().length < this.max) {
             this.items().push(createPrescriptionItemGroup());
+            this.items().markAsDirty();
         }
     }
 
     removeRow(index: number): void {
         this.items().removeAt(index);
+        this.items().markAsDirty();
     }
 
     /** Katalogdaki aktif ürünler; satır eski/pasif bir ürüne bağlıysa o ürün satırın kendi adıyla seçili kalır. */

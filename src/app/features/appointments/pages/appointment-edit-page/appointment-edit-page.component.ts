@@ -33,6 +33,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments/components/appointment-reason-vet-fields.component';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-appointment-edit-page',
@@ -182,7 +183,7 @@ import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments
         }
     `
 })
-export class AppointmentEditPageComponent implements OnInit {
+export class AppointmentEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly dateInputMin = DATE_INPUT_MIN;
     protected readonly dateInputMax = DATE_INPUT_MAX;
@@ -308,6 +309,10 @@ export class AppointmentEditPageComponent implements OnInit {
         this.reload();
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     reload(): void {
         this.loading.set(true);
         this.loadError.set(null);
@@ -417,6 +422,7 @@ export class AppointmentEditPageComponent implements OnInit {
         this.appointmentsService.updateAppointment(this.appointmentId, payload).subscribe({
             next: () => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/appointments', this.appointmentId], {
                     queryParams: {
                         saved: '1',

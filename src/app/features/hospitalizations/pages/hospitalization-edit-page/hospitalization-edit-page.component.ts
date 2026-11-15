@@ -53,6 +53,7 @@ import {
     plannedDischargeNotBeforeAdmissionValidator
 } from '@/app/entities/hospitalization/utils/hospitalization-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-hospitalization-edit-page',
@@ -246,7 +247,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         }
     `
 })
-export class HospitalizationEditPageComponent implements OnInit {
+export class HospitalizationEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
     protected readonly hospitalizationDateTooFarPastMessage = HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE;
@@ -412,6 +413,10 @@ export class HospitalizationEditPageComponent implements OnInit {
         this.reload();
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     examinationSelectDisabled(): boolean {
         return this.examinationFinalized() || !trimClientIdControlValue(this.form.controls.petId.value);
     }
@@ -462,6 +467,8 @@ export class HospitalizationEditPageComponent implements OnInit {
                 // Kaydın hastası ve kliniği değişmez (ADR-043 AK-10); muayene bağı aynı hasta içinde değişebilir.
                 this.form.controls.clientId.disable({ emitEvent: false });
                 this.form.controls.petId.disable({ emitEvent: false });
+                // Çakışmada "Yazdıklarımı atıp güncel kaydı yükle" de buradan geçer: form sunucu kaydına döner.
+                this.form.markAsPristine();
 
                 this.loading.set(false);
             },
@@ -535,6 +542,7 @@ export class HospitalizationEditPageComponent implements OnInit {
         this.hospitalizationsService.updateHospitalization(this.hospitalizationId, payload).subscribe({
             next: () => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/hospitalizations', this.hospitalizationId], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

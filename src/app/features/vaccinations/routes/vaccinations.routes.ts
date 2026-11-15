@@ -12,6 +12,7 @@ import { VaccinationNewPageComponent } from '@/app/features/vaccinations/pages/v
 import { VaccinationsListPageComponent } from '@/app/features/vaccinations/pages/vaccinations-list-page/vaccinations-list-page.component';
 import { canOpenVaccinationEdit } from '@/app/entities/vaccination/utils/vaccination-access.utils';
 import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
+import { unsavedChangesGuard } from '@/app/shared/ui/unsaved-changes/unsaved-changes.guard';
 
 export default [
     {
@@ -34,7 +35,8 @@ export default [
                 ? true
                 : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: VaccinationNewPageComponent
+        component: VaccinationNewPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id/edit',
@@ -44,7 +46,8 @@ export default [
 
             return canOpenVaccinationEdit((c) => auth.hasOperationClaim(c)) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: VaccinationEditPageComponent
+        component: VaccinationEditPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id',

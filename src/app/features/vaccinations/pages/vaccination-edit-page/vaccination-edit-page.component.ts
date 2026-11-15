@@ -41,6 +41,7 @@ import {
     vaccinationStatusDateFieldsAfterTransition
 } from '@/app/entities/vaccination/utils/vaccination-upsert-date-submit.utils';
 import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-vaccination-edit-page',
@@ -222,7 +223,7 @@ import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTime
         }
     `
 })
-export class VaccinationEditPageComponent implements OnInit {
+export class VaccinationEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly datetimeLocalInputMin = DATETIME_LOCAL_INPUT_MIN;
 
@@ -364,6 +365,10 @@ export class VaccinationEditPageComponent implements OnInit {
     /** Dolu ise aşı stoktan düşen uygulamaya bağlıdır; kilitli alanlar pasif. */
     readonly linkedAdministrationId = signal<string | null>(null);
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     reload(): void {
         this.loading.set(true);
         this.loadError.set(null);
@@ -483,6 +488,7 @@ export class VaccinationEditPageComponent implements OnInit {
         this.vaccinationsService.updateVaccination(this.vaccinationId, payload).subscribe({
             next: () => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/vaccinations', this.vaccinationId], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

@@ -18,6 +18,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-species-form-page',
@@ -105,7 +106,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         }
     `
 })
-export class SpeciesFormPageComponent implements OnInit {
+export class SpeciesFormPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     readonly speciesRoute = SPECIES_ROUTE;
     private readonly fb = inject(FormBuilder);
@@ -147,6 +148,10 @@ export class SpeciesFormPageComponent implements OnInit {
         this.currentId.set(id);
         this.showSavedBanner.set(this.route.snapshot.queryParamMap.get('saved') === '1');
         this.reloadSpeciesRecord();
+    }
+
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
     }
 
     reloadSpeciesRecord(): void {
@@ -211,6 +216,7 @@ export class SpeciesFormPageComponent implements OnInit {
             this.speciesService.updateSpecies(this.currentId()!, payload).subscribe({
                 next: () => {
                     this.submitting.set(false);
+                    this.form.markAsPristine();
                     void this.router.navigate([SPECIES_ROUTE]);
                 },
                 error: (e: unknown) => this.onSubmitError(e)
@@ -222,6 +228,7 @@ export class SpeciesFormPageComponent implements OnInit {
         this.speciesService.createSpecies(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate([SPECIES_ROUTE, id, 'edit'], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => this.onSubmitError(e)

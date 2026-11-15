@@ -37,6 +37,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { DATE_INPUT_MIN, dateYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { toIstanbulDateTimeInputParts, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 function requiredTrimmed(c: AbstractControl): ValidationErrors | null {
     return typeof c.value === 'string' && c.value.trim() ? null : { required: true };
@@ -94,7 +95,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './examination-workspace-page.component.html'
 })
-export class ExaminationWorkspacePageComponent implements OnInit {
+export class ExaminationWorkspacePageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly dateInputMin = DATE_INPUT_MIN;
 
@@ -218,6 +219,10 @@ export class ExaminationWorkspacePageComponent implements OnInit {
         }
 
         this.initCreateMode();
+    }
+
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty || this.selectionForm.dirty;
     }
 
     saveDisabled(): boolean {
@@ -385,6 +390,8 @@ export class ExaminationWorkspacePageComponent implements OnInit {
      * `submitting` bilerek açık bırakılır: gezinme bitene kadar ikinci gönderim (eski `rowVersion` ile 409) engellenir.
      */
     private goToSavedDetail(id: string): void {
+        this.form.markAsPristine();
+        this.selectionForm.markAsPristine();
         void this.router.navigate(['/panel/examinations', id], { queryParams: { saved: '1' } });
     }
 

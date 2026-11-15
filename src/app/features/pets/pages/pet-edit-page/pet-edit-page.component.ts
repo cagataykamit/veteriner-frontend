@@ -33,6 +33,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { DATE_INPUT_MIN } from '@/app/shared/utils/date-input-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-pet-edit-page',
@@ -237,7 +238,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         }
     `
 })
-export class PetEditPageComponent implements OnInit {
+export class PetEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly dateInputMin = DATE_INPUT_MIN;
 
@@ -347,6 +348,10 @@ export class PetEditPageComponent implements OnInit {
         this.loadPetColors();
         this.reload();
         this.syncBreedIdControlDisabledState();
+    }
+
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
     }
 
     reload(): void {
@@ -464,6 +469,7 @@ export class PetEditPageComponent implements OnInit {
         this.petsService.updatePet(this.petId, payload).subscribe({
             next: () => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/pets', this.petId], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

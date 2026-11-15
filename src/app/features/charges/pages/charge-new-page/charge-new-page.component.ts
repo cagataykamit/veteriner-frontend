@@ -26,6 +26,7 @@ import { formatUtcIsoAsLocalDateTimeDisplay, formatUtcIsoAsLocalTimeDisplay, toI
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-charge-new-page',
@@ -139,7 +140,7 @@ import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focu
         </div>
     `
 })
-export class ChargeNewPageComponent implements OnInit {
+export class ChargeNewPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly descriptionMaxLength = CHARGE_DESCRIPTION_MAX_LENGTH;
     protected readonly quantityMax = CHARGE_QUANTITY_MAX;
@@ -307,6 +308,10 @@ export class ChargeNewPageComponent implements OnInit {
         this.form.controls.examinationId.setValue(examinationId, { emitEvent: false });
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     goList(): void {
         const clientId = trimClientIdControlValue(this.form.controls.clientId.value);
 
@@ -350,6 +355,8 @@ export class ChargeNewPageComponent implements OnInit {
                 next: (r) => {
                     // Başarıda düğme kilitli kalır (sayfadan çıkılır); aynı requestId ile tekrar kayıt zaten oluşmaz.
                     const { id: chargeId, clientId, visitId, examinationId } = r.charge;
+
+                    this.form.markAsPristine();
 
                     if (thenCollectPayment) {
                         void this.router.navigate(['/panel/payments/new'], {

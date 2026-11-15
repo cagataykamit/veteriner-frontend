@@ -40,6 +40,7 @@ import { BarcodeScanButtonComponent } from '@/app/entities/inventory/components/
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 type BatchState = { status: 'loading' } | { status: 'ready'; info: ProductStockBatchesVm } | { status: 'error'; message: string };
 
@@ -274,7 +275,7 @@ function numberFromInput(event: Event): number | null {
         }
     `
 })
-export class SaleNewPageComponent {
+export class SaleNewPageComponent implements HasUnsavedChanges {
     readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
     private readonly salesService = inject(SalesService);
@@ -395,6 +396,11 @@ export class SaleNewPageComponent {
                 this.activeIndex.set(0);
                 this.searching.set(false);
             });
+    }
+
+    /** Sepet form değil, sinyallerde durur; tamamlanan satış (`done`) kaydedilmiştir. */
+    hasUnsavedChanges(): boolean {
+        return !this.done() && (this.lines().length > 0 || !!this.clientId() || !!this.notes().trim());
     }
 
     protected onTermInput(event: Event): void {

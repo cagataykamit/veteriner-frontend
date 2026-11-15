@@ -27,6 +27,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { EMPTY, map, switchMap } from 'rxjs';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-product-edit-page',
@@ -142,7 +143,7 @@ import { EMPTY, map, switchMap } from 'rxjs';
         }
     `
 })
-export class ProductEditPageComponent implements OnInit {
+export class ProductEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     readonly categoriesRoute = PRODUCT_CATEGORIES_ROUTE;
 
@@ -224,6 +225,10 @@ export class ProductEditPageComponent implements OnInit {
             });
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     reload(): void {
         const id = this.route.snapshot.paramMap.get('id')?.trim() ?? this.productId();
 
@@ -297,6 +302,7 @@ export class ProductEditPageComponent implements OnInit {
         this.productService.updateFromFormValue(id, value).subscribe({
             next: () => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/products', id], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

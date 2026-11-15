@@ -11,6 +11,7 @@ import { HospitalizationEditPageComponent } from '@/app/features/hospitalization
 import { HospitalizationNewPageComponent } from '@/app/features/hospitalizations/pages/hospitalization-new-page/hospitalization-new-page.component';
 import { HospitalizationsListPageComponent } from '@/app/features/hospitalizations/pages/hospitalizations-list-page/hospitalizations-list-page.component';
 import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
+import { unsavedChangesGuard } from '@/app/shared/ui/unsaved-changes/unsaved-changes.guard';
 
 export default [
     {
@@ -31,7 +32,8 @@ export default [
 
             return auth.hasOperationClaim(HOSPITALIZATIONS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: HospitalizationNewPageComponent
+        component: HospitalizationNewPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id/edit',
@@ -41,7 +43,8 @@ export default [
 
             return auth.hasOperationClaim(HOSPITALIZATIONS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: HospitalizationEditPageComponent
+        component: HospitalizationEditPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id',

@@ -23,6 +23,7 @@ import { goodsReceiptTotalCost } from '@/app/features/inventory/utils/goods-rece
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 type SelectOption = { label: string; value: string };
 
@@ -266,7 +267,7 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
         </div>
     `
 })
-export class GoodsReceiptPageComponent implements OnInit {
+export class GoodsReceiptPageComponent implements OnInit, HasUnsavedChanges {
     private readonly fb = inject(FormBuilder);
     private readonly route = inject(ActivatedRoute);
     private readonly auth = inject(AuthService);
@@ -328,6 +329,11 @@ export class GoodsReceiptPageComponent implements OnInit {
         }
     }
 
+    /** Satır ekleme/silme ve barkodla gelen ürün programla yazılır; onlar da kirli işaretlenir. */
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     onProductSearch(event: AutoCompleteCompleteEvent): void {
         const term = event.query.trim();
 
@@ -360,6 +366,7 @@ export class GoodsReceiptPageComponent implements OnInit {
                 }
 
                 line.patchValue({ product: toProductPick(p) });
+                line.markAsDirty();
                 const index = this.lines.controls.indexOf(line);
 
                 setTimeout(() => document.querySelector<HTMLInputElement>(`[data-testid="gr-row-${index}"] input[formcontrolname="quantity"]`)?.focus());
@@ -376,6 +383,7 @@ export class GoodsReceiptPageComponent implements OnInit {
         const line = createGoodsReceiptLineGroup(this.fb);
 
         this.lines.push(line);
+        this.lines.markAsDirty();
 
         return line;
     }
@@ -383,6 +391,7 @@ export class GoodsReceiptPageComponent implements OnInit {
     removeLine(index: number): void {
         if (this.lines.length > 1) {
             this.lines.removeAt(index);
+            this.lines.markAsDirty();
             this.lineErrors.set({});
         }
     }
@@ -458,6 +467,7 @@ export class GoodsReceiptPageComponent implements OnInit {
         this.goodsReceipts.create(mapGoodsReceiptFormToRequest(this.form, this.requestId)).subscribe({
             next: (r) => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 this.result.set(r);
             },
             error: (e: unknown) => {

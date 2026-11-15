@@ -19,6 +19,7 @@ import { ClinicSwitcherRefreshService } from '@/app/core/tenant/clinic-switcher-
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppPlanUpgradeNoticeComponent } from '@/app/entities/subscription/components/app-plan-upgrade-notice.component';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-clinic-create-page',
@@ -124,7 +125,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
         }
     `
 })
-export class ClinicCreatePageComponent {
+export class ClinicCreatePageComponent implements HasUnsavedChanges {
     private readonly clinicsApi = inject(ClinicsService);
     private readonly router = inject(Router);
     private readonly messages = inject(MessageService);
@@ -163,6 +164,10 @@ export class ClinicCreatePageComponent {
             this.form.enable({ emitEvent: false });
         }
     });
+
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
 
     onClinicPhoneBlur(): void {
         const c = this.form.controls.phone;
@@ -203,6 +208,7 @@ export class ClinicCreatePageComponent {
                     summary: 'Tamam',
                     detail: createdId ? 'Klinik oluşturuldu.' : 'Klinik oluşturuldu. Listeden açabilirsiniz.'
                 });
+                this.form.markAsPristine();
 
                 if (createdId) {
                     void this.router.navigate(['/panel/settings/clinics', createdId]);

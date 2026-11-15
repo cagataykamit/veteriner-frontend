@@ -44,6 +44,7 @@ import { FormsModule } from '@angular/forms';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 /** Açık tutar bu arada değişti: güncel bakiye yeniden okunur, aynı `requestId` ile tekrar denemek güvenlidir. */
 const STALE_BALANCE_CODES = new Set(['PaymentAllocations.ExceedsOutstanding', 'Payments.ConcurrencyConflict']);
@@ -252,7 +253,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
         </div>
     `
 })
-export class PaymentNewPageComponent implements OnInit {
+export class PaymentNewPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly paymentDateTooFarPastMessage = PAYMENT_DATE_TOO_FAR_PAST_MESSAGE;
 
@@ -295,6 +296,8 @@ export class PaymentNewPageComponent implements OnInit {
     /** Aktif kliniğin açık ücretleri (başka klinik ücretine tahsis edilemez). */
     readonly openCharges = signal<ClientOpenChargeVm[]>([]);
     private readonly amounts = signal<Record<string, number | null>>({});
+    /** Tutar satırları, alınan tutar ve avans seçimi formda değil; kullanıcı değiştirdiyse kaydedilmemiş sayılır (bağlamdan dolan tutar sayılmaz). */
+    private allocationEdited = false;
 
     readonly allocations = computed(() => buildAllocations(this.openCharges(), this.amounts()));
     readonly total = computed(() => allocationTotal(this.allocations()));
@@ -374,6 +377,10 @@ export class PaymentNewPageComponent implements OnInit {
         this.applyRouteContext();
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty || this.allocationEdited;
+    }
+
     goList(): void {
         void this.router.navigate(['/panel/payments']);
     }
@@ -383,14 +390,17 @@ export class PaymentNewPageComponent implements OnInit {
     }
 
     onAmountInput(row: ClientOpenChargeVm, raw: string): void {
+        this.allocationEdited = true;
         this.amounts.update((a) => ({ ...a, [row.chargeId]: parseDecimalFormInput(raw) }));
     }
 
     fillAllOutstanding(): void {
+        this.allocationEdited = true;
         this.amounts.set(Object.fromEntries(this.openCharges().map((c) => [c.chargeId, c.outstandingAmount])));
     }
 
     fillOutstanding(row: ClientOpenChargeVm): void {
+        this.allocationEdited = true;
         this.amounts.update((a) => ({ ...a, [row.chargeId]: row.outstandingAmount }));
     }
 
@@ -399,10 +409,12 @@ export class PaymentNewPageComponent implements OnInit {
     }
 
     onReceivedInput(raw: string): void {
+        this.allocationEdited = true;
         this.receivedInput.set(parseDecimalFormInput(raw));
     }
 
     setPrepayment(on: boolean): void {
+        this.allocationEdited = true;
         this.prepayment.set(on);
         this.receivedInput.set(null);
         this.submitError.set(null);
@@ -422,6 +434,7 @@ export class PaymentNewPageComponent implements OnInit {
         this.clientCreditsService.applyCredit(clientId, this.creditRequestId, this.allocations()).subscribe({
             next: () => {
                 // Başarıda düğme kilitli kalır (sayfadan çıkılır); aynı requestId ile tekrar mahsup zaten yazılmaz.
+                this.markSaved();
                 void this.router.navigate(['/panel/clients', clientId], { queryParams: { creditApplied: '1' } });
             },
             error: (e: unknown) => {
@@ -506,6 +519,8 @@ export class PaymentNewPageComponent implements OnInit {
         this.paymentsService.createPayment(payload).subscribe({
             next: ({ id }) => {
                 // Başarıda düğme kilitli kalır (sayfadan çıkılır); aynı requestId ile tekrar kayıt zaten oluşmaz.
+                this.markSaved();
+
                 if (!this.eDocumentAvailable() || !this.issueEDocument()) {
                     void this.router.navigate(['/panel/payments', id], { queryParams: { saved: '1' } });
 
@@ -535,6 +550,11 @@ export class PaymentNewPageComponent implements OnInit {
                 this.submitError.set(e instanceof Error ? e.message : 'Kayıt oluşturulamadı.');
             }
         });
+    }
+
+    private markSaved(): void {
+        this.form.markAsPristine();
+        this.allocationEdited = false;
     }
 
     /** Entegratör bağlıysa ve belge kesme izni varsa seçenek görünür; varsayılan klinik ayarından. Hata olursa seçenek gizli kalır. */

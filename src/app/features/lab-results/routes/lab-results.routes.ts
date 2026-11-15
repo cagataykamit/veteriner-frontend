@@ -11,6 +11,7 @@ import { LabResultEditPageComponent } from '@/app/features/lab-results/pages/lab
 import { LabResultNewPageComponent } from '@/app/features/lab-results/pages/lab-result-new-page/lab-result-new-page.component';
 import { LabResultsListPageComponent } from '@/app/features/lab-results/pages/lab-results-list-page/lab-results-list-page.component';
 import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
+import { unsavedChangesGuard } from '@/app/shared/ui/unsaved-changes/unsaved-changes.guard';
 
 export default [
     {
@@ -31,7 +32,8 @@ export default [
 
             return auth.hasOperationClaim(LAB_RESULTS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: LabResultNewPageComponent
+        component: LabResultNewPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id/edit',
@@ -41,7 +43,8 @@ export default [
 
             return auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: LabResultEditPageComponent
+        component: LabResultEditPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id',

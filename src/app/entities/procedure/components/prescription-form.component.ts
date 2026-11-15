@@ -466,6 +466,7 @@ export class PrescriptionFormComponent implements OnInit, HasUnsavedChanges {
         this.prescriptionsService.createPrescription(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 this.saved.emit(id);
             },
             error: (e: unknown) => {

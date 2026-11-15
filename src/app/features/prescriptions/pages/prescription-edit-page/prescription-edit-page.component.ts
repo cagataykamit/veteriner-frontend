@@ -36,6 +36,7 @@ import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtc
 import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import { PRESCRIPTION_DATE_TOO_FAR_PAST_MESSAGE, prescriptionDateNotTooFarPastValidator, prescriptionDateTimeLocalMinAllowed } from '@/app/entities/prescription/utils/prescription-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-prescription-edit-page',
@@ -203,7 +204,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         }
     `
 })
-export class PrescriptionEditPageComponent implements OnInit {
+export class PrescriptionEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly dateInputMin = DATE_INPUT_MIN;
     protected readonly prescriptionDateTooFarPastMessage = PRESCRIPTION_DATE_TOO_FAR_PAST_MESSAGE;
@@ -359,6 +360,10 @@ export class PrescriptionEditPageComponent implements OnInit {
         return !trimClientIdControlValue(this.form.controls.petId.value);
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     reload(): void {
         this.loading.set(true);
         this.loadError.set(null);
@@ -480,6 +485,7 @@ export class PrescriptionEditPageComponent implements OnInit {
         this.prescriptionsService.updatePrescription(this.prescriptionId, payload).subscribe({
             next: () => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/prescriptions', this.prescriptionId], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

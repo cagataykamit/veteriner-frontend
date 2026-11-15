@@ -6,6 +6,7 @@ import { SaleDetailPageComponent } from '@/app/features/sales/pages/sale-detail-
 import { SaleNewPageComponent } from '@/app/features/sales/pages/sale-new-page/sale-new-page.component';
 import { SalesListPageComponent } from '@/app/features/sales/pages/sales-list-page/sales-list-page.component';
 import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
+import { unsavedChangesGuard } from '@/app/shared/ui/unsaved-changes/unsaved-changes.guard';
 
 function requireClaim(claim: string): CanActivateFn {
     return () => {
@@ -17,6 +18,6 @@ function requireClaim(claim: string): CanActivateFn {
 
 export default [
     { path: '', canActivate: [requireClaim(SALES_READ_CLAIM)], component: SalesListPageComponent },
-    { path: 'new', canActivate: [requireClaim(SALES_CREATE_CLAIM)], component: SaleNewPageComponent },
+    { path: 'new', canActivate: [requireClaim(SALES_CREATE_CLAIM)], component: SaleNewPageComponent, canDeactivate: [unsavedChangesGuard] },
     { path: ':id', canActivate: [requireClaim(SALES_READ_CLAIM)], component: SaleDetailPageComponent }
 ] as Routes;

@@ -21,6 +21,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-breed-form-page',
@@ -103,7 +104,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         }
     `
 })
-export class BreedFormPageComponent implements OnInit {
+export class BreedFormPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     readonly breedsRoute = BREEDS_ROUTE;
     private readonly fb = inject(FormBuilder);
@@ -154,6 +155,10 @@ export class BreedFormPageComponent implements OnInit {
         this.editing.set(true);
         this.currentId.set(id);
         this.reloadBreedRecord();
+    }
+
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
     }
 
     reloadBreedRecord(): void {
@@ -220,6 +225,7 @@ export class BreedFormPageComponent implements OnInit {
             this.breedsService.updateBreed(this.currentId()!, payload).subscribe({
                 next: () => {
                     this.submitting.set(false);
+                    this.form.markAsPristine();
                     void this.router.navigate([BREEDS_ROUTE]);
                 },
                 error: (e: unknown) => this.onSubmitError(e)
@@ -236,6 +242,7 @@ export class BreedFormPageComponent implements OnInit {
         this.breedsService.createBreed(createPayload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate([BREEDS_ROUTE, id, 'edit'], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => this.onSubmitError(e)

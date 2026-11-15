@@ -6,6 +6,7 @@ import { ChargeNewPageComponent } from '@/app/features/charges/pages/charge-new-
 import { ChargeSuggestionsPageComponent } from '@/app/features/charges/pages/charge-suggestions-page/charge-suggestions-page.component';
 import { ChargesListPageComponent } from '@/app/features/charges/pages/charges-list-page/charges-list-page.component';
 import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
+import { unsavedChangesGuard } from '@/app/shared/ui/unsaved-changes/unsaved-changes.guard';
 
 function requireClaim(claim: string): CanActivateFn {
     return () => {
@@ -18,5 +19,5 @@ function requireClaim(claim: string): CanActivateFn {
 export default [
     { path: '', canActivate: [requireClaim(CHARGES_READ_CLAIM)], component: ChargesListPageComponent },
     { path: 'pending', canActivate: [requireClaim(CHARGES_READ_CLAIM)], component: ChargeSuggestionsPageComponent },
-    { path: 'new', canActivate: [requireClaim(CHARGES_CREATE_CLAIM)], component: ChargeNewPageComponent }
+    { path: 'new', canActivate: [requireClaim(CHARGES_CREATE_CLAIM)], component: ChargeNewPageComponent, canDeactivate: [unsavedChangesGuard] }
 ] as Routes;

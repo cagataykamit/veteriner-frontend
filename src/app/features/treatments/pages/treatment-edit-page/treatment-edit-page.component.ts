@@ -31,6 +31,7 @@ import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtc
 import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import { TREATMENT_DATE_TOO_FAR_PAST_MESSAGE, treatmentDateNotTooFarPastValidator, treatmentDateTimeLocalMinAllowed } from '@/app/entities/treatment/utils/treatment-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-treatment-edit-page',
@@ -173,7 +174,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         }
     `
 })
-export class TreatmentEditPageComponent implements OnInit {
+export class TreatmentEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly dateInputMin = DATE_INPUT_MIN;
     protected readonly treatmentDateTooFarPastMessage = TREATMENT_DATE_TOO_FAR_PAST_MESSAGE;
@@ -295,6 +296,10 @@ export class TreatmentEditPageComponent implements OnInit {
         this.reload();
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     examinationSelectDisabled(): boolean {
         return !trimClientIdControlValue(this.form.controls.petId.value);
     }
@@ -413,6 +418,7 @@ export class TreatmentEditPageComponent implements OnInit {
         this.treatmentsService.updateTreatment(this.treatmentId, payload).subscribe({
             next: () => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/treatments', this.treatmentId], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

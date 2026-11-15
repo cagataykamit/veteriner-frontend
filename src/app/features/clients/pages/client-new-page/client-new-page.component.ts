@@ -22,6 +22,7 @@ import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice
 import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
 import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
 import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-format.directive';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-client-new-page',
@@ -94,7 +95,7 @@ import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-form
         </div>
     `
 })
-export class ClientNewPageComponent {
+export class ClientNewPageComponent implements HasUnsavedChanges {
     readonly copy = PANEL_COPY;
 
     private readonly fb = inject(FormBuilder);
@@ -127,6 +128,10 @@ export class ClientNewPageComponent {
                 }
             });
         }
+    }
+
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty || this.invoicingForm.dirty;
     }
 
     fieldMessage(field: ClientCreateFormFieldKey): string | null {
@@ -173,6 +178,8 @@ export class ClientNewPageComponent {
         this.clientsService.createClient(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
+                this.invoicingForm.markAsPristine();
                 void this.router.navigate(['/panel/clients', id], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

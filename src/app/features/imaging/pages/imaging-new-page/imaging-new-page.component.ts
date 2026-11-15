@@ -1,7 +1,8 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ImagingRecordFormComponent } from '@/app/entities/procedure/components/imaging-record-form.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
+import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 /** Yeni görüntüleme kaydı: form adres çubuğu bağlamıyla (hasta / muayene) çalışır; kayıt ve dosyalar tamamlanınca detaya gider. */
 @Component({
@@ -14,9 +15,14 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         <app-imaging-record-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />
     `
 })
-export class ImagingNewPageComponent {
+export class ImagingNewPageComponent implements HasUnsavedChanges {
     private readonly router = inject(Router);
     readonly contextParams = inject(ActivatedRoute).snapshot.queryParamMap;
+    private readonly embeddedForm = viewChild(HAS_UNSAVED_CHANGES);
+
+    hasUnsavedChanges(): boolean {
+        return this.embeddedForm()?.hasUnsavedChanges() ?? false;
+    }
 
     goList(): void {
         void this.router.navigate(['/panel/imaging']);

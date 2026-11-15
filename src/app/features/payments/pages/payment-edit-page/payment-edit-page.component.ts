@@ -28,6 +28,7 @@ import { PAYMENT_DATE_TOO_FAR_PAST_MESSAGE, paymentDateNotTooFarPastValidator, p
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-payment-edit-page',
@@ -128,7 +129,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         }
     `
 })
-export class PaymentEditPageComponent implements OnInit {
+export class PaymentEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly paymentDateTooFarPastMessage = PAYMENT_DATE_TOO_FAR_PAST_MESSAGE;
 
@@ -211,6 +212,10 @@ export class PaymentEditPageComponent implements OnInit {
         });
 
         this.reload();
+    }
+
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
     }
 
     reload(): void {
@@ -301,6 +306,7 @@ export class PaymentEditPageComponent implements OnInit {
         this.paymentsService.updatePayment(this.paymentId, payload).subscribe({
             next: () => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/payments', this.paymentId], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

@@ -337,6 +337,37 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         expect(cmp.form.controls.visitReason.valid).toBe(false);
     });
 
+    it('yüklenen kayıt temizdir; kullanıcı yazınca kaydedilmemiş değişiklik var, başarılı kayıtta yönlenmeden önce temizlenir (O2)', () => {
+        expect(cmp.hasUnsavedChanges()).toBe(false);
+        typeNote('yeni anamnez');
+        cmp.form.controls.anamnesis.markAsDirty();
+        expect(cmp.hasUnsavedChanges()).toBe(true);
+        let dirtyAtNavigate: boolean | undefined;
+
+        navigate.mockImplementation(() => {
+            dirtyAtNavigate = cmp.hasUnsavedChanges();
+
+            return Promise.resolve(true);
+        });
+        service.updateExamination.mockReturnValue(of({ id: 'e1', rowVersion: 'V2' }));
+        cmp.onSubmit();
+
+        expect(navigate).toHaveBeenCalledWith(['/panel/examinations', 'e1'], { queryParams: { saved: '1' } });
+        expect(dirtyAtNavigate).toBe(false);
+    });
+
+    it('kayıt hatasında (409) değişiklik korunur; "güncel kaydı yükle" formu temizler (O2)', () => {
+        service.updateExamination.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
+        typeNote('yeni anamnez');
+        cmp.form.controls.anamnesis.markAsDirty();
+        cmp.onSubmit();
+        expect(cmp.hasUnsavedChanges()).toBe(true);
+
+        cmp.discardAndReload();
+
+        expect(cmp.hasUnsavedChanges()).toBe(false);
+    });
+
     it('doz hesabı planın sonuna yeni satır olarak eklenir ve form kirlenir', () => {
         cmp.form.controls.plan.setValue('Amoksisilin başla  ');
         cmp.appendToPlan('Doz hesabı: 10 kg × 5 mg/kg = 50 mg');

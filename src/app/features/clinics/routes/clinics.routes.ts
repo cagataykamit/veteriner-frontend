@@ -9,6 +9,7 @@ import { ClinicCreatePageComponent } from '@/app/features/clinics/pages/clinic-c
 import { ClinicDetailPageComponent } from '@/app/features/clinics/pages/clinic-detail-page/clinic-detail-page.component';
 import { ClinicsListPageComponent } from '@/app/features/clinics/pages/clinics-list-page/clinics-list-page.component';
 import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
+import { unsavedChangesGuard } from '@/app/shared/ui/unsaved-changes/unsaved-changes.guard';
 
 export default [
     {
@@ -29,7 +30,8 @@ export default [
 
             return auth.hasOperationClaim(CLINICS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: ClinicCreatePageComponent
+        component: ClinicCreatePageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':clinicId',

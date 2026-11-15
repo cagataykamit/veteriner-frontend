@@ -11,6 +11,7 @@ import { PaymentEditPageComponent } from '@/app/features/payments/pages/payment-
 import { PaymentNewPageComponent } from '@/app/features/payments/pages/payment-new-page/payment-new-page.component';
 import { PaymentsListPageComponent } from '@/app/features/payments/pages/payments-list-page/payments-list-page.component';
 import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
+import { unsavedChangesGuard } from '@/app/shared/ui/unsaved-changes/unsaved-changes.guard';
 
 export default [
     {
@@ -31,7 +32,8 @@ export default [
 
             return auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: PaymentNewPageComponent
+        component: PaymentNewPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id/edit',
@@ -41,7 +43,8 @@ export default [
 
             return auth.hasOperationClaim(PAYMENTS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: PaymentEditPageComponent
+        component: PaymentEditPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id',

@@ -12,6 +12,7 @@ import { createStrongPasswordValidators, getPasswordPolicyErrorMessage, PASSWORD
 import { AccountService } from '@/app/features/account/services/account.service';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { extractRawValidationErrors, firstStringMessage, parseValidationFieldErrors } from '@/app/shared/utils/validation-error-parse.utils';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 type ChangePasswordFieldKey = 'currentPassword' | 'newPassword' | 'confirmPassword';
 
@@ -123,7 +124,7 @@ function resolveChangePasswordErrorMessage(err: unknown): string {
         </div>
     `
 })
-export class ChangePasswordPageComponent {
+export class ChangePasswordPageComponent implements HasUnsavedChanges {
     private readonly fb = inject(FormBuilder);
     private readonly account = inject(AccountService);
     private readonly messages = inject(MessageService);
@@ -142,6 +143,10 @@ export class ChangePasswordPageComponent {
         },
         { validators: passwordsMatchValidator() }
     );
+
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
 
     onSubmit(): void {
         if (this.form.invalid) {
@@ -170,6 +175,7 @@ export class ChangePasswordPageComponent {
             .pipe(finalize(() => this.saving.set(false)))
             .subscribe({
                 next: () => {
+                    this.form.markAsPristine();
                     void this.router.navigate([ACCOUNT_ROUTE], { queryParams: { passwordChanged: '1' } });
                 },
                 error: (err: unknown) => {

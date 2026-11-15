@@ -13,6 +13,7 @@ import { ProductEditPageComponent } from '@/app/features/inventory/pages/product
 import { ProductListPageComponent } from '@/app/features/inventory/pages/product-list-page/product-list-page.component';
 import { ProductStockMovementsPageComponent } from '@/app/features/inventory/pages/product-stock-movements-page/product-stock-movements-page.component';
 import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
+import { unsavedChangesGuard } from '@/app/shared/ui/unsaved-changes/unsaved-changes.guard';
 
 export default [
     {
@@ -37,7 +38,8 @@ export default [
                 return auth.hasOperationClaim(PRODUCTS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
             }
         ],
-        component: ProductCreatePageComponent
+        component: ProductCreatePageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id/edit',
@@ -49,7 +51,8 @@ export default [
                 return auth.hasOperationClaim(PRODUCTS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
             }
         ],
-        component: ProductEditPageComponent
+        component: ProductEditPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id/stock-movements',

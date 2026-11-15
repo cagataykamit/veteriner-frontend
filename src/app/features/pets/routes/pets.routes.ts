@@ -14,6 +14,7 @@ import { PetsListPageComponent } from '@/app/features/pets/pages/pets-list-page/
 import { PetTimelinePageComponent } from '@/app/features/pets/pages/pet-timeline-page/pet-timeline-page.component';
 import { PetVaccinationPlanPageComponent } from '@/app/features/pets/pages/pet-vaccination-plan-page/pet-vaccination-plan-page.component';
 import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
+import { unsavedChangesGuard } from '@/app/shared/ui/unsaved-changes/unsaved-changes.guard';
 
 export default [
     {
@@ -34,7 +35,8 @@ export default [
 
             return auth.hasOperationClaim(PETS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: PetNewPageComponent
+        component: PetNewPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id/edit',
@@ -44,7 +46,8 @@ export default [
 
             return auth.hasOperationClaim(PETS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
-        component: PetEditPageComponent
+        component: PetEditPageComponent,
+        canDeactivate: [unsavedChangesGuard]
     },
     {
         path: ':id/timeline',

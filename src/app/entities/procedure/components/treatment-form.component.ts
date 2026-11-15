@@ -374,6 +374,7 @@ export class TreatmentFormComponent implements OnInit, HasUnsavedChanges {
         this.treatmentsService.createTreatment(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 this.saved.emit(id);
             },
             error: (e: unknown) => {

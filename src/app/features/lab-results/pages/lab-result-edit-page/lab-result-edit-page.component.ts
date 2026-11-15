@@ -32,6 +32,7 @@ import { dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/ap
 import { LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE, labResultDateNotTooFarPastValidator, labResultDateTimeLocalMinAllowed } from '@/app/entities/lab-result/utils/lab-result-date-validation.utils';
 import { LAB_RESULT_INCOMPLETE_MESSAGE, LAB_RESULT_INTERPRETATION_WITHOUT_RESULT_MESSAGE, labResultResultFieldsValidator } from '@/app/entities/lab-result/utils/lab-result-form.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 @Component({
     selector: 'app-lab-result-edit-page',
@@ -187,7 +188,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         }
     `
 })
-export class LabResultEditPageComponent implements OnInit {
+export class LabResultEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly copy = PANEL_COPY;
     protected readonly labResultDateTooFarPastMessage = LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE;
     protected readonly resultIncompleteMessage = LAB_RESULT_INCOMPLETE_MESSAGE;
@@ -319,6 +320,10 @@ export class LabResultEditPageComponent implements OnInit {
         this.reload();
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     examinationSelectDisabled(): boolean {
         return this.examinationFinalized() || !trimClientIdControlValue(this.form.controls.petId.value);
     }
@@ -370,6 +375,8 @@ export class LabResultEditPageComponent implements OnInit {
                 // Kaydın hastası ve kliniği değişmez (ADR-043 AK-10); muayene bağı aynı hasta içinde değişebilir.
                 this.form.controls.clientId.disable({ emitEvent: false });
                 this.form.controls.petId.disable({ emitEvent: false });
+                // Çakışmada "Yazdıklarımı atıp güncel kaydı yükle" de buradan geçer: form sunucu kaydına döner.
+                this.form.markAsPristine();
 
                 this.loading.set(false);
                 this.lockIdentityWhenExaminationFinalized(x.examinationId);
@@ -452,6 +459,7 @@ export class LabResultEditPageComponent implements OnInit {
         this.labResultsService.updateLabResult(this.labResultId, payload).subscribe({
             next: () => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/lab-results', this.labResultId], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {

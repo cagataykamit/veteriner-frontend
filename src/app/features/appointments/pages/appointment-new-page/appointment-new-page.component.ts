@@ -41,6 +41,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments/components/appointment-reason-vet-fields.component';
 import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
+import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 
 /** İlk uygun randevu günü en fazla bu kadar gün ileride aranır. */
 const APPOINTMENT_PREFILL_LOOKAHEAD_DAYS = 14;
@@ -175,7 +176,7 @@ interface AppointmentSlot {
         </div>
     `
 })
-export class AppointmentNewPageComponent implements OnInit {
+export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
     protected readonly dateInputMax = DATE_INPUT_MAX;
 
     private readonly fb = inject(FormBuilder);
@@ -291,6 +292,10 @@ export class AppointmentNewPageComponent implements OnInit {
         this.syncScheduledTimeDisabledState();
     }
 
+    hasUnsavedChanges(): boolean {
+        return this.form.dirty;
+    }
+
     goList(): void {
         void this.router.navigate(['/panel/appointments']);
     }
@@ -377,6 +382,7 @@ export class AppointmentNewPageComponent implements OnInit {
         this.appointmentsService.createAppointment(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
+                this.form.markAsPristine();
                 void this.router.navigate(['/panel/appointments', id], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {
