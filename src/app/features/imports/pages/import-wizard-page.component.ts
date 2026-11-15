@@ -15,6 +15,7 @@ import { ImportsService } from '@/app/features/imports/services/imports.service'
 import { importErrorCode, importErrorMessage, importStatusLabel, importStatusSeverity, isDiscardable, isImportJobRunning, isPreviewable } from '@/app/features/imports/utils/import-labels.utils';
 import { IMPORT_POLL_CONNECTION_MESSAGE, pollImportProgress } from '@/app/features/imports/utils/import-progress-poll.utils';
 import { columnMapsToRequest, initialColumnMaps, type ImportColumnMaps } from '@/app/features/imports/utils/import-schema.utils';
+import { fileBlockers, reviewNextHint } from '@/app/features/imports/utils/import-review.utils';
 import { type ImportValueChoices, petChoicesToRequest, valueChoicesToRequest } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -138,14 +139,20 @@ const STEPS: readonly { n: number; label: string }[] = [
                                 </p-message>
                             } @else if (preview()) {
                                 <app-import-review-step [batch]="b" [preview]="preview()" [canManage]="canManage && draft()" [busy]="busy()" [(choices)]="choices" (applyValues)="saveAndValidate()" />
-                                <div class="flex flex-wrap gap-2 mt-4">
+                                <!-- Alt çubuk ekrana yapışık: uzun sonuçta da geçiş düğmesi ve kapalıysa nedeni görünür. -->
+                                <div class="sticky bottom-0 z-10 py-3 mt-4 flex flex-wrap items-center gap-2 bg-surface-0 dark:bg-surface-900 border-t border-surface" data-testid="import-review-actions">
                                     @if (canManage && draft()) {
-                                        <button pButton type="button" severity="secondary" (click)="step.set(2)"><i class="p-button-icon pi pi-arrow-left"></i>Eşlemeye dön</button>
+                                        <button pButton type="button" [severity]="needsMappingFix() ? 'primary' : 'secondary'" (click)="step.set(2)"><i class="p-button-icon pi pi-arrow-left"></i>Eşlemeye dön</button>
                                     }
                                     @if (canManage && b.status === 'ValidationFailed') {
                                         <button pButton type="button" severity="secondary" [disabled]="busy()" (click)="revalidate()"><i class="p-button-icon" [class]="busy() ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"></i>Yeniden doğrula</button>
                                     }
                                     <button pButton type="button" [disabled]="!commitStepReachable()" (click)="step.set(4)">Onay adımına geç<i class="p-button-icon pi pi-arrow-right"></i></button>
+                                    @if (!commitStepReachable() && nextHint(); as hint) {
+                                        <span class="text-sm text-muted-color" data-testid="import-next-hint">{{ hint }}</span>
+                                    } @else if (b.status === 'Validated') {
+                                        <span class="text-sm text-muted-color">Onaylamadan hiçbir kayıt oluşmaz.</span>
+                                    }
                                 </div>
                             } @else if (busy()) {
                                 <app-loading-state message="Doğrulanıyor…" />
@@ -197,6 +204,18 @@ export class ImportWizardPageComponent implements OnInit {
     readonly progress = signal<ImportCommitProgressDto | null>(null);
     readonly stalled = signal(false);
     readonly pollError = signal<string | null>(null);
+    /** Onay adımına geçilemiyorsa alt çubukta yazan neden (seçim bekliyor, eşleme eksik …). */
+    protected readonly nextHint = computed(() => {
+        const p = this.preview();
+
+        return p ? reviewNextHint(p, this.choices()) : null;
+    });
+    /** Dosya düzeyi engel varsa "Eşlemeye dön" birincil düğme olur. */
+    protected readonly needsMappingFix = computed(() => {
+        const p = this.preview();
+
+        return !!p && fileBlockers(p).length > 0;
+    });
 
     /** Eşleme tercihleri sayfa durumunda tutulur; sunucu değer eşleme ve seçenekleri geri vermez. */
     maps = signal<ImportColumnMaps>({});
