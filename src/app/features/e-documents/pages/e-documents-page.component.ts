@@ -177,7 +177,7 @@ type View = 'documents' | 'undocumented';
                                             @if (!ro.mutationBlocked()) {
                                                 @if (canIssue && row.status === 'Failed') {
                                                     <button pButton type="button" size="small" [text]="true" [disabled]="busyId() === row.id" (click)="act(row, 'retry')"><i class="p-button-icon pi pi-replay"></i>Yeniden dene</button>
-                                                    <button pButton type="button" size="small" [text]="true" severity="secondary" (click)="openReason(row, 'discard')">Vazgeç</button>
+                                                    <button pButton type="button" size="small" [text]="true" severity="secondary" (click)="openReason(row, 'discard')">Geçersiz say</button>
                                                 }
                                                 @if (canCancel && row.canCancel) {
                                                     <button pButton type="button" size="small" [text]="true" severity="danger" (click)="openReason(row, 'cancel')">İptal et</button>
@@ -274,10 +274,10 @@ type View = 'documents' | 'undocumented';
         <app-e-document-issue-dialog [(visible)]="issueVisible" [source]="issueSource()" (changed)="load(page())" />
         <app-reason-confirm-dialog
             [(visible)]="reasonVisible"
-            [header]="reasonMode() === 'cancel' ? 'e-belgeyi iptal et' : 'Hatalı belgeden vazgeç'"
+            [header]="reasonMode() === 'cancel' ? 'e-belgeyi iptal et' : 'Hatalı belgeyi geçersiz say'"
             [summary]="reasonSummary()"
             [description]="reasonMode() === 'cancel' ? 'Belge entegratörde iptal edilir; ücretler yeniden belgelenebilir. İptal süresi sınırlıdır.' : 'Belge kesilmedi; ücretler yeniden belgelenebilir.'"
-            [confirmLabel]="reasonMode() === 'cancel' ? 'Belgeyi iptal et' : 'Vazgeç'"
+            [confirmLabel]="reasonMode() === 'cancel' ? 'Belgeyi iptal et' : 'Belgeyi geçersiz say'"
             failureFallback="İşlem yapılamadı."
             [execute]="reasonAction"
             (confirmed)="load(page())"

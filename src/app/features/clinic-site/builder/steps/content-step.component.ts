@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { conceptByKey, type CopyKey, type SiteArticle, type SiteBranch, type SiteFaq, type SiteFeature, type SiteImage, type SiteMember, type SiteService, STOCK_GALLERY, stockArticlePhoto, stockSectionPhoto, stockServicePhoto, type StoredSiteConfig } from '@site-engine';
 import { slugify, uniqueSlug } from '@/app/features/clinic-site/builder/site-checks';
 import { SiteBuilderStore } from '@/app/features/clinic-site/builder/site-builder.store';
@@ -235,7 +235,14 @@ const replaceAt = <T>(list: readonly T[], index: number, change: Partial<T>): T[
                                 <span class="no-thumb"><i class="pi pi-image" aria-hidden="true"></i></span>
                             }
                             <span class="size">{{ sizeLabel(image.sizeBytes) }}</span>
-                            <button type="button" class="wbtn ghost small" [disabled]="store.actionBusy()" (click)="store.deleteImage(image.id)">Sil</button>
+                            <!-- Yüklenen görsel sunucudan silinir, geri alınmaz: önce satırda onay (H12). -->
+                            @if (pendingImageDeleteId() === image.id) {
+                                <span class="hint">Görsel silinsin mi?</span>
+                                <button type="button" class="wbtn small" data-testid="image-delete-confirm" [disabled]="store.actionBusy()" (click)="deleteImage(image.id)">Görseli sil</button>
+                                <button type="button" class="wbtn ghost small" (click)="pendingImageDeleteId.set(null)">Vazgeç</button>
+                            } @else {
+                                <button type="button" class="wbtn ghost small" data-testid="image-delete" [disabled]="store.actionBusy()" (click)="pendingImageDeleteId.set(image.id)">Sil</button>
+                            }
                         </li>
                     } @empty {
                         <li class="hint">Henüz görsel yüklenmedi.</li>
@@ -354,6 +361,8 @@ const replaceAt = <T>(list: readonly T[], index: number, change: Partial<T>): T[
 })
 export class ContentStepComponent {
     protected readonly store = inject(SiteBuilderStore);
+    /** Silme onayı bekleyen görsel. */
+    protected readonly pendingImageDeleteId = signal<string | null>(null);
 
     protected readonly copyGroups = COPY_GROUPS;
     protected readonly suggestions = SUGGESTIONS;
@@ -405,6 +414,11 @@ export class ContentStepComponent {
         const slug = uniqueSlug(slugify(title) || 'yeni-hizmet', this.content().services.map((service) => service.slug));
 
         this.patch({ services: [...this.content().services, { slug, title, summary: '', body: '', image: null }] });
+    }
+
+    protected deleteImage(id: string): void {
+        this.pendingImageDeleteId.set(null);
+        this.store.deleteImage(id);
     }
 
     protected removeService(index: number): void {
