@@ -80,6 +80,7 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
                     useValue: {
                         getClinicName: () => 'Klinik',
                         getClinicId: () => 'clinic-1',
+                        getUserId: () => 'user-1',
                         hasOperationClaim: () => true
                     }
                 },
@@ -96,6 +97,9 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
         fixture.detectChanges();
     });
+
+    // Tarayıcı taslağı (B3) testler arasında sızmasın.
+    afterEach(() => sessionStorage.clear());
 
     const typeNote = (text: string) => {
         cmp.form.controls.anamnesis.setValue(text);

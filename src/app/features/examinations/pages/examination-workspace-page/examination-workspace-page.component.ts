@@ -36,11 +36,22 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { DATE_INPUT_MIN, dateYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
-import { toIstanbulDateTimeInputParts, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay, toIstanbulDateTimeInputParts, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
+import { readSessionDraft, removeSessionDraft, sessionDraftKey, writeSessionDraft } from '@/app/shared/utils/session-draft.storage';
+import { debounceTime, merge } from 'rxjs';
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
+
+/** Tarayıcı taslağı (B3): muayene formu, serbest oluşturmada hasta seçimi ve düzenlemede taslağın alındığı kayıt sürümü. */
+interface ExaminationDraftData {
+    form: ExaminationWorkspaceFormValue;
+    selection: { clientId: string; petId: string } | null;
+    rowVersion: string | null;
+}
+
+const DRAFT_SAVE_DEBOUNCE_MS = 400;
 
 function requiredTrimmed(c: AbstractControl): ValidationErrors | null {
     return typeof c.value === 'string' && c.value.trim() ? null : { required: true };
@@ -146,6 +157,15 @@ export class ExaminationWorkspacePageComponent implements OnInit, HasUnsavedChan
 
     readonly timeOptions = signal<SelectOption[]>(EXAMINATION_TIME_SELECT_OPTIONS);
 
+    /**
+     * Bulunan tarayıcı taslağı (B3): kullanıcı "Sürdür" ya da "Taslağı sil" diyene kadar otomatik kayıt bu taslağın üstüne yazmaz.
+     * `stale`: düzenlemede kayıt taslaktan sonra değişmiş.
+     */
+    readonly pendingDraft = signal<{ savedAtLabel: string; stale: boolean } | null>(null);
+    private draftKey: string | null = null;
+    private draftChecked = false;
+    private pendingDraftData: ExaminationDraftData | null = null;
+
     readonly selectionForm = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required]
@@ -202,6 +222,10 @@ export class ExaminationWorkspacePageComponent implements OnInit, HasUnsavedChan
                 }
             });
         }
+
+        merge(this.form.valueChanges, this.selectionForm.valueChanges)
+            .pipe(debounceTime(DRAFT_SAVE_DEBOUNCE_MS), takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => this.saveDraft());
     }
 
     ngOnInit(): void {
@@ -218,12 +242,42 @@ export class ExaminationWorkspacePageComponent implements OnInit, HasUnsavedChan
             }
 
             this.examinationId = id;
+            this.draftKey = this.examinationDraftKey('kayit', id);
             this.reload();
 
             return;
         }
 
         this.initCreateMode();
+    }
+
+    /** Taslakla devam: form (ve serbest oluşturmada hasta seçimi) taslaktaki değerlerle dolar; değişiklik kaydedilmemiş sayılır. */
+    resumeDraft(): void {
+        const data = this.pendingDraftData;
+
+        this.pendingDraft.set(null);
+        this.pendingDraftData = null;
+
+        if (!data) {
+            return;
+        }
+
+        if (data.selection && !this.isEdit && this.selectionForm.controls.clientId.enabled && data.selection.clientId) {
+            this.selectionForm.controls.clientId.setValue(data.selection.clientId);
+            this.selectionForm.controls.petId.setValue(data.selection.petId);
+            this.selectionForm.markAsDirty();
+        }
+
+        this.timeOptions.set(examinationTimeSelectOptionsWithLegacy(data.form.examinationTime));
+        this.form.patchValue(data.form);
+        this.form.markAsDirty();
+    }
+
+    /** Taslağı siler; form sunucudaki (ya da boş) hâliyle kalır. */
+    discardDraft(): void {
+        this.pendingDraft.set(null);
+        this.pendingDraftData = null;
+        this.removeDraft();
     }
 
     hasUnsavedChanges(): boolean {
@@ -296,6 +350,7 @@ export class ExaminationWorkspacePageComponent implements OnInit, HasUnsavedChan
                 this.submitError.set(null);
                 this.conflict.set(false);
                 this.loading.set(false);
+                this.offerDraftOnce();
             },
             error: (e: unknown) => {
                 this.loadError.set(panelHttpFailureMessage(e, 'Muayene bilgileri yüklenemedi.'));
@@ -304,8 +359,9 @@ export class ExaminationWorkspacePageComponent implements OnInit, HasUnsavedChan
         });
     }
 
-    /** Çakışma sonrası kullanıcının açık tercihi: yazdıkları atılır, güncel kayıt yüklenir. */
+    /** Çakışma sonrası kullanıcının açık tercihi: yazdıkları (ve taslağı) atılır, güncel kayıt yüklenir. */
     discardAndReload(): void {
+        this.removeDraft();
         this.reload();
     }
 
@@ -396,6 +452,7 @@ export class ExaminationWorkspacePageComponent implements OnInit, HasUnsavedChan
      * `submitting` bilerek açık bırakılır: gezinme bitene kadar ikinci gönderim (eski `rowVersion` ile 409) engellenir.
      */
     private goToSavedDetail(id: string): void {
+        this.removeDraft();
         this.form.markAsPristine();
         this.selectionForm.markAsPristine();
         void this.router.navigate(['/panel/examinations', id], { queryParams: { saved: '1' } });
@@ -418,8 +475,13 @@ export class ExaminationWorkspacePageComponent implements OnInit, HasUnsavedChan
         this.submitError.set(e instanceof Error ? e.message : fallback);
     }
 
+    /** Vazgeç: sayfadan çıkılırsa (kaydedilmemiş değişiklik sorusunda "Sayfada kal" denmezse) taslak da silinir. */
     onCancel(): void {
-        void this.router.navigate(this.isEdit ? ['/panel/examinations', this.examinationId] : ['/panel/examinations']);
+        void this.router.navigate(this.isEdit ? ['/panel/examinations', this.examinationId] : ['/panel/examinations']).then((left) => {
+            if (left) {
+                this.removeDraft();
+            }
+        });
     }
 
     /** Doz hesaplayıcının "Plana ekle"si: hesap planın sonuna yeni satır olarak eklenir; kayıt hekim kaydedince olur. */
@@ -484,6 +546,81 @@ export class ExaminationWorkspacePageComponent implements OnInit, HasUnsavedChan
             this.selectedPetId.set(petId?.trim() || null);
         });
         prefillPetFromRoute(this.route.snapshot.queryParamMap, this.selectionForm.controls.clientId, this.selectionForm.controls.petId);
+
+        this.draftKey = this.examinationDraftKey('yeni', this.createDraftScope());
+        this.offerDraftOnce();
+    }
+
+    // ---- Tarayıcı taslağı (B3) ----
+
+    /** Kullanıcı ve kliniğe özel anahtar: başka kullanıcı ya da klinik aynı sekmede taslağı görmez. */
+    private examinationDraftKey(kind: 'kayit' | 'yeni', scope: string): string {
+        return sessionDraftKey('muayene', this.auth.getUserId(), this.auth.getClinicId(), kind, scope);
+    }
+
+    /** Yeni muayenede taslak bağlama göre ayrılır: geliş, randevu, adresteki hasta ya da serbest oluşturma. */
+    private createDraftScope(): string {
+        const query = this.route.snapshot.queryParamMap;
+        const visit = parseVisitExaminationRouteContext(query);
+        const appointment = parseAppointmentExaminationRouteContext(query);
+        const petId = query.get('petId')?.trim();
+
+        if (visit) {
+            return `gelis-${visit.visitId}`;
+        }
+
+        if (appointment) {
+            return `randevu-${appointment.appointmentId}`;
+        }
+
+        return petId ? `hasta-${petId}` : 'serbest';
+    }
+
+    /** Sayfa ilk açıldığında bir kez: taslak varsa sorulur; kesinleşmiş muayenede taslak silinir. */
+    private offerDraftOnce(): void {
+        if (this.draftChecked || !this.draftKey) {
+            return;
+        }
+
+        this.draftChecked = true;
+        const draft = readSessionDraft<ExaminationDraftData>(this.draftKey);
+
+        if (!draft) {
+            return;
+        }
+
+        if (this.finalized()) {
+            this.removeDraft();
+
+            return;
+        }
+
+        this.pendingDraftData = draft.data;
+        this.pendingDraft.set({
+            savedAtLabel: formatUtcIsoAsLocalDateTimeDisplay(draft.savedAtUtc),
+            stale: this.isEdit && !!this.current && draft.data.rowVersion !== (this.current.rowVersion ?? null)
+        });
+    }
+
+    /** Yazdıkça (kısa gecikmeyle) taslağa yazar; soru yanıtlanmadan, kayıt sürerken ya da değişiklik yokken yazmaz. */
+    private saveDraft(): void {
+        if (!this.draftKey || !this.draftChecked || this.pendingDraft() || this.finalized() || this.submitting() || !this.hasUnsavedChanges()) {
+            return;
+        }
+
+        const selection = this.selectionForm.getRawValue();
+
+        writeSessionDraft<ExaminationDraftData>(this.draftKey, {
+            form: this.form.getRawValue(),
+            selection: this.isEdit || this.contextFromAppointment() || this.visitContextId() ? null : { clientId: selection.clientId, petId: selection.petId },
+            rowVersion: this.isEdit ? (this.current?.rowVersion ?? null) : null
+        });
+    }
+
+    private removeDraft(): void {
+        if (this.draftKey) {
+            removeSessionDraft(this.draftKey);
+        }
     }
 
     private mapLoadError(e: unknown, fallback: string): string {
