@@ -90,6 +90,9 @@ export interface ImportProgressDto {
     total: number;
 }
 
+/** Yükleme akışı: gönderim yüzdesi, ardından sunucunun oluşturduğu parti. */
+export type ImportUploadEvent = { type: 'progress'; percent: number } | { type: 'done'; batch: ImportBatchDto };
+
 export interface ImportBatchDto {
     id: string;
     status: ImportBatchStatus;

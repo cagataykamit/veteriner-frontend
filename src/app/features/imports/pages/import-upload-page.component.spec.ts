@@ -1,12 +1,13 @@
 import type { MockedObject } from 'vitest';
 import { ChangeDetectorRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { provideRouter, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { IMPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
-import type { ImportBatchDto, ImportSourceProfileCode, ImportSourceProfileDto, ImportTableSummaryDto } from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchDto, ImportSourceProfileCode, ImportSourceProfileDto, ImportTableSummaryDto, ImportUploadEvent } from '@/app/features/imports/models/import-api.model';
 import { ImportUploadPageComponent } from '@/app/features/imports/pages/import-upload-page.component';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 
@@ -46,7 +47,8 @@ describe('ImportUploadPageComponent', () => {
     function create(): void {
         imports = {
             getSourceProfiles: vi.fn().mockReturnValue(of(profiles)),
-            createBatch: vi.fn().mockReturnValue(of(uploaded)),
+            createBatch: vi.fn().mockReturnValue(of({ type: 'progress', percent: 100 }, { type: 'done', batch: uploaded })),
+            listBatches: vi.fn().mockReturnValue(of({ items: [], page: 1, pageSize: 20, totalItems: 0, totalPages: 0 })),
             downloadTemplate: vi.fn()
         } as unknown as MockedObject<ImportsService>;
         TestBed.configureTestingModule({
@@ -96,7 +98,8 @@ describe('ImportUploadPageComponent', () => {
 
         submitButton().click();
 
-        expect(sentKeys()).toEqual(['requestId', 'file']);
+        expect(sentKeys()).toEqual(['requestId', 'file', 'name']);
+        expect(sentForm().get('name')).toBe('ornek-musteriler.xlsx');
         expect((sentForm().get('file') as File).name).toBe('ornek-musteriler.xlsx');
     });
 
@@ -183,8 +186,75 @@ describe('ImportUploadPageComponent', () => {
 
         page.submit();
 
-        expect(sentKeys()).toEqual(['requestId', 'file', 'evetPatientReportFile', 'evetVaccineReportFile', 'productsFile', 'clinicId', 'sourceProfile']);
+        expect(sentKeys()).toEqual(['requestId', 'file', 'evetPatientReportFile', 'evetVaccineReportFile', 'productsFile', 'clinicId', 'name', 'sourceProfile']);
         expect((sentForm().get('productsFile') as File).name).toBe('ornek-urun-listesi.csv');
+    });
+
+    it('gönderim yüzdesini, sonra sunucuda işlendiğini ve sayfa kapansa da sürdüğünü söyler', () => {
+        const events = new Subject<ImportUploadEvent>();
+
+        imports.createBatch.mockReturnValue(events);
+        page.setXlsx(file('ornek.xlsx'));
+        render();
+        submitButton().click();
+        events.next({ type: 'progress', percent: 42 });
+        render();
+        const progress = () => el.querySelector('[data-testid="import-upload-progress"]')?.textContent ?? '';
+
+        expect(progress()).toContain('Dosyalar gönderiliyor… %42');
+        expect(progress()).toContain('bu sayfada kalın');
+
+        events.next({ type: 'progress', percent: 100 });
+        render();
+
+        expect(progress()).toContain('sunucuda okunuyor ve dönüştürülüyor');
+        expect(progress()).toContain('Sayfayı kapatsanız da işlem sürer');
+
+        events.next({ type: 'done', batch: uploaded });
+        render();
+
+        expect(el.querySelector('[data-testid="import-upload-progress"]')).toBeNull();
+        expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith([IMPORTS_ROUTE, 'b1'], expect.anything());
+    });
+
+    it('yarım kalmış içe aktarmaları kaldığı yerden devam için listeler; bitmiş olanları göstermez', () => {
+        TestBed.resetTestingModule();
+        create();
+        imports.listBatches.mockReturnValue(
+            of({
+                items: [
+                    { ...uploaded, id: 'd1', name: 'backup.xlsx', status: 'Validated' },
+                    { ...uploaded, id: 'd2', name: 'eski.xlsx', status: 'Committed' }
+                ],
+                page: 1,
+                pageSize: 20,
+                totalItems: 2,
+                totalPages: 1
+            })
+        );
+        page.ngOnInit();
+        render();
+
+        const drafts = el.querySelector('[data-testid="import-open-drafts"]')?.textContent ?? '';
+
+        expect(drafts).toContain('backup.xlsx');
+        expect(drafts).toContain('Doğrulandı');
+        expect(drafts).not.toContain('eski.xlsx');
+    });
+
+    it('aynı dosya zaten yüklüyse o içe aktarmaya bağlantı verir', () => {
+        imports.createBatch.mockReturnValue(
+            throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.DuplicateFile', detail: 'Aynı dosya zaten yüklenmiş.', extensions: { batchId: 'b9' } } }))
+        );
+        page.setXlsx(file('ornek.xlsx'));
+        render();
+        submitButton().click();
+        render();
+
+        const duplicate = el.querySelector('[data-testid="import-duplicate"]');
+
+        expect(duplicate?.textContent).toContain('Bu dosya zaten yüklendi');
+        expect(duplicate?.querySelector('a')?.getAttribute('href')).toContain('b9');
     });
 
     it('profil değişince dosya seçimleri ve deneme durumu sıfırlanır; Kolayvet şablon akışına döner', () => {

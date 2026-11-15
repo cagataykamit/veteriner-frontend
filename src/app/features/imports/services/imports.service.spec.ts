@@ -1,4 +1,4 @@
-import { provideHttpClient, withXhr } from '@angular/common/http';
+import { HttpEventType, provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
@@ -38,6 +38,21 @@ describe('ImportsService', () => {
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toBe(form);
         req.flush({});
+    });
+
+    it('yüklemede gönderim yüzdesini, sonra oluşan partiyi verir', () => {
+        const events: unknown[] = [];
+
+        service.createBatch(new FormData()).subscribe((e) => events.push(e));
+        const req = http.expectOne('http://api.test/api/v1/imports/batches');
+
+        req.event({ type: HttpEventType.UploadProgress, loaded: 30, total: 120 });
+        req.flush({ id: 'b1' });
+
+        expect(events).toEqual([
+            { type: 'progress', percent: 25 },
+            { type: 'done', batch: { id: 'b1' } }
+        ]);
     });
 
     it('eşlemeyi PUT ile kaydeder', () => {
