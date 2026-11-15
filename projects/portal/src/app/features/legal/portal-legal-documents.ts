@@ -156,7 +156,7 @@ export const PORTAL_PRIVACY_DOCUMENT: PortalLegalDocument = {
             paragraphs: [[{ text: 'a) Portal hesabı verileri', strong: true }]],
             items: [
                 'Hesap: e-posta adresi, görünen ad, parola (yalnız geri döndürülemez özet olarak; parolasız girişte hiç tutulmaz).',
-                'Giriş ve güvenlik: giriş kayıtları (zaman, başarılı/başarısız deneme, kullanılan yöntem), tek kullanımlık kodların geçerlilik ve deneme bilgisi, kilitleme durumu, IP adresi, Portal\'da hangi kaydın görüntülendiğine ilişkin erişim kaydı (kim, ne zaman, hangi kayıt; içerik değil).',
+                'Giriş ve güvenlik: giriş kayıtları (zaman, başarılı/başarısız deneme, kullanılan yöntem), tek kullanımlık kodların geçerlilik ve deneme bilgisi, kilitleme durumu, IP adresi, Portal\'da hangi kaydın görüntülendiğine ilişkin erişim kaydı (kim, ne zaman, hangi kayıt; içerik değil). Giriş kodu, parola sıfırlama kodu ve online randevu doğrulama kodu isteklerinde Cloudflare Turnstile\'ın işlediği IP adresi ve tarayıcı/cihaz bilgisi gibi teknik sinyaller.',
                 'Cihaz ve oturum: oturum ve yenileme jetonları, cihaz/tarayıcı türü, "tüm cihazlardan çıkış" için oturum listesi; bildirim izni verirseniz bildirim cihaz jetonu (v1).',
                 'Bildirim tercihi: hangi bildirim türünü hangi kanaldan almak istediğiniz.',
                 [
@@ -180,7 +180,7 @@ export const PORTAL_PRIVACY_DOCUMENT: PortalLegalDocument = {
         {
             heading: '3. Amaçlar ve hukuki sebepler',
             paragraphs: [
-                'Hesabın açılması, girişin sağlanması ve klinik kayıtlarının size gösterilmesi (Kanun m.5/2-c, sözleşmenin ifası); hesap güvenliği, yetkisiz erişimin ve kötüye kullanımın önlenmesi, erişim kaydı (m.5/2-f meşru menfaat;); şartların ve politikanın sürümlü kabulünün ispatı (m.5/2-e hakkın tesisi ve korunması); işlemsel bildirimler — giriş kodu, parola sıfırlama, randevu ve aşı hatırlatması (m.5/2-c; tercihinizle kapatılabilir); tanıtım/kampanya iletileri yalnız açık rızanızla.'
+                'Hesabın açılması, girişin sağlanması ve klinik kayıtlarının size gösterilmesi (Kanun m.5/2-c, sözleşmenin ifası); hesap güvenliği, yetkisiz erişimin ve kötüye kullanımın önlenmesi, erişim kaydı (m.5/2-f meşru menfaat;); şartların ve politikanın sürümlü kabulünün ispatı (m.5/2-e hakkın tesisi ve korunması); işlemsel bildirimler — giriş kodu, parola sıfırlama, randevu ve aşı hatırlatması (m.5/2-c; tercihinizle kapatılabilir); tanıtım/kampanya iletileri yalnız açık rızanızla. Kod isteklerinde otomatik (bot) kötüye kullanımı önlemek için Cloudflare Turnstile ile güvenlik doğrulaması yapılır (m.5/2-f meşru menfaat).'
             ]
         },
         {
@@ -192,7 +192,7 @@ export const PORTAL_PRIVACY_DOCUMENT: PortalLegalDocument = {
                 ],
                 [
                     { text: 'Hizmet sağlayıcılar:', strong: true },
-                    ' barındırma ve altyapı, e-posta gönderim sağlayıcısı [sağlayıcı belirlenmedi], bildirim (push) hizmeti — v1\'de, uygulama mağazası platformlarının bildirim altyapısı [yurt dışına aktarım: sağlayıcı, ülke ve Kanun m.9 mekanizması buraya yazılır].'
+                    ' barındırma ve altyapı, güvenlik doğrulaması (Cloudflare Turnstile; Cloudflare, Inc., ABD), e-posta gönderim sağlayıcısı [sağlayıcı belirlenmedi], bildirim (push) hizmeti — v1\'de, uygulama mağazası platformlarının bildirim altyapısı [yurt dışına aktarım: sağlayıcı, ülke ve Kanun m.9 mekanizması buraya yazılır].'
                 ],
                 [{ text: 'Yetkili kurumlar:', strong: true }, ' mevzuatın zorunlu kıldığı hallerde.']
             ],
