@@ -1,9 +1,12 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, ElementRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { PUBLIC_FEATURE_GROUPS, PUBLIC_FEATURE_SECTIONS, publicFeatureCardPlans, publicFeatureGroupShotCaption } from '@/app/features/public/utils/public-features-content.utils';
+import { PUBLIC_HOME_DAY_FLOW } from '@/app/features/public/utils/public-home-content.utils';
+import { PUBLIC_FEATURE_VISUALS } from '@/app/features/public/utils/public-screenshot-crops.utils';
 import { PUBLIC_FEATURES_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
+import { publicSiteToneClass } from '@/app/features/public/utils/public-site-tone.utils';
 import { PUBLIC_SITE_SHOWCASE } from '@/app/features/public/utils/public-site-showcase-content.utils';
 import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicPageHeaderComponent } from './components/public-page-header.component';
@@ -11,9 +14,10 @@ import { PublicScreenshotComponent } from './components/public-screenshot.compon
 import { PublicSiteShowcaseComponent } from './components/public-site-showcase.component';
 
 /**
- * Özellikler (tasarım belgesi 5.2): 6 bölüm, metin + ekran dönüşümlü; ardından klinik web sitesi vitrini ve gün akışı dışındaki
- * işler kart gruplarında (kartta paket etiketi; grubun ekranı varsa kartların altında, altyazıda kartın adı ve paketi).
- * Masaüstünde yapışkan bölüm dizini hepsini listeler.
+ * Özellikler (tasarım belgesi 5.2): 6 bölüm, her biri kendi tonunda panel; büyük ekran, köşesinde yapışkan not gibi yakın çekim,
+ * altında maddeler. Ardından klinik web sitesi vitrini ve gün akışı dışındaki işler kart gruplarında (kartta paket etiketi; grubun
+ * ekranı varsa kartların altında, altyazıda kartın adı ve paketi). Bölüm dizini geniş ekranda solda noktalı yol, dar ekranda üstte
+ * yapışkan şerittir; kaydırdıkça ekranın ortasından geçen bölüm işaretlenir.
  */
 @Component({
     selector: 'app-public-features-page',
@@ -25,64 +29,86 @@ import { PublicSiteShowcaseComponent } from './components/public-site-showcase.c
             eyebrow="Özellikler"
             title="Gelişten tahsilata bir günün akışı"
             lead="Modül listesi değil, bir ziyaretin yolculuğu: hasta kapıdan girer, muayene olur, ücreti alınır, gün kapanır. Ardından hasta sahibine ulaşan ve işletmeyi yöneten araçlar."
-        />
+        >
+            <ol class="ps-list ps-path" aria-label="Günün durakları">
+                @for (step of dayFlow; track step.id; let i = $index) {
+                    <li [class]="toneOf(i)">
+                        <span class="ps-bubble" aria-hidden="true">{{ i + 1 }}</span>
+                        <strong>{{ step.title }}</strong>
+                    </li>
+                }
+            </ol>
+        </app-public-page-header>
 
-        <div class="mx-auto max-w-6xl px-4 md:px-6 lg:grid lg:grid-cols-[200px_1fr] lg:gap-12">
-            <nav class="hidden lg:block" aria-label="Bölüm dizini">
-                <ul class="sticky top-24 m-0 list-none p-0 pt-16 text-sm">
-                    @for (section of index; track section.id) {
-                        <li>
-                            <a [routerLink]="[]" [fragment]="section.id" class="public-index-link flex min-h-9 items-center text-surface-600 no-underline dark:text-surface-300">{{
-                                section.title
-                            }}</a>
+        <div class="ps-wrap ps-layout">
+            <!-- Yol dizini: geniş ekranda solda noktalı yol, dar ekranda üstte kayan renkli haplar; kaydırdıkça etkin bölüm işaretlenir -->
+            <nav class="ps-route" aria-label="Bölüm dizini">
+                <ol class="ps-list">
+                    @for (item of index; track item.id; let i = $index) {
+                        <li [class]="toneOf(i)">
+                            <a
+                                [routerLink]="[]"
+                                [fragment]="item.id"
+                                [class.ps-route--active]="activeSection() === item.id"
+                                [class.ps-route--done]="i < activeSectionIndex()"
+                                [attr.aria-current]="activeSection() === item.id ? 'location' : null"
+                            >
+                                <span class="ps-route-dot" aria-hidden="true"></span>{{ item.title }}
+                            </a>
                         </li>
                     }
-                </ul>
+                </ol>
             </nav>
 
-            <div>
+            <div class="ps-stack">
                 @for (section of sections; track section.id; let i = $index) {
-                    <section [id]="section.id" class="public-section scroll-mt-24" [attr.aria-labelledby]="'feature-' + section.id">
-                        <div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-14">
-                            <div [class.lg:order-2]="i % 2 === 1">
-                                <h2 [id]="'feature-' + section.id" class="public-h2 m-0">{{ section.title }}</h2>
-                                <p class="public-lead m-0 mt-3">{{ section.lead }}</p>
-                                <ul class="m-0 mt-5 list-none space-y-2.5 p-0">
-                                    @for (bullet of section.bullets; track bullet) {
-                                        <li class="flex items-start gap-2.5 text-base text-surface-700 dark:text-surface-200">
-                                            <i class="pi pi-check mt-1 shrink-0 text-sm text-[var(--public-accent)]" aria-hidden="true"></i>
-                                            <span>{{ bullet }}</span>
-                                        </li>
-                                    }
-                                </ul>
+                    <section [id]="section.id" data-section-spy [class]="'ps-panel ps-feature ' + toneOf(i)" [attr.aria-labelledby]="'feature-' + section.id">
+                        <header class="ps-feature-head">
+                            <span class="ps-bubble ps-bubble--big" aria-hidden="true">{{ i + 1 }}</span>
+                            <div>
+                                <h2 [id]="'feature-' + section.id" class="public-h2">{{ section.title }}</h2>
+                                <p class="public-lead">{{ section.lead }}</p>
                             </div>
-                            <app-public-screenshot [shot]="section.screenshot" />
+                        </header>
+                        <div class="ps-feature-shot">
+                            <app-public-screenshot [crop]="visuals[section.id].main" [phoneCrop]="visuals[section.id].phone" />
+                            <div class="ps-feature-sticker ps-not-phone">
+                                <app-public-screenshot [crop]="visuals[section.id].details[0].crop" [sticker]="true" [caption]="visuals[section.id].details[0].label" />
+                            </div>
                         </div>
+                        <ul class="ps-list ps-points">
+                            @for (bullet of section.bullets; track bullet) {
+                                <li><i class="pi pi-check" aria-hidden="true"></i><span>{{ bullet }}</span></li>
+                            }
+                        </ul>
                     </section>
                 }
 
-                <section [id]="showcase.id" class="public-section scroll-mt-24" [attr.aria-labelledby]="'feature-' + showcase.id">
+                <section [id]="showcase.id" data-section-spy class="ps-panel ps-feature--plain ps-tone-mint" [attr.aria-labelledby]="'feature-' + showcase.id">
                     <app-public-site-showcase [headingId]="'feature-' + showcase.id" />
                 </section>
 
-                @for (group of groups; track group.id) {
-                    <section [id]="group.id" class="public-section scroll-mt-24" [attr.aria-labelledby]="'feature-' + group.id">
-                        <h2 [id]="'feature-' + group.id" class="public-h2 m-0">{{ group.title }}</h2>
-                        <p class="public-lead m-0 mt-3 max-w-2xl">{{ group.lead }}</p>
-                        <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                @for (group of groups; track group.id; let g = $index) {
+                    <section [id]="group.id" data-section-spy [class]="'ps-group ' + toneOf(g + 1)" [attr.aria-labelledby]="'feature-' + group.id">
+                        <header class="ps-feature-head">
+                            <span class="ps-bubble ps-bubble--big" aria-hidden="true">{{ noOf(group.id) }}</span>
+                            <div>
+                                <h2 [id]="'feature-' + group.id" class="public-h2">{{ group.title }}</h2>
+                                <p class="public-lead">{{ group.lead }}</p>
+                            </div>
+                        </header>
+                        <div class="ps-grid">
                             @for (card of group.cards; track card.title) {
-                                <article class="public-card flex flex-col p-5" data-feature-card>
-                                    <span class="public-step-badge" aria-hidden="true"><i [class]="card.icon"></i></span>
-                                    <h3 class="m-0 mt-3 text-base font-semibold text-surface-900 dark:text-surface-0">{{ card.title }}</h3>
-                                    <p class="m-0 mt-1.5 flex-1 text-sm text-surface-600 dark:text-surface-300">{{ card.description }}</p>
-                                    <p class="m-0 mt-4 text-sm font-semibold text-[var(--public-accent-text)]" data-feature-plans>{{ plansOf(card) }}</p>
+                                <article class="ps-card ps-card--plain" data-feature-card>
+                                    <span class="ps-round" aria-hidden="true"><i [class]="card.icon"></i></span>
+                                    <h3 class="ps-h3">{{ card.title }}</h3>
+                                    <p>{{ card.description }}</p>
+                                    <p class="ps-plan" data-feature-plans>{{ plansOf(card) }}</p>
                                 </article>
                             }
                         </div>
                         @if (group.shot; as shot) {
-                            <div class="mt-8">
-                                <app-public-screenshot [shot]="shot.screenshot" [caption]="shotCaptionOf(group)" />
-                            </div>
+                            <app-public-screenshot [shot]="shot.screenshot" [caption]="shotCaptionOf(group)" />
                         }
                     </section>
                 }
@@ -96,6 +122,7 @@ export class PublicFeaturesPageComponent implements OnInit {
     private readonly title = inject(Title);
     private readonly meta = inject(Meta);
     private readonly document = inject(DOCUMENT);
+    private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
     readonly sections = PUBLIC_FEATURE_SECTIONS;
     readonly groups = PUBLIC_FEATURE_GROUPS;
@@ -107,6 +134,55 @@ export class PublicFeaturesPageComponent implements OnInit {
     ];
     readonly plansOf = publicFeatureCardPlans;
     readonly shotCaptionOf = publicFeatureGroupShotCaption;
+    readonly visuals = PUBLIC_FEATURE_VISUALS;
+    readonly dayFlow = PUBLIC_HOME_DAY_FLOW;
+    readonly toneOf = publicSiteToneClass;
+
+    readonly activeSection = signal<string>(this.index[0].id);
+    readonly activeSectionIndex = computed(() => this.index.findIndex((item) => item.id === this.activeSection()));
+
+    constructor() {
+        const destroyRef = inject(DestroyRef);
+
+        afterNextRender(() => {
+            // Test ortamında (jsdom) yok; dizin yine çalışır, yalnız etkin bölüm işaretlenmez.
+            if (typeof IntersectionObserver === 'undefined') {
+                return;
+            }
+
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    const hit = entries.find((entry) => entry.isIntersecting);
+
+                    if (hit) {
+                        this.activeSection.set(hit.target.id);
+                        this.revealInStrip(hit.target.id);
+                    }
+                },
+                { rootMargin: '-40% 0px -55% 0px' }
+            );
+
+            this.host.nativeElement.querySelectorAll('[data-section-spy]').forEach((section) => observer.observe(section));
+            destroyRef.onDestroy(() => observer.disconnect());
+        });
+    }
+
+    /** Dar ekranda dizin yatay şerittir: etkin bölümün hapı görünür alana kayar (sayfa dikey kaymaz). */
+    private revealInStrip(id: string): void {
+        const strip = this.host.nativeElement.querySelector<HTMLElement>('.ps-route ol');
+        const link = strip?.querySelector<HTMLElement>(`a[href$="#${id}"]`);
+
+        if (!strip || !link || strip.scrollWidth <= strip.clientWidth) {
+            return;
+        }
+
+        strip.scrollTo({ left: link.offsetLeft - strip.offsetLeft - 20, behavior: 'smooth' });
+    }
+
+    /** Dizindeki sıra numarası (kart gruplarının başlık rozeti). */
+    noOf(id: string): string {
+        return String(this.index.findIndex((item) => item.id === id) + 1).padStart(2, '0');
+    }
 
     ngOnInit(): void {
         setPublicPageMeta(this.title, this.meta, PUBLIC_FEATURES_PAGE_META, this.document);

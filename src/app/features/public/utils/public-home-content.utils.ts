@@ -67,3 +67,17 @@ export const PUBLIC_HOME_DAY_FLOW: readonly PublicHomeFlowStepDef[] = [
 
 /** Kahraman alt satırı. */
 export const PUBLIC_HOME_TRIAL_LINE = '14 gün ücretsiz · kart gerekmez · satış görüşmesi yok';
+
+export interface PublicHomeTrustDef {
+    readonly icon: string;
+    readonly text: string;
+}
+
+/** Kahramanın altındaki güven satırı: yeni iddia yok, sitedeki mevcut cümlelerden kısa parçalar. */
+export const PUBLIC_HOME_TRUST: readonly PublicHomeTrustDef[] = [
+    { icon: 'pi pi-map-marker', text: "Türkiye'deki veteriner klinikleri için" },
+    { icon: 'pi pi-book', text: 'Kayıt defterleri her kayıtla kendiliğinden dolar' },
+    { icon: 'pi pi-shield', text: 'KVKK evrakı hazır' },
+    { icon: 'pi pi-lock', text: 'Kesinleşen muayene kilitlenir' },
+    { icon: 'pi pi-download', text: 'Veriniz sizde kalır' }
+];
