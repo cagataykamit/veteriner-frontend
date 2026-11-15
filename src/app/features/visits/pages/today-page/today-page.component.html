@@ -82,7 +82,7 @@
                             <div class="flex items-start justify-between gap-2 mb-2">
                                 <div class="text-sm font-medium">
                                     @if (item.arrivedAtUtc) {
-                                        <div>Geliş {{ time(item.arrivedAtUtc) }}</div>
+                                        <div>Geliş {{ arrival(item.arrivedAtUtc) }}</div>
                                         @if (item.scheduledAtUtc) {
                                             <div class="text-muted-color">Randevu {{ time(item.scheduledAtUtc) }}</div>
                                         }
@@ -172,7 +172,7 @@
                             <tr>
                                 <td>
                                     @if (item.arrivedAtUtc) {
-                                        <div>Geliş {{ time(item.arrivedAtUtc) }}</div>
+                                        <div>Geliş {{ arrival(item.arrivedAtUtc) }}</div>
                                         @if (item.scheduledAtUtc) {
                                             <div class="text-sm text-muted-color">Randevu {{ time(item.scheduledAtUtc) }}</div>
                                         }

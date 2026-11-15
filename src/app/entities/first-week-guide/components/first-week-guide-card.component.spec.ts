@@ -55,6 +55,21 @@ describe('FirstWeekGuideCardComponent', () => {
         expect(chip('İlk müşteri').getAttribute('aria-current')).toBe('step');
     });
 
+    it('telefonda tek satırlık özet: ilerleme ve sıradaki adım; dokununca kart açılır (H15)', () => {
+        render();
+        const compact = q('first-week-guide-compact')!;
+
+        expect(compact.textContent).toContain('İlk hafta 0/7');
+        expect(compact.textContent).toContain('Sıradaki: İlk müşteri');
+        expect(card()?.classList).toContain('fwg-collapsed');
+
+        (compact as HTMLButtonElement).click();
+        fixture.detectChanges();
+
+        expect(q('first-week-guide-compact')).toBeNull();
+        expect(card()?.classList).not.toContain('fwg-collapsed');
+    });
+
     it('hekime muayene adımlarını gösterir', () => {
         claims = VETERINARIAN;
         render();

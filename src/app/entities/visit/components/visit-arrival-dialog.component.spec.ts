@@ -116,7 +116,7 @@ describe('VisitArrivalDialogComponent', () => {
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { getClinicId: () => 'c1', getUserId: () => userId, hasOperationClaim: (c: string) => claims.includes(c) } },
-                { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli' }) } },
+                { provide: ClientsService, useValue: { getClientById: () => of({ fullName: 'Ali Veli', phone: '05321234567' }) } },
                 { provide: PetsService, useValue: { getPets } },
                 { provide: ExaminationTemplatesService, useValue: templatesMock() }
             ]
@@ -215,13 +215,13 @@ describe('VisitArrivalDialogComponent', () => {
             expect(cmp.form.controls.pet.touched).toBe(true);
         });
 
-        it('arama terimi sunucuya search olarak gider (yalnız aktif hayvanlar); sonuçlar sahip adıyla etiketlenir', () => {
+        it('arama terimi sunucuya search olarak gider (yalnız aktif hayvanlar); sonuçlar müşteri adı ve telefonuyla etiketlenir (H15)', () => {
             cmp.onPetSearch({ query: ' 985 1210 ', originalEvent: new Event('x') });
 
             expect(getPets).toHaveBeenCalledTimes(1);
 
             expect(getPets).toHaveBeenCalledWith({ page: 1, pageSize: 10, search: '985 1210', status: 'Active' });
-            expect(cmp.petSuggestions()).toEqual([{ id: 'p1', label: 'Pamuk — Kedi · Müşteri: Ali Veli', clientId: 'cl1', clientName: 'Ali Veli' }]);
+            expect(cmp.petSuggestions()).toEqual([{ id: 'p1', label: 'Pamuk — Kedi · Müşteri: Ali Veli · +90 532 123 45 67', clientId: 'cl1', clientName: 'Ali Veli' }]);
         });
 
         it('boş terim istek üretmez', () => {

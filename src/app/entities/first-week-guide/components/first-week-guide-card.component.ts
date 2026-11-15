@@ -1,4 +1,4 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, computed, ElementRef, inject, linkedSignal, OnInit, viewChild } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, computed, ElementRef, inject, linkedSignal, OnInit, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -10,7 +10,8 @@ import { FirstWeekGuideService, isFirstWeekGuideVisible } from '@/app/entities/f
  * Bugün ekranında rolüne göre "İlk hafta" karşılama afişi (TIER-022): solda marka renginde selam, sayaç ve ilerleme; sağda
  * sıradaki adım (ilk yapılmamış adım) ve altında adım hapları. Hapa tıklanan adım sağda açılır, oradan elle işaretlenir.
  * İlk görüldüğünden 14 gün kendiliğinden açılır; kapatılınca bir daha çıkmaz, kullanıcı menüsündeki "İlk hafta rehberi" ile
- * yeniden açılır. Rolü olmayan ya da adımı kalmayan kullanıcıda çizilmez.
+ * yeniden açılır. Rolü olmayan ya da adımı kalmayan kullanıcıda çizilmez. Telefonda tek satırlık özet olarak durur, dokununca açılır;
+ * böylece bekleyen hastalar ilk ekranda kalır (H15).
  */
 @Component({
     selector: 'app-first-week-guide-card',
@@ -94,12 +95,38 @@ import { FirstWeekGuideService, isFirstWeekGuideVisible } from '@/app/entities/f
                 min-height: var(--touch-target);
                 padding-right: 1rem;
             }
+            .fwg-collapsed {
+                display: none;
+            }
+        }
+        .fwg-compact {
+            min-height: var(--touch-target);
+            font: inherit;
+            color: inherit;
+            cursor: pointer;
         }
     `,
     template: `
         @if (visible()) {
+            @if (!expanded()) {
+                <button
+                    type="button"
+                    class="fwg-compact sm:hidden w-full flex items-center gap-2 mb-4 px-3 rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 text-left"
+                    [attr.aria-expanded]="false"
+                    (click)="expanded.set(true)"
+                    data-testid="first-week-guide-compact"
+                >
+                    <i class="pi pi-flag text-primary" aria-hidden="true"></i>
+                    <span class="font-medium whitespace-nowrap">İlk hafta {{ doneCount() }}/{{ steps.length }}</span>
+                    @if (nextStep(); as next) {
+                        <span class="text-muted-color truncate min-w-0">· Sıradaki: {{ next.title }}</span>
+                    }
+                    <i class="pi pi-chevron-down ml-auto text-muted-color" aria-hidden="true"></i>
+                </button>
+            }
             <section
                 class="relative grid lg:grid-cols-[19rem_minmax(0,1fr)] mb-4 overflow-hidden rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900"
+                [class.fwg-collapsed]="!expanded()"
                 aria-labelledby="first-week-guide-title"
                 data-testid="first-week-guide"
             >
@@ -206,6 +233,8 @@ export class FirstWeekGuideCardComponent implements OnInit {
     private readonly role = firstWeekGuideRole(this.hasClaim);
 
     readonly roleTitle = this.role ? FIRST_WEEK_GUIDE_ROLE_TITLES[this.role] : '';
+    /** Telefonda kart özet satırıyla başlar; geniş ekranda her zaman açıktır. */
+    readonly expanded = signal(false);
     readonly steps = this.role ? firstWeekGuideSteps(this.role, this.hasClaim) : [];
 
     readonly visible = computed(() => {
