@@ -40,7 +40,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
-                <button pButton type="button" [disabled]="form.invalid || submitting()" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ reverting() ? 'Geri al' : 'Gelmedi işaretle' }}</button>
+                <button pButton type="submit" form="appointment-no-show-form" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ reverting() ? 'Geri al' : 'Gelmedi işaretle' }}</button>
             </ng-template>
         </p-dialog>
     `

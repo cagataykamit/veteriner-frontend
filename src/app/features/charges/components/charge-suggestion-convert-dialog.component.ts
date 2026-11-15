@@ -35,7 +35,7 @@ export interface ChargeSuggestionOverrides {
                     <p class="mt-0 mb-4 text-sm text-muted-color">Katalogda bu kalem için fiyat yok; birim fiyatı girin.</p>
                 }
             }
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" id="charge-suggestion-convert-form">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12">
                         <label for="csc-description" class="block text-sm font-medium text-muted-color mb-2">Açıklama *</label>
@@ -69,7 +69,7 @@ export interface ChargeSuggestionOverrides {
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
-                <button pButton type="button" [disabled]="form.invalid || submitting()" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Ücrete çevir</button>
+                <button pButton type="submit" form="charge-suggestion-convert-form" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Ücrete çevir</button>
             </ng-template>
         </p-dialog>
     `

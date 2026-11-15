@@ -29,7 +29,7 @@ function addendumText(c: { value: unknown }): { addendumText: true } | null {
     template: `
         <p-dialog header="Ek not ekle" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(620px, 95vw)' }" [(visible)]="visible">
             <p class="mt-0 text-muted-color">Ek not kalıcıdır; eklendikten sonra düzenlenemez veya silinemez. İlk muayene metni değişmez.</p>
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" id="examination-addendum-form">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12">
                         <label for="ad-reason" class="block text-sm font-medium text-muted-color mb-2">Gerekçe *</label>
@@ -53,7 +53,7 @@ function addendumText(c: { value: unknown }): { addendumText: true } | null {
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
-                <button pButton type="button" [disabled]="form.invalid || submitting()" data-testid="addendum-submit" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Ek notu kaydet</button>
+                <button pButton type="submit" form="examination-addendum-form" [disabled]="form.invalid || submitting()" data-testid="addendum-submit"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Ek notu kaydet</button>
             </ng-template>
         </p-dialog>
     `

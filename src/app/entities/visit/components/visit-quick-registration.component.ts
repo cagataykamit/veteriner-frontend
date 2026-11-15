@@ -40,7 +40,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppTrialLimitNoticeComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4" aria-label="Hızlı kayıt">
+        <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4" aria-label="Hızlı kayıt" (keydown.enter)="onEnter($event)">
             <h3 class="text-base font-semibold mt-0 mb-3">{{ owner() ? 'Bu sahibe yeni hasta ekle' : 'Yeni müşteri ve hasta ekle' }}</h3>
             <div class="grid grid-cols-12 gap-3">
                 @if (owner(); as o) {
@@ -169,6 +169,16 @@ export class VisitQuickRegistrationComponent implements OnInit {
         const petOk = this.petForm.controls.name.valid && this.petForm.controls.speciesId.valid && this.petForm.controls.microchipNumber.valid;
 
         return petOk && (!!this.owner() || (this.clientForm.controls.fullName.valid && this.clientForm.controls.phone.valid));
+    }
+
+    /** Metin alanında Enter bu bölümü kaydeder; üstteki geliş formunu göndermez (bölümün kendi formu yok, geliş formunun içinde). */
+    onEnter(event: Event): void {
+        if (!(event.target instanceof HTMLInputElement)) {
+            return;
+        }
+
+        event.preventDefault();
+        this.submit();
     }
 
     submit(): void {

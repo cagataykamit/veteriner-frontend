@@ -88,6 +88,18 @@ describe('VisitQuickRegistrationComponent', () => {
         expect(cmp.canSubmit()).toBe(true);
     });
 
+    it('metin alanında Enter kaydeder (H3)', () => {
+        create();
+        fillValid();
+        const input = fixture.nativeElement.querySelector('#vr-petName') as HTMLInputElement;
+        const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+
+        input.dispatchEvent(event);
+
+        expect(clients.quickRegister).toHaveBeenCalledTimes(1);
+        expect(event.defaultPrevented).toBe(true);
+    });
+
     it('hayvan adı ve tür zorunludur', () => {
         create();
         cmp.clientForm.patchValue({ fullName: 'Ayşe Yılmaz', phone: '0532 123 45 67' });

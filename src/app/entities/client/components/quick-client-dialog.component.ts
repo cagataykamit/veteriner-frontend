@@ -66,7 +66,7 @@ import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>İptal</button>
-                <button pButton type="button" [disabled]="form.invalid || submitting()" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Müşteriyi kaydet</button>
+                <button pButton type="submit" form="quick-client-form" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Müşteriyi kaydet</button>
             </ng-template>
         </p-dialog>
     `

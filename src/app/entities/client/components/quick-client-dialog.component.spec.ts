@@ -1,6 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { Component } from '@angular/core';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { By } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
-import { throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { QuickClientDialogComponent } from './quick-client-dialog.component';
 
@@ -53,5 +56,41 @@ describe('QuickClientDialogComponent — deneme müşteri kotası (TRIAL-006)', 
         expect(cmp.trialLimitError()).toBe(detail);
         expect(cmp.submitError()).toBeNull();
         expect(cmp.visible()).toBe(true);
+    });
+});
+
+@Component({
+    standalone: true,
+    imports: [ReactiveFormsModule, QuickClientDialogComponent],
+    template: `<form [formGroup]="outer" (ngSubmit)="outerSubmitted = true"><app-quick-client-dialog [(visible)]="open" /></form>`
+})
+class OuterFormHostComponent {
+    readonly outer = new FormGroup({});
+    open = true;
+    outerSubmitted = false;
+}
+
+describe('QuickClientDialogComponent — Enter ile kaydetme', () => {
+    it('Enter (varsayılan düğmeyle form gönderimi) müşteriyi kaydeder; sayfadaki dış form gönderilmez', async () => {
+        const createClient = vi.fn().mockReturnValue(of({ id: 'c1' }));
+
+        TestBed.configureTestingModule({
+            imports: [OuterFormHostComponent],
+            providers: [{ provide: ClientsService, useValue: { createClient } }]
+        });
+        const fixture = TestBed.createComponent(OuterFormHostComponent);
+
+        fixture.detectChanges();
+        await fixture.whenStable();
+        const dialog = fixture.debugElement.query(By.directive(QuickClientDialogComponent)).componentInstance as QuickClientDialogComponent;
+
+        dialog.form.patchValue({ fullName: 'Ayşe Yılmaz', phone: '0532 111 22 33' });
+        fixture.detectChanges();
+        const form = document.getElementById('quick-client-form') as HTMLFormElement;
+
+        form.requestSubmit();
+
+        expect(createClient).toHaveBeenCalledTimes(1);
+        expect(fixture.componentInstance.outerSubmitted).toBe(false);
     });
 });

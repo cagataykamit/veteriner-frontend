@@ -131,7 +131,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>İptal</button>
-                <button pButton type="button" [disabled]="form.invalid || submitting()" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ appointment() ? 'Geldi olarak kaydet' : 'Kaydet' }}</button>
+                <button pButton type="submit" form="visit-arrival-form" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ appointment() ? 'Geldi olarak kaydet' : 'Kaydet' }}</button>
             </ng-template>
         </p-dialog>
     `
