@@ -49,7 +49,7 @@ describe('ilk hafta rehberi adımları', () => {
     });
 
     it('yönetici: davet, çalışma saatleri, hizmet ve fiyat, içe aktarma, hatırlatma, geliş ve gün sonu', () => {
-        expect(keys('manager', MANAGER)).toEqual(['invite', 'workingHours', 'services', 'import', 'reminderSettings', 'visit', 'endOfDay']);
+        expect(keys('manager', MANAGER)).toEqual(['invite', 'workingHours', 'clinicPhone', 'services', 'import', 'reminderSettings', 'visit', 'endOfDay']);
     });
 
     it('ekranına izni olmayan adım listede görünmez (ör. gün sonu iki izin birlikte ister)', () => {
@@ -68,6 +68,7 @@ describe('ilk hafta rehberi adımları', () => {
             expect(firstWeekGuideKeysForRequest('POST', '/api/v1/tenants/t-1/invites', {})).toEqual(['invite']);
             expect(firstWeekGuideKeysForRequest('POST', '/api/v1/imports/batches/b-1/commit', {})).toEqual(['import']);
             expect(firstWeekGuideKeysForRequest('PUT', '/api/v1/clinics/c-1/working-hours', {})).toEqual(['workingHours']);
+            expect(firstWeekGuideKeysForRequest('PUT', '/api/v1/clinics/c-1', {})).toEqual(['clinicPhone']);
         });
 
         it('hizmet adımını yalnız türü Hizmet olan ürün işaretler', () => {

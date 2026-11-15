@@ -25,6 +25,7 @@ describe('ClinicPortalSettingsPageComponent', () => {
     let confirmation: ConfirmationService;
     let el: HTMLElement;
     let planLocked: boolean;
+    let clinicPhone: string | null;
 
     async function create(): Promise<void> {
         await TestBed.configureTestingModule({
@@ -32,7 +33,7 @@ describe('ClinicPortalSettingsPageComponent', () => {
             providers: [
                 provideRouter([]),
                 { provide: ClinicPortalSettingsService, useValue: service },
-                { provide: ClinicsService, useValue: { listClinics: () => of([{ id: 'k1', name: 'Pati', isActive: true }]) } },
+                { provide: ClinicsService, useValue: { listClinics: () => of([{ id: 'k1', name: 'Pati', isActive: true }]), getClinicById: () => of({ id: 'k1', phone: clinicPhone }) } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'k1', getClinicName: () => 'Pati' } },
                 {
                     provide: TenantReadOnlyContextService,
@@ -53,6 +54,7 @@ describe('ClinicPortalSettingsPageComponent', () => {
 
     beforeEach(() => {
         planLocked = false;
+        clinicPhone = '0312 555 00 00';
         claims = new Set(['Clinics.Read', 'Clinics.Update']);
         service = {
             get: vi.fn().mockReturnValue(of(settings())),
@@ -154,5 +156,21 @@ describe('ClinicPortalSettingsPageComponent', () => {
 
         expect(fixture.componentInstance.canWrite()).toBe(false);
         expect(el.textContent).toContain('yalnız klinik yönetim yetkisi olan kullanıcı');
+    });
+
+    it('klinik telefonu yoksa uyarı ve klinik kaydına bağlantı gösterir (H9)', async () => {
+        clinicPhone = null;
+        await create();
+
+        const warn = el.querySelector('[data-testid="portal-phone-missing"]');
+
+        expect(warn?.textContent).toContain('Klinik telefonu yok');
+        expect(warn?.querySelector('a')?.getAttribute('href')).toBe('/panel/settings/clinics/k1');
+    });
+
+    it('telefon varsa uyarı yok', async () => {
+        await create();
+
+        expect(el.querySelector('[data-testid="portal-phone-missing"]')).toBeNull();
     });
 });

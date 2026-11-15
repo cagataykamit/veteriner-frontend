@@ -114,6 +114,8 @@ export interface CardSection {
 export const TODAY_ROUTE = '/panel/today';
 export const DASHBOARD_ROUTE = '/panel/dashboard';
 export const SETTINGS_ROUTE = '/panel/settings';
+/** Klinik kaydı sayfası (telefon, adres, çalışma saati); klinik kimliği sona eklenir. */
+export const CLINIC_DETAIL_ROUTE = '/panel/settings/clinics';
 export const DEFINITIONS_ROUTE = '/panel/settings/definitions';
 export const SPECIES_ROUTE = `${DEFINITIONS_ROUTE}/species`;
 export const BREEDS_ROUTE = `${DEFINITIONS_ROUTE}/breeds`;
