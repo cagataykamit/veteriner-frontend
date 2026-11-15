@@ -27,6 +27,19 @@
     @if (selectionError()) {
         <p class="text-danger mt-0 mb-4" role="alert">{{ selectionError() }}</p>
     }
+    @if (pendingDraft(); as draft) {
+        <div class="flex flex-wrap items-center gap-2 rounded-border border border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-950 p-3 mb-4" role="status" data-testid="examination-draft-prompt">
+            <p class="m-0 text-sm flex-1 min-w-60">
+                <i class="pi pi-history mr-2 text-primary" aria-hidden="true"></i>Kaydedilmemiş taslağınız var, sürdürülsün mü?
+                <span class="text-muted-color">(son değişiklik {{ draft.savedAtLabel }})</span>
+                @if (draft.stale) {
+                    <span class="block mt-1 text-amber-700 dark:text-amber-300">Kayıt bu arada değişti; sürdürürseniz taslaktaki alanlar güncel kaydın üstüne yazılır.</span>
+                }
+            </p>
+            <button pButton type="button" size="small" (click)="resumeDraft()" data-testid="examination-draft-resume">Sürdür</button>
+            <button pButton type="button" size="small" severity="secondary" [outlined]="true" (click)="discardDraft()" data-testid="examination-draft-discard">Taslağı sil</button>
+        </div>
+    }
 
     @if (cancelledAppointmentBlocked()) {
         <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4">
