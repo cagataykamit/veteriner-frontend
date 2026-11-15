@@ -9,6 +9,7 @@ import { PUBLIC_ANCHOR_SCROLL_OFFSET_PX, PublicLayoutComponent } from './public-
 import { appRoutes } from '@/app.routes';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { PUBLIC_CONTACT_CARD_ROWS, PUBLIC_CONTACT_EMAIL } from '@/app/features/public/utils/public-contact-content.utils';
+import { PUBLIC_EDOCUMENT_SECTION, PUBLIC_EDOCUMENT_STEPS } from '@/app/features/public/utils/public-edocument-content.utils';
 import { PUBLIC_FAQ_CATEGORIES, PUBLIC_HOME_FAQS, PUBLIC_PACKAGES_FAQ_CATEGORY_ID, publicFaqsOf } from '@/app/features/public/utils/public-faq-content.utils';
 import { PUBLIC_FEATURE_GROUPS, PUBLIC_FEATURE_SECTIONS } from '@/app/features/public/utils/public-features-content.utils';
 import { PUBLIC_HOME_AUDIENCE, PUBLIC_HOME_DAY_FLOW } from '@/app/features/public/utils/public-home-content.utils';
@@ -125,7 +126,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         await harness.navigateByUrl(PUBLIC_PATHS.features);
         harness.detectChanges();
 
-        expect(texts('section[id] h2')).toEqual([...PUBLIC_FEATURE_SECTIONS, PUBLIC_SITE_SHOWCASE, ...PUBLIC_FEATURE_GROUPS].map((s) => s.title));
+        expect(texts('section[id] h2')).toEqual([...PUBLIC_FEATURE_SECTIONS, PUBLIC_EDOCUMENT_SECTION, PUBLIC_SITE_SHOWCASE, ...PUBLIC_FEATURE_GROUPS].map((s) => s.title));
         const shots: PublicScreenshotKey[] = [...PUBLIC_FEATURE_SECTIONS.map((s) => s.screenshot), 'klinikSitesi', ...PUBLIC_FEATURE_GROUPS.flatMap((g) => (g.shot ? [g.shot.screenshot] : []))];
         const images = Array.from(root().querySelectorAll<HTMLImageElement>('figure.public-shot:not(.public-shot--sticker) img.public-shot-img--light'));
 
@@ -160,7 +161,23 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
 
         const hrefs = Array.from(root().querySelectorAll<HTMLAnchorElement>('nav[aria-label="Bölüm dizini"] a')).map((a) => a.getAttribute('href'));
 
-        expect(hrefs).toEqual([...PUBLIC_FEATURE_SECTIONS, PUBLIC_SITE_SHOWCASE, ...PUBLIC_FEATURE_GROUPS].map((s) => `${PUBLIC_PATHS.features}#${s.id}`));
+        expect(hrefs).toEqual([...PUBLIC_FEATURE_SECTIONS, PUBLIC_EDOCUMENT_SECTION, PUBLIC_SITE_SHOWCASE, ...PUBLIC_FEATURE_GROUPS].map((s) => `${PUBLIC_PATHS.features}#${s.id}`));
+    });
+
+    it('özellikler: e-belge bölümü sağlayıcı adı yazmaz, paketi özellik tablosundan okur; üç adım, çift belge kesilmez', async () => {
+        await harness.navigateByUrl(PUBLIC_PATHS.features);
+        harness.detectChanges();
+
+        const section = root().querySelector<HTMLElement>(`section#${PUBLIC_EDOCUMENT_SECTION.id}`)!;
+        const text = section.textContent ?? '';
+
+        expect(section.querySelector('h2')?.textContent?.trim()).toBe('e-Fatura, e-Arşiv ve e-SMM panelden');
+        expect(Array.from(section.querySelectorAll('[data-edocument-steps] strong')).map((el) => el.textContent?.trim())).toEqual(PUBLIC_EDOCUMENT_STEPS.map((s) => s.title));
+        expect(text).toContain('Aynı ücrete iki belge kesilmez');
+        expect(text).toContain('Anlaşmalı e-belge sağlayıcılarıyla');
+        expect(text).not.toMatch(/nilvera|paraşüt|parasut|logo|uyumsoft|mikro/i);
+        expect(section.querySelector('[data-edocument-plans]')?.textContent?.trim()).toBe('Tüm paketlerde');
+        expect(text).not.toMatch(/en iyi|bir numara|yalnızca bizde|saniyede|dakikada/i);
     });
 
     it('özellikler: klinik web sitesi vitrini kendi bölümünde; dört tasarım, yedi adım, sihirbaz ekranı ve bağlantılar', async () => {

@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { afterNextRender, Component, computed, DestroyRef, ElementRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
+import { PUBLIC_EDOCUMENT_SECTION, PUBLIC_EDOCUMENT_STEPS, publicEDocumentPlans } from '@/app/features/public/utils/public-edocument-content.utils';
 import { PUBLIC_FEATURE_GROUPS, PUBLIC_FEATURE_SECTIONS, publicFeatureCardPlans, publicFeatureGroupShotCaption } from '@/app/features/public/utils/public-features-content.utils';
 import { PUBLIC_HOME_DAY_FLOW } from '@/app/features/public/utils/public-home-content.utils';
 import { PUBLIC_FEATURE_VISUALS } from '@/app/features/public/utils/public-screenshot-crops.utils';
@@ -15,7 +16,7 @@ import { PublicSiteShowcaseComponent } from './components/public-site-showcase.c
 
 /**
  * Özellikler (tasarım belgesi 5.2): 6 bölüm, her biri kendi tonunda panel; büyük ekran, köşesinde yapışkan not gibi yakın çekim,
- * altında maddeler. Ardından klinik web sitesi vitrini ve gün akışı dışındaki işler kart gruplarında (kartta paket etiketi; grubun
+ * altında maddeler. Ardından e-belge, klinik web sitesi vitrini ve gün akışı dışındaki işler kart gruplarında (kartta paket etiketi; grubun
  * ekranı varsa kartların altında, altyazıda kartın adı ve paketi). Bölüm dizini geniş ekranda solda noktalı yol, dar ekranda üstte
  * yapışkan şerittir; kaydırdıkça ekranın ortasından geçen bölüm işaretlenir.
  */
@@ -84,6 +85,42 @@ import { PublicSiteShowcaseComponent } from './components/public-site-showcase.c
                     </section>
                 }
 
+                <!-- e-Belge: henüz ekranı yok; güneş tonunda panel, üç adım ve maddeler -->
+                <section [id]="edocument.id" data-section-spy [class]="'ps-panel ps-feature ' + toneById[edocument.id]" [attr.aria-labelledby]="'feature-' + edocument.id">
+                    <header class="ps-feature-head">
+                        <span class="ps-bubble ps-bubble--big" aria-hidden="true"><i class="pi pi-receipt"></i></span>
+                        <div>
+                            <p class="ps-tagline">
+                                <span class="ps-chip">{{ edocument.eyebrow }}</span><span class="ps-plan" data-edocument-plans>{{ edocumentPlans }}</span>
+                            </p>
+                            <!-- "e-SMM" tireden bölünmesin: her sözcük kendi içinde bölünmez -->
+                            <h2 [id]="'feature-' + edocument.id" class="public-h2">
+                                @for (word of edocumentTitleWords; track $index) {
+                                    <span class="whitespace-nowrap">{{ word }}</span>&ngsp;
+                                }
+                            </h2>
+                            <p class="public-lead">{{ edocument.lead }}</p>
+                        </div>
+                    </header>
+                    <div>
+                        <h3 class="ps-h3">{{ edocument.stepsTitle }}</h3>
+                        <ol class="ps-list ps-trail ps-trail--inset mt-4" data-edocument-steps>
+                            @for (step of edocumentSteps; track step.title; let s = $index) {
+                                <li>
+                                    <span class="ps-bubble ps-bubble--big" aria-hidden="true">{{ s + 1 }}</span>
+                                    <strong class="ps-h3 mt-4 block">{{ step.title }}</strong>
+                                    <p>{{ step.text }}</p>
+                                </li>
+                            }
+                        </ol>
+                    </div>
+                    <ul class="ps-list ps-points ps-points--two">
+                        @for (bullet of edocument.bullets; track bullet) {
+                            <li><i class="pi pi-check" aria-hidden="true"></i><span>{{ bullet }}</span></li>
+                        }
+                    </ul>
+                </section>
+
                 <section [id]="showcase.id" data-section-spy [class]="'ps-panel ps-feature--plain ' + toneById[showcase.id]" [attr.aria-labelledby]="'feature-' + showcase.id">
                     <app-public-site-showcase [headingId]="'feature-' + showcase.id" />
                 </section>
@@ -127,9 +164,14 @@ export class PublicFeaturesPageComponent implements OnInit {
     readonly sections = PUBLIC_FEATURE_SECTIONS;
     readonly groups = PUBLIC_FEATURE_GROUPS;
     readonly showcase = PUBLIC_SITE_SHOWCASE;
-    /** Dizin ve her bölümün tonu: altı adım sırayla dört tonu döner, vitrin nane, kart grupları gökten başlar. Panel ve dizin noktası aynı tonu buradan alır. */
+    readonly edocument = PUBLIC_EDOCUMENT_SECTION;
+    readonly edocumentTitleWords = PUBLIC_EDOCUMENT_SECTION.title.split(' ');
+    readonly edocumentSteps = PUBLIC_EDOCUMENT_STEPS;
+    readonly edocumentPlans = publicEDocumentPlans();
+    /** Dizin ve her bölümün tonu: altı adım sırayla dört tonu döner, e-belge onları izler, vitrin nane, kart grupları gökten başlar. Panel ve dizin noktası aynı tonu buradan alır. */
     readonly index = [
         ...PUBLIC_FEATURE_SECTIONS.map(({ id, title }, i) => ({ id, title, tone: publicSiteToneClass(i) })),
+        { id: PUBLIC_EDOCUMENT_SECTION.id, title: PUBLIC_EDOCUMENT_SECTION.indexTitle, tone: publicSiteToneClass(PUBLIC_FEATURE_SECTIONS.length) },
         { id: PUBLIC_SITE_SHOWCASE.id, title: PUBLIC_SITE_SHOWCASE.indexTitle, tone: publicSiteToneClass(0) },
         ...PUBLIC_FEATURE_GROUPS.map(({ id, title }, g) => ({ id, title, tone: publicSiteToneClass(g + 1) }))
     ];

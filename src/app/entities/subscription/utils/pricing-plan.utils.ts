@@ -97,6 +97,7 @@ export type PricingFeatureKey =
     | 'vaccinationWizard'
     | 'mobileBarcode'
     | 'cashManagement'
+    | 'eDocuments'
     | 'advancedReports'
     | 'clinicsOverview'
     | 'externalApi'
@@ -152,6 +153,7 @@ export const PRICING_FEATURE_ROWS: readonly PricingFeatureRowDef[] = [
     { group: 'Kayıt ve KVKK', label: 'Müşteri veri kopyası', plans: ALL },
     { group: 'Kayıt ve KVKK', label: 'Tüm verinizi dışa aktarma', detail: 'Kurumun tüm kayıtları tek ZIP paketinde, her tablo ayrı CSV', key: 'dataExport', plans: ALL },
     { group: 'Para ve stok', label: 'Ücret ve tahsilat', detail: 'Nakit, kart ya da havale kaydı', plans: ALL },
+    { group: 'Para ve stok', label: 'e-Fatura, e-Arşiv ve e-SMM', detail: 'Kendi e-belge sağlayıcı hesabınızla; tek tıkla ya da ödemede otomatik', key: 'eDocuments', plans: ALL },
     { group: 'Para ve stok', label: 'Ücret bekleyen kalemler', plans: ALL },
     { group: 'Para ve stok', label: 'Bakiye, borç raporu ve müşteri kredisi', plans: ALL },
     { group: 'Para ve stok', label: 'Gün sonu raporu', plans: ALL },
@@ -244,7 +246,6 @@ export function plansFromText(apiCode: string): string {
 /** Şu an olmayanlar (ADR-035): dürüst kısa liste, paketten bağımsız; tarih ya da vaat yazılmaz. */
 export const PRICING_NOT_AVAILABLE: readonly string[] = [
     'SMS hatırlatma (hatırlatmalar e-posta ile gider)',
-    'e-Fatura',
     'Online ödeme',
     'Ayrı telefon uygulaması (panel tarayıcıda, telefonda da çalışır)',
     "HBS'e otomatik gönderim (takip listesi var, giriş klinikçe yapılır)",
