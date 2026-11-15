@@ -242,9 +242,12 @@ export interface ImportRowPageDto {
     totalPages: number;
 }
 
+/** Satır listesi durum filtresi; `WillSkip`: doğrulamada bilerek atlanacak satırlar (sözleşme 7.7). */
+export type ImportRowStatusFilter = 'Valid' | 'Warning' | 'Error' | 'WillSkip';
+
 export interface ImportRowsQuery {
     table?: ImportTable;
-    status?: 'Valid' | 'Warning' | 'Error';
+    status?: ImportRowStatusFilter;
     code?: string;
     page: number;
     pageSize: number;

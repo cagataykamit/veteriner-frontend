@@ -1,4 +1,5 @@
 import type { MockedObject } from 'vitest';
+import { HttpResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject } from 'rxjs';
 import { BreedsService } from '@/app/entities/breed/services/breeds.service';
@@ -178,6 +179,26 @@ describe('ImportReviewStepComponent', () => {
             expect(lists[0]).toContain('Atlanacak · 1: Dosyada aynı kayıt daha önce geçiyor');
             expect(lists[0]).toContain('Hatalı · 1:');
             expect(lists[1]).toContain('Atlanacak · 2: Boş muayene satırı');
+        });
+
+        it('atlanan nedene tıklanınca o satırlar listelenir ve atlananlar indirilebilir', () => {
+            ready.notImportedReasons = [{ table: 'clinicalRecords', kind: 'Skipped', code: 'Imports.ClinicalRecordEmpty', rowCount: 2 }];
+            const el = render();
+
+            delete ready.notImportedReasons;
+            imports.getRows.mockClear();
+            el.querySelector<HTMLButtonElement>('[data-testid="import-table-reasons"] button')!.click();
+            fixture.detectChanges();
+
+            expect(imports.getRows).toHaveBeenLastCalledWith('b1', expect.objectContaining({ table: 'clinicalRecords', status: 'WillSkip', code: 'Imports.ClinicalRecordEmpty' }));
+            expect(el.querySelector<HTMLDetailsElement>('[data-testid="import-rows"]')?.open).toBe(true);
+
+            imports.downloadErrorReport.mockReturnValue(of(new HttpResponse<Blob>({ body: new Blob(['x']) })));
+            const download = Array.from(el.querySelectorAll<HTMLButtonElement>('[data-testid="import-skipped-download"] button')).find((b) => b.textContent?.includes('Excel'))!;
+
+            download.click();
+
+            expect(imports.downloadErrorReport).toHaveBeenCalledWith('b1', 'xlsx', { code: 'Imports.ClinicalRecordEmpty' });
         });
 
         it('engelleyen değerler açıkta, ırk ve renk kapalı isteğe bağlı bölümde', () => {

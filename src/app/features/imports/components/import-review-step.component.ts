@@ -8,7 +8,7 @@ import type { PaginatorState } from 'primeng/types/paginator';
 import { SelectModule } from 'primeng/select';
 import { map, Observable, of } from 'rxjs';
 import { BreedsService } from '@/app/entities/breed/services/breeds.service';
-import type { ImportBatchDto, ImportFileFormat, ImportNotImportedReasonDto, ImportPetCandidateDto, ImportPreviewDto, ImportRowDto, ImportRowsQuery, ImportTable, ImportUnmappedValueDto, ImportValueKind } from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchDto, ImportFileFormat, ImportNotImportedReasonDto, ImportPetCandidateDto, ImportPreviewDto, ImportRowDto, ImportRowsQuery, ImportRowStatusFilter, ImportTable, ImportUnmappedValueDto, ImportValueKind } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
 import { IMPORT_ISSUE_GROUPS, IMPORT_ROW_STATUS_LABELS, IMPORT_VALUE_KIND_LABELS, importErrorCode, importErrorMessage, importIssueDetail, importIssueLabel, importRowPlace } from '@/app/features/imports/utils/import-labels.utils';
@@ -90,7 +90,16 @@ const ROW_PAGE_SIZE = 25;
                             @if (reasons.length) {
                                 <ul class="list-none p-0 m-0 mt-2 text-xs text-muted-color flex flex-col gap-1" data-testid="import-table-reasons">
                                     @for (r of reasons; track r.kind + r.code) {
-                                        <li>{{ r.kind === 'Error' ? 'Hatalı' : 'Atlanacak' }} · {{ r.rowCount }}: {{ issueLabel(r.code) }}</li>
+                                        <li>
+                                            <button
+                                                type="button"
+                                                class="p-0 border-0 bg-transparent text-left text-xs text-muted-color cursor-pointer underline-offset-2 hover:underline"
+                                                [attr.aria-label]="'Satırları göster: ' + issueLabel(r.code)"
+                                                (click)="showReasonRows(t.key, r)"
+                                            >
+                                                {{ r.kind === 'Error' ? 'Hatalı' : 'Atlanacak' }} · {{ r.rowCount }}: {{ issueLabel(r.code) }}
+                                            </button>
+                                        </li>
                                     }
                                 </ul>
                             }
@@ -226,10 +235,10 @@ const ROW_PAGE_SIZE = 25;
             }
 
             @if (!p.payloadPurged) {
-                <details class="mb-4" [open]="!!codeFilter()" data-testid="import-rows">
+                <details class="mb-4" [open]="!!codeFilter() || statusFilter() === 'WillSkip'" data-testid="import-rows">
                     <summary class="cursor-pointer select-none font-medium mb-3">Satır satır incele</summary>
                     <div class="flex flex-wrap items-end justify-between gap-3 mb-3">
-                        <span class="text-sm text-muted-color">Yukarıdaki bir nedene tıklayınca yalnız o satırlar listelenir.</span>
+                        <span class="text-sm text-muted-color">Yukarıdaki ya da tablo kartındaki bir nedene tıklayınca yalnız o satırlar listelenir.</span>
                         <div class="flex flex-wrap gap-2 items-end">
                             <p-select
                                 [options]="tableOptions"
@@ -258,6 +267,13 @@ const ROW_PAGE_SIZE = 25;
                             }
                         </div>
                     </div>
+                    @if (statusFilter() === 'WillSkip') {
+                        <div class="flex flex-wrap items-center gap-2 mb-3" data-testid="import-skipped-download">
+                            <span class="text-sm text-muted-color">Atlanacak satırları dosyadaki değerleriyle indirip eski programla karşılaştırabilirsiniz{{ codeFilter() ? ' (yalnız seçili neden)' : '' }}:</span>
+                            <button pButton type="button" size="small" severity="secondary" [disabled]="reportBusy() === 'xlsx'" (click)="downloadReport('xlsx', true)"><i class="p-button-icon" [class]="reportBusy() === 'xlsx' ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Atlananları indir (Excel)</button>
+                            <button pButton type="button" size="small" severity="secondary" [disabled]="reportBusy() === 'csv'" (click)="downloadReport('csv', true)"><i class="p-button-icon" [class]="reportBusy() === 'csv' ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>CSV</button>
+                        </div>
+                    }
 
                     @if (rowsError()) {
                         <p-message severity="error" class="w-full" role="alert">{{ rowsError() }}</p-message>
@@ -332,10 +348,10 @@ export class ImportReviewStepComponent {
     protected readonly rowPlace = importRowPlace;
     protected readonly kindLabels = IMPORT_VALUE_KIND_LABELS;
     protected readonly tableOptions = IMPORT_TABLES.map((t) => ({ value: t, label: IMPORT_TABLE_LABELS[t] }));
-    protected readonly statusOptions = (['Error', 'Warning', 'Valid'] as const).map((value) => ({ value, label: IMPORT_ROW_STATUS_LABELS[value] }));
+    protected readonly statusOptions = (['Error', 'WillSkip', 'Warning', 'Valid'] as const).map((value) => ({ value, label: IMPORT_ROW_STATUS_LABELS[value] }));
 
     protected readonly tableFilter = signal<ImportTable | null>(null);
-    protected readonly statusFilter = signal<'Valid' | 'Warning' | 'Error' | null>(null);
+    protected readonly statusFilter = signal<ImportRowStatusFilter | null>(null);
     protected readonly codeFilter = signal<string | null>(null);
     protected readonly page = signal(1);
     protected readonly rows = signal<ImportRowDto[]>([]);
@@ -468,8 +484,16 @@ export class ImportReviewStepComponent {
         this.resetPage();
     }
 
-    protected setStatus(v: 'Valid' | 'Warning' | 'Error' | null): void {
+    protected setStatus(v: ImportRowStatusFilter | null): void {
         this.statusFilter.set(v);
+        this.resetPage();
+    }
+
+    /** Tablo kartındaki neden: o tablonun o nedenli satırları (atlananda `WillSkip`, hatada `Error`) listelenir. */
+    protected showReasonRows(table: ImportTable, reason: ImportNotImportedReasonDto): void {
+        this.tableFilter.set(table);
+        this.statusFilter.set(reason.kind === 'Error' ? 'Error' : 'WillSkip');
+        this.codeFilter.set(reason.code);
         this.resetPage();
     }
 
@@ -485,6 +509,10 @@ export class ImportReviewStepComponent {
 
     protected rowStatusLabel(r: ImportRowDto): string {
         const status = r.validation.status;
+
+        if (status !== 'Error' && r.validation.action === 'Skip') {
+            return IMPORT_ROW_STATUS_LABELS.WillSkip;
+        }
 
         return status === 'Error' || status === 'Warning' || status === 'Valid' ? IMPORT_ROW_STATUS_LABELS[status] : 'Bekliyor';
     }
@@ -510,12 +538,13 @@ export class ImportReviewStepComponent {
         return Object.entries(r.source ?? {}).map(([k, v]) => [k, v ?? ''] as [string, string]);
     }
 
-    protected downloadReport(format: ImportFileFormat): void {
+    /** Hata raporu; `skipped` ile atlanacak satırlar (seçili neden varsa yalnız o). */
+    protected downloadReport(format: ImportFileFormat, skipped = false): void {
         this.reportBusy.set(format);
-        this.imports.downloadErrorReport(this.batch().id, format).subscribe({
+        this.imports.downloadErrorReport(this.batch().id, format, skipped ? { code: this.codeFilter() } : undefined).subscribe({
             next: (res) => {
                 this.reportBusy.set(null);
-                saveDownload(res, `vetinity-iceaktar-hatalar.${format}`);
+                saveDownload(res, skipped ? `vetinity-iceaktar-atlananlar.${format}` : `vetinity-iceaktar-hatalar.${format}`);
             },
             error: (e: unknown) => {
                 this.reportBusy.set(null);

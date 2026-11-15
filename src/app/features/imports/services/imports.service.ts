@@ -100,8 +100,17 @@ export class ImportsService {
         return this.api.get<ImportRowPageDto>(ApiEndpoints.imports.rows(id), params);
     }
 
-    downloadErrorReport(id: string, format: ImportFileFormat): Observable<HttpResponse<Blob>> {
-        return this.api.getBlob(ApiEndpoints.imports.errors(id), new HttpParams().set('format', format));
+    /** Hata raporu; `skipped` ile bilerek atlanacak satırlar (isteğe bağlı tek neden kodu, sözleşme 7.8). */
+    downloadErrorReport(id: string, format: ImportFileFormat, skipped?: { code?: string | null }): Observable<HttpResponse<Blob>> {
+        let params = new HttpParams().set('format', format);
+
+        if (skipped) {
+            params = params.set('rows', 'skipped');
+
+            if (skipped.code) params = params.set('code', skipped.code);
+        }
+
+        return this.api.getBlob(ApiEndpoints.imports.errors(id), params);
     }
 
     downloadTemplate(format: ImportFileFormat, table?: ImportTable): Observable<HttpResponse<Blob>> {
