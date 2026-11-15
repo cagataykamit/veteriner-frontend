@@ -14,7 +14,7 @@ import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicFaqListComponent } from './components/public-faq-list.component';
 import { PublicPageHeaderComponent } from './components/public-page-header.component';
 
-/** Geçiş (tasarım belgesi 5.4, TIER-021): dikey zaman çizgisi, aktarılır/aktarılmaz ve geçiş desteği kutuları, sorular, çağrı. */
+/** Geçiş (tasarım belgesi 5.4, TIER-021): güneş tonunda dikey adım yolu, aktarılır/aktarılmaz ve geçiş desteği kutuları, sorular, çağrı. */
 @Component({
     selector: 'app-public-migration-page',
     standalone: true,
@@ -27,60 +27,59 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
             lead="Excel ya da CSV dosyanızı yükleyin, sütunları eşleyin, kontrol edin, aktarın. Yanlış giderse geri alın."
         />
 
-        <div class="mx-auto max-w-6xl px-4 md:px-6">
-            <div class="public-section grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px] lg:gap-14">
-                <ol class="public-timeline m-0 list-none p-0" aria-label="Geçiş adımları">
+        <div class="ps-wrap">
+            <div class="ps-section ps-section--tight ps-aside-layout">
+                <!-- Adımlar: güneş tonunda dikey yol -->
+                <ol class="ps-list ps-steps ps-steps--path ps-tone-sun" aria-label="Geçiş adımları" data-migration-steps>
                     @for (step of steps; track step.title; let i = $index) {
-                        <li class="public-timeline-item">
-                            <span class="public-timeline-marker" aria-hidden="true">{{ i + 1 }}</span>
-                            <div class="pb-10">
-                                <h2 class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">{{ step.title }}</h2>
-                                <p class="m-0 mt-1.5 text-base text-surface-600 dark:text-surface-300">{{ step.description }}</p>
+                        <li>
+                            <span class="ps-bubble ps-bubble--big" aria-hidden="true">{{ i + 1 }}</span>
+                            <div>
+                                <h2 class="ps-h3 ps-h3--first">{{ step.title }}</h2>
+                                <p>{{ step.description }}</p>
                             </div>
                         </li>
                     }
                 </ol>
 
-                <aside class="flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
-                    <div class="public-card p-5">
-                        <h2 class="m-0 text-base font-semibold text-surface-900 dark:text-surface-0">Aktarılır</h2>
-                        <ul class="m-0 mt-3 list-none space-y-2 p-0 text-sm">
+                <aside class="ps-aside">
+                    <div class="ps-card ps-card--plain ps-tone-mint">
+                        <h2 class="ps-h3"><span class="ps-round ps-round--small" aria-hidden="true"><i class="pi pi-check"></i></span>Aktarılır</h2>
+                        <ul class="ps-list ps-ticklist">
                             @for (item of included; track item) {
-                                <li class="flex items-start gap-2 text-surface-700 dark:text-surface-200">
-                                    <i class="pi pi-check mt-0.5 text-[var(--public-accent)]" aria-hidden="true"></i><span>{{ item }}</span>
-                                </li>
+                                <li><i class="pi pi-check" aria-hidden="true"></i><span>{{ item }}</span></li>
                             }
                         </ul>
                     </div>
-                    <div class="public-card p-5">
-                        <h2 class="m-0 text-base font-semibold text-surface-900 dark:text-surface-0">Şimdilik aktarılmaz</h2>
-                        <ul class="m-0 mt-3 list-none space-y-2 p-0 text-sm">
+                    <div class="ps-card ps-card--quiet">
+                        <h2 class="ps-h3"><span class="ps-round ps-round--small" aria-hidden="true"><i class="pi pi-clock"></i></span>Şimdilik aktarılmaz</h2>
+                        <ul class="ps-list ps-ticklist">
                             @for (item of excluded; track item) {
-                                <li class="flex items-start gap-2 text-surface-700 dark:text-surface-200">
-                                    <i class="pi pi-minus mt-0.5 text-surface-400" aria-hidden="true"></i><span>{{ item }}</span>
-                                </li>
+                                <li><i class="pi pi-minus" aria-hidden="true"></i><span>{{ item }}</span></li>
                             }
                         </ul>
                     </div>
-                    <div class="public-card p-5" data-testid="migration-support">
-                        <h2 class="m-0 text-base font-semibold text-surface-900 dark:text-surface-0">Geçiş desteği</h2>
-                        <ul class="m-0 mt-3 list-none space-y-2 p-0 text-sm">
+                    <div class="ps-card ps-tone-lilac" data-testid="migration-support">
+                        <h2 class="ps-h3"><span class="ps-round ps-round--small" aria-hidden="true"><i class="pi pi-headphones"></i></span>Geçiş desteği</h2>
+                        <ul class="ps-list ps-ticklist">
                             @for (item of supportPoints; track item) {
-                                <li class="flex items-start gap-2 text-surface-700 dark:text-surface-200">
-                                    <i class="pi pi-check mt-0.5 text-[var(--public-accent)]" aria-hidden="true"></i><span>{{ item }}</span>
-                                </li>
+                                <li><i class="pi pi-check" aria-hidden="true"></i><span>{{ item }}</span></li>
                             }
                         </ul>
-                        <p class="m-0 mt-3 text-sm font-semibold text-surface-900 dark:text-surface-0">{{ supportPrice }}</p>
+                        <p class="ps-strong">{{ supportPrice }}</p>
                     </div>
                 </aside>
             </div>
-
-            <section class="public-section mx-auto max-w-3xl" aria-labelledby="migration-faq-title">
-                <h2 id="migration-faq-title" class="public-h2 m-0 mb-6">Geçişle ilgili sorular</h2>
-                <app-public-faq-list [items]="faqs" idPrefix="migration-faq" />
-            </section>
         </div>
+
+        <section class="ps-section ps-section--band" aria-labelledby="migration-faq-title">
+            <div class="ps-wrap ps-narrow">
+                <header class="ps-head ps-head--center">
+                    <h2 id="migration-faq-title" class="public-h2">Geçişle ilgili sorular</h2>
+                </header>
+                <app-public-faq-list [items]="faqs" idPrefix="migration-faq" />
+            </div>
+        </section>
 
         <app-public-cta title="Dosyanıza birlikte bakalım" lead="Sorunuzu yazın ya da demo isteyin; eski programınızın dışa aktarımına görüşmede ekran paylaşımıyla birlikte bakalım." secondaryLabel="Bize yazın" />
     `

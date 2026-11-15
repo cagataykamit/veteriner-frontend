@@ -38,37 +38,44 @@ const PRICING_FAQ_JSON_LD_ID = 'packages-faq';
             lead="Kayıt defterleri, KVKK araçları, klinik web sitesi ve online randevu her pakette; üst paketler kullanıcı sayısını ve ek araçları artırır. Her paketi 14 gün ücretsiz deneyin, kart bilgisi istenmez."
         />
 
-        <div class="mx-auto max-w-6xl px-4 md:px-6">
-            <section class="public-section" aria-labelledby="packages-plans-title">
+        <section class="ps-section ps-section--tight" aria-labelledby="packages-plans-title">
+            <div class="ps-wrap">
                 <h2 id="packages-plans-title" class="sr-only">Paketler</h2>
-                <p class="m-0 mb-8 text-center text-sm text-muted-color">{{ pricingTerms }}.</p>
+                <p class="ps-small ps-center ps-terms">{{ pricingTerms }}.</p>
                 <app-public-plan-cards [plans]="plans" [pricing]="pricing()" [periodToggle]="true" />
-            </section>
+            </div>
+        </section>
 
-            <section class="public-section" aria-labelledby="packages-compare-title">
-                <h2 id="packages-compare-title" class="public-h2 m-0 mb-6">Paketleri karşılaştırın</h2>
+        <section class="ps-section ps-section--band" aria-labelledby="packages-compare-title">
+            <div class="ps-wrap">
+                <header class="ps-head ps-head--center">
+                    <h2 id="packages-compare-title" class="public-h2">Paketleri karşılaştırın</h2>
+                </header>
                 <app-public-plan-comparison [plans]="plans" [pricing]="pricing()" />
-            </section>
+            </div>
+        </section>
 
-            <section class="public-section" aria-labelledby="packages-not-title">
-                <div class="public-card p-6 md:p-8">
-                    <h2 id="packages-not-title" class="m-0 text-lg font-semibold text-surface-900 dark:text-surface-0">Şu an yok</h2>
-                    <ul class="m-0 mt-4 grid list-none grid-cols-1 gap-x-8 gap-y-2.5 p-0 sm:grid-cols-2">
+        <section class="ps-section ps-section--tight" aria-labelledby="packages-not-title">
+            <div class="ps-wrap">
+                <div class="ps-card ps-card--quiet">
+                    <h2 id="packages-not-title" class="ps-h3"><span class="ps-round ps-round--small" aria-hidden="true"><i class="pi pi-clock"></i></span>Şu an yok</h2>
+                    <ul class="ps-list ps-ticklist ps-ticklist--two">
                         @for (item of notAvailable; track item) {
-                            <li class="flex items-start gap-2.5 text-sm text-surface-700 dark:text-surface-200">
-                                <i class="pi pi-minus mt-0.5 shrink-0 text-surface-500 dark:text-surface-400" aria-hidden="true"></i>
-                                <span>{{ item }}</span>
-                            </li>
+                            <li><i class="pi pi-minus" aria-hidden="true"></i><span>{{ item }}</span></li>
                         }
                     </ul>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <section class="public-section mx-auto max-w-3xl" aria-labelledby="packages-faq-title">
-                <h2 id="packages-faq-title" class="public-h2 m-0 mb-6">Fiyat ve deneme hakkında</h2>
+        <section class="ps-section ps-section--band" aria-labelledby="packages-faq-title">
+            <div class="ps-wrap ps-narrow">
+                <header class="ps-head ps-head--center">
+                    <h2 id="packages-faq-title" class="public-h2">Fiyat ve deneme hakkında</h2>
+                </header>
                 <app-public-faq-list [items]="faqs" idPrefix="packages-faq" />
-            </section>
-        </div>
+            </div>
+        </section>
 
         <app-public-cta />
     `
