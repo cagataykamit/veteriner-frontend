@@ -708,6 +708,10 @@ export const ApiEndpoints = {
     },
     public: {
         ownerSignup: () => `/api/v1/public/owner-signup`,
+        /** Anonim, hız sınırlı: deneme kaydı telefon kodu gönder (`TRIAL_PHONE_VERIFICATION_API_CONTRACT.md` §2). */
+        signupPhoneCode: () => `/api/v1/public/owner-signup/phone-code`,
+        /** Anonim, hız sınırlı: kodu doğrula, kayıt jetonu al (§3). */
+        signupPhoneVerify: () => `/api/v1/public/owner-signup/phone-code/verify`,
         /** Anonim, hız sınırlı: satış ortağı kodu doğrulama; geçersizde tek tip yanıt. */
         validateDiscountCode: () => `/api/v1/public/discount-codes/validate`,
         /** Anonim: hukuki belgelerin güncel sürümleri (`LEGAL_ACCEPTANCE_API_CONTRACT.md` §3). */

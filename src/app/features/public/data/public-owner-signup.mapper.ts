@@ -15,6 +15,8 @@ export function mapPublicOwnerSignupFormToRequest(form: PublicOwnerSignupFormVal
         acceptedLegalDocuments: form.acceptedLegalDocuments,
         // Kod sunucuda yeniden doğrulanır; anlık doğrulama yalnız bilgi amaçlıdır (geçersizse kayıt tek tip hatayla döner).
         ...(discountCode ? { discountCode } : {}),
-        startWithExampleClinic: form.startMode === 'example'
+        startWithExampleClinic: form.startMode === 'example',
+        mobilePhone: form.mobilePhone.trim(),
+        phoneVerificationToken: form.phoneVerificationToken
     };
 }
