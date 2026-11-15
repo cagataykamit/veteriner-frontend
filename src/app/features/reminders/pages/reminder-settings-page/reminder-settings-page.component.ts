@@ -61,30 +61,30 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                     <app-form-error-summary />
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 md:col-span-6">
-                            <label class="block text-sm font-medium text-muted-color mb-2">Randevu hatırlatmaları aktif</label>
-                            <p-toggleswitch formControlName="appointmentRemindersEnabled" />
+                            <label for="rs-appointmentRemindersEnabled" class="block text-sm font-medium text-muted-color mb-2">Randevu hatırlatmaları aktif</label>
+                            <p-toggleswitch inputId="rs-appointmentRemindersEnabled" formControlName="appointmentRemindersEnabled" />
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label class="block text-sm font-medium text-muted-color mb-2">Randevudan kaç saat önce</label>
-                            <p-inputnumber formControlName="appointmentReminderHoursBefore" [min]="1" [max]="168" [useGrouping]="false" class="w-full" />
+                            <label for="rs-appointmentReminderHoursBefore" class="block text-sm font-medium text-muted-color mb-2">Randevudan kaç saat önce</label>
+                            <p-inputnumber inputId="rs-appointmentReminderHoursBefore" formControlName="appointmentReminderHoursBefore" [min]="1" [max]="168" [useGrouping]="false" class="w-full" />
                             @if (form.controls.appointmentReminderHoursBefore.invalid && form.controls.appointmentReminderHoursBefore.touched) {
                                 <small class="text-danger">Saat değeri 1 ile 168 arasında olmalıdır.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label class="block text-sm font-medium text-muted-color mb-2">Aşı hatırlatmaları aktif</label>
-                            <p-toggleswitch formControlName="vaccinationRemindersEnabled" />
+                            <label for="rs-vaccinationRemindersEnabled" class="block text-sm font-medium text-muted-color mb-2">Aşı hatırlatmaları aktif</label>
+                            <p-toggleswitch inputId="rs-vaccinationRemindersEnabled" formControlName="vaccinationRemindersEnabled" />
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label class="block text-sm font-medium text-muted-color mb-2">Aşıdan kaç gün önce</label>
-                            <p-inputnumber formControlName="vaccinationReminderDaysBefore" [min]="1" [max]="30" [useGrouping]="false" class="w-full" />
+                            <label for="rs-vaccinationReminderDaysBefore" class="block text-sm font-medium text-muted-color mb-2">Aşıdan kaç gün önce</label>
+                            <p-inputnumber inputId="rs-vaccinationReminderDaysBefore" formControlName="vaccinationReminderDaysBefore" [min]="1" [max]="30" [useGrouping]="false" class="w-full" />
                             @if (form.controls.vaccinationReminderDaysBefore.invalid && form.controls.vaccinationReminderDaysBefore.touched) {
                                 <small class="text-danger">Gün değeri 1 ile 30 arasında olmalıdır.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label class="block text-sm font-medium text-muted-color mb-2">E-posta kanalı aktif</label>
-                            <p-toggleswitch formControlName="emailChannelEnabled" />
+                            <label for="rs-emailChannelEnabled" class="block text-sm font-medium text-muted-color mb-2">E-posta kanalı aktif</label>
+                            <p-toggleswitch inputId="rs-emailChannelEnabled" formControlName="emailChannelEnabled" />
                         </div>
                     </div>
 
