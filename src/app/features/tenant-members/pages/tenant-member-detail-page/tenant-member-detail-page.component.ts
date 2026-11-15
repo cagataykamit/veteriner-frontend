@@ -127,7 +127,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <p class="text-sm text-muted-color mt-0 mb-3">Kendi hesabınız için rol ekleyemezsiniz.</p>
                     }
                     @if (m.claims.length === 0) {
-                        <app-empty-state message="Bu üye için listelenen rol veya yetki yok." hint="Backend bu koleksiyonu boş döndürdü." />
+                        <app-empty-state message="Bu üyenin rolü yok." />
                     } @else {
                         <div class="flex flex-wrap gap-2 mb-3">
                             @for (c of m.claims; track c.id + c.name) {
@@ -264,7 +264,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <p class="text-sm text-muted-color mt-0 mb-3">Kendi hesabınız için klinik üyeliği ekleyemez veya kaldıramazsınız.</p>
                     }
                     @if (m.clinics.length === 0) {
-                        <app-empty-state message="Bu üye için listelenen klinik üyeliği yok." hint="Backend bu koleksiyonu boş döndürdü." />
+                        <app-empty-state message="Bu üye henüz bir kliniğe atanmamış." />
                     } @else {
                         <ul class="list-none p-0 m-0 space-y-2">
                             @for (cl of m.clinics; track cl.id + cl.name) {

@@ -141,13 +141,13 @@ export const PANEL_COPY = {
     /** Kiracı — rol yetki matrisi (salt okunur) */
     tenantRoleMatrixTitle: 'Rol Yetki Özeti',
     tenantRoleMatrixDescription:
-        'Bu ekran salt okunur bir özet görünümüdür. Sunucuda tanımlı rol-yetki bağlarını gösterir; tenant panelinden düzenleme yapılamaz.',
+        'Bu ekran salt okunur bir özet görünümüdür. Rollerin hangi işlere izin verdiğini gösterir; buradan değiştirilemez.',
     tenantRoleMatrixLoading: 'Rol Yetki Özeti yükleniyor…',
     tenantRoleMatrixLoadError: 'Rol Yetki Özeti yüklenemedi.',
     tenantRoleMatrixEmptyMessage: 'Bu rol için ayrı yetki bağı tanımlı değil.',
     tenantRoleMatrixEmptyHint: 'Bu ortamda rol yetki bağları tanımlı değil veya henüz uygulanmamış olabilir.',
     tenantRoleMatrixGlobalInfo:
-        'Bu ekran yalnızca bilgilendirme amaçlıdır. Rol-yetki bağları merkezde tanımlanır ve tenant panelinden değiştirilemez.',
+        'Bu ekran yalnızca bilgilendirme amaçlıdır. Rollerin izinleri Vetinity tarafından tanımlanır ve buradan değiştirilemez.',
     tenantRoleMatrixTotalPrefix: 'Toplam',
     tenantRoleMatrixTotalSuffix: 'yetki',
     tenantRoleMatrixGroupOther: 'Diğer',

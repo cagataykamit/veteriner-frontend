@@ -107,7 +107,7 @@ export function authRefreshFailureMessage(err: unknown, fallback = 'Oturum yenil
 
 export function authFailureMessage(err: HttpErrorResponse, fallback = 'İşlem başarısız.'): string {
     if (err.status === 0) {
-        return 'Sunucuya ulaşılamıyor. API adresini ve ağı kontrol edin.';
+        return 'Sunucuya ulaşılamıyor. İnternet bağlantınızı kontrol edip tekrar deneyin.';
     }
 
     const problem = readProblemDetails(err);

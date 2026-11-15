@@ -216,7 +216,7 @@ import { ClientImportedAccountEntriesPanelComponent } from '@/app/entities/impor
                                         <p class="m-0 font-semibold text-sm text-surface-900 dark:text-surface-0 tabular-nums">{{ money(paymentSummary()!.totalPaidAmount, 'TRY') }}</p>
                                         <p class="text-muted-color text-[10px] m-0 mt-0.5 leading-tight">Genel toplam (rapor)</p>
                                     } @else if (paymentSummary()!.totalPaidAmount === 0 && paymentSummary()!.totalPaymentsCount > 0) {
-                                        <p class="text-muted-color text-xs m-0 leading-snug">Çoklu para biriminde tek tutar özetlenmez; doğruluk para birimi kırılımıyla backend’de tutulur.</p>
+                                        <p class="text-muted-color text-xs m-0 leading-snug">Farklı para birimlerindeki tutarlar toplanmaz; her para birimi ayrı gösterilir.</p>
                                     } @else {
                                         <p class="m-0 font-semibold text-surface-900 dark:text-surface-0">—</p>
                                     }

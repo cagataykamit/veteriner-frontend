@@ -76,7 +76,6 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                 @for (it of list; track it.id + it.rowNumber) {
                     <li class="rounded-border border border-surface-200 dark:border-surface-700 p-3">
                         <div class="font-medium">{{ entityLabel(it) }} · {{ tableLabel(it) }}, {{ it.rowNumber }}. satır</div>
-                        <div class="text-sm text-muted-color break-all">Kayıt kimliği: {{ it.id }}</div>
                         <ul class="m-0 mt-1 pl-4 text-sm">
                             @for (r of it.reasons; track r) {
                                 <li>{{ reasonLabel(r) }}</li>

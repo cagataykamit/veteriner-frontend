@@ -46,7 +46,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                         <div class="col-span-12 md:col-span-6">
                             <label for="speciesId" class="block text-sm font-medium text-muted-color mb-2">Tür *</label>
                             @if (editing()) {
-                                <p class="text-xs text-muted-color mt-0 mb-2">Tür bu kayıt için sabittir; güncelleme API’si tür değişikliğini desteklemez.</p>
+                                <p class="text-xs text-muted-color mt-0 mb-2">Kayıtlı ırkın türü değiştirilemez. Başka türe ait ırk için yeni ırk ekleyin.</p>
                             }
                             <p-select inputId="speciesId" formControlName="speciesId" [options]="speciesOptions()" optionLabel="label" optionValue="value" placeholder="Tür seçin" [loading]="loadingSpecies()" class="w-full" />
                             @if (apiFieldErrors().speciesId) {
