@@ -36,7 +36,7 @@ const EM = '—';
                     <span class="text-muted-color text-sm"> · {{ speciesBreed() }} · {{ age() }}</span>
                 </span>
                 <span class="min-w-0">
-                    <span class="text-muted-color">Sahip:</span>
+                    <span class="text-muted-color">Müşteri:</span>
                     @if (clientId()) {
                         <a [routerLink]="['/panel/clients', clientId()]" class="text-primary font-medium no-underline ml-1">{{ clientName() }}</a>
                     } @else {
@@ -132,7 +132,7 @@ export class ExaminationPatientHeaderComponent {
                 },
                 error: () => {
                     if (seq === this.clientSeq) {
-                        this.loadError.set('Sahip bilgileri tam yüklenemedi.');
+                        this.loadError.set('Müşteri bilgileri tam yüklenemedi.');
                     }
                 }
             });

@@ -120,7 +120,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                             <td class="text-sm">Tüm hekimler</td>
                             <td><app-status-tag label="Sistem" severity="secondary" /></td>
                             @if (canWrite()) {
-                                <td class="text-sm text-muted-color">Sahip ne için geldiğini yazar</td>
+                                <td class="text-sm text-muted-color">Müşteri ne için geldiğini yazar</td>
                             }
                         </tr>
                     </ng-template>

@@ -63,7 +63,7 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
                             <app-status-tag [label]="statusLabel(a.status)" [severity]="statusSeverity(a.status)" />
                             @if (a.ownerConfirmedAtUtc) {
                                 <span [attr.title]="'Hatırlatma e-postasından onaylandı: ' + (a.ownerConfirmedAtUtc | trDateTime)" data-testid="appointment-owner-confirmed">
-                                    <app-status-tag label="Sahip onayladı" severity="success" />
+                                    <app-status-tag label="Müşteri onayladı" severity="success" />
                                 </span>
                             }
                         </div>
@@ -119,13 +119,13 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
                 <div class="mb-4 py-2 flex flex-wrap gap-2 items-center" role="toolbar" aria-label="Randevu eylemleri" data-testid="appointment-action-bar">
                     @if (canCreateExamination && a.clientId?.trim() && a.petId?.trim()) {
                         @if (isCancelledForExam(a.status) || isNoShow(a.status)) {
-                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-ban"></i>Muayene Oluştur</button>
+                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-ban"></i>Muayene oluştur</button>
                         } @else if (ro.mutationBlocked()) {
-                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-lock"></i>Muayene Oluştur (salt okunur)</button>
+                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-lock"></i>Muayene oluştur (salt okunur)</button>
                         } @else if (canOpenVisit) {
-                            <button pButton type="button" class="p-button-primary" [disabled]="startingExam()" (click)="startExamination()"><i [class]="startingExam() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>Muayene Oluştur</button>
+                            <button pButton type="button" class="p-button-primary" [disabled]="startingExam()" (click)="startExamination()"><i [class]="startingExam() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>Muayene oluştur</button>
                         } @else {
-                            <a [routerLink]="['/panel/examinations/new']" [queryParams]="{ clientId: a.clientId, petId: a.petId, appointmentId: a.id }" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Muayene Oluştur</a>
+                            <a [routerLink]="['/panel/examinations/new']" [queryParams]="{ clientId: a.clientId, petId: a.petId, appointmentId: a.id }" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Muayene oluştur</a>
                         }
                     }
                     @if (canNoShow && !ro.mutationBlocked()) {

@@ -149,7 +149,7 @@ type SelectOption = { label: string; value: string };
                 }
 
                 <div class="flex flex-wrap justify-end gap-2 mt-2">
-                    <button pButton type="button" severity="secondary" [disabled]="submitting()" (click)="onCancel()">İptal</button>
+                    <button pButton type="button" severity="secondary" [disabled]="submitting()" (click)="onCancel()">Vazgeç</button>
                     <button pButton type="submit" [disabled]="submitDisabled() || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
                 </div>
             </form>

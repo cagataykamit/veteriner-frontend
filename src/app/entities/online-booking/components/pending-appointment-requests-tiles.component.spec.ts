@@ -38,7 +38,7 @@ describe('PendingAppointmentRequestsTilesComponent', () => {
         tiles[0].click();
         expect(opened).toEqual(['r1']);
         expect(tiles[1].textContent).toContain('5 Kas Per');
-        expect(tiles[1].textContent).toContain('Hayvan belirtilmedi');
+        expect(tiles[1].textContent).toContain('Hasta belirtilmedi');
         expect(el.querySelector('[data-testid="pending-requests-more"]')).toBeNull();
     });
 

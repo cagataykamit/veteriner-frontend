@@ -58,9 +58,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     <app-client-search inputId="chargeClientFilter" placeholder="Müşteri ara…" [ngModel]="clientId" (ngModelChange)="onClientFilterChange($event)" />
                 </app-filter-field>
                 @if (canCreate && !ro.mutationBlocked()) {
-                    <a actions routerLink="/panel/charges/new" [queryParams]="clientId ? { clientId } : null" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Ücret</a>
+                    <a actions routerLink="/panel/charges/new" [queryParams]="clientId ? { clientId } : null" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni ücret</a>
                 } @else if (canCreate) {
-                    <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Ücret (salt okunur)</button>
+                    <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni ücret (salt okunur)</button>
                 }
             </app-list-header>
 

@@ -30,9 +30,9 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
         <div class="card">
             <app-list-header class="mb-4" [title]="pageTitle()">
                 @if (canCreateAppointment && !ro.mutationBlocked()) {
-                    <button actions pButton type="button" class="p-button-primary" (click)="createAppointment()"><i class="pi pi-plus"></i>Yeni Randevu</button>
+                    <button actions pButton type="button" class="p-button-primary" (click)="createAppointment()"><i class="pi pi-plus"></i>Yeni randevu</button>
                 } @else if (canCreateAppointment && ro.mutationBlocked()) {
-                    <button actions pButton type="button" class="p-button-secondary" [disabled]="true"><i class="pi pi-lock"></i>Yeni Randevu (salt okunur)</button>
+                    <button actions pButton type="button" class="p-button-secondary" [disabled]="true"><i class="pi pi-lock"></i>Yeni randevu (salt okunur)</button>
                 }
             </app-list-header>
 
@@ -529,7 +529,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
             return 'Bugün İptal Edilen Randevular';
         }
 
-        return 'Randevu Takvimi';
+        return 'Randevu takvimi';
     }
 
     clearPreset(): void {

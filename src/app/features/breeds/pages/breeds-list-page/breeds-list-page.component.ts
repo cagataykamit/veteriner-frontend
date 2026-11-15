@@ -43,9 +43,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     template: `
         <app-page-header title="Irklar" description="Irk kayıtlarını yönetin.">
             @if (canCreateBreed() && !ro.mutationBlocked()) {
-                <a actions [routerLink]="[breedsRoute, 'new']" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Irk</a>
+                <a actions [routerLink]="[breedsRoute, 'new']" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni ırk</a>
             } @else if (canCreateBreed() && ro.mutationBlocked()) {
-                <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Irk (salt okunur)</button>
+                <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni ırk (salt okunur)</button>
             }
         </app-page-header>
 

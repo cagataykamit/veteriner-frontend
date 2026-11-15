@@ -80,9 +80,9 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                         </app-filter-field>
                         <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canCreatePayment && !ro.mutationBlocked()) {
-                            <a actions routerLink="/panel/payments/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Ödeme</a>
+                            <a actions routerLink="/panel/payments/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni ödeme</a>
                         } @else if (canCreatePayment && ro.mutationBlocked()) {
-                            <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Ödeme (salt okunur)</button>
+                            <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni ödeme (salt okunur)</button>
                         }
                     </app-list-header>
                     <div class="flex flex-wrap items-end gap-3">

@@ -679,7 +679,7 @@ export class ImportReviewStepComponent {
         const candidates = this.petCandidates(u);
         const first = candidates[0];
 
-        return first ? `${first.ownerName ?? 'Sahip'}: '${first.name ?? ''}' adlı ${candidates.length} hasta` : u.source;
+        return first ? `${first.ownerName ?? 'Müşteri'}: '${first.name ?? ''}' adlı ${candidates.length} hasta` : u.source;
     }
 
     private petCandidates(u: ImportUnmappedValueDto): ImportPetCandidateDto[] {

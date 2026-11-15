@@ -135,7 +135,7 @@ describe('AppGlobalSearch', () => {
         const sub = (option: Element) => option.querySelector('.block')!.textContent!.trim();
 
         expect(pet.textContent).toContain('Pamuk · Kedi · Tekir');
-        expect(sub(pet)).toBe('Sahip: Ali Veli · +90 532 123 45 67 · Mikroçip: 985112345678901');
+        expect(sub(pet)).toBe('Müşteri: Ali Veli · +90 532 123 45 67 · Mikroçip: 985112345678901');
         expect(sub(client)).toBe('+90 532 123 45 67 · Hastalar: Pamuk');
     });
 

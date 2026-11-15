@@ -35,7 +35,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                 <app-error-state [detail]="loadError()!" [showRetry]="!!currentId()" (retry)="reloadBreedRecord()" />
             </div>
         } @else {
-            <app-page-header [categoryLink]="breedsRoute" categoryLinkLabel="Irk listesine dön" [title]="editing() ? 'Irk Düzenle' : 'Yeni Irk'" [description]="editing() ? 'Irk kaydını güncelleyin.' : 'Yeni ırk kaydı oluşturun.'" />
+            <app-page-header [categoryLink]="breedsRoute" categoryLinkLabel="Irk listesine dön" [title]="editing() ? 'Irk Düzenle' : 'Yeni ırk'" [description]="editing() ? 'Irk kaydını güncelleyin.' : 'Yeni ırk kaydı oluşturun.'" />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {
@@ -93,7 +93,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                             pButton
                             type="submit"
                             [disabled]="form.invalid || submitting() || loading() || loadingSpecies() || ro.mutationBlocked() || submitting() || loading()"
-                        ><i class="p-button-icon" [class]="submitting() || loading() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ editing() ? 'Güncelle' : copy.buttonSave }}</button>
+                        ><i class="p-button-icon" [class]="submitting() || loading() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                         <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>

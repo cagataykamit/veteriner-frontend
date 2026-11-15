@@ -165,7 +165,7 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
             key: 'vaccination',
             title: 'Aşı kaydı',
             icon: 'pi pi-shield',
-            text: 'Uygulanan aşıyı muayene ayrıntısındaki Aşı Oluştur ile kaydedin.',
+            text: 'Uygulanan aşıyı muayene ayrıntısındaki Aşı oluştur ile kaydedin.',
             label: 'Yeni aşı',
             route: '/panel/vaccinations/new',
             claims: [VACCINATIONS_CREATE_CLAIM],

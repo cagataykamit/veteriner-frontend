@@ -27,7 +27,7 @@ import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent, AppTrialLimitNoticeComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" title="Yeni Müşteri" description="Müşteri kaydı oluşturun." />
+        <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" title="Yeni müşteri" description="Müşteri kaydı oluşturun." />
 
         <div class="card">
             <form [formGroup]="form" (ngSubmit)="onSubmit()">

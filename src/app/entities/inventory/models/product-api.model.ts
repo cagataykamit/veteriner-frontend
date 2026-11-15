@@ -28,7 +28,7 @@ export interface ProductDto {
     manufacturer?: string | null;
     /** KDV oranı (%); `null` = klinik varsayılanı (`BATCH_STOCK_API_CONTRACT.md` §2.1). */
     vatRate?: number | string | null;
-    /** Birim alış fiyatı (TL), bilgi amaçlı: stok değeri ve ücret hesabı okumaz. */
+    /** Birim alış fiyatı (₺), bilgi amaçlı: stok değeri ve ücret hesabı okumaz. */
     purchasePrice?: number | string | null;
 }
 

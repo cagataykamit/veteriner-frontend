@@ -88,7 +88,7 @@ const MAX_NAME_LENGTH = 100;
                     <p class="text-danger text-sm mt-2 mb-0" role="alert">{{ message }}</p>
                 }
                 <ng-template #footer>
-                    <button pButton type="button" severity="secondary" (click)="dialogVisible.set(false)" [disabled]="busy()"><i class="p-button-icon pi pi-times"></i>İptal</button>
+                    <button pButton type="button" severity="secondary" (click)="dialogVisible.set(false)" [disabled]="busy()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
                     <button pButton type="button" [disabled]="!canSave()" (click)="save()" data-testid="saved-filter-save">
                         <i class="p-button-icon" [class]="busy() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet
                     </button>

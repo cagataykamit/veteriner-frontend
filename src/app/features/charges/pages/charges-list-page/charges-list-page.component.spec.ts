@@ -97,12 +97,12 @@ describe('ChargesListPageComponent', () => {
         expect(fixture.nativeElement.textContent).toContain('Ödendi');
     });
 
-    it('Charges.Create yoksa (Veteriner) "Yeni Ücret" düğmesi görünmez', async () => {
+    it('Charges.Create yoksa (Veteriner) "Yeni ücret" düğmesi görünmez', async () => {
         await setup();
-        expect(fixture.nativeElement.textContent).not.toContain('Yeni Ücret');
+        expect(fixture.nativeElement.textContent).not.toContain('Yeni ücret');
     });
 
-    it('Charges.Create varsa "Yeni Ücret" bağlantısı görünür', async () => {
+    it('Charges.Create varsa "Yeni ücret" bağlantısı görünür', async () => {
         claims.add('Charges.Create');
         await setup();
         const link = fixture.nativeElement.querySelector('a[href="/panel/charges/new"]');

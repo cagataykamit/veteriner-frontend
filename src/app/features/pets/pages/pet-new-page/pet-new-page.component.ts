@@ -52,7 +52,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hasta listesine dön" title="Yeni Hasta" description="Hasta kaydı oluşturun." />
+        <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hasta listesine dön" title="Yeni hasta" description="Hasta kaydı oluşturun." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {

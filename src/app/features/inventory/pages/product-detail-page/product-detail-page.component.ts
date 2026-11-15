@@ -91,7 +91,7 @@ import { ConfirmationService } from 'primeng/api';
                         <button pButton type="button" severity="primary" class="whitespace-nowrap" [disabled]="isHeaderStockOperationDisabled()" [title]="headerStockOperationTitle()" (click)="openStockOperationFromHeader()"><i class="pi pi-sync"></i>Stok işlemi</button>
                     }
                     @if (canDeactivateProduct && !ro.mutationBlocked() && p.isActive) {
-                        <button pButton type="button" severity="danger" [outlined]="true" [disabled]="mutationBusy()" (click)="onDeactivateClick()"><i [class]="mutationBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-ban'"></i>Pasifleştir</button>
+                        <button pButton type="button" severity="danger" [outlined]="true" [disabled]="mutationBusy()" (click)="onDeactivateClick()"><i [class]="mutationBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-ban'"></i>Pasife al</button>
                     }
                     @if (canUpdateProduct && !ro.mutationBlocked() && !p.isActive) {
                         <button pButton type="button" class="p-button-outlined p-button-secondary" [disabled]="mutationBusy()" (click)="onActivateClick()"><i [class]="mutationBusy() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Aktifleştir</button>
@@ -313,7 +313,7 @@ export class ProductDetailPageComponent implements OnInit {
             header: 'Ürünü pasifleştir',
             message: 'Bu ürünü pasifleştirmek istediğinize emin misiniz?',
             icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'Pasifleştir',
+            acceptLabel: 'Pasife al',
             rejectLabel: 'Vazgeç',
             acceptButtonStyleClass: 'p-button-danger',
             rejectButtonStyleClass: 'p-button-secondary',
@@ -327,7 +327,7 @@ export class ProductDetailPageComponent implements OnInit {
                     },
                     error: (e: Error) => {
                         this.mutationBusy.set(false);
-                        this.mutationError.set(panelHttpFailureMessage(e, 'Pasifleştirme başarısız.'));
+                        this.mutationError.set(panelHttpFailureMessage(e, 'Pasife alınamadı.'));
                     }
                 });
             }

@@ -394,7 +394,7 @@ function petOption(p: GlobalSearchPetVm): SearchOption {
         route: recentlyViewedRoute({ kind: 'pet', id: p.id }),
         title: p.name,
         detail: p.summary,
-        subtitle: recentlyViewedSubtitle(p.ownerName && `Sahip: ${p.ownerName}`, p.ownerPhone, p.microchip && `Mikroçip: ${p.microchip}`)
+        subtitle: recentlyViewedSubtitle(p.ownerName && `Müşteri: ${p.ownerName}`, p.ownerPhone, p.microchip && `Mikroçip: ${p.microchip}`)
     };
 }
 

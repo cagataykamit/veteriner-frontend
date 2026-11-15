@@ -790,7 +790,7 @@ describe('TodayPageComponent', () => {
         expect(vi.mocked(toasts).mock.lastCall![0]).toEqual(expect.objectContaining({ severity: 'info', summary: 'Açık geliş kaydı zaten var.' }));
     });
 
-    it('sahip hatırlatmadan onayladıysa planlı satırda "Sahip onayladı" rozeti çıkar; gelişi açılmış satırda çıkmaz (TIER-019)', async () => {
+    it('sahip hatırlatmadan onayladıysa planlı satırda "Müşteri onayladı" rozeti çıkar; gelişi açılmış satırda çıkmaz (TIER-019)', async () => {
         const confirmed = item({ key: 'a1', visitId: null, appointmentId: 'a1', careStatus: null, appointmentStatus: 'Scheduled', arrivedAtUtc: null, scheduledAtUtc: '2026-10-10T09:00:00Z', ownerConfirmedAtUtc: '2026-10-09T18:00:00Z' });
         const notConfirmed = item({ key: 'a2', visitId: null, appointmentId: 'a2', careStatus: null, appointmentStatus: 'Scheduled', arrivedAtUtc: null, scheduledAtUtc: '2026-10-10T10:00:00Z' });
         const arrived = item({ key: 'w', appointmentId: 'a3', ownerConfirmedAtUtc: '2026-10-09T18:00:00Z' });
@@ -798,7 +798,7 @@ describe('TodayPageComponent', () => {
         const badges = (f.nativeElement as HTMLElement).querySelectorAll('[data-testid="today-owner-confirmed"]');
 
         expect(badges).toHaveLength(1);
-        expect(badges[0].textContent).toContain('Sahip onayladı');
+        expect(badges[0].textContent).toContain('Müşteri onayladı');
         expect(badges[0].getAttribute('title')).toContain('Hatırlatma e-postasından onaylandı');
     });
 

@@ -109,7 +109,7 @@
                             }
                             <ng-container *ngTemplateOutlet="preparation; context: { $implicit: item }" />
                             <dl class="m-0 mt-2 grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-1 text-sm">
-                                <dt class="text-muted-color">Sahip</dt>
+                                <dt class="text-muted-color">Müşteri</dt>
                                 <dd class="m-0 min-w-0 break-words">
                                     <a [routerLink]="['/panel/clients', item.clientId]" class="text-primary no-underline" data-testid="today-client-link">{{ item.clientName }}</a>
                                     @if (item.clientPhone) {
@@ -160,7 +160,7 @@
                             <tr>
                                 <th class="whitespace-nowrap">Saat</th>
                                 <th class="whitespace-nowrap">Hasta</th>
-                                <th class="whitespace-nowrap">Sahip</th>
+                                <th class="whitespace-nowrap">Müşteri</th>
                                 <th class="whitespace-nowrap @max-[76rem]:hidden">Hekim</th>
                                 <th class="whitespace-nowrap">Durum</th>
                                 <th class="whitespace-nowrap @max-[76rem]:hidden">Ödeme / yatış</th>
@@ -283,7 +283,7 @@
                     <article class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-3 min-w-0" data-testid="hospitalization-card">
                         <div class="font-medium break-words min-w-0">{{ h.petName }}</div>
                         <dl class="m-0 mt-2 grid grid-cols-[6rem_1fr] gap-x-2 gap-y-1 text-sm">
-                            <dt class="text-muted-color">Sahip</dt>
+                            <dt class="text-muted-color">Müşteri</dt>
                             <dd class="m-0 min-w-0 break-words">{{ h.clientName }}</dd>
                             <dt class="text-muted-color">Giriş</dt>
                             <dd class="m-0">{{ admittedAt(h.admittedAtUtc) }}</dd>
@@ -305,7 +305,7 @@
                 <ng-template #header>
                     <tr>
                         <th>Hasta</th>
-                        <th>Sahip</th>
+                        <th>Müşteri</th>
                         <th class="whitespace-nowrap">Giriş</th>
                         <th class="whitespace-nowrap">Yatış süresi</th>
                         <th class="whitespace-nowrap">Planlı taburcu</th>
@@ -378,7 +378,7 @@
 <ng-template #ownerConfirmed let-item>
     @if (item.ownerConfirmedAtUtc && !item.visitId) {
         <span class="shrink-0" [attr.title]="'Hatırlatma e-postasından onaylandı: ' + date(item.ownerConfirmedAtUtc) + ' ' + time(item.ownerConfirmedAtUtc)" data-testid="today-owner-confirmed">
-            <app-status-tag label="Sahip onayladı" severity="success" />
+            <app-status-tag label="Müşteri onayladı" severity="success" />
         </span>
     }
 </ng-template>

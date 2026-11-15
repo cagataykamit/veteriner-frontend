@@ -21,7 +21,7 @@ const ONLINE_BOOKING_PROBLEM_MESSAGES: Record<string, string> = {
     'Appointments.ClinicClosed': 'Seçilen gün klinik kapalı.',
     'Appointments.BreakTimeConflict': 'Seçilen saat mola zamanına denk geliyor.',
     'Appointments.NotAlignedToSlotInterval': 'Seçilen saat klinik slot aralığına uygun değil.',
-    'Pets.NotFound': 'Hayvan bulunamadı ya da seçilen müşteriye ait değil.',
+    'Pets.NotFound': 'Hasta bulunamadı ya da seçilen müşteriye ait değil.',
     'Notifications.NotFound': 'Bildirim bulunamadı.',
     'Clinics.NotFound': 'Klinik bulunamadı.',
     'Clinics.AccessDenied': 'Bu klinik için yetkiniz yok.'

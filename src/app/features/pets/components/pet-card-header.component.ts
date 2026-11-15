@@ -39,9 +39,9 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
                     <h1 class="m-0 text-2xl font-semibold leading-tight text-surface-900 dark:text-surface-0 break-words" data-testid="pet-name">{{ pet().name }}</h1>
                     <p class="m-0 mt-1 text-sm text-muted-color break-words" data-testid="pet-identity">{{ identityLine() }}</p>
 
-                    <p class="m-0 mt-3 flex flex-wrap items-center gap-x-6 gap-y-2" aria-label="Sahip">
+                    <p class="m-0 mt-3 flex flex-wrap items-center gap-x-6 gap-y-2" aria-label="Müşteri">
                         <span>
-                            <span class="text-muted-color">Sahip:</span>
+                            <span class="text-muted-color">Müşteri:</span>
                             @if (pet().ownerId) {
                                 <a [routerLink]="['/panel/clients', pet().ownerId]" class="text-primary font-medium no-underline ml-1">{{ pet().clientName }}</a>
                             } @else {

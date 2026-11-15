@@ -56,7 +56,7 @@ interface AppointmentSlot {
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AppointmentReasonVetFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-page-header categoryLink="/panel/appointments" categoryLinkLabel="Randevu listesine dön" title="Yeni Randevu" description="Randevu kaydı oluşturun." />
+        <app-page-header categoryLink="/panel/appointments" categoryLinkLabel="Randevu listesine dön" title="Yeni randevu" description="Randevu kaydı oluşturun." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {
@@ -140,12 +140,12 @@ interface AppointmentSlot {
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="appointmentType" class="block text-sm font-medium text-muted-color mb-2">Randevu Türü *</label>
-                        <p-select inputId="appointmentType" formControlName="appointmentType" [options]="typeOptions" optionLabel="label" optionValue="value" placeholder="Randevu Türü seçin" [showClear]="true" class="w-full" />
+                        <label for="appointmentType" class="block text-sm font-medium text-muted-color mb-2">Randevu türü *</label>
+                        <p-select inputId="appointmentType" formControlName="appointmentType" [options]="typeOptions" optionLabel="label" optionValue="value" placeholder="Randevu türü seçin" [showClear]="true" class="w-full" />
                         @if (apiFieldErrors().appointmentType) {
                             <small class="text-danger">{{ apiFieldErrors().appointmentType }}</small>
                         } @else if (form.controls.appointmentType.invalid && form.controls.appointmentType.touched) {
-                            <small class="text-danger">Randevu Türü seçimi zorunludur.</small>
+                            <small class="text-danger">Randevu türü seçimi zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12">
@@ -168,7 +168,7 @@ interface AppointmentSlot {
 
                 <div class="flex flex-wrap gap-2 mt-4">
                     <button pButton type="submit" [disabled]="form.invalid || submitting() || ro.mutationBlocked() || timeOptions().length === 0 || !!workingHoursLoadError()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
-                    <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>İptal</button>
+                    <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
                 </div>
             </form>
         </div>
@@ -347,7 +347,7 @@ export class AppointmentNewPageComponent implements OnInit {
 
         if (appointmentType === null || appointmentType === undefined) {
             this.form.markAllAsTouched();
-            this.submitError.set('Randevu Türü seçin.');
+            this.submitError.set('Randevu türü seçin.');
 
             return;
         }

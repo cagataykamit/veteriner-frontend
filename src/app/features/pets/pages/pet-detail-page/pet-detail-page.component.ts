@@ -138,7 +138,7 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
                             }
                             @if (hasText(p.clientEmail)) {
                                 <div>
-                                    <dt>Sahip e-posta</dt>
+                                    <dt>Müşteri e-posta</dt>
                                     <dd class="font-medium text-surface-900 dark:text-surface-0">{{ p.clientEmail }}</dd>
                                 </div>
                             }

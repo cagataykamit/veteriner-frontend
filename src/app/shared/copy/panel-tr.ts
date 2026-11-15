@@ -1,6 +1,10 @@
 /**
  * Panel ürün dili — sabit metinler (i18n altyapısı olmadan tek dil).
  * Listelerde tekrarlayan boş/hint metinleri buradan kullanın.
+ *
+ * Terim sözlüğü (H10): kayıt düğmesi "Kaydet" ("Güncelle" yok); formdan ve diyalogdan çıkış "Vazgeç", kaydın iptali
+ * "… iptal et"; "Ödeme al"; hayvan kaydı "Hasta", sahibi "Müşteri" (portal hasta sahibine kendi diliyle konuşur);
+ * düğme ve başlıklar cümle düzeninde ("Yeni müşteri"); "(isteğe bağlı)"; para birimi "₺"; "Pasife al".
  */
 export const PANEL_COPY = {
     listEmptyMessage: 'Kayıt bulunamadı.',
@@ -17,7 +21,7 @@ export const PANEL_COPY = {
     buttonSearch: 'Ara',
     buttonClear: 'Temizle',
     buttonSave: 'Kaydet',
-    buttonCancel: 'İptal',
+    buttonCancel: 'Vazgeç',
     buttonDetail: 'Detay',
     buttonRefresh: 'Yenile',
     labelClient: 'Müşteri',

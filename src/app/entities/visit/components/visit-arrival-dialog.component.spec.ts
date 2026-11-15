@@ -201,7 +201,7 @@ describe('VisitArrivalDialogComponent', () => {
     });
 
     describe('randevusuz hızlı geliş (sunucu tarafı arama)', () => {
-        const pick = () => cmp.form.controls.pet.setValue({ id: 'p1', label: 'Pamuk — Kedi · Sahip: Ali Veli', clientId: 'cl1', clientName: 'Ali Veli' });
+        const pick = () => cmp.form.controls.pet.setValue({ id: 'p1', label: 'Pamuk — Kedi · Müşteri: Ali Veli', clientId: 'cl1', clientName: 'Ali Veli' });
 
         beforeEach(() => {
             fixture.componentRef.setInput('appointment', null);
@@ -221,7 +221,7 @@ describe('VisitArrivalDialogComponent', () => {
             expect(getPets).toHaveBeenCalledTimes(1);
 
             expect(getPets).toHaveBeenCalledWith({ page: 1, pageSize: 10, search: '985 1210', status: 'Active' });
-            expect(cmp.petSuggestions()).toEqual([{ id: 'p1', label: 'Pamuk — Kedi · Sahip: Ali Veli', clientId: 'cl1', clientName: 'Ali Veli' }]);
+            expect(cmp.petSuggestions()).toEqual([{ id: 'p1', label: 'Pamuk — Kedi · Müşteri: Ali Veli', clientId: 'cl1', clientName: 'Ali Veli' }]);
         });
 
         it('boş terim istek üretmez', () => {
@@ -445,7 +445,7 @@ describe('VisitArrivalDialogComponent — geliş hazırlığı (CHECKIN-001…00
     it('randevusuz gelişte hazırlık ve ücret yönlendirmesi seçilen hastanın sahibiyle çalışır', async () => {
         const { cmp, visits, navigate } = await open([TEMPLATE_READ, CHARGE_CREATE], null);
 
-        cmp.form.controls.pet.setValue({ id: 'p1', label: 'Pamuk — Kedi · Sahip: Ali Veli', clientId: 'cl1', clientName: 'Ali Veli' });
+        cmp.form.controls.pet.setValue({ id: 'p1', label: 'Pamuk — Kedi · Müşteri: Ali Veli', clientId: 'cl1', clientName: 'Ali Veli' });
         cmp.arrivalReason.set('Kusma');
         cmp.preparedTemplateId.set('t-lines');
         cmp.form.controls.addChargeAfter.setValue(true);

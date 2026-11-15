@@ -38,7 +38,7 @@ export const USER_NOTIFICATION_TYPE_LABELS: Record<UserNotificationType, string>
     [UserNotificationType.AppointmentRequestCancelled]: 'Talep iptali',
     [UserNotificationType.AppointmentAssigned]: 'Size atanan randevu',
     [UserNotificationType.PortalDataRequestCreated]: 'Portal veri talebi',
-    [UserNotificationType.AppointmentCancelledByOwner]: 'Sahip randevuyu iptal etti',
+    [UserNotificationType.AppointmentCancelledByOwner]: 'Müşteri randevuyu iptal etti',
     [UserNotificationType.WaitlistOfferAccepted]: 'Bekleme listesinden randevu',
     [UserNotificationType.DataExportReady]: 'Veri paketi hazır',
     [UserNotificationType.DataExportFailed]: 'Veri paketi hazırlanamadı',

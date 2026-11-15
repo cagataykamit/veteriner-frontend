@@ -88,7 +88,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                                     <small class="text-muted-color">Hasta kayıtlı değilse kaydı resepsiyon oluşturur.</small>
                                 }
                                 @if (canAddPet && selectedOwner(); as owner) {
-                                    <button pButton type="button" size="small" [text]="true" (click)="openRegistration(owner)"><i class="p-button-icon pi pi-plus"></i>Bu sahibe yeni hasta ekle</button>
+                                    <button pButton type="button" size="small" [text]="true" (click)="openRegistration(owner)"><i class="p-button-icon pi pi-plus"></i>Bu müşteriye yeni hasta ekle</button>
                                 }
                             </div>
                         }
@@ -100,7 +100,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                         </div>
                     }
                     <div class="col-span-12">
-                        <label for="va-vet" class="block text-sm font-medium text-muted-color mb-2">Sorumlu hekim (opsiyonel)</label>
+                        <label for="va-vet" class="block text-sm font-medium text-muted-color mb-2">Sorumlu hekim (isteğe bağlı)</label>
                         <p-select
                             inputId="va-vet"
                             formControlName="veterinarianId"
@@ -130,7 +130,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                 }
             </form>
             <ng-template #footer>
-                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>İptal</button>
+                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
                 <button pButton type="submit" form="visit-arrival-form" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ appointment() ? 'Geldi olarak kaydet' : 'Kaydet' }}</button>
             </ng-template>
         </p-dialog>
@@ -364,7 +364,7 @@ export class VisitArrivalDialogComponent {
             map(() =>
                 pets.map((p) => ({
                     id: p.id,
-                    label: `${p.name} — ${p.speciesName} · Sahip: ${(p.clientId && this.ownerNames.get(p.clientId)) || '—'}`,
+                    label: `${p.name} — ${p.speciesName} · Müşteri: ${(p.clientId && this.ownerNames.get(p.clientId)) || '—'}`,
                     clientId: p.clientId,
                     clientName: (p.clientId && this.ownerNames.get(p.clientId)) || '—'
                 }))

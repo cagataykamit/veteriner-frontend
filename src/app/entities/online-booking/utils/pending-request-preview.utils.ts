@@ -34,7 +34,7 @@ export function toPendingRequestPreview(r: AppointmentRequestListItemVm, now: Da
         isNew: isNewAppointmentRequest(r.createdAtUtc, now),
         receivedAgo: appointmentRequestAgoLabel(r.createdAtUtc, now),
         contactName: r.contactName,
-        petLabel: r.petName ?? 'Hayvan belirtilmedi',
+        petLabel: r.petName ?? 'Hasta belirtilmedi',
         reasonName: r.reasonName,
         durationMinutes: r.durationMinutes,
         sourceLabel: appointmentRequestSourceLabel(r.source),

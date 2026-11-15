@@ -81,7 +81,7 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
                                             }
                                             <div class="text-sm text-muted-color">
                                                 @if (p.ownerName) {
-                                                    Sahip: {{ p.ownerName }}
+                                                    Müşteri: {{ p.ownerName }}
                                                 }
                                                 @if (p.ownerPhone) {
                                                     · {{ p.ownerPhone }}
@@ -117,7 +117,7 @@ const ROW_ACTION_KEYS: ReadonlySet<PatientActionKey> = new Set(['arrive', 'exami
                                     <li class="owner-row rounded-border border border-surface-200 dark:border-surface-700 p-3 flex flex-wrap items-center gap-x-4 gap-y-2">
                                         <div class="min-w-0 grow basis-64">
                                             <a [routerLink]="['/panel/clients', o.clientId]" class="font-semibold text-lg text-primary no-underline">{{ o.name }}</a>
-                                            <span class="text-muted-color"> · Sahip</span>
+                                            <span class="text-muted-color"> · Müşteri</span>
                                             <div class="text-sm text-muted-color">{{ o.phone }} · Kayıtlı hasta yok</div>
                                         </div>
                                         @if (!ro.mutationBlocked()) {
@@ -252,7 +252,7 @@ export class PatientsHomePageComponent implements OnInit {
     }
 
     openArrival(p: PatientRowVm): void {
-        this.arrivalPet.set({ id: p.petId, label: `${p.petName} · Sahip: ${p.ownerName || '—'}`, clientId: p.clientId, clientName: p.ownerName });
+        this.arrivalPet.set({ id: p.petId, label: `${p.petName} · Müşteri: ${p.ownerName || '—'}`, clientId: p.clientId, clientName: p.ownerName });
         this.arrivalOpen.set(true);
     }
 

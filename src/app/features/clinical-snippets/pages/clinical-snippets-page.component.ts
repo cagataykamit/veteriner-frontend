@@ -151,7 +151,7 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
                                                     [disabled]="mutatingId() !== null"
                                                     (click)="confirmDeactivate(row)"
                                                 >
-                                                    Pasifleştir
+                                                    Pasife al
                                                 </button>
                                             }
                                             @if (canDeactivate && !row.isActive) {
@@ -341,7 +341,7 @@ export class ClinicalSnippetsPageComponent implements OnInit {
             header: 'Metin parçasını pasifleştir',
             message: `#${row.shortcut} muayenede # listesinde görünmez. Önceden eklenmiş metinler değişmez; parçayı sonra yeniden etkinleştirebilirsiniz.`,
             icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'Pasifleştir',
+            acceptLabel: 'Pasife al',
             rejectLabel: 'Vazgeç',
             acceptButtonStyleClass: 'p-button-danger',
             rejectButtonStyleClass: 'p-button-secondary',

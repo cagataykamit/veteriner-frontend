@@ -310,7 +310,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(el.querySelector('[data-testid="exam-workspace"]')).not.toBeNull();
     });
 
-    it('Ödeme Oluştur yalnız Payments.Create izniyle görünür (Update tek başına yetmez)', async () => {
+    it('Ödeme al yalnız Payments.Create izniyle görünür (Update tek başına yetmez)', async () => {
         const hekim = await setup(detailVm, ['Examinations.Update']);
 
         expect(hekim.el.querySelector('a[href*="/panel/payments/new"]')).toBeNull();

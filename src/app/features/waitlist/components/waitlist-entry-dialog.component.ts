@@ -44,7 +44,7 @@ function localDate(offsetDays = 0): string {
                         <app-client-search inputId="wlClient" name="wlClient" [ngModel]="clientId()" (ngModelChange)="selectClient($event)" />
                     </div>
                     <div class="flex flex-col gap-1">
-                        <label for="wlPet" class="text-sm font-medium">Hayvan</label>
+                        <label for="wlPet" class="text-sm font-medium">Hasta</label>
                         <app-pet-search inputId="wlPet" name="wlPet" [clientId]="clientId()" [activeOnly]="true" [ngModel]="petId()" (ngModelChange)="petId.set($event || '')" />
                     </div>
                     <div class="flex flex-col gap-1">

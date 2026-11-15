@@ -154,7 +154,7 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
                 </div>
                 @if (lines.length > 0) {
                     <div class="flex flex-col gap-1" data-testid="template-package-price">
-                        <label for="tplPackagePrice" class="block text-sm font-medium text-muted-color">Paket fiyatı (TL)</label>
+                        <label for="tplPackagePrice" class="block text-sm font-medium text-muted-color">Paket fiyatı (₺)</label>
                         <input id="tplPackagePrice" type="number" step="0.01" min="0" class="w-full md:w-60 p-inputtext p-component" [formControl]="form.controls.packagePrice" placeholder="Boş: kalem kalem" />
                         @if (form.controls.packagePrice.invalid) {
                             <small class="text-danger">0'dan büyük, en fazla {{ priceDecimals }} ondalıklı, en çok {{ priceMax }}.</small>

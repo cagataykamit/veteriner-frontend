@@ -34,7 +34,7 @@ const APPT: AppointmentDetailVm = {
     ownerConfirmedAtUtc: null
 };
 
-describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () => {
+describe('AppointmentDetailPageComponent - Muayene oluştur (ADR-017 K7)', () => {
     let claims: Set<string>;
     let createVisit: Mock;
     let appt: AppointmentDetailVm;
@@ -61,7 +61,7 @@ describe('AppointmentDetailPageComponent - Muayene Oluştur (ADR-017 K7)', () =>
         return fixture;
     };
 
-    const examButton = (el: HTMLElement) => Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Muayene Oluştur'));
+    const examButton = (el: HTMLElement) => Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Muayene oluştur'));
 
     beforeEach(() => {
         appt = APPT;

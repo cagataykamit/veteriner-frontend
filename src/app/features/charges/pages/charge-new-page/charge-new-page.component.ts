@@ -32,7 +32,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent, ChargeTaxFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-page-header categoryLink="/panel/charges" categoryLinkLabel="Ücret listesine dön" title="Yeni Ücret" description="Müşteriye ücret satırı ekleyin. Ücret ödeme sayılmaz." />
+        <app-page-header categoryLink="/panel/charges" categoryLinkLabel="Ücret listesine dön" title="Yeni ücret" description="Müşteriye ücret satırı ekleyin. Ücret ödeme sayılmaz." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {
@@ -103,7 +103,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         }
                     </div>
                     <div class="col-span-12 md:col-span-4">
-                        <label for="chargeUnitPrice" class="block text-sm font-medium text-muted-color mb-2">Birim fiyat (TRY) *</label>
+                        <label for="chargeUnitPrice" class="block text-sm font-medium text-muted-color mb-2">Birim fiyat (₺) *</label>
                         <input id="chargeUnitPrice" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="unitPrice" />
                         @if (form.controls.unitPrice.invalid && form.controls.unitPrice.touched) {
                             <small class="text-danger">0'dan büyük, en fazla {{ unitPriceDecimals }} ondalıklı ve {{ unitPriceMax }} üstünde olmayan bir fiyat girin.</small>

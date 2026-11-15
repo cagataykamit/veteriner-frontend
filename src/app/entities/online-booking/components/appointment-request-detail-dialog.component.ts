@@ -81,7 +81,7 @@ type Mode = 'view' | 'approve' | 'reject';
                     <dl class="grid grid-cols-12 gap-x-4 gap-y-2 m-0 text-sm">
                         <dt class="col-span-4 text-muted-color">İstenen saat</dt>
                         <dd class="col-span-8 m-0 font-medium">{{ fmt(d.summary.requestedStartUtc) }}</dd>
-                        <dt class="col-span-4 text-muted-color">Sahip</dt>
+                        <dt class="col-span-4 text-muted-color">Müşteri</dt>
                         <dd class="col-span-8 m-0">
                             {{ d.summary.contactName }} · {{ d.summary.contactPhone ?? '—' }} · {{ d.summary.contactEmail }}
                             <!-- Portal talebi kayıtlı müşteriden gelir: kartı yeni sekmede açılır, talep penceresi kaybolmaz. -->
@@ -93,7 +93,7 @@ type Mode = 'view' | 'approve' | 'reject';
                                 <span class="block text-muted-color">Kayıtlı müşteri değil; onaylarken eşleştirilir ya da yeni müşteri açılır.</span>
                             }
                         </dd>
-                        <dt class="col-span-4 text-muted-color">Hayvan</dt>
+                        <dt class="col-span-4 text-muted-color">Hasta</dt>
                         <dd class="col-span-8 m-0">
                             {{ d.summary.petName ?? '—' }}
                             @if (d.summary.petId) {
@@ -105,7 +105,7 @@ type Mode = 'view' | 'approve' | 'reject';
                             }
                         </dd>
                         @if (d.ownerNote) {
-                            <dt class="col-span-4 text-muted-color">Sahip notu</dt>
+                            <dt class="col-span-4 text-muted-color">Müşteri notu</dt>
                             <dd class="col-span-8 m-0 whitespace-pre-wrap">{{ d.ownerNote }}</dd>
                         }
                         @if (d.approvedStartUtc) {
@@ -149,10 +149,10 @@ type Mode = 'view' | 'approve' | 'reject';
                                 </div>
                             }
                             @if (d.summary.petId) {
-                                <p class="m-0 text-sm">Hayvan: <span class="font-medium">{{ d.summary.petName }}</span></p>
+                                <p class="m-0 text-sm">Hasta: <span class="font-medium">{{ d.summary.petName }}</span></p>
                             } @else if (!registering()) {
                                 <div class="flex flex-col gap-1">
-                                    <label for="approvePet" class="text-sm text-muted-color">Hayvan</label>
+                                    <label for="approvePet" class="text-sm text-muted-color">Hasta</label>
                                     <app-pet-search inputId="approvePet" [clientId]="clientId() ?? ''" [ngModel]="petId()" (ngModelChange)="petId.set($event || null)" />
                                 </div>
                                 <div>

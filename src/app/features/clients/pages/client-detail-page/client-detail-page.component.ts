@@ -392,7 +392,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
             return null;
         }
 
-        return { id: pet.id, label: `${pet.name} — ${pet.speciesName} · Sahip: ${c.fullName}`, clientId: c.id, clientName: c.fullName };
+        return { id: pet.id, label: `${pet.name} — ${pet.speciesName} · Müşteri: ${c.fullName}`, clientId: c.id, clientName: c.fullName };
     });
 
     private cardSubscriptions = new Subscription();

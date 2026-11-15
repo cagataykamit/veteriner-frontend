@@ -40,7 +40,7 @@ const FIELD_MAP: Record<string, ClientCreateFormFieldKey> = {
     notes: 'notes'
 };
 
-/** Yaygın İngilizce doğrulama metinlerini Türkçe ürün diline yaklaştır (opsiyonel). */
+/** Yaygın İngilizce doğrulama metinlerini Türkçe ürün diline yaklaştır (isteğe bağlı). */
 function normalizeFieldMessage(formKey: ClientCreateFormFieldKey, message: string): string {
     const m = message.trim();
 

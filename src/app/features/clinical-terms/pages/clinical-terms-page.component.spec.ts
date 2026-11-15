@@ -66,7 +66,7 @@ describe('ClinicalTermsPageComponent', () => {
         expect(rows[0]).not.toContain('Adı düzelt');
         expect(rows[1]).toContain('Kliniğe özel');
         expect(rows[1]).toContain('Adı düzelt');
-        expect(rows[1]).toContain('Pasifleştir');
+        expect(rows[1]).toContain('Pasife al');
         expect(rows[2]).toContain('Pasif');
         expect(rows[2]).toContain('Etkinleştir');
     });

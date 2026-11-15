@@ -11,7 +11,7 @@ const PANEL_PAGE_TITLES: ReadonlyArray<readonly [string, string]> = [
     ['patients', 'Hastalar'],
     ['clients', 'Müşteriler'],
     ['pets', 'Hastalar'],
-    ['appointments/calendar', 'Randevu Takvimi'],
+    ['appointments/calendar', 'Randevu takvimi'],
     ['appointments', 'Randevular'],
     ['examinations', 'Muayeneler'],
     ['treatments', 'Tedaviler'],

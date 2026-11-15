@@ -58,7 +58,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
     imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ButtonModule, CheckboxModule, SelectModule, TableModule, AppPageHeaderComponent, ClientSearchComponent, DateInputComponent, TrDateTimePipe, CashRegisterSelectComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Yeni Ödeme" description="Müşterinin açık ücretlerinden hangilerine ne kadar ödeme alındığını girin." />
+        <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Yeni ödeme" description="Müşterinin açık ücretlerinden hangilerine ne kadar ödeme alındığını girin." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {
@@ -199,7 +199,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                         } @else if (creditAmount() > 0 && !prepayment()) {
                             <small class="block font-medium" data-testid="payment-overpayment" aria-live="polite">Fazlası ({{ money(creditAmount()) }}) müşteri kredisine yazılır.</small>
                         } @else {
-                            <small class="text-muted-color block">{{ prepayment() ? 'Tamamı müşteri kredisine yazılır; yalnız TRY.' : 'Boş bırakılırsa seçilen ücretlerin toplamı alınır; yalnız TRY.' }}</small>
+                            <small class="text-muted-color block">{{ prepayment() ? 'Tamamı müşteri kredisine yazılır; yalnız ₺.' : 'Boş bırakılırsa seçilen ücretlerin toplamı alınır; yalnız ₺.' }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6 lg:col-span-3">
@@ -287,7 +287,7 @@ export class PaymentNewPageComponent implements OnInit {
 
     readonly clientIdValue = signal('');
     readonly clientSelected = computed(() => this.clientIdValue() !== '');
-    /** "Ücret ekleyin" bağlantısı: müşteri yanında bilinen geliş de taşınır (Yeni Ücret'te yeniden seçmek gerekmesin). */
+    /** "Ücret ekleyin" bağlantısı: müşteri yanında bilinen geliş de taşınır (Yeni ücret'te yeniden seçmek gerekmesin). */
     readonly chargeNewQueryParams = computed(() => ({ clientId: this.clientIdValue(), ...(this.context?.visitId ? { visitId: this.context.visitId } : {}) }));
     readonly balanceLoading = signal(false);
     readonly balanceError = signal<string | null>(null);

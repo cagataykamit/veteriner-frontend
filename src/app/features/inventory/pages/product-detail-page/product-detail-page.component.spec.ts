@@ -229,7 +229,7 @@ describe('ProductDetailPageComponent', () => {
             const l = labels();
 
             expect(l).toContain('Düzenle');
-            expect(l).toContain('Pasifleştir');
+            expect(l).toContain('Pasife al');
             expect(l).not.toContain('Aktifleştir');
             expect(l.filter((x) => x === 'Stok işlemi').length).toBe(3);
         });
@@ -268,7 +268,7 @@ describe('ProductDetailPageComponent', () => {
             render();
 
             expect(labels()).toContain('Aktifleştir');
-            expect(labels()).not.toContain('Pasifleştir');
+            expect(labels()).not.toContain('Pasife al');
         });
 
         it('salt okunur modda düzenleme kilitli, stok işlemi yok', () => {
@@ -307,7 +307,7 @@ describe('ProductDetailPageComponent', () => {
             expect(t).toContain('Giriş miktarı *');
             expect(t).toContain('Birim maliyet');
             expect(t).toContain('Seri / lot no');
-            expect(labels(dialog()!)).toContain('İptal');
+            expect(labels(dialog()!)).toContain('Vazgeç');
             expect(findButton(dialog()!, 'Kaydet').disabled).toBe(true);
         });
 
@@ -399,11 +399,11 @@ describe('ProductDetailPageComponent', () => {
             expect(header.title).toBe('Bu ürün için henüz klinik stok kaydı yok. İlk stok kaydı oluşturmak için klinik bilgisi gereklidir.');
         });
 
-        it('İptal diyaloğu kapatır', () => {
+        it('Vazgeç diyaloğu kapatır', () => {
             render();
             click(el().querySelector('.hidden.md\\:block')!, 'Stok işlemi');
 
-            click(dialog()!, 'İptal');
+            click(dialog()!, 'Vazgeç');
 
             expect(dialog()?.textContent ?? '').not.toContain('Giriş miktarı *');
             expect(movements.create).not.toHaveBeenCalled();
@@ -421,12 +421,12 @@ describe('ProductDetailPageComponent', () => {
             });
         };
 
-        it('Pasifleştir onaylanınca servis çağrılır ve ürün yeniden yüklenir', () => {
+        it('Pasife al onaylanınca servis çağrılır ve ürün yeniden yüklenir', () => {
             products.deactivate.mockReturnValue(of(undefined));
             render();
             acceptConfirm();
 
-            click(el(), 'Pasifleştir');
+            click(el(), 'Pasife al');
 
             expect(products.deactivate).toHaveBeenCalledWith('p1');
             expect(products.getById).toHaveBeenCalledTimes(2);

@@ -80,8 +80,8 @@ const PAGE_SIZE = 20;
                             <tr>
                                 <th>İstenen saat</th>
                                 <th>Neden</th>
-                                <th>Sahip</th>
-                                <th>Hayvan</th>
+                                <th>Müşteri</th>
+                                <th>Hasta</th>
                                 <th>Kaynak</th>
                                 <th>Durum</th>
                                 <th style="width: 6rem"></th>

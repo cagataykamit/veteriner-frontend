@@ -77,7 +77,7 @@ describe('ReasonConfirmDialogComponent', () => {
         cmp.visible.set(true);
         fixture.detectChanges();
 
-        expect(document.body.textContent).toContain('Gerekçe (opsiyonel)');
+        expect(document.body.textContent).toContain('Gerekçe (isteğe bağlı)');
 
         cmp.form.controls.reason.setValue('x'.repeat(501));
         cmp.onSubmit();

@@ -84,9 +84,9 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                         </app-filter-field>
                         <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canCreateAppointment && !ro.mutationBlocked()) {
-                            <a actions routerLink="/panel/appointments/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Randevu</a>
+                            <a actions routerLink="/panel/appointments/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni randevu</a>
                         } @else if (canCreateAppointment && ro.mutationBlocked()) {
-                            <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Randevu (salt okunur)</button>
+                            <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni randevu (salt okunur)</button>
                         }
                     </app-list-header>
                     <div class="flex flex-wrap items-end gap-3">
@@ -145,7 +145,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                         <th>Süre</th>
                                         <th>Müşteri</th>
                                         <th>Hasta</th>
-                                        <th>Randevu Türü</th>
+                                        <th>Randevu türü</th>
                                         <th>Durum</th>
                                         <th style="width: 8rem">İşlemler</th>
                                     </tr>

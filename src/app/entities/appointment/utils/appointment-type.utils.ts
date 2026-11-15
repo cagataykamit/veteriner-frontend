@@ -181,7 +181,7 @@ export function appointmentTypeLabel(value: number | string | null | undefined):
             return LABEL_BY_VALUE.get(value) ?? EM;
         }
 
-        return `Randevu Türü (${value})`;
+        return `Randevu türü (${value})`;
     }
 
     const s = value.trim();
@@ -230,7 +230,7 @@ export function appointmentTypeDisplayLabel(appointmentType: number | null | und
     }
 
     if (appointmentType !== null && appointmentType !== undefined) {
-        return `Randevu Türü (${appointmentType})`;
+        return `Randevu türü (${appointmentType})`;
     }
 
     return EM;

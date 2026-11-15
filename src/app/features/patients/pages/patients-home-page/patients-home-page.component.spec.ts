@@ -77,7 +77,7 @@ describe('PatientsHomePageComponent (arama-öncelikli Hastalar girişi)', () => 
         const row = el.querySelector('.patient-row') as HTMLElement;
 
         expect(row.textContent).toContain('Pamuk');
-        expect(row.textContent).toContain('Sahip: Ali Veli');
+        expect(row.textContent).toContain('Müşteri: Ali Veli');
         expect(row.textContent).toContain('Mikroçip: 985');
         const labels = Array.from(row.querySelectorAll('a,button')).map((e) => e.textContent?.trim());
 

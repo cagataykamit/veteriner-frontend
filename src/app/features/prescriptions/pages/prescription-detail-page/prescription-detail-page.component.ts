@@ -135,11 +135,11 @@ import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dia
                 <app-detail-action-bar ariaLabel="Reçete eylemleri">
                     @if (!ro.mutationBlocked()) {
                         @if (r.examinationId?.trim() && r.clientId?.trim() && r.petId?.trim()) {
-                            <a [routerLink]="['/panel/payments/new']" [queryParams]="{ clientId: r.clientId, petId: r.petId, examinationId: r.examinationId }" pButton type="button" class="p-button-primary"><i class="pi pi-wallet"></i>Ödeme Oluştur</a>
+                            <a [routerLink]="['/panel/payments/new']" [queryParams]="{ clientId: r.clientId, petId: r.petId, examinationId: r.examinationId }" pButton type="button" class="p-button-primary"><i class="pi pi-wallet"></i>Ödeme al</a>
                         }
                         <button pButton type="button" class="p-button-danger p-button-outlined" data-testid="prescription-cancel-open" (click)="cancelVisible.set(true)"><i class="pi pi-ban"></i>İptal et</button>
                     } @else if (r.examinationId?.trim() && r.clientId?.trim() && r.petId?.trim()) {
-                        <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-lock"></i>Ödeme Oluştur (salt okunur)</button>
+                        <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-lock"></i>Ödeme al (salt okunur)</button>
                     }
                 </app-detail-action-bar>
             }

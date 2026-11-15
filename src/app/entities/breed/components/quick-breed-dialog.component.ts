@@ -49,7 +49,7 @@ import { InputTextModule } from 'primeng/inputtext';
                 }
             </form>
             <ng-template #footer>
-                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>İptal</button>
+                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
                 <button pButton type="submit" form="quick-breed-form" [disabled]="form.invalid || submitting() || !speciesIdContext() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
             </ng-template>
         </p-dialog>

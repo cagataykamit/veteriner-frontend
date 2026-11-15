@@ -26,9 +26,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     template: `
         <app-page-header title="Türler" description="Tür kayıtlarını yönetin.">
             @if (canCreateSpecies() && !ro.mutationBlocked()) {
-                <a actions [routerLink]="[speciesRoute, 'new']" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Tür</a>
+                <a actions [routerLink]="[speciesRoute, 'new']" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni tür</a>
             } @else if (canCreateSpecies() && ro.mutationBlocked()) {
-                <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Tür (salt okunur)</button>
+                <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni tür (salt okunur)</button>
             }
         </app-page-header>
 

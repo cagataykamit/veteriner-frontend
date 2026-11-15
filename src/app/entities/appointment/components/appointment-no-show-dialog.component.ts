@@ -26,7 +26,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             }
             <form [formGroup]="form" (ngSubmit)="onSubmit()" id="appointment-no-show-form">
                 <label for="ns-reason" class="block text-sm font-medium text-muted-color mb-2">
-                    {{ reverting() ? 'Gerekçe *' : 'Gerekçe (opsiyonel)' }}
+                    {{ reverting() ? 'Gerekçe *' : 'Gerekçe (isteğe bağlı)' }}
                 </label>
                 <textarea id="ns-reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
                 @if (form.controls.reason.invalid && form.controls.reason.touched) {

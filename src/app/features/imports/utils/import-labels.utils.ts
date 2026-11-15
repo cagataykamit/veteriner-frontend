@@ -147,7 +147,7 @@ const ISSUE_TEXTS: Readonly<Record<string, string | readonly [label: string, not
     'Imports.MatchedExisting': 'Sistemdeki kayıtla eşleşti',
     'Imports.SharedPhone': 'Telefon başka bir müşteriyle ortak',
     'Imports.PossibleDuplicate': 'Aynı adlı müşteri zaten var; ayrı kayıt oluşur',
-    'Imports.OwnerNotFound': 'Sahip (müşteri) bulunamadı',
+    'Imports.OwnerNotFound': 'Müşteri bulunamadı',
     'Imports.OwnerlessPetSkipped': 'Sahibi ve kaydı olmayan hasta (eski programda müşteri kartı silinmiş); atlanır',
     'Imports.AmbiguousPet': ['Kayıtların hangi hastaya ait olduğu seçilmedi (aynı sahipte aynı adlı birden çok hasta)', 'Yukarıda seçim yapınca düzelir.'],
     'Imports.AmbiguousPetSkipped': 'Hangi hastaya ait olduğu sorusunda "atla" seçildi; atlanır',

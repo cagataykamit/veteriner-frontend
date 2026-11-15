@@ -75,9 +75,9 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                         </app-filter-field>
                         <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canCreatePet && !ro.mutationBlocked()) {
-                            <a actions routerLink="/panel/pets/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Hasta</a>
+                            <a actions routerLink="/panel/pets/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni hasta</a>
                         } @else if (canCreatePet && ro.mutationBlocked()) {
-                            <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Hasta (salt okunur)</button>
+                            <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni hasta (salt okunur)</button>
                         }
                     </app-list-header>
                     <div class="flex flex-wrap items-end gap-3">

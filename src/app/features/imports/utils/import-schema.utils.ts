@@ -132,8 +132,8 @@ export function needsClinic(tables: Iterable<ImportTable>): boolean {
 
 const PET_LINK_FIELDS: readonly ImportFieldDef[] = [
     { key: 'HayvanNo', label: 'Hasta no', hint: 'Hastaya bağlantı için tercih edilen alan.' },
-    { key: 'SahipAdSoyad', label: 'Sahip ad soyad', hint: 'Hasta no yoksa sahip, hasta adı ve tür birlikte kullanılır.' },
-    { key: 'SahipTelefon', label: 'Sahip telefon' },
+    { key: 'SahipAdSoyad', label: 'Müşteri ad soyad', hint: 'Hasta no yoksa müşteri, hasta adı ve tür birlikte kullanılır.' },
+    { key: 'SahipTelefon', label: 'Müşteri telefon' },
     { key: 'HayvanAdi', label: 'Hasta adı' },
     { key: 'Tur', label: 'Tür' }
 ];
@@ -145,7 +145,7 @@ export const IMPORT_FIELDS: Readonly<Record<ImportTable, readonly ImportFieldDef
         { key: 'Telefon', label: 'Telefon' },
         { key: 'Eposta', label: 'E-posta' },
         { key: 'Adres', label: 'Adres' },
-        { key: 'AcikBakiye', label: 'Açık bakiye (borç / alacak)', hint: 'Eski programdaki bakiye (TL). Yeni müşteri için artı tutar tek bir devir ücreti, eksi tutar (alacak) tek bir devir alacağı olarak açılır. İkisi de ciroya, kasaya ve gün sonuna girmez.' },
+        { key: 'AcikBakiye', label: 'Açık bakiye (borç / alacak)', hint: 'Eski programdaki bakiye (₺). Yeni müşteri için artı tutar tek bir devir ücreti, eksi tutar (alacak) tek bir devir alacağı olarak açılır. İkisi de ciroya, kasaya ve gün sonuna girmez.' },
         { key: 'BakiyeTarihi', label: 'Bakiye tarihi', hint: 'Bakiyenin hangi tarihteki durum olduğu; yalnız devir ücretinin açıklamasına yazılır.' },
         { key: 'KimlikNo', label: 'Kimlik / vergi no', hint: 'Fatura bilgisi: 11 haneli T.C. kimlik no veya 10 haneli vergi no. Geçersizse boş kalır.' },
         { key: 'VergiDairesi', label: 'Vergi dairesi' },
@@ -154,8 +154,8 @@ export const IMPORT_FIELDS: Readonly<Record<ImportTable, readonly ImportFieldDef
     ],
     pets: [
         { key: 'MusteriNo', label: 'Müşteri no', hint: 'Sahibe bağlantı için tercih edilen alan.' },
-        { key: 'SahipAdSoyad', label: 'Sahip ad soyad', hint: 'Müşteri no yoksa sahibi bulmak için sahip telefonuyla birlikte kullanılır.' },
-        { key: 'SahipTelefon', label: 'Sahip telefon' },
+        { key: 'SahipAdSoyad', label: 'Müşteri ad soyad', hint: 'Müşteri no yoksa müşteriyi bulmak için müşteri telefonuyla birlikte kullanılır.' },
+        { key: 'SahipTelefon', label: 'Müşteri telefon' },
         { key: 'HayvanNo', label: 'Hasta no', hint: 'Aşıları hastaya bağlamak için tercih edilen alan.' },
         { key: 'HayvanAdi', label: 'Hasta adı' },
         { key: 'Tur', label: 'Tür' },
@@ -226,7 +226,7 @@ export const IMPORT_FIELDS: Readonly<Record<ImportTable, readonly ImportFieldDef
         { key: 'Birim', label: 'Birim' },
         { key: 'SatisFiyati', label: 'Satış fiyatı' },
         { key: 'KdvOrani', label: 'KDV oranı', hint: '20, %20 veya 18,5 gibi. Boşsa ya da okunamazsa klinik varsayılanı kullanılır.' },
-        { key: 'AlisFiyati', label: 'Alış fiyatı', hint: 'Birim alış fiyatı (TL), bilgi amaçlıdır; stok değeri ve ücret hesabında kullanılmaz. 0 boş sayılır.' },
+        { key: 'AlisFiyati', label: 'Alış fiyatı', hint: 'Birim alış fiyatı (₺), bilgi amaçlıdır; stok değeri ve ücret hesabında kullanılmaz. 0 boş sayılır.' },
         { key: 'Barkod', label: 'Barkod' },
         { key: 'StokKodu', label: 'Stok kodu' },
         { key: 'Uretici', label: 'Üretici' },

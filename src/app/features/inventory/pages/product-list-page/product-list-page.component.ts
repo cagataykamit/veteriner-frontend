@@ -157,7 +157,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                                         [disabled]="rowMutatingId() !== null"
                                                         (click)="onDeactivate(row)"
                                                     >
-                                                        Pasifleştir
+                                                        Pasife al
                                                     </button>
                                                 }
                                                 @if (canUpdateProduct && !ro.mutationBlocked() && !row.isActive) {
@@ -208,7 +208,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                                 [disabled]="rowMutatingId() !== null"
                                                 (click)="onDeactivate(row)"
                                             >
-                                                Pasifleştir
+                                                Pasife al
                                             </button>
                                         }
                                         @if (canUpdateProduct && !ro.mutationBlocked() && !row.isActive) {
@@ -380,7 +380,7 @@ export class ProductListPageComponent implements OnInit {
             header: 'Ürünü pasifleştir',
             message: 'Bu ürünü pasifleştirmek istediğinize emin misiniz?',
             icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'Pasifleştir',
+            acceptLabel: 'Pasife al',
             rejectLabel: 'Vazgeç',
             acceptButtonStyleClass: 'p-button-danger',
             rejectButtonStyleClass: 'p-button-secondary',
@@ -394,7 +394,7 @@ export class ProductListPageComponent implements OnInit {
                     },
                     error: (e: Error) => {
                         this.rowMutatingId.set(null);
-                        this.listActionError.set(panelHttpFailureMessage(e, 'Pasifleştirme başarısız.'));
+                        this.listActionError.set(panelHttpFailureMessage(e, 'Pasife alınamadı.'));
                     }
                 });
             }

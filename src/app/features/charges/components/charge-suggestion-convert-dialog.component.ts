@@ -52,7 +52,7 @@ export interface ChargeSuggestionOverrides {
                         }
                     </div>
                     <div class="col-span-12 sm:col-span-4">
-                        <label for="csc-unit-price" class="block text-sm font-medium text-muted-color mb-2">Birim fiyat (TRY) *</label>
+                        <label for="csc-unit-price" class="block text-sm font-medium text-muted-color mb-2">Birim fiyat (₺) *</label>
                         <input id="csc-unit-price" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="unitPrice" />
                         @if (form.controls.unitPrice.invalid && form.controls.unitPrice.touched) {
                             <small class="text-danger">0'dan büyük, en fazla {{ unitPriceDecimals }} ondalıklı ve {{ unitPriceMax }} üstünde olmayan bir fiyat girin.</small>

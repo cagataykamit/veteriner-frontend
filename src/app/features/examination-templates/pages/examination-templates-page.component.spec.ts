@@ -85,7 +85,7 @@ describe('ExaminationTemplatesPageComponent', () => {
         expect(rows[1]).toContain('Metin + 1 satır');
         expect(rows[1]).toContain('Pasif ürün var');
         expect(rows[1]).toContain('Düzenle');
-        expect(rows[1]).toContain('Pasifleştir');
+        expect(rows[1]).toContain('Pasife al');
         expect(rows[2]).toContain('Etkinleştir');
     });
 
