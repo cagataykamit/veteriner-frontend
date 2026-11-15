@@ -2,8 +2,6 @@ import { DOCUMENT } from '@angular/common';
 import { Component, computed, DestroyRef, ElementRef, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationStart, Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
-import { RippleModule } from 'primeng/ripple';
 import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
 import {
     PUBLIC_MAIN_CONTENT_ID,
@@ -16,7 +14,8 @@ import { LayoutService } from '@/app/layout/service/layout.service';
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
- * Herkese açık üst çubuk: masaüstünde (≥1200 px, `xl`) bağlantılar ve düğmeler, altında logo + hamburger.
+ * Herkese açık üst çubuk: krem zemin üstünde yüzen hap (`public-site.scss`). Masaüstünde (≥1200 px, `xl`) bağlantılar ve
+ * düğmeler, altında logo + hamburger.
  * 992–1199 px arasında beş öğe, Veteriner bul ve iki düğme tek satıra sığmadığı için eşik `lg` değil `xl`.
  * Menü öğeleri düz bağlantıdır; açılır alt menü yok (kullanıcı kararı 2026-11-12). Mobil menü tam ekran açılır; odak
  * içeride kalır, Escape ile kapanır, rota değişince kapanır. Veteriner bul hasta sahibine yöneliktir: klinik menüsünden
@@ -25,93 +24,53 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
 @Component({
     selector: 'app-public-topbar',
     standalone: true,
-    imports: [RouterLink, RouterLinkActive, ButtonModule, RippleModule],
+    imports: [RouterLink, RouterLinkActive],
     changeDetection: ChangeDetectionStrategy.OnPush,
     /* Yapışkan konum bileşenin kendisinde: iskeletin flex sütununda bileşen kutusu header'ın kapsayıcısıdır, içerideki sticky tutmaz */
     host: { class: 'sticky top-0 z-40 block' },
     template: `
         <a [href]="'#' + mainContentId" class="public-skip-link" (click)="skipToContent($event)">İçeriğe atla</a>
 
-        <header class="public-topbar w-full">
-            <div class="mx-auto flex h-[64px] max-w-6xl items-center justify-between gap-3 px-4 md:px-6">
-                <a routerLink="/" class="public-topbar-logo-link flex h-[44px] shrink-0 items-center no-underline" aria-label="Vetinity ana sayfa">
-                    <img
-                        [src]="brand.compactLockup"
-                        alt="Vetinity"
-                        class="block h-[38px] w-auto object-contain dark:hidden md:h-[42px]"
-                        width="168"
-                        height="42"
-                    />
-                    <img
-                        [src]="brand.compactLockupDark"
-                        alt="Vetinity"
-                        class="hidden h-[38px] w-auto object-contain dark:block md:h-[42px]"
-                        width="168"
-                        height="42"
-                    />
+        <header class="ps-topbar w-full">
+            <div class="ps-topbar-row">
+                <a routerLink="/" class="ps-topbar-logo no-underline" aria-label="Vetinity ana sayfa">
+                    <img [src]="brand.compactLockup" alt="Vetinity" class="block h-[38px] w-auto object-contain dark:hidden md:h-[40px]" width="168" height="42" />
+                    <img [src]="brand.compactLockupDark" alt="Vetinity" class="hidden h-[38px] w-auto object-contain dark:block md:h-[40px]" width="168" height="42" />
                 </a>
 
-                <nav class="hidden min-w-0 flex-1 items-center justify-center xl:flex" aria-label="Ana navigasyon">
-                    <ul class="m-0 flex list-none items-center p-0">
+                <nav class="ps-topbar-nav hidden xl:flex" aria-label="Ana navigasyon">
+                    <ul class="ps-list">
                         @for (item of navItems; track item.label) {
                             <li>
-                                <a
-                                    [routerLink]="item.routerLink"
-                                    routerLinkActive="router-link-active"
-                                    class="public-topbar-nav-link inline-flex min-h-[44px] items-center whitespace-nowrap px-2 text-sm 2xl:px-3 font-medium text-surface-700 no-underline dark:text-surface-300"
-                                >
-                                    {{ item.label }}
-                                </a>
+                                <a [routerLink]="item.routerLink" routerLinkActive="router-link-active" class="ps-topbar-link">{{ item.label }}</a>
                             </li>
                         }
                     </ul>
                 </nav>
 
-                <div class="hidden items-center gap-2 xl:flex">
-                    <a
-                        [href]="vetFinderHref"
-                        class="public-vet-finder-link inline-flex min-h-[44px] items-center gap-1.5 whitespace-nowrap px-1 text-sm font-medium no-underline"
-                    >
-                        <i class="pi pi-map-marker" aria-hidden="true"></i>{{ vetFinderLabel }}
-                    </a>
-                    <span class="public-topbar-divider h-6 w-px" aria-hidden="true"></span>
-                    <a routerLink="/auth/login" class="public-btn public-btn-ghost">Giriş yap</a>
+                <div class="ps-topbar-actions hidden items-center xl:flex">
+                    <a [href]="vetFinderHref" class="ps-topbar-finder"><i class="pi pi-map-marker" aria-hidden="true"></i>{{ vetFinderLabel }}</a>
+                    <a routerLink="/auth/login" class="ps-topbar-login">Giriş yap</a>
                     <a routerLink="/auth/signup" class="public-btn public-btn-primary">Ücretsiz dene</a>
-                    <button
-                        pButton
-                        pRipple
-                        type="button"
-                       
-                        [rounded]="true"
-                        severity="secondary"
-                        class="public-topbar-theme-toggle ml-1"
-                        [attr.aria-label]="themeToggleLabel()"
-                        (click)="toggleDarkMode()"
-                    ><i [class]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"></i></button>
+                    <button type="button" class="public-topbar-theme-toggle ps-topbar-icon" [attr.aria-label]="themeToggleLabel()" (click)="toggleDarkMode()">
+                        <i [class]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'" aria-hidden="true"></i>
+                    </button>
                 </div>
 
-                <div class="flex items-center gap-1 xl:hidden">
-                    <button
-                        pButton
-                        pRipple
-                        type="button"
-                       
-                        [rounded]="true"
-                        severity="secondary"
-                        class="public-topbar-theme-toggle"
-                        [attr.aria-label]="themeToggleLabel()"
-                        (click)="toggleDarkMode()"
-                    ><i [class]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'"></i></button>
+                <div class="ps-topbar-compact flex items-center gap-1 xl:hidden">
+                    <button type="button" class="public-topbar-theme-toggle ps-topbar-icon" [attr.aria-label]="themeToggleLabel()" (click)="toggleDarkMode()">
+                        <i [class]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'" aria-hidden="true"></i>
+                    </button>
                     <button
                         #menuButton
                         type="button"
-                        class="public-topbar-menu-button inline-flex h-[44px] w-[44px] cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-surface-900 dark:text-surface-0"
+                        class="ps-topbar-icon"
                         aria-controls="public-mobile-menu"
                         [attr.aria-expanded]="menuOpen()"
                         [attr.aria-label]="menuOpen() ? 'Menüyü kapat' : 'Menüyü aç'"
                         (click)="toggleMenu()"
                     >
-                        <i [class]="menuOpen() ? 'pi pi-times text-xl' : 'pi pi-bars text-xl'" aria-hidden="true"></i>
+                        <i [class]="menuOpen() ? 'pi pi-times' : 'pi pi-bars'" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>
@@ -121,54 +80,36 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
             <div
                 #mobileMenu
                 id="public-mobile-menu"
-                class="public-mobile-menu fixed inset-0 z-50 flex flex-col bg-surface-0 dark:bg-surface-950 xl:hidden"
+                class="ps-mobile-menu fixed inset-0 z-50 flex flex-col xl:hidden"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Menü"
                 (keydown)="onMenuKeydown($event)"
             >
-                <div class="flex h-[64px] items-center justify-between px-4">
-                    <a routerLink="/" class="flex h-[44px] items-center no-underline" aria-label="Vetinity ana sayfa" (click)="closeMenu()">
+                <div class="ps-mobile-menu-row">
+                    <a routerLink="/" class="ps-topbar-logo no-underline" aria-label="Vetinity ana sayfa" (click)="closeMenu()">
                         <img [src]="brand.compactLockup" alt="" class="block h-[38px] w-auto dark:hidden" width="168" height="42" />
                         <img [src]="brand.compactLockupDark" alt="" class="hidden h-[38px] w-auto dark:block" width="168" height="42" />
                     </a>
-                    <button
-                        #closeButton
-                        type="button"
-                        class="public-topbar-menu-button inline-flex h-[44px] w-[44px] cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-surface-900 dark:text-surface-0"
-                        aria-label="Menüyü kapat"
-                        (click)="closeMenu()"
-                    >
-                        <i class="pi pi-times text-xl" aria-hidden="true"></i>
+                    <button #closeButton type="button" class="ps-topbar-icon" aria-label="Menüyü kapat" (click)="closeMenu()">
+                        <i class="pi pi-times" aria-hidden="true"></i>
                     </button>
                 </div>
 
-                <nav class="flex-1 overflow-y-auto px-4 pt-2" aria-label="Ana navigasyon">
-                    <ul class="m-0 list-none p-0">
+                <nav class="flex-1 overflow-y-auto px-6 pt-4" aria-label="Ana navigasyon">
+                    <ul class="ps-list">
                         @for (item of navItems; track item.label) {
                             <li>
-                                <a
-                                    [routerLink]="item.routerLink"
-                                    class="public-mobile-menu-link flex min-h-[48px] items-center border-b border-surface-200 text-lg font-semibold text-surface-900 no-underline dark:border-surface-800 dark:text-surface-0"
-                                    (click)="closeMenu()"
-                                >
-                                    {{ item.label }}
-                                </a>
+                                <a [routerLink]="item.routerLink" class="ps-mobile-menu-link" (click)="closeMenu()">{{ item.label }}</a>
                             </li>
                         }
                     </ul>
                 </nav>
 
-                <div class="flex flex-col gap-3 px-4 pb-6 pt-4">
-                    <a
-                        [href]="vetFinderHref"
-                        class="public-vet-finder-link public-mobile-menu-link inline-flex min-h-[48px] items-center justify-center gap-2 text-base font-medium no-underline"
-                        (click)="closeMenu()"
-                    >
-                        <i class="pi pi-map-marker" aria-hidden="true"></i>{{ vetFinderLabel }}
-                    </a>
-                    <a routerLink="/auth/login" class="public-btn public-btn-secondary w-full !min-h-[48px]" (click)="closeMenu()">Giriş yap</a>
-                    <a routerLink="/auth/signup" class="public-btn public-btn-primary w-full !min-h-[48px]" (click)="closeMenu()">Ücretsiz dene</a>
+                <div class="flex flex-col gap-3 px-6 pb-6 pt-4">
+                    <a [href]="vetFinderHref" class="ps-mobile-menu-finder" (click)="closeMenu()"><i class="pi pi-map-marker" aria-hidden="true"></i>{{ vetFinderLabel }}</a>
+                    <a routerLink="/auth/login" class="public-btn public-btn-secondary w-full" (click)="closeMenu()">Giriş yap</a>
+                    <a routerLink="/auth/signup" class="public-btn public-btn-primary w-full" (click)="closeMenu()">Ücretsiz dene</a>
                 </div>
             </div>
         }

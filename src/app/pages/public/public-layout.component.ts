@@ -10,9 +10,9 @@ import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-
 export const PUBLIC_SITE_ROOT_CLASS = 'public-site-root';
 
 /** Yapışkan üst çubuk bölüm başlığını örtmesin: yönlendirici CSS `scroll-padding-top` değerini dikkate almaz. Değer temadakiyle aynı. */
-export const PUBLIC_ANCHOR_SCROLL_OFFSET_PX = 72;
+export const PUBLIC_ANCHOR_SCROLL_OFFSET_PX = 104;
 
-/** Tanıtım sitesi ortak iskeleti (tasarım belgesi bölüm 4): üst çubuk + sayfa + alt bilgi. Hukuki sayfalar da bu iskelette. */
+/** Tanıtım sitesi ortak iskeleti (tasarım belgesi bölüm 4): üst çubuk + sayfa + alt bilgi. Hukuki sayfalar da bu iskelette. Görünüş `public-site.scss`. */
 @Component({
     selector: 'app-public-layout',
     standalone: true,
@@ -20,7 +20,7 @@ export const PUBLIC_ANCHOR_SCROLL_OFFSET_PX = 72;
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <!-- overflow-x-clip: "hidden" kaydırma kabı yaratıp üst çubuğun "sticky" konumunu bozuyordu; "clip" yalnız kırpar -->
-        <div class="public-page flex min-h-screen flex-col overflow-x-clip bg-surface-0 dark:bg-surface-950">
+        <div class="public-page public-site flex min-h-screen flex-col overflow-x-clip">
             <app-public-topbar />
             <main [id]="mainContentId" class="relative flex-1">
                 <router-outlet />
