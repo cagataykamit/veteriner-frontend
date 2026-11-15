@@ -164,7 +164,7 @@ export class TenantInvitesService {
                 const vm = mapTenantInviteCreatedDto(raw);
 
                 if (!vm) {
-                    throw new Error('Davet yanıtı okunamadı (token veya inviteId eksik).');
+                    throw new Error('Davet yanıtı okunamadı. Sayfayı yenileyip tekrar deneyin.');
                 }
 
                 return vm;

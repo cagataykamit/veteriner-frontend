@@ -66,7 +66,7 @@ describe('PetTodoPanelComponent', () => {
         expect(root.querySelector('[data-testid="todo-forbidden"]')?.textContent).toContain('Yapılacakları görüntülemek için yetkiniz yok.');
     });
 
-    it('alınamayan kaynakta "Yeniden dene" retry yayar; alınamayan yoksa düğme yok', () => {
+    it('alınamayan kaynakta "Tekrar dene" retry yayar; alınamayan yoksa düğme yok', () => {
         const fixture = render({ loading: false, failed: ['Aşı'], forbidden: false, items: [] }, true);
         let retried = 0;
 

@@ -10,6 +10,7 @@ import { LabResultDetailPageComponent } from '@/app/features/lab-results/pages/l
 import { LabResultEditPageComponent } from '@/app/features/lab-results/pages/lab-result-edit-page/lab-result-edit-page.component';
 import { LabResultNewPageComponent } from '@/app/features/lab-results/pages/lab-result-new-page/lab-result-new-page.component';
 import { LabResultsListPageComponent } from '@/app/features/lab-results/pages/lab-results-list-page/lab-results-list-page.component';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 export default [
     {
@@ -18,7 +19,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(LAB_RESULTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(LAB_RESULTS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: LabResultsListPageComponent
     },
@@ -28,7 +29,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(LAB_RESULTS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(LAB_RESULTS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: LabResultNewPageComponent
     },
@@ -38,7 +39,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(LAB_RESULTS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: LabResultEditPageComponent
     },
@@ -48,7 +49,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(LAB_RESULTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(LAB_RESULTS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: LabResultDetailPageComponent
     }

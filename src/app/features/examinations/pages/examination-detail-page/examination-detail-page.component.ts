@@ -192,7 +192,7 @@ const RECORD_TEXT_SECTIONS: readonly {
                     }
                     @if (canCreatePayment) {
                         @if (!ro.mutationBlocked()) {
-                            <a [routerLink]="['/panel/payments/new']" [queryParams]="moneyContext" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-wallet"></i>Ödeme Oluştur</a>
+                            <a [routerLink]="['/panel/payments/new']" [queryParams]="moneyContext" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-wallet"></i>Ödeme al</a>
                         } @else {
                             <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Ödeme (salt okunur)</button>
                         }
@@ -366,7 +366,7 @@ export class ExaminationDetailPageComponent implements OnInit {
     readonly isEditable = isExaminationEditable;
     readonly canFinalizeExamination = this.auth.hasOperationClaim(EXAMINATIONS_FINALIZE_CLAIM);
     readonly canCreatePayment = this.auth.hasOperationClaim(PAYMENTS_CREATE_CLAIM);
-    /** Ücret ekle / Ödeme Oluştur: muayene düzenleme izninden bağımsız, yalnız ilgili finans izniyle (resepsiyon akışı). */
+    /** Ücret ekle / Ödeme al: muayene düzenleme izninden bağımsız, yalnız ilgili finans izniyle (resepsiyon akışı). */
     readonly canCreateCharge = this.auth.hasOperationClaim(CHARGES_CREATE_CLAIM);
     readonly canAddendumExamination = this.auth.hasOperationClaim(EXAMINATIONS_ADDENDUM_CLAIM);
     readonly statusLabel = examinationStatusLabel;

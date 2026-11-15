@@ -1,10 +1,18 @@
 /**
  * Panel ürün dili — sabit metinler (i18n altyapısı olmadan tek dil).
  * Listelerde tekrarlayan boş/hint metinleri buradan kullanın.
+ *
+ * Terim sözlüğü (H10): kayıt düğmesi "Kaydet" ("Güncelle" yok); formdan ve diyalogdan çıkış "Vazgeç", kaydın iptali
+ * "… iptal et"; "Ödeme al"; hayvan kaydı "Hasta", sahibi "Müşteri" (portal hasta sahibine kendi diliyle konuşur);
+ * düğme ve başlıklar cümle düzeninde ("Yeni müşteri"); "(isteğe bağlı)"; para birimi "₺"; "Pasife al".
  */
 export const PANEL_COPY = {
     listEmptyMessage: 'Kayıt bulunamadı.',
     listEmptyHint: 'Arama veya filtreleri değiştirerek tekrar deneyin.',
+    /** Liste boş ve filtre/arama uygulanmış (`app-list-empty-state`) */
+    listFilteredEmptyMessage: 'Bu aramaya uyan kayıt yok.',
+    listFilteredEmptyHint: 'Filtreleri temizleyerek tüm kayıtları görebilirsiniz.',
+    buttonClearFilters: 'Filtreleri temizle',
     /** `settings/clinics` — API scope’a göre liste boş olabilir */
     clinicsListEmptyMessage: 'Görüntüleme yetkiniz olan klinik bulunmuyor.',
     clinicsListEmptyHint: 'Atama veya ek yetki için kurum yöneticinize başvurun.',
@@ -13,7 +21,7 @@ export const PANEL_COPY = {
     buttonSearch: 'Ara',
     buttonClear: 'Temizle',
     buttonSave: 'Kaydet',
-    buttonCancel: 'İptal',
+    buttonCancel: 'Vazgeç',
     buttonDetail: 'Detay',
     buttonRefresh: 'Yenile',
     labelClient: 'Müşteri',
@@ -137,13 +145,13 @@ export const PANEL_COPY = {
     /** Kiracı — rol yetki matrisi (salt okunur) */
     tenantRoleMatrixTitle: 'Rol Yetki Özeti',
     tenantRoleMatrixDescription:
-        'Bu ekran salt okunur bir özet görünümüdür. Sunucuda tanımlı rol-yetki bağlarını gösterir; tenant panelinden düzenleme yapılamaz.',
+        'Bu ekran salt okunur bir özet görünümüdür. Rollerin hangi işlere izin verdiğini gösterir; buradan değiştirilemez.',
     tenantRoleMatrixLoading: 'Rol Yetki Özeti yükleniyor…',
     tenantRoleMatrixLoadError: 'Rol Yetki Özeti yüklenemedi.',
     tenantRoleMatrixEmptyMessage: 'Bu rol için ayrı yetki bağı tanımlı değil.',
     tenantRoleMatrixEmptyHint: 'Bu ortamda rol yetki bağları tanımlı değil veya henüz uygulanmamış olabilir.',
     tenantRoleMatrixGlobalInfo:
-        'Bu ekran yalnızca bilgilendirme amaçlıdır. Rol-yetki bağları merkezde tanımlanır ve tenant panelinden değiştirilemez.',
+        'Bu ekran yalnızca bilgilendirme amaçlıdır. Rollerin izinleri Vetinity tarafından tanımlanır ve buradan değiştirilemez.',
     tenantRoleMatrixTotalPrefix: 'Toplam',
     tenantRoleMatrixTotalSuffix: 'yetki',
     tenantRoleMatrixGroupOther: 'Diğer',

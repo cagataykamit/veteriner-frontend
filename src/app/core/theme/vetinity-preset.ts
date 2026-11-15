@@ -106,7 +106,9 @@ export const VetinityPreset = definePreset(Aura, {
             },
             dark: {
                 /* Koyu yüzey Aura varsayılanı (zinc, nötr gri) kalır; slate (lacivert tonlu) kullanıcı tarafından istenmedi (2026-11-09). */
-                primary: { color: '{primary.400}', contrastColor: '#042f2e', hoverColor: '{primary.300}', activeColor: '{primary.200}' }
+                primary: { color: '{primary.400}', contrastColor: '#042f2e', hoverColor: '{primary.300}', activeColor: '{primary.200}' },
+                /* Aura yer tutucusu (surface.500) koyu alanda 4.07:1 kalıyordu; surface.400 ≈ 7:1 (H19). */
+                formField: { placeholderColor: '{surface.400}' }
             }
         }
     },

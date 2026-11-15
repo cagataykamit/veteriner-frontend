@@ -9,7 +9,7 @@ import { AppListHeaderComponent } from './app-list-header.component';
         <app-list-header title="Müşteriler" [count]="count">
             <input data-testid="search" />
             <button actions data-testid="clear">Temizle</button>
-            <a actions data-testid="create">Yeni Müşteri</a>
+            <a actions data-testid="create">Yeni müşteri</a>
         </app-list-header>
     `
 })

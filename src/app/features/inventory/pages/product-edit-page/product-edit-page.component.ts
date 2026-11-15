@@ -297,7 +297,7 @@ export class ProductEditPageComponent implements OnInit {
         this.productService.updateFromFormValue(id, value).subscribe({
             next: () => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/products', id]);
+                void this.router.navigate(['/panel/products', id], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {
                 this.submitting.set(false);

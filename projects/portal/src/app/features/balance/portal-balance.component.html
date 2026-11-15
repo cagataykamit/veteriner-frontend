@@ -65,7 +65,7 @@
         <!-- AK-9: online ödeme yok; ödeme klinikte -->
         <section class="portal-card portal-stack" aria-labelledby="balance-pay-title" data-testid="balance-pay">
             <h2 id="balance-pay-title" class="portal-subtitle">Ödeme</h2>
-            <p class="portal-muted">Portal üzerinden ödeme yapılamaz. Ödeme için kliniği arayın.</p>
+            <p class="portal-muted">Portal üzerinden ödeme yapılamaz. {{ phoneHref() ? 'Ödeme için kliniği arayın.' : 'Ödeme kliniğinizde yapılır.' }}</p>
             @if (phoneHref(); as href) {
                 <a class="portal-action-link portal-action-link--primary" [href]="href">
                     <i class="fa-solid fa-phone" aria-hidden="true"></i> {{ clinic.data()?.phone }}

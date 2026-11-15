@@ -228,7 +228,7 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
                     this.form.markAsPristine();
                     this.messages.add({
                         severity: 'success',
-                        summary: 'Kaydedildi',
+                        summary: 'Tamam',
                         detail: BILLING_PROFILE_SAVE_SUCCESS
                     });
                 },
@@ -238,6 +238,8 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
                     this.messages.add({
                         severity: 'error',
                         summary: 'Hata',
+                        // Hata bildirimi kapatılana kadar kalır; 3 sn içinde okunmadan kaybolmasın (H19).
+                        sticky: true,
                         detail: toastDetail
                     });
                 }

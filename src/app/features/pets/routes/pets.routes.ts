@@ -13,6 +13,7 @@ import { PetNewPageComponent } from '@/app/features/pets/pages/pet-new-page/pet-
 import { PetsListPageComponent } from '@/app/features/pets/pages/pets-list-page/pets-list-page.component';
 import { PetTimelinePageComponent } from '@/app/features/pets/pages/pet-timeline-page/pet-timeline-page.component';
 import { PetVaccinationPlanPageComponent } from '@/app/features/pets/pages/pet-vaccination-plan-page/pet-vaccination-plan-page.component';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 export default [
     {
@@ -21,7 +22,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(PETS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(PETS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: PetsListPageComponent
     },
@@ -31,7 +32,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(PETS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(PETS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: PetNewPageComponent
     },
@@ -41,7 +42,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(PETS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(PETS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: PetEditPageComponent
     },
@@ -51,7 +52,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(PETS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(PETS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: PetTimelinePageComponent
     },
@@ -62,7 +63,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(VACCINATIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(VACCINATIONS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: PetVaccinationPlanPageComponent
     },
@@ -72,7 +73,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(PETS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(PETS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: PetDetailPageComponent
     }

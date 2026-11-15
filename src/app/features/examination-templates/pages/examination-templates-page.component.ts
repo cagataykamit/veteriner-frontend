@@ -135,7 +135,7 @@ const PAGE_SIZE = 50;
                                                     [disabled]="mutatingId() !== null"
                                                     (click)="confirmDeactivate(row)"
                                                 >
-                                                    Pasifleştir
+                                                    Pasife al
                                                 </button>
                                             }
                                             @if (canDeactivate && !row.isSystem && !row.isActive) {
@@ -238,7 +238,7 @@ export class ExaminationTemplatesPageComponent implements OnInit {
             header: 'Şablonu pasifleştir',
             message: `"${row.name}" muayenede seçilemez. Daha önce uygulandığı muayeneler değişmez; şablonu sonra yeniden etkinleştirebilirsiniz.`,
             icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'Pasifleştir',
+            acceptLabel: 'Pasife al',
             rejectLabel: 'Vazgeç',
             acceptButtonStyleClass: 'p-button-danger',
             rejectButtonStyleClass: 'p-button-secondary',

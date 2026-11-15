@@ -8,6 +8,7 @@ import {
 import { ClinicCreatePageComponent } from '@/app/features/clinics/pages/clinic-create-page/clinic-create-page.component';
 import { ClinicDetailPageComponent } from '@/app/features/clinics/pages/clinic-detail-page/clinic-detail-page.component';
 import { ClinicsListPageComponent } from '@/app/features/clinics/pages/clinics-list-page/clinics-list-page.component';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 export default [
     {
@@ -16,7 +17,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(CLINICS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(CLINICS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: ClinicsListPageComponent
     },
@@ -26,7 +27,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(CLINICS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(CLINICS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: ClinicCreatePageComponent
     },
@@ -36,7 +37,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(CLINICS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(CLINICS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: ClinicDetailPageComponent
     }

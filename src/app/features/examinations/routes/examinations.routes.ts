@@ -9,6 +9,7 @@ import {
 import { ExaminationDetailPageComponent } from '@/app/features/examinations/pages/examination-detail-page/examination-detail-page.component';
 import { ExaminationWorkspacePageComponent } from '@/app/features/examinations/pages/examination-workspace-page/examination-workspace-page.component';
 import { ExaminationsListPageComponent } from '@/app/features/examinations/pages/examinations-list-page/examinations-list-page.component';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 export default [
     {
@@ -17,7 +18,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: ExaminationsListPageComponent
     },
@@ -27,7 +28,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: ExaminationWorkspacePageComponent
     },
@@ -37,7 +38,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(EXAMINATIONS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(EXAMINATIONS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: ExaminationWorkspacePageComponent
     },
@@ -47,7 +48,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: ExaminationDetailPageComponent
     }

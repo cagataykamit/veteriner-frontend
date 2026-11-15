@@ -137,12 +137,12 @@ import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label for="appointmentType" class="block text-sm font-medium text-muted-color mb-2">Randevu Türü *</label>
-                            <p-select inputId="appointmentType" formControlName="appointmentType" [options]="typeOptions" optionLabel="label" optionValue="value" placeholder="Randevu Türü seçin" [showClear]="true" class="w-full" />
+                            <label for="appointmentType" class="block text-sm font-medium text-muted-color mb-2">Randevu türü *</label>
+                            <p-select inputId="appointmentType" formControlName="appointmentType" [options]="typeOptions" optionLabel="label" optionValue="value" placeholder="Randevu türü seçin" [showClear]="true" class="w-full" />
                             @if (apiFieldErrors().appointmentType) {
                                 <small class="text-danger">{{ apiFieldErrors().appointmentType }}</small>
                             } @else if (form.controls.appointmentType.invalid && form.controls.appointmentType.touched) {
-                                <small class="text-danger">Randevu Türü seçimi zorunludur.</small>
+                                <small class="text-danger">Randevu türü seçimi zorunludur.</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
@@ -379,7 +379,7 @@ export class AppointmentEditPageComponent implements OnInit {
 
         if (appointmentType === null || appointmentType === undefined) {
             this.form.markAllAsTouched();
-            this.submitError.set('Randevu Türü seçin.');
+            this.submitError.set('Randevu türü seçin.');
 
             return;
         }

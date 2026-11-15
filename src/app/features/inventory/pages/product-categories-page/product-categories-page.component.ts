@@ -173,7 +173,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                                                         [disabled]="rowMutatingId() !== null"
                                                         (click)="onDeactivate(row)"
                                                     >
-                                                        Pasifleştir
+                                                        Pasife al
                                                     </button>
                                                 }
                                                 @if (canUpdateCategories && !ro.mutationBlocked() && !row.isActive) {
@@ -207,7 +207,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                                                 [disabled]="rowMutatingId() !== null"
                                                 (click)="onDeactivate(row)"
                                             >
-                                                Pasifleştir
+                                                Pasife al
                                             </button>
                                         }
                                         @if (canUpdateCategories && !ro.mutationBlocked() && !row.isActive) {
@@ -381,7 +381,7 @@ export class ProductCategoriesPageComponent implements OnInit {
     }
 
     dialogSubmitLabel(): string {
-        return this.dialogMode() === 'create' ? this.copy.buttonSave : 'Güncelle';
+        return this.copy.buttonSave;
     }
 
     applyFilters(): void {
@@ -534,7 +534,7 @@ export class ProductCategoriesPageComponent implements OnInit {
             header: 'Kategoriyi pasifleştir',
             message: 'Bu kategoriyi pasifleştirmek istediğinize emin misiniz?',
             icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'Pasifleştir',
+            acceptLabel: 'Pasife al',
             rejectLabel: 'Vazgeç',
             acceptButtonStyleClass: 'p-button-danger',
             rejectButtonStyleClass: 'p-button-secondary',
@@ -548,7 +548,7 @@ export class ProductCategoriesPageComponent implements OnInit {
                     },
                     error: (e: Error) => {
                         this.rowMutatingId.set(null);
-                        this.listActionError.set(panelHttpFailureMessage(e, 'Pasifleştirme başarısız.'));
+                        this.listActionError.set(panelHttpFailureMessage(e, 'Pasife alınamadı.'));
                     }
                 });
             }

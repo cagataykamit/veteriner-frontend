@@ -256,7 +256,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
         expect(el().querySelector('[data-testid="todo-forbidden"]')?.textContent).toContain('Yapılacakları görüntülemek için yetkiniz yok.');
     });
 
-    it('"Yeniden dene" açık işleri yeniden okur: başarıda not kalkar, hata sürerse not kalır', () => {
+    it('"Tekrar dene" açık işleri yeniden okur: başarıda not kalkar, hata sürerse not kalır', () => {
         openItemsSource = () => of({ state: 'error' });
         create();
 
@@ -277,7 +277,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
         expect(el().querySelector('[data-testid="todo-overdueVaccine"]')).not.toBeNull();
     });
 
-    it('salt okunur kiracıda da "Yeniden dene" sunulur (okuma)', () => {
+    it('salt okunur kiracıda da "Tekrar dene" sunulur (okuma)', () => {
         openItemsSource = () => of({ state: 'ok', data: openItems({ labResults: { state: 'Unavailable', data: null } }) });
         TestBed.overrideProvider(TenantReadOnlyContextService, { useValue: { mutationBlocked: () => true } });
         create();

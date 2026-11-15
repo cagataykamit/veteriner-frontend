@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MessageModule } from 'primeng/message';
@@ -8,7 +9,7 @@ import { TableModule } from 'primeng/table';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLINICS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { SETTINGS_ROUTE } from '@/app/core/routing/panel-navigation';
+import { CLINIC_DETAIL_ROUTE, SETTINGS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import type { ClinicPortalSettingsVm, OwnerNotificationChannel, OwnerNotificationRuleVm } from '@/app/entities/owner-portal/models/owner-portal.model';
@@ -40,6 +41,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         FormsModule,
+        RouterLink,
         ConfirmDialogModule,
         MessageModule,
         SelectModule,
@@ -89,6 +91,12 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                         }
                         @if (message(); as m) {
                             <p-message [severity]="m.severity" class="w-full" role="status">{{ m.text }}</p-message>
+                        }
+                        @if (clinicPhone() === null) {
+                            <p-message severity="warn" class="w-full" data-testid="portal-phone-missing">
+                                Klinik telefonu yok: portalda hasta sahibi kliniği arayamaz, "kliniği arayın" yolları görünmez.
+                                <a [routerLink]="clinicDetailLink()" class="font-medium">Telefonu ekle</a>
+                            </p-message>
                         }
                         <div class="flex items-center gap-3">
                             <p-toggleswitch inputId="portalEnabled" [ngModel]="toggle()" (ngModelChange)="onToggle($event)" [disabled]="!canWrite() || saving()" data-testid="portal-enabled" />
@@ -177,6 +185,9 @@ export class ClinicPortalSettingsPageComponent implements OnInit {
     readonly message = signal<{ text: string; severity: 'success' | 'error' } | null>(null);
     readonly rules = signal<OwnerNotificationRuleVm[] | null>(null);
     readonly rulesError = signal<string | null>(null);
+    /** Kurulum uyarısı (H9): `null` telefon yok; `undefined` okunmadı (uyarı çıkmaz). */
+    readonly clinicPhone = signal<string | null | undefined>(undefined);
+    readonly clinicDetailLink = computed(() => `${CLINIC_DETAIL_ROUTE}/${this.clinicId()}`);
 
     typeLabel = notificationTypeLabel;
     categoryLabel = notificationCategoryLabel;
@@ -227,6 +238,11 @@ export class ClinicPortalSettingsPageComponent implements OnInit {
 
         this.loading.set(true);
         this.error.set(null);
+        this.clinicPhone.set(undefined);
+        this.clinics.getClinicById(clinicId).subscribe({
+            next: (clinic) => seq === this.loadSeq && this.clinicPhone.set(clinic.phone?.trim() || null),
+            error: () => undefined
+        });
         this.service.get(clinicId).subscribe({
             next: (s) => {
                 if (seq === this.loadSeq) {

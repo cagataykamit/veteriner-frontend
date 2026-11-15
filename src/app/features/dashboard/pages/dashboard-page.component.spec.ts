@@ -39,7 +39,7 @@ describe('DashboardPageComponent hızlı işlemler', () => {
         const fixture = create([VISITS_CREATE_CLAIM, APPOINTMENTS_READ_CLAIM]);
 
         expect(walkInButton(fixture)).toBeDefined();
-        expect(fixture.nativeElement.textContent).toContain('Yeni Randevu');
+        expect(fixture.nativeElement.textContent).toContain('Yeni randevu');
     });
 
     it('Visits.Create izni yokken düğme ve diyalog yoktur', () => {

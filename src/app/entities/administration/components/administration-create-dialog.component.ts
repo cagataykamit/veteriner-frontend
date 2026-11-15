@@ -55,7 +55,7 @@ const NOTES_MAX_LENGTH = 2000;
                     }
                 </p>
             }
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" id="administration-create-form">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12">
                         <label for="ad-product" class="block text-sm font-medium text-muted-color mb-2">Ürün *</label>
@@ -129,7 +129,7 @@ const NOTES_MAX_LENGTH = 2000;
             </form>
             <ng-template #footer>
                 <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
-                <button pButton type="button" [disabled]="form.invalid || submitting()" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet ve stoktan düş</button>
+                <button pButton type="submit" form="administration-create-form" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet ve stoktan düş</button>
             </ng-template>
         </p-dialog>
     `

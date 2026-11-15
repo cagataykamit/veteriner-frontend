@@ -36,7 +36,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
         } @else if (pageError(); as pe) {
             <div class="card">
                 <p class="text-danger m-0" role="alert">{{ pe }}</p>
-                <button pButton type="button" class="mt-3" (click)="reload()"><i class="p-button-icon pi pi-refresh"></i>Yeniden dene</button>
+                <button pButton type="button" class="mt-3" (click)="reload()"><i class="p-button-icon pi pi-refresh"></i>Tekrar dene</button>
             </div>
         } @else {
             @if (claimsLoadError(); as cle) {

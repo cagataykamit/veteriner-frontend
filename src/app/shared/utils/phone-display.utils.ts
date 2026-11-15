@@ -46,6 +46,21 @@ function toTurkishMobileNational10(digits: string): string | null {
     return null;
 }
 
+/**
+ * Form alanı biçimi (H17): tanınan cep numarası "0532 111 22 33" olur; tanınmayan değer olduğu gibi kalır (doğrulayıcı uyarır).
+ * Sunucu her biçimi aynı kayda çevirir; bu yalnız okunabilirlik ve tek görünüm içindir.
+ */
+export function formatTurkishMobileForInput(value: string | null | undefined): string {
+    const t = (value ?? '').trim();
+    const national = toTurkishMobileNational10(t.replace(/\D/g, ''));
+
+    if (!national || /[a-zA-ZğüşıöçĞÜŞİÖÇ]/.test(t)) {
+        return t;
+    }
+
+    return `0${national.slice(0, 3)} ${national.slice(3, 6)} ${national.slice(6, 8)} ${national.slice(8, 10)}`;
+}
+
 /** Aranabilir `tel:` bağlantısı; gösterilecek numara yoksa `null` (bağlantı çıkmaz). */
 export function clientPhoneTelHref(value: string | null | undefined): string | null {
     const digits = (value ?? '').replace(/[^\d+]/g, '');

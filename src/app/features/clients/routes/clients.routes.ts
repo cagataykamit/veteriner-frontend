@@ -12,6 +12,7 @@ import { ClientEditPageComponent } from '@/app/features/clients/pages/client-edi
 import { ClientKvkkFormPageComponent } from '@/app/features/clients/pages/client-kvkk-form-page/client-kvkk-form-page.component';
 import { ClientNewPageComponent } from '@/app/features/clients/pages/client-new-page/client-new-page.component';
 import { ClientsListPageComponent } from '@/app/features/clients/pages/clients-list-page/clients-list-page.component';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 export default [
     {
@@ -20,7 +21,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(CLIENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(CLIENTS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: ClientsListPageComponent
     },
@@ -30,7 +31,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(CLIENTS_CREATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(CLIENTS_CREATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: ClientNewPageComponent
     },
@@ -40,7 +41,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(CLIENTS_UPDATE_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(CLIENTS_UPDATE_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: ClientEditPageComponent
     },
@@ -50,7 +51,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(CLIENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(CLIENTS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: ClientKvkkFormPageComponent
     },
@@ -60,7 +61,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(CLIENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(CLIENTS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         data: { kvkkKind: 'disclosure' },
         component: ClientKvkkFormPageComponent
@@ -71,7 +72,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(CLIENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(CLIENTS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: ClientDataExportPageComponent
     },
@@ -81,7 +82,7 @@ export default [
             const auth = inject(AuthService);
             const router = inject(Router);
 
-            return auth.hasOperationClaim(CLIENTS_READ_CLAIM) ? true : router.createUrlTree(['/notfound']);
+            return auth.hasOperationClaim(CLIENTS_READ_CLAIM) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
         }],
         component: ClientDetailPageComponent
     }

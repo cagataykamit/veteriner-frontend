@@ -1,7 +1,7 @@
 import type { TodayItemVm, VisitCareStatus, VisitCorrectionAction } from '@/app/entities/visit/models/visit-vm.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { canMarkAppointmentNoShow, canRevertAppointmentNoShow } from '@/app/entities/appointment/utils/appointment-status.utils';
-import { parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay, parseUtcApiInstantIsoString, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 
 const CARE_STATUS_LABEL: Record<VisitCareStatus, string> = {
     Waiting: 'Bekliyor',
@@ -188,7 +188,7 @@ export function todayItemActions(item: TodayItemVm, now: Date = new Date()): Tod
     };
 }
 
-/** Geliş anından bu yana geçen süre: "Az önce", "12 dk", "1 sa 5 dk". Geliş yoksa/geçersizse `null`. */
+/** Geliş anından bu yana geçen süre: "Az önce", "12 dk", "1 sa 5 dk"; bir günü geçtiyse "6 gün" (H15). Geliş yoksa/geçersizse `null`. */
 export function formatElapsedSince(arrivedAtUtc: string | null, now: Date): string | null {
     const arrived = parseUtcApiInstantIsoString(arrivedAtUtc);
 
@@ -206,9 +206,24 @@ export function formatElapsedSince(arrivedAtUtc: string | null, now: Date): stri
         return `${minutes} dk`;
     }
 
+    if (minutes >= 24 * 60) {
+        return `${Math.floor(minutes / (24 * 60))} gün`;
+    }
+
     const rest = minutes % 60;
 
     return rest ? `${Math.floor(minutes / 60)} sa ${rest} dk` : `${Math.floor(minutes / 60)} sa`;
+}
+
+/** Bugün satırındaki geliş zamanı: bugünse yalnız saat, önceki günden açık kalmışsa tarih ve saat (H15). */
+export function formatTodayArrival(arrivedAtUtc: string | null, now: Date): string {
+    const time = formatUtcIsoAsLocalTimeDisplay(arrivedAtUtc);
+
+    if (!arrivedAtUtc || toIstanbulDateInputValue(arrivedAtUtc) === toIstanbulDateInputValue(now.toISOString())) {
+        return time;
+    }
+
+    return `${formatUtcIsoAsLocalDateDisplay(arrivedAtUtc)} ${time}`;
 }
 
 /** Yatış süresi: bir günden kısaysa saat/dakika, değilse tam gün sayısı. */

@@ -10,7 +10,7 @@ import { ClientEditPageComponent } from './client-edit-page.component';
 const client = (over: Partial<ClientDetailVm> = {}): ClientDetailVm => ({
     id: 'c1',
     fullName: 'Deneme Müşteri',
-    phone: '—',
+    phone: '0532 111 22 33',
     email: '—',
     address: '—',
     createdAtUtc: '2026-01-01T00:00:00Z',
@@ -81,6 +81,19 @@ describe('ClientEditPageComponent iç not', () => {
         submit();
 
         expect(el().textContent).toContain('En fazla 4000 karakter olabilir.');
+        expect(clients.updateClient).not.toHaveBeenCalled();
+    });
+
+    it('telefonu olmayan eski müşteride form açılınca hata yok; Kaydet basılınca telefon zorunlu uyarısı çıkar (H17)', () => {
+        render(client({ phone: '—' }));
+        const phoneError = () => el().querySelector('#phone')?.parentElement?.querySelector('.text-danger');
+
+        expect(phoneError()).toBeNull();
+        expect((el().querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBe(false);
+
+        submit();
+
+        expect(phoneError()?.textContent).toContain('Bu alan zorunludur.');
         expect(clients.updateClient).not.toHaveBeenCalled();
     });
 });

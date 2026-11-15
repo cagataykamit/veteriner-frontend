@@ -1,5 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, ContentChild, TemplateRef, input, ChangeDetectionStrategy } from '@angular/core';
+import { ButtonModule } from 'primeng/button';
 import { Paginator } from 'primeng/paginator';
 import type { AnyReportListState } from '@/app/features/reports/shared/report-list-state';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -15,7 +16,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 @Component({
     selector: 'app-report-results',
     standalone: true,
-    imports: [NgTemplateOutlet, Paginator, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent],
+    imports: [NgTemplateOutlet, ButtonModule, Paginator, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @let s = state();
@@ -49,7 +50,9 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 
                 @if (r.items.length === 0) {
                     <div class="card">
-                        <app-empty-state [message]="emptyMessage()" [hint]="emptyHint()" />
+                        <app-empty-state [message]="emptyMessage()" [hint]="emptyHint()">
+                            <button pButton type="button" size="small" severity="secondary" (click)="state().resetFilters()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClearFilters }}</button>
+                        </app-empty-state>
                     </div>
                 } @else {
                     <div class="card">

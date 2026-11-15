@@ -1,6 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { Component } from '@angular/core';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { By } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
-import { throwError } from 'rxjs';
+import { Dialog } from 'primeng/dialog';
+import { of, throwError } from 'rxjs';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { QuickClientDialogComponent } from './quick-client-dialog.component';
 
@@ -53,5 +57,65 @@ describe('QuickClientDialogComponent — deneme müşteri kotası (TRIAL-006)', 
         expect(cmp.trialLimitError()).toBe(detail);
         expect(cmp.submitError()).toBeNull();
         expect(cmp.visible()).toBe(true);
+    });
+});
+
+@Component({
+    standalone: true,
+    imports: [ReactiveFormsModule, QuickClientDialogComponent],
+    template: `<form [formGroup]="outer" (ngSubmit)="outerSubmitted = true"><app-quick-client-dialog [(visible)]="open" /></form>`
+})
+class OuterFormHostComponent {
+    readonly outer = new FormGroup({});
+    open = true;
+    outerSubmitted = false;
+}
+
+describe('QuickClientDialogComponent — Enter ile kaydetme', () => {
+    it('Enter (varsayılan düğmeyle form gönderimi) müşteriyi kaydeder; sayfadaki dış form gönderilmez', async () => {
+        const createClient = vi.fn().mockReturnValue(of({ id: 'c1' }));
+
+        TestBed.configureTestingModule({
+            imports: [OuterFormHostComponent],
+            providers: [{ provide: ClientsService, useValue: { createClient } }]
+        });
+        const fixture = TestBed.createComponent(OuterFormHostComponent);
+
+        fixture.detectChanges();
+        await fixture.whenStable();
+        const dialog = fixture.debugElement.query(By.directive(QuickClientDialogComponent)).componentInstance as QuickClientDialogComponent;
+
+        dialog.form.patchValue({ fullName: 'Ayşe Yılmaz', phone: '0532 111 22 33' });
+        fixture.detectChanges();
+        const form = document.getElementById('quick-client-form') as HTMLFormElement;
+
+        form.requestSubmit();
+
+        expect(createClient).toHaveBeenCalledTimes(1);
+        expect(fixture.componentInstance.outerSubmitted).toBe(false);
+    });
+});
+
+describe('QuickClientDialogComponent — dışarı tıklama (H4)', () => {
+    it('boşken dışarı tıklama kapatır; bir şey yazılınca kapatmaz', async () => {
+        TestBed.configureTestingModule({
+            imports: [QuickClientDialogComponent],
+            providers: [{ provide: ClientsService, useValue: { createClient: vi.fn() } }]
+        });
+        const fixture = TestBed.createComponent(QuickClientDialogComponent);
+        const cmp = fixture.componentInstance;
+
+        cmp.visible.set(true);
+        fixture.detectChanges();
+        await fixture.whenStable();
+        const dialog = fixture.debugElement.query(By.directive(Dialog)).componentInstance as Dialog;
+
+        expect(dialog.dismissableMask()).toBe(true);
+
+        cmp.form.controls.fullName.setValue('Ayşe');
+        cmp.form.controls.fullName.markAsDirty();
+        fixture.detectChanges();
+
+        expect(dialog.dismissableMask()).toBe(false);
     });
 });

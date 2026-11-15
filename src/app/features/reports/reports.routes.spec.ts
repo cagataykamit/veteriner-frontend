@@ -21,8 +21,8 @@ describe('reports.routes — borç raporu yetkisi', () => {
         expect(canActivate(['Charges.Read'])).toBe(true);
     });
 
-    it('Payments.Read tek başına yetmez; /notfound yönlenir', () => {
-        expect(canActivate(['Payments.Read'])).toBe('/notfound' as unknown as UrlTree);
+    it('Payments.Read tek başına yetmez; /panel/forbidden yönlenir', () => {
+        expect(canActivate(['Payments.Read'])).toBe('/panel/forbidden' as unknown as UrlTree);
     });
 });
 
@@ -46,9 +46,9 @@ describe('reports.routes — kayıt defteri yetkisi', () => {
         expect(canActivate('registers/prescriptions', ['Prescriptions.Read'])).toBe(true);
     });
 
-    it('karşı izin yetmez; /notfound yönlenir', () => {
-        expect(canActivate('registers/examinations', ['Prescriptions.Read'])).toBe('/notfound' as unknown as UrlTree);
-        expect(canActivate('registers/prescriptions', ['Examinations.Read'])).toBe('/notfound' as unknown as UrlTree);
+    it('karşı izin yetmez; /panel/forbidden yönlenir', () => {
+        expect(canActivate('registers/examinations', ['Prescriptions.Read'])).toBe('/panel/forbidden' as unknown as UrlTree);
+        expect(canActivate('registers/prescriptions', ['Examinations.Read'])).toBe('/panel/forbidden' as unknown as UrlTree);
     });
 
     it('rota verisi tanımlı bir defteri seçer', () => {
@@ -57,7 +57,7 @@ describe('reports.routes — kayıt defteri yetkisi', () => {
     });
 
     it('stok defterleri StockMovements.Read ister; narkotik defteri ve aşı bilgi raporu izinlerin hepsini birlikte ister', () => {
-        const notFound = '/notfound' as unknown as UrlTree;
+        const notFound = '/panel/forbidden' as unknown as UrlTree;
 
         expect(canActivate('registers/vaccines', ['StockMovements.Read'])).toBe(true);
         expect(canActivate('registers/medications', ['StockMovements.Read'])).toBe(true);
@@ -106,7 +106,7 @@ describe('reports.routes — gün sonu yetkisi', () => {
         expect(canActivate(['Visits.Read'])).toBe(true);
     });
 
-    it('Charges.Read tek başına yetmez; /notfound yönlenir', () => {
-        expect(canActivate(['Charges.Read'])).toBe('/notfound' as unknown as UrlTree);
+    it('Charges.Read tek başına yetmez; /panel/forbidden yönlenir', () => {
+        expect(canActivate(['Charges.Read'])).toBe('/panel/forbidden' as unknown as UrlTree);
     });
 });

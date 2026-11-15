@@ -18,7 +18,7 @@ import type { PaymentListItemVm } from '@/app/entities/payment/models/payment-vm
 import { PaymentsService } from '@/app/entities/payment/services/payments.service';
 import { paymentMethodLabel } from '@/app/entities/payment/utils/payment-method.utils';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
@@ -55,7 +55,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
         SelectModule,
         AppListHeaderComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
+        AppListEmptyStateComponent,
         AppContextFilterChipComponent,
         AppErrorStateComponent,
         DateInputComponent,
@@ -80,9 +80,9 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                         </app-filter-field>
                         <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canCreatePayment && !ro.mutationBlocked()) {
-                            <a actions routerLink="/panel/payments/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Ödeme</a>
+                            <a actions routerLink="/panel/payments/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni ödeme</a>
                         } @else if (canCreatePayment && ro.mutationBlocked()) {
-                            <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Ödeme (salt okunur)</button>
+                            <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni ödeme (salt okunur)</button>
                         }
                     </app-list-header>
                     <div class="flex flex-wrap items-end gap-3">
@@ -114,7 +114,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                     <app-error-state [detail]="error()!" (retry)="reload()" />
                 } @else {
                     @if (displayedRows().length === 0) {
-                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                        <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz ödeme yok." [createLabel]="canCreatePayment && !ro.mutationBlocked() ? 'Ödeme al' : null" [createLink]="'/panel/payments/new'" (clear)="resetFilters()" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
                             <p-table
@@ -373,6 +373,11 @@ export class PaymentsListPageComponent implements OnInit {
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
         this.list.loadFirstPage();
+    }
+
+    /** Boş listede "uyan kayıt yok" mu "henüz yok" mu gösterileceği. */
+    hasActiveFilters(): boolean {
+        return this.isSearchActive() || this.isMethodActive() || this.isFromDateActive() || this.isToDateActive();
     }
 
     resetFilters(): void {

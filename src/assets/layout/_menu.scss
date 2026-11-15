@@ -132,7 +132,9 @@ app-menu {
             color: var(--primary-color);
 
             // Açık temada seçili satır birincil rengin açık tonlu hapında: renk yalnız yazıda kalınca soluk görünüyordu (2026-11-09).
+            // Açık hap üstünde birincil yazı 4.2:1 kalıyordu; bir ton koyusu ≈6:1 (H19).
             :root:not(.app-dark) & {
+                color: var(--p-primary-700);
                 background-color: color-mix(in srgb, var(--primary-color) 10%, white);
             }
         }

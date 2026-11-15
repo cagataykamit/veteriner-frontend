@@ -40,7 +40,7 @@ type FormKind = 'movement' | 'transfer';
                     </div>
                     <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                         <label for="cmCategory" class="block text-sm font-medium text-muted-color mb-2">Gelir/gider türü *</label>
-                        <p-select inputId="cmCategory" name="category" [options]="activeCategories()" optionLabel="name" optionValue="id" [ngModel]="categoryId()" (ngModelChange)="categoryId.set($event)" placeholder="Seçin" class="w-full" />
+                        <p-select inputId="cmCategory" name="category" [options]="activeCategories()" optionLabel="name" optionValue="id" [ngModel]="effectiveCategoryId()" (ngModelChange)="categoryId.set($event)" placeholder="Seçin" class="w-full" />
                         @if (activeCategories().length === 0) {
                             <small class="text-muted-color">Önce Kasa ayarlarından bir tür ekleyin.</small>
                         }
@@ -134,12 +134,18 @@ export class CashMovementFormsComponent {
     readonly activeCategories = computed(() => this.categories().filter((c) => c.isActive));
     readonly sameRegister = computed(() => !!this.targetId() && this.effectiveRegisterId() === this.targetId());
     readonly effectiveRegisterId = computed(() => this.registerId() ?? this.activeRegisters().find((r) => r.isMain)?.id ?? null);
+    /** Tek gelir/gider türü varsa o seçili gelir (H1). */
+    readonly effectiveCategoryId = computed(() => {
+        const active = this.activeCategories();
+
+        return this.categoryId() ?? (active.length === 1 ? active[0].id : null);
+    });
 
     readonly canSubmit = computed(() => {
         const amount = this.amount();
         const base = !this.saving() && !!this.effectiveRegisterId() && !!this.date() && amount !== null && amount > 0;
 
-        return this.kind() === 'movement' ? base && !!this.categoryId() : base && !!this.targetId() && this.targetId() !== this.effectiveRegisterId();
+        return this.kind() === 'movement' ? base && !!this.effectiveCategoryId() : base && !!this.targetId() && this.targetId() !== this.effectiveRegisterId();
     });
 
     switchKind(kind: FormKind): void {
@@ -163,7 +169,7 @@ export class CashMovementFormsComponent {
                       direction: this.direction(),
                       businessDate: this.date(),
                       amount: this.amount()!,
-                      categoryId: this.categoryId()!,
+                      categoryId: this.effectiveCategoryId()!,
                       description
                   })
                 : this.service.createTransfer({

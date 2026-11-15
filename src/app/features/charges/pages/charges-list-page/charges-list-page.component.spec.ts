@@ -39,6 +39,7 @@ describe('ChargesListPageComponent', () => {
     let claims: Set<string>;
     let mutationBlocked: boolean;
     let queryClientId: string | null;
+    let querySaved: string | null = null;
 
     const setup = async () => {
         await TestBed.configureTestingModule({
@@ -50,7 +51,7 @@ describe('ChargesListPageComponent', () => {
                 { provide: ClientSearchService, useValue: { search: () => of([]), getById: () => of({ id: 'cl1', fullName: 'Ali Veli', phone: '—', petNames: [], label: 'Ali Veli' }) } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } },
-                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: (k: string) => (k === 'clientId' ? queryClientId : null) } } } }
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: (k: string) => (k === 'clientId' ? queryClientId : k === 'saved' ? querySaved : null) } } } }
             ]
         }).compileComponents();
         fixture = TestBed.createComponent(ChargesListPageComponent);
@@ -68,6 +69,14 @@ describe('ChargesListPageComponent', () => {
         claims = new Set(['Charges.Read']);
         mutationBlocked = false;
         queryClientId = null;
+    });
+
+    it('yeni ücretten sonra (saved=1) Ücret kaydedildi bandı görünür (H13)', async () => {
+        querySaved = '1';
+        await setup();
+        querySaved = null;
+
+        expect(fixture.nativeElement.textContent).toContain('Ücret kaydedildi.');
     });
 
     it('satırı TRY biçimiyle gösterir (birim fiyat ve tutar)', async () => {
@@ -97,12 +106,12 @@ describe('ChargesListPageComponent', () => {
         expect(fixture.nativeElement.textContent).toContain('Ödendi');
     });
 
-    it('Charges.Create yoksa (Veteriner) "Yeni Ücret" düğmesi görünmez', async () => {
+    it('Charges.Create yoksa (Veteriner) "Yeni ücret" düğmesi görünmez', async () => {
         await setup();
-        expect(fixture.nativeElement.textContent).not.toContain('Yeni Ücret');
+        expect(fixture.nativeElement.textContent).not.toContain('Yeni ücret');
     });
 
-    it('Charges.Create varsa "Yeni Ücret" bağlantısı görünür', async () => {
+    it('Charges.Create varsa "Yeni ücret" bağlantısı görünür', async () => {
         claims.add('Charges.Create');
         await setup();
         const link = fixture.nativeElement.querySelector('a[href="/panel/charges/new"]');

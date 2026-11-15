@@ -15,7 +15,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-chip/app-context-filter-chip.component';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -46,7 +46,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         AppContextFilterChipComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
-        AppEmptyStateComponent,
+        AppListEmptyStateComponent,
         AppRowActionButtonComponent,
         AppStatusTagComponent,
         ImagingCancelDialogComponent,
@@ -103,7 +103,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                 } @else if (error()) {
                     <app-error-state [detail]="error()!" (retry)="reload()" />
                 } @else if (rows().length === 0) {
-                    <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                    <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz görüntüleme kaydı yok." emptyHint="Görüntülemeler muayene içinden eklenir." (clear)="resetFilters()" />
                 } @else {
                     <ul class="list-none m-0 p-0 flex flex-col" data-testid="imaging-rows">
                         @for (row of rows(); track row.id) {
@@ -202,6 +202,11 @@ export class ImagingListPageComponent implements OnInit {
 
         this.page.set(1);
         this.reload();
+    }
+
+    /** Boş listede "uyan kayıt yok" mu "henüz yok" mu gösterileceği. */
+    hasActiveFilters(): boolean {
+        return !!(this.searchInput.trim() || this.modalityInput || this.statusInput || this.fromDateInput || this.toDateInput);
     }
 
     resetFilters(): void {

@@ -5,12 +5,13 @@ import { CHARGES_CREATE_CLAIM, CHARGES_READ_CLAIM } from '@/app/core/auth/operat
 import { ChargeNewPageComponent } from '@/app/features/charges/pages/charge-new-page/charge-new-page.component';
 import { ChargeSuggestionsPageComponent } from '@/app/features/charges/pages/charge-suggestions-page/charge-suggestions-page.component';
 import { ChargesListPageComponent } from '@/app/features/charges/pages/charges-list-page/charges-list-page.component';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 function requireClaim(claim: string): CanActivateFn {
     return () => {
         const router = inject(Router);
 
-        return inject(AuthService).hasOperationClaim(claim) ? true : router.createUrlTree(['/notfound']);
+        return inject(AuthService).hasOperationClaim(claim) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
     };
 }
 

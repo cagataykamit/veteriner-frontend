@@ -54,7 +54,7 @@ const TONE_CLASS: Record<PetTodoItem['tone'], string> = {
                         <i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Alınamadı: {{ view().failed.join(', ') }}. Liste eksik olabilir.
                     </p>
                     @if (retryable()) {
-                        <button pButton type="button" severity="secondary" [text]="true" size="small" class="shrink-0 ml-auto" data-testid="todo-retry" (click)="retry.emit()"><i class="pi pi-refresh"></i>Yeniden dene</button>
+                        <button pButton type="button" severity="secondary" [text]="true" size="small" class="shrink-0 ml-auto" data-testid="todo-retry" (click)="retry.emit()"><i class="pi pi-refresh"></i>Tekrar dene</button>
                     }
                 </div>
             }
@@ -63,7 +63,7 @@ const TONE_CLASS: Record<PetTodoItem['tone'], string> = {
 })
 export class PetTodoPanelComponent {
     readonly view = input.required<PetTodoView>();
-    /** Alınamayan kaynak için "Yeniden dene" sunulur; kaynağı yeniden okumak sayfanındır (`retry`). */
+    /** Alınamayan kaynak için "Tekrar dene" sunulur; kaynağı yeniden okumak sayfanındır (`retry`). */
     readonly retryable = input(false);
     readonly retry = output<void>();
 

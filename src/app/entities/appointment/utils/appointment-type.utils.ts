@@ -8,6 +8,8 @@ export type BackendAppointmentType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export const APPOINTMENT_TYPE_ENUM_MIN = 0;
 export const APPOINTMENT_TYPE_ENUM_MAX = 6;
+/** Yeni randevu formunda önden seçili tür: Muayene. */
+export const APPOINTMENT_TYPE_DEFAULT: BackendAppointmentType = 0;
 
 interface AppointmentTypeEnumDef {
     readonly value: BackendAppointmentType;
@@ -179,7 +181,7 @@ export function appointmentTypeLabel(value: number | string | null | undefined):
             return LABEL_BY_VALUE.get(value) ?? EM;
         }
 
-        return `Randevu Türü (${value})`;
+        return `Randevu türü (${value})`;
     }
 
     const s = value.trim();
@@ -228,7 +230,7 @@ export function appointmentTypeDisplayLabel(appointmentType: number | null | und
     }
 
     if (appointmentType !== null && appointmentType !== undefined) {
-        return `Randevu Türü (${appointmentType})`;
+        return `Randevu türü (${appointmentType})`;
     }
 
     return EM;

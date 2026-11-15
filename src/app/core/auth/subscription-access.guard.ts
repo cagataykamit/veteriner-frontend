@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { SUBSCRIPTIONS_MANAGE_CLAIM, SUBSCRIPTIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 /** Abonelik özet sayfası — en az okuma veya yönetim claim’i gerekir. */
 export const subscriptionAccessGuard: CanActivateFn = () => {
@@ -10,5 +11,5 @@ export const subscriptionAccessGuard: CanActivateFn = () => {
     const ok =
         auth.hasOperationClaim(SUBSCRIPTIONS_READ_CLAIM) || auth.hasOperationClaim(SUBSCRIPTIONS_MANAGE_CLAIM);
 
-    return ok ? true : router.createUrlTree(['/notfound']);
+    return ok ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
 };

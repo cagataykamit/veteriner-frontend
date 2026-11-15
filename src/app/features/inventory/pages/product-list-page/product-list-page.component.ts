@@ -18,7 +18,7 @@ import { ProductService } from '@/app/entities/inventory/services/product.servic
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PRODUCTS_CREATE_CLAIM, PRODUCTS_DEACTIVATE_CLAIM, PRODUCTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
@@ -27,6 +27,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { ConfirmationService } from 'primeng/api';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { RowLinkDirective } from '@/app/shared/ui/row-link/row-link.directive';
 
 type ProductsListState = {
     search: string;
@@ -41,6 +42,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
     selector: 'app-product-list-page',
     standalone: true,
     imports: [
+        RowLinkDirective,
         CommonModule,
         FormsModule,
         RouterLink,
@@ -52,7 +54,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
         SelectModule,
         AppListHeaderComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
+        AppListEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
         FilterFieldComponent,
@@ -106,7 +108,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                     <app-error-state [detail]="error()!" (retry)="reload()" />
                 } @else {
                     @if (displayedRows().length === 0) {
-                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                        <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz ürün yok." [createLabel]="canCreateProduct && !ro.mutationBlocked() ? 'İlk ürünü ekle' : null" [createLink]="'/panel/products/new'" (clear)="resetFilters()" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
                             <p-table
@@ -135,7 +137,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                     </tr>
                                 </ng-template>
                                 <ng-template #body let-row>
-                                    <tr>
+                                    <tr [appRowLink]="['/panel/products', row.id]">
                                         <td class="font-medium">{{ row.name }}</td>
                                         <td>{{ row.sku }}</td>
                                         <td>{{ row.categoryName }}</td>
@@ -157,7 +159,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                                         [disabled]="rowMutatingId() !== null"
                                                         (click)="onDeactivate(row)"
                                                     >
-                                                        Pasifleştir
+                                                        Pasife al
                                                     </button>
                                                 }
                                                 @if (canUpdateProduct && !ro.mutationBlocked() && !row.isActive) {
@@ -174,7 +176,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
 
                         <div class="lg:hidden space-y-3">
                             @for (row of displayedRows(); track row.id) {
-                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
+                                <div [appRowLink]="['/panel/products', row.id]" class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                                     <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
                                         <a [routerLink]="['/panel/products', row.id]" class="text-primary no-underline break-words">{{ row.name }}</a>
                                     </div>
@@ -208,7 +210,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                                                 [disabled]="rowMutatingId() !== null"
                                                 (click)="onDeactivate(row)"
                                             >
-                                                Pasifleştir
+                                                Pasife al
                                             </button>
                                         }
                                         @if (canUpdateProduct && !ro.mutationBlocked() && !row.isActive) {
@@ -344,6 +346,11 @@ export class ProductListPageComponent implements OnInit {
         });
     }
 
+    /** Boş listede "uyan kayıt yok" mu "henüz yok" mu gösterileceği. */
+    hasActiveFilters(): boolean {
+        return this.isSearchActive() || this.isActiveFilterApplied();
+    }
+
     resetFilters(): void {
         this.searchInput = '';
         this.isActiveFilter = '';
@@ -375,7 +382,7 @@ export class ProductListPageComponent implements OnInit {
             header: 'Ürünü pasifleştir',
             message: 'Bu ürünü pasifleştirmek istediğinize emin misiniz?',
             icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'Pasifleştir',
+            acceptLabel: 'Pasife al',
             rejectLabel: 'Vazgeç',
             acceptButtonStyleClass: 'p-button-danger',
             rejectButtonStyleClass: 'p-button-secondary',
@@ -389,7 +396,7 @@ export class ProductListPageComponent implements OnInit {
                     },
                     error: (e: Error) => {
                         this.rowMutatingId.set(null);
-                        this.listActionError.set(panelHttpFailureMessage(e, 'Pasifleştirme başarısız.'));
+                        this.listActionError.set(panelHttpFailureMessage(e, 'Pasife alınamadı.'));
                     }
                 });
             }

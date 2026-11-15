@@ -8,7 +8,7 @@ import { SPECIES_ROUTE } from '@/app/core/routing/panel-navigation';
 import { SPECIES_CREATE_CLAIM, SPECIES_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
 import type { SpeciesListItemVm } from '@/app/entities/species/models/species-vm.model';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -21,14 +21,14 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-species-list-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, TableModule, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppRowActionButtonComponent],
+    imports: [CommonModule, RouterLink, TableModule, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppListEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppRowActionButtonComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Türler" description="Tür kayıtlarını yönetin.">
             @if (canCreateSpecies() && !ro.mutationBlocked()) {
-                <a actions [routerLink]="[speciesRoute, 'new']" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Tür</a>
+                <a actions [routerLink]="[speciesRoute, 'new']" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni tür</a>
             } @else if (canCreateSpecies() && ro.mutationBlocked()) {
-                <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Tür (salt okunur)</button>
+                <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni tür (salt okunur)</button>
             }
         </app-page-header>
 
@@ -50,7 +50,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         </div>
                     </div>
                     @if (speciesRows().length === 0) {
-                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                        <app-list-empty-state [filtered]="false" emptyMessage="Henüz tür tanımı yok." [createLabel]="canCreateSpecies() && !ro.mutationBlocked() ? 'Yeni tür ekle' : null" [createLink]="speciesRoute + '/new'" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
                             <p-table [value]="speciesRows()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20, 50]" [tableStyle]="{ 'min-width': '60rem' }">

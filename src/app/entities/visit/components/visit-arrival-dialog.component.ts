@@ -21,6 +21,7 @@ import { findVeterinarianUserId } from '@/app/entities/visit/data/visit.mapper';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { CLIENT_PHONE_DISPLAY_PLACEHOLDER, formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 
 const PET_SEARCH_PAGE_SIZE = 10;
 
@@ -88,7 +89,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                                     <small class="text-muted-color">Hasta kayıtlı değilse kaydı resepsiyon oluşturur.</small>
                                 }
                                 @if (canAddPet && selectedOwner(); as owner) {
-                                    <button pButton type="button" size="small" [text]="true" (click)="openRegistration(owner)"><i class="p-button-icon pi pi-plus"></i>Bu sahibe yeni hasta ekle</button>
+                                    <button pButton type="button" size="small" [text]="true" (click)="openRegistration(owner)"><i class="p-button-icon pi pi-plus"></i>Bu müşteriye yeni hasta ekle</button>
                                 }
                             </div>
                         }
@@ -100,7 +101,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                         </div>
                     }
                     <div class="col-span-12">
-                        <label for="va-vet" class="block text-sm font-medium text-muted-color mb-2">Sorumlu hekim (opsiyonel)</label>
+                        <label for="va-vet" class="block text-sm font-medium text-muted-color mb-2">Sorumlu hekim (isteğe bağlı)</label>
                         <p-select
                             inputId="va-vet"
                             formControlName="veterinarianId"
@@ -130,8 +131,8 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
                 }
             </form>
             <ng-template #footer>
-                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>İptal</button>
-                <button pButton type="button" [disabled]="form.invalid || submitting()" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ appointment() ? 'Geldi olarak kaydet' : 'Kaydet' }}</button>
+                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
+                <button pButton type="submit" form="visit-arrival-form" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ appointment() ? 'Geldi olarak kaydet' : 'Kaydet' }}</button>
             </ng-template>
         </p-dialog>
     `
@@ -182,6 +183,8 @@ export class VisitArrivalDialogComponent {
 
     /** Sahip adı çözümlemesi aramalar arasında paylaşılır (aynı sahip için tekrar istek yok). */
     private readonly ownerNames = new Map<string, string>();
+    /** Aynı adlı müşterileri ayırt etmek için telefon (H15); yoksa boş. */
+    private readonly ownerPhones = new Map<string, string>();
     private readonly petSearch$ = new Subject<string>();
 
     constructor() {
@@ -311,7 +314,7 @@ export class VisitArrivalDialogComponent {
                 this.submitting.set(false);
                 const message = panelHttpFailureMessage(e, 'Geliş kaydı oluşturulamadı.');
 
-                this.submitError.set(request.petId && request.petId === this.registeredPetId ? `Kayıt tamamlandı, ancak geliş kaydı oluşturulamadı: ${message} Yeniden denemek için Kaydet'e basın.` : message);
+                this.submitError.set(request.petId && request.petId === this.registeredPetId ? `Kayıt tamamlandı, ancak geliş kaydı oluşturulamadı: ${message} Tekrar denemek için Kaydet'e basın.` : message);
             }
         });
     }
@@ -350,12 +353,17 @@ export class VisitArrivalDialogComponent {
         void this.router.navigate(['/panel/charges/new'], { queryParams: { clientId, petId: visit.petId, visitId: visit.id } });
     }
 
-    /** Aynı ada sahip hastaları ayırt etmek için sonuçlara sahip adı eklenir (liste DTO'sunda sahip adı yok). */
+    /** Aynı ada sahip hastaları ayırt etmek için sonuçlara müşteri adı ve telefonu eklenir (liste DTO'sunda yok). */
     private withOwnerLabels(pets: PetListItemVm[]): Observable<PetSuggestion[]> {
         const missing = [...new Set(pets.map((p) => p.clientId).filter((id): id is string => !!id && !this.ownerNames.has(id)))];
         const lookups = missing.map((id) =>
             this.clientsService.getClientById(id).pipe(
-                map((c) => this.ownerNames.set(id, c.fullName)),
+                map((c) => {
+                    const phone = formatClientPhoneForDisplay(c.phone);
+
+                    this.ownerNames.set(id, c.fullName);
+                    this.ownerPhones.set(id, phone === CLIENT_PHONE_DISPLAY_PLACEHOLDER ? '' : phone);
+                }),
                 catchError(() => of(this.ownerNames.set(id, '—')))
             )
         );
@@ -364,7 +372,7 @@ export class VisitArrivalDialogComponent {
             map(() =>
                 pets.map((p) => ({
                     id: p.id,
-                    label: `${p.name} — ${p.speciesName} · Sahip: ${(p.clientId && this.ownerNames.get(p.clientId)) || '—'}`,
+                    label: `${p.name} — ${p.speciesName} · Müşteri: ${(p.clientId && this.ownerNames.get(p.clientId)) || '—'}${p.clientId && this.ownerPhones.get(p.clientId) ? ` · ${this.ownerPhones.get(p.clientId)}` : ''}`,
                     clientId: p.clientId,
                     clientName: (p.clientId && this.ownerNames.get(p.clientId)) || '—'
                 }))

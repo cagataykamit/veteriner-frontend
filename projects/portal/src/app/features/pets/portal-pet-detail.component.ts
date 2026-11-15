@@ -4,8 +4,9 @@ import { portalLoad } from '@portal/app/shared/data/portal-load';
 import { formatPortalCalendarDate, formatPortalDay } from '@portal/app/shared/format/portal-date';
 import { genderLabel } from '@portal/app/shared/format/portal-labels';
 import { formatPortalWeight } from '@portal/app/shared/format/portal-money';
+import { PortalClinicActions } from '@portal/app/features/clinic/portal-clinic-actions.component';
 import { PortalErrorState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
-import { isDeceased, PortalPetDetail, PortalPetsApi, PortalPetVaccinations, PortalVaccinationHistoryItem } from './portal-pets.api';
+import { isDeceased, PortalPetDetail, PortalPetsApi, PortalPetVaccinations, PortalUpcomingVaccination, PortalVaccinationHistoryItem } from './portal-pets.api';
 
 interface PetInfoRow {
     readonly label: string;
@@ -20,7 +21,7 @@ interface PetInfoRow {
 @Component({
     selector: 'portal-pet-detail',
     standalone: true,
-    imports: [PortalErrorState, PortalSkeleton],
+    imports: [PortalClinicActions, PortalErrorState, PortalSkeleton],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './portal-pet-detail.component.html'
 })
@@ -81,5 +82,10 @@ export class PortalPetDetailComponent {
 
     historyDate(item: PortalVaccinationHistoryItem): string {
         return item.status === 'Applied' ? formatPortalDay(item.appliedAtUtc) : formatPortalDay(item.dueAtUtc);
+    }
+
+    /** Gecikmiş aşı varsa randevu eylemi gösterilir (H7). */
+    hasOverdue(items: readonly PortalUpcomingVaccination[]): boolean {
+        return items.some((i) => i.isOverdue);
     }
 }

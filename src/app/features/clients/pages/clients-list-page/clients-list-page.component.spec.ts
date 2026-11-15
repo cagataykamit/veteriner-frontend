@@ -115,7 +115,7 @@ describe('ClientsListPageComponent — tek başlık', () => {
         expect(el.querySelector('app-list-header')!.textContent).toContain('16 kayıt');
     });
 
-    it('"Yeni Müşteri" Temizle ile aynı eylem grubunda, aramanın sağındadır', () => {
+    it('"Yeni müşteri" Temizle ile aynı eylem grubunda, aramanın sağındadır', () => {
         const el = create();
         const createLink = el.querySelector('a[href="/panel/clients/new"]')!;
         const clear = Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Temizle')!;

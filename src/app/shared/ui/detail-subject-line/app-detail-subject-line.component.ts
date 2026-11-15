@@ -32,7 +32,7 @@ const EM = '—';
                 </span>
             }
             <span class="min-w-0">
-                <span class="text-muted-color">Sahip:</span>
+                <span class="text-muted-color">Müşteri:</span>
                 @if (clientId()) {
                     <a [routerLink]="['/panel/clients', clientId()]" class="text-primary font-medium no-underline ml-1">{{ clientLabel() }}</a>
                 } @else {

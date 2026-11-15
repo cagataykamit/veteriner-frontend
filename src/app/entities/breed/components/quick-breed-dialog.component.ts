@@ -21,7 +21,7 @@ import { InputTextModule } from 'primeng/inputtext';
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Yeni ırk" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(440px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onShow()">
+        <p-dialog header="Yeni ırk" [modal]="true" [dismissableMask]="form.pristine" [style]="{ width: 'min(440px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onShow()">
             @if (ro.mutationBlocked()) {
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">İşletme salt okunur moddadır; ırk oluşturulamaz.</p>
             }
@@ -49,8 +49,8 @@ import { InputTextModule } from 'primeng/inputtext';
                 }
             </form>
             <ng-template #footer>
-                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>İptal</button>
-                <button pButton type="button" [disabled]="form.invalid || submitting() || !speciesIdContext() || ro.mutationBlocked()" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
+                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
+                <button pButton type="submit" form="quick-breed-form" [disabled]="form.invalid || submitting() || !speciesIdContext() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
             </ng-template>
         </p-dialog>
     `

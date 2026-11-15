@@ -104,7 +104,7 @@ import { PortalBookingStep } from './portal-booking-ui.component';
             <div class="urgent" data-testid="booking-urgent">
                 <p class="urgent-text">
                     <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-                    <span><strong>Acil durum mu?</strong> Online talep kliniğin onayını bekler; acil durumda beklemeyin, kliniği telefonla arayın.</span>
+                    <span><strong>Acil durum mu?</strong> Online talep kliniğin onayını bekler; acil durumda beklemeyin, {{ phoneHref() ? 'kliniği telefonla arayın.' : 'kliniğe ya da en yakın veteriner acil servisine başvurun.' }}</span>
                 </p>
                 @if (phoneHref(); as href) {
                     <div class="urgent-phone">

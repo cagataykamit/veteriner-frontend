@@ -165,7 +165,7 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
             key: 'vaccination',
             title: 'Aşı kaydı',
             icon: 'pi pi-shield',
-            text: 'Uygulanan aşıyı muayene ayrıntısındaki Aşı Oluştur ile kaydedin.',
+            text: 'Uygulanan aşıyı muayene ayrıntısındaki Aşı oluştur ile kaydedin.',
             label: 'Yeni aşı',
             route: '/panel/vaccinations/new',
             claims: [VACCINATIONS_CREATE_CLAIM],
@@ -212,6 +212,16 @@ export const FIRST_WEEK_GUIDE_STEPS: Readonly<Record<FirstWeekGuideRole, readonl
             route: '/panel/settings/clinics',
             claims: [CLINICS_UPDATE_CLAIM],
             doneWhen: [put(`clinics/${ID}/working-hours`)]
+        },
+        {
+            key: 'clinicPhone',
+            title: 'Klinik telefonu',
+            icon: 'pi pi-phone',
+            text: 'Kliniğin ayrıntısına telefonunu girin; hasta sahibi portalda ve online randevuda kliniği bu numarayla arar.',
+            label: 'Klinikler',
+            route: '/panel/settings/clinics',
+            claims: [CLINICS_UPDATE_CLAIM],
+            doneWhen: [put(`clinics/${ID}`)]
         },
         {
             key: 'services',

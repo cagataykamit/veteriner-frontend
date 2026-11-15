@@ -11,7 +11,7 @@ import { TableModule } from 'primeng/table';
 import { ListPageState } from '@/app/shared/list/list-page-state';
 import type { ClientListItemVm } from '@/app/entities/client/models/client-vm.model';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
@@ -22,6 +22,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { CLIENTS_CREATE_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { RowLinkDirective } from '@/app/shared/ui/row-link/row-link.directive';
 
 type ClientsListState = {
     search: string;
@@ -35,6 +36,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
     selector: 'app-clients-list-page',
     standalone: true,
     imports: [
+        RowLinkDirective,
         CommonModule,
         FormsModule,
         RouterLink,
@@ -44,7 +46,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
         InputTextModule,
         AppListHeaderComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
+        AppListEmptyStateComponent,
         AppErrorStateComponent,
         FilterFieldComponent,
         SearchInputComponent,
@@ -61,9 +63,9 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                     </app-filter-field>
                     <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                     @if (canCreateClient && !ro.mutationBlocked()) {
-                        <a actions routerLink="/panel/clients/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Müşteri</a>
+                        <a actions routerLink="/panel/clients/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni müşteri</a>
                     } @else if (canCreateClient && ro.mutationBlocked()) {
-                        <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Müşteri (salt okunur)</button>
+                        <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni müşteri (salt okunur)</button>
                     }
                 </app-list-header>
                 @if (error()) {
@@ -72,7 +74,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                     <app-loading-state message="Müşteri listesi yükleniyor…" />
                 } @else {
                     @if (displayedRows().length === 0) {
-                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                        <app-list-empty-state [filtered]="isSearchActive()" emptyMessage="Henüz müşteri yok." [createLabel]="canCreateClient && !ro.mutationBlocked() ? 'İlk müşteriyi ekle' : null" [createLink]="'/panel/clients/new'" (clear)="resetFilters()" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
                             <p-table
@@ -100,7 +102,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                                     </tr>
                                 </ng-template>
                                 <ng-template #body let-row>
-                                    <tr>
+                                    <tr [appRowLink]="['/panel/clients', row.id]">
                                         <td class="font-medium"><a [routerLink]="['/panel/clients', row.id]" class="text-primary no-underline">{{ row.fullName }}</a></td>
                                         <td>{{ formatClientPhoneForDisplay(row.phone) }}</td>
                                         <td>{{ row.email }}</td>
@@ -122,7 +124,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
 
                         <div class="lg:hidden space-y-3">
                             @for (row of displayedRows(); track row.id) {
-                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
+                                <div [appRowLink]="['/panel/clients', row.id]" class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                                     <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
                                         <a [routerLink]="['/panel/clients', row.id]" class="text-primary no-underline break-words">{{ row.fullName }}</a>
                                     </div>

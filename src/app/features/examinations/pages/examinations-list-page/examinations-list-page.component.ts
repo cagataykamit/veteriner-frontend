@@ -15,7 +15,7 @@ import { TableModule } from 'primeng/table';
 import { ListPageState } from '@/app/shared/list/list-page-state';
 import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
@@ -51,7 +51,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
         InputTextModule,
         AppListHeaderComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
+        AppListEmptyStateComponent,
         AppContextFilterChipComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
@@ -92,7 +92,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                     <app-error-state [detail]="error()!" (retry)="reload()" />
                 } @else {
                     @if (displayedRows().length === 0) {
-                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                        <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz muayene yok." emptyHint="Muayene, hasta geldiğinde Bugün ekranından başlatılır." [createLabel]="'Bugün ekranına git'" [createLink]="'/panel/today'" (clear)="resetFilters()" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
                             <p-table
@@ -318,6 +318,11 @@ export class ExaminationsListPageComponent implements OnInit {
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
         this.list.loadFirstPage();
+    }
+
+    /** Boş listede "uyan kayıt yok" mu "henüz yok" mu gösterileceği. */
+    hasActiveFilters(): boolean {
+        return this.isSearchActive() || this.isFromDateActive() || this.isToDateActive();
     }
 
     resetFilters(): void {

@@ -9,6 +9,7 @@ import { portalLoad } from '@portal/app/shared/data/portal-load';
 import { formatPortalDay, formatPortalTime, formatPortalWeekday } from '@portal/app/shared/format/portal-date';
 import { appointmentTypeLabel, formatPersonName } from '@portal/app/shared/format/portal-labels';
 import { formatPortalMoney } from '@portal/app/shared/format/portal-money';
+import { PortalClinicActions } from '@portal/app/features/clinic/portal-clinic-actions.component';
 import { PortalEmptyState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
 import { nextScheduledAppointment, PortalPetVaccinationsEntry, PortalVaccineSummary, summarizeVaccines } from './portal-home.summary';
 
@@ -16,14 +17,15 @@ import { nextScheduledAppointment, PortalPetVaccinationsEntry, PortalVaccineSumm
 const HOME_APPOINTMENT_PAGE_SIZE = 20;
 
 /**
- * Ana ekran (Dilim 2): seçili klinik, en yakın randevu, gecikmiş/yaklaşan aşı, bakiye özeti ve hayvan kartları.
+ * Ana ekran (Dilim 2): ana eylem (randevu talebi ya da kliniği arama, H7), seçili klinik, en yakın randevu, gecikmiş/yaklaşan aşı,
+ * bakiye özeti ve hayvan kartları.
  * Her kart kendi isteğiyle yüklenir; biri hata verirse yalnız o kart "Tekrar dene" gösterir. Kartlar ilgili sayfaya gider.
  * Müşteriye dönük dil: "hayvanınız/hayvanlarınız" (ADR-022 madde 5).
  */
 @Component({
     selector: 'portal-home',
     standalone: true,
-    imports: [RouterLink, PortalEmptyState, PortalSkeleton],
+    imports: [RouterLink, PortalClinicActions, PortalEmptyState, PortalSkeleton],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './portal-home.component.html'
 })

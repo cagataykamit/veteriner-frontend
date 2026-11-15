@@ -173,7 +173,7 @@ const STEPS: readonly { n: number; label: string }[] = [
                     @if (jobRunning() && pollError()) {
                         <p-message severity="warn" class="w-full mt-4" role="alert">
                             {{ pollError() }}
-                            <button pButton type="button" size="small" severity="secondary" class="ml-2" (click)="retryPolling()"><i class="p-button-icon pi pi-refresh"></i>Yeniden dene</button>
+                            <button pButton type="button" size="small" severity="secondary" class="ml-2" (click)="retryPolling()"><i class="p-button-icon pi pi-refresh"></i>Tekrar dene</button>
                         </p-message>
                     }
                 </div>

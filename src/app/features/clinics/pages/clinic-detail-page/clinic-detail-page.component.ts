@@ -4,7 +4,8 @@ import { Component, DestroyRef, OnInit, effect, inject, signal, ChangeDetectionS
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import type { ClinicUpsertFormValue } from '@/app/entities/clinic/models/clinic-upsert.model';
 import type { ClinicDetailVm } from '@/app/entities/clinic/models/clinic-vm.model';
 import { CLINIC_ADDRESS_MAX, CLINIC_DESCRIPTION_MAX, CLINIC_DISTRICT_MAX, CLINIC_EMAIL_MAX, CLINIC_PHONE_MAX, clinicOptionalEmailValidator } from '@/app/entities/clinic/utils/clinic-profile-form.validators';
@@ -38,6 +39,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         CommonModule,
         ReactiveFormsModule,
         ButtonModule,
+        ConfirmDialogModule,
         InputTextModule,
         TextareaModule,
         ToastModule,
@@ -51,7 +53,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         ClinicAppointmentSettingsSectionComponent,
         ClinicTaxpayerSettingsSectionComponent
     ],
-    providers: [MessageService],
+    providers: [MessageService, ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="top-right" />
@@ -132,7 +134,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 <app-detail-action-bar ariaLabel="Klinik eylemleri">
                     @if (!ro.mutationBlocked()) {
                         @if (d.isActive === true) {
-                            <button pButton type="button" severity="danger" [outlined]="true" [disabled]="busyActivate() || saving() || busyDeactivate()" (click)="onDeactivate()"><i class="p-button-icon" [class]="busyDeactivate() ? 'pi pi-spin pi-spinner' : 'pi pi-ban'"></i>Pasife al</button>
+                            <button pButton type="button" severity="danger" [outlined]="true" [disabled]="busyActivate() || saving() || busyDeactivate()" (click)="confirmDeactivate()"><i class="p-button-icon" [class]="busyDeactivate() ? 'pi pi-spin pi-spinner' : 'pi pi-ban'"></i>Pasife al</button>
                         } @else {
                             <button pButton type="button" [disabled]="busyDeactivate() || saving() || busyActivate()" (click)="onActivate()"><i class="p-button-icon" [class]="busyActivate() ? 'pi pi-spin pi-spinner' : 'pi pi-check-circle'"></i>Aktifleştir</button>
                         }
@@ -235,6 +237,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 <app-clinic-taxpayer-settings-section [clinicId]="d.id" />
             }
         }
+        <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
     `
 })
 export class ClinicDetailPageComponent implements OnInit {
@@ -252,6 +255,7 @@ export class ClinicDetailPageComponent implements OnInit {
     private readonly destroyRef = inject(DestroyRef);
     private readonly clinicsApi = inject(ClinicsService);
     private readonly messages = inject(MessageService);
+    private readonly confirmation = inject(ConfirmationService);
     private readonly fb = inject(FormBuilder);
     readonly ro = inject(TenantReadOnlyContextService);
 
@@ -406,6 +410,20 @@ export class ClinicDetailPageComponent implements OnInit {
         }
 
         this.formError.set(clinicSettingsMutationMessage(e, 'Klinik güncellenemedi.'));
+    }
+
+    /** Pasife alma onaysız yapılmaz (H12). */
+    confirmDeactivate(): void {
+        this.confirmation.confirm({
+            header: 'Kliniği pasife al',
+            message: 'Klinik pasife alınınca bu klinikte yeni kayıt açılamaz. Kayıtlar silinmez; kliniği sonra yeniden etkinleştirebilirsiniz.',
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Pasife al',
+            rejectLabel: 'Vazgeç',
+            acceptButtonStyleClass: 'p-button-danger',
+            rejectButtonStyleClass: 'p-button-secondary',
+            accept: () => this.onDeactivate()
+        });
     }
 
     onDeactivate(): void {

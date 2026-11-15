@@ -24,7 +24,7 @@ import { parseExaminationCreateRouteContext } from '@/app/shared/panel/examinati
 import { copyTargetExaminationId, recordCopySourceId } from '@/app/shared/panel/record-copy.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
-import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
+import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { DATE_INPUT_MIN, dateTimeYearRangeValidator, dateYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import { TREATMENT_DATE_TOO_FAR_PAST_MESSAGE, treatmentDateNotTooFarPastValidator, treatmentDateTimeLocalMinAllowed } from '@/app/entities/treatment/utils/treatment-date-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -205,7 +205,7 @@ export class TreatmentFormComponent implements OnInit, HasUnsavedChanges {
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }, Validators.required],
-        treatmentDateLocal: ['', [Validators.required, dateTimeYearRangeValidator(), treatmentDateNotTooFarPastValidator()]],
+        treatmentDateLocal: [toIstanbulDateTimeLocalInputValue(new Date().toISOString()), [Validators.required, dateTimeYearRangeValidator(), treatmentDateNotTooFarPastValidator()]],
         examinationId: [''],
         followUpDate: ['', dateYearRangeValidator()],
         title: ['', Validators.required],

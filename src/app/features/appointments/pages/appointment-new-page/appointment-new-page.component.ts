@@ -29,24 +29,35 @@ import {
     appointmentLatestDateYmd,
     filterAllowedIstanbulTimeOptions,
     isIstanbulDateTimeTooFarInFuture,
-    isIstanbulDateTimeTooFarInPast
+    isIstanbulDateTimeTooFarInPast,
+    istanbulTodayYmd
 } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { fromIstanbulDateAndTimeToUtcIso } from '@/app/shared/utils/date.utils';
+import { addGregorianDaysToYmd, formatDateDisplay, fromIstanbulDateAndTimeToUtcIso } from '@/app/shared/utils/date.utils';
 import { DATE_INPUT_MAX, dateYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { messageFromClinicResolutionHttpError } from '@/app/features/appointments/utils/clinic-resolution-error.utils';
-import { APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/entities/appointment/utils/appointment-type.utils';
+import { APPOINTMENT_TYPE_DEFAULT, APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/entities/appointment/utils/appointment-type.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments/components/appointment-reason-vet-fields.component';
+import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
+
+/** İlk uygun randevu günü en fazla bu kadar gün ileride aranır. */
+const APPOINTMENT_PREFILL_LOOKAHEAD_DAYS = 14;
+
+interface AppointmentSlot {
+    date: string;
+    time: string;
+    label: string;
+}
 
 @Component({
     selector: 'app-appointment-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AppointmentReasonVetFieldsComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AppointmentReasonVetFieldsComponent, FocusFirstFieldDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-page-header categoryLink="/panel/appointments" categoryLinkLabel="Randevu listesine dön" title="Yeni Randevu" description="Randevu kaydı oluşturun." />
+        <app-page-header categoryLink="/panel/appointments" categoryLinkLabel="Randevu listesine dön" title="Yeni randevu" description="Randevu kaydı oluşturun." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {
@@ -56,7 +67,7 @@ import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments
                 <p class="text-danger mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
                         <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
@@ -110,6 +121,11 @@ import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments
                             <small class="text-danger">{{ whErr }}</small>
                         } @else if (form.controls.scheduledDate.value && timeOptions().length === 0) {
                             <small class="text-amber-600">Seçilen gün için uygun randevu saati bulunmuyor.</small>
+                            @if (nextAvailableSlot(); as next) {
+                                <button pButton type="button" size="small" [text]="true" class="p-0 mt-1" data-testid="appointment-next-slot" (click)="selectSlot(next)">
+                                    <i class="p-button-icon pi pi-calendar-plus"></i>İlk uygun gün: {{ next.label }}
+                                </button>
+                            }
                         }
                         @if (clinicSlotIntervalMinutes(); as startIntervalMinutes) {
                             <small class="block text-muted-color mt-1">Bu klinikte randevular {{ startIntervalMinutes }} dakikalık aralıklarla başlatılır.</small>
@@ -125,16 +141,16 @@ import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="appointmentType" class="block text-sm font-medium text-muted-color mb-2">Randevu Türü *</label>
-                        <p-select inputId="appointmentType" formControlName="appointmentType" [options]="typeOptions" optionLabel="label" optionValue="value" placeholder="Randevu Türü seçin" [showClear]="true" class="w-full" />
+                        <label for="appointmentType" class="block text-sm font-medium text-muted-color mb-2">Randevu türü *</label>
+                        <p-select inputId="appointmentType" formControlName="appointmentType" [options]="typeOptions" optionLabel="label" optionValue="value" placeholder="Randevu türü seçin" [showClear]="true" class="w-full" />
                         @if (apiFieldErrors().appointmentType) {
                             <small class="text-danger">{{ apiFieldErrors().appointmentType }}</small>
                         } @else if (form.controls.appointmentType.invalid && form.controls.appointmentType.touched) {
-                            <small class="text-danger">Randevu Türü seçimi zorunludur.</small>
+                            <small class="text-danger">Randevu türü seçimi zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12">
-                        <app-appointment-reason-vet-fields [clinicId]="activeClinicId" [reasonControl]="form.controls.reasonId" [vetControl]="form.controls.veterinarianUserId" (durationSuggested)="form.controls.durationMinutes.setValue($event)" />
+                        <app-appointment-reason-vet-fields [clinicId]="activeClinicId" [preselectSelf]="true" [reasonControl]="form.controls.reasonId" [vetControl]="form.controls.veterinarianUserId" (durationSuggested)="form.controls.durationMinutes.setValue($event)" />
                     </div>
                     <div class="col-span-12">
                         <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
@@ -153,7 +169,7 @@ import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments
 
                 <div class="flex flex-wrap gap-2 mt-4">
                     <button pButton type="submit" [disabled]="form.invalid || submitting() || ro.mutationBlocked() || timeOptions().length === 0 || !!workingHoursLoadError()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
-                    <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>İptal</button>
+                    <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
                 </div>
             </form>
         </div>
@@ -181,8 +197,14 @@ export class AppointmentNewPageComponent implements OnInit {
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
     readonly clinicSlotIntervalMinutes = signal<number | null>(null);
     readonly timeOptions = signal<SelectOption[]>([]);
+    /** Seçilen günde uygun saat yoksa önerilecek ilk uygun gün (seçilen günden itibaren). */
+    readonly nextAvailableSlot = signal<AppointmentSlot | null>(null);
     readonly workingHoursLoadError = signal<string | null>(null);
     private workingHours: ClinicWorkingHourVm[] = [];
+    /** İlk uygun gün/saat önden seçimi için çalışma saatleri ve randevu ayarı yüklendi mi; seçim bir kez yapılır. */
+    private workingHoursLoaded = false;
+    private appointmentSettingsLoaded = false;
+    private schedulePrefillDone = false;
 
     readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
     readonly notesMaxLength = APPOINTMENT_NOTES_MAX_LENGTH;
@@ -196,7 +218,7 @@ export class AppointmentNewPageComponent implements OnInit {
         scheduledDate: this.fb.nonNullable.control('', [Validators.required, appointmentCreateScheduleDateValidator(), dateYearRangeValidator()]),
         scheduledTime: this.fb.nonNullable.control('', Validators.required),
         durationMinutes: this.fb.nonNullable.control<number | string>(30, [Validators.required, Validators.min(5), Validators.max(240), Validators.pattern(/^[0-9]+$/)]),
-        appointmentType: this.fb.control<number | null>(null, Validators.required),
+        appointmentType: this.fb.control<number | null>(APPOINTMENT_TYPE_DEFAULT, Validators.required),
         notes: this.fb.nonNullable.control('', Validators.maxLength(APPOINTMENT_NOTES_MAX_LENGTH)),
         reasonId: this.fb.control<string | null>(null),
         veterinarianUserId: this.fb.control<string | null>(null)
@@ -326,7 +348,7 @@ export class AppointmentNewPageComponent implements OnInit {
 
         if (appointmentType === null || appointmentType === undefined) {
             this.form.markAllAsTouched();
-            this.submitError.set('Randevu Türü seçin.');
+            this.submitError.set('Randevu türü seçin.');
 
             return;
         }
@@ -355,7 +377,7 @@ export class AppointmentNewPageComponent implements OnInit {
         this.appointmentsService.createAppointment(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/appointments', id]);
+                void this.router.navigate(['/panel/appointments', id], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {
                 this.submitting.set(false);
@@ -396,11 +418,13 @@ export class AppointmentNewPageComponent implements OnInit {
             next: (s) => {
                 this.form.patchValue({ durationMinutes: s.defaultAppointmentDurationMinutes });
                 this.clinicSlotIntervalMinutes.set(s.slotIntervalMinutes);
+                this.appointmentSettingsLoaded = true;
                 this.rebuildTimeOptions();
             },
             error: () => {
                 this.form.patchValue({ durationMinutes: 30 });
                 this.clinicSlotIntervalMinutes.set(null);
+                this.appointmentSettingsLoaded = true;
                 this.rebuildTimeOptions();
             }
         });
@@ -422,6 +446,7 @@ export class AppointmentNewPageComponent implements OnInit {
             next: (items) => {
                 this.workingHours = items;
                 this.workingHoursLoadError.set(null);
+                this.workingHoursLoaded = true;
                 this.rebuildTimeOptions();
             },
             error: () => {
@@ -445,13 +470,75 @@ export class AppointmentNewPageComponent implements OnInit {
         control.enable({ emitEvent: false });
     }
 
+    /** Seçilen gün uygun değilse önerilen ilk uygun gün ve saat. */
+    selectSlot(slot: AppointmentSlot): void {
+        this.form.controls.scheduledDate.setValue(slot.date);
+        this.form.controls.scheduledTime.setValue(slot.time);
+    }
+
+    /**
+     * Tarih boşsa bugünden başlayarak ilk açık gün ve o günün ilk uygun saati önden seçilir (H1); bugün saat geçtiyse sonraki gün.
+     */
+    private prefillFirstAvailableSlot(): void {
+        if (this.schedulePrefillDone || !this.workingHoursLoaded || !this.appointmentSettingsLoaded) {
+            return;
+        }
+
+        this.schedulePrefillDone = true;
+
+        if (this.form.controls.scheduledDate.value.trim()) {
+            return;
+        }
+
+        const slot = this.findFirstAvailableSlot(istanbulTodayYmd());
+
+        if (slot) {
+            this.selectSlot(slot);
+        }
+    }
+
+    /**
+     * `fromYmd` gününden başlayıp en fazla `APPOINTMENT_PREFILL_LOOKAHEAD_DAYS` gün ileride ilk açık gün ve şimdiden sonraki ilk saat.
+     * Dolu saatleri bilmez (müsaitlik ucu yok); çalışma saatine ve şimdiye göre bakar.
+     */
+    private findFirstAvailableSlot(fromYmd: string): AppointmentSlot | null {
+        const duration = Math.trunc(Number(this.form.controls.durationMinutes.value));
+        const interval = this.clinicSlotIntervalMinutes() ?? 15;
+
+        if (!Number.isFinite(duration) || duration < 5 || duration > 240 || interval <= 0) {
+            return null;
+        }
+
+        const now = Date.now();
+
+        for (let offset = 0; offset < APPOINTMENT_PREFILL_LOOKAHEAD_DAYS; offset++) {
+            const ymd = addGregorianDaysToYmd(fromYmd, offset);
+            const hours = ymd ? this.resolveWorkingDay(ymd) : null;
+
+            if (!ymd || !hours || hours.isClosed) {
+                continue;
+            }
+
+            // Bugünün geçmiş saatleri geriye dönük kayıt için seçilebilir; öneri yalnız gelecekteki ilk saati alır.
+            const first = this.buildTimeOptions(hours, duration, interval).find((o) => new Date(fromIstanbulDateAndTimeToUtcIso(ymd, o.value) ?? 0).getTime() >= now);
+
+            if (first) {
+                return { date: ymd, time: first.value, label: `${formatDateDisplay(`${ymd}T00:00:00`)} ${first.value}` };
+            }
+        }
+
+        return null;
+    }
+
     private rebuildTimeOptions(): void {
+        this.prefillFirstAvailableSlot();
         const date = this.form.controls.scheduledDate.value.trim();
         const duration = Math.trunc(Number(this.form.controls.durationMinutes.value));
         const interval = this.clinicSlotIntervalMinutes() ?? 15;
 
         if (!date || !Number.isFinite(duration) || duration < 5 || duration > 240 || interval <= 0) {
             this.timeOptions.set([]);
+            this.nextAvailableSlot.set(null);
             this.form.controls.scheduledTime.setValue('', { emitEvent: false });
 
             return;
@@ -461,6 +548,7 @@ export class AppointmentNewPageComponent implements OnInit {
 
         if (!day || day.isClosed) {
             this.timeOptions.set([]);
+            this.nextAvailableSlot.set(this.findFirstAvailableSlot(date < istanbulTodayYmd() ? istanbulTodayYmd() : date));
             const selected = this.form.controls.scheduledTime.value.trim();
 
             if (selected) {
@@ -473,6 +561,7 @@ export class AppointmentNewPageComponent implements OnInit {
         const options = filterAllowedIstanbulTimeOptions(date, this.buildTimeOptions(day, duration, interval));
 
         this.timeOptions.set(options);
+        this.nextAvailableSlot.set(options.length === 0 ? this.findFirstAvailableSlot(date < istanbulTodayYmd() ? istanbulTodayYmd() : date) : null);
         const selected = this.form.controls.scheduledTime.value.trim();
 
         if (selected && !options.some((o) => o.value === selected)) {

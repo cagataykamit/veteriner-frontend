@@ -2,6 +2,7 @@ import type { TodayItemVm } from '@/app/entities/visit/models/visit-vm.model';
 import {
     correctionActionOptions,
     formatElapsedSince,
+    formatTodayArrival,
     formatHospitalizationStay,
     groupTodayItems,
     isPossiblyForgottenVisit,
@@ -103,6 +104,15 @@ describe('todayItemActions', () => {
     });
 });
 
+describe('formatTodayArrival (H15)', () => {
+    const now = new Date('2026-11-16T09:00:00Z');
+
+    it('bugünkü gelişte yalnız saat, önceki günden açık kalanda tarih ve saat', () => {
+        expect(formatTodayArrival('2026-11-16T06:30:00Z', now)).toBe('09:30');
+        expect(formatTodayArrival('2026-11-10T18:40:00Z', now)).toBe('10.11.2026 21:40');
+    });
+});
+
 describe('formatElapsedSince', () => {
     const now = new Date('2026-10-10T08:00:00Z');
 
@@ -111,6 +121,8 @@ describe('formatElapsedSince', () => {
         expect(formatElapsedSince('2026-10-10T07:48:00Z', now)).toBe('12 dk');
         expect(formatElapsedSince('2026-10-10T06:55:00Z', now)).toBe('1 sa 5 dk');
         expect(formatElapsedSince('2026-10-10T06:00:00Z', now)).toBe('2 sa');
+        // H15: bir günü geçen açık geliş saatle değil günle söylenir.
+        expect(formatElapsedSince('2026-10-04T01:52:00Z', now)).toBe('6 gün');
     });
 
     it('Z siz UTC anını UTC kabul eder; geçersiz/boş değer null', () => {

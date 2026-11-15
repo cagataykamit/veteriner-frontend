@@ -36,7 +36,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                 <app-error-state [detail]="loadError()!" [showRetry]="!!currentId()" (retry)="reloadSpeciesRecord()" />
             </div>
         } @else {
-            <app-page-header [categoryLink]="speciesRoute" categoryLinkLabel="Tür listesine dön" [title]="editing() ? 'Tür Düzenle' : 'Yeni Tür'" [description]="editing() ? 'Tür kaydını güncelleyin.' : 'Yeni tür kaydı oluşturun.'" />
+            <app-page-header [categoryLink]="speciesRoute" categoryLinkLabel="Tür listesine dön" [title]="editing() ? 'Tür Düzenle' : 'Yeni tür'" [description]="editing() ? 'Tür kaydını güncelleyin.' : 'Yeni tür kaydı oluşturun.'" />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {
@@ -97,7 +97,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <button pButton type="submit" [disabled]="form.invalid || submitting() || loading() || ro.mutationBlocked() || submitting() || loading()"><i class="p-button-icon" [class]="submitting() || loading() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ editing() ? 'Güncelle' : copy.buttonSave }}</button>
+                        <button pButton type="submit" [disabled]="form.invalid || submitting() || loading() || ro.mutationBlocked() || submitting() || loading()"><i class="p-button-icon" [class]="submitting() || loading() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                         <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>

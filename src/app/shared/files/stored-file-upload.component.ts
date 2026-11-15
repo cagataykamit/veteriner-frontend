@@ -25,7 +25,7 @@ let nextKey = 1;
 
 /**
  * Dosya seçme / sürükle-bırak ve yükleme kuyruğu (IMAGING_API_CONTRACT.md §5, ASAMA6 L6). Seçilen dosyalar tür ve boyut ön kontrolünden
- * geçer; yükleme sırayla, ilerleme çubuğuyla yapılır. Başarısız dosya kuyrukta kalır ve "Yeniden dene" ile tekrar gönderilir; çağıranın
+ * geçer; yükleme sırayla, ilerleme çubuğuyla yapılır. Başarısız dosya kuyrukta kalır ve "Tekrar dene" ile tekrar gönderilir; çağıranın
  * formu ve girilen metin etkilenmez. `ownerPath` verilip `autoUpload` açıksa seçim anında yüklenir (detay sayfası); değilse çağıran
  * kaydı oluşturduktan sonra `uploadPending(ownerPath)` çağırır (yeni kayıt formu).
  */
@@ -70,7 +70,7 @@ let nextKey = 1;
                             <span class="font-medium break-all flex-1 min-w-0">{{ item.name }}</span>
                             <span class="text-xs text-muted-color">{{ size(item.size) }}</span>
                             @if (item.status === 'failed') {
-                                <button pButton type="button" size="small" [text]="true" [disabled]="busy() || !ownerPath()" (click)="retry(item)"><i class="p-button-icon pi pi-refresh"></i>Yeniden dene</button>
+                                <button pButton type="button" size="small" [text]="true" [disabled]="busy() || !ownerPath()" (click)="retry(item)"><i class="p-button-icon pi pi-refresh"></i>Tekrar dene</button>
                             }
                             @if (item.status !== 'uploading' && item.status !== 'done') {
                                 <button

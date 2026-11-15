@@ -5,12 +5,13 @@ import { SALES_CREATE_CLAIM, SALES_READ_CLAIM } from '@/app/core/auth/operation-
 import { SaleDetailPageComponent } from '@/app/features/sales/pages/sale-detail-page/sale-detail-page.component';
 import { SaleNewPageComponent } from '@/app/features/sales/pages/sale-new-page/sale-new-page.component';
 import { SalesListPageComponent } from '@/app/features/sales/pages/sales-list-page/sales-list-page.component';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 function requireClaim(claim: string): CanActivateFn {
     return () => {
         const router = inject(Router);
 
-        return inject(AuthService).hasOperationClaim(claim) ? true : router.createUrlTree(['/notfound']);
+        return inject(AuthService).hasOperationClaim(claim) ? true : router.createUrlTree([PANEL_FORBIDDEN_URL]);
     };
 }
 

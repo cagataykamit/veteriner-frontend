@@ -76,7 +76,6 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                 @for (it of list; track it.id + it.rowNumber) {
                     <li class="rounded-border border border-surface-200 dark:border-surface-700 p-3">
                         <div class="font-medium">{{ entityLabel(it) }} · {{ tableLabel(it) }}, {{ it.rowNumber }}. satır</div>
-                        <div class="text-sm text-muted-color break-all">Kayıt kimliği: {{ it.id }}</div>
                         <ul class="m-0 mt-1 pl-4 text-sm">
                             @for (r of it.reasons; track r) {
                                 <li>{{ reasonLabel(r) }}</li>
@@ -111,7 +110,7 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                     @if (pollError()) {
                         <p-message severity="warn" class="w-full mt-2" role="alert">
                             {{ pollError() }}
-                            <button pButton type="button" size="small" severity="secondary" class="ml-2" (click)="startPolling(b.id)"><i class="p-button-icon pi pi-refresh"></i>Yeniden dene</button>
+                            <button pButton type="button" size="small" severity="secondary" class="ml-2" (click)="startPolling(b.id)"><i class="p-button-icon pi pi-refresh"></i>Tekrar dene</button>
                         </p-message>
                     }
                 } @else if (!screenAvailable()) {

@@ -14,7 +14,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import type { Observable } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLINICS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { SETTINGS_ROUTE } from '@/app/core/routing/panel-navigation';
+import { CLINIC_DETAIL_ROUTE, SETTINGS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
@@ -51,7 +51,6 @@ export const MIN_LEAD_OPTIONS: { label: string; value: number }[] = [
 ];
 
 /** Klinik ayrıntı sayfası: çalışma saatleri ve telefon burada düzenlenir. */
-const CLINIC_DETAIL_ROUTE = '/panel/settings/clinics';
 
 /**
  * Online randevu kurulumu (ADR-042 K1/K3/K5/K6 ve eki), Ayarlar altında, tek sayfada adım adım: 1) müşterinin seçeceği

@@ -68,7 +68,7 @@ export class PatientActionBarComponent {
     readonly petSuggestion = computed<PetSuggestion | null>(() => {
         const id = this.petId();
 
-        return id ? { id, label: `${this.petLabel()} · Sahip: ${this.clientName() || '—'}`, clientId: this.clientId(), clientName: this.clientName() } : this.arrivalPet();
+        return id ? { id, label: `${this.petLabel()} · Müşteri: ${this.clientName() || '—'}`, clientId: this.clientId(), clientName: this.clientName() } : this.arrivalPet();
     });
 
     onArrived(): void {

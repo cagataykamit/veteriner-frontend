@@ -2,10 +2,11 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router, Routes } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM, IMPORTS_COMMIT_CLAIM, IMPORTS_MANAGE_CLAIM, IMPORTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 const claimGuard =
     (claim: string): CanActivateFn =>
-    () => (inject(AuthService).hasOperationClaim(claim) ? true : inject(Router).createUrlTree(['/notfound']));
+    () => (inject(AuthService).hasOperationClaim(claim) ? true : inject(Router).createUrlTree([PANEL_FORBIDDEN_URL]));
 
 export default [
     {

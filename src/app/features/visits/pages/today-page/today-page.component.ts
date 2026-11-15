@@ -49,6 +49,7 @@ import {
     careStatusLabel,
     careStatusSeverity,
     formatElapsedSince,
+    formatTodayArrival,
     formatHospitalizationStay,
     groupTodayItems,
     todayItemActions,
@@ -286,6 +287,10 @@ export class TodayPageComponent implements OnInit {
 
     time(utc: string | null): string {
         return formatUtcIsoAsLocalTimeDisplay(utc);
+    }
+
+    arrival(utc: string | null): string {
+        return formatTodayArrival(utc, this.now());
     }
 
     date(utc: string | null): string {

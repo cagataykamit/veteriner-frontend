@@ -138,7 +138,7 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
                             }
                             @if (hasText(p.clientEmail)) {
                                 <div>
-                                    <dt>Sahip e-posta</dt>
+                                    <dt>Müşteri e-posta</dt>
                                     <dd class="font-medium text-surface-900 dark:text-surface-0">{{ p.clientEmail }}</dd>
                                 </div>
                             }
@@ -296,7 +296,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
         }
     }
 
-    /** Randevu iptali sonrası (sonraki randevu açık işlerdedir) ve Yapılacaklar'da "Yeniden dene"; okumadır, salt okunur kiracıda da çalışır. */
+    /** Randevu iptali sonrası (sonraki randevu açık işlerdedir) ve Yapılacaklar'da "Tekrar dene"; okumadır, salt okunur kiracıda da çalışır. */
     reloadOpenItems(): void {
         if (this.loader.id) {
             this.loadOpenItems(this.loader.id);

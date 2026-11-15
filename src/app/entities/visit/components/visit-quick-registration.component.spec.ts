@@ -88,6 +88,18 @@ describe('VisitQuickRegistrationComponent', () => {
         expect(cmp.canSubmit()).toBe(true);
     });
 
+    it('metin alanında Enter kaydeder (H3)', () => {
+        create();
+        fillValid();
+        const input = fixture.nativeElement.querySelector('#vr-petName') as HTMLInputElement;
+        const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+
+        input.dispatchEvent(event);
+
+        expect(clients.quickRegister).toHaveBeenCalledTimes(1);
+        expect(event.defaultPrevented).toBe(true);
+    });
+
     it('hayvan adı ve tür zorunludur', () => {
         create();
         cmp.clientForm.patchValue({ fullName: 'Ayşe Yılmaz', phone: '0532 123 45 67' });
@@ -114,7 +126,7 @@ describe('VisitQuickRegistrationComponent', () => {
             microchipNumber: '985121001234567'
         });
         expect(pets.createPet).not.toHaveBeenCalled();
-        expect(registered).toEqual([{ id: 'p-new', label: 'Pamuk — Kedi · Sahip: Ayşe Yılmaz', clientId: 'c-new', clientName: 'Ayşe Yılmaz' }]);
+        expect(registered).toEqual([{ id: 'p-new', label: 'Pamuk — Kedi · Müşteri: Ayşe Yılmaz', clientId: 'c-new', clientName: 'Ayşe Yılmaz' }]);
     });
 
     it('çift tıklama: yanıt gelmeden ikinci gönderim ikinci istek üretmez', () => {
@@ -178,7 +190,7 @@ describe('VisitQuickRegistrationComponent', () => {
 
         expect(clients.quickRegister).not.toHaveBeenCalled();
         expect(vi.mocked(pets.createPet).mock.lastCall![0]).toEqual(expect.objectContaining({ clientId: 'c-old', name: 'Pamuk', speciesId: 's1' }));
-        expect(registered[0]).toEqual({ id: 'p-new', label: 'Pamuk — Kedi · Sahip: Veli Kaya', clientId: 'c-old', clientName: 'Veli Kaya' });
+        expect(registered[0]).toEqual({ id: 'p-new', label: 'Pamuk — Kedi · Müşteri: Veli Kaya', clientId: 'c-old', clientName: 'Veli Kaya' });
     });
 
     it('kayıtlı sahibe hayvan eklerken hata mesajı gösterilir', () => {

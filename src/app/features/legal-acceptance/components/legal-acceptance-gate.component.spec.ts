@@ -39,6 +39,7 @@ describe('LegalAcceptanceGateComponent', () => {
     beforeEach(async () => {
         legal = {
             getMyStatus: vi.fn().mockName('LegalAcceptanceService.getMyStatus'),
+            takePrefetchedStatus: vi.fn().mockReturnValue(null),
             accept: vi.fn().mockName('LegalAcceptanceService.accept')
         } as unknown as MockedObject<LegalAcceptanceService>;
         auth = {
@@ -52,6 +53,15 @@ describe('LegalAcceptanceGateComponent', () => {
     });
 
     afterEach(() => fixture?.destroy());
+
+    it('panel rotası durumu önceden okuduysa pencere yeniden istek atmadan açılır (H18)', () => {
+        legal.takePrefetchedStatus.mockReturnValue(pendingStatus);
+        fixture = TestBed.createComponent(LegalAcceptanceGateComponent);
+        fixture.detectChanges();
+
+        expect(legal.getMyStatus).not.toHaveBeenCalled();
+        expect(fixture.componentInstance.pending()).toHaveLength(2);
+    });
 
     it('bekleyen kabul yoksa pencere açılmaz', () => {
         create(doneStatus);

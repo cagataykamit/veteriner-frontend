@@ -188,7 +188,7 @@ describe('ChargeNewPageComponent', () => {
         expect(req.quantity).toBe(1);
         expect(req.unitPrice).toBe(750);
         expect(req.requestId).toMatch(/^[0-9a-f-]{36}$/);
-        expect(router.navigate).toHaveBeenCalledWith(['/panel/charges'], { queryParams: { clientId: 'cl1' } });
+        expect(router.navigate).toHaveBeenCalledWith(['/panel/charges'], { queryParams: { clientId: 'cl1', saved: '1' } });
     });
 
     it('Payments.Create varsa ücret kaydından sonra ödeme formuna müşteri, ücret ve geliş bağlamıyla geçer', async () => {

@@ -1,6 +1,7 @@
 import { AbstractControl, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import type { ClientCreateFormFieldKey } from '@/app/entities/client/utils/client-create-validation-parse.utils';
 import {
+    CLIENT_CREATE_PHONE_MSG_INVALID,
     isValidTurkishMobileDigits,
     turkishMobilePhoneValidator
 } from '@/app/entities/client/utils/client-create-phone.utils';
@@ -18,7 +19,7 @@ export const CLIENT_UPSERT_FULL_NAME_MIN = 2;
 
 export const CLIENT_UPSERT_MSG_REQUIRED = 'Bu alan zorunludur.';
 export const CLIENT_UPSERT_MSG_MIN_LENGTH = 'En az 2 karakter olmalıdır.';
-export const CLIENT_UPSERT_MSG_PHONE_INVALID = 'Geçerli bir telefon numarası girin.';
+export const CLIENT_UPSERT_MSG_PHONE_INVALID = CLIENT_CREATE_PHONE_MSG_INVALID;
 export const CLIENT_UPSERT_MSG_EMAIL_INVALID = 'Geçerli bir e-posta adresi girin.';
 
 export function clientUpsertMaxLengthMessage(field: ClientCreateFormFieldKey): string | null {
@@ -84,7 +85,8 @@ export function clientUpsertFieldValidators(field: ClientCreateFormFieldKey): Va
                 Validators.maxLength(CLIENT_UPSERT_FIELD_MAX.fullName)
             ];
         case 'phone':
-            return [turkishMobilePhoneValidator()];
+            // Telefon zorunlu (H17); backend Create/Update/QuickRegister doğrulamasıyla aynı. İçe aktarma bu kuralın dışında.
+            return [trimmedRequired(), turkishMobilePhoneValidator()];
         case 'email':
             return [Validators.maxLength(CLIENT_UPSERT_FIELD_MAX.email), clientOptionalEmailValidator()];
         case 'address':

@@ -18,7 +18,7 @@ import { PET_LIFE_STATUS_FILTER_OPTIONS, PET_LIST_DEFAULT_STATUS, parsePetListSt
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { speciesEmoji } from '@/app/shared/utils/species-icon.utils';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
@@ -53,7 +53,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         SelectModule,
         AppListHeaderComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
+        AppListEmptyStateComponent,
         AppErrorStateComponent,
         AppContextFilterChipComponent,
         FilterFieldComponent,
@@ -75,9 +75,9 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                         </app-filter-field>
                         <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canCreatePet && !ro.mutationBlocked()) {
-                            <a actions routerLink="/panel/pets/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni Hasta</a>
+                            <a actions routerLink="/panel/pets/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni hasta</a>
                         } @else if (canCreatePet && ro.mutationBlocked()) {
-                            <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Hasta (salt okunur)</button>
+                            <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni hasta (salt okunur)</button>
                         }
                     </app-list-header>
                     <div class="flex flex-wrap items-end gap-3">
@@ -107,7 +107,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                     <app-error-state [detail]="error()!" (retry)="reload()" />
                 } @else {
                     @if (displayedRows().length === 0) {
-                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                        <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz hasta yok." [createLabel]="canCreatePet && !ro.mutationBlocked() ? 'İlk hastayı ekle' : null" [createLink]="'/panel/pets/new'" (clear)="resetFilters()" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
                             <p-table
@@ -338,6 +338,11 @@ export class PetsListPageComponent implements OnInit {
         this.activeSpeciesId.set(this.speciesIdInput.trim());
         this.activeStatus.set(this.statusInput ?? PET_LIST_DEFAULT_STATUS);
         this.list.loadFirstPage();
+    }
+
+    /** Boş listede "uyan kayıt yok" mu "henüz yok" mu gösterileceği. */
+    hasActiveFilters(): boolean {
+        return this.isSearchActive() || this.isSpeciesActive() || this.isStatusActive();
     }
 
     resetFilters(): void {

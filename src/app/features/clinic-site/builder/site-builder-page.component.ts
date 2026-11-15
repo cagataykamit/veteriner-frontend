@@ -91,7 +91,7 @@ const FONTS_LINK_ID = 'site-fonts-css';
                         <p class="notice bad" role="alert">
                             <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
                             <span>{{ store.saveError() }}</span>
-                            <button type="button" class="wbtn small" (click)="store.flush()">Yeniden dene</button>
+                            <button type="button" class="wbtn small" (click)="store.flush()">Tekrar dene</button>
                         </p>
                     }
                     @if (store.isClosedBySubscription() || store.subscriptionBlocked()) {
@@ -135,7 +135,7 @@ const FONTS_LINK_ID = 'site-fonts-css';
                             @case ('error') {
                                 <div class="state" role="alert">
                                     <p>{{ store.loadError() }}</p>
-                                    <button type="button" class="wbtn" (click)="store.reload()">Yeniden dene</button>
+                                    <button type="button" class="wbtn" (click)="store.reload()">Tekrar dene</button>
                                 </div>
                             }
                             @default {

@@ -126,12 +126,12 @@ import { ADMINISTRATION_LATE_ENTRY_LABEL } from '@/app/entities/administration/u
                     @if (!ro.mutationBlocked()) {
                         <a [routerLink]="['/panel/prescriptions/new']" [queryParams]="prescriptionCreateQueryParams()" pButton type="button" class="p-button-primary"><i class="pi pi-file-edit"></i>Reçete Oluştur</a>
                         @if (r.examinationId?.trim()) {
-                            <a [routerLink]="['/panel/payments/new']" [queryParams]="{ clientId: r.clientId, petId: r.petId, examinationId: r.examinationId }" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-wallet"></i>Ödeme Oluştur</a>
+                            <a [routerLink]="['/panel/payments/new']" [queryParams]="{ clientId: r.clientId, petId: r.petId, examinationId: r.examinationId }" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-wallet"></i>Ödeme al</a>
                         }
                     } @else {
                         <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-lock"></i>Reçete Oluştur (salt okunur)</button>
                         @if (r.examinationId?.trim()) {
-                            <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Ödeme Oluştur (salt okunur)</button>
+                            <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Ödeme al (salt okunur)</button>
                         }
                     }
                 </app-detail-action-bar>

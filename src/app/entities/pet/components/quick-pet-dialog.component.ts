@@ -18,6 +18,9 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick-breed-dialog.component';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { BREEDS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 /**
  * Seçili müşteri için tam sayfa ayrılmadan hayvan oluşturma (`mapPetUpsertFormToCreateRequest` ile aynı write hattı).
@@ -28,7 +31,7 @@ import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, SelectModule, QuickBreedDialogComponent, AppTrialLimitNoticeComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Yeni hasta" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(560px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onDialogShow()">
+        <p-dialog header="Yeni hasta" [modal]="true" [dismissableMask]="form.pristine" [style]="{ width: 'min(560px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onDialogShow()">
             @if (selectionError()) {
                 <p class="text-danger mt-0 mb-3" role="alert">{{ selectionError() }}</p>
             }
@@ -80,7 +83,7 @@ import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick
                         @if (apiFieldErrors().breedId) {
                             <small class="text-danger">{{ apiFieldErrors().breedId }}</small>
                         }
-                        @if (hasSpeciesForQuickBreed()) {
+                        @if (hasSpeciesForQuickBreed() && canShowQuickBreedButton()) {
                             <div class="mt-2">
                                 <button pButton type="button" [text]="true" class="p-0" (click)="quickBreedOpen.set(true)"><i class="p-button-icon pi pi-plus"></i>Bu tür için yeni ırk</button>
                             </div>
@@ -102,8 +105,8 @@ import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick
                 }
             </form>
             <ng-template #footer>
-                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>İptal</button>
-                <button pButton type="button" [disabled]="form.invalid || submitting() || !ownerClientIdTrimmed()" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
+                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
+                <button pButton type="submit" form="quick-pet-form" [disabled]="form.invalid || submitting() || !ownerClientIdTrimmed()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
             </ng-template>
         </p-dialog>
 
@@ -124,6 +127,10 @@ export class QuickPetDialogComponent {
     private readonly speciesService = inject(SpeciesService);
     private readonly breedsService = inject(BreedsService);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly auth = inject(AuthService);
+    private readonly ro = inject(TenantReadOnlyContextService);
+    /** Irk oluşturma yetkisi yoksa (ya da salt okunurda) "Bu tür için yeni ırk" görünmez; basıp hata almasın (H19). */
+    readonly canShowQuickBreedButton = (): boolean => this.auth.hasOperationClaim(BREEDS_CREATE_CLAIM) && !this.ro.mutationBlocked();
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);

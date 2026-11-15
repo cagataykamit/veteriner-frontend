@@ -20,7 +20,7 @@ import { StockMovementService } from '@/app/features/inventory/services/stock-mo
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { STOCK_MOVEMENTS_CREATE_CLAIM, STOCK_MOVEMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
@@ -61,7 +61,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
         StockMovementCreateDialogComponent,
         AppListHeaderComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
+        AppListEmptyStateComponent,
         AppErrorStateComponent,
         AppStatusTagComponent,
         DateInputComponent,
@@ -124,7 +124,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                     <app-error-state [detail]="error()!" (retry)="reload()" />
                 } @else {
                     @if (displayedRows().length === 0) {
-                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                        <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz stok hareketi yok." [createLabel]="canCreateStockMovement && !ro.mutationBlocked() ? 'Yeni stok hareketi' : null" (create)="createDialogOpen.set(true)" (clear)="resetFilters()" />
                     } @else {
                         <div class="hidden xl:block overflow-x-auto">
                             <p-table
@@ -333,6 +333,11 @@ export class StockMovementsPageComponent implements OnInit {
         this.list.loadFirstPage();
     }
 
+    /** Boş listede "uyan kayıt yok" mu "henüz yok" mu gösterileceği. */
+    hasActiveFilters(): boolean {
+        return this.isSearchActive() || this.movementTypeActive() || this.isFromActive() || this.isToActive();
+    }
+
     resetFilters(): void {
         this.exportError.set(null);
         this.searchInput = '';
@@ -370,7 +375,7 @@ export class StockMovementsPageComponent implements OnInit {
     onStockMovementCreated(): void {
         this.messages.add({
             severity: 'success',
-            summary: 'Kaydedildi',
+            summary: 'Tamam',
             detail: 'Stok hareketi oluşturuldu.'
         });
         this.reload();

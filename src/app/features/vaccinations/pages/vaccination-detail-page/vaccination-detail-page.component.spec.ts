@@ -124,7 +124,7 @@ describe('VaccinationDetailPageComponent — Düzenle', () => {
         expect(editLink([VACCINATIONS_UPDATE_CLAIM, VACCINE_DEFINITIONS_READ_CLAIM])).not.toBeNull();
     });
 
-    it('yalnız Vaccinations.Update varsa görünmez (rota /notfound verirdi)', () => {
+    it('yalnız Vaccinations.Update varsa görünmez (rota yetkiniz yok ekranı verirdi)', () => {
         expect(editLink([VACCINATIONS_UPDATE_CLAIM])).toBeNull();
     });
 });

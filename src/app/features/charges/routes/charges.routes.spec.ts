@@ -16,21 +16,21 @@ describe('charges.routes yetki korumaları', () => {
         });
     });
 
-    it('liste Charges.Read ister; yoksa /notfound', () => {
-        expect((run('') as UrlTree).toString()).toBe('/notfound');
+    it('liste Charges.Read ister; yoksa /panel/forbidden', () => {
+        expect((run('') as UrlTree).toString()).toBe('/panel/forbidden');
         claims.add('Charges.Read');
         expect(run('')).toBe(true);
     });
 
     it('bekleyen ücretler Charges.Read ister; hekim de girer (çevirme düğmeleri sayfada Charges.Create ile açılır)', () => {
-        expect((run('pending') as UrlTree).toString()).toBe('/notfound');
+        expect((run('pending') as UrlTree).toString()).toBe('/panel/forbidden');
         claims.add('Charges.Read');
         expect(run('pending')).toBe(true);
     });
 
     it('ekleme Charges.Create ister; yalnız okuyan (Veteriner) giremez', () => {
         claims.add('Charges.Read');
-        expect((run('new') as UrlTree).toString()).toBe('/notfound');
+        expect((run('new') as UrlTree).toString()).toBe('/panel/forbidden');
         claims.add('Charges.Create');
         expect(run('new')).toBe(true);
     });

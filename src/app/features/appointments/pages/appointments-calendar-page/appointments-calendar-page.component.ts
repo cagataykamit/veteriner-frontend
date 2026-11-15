@@ -11,7 +11,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatDateDisplay, localDateYyyyMmDd, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
+import { formatDateDisplay, formatWeekdayDateDisplay, localDateYyyyMmDd, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { APPOINTMENT_REQUESTS_MANAGE_CLAIM, APPOINTMENTS_CREATE_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppointmentRequestsCalendarLayerComponent } from '@/app/entities/online-booking/components/appointment-requests-calendar-layer.component';
@@ -30,9 +30,9 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
         <div class="card">
             <app-list-header class="mb-4" [title]="pageTitle()">
                 @if (canCreateAppointment && !ro.mutationBlocked()) {
-                    <button actions pButton type="button" class="p-button-primary" (click)="createAppointment()"><i class="pi pi-plus"></i>Yeni Randevu</button>
+                    <button actions pButton type="button" class="p-button-primary" (click)="createAppointment()"><i class="pi pi-plus"></i>Yeni randevu</button>
                 } @else if (canCreateAppointment && ro.mutationBlocked()) {
-                    <button actions pButton type="button" class="p-button-secondary" [disabled]="true"><i class="pi pi-lock"></i>Yeni Randevu (salt okunur)</button>
+                    <button actions pButton type="button" class="p-button-secondary" [disabled]="true"><i class="pi pi-lock"></i>Yeni randevu (salt okunur)</button>
                 }
             </app-list-header>
 
@@ -68,11 +68,7 @@ type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled
             } @else if (error(); as err) {
                 <app-error-state [detail]="err" (retry)="reload()" />
             } @else if (items().length === 0) {
-                <app-empty-state message="Bu tarih aralığında randevu bulunmuyor." hint="Yeni randevu oluşturarak takvime kayıt ekleyin.">
-                    @if (canCreateAppointment && !ro.mutationBlocked()) {
-                        <button pButton type="button" (click)="createAppointment()"><i class="pi pi-plus"></i>Yeni randevu oluştur</button>
-                    }
-                </app-empty-state>
+                <app-empty-state message="Bu tarih aralığında randevu bulunmuyor." hint="Yukarıdaki Yeni randevu ile takvime kayıt ekleyin." />
             } @else if (isPresetDateGroupedMode()) {
                 <div class="flex flex-col gap-4">
                     @for (day of presetGroupedByDate(); track day.dateKey) {
@@ -379,7 +375,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         const { start, endExclusive } = this.getDateRange();
 
         if (this.viewMode() === 'day') {
-            return formatDateDisplay(start);
+            return formatWeekdayDateDisplay(start);
         }
 
         const endDisplay = new Date(endExclusive);
@@ -406,7 +402,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
             return (
                 groups.get(key) ?? {
                     dateKey: key,
-                    dateLabel: formatDateDisplay(d),
+                    dateLabel: formatWeekdayDateDisplay(d),
                     items: []
                 }
             );
@@ -529,7 +525,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
             return 'Bugün İptal Edilen Randevular';
         }
 
-        return 'Randevu Takvimi';
+        return 'Randevu takvimi';
     }
 
     clearPreset(): void {

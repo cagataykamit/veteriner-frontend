@@ -58,6 +58,28 @@ describe('PetSearchComponent', () => {
         cmp = fixture.debugElement.children[0].componentInstance as PetSearchComponent;
     });
 
+    it('tek hastası olan müşteri seçilince hasta önden seçilir (H1)', async () => {
+        pets.getPets.mockReturnValue(paged([pet('p9', 'Luna', 'c9')]) as never);
+        host.clientId.set('c9');
+        fixture.detectChanges();
+        await wait(0);
+        expect(host.control.value).toBe('p9');
+    });
+
+    it('birden çok hastası varsa ya da seçim yapılmışsa önden seçim yapılmaz', async () => {
+        host.clientId.set('c3');
+        fixture.detectChanges();
+        await wait(0);
+        expect(host.control.value).toBe('');
+
+        pets.getPets.mockReturnValue(paged([pet('p9', 'Luna', 'c9')]) as never);
+        host.control.setValue('p1');
+        host.clientId.set('c9');
+        fixture.detectChanges();
+        await wait(0);
+        expect(host.control.value).toBe('p1');
+    });
+
     it('sahibin hayvanlarını sunucudan yükler; başka sahibin hayvanını süzer', async () => {
         cmp.onComplete({ query: '', originalEvent: new Event('x') });
         await wait(0);

@@ -5,12 +5,13 @@ import { IMAGING_CREATE_CLAIM, IMAGING_READ_CLAIM } from '@/app/core/auth/operat
 import { ImagingDetailPageComponent } from '@/app/features/imaging/pages/imaging-detail-page/imaging-detail-page.component';
 import { ImagingListPageComponent } from '@/app/features/imaging/pages/imaging-list-page/imaging-list-page.component';
 import { ImagingNewPageComponent } from '@/app/features/imaging/pages/imaging-new-page/imaging-new-page.component';
+import { PANEL_FORBIDDEN_URL } from '@/app/core/auth/panel-forbidden';
 
 function requireClaim(claim: string) {
     return () => {
         const auth = inject(AuthService);
 
-        return auth.hasOperationClaim(claim) ? true : inject(Router).createUrlTree(['/notfound']);
+        return auth.hasOperationClaim(claim) ? true : inject(Router).createUrlTree([PANEL_FORBIDDEN_URL]);
     };
 }
 

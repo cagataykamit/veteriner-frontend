@@ -29,7 +29,7 @@ import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
+import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import {
     HOSPITALIZATION_DATE_TOO_FAR_PAST_MESSAGE,
@@ -263,7 +263,7 @@ export class HospitalizationFormComponent implements OnInit, HasUnsavedChanges {
         {
             clientId: ['', Validators.required],
             petId: [{ value: '', disabled: true }, Validators.required],
-            admittedAtLocal: ['', [Validators.required, dateTimeYearRangeValidator(), hospitalizationDateNotTooFarPastValidator()]],
+            admittedAtLocal: [toIstanbulDateTimeLocalInputValue(new Date().toISOString()), [Validators.required, dateTimeYearRangeValidator(), hospitalizationDateNotTooFarPastValidator()]],
             plannedDischargeAtLocal: ['', dateTimeYearRangeValidator()],
             examinationId: [''],
             visitId: [''],

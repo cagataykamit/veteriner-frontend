@@ -1,7 +1,7 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
 /** Yerel doğrulama + API alan mesajı eşlemesi. */
-export const CLIENT_CREATE_PHONE_MSG_INVALID = 'Geçerli bir telefon numarası girin.';
+export const CLIENT_CREATE_PHONE_MSG_INVALID = 'Geçerli bir cep telefonu girin (ör. 0532 111 22 33).';
 
 /**
  * Sadece rakamlar — 10 hane (5…), 11 hane (05…) veya 12 hane (905…).

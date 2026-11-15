@@ -70,6 +70,9 @@
                                         </li>
                                     }
                                 </ul>
+                                @if (hasOverdue(v.upcoming)) {
+                                    <portal-clinic-actions [petId]="petId()" reason="vaccine" data-testid="pet-vaccine-action" />
+                                }
                             } @else {
                                 <p class="portal-muted">Planlanmış aşı yok.</p>
                             }

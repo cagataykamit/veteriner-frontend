@@ -16,7 +16,7 @@ import type { TenantMemberListItemVm } from '@/app/features/tenant-members/model
 import { TenantMembersService } from '@/app/features/tenant-members/services/tenant-members.service';
 import { TenantMemberRemoveDialogComponent } from '@/app/features/tenant-members/components/tenant-member-remove-dialog.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
+import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -38,7 +38,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         InputTextModule,
         AppPageHeaderComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
+        AppListEmptyStateComponent,
         AppErrorStateComponent,
         SearchInputComponent,
         AppRowActionButtonComponent,
@@ -81,7 +81,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                         </div>
                     </div>
                     @if (displayedRows().length === 0) {
-                        <app-empty-state [message]="copy.listEmptyMessage" [hint]="copy.listEmptyHint" />
+                        <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz kurum üyesi yok." emptyHint="Üye eklemek için davet gönderin." (clear)="resetFilters()" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
                             <p-table
@@ -248,6 +248,11 @@ export class TenantMembersListPageComponent implements OnInit {
     applySearch(): void {
         this.activeSearch.set(this.searchInput.trim());
         this.list.loadFirstPage();
+    }
+
+    /** Boş listede "uyan kayıt yok" mu "henüz yok" mu gösterileceği. */
+    hasActiveFilters(): boolean {
+        return !!this.activeSearch();
     }
 
     resetFilters(): void {

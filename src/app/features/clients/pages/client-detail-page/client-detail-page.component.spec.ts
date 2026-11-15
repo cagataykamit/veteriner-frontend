@@ -204,7 +204,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         TestBed.resetTestingModule();
         pets = { state: 'ok', data: [pet('p1', 'Pamuk'), pet('p2', 'Karabaş', 'Deceased')] };
         create();
-        expect(fixture.componentInstance.arrivalPet()).toEqual({ id: 'p1', label: 'Pamuk — Kedi · Sahip: Ali Veli', clientId: 'c1', clientName: 'Ali Veli' });
+        expect(fixture.componentInstance.arrivalPet()).toEqual({ id: 'p1', label: 'Pamuk — Kedi · Müşteri: Ali Veli', clientId: 'c1', clientName: 'Ali Veli' });
     });
 
     it('hayvanlar varsayılan aktif; vefat eden "Tümü" ile rozetli görünür', () => {

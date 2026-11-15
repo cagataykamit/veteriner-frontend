@@ -181,7 +181,7 @@ export class OrganizationSettingsPageComponent implements OnInit {
                     this.form.markAsPristine();
                     this.messages.add({
                         severity: 'success',
-                        summary: 'Kaydedildi',
+                        summary: 'Tamam',
                         detail: 'Kurum adı güncellendi.'
                     });
                 },

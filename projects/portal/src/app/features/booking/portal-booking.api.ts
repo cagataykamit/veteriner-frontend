@@ -1,8 +1,14 @@
-import { HttpParams } from '@angular/common/http';
+import { HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { PORTAL_API_BASE_URL, PortalApiClient, portalApiUrl } from '@portal/app/core/api/portal-api.client';
 import { PORTAL_ENDPOINTS } from '@portal/app/core/api/portal-endpoints';
+import { PORTAL_ERROR_CODES, portalProblemCode } from '@portal/app/core/errors/portal-errors';
+
+/** Klinik online talep almıyor (404 `OnlineBooking.NotFound`). */
+export function isBookingClosed(err: unknown): boolean {
+    return err instanceof HttpErrorResponse && err.status === 404 && portalProblemCode(err) === PORTAL_ERROR_CODES.onlineBookingNotFound;
+}
 
 /** Müsaitlik isteği gün sayısı (sözleşme: 1–14). */
 export const PORTAL_BOOKING_DAYS = 14;

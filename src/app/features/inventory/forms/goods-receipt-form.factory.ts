@@ -1,6 +1,7 @@
 import { AbstractControl, FormArray, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import { dispatchedNotAfterReceivedValidator, isStockBatchExpiryPast, STOCK_BATCH_INVOICE_MAX, STOCK_BATCH_LOT_MAX, STOCK_BATCH_SUPPLIER_MAX, STOCK_BATCH_TRANSPORT_MAX } from '@/app/features/inventory/forms/stock-batch-form.factory';
 import type { GoodsReceiptProductPick } from '@/app/features/inventory/models/goods-receipt-form.model';
+import { localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
 
 /** Satır doğrulaması: ürün listeden seçilmiş, aşı/kontrollü ürünse seri+SKT dolu, geçmiş SKT satır başına onaylı. */
 function goodsReceiptLineValidator(line: AbstractControl): ValidationErrors | null {
@@ -51,7 +52,8 @@ export function createGoodsReceiptFormGroup(fb: FormBuilder) {
             supplierName: ['', Validators.maxLength(STOCK_BATCH_SUPPLIER_MAX)],
             invoiceNumber: ['', Validators.maxLength(STOCK_BATCH_INVOICE_MAX)],
             invoiceDate: [''],
-            receivedDate: [''],
+            // Mal kabul çoğunlukla geldiği gün girilir (H1); değiştirilebilir.
+            receivedDate: [localDateYyyyMmDd()],
             dispatchedDate: [''],
             transportMethod: ['', Validators.maxLength(STOCK_BATCH_TRANSPORT_MAX)],
             coldChainMonitor: ['', Validators.maxLength(STOCK_BATCH_TRANSPORT_MAX)],

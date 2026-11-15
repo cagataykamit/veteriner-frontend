@@ -8,8 +8,7 @@ import { portalLoad } from '@portal/app/shared/data/portal-load';
 import { formatPortalDateParts, formatPortalDay, formatPortalTime, formatPortalWeekday, PortalDateParts } from '@portal/app/shared/format/portal-date';
 import { appointmentRequestStatus } from '@portal/app/shared/format/portal-labels';
 import { PortalEmptyState, PortalErrorState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
-import { isBookingClosed } from './portal-appointment-request.component';
-import { PortalAppointmentRequest, PortalBookingApi } from './portal-booking.api';
+import { isBookingClosed, PortalAppointmentRequest, PortalBookingApi } from './portal-booking.api';
 
 interface RequestsView {
     readonly bookingOpen: boolean;

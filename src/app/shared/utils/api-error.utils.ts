@@ -34,6 +34,11 @@ export function isUnhelpfulProblemText(s: string): boolean {
         return true;
     }
 
+    // Backend iş kuralı hatasında metin boşsa yazdığı İngilizce yer tutucu (ResultExtensions).
+    if (/^a business rule was violated\.?$/i.test(t)) {
+        return true;
+    }
+
     return false;
 }
 
@@ -345,7 +350,15 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
 
     const body = err.error as ProblemDetails | string | null | undefined;
 
-    if (body && typeof body === 'object') {
+    // O4: eşlenmemiş kodda sunucunun iş kuralı metni gösterilir (backend Türkçe yazar). Sunucu hatası (5xx) ya da teknik
+    // bağlam kodu (`Context.*`) metni kullanıcıya göre değildir: genel metin ve destek kodu.
+    if (isTechnicalProblem(err.status, code)) {
+        const supportCode = code ?? readSupportIdFromHttp(err);
+
+        if (supportCode) {
+            return unmappedProblemUserMessage(supportCode);
+        }
+    } else if (body && typeof body === 'object') {
         const detail = typeof body.detail === 'string' ? body.detail.trim() : '';
 
         if (detail && !isUnhelpfulProblemText(detail)) {
@@ -354,12 +367,11 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
 
         const title = typeof body.title === 'string' ? body.title.trim() : '';
 
-        if (title && !isUnhelpfulProblemText(title)) {
+        // Kodlu hatada başlık genel durum adıdır ("İş kuralı ihlali", "Çakışma"); aşağıda destek kodlu metin verilir.
+        if (title && !code && !isUnhelpfulProblemText(title)) {
             return title;
         }
-    }
-
-    if (typeof body === 'string') {
+    } else if (typeof body === 'string') {
         const t = body.trim();
 
         if (t && !isUnhelpfulProblemText(t)) {
@@ -373,8 +385,14 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
 
     const fromStatus = panelHttpStatusUserMessage(err.status);
 
-    if (fromStatus) {
+    // Kodlu iş kuralı hatasında (400/422) genel "veri işlenemedi" yerine destek kodlu metin; bağlantı, oturum, yetki gibi durumlar kendi metniyle.
+    if (fromStatus && !(code && (err.status === 400 || err.status === 422))) {
         return fromStatus;
+    }
+
+    // Kodlu ama kullanıcıya söylenecek metni olmayan hata: genel metin ve destek için kod (O4).
+    if (code) {
+        return unmappedProblemUserMessage(code);
     }
 
     if (err.message?.trim() && !isUnhelpfulProblemText(err.message)) {
@@ -382,6 +400,42 @@ export function messageFromHttpError(err: HttpErrorResponse, fallback = 'İstek 
     }
 
     return fallback;
+}
+
+/** Kullanıcıya gösterilmeyecek teknik hata kodlarının önekleri (ör. `Context.TenantConflict`: oturum/klinik bağlamı uyuşmazlığı). */
+const TECHNICAL_PROBLEM_CODE_PREFIXES = ['Context.'];
+
+/** Sunucu hatası (5xx) ya da teknik koddan gelen hata: sunucu metni gösterilmez (O4). */
+function isTechnicalProblem(status: number, code: string | null): boolean {
+    return status >= 500 || (!!code && TECHNICAL_PROBLEM_CODE_PREFIXES.some((prefix) => code.startsWith(prefix)));
+}
+
+/** Kodsuz sunucu hatasında desteğin kaydı bulacağı kimlik (ProblemDetails `correlationId` / `traceId`). */
+function readSupportIdFromHttp(err: HttpErrorResponse): string | null {
+    const body = err.error as unknown;
+
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+        return null;
+    }
+
+    const o = body as Record<string, unknown>;
+
+    for (const key of ['correlationId', 'traceId']) {
+        const v = o[key];
+
+        if (typeof v === 'string' && v.trim()) {
+            return v.trim();
+        }
+    }
+
+    return null;
+}
+
+/** Ekranın ve genel tabloların bilmediği, metni de olmayan hata kodu: kullanıcı ne olduğunu ve desteğe ne söyleyeceğini bilsin. */
+export const UNMAPPED_PROBLEM_MESSAGE = 'İşlem yapılamadı. Sorun sürerse destekle iletişime geçin.';
+
+export function unmappedProblemUserMessage(code: string): string {
+    return `${UNMAPPED_PROBLEM_MESSAGE} (Destek kodu: ${code})`;
 }
 
 /** Rapor 403 toparlama: gövde + Angular mesajından küçük harf metin. */
@@ -492,7 +546,7 @@ function panelHttpStatusUserMessage(status: number): string | null {
             return 'İstek zaman aşımına uğradı. Lütfen tekrar deneyin.';
         case 502:
         case 503:
-            return 'Ödeme veya abonelik hizmeti geçici olarak yanıt veremedi. Lütfen kısa süre sonra tekrar deneyin.';
+            return 'Sunucu geçici olarak yanıt veremedi. Lütfen kısa süre sonra tekrar deneyin.';
         case 409:
             return null;
         case 415:

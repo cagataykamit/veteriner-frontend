@@ -17,6 +17,14 @@ export const PORTAL_BOOKING_LIMITS = {
 /** Seçim anahtarı: "Diğer" seçeneğinin kimliği yoktur, radyo seçiminde bu anahtarla tutulur. */
 export const OTHER_REASON_KEY = 'other';
 
+/**
+ * Aşı nedeni: klinik nedenleri serbest adlıdır, kategori yoktur; adında "aşı" ile başlayan bir sözcük geçen ilk neden
+ * ("Aşı", "Kuduz aşısı", "Aşılama"). Yoksa `null`; kullanıcı kendisi seçer (H7).
+ */
+export function vaccineReason(reasons: readonly PortalBookingReason[]): PortalBookingReason | null {
+    return reasons.find((r) => r.id && r.name.toLocaleLowerCase('tr-TR').split(/[^a-zçğıöşü]+/u).some((w) => w.startsWith('aşı'))) ?? null;
+}
+
 export function reasonKey(reason: PortalBookingReason): string {
     return reason.id ?? OTHER_REASON_KEY;
 }

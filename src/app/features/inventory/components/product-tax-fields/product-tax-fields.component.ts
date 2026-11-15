@@ -22,7 +22,7 @@ import { PRODUCT_PURCHASE_PRICE_DECIMALS, type ProductUpsertFormGroup } from '@/
                 <small class="text-muted-color">Bu üründen oluşan ücrete yazılır.</small>
             </div>
             <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
-                <label [for]="idPrefix() + 'PurchasePrice'" class="block text-sm font-medium text-muted-color">Alış fiyatı (TL)</label>
+                <label [for]="idPrefix() + 'PurchasePrice'" class="block text-sm font-medium text-muted-color">Alış fiyatı (₺)</label>
                 <input [id]="idPrefix() + 'PurchasePrice'" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="purchasePrice" />
                 @if (form().controls.purchasePrice.invalid && form().controls.purchasePrice.touched) {
                     <small class="text-danger">0 veya daha büyük, en fazla {{ purchasePriceDecimals }} ondalıklı bir fiyat girin.</small>

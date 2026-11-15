@@ -74,6 +74,7 @@ describe('ProductDetailPageComponent', () => {
     let claims: string[];
     let clinicId: string | null;
     let routeId: string | null;
+    let query: Record<string, string>;
     const readOnly = signal(false);
 
     const el = () => fixture.nativeElement as HTMLElement;
@@ -131,7 +132,7 @@ describe('ProductDetailPageComponent', () => {
                     useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => clinicId, getClinicName: () => (clinicId ? 'Aktif Klinik' : null) }
                 },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: readOnly } },
-                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap(routeId ? { id: routeId } : {})) } }
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap(routeId ? { id: routeId } : {})), snapshot: { queryParamMap: convertToParamMap(query) } } }
             ]
         });
         fixture = TestBed.createComponent(ProductDetailPageComponent);
@@ -143,6 +144,7 @@ describe('ProductDetailPageComponent', () => {
         claims = [...ALL_CLAIMS];
         clinicId = 'c1';
         routeId = 'p1';
+        query = {};
         readOnly.set(false);
         products = {
             getById: vi.fn().mockName('ProductService.getById'),
@@ -217,6 +219,13 @@ describe('ProductDetailPageComponent', () => {
         });
     });
 
+    it('kayıttan sonra (saved=1) Ürün kaydedildi bandı görünür (H13)', () => {
+        query = { saved: '1' };
+        render();
+
+        expect((fixture.nativeElement as HTMLElement).textContent).toContain('Ürün kaydedildi.');
+    });
+
     describe('görünür metin ve düğmeler', () => {
         it('genel bilgiler, açıklama ve üst düğmeler', () => {
             render();
@@ -229,7 +238,7 @@ describe('ProductDetailPageComponent', () => {
             const l = labels();
 
             expect(l).toContain('Düzenle');
-            expect(l).toContain('Pasifleştir');
+            expect(l).toContain('Pasife al');
             expect(l).not.toContain('Aktifleştir');
             expect(l.filter((x) => x === 'Stok işlemi').length).toBe(3);
         });
@@ -268,7 +277,7 @@ describe('ProductDetailPageComponent', () => {
             render();
 
             expect(labels()).toContain('Aktifleştir');
-            expect(labels()).not.toContain('Pasifleştir');
+            expect(labels()).not.toContain('Pasife al');
         });
 
         it('salt okunur modda düzenleme kilitli, stok işlemi yok', () => {
@@ -307,7 +316,7 @@ describe('ProductDetailPageComponent', () => {
             expect(t).toContain('Giriş miktarı *');
             expect(t).toContain('Birim maliyet');
             expect(t).toContain('Seri / lot no');
-            expect(labels(dialog()!)).toContain('İptal');
+            expect(labels(dialog()!)).toContain('Vazgeç');
             expect(findButton(dialog()!, 'Kaydet').disabled).toBe(true);
         });
 
@@ -399,11 +408,11 @@ describe('ProductDetailPageComponent', () => {
             expect(header.title).toBe('Bu ürün için henüz klinik stok kaydı yok. İlk stok kaydı oluşturmak için klinik bilgisi gereklidir.');
         });
 
-        it('İptal diyaloğu kapatır', () => {
+        it('Vazgeç diyaloğu kapatır', () => {
             render();
             click(el().querySelector('.hidden.md\\:block')!, 'Stok işlemi');
 
-            click(dialog()!, 'İptal');
+            click(dialog()!, 'Vazgeç');
 
             expect(dialog()?.textContent ?? '').not.toContain('Giriş miktarı *');
             expect(movements.create).not.toHaveBeenCalled();
@@ -421,12 +430,12 @@ describe('ProductDetailPageComponent', () => {
             });
         };
 
-        it('Pasifleştir onaylanınca servis çağrılır ve ürün yeniden yüklenir', () => {
+        it('Pasife al onaylanınca servis çağrılır ve ürün yeniden yüklenir', () => {
             products.deactivate.mockReturnValue(of(undefined));
             render();
             acceptConfirm();
 
-            click(el(), 'Pasifleştir');
+            click(el(), 'Pasife al');
 
             expect(products.deactivate).toHaveBeenCalledWith('p1');
             expect(products.getById).toHaveBeenCalledTimes(2);

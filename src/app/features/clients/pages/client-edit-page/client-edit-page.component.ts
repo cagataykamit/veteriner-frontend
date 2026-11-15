@@ -23,11 +23,12 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-format.directive';
 
 @Component({
     selector: 'app-client-edit-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, ClientContactPreferenceFieldsComponent, ClientInvoicingFieldsComponent, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, PhoneFormatDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (loading()) {
@@ -53,8 +54,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
-                            <label for="phone" class="block text-sm font-medium text-muted-color mb-2">Telefon</label>
-                            <input id="phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
+                            <label for="phone" class="block text-sm font-medium text-muted-color mb-2">Telefon *</label>
+                            <input appPhoneFormat id="phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
                             @if (fieldMessage('phone'); as msg) {
                                 <small class="text-danger">{{ msg }}</small>
                             }
@@ -97,7 +98,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <button pButton type="submit" [disabled]="form.invalid || invoicingForm.invalid || submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Güncelle</button>
+                        <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                         <button pButton type="button" severity="secondary" (click)="goDetail()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>

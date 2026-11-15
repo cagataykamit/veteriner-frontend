@@ -27,7 +27,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             }
             <ng-content />
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
-                <label for="rc-reason" class="block text-sm font-medium text-muted-color mb-2">{{ reasonOptional() ? 'Gerekçe (opsiyonel)' : 'Gerekçe *' }}</label>
+                <label for="rc-reason" class="block text-sm font-medium text-muted-color mb-2">{{ reasonOptional() ? 'Gerekçe (isteğe bağlı)' : 'Gerekçe *' }}</label>
                 <textarea id="rc-reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
                 @if (form.controls.reason.invalid && (form.controls.reason.dirty || form.controls.reason.touched)) {
                     <small class="text-danger">

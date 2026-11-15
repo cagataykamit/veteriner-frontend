@@ -132,7 +132,7 @@ const PAGE_SIZE = 50;
                                                     [disabled]="mutatingId() !== null"
                                                     (click)="confirmDeactivate(row)"
                                                 >
-                                                    Pasifleştir
+                                                    Pasife al
                                                 </button>
                                             }
                                             @if (canDeactivate && !row.isActive) {
@@ -300,7 +300,7 @@ export class ClinicalTermsPageComponent implements OnInit {
             header: 'Terimi pasifleştir',
             message: `"${row.name}" muayene aramasında görünmez. Geçmiş muayene metinleri değişmez; terimi sonra yeniden etkinleştirebilirsiniz.`,
             icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'Pasifleştir',
+            acceptLabel: 'Pasife al',
             rejectLabel: 'Vazgeç',
             acceptButtonStyleClass: 'p-button-danger',
             rejectButtonStyleClass: 'p-button-secondary',

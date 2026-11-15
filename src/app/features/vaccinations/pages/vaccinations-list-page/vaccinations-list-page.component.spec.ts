@@ -150,7 +150,7 @@ describe('VaccinationsListPageComponent — satırda Düzenle', () => {
         }
     });
 
-    it('yetki yoksa ya da yalnız Vaccinations.Update varsa (rota /notfound verir) Düzenle görünmez; salt okunur kiracıda pasiftir', () => {
+    it('yetki yoksa ya da yalnız Vaccinations.Update varsa (rota yetkiniz yok ekranı verir) Düzenle görünmez; salt okunur kiracıda pasiftir', () => {
         expect(rowEditActions(create([])).length).toBe(0);
 
         TestBed.resetTestingModule();

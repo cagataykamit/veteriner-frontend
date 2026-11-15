@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { NEVER, of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLINICS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -316,12 +316,23 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
         expect(button('Randevu varsayılanlarını kaydet').disabled).toBe(true);
     });
 
-    it('Pasife al sonrası klinik, saatler ve varsayılanlar yeniden çekilir', async () => {
+    it('Pasife al onay ister (H12); onaydan sonra klinik, saatler ve varsayılanlar yeniden çekilir', async () => {
         clinics['deactivateClinic'].mockReturnValue(of(undefined));
         await render();
         clinics['getClinicById'].mockReturnValue(of(clinic({ isActive: false })));
 
+        const confirmation = fixture.debugElement.injector.get(ConfirmationService);
+        let accept: (() => void) | undefined;
+
+        vi.spyOn(confirmation, 'confirm').mockImplementation((c) => {
+            accept = c.accept;
+
+            return confirmation;
+        });
         await click('Pasife al');
+        expect(clinics['deactivateClinic']).not.toHaveBeenCalled();
+        accept?.();
+        await settle();
 
         expect(clinics['deactivateClinic']).toHaveBeenCalledWith('c1');
         expect(clinics['getClinicById']).toHaveBeenCalledTimes(2);

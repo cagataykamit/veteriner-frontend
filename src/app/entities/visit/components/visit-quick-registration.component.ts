@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, input, OnInit, output, signal, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -20,6 +20,7 @@ import { splitSearchTermForRegistration } from '@/app/entities/visit/utils/visit
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
 import { panelHttpFailureMessage, problemCodeFromHttpError, trialLimitMessage } from '@/app/shared/utils/api-error.utils';
+import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-format.directive';
 
 export interface RegistrationOwner {
     id: string;
@@ -32,24 +33,24 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
 /**
  * Randevusuz gelişte kayıtsız hasta kaydı (Visit'i üst diyalog açar).
  * Yeni müşteri: tek işlemli `POST /clients/quick-register` (yarım kayıt oluşmaz). Kayıtlı sahibe hayvan: `POST /pets`.
- * Form doğrulamaları mevcut müşteri/hayvan upsert factory'lerinden gelir; burada yalnızca telefon zorunlu eklenir.
+ * Form doğrulamaları mevcut müşteri/hayvan upsert factory'lerinden gelir (telefon zorunlu dahil).
  */
 @Component({
     selector: 'app-visit-quick-registration',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppTrialLimitNoticeComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppTrialLimitNoticeComponent, PhoneFormatDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4" aria-label="Hızlı kayıt">
-            <h3 class="text-base font-semibold mt-0 mb-3">{{ owner() ? 'Bu sahibe yeni hasta ekle' : 'Yeni müşteri ve hasta ekle' }}</h3>
+        <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4" aria-label="Hızlı kayıt" (keydown.enter)="onEnter($event)">
+            <h3 class="text-base font-semibold mt-0 mb-3">{{ owner() ? 'Bu müşteriye yeni hasta ekle' : 'Yeni müşteri ve hasta ekle' }}</h3>
             <div class="grid grid-cols-12 gap-3">
                 @if (owner(); as o) {
                     <div class="col-span-12">
-                        <span class="text-sm text-muted-color">Sahip:</span> <span class="font-medium">{{ o.name }}</span>
+                        <span class="text-sm text-muted-color">Müşteri:</span> <span class="font-medium">{{ o.name }}</span>
                     </div>
                 } @else {
                     <div class="col-span-12 md:col-span-6">
-                        <label for="vr-fullName" class="block text-sm font-medium text-muted-color mb-2">Sahip adı soyadı *</label>
+                        <label for="vr-fullName" class="block text-sm font-medium text-muted-color mb-2">Müşteri adı soyadı *</label>
                         <input id="vr-fullName" pInputText class="w-full" [formControl]="clientForm.controls.fullName" autocomplete="off" />
                         @if (clientMessage('fullName'); as msg) {
                             <small class="text-danger">{{ msg }}</small>
@@ -57,7 +58,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="vr-phone" class="block text-sm font-medium text-muted-color mb-2">Telefon *</label>
-                        <input id="vr-phone" pInputText class="w-full" inputmode="tel" autocomplete="off" [formControl]="clientForm.controls.phone" />
+                        <input appPhoneFormat id="vr-phone" pInputText class="w-full" inputmode="tel" autocomplete="off" [formControl]="clientForm.controls.phone" />
                         @if (clientMessage('phone'); as msg) {
                             <small class="text-danger">{{ msg }}</small>
                         }
@@ -91,7 +92,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
                     }
                 </div>
                 <div class="col-span-12 md:col-span-6">
-                    <label for="vr-microchip" class="block text-sm font-medium text-muted-color mb-2">Mikroçip (opsiyonel)</label>
+                    <label for="vr-microchip" class="block text-sm font-medium text-muted-color mb-2">Mikroçip (isteğe bağlı)</label>
                     <input id="vr-microchip" pInputText class="w-full" autocomplete="off" [formControl]="petForm.controls.microchipNumber" />
                     @if (petForm.controls.microchipNumber.invalid) {
                         <small class="text-danger">En fazla 50 karakter olabilir.</small>
@@ -139,12 +140,6 @@ export class VisitQuickRegistrationComponent implements OnInit {
     readonly speciesOptions = signal<SelectOption[]>([]);
     readonly loadingSpecies = signal(false);
 
-    constructor() {
-        // Bu akışta telefon zorunlu (mevcut müşteri formunda opsiyonel; kural yalnızca burada eklenir).
-        this.clientForm.controls.phone.addValidators(Validators.required);
-        this.clientForm.controls.phone.updateValueAndValidity({ emitEvent: false });
-    }
-
     ngOnInit(): void {
         this.owner.set(this.existingOwner());
         const { fullName, phone } = splitSearchTermForRegistration(this.searchTerm());
@@ -169,6 +164,16 @@ export class VisitQuickRegistrationComponent implements OnInit {
         const petOk = this.petForm.controls.name.valid && this.petForm.controls.speciesId.valid && this.petForm.controls.microchipNumber.valid;
 
         return petOk && (!!this.owner() || (this.clientForm.controls.fullName.valid && this.clientForm.controls.phone.valid));
+    }
+
+    /** Metin alanında Enter bu bölümü kaydeder; üstteki geliş formunu göndermez (bölümün kendi formu yok, geliş formunun içinde). */
+    onEnter(event: Event): void {
+        if (!(event.target instanceof HTMLInputElement)) {
+            return;
+        }
+
+        event.preventDefault();
+        this.submit();
     }
 
     submit(): void {
@@ -223,7 +228,7 @@ export class VisitQuickRegistrationComponent implements OnInit {
 
         this.registered.emit({
             id: petId,
-            label: `${petName.trim()} — ${species} · Sahip: ${owner.name}`,
+            label: `${petName.trim()} — ${species} · Müşteri: ${owner.name}`,
             clientId: owner.id,
             clientName: owner.name
         });

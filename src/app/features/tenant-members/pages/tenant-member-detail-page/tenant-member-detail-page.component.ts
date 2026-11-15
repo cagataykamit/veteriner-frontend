@@ -4,8 +4,9 @@ import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectio
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
@@ -36,8 +37,8 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-tenant-member-detail-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, ButtonModule, DialogModule, ToastModule, AppPageHeaderComponent, AppDetailIdentityCardComponent, AppStatusTagComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, TenantMemberRemoveDialogComponent, TrDateTimePipe],
-    providers: [MessageService],
+    imports: [CommonModule, FormsModule, ButtonModule, ConfirmDialogModule, DialogModule, ToastModule, AppPageHeaderComponent, AppDetailIdentityCardComponent, AppStatusTagComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, TenantMemberRemoveDialogComponent, TrDateTimePipe],
+    providers: [MessageService, ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="top-right" />
@@ -127,7 +128,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <p class="text-sm text-muted-color mt-0 mb-3">Kendi hesabınız için rol ekleyemezsiniz.</p>
                     }
                     @if (m.claims.length === 0) {
-                        <app-empty-state message="Bu üye için listelenen rol veya yetki yok." hint="Backend bu koleksiyonu boş döndürdü." />
+                        <app-empty-state message="Bu üyenin rolü yok." />
                     } @else {
                         <div class="flex flex-wrap gap-2 mb-3">
                             @for (c of m.claims; track c.id + c.name) {
@@ -140,7 +141,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                             severity="danger"
                                             class="p-button-sm p-button-text shrink-0"
                                             [disabled]="busyAdd() || busyAddClinic() || busyRemoveClinicId() !== null || (busyRemoveClaimId() !== null && busyRemoveClaimId() !== c.id) || busyRemoveClaimId() === c.id"
-                                            (click)="onRemoveRole(c.id)"
+                                            (click)="confirmRemoveRole(c.id, c.name)"
                                         ><i class="p-button-icon" [class]="busyRemoveClaimId() === c.id ? 'pi pi-spin pi-spinner' : 'pi pi-times'"></i>Kaldır</button>
                                     }
                                 </div>
@@ -264,7 +265,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <p class="text-sm text-muted-color mt-0 mb-3">Kendi hesabınız için klinik üyeliği ekleyemez veya kaldıramazsınız.</p>
                     }
                     @if (m.clinics.length === 0) {
-                        <app-empty-state message="Bu üye için listelenen klinik üyeliği yok." hint="Backend bu koleksiyonu boş döndürdü." />
+                        <app-empty-state message="Bu üye henüz bir kliniğe atanmamış." />
                     } @else {
                         <ul class="list-none p-0 m-0 space-y-2">
                             @for (cl of m.clinics; track cl.id + cl.name) {
@@ -283,7 +284,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                                 severity="danger"
                                                 class="p-button-sm p-button-text shrink-0"
                                                 [disabled]="busyAddClinic() || busyAdd() || busyRemoveClaimId() !== null || (busyRemoveClinicId() !== null && busyRemoveClinicId() !== cl.id) || busyRemoveClinicId() === cl.id"
-                                                (click)="onRemoveClinic(cl.id)"
+                                                (click)="confirmRemoveClinic(cl.id, cl.name)"
                                             ><i class="p-button-icon" [class]="busyRemoveClinicId() === cl.id ? 'pi pi-spin pi-spinner' : 'pi pi-times'"></i>Kaldır</button>
                                         }
                                     </div>
@@ -298,6 +299,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         @if (member(); as m) {
             <app-tenant-member-remove-dialog [(visible)]="removeMemberConfirmOpen" [member]="m" (removed)="onMemberRemoved()" />
         }
+        <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
     `
 })
 export class TenantMemberDetailPageComponent implements OnInit {
@@ -312,6 +314,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
     private readonly tenantInvites = inject(TenantInvitesService);
     private readonly auth = inject(AuthService);
     private readonly messages = inject(MessageService);
+    private readonly confirmation = inject(ConfirmationService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     /** `Tenants.InviteCreate` ve salt okunur değil — rol/klinik mutasyonları. */
@@ -474,6 +477,33 @@ export class TenantMemberDetailPageComponent implements OnInit {
                 this.busyAdd.set(false);
                 this.handleAssignError(e, memberId);
             }
+        });
+    }
+
+    /** Kaldırma onaysız yapılmaz (H12); onay düğmesi eylemin adını taşır. */
+    confirmRemoveRole(operationClaimId: string, roleName: string): void {
+        this.confirmation.confirm({
+            header: 'Rolü kaldır',
+            message: `${roleName} rolü bu üyeden kaldırılsın mı? Üye bu rolün izinlerini kaybeder.`,
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Rolü kaldır',
+            rejectLabel: 'Vazgeç',
+            acceptButtonStyleClass: 'p-button-danger',
+            rejectButtonStyleClass: 'p-button-secondary',
+            accept: () => this.onRemoveRole(operationClaimId)
+        });
+    }
+
+    confirmRemoveClinic(clinicId: string, clinicName: string): void {
+        this.confirmation.confirm({
+            header: 'Klinikten çıkar',
+            message: `Üye ${clinicName} kliniğinden çıkarılsın mı? Bu klinikte çalışamaz.`,
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Klinikten çıkar',
+            rejectLabel: 'Vazgeç',
+            acceptButtonStyleClass: 'p-button-danger',
+            rejectButtonStyleClass: 'p-button-secondary',
+            accept: () => this.onRemoveClinic(clinicId)
         });
     }
 

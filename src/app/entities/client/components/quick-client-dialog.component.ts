@@ -15,17 +15,19 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
 import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
+import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-format.directive';
 
 /**
  * Randevu / muayene formlarında tam sayfa ayrılmadan müşteri oluşturma (create contract ile aynı).
+ * Bir şey yazıldıysa dışarı tıklama diyaloğu kapatmaz (yazılan kaybolmasın); İptal ve çarpı kapatır.
  */
 @Component({
     selector: 'app-quick-client-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, AppTrialLimitNoticeComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, AppTrialLimitNoticeComponent, PhoneFormatDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Yeni müşteri ekle" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible" (onShow)="onShow()">
+        <p-dialog header="Yeni müşteri ekle" [modal]="true" [dismissableMask]="form.pristine" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible" (onShow)="onShow()">
             <form [formGroup]="form" (ngSubmit)="onSubmit()" id="quick-client-form">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
@@ -36,8 +38,8 @@ import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
-                        <label for="qc-phone" class="block text-sm font-medium text-muted-color mb-2">Telefon</label>
-                        <input id="qc-phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
+                        <label for="qc-phone" class="block text-sm font-medium text-muted-color mb-2">Telefon *</label>
+                        <input appPhoneFormat id="qc-phone" pInputText class="w-full" formControlName="phone" inputmode="tel" autocomplete="tel" />
                         @if (fieldMessage('phone'); as msg) {
                             <small class="text-danger">{{ msg }}</small>
                         }
@@ -65,8 +67,8 @@ import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
                 }
             </form>
             <ng-template #footer>
-                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>İptal</button>
-                <button pButton type="button" [disabled]="form.invalid || submitting()" (click)="onSubmit()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Müşteriyi kaydet</button>
+                <button pButton type="button" severity="secondary" (click)="close()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
+                <button pButton type="submit" form="quick-client-form" [disabled]="form.invalid || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Müşteriyi kaydet</button>
             </ng-template>
         </p-dialog>
     `

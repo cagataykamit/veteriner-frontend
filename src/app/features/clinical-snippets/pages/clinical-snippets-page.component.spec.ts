@@ -68,7 +68,7 @@ describe('ClinicalSnippetsPageComponent', () => {
         expect(rows[0]).toContain('Kaç kez?');
         expect(rows[0]).toContain('Aktif');
         expect(rows[0]).toContain('Düzenle');
-        expect(rows[0]).toContain('Pasifleştir');
+        expect(rows[0]).toContain('Pasife al');
         expect(rows[1]).toContain('Pasif');
         expect(rows[1]).toContain('Etkinleştir');
     });

@@ -31,7 +31,7 @@ import { type PaymentUpsertFieldErrors, parsePaymentUpsertHttpError } from '@/ap
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError, panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.utils';
+import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import { PAYMENT_DATE_TOO_FAR_PAST_MESSAGE, paymentDateNotTooFarPastValidator, paymentDateTimeLocalMinAllowed } from '@/app/features/payments/utils/payment-date-validation.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
@@ -43,6 +43,7 @@ import { EDocumentsService } from '@/app/entities/e-document/services/e-document
 import { FormsModule } from '@angular/forms';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
 
 /** Açık tutar bu arada değişti: güncel bakiye yeniden okunur, aynı `requestId` ile tekrar denemek güvenlidir. */
 const STALE_BALANCE_CODES = new Set(['PaymentAllocations.ExceedsOutstanding', 'Payments.ConcurrencyConflict']);
@@ -55,17 +56,17 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
 @Component({
     selector: 'app-payment-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ButtonModule, CheckboxModule, SelectModule, TableModule, AppPageHeaderComponent, ClientSearchComponent, DateInputComponent, TrDateTimePipe, CashRegisterSelectComponent],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ButtonModule, CheckboxModule, SelectModule, TableModule, AppPageHeaderComponent, ClientSearchComponent, DateInputComponent, TrDateTimePipe, CashRegisterSelectComponent, FocusFirstFieldDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Yeni Ödeme" description="Müşterinin açık ücretlerinden hangilerine ne kadar ödeme alındığını girin." />
+        <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Yeni ödeme" description="Müşterinin açık ücretlerinden hangilerine ne kadar ödeme alındığını girin." />
 
         <div class="card">
             @if (ro.mutationBlocked()) {
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; kayıt oluşturulamaz.</p>
             }
             <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit()">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">
                         <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
@@ -122,6 +123,12 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                                 </button>
                             }
                         } @else {
+                            <div class="flex flex-wrap items-center gap-3 mb-2">
+                                <span class="font-medium" data-testid="payment-total-outstanding">Toplam borç {{ money(totalOutstanding()) }}</span>
+                                <button pButton type="button" size="small" severity="secondary" [outlined]="true" (click)="fillAllOutstanding()" data-testid="payment-fill-all">
+                                    <i class="p-button-icon pi pi-check-square"></i>Tamamını al
+                                </button>
+                            </div>
                             <div class="overflow-x-auto table-stack-phone">
                                 <p-table [value]="openCharges()" dataKey="chargeId" size="small" [tableStyle]="{ 'min-width': '44rem' }">
                                     <ng-template #header>
@@ -193,7 +200,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                         } @else if (creditAmount() > 0 && !prepayment()) {
                             <small class="block font-medium" data-testid="payment-overpayment" aria-live="polite">Fazlası ({{ money(creditAmount()) }}) müşteri kredisine yazılır.</small>
                         } @else {
-                            <small class="text-muted-color block">{{ prepayment() ? 'Tamamı müşteri kredisine yazılır; yalnız TRY.' : 'Boş bırakılırsa seçilen ücretlerin toplamı alınır; yalnız TRY.' }}</small>
+                            <small class="text-muted-color block">{{ prepayment() ? 'Tamamı müşteri kredisine yazılır; yalnız ₺.' : 'Boş bırakılırsa seçilen ücretlerin toplamı alınır; yalnız ₺.' }}</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6 lg:col-span-3">
@@ -281,7 +288,7 @@ export class PaymentNewPageComponent implements OnInit {
 
     readonly clientIdValue = signal('');
     readonly clientSelected = computed(() => this.clientIdValue() !== '');
-    /** "Ücret ekleyin" bağlantısı: müşteri yanında bilinen geliş de taşınır (Yeni Ücret'te yeniden seçmek gerekmesin). */
+    /** "Ücret ekleyin" bağlantısı: müşteri yanında bilinen geliş de taşınır (Yeni ücret'te yeniden seçmek gerekmesin). */
     readonly chargeNewQueryParams = computed(() => ({ clientId: this.clientIdValue(), ...(this.context?.visitId ? { visitId: this.context.visitId } : {}) }));
     readonly balanceLoading = signal(false);
     readonly balanceError = signal<string | null>(null);
@@ -291,6 +298,8 @@ export class PaymentNewPageComponent implements OnInit {
 
     readonly allocations = computed(() => buildAllocations(this.openCharges(), this.amounts()));
     readonly total = computed(() => allocationTotal(this.allocations()));
+    /** Açık ücretlerin kalanı toplamı (tek tıkla tamamını alma, H2). */
+    readonly totalOutstanding = computed(() => this.openCharges().reduce((sum, c) => sum + c.outstandingAmount, 0));
     private readonly hasRowErrors = computed(() => this.openCharges().some((c) => this.rowError(c) !== null));
     private readonly formValid = signal(false);
 
@@ -327,7 +336,7 @@ export class PaymentNewPageComponent implements OnInit {
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         method: ['cash', Validators.required],
-        paidAtLocal: ['', [Validators.required, dateTimeYearRangeValidator(), paymentDateNotTooFarPastValidator()]],
+        paidAtLocal: [toIstanbulDateTimeLocalInputValue(new Date().toISOString()), [Validators.required, dateTimeYearRangeValidator(), paymentDateNotTooFarPastValidator()]],
         note: ['']
     });
 
@@ -375,6 +384,10 @@ export class PaymentNewPageComponent implements OnInit {
 
     onAmountInput(row: ClientOpenChargeVm, raw: string): void {
         this.amounts.update((a) => ({ ...a, [row.chargeId]: parseDecimalFormInput(raw) }));
+    }
+
+    fillAllOutstanding(): void {
+        this.amounts.set(Object.fromEntries(this.openCharges().map((c) => [c.chargeId, c.outstandingAmount])));
     }
 
     fillOutstanding(row: ClientOpenChargeVm): void {

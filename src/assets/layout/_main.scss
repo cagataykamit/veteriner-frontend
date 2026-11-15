@@ -11,3 +11,24 @@
     flex: 1 1 auto;
     padding-bottom: 2rem;
 }
+
+.layout-main:focus {
+    outline: none;
+}
+
+/* Klavye kullanıcısı için "İçeriğe geç" (H14): odaklanınca görünür. */
+.layout-skip-link {
+    position: fixed;
+    left: -999px;
+    top: 0.5rem;
+    z-index: 1100;
+    padding: 0.75rem 1rem;
+    border-radius: var(--content-border-radius);
+    background: var(--surface-card);
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.layout-skip-link:focus {
+    left: 0.5rem;
+}
