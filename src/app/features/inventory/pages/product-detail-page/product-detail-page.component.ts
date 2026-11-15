@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ProductClinicStocksComponent } from '@/app/features/inventory/components/product-clinic-stocks/product-clinic-stocks.component';
@@ -43,6 +43,9 @@ import { ConfirmationService } from 'primeng/api';
     providers: [ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
+        @if (showSavedBanner()) {
+            <p class="mb-4 m-0 text-sm font-medium" role="status">Ürün kaydedildi.</p>
+        }
         @if (loading()) {
             <app-loading-state message="Ürün yükleniyor…" />
         } @else if (error()) {
@@ -173,6 +176,10 @@ export class ProductDetailPageComponent implements OnInit {
     private readonly productService = inject(ProductService);
     private readonly confirmationService = inject(ConfirmationService);
     private readonly auth = inject(AuthService);
+    private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
+    /** Oluşturma ve düzenleme sonrası kısa onay (query `saved=1`, H13). */
+    readonly showSavedBanner = signal(false);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly canUpdateProduct = this.auth.hasOperationClaim(PRODUCTS_UPDATE_CLAIM);
@@ -272,6 +279,11 @@ export class ProductDetailPageComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        if (this.route.snapshot.queryParamMap.get('saved') === '1') {
+            this.showSavedBanner.set(true);
+            void this.router.navigate([], { relativeTo: this.route, queryParams: { saved: null }, queryParamsHandling: 'merge', replaceUrl: true });
+        }
+
         this.loader.init();
     }
 

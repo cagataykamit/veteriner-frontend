@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
@@ -52,6 +52,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
+        @if (showSavedBanner()) {
+            <p class="mb-4 m-0 text-sm font-medium" role="status">Ücret kaydedildi.</p>
+        }
         <div class="card">
             <app-list-header class="mb-4" title="Ücretler" [count]="totalItems()">
                 <app-filter-field label="Müşteri" labelFor="chargeClientFilter" [active]="!!clientId">
@@ -183,6 +186,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 export class ChargesListPageComponent implements OnInit {
     private readonly chargesService = inject(ChargesService);
     private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
+    /** Yeni ücret sonrası kısa onay (query `saved=1`, H13). */
+    readonly showSavedBanner = signal(false);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
@@ -218,6 +224,12 @@ export class ChargesListPageComponent implements OnInit {
 
     ngOnInit(): void {
         this.clientId = this.route.snapshot.queryParamMap.get('clientId')?.trim() || null;
+
+        if (this.route.snapshot.queryParamMap.get('saved') === '1') {
+            this.showSavedBanner.set(true);
+            void this.router.navigate([], { relativeTo: this.route, queryParams: { saved: null }, queryParamsHandling: 'merge', replaceUrl: true });
+        }
+
         this.load(1, this.pageSize());
     }
 

@@ -163,7 +163,7 @@ export class ReminderSettingsPageComponent implements OnInit {
                 this.form.markAsPristine();
                 addTracedToast(this.messages, 'ReminderSettingsPage', this.router.url, {
                     severity: 'success',
-                    summary: 'Kaydedildi',
+                    summary: 'Tamam',
                     detail: 'Hatırlatma ayarları güncellendi.'
                 });
             },

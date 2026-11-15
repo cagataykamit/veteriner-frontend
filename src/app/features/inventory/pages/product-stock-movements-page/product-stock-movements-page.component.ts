@@ -405,7 +405,7 @@ export class ProductStockMovementsPageComponent implements OnInit {
     onStockMovementCreated(): void {
         this.messages.add({
             severity: 'success',
-            summary: 'Kaydedildi',
+            summary: 'Tamam',
             detail: 'Stok hareketi oluşturuldu.'
         });
 

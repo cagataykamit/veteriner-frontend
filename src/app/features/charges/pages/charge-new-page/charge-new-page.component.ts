@@ -358,7 +358,7 @@ export class ChargeNewPageComponent implements OnInit {
                         return;
                     }
 
-                    void this.router.navigate(['/panel/charges'], { queryParams: { clientId } });
+                    void this.router.navigate(['/panel/charges'], { queryParams: { clientId, saved: '1' } });
                 },
                 error: (e: Error) => {
                     this.submitting.set(false);

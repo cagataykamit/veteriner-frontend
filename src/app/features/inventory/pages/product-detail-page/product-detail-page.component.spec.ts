@@ -74,6 +74,7 @@ describe('ProductDetailPageComponent', () => {
     let claims: string[];
     let clinicId: string | null;
     let routeId: string | null;
+    let query: Record<string, string>;
     const readOnly = signal(false);
 
     const el = () => fixture.nativeElement as HTMLElement;
@@ -131,7 +132,7 @@ describe('ProductDetailPageComponent', () => {
                     useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => clinicId, getClinicName: () => (clinicId ? 'Aktif Klinik' : null) }
                 },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: readOnly } },
-                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap(routeId ? { id: routeId } : {})) } }
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap(routeId ? { id: routeId } : {})), snapshot: { queryParamMap: convertToParamMap(query) } } }
             ]
         });
         fixture = TestBed.createComponent(ProductDetailPageComponent);
@@ -143,6 +144,7 @@ describe('ProductDetailPageComponent', () => {
         claims = [...ALL_CLAIMS];
         clinicId = 'c1';
         routeId = 'p1';
+        query = {};
         readOnly.set(false);
         products = {
             getById: vi.fn().mockName('ProductService.getById'),
@@ -215,6 +217,13 @@ describe('ProductDetailPageComponent', () => {
             expect(text()).toContain('Stoklar alınamadı.');
             expect(text()).toContain('Ürün bilgileri');
         });
+    });
+
+    it('kayıttan sonra (saved=1) Ürün kaydedildi bandı görünür (H13)', () => {
+        query = { saved: '1' };
+        render();
+
+        expect((fixture.nativeElement as HTMLElement).textContent).toContain('Ürün kaydedildi.');
     });
 
     describe('görünür metin ve düğmeler', () => {

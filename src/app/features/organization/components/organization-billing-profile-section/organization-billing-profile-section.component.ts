@@ -228,7 +228,7 @@ export class OrganizationBillingProfileSectionComponent implements OnInit {
                     this.form.markAsPristine();
                     this.messages.add({
                         severity: 'success',
-                        summary: 'Kaydedildi',
+                        summary: 'Tamam',
                         detail: BILLING_PROFILE_SAVE_SUCCESS
                     });
                 },

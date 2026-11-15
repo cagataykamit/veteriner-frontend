@@ -376,7 +376,7 @@ export class AppointmentNewPageComponent implements OnInit {
         this.appointmentsService.createAppointment(payload).subscribe({
             next: ({ id }) => {
                 this.submitting.set(false);
-                void this.router.navigate(['/panel/appointments', id]);
+                void this.router.navigate(['/panel/appointments', id], { queryParams: { saved: '1' } });
             },
             error: (e: unknown) => {
                 this.submitting.set(false);

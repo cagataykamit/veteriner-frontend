@@ -213,7 +213,7 @@ export class ProductCreatePageComponent implements OnInit {
                 this.submitting.set(false);
 
                 if (id?.trim()) {
-                    void this.router.navigate(['/panel/products', id.trim()]);
+                    void this.router.navigate(['/panel/products', id.trim()], { queryParams: { saved: '1' } });
                 } else {
                     void this.router.navigateByUrl('/panel/products');
                 }
