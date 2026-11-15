@@ -6,6 +6,7 @@ import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
@@ -50,7 +51,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
         ReactiveFormsModule,
         ButtonModule,
         ConfirmDialogModule,
-        DialogModule, DialogFocusReturnDirective,
+        DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective,
         InputTextModule,
         MessageModule,
         SelectModule,
@@ -152,7 +153,7 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
             }
         </div>
 
-        <p-dialog [header]="editing() ? 'Takvim satırını düzenle' : 'Yeni takvim satırı'" [modal]="true" [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [style]="{ width: 'min(34rem, 95vw)' }" [draggable]="false">
+        <p-dialog [appUnsavedChanges]="form.dirty" [header]="editing() ? 'Takvim satırını düzenle' : 'Yeni takvim satırı'" [modal]="true" [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [style]="{ width: 'min(34rem, 95vw)' }" [draggable]="false">
             <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
                 @if (dialogError(); as err) {
                     <p-message severity="error" class="w-full" role="alert">{{ err }}</p-message>

@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { SelectModule } from 'primeng/select';
 import type { TodayItemVm, VisitCorrectionAction, VisitVm } from '@/app/entities/visit/models/visit-vm.model';
@@ -20,10 +21,10 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 @Component({
     selector: 'app-visit-correction-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogFocusReturnDirective, ButtonModule, SelectModule],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, SelectModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog
+        <p-dialog [appUnsavedChanges]="form.dirty"
             [header]="restoring() ? 'Yanlış gelişi geri al' : 'Geliş düzeltmesi'"
             [modal]="true"
             [dismissableMask]="!submitting()"

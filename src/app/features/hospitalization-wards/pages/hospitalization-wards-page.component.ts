@@ -5,6 +5,7 @@ import type { Observable } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
@@ -50,7 +51,7 @@ type DialogTarget =
         ReactiveFormsModule,
         ButtonModule,
         ConfirmDialogModule,
-        DialogModule, DialogFocusReturnDirective,
+        DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective,
         InputTextModule,
         MessageModule,
         SelectModule,
@@ -178,7 +179,7 @@ type DialogTarget =
             }
         </div>
 
-        <p-dialog [header]="dialogTitle()" [modal]="true" [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [style]="{ width: 'min(28rem, 95vw)' }" [draggable]="false">
+        <p-dialog [appUnsavedChanges]="dialogForm.dirty" [header]="dialogTitle()" [modal]="true" [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [style]="{ width: 'min(28rem, 95vw)' }" [draggable]="false">
             <form [formGroup]="dialogForm" (ngSubmit)="submitDialog()" class="flex flex-col gap-4">
                 @if (dialogError()) {
                     <p-message severity="error" class="w-full" role="alert">{{ dialogError() }}</p-message>

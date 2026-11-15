@@ -4,6 +4,7 @@ import { Component, computed, effect, inject, input, signal, untracked, ChangeDe
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CARE_INSTRUCTIONS_CREATE_CLAIM, CARE_INSTRUCTIONS_READ_CLAIM, CARE_INSTRUCTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -26,7 +27,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
 @Component({
     selector: 'app-care-instructions-section',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, DialogModule, DialogFocusReturnDirective, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent, TrDateTimePipe],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent, TrDateTimePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (canRead) {
@@ -67,7 +68,7 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
                 }
             </div>
 
-            <p-dialog [header]="editing() ? 'Bakım talimatını düzenle' : 'Bakım talimatı ekle'" [modal]="true" [(visible)]="dialogVisible" [style]="{ width: 'min(36rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
+            <p-dialog [appUnsavedChanges]="form.dirty" [header]="editing() ? 'Bakım talimatını düzenle' : 'Bakım talimatı ekle'" [modal]="true" [(visible)]="dialogVisible" [style]="{ width: 'min(36rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
                     <label for="careInstructionText" class="block text-sm font-medium text-muted-color mb-2">Talimat metni *</label>
                     <textarea id="careInstructionText" rows="8" [attr.maxlength]="textMax" class="w-full p-inputtext p-component" formControlName="text"></textarea>

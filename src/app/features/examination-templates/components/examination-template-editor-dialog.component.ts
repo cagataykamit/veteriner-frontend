@@ -4,6 +4,7 @@ import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, Reacti
 import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
@@ -65,10 +66,10 @@ const MODE_HEADER: Record<ExaminationTemplateEditorMode, string> = {
 @Component({
     selector: 'app-examination-template-editor-dialog',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, DialogModule, DialogFocusReturnDirective, InputTextModule, MessageModule, SelectModule, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent],
+    imports: [ReactiveFormsModule, ButtonModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, InputTextModule, MessageModule, SelectModule, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog [header]="header()" [modal]="true" [visible]="visible()" (visibleChange)="visible.set($event)" [closable]="!submitting()" [style]="{ width: 'min(48rem, 95vw)' }" [draggable]="false">
+        <p-dialog [appUnsavedChanges]="form.dirty" [header]="header()" [modal]="true" [visible]="visible()" (visibleChange)="visible.set($event)" [closable]="!submitting()" [style]="{ width: 'min(48rem, 95vw)' }" [draggable]="false">
             <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
                 @if (submitError()) {
                     <p-message severity="error" class="w-full" role="alert">{{ submitError() }}</p-message>

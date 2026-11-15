@@ -6,6 +6,7 @@ import { TestBed } from '@angular/core/testing';
 import { Dialog } from 'primeng/dialog';
 import { of, throwError } from 'rxjs';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
+import { UnsavedChangesService } from '@/app/shared/ui/unsaved-changes/unsaved-changes.service';
 import { QuickClientDialogComponent } from './quick-client-dialog.component';
 
 describe('QuickClientDialogComponent — aramadan önden doldurma (APPT-017/019)', () => {
@@ -96,8 +97,8 @@ describe('QuickClientDialogComponent — Enter ile kaydetme', () => {
     });
 });
 
-describe('QuickClientDialogComponent — dışarı tıklama (H4)', () => {
-    it('boşken dışarı tıklama kapatır; bir şey yazılınca kapatmaz', async () => {
+describe('QuickClientDialogComponent — dışarı tıklama, Esc, çarpı (H4, O2)', () => {
+    it('boşken sorusuz kapanır; bir şey yazılınca kaydedilmemiş değişiklik sorulur', async () => {
         TestBed.configureTestingModule({
             imports: [QuickClientDialogComponent],
             providers: [{ provide: ClientsService, useValue: { createClient: vi.fn() } }]
@@ -110,12 +111,20 @@ describe('QuickClientDialogComponent — dışarı tıklama (H4)', () => {
         await fixture.whenStable();
         const dialog = fixture.debugElement.query(By.directive(Dialog)).componentInstance as Dialog;
 
+        const unsaved = TestBed.inject(UnsavedChangesService);
+
         expect(dialog.dismissableMask()).toBe(true);
 
         cmp.form.controls.fullName.setValue('Ayşe');
         cmp.form.controls.fullName.markAsDirty();
         fixture.detectChanges();
 
-        expect(dialog.dismissableMask()).toBe(false);
+        dialog.close(new Event('mousedown', { cancelable: true }));
+        expect(unsaved.asking()).toBe(true);
+        expect(cmp.visible()).toBe(true);
+
+        unsaved.answer(true);
+        await fixture.whenStable();
+        expect(cmp.visible()).toBe(false);
     });
 });

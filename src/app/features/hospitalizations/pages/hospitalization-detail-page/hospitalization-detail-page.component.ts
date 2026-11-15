@@ -6,6 +6,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { CareInstructionsSectionComponent } from '@/app/entities/care-instruction/components/care-instructions-section.component';
 import type { HospitalizationDetailVm } from '@/app/entities/hospitalization/models/hospitalization-vm.model';
@@ -40,7 +41,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         RouterLink,
         ReactiveFormsModule,
         ButtonModule,
-        DialogModule, DialogFocusReturnDirective,
+        DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective,
         AppPageHeaderComponent,
         AppDetailIdentityCardComponent,
         AppDetailActionBarComponent,
@@ -192,7 +193,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
             (confirmed)="reload()"
         />
 
-        <p-dialog header="Taburcu işlemi" [modal]="true" [(visible)]="dischargeDialogVisible" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [focusOnShow]="false" (onHide)="onDischargeDialogHide()">
+        <p-dialog [appUnsavedChanges]="dischargeForm.dirty" header="Taburcu işlemi" [modal]="true" [(visible)]="dischargeDialogVisible" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [focusOnShow]="false" (onHide)="onDischargeDialogHide()">
             <p class="text-sm text-muted-color mt-0 mb-4">Taburcu tarihi ve saati zorunludur. İşlem sonrası kayıt kapatılır.</p>
             <form [formGroup]="dischargeForm" (ngSubmit)="onDischargeSubmit()">
                 <div class="flex flex-col gap-4">

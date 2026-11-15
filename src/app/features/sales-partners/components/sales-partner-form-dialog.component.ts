@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
@@ -16,10 +17,10 @@ const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 @Component({
     selector: 'app-sales-partner-form-dialog',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, CheckboxModule, DialogModule, DialogFocusReturnDirective, InputTextModule, MessageModule],
+    imports: [ReactiveFormsModule, ButtonModule, CheckboxModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, InputTextModule, MessageModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog [header]="partner() ? 'Satış ortağını düzenle' : 'Yeni satış ortağı'" [modal]="true" [(visible)]="visible" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
+        <p-dialog [appUnsavedChanges]="form.dirty" [header]="partner() ? 'Satış ortağını düzenle' : 'Yeni satış ortağı'" [modal]="true" [(visible)]="visible" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false" [closable]="!submitting()">
             <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
                 @if (error()) {
                     <p-message severity="error" class="w-full" role="alert">{{ error() }}</p-message>

@@ -4,6 +4,7 @@ import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
@@ -38,7 +39,7 @@ const PAGE_SIZE = 50;
         ReactiveFormsModule,
         ButtonModule,
         ConfirmDialogModule,
-        DialogModule, DialogFocusReturnDirective,
+        DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective,
         InputTextModule,
         MessageModule,
         SelectButtonModule,
@@ -151,7 +152,7 @@ const PAGE_SIZE = 50;
             }
         </div>
 
-        <p-dialog
+        <p-dialog [appUnsavedChanges]="dialogForm.dirty"
             [header]="editing() ? 'Terim adını düzelt' : 'Yeni ' + kindLabel().toLocaleLowerCase('tr') + ' terimi'"
             [modal]="true"
             [visible]="dialogVisible()"

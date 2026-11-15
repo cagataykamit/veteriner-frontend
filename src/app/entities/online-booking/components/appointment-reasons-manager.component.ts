@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
@@ -42,7 +43,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         ButtonModule,
         CheckboxModule,
         ConfirmDialogModule,
-        DialogModule, DialogFocusReturnDirective,
+        DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective,
         InputTextModule,
         MessageModule,
         TableModule,
@@ -129,7 +130,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
             </div>
         }
 
-        <p-dialog [header]="editing() ? 'Nedeni düzenle' : 'Yeni neden'" [modal]="true" [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false">
+        <p-dialog [appUnsavedChanges]="form.dirty" [header]="editing() ? 'Nedeni düzenle' : 'Yeni neden'" [modal]="true" [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false">
             <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
                 @if (dialogError()) {
                     <p-message severity="error" class="w-full" role="alert">{{ dialogError() }}</p-message>

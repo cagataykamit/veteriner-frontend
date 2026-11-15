@@ -8,6 +8,7 @@ import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
@@ -52,7 +53,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
         Paginator,
         ButtonModule,
         ConfirmDialogModule,
-        DialogModule, DialogFocusReturnDirective,
+        DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective,
         MessageModule,
         InputTextModule,
         SelectModule,
@@ -237,7 +238,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
             }
         </div>
 
-        <p-dialog [header]="dialogHeader()" [modal]="true" [visible]="dialogVisible()" (visibleChange)="onDialogVisibleChange($event)" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false">
+        <p-dialog [appUnsavedChanges]="dialogForm.dirty" [header]="dialogHeader()" [modal]="true" [visible]="dialogVisible()" (visibleChange)="onDialogVisibleChange($event)" [style]="{ width: 'min(32rem, 95vw)' }" [draggable]="false">
             <form [formGroup]="dialogForm" (ngSubmit)="submitDialog()" class="flex flex-col gap-4">
                 @if (dialogError()) {
                     <p-message severity="error" class="w-full" role="alert">{{ dialogError() }}</p-message>

@@ -12,6 +12,7 @@ import { clientUpsertFieldErrorMessage } from '@/app/entities/client/utils/clien
 import { quickClientPrefill } from '@/app/entities/client/utils/quick-client-prefill.utils';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
@@ -25,10 +26,10 @@ import { PhoneFormatDirective } from '@/app/shared/forms/phone-format/phone-form
 @Component({
     selector: 'app-quick-client-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogFocusReturnDirective, ButtonModule, InputTextModule, AppTrialLimitNoticeComponent, PhoneFormatDirective],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, InputTextModule, AppTrialLimitNoticeComponent, PhoneFormatDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Yeni müşteri ekle" [modal]="true" [dismissableMask]="form.pristine" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible" (onShow)="onShow()">
+        <p-dialog [appUnsavedChanges]="form.dirty" header="Yeni müşteri ekle" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible" (onShow)="onShow()">
             <form [formGroup]="form" (ngSubmit)="onSubmit()" id="quick-client-form">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">

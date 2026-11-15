@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
@@ -52,7 +53,7 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
         ButtonModule,
         CheckboxModule,
         ConfirmDialogModule,
-        DialogModule, DialogFocusReturnDirective,
+        DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective,
         InputTextModule,
         MessageModule,
         TableModule,
@@ -170,7 +171,7 @@ function shortcutFormat(c: AbstractControl): ValidationErrors | null {
             }
         </div>
 
-        <p-dialog
+        <p-dialog [appUnsavedChanges]="dialogForm.dirty"
             [header]="editing() ? 'Metin parçasını düzenle' : 'Yeni metin parçası'"
             [modal]="true"
             [visible]="dialogVisible()"

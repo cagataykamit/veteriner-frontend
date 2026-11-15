@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import type { ChargeVm } from '@/app/entities/charge/models/charge-vm.model';
 import { ChargeTaxFieldsComponent } from '@/app/features/charges/components/charge-tax-fields.component';
@@ -23,10 +24,10 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 @Component({
     selector: 'app-charge-correction-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogFocusReturnDirective, ButtonModule, ChargeTaxFieldsComponent, MoneyPipe],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, ChargeTaxFieldsComponent, MoneyPipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Ücreti düzelt" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
+        <p-dialog [appUnsavedChanges]="form.dirty" header="Ücreti düzelt" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
             @if (charge(); as c) {
                 <p class="mt-0 mb-1 font-medium">{{ c.clientName }}</p>
                 @if (c.allocatedAmount) {

@@ -10,6 +10,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { trimClientIdControlValue } from '@/app/shared/forms/client-pet-selection.utils';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { InputTextModule } from 'primeng/inputtext';
 
@@ -19,10 +20,10 @@ import { InputTextModule } from 'primeng/inputtext';
 @Component({
     selector: 'app-quick-breed-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogFocusReturnDirective, ButtonModule, InputTextModule],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, InputTextModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Yeni ırk" [modal]="true" [dismissableMask]="form.pristine" [style]="{ width: 'min(440px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onShow()">
+        <p-dialog [appUnsavedChanges]="form.dirty" header="Yeni ırk" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(440px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onShow()">
             @if (ro.mutationBlocked()) {
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">İşletme salt okunur moddadır; ırk oluşturulamaz.</p>
             }

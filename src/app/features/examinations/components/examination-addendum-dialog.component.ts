@@ -2,6 +2,7 @@ import { Component, effect, inject, input, model, output, signal, untracked, Cha
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import type { ExaminationAddendumVm } from '@/app/entities/examination/models/examination-vm.model';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
@@ -25,10 +26,10 @@ function addendumText(c: { value: unknown }): { addendumText: true } | null {
 @Component({
     selector: 'app-examination-addendum-dialog',
     standalone: true,
-    imports: [ReactiveFormsModule, DialogModule, DialogFocusReturnDirective, ButtonModule],
+    imports: [ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Ek not ekle" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(620px, 95vw)' }" [(visible)]="visible">
+        <p-dialog [appUnsavedChanges]="form.dirty" header="Ek not ekle" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(620px, 95vw)' }" [(visible)]="visible">
             <p class="mt-0 text-muted-color">Ek not kalıcıdır; eklendikten sonra düzenlenemez veya silinemez. İlk muayene metni değişmez.</p>
             <form [formGroup]="form" (ngSubmit)="onSubmit()" id="examination-addendum-form">
                 <div class="grid grid-cols-12 gap-4">
