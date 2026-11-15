@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { LegalAcceptanceService } from '@/app/features/legal-acceptance/services/legal-acceptance.service';
 import { appRoutes } from '@/app.routes';
 
 describe('panel yönlendirmeleri', () => {
@@ -15,7 +16,8 @@ describe('panel yönlendirmeleri', () => {
         TestBed.configureTestingModule({
             providers: [
                 provideRouter(appRoutes),
-                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c.toLowerCase()), isAuthenticated: () => authenticated, hasSelectedClinic: () => authenticated, hasPanelContext: () => authenticated, ensureValidAccessToken: () => of(null) } }
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c.toLowerCase()), isAuthenticated: () => authenticated, hasSelectedClinic: () => authenticated, hasPanelContext: () => authenticated, ensureValidAccessToken: () => of(null) } },
+                { provide: LegalAcceptanceService, useValue: { prefetchMyStatus: () => of(true) } }
             ]
         });
         router = TestBed.inject(Router);
