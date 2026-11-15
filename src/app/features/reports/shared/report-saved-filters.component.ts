@@ -68,7 +68,7 @@ const MAX_NAME_LENGTH = 100;
                 <p class="text-danger text-sm mt-2 mb-0" role="alert">{{ message }}</p>
             }
 
-            <p-dialog [header]="copy.reportsSavedFilterSave" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(440px, 95vw)' }" [(visible)]="dialogVisible">
+            <p-dialog [header]="copy.reportsSavedFilterSave" [modal]="true" [dismissableMask]="!busy() && !nameChanged()" [style]="{ width: 'min(440px, 95vw)' }" [(visible)]="dialogVisible">
                 <label for="reportSavedFilterName" class="block text-sm font-medium text-muted-color mb-2">{{ copy.reportsSavedFilterNameLabel }}</label>
                 <input
                     id="reportSavedFilterName"
@@ -118,6 +118,9 @@ export class ReportSavedFiltersComponent implements OnInit {
 
     readonly dialogVisible = signal(false);
     readonly nameInput = signal('');
+    /** Açılıştaki ad; ad değiştiyse dışarı tıklama diyaloğu kapatmaz. */
+    private readonly openedName = signal('');
+    readonly nameChanged = computed(() => this.nameInput() !== this.openedName());
     readonly dialogError = signal<string | null>(null);
     /** Kaydedilecek filtre seti, diyalog açılırken alınır. */
     private readonly pending = signal<Record<string, string>>({});
@@ -147,6 +150,7 @@ export class ReportSavedFiltersComponent implements OnInit {
     openSave(): void {
         this.pending.set(this.state().savedFilterValues());
         this.nameInput.set(this.selected()?.name ?? '');
+        this.openedName.set(this.nameInput());
         this.dialogError.set(null);
         this.dialogVisible.set(true);
     }

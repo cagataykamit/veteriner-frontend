@@ -21,7 +21,7 @@ import { InputTextModule } from 'primeng/inputtext';
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Yeni ırk" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(440px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onShow()">
+        <p-dialog header="Yeni ırk" [modal]="true" [dismissableMask]="form.pristine" [style]="{ width: 'min(440px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onShow()">
             @if (ro.mutationBlocked()) {
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">İşletme salt okunur moddadır; ırk oluşturulamaz.</p>
             }

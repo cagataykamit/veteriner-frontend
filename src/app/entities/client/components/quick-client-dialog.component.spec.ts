@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
+import { Dialog } from 'primeng/dialog';
 import { of, throwError } from 'rxjs';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { QuickClientDialogComponent } from './quick-client-dialog.component';
@@ -92,5 +93,29 @@ describe('QuickClientDialogComponent — Enter ile kaydetme', () => {
 
         expect(createClient).toHaveBeenCalledTimes(1);
         expect(fixture.componentInstance.outerSubmitted).toBe(false);
+    });
+});
+
+describe('QuickClientDialogComponent — dışarı tıklama (H4)', () => {
+    it('boşken dışarı tıklama kapatır; bir şey yazılınca kapatmaz', async () => {
+        TestBed.configureTestingModule({
+            imports: [QuickClientDialogComponent],
+            providers: [{ provide: ClientsService, useValue: { createClient: vi.fn() } }]
+        });
+        const fixture = TestBed.createComponent(QuickClientDialogComponent);
+        const cmp = fixture.componentInstance;
+
+        cmp.visible.set(true);
+        fixture.detectChanges();
+        await fixture.whenStable();
+        const dialog = fixture.debugElement.query(By.directive(Dialog)).componentInstance as Dialog;
+
+        expect(dialog.dismissableMask()).toBe(true);
+
+        cmp.form.controls.fullName.setValue('Ayşe');
+        cmp.form.controls.fullName.markAsDirty();
+        fixture.detectChanges();
+
+        expect(dialog.dismissableMask()).toBe(false);
     });
 });

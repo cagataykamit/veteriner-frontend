@@ -18,6 +18,7 @@ import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
  * Randevu / muayene formlarında tam sayfa ayrılmadan müşteri oluşturma (create contract ile aynı).
+ * Bir şey yazıldıysa dışarı tıklama diyaloğu kapatmaz (yazılan kaybolmasın); İptal ve çarpı kapatır.
  */
 @Component({
     selector: 'app-quick-client-dialog',
@@ -25,7 +26,7 @@ import { trialLimitMessage } from '@/app/shared/utils/api-error.utils';
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, AppTrialLimitNoticeComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Yeni müşteri ekle" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible" (onShow)="onShow()">
+        <p-dialog header="Yeni müşteri ekle" [modal]="true" [dismissableMask]="form.pristine" [style]="{ width: 'min(520px, 95vw)' }" [(visible)]="visible" (onShow)="onShow()">
             <form [formGroup]="form" (ngSubmit)="onSubmit()" id="quick-client-form">
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-6">

@@ -20,7 +20,7 @@ import { SelectModule } from 'primeng/select';
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, SelectModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Yeni tür" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(480px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onShow()">
+        <p-dialog header="Yeni tür" [modal]="true" [dismissableMask]="form.pristine" [style]="{ width: 'min(480px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onShow()">
             @if (ro.mutationBlocked()) {
                 <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">İşletme salt okunur moddadır; tür oluşturulamaz.</p>
             }

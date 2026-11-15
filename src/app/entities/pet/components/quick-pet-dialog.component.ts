@@ -28,7 +28,7 @@ import { QuickBreedDialogComponent } from '@/app/entities/breed/components/quick
     imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, SelectModule, QuickBreedDialogComponent, AppTrialLimitNoticeComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Yeni hasta" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(560px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onDialogShow()">
+        <p-dialog header="Yeni hasta" [modal]="true" [dismissableMask]="form.pristine" [style]="{ width: 'min(560px, 95vw)' }" [contentStyle]="{ overflow: 'visible' }" [(visible)]="visible" (onShow)="onDialogShow()">
             @if (selectionError()) {
                 <p class="text-danger mt-0 mb-3" role="alert">{{ selectionError() }}</p>
             }

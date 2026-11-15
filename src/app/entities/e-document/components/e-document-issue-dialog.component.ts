@@ -33,7 +33,7 @@ interface GroupState {
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [FormsModule, RouterLink, ButtonModule, DialogModule, InputTextModule, AppStatusTagComponent, AppLoadingStateComponent, MoneyPipe],
     template: `
-        <p-dialog [header]="header()" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible" (onShow)="load()" (onHide)="onHide()">
+        <p-dialog [header]="header()" [modal]="true" [dismissableMask]="!busy() && !note.trim()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible" (onShow)="load()" (onHide)="onHide()">
             @if (loading()) {
                 <app-loading-state message="Belge hazırlanıyor…" />
             } @else if (loadError()) {
@@ -190,6 +190,8 @@ export class EDocumentIssueDialogComponent {
     readonly preview = signal<EDocumentPreviewDto | null>(null);
     readonly groups = signal<GroupState[]>([]);
     readonly anyIssued = computed(() => this.groups().some((g) => g.document !== null));
+    /** Belge kesilirken ya da not yazılmışken dışarı tıklama diyaloğu kapatmaz. */
+    readonly busy = computed(() => this.groups().some((g) => g.busy));
 
     note = '';
 
