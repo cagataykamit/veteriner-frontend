@@ -4,6 +4,7 @@ import { Component, DestroyRef, inject, signal, ChangeDetectionStrategy } from '
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { injectReturnTarget } from '@/app/shared/utils/return-target.utils';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { ClientContactPreferenceFieldsComponent } from '@/app/features/clients/components/client-contact-preference-fields.component';
@@ -71,7 +72,7 @@ import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.com
 
                 <div class="flex flex-wrap gap-2 mt-4">
                     <button pButton type="submit" [disabled]="submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
-                    <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
+                    <button pButton type="button" severity="secondary" (click)="goBack()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>
         </div>
@@ -83,6 +84,8 @@ export class ClientNewPageComponent implements HasUnsavedChanges {
     private readonly fb = inject(FormBuilder);
     private readonly clientsService = inject(ClientsService);
     private readonly router = inject(Router);
+    /** İptal: geldiği yer (`returnUrl`, önceki sayfa, bağlamdaki kart), yoksa liste. */
+    private readonly returnTarget = injectReturnTarget('/panel/clients');
     private readonly destroyRef = inject(DestroyRef);
 
     readonly submitting = signal(false);
@@ -132,8 +135,8 @@ export class ClientNewPageComponent implements HasUnsavedChanges {
         return clientUpsertFieldErrorMessage(field, control.errors);
     }
 
-    goList(): void {
-        void this.router.navigate(['/panel/clients']);
+    goBack(): void {
+        void this.router.navigateByUrl(this.returnTarget.url);
     }
 
     onSubmit(): void {

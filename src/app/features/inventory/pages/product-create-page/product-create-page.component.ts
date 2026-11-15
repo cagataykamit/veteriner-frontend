@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { injectReturnTarget } from '@/app/shared/utils/return-target.utils';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -119,7 +120,7 @@ import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.com
 
                 <div class="flex flex-wrap gap-2 mt-4">
                     <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
-                    <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
+                    <button pButton type="button" severity="secondary" (click)="goBack()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>
         </div>
@@ -130,6 +131,8 @@ export class ProductCreatePageComponent implements OnInit, HasUnsavedChanges {
 
     private readonly fb = inject(FormBuilder);
     private readonly router = inject(Router);
+    /** İptal: geldiği yer (`returnUrl`, önceki sayfa, bağlamdaki kart), yoksa liste. */
+    private readonly returnTarget = injectReturnTarget('/panel/products');
     private readonly productService = inject(ProductService);
     private readonly categoryService = inject(ProductCategoryService);
     private readonly auth = inject(AuthService);
@@ -176,8 +179,8 @@ export class ProductCreatePageComponent implements OnInit, HasUnsavedChanges {
         return this.form.dirty;
     }
 
-    goList(): void {
-        void this.router.navigateByUrl('/panel/products');
+    goBack(): void {
+        void this.router.navigateByUrl(this.returnTarget.url);
     }
 
     onSubmit(): void {

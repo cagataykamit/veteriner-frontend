@@ -7,6 +7,7 @@ import { Component, DestroyRef, effect, inject, OnInit, signal, ChangeDetectionS
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, type ParamMap, Router } from '@angular/router';
+import { injectReturnTarget } from '@/app/shared/utils/return-target.utils';
 import { prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -138,7 +139,7 @@ interface AppointmentSlot {
 
                 <div class="flex flex-wrap gap-2 mt-4">
                     <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked() || timeOptions().length === 0 || !!workingHoursLoadError()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
-                    <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
+                    <button pButton type="button" severity="secondary" (click)="goBack()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
                 </div>
             </form>
         </div>
@@ -153,6 +154,8 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
     private readonly petsService = inject(PetsService);
     private readonly clinicsApi = inject(ClinicsService);
     private readonly router = inject(Router);
+    /** İptal: geldiği yer (`returnUrl`, önceki sayfa, bağlamdaki kart), yoksa liste. */
+    private readonly returnTarget = injectReturnTarget('/panel/appointments');
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
@@ -265,8 +268,8 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
         return this.form.dirty;
     }
 
-    goList(): void {
-        void this.router.navigate(['/panel/appointments']);
+    goBack(): void {
+        void this.router.navigateByUrl(this.returnTarget.url);
     }
 
     maxScheduledDate(): string {

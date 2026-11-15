@@ -6,6 +6,7 @@ import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectio
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { injectReturnTarget } from '@/app/shared/utils/return-target.utils';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
@@ -227,7 +228,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
 
                 <div class="flex flex-wrap gap-2 mt-4">
                     <button pButton type="submit" [disabled]="busy() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
-                    <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="busy()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
+                    <button pButton type="button" severity="secondary" (click)="goBack()" [disabled]="busy()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>
         </div>
@@ -242,6 +243,8 @@ export class PaymentNewPageComponent implements OnInit, HasUnsavedChanges {
     private readonly clientsService = inject(ClientsService);
     private readonly clientCreditsService = inject(ClientCreditsService);
     private readonly router = inject(Router);
+    /** İptal: geldiği yer (`returnUrl`, önceki sayfa, bağlamdaki kart), yoksa liste. */
+    private readonly returnTarget = injectReturnTarget('/panel/payments');
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
@@ -361,8 +364,8 @@ export class PaymentNewPageComponent implements OnInit, HasUnsavedChanges {
         return this.form.dirty || this.allocationEdited;
     }
 
-    goList(): void {
-        void this.router.navigate(['/panel/payments']);
+    goBack(): void {
+        void this.router.navigateByUrl(this.returnTarget.url);
     }
 
     amountOf(row: ClientOpenChargeVm): number | string {

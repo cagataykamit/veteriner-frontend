@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { VaccinationFormComponent, type VaccinationSavedEvent } from '@/app/entities/procedure/components/vaccination-form.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { injectReturnTarget } from '@/app/shared/utils/return-target.utils';
 
 /** Ayrı oluşturma sayfası: form bileşenini adres çubuğu bağlamıyla (query) çalıştırır; kayıttan sonra detaya gider. */
 @Component({
@@ -12,20 +13,22 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/vaccinations" categoryLinkLabel="Aşı listesine dön" title="Yeni Aşı" description="Aşı kaydı oluşturun." />
-        <app-vaccination-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goList()" />
+        <app-vaccination-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goBack()" />
     `
 })
 export class VaccinationNewPageComponent implements HasUnsavedChanges {
     private readonly router = inject(Router);
     readonly contextParams = inject(ActivatedRoute).snapshot.queryParamMap;
     private readonly embeddedForm = viewChild(HAS_UNSAVED_CHANGES);
+    /** İptal: geldiği yer (`returnUrl`, önceki sayfa, bağlamdaki kart), yoksa liste. */
+    private readonly returnTarget = injectReturnTarget('/panel/vaccinations');
 
     hasUnsavedChanges(): boolean {
         return this.embeddedForm()?.hasUnsavedChanges() ?? false;
     }
 
-    goList(): void {
-        void this.router.navigate(['/panel/vaccinations']);
+    goBack(): void {
+        void this.router.navigateByUrl(this.returnTarget.url);
     }
 
     onSaved({ id, stockNotice }: VaccinationSavedEvent): void {

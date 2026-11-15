@@ -3,6 +3,7 @@ import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectio
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { injectReturnTarget } from '@/app/shared/utils/return-target.utils';
 import { startWith, type Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
@@ -134,7 +135,7 @@ import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.com
                     @if (canCollectPayment) {
                         <button pButton type="button" severity="secondary" (click)="formSubmit.revealIssues() || onSubmit(false)" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon pi pi-check"></i>{{ copy.buttonSave }}</button>
                     }
-                    <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
+                    <button pButton type="button" severity="secondary" (click)="goBack()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>
         </div>
@@ -153,6 +154,8 @@ export class ChargeNewPageComponent implements OnInit, HasUnsavedChanges {
     private readonly examinationsService = inject(ExaminationsService);
     private readonly visitsService = inject(VisitsService);
     private readonly router = inject(Router);
+    /** İptal ve kayıt sonrası: geldiği yer (`returnUrl`, önceki sayfa, bağlamdaki kart), yoksa ücret listesi. */
+    private readonly returnTarget = injectReturnTarget('/panel/charges');
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
@@ -312,10 +315,21 @@ export class ChargeNewPageComponent implements OnInit, HasUnsavedChanges {
         return this.form.dirty;
     }
 
-    goList(): void {
+    goBack(): void {
+        if (!this.returnsToChargeList()) {
+            void this.router.navigateByUrl(this.returnTarget.url);
+
+            return;
+        }
+
         const clientId = trimClientIdControlValue(this.form.controls.clientId.value);
 
         void this.router.navigate(['/panel/charges'], { queryParams: clientId ? { clientId } : {} });
+    }
+
+    /** Ücret listesinden ya da doğrudan gelindiyse liste seçili müşteriyle açılır; muayene, müşteri kartı gibi yerden gelindiyse oraya dönülür. */
+    private returnsToChargeList(): boolean {
+        return this.returnTarget.source === 'list' || this.returnTarget.url.split(/[?#]/)[0] === '/panel/charges';
     }
 
     onSubmit(thenCollectPayment = false): void {
@@ -362,6 +376,12 @@ export class ChargeNewPageComponent implements OnInit, HasUnsavedChanges {
                         void this.router.navigate(['/panel/payments/new'], {
                             queryParams: { clientId, chargeId, ...(visitId ? { visitId } : {}), ...(examinationId ? { examinationId } : {}) }
                         });
+
+                        return;
+                    }
+
+                    if (!this.returnsToChargeList()) {
+                        void this.router.navigateByUrl(this.returnTarget.url);
 
                         return;
                     }
