@@ -1,4 +1,5 @@
 import { HttpTestingController } from '@angular/common/http/testing';
+import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { configurePortalHttp, TEST_ME, TEST_PORTAL_BASE as BASE, testTokens as tokens, expectOneSoon, waitFor } from '@portal/app/testing/portal-testing';
 import type { PortalMe } from './portal-auth.models';
@@ -85,6 +86,37 @@ describe('PortalSessionService', () => {
         await waitFor(() => received.length === 2);
 
         expect(received).toEqual(['access-2', 'access-2']);
+    });
+
+    it('iki sekme aynı anda yenilerse istekler Web Locks ile sıralanır; ikinci sekme ilkinin döndürdüğü anahtarı gönderir', async () => {
+        // Her sekmenin kendi bellek deposu ve oturumu vardır; localStorage ve tarayıcı kilidi ortaktır (testler Chromium'da koşar).
+        const tabB = Injector.create({
+            providers: [
+                { provide: PortalTokenStore, useClass: PortalTokenStore },
+                { provide: PortalSessionService, useClass: PortalSessionService }
+            ],
+            parent: TestBed.inject(Injector)
+        }).get(PortalSessionService);
+
+        localStorage.setItem(PORTAL_STORAGE_KEYS.refreshToken, 'refresh-0');
+        const received: string[] = [];
+
+        session.refreshTokens().subscribe((t) => received.push(t.accessToken));
+        tabB.refreshTokens().subscribe((t) => received.push(t.accessToken));
+
+        // `expectOneSoon` iki açık istek görürse düşer: kilit, ikinci isteği ilk yanıt yazılana dek bekletir.
+        const first = await expectOneSoon(http, `${BASE}/auth/refresh`);
+
+        expect(first.request.body).toEqual({ refreshToken: 'refresh-0' });
+        first.flush(tokens(1));
+        const second = await expectOneSoon(http, `${BASE}/auth/refresh`);
+
+        expect(second.request.body).toEqual({ refreshToken: 'refresh-1' });
+        second.flush(tokens(2));
+        await waitFor(() => received.length === 2);
+
+        expect(received).toEqual(['access-1', 'access-2']);
+        expect(localStorage.getItem(PORTAL_STORAGE_KEYS.refreshToken)).toBe('refresh-2');
     });
 
     it("çıkışta refresh token'ı sunucuya bildirir ve yerel oturumu siler", async () => {
