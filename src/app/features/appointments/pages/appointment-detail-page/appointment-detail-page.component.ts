@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, input, OnInit, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AppointmentNoShowDialogComponent } from '@/app/entities/appointment/components/appointment-no-show-dialog.component';
@@ -9,7 +9,10 @@ import type { ExaminationListItemVm } from '@/app/entities/examination/models/ex
 import { DetailRelatedSummariesService } from '@/app/entities/patient/services/detail-related-summaries.service';
 import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { appointmentStatusLabel, appointmentStatusSeverity, canMarkAppointmentNoShow, canRevertAppointmentNoShow, isAppointmentNoShowStatus, isAppointmentCancelledStatus } from '@/app/entities/appointment/utils/appointment-status.utils';
+import { appointmentStatusLabel, appointmentStatusSeverity, canCancelAppointment, canMarkAppointmentNoShow, canRevertAppointmentNoShow, isAppointmentNoShowStatus, isAppointmentCancelledStatus } from '@/app/entities/appointment/utils/appointment-status.utils';
+import type { AppointmentCancelResult } from '@/app/entities/appointment/services/appointments.service';
+import { AppointmentCancelDialogComponent, type AppointmentCancelTarget } from '@/app/features/appointments/components/appointment-cancel-dialog.component';
+import { AppointmentCancelUndoComponent } from '@/app/features/appointments/components/appointment-cancel-undo.component';
 import { WaitlistSlotNoticeComponent } from '@/app/entities/waitlist/components/waitlist-slot-notice.component';
 import { appointmentTypeDisplayLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
 import { DETAIL_STATS_GRID_CLASS } from '@/app/shared/ui/detail.classes';
@@ -24,7 +27,7 @@ import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { switchMap } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { APPOINTMENTS_NOSHOW_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM, EXAMINATIONS_CREATE_CLAIM, VISITS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { APPOINTMENTS_CANCEL_CLAIM, APPOINTMENTS_NOSHOW_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM, EXAMINATIONS_CREATE_CLAIM, VISITS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-line/app-detail-subject-line.component';
@@ -32,13 +35,17 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
 @Component({
     selector: 'app-appointment-detail-page',
     standalone: true,
-    imports: [AppDetailSubjectLineComponent, CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppointmentNoShowDialogComponent, TrDateTimePipe, WaitlistSlotNoticeComponent],
+    imports: [AppDetailSubjectLineComponent, CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppointmentNoShowDialogComponent, TrDateTimePipe, WaitlistSlotNoticeComponent, AppointmentCancelDialogComponent, AppointmentCancelUndoComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
             <p class="mb-4 m-0 text-sm font-medium">Randevu kaydedildi.</p>
         }
 
+        <!-- "Geri al" bandı yeniden yüklemede kaybolmasın diye yükleme durumunun dışında (geri sayım baştan başlamaz). -->
+        @if (lastCancel(); as c) {
+            <div class="mb-4"><app-appointment-cancel-undo [appointmentId]="c.id" [undoWindowSeconds]="c.undoWindowSeconds" (reverted)="onCancelReverted()" /></div>
+        }
         @if (loading()) {
             <app-loading-state message="Randevu yükleniyor…" />
         } @else if (error()) {
@@ -46,7 +53,9 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             </div>
         } @else if (appt(); as a) {
-            <app-page-header [categoryLink]="backLink()" [categoryLinkLabel]="backLabel()" />
+            @if (!embedded()) {
+                <app-page-header [categoryLink]="backLink()" [categoryLinkLabel]="backLabel()" />
+            }
 
             <!--
                 Kimlik kartı (müşteri/hasta kartıyla aynı dil): tür + durum rozeti, tarih-saat, kayıt satırı, hasta/sahip bağlantıları,
@@ -83,7 +92,9 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
                         }
                     </div>
                     <div class="flex flex-wrap gap-2 items-center w-full @md:w-auto @md:ml-auto">
-                        @if (canRescheduleAppointment && !ro.mutationBlocked()) {
+                        @if (canRescheduleAppointment && !ro.mutationBlocked() && embedded()) {
+                            <button pButton type="button" class="p-button-outlined p-button-secondary" (click)="editRequested.emit(a.id)" data-testid="appointment-edit-inline"><i class="pi pi-pencil"></i>Düzenle</button>
+                        } @else if (canRescheduleAppointment && !ro.mutationBlocked()) {
                             <a [routerLink]="['/panel/appointments', a.id, 'edit']" [queryParams]="returnContextQueryParams() ?? undefined" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
                         } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
                             <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
@@ -114,8 +125,8 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
                 <app-appointment-no-show-dialog [(visible)]="noShowOpen" [appointmentId]="a.id" [mode]="noShowMode()" [subject]="noShowSubject()" (done)="onNoShowDone()" />
             }
 
-            <!-- Eylem şeridi (müşteri/hasta kartıyla aynı): muayene aç ve gelmedi; kapalı durumda kilitli görünür. -->
-            @if (canCreateExamination || canNoShow) {
+            <!-- Eylem şeridi (müşteri/hasta kartıyla aynı): muayene aç, gelmedi ve iptal; kapalı durumda kilitli görünür. -->
+            @if (canCreateExamination || canNoShow || canCancel) {
                 <div class="mb-4 py-2 flex flex-wrap gap-2 items-center" role="toolbar" aria-label="Randevu eylemleri" data-testid="appointment-action-bar">
                     @if (canCreateExamination && a.clientId?.trim() && a.petId?.trim()) {
                         @if (isCancelledForExam(a.status) || isNoShow(a.status)) {
@@ -135,10 +146,16 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
                             <button pButton type="button" class="p-button-outlined p-button-secondary" (click)="openNoShow('revert')"><i class="pi pi-undo"></i>Gelmedi işaretini geri al</button>
                         }
                     }
+                    @if (canCancel && !ro.mutationBlocked() && isCancellable(a.status)) {
+                        <button pButton type="button" class="p-button-outlined p-button-danger" (click)="cancelOpen.set(true)" data-testid="appointment-cancel"><i class="pi pi-ban"></i>Randevuyu iptal et</button>
+                    }
                     @if (ro.mutationBlocked()) {
                         <span class="text-amber-700 dark:text-amber-300 text-sm" role="status">İşletme salt okunur moddadır; eylemler kapalı.</span>
                     }
                 </div>
+            }
+            @if (canCancel) {
+                <app-appointment-cancel-dialog [(visible)]="cancelOpen" [target]="cancelTarget()" (cancelled)="onCancelled(a.id, $event)" />
             }
 
             <!-- Satır ızgarası: bağlı muayene | notlar (8/4), eşit yükseklik; kırılım içerik alanına göre. -->
@@ -191,6 +208,13 @@ export class AppointmentDetailPageComponent implements OnInit {
     private readonly visitsService = inject(VisitsService);
     readonly ro = inject(TenantReadOnlyContextService);
 
+    /** Pencere kipi (takvim): kimlik rotadan değil buradan gelir; geri bağlantısı yok, düzenleme `editRequested` ile pencerede. */
+    readonly appointmentId = input<string | null>(null);
+    readonly embedded = computed(() => !!this.appointmentId());
+    readonly editRequested = output<string>();
+    /** Randevu değişti (iptal, geri alma, gelmedi): çağıran takvimi yeniler. */
+    readonly changed = output<void>();
+
     readonly copy = PANEL_COPY;
     readonly emptyMark = '—';
     readonly showSavedBanner = signal(false);
@@ -232,6 +256,16 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly canRevertNoShow = canRevertAppointmentNoShow;
     readonly canNoShow = this.auth.hasOperationClaim(APPOINTMENTS_NOSHOW_CLAIM);
     readonly noShowOpen = signal(false);
+    /** İptal (`Appointments.Cancel`, yalnız Planlandı randevu; ADR-026 madde 7) ve "Geri al" bandı (B2). */
+    readonly canCancel = this.auth.hasOperationClaim(APPOINTMENTS_CANCEL_CLAIM);
+    readonly isCancellable = canCancelAppointment;
+    readonly cancelOpen = signal(false);
+    readonly lastCancel = signal<{ id: string; undoWindowSeconds: number } | null>(null);
+    readonly cancelTarget = computed<AppointmentCancelTarget | null>(() => {
+        const a = this.appt();
+
+        return a ? { id: a.id, petName: a.petName, clientName: a.clientName, scheduledAtUtc: a.scheduledAtUtc } : null;
+    });
     readonly noShowMode = signal<'mark' | 'revert'>('mark');
     /** Gelmedi koşulu (saati geçmiş mi) için saat; sayfa yüklenince/yenilenince güncellenir. */
     readonly now = signal(new Date());
@@ -242,6 +276,14 @@ export class AppointmentDetailPageComponent implements OnInit {
     });
 
     ngOnInit(): void {
+        const embeddedId = this.appointmentId();
+
+        if (embeddedId) {
+            this.loader.initWithId(embeddedId);
+
+            return;
+        }
+
         this.readReturnContext();
 
         if (this.route.snapshot.queryParamMap.get('saved') === '1') {
@@ -292,6 +334,18 @@ export class AppointmentDetailPageComponent implements OnInit {
     onNoShowDone(): void {
         this.now.set(new Date());
         this.reload();
+        this.changed.emit();
+    }
+
+    onCancelled(appointmentId: string, result: AppointmentCancelResult): void {
+        this.lastCancel.set({ id: appointmentId, undoWindowSeconds: result.undoWindowSeconds });
+        this.reload();
+        this.changed.emit();
+    }
+
+    onCancelReverted(): void {
+        this.reload();
+        this.changed.emit();
     }
 
     reload(): void {

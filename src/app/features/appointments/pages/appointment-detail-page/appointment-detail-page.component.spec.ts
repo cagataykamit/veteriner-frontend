@@ -134,3 +134,80 @@ describe('AppointmentDetailPageComponent - Muayene oluştur (ADR-017 K7)', () =>
         expect(back.getAttribute('aria-label') ?? back.textContent).toContain('Takvime dön');
     });
 });
+
+describe('AppointmentDetailPageComponent - takvim penceresi ve iptal', () => {
+    let getAppointmentById: Mock;
+    let cancelAppointment: Mock;
+    let claims: Set<string>;
+
+    const create = (appointmentId: string | null) => {
+        TestBed.configureTestingModule({
+            imports: [AppointmentDetailPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'a1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null, planFeatureReady: () => true } },
+                { provide: WaitlistService, useValue: { slot: () => NEVER } },
+                { provide: AppointmentsService, useValue: { getAppointmentById, cancelAppointment, revertCancellation: () => of(undefined) } },
+                { provide: DetailRelatedSummariesService, useValue: { loadExaminationsLinkedToAppointment: () => of([]) } },
+                { provide: VisitsService, useValue: { getCurrentVeterinarianUserId: () => of('vet1'), createVisit: vi.fn() } }
+            ]
+        });
+        const fixture = TestBed.createComponent(AppointmentDetailPageComponent);
+
+        if (appointmentId) {
+            fixture.componentRef.setInput('appointmentId', appointmentId);
+        }
+
+        fixture.detectChanges();
+
+        return fixture;
+    };
+
+    beforeEach(() => {
+        claims = new Set(['Appointments.Reschedule', 'Appointments.Cancel']);
+        getAppointmentById = vi.fn((id: string) => of({ ...APPT, id }));
+        cancelAppointment = vi.fn().mockReturnValue(of({ undoWindowSeconds: 10 }));
+    });
+
+    it('pencere kipinde kimlik rotadan değil girdiden gelir; geri bağlantısı yok; Düzenle pencerede kalır', () => {
+        const fixture = create('a2');
+        const el = fixture.nativeElement as HTMLElement;
+        const edits: string[] = [];
+
+        fixture.componentInstance.editRequested.subscribe((id) => edits.push(id));
+
+        expect(getAppointmentById).toHaveBeenCalledWith('a2');
+        expect(getAppointmentById).not.toHaveBeenCalledWith('a1');
+        expect(el.querySelector('[data-testid="page-header-category-link"]')).toBeNull();
+        el.querySelector<HTMLButtonElement>('[data-testid="appointment-edit-inline"]')!.click();
+        expect(edits).toEqual(['a2']);
+    });
+
+    it('planlı randevu ayrıntıdan iptal edilir; Geri al bandı görünür ve çağıran haberdar edilir', () => {
+        const fixture = create('a2');
+        const el = fixture.nativeElement as HTMLElement;
+        let changed = 0;
+
+        fixture.componentInstance.changed.subscribe(() => changed++);
+        el.querySelector<HTMLButtonElement>('[data-testid="appointment-cancel"]')!.click();
+        fixture.detectChanges();
+        expect(fixture.componentInstance.cancelOpen()).toBe(true);
+
+        fixture.componentInstance.onCancelled('a2', { undoWindowSeconds: 10 });
+        fixture.detectChanges();
+
+        expect(changed).toBe(1);
+        expect(el.querySelector('[data-testid="appointment-cancel-undo"]')).not.toBeNull();
+    });
+
+    it('iptal yetkisi yoksa ya da randevu planlı değilse iptal düğmesi yok; rota kipinde geri bağlantısı durur', () => {
+        claims.delete('Appointments.Cancel');
+        const el = create(null).nativeElement as HTMLElement;
+
+        expect(el.querySelector('[data-testid="appointment-cancel"]')).toBeNull();
+        expect(el.querySelector('[data-testid="page-header-category-link"]')).not.toBeNull();
+        expect(getAppointmentById).toHaveBeenCalledWith('a1');
+    });
+});
