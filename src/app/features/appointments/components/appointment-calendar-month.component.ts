@@ -41,7 +41,7 @@ const URGENCY: readonly CalendarItemState[] = ['Overdue', 'DueToday', 'Upcoming'
                     @for (c of week; track c.dateKey) {
                         <button
                             type="button"
-                            class="text-left min-w-0 min-h-16 md:min-h-24 p-1.5 md:p-2 border-l border-surface first:border-l-0 cursor-pointer hover:bg-primary-50 dark:hover:bg-primary-950/60 focus-visible:outline-2 focus-visible:outline-primary"
+                            class="flex flex-col items-start justify-start text-left min-w-0 min-h-16 md:min-h-24 p-1 md:p-2 border-l border-surface first:border-l-0 cursor-pointer hover:bg-primary-50 dark:hover:bg-primary-950/60 focus-visible:outline-2 focus-visible:outline-primary"
                             [class.opacity-50]="!c.inMonth"
                             [class]="c.today ? 'bg-primary-50 dark:bg-primary-950' : ''"
                             [attr.aria-label]="ariaLabel(c)"
@@ -49,21 +49,19 @@ const URGENCY: readonly CalendarItemState[] = ['Overdue', 'DueToday', 'Upcoming'
                             (click)="dayOpen.emit(c.dateKey)"
                             [attr.data-testid]="'calendar-month-day-' + c.dateKey"
                         >
-                            <span class="flex items-center gap-1">
-                                <span
-                                    class="inline-flex items-center justify-center min-w-6 h-6 rounded-full text-sm tabular-nums"
-                                    [class]="c.today ? 'bg-primary text-primary-contrast font-semibold' : 'font-medium'"
-                                    >{{ c.dayNumber }}</span
-                                >
-                                @if (c.total) {
-                                    <!-- Telefonda yalnız toplam ve en acil durumun noktası. -->
-                                    <span class="md:hidden ml-auto inline-flex items-center gap-1 text-xs font-semibold tabular-nums">
-                                        <span class="w-2 h-2 rounded-full" [class]="dot(c.urgent!)" aria-hidden="true"></span>{{ c.total }}
-                                    </span>
-                                }
-                            </span>
+                            <span
+                                class="inline-flex items-center justify-center min-w-6 h-6 rounded-full text-sm tabular-nums"
+                                [class]="c.today ? 'bg-primary text-primary-contrast font-semibold' : 'font-medium'"
+                                >{{ c.dayNumber }}</span
+                            >
                             @if (c.total) {
-                                <span class="hidden md:block mt-1 text-xs leading-4 text-surface-900 dark:text-surface-0 truncate">
+                                <!-- Telefonda yalnız toplam ve en acil durumun noktası, gün numarasının altında. -->
+                                <span class="md:hidden mt-0.5 inline-flex items-center gap-1 text-xs font-semibold tabular-nums">
+                                    <span class="w-2 h-2 rounded-full shrink-0" [class]="dot(c.urgent!)" aria-hidden="true"></span>{{ c.total }}
+                                </span>
+                            }
+                            @if (c.total) {
+                                <span class="hidden md:block w-full mt-1 text-xs leading-4 text-surface-900 dark:text-surface-0 truncate">
                                     @if (c.appointments) {
                                         {{ c.appointments }} randevu
                                     }
