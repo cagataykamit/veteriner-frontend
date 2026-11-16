@@ -31,7 +31,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         slug: 'basic',
         apiCode: 'Basic',
         title: 'Temel',
-        description: 'Tek hekimli ya da küçük ekipli, tek şubeli klinik',
+        description: 'Tek şubeli, küçük ekipli klinik',
         recommended: false,
         trialDays: 14
     },
@@ -39,7 +39,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         slug: 'pro',
         apiCode: 'Pro',
         title: 'Profesyonel',
-        description: 'Büyüyen, birkaç kullanıcılı ve hasta portalı kullanan klinik',
+        description: 'Tek şubeli, ekibi büyüyen klinik',
         recommended: true,
         trialDays: 14
     },
@@ -47,7 +47,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         slug: 'premium',
         apiCode: 'Premium',
         title: 'Kurumsal',
-        description: 'Birden fazla şubesi olan işletme',
+        description: 'Birden çok şubesi ya da büyük ekibi olan klinik',
         recommended: false,
         trialDays: 14
     }
@@ -116,7 +116,7 @@ export interface PricingFeatureRowDef {
 }
 
 const ALL: Readonly<Record<PricingPlanSlug, PricingFeatureCell>> = { basic: true, pro: true, premium: true };
-/** Profesyonel ve Kurumsal (portal ve TIER-003…008, 018; ADR-035). */
+/** Profesyonel ve Kurumsal (TIER-003…008, 018; ADR-035). Portal 2026-11-16'dan beri tüm paketlerde. */
 const PRO_AND_UP: Readonly<Record<PricingPlanSlug, PricingFeatureCell>> = { basic: false, pro: true, premium: true };
 const PREMIUM_ONLY: Readonly<Record<PricingPlanSlug, PricingFeatureCell>> = { basic: false, pro: false, premium: true };
 
@@ -186,8 +186,8 @@ export const PRICING_FEATURE_ROWS: readonly PricingFeatureRowDef[] = [
         key: 'automatedReminders',
         plans: PRO_AND_UP
     },
-    { group: 'Hasta sahibi', label: 'Hasta sahibi portalı', detail: 'Aşı, randevu, bakiye, veri talebi; telefonda ana ekrana eklenebilir', plans: PRO_AND_UP },
-    { group: 'Hasta sahibi', label: 'Portaldan randevu talebi', detail: 'Kendi hayvanını seçerek', plans: PRO_AND_UP },
+    { group: 'Hasta sahibi', label: 'Hasta sahibi portalı', detail: 'Aşı, randevu, bakiye, veri talebi; telefonda ana ekrana eklenebilir', plans: ALL },
+    { group: 'Hasta sahibi', label: 'Portaldan randevu talebi', detail: 'Kendi hayvanını seçerek', plans: ALL },
     { group: 'Yönetim', label: 'Raporlar', detail: 'Randevu, muayene, aşı, ödeme, borç ve işletme performansı', plans: ALL },
     { group: 'Yönetim', label: 'Gelişmiş raporlar', detail: 'Hekim, hizmet ve tür kırılımları; önceki dönemle', key: 'advancedReports', plans: PRO_AND_UP },
     { group: 'Yönetim', label: 'Şubeler özeti', detail: 'Tüm şubelerin ciro, tahsilat ve iş yükü tek tabloda', key: 'clinicsOverview', plans: PREMIUM_ONLY },
