@@ -10,60 +10,54 @@ import {
     PUBLIC_VET_FINDER_LABEL
 } from '@/app/features/public/utils/public-navigation.utils';
 
-/** Alt bilgi (tasarım belgesi bölüm 4): lacivert zemin, 4 sütun; altta © yıl, tüzel kişi adı (AK-6) ve e-posta. */
+/** Alt bilgi (tasarım belgesi bölüm 4): sayfa zemininde 4 sütun; altta © yıl, tüzel kişi adı (AK-6) ve e-posta. */
 @Component({
     selector: 'app-public-footer',
     standalone: true,
     imports: [RouterLink],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <footer class="public-footer mt-16 md:mt-24">
-            <div class="mx-auto max-w-6xl px-4 pb-8 pt-12 md:px-6 md:pt-14">
-                <div class="grid grid-cols-1 gap-10 md:grid-cols-12">
-                    <div class="md:col-span-5">
-                        <img [src]="brand.compactLockupDark" alt="Vetinity" class="h-8 w-auto md:h-9" width="200" height="40" />
-                        <p class="public-on-brand-muted m-0 mt-4 max-w-sm text-sm leading-relaxed">
-                            Veteriner klinikleri için bulut klinik programı: gününüz, kayıt defterleriniz ve KVKK evrakınız tek yerde.
-                        </p>
+        <footer class="ps-footer">
+            <div class="ps-wrap">
+                <div class="ps-footer-grid">
+                    <div class="ps-footer-brand">
+                        <img [src]="brand.compactLockup" alt="Vetinity" class="block h-9 w-auto dark:hidden" width="200" height="40" />
+                        <img [src]="brand.compactLockupDark" alt="Vetinity" class="hidden h-9 w-auto dark:block" width="200" height="40" />
+                        <p>Veteriner klinikleri için bulut klinik programı: gününüz, kayıt defterleriniz ve KVKK evrakınız tek yerde.</p>
                     </div>
-
-                    <div class="grid grid-cols-1 gap-8 sm:grid-cols-3 md:col-span-7">
-                        <div>
-                            <p class="public-on-brand-text m-0 mb-3 text-sm font-semibold">Ürün</p>
-                            <ul class="m-0 list-none p-0 text-sm md:space-y-2">
-                                @for (link of productLinks; track link.routerLink) {
-                                    <li><a [routerLink]="link.routerLink" class="public-footer-link">{{ link.label }}</a></li>
-                                }
-                                <!-- Hasta sahibine yönelik sayfa ayrı sunucuda; Angular rotası değil -->
-                                <li><a [href]="vetFinderHref" class="public-footer-link">{{ vetFinderLabel }}</a></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <p class="public-on-brand-text m-0 mb-3 text-sm font-semibold">Destek</p>
-                            <ul class="m-0 list-none p-0 text-sm md:space-y-2">
-                                @for (link of supportLinks; track link.routerLink) {
-                                    <li><a [routerLink]="link.routerLink" class="public-footer-link">{{ link.label }}</a></li>
-                                }
-                                <li><a routerLink="/auth/login" class="public-footer-link">Giriş yap</a></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <p class="public-on-brand-text m-0 mb-3 text-sm font-semibold">Hukuki</p>
-                            <ul class="m-0 list-none p-0 text-sm md:space-y-2">
-                                @for (doc of legalLinks; track doc.path) {
-                                    <li><a [routerLink]="doc.path" class="public-footer-link">{{ doc.shortTitle }}</a></li>
-                                }
-                            </ul>
-                        </div>
+                    <div>
+                        <p class="ps-footer-title">Ürün</p>
+                        <ul class="ps-list">
+                            @for (link of productLinks; track link.routerLink) {
+                                <li><a [routerLink]="link.routerLink">{{ link.label }}</a></li>
+                            }
+                            <!-- Hasta sahibine yönelik sayfa ayrı sunucuda; Angular rotası değil -->
+                            <li><a [href]="vetFinderHref">{{ vetFinderLabel }}</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="ps-footer-title">Destek</p>
+                        <ul class="ps-list">
+                            @for (link of supportLinks; track link.routerLink) {
+                                <li><a [routerLink]="link.routerLink">{{ link.label }}</a></li>
+                            }
+                            <li><a routerLink="/auth/login">Giriş yap</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="ps-footer-title">Hukuki</p>
+                        <ul class="ps-list">
+                            @for (doc of legalLinks; track doc.path) {
+                                <li><a [routerLink]="doc.path">{{ doc.shortTitle }}</a></li>
+                            }
+                        </ul>
                     </div>
                 </div>
 
-                <div class="mt-10 flex flex-col gap-2 border-t border-white/15 pt-6 text-xs sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-                    <p class="public-on-brand-subtle m-0">© {{ year }} {{ legalEntityName ?? 'Vetinity' }}.</p>
+                <div class="ps-footer-base">
+                    <p>© {{ year }} {{ legalEntityName ?? 'Vetinity' }}.</p>
                     @if (contactEmail) {
-                        <p class="public-on-brand-subtle m-0">
-                            <a [href]="'mailto:' + contactEmail" class="public-footer-link">{{ contactEmail }}</a>
-                        </p>
+                        <p><a [href]="'mailto:' + contactEmail">{{ contactEmail }}</a></p>
                     }
                 </div>
             </div>

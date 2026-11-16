@@ -34,11 +34,6 @@
     --public-on-brand: #f8fafc;
     --public-on-brand-muted: color-mix(in srgb, white 82%, transparent);
     --public-on-brand-subtle: color-mix(in srgb, white 72%, transparent);
-
-    /* Topbar nav — hover/focus/active kontrastı */
-    --public-topbar-nav-hover-color: var(--vetinity-navy);
-    --public-topbar-nav-hover-bg: color-mix(in srgb, var(--public-accent) 10%, transparent);
-    --public-topbar-nav-focus-ring: color-mix(in srgb, var(--public-accent) 38%, transparent);
 }
 
 .public-page {
@@ -51,8 +46,8 @@
  */
 html.public-site-root {
     font-size: 16px;
-    /* Yapışkan üst çubuk (64 px) sayfa içi bağlantı ve odak hedeflerini örtmesin */
-    scroll-padding-top: 72px;
+    /* Yüzen üst çubuk (10 + 64 px) ve Özellikler dizini sayfa içi bağlantı ve odak hedeflerini örtmesin */
+    scroll-padding-top: 104px;
 }
 
 /* Koyu tema: zemin #0b1220, kart #111a2e, metin #e5e7eb, teal aynı */
@@ -60,9 +55,6 @@ html.public-site-root {
     --public-accent-text: var(--vetinity-teal);
     --public-accent-hover: var(--vetinity-soft-teal);
     --p-text-muted-color: var(--p-surface-400);
-    --public-topbar-nav-hover-color: var(--vetinity-soft-teal);
-    --public-topbar-nav-hover-bg: color-mix(in srgb, var(--vetinity-teal) 14%, transparent);
-    --public-topbar-nav-focus-ring: color-mix(in srgb, var(--vetinity-soft-teal) 42%, transparent);
     --public-border: color-mix(in srgb, var(--vetinity-soft-teal) 16%, var(--p-surface-800));
     --public-border-emphasis: color-mix(in srgb, var(--vetinity-soft-teal) 30%, var(--p-surface-700));
 }
@@ -87,33 +79,6 @@ html.public-site-root {
     }
 }
 
-/* —— Koyu zemin metin —— */
-
-.public-on-brand-text {
-    color: var(--public-on-brand);
-}
-
-.public-on-brand-muted {
-    color: var(--public-on-brand-muted);
-}
-
-.public-on-brand-subtle {
-    color: var(--public-on-brand-subtle);
-}
-
-/* —— Topbar —— */
-
-/* Yapışkan üst çubuk: yarı saydam zemin + 1 px alt çizgi (tasarım belgesi bölüm 4) */
-.public-page .public-topbar {
-    background: color-mix(in srgb, var(--p-surface-0) 88%, transparent);
-    border-bottom: 1px solid var(--public-border);
-    backdrop-filter: blur(8px);
-}
-
-.app-dark .public-page .public-topbar {
-    background: color-mix(in srgb, #0b1220 88%, transparent);
-}
-
 /* "İçeriğe atla": yalnız klavye odağında görünür */
 .public-page .public-skip-link {
     position: absolute;
@@ -133,89 +98,6 @@ html.public-site-root {
     top: 0.75rem;
     outline: 2px solid var(--vetinity-teal);
     outline-offset: 2px;
-}
-
-.public-page .public-topbar-nav-link {
-    box-sizing: border-box;
-    border-radius: 0.375rem;
-    font-weight: 500;
-    transition:
-        color 0.15s ease,
-        background-color 0.15s ease,
-        box-shadow 0.15s ease;
-}
-
-.public-page .public-topbar-nav-link:hover,
-.public-page .public-topbar-nav-link.router-link-active {
-    color: var(--public-topbar-nav-hover-color);
-}
-
-@media (hover: hover) and (pointer: fine) {
-    .public-page .public-topbar-nav-link:hover {
-        background-color: var(--public-topbar-nav-hover-bg);
-    }
-}
-
-.public-page .public-topbar-nav-link:focus-visible,
-.public-page .public-topbar-menu-button:focus-visible,
-.public-page .public-mobile-menu-link:focus-visible,
-.public-page .public-vet-finder-link:focus-visible {
-    color: var(--public-topbar-nav-hover-color);
-    outline: none;
-    box-shadow: 0 0 0 2px var(--public-topbar-nav-focus-ring);
-}
-
-.public-page .public-mobile-menu-link:hover {
-    color: var(--public-topbar-nav-hover-color);
-}
-
-/* Veteriner bul: hasta sahibine yönelik ikincil bağlantı; klinik menüsünden renk ve çizgiyle ayrılır, düğme değildir */
-.public-page .public-vet-finder-link {
-    border-radius: 0.375rem;
-    color: var(--public-accent-text);
-}
-
-.public-page .public-vet-finder-link:hover {
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-
-.public-page .public-topbar-divider {
-    background: var(--public-border);
-}
-
-/* Tema düğmesi: 44 px dokunma hedefi, 1 px çerçeve, gölge yok */
-.public-page .public-topbar-theme-toggle.p-button.p-button-rounded {
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-    padding: 0 !important;
-    flex-shrink: 0;
-    background: var(--p-surface-0) !important;
-    border: 1px solid var(--public-border) !important;
-    color: var(--vetinity-navy) !important;
-    box-shadow: none !important;
-}
-
-.public-page .public-topbar-theme-toggle.p-button.p-button-rounded .p-button-icon {
-    font-size: 1.05rem;
-    color: inherit !important;
-}
-
-.public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):hover,
-.public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):focus-visible {
-    background: var(--vetinity-bg-soft) !important;
-    border-color: var(--public-border-emphasis) !important;
-}
-
-.app-dark .public-page .public-topbar-theme-toggle.p-button.p-button-rounded {
-    background: #111a2e !important;
-    color: #e5e7eb !important;
-}
-
-.app-dark .public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):hover,
-.app-dark .public-page .public-topbar-theme-toggle.p-button.p-button-rounded:not(:disabled):focus-visible {
-    background: color-mix(in srgb, var(--vetinity-teal) 14%, #111a2e) !important;
 }
 
 /* —— Çok sayfalı iskelet (tasarım belgesi bölüm 3–4): tipografi, kart, düğme, yüzeyler —— */
@@ -275,12 +157,6 @@ html.public-site-root {
     color: #e5e7eb;
 }
 
-/* Lacivert zemin (kahraman, çağrı kartı) üstündeki başlık; tema rengini ezer */
-.public-page .public-h1.public-on-brand-text,
-.public-page .public-h2.public-on-brand-text {
-    color: var(--public-on-brand);
-}
-
 .app-dark .public-page .public-lead {
     color: var(--p-surface-300);
 }
@@ -309,15 +185,6 @@ html.public-site-root {
 
 .app-dark .public-page .public-card {
     background: #111a2e;
-}
-
-/* Açık teal yüzey (sayfa başlığı, "Türkiye'ye özgü") */
-.public-page .public-soft-surface {
-    background: var(--vetinity-bg-soft);
-}
-
-.app-dark .public-page .public-soft-surface {
-    background: color-mix(in srgb, var(--vetinity-teal) 8%, #0b1220);
 }
 
 /* Ekran görüntüsü çerçevesi: 1 px çerçeve, 16 px köşe, tek gölge; tarayıcı çubuğu çizilmez (tasarım belgesi bölüm 2) */
@@ -360,59 +227,6 @@ html.public-site-root {
 
 .app-dark .public-page .public-shot-caption {
     color: var(--p-surface-200);
-}
-
-/* —— Klinik web sitesi vitrini: açık teal yüzeyde çerçeveli bölüm —— */
-.public-page .public-site-showcase {
-    padding: 1.5rem 1.25rem;
-    border: 1px solid var(--public-border);
-    border-radius: var(--public-radius-shot);
-    background: var(--vetinity-bg-soft);
-}
-
-@media (min-width: 768px) {
-    .public-page .public-site-showcase {
-        padding: 2.5rem;
-    }
-}
-
-.app-dark .public-page .public-site-showcase {
-    background: color-mix(in srgb, var(--vetinity-teal) 8%, #0b1220);
-}
-
-/* Tasarım görselinin üstünde sitenin adresi: bunun bir web sitesi olduğunu söyler; tarayıcı düğmesi taklidi yok */
-.public-page .public-site-design-address {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.875rem;
-    overflow: hidden;
-    border-bottom: 1px solid var(--public-border);
-    color: var(--p-surface-600);
-    font-size: 0.8125rem;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-.public-page .public-site-design-address .pi {
-    color: var(--public-accent-text);
-    font-size: 0.8125rem;
-}
-
-.app-dark .public-page .public-site-design-address {
-    color: var(--p-surface-300);
-}
-
-.public-page .public-site-steps {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr));
-    gap: 0.75rem;
-}
-
-.public-page .public-site-steps .public-timeline-marker {
-    width: 2rem;
-    height: 2rem;
-    font-size: 0.875rem;
 }
 
 /* Düğmeler: birincil lacivert zemin + beyaz metin; ikincil beyaz zemin + lacivert çerçeve (teal üstünde beyaz metin yok) */
@@ -488,100 +302,6 @@ html.public-site-root {
     border-color: #ffffff;
     background: color-mix(in srgb, white 10%, transparent);
     color: #ffffff;
-}
-
-/* Metin düğmesi (üst çubuk "Giriş yap") */
-.public-page .public-btn-ghost {
-    background: transparent;
-    color: var(--p-surface-800);
-}
-
-.public-page .public-btn-ghost:hover {
-    background: var(--public-topbar-nav-hover-bg);
-    color: var(--public-topbar-nav-hover-color);
-}
-
-.app-dark .public-page .public-btn-ghost {
-    color: var(--p-surface-200);
-}
-
-/* Lacivert kart üzerinde düğmeler (çağrı kartı) */
-.public-page .public-btn-on-dark {
-    background: #ffffff;
-    border-color: #ffffff;
-    color: var(--vetinity-navy);
-}
-
-.public-page .public-btn-on-dark:hover {
-    background: #e6f6f5;
-    border-color: #e6f6f5;
-    color: var(--vetinity-navy);
-}
-
-.public-page .public-btn-outline-on-dark {
-    background: transparent;
-    border-color: color-mix(in srgb, white 55%, transparent);
-    color: #ffffff;
-}
-
-.public-page .public-btn-outline-on-dark:hover {
-    background: color-mix(in srgb, white 12%, transparent);
-    border-color: #ffffff;
-    color: #ffffff;
-}
-
-/* Çağrı kartı: lacivert zemin, gradient yok */
-.public-page .public-cta-card {
-    background: var(--vetinity-navy);
-    border-radius: var(--public-radius-card);
-}
-
-/* Alt bilgi: lacivert zemin, kenardan kenara */
-.public-page .public-footer {
-    background: var(--vetinity-navy);
-}
-
-.app-dark .public-page .public-footer {
-    background: #07122a;
-}
-
-.public-page .public-footer-link {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    min-width: 44px;
-    color: var(--public-on-brand-muted);
-    text-decoration: none;
-    transition: color 0.15s ease;
-}
-
-.public-page .public-footer-link:hover,
-.public-page .public-footer-link:focus-visible {
-    color: var(--public-on-brand);
-}
-
-@media (min-width: 768px) {
-    .public-page .public-footer-link {
-        min-height: 0;
-        min-width: 0;
-    }
-}
-
-/* Numaralı/ikonlu adım rozeti */
-.public-page .public-step-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 0.625rem;
-    background: var(--vetinity-bg-soft);
-    color: var(--vetinity-navy);
-}
-
-.app-dark .public-page .public-step-badge {
-    background: color-mix(in srgb, var(--vetinity-teal) 18%, transparent);
-    color: var(--vetinity-soft-teal);
 }
 
 /* SSS kategori sekmeleri (çip) */
@@ -801,105 +521,6 @@ html.public-site-root {
 
 .public-page .public-plan-price--text {
     font-size: 1.5rem;
-}
-
-/* Özellikler bölüm dizini */
-.public-page .public-index-link:hover,
-.public-page .public-index-link:focus-visible {
-    color: var(--vetinity-navy);
-}
-
-.app-dark .public-page .public-index-link:hover,
-.app-dark .public-page .public-index-link:focus-visible {
-    color: var(--vetinity-soft-teal);
-}
-
-/* Geçiş zaman çizgisi (dikey; mobilde de aynı) */
-.public-page .public-timeline-item {
-    position: relative;
-    display: grid;
-    grid-template-columns: 2.5rem 1fr;
-    column-gap: 1rem;
-}
-
-.public-page .public-timeline-item::before {
-    content: '';
-    position: absolute;
-    left: 1.25rem;
-    top: 2.5rem;
-    bottom: 0;
-    width: 1px;
-    background: var(--public-border-emphasis);
-}
-
-.public-page .public-timeline-item:last-child::before {
-    display: none;
-}
-
-.public-page .public-timeline-marker {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 999px;
-    background: var(--vetinity-navy);
-    color: #ffffff;
-    font-weight: 700;
-}
-
-.app-dark .public-page .public-timeline-marker {
-    background: var(--vetinity-teal);
-    color: #0b1220;
-}
-
-/* —— Ana sayfa (5.1): kahraman gradienti kenardan kenara, akış sekmeleri —— */
-
-/* Tek gradient: lacivert → teal; yalnız kahraman (bölüm 3). Üstündeki metin beyaz, lacivert ağırlıklı zemin ≥ 4.5:1. */
-.public-page .public-hero-gradient {
-    background: linear-gradient(135deg, #061224 0%, var(--vetinity-navy) 45%, color-mix(in srgb, var(--vetinity-navy) 55%, var(--vetinity-teal)) 100%);
-}
-
-.public-page .public-flow-tab {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-    min-height: 44px;
-    padding: 0.875rem 1rem;
-    border: 1px solid var(--public-border);
-    border-radius: var(--public-radius-card);
-    background: var(--p-surface-0);
-    color: var(--p-surface-900);
-    text-align: left;
-    cursor: pointer;
-    transition:
-        border-color 0.15s ease,
-        background-color 0.15s ease;
-}
-
-.public-page .public-flow-tab:hover {
-    border-color: var(--public-border-emphasis);
-}
-
-.public-page .public-flow-tab:focus-visible {
-    outline: 2px solid var(--vetinity-teal);
-    outline-offset: 2px;
-}
-
-.public-page .public-flow-tab--active {
-    border-color: var(--vetinity-teal);
-    background: var(--vetinity-bg-soft);
-}
-
-.app-dark .public-page .public-flow-tab {
-    background: #111a2e;
-    color: #e5e7eb;
-}
-
-.app-dark .public-page .public-flow-tab--active {
-    border-color: var(--vetinity-teal);
-    background: color-mix(in srgb, var(--vetinity-teal) 14%, #111a2e);
 }
 
 /* —— Auth shell layout — login / forgot / reset —— */

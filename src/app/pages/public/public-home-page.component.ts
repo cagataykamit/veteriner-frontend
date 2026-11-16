@@ -3,17 +3,15 @@ import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectio
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { PUBLIC_HOME_FAQS } from '@/app/features/public/utils/public-faq-content.utils';
-import {
-    PUBLIC_HOME_AUDIENCE,
-    PUBLIC_HOME_DAY_FLOW,
-    PUBLIC_HOME_TRIAL_LINE
-} from '@/app/features/public/utils/public-home-content.utils';
+import { PUBLIC_HOME_AUDIENCE, PUBLIC_HOME_DAY_FLOW, PUBLIC_HOME_TRIAL_LINE, PUBLIC_HOME_TRUST } from '@/app/features/public/utils/public-home-content.utils';
 import {
     PUBLIC_MIGRATION_EXCLUDED,
     PUBLIC_MIGRATION_HOME_STEPS,
     PUBLIC_MIGRATION_INCLUDED
 } from '@/app/features/public/utils/public-migration-content.utils';
 import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
+import { PUBLIC_FEATURE_VISUALS } from '@/app/features/public/utils/public-screenshot-crops.utils';
+import { publicSiteToneClass } from '@/app/features/public/utils/public-site-tone.utils';
 import {
     PUBLIC_KVKK_NOTE,
     PUBLIC_KVKK_STEPS,
@@ -32,218 +30,276 @@ import { PublicSiteShowcaseComponent } from './components/public-site-showcase.c
 const HOME_FAQ_JSON_LD_ID = 'home-faq';
 const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
 
-/** Ana sayfa omurgası (tasarım belgesi 5.1, ADR-035): kahraman, kime göre, bir günün akışı, Türkiye'ye özgü, kayıt güvenliği, klinik web sitesi, geçiş, paketler, SSS, çağrı. */
+/**
+ * Ana sayfa omurgası (tasarım belgesi 5.1, ADR-035): kahraman, güven satırı, kime göre, bir günün akışı, Türkiye'ye özgü, kayıt
+ * güvenliği, klinik web sitesi, geçiş, paketler, SSS, çağrı. Görünüş "Sıcak klinik" (`public-site.scss`): günün dört adımı dört
+ * tonla ayrışır; ekranlar panel menüsü kırpılmış, büyük ve yakın çekimli; telefonda dar parça gösterilir.
+ */
 @Component({
     selector: 'app-public-home-page',
     standalone: true,
     imports: [RouterLink, PublicScreenshotComponent, PublicSiteShowcaseComponent, PublicPlanCardsComponent, PublicFaqListComponent, PublicCtaComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <!-- 1 Kahraman: gradient kenardan kenara, sol metin, sağ ekran -->
-        <section class="public-hero-gradient" aria-labelledby="public-home-hero-title">
-            <div class="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 pb-12 pt-12 md:px-6 md:pt-16 lg:grid-cols-[45fr_55fr] lg:gap-14 lg:pb-16">
+        <!-- 1 Kahraman: solda metin ("tek ekranda" fosforlu), sağda kalın çerçevede ekran ve yapışkan not; altında günün dört durağı -->
+        <section class="ps-hero" aria-labelledby="public-home-hero-title">
+            <span class="ps-blob ps-blob--a ps-tone-mint" aria-hidden="true"></span>
+            <span class="ps-blob ps-blob--b ps-tone-sun" aria-hidden="true"></span>
+            <div class="ps-wrap ps-hero-grid">
                 <div>
-                    <p class="public-eyebrow m-0 mb-4 !text-[var(--vetinity-soft-teal)]">Veteriner klinikleri için</p>
-                    <h1 id="public-home-hero-title" class="public-h1 public-on-brand-text m-0">Veteriner kliniğinizin günü tek ekranda</h1>
-                    <p class="m-0 mt-5 max-w-xl text-base leading-relaxed public-on-brand-muted md:text-lg">
-                        Geliş, bekleme, muayene, tahsilat ve kayıt defterleri aynı yerde. Kâğıt, Excel ya da eski programdaki kayıtlarınızı da getirin.
-                    </p>
-                    <div class="mt-7 flex flex-col gap-3 sm:flex-row">
-                        <a routerLink="/auth/signup" class="public-btn public-btn-on-dark w-full sm:w-auto">Ücretsiz dene</a>
-                        <a [routerLink]="paths.contact" class="public-btn public-btn-outline-on-dark w-full sm:w-auto">Demo iste</a>
+                    <p class="ps-chip ps-tone-mint"><i class="pi pi-heart-fill" aria-hidden="true"></i>Veteriner klinikleri için</p>
+                    <h1 id="public-home-hero-title" class="public-h1">Veteriner kliniğinizin günü <em class="ps-marker">tek ekranda</em></h1>
+                    <p class="ps-hero-lead">Geliş, bekleme, muayene, tahsilat ve kayıt defterleri aynı yerde. Kâğıt, Excel ya da eski programdaki kayıtlarınızı da getirin.</p>
+                    <div class="ps-actions">
+                        <a routerLink="/auth/signup" class="public-btn public-btn-primary">Ücretsiz dene</a>
+                        <a [routerLink]="paths.contact" class="public-btn public-btn-secondary">Demo iste</a>
                     </div>
-                    <p class="m-0 mt-4 text-sm public-on-brand-subtle">{{ trialLine }}</p>
-                </div>
-                <div class="relative lg:translate-y-12">
-                    <app-public-screenshot shot="bugun" [eager]="true" />
-                    <!-- Telefonda aynı ekran: yalnız geniş ekranda, masaüstü görüntüsünün sol alt köşesine biner -->
-                    <div class="absolute -bottom-10 -left-6 hidden w-[19%] lg:block" data-hero-phone>
-                        <app-public-screenshot shot="telefonBugun" />
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 2 Kime göre -->
-        <section class="mx-auto max-w-6xl px-4 pt-16 md:px-6 lg:pt-28" aria-labelledby="public-home-audience-title">
-            <h2 id="public-home-audience-title" class="public-h2 m-0 text-center">Kime göre?</h2>
-            <p class="public-lead m-0 mx-auto mt-3 max-w-2xl text-center">Tek hekimli klinikten çok şubeli işletmeye; büyüdükçe şube eklersiniz.</p>
-            <div class="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
-                @for (item of audience; track item.title) {
-                    <article class="public-card p-6">
-                        <span class="public-step-badge" aria-hidden="true"><i [class]="item.icon"></i></span>
-                        <h3 class="m-0 mt-4 text-lg font-semibold text-surface-900 dark:text-surface-0">{{ item.title }}</h3>
-                        <p class="m-0 mt-2 text-sm leading-relaxed text-surface-600 dark:text-surface-300">{{ item.description }}</p>
-                    </article>
-                }
-            </div>
-        </section>
-
-        <!-- 3 Bir günün akışı: 4 sekme, seçili adımın ekranı altta -->
-        <section class="mx-auto max-w-6xl px-4 pt-20 md:px-6 lg:pt-28" aria-labelledby="public-home-flow-title">
-            <h2 id="public-home-flow-title" class="public-h2 m-0 text-center">Bir günün akışı</h2>
-            <p class="public-lead m-0 mx-auto mt-3 max-w-2xl text-center">Gelişten gün sonuna dört adım; her adımda tek ekran.</p>
-            <div class="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4" role="tablist" aria-label="Günün adımları">
-                @for (step of dayFlow; track step.id; let i = $index) {
-                    <button
-                        type="button"
-                        role="tab"
-                        [id]="'flow-tab-' + step.id"
-                        [attr.aria-selected]="activeFlowId() === step.id"
-                        [attr.aria-controls]="'flow-panel-' + step.id"
-                        class="public-flow-tab"
-                        [class.public-flow-tab--active]="activeFlowId() === step.id"
-                        (click)="activeFlowId.set(step.id)"
-                    >
-                        <span class="text-xs font-semibold text-muted-color">{{ i + 1 }}</span>
-                        <span class="text-base font-semibold">{{ step.title }}</span>
-                        <span class="hidden text-sm text-surface-600 dark:text-surface-300 md:block">{{ step.description }}</span>
-                    </button>
-                }
-            </div>
-            <div role="tabpanel" [id]="'flow-panel-' + activeFlow().id" [attr.aria-labelledby]="'flow-tab-' + activeFlow().id" class="mt-6">
-                <p class="m-0 mb-4 text-center text-sm text-surface-600 dark:text-surface-300 md:hidden">{{ activeFlow().description }}</p>
-                <app-public-screenshot [shot]="activeFlow().screenshot" />
-            </div>
-            <p class="m-0 mt-6 text-center">
-                <a [routerLink]="paths.features" class="public-brand-link inline-flex min-h-[44px] items-center">Tüm akışı görün</a>
-            </p>
-        </section>
-
-        <!-- 4 Türkiye'ye özgü: açık teal yüzey, iki sütun -->
-        <section class="public-soft-surface mt-20 lg:mt-28" aria-labelledby="public-home-tr-title">
-            <div class="mx-auto max-w-6xl px-4 py-16 md:px-6 lg:py-24">
-                <h2 id="public-home-tr-title" class="public-h2 m-0">Türkiye'ye özgü</h2>
-                <p class="public-lead m-0 mt-3 max-w-2xl">Kayıt defterleri her kayıtla kendiliğinden dolar; KVKK evrakı hazır.</p>
-                <div class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
-                    <div>
-                        <h3 class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">Kayıt defterleri</h3>
-                        <ul class="m-0 mt-4 list-none space-y-2 p-0">
-                            @for (register of registers; track register.name) {
-                                <li class="flex items-center gap-2.5 text-base text-surface-700 dark:text-surface-200">
-                                    <i class="pi pi-book text-[var(--public-accent)]" aria-hidden="true"></i>{{ register.name }}
-                                </li>
-                            }
-                        </ul>
-                        <p class="m-0 mt-3 text-sm text-surface-600 dark:text-surface-300">Yazdırın, Excel'e alın.</p>
-                        <div class="mt-5">
-                            <app-public-screenshot shot="kayitDefteri" />
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="m-0 text-xl font-semibold text-surface-900 dark:text-surface-0">KVKK evrakı</h3>
-                        <ul class="m-0 mt-4 list-none space-y-2 p-0">
-                            @for (step of kvkkSteps; track step.title) {
-                                <li class="flex items-center gap-2.5 text-base text-surface-700 dark:text-surface-200">
-                                    <i [class]="step.icon + ' text-[var(--public-accent)]'" aria-hidden="true"></i>{{ step.title }}
-                                </li>
-                            }
-                        </ul>
-                        <p class="m-0 mt-3 text-sm text-surface-600 dark:text-surface-300">Rıza kaydı ve metin sürümü müşteri kartında.</p>
-                        <div class="mt-5">
-                            <app-public-screenshot shot="kvkkFormu" />
-                        </div>
-                    </div>
-                </div>
-                <p class="public-note m-0 mt-8">{{ kvkkNote }}</p>
-                <p class="m-0 mt-3">
-                    <a [routerLink]="paths.registersAndKvkk" class="public-brand-link inline-flex min-h-[44px] items-center">Defterler ve KVKK sayfası</a>
-                </p>
-            </div>
-        </section>
-
-        <!-- 5 Kayıt güvenliği: sol ekran, sağ 4 madde -->
-        <section class="mx-auto max-w-6xl px-4 pt-20 md:px-6 lg:pt-28" aria-labelledby="public-home-safety-title">
-            <div class="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14">
-                <app-public-screenshot shot="kesinlestirme" />
-                <div>
-                    <h2 id="public-home-safety-title" class="public-h2 m-0">Kayıtlarınız güvende ve dürüst</h2>
-                    <ul class="m-0 mt-6 list-none space-y-4 p-0">
-                        @for (item of safetyItems; track item.title) {
-                            <li class="flex items-start gap-3">
-                                <i class="pi pi-check-circle mt-1 shrink-0 text-[var(--public-accent)]" aria-hidden="true"></i>
-                                <div>
-                                    <p class="m-0 text-base font-semibold text-surface-900 dark:text-surface-0">{{ item.title }}</p>
-                                    <p class="m-0 mt-0.5 text-sm text-surface-600 dark:text-surface-300">{{ item.description }}</p>
-                                </div>
-                            </li>
+                    <ul class="ps-list ps-ticks" [attr.aria-label]="trialLine">
+                        @for (part of trialParts; track part) {
+                            <li><i class="pi pi-check" aria-hidden="true"></i>{{ part }}</li>
                         }
                     </ul>
                 </div>
+                <div class="ps-stage">
+                    <div class="ps-stage-main ps-not-phone">
+                        <app-public-screenshot crop="bugunIcerik" [eager]="true" />
+                    </div>
+                    <!-- Telefonda masaüstü ekranı yerine gerçek telefon ekranı -->
+                    <div class="ps-only-phone" data-hero-phone>
+                        <app-public-screenshot crop="telefonKart" />
+                    </div>
+                    <div class="ps-stage-sticker ps-not-phone">
+                        <app-public-screenshot crop="bugunAcil" [sticker]="true" [caption]="heroStickerCaption" />
+                    </div>
+                </div>
             </div>
-        </section>
-
-        <!-- Klinik web sitesi: dört tasarım, ayrıntısı Özellikler'de -->
-        <section class="mx-auto max-w-6xl px-4 pt-20 md:px-6 lg:pt-28" aria-labelledby="public-home-site-title">
-            <app-public-site-showcase [compact]="true" headingId="public-home-site-title" />
-        </section>
-
-        <!-- 6 Geçiş: 3 adım + aktarılır/aktarılmaz -->
-        <section class="mx-auto max-w-6xl px-4 pt-20 md:px-6 lg:pt-28" aria-labelledby="public-home-migration-title">
-            <h2 id="public-home-migration-title" class="public-h2 m-0">Eski programdan kayıtlarınızla geçin</h2>
-            <ol class="m-0 mt-8 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-3">
-                @for (step of migrationSteps; track step.title; let i = $index) {
-                    <li class="public-card p-5">
-                        <span class="public-timeline-marker" aria-hidden="true">{{ i + 1 }}</span>
-                        <h3 class="m-0 mt-3 text-base font-semibold text-surface-900 dark:text-surface-0">{{ step.title }}</h3>
-                        <p class="m-0 mt-1.5 text-sm text-surface-600 dark:text-surface-300">{{ step.description }}</p>
+            <ol class="ps-list ps-wrap ps-path" aria-label="Günün durakları">
+                @for (step of dayFlow; track step.id; let i = $index) {
+                    <li [class]="toneOf(i)">
+                        <span class="ps-bubble" aria-hidden="true">{{ i + 1 }}</span>
+                        <strong>{{ step.title }}</strong>
                     </li>
                 }
             </ol>
-            <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div class="public-card p-5">
-                    <h3 class="m-0 text-sm font-semibold uppercase tracking-wide text-muted-color">Aktarılır</h3>
-                    <ul class="m-0 mt-2 list-none space-y-1.5 p-0 text-sm text-surface-700 dark:text-surface-200">
-                        @for (item of migrationIncluded; track item) {
-                            <li class="flex items-start gap-2"><i class="pi pi-check mt-0.5 text-[var(--public-accent)]" aria-hidden="true"></i><span>{{ item }}</span></li>
-                        }
-                    </ul>
-                </div>
-                <div class="public-card p-5">
-                    <h3 class="m-0 text-sm font-semibold uppercase tracking-wide text-muted-color">Şimdilik aktarılmaz</h3>
-                    <ul class="m-0 mt-2 list-none space-y-1.5 p-0 text-sm text-surface-700 dark:text-surface-200">
-                        @for (item of migrationExcluded; track item) {
-                            <li class="flex items-start gap-2"><i class="pi pi-minus mt-0.5 text-surface-400" aria-hidden="true"></i><span>{{ item }}</span></li>
-                        }
-                    </ul>
+        </section>
+
+        <!-- Güven satırı -->
+        <div class="ps-trust">
+            <ul class="ps-list ps-wrap" aria-label="Kısaca">
+                @for (item of trust; track item.text) {
+                    <li><i [class]="item.icon" aria-hidden="true"></i>{{ item.text }}</li>
+                }
+            </ul>
+        </div>
+
+        <!-- 2 Kime göre: üç tonlu kart -->
+        <section class="ps-section" aria-labelledby="public-home-audience-title">
+            <div class="ps-wrap">
+                <header class="ps-head ps-head--center">
+                    <h2 id="public-home-audience-title" class="public-h2">Kime göre?</h2>
+                    <p class="public-lead">Tek hekimli klinikten çok şubeli işletmeye; büyüdükçe şube eklersiniz.</p>
+                </header>
+                <div class="ps-cards3">
+                    @for (item of audience; track item.title; let i = $index) {
+                        <article [class]="'ps-card ' + toneOf(i)">
+                            <span class="ps-round" aria-hidden="true"><i [class]="item.icon"></i></span>
+                            <h3 class="ps-h3">{{ item.title }}</h3>
+                            <p>{{ item.description }}</p>
+                        </article>
+                    }
                 </div>
             </div>
-            <p class="m-0 mt-4">
-                <a [routerLink]="paths.migration" class="public-brand-link inline-flex min-h-[44px] items-center">Geçiş adımlarının tamamı</a>
-            </p>
+        </section>
+
+        <!-- 3 Bir günün akışı: renkli sekmeler; panel seçili adımın rengine bürünür -->
+        <section class="ps-section ps-section--tight" aria-labelledby="public-home-flow-title">
+            <div class="ps-wrap">
+                <header class="ps-head ps-head--center">
+                    <h2 id="public-home-flow-title" class="public-h2">Bir günün akışı</h2>
+                    <p class="public-lead">Gelişten gün sonuna dört adım; her adımda tek ekran.</p>
+                </header>
+                <div class="ps-tabs" role="tablist" aria-label="Günün adımları">
+                    @for (step of dayFlow; track step.id; let i = $index) {
+                        <button
+                            type="button"
+                            role="tab"
+                            [id]="'flow-tab-' + step.id"
+                            [attr.aria-selected]="activeFlowId() === step.id"
+                            [attr.aria-controls]="'flow-panel-' + step.id"
+                            [class]="'ps-tab ' + toneOf(i)"
+                            [class.ps-tab--active]="activeFlowId() === step.id"
+                            (click)="activeFlowId.set(step.id)"
+                        >
+                            <span class="ps-bubble" aria-hidden="true">{{ i + 1 }}</span><span>{{ step.title }}</span>
+                        </button>
+                    }
+                </div>
+                <div role="tabpanel" [id]="'flow-panel-' + activeFlow().id" [attr.aria-labelledby]="'flow-tab-' + activeFlow().id" [class]="'ps-stagepanel ' + toneOf(activeFlowIndex())">
+                    <p class="ps-stagepanel-text">{{ activeFlow().description }}</p>
+                    <app-public-screenshot [crop]="activeVisual().main" [phoneCrop]="activeVisual().phone" />
+                    <div class="ps-zooms ps-not-phone" [class.ps-zooms--single]="activeVisual().details.length === 1">
+                        @for (detail of activeVisual().details; track detail.crop) {
+                            <div>
+                                <app-public-screenshot [crop]="detail.crop" />
+                                <p class="ps-zoom-label"><i class="pi pi-search-plus" aria-hidden="true"></i>{{ detail.label }}</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <p class="ps-more ps-center">
+                    <a [routerLink]="paths.features" class="public-btn public-btn-secondary">Tüm akışı görün<i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+                </p>
+            </div>
+        </section>
+
+        <!-- 4 Türkiye'ye özgü: iki büyük kart, altında defter satırları -->
+        <section class="ps-section ps-section--band" aria-labelledby="public-home-tr-title">
+            <div class="ps-wrap">
+                <header class="ps-head ps-head--center">
+                    <h2 id="public-home-tr-title" class="public-h2">Türkiye'ye özgü</h2>
+                    <p class="public-lead">Kayıt defterleri her kayıtla kendiliğinden dolar; KVKK evrakı hazır.</p>
+                </header>
+                <div class="ps-duo">
+                    <article class="ps-card ps-card--plain">
+                        <h3 class="ps-h3">Kayıt defterleri</h3>
+                        <ul class="ps-list ps-rows ps-tone-mint">
+                            @for (register of registers; track register.name) {
+                                <li>
+                                    <span class="ps-round ps-round--small" aria-hidden="true"><i class="pi pi-book"></i></span>
+                                    <div>
+                                        <strong>{{ register.name }}</strong>
+                                        <p>{{ register.fills }}</p>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                        <p class="ps-small">Yazdırın, Excel'e alın.</p>
+                        <div class="ps-card-shot"><app-public-screenshot crop="defterCikti" /></div>
+                    </article>
+                    <article class="ps-card ps-card--plain">
+                        <h3 class="ps-h3">KVKK evrakı</h3>
+                        <ul class="ps-list ps-rows ps-tone-lilac">
+                            @for (step of kvkkSteps; track step.title) {
+                                <li>
+                                    <span class="ps-round ps-round--small" aria-hidden="true"><i [class]="step.icon"></i></span>
+                                    <div>
+                                        <strong>{{ step.title }}</strong>
+                                        <p>{{ step.description }}</p>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                        <p class="ps-small">Rıza kaydı ve metin sürümü müşteri kartında.</p>
+                        <div class="ps-card-shot"><app-public-screenshot shot="kvkkFormu" /></div>
+                    </article>
+                </div>
+                <div class="mt-5"><app-public-screenshot crop="defterSatirlar" phoneCrop="defterDar" /></div>
+                <p class="public-note">{{ kvkkNote }}</p>
+                <p class="ps-more ps-center">
+                    <a [routerLink]="paths.registersAndKvkk" class="public-btn public-btn-secondary">Defterler ve KVKK sayfası<i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+                </p>
+            </div>
+        </section>
+
+        <!-- 5 Kayıt güvenliği: leylak panel, solda dört madde, sağda kesinleştirme ekranı ve yakın çekimi -->
+        <section class="ps-section" aria-labelledby="public-home-safety-title">
+            <div class="ps-wrap">
+                <div class="ps-panel ps-tone-lilac ps-split">
+                    <div>
+                        <h2 id="public-home-safety-title" class="public-h2">Kayıtlarınız güvende ve dürüst</h2>
+                        <ul class="ps-list ps-minis">
+                            @for (item of safetyItems; track item.title) {
+                                <li>
+                                    <span class="ps-round ps-round--small" aria-hidden="true"><i [class]="item.icon"></i></span>
+                                    <strong>{{ item.title }}</strong>
+                                    <p>{{ item.description }}</p>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                    <div class="ps-overlap">
+                        <app-public-screenshot shot="kesinlestirme" />
+                        <div class="ps-overlap-zoom ps-not-phone"><app-public-screenshot crop="kesinlestirmeKontrol" /></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Klinik web sitesi: dört tasarım fotoğraf kartı gibi; ayrıntısı Özellikler'de -->
+        <section class="ps-section ps-section--tight" aria-labelledby="public-home-site-title">
+            <div class="ps-wrap">
+                <app-public-site-showcase [compact]="true" headingId="public-home-site-title" />
+            </div>
+        </section>
+
+        <!-- 6 Geçiş: noktalı yolda üç adım, aktarılır / aktarılmaz -->
+        <section class="ps-section ps-section--band" aria-labelledby="public-home-migration-title">
+            <div class="ps-wrap">
+                <header class="ps-head ps-head--center">
+                    <h2 id="public-home-migration-title" class="public-h2">Eski programdan kayıtlarınızla geçin</h2>
+                </header>
+                <ol class="ps-list ps-trail ps-tone-sun">
+                    @for (step of migrationSteps; track step.title; let i = $index) {
+                        <li>
+                            <span class="ps-bubble ps-bubble--big" aria-hidden="true">{{ i + 1 }}</span>
+                            <h3 class="ps-h3">{{ step.title }}</h3>
+                            <p>{{ step.description }}</p>
+                        </li>
+                    }
+                </ol>
+                <div class="ps-transfer">
+                    <div class="ps-card ps-card--plain ps-tone-mint">
+                        <h3 class="ps-h3"><span class="ps-round ps-round--small" aria-hidden="true"><i class="pi pi-check"></i></span>Aktarılır</h3>
+                        <ul class="ps-list ps-ticklist" data-migration-included>
+                            @for (item of migrationIncluded; track item) {
+                                <li><i class="pi pi-check" aria-hidden="true"></i><span>{{ item }}</span></li>
+                            }
+                        </ul>
+                    </div>
+                    <div class="ps-card ps-card--quiet">
+                        <h3 class="ps-h3"><span class="ps-round ps-round--small" aria-hidden="true"><i class="pi pi-clock"></i></span>Şimdilik aktarılmaz</h3>
+                        <ul class="ps-list ps-ticklist" data-migration-excluded>
+                            @for (item of migrationExcluded; track item) {
+                                <li><i class="pi pi-minus" aria-hidden="true"></i><span>{{ item }}</span></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+                <p class="ps-more ps-center">
+                    <a [routerLink]="paths.migration" class="public-btn public-btn-secondary">Geçiş adımlarının tamamı<i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+                </p>
+            </div>
         </section>
 
         <!-- 7 Paketler: kart metni paket verisinden (ADR-035), fiyat ve sınır backend kataloğundan (WEB-007) -->
-        <section class="public-soft-surface mt-20 lg:mt-28" aria-labelledby="public-home-packages-title">
-            <div class="mx-auto max-w-6xl px-4 py-16 md:px-6 lg:py-20">
-                <h2 id="public-home-packages-title" class="public-h2 m-0 text-center">Paketler</h2>
-                <p class="public-lead m-0 mx-auto mt-3 max-w-2xl text-center">
-                    Kayıt defterleri ve KVKK araçları her pakette. {{ pricingTerms }}.
-                </p>
-                <div class="mt-10">
-                    <app-public-plan-cards [pricing]="pricing()" />
-                </div>
-                <p class="m-0 mt-6 text-center">
-                    <a [routerLink]="paths.packages" class="public-brand-link inline-flex min-h-[44px] items-center">Paketleri karşılaştırın</a>
+        <section class="ps-section" aria-labelledby="public-home-packages-title">
+            <div class="ps-wrap">
+                <header class="ps-head ps-head--center">
+                    <h2 id="public-home-packages-title" class="public-h2">Paketler</h2>
+                    <p class="public-lead">Kayıt defterleri ve KVKK araçları her pakette. {{ pricingTerms }}.</p>
+                </header>
+                <app-public-plan-cards [pricing]="pricing()" />
+                <p class="ps-more ps-center">
+                    <a [routerLink]="paths.packages" class="public-btn public-btn-secondary">Paketleri karşılaştırın<i class="pi pi-arrow-right" aria-hidden="true"></i></a>
                 </p>
             </div>
         </section>
 
         <!-- 8 SSS -->
-        <section class="mx-auto max-w-[720px] px-4 pt-20 md:px-6 lg:pt-28" aria-labelledby="public-home-faq-title">
-            <h2 id="public-home-faq-title" class="public-h2 m-0 text-center">Sık sorulan sorular</h2>
-            <div class="mt-8">
+        <section class="ps-section ps-section--band" aria-labelledby="public-home-faq-title">
+            <div class="ps-wrap ps-narrow">
+                <header class="ps-head ps-head--center">
+                    <h2 id="public-home-faq-title" class="public-h2">Sık sorulan sorular</h2>
+                </header>
                 <app-public-faq-list [items]="faqs" idPrefix="home-faq" />
+                <p class="ps-more ps-center">
+                    <a [routerLink]="paths.faq" class="public-btn public-btn-secondary">Tüm sorular<i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+                </p>
             </div>
-            <p class="m-0 mt-6 text-center">
-                <a [routerLink]="paths.faq" class="public-brand-link inline-flex min-h-[44px] items-center">Tüm sorular</a>
-            </p>
         </section>
 
         <!-- 9 Çağrı -->
-        <div class="pt-20 lg:pt-28">
-            <app-public-cta />
-        </div>
+        <app-public-cta />
     `
 })
 export class PublicHomePageComponent implements OnInit {
@@ -255,6 +311,11 @@ export class PublicHomePageComponent implements OnInit {
 
     readonly paths = PUBLIC_PATHS;
     readonly trialLine = PUBLIC_HOME_TRIAL_LINE;
+    readonly trialParts = PUBLIC_HOME_TRIAL_LINE.split(' · ');
+    readonly trust = PUBLIC_HOME_TRUST;
+    readonly toneOf = publicSiteToneClass;
+    /** Kahramandaki yakın çekimin notu: geliş bölümünün ilk yakın çekim altyazısı. */
+    readonly heroStickerCaption = PUBLIC_FEATURE_VISUALS['gelis'].details[0].label;
     readonly audience = PUBLIC_HOME_AUDIENCE;
     readonly dayFlow = PUBLIC_HOME_DAY_FLOW;
     readonly registers = PUBLIC_REGISTERS;
@@ -270,6 +331,8 @@ export class PublicHomePageComponent implements OnInit {
 
     readonly activeFlowId = signal(PUBLIC_HOME_DAY_FLOW[0].id);
     readonly activeFlow = computed(() => this.dayFlow.find((s) => s.id === this.activeFlowId()) ?? this.dayFlow[0]);
+    readonly activeFlowIndex = computed(() => this.dayFlow.indexOf(this.activeFlow()));
+    readonly activeVisual = computed(() => PUBLIC_FEATURE_VISUALS[this.activeFlow().id]);
 
     ngOnInit(): void {
         this.planCatalog.ensureLoaded();

@@ -127,7 +127,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
 
         expect(texts('section[id] h2')).toEqual([...PUBLIC_FEATURE_SECTIONS, PUBLIC_SITE_SHOWCASE, ...PUBLIC_FEATURE_GROUPS].map((s) => s.title));
         const shots: PublicScreenshotKey[] = [...PUBLIC_FEATURE_SECTIONS.map((s) => s.screenshot), 'klinikSitesi', ...PUBLIC_FEATURE_GROUPS.flatMap((g) => (g.shot ? [g.shot.screenshot] : []))];
-        const images = Array.from(root().querySelectorAll<HTMLImageElement>('figure.public-shot img.public-shot-img--light'));
+        const images = Array.from(root().querySelectorAll<HTMLImageElement>('figure.public-shot:not(.public-shot--sticker) img.public-shot-img--light'));
 
         expect(shots.length).toBeGreaterThan(PUBLIC_FEATURE_SECTIONS.length);
         expect(images.map((img) => img.alt)).toEqual(shots.map((key) => PUBLIC_SCREENSHOTS[key].alt));
@@ -139,7 +139,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
             expect(img.getAttribute('height')).toBe(String(def.height));
             expect(img.getAttribute('loading')).toBe('lazy');
         });
-        expect(root().querySelectorAll('figure.public-shot img.public-shot-img--dark').length).toBe(shots.length);
+        expect(root().querySelectorAll('figure.public-shot:not(.public-shot--sticker) img.public-shot-img--dark').length).toBe(shots.length);
     });
 
     it('özellikler: grup ekranının altyazısı gösterdiği kartın adı ve paketi, özellik tablosundan', async () => {
@@ -208,7 +208,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         await harness.navigateByUrl(PUBLIC_PATHS.migration);
         harness.detectChanges();
 
-        expect(text('.public-timeline-item h2')).toBe('Kaynak programı seçin, dosyanızı yükleyin');
+        expect(text('[data-migration-steps] h2')).toBe('Kaynak programı seçin, dosyanızı yükleyin');
         const support = root().querySelector('[data-testid="migration-support"]')?.textContent ?? '';
 
         expect(support).toContain('1 saatlik kurulum görüşmesi');
@@ -250,11 +250,11 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(setOffset).toHaveBeenLastCalledWith([0, 0]);
     });
 
-    it('defterler: tablo tüm defterleri listeler; "mevzuata uygun" ve "KVKK uyumlu" yazmaz', async () => {
+    it('defterler: liste tüm defterleri sayar; "mevzuata uygun" ve "KVKK uyumlu" yazmaz', async () => {
         await harness.navigateByUrl(PUBLIC_PATHS.registersAndKvkk);
         harness.detectChanges();
 
-        expect(texts('tbody th')).toEqual(PUBLIC_REGISTERS.map((r) => r.name));
+        expect(texts('[data-register-name]')).toEqual(PUBLIC_REGISTERS.map((r) => r.name));
         const body = root().textContent ?? '';
 
         expect(body).not.toContain('mevzuata uygun');
@@ -414,7 +414,7 @@ describe('Ana sayfa (PublicHomePage)', () => {
         const section = root().querySelector<HTMLElement>('section[aria-labelledby="public-home-site-title"]')!;
 
         expect(Array.from(section.querySelectorAll('[data-site-designs] img')).map((img) => img.getAttribute('src'))).toEqual(PUBLIC_SITE_DESIGNS.map(publicSiteDesignSrc));
-        expect(section.querySelector('a.public-brand-link')?.getAttribute('href')).toBe(`${PUBLIC_PATHS.features}#${PUBLIC_SITE_SHOWCASE.id}`);
+        expect(section.querySelector('a.public-btn')?.getAttribute('href')).toBe(`${PUBLIC_PATHS.features}#${PUBLIC_SITE_SHOWCASE.id}`);
         expect(section.querySelector('[data-site-steps]')).toBeNull();
         expect(section.querySelector('figure.public-shot img.public-shot-img--light')).toBeNull();
     });
@@ -424,7 +424,9 @@ describe('Ana sayfa (PublicHomePage)', () => {
 
         expect(hero.querySelector('a[href="/auth/signup"]')?.textContent?.trim()).toBe('Ücretsiz dene');
         expect(hero.querySelector(`a[href="${PUBLIC_PATHS.contact}"]`)?.textContent?.trim()).toBe('Demo iste');
-        expect(hero.textContent).toContain('14 gün ücretsiz · kart gerekmez · satış görüşmesi yok');
+        // Deneme satırı üç hap olarak dizilir; listenin erişilebilir adı satırın tamamı.
+        expect(hero.querySelector('ul')?.getAttribute('aria-label')).toBe('14 gün ücretsiz · kart gerekmez · satış görüşmesi yok');
+        expect(Array.from(hero.querySelectorAll('ul li')).map((li) => li.textContent?.trim())).toEqual(['14 gün ücretsiz', 'kart gerekmez', 'satış görüşmesi yok']);
         expect(root().textContent).not.toContain('Panel önizleme');
         const shot = hero.querySelector<HTMLImageElement>('figure.public-shot img.public-shot-img--light');
 

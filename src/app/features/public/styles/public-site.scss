@@ -1,0 +1,1950 @@
+/*
+ * Tanıtım sitesi görünümü · "Sıcak klinik" (kullanıcı kararı 2026-11-16). Krem zemin, lacivert metin, yuvarlak paneller, Nunito
+ * başlık. Marka teali "nane" tonu olarak kalır, yanına üç yumuşak ton gelir (gök, güneş, leylak): günün dört adımı renkle ayrışır.
+ * Tonlar yalnız zeminde ve küçük işaretlerde; metin lacivert ya da tonun koyu eşi (en az 5,4:1). Birincil düğme ve vurgu her
+ * zaman lacivert ve teal.
+ *
+ * Kapsam `.public-site` (PublicLayout). Auth sayfaları `public-page-theme.scss` ile kalır. Ortak bileşenlerin `public-*` sınıfları
+ * (başlık, kart, düğme, ekran çerçevesi, paket kartı, SSS) burada `.public-page.public-site` ile yeniden giydirilir; koyu tema
+ * kuralı (`.app-dark .public-page …`) aynı özgüllükte olduğu için bu dosya sonra yüklenir. Yeni yapılar `ps-` önekli.
+ */
+
+@use 'sass:list';
+
+/* Dört ton: açık zemin / koyu metin · koyu tema zemin / açık metin. Tek yer burası; sıra `public-site-tone.utils.ts`. */
+$public-site-tones: (
+    mint: (#d8f3ee, #0a6b64, #12403c, #86e3d9),
+    sky: (#deebff, #2450b3, #1b2e57, #a9c3ff),
+    sun: (#ffedc7, #8a5200, #47330f, #ffd690),
+    lilac: (#ebe4fd, #5b3db3, #2e2554, #cbbcff)
+);
+
+$ps: '.public-page.public-site';
+
+#{$ps} {
+    --ps-bg: #fffaf2;
+    --ps-band: #fbf1e2;
+    --ps-card: #ffffff;
+    --ps-ink: #0b1d3a;
+    --ps-ink-2: #51607a;
+    --ps-rule: #eee3d3;
+    --ps-accent: #0a7a72;
+    --ps-marker: #ffd978;
+    --ps-bubble-text: #ffffff;
+    --ps-shadow: 0 24px 50px -28px rgb(60 40 10 / 0.35);
+    --ps-shadow-soft: 0 10px 30px -18px rgb(60 40 10 / 0.3);
+    --ps-font-display: 'Nunito', 'Inter', system-ui, sans-serif;
+    --ps-font-body: 'Inter', system-ui, sans-serif;
+    --ps-wrap: 1240px;
+    /* Ortak bileşenlerin değişkenleri aynı renklere bağlanır */
+    --public-accent-text: var(--ps-accent);
+    --public-accent: var(--ps-accent);
+    --public-border: var(--ps-rule);
+    --public-border-emphasis: var(--ps-rule);
+    --p-text-muted-color: var(--ps-ink-2);
+
+    background: var(--ps-bg);
+    color: var(--ps-ink);
+    font-family: var(--ps-font-body);
+    -webkit-font-smoothing: antialiased;
+}
+
+.app-dark #{$ps} {
+    --ps-bg: #0f1725;
+    --ps-band: #131d2e;
+    --ps-card: #19243a;
+    --ps-ink: #f5efe5;
+    --ps-ink-2: #b4bdcc;
+    --ps-rule: #2a364c;
+    --ps-accent: #6fd9ce;
+    --ps-marker: #7a5a12;
+    --ps-bubble-text: #0b1d3a;
+    --ps-shadow: 0 24px 50px -28px rgb(0 0 0 / 0.8);
+    --ps-shadow-soft: 0 10px 30px -18px rgb(0 0 0 / 0.7);
+}
+
+@each $name, $c in $public-site-tones {
+    .public-site .ps-tone-#{$name} {
+        --tone: #{list.nth($c, 1)};
+        --tone-ink: #{list.nth($c, 2)};
+    }
+
+    .app-dark .public-site .ps-tone-#{$name} {
+        --tone: #{list.nth($c, 3)};
+        --tone-ink: #{list.nth($c, 4)};
+    }
+}
+
+.public-site [id] {
+    scroll-margin-top: 104px;
+}
+
+.public-site :where(a, button, summary):focus-visible {
+    outline: 2px solid var(--ps-accent);
+    outline-offset: 3px;
+}
+
+.public-site .ps-wrap {
+    width: 100%;
+    max-width: var(--ps-wrap);
+    margin-inline: auto;
+    padding-inline: 20px;
+}
+
+@media (min-width: 768px) {
+    .public-site .ps-wrap {
+        padding-inline: 32px;
+    }
+}
+
+.public-site .ps-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* —— Tipografi (ortak sınıflar) —— */
+
+#{$ps} :is(.public-h1, .public-h2, .ps-h3) {
+    margin: 0;
+    font-family: var(--ps-font-display);
+    color: inherit;
+    text-wrap: balance;
+}
+
+#{$ps} .public-h1 {
+    font-size: clamp(2.375rem, 4.3vw, 3.5rem);
+    font-weight: 900;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+}
+
+#{$ps} .public-h2 {
+    font-size: clamp(1.875rem, 3.4vw, 2.75rem);
+    font-weight: 900;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+}
+
+#{$ps} .ps-h3 {
+    font-size: 1.3125rem;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+/* Fosforlu kalem: başlığın vurgulanan sözcükleri */
+#{$ps} .ps-marker {
+    font-style: normal;
+    white-space: nowrap;
+    background: linear-gradient(transparent 58%, var(--ps-marker) 58%, var(--ps-marker) 92%, transparent 92%);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    padding-inline: 0.12em;
+    margin-inline: -0.12em;
+}
+
+#{$ps} .public-lead {
+    max-width: 58ch;
+    margin: 0.75rem 0 0;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: var(--ps-ink-2);
+}
+
+#{$ps} .ps-small {
+    margin: 1rem 0 0;
+    font-size: 0.9375rem;
+    color: var(--ps-ink-2);
+}
+
+#{$ps} .public-note,
+#{$ps} .ps-note {
+    max-width: 72ch;
+    margin: 2rem auto 0;
+    padding: 1rem 1.25rem;
+    border-radius: 16px;
+    background: var(--ps-card);
+    font-size: 0.9375rem;
+    color: var(--ps-ink-2);
+}
+
+#{$ps} .public-eyebrow,
+#{$ps} .ps-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0.4rem 0.95rem;
+    border-radius: 999px;
+    background: var(--tone, var(--ps-card));
+    color: var(--tone-ink, var(--ps-ink));
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+#{$ps} .ps-chip i {
+    font-size: 0.75rem;
+}
+
+#{$ps} .ps-plan {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--ps-accent);
+}
+
+#{$ps} .ps-bubble {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--tone-ink, var(--ps-ink));
+    color: var(--ps-bubble-text);
+    font-family: var(--ps-font-display);
+    font-size: 0.9375rem;
+    font-weight: 900;
+}
+
+#{$ps} .ps-bubble--big {
+    width: 3.25rem;
+    height: 3.25rem;
+    font-size: 1.375rem;
+}
+
+#{$ps} .ps-round {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background: var(--tone, var(--ps-band));
+    color: var(--tone-ink, var(--ps-accent));
+    font-size: 1.375rem;
+}
+
+#{$ps} .ps-round--small {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1rem;
+}
+
+#{$ps} .public-brand-link,
+#{$ps} .ps-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    font-weight: 700;
+    color: var(--ps-accent);
+    text-decoration: none;
+}
+
+#{$ps} .public-brand-link:hover,
+#{$ps} .ps-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+#{$ps} .ps-link i {
+    font-size: 0.75rem;
+}
+
+#{$ps} .ps-more {
+    margin: 2rem 0 0;
+}
+
+#{$ps} .ps-center {
+    text-align: center;
+}
+
+/* —— Düğme (ortak sınıflar) —— */
+
+#{$ps} .public-btn {
+    min-height: 52px;
+    padding: 0 1.75rem;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    font-family: var(--ps-font-display);
+    font-size: 1.0625rem;
+    font-weight: 800;
+    white-space: nowrap;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease,
+        transform 0.15s ease;
+}
+
+#{$ps} .public-btn i {
+    font-size: 0.8125rem;
+}
+
+#{$ps} .public-btn-primary,
+#{$ps} .public-btn-primary:hover {
+    border-color: var(--ps-ink);
+    background: var(--ps-ink);
+    color: var(--ps-bg);
+    box-shadow: 0 12px 24px -12px rgb(11 29 58 / 0.6);
+}
+
+#{$ps} .public-btn-primary:hover {
+    transform: translateY(-2px);
+}
+
+#{$ps} .public-btn-secondary {
+    border-color: var(--ps-ink);
+    background: var(--ps-card);
+    color: var(--ps-ink);
+}
+
+#{$ps} .public-btn-secondary:hover {
+    border-color: var(--ps-ink);
+    background: var(--ps-band);
+    color: var(--ps-ink);
+}
+
+#{$ps} .ps-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 2rem;
+}
+
+@media (min-width: 560px) {
+    #{$ps} .ps-actions {
+        flex-direction: row;
+    }
+
+    #{$ps} .ps-actions--center {
+        justify-content: center;
+    }
+}
+
+/* —— Kart, panel (ortak sınıflar) —— */
+
+#{$ps} .public-card {
+    border: 1px solid var(--ps-rule);
+    border-radius: 28px;
+    background: var(--ps-card);
+    box-shadow: var(--ps-shadow-soft);
+}
+
+#{$ps} .ps-card {
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+    border-radius: 28px;
+    background: var(--tone, var(--ps-card));
+}
+
+#{$ps} .ps-card > .ps-round {
+    margin-bottom: 1.25rem;
+    background: var(--ps-card);
+}
+
+#{$ps} .ps-card p {
+    margin: 0.5rem 0 0;
+    color: var(--ps-ink-2);
+}
+
+#{$ps} .ps-card[class*='ps-tone'] > p {
+    color: var(--ps-ink);
+}
+
+#{$ps} .ps-card .ps-plan {
+    margin-top: auto;
+    padding-top: 1rem;
+    color: var(--ps-accent);
+}
+
+#{$ps} .ps-card--plain {
+    border: 1px solid var(--ps-rule);
+    background: var(--ps-card);
+    box-shadow: var(--ps-shadow-soft);
+}
+
+#{$ps} .ps-card--plain > .ps-round {
+    background: var(--tone, var(--ps-band));
+}
+
+#{$ps} .ps-card--quiet {
+    border: 2px dashed var(--ps-rule);
+    background: transparent;
+}
+
+#{$ps} .ps-panel {
+    padding: clamp(1.5rem, 3.6vw, 3.5rem);
+    border-radius: 36px;
+    background: var(--tone, var(--ps-card));
+}
+
+#{$ps} .ps-cards3,
+#{$ps} .ps-grid {
+    display: grid;
+    gap: 1.25rem;
+}
+
+@media (min-width: 700px) {
+    #{$ps} .ps-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (min-width: 900px) {
+    #{$ps} .ps-cards3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1300px) {
+    #{$ps} .ps-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* —— Ekran görüntüsü: kalın açık çerçeve, yakın çekim, yapışkan not —— */
+
+#{$ps} .public-shot {
+    overflow: hidden;
+    border: 6px solid var(--ps-card);
+    border-radius: 22px;
+    background: var(--ps-card);
+    box-shadow: var(--ps-shadow);
+}
+
+#{$ps} .public-shot-box {
+    overflow: hidden;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.app-dark #{$ps} .public-shot-box {
+    background: #0b1220;
+}
+
+#{$ps} .public-shot--crop .public-shot-box {
+    position: relative;
+    aspect-ratio: var(--shot-ratio);
+}
+
+#{$ps} .public-shot--crop .public-shot-img {
+    position: absolute;
+    top: var(--shot-y);
+    left: var(--shot-x);
+    width: var(--shot-w);
+    max-width: none;
+    height: auto;
+}
+
+/* Telefon: büyük görüntünün yerine dar parça (varsa) */
+@media (max-width: 639px) {
+    #{$ps} .public-shot--crop .public-shot-box {
+        aspect-ratio: var(--shot-ratio-p, var(--shot-ratio));
+    }
+
+    #{$ps} .public-shot--crop .public-shot-img {
+        top: var(--shot-y-p, var(--shot-y));
+        left: var(--shot-x-p, var(--shot-x));
+        width: var(--shot-w-p, var(--shot-w));
+    }
+
+    .public-site .ps-not-phone {
+        display: none !important;
+    }
+}
+
+@media (min-width: 640px) {
+    .public-site .ps-only-phone {
+        display: none !important;
+    }
+}
+
+#{$ps} .public-shot-caption {
+    padding: 0.75rem 0.75rem 0.5rem;
+    border: 0;
+    font-size: 0.9375rem;
+    text-align: center;
+    color: var(--ps-ink-2);
+}
+
+#{$ps} .public-shot--sticker {
+    border-width: 5px;
+    border-radius: 18px;
+    transform: rotate(-1.5deg);
+}
+
+#{$ps} .public-shot--sticker .public-shot-box {
+    border-radius: 11px;
+}
+
+#{$ps} .public-shot--sticker .public-shot-caption {
+    padding: 0.625rem 0.75rem 0.5rem;
+    font-family: var(--ps-font-display);
+    font-weight: 800;
+    line-height: 1.3;
+    text-align: left;
+    color: var(--ps-ink);
+}
+
+/* —— Üst çubuk: yüzen hap —— */
+
+.public-site .ps-topbar {
+    padding: 10px 10px 0;
+}
+
+.public-site .ps-topbar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: calc(var(--ps-wrap) - 40px);
+    height: 64px;
+    margin-inline: auto;
+    padding-inline: 1.25rem 0.625rem;
+    border: 1px solid var(--ps-rule);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ps-card) 94%, transparent);
+    box-shadow: var(--ps-shadow-soft);
+    backdrop-filter: blur(10px);
+}
+
+.public-site .ps-topbar-logo {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    height: 44px;
+}
+
+.public-site .ps-topbar-nav {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+}
+
+.public-site .ps-topbar-nav ul {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+}
+
+.public-site .ps-topbar-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 0.75rem;
+    border-radius: 999px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--ps-ink-2);
+    text-decoration: none;
+}
+
+.public-site .ps-topbar-link:hover,
+.public-site .ps-topbar-link.router-link-active {
+    background: var(--ps-band);
+    color: var(--ps-ink);
+}
+
+.public-site .ps-topbar-actions {
+    gap: 0.75rem;
+}
+
+.public-site .ps-topbar-finder,
+.public-site .ps-topbar-login {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 44px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.public-site .ps-topbar-finder {
+    color: var(--ps-accent);
+}
+
+.public-site .ps-topbar-login {
+    padding-inline: 0.5rem;
+    color: var(--ps-ink);
+}
+
+#{$ps} .ps-topbar .public-btn {
+    min-height: 44px;
+    padding: 0 1.125rem;
+    font-size: 0.9375rem;
+    box-shadow: none;
+}
+
+.public-site .ps-topbar-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--ps-ink);
+    font-size: 1.125rem;
+    cursor: pointer;
+}
+
+.public-site .ps-topbar-icon:hover {
+    background: var(--ps-band);
+}
+
+.public-site .ps-topbar-compact {
+    margin-left: auto;
+}
+
+/* Telefon menüsü: tam ekran, krem zemin */
+.public-site .ps-mobile-menu {
+    background: var(--ps-bg);
+}
+
+.public-site .ps-mobile-menu-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    margin: 10px 10px 0;
+    padding-inline: 1.25rem 0.625rem;
+    border: 1px solid var(--ps-rule);
+    border-radius: 999px;
+    background: var(--ps-card);
+}
+
+.public-site .ps-mobile-menu-link {
+    display: flex;
+    align-items: center;
+    min-height: 56px;
+    border-bottom: 1px solid var(--ps-rule);
+    font-family: var(--ps-font-display);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--ps-ink);
+    text-decoration: none;
+}
+
+.public-site .ps-mobile-menu-finder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 48px;
+    font-weight: 700;
+    color: var(--ps-accent);
+    text-decoration: none;
+}
+
+/* —— Kahraman —— */
+
+.public-site .ps-hero {
+    position: relative;
+    padding-top: clamp(3rem, 6vw, 5rem);
+}
+
+.public-site .ps-hero > .ps-wrap {
+    position: relative;
+}
+
+.public-site .ps-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(10px);
+    pointer-events: none;
+    background: radial-gradient(circle, var(--tone) 0%, transparent 68%);
+}
+
+.public-site .ps-blob--a {
+    top: -8%;
+    right: -8%;
+    width: min(46vw, 620px);
+    aspect-ratio: 1;
+}
+
+.public-site .ps-blob--b {
+    top: 38%;
+    left: -12%;
+    width: min(38vw, 480px);
+    aspect-ratio: 1;
+}
+
+.app-dark .public-site .ps-blob {
+    opacity: 0.6;
+}
+
+.public-site .ps-hero-grid {
+    display: grid;
+    gap: 3rem;
+}
+
+#{$ps} .ps-hero .public-h1 {
+    margin-top: 1.25rem;
+}
+
+#{$ps} .ps-hero-lead {
+    max-width: 50ch;
+    margin: 1.25rem 0 0;
+    font-size: clamp(1.0625rem, 1.5vw, 1.1875rem);
+    color: var(--ps-ink-2);
+}
+
+.public-site .ps-ticks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+}
+
+.public-site .ps-ticks li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--ps-rule);
+    border-radius: 999px;
+    background: var(--ps-card);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.public-site .ps-ticks i {
+    font-size: 0.6875rem;
+    color: var(--ps-accent);
+}
+
+.public-site .ps-stage {
+    position: relative;
+}
+
+.public-site .ps-stage-sticker {
+    position: relative;
+    width: 92%;
+    margin: -1.25rem auto 0;
+}
+
+/* Günün yolu: dört renkli durak */
+.public-site .ps-path {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+}
+
+.public-site .ps-path li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 999px;
+    background: var(--tone);
+    color: var(--tone-ink);
+}
+
+.public-site .ps-path strong {
+    font-family: var(--ps-font-display);
+    font-size: 1.125rem;
+    font-weight: 800;
+}
+
+@media (min-width: 1000px) {
+    .public-site .ps-hero-grid {
+        grid-template-columns: minmax(0, 11fr) minmax(0, 13fr);
+        align-items: center;
+        gap: 3.5rem;
+    }
+
+    .public-site .ps-stage {
+        padding-bottom: 8%;
+    }
+
+    .public-site .ps-stage-main {
+        width: 118%;
+    }
+
+    .public-site .ps-stage-sticker {
+        position: absolute;
+        bottom: 0;
+        left: -10%;
+        width: 70%;
+        margin: 0;
+    }
+
+    .public-site .ps-path {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2.5rem;
+    }
+
+    .public-site .ps-path li + li::before {
+        content: '';
+        position: absolute;
+        width: 2.5rem;
+        margin-left: -3.5rem;
+        border-top: 3px dotted var(--ps-ink-2);
+        opacity: 0.5;
+    }
+}
+
+/* Sayfa başlığı (ana sayfa dışı): ortalı, iki ton lekesi */
+.public-site .ps-page-hero {
+    position: relative;
+    padding-block: clamp(3rem, 6vw, 5rem) clamp(1.5rem, 3vw, 2.5rem);
+    text-align: center;
+}
+
+#{$ps} .ps-page-hero .public-h1 {
+    max-width: 20ch;
+    margin: 1.25rem auto 0;
+    font-size: clamp(2.25rem, 4.8vw, 3.75rem);
+}
+
+#{$ps} .ps-page-hero .ps-hero-lead {
+    max-width: 62ch;
+    margin-inline: auto;
+}
+
+/* —— Güven satırı —— */
+
+.public-site .ps-trust {
+    padding-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.public-site .ps-trust ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.625rem;
+}
+
+.public-site .ps-trust li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.125rem;
+    border: 1px solid var(--ps-rule);
+    border-radius: 999px;
+    background: var(--ps-card);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    box-shadow: var(--ps-shadow-soft);
+}
+
+.public-site .ps-trust i {
+    color: var(--ps-accent);
+}
+
+/* —— Bölüm —— */
+
+.public-site .ps-section {
+    padding-block: clamp(3.5rem, 7vw, 6rem);
+}
+
+.public-site .ps-section--band {
+    background: var(--ps-band);
+}
+
+.public-site .ps-section--tight {
+    padding-block: clamp(2rem, 4vw, 3rem);
+}
+
+.public-site .ps-head {
+    margin-bottom: clamp(1.75rem, 3.5vw, 2.75rem);
+}
+
+.public-site .ps-head--center {
+    text-align: center;
+}
+
+#{$ps} .ps-head--center .public-lead {
+    margin-inline: auto;
+}
+
+.public-site .ps-narrow {
+    max-width: 860px;
+}
+
+/* —— Gün akışı: renkli sekme, seçili adımın renginde panel —— */
+
+.public-site .ps-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.625rem;
+}
+
+.public-site .ps-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 60px;
+    padding: 0.625rem 1rem;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: var(--tone);
+    color: var(--tone-ink);
+    font-family: var(--ps-font-display);
+    font-size: 1.125rem;
+    font-weight: 800;
+    cursor: pointer;
+    opacity: 0.72;
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease;
+}
+
+.public-site .ps-tab:hover {
+    opacity: 1;
+}
+
+.public-site .ps-tab--active {
+    border-color: var(--tone-ink);
+    opacity: 1;
+    transform: translateY(-2px);
+}
+
+.public-site .ps-stagepanel {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    padding: clamp(1.25rem, 3.4vw, 3rem);
+    border-radius: 36px;
+    background: var(--tone);
+}
+
+.public-site .ps-stagepanel-text {
+    max-width: 46ch;
+    margin: 0;
+    font-family: var(--ps-font-display);
+    font-size: clamp(1.1875rem, 2.1vw, 1.5rem);
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--tone-ink);
+}
+
+.public-site .ps-zooms {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.public-site .ps-zoom-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin: 0.75rem 0 0;
+    padding-inline: 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--tone-ink);
+}
+
+.public-site .ps-zoom-label i {
+    margin-top: 0.25em;
+}
+
+@media (min-width: 768px) {
+    .public-site .ps-tabs {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .public-site .ps-zooms {
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+    }
+
+    .public-site .ps-zooms--single {
+        grid-template-columns: minmax(0, 760px);
+    }
+}
+
+/* —— Liste satırları (defterler, KVKK) —— */
+
+.public-site .ps-duo {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.public-site .ps-rows {
+    display: grid;
+    gap: 0.875rem;
+    margin-top: 1.25rem;
+}
+
+.public-site .ps-rows > li {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+}
+
+#{$ps} .ps-rows p {
+    margin: 0;
+    font-size: 0.9375rem;
+}
+
+#{$ps} .ps-card-shot {
+    margin-top: auto;
+    border-color: var(--ps-band);
+    box-shadow: none;
+}
+
+#{$ps} .ps-small + .ps-card-shot {
+    margin-top: 1.5rem;
+}
+
+@media (min-width: 1000px) {
+    .public-site .ps-duo {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* —— Bölünmüş panel: solda maddeler, sağda üst üste iki ekran —— */
+
+.public-site .ps-split {
+    display: grid;
+    gap: 2.5rem;
+    align-items: center;
+}
+
+.public-site .ps-minis {
+    display: grid;
+    gap: 0.875rem;
+    margin-top: 2rem;
+}
+
+.public-site .ps-minis > li {
+    padding: 1.25rem;
+    border-radius: 20px;
+    background: var(--ps-card);
+}
+
+.public-site .ps-minis strong {
+    display: block;
+    margin-top: 0.875rem;
+    font-family: var(--ps-font-display);
+    font-size: 1.0625rem;
+    font-weight: 800;
+}
+
+#{$ps} .ps-minis p {
+    margin: 0.25rem 0 0;
+    font-size: 0.9375rem;
+    color: var(--ps-ink-2);
+}
+
+.public-site .ps-overlap {
+    position: relative;
+    padding-bottom: 14%;
+}
+
+.public-site .ps-overlap-zoom {
+    position: absolute;
+    right: -2%;
+    bottom: 0;
+    width: 56%;
+    transform: rotate(1.5deg);
+}
+
+@media (min-width: 560px) {
+    .public-site .ps-minis {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (min-width: 1000px) {
+    .public-site .ps-split {
+        grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+        gap: 3.5rem;
+    }
+}
+
+/* —— Klinik web sitesi: fotoğraf kartları —— */
+
+.public-site .ps-photos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+
+.public-site .ps-photos figure {
+    min-width: 0;
+    margin: 0;
+    padding: 8px 8px 0;
+    border-radius: 20px;
+    background: var(--ps-card);
+    box-shadow: var(--ps-shadow);
+}
+
+.public-site .ps-photos img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 13px;
+}
+
+.public-site .ps-photos figcaption {
+    padding: 0.75rem 0.5rem 0.875rem;
+    font-family: var(--ps-font-display);
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.public-site .ps-photos figcaption small {
+    display: block;
+    font-family: var(--ps-font-body);
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--ps-ink-2);
+}
+
+/* Görselin üstünde sitenin adresi: bunun bir web sitesi olduğunu söyler; tarayıcı düğmesi taklidi yok */
+.public-site .ps-address {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin: 0 0.25rem 0.5rem;
+    overflow: hidden;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--ps-ink-2);
+}
+
+.public-site .ps-address i {
+    font-size: 0.625rem;
+}
+
+@media (max-width: 479px) {
+    .public-site .ps-photos {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (min-width: 900px) {
+    .public-site .ps-photos {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .public-site .ps-photos--tilt figure:nth-child(odd) {
+        transform: rotate(-1.4deg);
+    }
+
+    .public-site .ps-photos--tilt figure:nth-child(even) {
+        transform: rotate(1.2deg) translateY(0.75rem);
+    }
+
+    .public-site .ps-photos--large {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* —— Noktalı yol (geçiş, e-belge): numaralı adımlar —— */
+
+.public-site .ps-trail {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.public-site .ps-trail > li {
+    position: relative;
+}
+
+#{$ps} .ps-trail .ps-h3 {
+    margin-top: 1rem;
+}
+
+#{$ps} .ps-trail p {
+    margin: 0.375rem 0 0;
+    color: var(--ps-ink-2);
+}
+
+.public-site .ps-trail--inset > li {
+    padding: 1.5rem;
+    border-radius: 24px;
+    background: var(--ps-card);
+}
+
+@media (min-width: 768px) {
+    .public-site .ps-trail {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+    }
+
+    .public-site .ps-trail:not(.ps-trail--inset) > li + li::before {
+        content: '';
+        position: absolute;
+        top: 1.625rem;
+        right: calc(100% + 0.5rem);
+        width: calc(100% - 4.5rem);
+        border-top: 3px dotted var(--tone-ink);
+        opacity: 0.45;
+    }
+}
+
+/* Dikey yol: uzun adım listesi (Geçiş sayfası) */
+.public-site .ps-steps {
+    display: grid;
+    gap: 1rem;
+}
+
+.public-site .ps-steps > li {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1.25rem;
+    padding: 1.5rem;
+    border-radius: 24px;
+    background: var(--tone);
+}
+
+#{$ps} .ps-steps .ps-h3 {
+    margin-top: 0.75rem;
+}
+
+#{$ps} .ps-steps p {
+    margin: 0.375rem 0 0;
+}
+
+/* —— Aktarılır / aktarılmaz —— */
+
+.public-site .ps-transfer {
+    display: grid;
+    gap: 1.25rem;
+    margin-top: 2.5rem;
+}
+
+#{$ps} .ps-transfer .ps-h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.public-site .ps-ticklist {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+}
+
+.public-site .ps-ticklist > li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.public-site .ps-ticklist i {
+    margin-top: 0.35em;
+    font-size: 0.75rem;
+    color: var(--ps-accent);
+}
+
+.public-site .ps-card--quiet .ps-ticklist,
+.public-site .ps-card--quiet .ps-ticklist i {
+    color: var(--ps-ink-2);
+}
+
+@media (min-width: 768px) {
+    .public-site .ps-transfer {
+        grid-template-columns: 3fr 2fr;
+    }
+
+    .public-site .ps-transfer .ps-card--plain .ps-ticklist {
+        grid-template-columns: 1fr 1fr;
+        column-gap: 2rem;
+    }
+}
+
+/* —— Madde kutuları —— */
+
+.public-site .ps-points {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.public-site .ps-points > li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.125rem;
+    border-radius: 18px;
+    background: var(--ps-card);
+    font-weight: 500;
+}
+
+.public-site .ps-points i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: var(--tone, var(--ps-band));
+    color: var(--tone-ink, var(--ps-accent));
+    font-size: 0.6875rem;
+}
+
+@media (min-width: 768px) {
+    .public-site .ps-points {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .public-site .ps-points--two {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* —— Paket kartları ve karşılaştırma (ortak bileşenler) —— */
+
+#{$ps} .public-plan-card {
+    padding: 2rem;
+}
+
+#{$ps} .public-plan-card h3 {
+    font-family: var(--ps-font-display);
+    font-size: 1.625rem;
+    font-weight: 900;
+}
+
+#{$ps} .public-plan-card--recommended {
+    border: 3px solid var(--ps-accent);
+}
+
+#{$ps} .public-plan-badge {
+    padding: 0.3rem 0.8rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--ps-marker);
+    color: var(--ps-ink);
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+#{$ps} .public-plan-price {
+    font-family: var(--ps-font-display);
+    font-weight: 900;
+}
+
+#{$ps} .public-chip-tab {
+    min-height: 44px;
+    padding: 0 1.25rem;
+    border: 2px solid var(--ps-ink);
+    border-radius: 999px;
+    background: var(--ps-card);
+    color: var(--ps-ink);
+    font-family: var(--ps-font-display);
+    font-weight: 800;
+}
+
+#{$ps} .public-chip-tab--active,
+#{$ps} .public-chip-tab--active:hover {
+    border-color: var(--ps-ink);
+    background: var(--ps-ink);
+    color: var(--ps-bg);
+}
+
+#{$ps} .public-plan-compare-head th {
+    background: var(--ps-ink);
+    color: var(--ps-bg);
+}
+
+#{$ps} .public-plan-compare-head th:first-child {
+    border-top-left-radius: 27px;
+}
+
+#{$ps} .public-plan-compare-head th:last-child {
+    border-top-right-radius: 27px;
+}
+
+#{$ps} .public-plan-compare-group th {
+    background: var(--ps-band);
+}
+
+/* —— SSS akordeonu (ortak bileşen) —— */
+
+#{$ps} .public-faq-item {
+    border: 0;
+    border-radius: 22px;
+}
+
+#{$ps} .public-faq-item button {
+    font-family: var(--ps-font-display);
+}
+
+#{$ps} .public-faq-item button > span {
+    font-size: 1.0625rem;
+    font-weight: 800;
+    color: var(--ps-ink);
+}
+
+#{$ps} .public-faq-item button > i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--ps-band);
+    font-size: 0.75rem;
+    color: var(--ps-accent);
+}
+
+#{$ps} .public-faq-item p {
+    color: var(--ps-ink-2);
+}
+
+/* —— Çağrı kartı: her iki temada lacivert —— */
+
+.public-site .ps-cta {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(3rem, 7vw, 5.5rem) 1.5rem;
+    border-radius: 40px;
+    background: #0b1d3a;
+    color: #fffaf2;
+    text-align: center;
+}
+
+.public-site .ps-cta > :not(.ps-blob) {
+    position: relative;
+}
+
+.public-site .ps-cta .ps-blob {
+    opacity: 0.28;
+}
+
+#{$ps} .ps-cta .public-h2 {
+    font-size: clamp(2.25rem, 4.8vw, 3.5rem);
+}
+
+#{$ps} .ps-cta p {
+    margin: 0.875rem 0 0;
+    font-size: 1.125rem;
+    color: rgb(255 250 242 / 0.85);
+}
+
+#{$ps} .ps-cta .public-btn-primary,
+#{$ps} .ps-cta .public-btn-primary:hover {
+    border-color: #fffaf2;
+    background: #fffaf2;
+    color: #0b1d3a;
+}
+
+#{$ps} .ps-cta .public-btn-secondary,
+#{$ps} .ps-cta .public-btn-secondary:hover {
+    border-color: rgb(255 250 242 / 0.7);
+    background: transparent;
+    color: #fffaf2;
+}
+
+#{$ps} .ps-cta .ps-cta-q {
+    margin-top: 1.5rem;
+    font-size: 0.9375rem;
+}
+
+.public-site .ps-cta-q a {
+    color: #fffaf2;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* —— Alt bilgi —— */
+
+.public-site .ps-footer {
+    padding-block: 3.5rem 2rem;
+    font-size: 0.9375rem;
+    color: var(--ps-ink-2);
+}
+
+.public-site .ps-footer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.public-site .ps-footer-brand {
+    grid-column: 1 / -1;
+}
+
+.public-site .ps-footer-brand p {
+    max-width: 36ch;
+    margin: 1rem 0 0;
+}
+
+.public-site .ps-footer-title {
+    margin: 0 0 0.5rem;
+    font-family: var(--ps-font-display);
+    font-weight: 800;
+    color: var(--ps-ink);
+}
+
+.public-site .ps-footer a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.public-site .ps-footer a:hover {
+    color: var(--ps-accent);
+}
+
+.public-site .ps-footer-base {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--ps-rule);
+    font-size: 0.875rem;
+}
+
+.public-site .ps-footer-base p {
+    margin: 0;
+}
+
+@media (min-width: 900px) {
+    .public-site .ps-footer-grid {
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+    }
+
+    .public-site .ps-footer-brand {
+        grid-column: auto;
+    }
+}
+
+/* —— Özellikler: yol dizini ve bölüm panelleri —— */
+
+.public-site .ps-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    padding-top: 1rem;
+}
+
+/* Dar ekranda üstte kayan renkli haplar, genişte solda noktalı yol */
+.public-site .ps-route {
+    position: sticky;
+    top: 84px;
+    z-index: 30;
+    margin-inline: -20px;
+    padding: 0.5rem 20px;
+    background: color-mix(in srgb, var(--ps-bg) 92%, transparent);
+    backdrop-filter: blur(10px);
+}
+
+.public-site .ps-route ol {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.public-site .ps-route ol::-webkit-scrollbar {
+    display: none;
+}
+
+.public-site .ps-route a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 40px;
+    padding: 0 0.875rem;
+    border-radius: 999px;
+    background: var(--tone);
+    color: var(--tone-ink);
+    font-size: 0.875rem;
+    font-weight: 700;
+    white-space: nowrap;
+    text-decoration: none;
+    opacity: 0.75;
+}
+
+.public-site .ps-route-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--tone-ink);
+}
+
+.public-site .ps-route a.ps-route--active {
+    opacity: 1;
+    box-shadow: inset 0 0 0 2px var(--tone-ink);
+}
+
+.public-site .ps-stack {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .public-site .ps-route {
+        margin-inline: -32px;
+        padding-inline: 32px;
+    }
+}
+
+@media (min-width: 1100px) {
+    .public-site .ps-layout {
+        grid-template-columns: 210px minmax(0, 1fr);
+        align-items: start;
+        gap: 2.5rem;
+    }
+
+    .public-site .ps-route {
+        top: 104px;
+        margin: 0;
+        padding: 0.5rem 0;
+        background: none;
+        backdrop-filter: none;
+    }
+
+    .public-site .ps-route ol {
+        position: relative;
+        flex-direction: column;
+        gap: 0;
+        overflow: visible;
+    }
+
+    .public-site .ps-route ol::before {
+        content: '';
+        position: absolute;
+        top: 1.25rem;
+        bottom: 1.25rem;
+        left: 8px;
+        border-left: 3px dotted var(--ps-rule);
+    }
+
+    .public-site .ps-route a {
+        position: relative;
+        gap: 0.875rem;
+        min-height: 42px;
+        padding: 0;
+        border-radius: 0;
+        background: none;
+        font-weight: 600;
+        line-height: 1.25;
+        white-space: normal;
+        color: var(--ps-ink-2);
+        opacity: 1;
+        transition: color 0.15s ease;
+    }
+
+    .public-site .ps-route-dot {
+        flex-shrink: 0;
+        box-sizing: border-box;
+        width: 19px;
+        height: 19px;
+        border: 4px solid var(--ps-bg);
+        background: var(--ps-rule);
+        transition:
+            transform 0.15s ease,
+            background-color 0.15s ease;
+    }
+
+    .public-site .ps-route a:hover,
+    .public-site .ps-route a.ps-route--active {
+        color: var(--ps-ink);
+        box-shadow: none;
+    }
+
+    .public-site .ps-route a.ps-route--done .ps-route-dot,
+    .public-site .ps-route a:hover .ps-route-dot {
+        background: var(--tone-ink);
+    }
+
+    .public-site .ps-route a.ps-route--active {
+        font-family: var(--ps-font-display);
+        font-size: 1.0625rem;
+        font-weight: 900;
+    }
+
+    .public-site .ps-route a.ps-route--active .ps-route-dot {
+        background: var(--tone-ink);
+        transform: scale(1.45);
+        box-shadow: 0 0 0 5px var(--tone);
+    }
+}
+
+.public-site .ps-feature {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+}
+
+#{$ps} .ps-feature--plain {
+    border: 1px solid var(--ps-rule);
+    background: var(--ps-card);
+    box-shadow: var(--ps-shadow-soft);
+}
+
+.public-site .ps-feature-head {
+    display: grid;
+    gap: 1rem;
+}
+
+.public-site .ps-tagline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin: 0 0 0.75rem;
+}
+
+#{$ps} .ps-tagline .ps-chip {
+    background: var(--ps-card);
+}
+
+#{$ps} .ps-feature--plain .ps-tagline .ps-chip {
+    background: var(--tone);
+}
+
+.public-site .ps-feature-shot {
+    position: relative;
+}
+
+.public-site .ps-feature-sticker {
+    width: 88%;
+    margin: -1rem 0 0 auto;
+}
+
+#{$ps} .ps-feature-sticker .public-shot--sticker {
+    transform: rotate(1.2deg);
+}
+
+.public-site .ps-wizard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.public-site .ps-wizard > li {
+    padding: 1rem;
+    border-radius: 20px;
+    background: var(--tone);
+}
+
+.public-site .ps-wizard strong {
+    display: block;
+    margin-top: 0.75rem;
+    font-family: var(--ps-font-display);
+    font-weight: 800;
+    color: var(--tone-ink);
+}
+
+#{$ps} .ps-wizard p {
+    margin: 0.25rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+}
+
+.public-site .ps-group {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+    padding-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+@media (min-width: 768px) {
+    .public-site .ps-feature-head {
+        grid-template-columns: auto 1fr;
+        align-items: start;
+        gap: 1.5rem;
+    }
+
+    .public-site .ps-feature-shot {
+        padding-bottom: 6%;
+    }
+
+    .public-site .ps-feature-sticker {
+        position: absolute;
+        right: -1.5%;
+        bottom: 0;
+        width: 52%;
+        margin: 0;
+    }
+
+    .public-site .ps-wizard {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* —— İletişim: form kartı —— */
+
+#{$ps} .ps-form-card {
+    padding: clamp(1.5rem, 3.6vw, 2.75rem);
+}
+
+/* —— Sayfaya özgü küçük yapılar (Defterler, Geçiş, Paketler, İletişim) —— */
+
+#{$ps} .ps-h3--first {
+    margin-top: 0;
+}
+
+#{$ps} .ps-h3 i {
+    margin-right: 0.25rem;
+    font-size: 1rem;
+    color: var(--tone-ink, var(--ps-accent));
+}
+
+#{$ps} .ps-strong {
+    margin: 1rem 0 0;
+    font-weight: 700;
+}
+
+#{$ps} .ps-terms {
+    margin: 0 0 2rem;
+}
+
+/* Defter satırları: iki sütun kart */
+.public-site .ps-minis--rows > li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 0.875rem;
+    align-items: start;
+}
+
+.public-site .ps-minis--rows > li > .ps-round {
+    grid-row: span 3;
+}
+
+.public-site .ps-minis--rows strong {
+    margin-top: 0;
+}
+
+/* Dört kart (Erişim ve iz) */
+.public-site .ps-cards4 {
+    display: grid;
+    gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+    .public-site .ps-cards4 {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (min-width: 1100px) {
+    .public-site .ps-cards4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Geçiş: solda adım yolu, sağda yapışkan kutular */
+.public-site .ps-aside-layout {
+    display: grid;
+    gap: 2rem;
+}
+
+.public-site .ps-aside {
+    display: grid;
+    gap: 1.25rem;
+    align-content: start;
+}
+
+#{$ps} .ps-aside .ps-h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.public-site .ps-steps--path > li {
+    background: var(--ps-card);
+    box-shadow: var(--ps-shadow-soft);
+}
+
+.public-site .ps-steps--path > li + li::before {
+    content: '';
+    position: absolute;
+    top: -1rem;
+    left: calc(1.5rem + 1.625rem - 1px);
+    height: 1rem;
+    border-left: 3px dotted var(--tone-ink);
+    opacity: 0.45;
+}
+
+@media (min-width: 1000px) {
+    .public-site .ps-aside-layout {
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 3rem;
+    }
+
+    .public-site .ps-aside {
+        position: sticky;
+        top: 104px;
+    }
+}
+
+@media (min-width: 640px) {
+    .public-site .ps-ticklist--two {
+        grid-template-columns: 1fr 1fr;
+        column-gap: 2rem;
+    }
+}
+
+/* İletişim: solda form, sağda deneme ve iletişim kartları */
+.public-site .ps-contact {
+    display: grid;
+    gap: 2rem;
+}
+
+.public-site .ps-contact-side {
+    display: grid;
+    gap: 1.5rem;
+    align-content: start;
+}
+
+#{$ps} .ps-h2--small {
+    font-size: clamp(1.5rem, 2.4vw, 1.875rem);
+}
+
+#{$ps} .ps-inline-link {
+    font-weight: 700;
+    color: var(--ps-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.public-site .ps-contact-rows {
+    display: grid;
+    gap: 1rem;
+    margin: 1.25rem 0 0;
+}
+
+.public-site .ps-contact-rows > div {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+}
+
+.public-site .ps-contact-rows dt {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--ps-ink-2);
+}
+
+.public-site .ps-contact-rows dd {
+    margin: 0.125rem 0 0;
+    font-size: 1rem;
+}
+
+#{$ps} .ps-contact .public-card {
+    padding: clamp(1.5rem, 3.6vw, 2.75rem);
+}
+
+@media (min-width: 1000px) {
+    .public-site .ps-contact {
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        gap: 3rem;
+    }
+}

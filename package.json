@@ -51,6 +51,7 @@
     "@fontsource-variable/karla": "5.3.0",
     "@fontsource-variable/manrope": "5.3.0",
     "@fontsource-variable/newsreader": "5.3.0",
+    "@fontsource-variable/nunito": "5.3.0",
     "@fortawesome/fontawesome-free": "^7.3.1",
     "@primeuix/themes": "^2.0.3",
     "@tailwindcss/postcss": "^4.3.3",

@@ -1,7 +1,7 @@
 import { Component, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import type { PublicFaqDef } from '@/app/features/public/utils/public-faq-content.utils';
 
-/** SSS akordeonu: 1 px çerçeve, gölge yok; birden fazla soru aynı anda açık olabilir (tasarım belgesi bölüm 6). */
+/** SSS akordeonu: yuvarlak beyaz kartlar (`public-site.scss`); birden fazla soru aynı anda açık olabilir (tasarım belgesi bölüm 6). */
 @Component({
     selector: 'app-public-faq-list',
     standalone: true,
@@ -9,7 +9,7 @@ import type { PublicFaqDef } from '@/app/features/public/utils/public-faq-conten
     template: `
         <div class="flex w-full flex-col gap-3">
             @for (faq of items(); track faq.question; let i = $index) {
-                <article class="public-card overflow-hidden">
+                <article class="public-card public-faq-item overflow-hidden">
                     <h3 class="m-0">
                         <button
                             type="button"
