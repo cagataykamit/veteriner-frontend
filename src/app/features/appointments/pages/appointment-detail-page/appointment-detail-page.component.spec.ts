@@ -181,6 +181,8 @@ describe('AppointmentDetailPageComponent - takvim penceresi ve iptal', () => {
         expect(getAppointmentById).toHaveBeenCalledWith('a2');
         expect(getAppointmentById).not.toHaveBeenCalledWith('a1');
         expect(el.querySelector('[data-testid="page-header-category-link"]')).toBeNull();
+        // Ayrıntı ucu kayıt zamanlarını taşımıyor: tireli boş satır yok.
+        expect(el.querySelector('[data-testid="appointment-record-times"]')).toBeNull();
         el.querySelector<HTMLButtonElement>('[data-testid="appointment-edit-inline"]')!.click();
         expect(edits).toEqual(['a2']);
     });
@@ -209,5 +211,31 @@ describe('AppointmentDetailPageComponent - takvim penceresi ve iptal', () => {
         expect(el.querySelector('[data-testid="appointment-cancel"]')).toBeNull();
         expect(el.querySelector('[data-testid="page-header-category-link"]')).not.toBeNull();
         expect(getAppointmentById).toHaveBeenCalledWith('a1');
+    });
+});
+
+describe('AppointmentDetailPageComponent - kayıt zamanları', () => {
+    it('değer varsa yalnız olan zaman yazılır', () => {
+        TestBed.configureTestingModule({
+            imports: [AppointmentDetailPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'a1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => false } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null, planFeatureReady: () => true } },
+                { provide: WaitlistService, useValue: { slot: () => NEVER } },
+                { provide: AppointmentsService, useValue: { getAppointmentById: () => of({ ...APPT, createdAtUtc: '2026-10-01T09:00:00Z' }) } },
+                { provide: DetailRelatedSummariesService, useValue: { loadExaminationsLinkedToAppointment: () => of([]) } },
+                { provide: VisitsService, useValue: {} }
+            ]
+        });
+        const fixture = TestBed.createComponent(AppointmentDetailPageComponent);
+
+        fixture.detectChanges();
+        const row = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="appointment-record-times"]');
+
+        expect(row?.textContent).toContain('Oluşturulma');
+        expect(row?.textContent).not.toContain('Güncellenme');
+        expect(row?.textContent).not.toContain('—');
     });
 });

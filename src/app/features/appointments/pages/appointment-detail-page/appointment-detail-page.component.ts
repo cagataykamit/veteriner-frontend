@@ -77,7 +77,20 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
                             }
                         </div>
                         <p class="m-0 mt-1 text-base font-medium text-surface-900 dark:text-surface-0 tabular-nums">{{ a.scheduledAtUtc | trDateTime }}</p>
-                        <p class="m-0 mt-1 text-sm text-muted-color">Oluşturulma: {{ a.createdAtUtc | trDateTime }} · Güncellenme: {{ a.updatedAtUtc | trDateTime }}</p>
+                        <!-- Kayıt zamanları yalnız varsa (randevu ayrıntı ucu bugün bu alanları taşımıyor; boş satır tire göstermesin). -->
+                        @if (a.createdAtUtc || a.updatedAtUtc) {
+                            <p class="m-0 mt-1 text-sm text-muted-color" data-testid="appointment-record-times">
+                                @if (a.createdAtUtc) {
+                                    Oluşturulma: {{ a.createdAtUtc | trDateTime }}
+                                }
+                                @if (a.createdAtUtc && a.updatedAtUtc) {
+                                    ·
+                                }
+                                @if (a.updatedAtUtc) {
+                                    Güncellenme: {{ a.updatedAtUtc | trDateTime }}
+                                }
+                            </p>
+                        }
 
                         <app-detail-subject-line [petId]="a.petId" [petName]="a.petName" [speciesName]="a.speciesName" [clientId]="a.clientId" [clientName]="a.clientName" />
 
