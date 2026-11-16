@@ -1,6 +1,17 @@
 import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
 import type { VaccinationCalendarItemVm } from '@/app/entities/vaccination/models/vaccination-calendar.model';
-import { appointmentBubble, readVaccineLayerPreference, vaccinationBubble, vaccineChipClass, vaccinesOn, writeVaccineLayerPreference } from './calendar-layer.utils';
+import { convertToParamMap } from '@angular/router';
+import {
+    appointmentBubble,
+    calendarFiltersToQueryParams,
+    calendarRequestFor,
+    parseCalendarFilters,
+    readStoredCalendarFilters,
+    vaccinationBubble,
+    vaccineChipClass,
+    vaccinesOn,
+    writeStoredCalendarFilters
+} from './calendar-layer.utils';
 
 const v = (id: string, state: VaccinationCalendarItemVm['state'], petName = id, extra: Partial<VaccinationCalendarItemVm> = {}): VaccinationCalendarItemVm => ({
     key: `${id}:NextDue`,
@@ -25,11 +36,11 @@ describe('calendar-layer.utils', () => {
         expect(vaccineChipClass('Upcoming')).toContain('border-surface-900');
         expect(vaccineChipClass('Upcoming')).not.toMatch(/gray|surface-400|surface-500/);
         expect(vaccineChipClass('Overdue')).toContain('red');
-        expect(vaccineChipClass('Applied')).toContain('green');
+        expect(vaccineChipClass('Completed')).toContain('green');
     });
 
     it('günün aşıları: yalnız o gün; gecikmiş, bugün, ileri, uygulandı sırasıyla', () => {
-        const items = [v('a', 'Applied'), v('b', 'Upcoming'), v('c', 'Overdue'), v('d', 'DueToday'), v('e', 'DueToday', 'x', { dateKey: '2026-11-17' })];
+        const items = [v('a', 'Completed'), v('b', 'Upcoming'), v('c', 'Overdue'), v('d', 'DueToday'), v('e', 'DueToday', 'x', { dateKey: '2026-11-17' })];
 
         expect(vaccinesOn('2026-11-16', items).map((i) => i.vaccinationId)).toEqual(['c', 'd', 'b', 'a']);
     });
@@ -78,12 +89,28 @@ describe('calendar-layer.utils', () => {
         );
     });
 
-    it('katman tercihi varsayılan açık; kapatma hatırlanır', () => {
-        localStorage.removeItem('vetinity.calendar.vaccineLayer');
-        expect(readVaccineLayerPreference()).toBe(true);
-        writeVaccineLayerPreference(false);
-        expect(readVaccineLayerPreference()).toBe(false);
-        writeVaccineLayerPreference(true);
-        expect(readVaccineLayerPreference()).toBe(true);
+    it('filtreler adres çubuğundan okunur ve yazılır; bilinmeyen değerler atlanır, boş filtre parametre yazmaz', () => {
+        const f = parseCalendarFilters(convertToParamMap({ vet: 'none', types: 'asi,1,x', states: 'Completed,Bad,DueToday' }));
+
+        expect(f).toEqual({ vet: 'none', types: ['asi', '1'], states: ['DueToday', 'Completed'] });
+        expect(calendarFiltersToQueryParams(f)).toEqual({ vet: 'none', types: 'asi,1', states: 'DueToday,Completed' });
+        expect(calendarFiltersToQueryParams({ vet: null, types: [], states: [] })).toEqual({ vet: undefined, types: undefined, states: undefined });
+    });
+
+    it('sunucu isteği: tür boşsa randevu ve aşı tümü; yalnız aşı seçiliyse randevu yok; hekim seçiliyse aşı yok', () => {
+        expect(calendarRequestFor({ vet: null, types: [], states: [] })).toEqual(
+            expect.objectContaining({ appointments: true, appointmentTypes: [], vaccines: true, withoutVeterinarian: false })
+        );
+        expect(calendarRequestFor({ vet: null, types: ['asi'], states: [] })).toEqual(expect.objectContaining({ appointments: false, vaccines: true }));
+        expect(calendarRequestFor({ vet: null, types: ['1', '2'], states: [] })).toEqual(expect.objectContaining({ appointments: true, appointmentTypes: [1, 2], vaccines: false }));
+        expect(calendarRequestFor({ vet: 'v1', types: [], states: [] })).toEqual(expect.objectContaining({ veterinarianUserId: 'v1', vaccines: false }));
+        expect(calendarRequestFor({ vet: 'none', types: [], states: [] })).toEqual(expect.objectContaining({ veterinarianUserId: undefined, withoutVeterinarian: true, vaccines: true }));
+    });
+
+    it('son seçim tarayıcıda hatırlanır', () => {
+        writeStoredCalendarFilters({ vet: null, types: ['asi'], states: ['Overdue'] });
+        expect(readStoredCalendarFilters()).toEqual({ vet: null, types: ['asi'], states: ['Overdue'] });
+        writeStoredCalendarFilters({ vet: null, types: [], states: [] });
+        expect(readStoredCalendarFilters()).toEqual({ vet: null, types: [], states: [] });
     });
 });

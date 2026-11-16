@@ -1,7 +1,7 @@
 import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import { BehaviorSubject, of } from 'rxjs';
+import { BehaviorSubject, NEVER, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { APPOINTMENTS_CREATE_CLAIM, VACCINATIONS_CREATE_CLAIM, VACCINATIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
@@ -70,10 +70,15 @@ describe('AppointmentsCalendarPageComponent — saat ızgarası (B1)', () => {
     let navigate: Mock;
     let params: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
     let claims: Set<string>;
+    let myClinics: { id: string; name: string }[];
+    let selectClinic: Mock;
 
     beforeEach(() => {
         claims = new Set([APPOINTMENTS_CREATE_CLAIM]);
-        localStorage.removeItem('vetinity.calendar.vaccineLayer');
+        myClinics = [{ id: 'c1', name: 'Merkez' }];
+        // Başarıda sayfa yeniden yüklenir; testte yanıt gelmez.
+        selectClinic = vi.fn().mockReturnValue(NEVER);
+        localStorage.removeItem('vetinity.calendar.filters');
     });
 
     afterEach(() => vi.useRealTimers());
@@ -104,7 +109,10 @@ describe('AppointmentsCalendarPageComponent — saat ızgarası (B1)', () => {
                 { provide: AppointmentReasonsService, useValue: { list: () => of([]) } },
                 { provide: OnlineBookingService, useValue: { availability: () => of([]) } },
                 { provide: VaccinationsService, useValue: { getCalendarVaccinations } },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez', hasOperationClaim: (c: string) => claims.has(c) } },
+                {
+                    provide: AuthService,
+                    useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez', hasOperationClaim: (c: string) => claims.has(c), getMyClinics: () => of(myClinics), selectClinic }
+                },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
         });
@@ -122,7 +130,9 @@ describe('AppointmentsCalendarPageComponent — saat ızgarası (B1)', () => {
         expect(el.querySelector('[data-testid="calendar-range-title"]')?.textContent).toContain('Bugün · Pazartesi');
         expect(cmp.gridColumns().map((c) => c.title)).toEqual(['Dr. Ayşe', 'Dr. Mert', 'Hekim seçilmedi']);
         expect(el.querySelector('[data-testid="calendar-block-a"]')?.textContent).toContain('Hasta-a');
-        expect(getCalendarAppointments).toHaveBeenCalledWith({ dateFromUtc: '2026-11-15T21:00:00.000Z', dateToUtc: '2026-11-22T21:00:00.000Z', status: undefined });
+        expect(getCalendarAppointments).toHaveBeenCalledWith(
+            expect.objectContaining({ dateFromUtc: '2026-11-15T21:00:00.000Z', dateToUtc: '2026-11-22T21:00:00.000Z', status: undefined, appointmentTypes: [], states: [], withoutVeterinarian: false })
+        );
     });
 
     it('aynı hekimde üst üste binen randevular çakışma olarak işaretlenir; farklı hekimler işaretlenmez', () => {
@@ -168,7 +178,7 @@ describe('AppointmentsCalendarPageComponent — saat ızgarası (B1)', () => {
         claims.add(VACCINATIONS_READ_CLAIM);
         const { el, cmp } = create([appt('a', '09:00', 'v1')], {}, [vaccine('x', '2026-11-16', 'DueToday'), vaccine('y', '2026-11-16', 'Overdue', 'Planned'), vaccine('z', '2026-11-18', 'Upcoming')]);
 
-        expect(getCalendarVaccinations).toHaveBeenCalledWith({ dateFromUtc: '2026-11-15T21:00:00.000Z', dateToUtc: '2026-11-22T21:00:00.000Z' });
+        expect(getCalendarVaccinations).toHaveBeenCalledWith({ dateFromUtc: '2026-11-15T21:00:00.000Z', dateToUtc: '2026-11-22T21:00:00.000Z', states: [] });
         const strip = el.querySelector('[data-testid="calendar-all-day"]');
 
         expect(strip?.textContent).toContain('Aşılı-x');
@@ -180,22 +190,69 @@ describe('AppointmentsCalendarPageComponent — saat ızgarası (B1)', () => {
         expect(el.querySelector('[data-testid="agenda-vaccines"]')?.textContent).toContain('Aşılı-x');
     });
 
-    it('aşı katmanı kapatılınca şerit gizlenir ve seçim hatırlanır', () => {
+    it('filtreler adres çubuğundan sunucuya gider: tür ve durum; "Planlı aşılar" seçili değilse aşı istenmez', () => {
         claims.add(VACCINATIONS_READ_CLAIM);
-        const { el, fixture } = create([], {}, [vaccine('x', '2026-11-16', 'DueToday')]);
+        const { el, cmp } = create([], { types: '2,5', states: 'Upcoming,DueToday', vet: 'none' }, [vaccine('x', '2026-11-16', 'DueToday')]);
 
-        el.querySelector<HTMLButtonElement>('[data-testid="calendar-vaccine-layer-toggle"]')!.click();
-        fixture.detectChanges();
-
+        expect(getCalendarAppointments).toHaveBeenCalledWith(
+            expect.objectContaining({ appointmentTypes: [2, 5], states: ['DueToday', 'Upcoming'], withoutVeterinarian: true, veterinarianUserId: undefined })
+        );
+        expect(getCalendarVaccinations).not.toHaveBeenCalled();
         expect(el.querySelector('[data-testid="calendar-all-day"]')).toBeNull();
-        expect(localStorage.getItem('vetinity.calendar.vaccineLayer')).toBe('off');
+        expect(cmp.gridColumns().map((c) => c.title)).toEqual(['Hekim seçilmedi']);
+        expect(cmp.agendaGaps()).toEqual([]);
     });
 
-    it('aşı yetkisi yoksa katman düğmesi yok ve aşı istenmez', () => {
-        const { el } = create([]);
+    it('"Planlı aşılar" ve durum seçiliyse aşılar durum filtresiyle istenir; yalnız aşı seçiliyse randevu istenmez', () => {
+        claims.add(VACCINATIONS_READ_CLAIM);
+        create([], { types: 'asi', states: 'Overdue' });
 
-        expect(el.querySelector('[data-testid="calendar-vaccine-layer-toggle"]')).toBeNull();
+        expect(getCalendarAppointments).not.toHaveBeenCalled();
+        expect(getCalendarVaccinations).toHaveBeenCalledWith(expect.objectContaining({ states: ['Overdue'] }));
+    });
+
+    it('belirli bir hekim seçiliyken aşı istenmez (aşının hekimi yok) ve yalnız o hekimin sütunu çizilir', () => {
+        claims.add(VACCINATIONS_READ_CLAIM);
+        const { cmp } = create([appt('a', '09:00', 'v1')], { vet: 'v1' });
+
+        expect(getCalendarAppointments).toHaveBeenCalledWith(expect.objectContaining({ veterinarianUserId: 'v1', withoutVeterinarian: false }));
         expect(getCalendarVaccinations).not.toHaveBeenCalled();
+        expect(cmp.gridColumns().map((c) => c.title)).toEqual(['Dr. Ayşe']);
+    });
+
+    it('filtre değişimi adres çubuğuna yazılır ve hatırlanır; adres boşsa son seçim geri yüklenir', () => {
+        const { cmp } = create([]);
+
+        cmp.applyFilters({ vet: null, types: ['1'], states: ['Overdue'] });
+        expect(navigate).toHaveBeenLastCalledWith(['/panel/appointments/calendar'], { queryParams: expect.objectContaining({ types: '1', states: 'Overdue', vet: undefined }) });
+        expect(localStorage.getItem('vetinity.calendar.filters')).toContain('types=1');
+
+        TestBed.resetTestingModule();
+        create([]);
+        expect(navigate).toHaveBeenCalledWith(['/panel/appointments/calendar'], { queryParams: expect.objectContaining({ types: '1', states: 'Overdue' }), replaceUrl: true });
+    });
+
+    it('şube seçimi yalnız birden çok klinikte görünür ve aktif kliniği değiştirir', () => {
+        myClinics = [{ id: 'c1', name: 'Merkez' }];
+        expect(create([]).el.querySelector('#calFltClinicInput')).toBeNull();
+
+        TestBed.resetTestingModule();
+        myClinics = [
+            { id: 'c1', name: 'Merkez' },
+            { id: 'c2', name: 'Şube 2' }
+        ];
+        const { el, cmp } = create([]);
+
+        expect(el.textContent).toContain('Şube');
+        cmp.switchClinic({ id: 'c2', name: 'Şube 2' });
+        expect(selectClinic).toHaveBeenCalledWith('c2', 'Şube 2');
+    });
+
+    it('aşı yetkisi yoksa "Planlı aşılar" seçeneği yok ve aşı istenmez', () => {
+        const { cmp } = create([]);
+
+        expect(getCalendarVaccinations).not.toHaveBeenCalled();
+        expect(cmp.canReadVaccinations).toBe(false);
     });
 
     it('sonraki aşıdan "Aşıyı yap" hasta ve aşı dolu yeni aşı; "Randevu ver" aşılama türü ve not dolu yeni randevu açar', () => {

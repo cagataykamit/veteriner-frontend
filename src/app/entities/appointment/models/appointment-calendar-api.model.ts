@@ -24,4 +24,9 @@ export interface AppointmentCalendarQuery {
     dateToUtc: string;
     clinicId?: string;
     status?: string;
+    /** Takvim filtreleri (sözleşme §6): hekim ya da yalnız hekimsiz, türler (sayı), durumlar. */
+    veterinarianUserId?: string;
+    withoutVeterinarian?: boolean;
+    appointmentTypes?: readonly number[];
+    states?: readonly string[];
 }

@@ -50,6 +50,20 @@ export function appointmentCalendarQueryToHttpParams(query: AppointmentCalendarQ
         p = p.set('status', query.status.trim());
     }
 
+    if (query.veterinarianUserId?.trim()) {
+        p = p.set('veterinarianUserId', query.veterinarianUserId.trim());
+    } else if (query.withoutVeterinarian) {
+        p = p.set('withoutVeterinarian', 'true');
+    }
+
+    for (const t of query.appointmentTypes ?? []) {
+        p = p.append('appointmentTypes', String(t));
+    }
+
+    for (const s of query.states ?? []) {
+        p = p.append('states', s);
+    }
+
     return p;
 }
 

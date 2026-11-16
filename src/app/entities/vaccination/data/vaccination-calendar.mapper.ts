@@ -2,11 +2,11 @@ import type {
     VaccinationCalendarItemDto,
     VaccinationCalendarItemVm,
     VaccinationCalendarKind,
-    VaccinationCalendarState
+    CalendarItemState
 } from '@/app/entities/vaccination/models/vaccination-calendar.model';
 
 const KINDS: readonly VaccinationCalendarKind[] = ['Planned', 'NextDue', 'Applied'];
-const STATES: readonly VaccinationCalendarState[] = ['Applied', 'DueToday', 'Upcoming', 'Overdue'];
+const STATES: readonly CalendarItemState[] = ['DueToday', 'Upcoming', 'Overdue', 'Completed'];
 
 function text(value: string | null | undefined, fallback = '—'): string {
     return value?.trim() ? value.trim() : fallback;

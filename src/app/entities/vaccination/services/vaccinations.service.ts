@@ -55,13 +55,17 @@ export class VaccinationsService {
         );
     }
 
-    /** Takvim aşı katmanı (`[dateFromUtc, dateToUtc)`, aktif klinik). */
-    getCalendarVaccinations(query: { dateFromUtc: string; dateToUtc: string }): Observable<VaccinationCalendarItemVm[]> {
+    /** Takvim aşı katmanı (`[dateFromUtc, dateToUtc)`, aktif klinik); `states` durum filtresi (sözleşme §6). */
+    getCalendarVaccinations(query: { dateFromUtc: string; dateToUtc: string; states?: readonly string[] }): Observable<VaccinationCalendarItemVm[]> {
         let params = new HttpParams().set('dateFromUtc', query.dateFromUtc).set('dateToUtc', query.dateToUtc);
         const clinicId = this.auth.getClinicId()?.trim();
 
         if (clinicId) {
             params = params.set('clinicId', clinicId);
+        }
+
+        for (const s of query.states ?? []) {
+            params = params.append('states', s);
         }
 
         return this.api.get<VaccinationCalendarItemDto[]>(ApiEndpoints.vaccinations.calendar(), params).pipe(

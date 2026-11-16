@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import type { Subscription } from 'rxjs';
+import { of, type Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { type Popover, PopoverModule } from 'primeng/popover';
@@ -11,7 +11,9 @@ import type { VaccinePick } from '@/app/features/appointments/components/calenda
 import { AppointmentDetailPageComponent } from '@/app/features/appointments/pages/appointment-detail-page/appointment-detail-page.component';
 import { AppointmentEditPageComponent } from '@/app/features/appointments/pages/appointment-edit-page/appointment-edit-page.component';
 import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
-import { readVaccineLayerPreference, vaccineDotClass, vaccineStateLabel, vaccinesOn, writeVaccineLayerPreference } from './calendar-layer.utils';
+import { calendarFiltersToQueryParams, calendarRequestFor, type CalendarFilters, EMPTY_CALENDAR_FILTERS, NO_VET, parseCalendarFilters, readStoredCalendarFilters, vaccineStateLabel, vaccinesOn, writeStoredCalendarFilters } from './calendar-layer.utils';
+import type { ClinicSummary } from '@/app/core/auth/auth.models';
+import { AppointmentCalendarFiltersComponent } from '@/app/features/appointments/components/appointment-calendar-filters.component';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
 import { groupCalendarItemsByDay } from '@/app/entities/appointment/data/appointment-calendar.mapper';
@@ -82,6 +84,7 @@ const WEEKDAY_LONG = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', timeZon
         AppointmentDetailPageComponent,
         AppointmentEditPageComponent,
         DialogUnsavedChangesDirective,
+        AppointmentCalendarFiltersComponent,
         AppointmentRequestsCalendarLayerComponent,
         AppListHeaderComponent,
         AppLoadingStateComponent,
@@ -124,51 +127,35 @@ const WEEKDAY_LONG = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', timeZon
                         <button pButton type="button" size="small" severity="secondary" [text]="true" aria-label="Sonraki" (click)="next()"><i class="p-button-icon pi pi-angle-right"></i></button>
                     </div>
                     <h2 class="m-0 text-lg font-semibold" data-testid="calendar-range-title">{{ rangeTitle() }}</h2>
-                    @if (canReadVaccinations) {
-                        <button
-                            type="button"
-                            class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-sm cursor-pointer"
-                            [class]="vaccineLayer() ? 'border-surface-900 dark:border-surface-0 font-medium' : 'border-surface text-muted-color'"
-                            [attr.aria-pressed]="vaccineLayer()"
-                            (click)="toggleVaccineLayer()"
-                            data-testid="calendar-vaccine-layer-toggle"
-                        >
-                            <i class="pi pi-shield !text-xs" aria-hidden="true"></i>Aşılar
-                            @if (vaccineLayer() && vaccinesInView() > 0) {
-                                <span class="rounded-full bg-surface-100 dark:bg-surface-800 px-1.5 text-xs tabular-nums">{{ vaccinesInView() }}</span>
-                            }
-                        </button>
-                        @if (vaccineLayer()) {
-                            <span class="hidden xl:inline-flex items-center gap-2 text-xs text-muted-color" aria-label="Aşı renkleri">
-                                @for (l of vaccineLegend; track l.label) {
-                                    <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full" [class]="l.dot" aria-hidden="true"></span>{{ l.label }}</span>
-                                }
-                            </span>
-                        }
-                        @if (vaccineError(); as ve) {
-                            <span class="text-xs text-red-600 dark:text-red-400" role="alert">{{ ve }}</span>
-                        }
+                    @if (vaccinesInView() > 0) {
+                        <span class="inline-flex items-center gap-1 text-sm text-muted-color" data-testid="calendar-vaccine-count"><i class="pi pi-shield !text-xs" aria-hidden="true"></i>{{ vaccinesInView() }} aşı</span>
+                    }
+                    @if (vaccineError(); as ve) {
+                        <span class="text-xs text-red-600 dark:text-red-400" role="alert">{{ ve }}</span>
                     }
                     @if (conflictCount()) {
                         <span class="inline-flex items-center gap-1 rounded-border bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 px-2 py-1 text-sm"
                             ><i class="pi pi-exclamation-triangle" aria-hidden="true"></i>{{ conflictCount() }} çakışma</span
                         >
                     }
-                    @if (vets().length > 1) {
-                        <div class="hidden lg:flex ml-auto flex-wrap items-center gap-1" role="group" aria-label="Hekimler">
-                            @for (v of vets(); track v.userId; let i = $index) {
-                                <button
-                                    type="button"
-                                    class="inline-flex items-center gap-1 rounded-full border border-surface px-2 py-0.5 text-sm cursor-pointer"
-                                    [class.line-through]="hiddenVets().has(v.userId)"
-                                    [class.text-muted-color]="hiddenVets().has(v.userId)"
-                                    [attr.aria-pressed]="!hiddenVets().has(v.userId)"
-                                    (click)="toggleVet(v.userId)"
-                                >
-                                    <span class="w-2.5 h-2.5 rounded-full" [class]="dot(i)" aria-hidden="true"></span>{{ v.name }}
-                                </button>
-                            }
-                        </div>
+                </div>
+                <!-- Filtre şeridi: seçim anında sunucuda uygulanır, adres çubuğunda durur; durum çipleri renk açıklamasıdır. -->
+                <div class="mb-3">
+                    <app-appointment-calendar-filters
+                        [filters]="filters()"
+                        [vets]="vets()"
+                        [vetOrder]="vetOrder()"
+                        [canSeeVaccines]="canReadVaccinations"
+                        [clinics]="myClinics()"
+                        [activeClinicId]="clinicId"
+                        (filtersChange)="applyFilters($event)"
+                        (clinicChange)="switchClinic($event)"
+                    />
+                    @if (narrowed()) {
+                        <p class="m-0 mt-1 text-xs text-muted-color">Tür ya da durum filtresi açıkken boş saatler gösterilmez; "Boş saat bul" tüm randevulara bakar.</p>
+                    }
+                    @if (clinicSwitchError(); as ce) {
+                        <p class="m-0 mt-1 text-xs text-red-600 dark:text-red-400" role="alert">{{ ce }}</p>
                     }
                 </div>
                 @if (canManageRequests) {
@@ -321,14 +308,18 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     readonly clinicName = this.auth.getClinicName()?.trim() || '';
     private readonly vaccinationsService = inject(VaccinationsService);
 
-    /** Aşı katmanı: varsayılan açık, seçim tarayıcıda hatırlanır. */
-    readonly vaccineLayer = signal(readVaccineLayerPreference());
+    /** Takvim filtreleri (adres çubuğunda `vet`, `types`, `states`; son seçim tarayıcıda hatırlanır). Aşı katmanı "Tür"deki ayrı seçenek. */
+    readonly filters = signal<CalendarFilters>(EMPTY_CALENDAR_FILTERS);
+    /** Tür ya da durum filtresi: ekrandaki randevular günün tamamı değildir, boş saat hesaplanmaz. */
+    readonly narrowed = computed(() => this.filters().types.length > 0 || this.filters().states.length > 0);
+    readonly myClinics = signal<ClinicSummary[]>([]);
+    readonly clinicSwitchError = signal<string | null>(null);
     readonly vaccines = signal<VaccinationCalendarItemVm[]>([]);
     readonly vaccineError = signal<string | null>(null);
     readonly selectedVaccine = signal<VaccinationCalendarItemVm | null>(null);
-    readonly vaccineLegend = (['DueToday', 'Upcoming', 'Overdue', 'Applied'] as const).map((s) => ({ label: vaccineStateLabel(s), dot: vaccineDotClass(s) }));
     private readonly vaccineMenu = viewChild<Popover>('vaccineMenu');
     private vaccineRequest: Subscription | null = null;
+    private appointmentRequest: Subscription | null = null;
 
     /** Açık randevu penceresi; kapanınca takvim yalnız değişiklik olduysa yenilenir. */
     readonly dialog = signal<{ id: string; mode: 'detail' | 'edit' } | null>(null);
@@ -347,7 +338,6 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     readonly vets = signal<VeterinarianVm[]>([]);
     readonly hours = signal<ClinicWorkingHourVm[]>([]);
     readonly slotInterval = signal(15);
-    readonly hiddenVets = signal<ReadonlySet<string>>(new Set());
     /** Her başarılı yüklemede artar; "Boş saat bul" listesini de yeniler. */
     readonly loadCount = signal(0);
 
@@ -372,13 +362,20 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         return ids;
     });
 
-    readonly visibleItems = computed(() => this.items().filter((i) => !i.veterinarianUserId || !this.hiddenVets().has(i.veterinarianUserId)));
+    /** Sunucu hekim, tür ve durum filtresini uygulamış randevular. */
+    readonly visibleItems = computed(() => this.items());
+    /** Gösterilen hekimler: filtre bir hekimse yalnız o, "hekim atanmamış"sa hiçbiri, yoksa klinik hekimleri. */
+    readonly activeVetIds = computed(() => {
+        const vet = this.filters().vet;
+
+        return vet === NO_VET ? [] : vet ? [vet] : this.vetOrder();
+    });
     readonly selectedDayItems = computed(() => this.itemsOn(this.selectedDate(), this.visibleItems()));
     readonly selectedWorking = computed(() => workingDayFor(this.gridHours(), this.selectedDate()));
 
     readonly gridColumns = computed<CalendarGridColumn[]>(() => (this.viewMode() === 'week' ? this.weekColumns() : this.dayColumns()));
 
-    readonly shownVaccines = computed(() => (this.vaccineLayer() ? this.vaccines() : []));
+    readonly shownVaccines = computed(() => this.vaccines());
     readonly selectedDayVaccines = computed(() => vaccinesOn(this.selectedDate(), this.shownVaccines()));
     readonly vaccinesInView = computed(() => (this.viewMode() === 'week' ? this.shownVaccines().length : this.selectedDayVaccines().length));
 
@@ -431,11 +428,13 @@ export class AppointmentsCalendarPageComponent implements OnInit {
 
     /** Telefonda boş satırlar: hekimsiz klinikte günün boşlukları; hekim varsa hepsinin aynı anda boş olduğu aralıklar. */
     readonly agendaGaps = computed(() => {
+        if (this.narrowed()) {
+            return [];
+        }
+
         const working = this.selectedWorking();
         const items = this.selectedDayItems();
-        const vetIds = this.vets()
-            .map((v) => v.userId)
-            .filter((id) => !this.hiddenVets().has(id));
+        const vetIds = this.activeVetIds().filter((id) => this.vets().some((v) => v.userId === id));
 
         if (vetIds.length === 0) {
             return freeGaps(working, items, this.rowStep());
@@ -465,11 +464,41 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         this.route.queryParamMap.subscribe((params) => {
             const preset = this.toPreset(params.get('preset'));
             const date = params.get('date')?.trim() ?? '';
+            const hasFilterParams = ['vet', 'types', 'states'].some((k) => params.has(k));
+
+            // Adreste filtre yoksa son seçim geri yüklenir; adres de güncellenir (yenilemede kaybolmaz).
+            if (!preset && !hasFilterParams) {
+                const stored = readStoredCalendarFilters();
+
+                if (stored.vet || stored.types.length || stored.states.length) {
+                    this.filters.set(stored);
+                    this.navigate({}, true);
+
+                    return;
+                }
+            }
 
             this.activePreset.set(preset);
+            this.filters.set(preset ? EMPTY_CALENDAR_FILTERS : parseCalendarFilters(params));
             this.viewMode.set(!preset && params.get('view') === 'week' ? 'week' : 'day');
             this.selectedDate.set(!preset && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : istanbulTodayYmd());
             this.reload();
+        });
+    }
+
+    /** Filtre seçimi anında uygulanır: adres çubuğuna yazılır (yeniden yükleme oradan), son seçim hatırlanır. */
+    applyFilters(f: CalendarFilters): void {
+        writeStoredCalendarFilters(f);
+        this.filters.set(f);
+        this.navigate({});
+    }
+
+    /** Şube: takvim aktif klinikle çalışır; aktif klinik değişir ve takvim aynı görünüm ve filtrelerle yeni klinikte açılır (sözleşme §6.4). */
+    switchClinic(clinic: ClinicSummary): void {
+        this.clinicSwitchError.set(null);
+        this.auth.selectClinic(clinic.id, clinic.name).subscribe({
+            next: () => window.location.replace(this.router.url),
+            error: (e: unknown) => this.clinicSwitchError.set(panelHttpFailureMessage(e, 'Şube değiştirilemedi.'))
         });
     }
 
@@ -499,27 +528,33 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         this.navigate({ view: 'day', date: date === istanbulTodayYmd() ? null : date });
     }
 
-    toggleVet(id: string): void {
-        const next = new Set(this.hiddenVets());
-
-        if (!next.delete(id)) {
-            next.add(id);
-        }
-
-        this.hiddenVets.set(next);
-    }
-
     reload(): void {
         const preset = this.presetQuery();
         const keys = this.weekKeys();
         const from = preset?.start.toISOString() ?? dateOnlyInputToIstanbulStartUtcIso(keys[0]);
         const to = preset?.endExclusive.toISOString() ?? dateOnlyInputToIstanbulStartUtcIso(addGregorianDaysToYmd(keys[6], 1) ?? keys[6]);
 
+        const req = calendarRequestFor(this.filters());
+
         this.today.set(istanbulTodayYmd());
         this.requestLayerRange.set({ fromUtc: from, toUtc: to });
         this.loading.set(true);
         this.error.set(null);
-        this.appointments.getCalendarAppointments({ dateFromUtc: from, dateToUtc: to, status: preset?.status }).subscribe({
+        // Hızlı gezinmede ve filtre değişiminde eski yanıt yenisini ezmesin.
+        this.appointmentRequest?.unsubscribe();
+        const source = req.appointments
+            ? this.appointments.getCalendarAppointments({
+                  dateFromUtc: from,
+                  dateToUtc: to,
+                  status: preset?.status,
+                  veterinarianUserId: req.veterinarianUserId,
+                  withoutVeterinarian: req.withoutVeterinarian,
+                  appointmentTypes: req.appointmentTypes,
+                  states: req.states
+              })
+            : of([]);
+
+        this.appointmentRequest = source.subscribe({
             next: (res) => {
                 this.items.set(res);
                 this.loading.set(false);
@@ -530,17 +565,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
                 this.loading.set(false);
             }
         });
-        this.loadVaccines(preset ? null : { dateFromUtc: from, dateToUtc: to });
-    }
-
-    toggleVaccineLayer(): void {
-        const on = !this.vaccineLayer();
-
-        const range = this.requestLayerRange();
-
-        this.vaccineLayer.set(on);
-        writeVaccineLayerPreference(on);
-        this.loadVaccines(this.activePreset() || !range.fromUtc || !range.toUtc ? null : { dateFromUtc: range.fromUtc, dateToUtc: range.toUtc });
+        this.loadVaccines(preset || !req.vaccines ? null : { dateFromUtc: from, dateToUtc: to, states: req.states });
     }
 
     openVaccine(pick: VaccinePick): void {
@@ -549,6 +574,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     }
 
     vaccineStateText(v: VaccinationCalendarItemVm): string {
+        // Menüde aşıya özgü metin ("bugün yapılacak", "uygulandı").
         return vaccineStateLabel(v.state).toLocaleLowerCase('tr');
     }
 
@@ -615,11 +641,12 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         this.showDetail(id);
     }
 
-    private loadVaccines(range: { dateFromUtc: string; dateToUtc: string } | null): void {
+    /** `null`: aşı katmanı istenmiyor (hazır liste, tür filtresinde "Planlı aşılar" yok ya da belirli bir hekim seçili). */
+    private loadVaccines(range: { dateFromUtc: string; dateToUtc: string; states: readonly string[] } | null): void {
         // Hızlı gezinmede eski aralığın geç gelen yanıtı yenisini ezmesin.
         this.vaccineRequest?.unsubscribe();
 
-        if (!range || !this.canReadVaccinations || !this.vaccineLayer()) {
+        if (!range || !this.canReadVaccinations) {
             this.vaccines.set([]);
             this.vaccineError.set(null);
 
@@ -721,12 +748,13 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         const items = this.selectedDayItems();
         const ids = this.conflicts();
         const names = new Map(this.vets().map((v) => [v.userId, v.name]));
-        const vetIds = this.vetOrder().filter((id) => !this.hiddenVets().has(id));
+        const vetIds = this.activeVetIds();
         const unassigned = items.filter((i) => !i.veterinarianUserId);
 
         const column = (key: string, vetId: string | null, title: string, own: AppointmentCalendarItemVm[]): CalendarGridColumn => {
             const live = own.filter((i) => !isCancelled(i)).length;
-            const free = vetId && working ? freeGaps(working, own, this.rowStep()).reduce((s, g) => s + g.end - g.start, 0) : null;
+            // Tür/durum filtresinde sütun günün tüm randevularını göstermez; boş süre yazılmaz.
+            const free = vetId && working && !this.narrowed() ? freeGaps(working, own, this.rowStep()).reduce((s, g) => s + g.end - g.start, 0) : null;
 
             return {
                 key,
@@ -742,6 +770,10 @@ export class AppointmentsCalendarPageComponent implements OnInit {
                 opensDay: false
             };
         };
+
+        if (this.filters().vet === NO_VET) {
+            return [column(UNASSIGNED, null, 'Hekim seçilmedi', unassigned)];
+        }
 
         if (vetIds.length === 0) {
             return [column('all', null, 'Randevular', items)];
@@ -784,9 +816,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     }
 
     private freeVetAt(dateKey: string, minute: number): string | null {
-        const vetIds = this.vets()
-            .map((v) => v.userId)
-            .filter((id) => !this.hiddenVets().has(id));
+        const vetIds = this.activeVetIds().filter((id) => this.vets().some((v) => v.userId === id));
 
         return firstFreeVeterinarian(vetIds, this.items(), dateKey, minute, this.rowStep());
     }
@@ -798,18 +828,24 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         this.navigate({ date: date === istanbulTodayYmd() ? null : date });
     }
 
-    /** Görünüm ve gün adreste tutulur (geri dön bağlantısı aynı güne döner); `null` varsayılana (gün, bugün) döner. */
-    private navigate(params: { view?: CalendarViewMode; date?: string | null }): void {
+    /** Görünüm, gün ve filtreler adreste tutulur (geri dön bağlantısı aynı yere döner); `null` varsayılana (gün, bugün) döner. */
+    private navigate(params: { view?: CalendarViewMode; date?: string | null }, replaceUrl = false): void {
         const view = params.view ?? this.viewMode();
         const date = params.date === undefined ? (this.selectedDate() === istanbulTodayYmd() ? null : this.selectedDate()) : params.date;
 
-        void this.router.navigate(['/panel/appointments/calendar'], { queryParams: { view: view === 'week' ? 'week' : undefined, date: date ?? undefined } });
+        void this.router.navigate(['/panel/appointments/calendar'], {
+            queryParams: { view: view === 'week' ? 'week' : undefined, date: date ?? undefined, ...calendarFiltersToQueryParams(this.filters()) },
+            ...(replaceUrl ? { replaceUrl } : {})
+        });
     }
 
     private loadClinicSetup(): void {
         if (!this.clinicId) {
             return;
         }
+
+        // Şube filtresi yalnız birden çok kliniğe erişende görünür.
+        this.auth.getMyClinics().subscribe({ next: (c) => this.myClinics.set(c.filter((x) => x.isActive !== false)), error: () => this.myClinics.set([]) });
 
         this.visits.getVeterinarians(this.clinicId).subscribe({ next: (v) => this.vets.set(v), error: () => this.vets.set([]) });
         this.clinics.getWorkingHours(this.clinicId).subscribe({ next: (h) => this.hours.set(h), error: () => this.hours.set([]) });
