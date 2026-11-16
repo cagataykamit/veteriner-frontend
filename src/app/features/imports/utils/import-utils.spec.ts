@@ -1,6 +1,26 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { ImportReminderImpactDto, ImportTableInfoDto } from '@/app/features/imports/models/import-api.model';
-import { duplicateBatchId, importCommitBlockers, importErrorMessage, importIssueDetail, importIssueLabel, importRowPlace, isDiscardable, isEndpointUnavailable, isImportJobRunning, reminderEmailTotal, reminderImpactCurrentCount, precheckImportFile, rollbackCountsText, rollbackCountsTotal, rollbackReasonLabel } from '@/app/features/imports/utils/import-labels.utils';
+import {
+    canStartRollback,
+    duplicateBatchId,
+    importCommitBlockers,
+    importErrorMessage,
+    importIssueDetail,
+    importIssueLabel,
+    importRowPlace,
+    isDiscardable,
+    isEndpointUnavailable,
+    isImportJobRunning,
+    isRollbackFinal,
+    reminderEmailTotal,
+    reminderImpactCurrentCount,
+    precheckImportFile,
+    rollbackCountsText,
+    rollbackCountsTotal,
+    rollbackDeadlineText,
+    rollbackFinalText,
+    rollbackReasonLabel
+} from '@/app/features/imports/utils/import-labels.utils';
 import { columnMapsToRequest, fieldLabel, IMPORT_CSV_FIELD, IMPORT_CSV_TEMPLATE_FILE, IMPORT_TABLES, initialColumnMaps, mappingConfidence, missingRequired, needsClinic } from '@/app/features/imports/utils/import-schema.utils';
 import { IMPORT_PET_MERGE_PREFIX, IMPORT_VALUE_SKIP, petCandidateLabel, petChoicesToRequest, petDisplayName, petMergeConflict, petRowLabel, valueChoicesToRequest } from '@/app/features/imports/utils/import-value-mapping.utils';
 import { isTrialLimitError } from '@/app/shared/utils/api-error.utils';
@@ -116,6 +136,34 @@ describe('import-value-mapping.utils', () => {
 
         expect(petRowLabel(row)).toBe('01.12.2026 · Randevu (Kontrol): Dikiş alma');
         expect(petRowLabel({ ...row, table: 'vaccinations', title: 'KUDUZ', summary: null })).toBe('01.12.2026 · Aşı: KUDUZ');
+    });
+});
+
+describe('geri alma süresi (sözleşme 9.1)', () => {
+    it('kural sunucudan okunur; alanı göndermeyen eski sunucuda durumdan çıkarılır', () => {
+        expect(canStartRollback({ status: 'Committed', canRollback: true, rollbackDeadlineUtc: '2026-12-16T12:37:00Z' })).toBe(true);
+        expect(canStartRollback({ status: 'Committed', canRollback: false, rollbackDeadlineUtc: '2026-10-14T08:00:00Z' })).toBe(false);
+        expect(canStartRollback({ status: 'Committed' })).toBe(true);
+        expect(canStartRollback({ status: 'RolledBack' })).toBe(false);
+    });
+
+    it('süre içinde son tarihi, dolunca kesinleşti bilgisini İstanbul saatiyle verir', () => {
+        const open = { status: 'Committed' as const, canRollback: true, rollbackDeadlineUtc: '2026-12-16T12:37:00Z' };
+        const closed = { status: 'RollbackFailed' as const, canRollback: false, rollbackDeadlineUtc: '2026-10-14T08:00:00Z' };
+
+        expect(rollbackDeadlineText(open)).toBe('16.12.2026 15:37 tarihine kadar geri alınabilir');
+        expect(isRollbackFinal(open)).toBe(false);
+        expect(rollbackFinalText(open)).toBeNull();
+        expect(isRollbackFinal(closed)).toBe(true);
+        expect(rollbackDeadlineText(closed)).toBeNull();
+        expect(rollbackFinalText(closed)).toBe('Geri alma süresi 14.10.2026 11:00 tarihinde doldu');
+        expect(isRollbackFinal({ status: 'RolledBack', canRollback: false, rollbackDeadlineUtc: null })).toBe(false);
+    });
+
+    it('süre doldu hatası anlaşılır mesajla gösterilir', () => {
+        const err = new HttpErrorResponse({ status: 409, error: { code: 'Imports.RollbackWindowClosed', detail: 'x' } });
+
+        expect(importErrorMessage(err, 'yedek')).toContain('Geri alma süresi doldu; aktarma kesinleşti.');
     });
 });
 

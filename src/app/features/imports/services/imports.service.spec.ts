@@ -25,7 +25,23 @@ describe('ImportsService', () => {
         expect(req.request.params.get('page')).toBe('2');
         expect(req.request.params.get('pageSize')).toBe('20');
         expect(req.request.params.get('status')).toBe('Validated');
+        expect(req.request.params.has('includeClosed')).toBe(false);
         req.flush({ items: [], page: 2, pageSize: 20, totalItems: 0, totalPages: 0 });
+    });
+
+    it('kapanmış partileri yalnız istenince ister', () => {
+        service.listBatches(1, 20).subscribe();
+        const current = http.expectOne((r) => r.url === 'http://api.test/api/v1/imports/batches');
+
+        expect(current.request.params.has('includeClosed')).toBe(false);
+        current.flush({ items: [], page: 1, pageSize: 20, totalItems: 0, totalPages: 0 });
+
+        service.listBatches(1, 20, undefined, true).subscribe();
+        const all = http.expectOne((r) => r.url === 'http://api.test/api/v1/imports/batches');
+
+        expect(all.request.params.get('includeClosed')).toBe('true');
+        expect(all.request.params.has('status')).toBe(false);
+        all.flush({ items: [], page: 1, pageSize: 20, totalItems: 0, totalPages: 0 });
     });
 
     it('yüklemeyi multipart gövde olarak gönderir', () => {

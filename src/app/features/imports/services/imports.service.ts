@@ -30,11 +30,17 @@ import type {
 export class ImportsService {
     private readonly api = inject(ApiClient);
 
-    listBatches(page: number, pageSize: number, status?: ImportBatchStatus): Observable<ImportBatchPageDto> {
+    /**
+     * Parti listesi. `status` verilmezse sunucu kapanmış partileri (geri alınmış, silinmiş, süresi dolmuş taslak) göstermez;
+     * `includeClosed` hepsini getirir (sözleşme 7.5).
+     */
+    listBatches(page: number, pageSize: number, status?: ImportBatchStatus, includeClosed = false): Observable<ImportBatchPageDto> {
         let params = new HttpParams().set('page', page).set('pageSize', pageSize);
 
         if (status) {
             params = params.set('status', status);
+        } else if (includeClosed) {
+            params = params.set('includeClosed', true);
         }
 
         return this.api.get<ImportBatchPageDto>(ApiEndpoints.imports.batches(), params);
