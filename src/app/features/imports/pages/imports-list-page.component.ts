@@ -12,7 +12,7 @@ import { IMPORTS_ROUTE, MIGRATION_SUPPORT_ROUTE } from '@/app/core/routing/panel
 import type { ImportBatchDto, ImportBatchStatus } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
-import { IMPORT_STATUS_LABELS, importErrorMessage, importStatusLabel, importStatusSeverity, isDiscardable, isRollbackScreenAvailable } from '@/app/features/imports/utils/import-labels.utils';
+import { IMPORT_STATUS_LABELS, canStartRollback, importErrorMessage, importStatusLabel, importStatusSeverity, isDiscardable, isRollbackFinal, rollbackDeadlineText, rollbackFinalText } from '@/app/features/imports/utils/import-labels.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -22,7 +22,11 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
 import { IMPORT_TABLE_UNITS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 
-/** Parti geçmişi: durum, tarih, sayılar; taslaklar sürdürülür veya silinir. */
+const ALL_STATUSES = 'All';
+
+type ImportStatusFilter = ImportBatchStatus | typeof ALL_STATUSES;
+
+/** Parti geçmişi: durum, tarih, sayılar; taslaklar sürdürülür veya silinir. Geri alma süresi içindeki partide son tarih, dolmuşta "Kesinleşti" görünür. */
 @Component({
     selector: 'app-imports-list-page',
     standalone: true,
@@ -57,13 +61,13 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                 <div class="flex flex-wrap items-end gap-3 mb-4">
                     <div class="flex flex-col gap-1">
                         <label for="importStatusFilter" class="text-sm text-muted-color">Durum</label>
-                        <p-select inputId="importStatusFilter" [options]="statusOptions" [(ngModel)]="statusFilter" optionLabel="label" optionValue="value" placeholder="Tümü" [showClear]="true" class="w-56" (ngModelChange)="applyFilter()" />
+                        <p-select inputId="importStatusFilter" [options]="statusOptions" [(ngModel)]="statusFilter" optionLabel="label" optionValue="value" placeholder="Geçerli olanlar" [showClear]="true" class="w-56" (ngModelChange)="applyFilter()" />
                     </div>
                 </div>
 
                 @if (items().length === 0) {
                     <app-empty-state
-                        [message]="statusFilter ? 'Bu durumda içe aktarma yok.' : 'Henüz içe aktarma yapılmadı.'"
+                        [message]="statusFilter ? 'Bu durumda içe aktarma yok.' : 'Geçerli içe aktarma yok.'"
                         [hint]="statusFilter || !canManage ? undefined : 'Önce şablonu indirip eski kayıtlarınızı doldurun, sonra yeni içe aktarma başlatın.'"
                     />
                 } @else {
@@ -84,8 +88,13 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
                                         <button pButton type="button" size="small" severity="danger" [disabled]="busyId() === b.id" (click)="discard(b)">@if (busyId() === b.id) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Sil</button>
                                         <button pButton type="button" size="small" severity="secondary" (click)="discardingId.set(null)">Vazgeç</button>
                                     } @else {
+                                        @if (isFinal(b)) {
+                                            <span class="inline-flex items-center gap-1 text-sm text-muted-color" [attr.title]="finalText(b)" data-testid="import-final"><i class="pi pi-lock" aria-hidden="true"></i>Kesinleşti</span>
+                                        } @else if (canCommit && deadlineText(b)) {
+                                            <small class="text-muted-color" data-testid="import-rollback-deadline">{{ deadlineText(b) }}</small>
+                                        }
                                         <a pButton size="small" severity="secondary" [routerLink]="[b.id]">{{ isDraft(b) && canManage ? 'Devam et' : 'Aç' }}</a>
-                                        @if (canCommit && canRollback(b)) {
+                                        @if (canCommit && showRollbackLink(b)) {
                                             <a pButton size="small" severity="danger" [outlined]="true" [routerLink]="[b.id, 'rollback']"><i class="p-button-icon pi pi-undo"></i>{{ b.status === 'RollingBack' ? 'Geri alma durumu' : 'Geri al' }}</a>
                                         }
                                         @if (canManage && isDraft(b)) {
@@ -113,8 +122,12 @@ export class ImportsListPageComponent implements OnInit {
     readonly canRequestSupport = this.auth.hasOperationClaim(CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM);
     readonly migrationSupportRoute = MIGRATION_SUPPORT_ROUTE;
     readonly pageSize = 20;
-    readonly statusOptions = (Object.keys(IMPORT_STATUS_LABELS) as ImportBatchStatus[]).map((value) => ({ value, label: IMPORT_STATUS_LABELS[value] }));
-    statusFilter: ImportBatchStatus | null = null;
+    /** Filtre boşken sunucu yalnız geçerli partileri döner; geri alınan, silinen ve süresi dolan taslaklar "Tümü" ya da kendi durumuyla görünür. */
+    readonly statusOptions: { value: ImportStatusFilter; label: string }[] = [
+        { value: ALL_STATUSES, label: 'Tümü' },
+        ...(Object.keys(IMPORT_STATUS_LABELS) as ImportBatchStatus[]).map((value) => ({ value, label: IMPORT_STATUS_LABELS[value] }))
+    ];
+    statusFilter: ImportStatusFilter | null = null;
 
     readonly loading = signal(true);
     readonly error = signal<string | null>(null);
@@ -133,7 +146,10 @@ export class ImportsListPageComponent implements OnInit {
     load(): void {
         this.loading.set(true);
         this.error.set(null);
-        this.imports.listBatches(this.page(), this.pageSize, this.statusFilter ?? undefined).subscribe({
+        const filter = this.statusFilter;
+        const status = filter && filter !== ALL_STATUSES ? filter : undefined;
+
+        this.imports.listBatches(this.page(), this.pageSize, status, filter === ALL_STATUSES).subscribe({
             next: (res) => {
                 this.items.set(res.items);
                 this.totalItems.set(res.totalItems);
@@ -192,9 +208,14 @@ export class ImportsListPageComponent implements OnInit {
         return isDiscardable(b.status);
     }
 
-    protected canRollback(b: ImportBatchDto): boolean {
-        return isRollbackScreenAvailable(b.status);
+    /** Süre içinde geri alınabilir parti ya da süren geri almanın durumu. */
+    protected showRollbackLink(b: ImportBatchDto): boolean {
+        return b.status === 'RollingBack' || canStartRollback(b);
     }
+
+    protected isFinal = isRollbackFinal;
+    protected deadlineText = rollbackDeadlineText;
+    protected finalText = rollbackFinalText;
 
     protected statusLabel = importStatusLabel;
     protected statusSeverity = importStatusSeverity;

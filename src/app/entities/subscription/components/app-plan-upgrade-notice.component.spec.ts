@@ -32,11 +32,11 @@ describe('AppPlanUpgradeNoticeComponent', () => {
 
     it('gereken paketi ve üst paketleri yazar, abonelik sayfasına bağlar', () => {
         claims.add('Subscriptions.Read');
-        locked = { feature: 'OwnerPortal', isEnabled: false, requiredPlanCode: 'Pro' };
-        const el = create('OwnerPortal');
+        locked = { feature: 'Waitlist', isEnabled: false, requiredPlanCode: 'Pro' };
+        const el = create('Waitlist');
         const link = el.querySelector<HTMLAnchorElement>('[data-testid="plan-upgrade-link"]');
 
-        expect(el.textContent).toContain('Hasta sahibi portalı Profesyonel ve Kurumsal paketlerinde var.');
+        expect(el.textContent).toContain('Bekleme listesi Profesyonel ve Kurumsal paketlerinde var.');
         expect(link?.textContent).toContain('Üst pakete geç');
         expect(link?.getAttribute('href')).toBe('/panel/settings/subscription');
     });
@@ -48,14 +48,14 @@ describe('AppPlanUpgradeNoticeComponent', () => {
     });
 
     it('abonelik erişimi olmayan rolde bağlantı yerine yöneticiye yönlendirir', () => {
-        locked = { feature: 'OwnerPortal', isEnabled: false, requiredPlanCode: 'Pro' };
-        const el = create('OwnerPortal');
+        locked = { feature: 'Waitlist', isEnabled: false, requiredPlanCode: 'Pro' };
+        const el = create('Waitlist');
 
         expect(el.querySelector('[data-testid="plan-upgrade-link"]')).toBeNull();
         expect(el.textContent).toContain('kurum yöneticinize');
     });
 
     it('paket bilgisi henüz yoksa paket adı uydurmaz', () => {
-        expect(create('OwnerPortal').textContent).toContain('Hasta sahibi portalı mevcut paketinizde yok.');
+        expect(create('Waitlist').textContent).toContain('Bekleme listesi mevcut paketinizde yok.');
     });
 });

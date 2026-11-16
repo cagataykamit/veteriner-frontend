@@ -50,9 +50,10 @@ describe('ImportRollbackPageComponent', () => {
         opts: {
             claim?: boolean;
             preview?: ImportRollbackPreviewDto;
+            batch?: Partial<ImportBatchDto>;
         } = {}
     ): HTMLElement {
-        imports.getBatch.mockReturnValue(of(batch(status)));
+        imports.getBatch.mockReturnValue(of({ ...batch(status), ...opts.batch }));
         imports.getRollbackPreview.mockReturnValue(of(opts.preview ?? preview()));
         TestBed.configureTestingModule({
             imports: [ImportRollbackPageComponent],
@@ -191,5 +192,44 @@ describe('ImportRollbackPageComponent', () => {
         expect(text(el)).toContain('2 / 8 satır işlendi');
         expect(submitButton(el)).toBeNull();
         fixture.destroy();
+    });
+
+    it('süre içindeki partide son tarihi formun üstünde gösterir', () => {
+        const el = create('Committed', { batch: { canRollback: true, rollbackDeadlineUtc: '2026-12-16T12:37:00Z' } });
+
+        expect(el.querySelector('[data-testid="import-rollback-deadline"]')?.textContent).toContain('16.12.2026 15:37 tarihine kadar geri alınabilir');
+        expect(submitButton(el)).not.toBeNull();
+    });
+
+    it('süresi dolmuş partide kesinleşti mesajı gösterir; önizleme istemez, form yoktur', () => {
+        const el = create('Committed', { batch: { canRollback: false, rollbackDeadlineUtc: '2026-10-14T08:00:00Z' } });
+        const final = el.querySelector('[data-testid="import-rollback-final"]')?.textContent ?? '';
+
+        expect(final).toContain('kesinleşti');
+        expect(final).toContain('Geri alma süresi 14.10.2026 11:00 tarihinde doldu');
+        expect(imports.getRollbackPreview).not.toHaveBeenCalled();
+        expect(submitButton(el)).toBeNull();
+    });
+
+    it('yarım kalmış geri alma süre dolunca yeniden denenemez', () => {
+        const el = create('RollbackFailed', { batch: { canRollback: false, rollbackDeadlineUtc: '2026-10-14T08:00:00Z' } });
+
+        expect(text(el)).toContain('kesinleşti');
+        expect(text(el)).not.toContain('yeniden deneyebilirsiniz');
+        expect(submitButton(el)).toBeNull();
+    });
+
+    it('gönderirken süre dolduysa sunucu mesajını gösterir ve partiyi yeniden okur', () => {
+        const el = create('Committed', { batch: { canRollback: true, rollbackDeadlineUtc: '2026-12-16T12:37:00Z' } });
+        imports.rollback.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.RollbackWindowClosed' } })));
+        imports.getBatch.mockReturnValue(of({ ...batch('Committed'), canRollback: false, rollbackDeadlineUtc: '2026-11-16T12:37:00Z' }));
+        fill('Yanlış dosya', true);
+
+        submitButton(el)!.click();
+        fixture.detectChanges();
+
+        expect(text(el)).toContain('Geri alma süresi doldu; aktarma kesinleşti.');
+        expect(imports.getBatch).toHaveBeenCalledTimes(2);
+        expect(submitButton(el)).toBeNull();
     });
 });

@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type {
+    ImportBatchDto,
     ImportBatchStatus,
     ImportRowStatusFilter,
     ImportJobStatus,
@@ -13,6 +14,7 @@ import type {
 } from '@/app/features/imports/models/import-api.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { IMPORT_TABLE_LABELS } from '@/app/features/imports/utils/import-schema.utils';
 
 export const IMPORT_STATUS_LABELS: Readonly<Record<ImportBatchStatus, string>> = {
@@ -88,6 +90,28 @@ export function isRollbackScreenAvailable(status: string): boolean {
     return isRollbackable(status) || status === 'RollingBack';
 }
 
+type RollbackWindow = Pick<ImportBatchDto, 'status' | 'canRollback' | 'rollbackDeadlineUtc'>;
+
+/** Geri alma şu an başlatılabilir mi (sözleşme 9.1). Kural sunucudadır (`canRollback`); alanı göndermeyen eski sunucuda yalnız durum. */
+export function canStartRollback(b: RollbackWindow): boolean {
+    return b.canRollback ?? isRollbackable(b.status);
+}
+
+/** Geri alma süresi dolmuş: aktarma kesinleşti (sözleşme 9.1). */
+export function isRollbackFinal(b: RollbackWindow): boolean {
+    return !!b.rollbackDeadlineUtc && b.canRollback === false;
+}
+
+/** Süre içindeki partide son tarih; başka durumda null. */
+export function rollbackDeadlineText(b: RollbackWindow): string | null {
+    return b.rollbackDeadlineUtc && canStartRollback(b) ? `${formatUtcIsoAsLocalDateTimeDisplay(b.rollbackDeadlineUtc)} tarihine kadar geri alınabilir` : null;
+}
+
+/** Süresi dolmuş partide açıklama; başka durumda null. */
+export function rollbackFinalText(b: RollbackWindow): string | null {
+    return b.rollbackDeadlineUtc && isRollbackFinal(b) ? `Geri alma süresi ${formatUtcIsoAsLocalDateTimeDisplay(b.rollbackDeadlineUtc)} tarihinde doldu` : null;
+}
+
 export const IMPORT_VALUE_KIND_LABELS: Readonly<Record<ImportValueKind, string>> = {
     species: 'Tür',
     breed: 'Irk',
@@ -138,6 +162,8 @@ const ISSUE_TEXTS: Readonly<Record<string, string | readonly [label: string, not
     'Imports.ColorFreeText': 'Renk sistemde yok; nota eklenir',
     'Pets.BreedSpeciesMismatch': 'Seçilen ırk bu türe ait değil; ırk metin olarak aktarılır',
     'VaccineDefinitions.InvalidSpecies': 'Seçilen aşı bu türe uygun değil',
+    'Imports.SpeciesFromVaccines': ['Türü aşılarından çıkarıldı', 'Dosyada türü yok (ya da "Diğer"); aşılarının hepsi aynı türe ait olduğu için o türle aktarılır.'],
+    'Imports.VaccineSpeciesUnverified': ['Hastanın türü bilinmiyor; aşı tür denetlenmeden aktarılır', 'Türü dosyada yok ve aşıları farklı türleri gösteriyor; aşılar reddedilmez.'],
     'Imports.GenderUnrecognized': 'Cinsiyet tanınmadı',
     'Imports.NeuteredUnrecognized': 'Kısır değeri tanınmadı',
     'Imports.WeightInvalid': 'Ağırlık geçersiz; boş aktarılır',
@@ -226,6 +252,7 @@ const ISSUE_DETAIL_CODES: ReadonlySet<string> = new Set([
     'Imports.NeuteredUnrecognized',
     'Imports.StatusUnrecognized',
     'Imports.WeightInvalid',
+    'Imports.SpeciesFromVaccines',
     'Imports.TemperatureInvalid',
     'Imports.DeceasedDateIgnored',
     'Imports.MicrochipInvalid',
@@ -273,7 +300,8 @@ const PROBLEM_MESSAGES: Readonly<Record<string, string>> = {
     'Imports.ReminderImpactChanged': 'E-posta sayısı değişti. Güncel sayıyı görüp tekrar onaylayın.',
     'Imports.CommitBlocked': 'Aktarma şu an başlatılamıyor. Doğrulama sonucundaki engelleri giderip yeniden doğrulayın.',
     'Imports.AccessDenied': 'Bu işlem için gerekli yetkiniz yok (müşteri, hasta, aşı, muayene, ücret, randevu veya ürün ekleme yetkisi). Yöneticinizle görüşün.',
-    'Imports.RollbackBlocked': 'Bağlı kaydı olan kayıtlar var; hiçbir şey silinmedi. Aşağıdaki listeye bakın.'
+    'Imports.RollbackBlocked': 'Bağlı kaydı olan kayıtlar var; hiçbir şey silinmedi. Aşağıdaki listeye bakın.',
+    'Imports.RollbackWindowClosed': 'Geri alma süresi doldu; aktarma kesinleşti. Aktarmalar uygulandıktan sonra 30 gün içinde geri alınabilir.'
 };
 
 /** Sayfada gösterilecek Türkçe hata; içe aktarma kodları önce, sonra genel panel eşlemesi. */

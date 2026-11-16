@@ -6,7 +6,7 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
-import type { ImportBatchDto, ImportCommitProgressDto, ImportPreviewDto, ImportTableSummaryDto } from '@/app/features/imports/models/import-api.model';
+import type { ImportBatchDto, ImportCommitProgressDto, ImportPreviewDto, ImportTableSummaryDto, ImportWarningDto } from '@/app/features/imports/models/import-api.model';
 import { ImportWizardPageComponent } from '@/app/features/imports/pages/import-wizard-page.component';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { IMPORT_JOB_STALL_MS, IMPORT_PROGRESS_MAX_FAILURES, IMPORT_PROGRESS_POLL_MS } from '@/app/features/imports/utils/import-progress-poll.utils';
@@ -116,16 +116,72 @@ describe('ImportWizardPageComponent (K13 arka plan doğrulama)', () => {
         vi.useRealTimers();
     });
 
-    it('yükleme notları ayrı uyarı kutuları yerine tek, kapalı açılır kartta listelenir', () => {
+    const decisionNote: ImportWarningDto = {
+        code: 'Imports.EVet.SameOwnerSameName',
+        table: 'pets',
+        message: 'Aynı sahipte aynı adlı birden çok hasta …',
+        severity: 'decision',
+        count: 26,
+        unit: 'satır',
+        title: 'hangi hastaya ait, sizden sorulacak',
+        parts: [
+            { label: 'Hastası size sorulacak', count: 26, severity: 'decision' },
+            { label: 'Doğru hastaya kendiliğinden bağlandı', count: 184 }
+        ],
+        target: { anchor: 'required' }
+    };
+    const skippedNote: ImportWarningDto = { code: 'Imports.EVet.PassiveProducts', table: 'products', message: '142 pasif ürün aktarılmayacak.', severity: 'skipped', count: 142, unit: 'pasif ürün', title: 'aktarılmayacak' };
+    const notesPanel = (el: HTMLElement) => el.querySelector<HTMLElement>('[data-testid="import-upload-notes"]');
+    const noteKinds = (el: HTMLElement) => [...el.querySelectorAll<HTMLElement>('[data-testid="import-note"]')].map((li) => li.dataset['kind']);
+
+    it('partiye yazılmış notlar sayfa yenilenince de gelir; panel açık, satır satır ve karar önce', () => {
+        history.replaceState(null, '');
+        const el = create({ ...batch('Uploaded'), warnings: [skippedNote, decisionNote] });
+
+        expect(notesPanel(el)?.textContent).toContain('Dosya okunurken 2 not çıktı');
+        expect(noteKinds(el)).toEqual(['decision', 'skipped']);
+        expect(text(el)).toContain('Doğrulamada sorulacak');
+        expect(el.querySelectorAll('[data-testid="import-note-detail"]').length).toBe(1);
+    });
+
+    it('not taşımayan eski sunucuda yükleme yanıtının notları kullanılır; yapısız not düz metin, bilgi sayılır', () => {
         history.replaceState({ warnings: [{ table: 'pets', code: 'A', message: 'Birinci not' }, { table: 'products', code: 'B', message: 'İkinci not' }] }, '');
         const el = create(batch('Uploaded'));
-        history.replaceState(null, '');
-        const notes = el.querySelector<HTMLDetailsElement>('[data-testid="import-upload-notes"]');
 
-        expect(notes?.open).toBe(false);
-        expect(notes?.querySelector('summary')?.textContent).toContain('Dosya okunurken 2 not çıktı');
-        expect(notes?.querySelectorAll('li').length).toBe(2);
+        history.replaceState(null, '');
+
+        expect(notesPanel(el)?.textContent).toContain('Dosya okunurken 2 not çıktı');
+        expect([...el.querySelectorAll('[data-testid="import-note-plain"]')].map((p) => p.textContent?.trim())).toEqual(['Birinci not', 'İkinci not']);
+        expect(noteKinds(el)).toEqual(['info', 'info']);
         expect(el.querySelectorAll('p-message[severity="warn"]').length).toBe(0);
+    });
+
+    it('karar notunun düğmesi Doğrulama adımındaki "Sizden beklenen"e götürür', () => {
+        imports.getPreview.mockReturnValue(of(preview({ canCommit: false, blockers: ['Imports.AmbiguousPet'], unmappedValues: [{ kind: 'pet', source: 'Belirsiz: 903 / 904', rowCount: 26, blocking: true }] })));
+        const el = create({ ...batch('Validated', 'v1'), warnings: [decisionNote] });
+
+        fixture.componentInstance.step.set(2);
+        fixture.detectChanges();
+
+        el.querySelector<HTMLButtonElement>('[data-testid="import-note-go"]')!.click();
+        fixture.detectChanges();
+
+        expect(text(el)).toContain('Adım 3 · Doğrulama sonucu');
+        expect(el.querySelector('[data-testid="import-required-values"]')).not.toBeNull();
+    });
+
+    it('önizlemede seçim bekleyen hasta kalmayınca karar notu bilgiye döner; 4. adımda panel kapalı gelir', () => {
+        const el = create({ ...batch('Validated', 'v1'), warnings: [decisionNote, skippedNote] });
+
+        expect(noteKinds(el)).toEqual(['info', 'skipped']);
+        expect(text(el)).toContain('210');
+        expect(el.querySelector('[data-testid="import-note-go"]')).toBeNull();
+
+        fixture.componentInstance.step.set(4);
+        fixture.detectChanges();
+
+        expect(notesPanel(el)?.textContent).toContain('Dosya okunurken 2 not çıktı');
+        expect(el.querySelectorAll('[data-testid="import-note"]').length).toBe(0);
     });
 
     it('sayfa yenilenince (yükleme notu olmadan) parti durumundan kalınan adım açılır', () => {

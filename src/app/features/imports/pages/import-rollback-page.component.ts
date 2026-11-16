@@ -17,16 +17,19 @@ import { ImportsService } from '@/app/features/imports/services/imports.service'
 import {
     IMPORT_TABLE_LABELS,
     ROLLBACK_ENTITY_LABELS,
+    canStartRollback,
     importErrorCode,
     importErrorExtension,
     importErrorMessage,
     importStatusLabel,
     importStatusSeverity,
-    isRollbackable,
+    isRollbackFinal,
     isRollbackScreenAvailable,
     rollbackBlockedItems,
     rollbackCountsText,
     rollbackCountsTotal,
+    rollbackDeadlineText,
+    rollbackFinalText,
     rollbackReasonLabel,
     rollbackWarningLabel
 } from '@/app/features/imports/utils/import-labels.utils';
@@ -121,7 +124,12 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                     <p-message severity="error" class="w-full mb-4" role="alert">{{ error() }}</p-message>
                 }
 
-                @if (b.status === 'RolledBack') {
+                @if (finalized()) {
+                    <p-message severity="info" class="w-full mb-4" role="status" data-testid="import-rollback-final">
+                        <span class="font-medium">Bu içe aktarma kesinleşti; artık geri alınamaz.</span>
+                        {{ finalText() }}. İçe aktarmalar uygulandıktan sonra 30 gün içinde geri alınabilir. Aktarılan kayıtlar diğer kayıtlar gibi tek tek düzenlenebilir.
+                    </p-message>
+                } @else if (b.status === 'RolledBack') {
                     <p-message severity="success" class="w-full mb-4" role="status">Geri alma tamamlandı. Bu içe aktarmanın oluşturduğu tüm kayıtlar silindi; aynı dosyayı yeniden yükleyebilirsiniz.</p-message>
                 } @else if (b.status === 'PartiallyRolledBack') {
                     <p-message severity="warn" class="w-full mb-4" role="status">Geri alma kısmen tamamlandı. Bağlı kaydı olan kayıtlar silinmedi; nedenleri aşağıda.</p-message>
@@ -167,6 +175,9 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                 @if (formVisible()) {
                     <section class="mt-4">
                         <h6 class="mt-0 mb-2">Geri almayı onayla</h6>
+                        @if (deadlineText()) {
+                            <p class="mt-0 mb-3 text-sm text-muted-color" data-testid="import-rollback-deadline"><i class="pi pi-clock mr-1" aria-hidden="true"></i>{{ deadlineText() }}. Bu tarihten sonra içe aktarma kesinleşir.</p>
+                        }
 
                         <div class="flex flex-col gap-1 mb-4">
                             <label for="rollbackReason" class="font-medium">Gerekçe (zorunlu)</label>
@@ -236,7 +247,27 @@ export class ImportRollbackPageComponent implements OnInit {
     readonly ack = signal(false);
 
     protected readonly screenAvailable = computed(() => isRollbackScreenAvailable(this.batch()?.status ?? ''));
-    protected readonly formVisible = computed(() => isRollbackable(this.batch()?.status ?? '') && !!this.preview());
+    protected readonly formVisible = computed(() => {
+        const b = this.batch();
+
+        return !!b && canStartRollback(b) && !!this.preview();
+    });
+    /** Geri alma süresi doldu: aktarma kesinleşti (sözleşme 9.1); form ve önizleme gösterilmez. */
+    protected readonly finalized = computed(() => {
+        const b = this.batch();
+
+        return !!b && isRollbackFinal(b);
+    });
+    protected readonly finalText = computed(() => {
+        const b = this.batch();
+
+        return b ? rollbackFinalText(b) : null;
+    });
+    protected readonly deadlineText = computed(() => {
+        const b = this.batch();
+
+        return b ? rollbackDeadlineText(b) : null;
+    });
     protected readonly isRetry = computed(() => ['PartiallyRolledBack', 'RollbackFailed'].includes(this.batch()?.status ?? ''));
     protected readonly deleteUnblockedAvailable = computed(() => !!this.preview()?.canDeleteUnblockedOnly);
     protected readonly canSubmit = computed(() => this.reason().trim().length > 0 && this.reason().trim().length <= ROLLBACK_REASON_MAX_LENGTH && this.ack() && !this.busy());
@@ -272,7 +303,7 @@ export class ImportRollbackPageComponent implements OnInit {
 
                 if (b.status === 'RollingBack') {
                     this.startPolling(b.id);
-                } else if (isRollbackScreenAvailable(b.status) || b.status === 'RolledBack') {
+                } else if ((isRollbackScreenAvailable(b.status) || b.status === 'RolledBack') && !isRollbackFinal(b)) {
                     this.loadPreview();
                 }
             },
@@ -358,7 +389,7 @@ export class ImportRollbackPageComponent implements OnInit {
             return;
         }
 
-        if (code === 'Imports.InvalidState' || code === 'Imports.ConcurrencyConflict') {
+        if (code === 'Imports.InvalidState' || code === 'Imports.ConcurrencyConflict' || code === 'Imports.RollbackWindowClosed') {
             this.error.set(importErrorMessage(e, 'Geri alma başlatılamadı.'));
             this.load();
 

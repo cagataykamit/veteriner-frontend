@@ -79,10 +79,36 @@ export interface ImportTableInfoDto {
     columns: ImportColumnDto[];
 }
 
+/** Dosya notunun etkisi (sözleşme 7.2.1); yoksa `info` sayılır. */
+export type ImportWarningSeverity = 'decision' | 'attention' | 'info' | 'skipped';
+
+export interface ImportWarningPartDto {
+    label: string;
+    count: number;
+    severity?: ImportWarningSeverity | null;
+}
+
+/** `required`: Doğrulama adımında "Sizden beklenen"; `rows`: satır incelemesi (henüz üretilmiyor). */
+export interface ImportWarningTargetDto {
+    anchor: 'required' | 'rows';
+    table?: ImportTable | null;
+    reason?: string | null;
+}
+
+/** Dosya okunurken çıkan not. `message` her notta vardır; diğer alanlar yoksa not düz metin gösterilir. */
 export interface ImportWarningDto {
     code: string;
     table?: ImportTable | null;
     message: string;
+    severity?: ImportWarningSeverity | null;
+    count?: number | null;
+    unit?: string | null;
+    title?: string | null;
+    source?: string | null;
+    parts?: ImportWarningPartDto[] | null;
+    outcome?: string | null;
+    example?: string | null;
+    target?: ImportWarningTargetDto | null;
 }
 
 export interface ImportProgressDto {
@@ -107,6 +133,10 @@ export interface ImportBatchDto {
     rolledBackAtUtc: string | null;
     remindersReleasedAtUtc: string | null;
     payloadPurgedAtUtc: string | null;
+    /** Geri alma şu an başlatılabilir mi (sözleşme 9.1; kural sunucuda). Eski sunucu göndermezse durumdan çıkarılır. */
+    canRollback?: boolean;
+    /** Geri almanın son anı (UTC); geri alınabilir durumda olmayan partide null. Geçmişse aktarma kesinleşmiştir. */
+    rollbackDeadlineUtc?: string | null;
     /** TIER-021; eski sunucu göndermezse `Generic` sayılır. */
     sourceProfile?: ImportSourceProfileCode;
     summary: ImportSummaryDto;
@@ -114,7 +144,7 @@ export interface ImportBatchDto {
     progress?: ImportProgressDto | null;
     /** Listede null. */
     tables?: ImportTableInfoDto[] | null;
-    /** Yalnız yükleme yanıtında. */
+    /** Dosya notları: yükleme ve ayrıntı yanıtında (`tables` ile birlikte); listede ve bu alandan önce yüklenmiş partide null. */
     warnings?: ImportWarningDto[] | null;
 }
 
