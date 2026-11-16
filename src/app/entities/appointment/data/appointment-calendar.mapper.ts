@@ -88,7 +88,9 @@ export function mapAppointmentCalendarItemDtoToVm(dto: AppointmentCalendarItemDt
         petName: toText(dto.petName),
         clientName: toText(dto.clientName),
         veterinarianUserId: dto.veterinarianUserId?.trim() ? dto.veterinarianUserId.trim() : null,
-        veterinarianName: toText(dto.veterinarianName)
+        veterinarianName: toText(dto.veterinarianName),
+        reasonName: dto.reasonName?.trim() ? dto.reasonName.trim() : null,
+        notes: dto.notes?.trim() ? dto.notes.trim() : null
     };
 }
 

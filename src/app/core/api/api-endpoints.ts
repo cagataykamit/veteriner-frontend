@@ -269,6 +269,8 @@ export const ApiEndpoints = {
         /** Query: `Page`, `PageSize`, `Search`, `Status`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `OnlyOverdue`, `Sort` (`dueAtUtc` | `appliedAtUtc`), `Order` (+ `clinicId`, `PetId`, `ClientId`). */
         list: () => `/api/v1/vaccinations`,
         byId: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}`,
+        /** Takvim aşı katmanı: `dateFromUtc`, `dateToUtc` (en çok 45 gün), `clinicId` (`APPOINTMENT_CALENDAR_API_CONTRACT.md` §5). */
+        calendar: () => `/api/v1/vaccinations/calendar`,
         /** GET HBS ATS hazır verisi (`Vaccinations.Read`; `HBS_ASSISTANT_API_CONTRACT.md` §4). */
         hbsData: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}/hbs-data`,
         /** PATCH ATS geri kaydı `{ status, referenceNumber, notRequiredReason }` (`Vaccinations.Update`; §5). */

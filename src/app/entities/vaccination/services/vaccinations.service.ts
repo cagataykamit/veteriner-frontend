@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
@@ -22,6 +22,8 @@ import type {
     VaccinationEditVm,
     VaccinationListItemVm
 } from '@/app/entities/vaccination/models/vaccination-vm.model';
+import { mapVaccinationCalendarItemsToVm } from '@/app/entities/vaccination/data/vaccination-calendar.mapper';
+import type { VaccinationCalendarItemDto, VaccinationCalendarItemVm } from '@/app/entities/vaccination/models/vaccination-calendar.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface VaccinationsPagedVm {
@@ -50,6 +52,21 @@ export class VaccinationsService {
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Aşı listesi yüklenemedi.')))
             )
+        );
+    }
+
+    /** Takvim aşı katmanı (`[dateFromUtc, dateToUtc)`, aktif klinik). */
+    getCalendarVaccinations(query: { dateFromUtc: string; dateToUtc: string }): Observable<VaccinationCalendarItemVm[]> {
+        let params = new HttpParams().set('dateFromUtc', query.dateFromUtc).set('dateToUtc', query.dateToUtc);
+        const clinicId = this.auth.getClinicId()?.trim();
+
+        if (clinicId) {
+            params = params.set('clinicId', clinicId);
+        }
+
+        return this.api.get<VaccinationCalendarItemDto[]>(ApiEndpoints.vaccinations.calendar(), params).pipe(
+            map((res) => mapVaccinationCalendarItemsToVm(res)),
+            catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Takvim aşıları yüklenemedi.'))))
         );
     }
 

@@ -23,6 +23,9 @@ export interface AppointmentCalendarItemVm {
     veterinarianUserId: string | null;
     /** Hekimin görünen adı; hekimsiz ya da ad yoksa boş. */
     veterinarianName: string;
+    /** Randevu nedeni; yoksa `null` (balonda tür yazılır). */
+    reasonName: string | null;
+    notes: string | null;
 }
 
 export interface AppointmentCalendarDayGroupVm {

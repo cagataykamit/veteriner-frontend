@@ -27,6 +27,8 @@ const item = (id: string, hm: string, duration: number, extra: Partial<Appointme
         clientName: '',
         veterinarianUserId: null,
         veterinarianName: '',
+        reasonName: null,
+        notes: null,
         ...extra
     };
 };
