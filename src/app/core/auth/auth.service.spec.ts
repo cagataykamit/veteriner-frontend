@@ -275,6 +275,20 @@ describe('AuthService', () => {
                 expect(tabA.getAccessToken()).not.toBe(tabB.getAccessToken());
             });
 
+            it('bir sekme yenilerken diğeri çıkarsa çıkış kilidi bekler ve güncel anahtarı kapatır', async () => {
+                localStorage.setItem(REFRESH, 'rt-0');
+                singleUseServer();
+                const [tabA, tabB] = twoTabs();
+
+                await Promise.allSettled([firstValueFrom(tabA.refreshSession()), firstValueFrom(tabB.logoutCurrentSession())]);
+
+                expect(api.post.mock.calls.map((c) => [c[0], (c[1] as { refreshToken: string }).refreshToken])).toEqual([
+                    [ApiEndpoints.auth.refresh(), 'rt-0'],
+                    [ApiEndpoints.auth.logout(), 'rt-1']
+                ]);
+                expect(localStorage.getItem(REFRESH)).toBeNull();
+            });
+
             it('Web Locks yoksa iki sekme aynı anahtarı gönderir ve biri reddedilir (kilidin kapattığı yarış)', async () => {
                 Object.defineProperty(navigator, 'locks', { configurable: true, value: undefined });
                 localStorage.setItem(REFRESH, 'rt-0');

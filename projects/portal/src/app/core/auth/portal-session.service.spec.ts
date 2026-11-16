@@ -125,11 +125,12 @@ describe('PortalSessionService', () => {
         let done = false;
 
         session.logout().subscribe(() => (done = true));
-        const req = http.expectOne(`${BASE}/auth/logout`);
+        const req = await expectOneSoon(http, `${BASE}/auth/logout`);
 
         expect(req.request.body).toEqual({ refreshToken: 'refresh-1' });
         expect(req.request.headers.get('Authorization')).toBe('Bearer access-1');
         req.flush(null, { status: 204, statusText: 'No Content' });
+        await waitFor(() => done);
 
         expect(done).toBe(true);
         expect(store.accessToken()).toBeNull();

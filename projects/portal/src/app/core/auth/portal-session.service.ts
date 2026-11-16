@@ -125,7 +125,10 @@ export class PortalSessionService {
      */
     logout(): Observable<void> {
         return this.pushRegistration.revokeThisDevice().pipe(
-            switchMap(() => this.authApi.logout(this.tokens.refreshToken())),
+            // Yenilemeyle aynı sekmeler arası kilitte: başka sekme az önce döndürdüyse güncel anahtar kapatılır.
+            switchMap(() =>
+                from(this.withRefreshLock(() => firstValueFrom(this.authApi.logout(this.tokens.refreshToken()), { defaultValue: undefined })))
+            ),
             catchError(() => of(undefined)),
             map(() => this.endLocalSession())
         );
