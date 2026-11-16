@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, computed, DestroyRef, ElementRef, inject, Injector, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
@@ -10,9 +10,11 @@ import { ImportCommitStepComponent } from '@/app/features/imports/components/imp
 import { ImportJobProgressComponent } from '@/app/features/imports/components/import-job-progress.component';
 import { ImportMappingStepComponent } from '@/app/features/imports/components/import-mapping-step.component';
 import { ImportReviewStepComponent } from '@/app/features/imports/components/import-review-step.component';
-import type { ImportBatchDto, ImportCommitProgressDto, ImportDuplicateClientMode, ImportJobStatus, ImportPreviewDto, ImportWarningDto } from '@/app/features/imports/models/import-api.model';
+import { ImportUploadNotesComponent } from '@/app/features/imports/components/import-upload-notes.component';
+import type { ImportBatchDto, ImportCommitProgressDto, ImportDuplicateClientMode, ImportJobStatus, ImportPreviewDto, ImportWarningDto, ImportWarningTargetDto } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { importErrorCode, importErrorMessage, importStatusLabel, importStatusSeverity, isDiscardable, isImportJobRunning, isPreviewable } from '@/app/features/imports/utils/import-labels.utils';
+import { noteKind, settleDecisions } from '@/app/features/imports/utils/import-notes.utils';
 import { IMPORT_POLL_CONNECTION_MESSAGE, pollImportProgress } from '@/app/features/imports/utils/import-progress-poll.utils';
 import { columnMapsToRequest, initialColumnMaps, type ImportColumnMaps } from '@/app/features/imports/utils/import-schema.utils';
 import { fileBlockers, reviewNextHint } from '@/app/features/imports/utils/import-review.utils';
@@ -46,7 +48,8 @@ const STEPS: readonly { n: number; label: string }[] = [
         ImportMappingStepComponent,
         ImportReviewStepComponent,
         ImportCommitStepComponent,
-        ImportJobProgressComponent
+        ImportJobProgressComponent,
+        ImportUploadNotesComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -105,19 +108,8 @@ const STEPS: readonly { n: number; label: string }[] = [
                 @if (!canManage) {
                     <p-message severity="info" class="w-full mb-4">Bu içe aktarmayı yalnızca görüntüleyebilirsiniz.</p-message>
                 }
-                @if (warnings().length > 0) {
-                    <details class="card mb-4 py-3" data-testid="import-upload-notes">
-                        <summary class="cursor-pointer select-none flex items-center gap-2 font-medium">
-                            <i class="pi pi-info-circle text-primary" aria-hidden="true"></i>
-                            Dosya okunurken {{ warnings().length }} not çıktı
-                            <span class="text-sm font-normal text-muted-color">· göster / gizle</span>
-                        </summary>
-                        <ul class="m-0 mt-3 pl-5 flex flex-col gap-2 text-sm text-surface-700 dark:text-surface-200">
-                            @for (w of warnings(); track w.code + w.message) {
-                                <li>{{ w.message }}</li>
-                            }
-                        </ul>
-                    </details>
+                @if (notes().length > 0) {
+                    <app-import-upload-notes [notes]="notes()" [startOpen]="notesOpen()" [canGo]="!!preview()" (go)="goToNoteTarget($event)" />
                 }
                 @if (error()) {
                     <p-message severity="error" class="w-full mb-4" role="alert">{{ error() }}</p-message>
@@ -186,6 +178,8 @@ export class ImportWizardPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly auth = inject(AuthService);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+    private readonly injector = inject(Injector);
 
     readonly listRoute = IMPORTS_ROUTE;
     readonly steps = STEPS;
@@ -199,7 +193,12 @@ export class ImportWizardPageComponent implements OnInit {
     readonly loadError = signal<string | null>(null);
     readonly error = signal<string | null>(null);
     readonly busy = signal(false);
-    readonly warnings = signal<ImportWarningDto[]>([]);
+    /** Yükleme yanıtının notları (`history.state`); parti ayrıntısı not taşımayan eski sunucu için geri dönüş. */
+    private readonly uploadNotes = signal<ImportWarningDto[]>([]);
+    /** Dosya notları: partiye yazılmış olanlar, yoksa yüklemeden gelenler; karar notu önizlemeye göre güncellenir. */
+    protected readonly notes = computed(() => settleDecisions(this.batch()?.warnings ?? this.uploadNotes(), this.preview()));
+    /** Not paneli 2. ve 3. adımda açık; 4. adımda yalnız karar bekleyen not varsa. */
+    protected readonly notesOpen = computed(() => this.step() !== 4 || this.notes().some((n) => noteKind(n) === 'decision'));
     /** Süren işin (doğrulama veya uygulama) son yoklama yanıtı. */
     readonly progress = signal<ImportCommitProgressDto | null>(null);
     readonly stalled = signal(false);
@@ -233,7 +232,7 @@ export class ImportWizardPageComponent implements OnInit {
     ngOnInit(): void {
         const state = history.state as { warnings?: ImportWarningDto[] } | null;
 
-        this.warnings.set(Array.isArray(state?.warnings) ? state.warnings : []);
+        this.uploadNotes.set(Array.isArray(state?.warnings) ? state.warnings : []);
         this.destroyRef.onDestroy(() => this.pollSub?.unsubscribe());
         this.load();
     }
@@ -311,7 +310,7 @@ export class ImportWizardPageComponent implements OnInit {
     }
 
     onBatchChange(b: ImportBatchDto): void {
-        this.batch.update((cur) => (cur ? { ...b, tables: b.tables ?? cur.tables } : b));
+        this.batch.update((cur) => (cur ? { ...b, tables: b.tables ?? cur.tables, warnings: b.warnings ?? cur.warnings } : b));
 
         if (isImportJobRunning(b.status)) {
             this.startPolling(b.id, b.status);
@@ -400,6 +399,25 @@ export class ImportWizardPageComponent implements OnInit {
         if (this.canGoTo(n)) {
             this.step.set(n as WizardStep);
         }
+    }
+
+    /** Karar notunun düğmesi: Doğrulama adımındaki "Sizden beklenen" bölümüne gider ve başlığına odaklanır. */
+    goToNoteTarget(target: ImportWarningTargetDto): void {
+        if (target.anchor !== 'required' || !this.preview()) {
+            return;
+        }
+
+        this.step.set(3);
+        afterNextRender(
+            () => {
+                const heading = this.host.nativeElement.querySelector<HTMLElement>('#import-required-title');
+
+                heading?.setAttribute('tabindex', '-1');
+                heading?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                heading?.focus({ preventScroll: true });
+            },
+            { injector: this.injector }
+        );
     }
 
     private stepForStatus(status: string): WizardStep {

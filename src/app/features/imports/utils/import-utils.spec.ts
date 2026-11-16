@@ -132,6 +132,14 @@ describe('import-labels.utils', () => {
         expect(importIssueLabel('Imports.ClinicalRecordImportedBefore')).toBe('Bu kayıt daha önceki bir aktarmada geldi; tekrar eklenmiyor');
     });
 
+    it('türü aşılarından çıkarılan hasta bilgi notunda, çıkarılan tür satır ayrıntısında görünür', () => {
+        const message = 'Türü dosyada yok (Diğer); aşılarının hepsi Köpek aşısı olduğu için Köpek olarak aktarılacak.';
+
+        expect(importIssueLabel('Imports.SpeciesFromVaccines')).toBe('Türü aşılarından çıkarıldı');
+        expect(importIssueDetail('Imports.SpeciesFromVaccines', message)).toBe(message);
+        expect(importIssueLabel('Imports.VaccineSpeciesUnverified')).toBe('Hastanın türü bilinmiyor; aşı tür denetlenmeden aktarılır');
+    });
+
     it('ayrıntı yalnız çakışan satırı söyleyen kodlarda ve etiketten farklıysa gösterilir', () => {
         expect(importIssueDetail('Imports.MicrochipConflict', 'Aynı mikroçip kayıtlı başka bir hastada var.')).toBe('Aynı mikroçip kayıtlı başka bir hastada var.');
         expect(importIssueDetail('Imports.DuplicateInFile', 'Aynı hasta 12. satırda da var; bu satır atlanacak.')).toBe('Aynı hasta 12. satırda da var; bu satır atlanacak.');
