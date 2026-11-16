@@ -155,7 +155,7 @@ const VET_TONES = ['teal', 'violet', 'orange', 'sky', 'rose', 'lime'] as const;
                                         @if (b.end - b.start >= 45 && b.lanes === 1) {
                                             <span class="block text-xs leading-4 text-muted-color truncate"
                                                 >{{ b.item.appointmentTypeLabel }}
-                                                @if (byVet() && b.item.veterinarianName) {
+                                                @if (byVet() && b.item.veterinarianUserId) {
                                                     · {{ b.item.veterinarianName }}
                                                 }
                                             </span>
