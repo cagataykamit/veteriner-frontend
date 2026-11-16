@@ -2,6 +2,10 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
 import { parseAppointmentStatusRawToEnum, appointmentStatusEnumLabel } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { clockLabel, type Gap, toBlockTimes, type WorkingDay } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-grid.utils';
+import type { VaccinationCalendarItemVm } from '@/app/entities/vaccination/models/vaccination-calendar.model';
+import { CalendarBubbleDirective, type CalendarBubbleData } from '@/app/features/appointments/components/calendar-bubble';
+import { CalendarVaccineStripComponent, type VaccinePick } from '@/app/features/appointments/components/calendar-vaccine-strip.component';
+import { appointmentBubble } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-layer.utils';
 
 export interface AgendaDay {
     dateKey: string;
@@ -20,11 +24,13 @@ interface AgendaRow {
 
 /**
  * Telefonda günün ajandası (B1): gün şeridi, saat sırasıyla randevular, "Şimdi" çizgisi, öğle arası ve boş aralıklar ("+ Randevu").
- * Boş aralıklar çağıranın hesabıdır (seçili hekimin ya da tüm hekimlerin aynı anda boş olduğu aralıklar).
+ * Boş aralıklar çağıranın hesabıdır (seçili hekimin ya da tüm hekimlerin aynı anda boş olduğu aralıklar). Aşı katmanı açıksa günün
+ * aşıları listenin üstünde ayrı kutuda; randevu sayılmaz.
  */
 @Component({
     selector: 'app-appointment-day-agenda',
     standalone: true,
+    imports: [CalendarBubbleDirective, CalendarVaccineStripComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="flex gap-1 overflow-x-auto pb-2 -mx-1 px-1" role="tablist" aria-label="Günler">
@@ -43,6 +49,12 @@ interface AgendaRow {
                 </button>
             }
         </div>
+        @if (vaccines().length) {
+            <section class="mt-2 rounded-border border border-surface bg-surface-50 dark:bg-surface-950 px-2 py-2" aria-label="Günün aşıları" data-testid="agenda-vaccines">
+                <p class="m-0 mb-1 text-xs font-semibold text-muted-color">Aşılar · randevu değildir</p>
+                <app-calendar-vaccine-strip [items]="vaccines()" [limit]="4" [clinicName]="clinicName()" (pick)="vaccinePick.emit($event)" />
+            </section>
+        }
         @if (rows().length === 0) {
             <p class="m-0 mt-2 text-sm text-muted-color">{{ working() ? 'Bu gün randevu yok.' : 'Klinik bu gün kapalı.' }}</p>
         }
@@ -83,6 +95,7 @@ interface AgendaRow {
                                 type="button"
                                 class="w-full text-left rounded-border border border-surface border-l-4 px-3 py-2 cursor-pointer"
                                 [class]="itemClass(r.item!)"
+                                [appCalendarBubble]="bubble(r.item!)"
                                 (click)="open.emit(r.item!.id)"
                                 [attr.data-testid]="'agenda-item-' + r.item!.id"
                             >
@@ -118,10 +131,14 @@ export class AppointmentDayAgendaComponent {
     readonly conflicts = input<ReadonlySet<string>>(new Set());
     readonly nowMinute = input<number | null>(null);
     readonly canCreate = input(false);
+    /** Seçili günün aşıları (katman kapalıysa boş). */
+    readonly vaccines = input<VaccinationCalendarItemVm[]>([]);
+    readonly clinicName = input('');
 
     readonly dayChange = output<string>();
     readonly gapPick = output<number>();
     readonly open = output<string>();
+    readonly vaccinePick = output<VaccinePick>();
 
     protected readonly rows = computed<AgendaRow[]>(() => {
         const rows: AgendaRow[] = [];
@@ -154,6 +171,10 @@ export class AppointmentDayAgendaComponent {
 
     protected clock(m: number): string {
         return clockLabel(m);
+    }
+
+    protected bubble(item: AppointmentCalendarItemVm): CalendarBubbleData {
+        return appointmentBubble(item, this.clinicName());
     }
 
     protected isCancelled(item: AppointmentCalendarItemVm): boolean {

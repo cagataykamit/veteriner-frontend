@@ -1,6 +1,17 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import type { Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { type Popover, PopoverModule } from 'primeng/popover';
+import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
+import type { VaccinationCalendarItemVm } from '@/app/entities/vaccination/models/vaccination-calendar.model';
+import { CalendarBubbleComponent, CalendarBubbleService } from '@/app/features/appointments/components/calendar-bubble';
+import type { VaccinePick } from '@/app/features/appointments/components/calendar-vaccine-strip.component';
+import { AppointmentDetailPageComponent } from '@/app/features/appointments/pages/appointment-detail-page/appointment-detail-page.component';
+import { AppointmentEditPageComponent } from '@/app/features/appointments/pages/appointment-edit-page/appointment-edit-page.component';
+import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import { readVaccineLayerPreference, vaccineDotClass, vaccineStateLabel, vaccinesOn, writeVaccineLayerPreference } from './calendar-layer.utils';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
 import { groupCalendarItemsByDay } from '@/app/entities/appointment/data/appointment-calendar.mapper';
@@ -17,11 +28,18 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { addGregorianDaysToYmd, dateOnlyInputToIstanbulStartUtcIso, formatDateDisplay, formatWeekdayDateDisplay, toIstanbulTimeInputValue } from '@/app/shared/utils/date.utils';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { APPOINTMENT_REQUESTS_MANAGE_CLAIM, APPOINTMENTS_CREATE_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import {
+    APPOINTMENT_REQUESTS_MANAGE_CLAIM,
+    APPOINTMENTS_CREATE_CLAIM,
+    APPOINTMENTS_RESCHEDULE_CLAIM,
+    VACCINATIONS_CREATE_CLAIM,
+    VACCINATIONS_READ_CLAIM,
+    VACCINATIONS_UPDATE_CLAIM
+} from '@/app/core/auth/operation-claims.constants';
 import { AppointmentRequestsCalendarLayerComponent } from '@/app/entities/online-booking/components/appointment-requests-calendar-layer.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { istanbulTodayYmd } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
-import { AppointmentCalendarGridComponent, type CalendarGridColumn, type CalendarSlotPick, vetDotClass } from '@/app/features/appointments/components/appointment-calendar-grid.component';
+import { type CalendarAllDayCell, AppointmentCalendarGridComponent, type CalendarGridColumn, type CalendarSlotPick, vetDotClass } from '@/app/features/appointments/components/appointment-calendar-grid.component';
 import { AppointmentFreeSlotFinderComponent, type FreeSlotPick } from '@/app/features/appointments/components/appointment-free-slot-finder.component';
 import { type AgendaDay, AppointmentDayAgendaComponent } from '@/app/features/appointments/components/appointment-day-agenda.component';
 import { clockLabel, conflictIds, durationText, firstFreeVeterinarian, freeGaps, gridBounds, intersectGaps, isCancelled, layoutBlocks, minutesOf, rowStepMinutes, toBlockTimes, weekDateKeys, workingDayFor } from './calendar-grid.utils';
@@ -30,6 +48,8 @@ type CalendarViewMode = 'day' | 'week';
 type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled';
 
 const UNASSIGNED = 'yok';
+/** Randevu türü "Aşılama" (backend `AppointmentType.Vaccination`). */
+const VACCINATION_APPOINTMENT_TYPE = 1;
 /** Çalışma saatleri alınamazsa ızgara bu haftayla çizilir (pazartesi–cumartesi 08–20). */
 const FALLBACK_WEEK: ClinicWorkingHourVm[] = [1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
     dayOfWeek,
@@ -47,12 +67,21 @@ const WEEKDAY_LONG = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', timeZon
  * Randevu takvimi (kullanıcı dostu denetim B1, seçilen kurgu A + "Boş saat bul"): gün görünümünde saat ızgarası ve hekim başına sütun,
  * hafta görünümünde gün sütunları (bloklar hekim renginde), boş hücreye tıklayınca tarih-saat-hekim dolu Yeni randevu, çakışan randevu
  * kırmızı. Telefonda günün ajandası. Görünüm ve gün adreste (`?view=week&date=yyyy-MM-dd`); `preset` listeleri değişmedi.
+ * Aşı katmanı (2026-11-16): planlı/sonraki/uygulanan aşılar günün üst şeridinde; randevu sayılmaz (çakışma, boş saat ve sayaçlara girmez).
+ * Kartın üzerine gelince ayrıntı balonu; randevuya tıklayınca ayrıntı sayfadan çıkmadan pencerede.
  */
 @Component({
     selector: 'app-appointments-calendar-page',
     standalone: true,
+    providers: [CalendarBubbleService],
     imports: [
         ButtonModule,
+        DialogModule,
+        PopoverModule,
+        CalendarBubbleComponent,
+        AppointmentDetailPageComponent,
+        AppointmentEditPageComponent,
+        DialogUnsavedChangesDirective,
         AppointmentRequestsCalendarLayerComponent,
         AppListHeaderComponent,
         AppLoadingStateComponent,
@@ -95,6 +124,31 @@ const WEEKDAY_LONG = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', timeZon
                         <button pButton type="button" size="small" severity="secondary" [text]="true" aria-label="Sonraki" (click)="next()"><i class="p-button-icon pi pi-angle-right"></i></button>
                     </div>
                     <h2 class="m-0 text-lg font-semibold" data-testid="calendar-range-title">{{ rangeTitle() }}</h2>
+                    @if (canReadVaccinations) {
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-sm cursor-pointer"
+                            [class]="vaccineLayer() ? 'border-surface-900 dark:border-surface-0 font-medium' : 'border-surface text-muted-color'"
+                            [attr.aria-pressed]="vaccineLayer()"
+                            (click)="toggleVaccineLayer()"
+                            data-testid="calendar-vaccine-layer-toggle"
+                        >
+                            <i class="pi pi-shield !text-xs" aria-hidden="true"></i>Aşılar
+                            @if (vaccineLayer() && vaccinesInView() > 0) {
+                                <span class="rounded-full bg-surface-100 dark:bg-surface-800 px-1.5 text-xs tabular-nums">{{ vaccinesInView() }}</span>
+                            }
+                        </button>
+                        @if (vaccineLayer()) {
+                            <span class="hidden xl:inline-flex items-center gap-2 text-xs text-muted-color" aria-label="Aşı renkleri">
+                                @for (l of vaccineLegend; track l.label) {
+                                    <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full" [class]="l.dot" aria-hidden="true"></span>{{ l.label }}</span>
+                                }
+                            </span>
+                        }
+                        @if (vaccineError(); as ve) {
+                            <span class="text-xs text-red-600 dark:text-red-400" role="alert">{{ ve }}</span>
+                        }
+                    }
                     @if (conflictCount()) {
                         <span class="inline-flex items-center gap-1 rounded-border bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 px-2 py-1 text-sm"
                             ><i class="pi pi-exclamation-triangle" aria-hidden="true"></i>{{ conflictCount() }} çakışma</span
@@ -172,9 +226,12 @@ const WEEKDAY_LONG = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', timeZon
                         [canCreate]="canPick()"
                         [nowMinute]="nowMinute()"
                         [minColumnPx]="viewMode() === 'week' ? 120 : 180"
+                        [allDay]="allDayCells()"
+                        [clinicName]="clinicName"
                         (slotPick)="onSlotPick($event)"
                         (open)="openDetail($event)"
                         (dayOpen)="openDay($event)"
+                        (vaccinePick)="openVaccine($event)"
                     />
                     @if (showFinder()) {
                         <app-appointment-free-slot-finder [clinicId]="clinicId!" [vets]="vets()" [canCreate]="canPick()" [refreshKey]="loadCount()" (pick)="onFreeSlotPick($event)" />
@@ -191,13 +248,58 @@ const WEEKDAY_LONG = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', timeZon
                         [conflicts]="conflicts()"
                         [nowMinute]="selectedDate() === today() ? nowMinute() : null"
                         [canCreate]="canPick()"
+                        [vaccines]="selectedDayVaccines()"
+                        [clinicName]="clinicName"
                         (dayChange)="goToDate($event)"
                         (gapPick)="onAgendaGapPick($event)"
                         (open)="openDetail($event)"
+                        (vaccinePick)="openVaccine($event)"
                     />
                 </div>
             }
         </div>
+
+        <app-calendar-bubble />
+
+        <!-- Aşıya tıklayınca: aşıyı yap ya da bu aşı için randevu ver (aşı randevu sayılmaz). -->
+        <p-popover #vaccineMenu styleClass="w-[20rem] max-w-[calc(100vw-2rem)]">
+            @if (selectedVaccine(); as v) {
+                <div class="flex flex-col gap-2" data-testid="calendar-vaccine-menu">
+                    <div>
+                        <p class="m-0 font-semibold">{{ v.vaccineName }}</p>
+                        <p class="m-0 text-sm text-muted-color">{{ v.clientName }} – {{ v.petName }} · {{ vaccineStateText(v) }}</p>
+                    </div>
+                    @if (v.kind !== 'Applied' && canApplyVaccine(v)) {
+                        <button pButton type="button" size="small" class="justify-start" (click)="applyVaccine(v)" data-testid="calendar-vaccine-apply"><i class="pi pi-check"></i>Aşıyı yap</button>
+                    }
+                    @if (v.kind !== 'Applied' && canPick()) {
+                        <button pButton type="button" size="small" severity="secondary" [outlined]="true" class="justify-start" (click)="bookForVaccine(v)" data-testid="calendar-vaccine-book"><i class="pi pi-calendar-plus"></i>Bu aşı için randevu ver</button>
+                    }
+                    <button pButton type="button" size="small" severity="secondary" [text]="true" class="justify-start" (click)="openVaccineRecord(v)"><i class="pi pi-external-link"></i>Aşı kaydını aç</button>
+                </div>
+            }
+        </p-popover>
+
+        <!-- Randevu ayrıntısı sayfadan çıkmadan: ayrıntı bileşeni pencere kipinde; düzenleme aynı pencerede. Kapanınca takvim aynı yerde, değişiklik varsa yenilenir. -->
+        <p-dialog
+            [visible]="!!dialog()"
+            (visibleChange)="$event || closeDialog()"
+            [appUnsavedChanges]="editPage()?.hasUnsavedChanges() ?? false"
+            [header]="dialog()?.mode === 'edit' ? 'Randevuyu düzenle' : 'Randevu'"
+            [modal]="true"
+            [dismissableMask]="true"
+            [draggable]="false"
+            [style]="{ width: 'min(64rem, 96vw)' }"
+            [contentStyle]="{ 'max-height': '80vh' }"
+        >
+            @if (dialog(); as d) {
+                @if (d.mode === 'edit') {
+                    <app-appointment-edit-page [embeddedId]="d.id" (saved)="onEditSaved(d.id)" (closed)="showDetail(d.id)" />
+                } @else {
+                    <app-appointment-detail-page [appointmentId]="d.id" (editRequested)="openEdit($event)" (changed)="calendarDirty = true" />
+                }
+            }
+        </p-dialog>
     `
 })
 export class AppointmentsCalendarPageComponent implements OnInit {
@@ -212,7 +314,26 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     readonly canManageRequests = this.auth.hasOperationClaim(APPOINTMENT_REQUESTS_MANAGE_CLAIM);
     readonly canCreateAppointment = this.auth.hasOperationClaim(APPOINTMENTS_CREATE_CLAIM);
     readonly canRescheduleAppointment = this.auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM);
+    readonly canReadVaccinations = this.auth.hasOperationClaim(VACCINATIONS_READ_CLAIM);
+    private readonly canCreateVaccination = this.auth.hasOperationClaim(VACCINATIONS_CREATE_CLAIM);
+    private readonly canUpdateVaccination = this.auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM);
     readonly clinicId = this.auth.getClinicId()?.trim() || null;
+    readonly clinicName = this.auth.getClinicName()?.trim() || '';
+    private readonly vaccinationsService = inject(VaccinationsService);
+
+    /** Aşı katmanı: varsayılan açık, seçim tarayıcıda hatırlanır. */
+    readonly vaccineLayer = signal(readVaccineLayerPreference());
+    readonly vaccines = signal<VaccinationCalendarItemVm[]>([]);
+    readonly vaccineError = signal<string | null>(null);
+    readonly selectedVaccine = signal<VaccinationCalendarItemVm | null>(null);
+    readonly vaccineLegend = (['DueToday', 'Upcoming', 'Overdue', 'Applied'] as const).map((s) => ({ label: vaccineStateLabel(s), dot: vaccineDotClass(s) }));
+    private readonly vaccineMenu = viewChild<Popover>('vaccineMenu');
+    private vaccineRequest: Subscription | null = null;
+
+    /** Açık randevu penceresi; kapanınca takvim yalnız değişiklik olduysa yenilenir. */
+    readonly dialog = signal<{ id: string; mode: 'detail' | 'edit' } | null>(null);
+    readonly editPage = viewChild(AppointmentEditPageComponent);
+    calendarDirty = false;
 
     readonly viewMode = signal<CalendarViewMode>('day');
     readonly selectedDate = signal(istanbulTodayYmd());
@@ -256,6 +377,23 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     readonly selectedWorking = computed(() => workingDayFor(this.gridHours(), this.selectedDate()));
 
     readonly gridColumns = computed<CalendarGridColumn[]>(() => (this.viewMode() === 'week' ? this.weekColumns() : this.dayColumns()));
+
+    readonly shownVaccines = computed(() => (this.vaccineLayer() ? this.vaccines() : []));
+    readonly selectedDayVaccines = computed(() => vaccinesOn(this.selectedDate(), this.shownVaccines()));
+    readonly vaccinesInView = computed(() => (this.viewMode() === 'week' ? this.shownVaccines().length : this.selectedDayVaccines().length));
+
+    /** Üst şerit: hafta görünümünde gün başına hücre, gün görünümünde tüm sütunlara yayılan tek hücre; görünürde aşı yoksa şerit yok. */
+    readonly allDayCells = computed<CalendarAllDayCell[] | null>(() => {
+        if (this.vaccinesInView() === 0) {
+            return null;
+        }
+
+        if (this.viewMode() === 'week') {
+            return this.weekKeys().map((dateKey) => ({ key: dateKey, span: 1, items: vaccinesOn(dateKey, this.shownVaccines()), limit: 3, stacked: true }));
+        }
+
+        return [{ key: 'day', span: this.gridColumns().length, items: this.selectedDayVaccines(), limit: 12, stacked: false }];
+    });
 
     readonly bounds = computed(() => gridBounds(this.gridHours(), layoutBlocks(this.viewMode() === 'week' ? this.visibleItems() : this.selectedDayItems())));
 
@@ -392,6 +530,112 @@ export class AppointmentsCalendarPageComponent implements OnInit {
                 this.loading.set(false);
             }
         });
+        this.loadVaccines(preset ? null : { dateFromUtc: from, dateToUtc: to });
+    }
+
+    toggleVaccineLayer(): void {
+        const on = !this.vaccineLayer();
+
+        const range = this.requestLayerRange();
+
+        this.vaccineLayer.set(on);
+        writeVaccineLayerPreference(on);
+        this.loadVaccines(this.activePreset() || !range.fromUtc || !range.toUtc ? null : { dateFromUtc: range.fromUtc, dateToUtc: range.toUtc });
+    }
+
+    openVaccine(pick: VaccinePick): void {
+        this.selectedVaccine.set(pick.item);
+        this.vaccineMenu()?.show(pick.event, pick.event.currentTarget ?? pick.event.target);
+    }
+
+    vaccineStateText(v: VaccinationCalendarItemVm): string {
+        return vaccineStateLabel(v.state).toLocaleLowerCase('tr');
+    }
+
+    /** Planlı kayıt düzenlenip "Uygulandı" yapılır; sonraki tarih için aynı aşı yeni kayıt olarak (hasta ve aşı dolu) girilir. */
+    canApplyVaccine(v: VaccinationCalendarItemVm): boolean {
+        return !this.ro.mutationBlocked() && (v.kind === 'Planned' ? this.canUpdateVaccination : this.canCreateVaccination && !!v.petId && !!v.clientId);
+    }
+
+    applyVaccine(v: VaccinationCalendarItemVm): void {
+        this.vaccineMenu()?.hide();
+
+        if (v.kind === 'Planned') {
+            void this.router.navigate(['/panel/vaccinations', v.vaccinationId, 'edit'], { queryParams: this.returnContextQueryParams() });
+
+            return;
+        }
+
+        void this.router.navigate(['/panel/vaccinations/new'], {
+            queryParams: {
+                clientId: v.clientId,
+                petId: v.petId,
+                vaccineDefinitionId: v.vaccineDefinitionId ?? undefined,
+                status: 1,
+                ...this.returnContextQueryParams()
+            }
+        });
+    }
+
+    /** Randevu formu hasta, aşılama türü ve not dolu; gecikmiş aşıda tarih boş kalır (form ilk uygun saati önerir). */
+    bookForVaccine(v: VaccinationCalendarItemVm): void {
+        this.vaccineMenu()?.hide();
+        void this.router.navigate(['/panel/appointments/new'], {
+            queryParams: {
+                clientId: v.clientId ?? undefined,
+                petId: v.petId ?? undefined,
+                date: v.dateKey >= istanbulTodayYmd() ? v.dateKey : undefined,
+                type: VACCINATION_APPOINTMENT_TYPE,
+                notes: `Aşı: ${v.vaccineName}`,
+                ...this.returnContextQueryParams()
+            }
+        });
+    }
+
+    openVaccineRecord(v: VaccinationCalendarItemVm): void {
+        this.vaccineMenu()?.hide();
+        void this.router.navigate(['/panel/vaccinations', v.vaccinationId], { queryParams: this.returnContextQueryParams() });
+    }
+
+    closeDialog(): void {
+        this.dialog.set(null);
+
+        if (this.calendarDirty) {
+            this.calendarDirty = false;
+            this.reload();
+        }
+    }
+
+    showDetail(id: string): void {
+        this.dialog.set({ id, mode: 'detail' });
+    }
+
+    onEditSaved(id: string): void {
+        this.calendarDirty = true;
+        this.showDetail(id);
+    }
+
+    private loadVaccines(range: { dateFromUtc: string; dateToUtc: string } | null): void {
+        // Hızlı gezinmede eski aralığın geç gelen yanıtı yenisini ezmesin.
+        this.vaccineRequest?.unsubscribe();
+
+        if (!range || !this.canReadVaccinations || !this.vaccineLayer()) {
+            this.vaccines.set([]);
+            this.vaccineError.set(null);
+
+            return;
+        }
+
+        this.vaccineRequest = this.vaccinationsService.getCalendarVaccinations(range).subscribe({
+            next: (v) => {
+                this.vaccines.set(v);
+                this.vaccineError.set(null);
+            },
+            error: () => {
+                this.vaccines.set([]);
+                this.vaccineError.set('Aşılar yüklenemedi.');
+            }
+        });
     }
 
     onSlotPick(pick: CalendarSlotPick): void {
@@ -408,8 +652,9 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         this.createAppointment({ date: pick.date, time: pick.time, vet: pick.veterinarianUserId });
     }
 
+    /** Ayrıntı sayfadan çıkmadan pencerede; doğrudan bağlantıyla açılan ayrıntı sayfası değişmedi. */
     openDetail(id: string): void {
-        void this.router.navigate(['/panel/appointments', id], { queryParams: this.returnContextQueryParams() });
+        this.showDetail(id);
     }
 
     openEdit(id: string): void {
@@ -417,7 +662,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
             return;
         }
 
-        void this.router.navigate(['/panel/appointments', id, 'edit'], { queryParams: this.returnContextQueryParams() });
+        this.dialog.set({ id, mode: 'edit' });
     }
 
     /** Boş hücre / boş saat: tarih, saat ve hekim dolu form; üstteki düğme boş form açar (form ilk uygun saati önerir). */
