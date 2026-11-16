@@ -84,6 +84,13 @@ $ps: '.public-page.public-site';
     outline-offset: 3px;
 }
 
+/* Liste sıfırlaması ps-wrap'tan önce: aynı öğede ikisi varsa ortalama ve yan boşluk ps-wrap'tan gelir */
+.public-site .ps-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
 .public-site .ps-wrap {
     width: 100%;
     max-width: var(--ps-wrap);
@@ -95,12 +102,6 @@ $ps: '.public-page.public-site';
     .public-site .ps-wrap {
         padding-inline: 32px;
     }
-}
-
-.public-site .ps-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
 }
 
 /* —— Tipografi (ortak sınıflar) —— */
