@@ -1,5 +1,5 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { Observable, of, throwError } from 'rxjs';
+import { defer, firstValueFrom, from, Observable, of, throwError } from 'rxjs';
 import { catchError, finalize, map, shareReplay, tap } from 'rxjs/operators';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
@@ -19,6 +19,8 @@ const REFRESH_TOKEN_KEY = 'veteriner.refresh_token';
 const ACTIVE_CLINIC_ID_KEY = 'veteriner.active_clinic_id';
 const ACTIVE_CLINIC_NAME_KEY = 'veteriner.active_clinic_name';
 const PLATFORM_ONLY_SESSION_KEY = 'veteriner.platform_only_session';
+/** Sekmeler arası yenileme kilidi (portalın `vetinity.portal.refresh` kilidinin panel karşılığı). */
+const REFRESH_LOCK_NAME = 'veteriner.auth.refresh';
 
 /** Ham API gövdesi — `LoginResultDto` + PascalCase / snake_case varyantları serviste normalize edilir. */
 type LoginResultRaw = Record<string, unknown>;
@@ -272,24 +274,19 @@ export class AuthService {
 
     /**
      * Refresh token ile yeni access (ve varsa yeni refresh) alır.
-     * Paralel çağrılar tek HTTP isteğinde birleşir.
+     * Aynı sekmede paralel çağrılar tek HTTP isteğinde birleşir; sekmeler arası Web Locks ile sıralanır (refresh token her
+     * yenilemede döner ve tek kullanımlıktır: iki sekme aynı anahtarı aynı anda gönderirse biri reddedilir).
      */
     refreshSession(): Observable<SessionTokens> {
         if (this.refreshShare) {
             return this.refreshShare;
         }
 
-        const rt = this.getRefreshToken();
-
-        if (!rt) {
+        if (!this.getRefreshToken()) {
             return throwError(() => new Error('Yenileme anahtarı yok.'));
         }
 
-        const body: RefreshTokenRequest = { refreshToken: rt };
-
-        this.refreshShare = this.api.post<LoginResultRaw>(ApiEndpoints.auth.refresh(), body).pipe(
-            map((raw) => this.mapTokenResponse(raw)),
-            tap((tokens) => this.persistFromTokens(tokens)),
+        this.refreshShare = this.withRefreshLock(() => this.rotateRefreshToken()).pipe(
             catchError((err) => {
                 this.refreshShare = null;
 
@@ -302,6 +299,33 @@ export class AuthService {
         );
 
         return this.refreshShare;
+    }
+
+    /**
+     * Anahtar kilit içinde okunur: başka sekme az önce döndürdüyse onun yazdığı güncel anahtar gönderilir. Yeni anahtarlar
+     * kilit bırakılmadan yazılır, sıradaki sekme onları okur.
+     */
+    private rotateRefreshToken(): Observable<SessionTokens> {
+        const rt = this.getRefreshToken();
+
+        if (!rt) {
+            return throwError(() => new Error('Yenileme anahtarı yok.'));
+        }
+
+        const body: RefreshTokenRequest = { refreshToken: rt };
+
+        return this.api.post<LoginResultRaw>(ApiEndpoints.auth.refresh(), body).pipe(
+            map((raw) => this.mapTokenResponse(raw)),
+            tap((tokens) => this.persistFromTokens(tokens))
+        );
+    }
+
+    /** Web Locks yoksa (eski tarayıcı) yalnız sekme içi birleştirme kalır. */
+    private withRefreshLock<T>(work: () => Observable<T>): Observable<T> {
+        const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined;
+
+        // `request` geri çağrının sözünü bekleyip sonucunu döner; lib tipi iç içe söz olarak tanımlar.
+        return locks ? defer(() => from(locks.request(REFRESH_LOCK_NAME, () => firstValueFrom(work())) as unknown as Promise<T>)) : work();
     }
 
     /**
