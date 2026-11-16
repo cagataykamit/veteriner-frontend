@@ -136,13 +136,16 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         expect(planAvailabilityText('clinicSite', SAMPLE_ROWS)).toBe('');
     });
 
-    it('özellik tablosu ve "Şu an yok": söylenmeyecek iddia yok (ADR-034 karar 6); online randevu artık "yok" listesinde değil', () => {
+    it('özellik tablosu ve "Şu an yok": söylenmeyecek iddia yok (ADR-034 karar 6); online randevu ve e-belge artık "yok" listesinde değil', () => {
         const text = PRICING_FEATURE_ROWS.map((r) => `${r.label} ${r.detail ?? ''}`).join(' ');
 
-        expect(text).not.toMatch(/mevzuata uygun|KVKK uyumlu|SMS|e-?fatura|mobil uygulama|mağaza|veri merkezi|push|anlık bildirim|yalnızca bizde|en iyi|müşteri sayısı/i);
+        expect(text).not.toMatch(/mevzuata uygun|KVKK uyumlu|SMS|mobil uygulama|mağaza|veri merkezi|push|anlık bildirim|yalnızca bizde|en iyi|müşteri sayısı/i);
         expect(PRICING_NOT_AVAILABLE).not.toContain('Online randevu');
         expect(PRICING_NOT_AVAILABLE).toContain('Online ödeme');
-        expect(PRICING_NOT_AVAILABLE.join(' ')).toMatch(/e-Fatura/);
+        // e-belge canlıya çıktı (ADR-036): satır tabloda, "yok" listesinde değil; sağlayıcı adı yazılmaz.
+        expect(PRICING_NOT_AVAILABLE.join(' ')).not.toMatch(/e-Fatura/);
+        expect(planAvailabilityText('eDocuments')).toBe('Tüm paketlerde');
+        expect(text).not.toMatch(/nilvera|paraşüt|parasut/i);
         expect(PRICING_NOT_AVAILABLE.join(' ')).toMatch(/HBS'e otomatik gönderim/);
         expect(PRICING_NOT_AVAILABLE.join(' ')).toMatch(/Yapay zekâ/);
         expect(PRICING_NOT_AVAILABLE.join(' ')).not.toMatch(/mağaza/i);

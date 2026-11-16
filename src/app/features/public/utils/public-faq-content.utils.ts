@@ -94,7 +94,7 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
             },
             {
                 question: 'Fatura kesiliyor mu?',
-                answer: 'Abonelik için fatura düzenlenir. Klinik içindeki tahsilat fişleri mali belge değildir; e-Fatura entegrasyonu bugün yoktur.'
+                answer: "Abonelik için fatura düzenlenir. Klinikte aldığınız ödemeler için e-Fatura, e-Arşiv ve e-SMM'yi panelden kesersiniz: kendi e-belge sağlayıcı hesabınızı bağlarsınız, belge ücretleri sağlayıcınızla aranızdadır. Belge kesmediğiniz tahsilat fişleri mali belge değildir."
             }
         ]
     },
