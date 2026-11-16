@@ -266,3 +266,17 @@ export function durationText(minutes: number): string {
 
     return h && m ? `${h} sa ${m} dk` : h ? `${h} sa` : `${m} dk`;
 }
+
+/** Ay ızgarası: ayın ilk gününün haftasından son gününün haftasına pazartesi başlangıçlı haftalar (4–6 hafta, en çok 42 gün). */
+export function monthGridWeeks(anyDateKey: string): string[][] {
+    const monthKey = anyDateKey.slice(0, 7);
+    const weeks: string[][] = [];
+    let week = weekDateKeys(`${monthKey}-01`);
+
+    while (week[0].slice(0, 7) <= monthKey && weeks.length < 6) {
+        weeks.push(week);
+        week = weekDateKeys(addGregorianDaysToYmd(week[6], 1) ?? week[6]);
+    }
+
+    return weeks;
+}

@@ -14,6 +14,8 @@ import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/d
 import { calendarFiltersToQueryParams, calendarRequestFor, type CalendarFilters, EMPTY_CALENDAR_FILTERS, NO_VET, parseCalendarFilters, readStoredCalendarFilters, vaccineStateLabel, vaccinesOn, writeStoredCalendarFilters } from './calendar-layer.utils';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AppointmentCalendarFiltersComponent } from '@/app/features/appointments/components/appointment-calendar-filters.component';
+import { AppointmentCalendarMonthComponent } from '@/app/features/appointments/components/appointment-calendar-month.component';
+import type { CalendarDaySummaryVm } from '@/app/entities/appointment/models/calendar-day-summary.model';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
 import { groupCalendarItemsByDay } from '@/app/entities/appointment/data/appointment-calendar.mapper';
@@ -44,9 +46,9 @@ import { istanbulTodayYmd } from '@/app/features/appointments/utils/appointment-
 import { type CalendarAllDayCell, AppointmentCalendarGridComponent, type CalendarGridColumn, type CalendarSlotPick, vetDotClass } from '@/app/features/appointments/components/appointment-calendar-grid.component';
 import { AppointmentFreeSlotFinderComponent, type FreeSlotPick } from '@/app/features/appointments/components/appointment-free-slot-finder.component';
 import { type AgendaDay, AppointmentDayAgendaComponent } from '@/app/features/appointments/components/appointment-day-agenda.component';
-import { clockLabel, conflictIds, durationText, firstFreeVeterinarian, freeGaps, gridBounds, intersectGaps, isCancelled, layoutBlocks, minutesOf, rowStepMinutes, toBlockTimes, weekDateKeys, workingDayFor } from './calendar-grid.utils';
+import { clockLabel, conflictIds, durationText, firstFreeVeterinarian, freeGaps, gridBounds, intersectGaps, isCancelled, layoutBlocks, minutesOf, monthGridWeeks, rowStepMinutes, toBlockTimes, weekDateKeys, workingDayFor } from './calendar-grid.utils';
 
-type CalendarViewMode = 'day' | 'week';
+type CalendarViewMode = 'day' | 'week' | 'month';
 type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled';
 
 const UNASSIGNED = 'yok';
@@ -64,6 +66,7 @@ const FALLBACK_WEEK: ClinicWorkingHourVm[] = [1, 2, 3, 4, 5, 6].map((dayOfWeek) 
 }));
 const WEEKDAY_SHORT = new Intl.DateTimeFormat('tr-TR', { weekday: 'short', timeZone: 'UTC' });
 const WEEKDAY_LONG = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', timeZone: 'UTC' });
+const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 /**
  * Randevu takvimi (kullanıcı dostu denetim B1, seçilen kurgu A + "Boş saat bul"): gün görünümünde saat ızgarası ve hekim başına sütun,
@@ -85,6 +88,7 @@ const WEEKDAY_LONG = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', timeZon
         AppointmentEditPageComponent,
         DialogUnsavedChangesDirective,
         AppointmentCalendarFiltersComponent,
+        AppointmentCalendarMonthComponent,
         AppointmentRequestsCalendarLayerComponent,
         AppListHeaderComponent,
         AppLoadingStateComponent,
@@ -109,16 +113,27 @@ const WEEKDAY_LONG = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', timeZon
 
             @if (!isPresetDateGroupedMode()) {
                 <div class="flex flex-wrap items-center gap-2 mb-3">
-                    <div class="hidden lg:inline-flex rounded-border border border-surface overflow-hidden" role="group" aria-label="Görünüm">
+                    <!-- Telefonda Gün (ajanda) ve Ay; Hafta geniş ekranda. -->
+                    <div class="inline-flex rounded-border border border-surface overflow-hidden" role="group" aria-label="Görünüm">
                         <button type="button" class="px-3 py-1.5 text-sm cursor-pointer" [class]="viewMode() === 'day' ? 'bg-primary text-primary-contrast' : ''" [attr.aria-pressed]="viewMode() === 'day'" (click)="changeViewMode('day')">Gün</button>
                         <button
                             type="button"
-                            class="px-3 py-1.5 text-sm cursor-pointer border-l border-surface"
+                            class="hidden lg:block px-3 py-1.5 text-sm cursor-pointer border-l border-surface"
                             [class]="viewMode() === 'week' ? 'bg-primary text-primary-contrast' : ''"
                             [attr.aria-pressed]="viewMode() === 'week'"
                             (click)="changeViewMode('week')"
                         >
                             Hafta
+                        </button>
+                        <button
+                            type="button"
+                            class="px-3 py-1.5 text-sm cursor-pointer border-l border-surface"
+                            [class]="viewMode() === 'month' ? 'bg-primary text-primary-contrast' : ''"
+                            [attr.aria-pressed]="viewMode() === 'month'"
+                            (click)="changeViewMode('month')"
+                            data-testid="calendar-view-month"
+                        >
+                            Ay
                         </button>
                     </div>
                     <div class="inline-flex items-center gap-1">
@@ -169,10 +184,19 @@ const WEEKDAY_LONG = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', timeZon
                 </div>
             }
 
-            @if (loading() && items().length === 0) {
+            @if (loading() && items().length === 0 && viewMode() !== 'month') {
                 <app-loading-state message="Takvim verileri yükleniyor…" />
             } @else if (error(); as err) {
                 <app-error-state [detail]="err" (retry)="reload()" />
+            } @else if (viewMode() === 'month' && !activePreset()) {
+                <app-appointment-calendar-month
+                    [weeks]="monthWeeks()"
+                    [monthKey]="selectedDate().slice(0, 7)"
+                    [today]="today()"
+                    [appointmentSummary]="appointmentSummary()"
+                    [vaccineSummary]="vaccineSummary()"
+                    (dayOpen)="openDay($event)"
+                />
             } @else if (isPresetDateGroupedMode()) {
                 @if (items().length === 0) {
                     <app-empty-state message="Bu tarih aralığında randevu bulunmuyor." />
@@ -377,7 +401,13 @@ export class AppointmentsCalendarPageComponent implements OnInit {
 
     readonly shownVaccines = computed(() => this.vaccines());
     readonly selectedDayVaccines = computed(() => vaccinesOn(this.selectedDate(), this.shownVaccines()));
-    readonly vaccinesInView = computed(() => (this.viewMode() === 'week' ? this.shownVaccines().length : this.selectedDayVaccines().length));
+    readonly vaccinesInView = computed(() =>
+        this.viewMode() === 'month'
+            ? [...this.vaccineSummary().values()].reduce((s, d) => s + d.total, 0)
+            : this.viewMode() === 'week'
+              ? this.shownVaccines().length
+              : this.selectedDayVaccines().length
+    );
 
     /** Üst şerit: hafta görünümünde gün başına hücre, gün görünümünde tüm sütunlara yayılan tek hücre; görünürde aşı yoksa şerit yok. */
     readonly allDayCells = computed<CalendarAllDayCell[] | null>(() => {
@@ -401,8 +431,19 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         return Math.ceil(inView.length / 2);
     });
 
+    /** Ay görünümü: ızgara haftaları ve gün özetleri (sunucuda sayılır; sözleşme §7). */
+    readonly monthWeeks = computed(() => monthGridWeeks(this.selectedDate()));
+    readonly appointmentSummary = signal<ReadonlyMap<string, CalendarDaySummaryVm>>(new Map());
+    readonly vaccineSummary = signal<ReadonlyMap<string, CalendarDaySummaryVm>>(new Map());
+
     readonly rangeTitle = computed(() => {
         const date = this.selectedDate();
+
+        if (this.viewMode() === 'month') {
+            const title = MONTH_TITLE.format(new Date(`${date.slice(0, 7)}-15T12:00:00Z`));
+
+            return title.charAt(0).toLocaleUpperCase('tr') + title.slice(1);
+        }
 
         if (this.viewMode() === 'week') {
             const keys = this.weekKeys();
@@ -480,7 +521,9 @@ export class AppointmentsCalendarPageComponent implements OnInit {
 
             this.activePreset.set(preset);
             this.filters.set(preset ? EMPTY_CALENDAR_FILTERS : parseCalendarFilters(params));
-            this.viewMode.set(!preset && params.get('view') === 'week' ? 'week' : 'day');
+            const view = params.get('view');
+
+            this.viewMode.set(!preset && (view === 'week' || view === 'month') ? view : 'day');
             this.selectedDate.set(!preset && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : istanbulTodayYmd());
             this.reload();
         });
@@ -528,7 +571,72 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         this.navigate({ view: 'day', date: date === istanbulTodayYmd() ? null : date });
     }
 
+    /**
+     * Ay görünümü: ızgaranın tüm günleri (en çok 42) tek istekte, gün başına sayı; randevu ve aşı aynı filtrelerle (aşı katmanı kuralı
+     * gün/hafta ile aynı). Kayıtlar çekilmez.
+     */
+    private reloadMonth(): void {
+        const weeks = this.monthWeeks();
+        const last = weeks.at(-1)![6];
+        const from = dateOnlyInputToIstanbulStartUtcIso(weeks[0][0]);
+        const to = dateOnlyInputToIstanbulStartUtcIso(addGregorianDaysToYmd(last, 1) ?? last);
+        const req = calendarRequestFor(this.filters());
+
+        this.today.set(istanbulTodayYmd());
+        this.requestLayerRange.set({ fromUtc: from, toUtc: to });
+        this.items.set([]);
+        this.vaccines.set([]);
+        this.error.set(null);
+        this.vaccineError.set(null);
+        this.loading.set(true);
+        this.appointmentRequest?.unsubscribe();
+        this.vaccineRequest?.unsubscribe();
+
+        const empty = new Map<string, CalendarDaySummaryVm>();
+        const appointments = req.appointments
+            ? this.appointments.getCalendarSummary({
+                  dateFromUtc: from,
+                  dateToUtc: to,
+                  veterinarianUserId: req.veterinarianUserId,
+                  withoutVeterinarian: req.withoutVeterinarian,
+                  appointmentTypes: req.appointmentTypes,
+                  states: req.states
+              })
+            : of(empty);
+
+        this.appointmentRequest = appointments.subscribe({
+            next: (s) => {
+                this.appointmentSummary.set(s);
+                this.loading.set(false);
+            },
+            error: (e: Error) => {
+                this.error.set(panelHttpFailureMessage(e, 'Takvim özeti yüklenemedi.'));
+                this.loading.set(false);
+            }
+        });
+
+        if (!req.vaccines || !this.canReadVaccinations) {
+            this.vaccineSummary.set(empty);
+
+            return;
+        }
+
+        this.vaccineRequest = this.vaccinationsService.getCalendarSummary({ dateFromUtc: from, dateToUtc: to, states: req.states }).subscribe({
+            next: (s) => this.vaccineSummary.set(s),
+            error: () => {
+                this.vaccineSummary.set(empty);
+                this.vaccineError.set('Aşılar yüklenemedi.');
+            }
+        });
+    }
+
     reload(): void {
+        if (this.viewMode() === 'month' && !this.activePreset()) {
+            this.reloadMonth();
+
+            return;
+        }
+
         const preset = this.presetQuery();
         const keys = this.weekKeys();
         const from = preset?.start.toISOString() ?? dateOnlyInputToIstanbulStartUtcIso(keys[0]);
@@ -822,6 +930,14 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     }
 
     private move(step: number): void {
+        if (this.viewMode() === 'month') {
+            const first = shiftMonth(this.selectedDate(), step);
+
+            this.navigate({ date: first.slice(0, 7) === istanbulTodayYmd().slice(0, 7) ? null : first });
+
+            return;
+        }
+
         const days = this.viewMode() === 'week' ? 7 : 1;
         const date = addGregorianDaysToYmd(this.selectedDate(), step * days) ?? this.selectedDate();
 
@@ -834,7 +950,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         const date = params.date === undefined ? (this.selectedDate() === istanbulTodayYmd() ? null : this.selectedDate()) : params.date;
 
         void this.router.navigate(['/panel/appointments/calendar'], {
-            queryParams: { view: view === 'week' ? 'week' : undefined, date: date ?? undefined, ...calendarFiltersToQueryParams(this.filters()) },
+            queryParams: { view: view === 'day' ? undefined : view, date: date ?? undefined, ...calendarFiltersToQueryParams(this.filters()) },
             ...(replaceUrl ? { replaceUrl } : {})
         });
     }
@@ -909,4 +1025,14 @@ export class AppointmentsCalendarPageComponent implements OnInit {
                 return 'Randevu takvimine dön';
         }
     }
+}
+
+/** Ayın ilk günü (yyyy-MM-01), `step` ay ileri ya da geri. */
+function shiftMonth(dateKey: string, step: number): string {
+    const y = Number(dateKey.slice(0, 4));
+    const m = Number(dateKey.slice(5, 7)) - 1 + step;
+    const year = y + Math.floor(m / 12);
+    const month = ((m % 12) + 12) % 12;
+
+    return `${year}-${String(month + 1).padStart(2, '0')}-01`;
 }

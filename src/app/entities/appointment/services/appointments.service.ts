@@ -25,6 +25,7 @@ import type { CreateAppointmentRequest, UpdateAppointmentRequest } from '@/app/e
 import type { AppointmentsListQuery } from '@/app/entities/appointment/models/appointment-query.model';
 import type { AppointmentDetailVm, AppointmentEditVm, AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
+import { type CalendarDaySummaryDto, type CalendarDaySummaryVm, mapCalendarDaySummaries } from '@/app/entities/appointment/models/calendar-day-summary.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 /** İptal sonucu: `undoWindowSeconds` > 0 ise "Geri al" bu süre gösterilir. */
@@ -74,6 +75,17 @@ export class AppointmentsService {
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Takvim randevuları yüklenemedi.')))
             )
+        );
+    }
+
+    /** Ay görünümü: takvimle aynı filtreler, gün başına sayı (BE sözleşmesi §7). */
+    getCalendarSummary(query: AppointmentCalendarQuery): Observable<Map<string, CalendarDaySummaryVm>> {
+        const clinicFromAuth = this.auth.getClinicId()?.trim() ?? '';
+        const params = appointmentCalendarQueryToHttpParams({ ...query, clinicId: query.clinicId?.trim() || clinicFromAuth || undefined });
+
+        return this.api.get<CalendarDaySummaryDto[]>(ApiEndpoints.appointments.calendarSummary(), params).pipe(
+            map((res) => mapCalendarDaySummaries(res)),
+            catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Takvim özeti yüklenemedi.'))))
         );
     }
 

@@ -1,6 +1,6 @@
 import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
 import type { ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
-import { conflictIds, durationText, firstFreeVeterinarian, freeGaps, gridBounds, intersectGaps, isOpenAt, layoutBlocks, rowStepMinutes, weekDateKeys, workingDayFor } from './calendar-grid.utils';
+import { conflictIds, durationText, firstFreeVeterinarian, freeGaps, gridBounds, intersectGaps, isOpenAt, layoutBlocks, monthGridWeeks, rowStepMinutes, weekDateKeys, workingDayFor } from './calendar-grid.utils';
 
 /** İstanbul 16.11.2026 (pazartesi) hh:mm başlangıçlı randevu (UTC+3). */
 const item = (id: string, hm: string, duration: number, extra: Partial<AppointmentCalendarItemVm> = {}): AppointmentCalendarItemVm => {
@@ -130,5 +130,23 @@ describe('calendar-grid.utils — boş hekim ve ortak boşluk', () => {
         expect(firstFreeVeterinarian(['v1'], items, '2026-11-16', 840, 30)).toBeNull();
         expect(firstFreeVeterinarian(['v1'], items, '2026-11-16', 870, 30)).toBe('v1');
         expect(durationText(150)).toBe('2 sa 30 dk');
+    });
+});
+
+describe('monthGridWeeks', () => {
+    it('Kasım 2026: pazartesi 26 Ekim ile başlar, 6 Aralık ile biter (6 hafta)', () => {
+        const weeks = monthGridWeeks('2026-11-16');
+
+        expect(weeks.length).toBe(6);
+        expect(weeks[0][0]).toBe('2026-10-26');
+        expect(weeks[5][6]).toBe('2026-12-06');
+    });
+
+    it('Şubat 2027: 4 ya da 5 hafta, ay dışına taşan hafta eklenmez', () => {
+        const weeks = monthGridWeeks('2027-02-10');
+
+        expect(weeks[0][0]).toBe('2027-02-01');
+        expect(weeks.at(-1)![6]).toBe('2027-02-28');
+        expect(weeks.length).toBe(4);
     });
 });

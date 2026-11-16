@@ -67,6 +67,8 @@ const vaccine = (id: string, dateKey: string, state: VaccinationCalendarItemVm['
 describe('AppointmentsCalendarPageComponent — saat ızgarası (B1)', () => {
     let getCalendarAppointments: Mock;
     let getCalendarVaccinations: Mock;
+    let getCalendarSummary: Mock;
+    let getVaccineSummary: Mock;
     let navigate: Mock;
     let params: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
     let claims: Set<string>;
@@ -88,13 +90,15 @@ describe('AppointmentsCalendarPageComponent — saat ızgarası (B1)', () => {
         vi.setSystemTime(new Date('2026-11-16T10:40:00+03:00'));
         getCalendarAppointments = vi.fn().mockReturnValue(of(items));
         getCalendarVaccinations = vi.fn().mockReturnValue(of(vaccines));
+        getCalendarSummary = vi.fn().mockReturnValue(of(new Map([['2026-11-16', { dateKey: '2026-11-16', total: 3, dueToday: 3, upcoming: 0, overdue: 0, completed: 0 }]])));
+        getVaccineSummary = vi.fn().mockReturnValue(of(new Map()));
         params = new BehaviorSubject(convertToParamMap(query));
         TestBed.configureTestingModule({
             imports: [AppointmentsCalendarPageComponent],
             providers: [
                 provideRouter([]),
                 { provide: ActivatedRoute, useValue: { queryParamMap: params.asObservable(), snapshot: { queryParamMap: convertToParamMap(query) } } },
-                { provide: AppointmentsService, useValue: { getCalendarAppointments } },
+                { provide: AppointmentsService, useValue: { getCalendarAppointments, getCalendarSummary } },
                 { provide: ClinicsService, useValue: { getWorkingHours: () => of(week), getAppointmentSettings: () => of({ slotIntervalMinutes: 15 }) } },
                 {
                     provide: VisitsService,
@@ -108,7 +112,7 @@ describe('AppointmentsCalendarPageComponent — saat ızgarası (B1)', () => {
                 },
                 { provide: AppointmentReasonsService, useValue: { list: () => of([]) } },
                 { provide: OnlineBookingService, useValue: { availability: () => of([]) } },
-                { provide: VaccinationsService, useValue: { getCalendarVaccinations } },
+                { provide: VaccinationsService, useValue: { getCalendarVaccinations, getCalendarSummary: getVaccineSummary } },
                 {
                     provide: AuthService,
                     useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez', hasOperationClaim: (c: string) => claims.has(c), getMyClinics: () => of(myClinics), selectClinic }
@@ -253,6 +257,31 @@ describe('AppointmentsCalendarPageComponent — saat ızgarası (B1)', () => {
 
         expect(getCalendarVaccinations).not.toHaveBeenCalled();
         expect(cmp.canReadVaccinations).toBe(false);
+    });
+
+    it('ay görünümü: ızgaranın tüm günleri tek özet isteğinde, filtrelerle; kayıt çekilmez; hücre o günü açar', () => {
+        claims.add(VACCINATIONS_READ_CLAIM);
+        const { el, cmp } = create([], { view: 'month', states: 'DueToday', vet: 'none' });
+
+        expect(cmp.rangeTitle()).toBe('Kasım 2026');
+        expect(getCalendarSummary).toHaveBeenCalledWith(
+            expect.objectContaining({ dateFromUtc: '2026-10-25T21:00:00.000Z', dateToUtc: '2026-12-06T21:00:00.000Z', states: ['DueToday'], withoutVeterinarian: true })
+        );
+        expect(getVaccineSummary).toHaveBeenCalledWith({ dateFromUtc: '2026-10-25T21:00:00.000Z', dateToUtc: '2026-12-06T21:00:00.000Z', states: ['DueToday'] });
+        expect(getCalendarAppointments).not.toHaveBeenCalled();
+        expect(el.querySelector('[data-testid="calendar-month-day-2026-11-16"]')?.textContent).toContain('3 randevu');
+
+        el.querySelector<HTMLButtonElement>('[data-testid="calendar-month-day-2026-11-20"]')!.click();
+        expect(navigate).toHaveBeenLastCalledWith(['/panel/appointments/calendar'], { queryParams: expect.objectContaining({ view: undefined, date: '2026-11-20', states: 'DueToday', vet: 'none' }) });
+    });
+
+    it('ay görünümünde önceki/sonraki bir ay kaydırır; görünüm adreste "month"', () => {
+        const { cmp } = create([], { view: 'month' });
+
+        cmp.previous();
+        expect(navigate).toHaveBeenLastCalledWith(['/panel/appointments/calendar'], { queryParams: expect.objectContaining({ view: 'month', date: '2026-10-01' }) });
+        cmp.next();
+        expect(navigate).toHaveBeenLastCalledWith(['/panel/appointments/calendar'], { queryParams: expect.objectContaining({ view: 'month', date: '2026-12-01' }) });
     });
 
     it('sonraki aşıdan "Aşıyı yap" hasta ve aşı dolu yeni aşı; "Randevu ver" aşılama türü ve not dolu yeni randevu açar', () => {
