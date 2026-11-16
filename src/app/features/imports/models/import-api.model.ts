@@ -133,6 +133,10 @@ export interface ImportBatchDto {
     rolledBackAtUtc: string | null;
     remindersReleasedAtUtc: string | null;
     payloadPurgedAtUtc: string | null;
+    /** Geri alma şu an başlatılabilir mi (sözleşme 9.1; kural sunucuda). Eski sunucu göndermezse durumdan çıkarılır. */
+    canRollback?: boolean;
+    /** Geri almanın son anı (UTC); geri alınabilir durumda olmayan partide null. Geçmişse aktarma kesinleşmiştir. */
+    rollbackDeadlineUtc?: string | null;
     /** TIER-021; eski sunucu göndermezse `Generic` sayılır. */
     sourceProfile?: ImportSourceProfileCode;
     summary: ImportSummaryDto;
