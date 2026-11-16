@@ -30,7 +30,7 @@ import { formatCount } from '@/app/features/imports/utils/import-review.utils';
                     <i class="pi pi-file-check text-primary" aria-hidden="true"></i>
                     Dosya okunurken {{ notes().length }} not çıktı
                 </button>
-                <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label="Türe göre filtre" data-testid="import-notes-filter">
+                <div class="order-last sm:order-none w-full sm:w-auto flex flex-wrap items-center gap-1.5" role="group" aria-label="Türe göre filtre" data-testid="import-notes-filter">
                     @for (k of kinds; track k) {
                         @if (counts()[k]) {
                             <button
@@ -102,6 +102,9 @@ import { formatCount } from '@/app/features/imports/utils/import-review.utils';
                                         >
                                             <i class="pi" [class]="expanded ? 'pi-angle-up' : 'pi-angle-down'" aria-hidden="true"></i>
                                         </button>
+                                    } @else {
+                                        <!-- Tür etiketleri aynı hizada kalsın. -->
+                                        <span class="w-7 h-7" aria-hidden="true"></span>
                                     }
                                 </span>
                             </div>
