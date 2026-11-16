@@ -174,7 +174,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(section.querySelector('h2')?.textContent?.trim()).toBe('e-Fatura, e-Arşiv ve e-SMM panelden');
         expect(Array.from(section.querySelectorAll('[data-edocument-steps] strong')).map((el) => el.textContent?.trim())).toEqual(PUBLIC_EDOCUMENT_STEPS.map((s) => s.title));
         expect(text).toContain('Aynı ücrete iki belge kesilmez');
-        expect(text).toContain('Anlaşmalı e-belge sağlayıcılarıyla');
+        expect(text).toContain('Desteklenen e-belge sağlayıcılarıyla');
         expect(text).not.toMatch(/nilvera|paraşüt|parasut|logo|uyumsoft|mikro/i);
         expect(section.querySelector('[data-edocument-plans]')?.textContent?.trim()).toBe('Tüm paketlerde');
         expect(text).not.toMatch(/en iyi|bir numara|yalnızca bizde|saniyede|dakikada/i);

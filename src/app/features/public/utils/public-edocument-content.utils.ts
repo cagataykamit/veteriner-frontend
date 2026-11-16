@@ -20,7 +20,7 @@ export const PUBLIC_EDOCUMENT_SECTION = {
         'Tek tıkla kesersiniz ya da ödeme alınınca kendiliğinden kesilir; hangisi olacağını siz seçersiniz',
         'Aynı ücrete iki belge kesilmez',
         "Belgenin PDF'i ve durumu panelde; kesilemeyen belge nedeniyle listelenir, yeniden denersiniz",
-        'Anlaşmalı e-belge sağlayıcılarıyla çalışır; sağlayıcı hesabınız ve belge ücretleri sağlayıcınızla aranızdadır'
+        'Desteklenen e-belge sağlayıcılarıyla çalışır; sağlayıcı hesabınız ve belge ücretleri sağlayıcınızla aranızdadır'
     ],
     stepsTitle: 'Nasıl işler'
 } as const;
@@ -35,7 +35,7 @@ export interface PublicEDocumentStepDef {
 }
 
 export const PUBLIC_EDOCUMENT_STEPS: readonly PublicEDocumentStepDef[] = [
-    { title: 'Hesabınızı bağlarsınız', text: 'Ayarlar > e-Belge sayfasından, anlaşmalı sağlayıcılardan birindeki kendi hesabınızı bir kez bağlarsınız.' },
+    { title: 'Hesabınızı bağlarsınız', text: 'Ayarlar > e-Belge sayfasından, desteklenen sağlayıcılardan birindeki kendi hesabınızı bir kez bağlarsınız.' },
     { title: 'Ödemeyi alırsınız', text: 'Ödeme ekranında belgeyi kesersiniz; otomatik kesimi açtıysanız ödeme kaydedilince kendiliğinden kesilir.' },
     { title: 'Belge panelde durur', text: "e-Fatura, e-Arşiv ya da e-SMM; PDF'i ve durumu ödeme kaydında görürsünüz." }
 ];
