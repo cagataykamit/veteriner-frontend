@@ -46,7 +46,7 @@ import { istanbulTodayYmd } from '@/app/features/appointments/utils/appointment-
 import { type CalendarAllDayCell, AppointmentCalendarGridComponent, type CalendarGridColumn, type CalendarSlotPick, vetDotClass } from '@/app/features/appointments/components/appointment-calendar-grid.component';
 import { AppointmentFreeSlotFinderComponent, type FreeSlotPick } from '@/app/features/appointments/components/appointment-free-slot-finder.component';
 import { type AgendaDay, AppointmentDayAgendaComponent } from '@/app/features/appointments/components/appointment-day-agenda.component';
-import { clockLabel, conflictIds, durationText, firstFreeVeterinarian, freeGaps, gridBounds, intersectGaps, isCancelled, layoutBlocks, minutesOf, monthGridWeeks, rowStepMinutes, toBlockTimes, weekDateKeys, workingDayFor } from './calendar-grid.utils';
+import { clockLabel, conflictIds, durationText, firstFreeVeterinarian, firstScrollMinute, freeGaps, gridBounds, intersectGaps, isCancelled, layoutBlocks, minutesOf, monthGridWeeks, rowStepMinutes, toBlockTimes, weekDateKeys, workingDayFor } from './calendar-grid.utils';
 
 type CalendarViewMode = 'day' | 'week' | 'month';
 type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled';
@@ -236,6 +236,8 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                         [vetOrder]="vetOrder()"
                         [canCreate]="canPick()"
                         [nowMinute]="nowMinute()"
+                        [scrollToMinute]="scrollMinute()"
+                        [scrollKey]="loadCount() + viewMode() + selectedDate()"
                         [minColumnPx]="viewMode() === 'week' ? 120 : 180"
                         [allDay]="allDayCells()"
                         [clinicName]="clinicName"
@@ -422,7 +424,16 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         return [{ key: 'day', span: this.gridColumns().length, items: this.selectedDayVaccines(), limit: 12, stacked: false }];
     });
 
-    readonly bounds = computed(() => gridBounds(this.gridHours(), layoutBlocks(this.viewMode() === 'week' ? this.visibleItems() : this.selectedDayItems())));
+    /** Görünümdeki randevu blokları ve gösterilen günlerin girilmiş çalışma saati (yedek hafta değil; girilmemişse ilk kayıt ya da 08:00). */
+    private readonly viewBlocks = computed(() => layoutBlocks(this.viewMode() === 'week' ? this.visibleItems() : this.selectedDayItems()));
+    readonly bounds = computed(() =>
+        gridBounds(
+            (this.viewMode() === 'week' ? this.weekKeys() : [this.selectedDate()]).map((d) => workingDayFor(this.hours(), d)),
+            this.viewBlocks()
+        )
+    );
+    /** İlk ekranda ilk kayda (yoksa seçili günün açılışına) kaydırılır; her yüklemede bir kez. */
+    readonly scrollMinute = computed(() => firstScrollMinute(this.viewBlocks(), workingDayFor(this.hours(), this.selectedDate())));
 
     readonly conflictCount = computed(() => {
         const ids = this.conflicts();

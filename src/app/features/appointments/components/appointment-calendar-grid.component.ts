@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { afterRenderEffect, ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output } from '@angular/core';
 import { appointmentStatusEnumLabel, parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { type CalendarBlock, clockLabel, isOpenAt, type WorkingDay } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-grid.utils';
 import type { VaccinationCalendarItemVm } from '@/app/entities/vaccination/models/vaccination-calendar.model';
@@ -99,7 +99,7 @@ const VET_TONES = ['teal', 'violet', 'orange', 'sky', 'rose', 'lime'] as const;
                         }
                     </div>
                 }
-                <div class="grid" [style.grid-template-columns]="template()">
+                <div class="grid" [style.grid-template-columns]="template()" data-grid-body>
                     <div class="relative" [style.height.px]="height()">
                         @for (m of hourMarks(); track m) {
                             <div class="absolute right-1 text-[11px] text-muted-color tabular-nums -translate-y-1/2" [style.top.px]="y(m)">{{ clock(m) }}</div>
@@ -203,6 +203,38 @@ export class AppointmentCalendarGridComponent {
     readonly open = output<string>();
     readonly dayOpen = output<string>();
     readonly vaccinePick = output<VaccinePick>();
+    /** İlk ekranda gösterilecek dakika (ilk kayıt ya da açılış); `scrollKey` her değiştiğinde bir kez, hedef görünmüyorsa sayfa kaydırılır. */
+    readonly scrollToMinute = input<number | null>(null);
+    readonly scrollKey = input<string>('');
+
+    private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+    private lastScrollKey: string | null = null;
+
+    constructor() {
+        afterRenderEffect(() => {
+            const key = this.scrollKey();
+            const minute = this.scrollToMinute();
+
+            if (minute === null || key === this.lastScrollKey) {
+                return;
+            }
+
+            this.lastScrollKey = key;
+            const body = this.host.nativeElement.querySelector('[data-grid-body]');
+
+            // Telefonda ızgara gizli (ajanda gösterilir); gizli öğede kaydırma yapılmaz.
+            if (!body || body.getClientRects().length === 0) {
+                return;
+            }
+
+            const top =body.getBoundingClientRect().top + window.scrollY + this.y(Math.max(minute, this.start()));
+
+            // Yalnız hedef ekranın altında kalıyorsa: üst çubuk ve sütun başlığının altına gelecek kadar.
+            if (top > window.scrollY + window.innerHeight - 120) {
+                window.scrollTo({ top: Math.max(0, top - 220) });
+            }
+        });
+    }
 
     protected readonly pxPerMin = PX_PER_MIN;
     protected readonly height = computed(() => (this.end() - this.start()) * PX_PER_MIN);
