@@ -45,6 +45,7 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 @Component({
     selector: 'app-vaccination-edit-page',
@@ -64,7 +65,8 @@ import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.com
         PetSearchComponent,
         DateInputComponent,
         FormFieldComponent, FormSubmitDirective,
-        FormErrorSummaryComponent
+        FormErrorSummaryComponent,
+        ReadOnlyReasonDirective
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -171,7 +173,7 @@ import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.com
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <button pButton type="submit" [disabled]="submitting() || vaccineDefinitionsLoading() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                        <button pButton type="submit" [disabled]="submitting() || vaccineDefinitionsLoading() || ro.mutationBlocked()" appReadOnlyReason><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                         <button pButton type="button" severity="secondary" (click)="goDetail()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>

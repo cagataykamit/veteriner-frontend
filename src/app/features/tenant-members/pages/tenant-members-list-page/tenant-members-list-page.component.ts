@@ -25,6 +25,8 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
+const TENANT_MEMBERS_LIST_STATE_KEY = 'panel:tenant-members:listState';
+
 @Component({
     selector: 'app-tenant-members-list-page',
     standalone: true,
@@ -211,7 +213,15 @@ export class TenantMembersListPageComponent implements OnInit {
                     pageSize,
                     search: this.activeSearch() || undefined
                 }),
-        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}`
+        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}`,
+        persist: {
+            key: TENANT_MEMBERS_LIST_STATE_KEY,
+            save: () => ({ search: this.searchInput.trim() }),
+            restore: (state) => {
+                this.searchInput = typeof state['search'] === 'string' ? state['search'] : '';
+                this.activeSearch.set(this.searchInput.trim());
+            }
+        }
     });
 
     readonly loading = this.list.loading;
@@ -242,6 +252,10 @@ export class TenantMembersListPageComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        if (!this.list.restore()) {
+            this.list.goToFirstPage();
+        }
+
         this.list.startInitialLoad();
     }
 
@@ -258,7 +272,7 @@ export class TenantMembersListPageComponent implements OnInit {
     resetFilters(): void {
         this.searchInput = '';
         this.activeSearch.set('');
-        this.list.loadFirstPage();
+        this.list.resetToFirstPage();
     }
 
     reload(): void {

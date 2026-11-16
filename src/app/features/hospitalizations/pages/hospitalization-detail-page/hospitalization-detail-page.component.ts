@@ -31,6 +31,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 /** Düzenleme/oluşturma sonrası dönülen sayfada gösterilen kısa onay (query `saved`). */
 const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', created: 'Kayıt oluşturuldu.' };
@@ -58,7 +59,8 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         ReasonConfirmDialogComponent,
         TrDateTimePipe,
         FormSubmitDirective,
-        FormErrorSummaryComponent
+        FormErrorSummaryComponent,
+        ReadOnlyReasonDirective
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -234,7 +236,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                 }
                 <div class="flex flex-wrap justify-end gap-2 mt-4">
                     <button pButton type="button" severity="secondary" (click)="dischargeDialogVisible.set(false)" [disabled]="dischargeSubmitting()">Vazgeç</button>
-                    <button pButton type="submit" [disabled]="ro.mutationBlocked() || dischargeSubmitting()"><i class="p-button-icon" [class]="dischargeSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Taburcu et</button>
+                    <button pButton type="submit" [disabled]="ro.mutationBlocked() || dischargeSubmitting()" appReadOnlyReason><i class="p-button-icon" [class]="dischargeSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Taburcu et</button>
                 </div>
             </form>
         </p-dialog>

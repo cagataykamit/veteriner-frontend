@@ -3,7 +3,7 @@
     <div actions class="flex flex-wrap gap-2">
         <button pButton type="button" severity="secondary" (click)="refresh('silent')"><i class="p-button-icon pi pi-refresh"></i>{{ copy.buttonRefresh }}</button>
         @if (canCreateVisit) {
-            <button pButton type="button" [disabled]="ro.mutationBlocked()" (click)="openWalkInArrival()"><i class="p-button-icon pi pi-plus"></i>Randevusuz geliş</button>
+            <button pButton type="button" [disabled]="ro.mutationBlocked()" appReadOnlyReason (click)="openWalkInArrival()"><i class="p-button-icon pi pi-plus"></i>Randevusuz geliş</button>
         }
         @if (canCreateAppointment) {
             <a routerLink="/panel/appointments/new" pButton type="button" class="p-button-secondary" data-testid="today-new-appointment"><i class="pi pi-calendar-plus"></i>Yeni randevu</a>
@@ -95,7 +95,7 @@
                                 </div>
                             </div>
                             <div class="font-medium flex flex-wrap items-center gap-2 min-w-0">
-                                <a [routerLink]="['/panel/pets', item.petId]" class="break-words min-w-0 text-primary no-underline" data-testid="today-pet-link">{{ item.petName }}</a>
+                                <a [routerLink]="['/panel/pets', item.petId]" class="touch:touch-hit break-words min-w-0 text-primary no-underline" data-testid="today-pet-link">{{ item.petName }}</a>
                                 <app-pet-alert-badges class="min-w-0 max-w-full" [alerts]="item.petAlerts" />
                                 @if (item.isUrgent) {
                                     <app-status-tag class="shrink-0" label="Acil" severity="danger" />
@@ -111,7 +111,7 @@
                             <dl class="m-0 mt-2 grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-1 text-sm">
                                 <dt class="text-muted-color">Müşteri</dt>
                                 <dd class="m-0 min-w-0 break-words">
-                                    <a [routerLink]="['/panel/clients', item.clientId]" class="text-primary no-underline" data-testid="today-client-link">{{ item.clientName }}</a>
+                                    <a [routerLink]="['/panel/clients', item.clientId]" class="touch:touch-hit text-primary no-underline" data-testid="today-client-link">{{ item.clientName }}</a>
                                     @if (item.clientPhone) {
                                         <span class="text-muted-color whitespace-nowrap"> · {{ phone(item.clientPhone) }}</span>
                                     }
@@ -183,7 +183,7 @@
                                 <td>
                                     <!-- Dar sütunda birden çok uyarı rozeti alt satıra sarar; hasta adını sıkıştırmaz -->
                                     <div class="font-medium flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
-                                        <a [routerLink]="['/panel/pets', item.petId]" class="line-clamp-2 break-words min-w-0 text-primary no-underline" data-testid="today-pet-link" [attr.title]="item.petName">{{ item.petName }}</a>
+                                        <a [routerLink]="['/panel/pets', item.petId]" class="touch:touch-hit line-clamp-2 break-words min-w-0 text-primary no-underline" data-testid="today-pet-link" [attr.title]="item.petName">{{ item.petName }}</a>
                                         <app-pet-alert-badges class="min-w-0 max-w-full" [alerts]="item.petAlerts" />
                                         @if (item.isUrgent) {
                                             <app-status-tag class="shrink-0" label="Acil" severity="danger" />
@@ -202,7 +202,7 @@
                                 </td>
                                 <td>
                                     <div class="line-clamp-2 break-words" [attr.title]="item.clientName">
-                                        <a [routerLink]="['/panel/clients', item.clientId]" class="text-primary no-underline" data-testid="today-client-link">{{ item.clientName }}</a>
+                                        <a [routerLink]="['/panel/clients', item.clientId]" class="touch:touch-hit text-primary no-underline" data-testid="today-client-link">{{ item.clientName }}</a>
                                     </div>
                                     @if (item.clientPhone) {
                                         <div class="text-sm text-muted-color whitespace-nowrap">{{ phone(item.clientPhone) }}</div>

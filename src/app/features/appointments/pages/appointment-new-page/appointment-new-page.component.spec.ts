@@ -2,12 +2,14 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { type Observable, of, throwError } from 'rxjs';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
+import type { StaffAvailabilityDayVm } from '@/app/entities/online-booking/models/online-booking.model';
+import { OnlineBookingService } from '@/app/entities/online-booking/services/online-booking.service';
 import { AppointmentNewPageComponent } from './appointment-new-page.component';
 
 const day = (dayOfWeek: number, isClosed = false): ClinicWorkingHourVm => ({
@@ -23,6 +25,13 @@ const day = (dayOfWeek: number, isClosed = false): ClinicWorkingHourVm => ({
 describe('AppointmentNewPageComponent — varsayılanlar (H1)', () => {
     afterEach(() => vi.useRealTimers());
 
+    /** Varsayılan: müsaitlik alınamadı; form çalışma saatine göre önerir. */
+    let availability: (reasonId: string | null) => Observable<StaffAvailabilityDayVm[]> = () => throwError(() => new Error('yok'));
+
+    beforeEach(() => {
+        availability = () => throwError(() => new Error('yok'));
+    });
+
     const create = (hours: ClinicWorkingHourVm[], query: Record<string, string> = {}) => {
         TestBed.configureTestingModule({
             imports: [AppointmentNewPageComponent],
@@ -34,7 +43,8 @@ describe('AppointmentNewPageComponent — varsayılanlar (H1)', () => {
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } },
                 { provide: AuthService, useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez', getUserId: () => 'u1', hasOperationClaim: () => true } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
-                { provide: ClinicsService, useValue: { getWorkingHours: () => of(hours), getAppointmentSettings: () => of({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 30 }) } }
+                { provide: ClinicsService, useValue: { getWorkingHours: () => of(hours), getAppointmentSettings: () => of({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 30 }) } },
+                { provide: OnlineBookingService, useValue: { availability: (_clinicId: string, reasonId: string | null) => availability(reasonId) } }
             ]
         });
         const fixture = TestBed.createComponent(AppointmentNewPageComponent);
@@ -43,6 +53,64 @@ describe('AppointmentNewPageComponent — varsayılanlar (H1)', () => {
 
         return fixture.componentInstance;
     };
+
+    const slot = (startUtc: string, vets: string[]) => ({ startUtc, endUtc: startUtc, freeVeterinarianUserIds: vets });
+    const freeDays: StaffAvailabilityDayVm[] = [
+        { date: '2026-11-16', slots: [slot('2026-11-16T08:00:00Z', ['v1']), slot('2026-11-16T08:30:00Z', ['v2'])] },
+        { date: '2026-11-17', slots: [slot('2026-11-17T11:00:00Z', ['v1', 'v2'])] }
+    ];
+
+    describe('boş saatler (O9)', () => {
+        beforeEach(() => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(new Date('2026-11-16T10:10:00+03:00'));
+            availability = () => of(freeDays);
+        });
+
+        it('ilk boş saat müsaitlikten önden seçilir (dolu 10:30 atlanır)', () => {
+            const cmp = create([0, 1, 2, 3, 4, 5, 6].map((d) => day(d)));
+
+            expect(cmp.form.controls.scheduledDate.value).toBe('2026-11-16');
+            expect(cmp.form.controls.scheduledTime.value).toBe('11:00');
+            expect(cmp.slotDays().map((d) => d.date)).toEqual(['2026-11-16', '2026-11-17']);
+        });
+
+        it('hekim değişince önden seçilen saat o hekimin ilk boş saatine kayar; kullanıcı seçimi korunur', () => {
+            const cmp = create([0, 1, 2, 3, 4, 5, 6].map((d) => day(d)));
+
+            cmp.form.controls.veterinarianUserId.setValue('v2');
+            expect(cmp.form.controls.scheduledTime.value).toBe('11:30');
+
+            cmp.pickSlot({ date: '2026-11-17', time: '14:00' });
+            cmp.form.controls.veterinarianUserId.setValue('v1');
+            expect(cmp.form.getRawValue()).toEqual(expect.objectContaining({ scheduledDate: '2026-11-17', scheduledTime: '14:00' }));
+            expect(cmp.form.dirty).toBe(true);
+        });
+
+        it('gün şeridi günü ve o günün ilk boş saatini seçer', () => {
+            const cmp = create([0, 1, 2, 3, 4, 5, 6].map((d) => day(d)));
+
+            cmp.pickSlotDay('2026-11-17');
+
+            expect(cmp.form.controls.scheduledDate.value).toBe('2026-11-17');
+            expect(cmp.form.controls.scheduledTime.value).toBe('14:00');
+        });
+
+        it('neden değişince boş saatler o nedenin süresiyle yeniden alınır', () => {
+            const reasons: (string | null)[] = [];
+
+            availability = (reasonId) => {
+                reasons.push(reasonId);
+
+                return of(freeDays);
+            };
+            const cmp = create([0, 1, 2, 3, 4, 5, 6].map((d) => day(d)));
+
+            cmp.form.controls.reasonId.setValue('r1');
+
+            expect(reasons).toEqual([null, 'r1']);
+        });
+    });
 
     it('takvimden gelen tarih, saat ve hekim formu doldurur; ilk uygun saat önerisi yapılmaz', () => {
         vi.useFakeTimers({ toFake: ['Date'] });

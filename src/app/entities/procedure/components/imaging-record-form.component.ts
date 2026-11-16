@@ -24,6 +24,7 @@ import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 /**
  * Yeni görüntüleme kaydı (ADR-007; IMAGING_API_CONTRACT.md §4/§5). Sıra (L6): önce kayıt (JSON), sonra dosyalar tek tek yüklenir.
@@ -34,7 +35,7 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
     selector: 'app-imaging-record-form',
     standalone: true,
     providers: [{ provide: HAS_UNSAVED_CHANGES, useExisting: forwardRef(() => ImagingRecordFormComponent) }],
-    imports: [ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, StoredFileUploadComponent],
+    imports: [ReactiveFormsModule, RouterLink, ButtonModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, StoredFileUploadComponent, ReadOnlyReasonDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-pet-alert-banner [petId]="form.controls.petId.value" />
@@ -123,7 +124,7 @@ import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/uns
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <button pButton type="submit" [disabled]="submitting() || applyingContext() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ recordId() ? 'Dosyaları yükle' : copy.buttonSave }}</button>
+                    <button pButton type="submit" [disabled]="submitting() || applyingContext() || ro.mutationBlocked()" appReadOnlyReason><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ recordId() ? 'Dosyaları yükle' : copy.buttonSave }}</button>
                     <button pButton type="button" severity="secondary" (click)="cancelled.emit()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>

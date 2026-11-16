@@ -3,10 +3,12 @@ import { ClientSearchComponent } from '@/app/entities/client/components/client-s
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, effect, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, type ParamMap, Router } from '@angular/router';
+import type { Subscription } from 'rxjs';
+import { injectReturnTarget } from '@/app/shared/utils/return-target.utils';
 import { prefillPetFromRoute } from '@/app/shared/panel/examination-create-route-context.utils';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -45,8 +47,12 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
+import { OnlineBookingService } from '@/app/entities/online-booking/services/online-booking.service';
+import type { StaffAvailabilityDayVm } from '@/app/entities/online-booking/models/online-booking.model';
+import { AppointmentSlotPickerComponent, toSlotPickerDays, type SlotPick } from '@/app/features/appointments/components/appointment-slot-picker.component';
 
-/** İlk uygun randevu günü en fazla bu kadar gün ileride aranır. */
+/** İlk uygun randevu günü en fazla bu kadar gün ileride aranır; boş saat şeridi de bu kadar günü gösterir (sunucu üst sınırı). */
 const APPOINTMENT_PREFILL_LOOKAHEAD_DAYS = 14;
 
 interface AppointmentSlot {
@@ -58,7 +64,7 @@ interface AppointmentSlot {
 @Component({
     selector: 'app-appointment-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AppointmentReasonVetFieldsComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AppointmentReasonVetFieldsComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective, AppointmentSlotPickerComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/appointments" categoryLinkLabel="Randevu listesine dön" title="Yeni randevu" description="Randevu kaydı oluşturun." />
@@ -112,6 +118,17 @@ interface AppointmentSlot {
                             <small class="block text-muted-color mt-1">Bu klinikte randevular {{ startIntervalMinutes }} dakikalık aralıklarla başlatılır.</small>
                         }
                     </div>
+                    @if (availability() !== null) {
+                        <app-appointment-slot-picker
+                            class="col-span-12"
+                            [days]="slotDays()"
+                            [date]="form.controls.scheduledDate.value"
+                            [time]="form.controls.scheduledTime.value"
+                            [disabled]="ro.mutationBlocked()"
+                            (dateChange)="pickSlotDay($event)"
+                            (timePick)="pickSlot($event)"
+                        />
+                    }
                     <app-form-field class="col-span-12 md:col-span-6" label="Randevu süresi (dakika)" fieldId="durationMinutes" [error]="apiFieldErrors().durationMinutes ? apiFieldErrors().durationMinutes : form.controls.durationMinutes.invalid && form.controls.durationMinutes.touched ? 'Randevu süresi 5 ile 240 dakika arasında olmalıdır.' : null" [required]="true">
                         <input id="durationMinutes" type="number" class="w-full p-inputtext p-component" formControlName="durationMinutes" min="5" max="240" step="1" />
                     </app-form-field>
@@ -137,8 +154,8 @@ interface AppointmentSlot {
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked() || timeOptions().length === 0 || !!workingHoursLoadError()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
-                    <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
+                    <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked() || timeOptions().length === 0 || !!workingHoursLoadError()" appReadOnlyReason><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
+                    <button pButton type="button" severity="secondary" (click)="goBack()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
                 </div>
             </form>
         </div>
@@ -152,7 +169,10 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
     private readonly clientsService = inject(ClientsService);
     private readonly petsService = inject(PetsService);
     private readonly clinicsApi = inject(ClinicsService);
+    private readonly bookingApi = inject(OnlineBookingService);
     private readonly router = inject(Router);
+    /** İptal: geldiği yer (`returnUrl`, önceki sayfa, bağlamdaki kart), yoksa liste. */
+    private readonly returnTarget = injectReturnTarget('/panel/appointments');
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
@@ -174,6 +194,19 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
     private workingHoursLoaded = false;
     private appointmentSettingsLoaded = false;
     private schedulePrefillDone = false;
+
+    /**
+     * Boş saatler (O9): seçili nedenin süresiyle sunucunun müsaitlik hesabı (çalışma saati, mola, hekim çakışması). `null`:
+     * henüz yüklenmedi ya da alınamadı; o zaman yalnız çalışma saatine göre saat listesi kalır.
+     */
+    readonly availability = signal<StaffAvailabilityDayVm[] | null>(null);
+    private availabilitySettled = false;
+    /** Neden hızlı değişirse önceki yanıt sonrakini ezmesin. */
+    private availabilitySub?: Subscription;
+    private readonly selectedVetId = signal<string | null>(null);
+    readonly slotDays = computed(() => toSlotPickerDays(this.availability() ?? [], this.selectedVetId()));
+    /** Önden seçilen gün/saat; kullanıcı değiştirmediyse hekim ya da neden değişince ilk boş saate kaydırılır. */
+    private autoSlot: SlotPick | null = null;
 
     readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
     readonly notesMaxLength = APPOINTMENT_NOTES_MAX_LENGTH;
@@ -212,6 +245,11 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
         this.form.controls.appointmentType.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('appointmentType'));
         this.form.controls.durationMinutes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('durationMinutes'));
         this.form.controls.notes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => clearApiError('notes'));
+        this.form.controls.veterinarianUserId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((vet) => {
+            this.selectedVetId.set(vet?.trim() || null);
+            this.followAutoSlot();
+        });
+        this.form.controls.reasonId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.loadAvailability());
 
         effect(() => {
             this.timeOptions();
@@ -224,6 +262,7 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         this.loadDefaultDurationFromClinic();
         this.loadWorkingHours();
+        this.loadAvailability();
         this.form.controls.scheduledDate.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.rebuildTimeOptions());
         this.form.controls.durationMinutes.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.rebuildTimeOptions());
         this.form.controls.clientId.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((clientId) => {
@@ -265,8 +304,8 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
         return this.form.dirty;
     }
 
-    goList(): void {
-        void this.router.navigate(['/panel/appointments']);
+    goBack(): void {
+        void this.router.navigateByUrl(this.returnTarget.url);
     }
 
     maxScheduledDate(): string {
@@ -468,16 +507,36 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
     }
 
     /** Seçilen gün uygun değilse önerilen ilk uygun gün ve saat. */
-    selectSlot(slot: AppointmentSlot): void {
+    selectSlot(slot: SlotPick): void {
         this.form.controls.scheduledDate.setValue(slot.date);
         this.form.controls.scheduledTime.setValue(slot.time);
     }
 
+    /** Boş saat düğmesi: tarih ve saat tek dokunuşla dolar. */
+    pickSlot(slot: SlotPick): void {
+        this.selectSlot(slot);
+        this.form.markAsDirty();
+    }
+
+    /** Gün şeridi: gün değişir, o günün ilk boş saati seçilir (saat listesinden yine değiştirilebilir). */
+    pickSlotDay(date: string): void {
+        const first = this.slotDays().find((d) => d.date === date)?.times[0];
+
+        this.form.controls.scheduledDate.setValue(date);
+
+        if (first) {
+            this.form.controls.scheduledTime.setValue(first);
+        }
+
+        this.form.markAsDirty();
+    }
+
     /**
-     * Tarih boşsa bugünden başlayarak ilk açık gün ve o günün ilk uygun saati önden seçilir (H1); bugün saat geçtiyse sonraki gün.
+     * Tarih boşsa ilk boş saat önden seçilir (H1, O9): müsaitlik alındıysa ondan (dolu saat atlanır), alınamadıysa bugünden
+     * başlayarak çalışma saatine göre ilk açık gün ve o günün ilk uygun saati; bugün saat geçtiyse sonraki gün.
      */
     private prefillFirstAvailableSlot(): void {
-        if (this.schedulePrefillDone || !this.workingHoursLoaded || !this.appointmentSettingsLoaded) {
+        if (this.schedulePrefillDone || !this.workingHoursLoaded || !this.appointmentSettingsLoaded || !this.availabilitySettled) {
             return;
         }
 
@@ -487,11 +546,69 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
             return;
         }
 
-        const slot = this.findFirstAvailableSlot(istanbulTodayYmd());
+        const slot = this.firstFreeSlot() ?? this.findFirstAvailableSlot(istanbulTodayYmd());
 
         if (slot) {
             this.selectSlot(slot);
+            this.autoSlot = { date: slot.date, time: slot.time };
         }
+    }
+
+    private firstFreeSlot(): SlotPick | null {
+        const day = this.slotDays()[0];
+
+        return day ? { date: day.date, time: day.times[0] } : null;
+    }
+
+    /** Önden seçilen saat kullanıcı dokunmadan duruyorsa ve artık boş değilse (hekim ya da neden değişti) ilk boş saate geçilir. */
+    private followAutoSlot(): void {
+        const auto = this.autoSlot;
+        const v = this.form.getRawValue();
+
+        if (!auto || v.scheduledDate !== auto.date || v.scheduledTime !== auto.time || this.availability() === null) {
+            return;
+        }
+
+        if (this.slotDays().some((d) => d.date === auto.date && d.times.includes(auto.time))) {
+            return;
+        }
+
+        const next = this.firstFreeSlot();
+
+        if (next) {
+            this.selectSlot(next);
+            this.autoSlot = next;
+        }
+    }
+
+    /** Neden süreyi belirler; neden değişince boş saatler yeniden hesaplanır. Hata formu durdurmaz (saat listesi kalır). */
+    private loadAvailability(): void {
+        const clinicId = this.activeClinicId;
+
+        if (!clinicId) {
+            this.availabilitySettled = true;
+
+            return;
+        }
+
+        this.availabilitySub?.unsubscribe();
+        this.availabilitySub = this.bookingApi.availability(clinicId, this.form.controls.reasonId.value?.trim() || null, istanbulTodayYmd(), APPOINTMENT_PREFILL_LOOKAHEAD_DAYS).subscribe({
+            next: (days) => this.settleAvailability(days),
+            error: () => this.settleAvailability(null)
+        });
+    }
+
+    private settleAvailability(days: StaffAvailabilityDayVm[] | null): void {
+        this.availability.set(days);
+
+        if (!this.availabilitySettled) {
+            this.availabilitySettled = true;
+            this.rebuildTimeOptions();
+
+            return;
+        }
+
+        this.followAutoSlot();
     }
 
     /**

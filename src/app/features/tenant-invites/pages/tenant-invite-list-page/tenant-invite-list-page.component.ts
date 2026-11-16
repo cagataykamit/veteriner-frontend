@@ -24,6 +24,8 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
+const TENANT_INVITES_LIST_STATE_KEY = 'panel:tenant-invites:listState';
+
 @Component({
     selector: 'app-tenant-invite-list-page',
     standalone: true,
@@ -209,7 +211,15 @@ export class TenantInviteListPageComponent implements OnInit {
                     pageSize,
                     search: this.activeSearch() || undefined
                 }),
-        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}`
+        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}`,
+        persist: {
+            key: TENANT_INVITES_LIST_STATE_KEY,
+            save: () => ({ search: this.searchInput.trim() }),
+            restore: (state) => {
+                this.searchInput = typeof state['search'] === 'string' ? state['search'] : '';
+                this.activeSearch.set(this.searchInput.trim());
+            }
+        }
     });
 
     readonly loading = this.list.loading;
@@ -230,6 +240,10 @@ export class TenantInviteListPageComponent implements OnInit {
     readonly displayedRows = computed(() => this.rawItems());
 
     ngOnInit(): void {
+        if (!this.list.restore()) {
+            this.list.goToFirstPage();
+        }
+
         this.list.startInitialLoad();
     }
 
@@ -248,7 +262,7 @@ export class TenantInviteListPageComponent implements OnInit {
         this.actionError.set(null);
         this.searchInput = '';
         this.activeSearch.set('');
-        this.list.loadFirstPage();
+        this.list.resetToFirstPage();
     }
 
     reload(): void {

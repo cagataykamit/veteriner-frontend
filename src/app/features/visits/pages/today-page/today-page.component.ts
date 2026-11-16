@@ -76,6 +76,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 /** Resepsiyon ve hekimin aynı kuyruğu güncel görmesi için otomatik yenileme aralığı. */
 const REFRESH_INTERVAL_MS = 30_000;
@@ -119,7 +120,8 @@ type TodayScope = 'mine' | 'all';
         PendingAppointmentRequestsChipComponent,
         PendingAppointmentRequestsTilesComponent,
         AppointmentRequestDetailDialogComponent,
-        EDocumentIssueDialogComponent
+        EDocumentIssueDialogComponent,
+        ReadOnlyReasonDirective
     ],
     providers: [MessageService, PendingAppointmentRequestsState],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -184,7 +186,7 @@ export class TodayPageComponent implements OnInit {
     private readonly rowMenu = viewChild<Menu>('rowMenu');
     readonly rowMenuItems = signal<MenuItem[]>([]);
     /** Menü kapanış animasyonu bitmeden sayfa değişirse kaplama gövdede asılı kalır; ödeme/ücret sayfasına menü kapandıktan sonra gidilir. */
-    private readonly navigateAfterMenu = signal<{ item: TodayItemVm; target: 'payment' | 'charge' } | null>(null);
+    private readonly navigateAfterMenu = signal<{ item: TodayItemVm; target: 'payment' | 'charge' | 'appointment' } | null>(null);
     readonly noShowOpen = signal(false);
     readonly noShowItem = signal<TodayItemVm | null>(null);
     readonly noShowMode = signal<'mark' | 'revert'>('mark');
@@ -390,7 +392,8 @@ export class TodayPageComponent implements OnInit {
             canNoShow: this.canNoShow,
             canCorrect: this.canCorrect,
             canCollectPayment: this.canCollectPayment,
-            canCreateCharge: this.canCreateCharge
+            canCreateCharge: this.canCreateCharge,
+            canCreateAppointment: this.canCreateAppointment
         };
     }
 
@@ -411,7 +414,8 @@ export class TodayPageComponent implements OnInit {
             correct: () => this.openCorrection(item),
             editPreparation: () => this.openPreparation(item),
             collectPayment: () => this.navigateAfterMenu.set({ item, target: 'payment' }),
-            addCharge: () => this.navigateAfterMenu.set({ item, target: 'charge' })
+            addCharge: () => this.navigateAfterMenu.set({ item, target: 'charge' }),
+            bookAppointment: () => this.navigateAfterMenu.set({ item, target: 'appointment' })
         };
         const blocked = this.ro.mutationBlocked() || this.isBusy(item);
 
@@ -507,6 +511,8 @@ export class TodayPageComponent implements OnInit {
             this.openPayment(pending.item);
         } else if (pending?.target === 'charge') {
             this.openCharge(pending.item);
+        } else if (pending?.target === 'appointment') {
+            this.openNewAppointment(pending.item);
         }
     }
 
@@ -518,6 +524,11 @@ export class TodayPageComponent implements OnInit {
     /** Müşteri ve (varsa) geliş bağlamı ödeme formuna taşınır; o gelişin açık ücretleri dolu gelir. */
     openPayment(item: TodayItemVm): void {
         void this.router.navigate(['/panel/payments/new'], { queryParams: { clientId: item.clientId, visitId: item.visitId } });
+    }
+
+    /** Sonraki randevu: müşteri ve hasta dolu açılır; gün ve ilk boş saat formda önden seçilir. */
+    openNewAppointment(item: TodayItemVm): void {
+        void this.router.navigate(['/panel/appointments/new'], { queryParams: { clientId: item.clientId, petId: item.petId } });
     }
 
     /** Müşteri, hasta ve (varsa) geliş bağlamı ücret formuna taşınır; hasta tekrar seçilmez. */

@@ -14,6 +14,7 @@ import { ReportPreferencesService, reportKeyFromRoute, type ReportSavedFilterDto
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 /** Kayıtlı filtre adı üst sınırı (sözleşme §3; `ReportSavedFilter.MaxNameLength`). */
 const MAX_NAME_LENGTH = 100;
@@ -25,7 +26,7 @@ const MAX_NAME_LENGTH = 100;
 @Component({
     selector: 'app-report-saved-filters',
     standalone: true,
-    imports: [FormsModule, ButtonModule, SelectModule, DialogModule, DialogFocusReturnDirective, InputTextModule, ConfirmDialogModule, FilterFieldComponent],
+    imports: [FormsModule, ButtonModule, SelectModule, DialogModule, DialogFocusReturnDirective, InputTextModule, ConfirmDialogModule, FilterFieldComponent, ReadOnlyReasonDirective],
     providers: [ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -61,7 +62,7 @@ const MAX_NAME_LENGTH = 100;
                         <i class="p-button-icon pi pi-trash"></i>
                     </button>
                 }
-                <button pButton type="button" severity="secondary" [outlined]="true" [disabled]="busy() || ro.mutationBlocked()" (click)="openSave()" data-testid="saved-filter-open-save">
+                <button pButton type="button" severity="secondary" [outlined]="true" [disabled]="busy() || ro.mutationBlocked()" appReadOnlyReason (click)="openSave()" data-testid="saved-filter-open-save">
                     <i class="p-button-icon pi pi-bookmark"></i>{{ copy.reportsSavedFilterSave }}
                 </button>
             </div>

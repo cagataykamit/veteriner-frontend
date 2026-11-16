@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { startWith, type Subscription } from 'rxjs';
+import { injectReturnTarget } from '@/app/shared/utils/return-target.utils';
+import { catchError, debounceTime, distinctUntilChanged, map, of, startWith, switchMap, type Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -30,11 +31,17 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
+import { ProductService } from '@/app/entities/inventory/services/product.service';
+import type { ChargeCatalogItemVm } from '@/app/entities/inventory/models/product-vm.model';
+
+/** Açıklama önerisi bu kadar harften sonra aranır. */
+const CATALOG_SEARCH_MIN_LENGTH = 2;
 
 @Component({
     selector: 'app-charge-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent, ChargeTaxFieldsComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ClientSearchComponent, PetSearchComponent, AppPageHeaderComponent, ChargeTaxFieldsComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/charges" categoryLinkLabel="Ücret listesine dön" title="Yeni ücret" description="Müşteriye ücret satırı ekleyin. Ücret ödeme sayılmaz." />
@@ -92,7 +99,35 @@ import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.com
                     }
                     <div class="col-span-12">
                         <label for="chargeDescription" class="block text-sm font-medium text-muted-color mb-2">Açıklama *</label>
-                        <input id="chargeDescription" type="text" class="w-full p-inputtext p-component" formControlName="description" [attr.maxlength]="descriptionMaxLength" placeholder="Örn. Genel muayene, mama satışı" />
+                        <input
+                            id="chargeDescription"
+                            type="text"
+                            class="w-full p-inputtext p-component"
+                            formControlName="description"
+                            [attr.maxlength]="descriptionMaxLength"
+                            autocomplete="off"
+                            placeholder="Hizmet ya da ürün adı yazın; örn. Genel muayene"
+                            [attr.aria-describedby]="catalogSuggestions().length ? 'chargeCatalogHint' : null"
+                        />
+                        @if (catalogSuggestions().length > 0) {
+                            <ul class="list-none m-0 mt-1 p-0 rounded-border border border-surface overflow-hidden" aria-label="Hizmet ve ürün önerileri" data-testid="charge-catalog-suggestions">
+                                @for (item of catalogSuggestions(); track item.id) {
+                                    <li class="border-b border-surface last:border-b-0">
+                                        <button
+                                            type="button"
+                                            class="w-full flex items-center gap-3 px-3 py-2 min-h-(--touch-target) text-left text-color bg-transparent border-0 cursor-pointer hover:bg-emphasis"
+                                            (click)="pickCatalogItem(item)"
+                                            data-testid="charge-catalog-item"
+                                        >
+                                            <span class="truncate">{{ item.name }}</span>
+                                            <span class="shrink-0 text-xs text-muted-color">{{ item.kind === 'Service' ? 'Hizmet' : 'Ürün' }}</span>
+                                            <span class="ml-auto shrink-0 font-medium tabular-nums">{{ item.unitPriceText }}</span>
+                                        </button>
+                                    </li>
+                                }
+                            </ul>
+                            <small id="chargeCatalogHint" class="block text-muted-color mt-1">Seçince fiyat ve KDV dolar; listede yoksa yazdığınız metin kalır.</small>
+                        }
                         @if (form.controls.description.invalid && form.controls.description.touched) {
                             <small class="text-danger">Açıklama zorunludur (en fazla {{ descriptionMaxLength }} karakter).</small>
                         }
@@ -118,7 +153,7 @@ import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.com
                             <small class="text-danger">Tutar sıfıra yuvarlanıyor; miktar veya birim fiyatı artırın.</small>
                         }
                     </div>
-                    <app-charge-tax-fields [lineKind]="form.controls.lineKind" [vatRate]="form.controls.vatRate" idPrefix="charge" />
+                    <app-charge-tax-fields [lineKind]="form.controls.lineKind" [vatRate]="form.controls.vatRate" [currentVatRate]="pickedVatRate()" idPrefix="charge" />
                 </div>
 
                 @if (submitError()) {
@@ -129,12 +164,12 @@ import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.com
                     <button
                         pButton
                         type="submit"
-                        [disabled]="submitting() || ro.mutationBlocked()"
+                        [disabled]="submitting() || ro.mutationBlocked()" appReadOnlyReason
                     ><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : (canCollectPayment ? 'pi pi-wallet' : 'pi pi-check')"></i>{{ canCollectPayment ? 'Kaydet ve ödemeyi şimdi al' : copy.buttonSave }}</button>
                     @if (canCollectPayment) {
                         <button pButton type="button" severity="secondary" (click)="formSubmit.revealIssues() || onSubmit(false)" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon pi pi-check"></i>{{ copy.buttonSave }}</button>
                     }
-                    <button pButton type="button" severity="secondary" (click)="goList()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
+                    <button pButton type="button" severity="secondary" (click)="goBack()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>
         </div>
@@ -152,7 +187,10 @@ export class ChargeNewPageComponent implements OnInit, HasUnsavedChanges {
     private readonly chargesService = inject(ChargesService);
     private readonly examinationsService = inject(ExaminationsService);
     private readonly visitsService = inject(VisitsService);
+    private readonly productService = inject(ProductService);
     private readonly router = inject(Router);
+    /** İptal ve kayıt sonrası: geldiği yer (`returnUrl`, önceki sayfa, bağlamdaki kart), yoksa ücret listesi. */
+    private readonly returnTarget = injectReturnTarget('/panel/charges');
     private readonly route = inject(ActivatedRoute);
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
@@ -196,6 +234,15 @@ export class ChargeNewPageComponent implements OnInit, HasUnsavedChanges {
         initialValue: this.form.getRawValue()
     });
 
+    /** Açıklama yazıldıkça hizmet ve ürün önerileri (O10); seçilince ya da metin kısalınca boşalır. */
+    readonly catalogSuggestions = signal<ChargeCatalogItemVm[]>([]);
+    /** Seçilen kalemin KDV'si listede olmayan bir oransa seçenek olarak eklenir. */
+    readonly pickedVatRate = signal<number | null>(null);
+    /** Seçilen kalemin adı: aynı metin için yeniden öneri açılmaz. */
+    private pickedCatalogName: string | null = null;
+    /** Bugünkü tek gelişin otomatik seçildiği müşteri/hasta; kullanıcı kaldırırsa aynı seçim için yeniden seçilmez. */
+    private autoVisitKey: string | null = null;
+
     readonly amountPreview = computed(() => computeChargeAmount(this.formValue().quantity ?? null, this.formValue().unitPrice ?? null));
     readonly amountDisplay = computed(() => formatMoney(this.amountPreview(), 'TRY'));
     /** Alanlar tek tek geçerli ama çarpım sıfıra yuvarlanıyor (ör. 0,001 × 1). */
@@ -218,6 +265,48 @@ export class ChargeNewPageComponent implements OnInit, HasUnsavedChanges {
                 label: `${i.petName} — ${formatUtcIsoAsLocalTimeDisplay(i.arrivedAtUtc)} gelişi`
             }));
     });
+
+    constructor() {
+        this.form.controls.description.valueChanges
+            .pipe(
+                debounceTime(250),
+                map((v) => v.trim()),
+                distinctUntilChanged(),
+                switchMap((term) =>
+                    term.length < CATALOG_SEARCH_MIN_LENGTH || term === this.pickedCatalogName ? of([]) : this.productService.searchChargeCatalog(term).pipe(catchError(() => of([])))
+                ),
+                takeUntilDestroyed()
+            )
+            .subscribe((items) => this.catalogSuggestions.set(items));
+
+        // Seçili müşteri/hastanın bugün tek gelişi varsa ücret o gelişe bağlanır (O10); birden çoksa seçim kullanıcıdadır.
+        effect(() => {
+            const options = this.visitOptions();
+            const { clientId, petId } = this.formValue();
+            const key = `${trimClientIdControlValue(clientId)}|${trimClientIdControlValue(petId)}`;
+
+            if (options.length !== 1 || this.autoVisitKey === key || this.form.controls.visitId.value) {
+                return;
+            }
+
+            this.autoVisitKey = key;
+            this.form.controls.visitId.setValue(options[0].value as string, { emitEvent: false });
+        });
+    }
+
+    /** Öneriden seçim: açıklama, birim fiyat, KDV ve satır türü dolar; miktar ve diğer alanlar kalır. */
+    pickCatalogItem(item: ChargeCatalogItemVm): void {
+        this.pickedCatalogName = item.name;
+        this.pickedVatRate.set(item.vatRate);
+        this.form.patchValue({
+            description: item.name.slice(0, CHARGE_DESCRIPTION_MAX_LENGTH),
+            lineKind: item.kind === 'Service' ? 'Service' : 'Product',
+            vatRate: item.vatRate,
+            ...(item.unitPrice != null ? { unitPrice: item.unitPrice } : {})
+        });
+        this.form.markAsDirty();
+        this.catalogSuggestions.set([]);
+    }
 
     ngOnInit(): void {
         if (this.canLinkVisit) {
@@ -312,10 +401,21 @@ export class ChargeNewPageComponent implements OnInit, HasUnsavedChanges {
         return this.form.dirty;
     }
 
-    goList(): void {
+    goBack(): void {
+        if (!this.returnsToChargeList()) {
+            void this.router.navigateByUrl(this.returnTarget.url);
+
+            return;
+        }
+
         const clientId = trimClientIdControlValue(this.form.controls.clientId.value);
 
         void this.router.navigate(['/panel/charges'], { queryParams: clientId ? { clientId } : {} });
+    }
+
+    /** Ücret listesinden ya da doğrudan gelindiyse liste seçili müşteriyle açılır; muayene, müşteri kartı gibi yerden gelindiyse oraya dönülür. */
+    private returnsToChargeList(): boolean {
+        return this.returnTarget.source === 'list' || this.returnTarget.url.split(/[?#]/)[0] === '/panel/charges';
     }
 
     onSubmit(thenCollectPayment = false): void {
@@ -362,6 +462,12 @@ export class ChargeNewPageComponent implements OnInit, HasUnsavedChanges {
                         void this.router.navigate(['/panel/payments/new'], {
                             queryParams: { clientId, chargeId, ...(visitId ? { visitId } : {}), ...(examinationId ? { examinationId } : {}) }
                         });
+
+                        return;
+                    }
+
+                    if (!this.returnsToChargeList()) {
+                        void this.router.navigateByUrl(this.returnTarget.url);
 
                         return;
                     }

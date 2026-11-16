@@ -9,6 +9,8 @@ export interface MenuFlyoutTab {
     /** Sayaç metni (`menuBadgeLabel`); 0 veya bilinmiyorsa yok. */
     readonly badge?: string | null;
     readonly active: boolean;
+    /** Paket dışı sekmenin ipucu ("Üst pakette"); sekme yine açılır. */
+    readonly lockHint?: string | null;
 }
 
 /** Panelin pencere kenarına en yakın mesafesi. */
@@ -48,9 +50,13 @@ const ANCHOR_GAP_PX = 4;
                     [routerLink]="tab.route"
                     [class.active-route]="tab.active"
                     [attr.aria-current]="tab.active ? 'page' : null"
+                    [attr.title]="tab.lockHint || null"
                     (click)="selected.emit()"
                 >
                     <span class="layout-menu-flyout-text">{{ tab.label }}</span>
+                    @if (tab.lockHint) {
+                        <i class="pi pi-lock text-sm text-muted-color" aria-hidden="true"></i><span class="sr-only"> ({{ tab.lockHint }})</span>
+                    }
                     @if (tab.badge) {
                         <span class="layout-menuitem-badge">{{ tab.badge }}<span class="sr-only"> bekleyen</span></span>
                     }

@@ -41,12 +41,13 @@ import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-
 import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 @Component({
     selector: 'app-prescription-form',
     standalone: true,
     providers: [{ provide: HAS_UNSAVED_CHANGES, useExisting: forwardRef(() => PrescriptionFormComponent) }],
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, PrescriptionItemsEditorComponent, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, PrescriptionItemsEditorComponent, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-pet-alert-banner [petId]="form.controls.petId.value" />
@@ -201,7 +202,7 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                 }
 
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <button pButton type="submit" [disabled]="submitting() || applyingRouteContext() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                    <button pButton type="submit" [disabled]="submitting() || applyingRouteContext() || ro.mutationBlocked()" appReadOnlyReason><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                     <button pButton type="button" severity="secondary" (click)="cancel()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>

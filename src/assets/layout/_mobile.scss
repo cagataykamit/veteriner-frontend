@@ -1,15 +1,17 @@
 @use 'mixins' as *;
 
 /*
- * Telefon genişliği (MOBILE-004, ≤ 575 px): panelin her ekranında geçerli ortak kurallar. Sayfa sayfa kopya kural yazılmaz;
- * sayfaya özgü düzen (kart satırı, öncelikli sütun) şablonda `max-sm:` / `lg:hidden` ile yapılır.
- * - Dokunma hedefi en az `--touch-target` (44 px): düğme, giriş alanı, seçenek, sayfalama, onay kutusu.
- * - Giriş alanları 16 px yazı: iOS Safari daha küçük yazıda odaklanınca sayfayı yakınlaştırıyor.
- * - Diyalog ve çekmeceler tam ekran; onay penceresi (ConfirmDialog) kısa metin olduğundan ekran genişliğinde ortada kalır.
+ * Telefon ve dokunmatik ekran (MOBILE-004, O5): panelin her ekranında geçerli ortak kurallar. Sayfa sayfa kopya kural yazılmaz;
+ * sayfaya özgü düzen (kart satırı, öncelikli sütun) şablonda `max-sm:` / `touch:` / `lg:hidden` ile yapılır.
+ * - Dokunma hedefi en az `--touch-target` (44 px): düğme, giriş alanı, seçenek, sayfalama, onay kutusu. Telefonda ve tablette
+ *   (dokunmatik işaretçi) geçerlidir.
+ * - Giriş alanları 16 px yazı: iOS Safari (iPad dahil) daha küçük yazıda odaklanınca sayfayı yakınlaştırıyor.
+ * - Telefonda: diyalog ve çekmeceler tam ekran (onay penceresi kısa metin olduğundan ortada kalır); uzun formun Kaydet satırı
+ *   ekranın altına yapışır.
  * PrimeNG biçemleri çalışma anında sonradan eklendiği için çakışan özelliklerde seçici bir sınıf daha özgüldür ya da satır içi
  * stili (diyalog genişliği) ezmek için `!important` kullanılır.
  */
-@include phone {
+@include touch {
     .p-button,
     .p-togglebutton,
     .p-paginator .p-paginator-page,
@@ -66,6 +68,21 @@
         width: max(100%, var(--touch-target));
         height: max(100%, var(--touch-target));
         transform: translate(-50%, -50%);
+    }
+}
+
+@include phone {
+    /*
+     * Sayfa formunun son satırı Kaydet'i taşıyorsa (form[appFormSubmit]) ekranın altına yapışır: uzun formda kullanıcı aşağı inmeden
+     * kaydeder; eksik alan varsa Kaydet ilk eksiğe kaydırır. Diyalog formu kendi alt çubuğunu kullanır.
+     */
+    .layout-main form[appformsubmit] > :last-child:has(> button[type='submit']) {
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+        padding-block: 0.75rem;
+        background: var(--surface-card);
+        border-top: 1px solid var(--surface-border);
     }
 
     .p-dialog-mask .p-dialog:not(.p-confirmdialog) {

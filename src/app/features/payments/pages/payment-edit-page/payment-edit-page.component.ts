@@ -32,11 +32,12 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 @Component({
     selector: 'app-payment-edit-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (loading()) {
@@ -87,7 +88,7 @@ import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.com
                     }
 
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                        <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()" appReadOnlyReason><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
                         <button pButton type="button" severity="secondary" (click)="goDetail()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                     </div>
                 </form>

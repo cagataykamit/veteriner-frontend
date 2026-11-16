@@ -33,7 +33,7 @@ import type { PendingRequestPreviewVm } from '@/app/entities/online-booking/util
     template: `
         <button
             type="button"
-            class="inline-flex items-center gap-1.5 rounded-border border px-2 py-0.5 text-sm font-medium cursor-pointer max-sm:min-h-(--touch-target) bg-primary-50 dark:bg-primary-950/40 border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-300"
+            class="inline-flex items-center gap-1.5 rounded-border border px-2 py-0.5 text-sm font-medium cursor-pointer touch:min-h-(--touch-target) bg-primary-50 dark:bg-primary-950/40 border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-300"
             aria-haspopup="dialog"
             [attr.aria-expanded]="open()"
             (click)="panel.toggle($event)"

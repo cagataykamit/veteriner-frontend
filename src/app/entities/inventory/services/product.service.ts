@@ -5,6 +5,7 @@ import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
     mapPagedProductsToVm,
+    mapProductDtoToChargeCatalogItem,
     mapProductDtoToDetailVm,
     mapProductUpsertFormValueToCreateRequest,
     mapProductUpsertFormValueToUpdateRequest,
@@ -24,7 +25,7 @@ import type { ProductStockDto } from '@/app/entities/inventory/models/product-st
 import type { ProductStockVm } from '@/app/entities/inventory/models/product-stock-vm.model';
 import type { ProductUpsertFormValue } from '@/app/entities/inventory/models/product-upsert-form.model';
 import type { ProductsListQuery } from '@/app/entities/inventory/models/product-query.model';
-import type { ProductDetailVm, ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
+import type { ChargeCatalogItemVm, ProductDetailVm, ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
 import { isStockTrackedKind } from '@/app/entities/inventory/utils/product-classification.utils';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
@@ -52,6 +53,20 @@ export class ProductService {
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Ürün listesi yüklenemedi.')))
             )
+        );
+    }
+
+    /**
+     * Ücret formunda açıklama önerisi (O10): ada göre aktif hizmet ve ürünler, hizmetler önce. Ücret stok düşmez; ürün satırı
+     * yalnız fiyat ve KDV için önerilir (stoklu satış Satış ekranındadır).
+     */
+    searchChargeCatalog(search: string, pageSize = 6): Observable<ChargeCatalogItemVm[]> {
+        const params = productsQueryToHttpParams({ page: 1, pageSize, search, isActive: true });
+
+        return this.api.get<ProductDtoPagedResult>(ApiEndpoints.products.list(), params).pipe(
+            map((res) => (res.items ?? []).map(mapProductDtoToChargeCatalogItem).filter((p) => !!p.name)),
+            map((items) => [...items.filter((p) => p.kind === 'Service'), ...items.filter((p) => p.kind !== 'Service')]),
+            catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Hizmet listesi yüklenemedi.'))))
         );
     }
 

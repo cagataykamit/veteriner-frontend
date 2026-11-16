@@ -22,11 +22,12 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 @Component({
     selector: 'app-clinic-create-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, TextareaModule, ToastModule, AppPageHeaderComponent, AppPlanUpgradeNoticeComponent, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, TextareaModule, ToastModule, AppPageHeaderComponent, AppPlanUpgradeNoticeComponent, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -120,7 +121,7 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                     </div>
                 </div>
                 <div class="mt-4 mb-0 flex flex-wrap gap-2">
-                    <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
+                    <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()" appReadOnlyReason><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
                     <button pButton type="button" severity="secondary" [disabled]="submitting()" (click)="onCancel()"><i class="p-button-icon pi pi-times"></i>Vazgeç</button>
                 </div>
             </form>

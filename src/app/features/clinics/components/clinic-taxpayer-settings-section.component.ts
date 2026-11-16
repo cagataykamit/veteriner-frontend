@@ -13,6 +13,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { TAX_IDENTITY_MSG_TAXPAYER, TAX_RATE_MSG_INVALID, taxpayerIdentityValidator, taxRateValidator } from '@/app/shared/utils/turkish-tax-identity.utils';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 /**
  * Klinik ayarlarındaki "Mükellef bilgileri" kartı (ADR-036 Dilim 1): fatura/e-belgeyi düzenleyen kimlik, adres ve varsayılan
@@ -21,7 +22,7 @@ import { TAX_IDENTITY_MSG_TAXPAYER, TAX_RATE_MSG_INVALID, taxpayerIdentityValida
 @Component({
     selector: 'app-clinic-taxpayer-settings-section',
     standalone: true,
-    imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppLoadingStateComponent, AppErrorStateComponent],
+    imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppLoadingStateComponent, AppErrorStateComponent, ReadOnlyReasonDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card mb-4" [formGroup]="form" data-testid="clinic-taxpayer-settings">
@@ -89,7 +90,7 @@ import { TAX_IDENTITY_MSG_TAXPAYER, TAX_RATE_MSG_INVALID, taxpayerIdentityValida
                 </div>
 
                 <div class="mt-4 flex justify-end">
-                    <button pButton type="button" severity="secondary" [disabled]="form.invalid || form.pristine || saving() || ro.mutationBlocked()" (click)="save()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Mükellef bilgilerini kaydet</button>
+                    <button pButton type="button" severity="secondary" [disabled]="form.invalid || form.pristine || saving() || ro.mutationBlocked()" appReadOnlyReason (click)="save()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Mükellef bilgilerini kaydet</button>
                 </div>
             }
         </div>

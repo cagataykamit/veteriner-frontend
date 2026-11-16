@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { APPOINTMENTS_READ_CLAIM, PAYMENTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ReportPreferencesService } from '@/app/features/reports/shared/report-preferences.service';
 import { ReportsHubPageComponent } from './reports-hub-page.component';
@@ -47,7 +48,8 @@ describe('ReportsHubPageComponent — favoriler (REPORT-003)', () => {
             providers: [
                 provideRouter([]),
                 { provide: ReportPreferencesService, useValue: preferences },
-                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } }
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
+                { provide: TenantReadOnlyContextService, useValue: { planLockHint: () => null } }
             ]
         });
     });

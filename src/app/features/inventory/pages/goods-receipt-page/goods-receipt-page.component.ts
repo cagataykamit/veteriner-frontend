@@ -28,6 +28,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 type SelectOption = { label: string; value: string };
 
@@ -44,7 +45,7 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
 @Component({
     selector: 'app-goods-receipt-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, AutoCompleteModule, BarcodeScanButtonComponent, DateInputComponent, AppListHeaderComponent, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, SelectModule, AutoCompleteModule, BarcodeScanButtonComponent, DateInputComponent, AppListHeaderComponent, InlineCreateDirective, InlineCreateOptionComponent, QuickProductDialogComponent, ReadOnlyReasonDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card">
@@ -266,7 +267,7 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
                     }
 
                     <div class="flex flex-wrap justify-end gap-2">
-                        <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
+                        <button pButton type="submit" [disabled]="submitting() || ro.mutationBlocked()" appReadOnlyReason><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
                     </div>
                 </form>
             }

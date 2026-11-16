@@ -108,7 +108,7 @@ type ClosingStatus = Extract<DataRequestStaffStatus, 'Completed' | 'Rejected'>;
                         <ng-template #body let-r>
                             <tr data-testid="data-request-row" class="cursor-pointer" [class.bg-highlight]="r.id === openId()" (click)="openDetail(r)">
                                 <td>
-                                    <a [routerLink]="['/panel/clients', r.clientId]" class="font-medium max-sm:touch-hit" (click)="$event.stopPropagation()" data-testid="data-request-client">{{ r.clientName }}</a>
+                                    <a [routerLink]="['/panel/clients', r.clientId]" class="font-medium touch:touch-hit" (click)="$event.stopPropagation()" data-testid="data-request-client">{{ r.clientName }}</a>
                                     @if (showClinic()) {
                                         <div><small class="text-muted-color">{{ r.clinicName }}</small></div>
                                     }

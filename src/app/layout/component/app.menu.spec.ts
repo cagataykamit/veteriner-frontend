@@ -2,6 +2,7 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { PLATFORM_ADMIN_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { LayoutService } from '@/app/layout/service/layout.service';
 import { MenuBadgeService } from '@/app/layout/service/menu-badge.service';
@@ -21,7 +22,8 @@ describe('AppMenu', () => {
                 provideRouter([{ path: '**', children: [] }]),
                 { provide: AuthService, useValue: { hasOperationClaim: hasClaim, activeClinicLabel: clinicLabel } },
                 { provide: LayoutService, useValue: { isMenuRail: rail, layoutState: signal({ activePath: null }) } },
-                { provide: MenuBadgeService, useValue: { count: (key: string) => counts[key] ?? null, connect: () => undefined } }
+                { provide: MenuBadgeService, useValue: { count: (key: string) => counts[key] ?? null, connect: () => undefined } },
+                { provide: TenantReadOnlyContextService, useValue: { planLockHint: () => null } }
             ]
         });
         const fixture = TestBed.createComponent(AppMenu);

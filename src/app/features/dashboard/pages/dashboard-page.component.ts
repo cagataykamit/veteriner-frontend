@@ -33,6 +33,7 @@ import { panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 import type { ProductStockVm } from '@/app/entities/inventory/models/product-stock-vm.model';
 import { ProductStockService } from '@/app/entities/inventory/services/product-stock.service';
 import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
 
 @Component({
     selector: 'app-dashboard-page',
@@ -51,7 +52,8 @@ import { TrDatePipe, TrDateTimePipe, TrTimePipe } from '@/app/shared/pipes/tr-da
         VisitArrivalDialogComponent,
         TrDatePipe,
         TrDateTimePipe,
-        TrTimePipe
+        TrTimePipe,
+        ReadOnlyReasonDirective
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './dashboard-page.component.html'

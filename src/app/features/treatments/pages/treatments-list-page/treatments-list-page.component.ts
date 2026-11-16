@@ -25,6 +25,16 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
+type TreatmentsListState = {
+    search: string;
+    fromDate: string;
+    toDate: string;
+    page: number;
+    pageSize: number;
+};
+
+const TREATMENTS_LIST_STATE_KEY = 'panel:treatments:listState';
+
 @Component({
     selector: 'app-treatments-list-page',
     standalone: true,
@@ -224,7 +234,25 @@ export class TreatmentsListPageComponent implements OnInit {
                     fromDate: this.activeFromDate() || undefined,
                     toDate: this.activeToDate() || undefined
                 }),
-        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}|${this.activeFromDate().trim()}|${this.activeToDate().trim()}|${this.contextPetId()}`
+        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}|${this.activeFromDate().trim()}|${this.activeToDate().trim()}|${this.contextPetId()}`,
+        persist: {
+            key: TREATMENTS_LIST_STATE_KEY,
+            save: (): Omit<TreatmentsListState, 'page' | 'pageSize'> => ({
+                search: this.searchInput.trim(),
+                fromDate: this.fromDateInput.trim(),
+                toDate: this.toDateInput.trim()
+            }),
+            restore: (state) => {
+                const parsed = state as Partial<TreatmentsListState>;
+
+                this.searchInput = typeof parsed.search === 'string' ? parsed.search : '';
+                this.fromDateInput = typeof parsed.fromDate === 'string' ? parsed.fromDate : '';
+                this.toDateInput = typeof parsed.toDate === 'string' ? parsed.toDate : '';
+                this.activeSearch.set(this.searchInput.trim());
+                this.activeFromDate.set(this.fromDateInput.trim());
+                this.activeToDate.set(this.toDateInput.trim());
+            }
+        }
     });
 
     readonly loading = this.list.loading;
@@ -247,6 +275,10 @@ export class TreatmentsListPageComponent implements OnInit {
     readonly displayedRows = computed(() => this.rawItems());
 
     ngOnInit(): void {
+        if (!this.list.restore()) {
+            this.list.goToFirstPage();
+        }
+
         this.list.startInitialLoad();
     }
 
@@ -281,7 +313,7 @@ export class TreatmentsListPageComponent implements OnInit {
         this.activeSearch.set('');
         this.activeFromDate.set('');
         this.activeToDate.set('');
-        this.list.loadFirstPage();
+        this.list.resetToFirstPage();
     }
 
     clearContextFilter(): void {
