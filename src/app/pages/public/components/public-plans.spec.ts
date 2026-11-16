@@ -65,8 +65,11 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         expect(labels('basic')).toContain('Destek: E-posta ve WhatsApp');
 
         expect(planCardFeatures('pro').lead).toBe("Temel'deki her şey, artı:");
-        expect(labels('pro')).toContain('Hasta sahibi portalı');
+        expect(labels('pro')).toContain('Bekleme listesi');
         expect(labels('pro')).toContain('Destek: E-posta ve WhatsApp, öncelikli');
+        // Portal 2026-11-16'dan beri tüm paketlerde (ADR-035): Temel'in sayımında, üst paket farkında değil.
+        expect(labels('pro')).not.toContain('Hasta sahibi portalı');
+        expect(labels('pro')).not.toContain('Portaldan randevu talebi');
         expect(labels('pro')).not.toContain('Bugün ekranı ve geliş takibi');
         expect(labels('pro')).not.toContain('Çok klinik yönetimi ve klinikler arası yetki');
 
@@ -83,9 +86,9 @@ describe('Paket verisi (pricing-plan.utils)', () => {
 
     it('kimin için: her paketin kısa açıklaması var', () => {
         expect(PRICING_PLAN_DEFS.map((p) => p.description)).toEqual([
-            'Tek hekimli ya da küçük ekipli, tek şubeli klinik',
-            'Büyüyen, birkaç kullanıcılı ve hasta portalı kullanan klinik',
-            'Birden fazla şubesi olan işletme'
+            'Tek şubeli, küçük ekipli klinik',
+            'Tek şubeli, ekibi büyüyen klinik',
+            'Birden çok şubesi ya da büyük ekibi olan klinik'
         ]);
     });
 
@@ -105,8 +108,6 @@ describe('Paket verisi (pricing-plan.utils)', () => {
             'Çoklu kasa ve kasa yönetimi',
             'Kamerayla barkod okutma',
             'Otomatik hatırlatıcılar',
-            'Hasta sahibi portalı',
-            'Portaldan randevu talebi',
             'Gelişmiş raporlar',
             'Şubeler özeti',
             'Çok klinik yönetimi ve klinikler arası yetki',
