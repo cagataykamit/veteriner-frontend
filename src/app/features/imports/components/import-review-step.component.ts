@@ -23,7 +23,7 @@ import type {
 } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
-import { IMPORT_ROW_STATUS_LABELS, IMPORT_VALUE_KIND_LABELS, importErrorCode, importErrorMessage, importIssueDetail, importIssueLabel, importRowPlace, reminderEmailTotal } from '@/app/features/imports/utils/import-labels.utils';
+import { IMPORT_ROW_STATUS_LABELS, IMPORT_VALUE_KIND_LABELS, importErrorCode, importErrorMessage, importIssueDetail, importIssueLabel, importRowPlace, purgedRowsNotice, reminderEmailTotal } from '@/app/features/imports/utils/import-labels.utils';
 import {
     fileBlockers,
     formatCount,
@@ -33,6 +33,7 @@ import {
     type ImportReviewReason,
     issueReasons,
     notImportedReasons,
+    overlapSummary,
     requiredValues,
     reviewHeadline,
     reviewState,
@@ -73,6 +74,10 @@ const OUTCOME_DOT: Readonly<Record<ImportOutcome | 'attention' | 'info', string>
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (preview(); as p) {
+            @if (overlap(); as summary) {
+                <p-message severity="info" icon="pi pi-sync" class="w-full mb-4" role="status" data-testid="import-overlap">{{ summary }}</p-message>
+            }
+
             <!-- Sonuç -->
             <section class="rounded-border border p-4 sm:p-6 mb-4" [class]="tone().frame" [attr.role]="state() === 'failed' || state() === 'blocked' ? 'alert' : null" data-testid="import-review-summary">
                 <div class="flex items-start gap-3 sm:gap-4">
@@ -424,7 +429,7 @@ const OUTCOME_DOT: Readonly<Record<ImportOutcome | 'attention' | 'info', string>
             </div>
 
             @if (p.payloadPurged) {
-                <p-message severity="info" class="w-full mb-4">Satır verisi saklama süresi sonunda silindi; yalnızca sayılar görüntülenebilir.</p-message>
+                <p-message severity="info" class="w-full mb-4" data-testid="import-rows-purged">{{ purgedNotice() }}</p-message>
             }
 
             <!-- Neden listesi: kısa ad, tek cümle açıklama, satır sayısı; tıklanınca o nedenin satırları açılır. -->
@@ -574,6 +579,9 @@ export class ImportReviewStepComponent {
     protected readonly info = computed(() => (this.preview() ? issueReasons(this.preview()!, 'Info') : []));
     protected readonly state = computed(() => (this.preview() ? reviewState(this.preview()!, this.totals()) : 'past'));
     protected readonly headline = computed(() => reviewHeadline(this.state(), this.totals(), this.required().length));
+    /** İkinci (güncelleme) aktarmasında en üstteki özet; ilk aktarmada null. */
+    protected readonly overlap = computed(() => (this.preview() ? overlapSummary(this.preview()!) : null));
+    protected readonly purgedNotice = computed(() => purgedRowsNotice(this.batch().status));
     protected readonly emailsNow = computed(() => (this.preview() ? reminderEmailTotal(this.preview()!.reminderImpact) : 0));
 
     protected readonly outcomes = computed(() => [
@@ -845,7 +853,7 @@ export class ImportReviewStepComponent {
             error: (e: unknown) => {
                 this.rows.set([]);
                 this.rowsLoading.set(false);
-                this.rowsError.set(importErrorCode(e) === 'Imports.PayloadPurged' ? 'Satır verisi saklama süresi sonunda silindi.' : importErrorMessage(e, 'Satırlar yüklenemedi.'));
+                this.rowsError.set(importErrorCode(e) === 'Imports.PayloadPurged' ? this.purgedNotice() : importErrorMessage(e, 'Satırlar yüklenemedi.'));
             }
         });
     }

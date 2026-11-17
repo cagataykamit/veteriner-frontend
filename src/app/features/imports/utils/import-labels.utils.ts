@@ -84,6 +84,14 @@ export function isRollbackable(status: string): boolean {
     return ROLLBACKABLE_STATUSES.includes(status);
 }
 
+/**
+ * Satırları silinmiş partinin notu (sözleşme 10.1): aktarılmış partide satırlar geri alma süresi dolunca silinir ("kesinleşti"),
+ * taslak ise silinirken ya da süresi dolarken.
+ */
+export function purgedRowsNotice(status: string): string {
+    return isRollbackable(status) ? 'Bu aktarma kesinleşti, satır ayrıntısı saklanmıyor; yalnızca sayılar görüntülenebilir.' : 'Satır ayrıntısı saklanmıyor; yalnızca sayılar görüntülenebilir.';
+}
+
 /** Geri alma ekranı: geri alınabilir durumlar ve süren geri alma. */
 export function isRollbackScreenAvailable(status: string): boolean {
     return isRollbackable(status) || status === 'RollingBack';
@@ -160,6 +168,7 @@ const ISSUE_TEXTS: Readonly<Record<string, string | readonly [label: string, not
     'Imports.DuplicateInFile': ['Dosyada aynı kayıt daha önce geçiyor', 'Bir kez aktarılır; tekrarı atlanır.'],
     'Imports.DuplicateClient': 'Aynı müşteri sistemde zaten var',
     'Imports.MatchedExisting': 'Sistemdeki kayıtla eşleşti',
+    'Imports.MatchedBySourceId': ['Önceki aktarmadaki kayıtla eşleşti', 'Eski programdaki numarasıyla bulundu; adı ya da telefonu değişmiş olsa da yeni kayıt açılmaz.'],
     'Imports.SharedPhone': 'Telefon başka bir müşteriyle ortak',
     'Imports.PossibleDuplicate': 'Aynı adlı müşteri zaten var; ayrı kayıt oluşur',
     'Imports.OwnerNotFound': 'Müşteri bulunamadı',
@@ -183,7 +192,8 @@ const ISSUE_TEXTS: Readonly<Record<string, string | readonly [label: string, not
     'Imports.CreditBalanceNotImported': 'Alacak (eksi) bakiye aktarılmadı; müşteri bakiyesiz aktarıldı',
     'Imports.AmountInvalid': 'Tutar okunamadı veya geçersiz',
     'Imports.EntryAmountInvalid': 'Tutar okunamadı, sıfır ya da geçersiz; hareket aktarılmaz',
-    'Imports.BalanceNotAppliedToExisting': 'Müşteri sistemde zaten var; açık bakiye eklenmez',
+    'Imports.BalanceNotAppliedToExisting': 'Müşteri dosyada tekrar ediyor; açık bakiye eklenmez',
+    'Imports.BalanceDifference': ['Bakiye sistemdekinden farklı', 'Onay adımında farkı devir olarak açabilir ya da atlayabilirsiniz.'],
     'Imports.BalanceDateIgnored': 'Bakiye tarihi okunamadı; açıklamaya yazılmaz',
     'Imports.DateInFuture': ['Tarih gelecekte', 'Yapılmış bir işlemin tarihi ileri olamaz.'],
     'Imports.RecordBeforeBirth': 'Kayıt, doğum tarihinden önce görünüyor',
@@ -279,7 +289,7 @@ const PROBLEM_MESSAGES: Readonly<Record<string, string>> = {
     'Imports.DuplicateFile': 'Bu dosya daha önce yüklenmiş.',
     'Imports.RequestIdConflict': 'Bu yükleme farklı bilgilerle daha önce başlatılmış. Sayfayı yenileyip tekrar deneyin.',
     'Imports.AnotherJobRunning': 'Şu anda başka bir içe aktarma işlemi sürüyor. Bitmesini bekleyin.',
-    'Imports.PayloadPurged': 'Satır verisi saklama süresi sonunda silindi.',
+    'Imports.PayloadPurged': 'Satır ayrıntısı saklanmıyor (aktarma kesinleşti ya da taslak silindi).',
     'Imports.InvalidState': 'Bu işlem içe aktarmanın şu anki durumunda yapılamaz. Sayfayı yenileyin.',
     'Imports.ConcurrencyConflict': 'Kayıt aynı anda başka bir yerde değişti. Sayfayı yenileyip tekrar deneyin.',
     'Imports.TooManyOpenDrafts': 'En fazla 5 açık taslak olabilir. Eski bir taslağı silin veya tamamlayın.',

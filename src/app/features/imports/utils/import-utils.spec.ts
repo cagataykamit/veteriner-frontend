@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import type { ImportReminderImpactDto, ImportTableInfoDto } from '@/app/features/imports/models/import-api.model';
 import {
     canStartRollback,
+    purgedRowsNotice,
     duplicateBatchId,
     importCommitBlockers,
     importErrorMessage,
@@ -314,5 +315,11 @@ describe('tam geçiş tabloları (sözleşme 12)', () => {
         expect(reminderEmailTotal({ ...base, totalEmailsWithinReminderWindow: 8 })).toBe(8);
         expect(reminderImpactCurrentCount(problem(409, 'Imports.ReminderImpactChanged', { extensions: { emailsWithinReminderWindow: 3, totalEmailsWithinReminderWindow: 7 } }))).toBe(7);
         expect(reminderImpactCurrentCount(problem(409, 'Imports.ReminderImpactChanged', { extensions: { emailsWithinReminderWindow: 3 } }))).toBe(3);
+    });
+
+    it('satırı silinmiş partinin notu aktarılmış partide "kesinleşti" der (sözleşme 10.1)', () => {
+        expect(purgedRowsNotice('Committed')).toBe('Bu aktarma kesinleşti, satır ayrıntısı saklanmıyor; yalnızca sayılar görüntülenebilir.');
+        expect(purgedRowsNotice('PartiallyRolledBack')).toContain('kesinleşti');
+        expect(purgedRowsNotice('Discarded')).toBe('Satır ayrıntısı saklanmıyor; yalnızca sayılar görüntülenebilir.');
     });
 });

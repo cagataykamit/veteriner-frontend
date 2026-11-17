@@ -162,7 +162,10 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                     <p-message severity="info" class="w-full mb-4" role="status">Aktarma yarıda kalmıştı. Şimdiye dek oluşan kayıtlar geri alınabilir.</p-message>
                 }
 
-                @if (preview(); as p) {
+                @if (b.payloadPurgedAtUtc) {
+                    <!-- Geri alma süresi dolunca satırlar silinir (sözleşme 10.1): önizleme sayıları 0 olur, yanıltmasın. -->
+                    <p-message severity="info" class="w-full mb-4" role="status" data-testid="import-rollback-purged">Bu aktarma kesinleşti, satır ayrıntısı saklanmıyor. Aktarılan kayıt sayıları içe aktarma özetinde durur.</p-message>
+                } @else if (preview(); as p) {
                     <h6 class="mt-0 mb-2">Geri alma özeti</h6>
                     <div class="flex flex-wrap gap-3 mb-3">
                         <ng-container *ngTemplateOutlet="counts; context: { title: 'Silinecek (bağı yok)', c: p.deletable }" />
@@ -173,6 +176,13 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                     </div>
                     @if (p.kept.matchedClients || p.kept.matchedPets || p.kept.matchedProducts) {
                         <p class="text-sm text-muted-color mt-0">Sistemde önceden var olup eşleşen {{ p.kept.matchedClients }} müşteri{{ p.kept.matchedProducts ? ', ' + p.kept.matchedPets + ' hasta ve ' + p.kept.matchedProducts + ' ürüne' : ' ve ' + p.kept.matchedPets + ' hastaya' }} dokunulmaz.</p>
+                    }
+                    @if (p.balanceAdjustments; as b) {
+                        @if (b.delete || b.keep) {
+                            <p class="text-sm text-muted-color mt-0" data-testid="rollback-balance-adjustments">
+                                Bu aktarmada eşleşen müşterilere açılan {{ b.delete + b.keep }} bakiye farkı hareketi{{ b.delete ? ': ' + b.delete + ' silinir' : '' }}{{ b.keep ? (b.delete ? ', ' : ': ') + b.keep + ' tahsilat ya da mahsup gördüğü için kalır' : '' }}.
+                            </p>
+                        }
                     }
                     @for (w of p.warnings; track w) {
                         <p-message severity="warn" class="w-full mb-2">{{ warningLabel(w) }}</p-message>

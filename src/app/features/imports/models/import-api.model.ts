@@ -47,6 +47,9 @@ export type ImportIssueSeverity = 'Info' | 'Warning' | 'Error';
 export type ImportValueKind = 'species' | 'breed' | 'vaccine' | 'color' | 'pet';
 export type ImportDuplicateClientMode = 'Match' | 'Skip' | 'Error';
 export type ImportOnErrors = 'SkipErrorRows' | 'FailIfAny';
+
+/** Eşleşen müşterilerin bakiye farkı seçimi (sözleşme 14.3, ADR-051): `Skip` varsayılan, `Apply` farkı devir olarak açar. */
+export type ImportBalanceDifferenceMode = 'Skip' | 'Apply';
 export type ImportFileFormat = 'xlsx' | 'csv';
 
 export interface ImportTableSummaryDto {
@@ -252,6 +255,35 @@ export interface ImportPreviewDto {
     petCandidates?: ImportPetCandidateDto[];
     /** Belirsiz hasta gruplarının kayıtları (sözleşme 13.4, 2026-11-16); eski sunucu yanıtında yoktur. */
     petRows?: ImportPetRowDto[];
+    /** Güncelleme özeti (sözleşme 14.4, 2026-11-17); eski sunucu yanıtında yoktur. */
+    overlap?: ImportOverlapDto;
+    /** Eşleşen müşterilerin bakiye farkları (sözleşme 14.3, 2026-11-17); eski sunucu yanıtında yoktur. */
+    balanceDifferences?: ImportBalanceDifferencesDto;
+}
+
+/** Güncelleme özeti: `isUpdate` satırların en az yarısı zaten sistemdeyse; tablo başına yeni ve zaten var sayıları. */
+export interface ImportOverlapDto {
+    isUpdate: boolean;
+    matchedBySourceId: number;
+    tables: { table: ImportTable; willCreate: number; alreadyExists: number }[];
+}
+
+/** Bakiye farkı: `difference` = dosyadaki − sistemdeki (artı borç artar). `items` en çok 200, mutlak farka göre azalan. */
+export interface ImportBalanceDifferenceDto {
+    rowNumber: number;
+    clientId: string | null;
+    clientName: string | null;
+    currentBalance: number;
+    fileBalance: number;
+    difference: number;
+}
+
+export interface ImportBalanceDifferencesDto {
+    count: number;
+    totalIncrease: number;
+    totalDecrease: number;
+    items: ImportBalanceDifferenceDto[];
+    truncated: boolean;
 }
 
 /** Aktarılmayacak satırın nedeni: `Skipped` bilerek atlanan, `Error` hatalı; satır başına bir neden sayılır. */
@@ -301,6 +333,8 @@ export interface ImportRowsQuery {
 export interface ImportCommitRequestDto {
     validationId: string;
     onErrors: ImportOnErrors;
+    /** Verilmezse sunucu `Skip` sayar. */
+    balanceDifferences?: ImportBalanceDifferenceMode;
 }
 
 /** Arka plan işi süren durumlar (§3): doğrulama (K13), uygulama (B4), geri alma (B5). */
@@ -384,6 +418,8 @@ export interface ImportRollbackPreviewDto {
     rolledBack: ImportRollbackCountsDto;
     remindersAlreadyReleased: boolean;
     warnings: string[];
+    /** Eşleşen müşterilere açılan bakiye farkı hareketleri (sözleşme 14.5): silinecek / tahsilat görmüş, kalacak. Eski sunucuda yok. */
+    balanceAdjustments?: { delete: number; keep: number };
 }
 
 /** `POST .../rollback` gövdesi (B5, §7.12). `reason` 1–500 karakter. */

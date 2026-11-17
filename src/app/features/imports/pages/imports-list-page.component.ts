@@ -64,6 +64,7 @@ type ImportStatusFilter = ImportBatchStatus | typeof ALL_STATUSES;
                         <label for="importStatusFilter" class="text-sm text-muted-color">Durum</label>
                         <p-select inputId="importStatusFilter" [options]="statusOptions" [(ngModel)]="statusFilter" optionLabel="label" optionValue="value" placeholder="Geçerli olanlar" [showClear]="true" class="w-56" (ngModelChange)="applyFilter()" />
                     </div>
+                    <small class="text-muted-color pb-2" data-testid="import-closed-retention-hint">Geri alınan, silinen ve süresi dolan içe aktarmalar kısa süre görünür; geri alma süresi kadar sonra geçmişten tamamen silinir.</small>
                 </div>
 
                 @if (items().length === 0) {
@@ -130,7 +131,7 @@ export class ImportsListPageComponent implements OnInit {
     readonly canRequestSupport = this.auth.hasOperationClaim(CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM);
     readonly migrationSupportRoute = MIGRATION_SUPPORT_ROUTE;
     readonly pageSize = 20;
-    /** Filtre boşken sunucu yalnız geçerli partileri döner; geri alınan, silinen ve süresi dolan taslaklar "Tümü" ya da kendi durumuyla görünür. */
+    /** Filtre boşken sunucu yalnız geçerli partileri döner; geri alınan, silinen ve süresi dolan taslaklar "Tümü" ya da kendi durumuyla görünür, geri alma süresi kadar sonra silinir (sözleşme 10.1). */
     readonly statusOptions: { value: ImportStatusFilter; label: string }[] = [
         { value: ALL_STATUSES, label: 'Tümü' },
         ...(Object.keys(IMPORT_STATUS_LABELS) as ImportBatchStatus[]).map((value) => ({ value, label: IMPORT_STATUS_LABELS[value] }))
