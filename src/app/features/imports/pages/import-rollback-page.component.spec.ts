@@ -103,8 +103,8 @@ describe('ImportRollbackPageComponent', () => {
 
         expect(t).toContain('10 müşteri · 12 hasta · 30 aşı');
         expect(t).toContain('Hasta · Hastalar, 12. satır');
-        expect(t).toContain('Bağlı geliş (ziyaret) var');
-        expect(t).toContain('Bağlı ücret var');
+        expect(t).toContain('Bu hastaya geliş kaydedilmiş; hasta klinikte kullanılıyor.');
+        expect(t).toContain('Bu hastaya ücret yazılmış.');
         expect(t).toContain('düzenlemeler izlenemiyor');
     });
 
@@ -149,8 +149,8 @@ describe('ImportRollbackPageComponent', () => {
         const t = text(el);
 
         expect(t).toContain('hiçbir şey silinmedi');
-        expect(t).toContain('Müşteri · Müşteriler, 3. satır');
-        expect(t).toContain('Müşteri sonradan düzenlenmiş');
+        expect(imports.getRollbackPreview).toHaveBeenCalledTimes(2);
+        expect(t).toContain('Hasta · Hastalar, 12. satır');
     });
 
     it('409 RequestIdConflict: sade mesaj gösterir ve sonraki gönderimde yeni requestId kullanır', () => {
@@ -171,7 +171,7 @@ describe('ImportRollbackPageComponent', () => {
 
         expect(t).toContain('kısmen tamamlandı');
         expect(t).toContain('5 müşteri · 5 hasta · 9 aşı');
-        expect(t).toContain('Bağlı geliş (ziyaret) var');
+        expect(t).toContain('Bu hastaya geliş kaydedilmiş');
         expect(t).toContain('Geri almayı yeniden dene');
     });
 
@@ -221,6 +221,7 @@ describe('ImportRollbackPageComponent', () => {
 
     it('gönderirken süre dolduysa sunucu mesajını gösterir ve partiyi yeniden okur', () => {
         const el = create('Committed', { batch: { canRollback: true, rollbackDeadlineUtc: '2026-12-16T12:37:00Z' } });
+
         imports.rollback.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { code: 'Imports.RollbackWindowClosed' } })));
         imports.getBatch.mockReturnValue(of({ ...batch('Committed'), canRollback: false, rollbackDeadlineUtc: '2026-11-16T12:37:00Z' }));
         fill('Yanlış dosya', true);
@@ -231,5 +232,48 @@ describe('ImportRollbackPageComponent', () => {
         expect(text(el)).toContain('Geri alma süresi doldu; aktarma kesinleşti.');
         expect(imports.getBatch).toHaveBeenCalledTimes(2);
         expect(submitButton(el)).toBeNull();
+    });
+
+    it('kalan kayıtları adıyla, zincir hâlinde gruplu ve yeni sekmede açılan bağlantıyla gösterir', () => {
+        const el = create('PartiallyRolledBack', {
+            preview: preview({
+                status: 'PartiallyRolledBack',
+                blockedItems: [
+                    { entity: 'Client', id: 'c-1', table: 'customers', rowNumber: 3224, reasons: ['HasKeptPets'], groupId: 'c-1', record: { name: 'Ayşe Yılmaz', clientId: 'c-1', ownerName: 'Ayşe Yılmaz' } },
+                    { entity: 'Pet', id: 'p-1', table: 'pets', rowNumber: 4818, reasons: ['HasKeptAppointments', 'HasVisits'], groupId: 'c-1', record: { name: 'Pamuk', species: 'Kedi', petId: 'p-1', petName: 'Pamuk', clientId: 'c-1', ownerName: 'Ayşe Yılmaz' } },
+                    { entity: 'Appointment', id: 'a-1', table: 'appointments', rowNumber: 20655, reasons: ['HasVisits'], groupId: 'c-1', record: { petId: 'p-1', petName: 'Pamuk', species: 'Kedi', clientId: 'c-1', ownerName: 'Ayşe Yılmaz', atUtc: '2026-11-20T07:30:00Z', kind: 'Vaccination' } },
+                    { entity: 'Client', id: 'c-2', table: 'customers', rowNumber: 7, reasons: ['ClientModified'], groupId: 'c-2' }
+                ]
+            })
+        });
+        const groups = el.querySelectorAll('[data-testid="import-rollback-group"]');
+        const links = Array.from(groups[0].querySelectorAll('a'));
+
+        expect(groups.length).toBe(2);
+        expect(groups[0].querySelectorAll('[data-testid="import-rollback-item"]').length).toBe(3);
+        expect(links.map((a) => a.textContent?.trim())).toEqual([
+            expect.stringContaining('Ayşe Yılmaz'),
+            expect.stringContaining('Pamuk'),
+            expect.stringContaining('20.11.2026 10:30 · Aşı randevusu')
+        ]);
+        expect(links.every((a) => a.getAttribute('target') === '_blank')).toBe(true);
+        expect(links[2].getAttribute('href')).toBe('/panel/appointments/a-1');
+        expect(groups[0].textContent).toContain('Kedi · sahibi Ayşe Yılmaz');
+        expect(groups[0].textContent).toContain('Bu hasta, kalan randevusu yüzünden duruyor.');
+        expect(groups[0].textContent).toContain('Bu randevuya geliş kaydedilmiş. Geliş silinirse randevu da geri alınabilir.');
+        expect(groups[0].textContent).toContain('Dosyada: Randevular, 20655. satır');
+        // Kayıt bilgisi yoksa (izin yok ya da kayıt silinmiş) dosyadaki satıra düşer, bağlantı olmaz.
+        expect(groups[1].textContent).toContain('Müşteri · Müşteriler, 7. satır');
+        expect(groups[1].querySelector('a')).toBeNull();
+    });
+
+    it('silinecek kayıt kalmadıysa onay formu yerine açıklama gösterir', () => {
+        const el = create('PartiallyRolledBack', {
+            preview: preview({ status: 'PartiallyRolledBack', canDeleteUnblockedOnly: false, deletable: { clients: 0, pets: 0, vaccinations: 0 } })
+        });
+
+        expect(el.querySelector('[data-testid="import-rollback-nothing"]')?.textContent).toContain('Geri alınabilecek kayıt kalmadı. Aşağıdaki kayıtlar klinikte kullanıldığı için duruyor.');
+        expect(submitButton(el)).toBeNull();
+        expect(text(el)).toContain('Silinemeyecek kayıtlar');
     });
 });

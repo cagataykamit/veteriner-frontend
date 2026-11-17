@@ -343,13 +343,30 @@ export interface ImportRollbackCountsDto {
     openingBalances?: number;
 }
 
-/** Engelli kayıt: kişisel veri içermez; kaydı oluşturan satırın tablosu ve numarası. */
+/** Engelli kayıt: kaydı oluşturan satırın tablosu ve numarası; `record` yalnız yetkili kullanıcıya (kişisel veri). */
 export interface ImportRollbackBlockedItemDto {
     entity: ImportRollbackEntity;
     id: string;
     table: ImportTable;
     rowNumber: number;
     reasons: string[];
+    /** Geri alma birimi (müşteri ya da ürün); liste grup grup sıralıdır (§7.11). Eski sunucuda yok. */
+    groupId?: string | null;
+    /** Kaydı tanıtan bilgiler; müşteri ve hasta okuma izniyle ve kayıt varsa dolu. */
+    record?: ImportRollbackRecordDto | null;
+}
+
+/** §7.11: alanlar kayıt türüne göre dolar. `atUtc` UTC an, `on` gün (`yyyy-MM-dd`), `kind` randevu ya da hareket türü kodu. */
+export interface ImportRollbackRecordDto {
+    name?: string | null;
+    species?: string | null;
+    petId?: string | null;
+    petName?: string | null;
+    clientId?: string | null;
+    ownerName?: string | null;
+    atUtc?: string | null;
+    on?: string | null;
+    kind?: string | null;
 }
 
 /** `GET .../rollback-preview` (B5, §7.11). */
