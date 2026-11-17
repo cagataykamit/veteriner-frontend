@@ -23,7 +23,7 @@ import type {
 } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
-import { IMPORT_ROW_STATUS_LABELS, IMPORT_VALUE_KIND_LABELS, importErrorCode, importErrorMessage, importIssueDetail, importIssueLabel, importRowPlace, reminderEmailTotal } from '@/app/features/imports/utils/import-labels.utils';
+import { IMPORT_ROW_STATUS_LABELS, IMPORT_VALUE_KIND_LABELS, importErrorCode, importErrorMessage, importIssueDetail, importIssueLabel, importRowPlace, purgedRowsNotice, reminderEmailTotal } from '@/app/features/imports/utils/import-labels.utils';
 import {
     fileBlockers,
     formatCount,
@@ -429,7 +429,7 @@ const OUTCOME_DOT: Readonly<Record<ImportOutcome | 'attention' | 'info', string>
             </div>
 
             @if (p.payloadPurged) {
-                <p-message severity="info" class="w-full mb-4">Satır verisi saklama süresi sonunda silindi; yalnızca sayılar görüntülenebilir.</p-message>
+                <p-message severity="info" class="w-full mb-4" data-testid="import-rows-purged">{{ purgedNotice() }}</p-message>
             }
 
             <!-- Neden listesi: kısa ad, tek cümle açıklama, satır sayısı; tıklanınca o nedenin satırları açılır. -->
@@ -581,6 +581,7 @@ export class ImportReviewStepComponent {
     protected readonly headline = computed(() => reviewHeadline(this.state(), this.totals(), this.required().length));
     /** İkinci (güncelleme) aktarmasında en üstteki özet; ilk aktarmada null. */
     protected readonly overlap = computed(() => (this.preview() ? overlapSummary(this.preview()!) : null));
+    protected readonly purgedNotice = computed(() => purgedRowsNotice(this.batch().status));
     protected readonly emailsNow = computed(() => (this.preview() ? reminderEmailTotal(this.preview()!.reminderImpact) : 0));
 
     protected readonly outcomes = computed(() => [
@@ -852,7 +853,7 @@ export class ImportReviewStepComponent {
             error: (e: unknown) => {
                 this.rows.set([]);
                 this.rowsLoading.set(false);
-                this.rowsError.set(importErrorCode(e) === 'Imports.PayloadPurged' ? 'Satır verisi saklama süresi sonunda silindi.' : importErrorMessage(e, 'Satırlar yüklenemedi.'));
+                this.rowsError.set(importErrorCode(e) === 'Imports.PayloadPurged' ? this.purgedNotice() : importErrorMessage(e, 'Satırlar yüklenemedi.'));
             }
         });
     }

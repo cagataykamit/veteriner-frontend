@@ -139,7 +139,10 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                     <p-message severity="info" class="w-full mb-4" role="status">Aktarma yarıda kalmıştı. Şimdiye dek oluşan kayıtlar geri alınabilir.</p-message>
                 }
 
-                @if (preview(); as p) {
+                @if (b.payloadPurgedAtUtc) {
+                    <!-- Geri alma süresi dolunca satırlar silinir (sözleşme 10.1): önizleme sayıları 0 olur, yanıltmasın. -->
+                    <p-message severity="info" class="w-full mb-4" role="status" data-testid="import-rollback-purged">Bu aktarma kesinleşti, satır ayrıntısı saklanmıyor. Aktarılan kayıt sayıları içe aktarma özetinde durur.</p-message>
+                } @else if (preview(); as p) {
                     <h6 class="mt-0 mb-2">Geri alma özeti</h6>
                     <div class="flex flex-wrap gap-3 mb-3">
                         <ng-container *ngTemplateOutlet="counts; context: { title: 'Silinecek (bağı yok)', c: p.deletable }" />
