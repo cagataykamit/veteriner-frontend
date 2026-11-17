@@ -1,6 +1,6 @@
 import type { ImportPreviewDto, ImportTableSummaryDto } from '@/app/features/imports/models/import-api.model';
 import { importIssueLabel, importIssueNote } from '@/app/features/imports/utils/import-labels.utils';
-import { fileBlockers, importableText, issueReasons, notImportedReasons, reviewHeadline, reviewNextHint, reviewState, reviewTables, reviewTotals } from '@/app/features/imports/utils/import-review.utils';
+import { fileBlockers, importableText, issueReasons, notImportedReasons, overlapSummary, reviewHeadline, reviewNextHint, reviewState, reviewTables, reviewTotals } from '@/app/features/imports/utils/import-review.utils';
 import { IMPORT_VALUE_SKIP } from '@/app/features/imports/utils/import-value-mapping.utils';
 
 const zero: ImportTableSummaryDto = { total: 0, valid: 0, warning: 0, error: 0, willCreate: 0, willMatch: 0, willSkip: 0, created: 0, matched: 0, skipped: 0, failed: 0 };
@@ -104,5 +104,40 @@ describe('import-review.utils', () => {
         expect(importIssueNote('Imports.PetNotFound')).toBe('Hasta dosyada yok ya da aynı sahipte aynı adlı birden çok hasta var.');
         expect(importIssueNote('Imports.PhoneInvalid')).toBeNull();
         expect(importIssueNote('Imports.Bilinmeyen')).toBeNull();
+    });
+
+    describe('overlapSummary (güncelleme aktarması, sözleşme 14.4)', () => {
+        it('ilk aktarmada (ya da eski sunucuda) özet yoktur', () => {
+            expect(overlapSummary(preview())).toBeNull();
+            expect(overlapSummary(preview({ overlap: { isUpdate: false, matchedBySourceId: 0, tables: [] } }))).toBeNull();
+        });
+
+        it('yalnız yenisi olan tabloları sayar', () => {
+            const p = preview({
+                overlap: {
+                    isUpdate: true,
+                    matchedBySourceId: 4310,
+                    tables: [
+                        { table: 'customers', willCreate: 12, alreadyExists: 4365 },
+                        { table: 'pets', willCreate: 3, alreadyExists: 6440 },
+                        { table: 'vaccinations', willCreate: 0, alreadyExists: 16817 },
+                        { table: 'clinicalRecords', willCreate: 1400, alreadyExists: 17233 }
+                    ]
+                }
+            });
+
+            expect(overlapSummary(p)).toBe('Bu dosya önceki aktarmayla büyük ölçüde örtüşüyor: 12 yeni müşteri, 3 yeni hasta, 1.400 yeni klinik kayıt gelecek; geri kalanı zaten var.');
+        });
+
+        it('hiç yeni kayıt yoksa bunu söyler', () => {
+            const p = preview({ overlap: { isUpdate: true, matchedBySourceId: 2, tables: [{ table: 'customers', willCreate: 0, alreadyExists: 2 }] } });
+
+            expect(overlapSummary(p)).toBe('Bu dosya önceki aktarmayla büyük ölçüde örtüşüyor: yeni kayıt yok; hepsi zaten var.');
+        });
+    });
+
+    it('güncelleme aktarması kodlarının Türkçe etiketi var', () => {
+        expect(importIssueLabel('Imports.MatchedBySourceId')).toBe('Önceki aktarmadaki kayıtla eşleşti');
+        expect(importIssueLabel('Imports.BalanceDifference')).toBe('Bakiye sistemdekinden farklı');
     });
 });

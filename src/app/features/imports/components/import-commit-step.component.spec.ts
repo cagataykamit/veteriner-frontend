@@ -239,4 +239,52 @@ describe('ImportCommitStepComponent', () => {
         cmp.release(committedPreview);
         expect(vi.mocked(imports.releaseReminders).mock.lastCall).toEqual(['b1', 9]);
     });
+
+    describe('bakiye farkı (sözleşme 14.3)', () => {
+        const withDifferences = {
+            ...preview,
+            balanceDifferences: {
+                count: 2,
+                totalIncrease: 249.5,
+                totalDecrease: 300,
+                truncated: false,
+                items: [
+                    { rowNumber: 9, clientId: 'c2', clientName: 'Mehmet Kaya', currentBalance: 400, fileBalance: 100, difference: -300 },
+                    { rowNumber: 5, clientId: 'c1', clientName: 'Ayşe Yılmaz', currentBalance: 1250.5, fileBalance: 1500, difference: 249.5 }
+                ]
+            }
+        } as unknown as ImportPreviewDto;
+
+        it('farkları listeler; varsayılan seçim atlamaktır ve commit gövdesine yazılır', () => {
+            imports.commit.mockReturnValue(of(batch('Committing')));
+            const el = create(batch('Validated'), { preview: withDifferences });
+            const section = el.querySelector('[data-testid="import-balance-differences"]');
+
+            expect(section?.textContent).toContain('Bakiye farkı: 2 müşteri');
+            expect(section?.textContent).toContain('Mehmet Kaya');
+            expect(section?.textContent).toContain('Ayşe Yılmaz');
+
+            const cmp = fixture.componentInstance as unknown as { confirmed: boolean; balanceMode: string; commit(): void };
+
+            cmp.confirmed = true;
+            cmp.commit();
+            expect(imports.commit).toHaveBeenLastCalledWith('b1', { validationId: 'v1', onErrors: 'SkipErrorRows', balanceDifferences: 'Skip' });
+
+            cmp.balanceMode = 'Apply';
+            cmp.commit();
+            expect(imports.commit).toHaveBeenLastCalledWith('b1', { validationId: 'v1', onErrors: 'SkipErrorRows', balanceDifferences: 'Apply' });
+        });
+
+        it('fark yoksa bölüm görünmez ve gövdeye alan eklenmez', () => {
+            imports.commit.mockReturnValue(of(batch('Committing')));
+            const el = create(batch('Validated'));
+
+            expect(el.querySelector('[data-testid="import-balance-differences"]')).toBeNull();
+            const cmp = fixture.componentInstance as unknown as { confirmed: boolean; commit(): void };
+
+            cmp.confirmed = true;
+            cmp.commit();
+            expect(imports.commit).toHaveBeenLastCalledWith('b1', { validationId: 'v1', onErrors: 'SkipErrorRows' });
+        });
+    });
 });
