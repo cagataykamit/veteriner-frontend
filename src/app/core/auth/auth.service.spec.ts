@@ -1,6 +1,6 @@
 import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom, of, Subject, throwError } from 'rxjs';
+import { defer, firstValueFrom, of, ReplaySubject, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { readSessionDraft, sessionDraftKey, writeSessionDraft } from '@/app/shared/utils/session-draft.storage';
@@ -213,7 +213,8 @@ describe('AuthService', () => {
         });
 
         it('refreshSession: paralel çağrılar tek istekte birleşir; yeni anahtarlar yazılır', async () => {
-            const response = new Subject<unknown>();
+            // Yanıt kilit alındıktan sonra dinlenir (Web Locks zaman uyumsuz); sonradan abone olana da ulaşsın.
+            const response = new ReplaySubject<unknown>(1);
             const fresh = jwt({ sub: 'u1', exp: nowSec() + 3600 });
 
             localStorage.setItem(REFRESH, 'rt-eski');
@@ -231,6 +232,74 @@ describe('AuthService', () => {
             expect(api.post).toHaveBeenCalledWith(ApiEndpoints.auth.refresh(), { refreshToken: 'rt-eski' });
             expect(auth.getAccessToken()).toBe(fresh);
             expect(localStorage.getItem(REFRESH)).toBe('rt-yeni');
+        });
+
+        describe('sekmeler arası yenileme', () => {
+            /** Sunucu gibi: her refresh token bir kez kullanılır; kullanılan anahtar yeniden gelirse 401. */
+            const singleUseServer = () => {
+                const valid = new Set(['rt-0']);
+                let issued = 0;
+
+                api.post.mockImplementation(((_url: string, body: { refreshToken: string }) =>
+                    defer(async () => {
+                        const accepted = valid.delete(body.refreshToken);
+
+                        await new Promise((resolve) => setTimeout(resolve, 5));
+
+                        if (!accepted) {
+                            throw { status: 401 };
+                        }
+
+                        issued++;
+                        valid.add(`rt-${issued}`);
+
+                        return { accessToken: jwt({ sub: 'u1', n: issued }), refreshToken: `rt-${issued}` };
+                    })) as never);
+            };
+
+            /** Aynı localStorage'ı paylaşan iki sekme; kilit tarayıcının gerçek Web Locks'udur (testler Chromium'da koşar). */
+            const twoTabs = (): [AuthService, AuthService] => [create(), TestBed.runInInjectionContext(() => new AuthService())];
+
+            afterEach(() => Reflect.deleteProperty(navigator, 'locks'));
+
+            it('iki sekme aynı anda yenilerse ikisi de yeni anahtar alır; ikinci sekme ilkinin döndürdüğü anahtarı gönderir', async () => {
+                localStorage.setItem(REFRESH, 'rt-0');
+                singleUseServer();
+                const [tabA, tabB] = twoTabs();
+
+                const results = await Promise.allSettled([firstValueFrom(tabA.refreshSession()), firstValueFrom(tabB.refreshSession())]);
+
+                expect(results.map((r) => r.status)).toEqual(['fulfilled', 'fulfilled']);
+                expect(api.post.mock.calls.map((c) => (c[1] as { refreshToken: string }).refreshToken)).toEqual(['rt-0', 'rt-1']);
+                expect(localStorage.getItem(REFRESH)).toBe('rt-2');
+                expect(tabA.getAccessToken()).not.toBe(tabB.getAccessToken());
+            });
+
+            it('bir sekme yenilerken diğeri çıkarsa çıkış kilidi bekler ve güncel anahtarı kapatır', async () => {
+                localStorage.setItem(REFRESH, 'rt-0');
+                singleUseServer();
+                const [tabA, tabB] = twoTabs();
+
+                await Promise.allSettled([firstValueFrom(tabA.refreshSession()), firstValueFrom(tabB.logoutCurrentSession())]);
+
+                expect(api.post.mock.calls.map((c) => [c[0], (c[1] as { refreshToken: string }).refreshToken])).toEqual([
+                    [ApiEndpoints.auth.refresh(), 'rt-0'],
+                    [ApiEndpoints.auth.logout(), 'rt-1']
+                ]);
+                expect(localStorage.getItem(REFRESH)).toBeNull();
+            });
+
+            it('Web Locks yoksa iki sekme aynı anahtarı gönderir ve biri reddedilir (kilidin kapattığı yarış)', async () => {
+                Object.defineProperty(navigator, 'locks', { configurable: true, value: undefined });
+                localStorage.setItem(REFRESH, 'rt-0');
+                singleUseServer();
+                const [tabA, tabB] = twoTabs();
+
+                const results = await Promise.allSettled([firstValueFrom(tabA.refreshSession()), firstValueFrom(tabB.refreshSession())]);
+
+                expect(results.map((r) => r.status).sort()).toEqual(['fulfilled', 'rejected']);
+                expect(api.post.mock.calls.map((c) => (c[1] as { refreshToken: string }).refreshToken)).toEqual(['rt-0', 'rt-0']);
+            });
         });
 
         it('refreshSession: hata sonrası sonraki çağrı yeni istek atar', async () => {
