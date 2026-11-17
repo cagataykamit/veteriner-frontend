@@ -100,7 +100,7 @@ export const EVET_UPLOAD_FILES: readonly EVetUploadFileDef[] = [
         field: 'evetVaccineReportFile',
         extension: '.csv',
         requirement: 'isteğe bağlı',
-        menu: 'Rapor > Resmi > Aşı Bilgisi',
+        menu: 'Rapor > Resmi > Aşı Bilgi',
         instruction: "Tarih aralığını E-vet'i kullanmaya başladığınız tarihten bugüne seçip Csv olarak indirin. Aşıların seri numarasını ve ürün adını ekler.",
         label: 'Aşı Bilgisi (.csv)',
         contents: 'Aşıların seri numarası ve ürün adı'
