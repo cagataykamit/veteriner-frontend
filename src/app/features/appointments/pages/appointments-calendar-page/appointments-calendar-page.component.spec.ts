@@ -1,9 +1,11 @@
 import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import { BehaviorSubject, of } from 'rxjs';
+import { BehaviorSubject, NEVER, of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { APPOINTMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { APPOINTMENTS_CREATE_CLAIM, VACCINATIONS_CREATE_CLAIM, VACCINATIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
+import type { VaccinationCalendarItemVm } from '@/app/entities/vaccination/models/vaccination-calendar.model';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
@@ -39,29 +41,64 @@ const appt = (id: string, hm: string, vet: string | null, extra: Partial<Appoint
     clientName: 'Sahip',
     veterinarianUserId: vet,
     veterinarianName: vet ? `Dr. ${vet}` : '',
+    reasonName: null,
+    notes: null,
     ...extra
 });
 
 const week = [1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({ dayOfWeek, dayLabel: '', isClosed: false, opensAt: '09:00', closesAt: '19:00', breakStartsAt: '12:30', breakEndsAt: '13:30' }));
 
+const vaccine = (id: string, dateKey: string, state: VaccinationCalendarItemVm['state'], kind: VaccinationCalendarItemVm['kind'] = 'NextDue'): VaccinationCalendarItemVm => ({
+    key: `${id}:${kind}`,
+    vaccinationId: id,
+    kind,
+    state,
+    dateKey,
+    atUtc: `${dateKey}T09:00:00Z`,
+    petId: `pet-${id}`,
+    petName: `Aşılı-${id}`,
+    clientId: `client-${id}`,
+    clientName: 'Sahip',
+    vaccineDefinitionId: 'def-karma',
+    vaccineName: 'Karma',
+    notes: null
+});
+
 describe('AppointmentsCalendarPageComponent — saat ızgarası (B1)', () => {
     let getCalendarAppointments: Mock;
+    let getCalendarVaccinations: Mock;
+    let getCalendarSummary: Mock;
+    let getVaccineSummary: Mock;
     let navigate: Mock;
     let params: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
+    let claims: Set<string>;
+    let myClinics: { id: string; name: string }[];
+    let selectClinic: Mock;
+
+    beforeEach(() => {
+        claims = new Set([APPOINTMENTS_CREATE_CLAIM]);
+        myClinics = [{ id: 'c1', name: 'Merkez' }];
+        // Başarıda sayfa yeniden yüklenir; testte yanıt gelmez.
+        selectClinic = vi.fn().mockReturnValue(NEVER);
+        localStorage.removeItem('vetinity.calendar.filters');
+    });
 
     afterEach(() => vi.useRealTimers());
 
-    const create = (items: AppointmentCalendarItemVm[], query: Record<string, string> = {}) => {
+    const create = (items: AppointmentCalendarItemVm[], query: Record<string, string> = {}, vaccines: VaccinationCalendarItemVm[] = []) => {
         vi.useFakeTimers({ toFake: ['Date'] });
         vi.setSystemTime(new Date('2026-11-16T10:40:00+03:00'));
         getCalendarAppointments = vi.fn().mockReturnValue(of(items));
+        getCalendarVaccinations = vi.fn().mockReturnValue(of(vaccines));
+        getCalendarSummary = vi.fn().mockReturnValue(of(new Map([['2026-11-16', { dateKey: '2026-11-16', total: 3, dueToday: 3, upcoming: 0, overdue: 0, completed: 0 }]])));
+        getVaccineSummary = vi.fn().mockReturnValue(of(new Map()));
         params = new BehaviorSubject(convertToParamMap(query));
         TestBed.configureTestingModule({
             imports: [AppointmentsCalendarPageComponent],
             providers: [
                 provideRouter([]),
                 { provide: ActivatedRoute, useValue: { queryParamMap: params.asObservable(), snapshot: { queryParamMap: convertToParamMap(query) } } },
-                { provide: AppointmentsService, useValue: { getCalendarAppointments } },
+                { provide: AppointmentsService, useValue: { getCalendarAppointments, getCalendarSummary } },
                 { provide: ClinicsService, useValue: { getWorkingHours: () => of(week), getAppointmentSettings: () => of({ slotIntervalMinutes: 15 }) } },
                 {
                     provide: VisitsService,
@@ -75,7 +112,11 @@ describe('AppointmentsCalendarPageComponent — saat ızgarası (B1)', () => {
                 },
                 { provide: AppointmentReasonsService, useValue: { list: () => of([]) } },
                 { provide: OnlineBookingService, useValue: { availability: () => of([]) } },
-                { provide: AuthService, useValue: { getClinicId: () => 'c1', hasOperationClaim: (c: string) => c === APPOINTMENTS_CREATE_CLAIM } },
+                { provide: VaccinationsService, useValue: { getCalendarVaccinations, getCalendarSummary: getVaccineSummary } },
+                {
+                    provide: AuthService,
+                    useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez', hasOperationClaim: (c: string) => claims.has(c), getMyClinics: () => of(myClinics), selectClinic }
+                },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
         });
@@ -93,7 +134,9 @@ describe('AppointmentsCalendarPageComponent — saat ızgarası (B1)', () => {
         expect(el.querySelector('[data-testid="calendar-range-title"]')?.textContent).toContain('Bugün · Pazartesi');
         expect(cmp.gridColumns().map((c) => c.title)).toEqual(['Dr. Ayşe', 'Dr. Mert', 'Hekim seçilmedi']);
         expect(el.querySelector('[data-testid="calendar-block-a"]')?.textContent).toContain('Hasta-a');
-        expect(getCalendarAppointments).toHaveBeenCalledWith({ dateFromUtc: '2026-11-15T21:00:00.000Z', dateToUtc: '2026-11-22T21:00:00.000Z', status: undefined });
+        expect(getCalendarAppointments).toHaveBeenCalledWith(
+            expect.objectContaining({ dateFromUtc: '2026-11-15T21:00:00.000Z', dateToUtc: '2026-11-22T21:00:00.000Z', status: undefined, appointmentTypes: [], states: [], withoutVeterinarian: false })
+        );
     });
 
     it('aynı hekimde üst üste binen randevular çakışma olarak işaretlenir; farklı hekimler işaretlenmez', () => {
@@ -133,6 +176,154 @@ describe('AppointmentsCalendarPageComponent — saat ızgarası (B1)', () => {
         expect(cmp.agendaGaps()[0]).toEqual({ start: 570, end: 750 });
         el.querySelector<HTMLButtonElement>('[data-testid="agenda-gap"]')!.click();
         expect(navigate).toHaveBeenCalledWith(['/panel/appointments/new'], { queryParams: { date: '2026-11-16', time: '09:30', vet: 'v1' } });
+    });
+
+    it('aşı katmanı: aşılar günün üst şeridinde; randevu sayılmaz (çakışma ve boş saatler değişmez)', () => {
+        claims.add(VACCINATIONS_READ_CLAIM);
+        const { el, cmp } = create([appt('a', '09:00', 'v1')], {}, [vaccine('x', '2026-11-16', 'DueToday'), vaccine('y', '2026-11-16', 'Overdue', 'Planned'), vaccine('z', '2026-11-18', 'Upcoming')]);
+
+        expect(getCalendarVaccinations).toHaveBeenCalledWith({ dateFromUtc: '2026-11-15T21:00:00.000Z', dateToUtc: '2026-11-22T21:00:00.000Z', states: [] });
+        const strip = el.querySelector('[data-testid="calendar-all-day"]');
+
+        expect(strip?.textContent).toContain('Aşılı-x');
+        expect(strip?.textContent).not.toContain('Aşılı-z');
+        // Gecikmiş önce, sonra bugün.
+        expect(cmp.selectedDayVaccines().map((v) => v.vaccinationId)).toEqual(['y', 'x']);
+        expect(cmp.gridColumns().map((c) => c.title)).toEqual(['Dr. Ayşe', 'Dr. Mert']);
+        expect(cmp.conflicts().size).toBe(0);
+        expect(el.querySelector('[data-testid="agenda-vaccines"]')?.textContent).toContain('Aşılı-x');
+    });
+
+    it('filtreler adres çubuğundan sunucuya gider: tür ve durum; "Planlı aşılar" seçili değilse aşı istenmez', () => {
+        claims.add(VACCINATIONS_READ_CLAIM);
+        const { el, cmp } = create([], { types: '2,5', states: 'Upcoming,DueToday', vet: 'none' }, [vaccine('x', '2026-11-16', 'DueToday')]);
+
+        expect(getCalendarAppointments).toHaveBeenCalledWith(
+            expect.objectContaining({ appointmentTypes: [2, 5], states: ['DueToday', 'Upcoming'], withoutVeterinarian: true, veterinarianUserId: undefined })
+        );
+        expect(getCalendarVaccinations).not.toHaveBeenCalled();
+        expect(el.querySelector('[data-testid="calendar-all-day"]')).toBeNull();
+        expect(cmp.gridColumns().map((c) => c.title)).toEqual(['Hekim seçilmedi']);
+        expect(cmp.agendaGaps()).toEqual([]);
+    });
+
+    it('"Planlı aşılar" ve durum seçiliyse aşılar durum filtresiyle istenir; yalnız aşı seçiliyse randevu istenmez', () => {
+        claims.add(VACCINATIONS_READ_CLAIM);
+        create([], { types: 'asi', states: 'Overdue' });
+
+        expect(getCalendarAppointments).not.toHaveBeenCalled();
+        expect(getCalendarVaccinations).toHaveBeenCalledWith(expect.objectContaining({ states: ['Overdue'] }));
+    });
+
+    it('belirli bir hekim seçiliyken aşı istenmez (aşının hekimi yok) ve yalnız o hekimin sütunu çizilir', () => {
+        claims.add(VACCINATIONS_READ_CLAIM);
+        const { cmp } = create([appt('a', '09:00', 'v1')], { vet: 'v1' });
+
+        expect(getCalendarAppointments).toHaveBeenCalledWith(expect.objectContaining({ veterinarianUserId: 'v1', withoutVeterinarian: false }));
+        expect(getCalendarVaccinations).not.toHaveBeenCalled();
+        expect(cmp.gridColumns().map((c) => c.title)).toEqual(['Dr. Ayşe']);
+    });
+
+    it('filtre değişimi adres çubuğuna yazılır ve hatırlanır; adres boşsa son seçim geri yüklenir', () => {
+        const { cmp } = create([]);
+
+        cmp.applyFilters({ vet: null, types: ['1'], states: ['Overdue'] });
+        expect(navigate).toHaveBeenLastCalledWith(['/panel/appointments/calendar'], { queryParams: expect.objectContaining({ types: '1', states: 'Overdue', vet: undefined }) });
+        expect(localStorage.getItem('vetinity.calendar.filters')).toContain('types=1');
+
+        TestBed.resetTestingModule();
+        create([]);
+        expect(navigate).toHaveBeenCalledWith(['/panel/appointments/calendar'], { queryParams: expect.objectContaining({ types: '1', states: 'Overdue' }), replaceUrl: true });
+    });
+
+    it('şube seçimi yalnız birden çok klinikte görünür ve aktif kliniği değiştirir', () => {
+        myClinics = [{ id: 'c1', name: 'Merkez' }];
+        expect(create([]).el.querySelector('#calFltClinicInput')).toBeNull();
+
+        TestBed.resetTestingModule();
+        myClinics = [
+            { id: 'c1', name: 'Merkez' },
+            { id: 'c2', name: 'Şube 2' }
+        ];
+        const { el, cmp } = create([]);
+
+        expect(el.textContent).toContain('Şube');
+        cmp.switchClinic({ id: 'c2', name: 'Şube 2' });
+        expect(selectClinic).toHaveBeenCalledWith('c2', 'Şube 2');
+    });
+
+    it('aşı yetkisi yoksa "Planlı aşılar" seçeneği yok ve aşı istenmez', () => {
+        const { cmp } = create([]);
+
+        expect(getCalendarVaccinations).not.toHaveBeenCalled();
+        expect(cmp.canReadVaccinations).toBe(false);
+    });
+
+    it('ay görünümü: ızgaranın tüm günleri tek özet isteğinde, filtrelerle; kayıt çekilmez; hücre o günü açar', () => {
+        claims.add(VACCINATIONS_READ_CLAIM);
+        const { el, cmp } = create([], { view: 'month', states: 'DueToday', vet: 'none' });
+
+        expect(cmp.rangeTitle()).toBe('Kasım 2026');
+        expect(getCalendarSummary).toHaveBeenCalledWith(
+            expect.objectContaining({ dateFromUtc: '2026-10-25T21:00:00.000Z', dateToUtc: '2026-12-06T21:00:00.000Z', states: ['DueToday'], withoutVeterinarian: true })
+        );
+        expect(getVaccineSummary).toHaveBeenCalledWith({ dateFromUtc: '2026-10-25T21:00:00.000Z', dateToUtc: '2026-12-06T21:00:00.000Z', states: ['DueToday'] });
+        expect(getCalendarAppointments).not.toHaveBeenCalled();
+        expect(el.querySelector('[data-testid="calendar-month-day-2026-11-16"]')?.textContent).toContain('3 randevu');
+
+        el.querySelector<HTMLButtonElement>('[data-testid="calendar-month-day-2026-11-20"]')!.click();
+        expect(navigate).toHaveBeenLastCalledWith(['/panel/appointments/calendar'], { queryParams: expect.objectContaining({ view: undefined, date: '2026-11-20', states: 'DueToday', vet: 'none' }) });
+    });
+
+    it('ay görünümünde önceki/sonraki bir ay kaydırır; görünüm adreste "month"', () => {
+        const { cmp } = create([], { view: 'month' });
+
+        cmp.previous();
+        expect(navigate).toHaveBeenLastCalledWith(['/panel/appointments/calendar'], { queryParams: expect.objectContaining({ view: 'month', date: '2026-10-01' }) });
+        cmp.next();
+        expect(navigate).toHaveBeenLastCalledWith(['/panel/appointments/calendar'], { queryParams: expect.objectContaining({ view: 'month', date: '2026-12-01' }) });
+    });
+
+    it('sonraki aşıdan "Aşıyı yap" hasta ve aşı dolu yeni aşı; "Randevu ver" aşılama türü ve not dolu yeni randevu açar', () => {
+        claims.add(VACCINATIONS_READ_CLAIM).add(VACCINATIONS_CREATE_CLAIM);
+        const { cmp } = create([]);
+        const v = vaccine('x', '2026-11-18', 'Upcoming');
+
+        expect(cmp.canApplyVaccine(v)).toBe(true);
+        cmp.applyVaccine(v);
+        expect(navigate).toHaveBeenCalledWith(['/panel/vaccinations/new'], {
+            queryParams: expect.objectContaining({ clientId: 'client-x', petId: 'pet-x', vaccineDefinitionId: 'def-karma', status: 1 })
+        });
+
+        cmp.bookForVaccine(v);
+        expect(navigate).toHaveBeenCalledWith(['/panel/appointments/new'], {
+            queryParams: expect.objectContaining({ clientId: 'client-x', petId: 'pet-x', date: '2026-11-18', type: 1, notes: 'Aşı: Karma' })
+        });
+
+        cmp.bookForVaccine(vaccine('old', '2026-11-10', 'Overdue'));
+        expect(navigate).toHaveBeenLastCalledWith(['/panel/appointments/new'], { queryParams: expect.objectContaining({ date: undefined }) });
+    });
+
+    it('randevuya tıklayınca sayfadan çıkılmaz; ayrıntı pencerede açılır, düzenleme aynı pencerede', () => {
+        const { cmp } = create([appt('a', '09:00', 'v1')]);
+
+        cmp.openDetail('a');
+        expect(cmp.dialog()).toEqual({ id: 'a', mode: 'detail' });
+        expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('pencere kapanınca takvim yalnız değişiklik olduysa yenilenir', () => {
+        const { cmp } = create([appt('a', '09:00', 'v1')]);
+
+        cmp.dialog.set({ id: 'a', mode: 'detail' });
+        cmp.closeDialog();
+        expect(getCalendarAppointments).toHaveBeenCalledTimes(1);
+
+        cmp.dialog.set({ id: 'a', mode: 'detail' });
+        cmp.calendarDirty = true;
+        cmp.closeDialog();
+        expect(getCalendarAppointments).toHaveBeenCalledTimes(2);
+        expect(cmp.dialog()).toBeNull();
     });
 
     it('zamanı geçmiş preset: eski gruplu liste', () => {

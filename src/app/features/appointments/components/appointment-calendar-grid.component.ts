@@ -1,6 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { afterRenderEffect, ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output } from '@angular/core';
 import { appointmentStatusEnumLabel, parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { type CalendarBlock, clockLabel, isOpenAt, type WorkingDay } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-grid.utils';
+import type { VaccinationCalendarItemVm } from '@/app/entities/vaccination/models/vaccination-calendar.model';
+import { CalendarBubbleDirective, type CalendarBubbleData } from '@/app/features/appointments/components/calendar-bubble';
+import { CalendarVaccineStripComponent, type VaccinePick } from '@/app/features/appointments/components/calendar-vaccine-strip.component';
+import { appointmentBubble } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-layer.utils';
 
 /** Izgara sütunu: gün görünümünde bir hekim (ya da "Hekim seçilmedi"), hafta görünümünde bir gün. */
 export interface CalendarGridColumn {
@@ -20,6 +24,17 @@ export interface CalendarGridColumn {
     opensDay: boolean;
 }
 
+/** Üst şerit hücresi: hafta görünümünde gün başına bir, gün görünümünde tüm sütunlara yayılan tek hücre. */
+export interface CalendarAllDayCell {
+    key: string;
+    span: number;
+    items: VaccinationCalendarItemVm[];
+    /** Kapalıyken gösterilen çip sayısı. */
+    limit: number;
+    /** Dar hafta hücresinde çipler alt alta, tam genişlik. */
+    stacked: boolean;
+}
+
 export interface CalendarSlotPick {
     column: CalendarGridColumn;
     minute: number;
@@ -36,6 +51,7 @@ const VET_TONES = ['teal', 'violet', 'orange', 'sky', 'rose', 'lime'] as const;
 @Component({
     selector: 'app-appointment-calendar-grid',
     standalone: true,
+    imports: [CalendarBubbleDirective, CalendarVaccineStripComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="overflow-x-auto rounded-border border border-surface" data-testid="calendar-grid">
@@ -70,7 +86,20 @@ const VET_TONES = ['teal', 'violet', 'orange', 'sky', 'rose', 'lime'] as const;
                         </button>
                     }
                 </div>
-                <div class="grid" [style.grid-template-columns]="template()">
+                @if (allDay(); as cells) {
+                    <!-- Aşı katmanı: günün üst şeridi; saat dilimine yerleşmez, hekim sütunlu görünümde tüm sütunlara yayılır. -->
+                    <div class="grid border-b border-surface bg-surface-50 dark:bg-surface-950" [style.grid-template-columns]="template()" data-testid="calendar-all-day">
+                        <div class="text-[11px] text-muted-color px-1 py-1.5" title="Aşılar randevu sayılmaz">aşı</div>
+                        @for (cell of cells; track cell.key) {
+                            <div class="border-l border-surface px-1.5 py-1 min-w-0" [style.grid-column]="'span ' + cell.span">
+                                @if (cell.items.length) {
+                                    <app-calendar-vaccine-strip [items]="cell.items" [limit]="cell.limit" [stacked]="cell.stacked" [clinicName]="clinicName()" (pick)="vaccinePick.emit($event)" />
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                <div class="grid" [style.grid-template-columns]="template()" data-grid-body>
                     <div class="relative" [style.height.px]="height()">
                         @for (m of hourMarks(); track m) {
                             <div class="absolute right-1 text-[11px] text-muted-color tabular-nums -translate-y-1/2" [style.top.px]="y(m)">{{ clock(m) }}</div>
@@ -106,7 +135,8 @@ const VET_TONES = ['teal', 'violet', 'orange', 'sky', 'rose', 'lime'] as const;
                                         type="button"
                                         class="w-full h-full text-left rounded-md border border-surface border-l-4 px-2 py-1 overflow-hidden cursor-pointer shadow-sm hover:shadow-md"
                                         [class]="blockClass(b)"
-                                        [title]="hint(b)"
+                                        [appCalendarBubble]="bubble(b)"
+                                        [attr.aria-label]="hint(b)"
                                         (click)="open.emit(b.item.id)"
                                         [attr.data-testid]="'calendar-block-' + b.item.id"
                                     >
@@ -125,7 +155,7 @@ const VET_TONES = ['teal', 'violet', 'orange', 'sky', 'rose', 'lime'] as const;
                                         @if (b.end - b.start >= 45 && b.lanes === 1) {
                                             <span class="block text-xs leading-4 text-muted-color truncate"
                                                 >{{ b.item.appointmentTypeLabel }}
-                                                @if (byVet() && b.item.veterinarianName) {
+                                                @if (byVet() && b.item.veterinarianUserId) {
                                                     · {{ b.item.veterinarianName }}
                                                 }
                                             </span>
@@ -164,10 +194,47 @@ export class AppointmentCalendarGridComponent {
     readonly nowMinute = input<number | null>(null);
     /** Gün görünümünde sütun en az bu genişlikte (hekim çoksa yatay kaydırma). */
     readonly minColumnPx = input(180);
+    /** Aşı katmanı hücreleri (gün görünümünde tek hücre tüm sütunlara yayılır); `null` ise şerit çizilmez. */
+    readonly allDay = input<CalendarAllDayCell[] | null>(null);
+    /** Ayrıntı balonundaki klinik adı. */
+    readonly clinicName = input('');
 
     readonly slotPick = output<CalendarSlotPick>();
     readonly open = output<string>();
     readonly dayOpen = output<string>();
+    readonly vaccinePick = output<VaccinePick>();
+    /** İlk ekranda gösterilecek dakika (ilk kayıt ya da açılış); `scrollKey` her değiştiğinde bir kez, hedef görünmüyorsa sayfa kaydırılır. */
+    readonly scrollToMinute = input<number | null>(null);
+    readonly scrollKey = input<string>('');
+
+    private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+    private lastScrollKey: string | null = null;
+
+    constructor() {
+        afterRenderEffect(() => {
+            const key = this.scrollKey();
+            const minute = this.scrollToMinute();
+
+            if (minute === null || key === this.lastScrollKey) {
+                return;
+            }
+
+            this.lastScrollKey = key;
+            const body = this.host.nativeElement.querySelector('[data-grid-body]');
+
+            // Telefonda ızgara gizli (ajanda gösterilir); gizli öğede kaydırma yapılmaz.
+            if (!body || body.getClientRects().length === 0) {
+                return;
+            }
+
+            const top =body.getBoundingClientRect().top + window.scrollY + this.y(Math.max(minute, this.start()));
+
+            // Yalnız hedef ekranın altında kalıyorsa: üst çubuk ve sütun başlığının altına gelecek kadar.
+            if (top > window.scrollY + window.innerHeight - 120) {
+                window.scrollTo({ top: Math.max(0, top - 220) });
+            }
+        });
+    }
 
     protected readonly pxPerMin = PX_PER_MIN;
     protected readonly height = computed(() => (this.end() - this.start()) * PX_PER_MIN);
@@ -216,6 +283,10 @@ export class AppointmentCalendarGridComponent {
         const parts = [this.range(b), `${b.item.petName} (${b.item.clientName})`, b.item.appointmentTypeLabel, b.item.veterinarianName || 'Hekim seçilmedi', b.item.statusLabel];
 
         return parts.filter((p) => !!p).join(' · ');
+    }
+
+    protected bubble(b: CalendarBlock): CalendarBubbleData {
+        return appointmentBubble(b.item, this.clinicName());
     }
 
     protected blockClass(b: CalendarBlock): string {

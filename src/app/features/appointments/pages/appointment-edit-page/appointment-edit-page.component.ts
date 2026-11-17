@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/entities/client/components/client-s
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, DestroyRef, inject, input, OnInit, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -69,7 +69,9 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                 <app-error-state [detail]="loadError()!" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header [categoryLink]="backLink()" [categoryLinkLabel]="backLabel()" title="Randevuyu Düzenle" description="Randevu kaydını güncelleyin." />
+            @if (!embeddedId()) {
+                <app-page-header [categoryLink]="backLink()" [categoryLinkLabel]="backLabel()" title="Randevuyu Düzenle" description="Randevu kaydını güncelleyin." />
+            }
 
             <div class="card">
                 @if (ro.mutationBlocked()) {
@@ -127,7 +129,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                             <div class="flex min-h-10 items-center" role="group" aria-labelledby="statusLabel" data-testid="appointment-status">
                                 <app-status-tag [label]="statusLabel(form.controls.status.value)" [severity]="statusSeverity(form.controls.status.value)" />
                             </div>
-                            <small class="block text-muted-color mt-1">Durum bu formdan değiştirilmez; iptal randevu listesinden, tamamlama muayeneyle yapılır.</small>
+                            <small class="block text-muted-color mt-1">Durum bu formdan değiştirilmez; iptal randevu ayrıntısından ya da listeden, tamamlama muayeneyle yapılır.</small>
                             @if (apiFieldErrors().status) {
                                 <small class="block text-danger">{{ apiFieldErrors().status }}</small>
                             }
@@ -178,6 +180,10 @@ export class AppointmentEditPageComponent implements OnInit, HasUnsavedChanges {
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
+    /** Pencere kipi (takvim): kimlik rotadan değil buradan; kayıt `saved`, vazgeçme `closed` ile çağırana döner. */
+    readonly embeddedId = input<string | null>(null);
+    readonly saved = output<void>();
+    readonly closed = output<void>();
     /** Yüklenen randevunun nedeni (pasif olsa da seçenekte kalır). */
     readonly loadedReasonId = signal<string | null>(null);
 
@@ -249,7 +255,7 @@ export class AppointmentEditPageComponent implements OnInit, HasUnsavedChanges {
         this.activeClinicLabel.set(this.auth.getClinicName() ?? this.auth.getClinicId() ?? 'Belirlenmedi');
         this.loadSlotIntervalHint();
         this.loadWorkingHours();
-        const id = this.route.snapshot.paramMap.get('id')?.trim() ?? '';
+        const id = this.embeddedId()?.trim() || (this.route.snapshot.paramMap.get('id')?.trim() ?? '');
 
         if (!id) {
             this.loadError.set('Geçersiz randevu.');
@@ -399,6 +405,13 @@ export class AppointmentEditPageComponent implements OnInit, HasUnsavedChanges {
             next: () => {
                 this.submitting.set(false);
                 this.form.markAsPristine();
+
+                if (this.embeddedId()) {
+                    this.saved.emit();
+
+                    return;
+                }
+
                 void this.router.navigate(['/panel/appointments', this.appointmentId], {
                     queryParams: {
                         saved: '1',
@@ -432,6 +445,12 @@ export class AppointmentEditPageComponent implements OnInit, HasUnsavedChanges {
     }
 
     goDetail(): void {
+        if (this.embeddedId()) {
+            this.closed.emit();
+
+            return;
+        }
+
         const safeUrl = this.returnUrl();
 
         if (safeUrl) {

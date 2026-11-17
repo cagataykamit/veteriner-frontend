@@ -486,12 +486,23 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
 
     /**
      * Takvimde boş hücre / boş saat: `date` (yyyy-MM-dd), `time` (HH:mm) ve `vet` (hekim kimliği) formu doldurur. Tarih geldiyse "ilk
-     * uygun saat" önerisi yapılmaz; saat, o günün seçeneklerinde yoksa saat seçimi boş kalır.
+     * uygun saat" önerisi yapılmaz; saat, o günün seçeneklerinde yoksa saat seçimi boş kalır. Takvimdeki aşıdan "Randevu ver":
+     * `type` (randevu türü sayısı) ve `notes` da gelir.
      */
     private prefillScheduleFromRoute(query: ParamMap): void {
         const date = query.get('date')?.trim() ?? '';
         const time = query.get('time')?.trim() ?? '';
         const vet = query.get('vet')?.trim() ?? '';
+        const type = Number(query.get('type'));
+        const notes = query.get('notes')?.trim() ?? '';
+
+        if (query.has('type') && this.typeOptions.some((o) => o.value === type)) {
+            this.form.controls.appointmentType.setValue(type);
+        }
+
+        if (notes) {
+            this.form.controls.notes.setValue(notes.slice(0, this.notesMaxLength));
+        }
 
         if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
             this.form.controls.scheduledDate.setValue(date);

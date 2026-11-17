@@ -74,6 +74,14 @@ export class RouteEntityLoader<T> {
             .subscribe();
     }
 
+    /** Rota yerine verilen kimlikle yükler (sayfa bileşeni pencere içinde kullanıldığında); sonra `reload()` aynı kimlikle çalışır. */
+    initWithId(id: string): void {
+        this.currentId = id;
+        this.loading.set(true);
+        this.error.set(null);
+        this.fetch(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
+    }
+
     reload(): void {
         const id = this.currentId;
 

@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
@@ -22,7 +22,17 @@ import type {
     VaccinationEditVm,
     VaccinationListItemVm
 } from '@/app/entities/vaccination/models/vaccination-vm.model';
+import { mapVaccinationCalendarItemsToVm } from '@/app/entities/vaccination/data/vaccination-calendar.mapper';
+import type { VaccinationCalendarItemDto, VaccinationCalendarItemVm } from '@/app/entities/vaccination/models/vaccination-calendar.model';
+import { type CalendarDaySummaryDto, type CalendarDaySummaryVm, mapCalendarDaySummaries } from '@/app/entities/appointment/models/calendar-day-summary.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
+
+/** Takvim aşı katmanı sorgusu: `[dateFromUtc, dateToUtc)`, aktif klinik; `states` durum filtresi (sözleşme §6). */
+export interface VaccinationCalendarQuery {
+    dateFromUtc: string;
+    dateToUtc: string;
+    states?: readonly string[];
+}
 
 export interface VaccinationsPagedVm {
     items: VaccinationListItemVm[];
@@ -51,6 +61,37 @@ export class VaccinationsService {
                 throwError(() => new Error(messageFromHttpError(err, 'Aşı listesi yüklenemedi.')))
             )
         );
+    }
+
+    /** Takvim aşı katmanı (`[dateFromUtc, dateToUtc)`, aktif klinik); `states` durum filtresi (sözleşme §6). */
+    getCalendarVaccinations(query: VaccinationCalendarQuery): Observable<VaccinationCalendarItemVm[]> {
+        return this.api.get<VaccinationCalendarItemDto[]>(ApiEndpoints.vaccinations.calendar(), this.calendarParams(query)).pipe(
+            map((res) => mapVaccinationCalendarItemsToVm(res)),
+            catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Takvim aşıları yüklenemedi.'))))
+        );
+    }
+
+    /** Ay görünümü: aşı katmanı gün başına sayı (sözleşme §7). */
+    getCalendarSummary(query: VaccinationCalendarQuery): Observable<Map<string, CalendarDaySummaryVm>> {
+        return this.api.get<CalendarDaySummaryDto[]>(ApiEndpoints.vaccinations.calendarSummary(), this.calendarParams(query)).pipe(
+            map((res) => mapCalendarDaySummaries(res)),
+            catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Takvim aşı özeti yüklenemedi.'))))
+        );
+    }
+
+    private calendarParams(query: VaccinationCalendarQuery): HttpParams {
+        let params = new HttpParams().set('dateFromUtc', query.dateFromUtc).set('dateToUtc', query.dateToUtc);
+        const clinicId = this.auth.getClinicId()?.trim();
+
+        if (clinicId) {
+            params = params.set('clinicId', clinicId);
+        }
+
+        for (const s of query.states ?? []) {
+            params = params.append('states', s);
+        }
+
+        return params;
     }
 
     getVaccinationById(id: string): Observable<VaccinationDetailVm> {

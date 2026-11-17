@@ -152,20 +152,29 @@ export function isOpenAt(day: WorkingDay | null, minute: number): boolean {
     return !(day.breakStart !== null && day.breakEnd !== null && minute >= day.breakStart && minute < day.breakEnd);
 }
 
-/** Izgaranın saat aralığı: haftanın en erken açılışı – en geç kapanışı (tam saate), dışarıda kalan randevular da sığar. */
-export function gridBounds(hours: readonly ClinicWorkingHourVm[], blocks: readonly CalendarBlock[]): { start: number; end: number } {
-    const days = [0, 1, 2, 3, 4, 5, 6].map((dow) => hours.find((h) => h.dayOfWeek === dow)).filter((h): h is ClinicWorkingHourVm => !!h && !h.isClosed);
-    const opens = days.map((h) => minutesOf(h.opensAt)).filter((m): m is number => m !== null);
-    const closes = days.map((h) => minutesOf(h.closesAt)).filter((m): m is number => m !== null);
-    let start = opens.length ? Math.min(...opens) : DEFAULT_GRID_START;
-    let end = closes.length ? Math.max(...closes) : DEFAULT_GRID_END;
+/**
+ * Izgaranın saat aralığı (tam saate), yalnız gösterilen günlerin çalışma saatinden: başlangıç çalışma saatinin başı; çalışma saati
+ * girilmemişse ilk kaydın saati; o da yoksa 08:00. Çalışma saati dışında kalan randevular da sığar.
+ */
+export function gridBounds(days: readonly (WorkingDay | null)[], blocks: readonly CalendarBlock[]): { start: number; end: number } {
+    const open = days.filter((d): d is WorkingDay => !!d);
+    const firstBlock = blocks.length ? Math.min(...blocks.map((b) => b.start)) : null;
+    let start = open.length ? Math.min(...open.map((d) => d.open)) : (firstBlock ?? DEFAULT_GRID_START);
+    let end = open.length ? Math.max(...open.map((d) => d.close)) : DEFAULT_GRID_END;
 
     for (const b of blocks) {
         start = Math.min(start, b.start);
         end = Math.max(end, b.end);
     }
 
-    return { start: Math.floor(start / 60) * 60, end: Math.min(24 * 60, Math.ceil(end / 60) * 60) };
+    start = Math.floor(start / 60) * 60;
+
+    return { start, end: Math.min(24 * 60, Math.max(start + 60, Math.ceil(end / 60) * 60)) };
+}
+
+/** İlk ekranda gösterilecek dakika: görünümdeki ilk kayıt; kayıt yoksa seçili günün açılışı; o da yoksa kaydırma yok. */
+export function firstScrollMinute(blocks: readonly CalendarBlock[], selectedDay: WorkingDay | null): number | null {
+    return blocks.length ? Math.min(...blocks.map((b) => b.start)) : (selectedDay?.open ?? null);
 }
 
 /** Çalışma saatinde, mola ve verilen randevular dışında kalan aralıklar (iptaller boş sayılır). */
@@ -265,4 +274,18 @@ export function durationText(minutes: number): string {
     const m = minutes % 60;
 
     return h && m ? `${h} sa ${m} dk` : h ? `${h} sa` : `${m} dk`;
+}
+
+/** Ay ızgarası: ayın ilk gününün haftasından son gününün haftasına pazartesi başlangıçlı haftalar (4–6 hafta, en çok 42 gün). */
+export function monthGridWeeks(anyDateKey: string): string[][] {
+    const monthKey = anyDateKey.slice(0, 7);
+    const weeks: string[][] = [];
+    let week = weekDateKeys(`${monthKey}-01`);
+
+    while (week[0].slice(0, 7) <= monthKey && weeks.length < 6) {
+        weeks.push(week);
+        week = weekDateKeys(addGregorianDaysToYmd(week[6], 1) ?? week[6]);
+    }
+
+    return weeks;
 }

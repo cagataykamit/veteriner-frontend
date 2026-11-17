@@ -13,6 +13,10 @@ export interface AppointmentCalendarItemDto {
     /** Randevunun hekimi; hekimsizse boş (takvimde "Hekim seçilmedi" sütunu). */
     veterinarianUserId?: string | null;
     veterinarianName?: string | null;
+    reasonId?: string | null;
+    /** Randevu nedeninin adı (ayrıntı balonu); nedensiz randevuda boş. */
+    reasonName?: string | null;
+    notes?: string | null;
 }
 
 export interface AppointmentCalendarQuery {
@@ -20,4 +24,9 @@ export interface AppointmentCalendarQuery {
     dateToUtc: string;
     clinicId?: string;
     status?: string;
+    /** Takvim filtreleri (sözleşme §6): hekim ya da yalnız hekimsiz, türler (sayı), durumlar. */
+    veterinarianUserId?: string;
+    withoutVeterinarian?: boolean;
+    appointmentTypes?: readonly number[];
+    states?: readonly string[];
 }

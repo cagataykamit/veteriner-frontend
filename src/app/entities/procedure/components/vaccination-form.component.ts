@@ -277,6 +277,9 @@ export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
     /** Bağlam başarıyla uygulandıysa API’ye iletilir; serbest oluşturmada null kalır. */
     private routeExaminationId: string | null = null;
 
+    /** Rotadan gelen aşı tanımı; tür listesi gelince seçilir (takvimden "Aşıyı yap"). */
+    private pendingVaccineDefinitionId: string | null = null;
+
     /** Son bilinen durum — yalnızca kullanıcı `status` değiştirdiğinde tarih reseti için. */
     private lastStatusForDateTransition: number | null = null;
 
@@ -407,9 +410,21 @@ export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
                 this.loadVaccineDefinitionsForSpecies(null);
             }
         });
+        this.applyRoutePrefill();
         this.loadVaccineDefinitionsForSpecies(null);
         this.tryApplyVaccinationRouteContext();
         this.loadVaccineProducts();
+    }
+
+    /** Takvimdeki sonraki aşıdan "Aşıyı yap": `status=1` Uygulandı seçer; `vaccineDefinitionId` tanım listesi gelince seçilir. */
+    private applyRoutePrefill(): void {
+        const params = this.contextParams();
+
+        if (params.get('status') === '1') {
+            this.form.controls.status.setValue(1);
+        }
+
+        this.pendingVaccineDefinitionId = params.get('vaccineDefinitionId')?.trim() || null;
     }
 
     /** Aşı türündeki aktif ürünler; okuma yetkisi yoksa yalnız aşı kaydı yazılabilir. */
@@ -468,6 +483,12 @@ export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
                 next: (r) => {
                     this.vaccineDefinitionRows.set(r.items);
                     this.vaccineDefinitionsLoading.set(false);
+
+                    if (this.pendingVaccineDefinitionId && r.items.some((i) => i.id === this.pendingVaccineDefinitionId)) {
+                        this.form.controls.vaccineDefinitionId.setValue(this.pendingVaccineDefinitionId);
+                        this.pendingVaccineDefinitionId = null;
+                    }
+
                     this.sanitizeVaccineDefinitionSelection(r.items);
                 },
                 error: (e: unknown) => {

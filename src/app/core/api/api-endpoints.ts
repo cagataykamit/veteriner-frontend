@@ -240,6 +240,8 @@ export const ApiEndpoints = {
         /** Query: `Page`, `PageSize`, `Search`, `Status`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `Sort`, `Order` (+ `clinicId`, `PetId`, `ClientId`). */
         list: () => `/api/v1/appointments`,
         calendar: () => `/api/v1/appointments/calendar`,
+        /** Ay görünümü gün özeti; `calendar` ile aynı parametreler (BE sözleşmesi §7). */
+        calendarSummary: () => `/api/v1/appointments/calendar/summary`,
         byId: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}`,
         cancel: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}/cancel`,
         /** İptali kısa süre içinde geri alır ("Geri al"; APPOINTMENT_CANCEL_UNDO_API_CONTRACT.md). */
@@ -269,6 +271,10 @@ export const ApiEndpoints = {
         /** Query: `Page`, `PageSize`, `Search`, `Status`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `OnlyOverdue`, `Sort` (`dueAtUtc` | `appliedAtUtc`), `Order` (+ `clinicId`, `PetId`, `ClientId`). */
         list: () => `/api/v1/vaccinations`,
         byId: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}`,
+        /** Takvim aşı katmanı: `dateFromUtc`, `dateToUtc` (en çok 45 gün), `clinicId` (`APPOINTMENT_CALENDAR_API_CONTRACT.md` §5). */
+        calendar: () => `/api/v1/vaccinations/calendar`,
+        /** Ay görünümü gün özeti (§7). */
+        calendarSummary: () => `/api/v1/vaccinations/calendar/summary`,
         /** GET HBS ATS hazır verisi (`Vaccinations.Read`; `HBS_ASSISTANT_API_CONTRACT.md` §4). */
         hbsData: (id: string) => `/api/v1/vaccinations/${encodeURIComponent(id)}/hbs-data`,
         /** PATCH ATS geri kaydı `{ status, referenceNumber, notRequiredReason }` (`Vaccinations.Update`; §5). */
