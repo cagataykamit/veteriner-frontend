@@ -33,6 +33,7 @@ import {
     type ImportReviewReason,
     issueReasons,
     notImportedReasons,
+    overlapSummary,
     requiredValues,
     reviewHeadline,
     reviewState,
@@ -73,6 +74,10 @@ const OUTCOME_DOT: Readonly<Record<ImportOutcome | 'attention' | 'info', string>
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (preview(); as p) {
+            @if (overlap(); as summary) {
+                <p-message severity="info" icon="pi pi-sync" class="w-full mb-4" role="status" data-testid="import-overlap">{{ summary }}</p-message>
+            }
+
             <!-- Sonuç -->
             <section class="rounded-border border p-4 sm:p-6 mb-4" [class]="tone().frame" [attr.role]="state() === 'failed' || state() === 'blocked' ? 'alert' : null" data-testid="import-review-summary">
                 <div class="flex items-start gap-3 sm:gap-4">
@@ -574,6 +579,8 @@ export class ImportReviewStepComponent {
     protected readonly info = computed(() => (this.preview() ? issueReasons(this.preview()!, 'Info') : []));
     protected readonly state = computed(() => (this.preview() ? reviewState(this.preview()!, this.totals()) : 'past'));
     protected readonly headline = computed(() => reviewHeadline(this.state(), this.totals(), this.required().length));
+    /** İkinci (güncelleme) aktarmasında en üstteki özet; ilk aktarmada null. */
+    protected readonly overlap = computed(() => (this.preview() ? overlapSummary(this.preview()!) : null));
     protected readonly emailsNow = computed(() => (this.preview() ? reminderEmailTotal(this.preview()!.reminderImpact) : 0));
 
     protected readonly outcomes = computed(() => [

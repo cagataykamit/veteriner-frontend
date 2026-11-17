@@ -56,6 +56,23 @@ export function formatCount(n: number): string {
     return n.toLocaleString('tr-TR');
 }
 
+/**
+ * Güncelleme aktarması özeti (sözleşme 14.4): dosya önceki aktarmayla büyük ölçüde örtüşüyorsa tek cümle, aksi null.
+ * Yalnız yenisi olan tablolar sayılır; hiç yeni yoksa bunu söyler.
+ */
+export function overlapSummary(p: ImportPreviewDto): string | null {
+    const o = p.overlap;
+
+    if (!o?.isUpdate) {
+        return null;
+    }
+
+    const fresh = o.tables.filter((t) => t.willCreate > 0).map((t) => `${formatCount(t.willCreate)} yeni ${IMPORT_TABLE_UNITS[t.table]}`);
+    const lead = 'Bu dosya önceki aktarmayla büyük ölçüde örtüşüyor';
+
+    return fresh.length ? `${lead}: ${fresh.join(', ')} gelecek; geri kalanı zaten var.` : `${lead}: yeni kayıt yok; hepsi zaten var.`;
+}
+
 /** Partide satırı olan tablolar, doğrulama sırasıyla. */
 export function reviewTables(p: ImportPreviewDto): ImportReviewTable[] {
     return IMPORT_TABLES.filter((t) => p.summary[t].total > 0).map((t) => {
