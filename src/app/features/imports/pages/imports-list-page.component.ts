@@ -12,7 +12,8 @@ import { IMPORTS_ROUTE, MIGRATION_SUPPORT_ROUTE } from '@/app/core/routing/panel
 import type { ImportBatchDto, ImportBatchStatus } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
-import { IMPORT_STATUS_LABELS, canStartRollback, importErrorMessage, importStatusLabel, importStatusSeverity, isDiscardable, isRollbackFinal, rollbackDeadlineText, rollbackFinalText } from '@/app/features/imports/utils/import-labels.utils';
+import { IMPORT_STATUS_LABELS, canStartRollback, importErrorMessage, importStatusLabel, importStatusSeverity, isDiscardable } from '@/app/features/imports/utils/import-labels.utils';
+import { rollbackWindowListText, rollbackWindowSentence, rollbackWindowState } from '@/app/features/imports/utils/import-rollback-window.utils';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -88,10 +89,17 @@ type ImportStatusFilter = ImportBatchStatus | typeof ALL_STATUSES;
                                         <button pButton type="button" size="small" severity="danger" [disabled]="busyId() === b.id" (click)="discard(b)">@if (busyId() === b.id) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Sil</button>
                                         <button pButton type="button" size="small" severity="secondary" (click)="discardingId.set(null)">Vazgeç</button>
                                     } @else {
-                                        @if (isFinal(b)) {
-                                            <span class="inline-flex items-center gap-1 text-sm text-muted-color" [attr.title]="finalText(b)" data-testid="import-final"><i class="pi pi-lock" aria-hidden="true"></i>Kesinleşti</span>
-                                        } @else if (canCommit && deadlineText(b)) {
-                                            <small class="text-muted-color" data-testid="import-rollback-deadline">{{ deadlineText(b) }}</small>
+                                        @if (windowState(b); as w) {
+                                            @if (w.kind === 'final') {
+                                                <span class="inline-flex items-center gap-1 text-sm text-muted-color" [attr.title]="windowSentence(w)" data-testid="import-final"><i class="pi pi-lock" aria-hidden="true"></i>Kesinleşti</span>
+                                            } @else if (canCommit) {
+                                                <span class="inline-flex flex-wrap items-center gap-2" data-testid="import-rollback-deadline">
+                                                    @if (w.kind === 'lastDay') {
+                                                        <app-status-tag label="Bugün son gün" severity="warn" />
+                                                    }
+                                                    <small [class]="w.kind === 'lastDay' ? 'font-medium text-yellow-700 dark:text-yellow-300' : 'text-muted-color'">{{ windowListText(w) }}</small>
+                                                </span>
+                                            }
                                         }
                                         <a pButton size="small" severity="secondary" [routerLink]="[b.id]">{{ isDraft(b) && canManage ? 'Devam et' : 'Aç' }}</a>
                                         @if (canCommit && showRollbackLink(b)) {
@@ -210,12 +218,13 @@ export class ImportsListPageComponent implements OnInit {
 
     /** Süre içinde geri alınabilir parti ya da süren geri almanın durumu. */
     protected showRollbackLink(b: ImportBatchDto): boolean {
-        return b.status === 'RollingBack' || canStartRollback(b);
+        return b.status === 'RollingBack' || (canStartRollback(b) && this.windowState(b)?.kind !== 'final');
     }
 
-    protected isFinal = isRollbackFinal;
-    protected deadlineText = rollbackDeadlineText;
-    protected finalText = rollbackFinalText;
+    /** Kalan gün İstanbul takvim gününe göre; sayfa açıkken süre dolarsa da kesinleşti görünür. */
+    protected windowState = (b: ImportBatchDto) => rollbackWindowState(b);
+    protected windowListText = rollbackWindowListText;
+    protected windowSentence = rollbackWindowSentence;
 
     protected statusLabel = importStatusLabel;
     protected statusSeverity = importStatusSeverity;

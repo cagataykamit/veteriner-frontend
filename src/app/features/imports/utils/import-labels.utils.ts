@@ -14,7 +14,6 @@ import type {
 } from '@/app/features/imports/models/import-api.model';
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { IMPORT_TABLE_LABELS } from '@/app/features/imports/utils/import-schema.utils';
 
 export const IMPORT_STATUS_LABELS: Readonly<Record<ImportBatchStatus, string>> = {
@@ -100,16 +99,6 @@ export function canStartRollback(b: RollbackWindow): boolean {
 /** Geri alma süresi dolmuş: aktarma kesinleşti (sözleşme 9.1). */
 export function isRollbackFinal(b: RollbackWindow): boolean {
     return !!b.rollbackDeadlineUtc && b.canRollback === false;
-}
-
-/** Süre içindeki partide son tarih; başka durumda null. */
-export function rollbackDeadlineText(b: RollbackWindow): string | null {
-    return b.rollbackDeadlineUtc && canStartRollback(b) ? `${formatUtcIsoAsLocalDateTimeDisplay(b.rollbackDeadlineUtc)} tarihine kadar geri alınabilir` : null;
-}
-
-/** Süresi dolmuş partide açıklama; başka durumda null. */
-export function rollbackFinalText(b: RollbackWindow): string | null {
-    return b.rollbackDeadlineUtc && isRollbackFinal(b) ? `Geri alma süresi ${formatUtcIsoAsLocalDateTimeDisplay(b.rollbackDeadlineUtc)} tarihinde doldu` : null;
 }
 
 export const IMPORT_VALUE_KIND_LABELS: Readonly<Record<ImportValueKind, string>> = {

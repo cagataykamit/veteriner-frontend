@@ -239,4 +239,27 @@ describe('ImportCommitStepComponent', () => {
         cmp.release(committedPreview);
         expect(vi.mocked(imports.releaseReminders).mock.lastCall).toEqual(['b1', 9]);
     });
+
+    describe('geri alma süresi bilgisi (sözleşme 9.1)', () => {
+        beforeEach(() => {
+            vi.useFakeTimers({ toFake: ['Date'] });
+            vi.setSystemTime(new Date('2026-11-17T12:57:00Z'));
+        });
+
+        afterEach(() => vi.useRealTimers());
+
+        it('aktarmayı başlatmadan önce süreyi sunucunun verdiği günle söyler', () => {
+            const el = create({ ...batch('Validated'), rollbackWindowDays: 15 });
+
+            expect(el.querySelector('[data-testid="import-commit-rollback-window"]')?.textContent).toContain('Aktarmadan sonra 15 gün içinde geri alabilirsiniz');
+        });
+
+        it('aktarma bitince kalan günü ve son anı söyler', () => {
+            const el = create({ ...committed(), canRollback: true, rollbackDeadlineUtc: '2026-12-02T12:57:00Z', rollbackWindowDays: 15 }, { preview: committedPreview });
+
+            expect(el.querySelector('[data-testid="import-committed-rollback-window"]')?.textContent).toContain(
+                "Bir sorun görürseniz bu aktarmayı 15 gün daha geri alabilirsiniz (2 Aralık 2026, 15:57'ye kadar)."
+            );
+        });
+    });
 });

@@ -194,19 +194,37 @@ describe('ImportRollbackPageComponent', () => {
         fixture.destroy();
     });
 
-    it('süre içindeki partide son tarihi formun üstünde gösterir', () => {
-        const el = create('Committed', { batch: { canRollback: true, rollbackDeadlineUtc: '2026-12-16T12:37:00Z' } });
+    describe('kalan gün (İstanbul takvim günü)', () => {
+        beforeEach(() => vi.useFakeTimers({ toFake: ['Date'] }));
+        afterEach(() => vi.useRealTimers());
 
-        expect(el.querySelector('[data-testid="import-rollback-deadline"]')?.textContent).toContain('16.12.2026 15:37 tarihine kadar geri alınabilir');
-        expect(submitButton(el)).not.toBeNull();
+        it('süre içindeki partide kalan günü ve kesin tarihi formun üstünde gösterir', () => {
+            vi.setSystemTime(new Date('2026-11-20T07:00:00Z'));
+            const el = create('Committed', { batch: { canRollback: true, rollbackDeadlineUtc: '2026-12-02T12:57:00Z' } });
+
+            expect(el.querySelector('[data-testid="import-rollback-deadline"]')?.textContent).toContain(
+                "Bu aktarmayı 12 gün daha geri alabilirsiniz (2 Aralık 2026, 15:57'ye kadar). Bu tarihten sonra aktarma kesinleşir ve geri alınamaz."
+            );
+            expect(submitButton(el)).not.toBeNull();
+        });
+
+        it('son günde uyarı tonuyla "bugün son gün" der', () => {
+            vi.setSystemTime(new Date('2026-12-02T06:00:00Z'));
+            const el = create('Committed', { batch: { canRollback: true, rollbackDeadlineUtc: '2026-12-02T12:57:00Z' } });
+            const notice = el.querySelector('[data-testid="import-rollback-deadline"]');
+
+            expect(notice?.textContent).toContain("Bu aktarmayı geri almak için bugün son gün (15:57'ye kadar).");
+            expect(notice?.outerHTML).toContain('warn');
+        });
     });
 
     it('süresi dolmuş partide kesinleşti mesajı gösterir; önizleme istemez, form yoktur', () => {
-        const el = create('Committed', { batch: { canRollback: false, rollbackDeadlineUtc: '2026-10-14T08:00:00Z' } });
+        const el = create('Committed', { batch: { canRollback: false, rollbackDeadlineUtc: '2026-10-14T08:00:00Z', rollbackWindowDays: 15 } });
         const final = el.querySelector('[data-testid="import-rollback-final"]')?.textContent ?? '';
 
         expect(final).toContain('kesinleşti');
-        expect(final).toContain('Geri alma süresi 14.10.2026 11:00 tarihinde doldu');
+        expect(final).toContain('Geri alma süresi doldu (son gün 14 Ekim 2026, 11:00).');
+        expect(final).toContain('uygulandıktan sonra 15 gün içinde geri alınabilir');
         expect(imports.getRollbackPreview).not.toHaveBeenCalled();
         expect(submitButton(el)).toBeNull();
     });

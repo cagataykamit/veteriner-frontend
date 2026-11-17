@@ -67,15 +67,24 @@ describe('ImportsListPageComponent', () => {
         expect(imports.listBatches).toHaveBeenLastCalledWith(1, 20, 'RolledBack', false);
     });
 
-    it('süre içindeki partide son tarihi ve "Geri al" düğmesini, dolmuşta "Kesinleşti" bilgisini gösterir', () => {
+    it('süre içindeki partide kalan günü ve "Geri al" düğmesini, son günde vurguyu, dolmuşta "Kesinleşti" bilgisini gösterir', () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date('2026-11-20T07:00:00Z'));
         const el = create([
-            batch('Açık parti', { canRollback: true, rollbackDeadlineUtc: '2026-12-16T12:37:00Z' }),
+            batch('Açık parti', { canRollback: true, rollbackDeadlineUtc: '2026-12-02T12:57:00Z' }),
+            batch('Son gün partisi', { canRollback: true, rollbackDeadlineUtc: '2026-11-20T13:57:00Z' }),
             batch('Eski parti', { canRollback: false, rollbackDeadlineUtc: '2026-10-14T08:00:00Z' })
         ]);
+
+        vi.useRealTimers();
         const open = row(el, 'Açık parti');
+        const lastDay = row(el, 'Son gün partisi');
         const final = row(el, 'Eski parti');
 
-        expect(open.querySelector('[data-testid="import-rollback-deadline"]')?.textContent).toContain('16.12.2026 15:37 tarihine kadar geri alınabilir');
+        expect(open.querySelector('[data-testid="import-rollback-deadline"]')?.textContent).toContain("12 gün daha geri alınabilir · 2 Aralık 15:57'ye kadar");
+        expect(lastDay.querySelector('[data-testid="import-rollback-deadline"]')?.textContent).toContain('Bugün son gün');
+        expect(lastDay.querySelector('[data-testid="import-rollback-deadline"]')?.textContent).toContain("16:57'ye kadar geri alınabilir");
+        expect(rollbackLink(lastDay)).toBeDefined();
         expect(rollbackLink(open)).toBeDefined();
         expect(final.querySelector('[data-testid="import-final"]')?.textContent).toContain('Kesinleşti');
         expect(rollbackLink(final)).toBeUndefined();

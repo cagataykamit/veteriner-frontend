@@ -27,12 +27,11 @@ import {
     rollbackBlockedItems,
     rollbackCountsText,
     rollbackCountsTotal,
-    rollbackDeadlineText,
-    rollbackFinalText,
     rollbackWarningLabel
 } from '@/app/features/imports/utils/import-labels.utils';
 import { rollbackBlockedDetail, rollbackBlockedGroups, rollbackBlockedLink, rollbackBlockedReasonText, rollbackBlockedSource, rollbackBlockedTitle } from '@/app/features/imports/utils/import-rollback-blocked.utils';
 import { IMPORT_POLL_CONNECTION_MESSAGE, pollImportProgress } from '@/app/features/imports/utils/import-progress-poll.utils';
+import { rollbackWindowSentence, rollbackWindowState } from '@/app/features/imports/utils/import-rollback-window.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -147,7 +146,11 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                 @if (finalized()) {
                     <p-message severity="info" class="w-full mb-4" role="status" data-testid="import-rollback-final">
                         <span class="font-medium">Bu içe aktarma kesinleşti; artık geri alınamaz.</span>
-                        {{ finalText() }}. İçe aktarmalar uygulandıktan sonra 30 gün içinde geri alınabilir. Aktarılan kayıtlar diğer kayıtlar gibi tek tek düzenlenebilir.
+                        {{ windowText() }}
+                        @if (b.rollbackWindowDays) {
+                            İçe aktarmalar uygulandıktan sonra {{ b.rollbackWindowDays }} gün içinde geri alınabilir.
+                        }
+                        Aktarılan kayıtlar diğer kayıtlar gibi tek tek düzenlenebilir.
                     </p-message>
                 } @else if (b.status === 'RolledBack') {
                     <p-message severity="success" class="w-full mb-4" role="status">Geri alma tamamlandı. Bu içe aktarmanın oluşturduğu tüm kayıtlar silindi; aynı dosyayı yeniden yükleyebilirsiniz.</p-message>
@@ -199,8 +202,12 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                 @if (formVisible()) {
                     <section class="mt-4">
                         <h6 class="mt-0 mb-2">Geri almayı onayla</h6>
-                        @if (deadlineText()) {
-                            <p class="mt-0 mb-3 text-sm text-muted-color" data-testid="import-rollback-deadline"><i class="pi pi-clock mr-1" aria-hidden="true"></i>{{ deadlineText() }}. Bu tarihten sonra içe aktarma kesinleşir.</p>
+                        @if (windowState(); as w) {
+                            @if (w.kind !== 'final') {
+                                <p-message [severity]="w.kind === 'lastDay' ? 'warn' : 'info'" class="w-full mb-3" role="status" data-testid="import-rollback-deadline">
+                                    <i class="pi pi-clock mr-2" aria-hidden="true"></i>{{ windowText() }}
+                                </p-message>
+                            }
                         }
 
                         <div class="flex flex-col gap-1 mb-4">
@@ -289,15 +296,16 @@ export class ImportRollbackPageComponent implements OnInit {
 
         return !!b && isRollbackFinal(b);
     });
-    protected readonly finalText = computed(() => {
+    /** Kalan gün (İstanbul takvim günü) ve kesin tarih; son günde vurgulu. */
+    protected readonly windowState = computed(() => {
         const b = this.batch();
 
-        return b ? rollbackFinalText(b) : null;
+        return b ? rollbackWindowState(b) : null;
     });
-    protected readonly deadlineText = computed(() => {
-        const b = this.batch();
+    protected readonly windowText = computed(() => {
+        const w = this.windowState();
 
-        return b ? rollbackDeadlineText(b) : null;
+        return w ? rollbackWindowSentence(w) : null;
     });
     protected readonly isRetry = computed(() => ['PartiallyRolledBack', 'RollbackFailed'].includes(this.batch()?.status ?? ''));
     protected readonly deleteUnblockedAvailable = computed(() => !!this.preview()?.canDeleteUnblockedOnly);

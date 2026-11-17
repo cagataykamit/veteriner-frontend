@@ -10,6 +10,7 @@ import type { ImportBatchDto, ImportCommitProgressDto, ImportFileFormat, ImportO
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
 import { importCommitBlockers, importErrorCode, importErrorMessage, importIssueLabel, importStatusLabel, isEndpointUnavailable, reminderEmailTotal, reminderImpactCurrentCount } from '@/app/features/imports/utils/import-labels.utils';
+import { rollbackWindowBeforeCommitText, rollbackWindowSentence, rollbackWindowState } from '@/app/features/imports/utils/import-rollback-window.utils';
 import { IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 
@@ -78,6 +79,9 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                 @if (!canCommitClaim()) {
                     <p-message severity="info" class="w-full">Aktarmayı başlatmak için aktarma yetkisi gerekir.</p-message>
                 } @else {
+                    @if (beforeCommitText(); as t) {
+                        <p class="mt-0 mb-3 text-sm text-muted-color" data-testid="import-commit-rollback-window"><i class="pi pi-undo mr-2" aria-hidden="true"></i>{{ t }}</p>
+                    }
                     <div class="flex items-start gap-2 mb-4">
                         <p-checkbox inputId="importConfirm" [binary]="true" [(ngModel)]="confirmed" />
                         <label for="importConfirm" class="cursor-pointer">Özeti inceledim; kayıtların yukarıdaki gibi oluşturulmasını onaylıyorum.</label>
@@ -97,6 +101,9 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
             }
             @case ('Committed') {
                 <p-message severity="success" class="w-full mb-4">Aktarma tamamlandı{{ batch().committedAtUtc ? ' · ' + date(batch().committedAtUtc!) : '' }}.</p-message>
+                @if (afterCommitText(); as t) {
+                    <p-message [severity]="afterCommitWarn() ? 'warn' : 'info'" class="w-full mb-4" role="status" data-testid="import-committed-rollback-window"><i class="pi pi-undo mr-2" aria-hidden="true"></i>{{ t }}</p-message>
+                }
                 <ng-container *ngTemplateOutlet="result" />
 
                 @if (preview(); as p) {
@@ -240,6 +247,18 @@ export class ImportCommitStepComponent {
 
     /** Uygulama anında doğan satır sorunları (önizleme sayımlarından). */
     protected readonly applyIssues = computed(() => (this.preview()?.issueCounts ?? []).filter((i) => ['Imports.OwnerUnitFailed', 'Imports.MatchedAtCommit', 'Imports.ApplyFailed'].includes(i.code)));
+
+    /** Onaydan önce: aktarma geri alınabilir ama süreyle (sözleşme 9.1; süre sunucudan). */
+    protected readonly beforeCommitText = computed(() => rollbackWindowBeforeCommitText(this.batch().rollbackWindowDays));
+
+    /** Aktarma bittiğinde: kalan gün ve son an; süre dolduysa gösterilmez. */
+    private readonly windowState = computed(() => rollbackWindowState(this.batch()));
+    protected readonly afterCommitText = computed(() => {
+        const w = this.windowState();
+
+        return w && w.kind !== 'final' ? rollbackWindowSentence(w, 'Bir sorun görürseniz bu aktarmayı') : null;
+    });
+    protected readonly afterCommitWarn = computed(() => this.windowState()?.kind === 'lastDay');
 
     /** Hata raporu: doğrulamada hatalı veya uygulamada başarısız satır varsa anlamlıdır. */
     protected readonly hasProblemRows = computed(() => IMPORT_TABLES.some((t) => this.batch().summary[t].failed > 0 || this.batch().summary[t].error > 0));
