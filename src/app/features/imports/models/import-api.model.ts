@@ -137,6 +137,8 @@ export interface ImportBatchDto {
     canRollback?: boolean;
     /** Geri almanın son anı (UTC); geri alınabilir durumda olmayan partide null. Geçmişse aktarma kesinleşmiştir. */
     rollbackDeadlineUtc?: string | null;
+    /** Geri alma süresi (gün); uygulamadan önceki bilgi metni için. Eski sunucuda yok. */
+    rollbackWindowDays?: number;
     /** TIER-021; eski sunucu göndermezse `Generic` sayılır. */
     sourceProfile?: ImportSourceProfileCode;
     summary: ImportSummaryDto;

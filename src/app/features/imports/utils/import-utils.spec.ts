@@ -17,8 +17,6 @@ import {
     precheckImportFile,
     rollbackCountsText,
     rollbackCountsTotal,
-    rollbackDeadlineText,
-    rollbackFinalText,
     rollbackReasonLabel
 } from '@/app/features/imports/utils/import-labels.utils';
 import { columnMapsToRequest, fieldLabel, IMPORT_CSV_FIELD, IMPORT_CSV_TEMPLATE_FILE, IMPORT_TABLES, initialColumnMaps, mappingConfidence, missingRequired, needsClinic } from '@/app/features/imports/utils/import-schema.utils';
@@ -147,16 +145,9 @@ describe('geri alma süresi (sözleşme 9.1)', () => {
         expect(canStartRollback({ status: 'RolledBack' })).toBe(false);
     });
 
-    it('süre içinde son tarihi, dolunca kesinleşti bilgisini İstanbul saatiyle verir', () => {
-        const open = { status: 'Committed' as const, canRollback: true, rollbackDeadlineUtc: '2026-12-16T12:37:00Z' };
-        const closed = { status: 'RollbackFailed' as const, canRollback: false, rollbackDeadlineUtc: '2026-10-14T08:00:00Z' };
-
-        expect(rollbackDeadlineText(open)).toBe('16.12.2026 15:37 tarihine kadar geri alınabilir');
-        expect(isRollbackFinal(open)).toBe(false);
-        expect(rollbackFinalText(open)).toBeNull();
-        expect(isRollbackFinal(closed)).toBe(true);
-        expect(rollbackDeadlineText(closed)).toBeNull();
-        expect(rollbackFinalText(closed)).toBe('Geri alma süresi 14.10.2026 11:00 tarihinde doldu');
+    it('kesinleşme sunucunun kararıdır; son anı olmayan parti kesinleşmiş sayılmaz', () => {
+        expect(isRollbackFinal({ status: 'Committed', canRollback: true, rollbackDeadlineUtc: '2026-12-16T12:37:00Z' })).toBe(false);
+        expect(isRollbackFinal({ status: 'RollbackFailed', canRollback: false, rollbackDeadlineUtc: '2026-10-14T08:00:00Z' })).toBe(true);
         expect(isRollbackFinal({ status: 'RolledBack', canRollback: false, rollbackDeadlineUtc: null })).toBe(false);
     });
 
