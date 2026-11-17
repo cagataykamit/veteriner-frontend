@@ -6,12 +6,13 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { ImportJobProgressComponent } from '@/app/features/imports/components/import-job-progress.component';
-import type { ImportBatchDto, ImportCommitProgressDto, ImportFileFormat, ImportOnErrors, ImportPreviewDto } from '@/app/features/imports/models/import-api.model';
+import type { ImportBalanceDifferenceMode, ImportBatchDto, ImportCommitProgressDto, ImportFileFormat, ImportOnErrors, ImportPreviewDto } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
 import { importCommitBlockers, importErrorCode, importErrorMessage, importIssueLabel, importStatusLabel, isEndpointUnavailable, reminderEmailTotal, reminderImpactCurrentCount } from '@/app/features/imports/utils/import-labels.utils';
 import { IMPORT_TABLE_LABELS, IMPORT_TABLES } from '@/app/features/imports/utils/import-schema.utils';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatMoney } from '@/app/shared/utils/money.utils';
 
 /**
  * Adım 4: onay, ilerleme ve sonuç (B4 uçları). "Henüz etkin değil" yedeği yalnız uç gerçekten dağıtılmamışsa
@@ -52,6 +53,45 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
                         <p-select inputId="importOnErrors" [options]="onErrorsOptions" optionLabel="label" optionValue="value" [(ngModel)]="onErrors" class="w-full md:w-[28rem]" />
                         <small class="text-muted-color">Bu satırlar indirilebilir listede kalır; eski programda düzeltip sonradan yeni içe aktarma olarak yükleyebilirsiniz.</small>
                     </div>
+                }
+
+                @if (balanceDifferences(); as d) {
+                    <section class="rounded-border border border-surface-200 dark:border-surface-700 p-4 mb-4" aria-labelledby="import-balance-title" data-testid="import-balance-differences">
+                        <h6 id="import-balance-title" class="mt-0 mb-1">Bakiye farkı: {{ d.count }} müşteri</h6>
+                        <p class="mt-0 mb-3 text-sm text-muted-color">
+                            Bu müşteriler sistemde zaten var, ama eski programdaki bakiyeleri sistemdekinden farklı. Bakiyeler kendiliğinden değişmez. Farkı devir olarak açarsanız artı fark devir borcu, eksi fark devir alacağı olur; ciroya,
+                            gün sonuna ve kasaya girmez.
+                        </p>
+                        <div class="overflow-x-auto mb-3">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left text-muted-color">
+                                        <th class="font-normal py-1 pr-3">Müşteri</th>
+                                        <th class="font-normal py-1 pr-3 text-right">Sistemde</th>
+                                        <th class="font-normal py-1 pr-3 text-right">Dosyada</th>
+                                        <th class="font-normal py-1 text-right">Fark</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (i of d.items; track i.rowNumber) {
+                                        <tr class="border-t border-surface-200 dark:border-surface-700">
+                                            <td class="py-1 pr-3">{{ i.clientName ?? 'Satır ' + i.rowNumber }}</td>
+                                            <td class="py-1 pr-3 text-right tabular-nums">{{ money(i.currentBalance) }}</td>
+                                            <td class="py-1 pr-3 text-right tabular-nums">{{ money(i.fileBalance) }}</td>
+                                            <td class="py-1 text-right tabular-nums font-medium">{{ i.difference > 0 ? '+' : '' }}{{ money(i.difference) }}</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        @if (d.truncated) {
+                            <p class="mt-0 mb-3 text-sm text-muted-color">İlk {{ d.items.length }} müşteri gösteriliyor (en büyük farklar).</p>
+                        }
+                        <div class="flex flex-col gap-1">
+                            <label for="importBalanceDifferences" class="text-sm font-medium">Farklar</label>
+                            <p-select inputId="importBalanceDifferences" [options]="balanceOptions()" optionLabel="label" optionValue="value" [(ngModel)]="balanceMode" class="w-full md:w-[28rem]" />
+                        </div>
+                    </section>
                 }
 
                 <p-message severity="info" class="w-full mb-4">
@@ -206,7 +246,26 @@ export class ImportCommitStepComponent {
         { label: 'Eksik bilgili satır varsa hiçbir şey aktarma', value: 'FailIfAny' }
     ];
     protected onErrors: ImportOnErrors = 'SkipErrorRows';
+    /** Bakiye farkları kendiliğinden uygulanmaz (ADR-051); kullanıcı tek seçimle açar. */
+    protected balanceMode: ImportBalanceDifferenceMode = 'Skip';
     protected confirmed = false;
+
+    /** Eşleşen müşterilerin bakiye farkları; yoksa (ya da eski sunucu) null. */
+    protected readonly balanceDifferences = computed(() => {
+        const d = this.preview()?.balanceDifferences;
+
+        return d && d.count > 0 ? d : null;
+    });
+
+    protected readonly balanceOptions = computed<{ label: string; value: ImportBalanceDifferenceMode }[]>(() => {
+        const d = this.balanceDifferences();
+        const totals = d ? [d.totalIncrease > 0 ? `+${formatMoney(d.totalIncrease)} borç` : null, d.totalDecrease > 0 ? `${formatMoney(d.totalDecrease)} alacak` : null].filter(Boolean).join(', ') : '';
+
+        return [
+            { label: 'Atla; bakiyeler değişmesin', value: 'Skip' },
+            { label: `Farkları devir olarak aç${totals ? ` (${totals})` : ''}`, value: 'Apply' }
+        ];
+    });
 
     protected readonly busy = signal(false);
     protected readonly error = signal<string | null>(null);
@@ -247,6 +306,7 @@ export class ImportCommitStepComponent {
     protected statusLabel = importStatusLabel;
     protected issueLabel = importIssueLabel;
     protected date = formatUtcIsoAsLocalDateTimeDisplay;
+    protected money = (amount: number): string => formatMoney(amount);
 
     protected commit(): void {
         const validationId = this.batch().validationId ?? this.preview()?.validationId;
@@ -259,7 +319,9 @@ export class ImportCommitStepComponent {
         this.error.set(null);
         this.blockers.set([]);
         this.unavailable.set(false);
-        this.imports.commit(this.batch().id, { validationId, onErrors: this.onErrors }).subscribe({
+        const body = this.balanceDifferences() ? { validationId, onErrors: this.onErrors, balanceDifferences: this.balanceMode } : { validationId, onErrors: this.onErrors };
+
+        this.imports.commit(this.batch().id, body).subscribe({
             next: (batch) => {
                 this.busy.set(false);
                 this.batchChange.emit(batch);

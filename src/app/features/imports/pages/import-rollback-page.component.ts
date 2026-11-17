@@ -151,6 +151,13 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                     @if (p.kept.matchedClients || p.kept.matchedPets || p.kept.matchedProducts) {
                         <p class="text-sm text-muted-color mt-0">Sistemde önceden var olup eşleşen {{ p.kept.matchedClients }} müşteri{{ p.kept.matchedProducts ? ', ' + p.kept.matchedPets + ' hasta ve ' + p.kept.matchedProducts + ' ürüne' : ' ve ' + p.kept.matchedPets + ' hastaya' }} dokunulmaz.</p>
                     }
+                    @if (p.balanceAdjustments; as b) {
+                        @if (b.delete || b.keep) {
+                            <p class="text-sm text-muted-color mt-0" data-testid="rollback-balance-adjustments">
+                                Bu aktarmada eşleşen müşterilere açılan {{ b.delete + b.keep }} bakiye farkı hareketi{{ b.delete ? ': ' + b.delete + ' silinir' : '' }}{{ b.keep ? (b.delete ? ', ' : ': ') + b.keep + ' tahsilat ya da mahsup gördüğü için kalır' : '' }}.
+                            </p>
+                        }
+                    }
                     @for (w of p.warnings; track w) {
                         <p-message severity="warn" class="w-full mb-2">{{ warningLabel(w) }}</p-message>
                     }
