@@ -87,7 +87,7 @@ describe('MigrationSupportPageComponent', () => {
 
         expect(kvkk).toContain('e-postayla göndermeyin');
         expect(kvkk).toContain('ekran paylaşımında');
-        expect(kvkk).toContain('30 gün');
+        expect(kvkk).toContain('geri alma süresi dolunca silinir');
     });
 
     it('Kurumsal pakette ücretsiz yazar', async () => {
