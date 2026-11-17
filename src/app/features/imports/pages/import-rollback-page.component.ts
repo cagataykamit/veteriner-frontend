@@ -15,7 +15,6 @@ import { ImportJobProgressComponent } from '@/app/features/imports/components/im
 import type { ImportBatchDto, ImportBlockedPolicy, ImportCommitProgressDto, ImportRollbackBlockedItemDto, ImportRollbackCountsDto, ImportRollbackPreviewDto } from '@/app/features/imports/models/import-api.model';
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import {
-    IMPORT_TABLE_LABELS,
     ROLLBACK_ENTITY_LABELS,
     canStartRollback,
     importErrorCode,
@@ -30,9 +29,9 @@ import {
     rollbackCountsTotal,
     rollbackDeadlineText,
     rollbackFinalText,
-    rollbackReasonLabel,
     rollbackWarningLabel
 } from '@/app/features/imports/utils/import-labels.utils';
+import { rollbackBlockedDetail, rollbackBlockedGroups, rollbackBlockedLink, rollbackBlockedReasonText, rollbackBlockedSource, rollbackBlockedTitle } from '@/app/features/imports/utils/import-rollback-blocked.utils';
 import { IMPORT_POLL_CONNECTION_MESSAGE, pollImportProgress } from '@/app/features/imports/utils/import-progress-poll.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -75,13 +74,34 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
         </app-page-header>
 
         <ng-template #items let-list let-truncated="truncated">
-            <ul class="list-none p-0 m-0 flex flex-col gap-2" aria-label="Silinemeyen kayıtlar">
-                @for (it of list; track it.id + it.rowNumber) {
-                    <li class="rounded-border border border-surface-200 dark:border-surface-700 p-3">
-                        <div class="font-medium">{{ entityLabel(it) }} · {{ tableLabel(it) }}, {{ it.rowNumber }}. satır</div>
-                        <ul class="m-0 mt-1 pl-4 text-sm">
-                            @for (r of it.reasons; track r) {
-                                <li>{{ reasonLabel(r) }}</li>
+            <ul class="list-none p-0 m-0 flex flex-col gap-3" aria-label="Silinemeyen kayıtlar">
+                @for (g of groups(list); track g.key) {
+                    <li class="rounded-border border border-surface-200 dark:border-surface-700" data-testid="import-rollback-group">
+                        <ul class="list-none p-0 m-0">
+                            @for (it of g.items; track it.id + it.rowNumber; let first = $first) {
+                                <li class="p-3 border-surface-200 dark:border-surface-700" [class.border-t]="!first" [class.pl-8]="!first" data-testid="import-rollback-item">
+                                    <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                                        <span class="text-xs text-muted-color">{{ entityLabel(it) }}</span>
+                                        @if (link(it); as l) {
+                                            <a [routerLink]="l" target="_blank" rel="noopener" class="font-medium text-primary no-underline hover:underline"
+                                                >{{ title(it) }}<i class="pi pi-external-link text-xs ml-1" aria-hidden="true"></i><span class="sr-only"> (yeni sekmede açılır)</span></a
+                                            >
+                                        } @else {
+                                            <span class="font-medium">{{ title(it) }}</span>
+                                        }
+                                        @if (detail(it); as d) {
+                                            <span class="text-sm text-muted-color">{{ d }}</span>
+                                        }
+                                    </div>
+                                    <ul class="m-0 mt-1 pl-4 text-sm">
+                                        @for (r of it.reasons; track r) {
+                                            <li>{{ reasonText(it, r) }}</li>
+                                        }
+                                    </ul>
+                                    @if (it.record) {
+                                        <small class="block mt-1 text-muted-color">Dosyada: {{ source(it) }}</small>
+                                    }
+                                </li>
                             }
                         </ul>
                     </li>
@@ -158,13 +178,17 @@ export const ROLLBACK_REASON_MAX_LENGTH = 500;
                         <p-message severity="warn" class="w-full mb-2">{{ warningLabel('Imports.RemindersAlreadyReleased') }}</p-message>
                     }
 
+                    @if (nothingToRollback()) {
+                        <p-message severity="info" class="w-full mb-3" role="status" data-testid="import-rollback-nothing">Geri alınabilecek kayıt kalmadı. Aşağıdaki kayıtlar klinikte kullanıldığı için duruyor.</p-message>
+                    }
                     @if (p.blockedItems.length > 0) {
-                        <h6 class="mb-2">Silinemeyecek kayıtlar</h6>
+                        <h6 class="mb-1">Silinemeyecek kayıtlar</h6>
+                        <p class="mt-0 mb-2 text-sm text-muted-color">Aynı müşteriye ait kayıtlar bir arada. Kayda tıklayınca yeni sekmede açılır.</p>
                         <ng-container *ngTemplateOutlet="items; context: { $implicit: p.blockedItems, truncated: p.blockedItemsTruncated }" />
                     }
                 }
 
-                @if (blockedError()) {
+                @if (blockedError() && !preview()?.blockedItems?.length) {
                     <h6 class="mb-2">Geri alma durduruldu: şu kayıtlar silinemiyor</h6>
                     @if (blockedError()!.counts) {
                         <p class="mt-0 text-sm">{{ countsText(blockedError()!.counts!) }} engelli.</p>
@@ -247,10 +271,17 @@ export class ImportRollbackPageComponent implements OnInit {
     readonly ack = signal(false);
 
     protected readonly screenAvailable = computed(() => isRollbackScreenAvailable(this.batch()?.status ?? ''));
+    /** Geri alınabilir partide silinecek kayıt kalmadı, yalnız klinikte kullanılan kayıtlar duruyor: onay formu anlamsız. */
+    protected readonly nothingToRollback = computed(() => {
+        const b = this.batch();
+        const p = this.preview();
+
+        return !!b && !!p && canStartRollback(b) && rollbackCountsTotal(p.deletable) === 0 && rollbackCountsTotal(p.blocked) > 0;
+    });
     protected readonly formVisible = computed(() => {
         const b = this.batch();
 
-        return !!b && canStartRollback(b) && !!this.preview();
+        return !!b && canStartRollback(b) && !!this.preview() && !this.nothingToRollback();
     });
     /** Geri alma süresi doldu: aktarma kesinleşti (sözleşme 9.1); form ve önizleme gösterilmez. */
     protected readonly finalized = computed(() => {
@@ -274,10 +305,14 @@ export class ImportRollbackPageComponent implements OnInit {
 
     protected statusLabel = importStatusLabel;
     protected statusSeverity = importStatusSeverity;
-    protected reasonLabel = rollbackReasonLabel;
     protected warningLabel = rollbackWarningLabel;
     protected entityLabel = (it: ImportRollbackBlockedItemDto): string => ROLLBACK_ENTITY_LABELS[it.entity] ?? it.entity;
-    protected tableLabel = (it: ImportRollbackBlockedItemDto): string => IMPORT_TABLE_LABELS[it.table] ?? it.table;
+    protected groups = rollbackBlockedGroups;
+    protected title = rollbackBlockedTitle;
+    protected detail = rollbackBlockedDetail;
+    protected link = rollbackBlockedLink;
+    protected source = rollbackBlockedSource;
+    protected reasonText = (it: ImportRollbackBlockedItemDto, code: string): string => rollbackBlockedReasonText(it.entity, code);
 
     /** İstek anahtarı form açılışında bir kez üretilir; her tamamlanan geri alma döngüsünden sonra yenilenir (yeniden deneme yeni anahtarla gider). */
     private requestId = crypto.randomUUID();
