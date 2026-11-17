@@ -80,7 +80,7 @@ const TIME_OPTIONS = (Object.keys(MIGRATION_MEETING_TIME_LABELS) as MigrationMee
                         } @else {
                             içe aktarma ekranına
                         }
-                        yükleyin. Gerekirse destek ekibimiz sizin izninizle ekran paylaşımında yardım eder; dosyanızı almaz. Yüklenen satırlar işlem bittikten 30 gün sonra silinir.
+                        yükleyin. Gerekirse destek ekibimiz sizin izninizle ekran paylaşımında yardım eder; dosyanızı almaz. Yüklenen satırların ayrıntısı, aktarmanın geri alma süresi dolunca silinir.
                     </p-message>
                 </section>
 

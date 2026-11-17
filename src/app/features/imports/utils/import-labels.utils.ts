@@ -300,7 +300,7 @@ const PROBLEM_MESSAGES: Readonly<Record<string, string>> = {
     'Imports.CommitBlocked': 'Aktarma şu an başlatılamıyor. Doğrulama sonucundaki engelleri giderip yeniden doğrulayın.',
     'Imports.AccessDenied': 'Bu işlem için gerekli yetkiniz yok (müşteri, hasta, aşı, muayene, ücret, randevu veya ürün ekleme yetkisi). Yöneticinizle görüşün.',
     'Imports.RollbackBlocked': 'Bağlı kaydı olan kayıtlar var; hiçbir şey silinmedi. Aşağıdaki listeye bakın.',
-    'Imports.RollbackWindowClosed': 'Geri alma süresi doldu; aktarma kesinleşti. Aktarmalar uygulandıktan sonra 30 gün içinde geri alınabilir.'
+    'Imports.RollbackWindowClosed': 'Geri alma süresi doldu; aktarma kesinleşti. Aktarmalar yalnız geri alma süresi içinde geri alınabilir.'
 };
 
 /** Sayfada gösterilecek Türkçe hata; içe aktarma kodları önce, sonra genel panel eşlemesi. */
