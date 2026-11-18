@@ -29,6 +29,14 @@
   --text-xs: 0.8572rem;
 }
 
+/* Yapay zekâ tonu: yalnız "makineden geldi, henüz doğrulanmadı" işareti (simge, Taslak etiketi, kesik çerçeve, AI çipi); eylem rengi değildir.
+   Değerler temada (`vetinity-preset.ts` → `ai`); açık/koyu oradan gelir. */
+@theme inline {
+  --color-ai: var(--p-ai-color);
+  --color-ai-surface: var(--p-ai-background);
+  --color-ai-border: var(--p-ai-border-color);
+}
+
 /*
   The default border color has changed to `currentcolor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still

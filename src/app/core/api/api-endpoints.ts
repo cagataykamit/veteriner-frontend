@@ -577,6 +577,20 @@ export const ApiEndpoints = {
         activate: (id: string) => `/api/v1/clinical-snippets/${encodeURIComponent(id)}/activate`,
         deactivate: (id: string) => `/api/v1/clinical-snippets/${encodeURIComponent(id)}/deactivate`
     },
+    /** Yapay zekâ (Veteriner `docs/AI_HISTORY_SUMMARY_API_CONTRACT.md`, `docs/AI_DRAFTS_API_CONTRACT.md`); hepsi `Ai.Use` ister. */
+    ai: {
+        /** GET: giriş düğmesini göster / soluklaştır (`isAvailable`, `unavailableCode`, `clinicMonthUsedPercent`). */
+        status: () => `/api/v1/ai/status`,
+        /** POST, gövde yok (`Pets.Read` de gerekir): kaydedilmeyen taslak özet. */
+        petHistorySummary: (petId: string) => `/api/v1/pets/${encodeURIComponent(petId)}/ai/history-summary`,
+        /** GET `?targetType=&targetId=`: kaydın karar bekleyen taslakları (en çok 20). */
+        drafts: () => `/api/v1/ai/drafts`,
+        draftById: (id: string) => `/api/v1/ai/drafts/${encodeURIComponent(id)}`,
+        /** POST `{ editedContent? }`: hedef kayda özelliğin uygulayıcısıyla yazar. */
+        draftAccept: (id: string) => `/api/v1/ai/drafts/${encodeURIComponent(id)}/accept`,
+        /** POST, gövde yok: hiçbir kayda yazılmaz. */
+        draftDiscard: (id: string) => `/api/v1/ai/drafts/${encodeURIComponent(id)}/discard`
+    },
     examinationTemplates: {
         /** GET (Query: `search`, `includeInactive`, `page`, `pageSize`) ve POST. */
         list: () => `/api/v1/examination-templates`,

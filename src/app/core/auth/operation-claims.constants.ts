@@ -254,3 +254,6 @@ export const IMPORTS_MANAGE_CLAIM = 'Imports.Manage' as const;
 
 /** Veri içe aktarma: onaylayıp uygulama ve hatırlatmaları açma */
 export const IMPORTS_COMMIT_CLAIM = 'Imports.Commit' as const;
+
+/** Yapay zekâ özelliklerini kullanma (`AI_HISTORY_SUMMARY_API_CONTRACT.md` §0); sekretere verilmez. Yoksa AI girişleri hiç görünmez. */
+export const AI_USE_CLAIM = 'Ai.Use' as const;
