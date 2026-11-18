@@ -175,9 +175,9 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                     }
                     <!-- Telefonda Gün (ajanda) ve Ay; Hafta geniş ekranda. Düğme genişlikleri sabit (seçili olanın kalın yazısı yeri kaydırmasın). -->
                     <div class="inline-flex rounded-lg border border-surface bg-surface-50 dark:bg-surface-800 p-0.5" role="group" aria-label="Görünüm">
-                        <button type="button" class="w-16 py-1 rounded-md text-sm text-center cursor-pointer" [class]="segClass('day')" [attr.aria-pressed]="viewMode() === 'day'" (click)="changeViewMode('day')">Gün</button>
-                        <button type="button" class="hidden lg:block w-16 py-1 rounded-md text-sm text-center cursor-pointer" [class]="segClass('week')" [attr.aria-pressed]="viewMode() === 'week'" (click)="changeViewMode('week')">Hafta</button>
-                        <button type="button" class="w-16 py-1 rounded-md text-sm text-center cursor-pointer" [class]="segClass('month')" [attr.aria-pressed]="viewMode() === 'month'" (click)="changeViewMode('month')" data-testid="calendar-view-month">Ay</button>
+                        <button type="button" class="w-[4.75rem] py-1.5 rounded-md text-[15px] text-center cursor-pointer" [class]="segClass('day')" [attr.aria-pressed]="viewMode() === 'day'" (click)="changeViewMode('day')">Gün</button>
+                        <button type="button" class="hidden lg:block w-[4.75rem] py-1.5 rounded-md text-[15px] text-center cursor-pointer" [class]="segClass('week')" [attr.aria-pressed]="viewMode() === 'week'" (click)="changeViewMode('week')">Hafta</button>
+                        <button type="button" class="w-[4.75rem] py-1.5 rounded-md text-[15px] text-center cursor-pointer" [class]="segClass('month')" [attr.aria-pressed]="viewMode() === 'month'" (click)="changeViewMode('month')" data-testid="calendar-view-month">Ay</button>
                     </div>
                     <!-- Filtreler açılır panelde; düğmede etkin filtre sayısı. Durum çiplerindeki şerit renk açıklamasıdır. -->
                     <div class="relative">
