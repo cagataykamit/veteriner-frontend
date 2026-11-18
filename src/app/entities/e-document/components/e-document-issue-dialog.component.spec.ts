@@ -6,7 +6,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { EDocumentDto, EDocumentPreviewDto } from '@/app/entities/e-document/models/e-document.model';
 import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
-import { eDocumentReturnLabel, eDocumentSetupDoneValue, eDocumentStatusLabel, eDocumentTypeLabel, isEDocumentPending } from '@/app/entities/e-document/utils/e-document-labels';
+import { E_DOCUMENT_SETUP_ISSUE, eDocumentReturnLabel, eDocumentSetupDoneValue, eDocumentStatusLabel, eDocumentTypeLabel, isEDocumentPending } from '@/app/entities/e-document/utils/e-document-labels';
 import { clearEDocumentResume, readEDocumentResume } from '@/app/entities/e-document/utils/e-document-resume';
 import { EDocumentIssueDialogComponent, issueErrorMessage } from './e-document-issue-dialog.component';
 
@@ -22,6 +22,7 @@ const preview: EDocumentPreviewDto = {
     ],
     skipped: [],
     taxpayerType: 'Both',
+    taxpayerIdentityMasked: '100******46',
     clinicSetupIssues: []
 };
 
@@ -100,15 +101,29 @@ describe('EDocumentIssueDialogComponent', () => {
         expect(cmp.loadError()).toBeNull();
         expect(cmp.setupItems().map((i) => [i.code, i.missingIndex, i.doneValue])).toEqual([
             ['TaxpayerTypeMissing', 0, ''],
+            ['TaxpayerIdentityMissing', null, 'TCKN 100******46'],
             ['NotConnected', null, 'Bağlı · Paraşüt · test ortamı']
         ]);
-        expect(cmp.setupReadyCount()).toBe(1);
+        expect(cmp.setupReadyCount()).toBe(2);
         expect(text).toContain('Belge kesmeden önce bir ayar gerekli');
-        expect(text).toContain('1 / 2 hazır');
+        expect(text).toContain('2 / 3 hazır');
         expect(body.querySelector('[data-testid="e-document-setup-primary"]')?.textContent).toContain('Mükellef bilgilerini aç');
         expect(body.querySelector('[data-testid="e-document-setup"] .text-danger')).toBeNull();
         expect(text.toLocaleLowerCase('tr-TR')).not.toContain('hata');
         expect(body.querySelector('[data-testid="e-document-issue"]')).toBeNull();
+    });
+
+    it('mükellef türü ve VKN / TCKN eksikse sırayla numaralanır, ikisi de mükellef bilgilerine götürür', () => {
+        const cmp = render({ ...missingTaxpayer, taxpayerIdentityMasked: null, clinicSetupIssues: [{ code: 'TaxpayerTypeMissing' }, { code: 'TaxpayerIdentityMissing' }] }).componentInstance;
+
+        expect(cmp.setupItems().map((i) => [i.code, i.missingIndex])).toEqual([
+            ['TaxpayerTypeMissing', 0],
+            ['TaxpayerIdentityMissing', 1],
+            ['NotConnected', null]
+        ]);
+        expect(cmp.setupReadyCount()).toBe(1);
+        expect(E_DOCUMENT_SETUP_ISSUE.TaxpayerIdentityMissing.action).toBe('Mükellef bilgilerini aç');
+        expect(E_DOCUMENT_SETUP_ISSUE.TaxpayerIdentityMissing.fragment).toBe('mukellef-bilgileri');
     });
 
     it('ayar düğmesi seçimi saklar ve dönüş adresiyle ayar sayfasına gider', () => {
@@ -133,7 +148,7 @@ describe('EDocumentIssueDialogComponent', () => {
     });
 
     it('klinik ayarını düzenleme yetkisi yoksa düğme yerine kilitli not gösterir', () => {
-        const fixture = render({ ...missingTaxpayer, clinicSetupIssues: [{ code: 'TaxpayerTypeMissing' }, { code: 'NotConnected' }] }, { chargeIds: ['c1'] }, false);
+        const fixture = render({ ...missingTaxpayer, clinicSetupIssues: [{ code: 'TaxpayerTypeMissing' }, { code: 'TaxpayerIdentityMissing' }, { code: 'NotConnected' }] }, { chargeIds: ['c1'] }, false);
 
         fixture.componentRef.setInput('visible', true);
         fixture.detectChanges();
@@ -142,8 +157,8 @@ describe('EDocumentIssueDialogComponent', () => {
         expect(fixture.componentInstance.canFixSetup).toBe(false);
         expect(body.querySelector('[data-testid="e-document-setup-primary"]')).toBeNull();
         expect(body.querySelector('[data-testid="e-document-setup"] button')).toBeNull();
-        expect(body.querySelector('[data-testid="e-document-setup-locked"]')?.textContent).toContain('“Mükellef türü, e-Belge entegratörü bağlantısı”');
-        expect(body.textContent).toContain('0 / 2 hazır');
+        expect(body.querySelector('[data-testid="e-document-setup-locked"]')?.textContent).toContain('“Mükellef türü, Kliniğin VKN / TCKN numarası, e-Belge entegratörü bağlantısı”');
+        expect(body.textContent).toContain('0 / 3 hazır');
     });
 
     it('gerçek sunucu hatası loadError olarak kalır', () => {
@@ -200,6 +215,7 @@ describe('e-document-labels', () => {
 
     it('tamam olan ayarın değeri ve dönüş düğmesi', () => {
         expect(eDocumentSetupDoneValue('TaxpayerTypeMissing', { ...preview, taxpayerType: 'SelfEmployed' })).toBe('Serbest meslek');
+        expect(eDocumentSetupDoneValue('TaxpayerIdentityMissing', { ...preview, taxpayerIdentityMasked: '123*****90' })).toBe('VKN 123*****90');
         expect(eDocumentSetupDoneValue('NotConnected', { ...preview, connection: { status: 'Connected', environment: 'Live', providerName: null } })).toBe('Bağlı · canlı ortam');
         expect(eDocumentReturnLabel('/panel/charges?clientId=x')).toBe('Ücretlere dön');
         expect(eDocumentReturnLabel('/panel/e-documents')).toBe('e-Belgelere dön');

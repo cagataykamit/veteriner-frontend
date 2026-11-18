@@ -74,13 +74,23 @@ export interface EDocumentSetupIssueInfo {
     fragment: string;
 }
 
+/** Mükellef türü ve VKN / TCKN aynı kartta: aktif kliniğin ayrıntı sayfası, "Mükellef bilgileri". */
+const TAXPAYER_CARD: Pick<EDocumentSetupIssueInfo, 'action' | 'route' | 'fragment'> = {
+    action: 'Mükellef bilgilerini aç',
+    route: (clinicId) => (clinicId ? ['/panel/settings/clinics', clinicId] : ['/panel/settings/clinics']),
+    fragment: 'mukellef-bilgileri'
+};
+
 export const E_DOCUMENT_SETUP_ISSUE: Record<EDocumentSetupIssueCode, EDocumentSetupIssueInfo> = {
     TaxpayerTypeMissing: {
         title: 'Mükellef türü',
         reason: 'Belgenin e-SMM mi fatura mı olacağı bu seçimden çıkar.',
-        action: 'Mükellef bilgilerini aç',
-        route: (clinicId) => (clinicId ? ['/panel/settings/clinics', clinicId] : ['/panel/settings/clinics']),
-        fragment: 'mukellef-bilgileri'
+        ...TAXPAYER_CARD
+    },
+    TaxpayerIdentityMissing: {
+        title: 'Kliniğin VKN / TCKN numarası',
+        reason: 'Belgede düzenleyen olarak kliniğin vergi kimliği yazılır.',
+        ...TAXPAYER_CARD
     },
     NotConnected: {
         title: 'e-Belge entegratörü bağlantısı',
@@ -92,12 +102,18 @@ export const E_DOCUMENT_SETUP_ISSUE: Record<EDocumentSetupIssueCode, EDocumentSe
 };
 
 /** Hazırlık listesinin sırası; tamam olanlar da bu sırayla (değeriyle) görünür. */
-export const E_DOCUMENT_SETUP_ORDER: readonly EDocumentSetupIssueCode[] = ['TaxpayerTypeMissing', 'NotConnected'];
+export const E_DOCUMENT_SETUP_ORDER: readonly EDocumentSetupIssueCode[] = ['TaxpayerTypeMissing', 'TaxpayerIdentityMissing', 'NotConnected'];
 
-/** Tamam olan ayarın değeri: seçili mükellef türü ya da bağlı entegratör ve ortamı. */
+/** Tamam olan ayarın değeri: seçili mükellef türü, maskeli VKN / TCKN ya da bağlı entegratör ve ortamı. */
 export function eDocumentSetupDoneValue(code: EDocumentSetupIssueCode, preview: EDocumentPreviewDto): string {
     if (code === 'TaxpayerTypeMissing') {
         return CLINIC_TAXPAYER_TYPE_OPTIONS.find((o) => o.value === preview.taxpayerType)?.label ?? '';
+    }
+
+    if (code === 'TaxpayerIdentityMissing') {
+        const masked = preview.taxpayerIdentityMasked;
+
+        return masked ? `${masked.length === 10 ? 'VKN' : 'TCKN'} ${masked}` : '';
     }
 
     const environment = preview.connection.environment === 'Live' ? 'canlı ortam' : preview.connection.environment === 'Test' ? 'test ortamı' : null;

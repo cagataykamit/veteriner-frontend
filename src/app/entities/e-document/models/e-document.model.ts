@@ -124,12 +124,14 @@ export interface EDocumentPreviewDto {
     skipped: { chargeId: string; reason: 'AlreadyDocumented' | 'Voided' }[];
     /** Klinik mükellef türü; seçilmemişse `null` (o zaman `groups` boş). */
     taxpayerType: ClinicTaxpayerType | null;
+    /** Kliniğin VKN / TCKN'si maskeli; yoksa `null`. */
+    taxpayerIdentityMasked: string | null;
     /** Belge kesmeden önce klinikte tamamlanması gereken ayarlar; boş değilse kesme reddedilir. */
     clinicSetupIssues: { code: EDocumentSetupIssueCode }[];
 }
 
 /** Önizlemenin klinik hazırlık listesindeki eksik (backend sözleşmesi §4.1). */
-export type EDocumentSetupIssueCode = 'TaxpayerTypeMissing' | 'NotConnected';
+export type EDocumentSetupIssueCode = 'TaxpayerTypeMissing' | 'TaxpayerIdentityMissing' | 'NotConnected';
 
 export interface UndocumentedChargeDto {
     chargeId: string;
