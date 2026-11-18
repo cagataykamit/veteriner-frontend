@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -26,6 +26,7 @@ import {
     eDocumentTypeLabel,
     isEDocumentPending
 } from '@/app/entities/e-document/utils/e-document-labels';
+import { consumeEDocumentResume } from '@/app/entities/e-document/utils/e-document-resume';
 import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -288,6 +289,7 @@ export class EDocumentsPageComponent implements OnInit {
     private readonly service = inject(EDocumentsService);
     private readonly auth = inject(AuthService);
     private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
     private readonly messages = inject(MessageService);
     readonly ro = inject(TenantReadOnlyContextService);
 
@@ -344,6 +346,7 @@ export class EDocumentsPageComponent implements OnInit {
 
         this.clientId = query.get('clientId')?.trim() || null;
         this.view.set(query.get('view') === 'undocumented' ? 'undocumented' : 'documents');
+        this.resumeEDocument();
         this.load(1);
     }
 
@@ -430,6 +433,16 @@ export class EDocumentsPageComponent implements OnInit {
     openIssueForSelection(): void {
         this.issueSource.set({ chargeIds: this.selected().map((s) => s.chargeId) });
         this.issueVisible = true;
+    }
+
+    /** Eksik ayarı tamamlayıp ayar sayfasından dönüldüyse aynı seçimle pencere yeniden açılır. */
+    private resumeEDocument(): void {
+        const source = consumeEDocumentResume(this.route, this.router);
+
+        if (source) {
+            this.issueSource.set(source);
+            this.issueVisible = true;
+        }
     }
 
     hasPdf(row: EDocumentListItemDto): boolean {

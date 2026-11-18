@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, ViewportScroller } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, effect, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -16,6 +16,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { ClinicAppointmentSettingsSectionComponent } from '@/app/features/clinics/components/clinic-appointment-settings-section.component';
+import { EDocumentReturnBannerComponent } from '@/app/entities/e-document/components/e-document-return-banner.component';
 import { ClinicTaxpayerSettingsSectionComponent } from '@/app/features/clinics/components/clinic-taxpayer-settings-section.component';
 import { ClinicWorkingHoursSectionComponent } from '@/app/features/clinics/components/clinic-working-hours-section.component';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
@@ -55,6 +56,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
         ClinicWorkingHoursSectionComponent,
         ClinicAppointmentSettingsSectionComponent,
         ClinicTaxpayerSettingsSectionComponent,
+        EDocumentReturnBannerComponent,
         FormSubmitDirective,
         FormErrorSummaryComponent,
         ReadOnlyReasonDirective
@@ -63,6 +65,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="top-right" />
+        <app-e-document-return-banner #returnBanner />
         @if (loading()) {
             <app-loading-state message="Klinik bilgileri yükleniyor…" />
         } @else if (loadError()) {
@@ -241,7 +244,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
             }
 
             @if (canUpdateClinic) {
-                <app-clinic-taxpayer-settings-section [clinicId]="d.id" />
+                <app-clinic-taxpayer-settings-section [clinicId]="d.id" (saved)="returnBanner.recheck()" />
             }
         }
         <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
@@ -258,6 +261,9 @@ export class ClinicDetailPageComponent implements OnInit {
     }
 
     private readonly route = inject(ActivatedRoute);
+    private readonly viewportScroller = inject(ViewportScroller);
+    /** Adresteki parçaya (ör. "Belge kes"ten gelinen #mukellef-bilgileri) yalnız ilk yüklemede kaydırılır. */
+    private fragmentPending = true;
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
     private readonly clinicsApi = inject(ClinicsService);
@@ -334,6 +340,18 @@ export class ClinicDetailPageComponent implements OnInit {
         }
     }
 
+    /** Kartlar veri gelince çizilir; yönlendiricinin parça kaydırması o an hedefi bulamaz, çizimden sonra yeniden denenir. */
+    private scrollToFragmentOnce(): void {
+        const fragment = this.route.snapshot.fragment;
+
+        if (!this.fragmentPending || !fragment) {
+            return;
+        }
+
+        this.fragmentPending = false;
+        setTimeout(() => this.viewportScroller.scrollToAnchor(fragment));
+    }
+
     private load(id: string): void {
         this.loading.set(true);
         this.loadError.set(null);
@@ -345,6 +363,7 @@ export class ClinicDetailPageComponent implements OnInit {
                 this.detail.set(vm);
                 this.patchFormFromVm(vm);
                 this.loading.set(false);
+                this.scrollToFragmentOnce();
             },
             error: (e: Error) => {
                 this.loadError.set(panelHttpFailureMessage(e, 'Yükleme hatası'));

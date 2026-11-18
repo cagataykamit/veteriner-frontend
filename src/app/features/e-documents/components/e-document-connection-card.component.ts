@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -38,7 +38,7 @@ const RETURN_REASONS: Record<string, string> = {
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [FormsModule, ButtonModule, InputTextModule, SelectModule, AppLoadingStateComponent, AppErrorStateComponent, AppStatusTagComponent, TrDateTimePipe, ReadOnlyReasonDirective],
     template: `
-        <div class="card mb-4" data-testid="e-document-connection">
+        <div class="card mb-4" id="entegrator" data-testid="e-document-connection">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <h5 class="m-0">Entegratör</h5>
                 @if (connection()) {
@@ -139,6 +139,8 @@ const RETURN_REASONS: Record<string, string> = {
 })
 export class EDocumentConnectionCardComponent implements OnInit {
     readonly clinicId = input.required<string>();
+    /** Bağlantı yüklendi ya da değişti (ör. "Belge kes"ten gelindiyse dönüş şeridi yeniden denetler). */
+    readonly connectionChange = output<EDocumentConnectionDto>();
 
     private readonly service = inject(EDocumentsService);
     private readonly messages = inject(MessageService);
@@ -273,6 +275,7 @@ export class EDocumentConnectionCardComponent implements OnInit {
 
     private setConnection(c: EDocumentConnectionDto): void {
         this.connection.set(c);
+        this.connectionChange.emit(c);
         this.selectedProvider ??= c.provider ?? c.availableProviders.find((p) => p.configured)?.provider ?? null;
         this.loading.set(false);
     }
