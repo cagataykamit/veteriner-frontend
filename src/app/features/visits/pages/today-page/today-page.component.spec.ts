@@ -186,6 +186,28 @@ describe('TodayPageComponent', () => {
         expect(views).not.toContain('Bugün');
     });
 
+    it('başlığın yanında soluk gün, tarih ve saat (İstanbul): "Cumartesi, 10 Ekim · 13:00"', async () => {
+        const f = await create(['Visits.Read'], { date: '2026-10-10', activeHospitalizations: [], items: [] });
+        const note = (f.nativeElement as HTMLElement).querySelector('[data-testid="page-header-title-note"]')!;
+
+        expect(note.textContent?.trim()).toBe('Cumartesi, 10 Ekim · 13:00');
+        expect(note.className).toContain('text-muted-color');
+    });
+
+    it('Açık işler çipleri Liste / Hastalar seçimleriyle aynı satırda, sağa yaslı', async () => {
+        const f = await create(['Visits.Read'], {
+            date: 'd',
+            activeHospitalizations: [],
+            items: [],
+            openItems: { unchargedVisitCount: 2, outstandingVisitCount: 0, outstandingAmount: 0, awaitingLabCount: 0, incompleteVisitCount: 0 }
+        });
+        const strip = (f.nativeElement as HTMLElement).querySelector('app-today-open-items') as HTMLElement;
+
+        expect(strip.classList).toContain('ml-auto');
+        expect(strip.parentElement?.querySelector(':scope > p-selectbutton')).not.toBeNull();
+        expect(strip.parentElement?.className).toContain('flex');
+    });
+
     it('hasta ve sahip adı detay sayfasına bağlantıdır', async () => {
         const f = await create(['Visits.Read'], {
             date: '2026-10-10',
@@ -1072,10 +1094,28 @@ describe('TodayPageComponent', () => {
 
             expect(root.querySelector('[data-testid="today-completed-toggle"]')).toBeNull();
             expect(done.getAttribute('data-today-row')).toBe('done');
-            expect(done.className).toContain('[&>td]:h-[2.375rem]');
-            expect(open.className).toContain('[&>td]:h-[2.875rem]');
+            expect(done.className).toContain('[&>td]:h-[38px]');
+            expect(open.className).toContain('[&>td]:h-[46px]');
             expect(done.querySelector('[data-testid="today-pet-link"]')?.className).not.toContain('text-primary');
             expect(open.querySelector('[data-testid="today-pet-link"]')?.className).toContain('text-primary');
+        });
+
+        it('taslak ölçüleri: px sütun genişlikleri, küçük soluk başlıklar, küçük sıkı ara başlık; müşteri adı düz metin renginde', async () => {
+            const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'w', clientPhone: '905439580091' })] });
+            const root = f.nativeElement as HTMLElement;
+            const cols = Array.from(root.querySelectorAll('colgroup col')).map((c) => Array.from(c.classList).find((k) => k.startsWith('w-')));
+            const wrapper = root.querySelector('table')!.closest('.overflow-x-auto') as HTMLElement;
+            const groupCell = root.querySelector('[data-testid="today-group-header"] td') as HTMLElement;
+            const client = root.querySelector('[data-testid="today-client-link"]') as HTMLElement;
+
+            expect(cols).toEqual(['w-[80px]', 'w-[220px]', 'w-[230px]', 'w-[160px]', 'w-[180px]', 'w-auto', 'w-[230px]']);
+            expect(wrapper.className).toContain('[&_th]:text-[12px]!');
+            expect(wrapper.className).toContain('[&_th]:text-muted-color!');
+            expect(groupCell.className).toContain('text-[11.5px]!');
+            expect(groupCell.className).toContain('tracking-[0.6px]');
+            expect(client.className).toContain('text-color');
+            expect(client.className).not.toContain('text-primary');
+            expect(client.closest('td')?.textContent).toContain('+90 543 958 00 91');
         });
 
         it('Gelmedi satırında ödeme çipi ve kalan yok; durum soluk "Gelmedi", planlanan saat görünür; yatış rozeti yine görünür', async () => {

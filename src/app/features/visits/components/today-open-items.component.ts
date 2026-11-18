@@ -29,8 +29,8 @@ const TONE_MUTED = 'text-muted-color border-surface-300 dark:border-surface-700'
     imports: [RouterLink, TodayOpenVisitsChipComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <section class="flex flex-wrap items-center gap-2 mb-4" aria-label="Açık işler" data-testid="open-items-strip">
-            <span class="text-sm font-medium">Açık işler</span>
+        <section class="flex flex-wrap items-center gap-[6px]" aria-label="Açık işler" data-testid="open-items-strip">
+            <span class="text-[13px] font-semibold mr-[2px]">Açık işler</span>
             <ng-content />
             @for (e of entries(); track e.key) {
                 @if (e.visits; as kind) {

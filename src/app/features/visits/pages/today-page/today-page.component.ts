@@ -76,7 +76,7 @@ import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-load
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatTimeDisplay, formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay, formatWeekdayDayMonthDisplay } from '@/app/shared/utils/date.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
@@ -197,18 +197,22 @@ export class TodayPageComponent implements OnInit {
     /** Listede hiçbir satırda sorumlu hekim yoksa Hekim sütunu çizilmez (her satırda "—" yer kaplamasın). */
     readonly hasVet = computed(() => (this.today()?.items ?? []).some((i) => !!i.responsibleVeterinarianName));
     /**
-     * Sütunlar kapsayıcı genişliğine göre (kapsayıcı sorgusu; ekran/yakınlaştırma değil): <72 rem Hekim gizlenir (ad Hasta hücresine iner),
-     * <64 rem Neden / not gizlenir (açık iş çipleri Durum hücresine iner), <50 rem düğmeler yalnız simge. Sınıflar tam yazılmalı (Tailwind kaynaktan tarar).
+     * Sütun genişlikleri taslak A ile aynı (px): Saat dar, Hasta ve Müşteri geniş, Neden / not kalan yeri alır, İşlem sağa yaslı.
+     * Kapsayıcı genişliğine göre (kapsayıcı sorgusu; ekran/yakınlaştırma değil): <72 rem Hekim gizlenir (ad Hasta hücresine iner) ve Hasta /
+     * Müşteri esner, <64 rem Neden / not gizlenir (açık iş çipleri Durum hücresine iner), <50 rem düğmeler yalnız simge. Sınıflar tam yazılmalı
+     * (Tailwind kaynaktan tarar).
      */
     readonly columns = computed<TodayColumn[]>(() => [
-        { label: 'Saat', className: 'w-[5rem]' },
-        { label: 'Hasta', className: 'w-[12.5rem] @max-[64rem]:w-auto' },
-        { label: 'Müşteri', className: 'w-[12.5rem] @max-[64rem]:w-auto' },
-        ...(this.hasVet() ? [{ label: 'Hekim', className: 'w-[9.5rem] @max-[72rem]:hidden' }] : []),
-        { label: 'Durum', className: 'w-[11rem]' },
+        { label: 'Saat', className: 'w-[80px]' },
+        { label: 'Hasta', className: 'w-[220px] @max-[72rem]:w-auto' },
+        { label: 'Müşteri', className: 'w-[230px] @max-[72rem]:w-auto' },
+        ...(this.hasVet() ? [{ label: 'Hekim', className: 'w-[160px] @max-[72rem]:hidden' }] : []),
+        { label: 'Durum', className: 'w-[180px]' },
         { label: 'Neden / not', className: 'w-auto @max-[64rem]:hidden' },
-        { label: 'İşlem', className: 'w-[15.5rem] @max-[50rem]:w-[8rem]' }
+        { label: 'İşlem', className: 'w-[230px] @max-[50rem]:w-[120px]' }
     ]);
+    /** Başlığın yanında soluk tarih ve saat ("Çarşamba, 19 Kasım · 15:20"); her yenilemede güncellenir. */
+    readonly headerNote = computed(() => `${formatWeekdayDayMonthDisplay(this.now())} · ${formatTimeDisplay(this.now())}`);
     /** Liste başlığındaki sayım ("1 bekleniyor · 2 sırada …"); yalnız günlük listede. */
     readonly summary = computed(() => {
         const counts = new Map<TodayStatusTone, number>();

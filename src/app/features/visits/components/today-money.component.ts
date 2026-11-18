@@ -31,7 +31,7 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
             }
         }
         @if ((item().outstandingAmount ?? 0) > 0) {
-            <span class="text-sm font-semibold whitespace-nowrap text-amber-700 dark:text-amber-300" [attr.title]="remainingTitle()" data-testid="today-remaining">Kalan {{ item().outstandingAmount | money }}</span>
+            <span class="text-[13px] font-semibold whitespace-nowrap text-amber-700 dark:text-amber-300" [attr.title]="remainingTitle()" data-testid="today-remaining">Kalan {{ item().outstandingAmount | money }}</span>
         }
     `
 })
