@@ -36,7 +36,13 @@ const DAYS = 7;
     imports: [FormsModule, SelectModule, ButtonModule],
     template: `
         <section class="rounded-border border border-surface p-3 flex flex-col gap-3" aria-labelledby="free-slot-title" data-testid="free-slot-finder">
-            <h3 id="free-slot-title" class="m-0 text-base font-semibold"><i class="pi pi-search mr-2 text-primary" aria-hidden="true"></i>Boş saat bul</h3>
+            <h3 id="free-slot-title" class="m-0 text-base font-semibold">
+                <button type="button" class="w-full flex items-center gap-2 text-left cursor-pointer" [attr.aria-expanded]="open()" (click)="open.set(!open())" data-testid="free-slot-toggle">
+                    <i class="pi pi-search text-primary" aria-hidden="true"></i>Boş saat bul
+                    <i class="pi ml-auto !text-xs text-muted-color" [class]="open() ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i>
+                </button>
+            </h3>
+            @if (open()) {
             @if (reasons().length > 0) {
                 <div>
                     <label for="freeSlotReason" class="block text-xs text-muted-color mb-1">Randevu nedeni (süre)</label>
@@ -100,6 +106,7 @@ const DAYS = 7;
                     </ul>
                 }
             </div>
+            }
         </section>
     `
 })
@@ -109,6 +116,8 @@ export class AppointmentFreeSlotFinderComponent {
     readonly canCreate = input(false);
     /** Takvim yenilenince (randevu eklendi/iptal) liste de yenilenir. */
     readonly refreshKey = input(0);
+    /** Takvimin sağ panelinde katlanmış başlar ("Klinikte" üstte kalsın); başlığa tıklanınca açılır. */
+    readonly open = signal(false);
     readonly pick = output<FreeSlotPick>();
 
     private readonly reasonsApi = inject(AppointmentReasonsService);

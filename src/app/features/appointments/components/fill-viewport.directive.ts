@@ -32,13 +32,13 @@ export class FillViewportDirective {
             return;
         }
 
-        const top = Math.round(this.el.getBoundingClientRect().top + window.scrollY);
+        const top = Math.ceil(this.el.getBoundingClientRect().top + window.scrollY);
         const key = `${top}:${window.innerWidth}x${window.innerHeight}`;
 
         if (key !== this.measuredKey) {
             this.measuredKey = key;
             this.el.style.height = `${PROBE_PX}px`;
-            this.below = Math.max(0, document.documentElement.scrollHeight - (top + PROBE_PX));
+            this.below = Math.max(0, Math.ceil(document.documentElement.scrollHeight - (top + PROBE_PX)));
         }
 
         const height = `${Math.max(this.fillMin(), Math.floor(window.innerHeight - top - this.below))}px`;
