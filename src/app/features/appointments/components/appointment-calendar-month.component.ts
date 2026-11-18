@@ -62,8 +62,11 @@ const WEEKDAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
                             @if (c.closed) {
                                 <span class="absolute top-1.5 right-2 text-[11.5px] text-muted-color">kapalı</span>
                             } @else {
-                                <span class="text-xl md:text-[26px] font-bold leading-none tabular-nums">{{ c.appointments }}</span>
-                                <span class="hidden md:block text-[11.5px] text-muted-color mt-0.5">randevu</span>
+                                <!-- Sayı ve "randevu" tek satırda: alttaki aşı/gecikmiş satırıyla çakışmasın. -->
+                                <span class="flex items-baseline gap-1 -mt-2"
+                                    ><span class="text-xl md:text-[26px] font-bold leading-none tabular-nums">{{ c.appointments }}</span
+                                    ><span class="hidden md:inline text-[11.5px] text-muted-color">randevu</span></span
+                                >
                             }
                             <span class="hidden md:flex absolute left-2 right-2 bottom-1 items-center gap-1.5 text-[11.5px] text-muted-color">
                                 @if (c.vaccines) {

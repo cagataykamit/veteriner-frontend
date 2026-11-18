@@ -48,7 +48,7 @@ type WeekRow = { kind: 'item'; item: AppointmentCalendarItemVm; minute: number }
                         @if (d.day.vaccines; as v) {
                             <button
                                 type="button"
-                                class="flex items-center gap-1.5 whitespace-nowrap overflow-hidden rounded-md border border-dashed border-surface bg-surface-50 dark:bg-surface-800 px-2 py-1 text-[12.5px] text-left cursor-pointer hover:border-primary"
+                                class="shrink-0 flex items-center gap-1.5 whitespace-nowrap overflow-hidden rounded-md border border-dashed border-surface bg-surface-50 dark:bg-surface-800 px-2 py-1 text-[12.5px] text-left cursor-pointer hover:border-primary"
                                 (click)="dayOpen.emit(d.day.dateKey)"
                                 [attr.aria-label]="v.total + ' aşı' + (v.overdue ? ', ' + v.overdue + ' gecikmiş' : '') + ', günü aç'"
                                 [attr.data-testid]="'calendar-week-vaccines-' + d.day.dateKey"
@@ -62,11 +62,11 @@ type WeekRow = { kind: 'item'; item: AppointmentCalendarItemVm; minute: number }
                         }
                         @for (r of d.rows; track $index) {
                             @if (r.kind === 'now') {
-                                <div class="flex items-center gap-1.5 text-primary text-[11px] font-bold tabular-nums" aria-hidden="true">{{ clock(r.minute) }}<span class="flex-1 h-0.5 bg-primary"></span></div>
+                                <div class="shrink-0 flex items-center gap-1.5 text-primary text-[11px] font-bold tabular-nums" aria-hidden="true">{{ clock(r.minute) }}<span class="flex-1 h-0.5 bg-primary"></span></div>
                             } @else {
                                 <button
                                     type="button"
-                                    class="flex flex-col text-left rounded-md border border-l-[3px] px-2 py-1 cursor-pointer shadow-sm hover:shadow-md min-w-0"
+                                    class="shrink-0 flex flex-col text-left rounded-md border border-l-[3px] px-2 py-1 cursor-pointer shadow-sm hover:shadow-md min-w-0"
                                     [class]="cardClass(r.item)"
                                     [appCalendarBubble]="bubble(r.item)"
                                     (click)="open.emit(r.item.id)"

@@ -72,17 +72,25 @@ const MANY_COLUMNS = 4;
                         @if (c.kind === 'vaccines') {
                             <div class="relative flex items-center gap-2.5 px-3 py-2 border-l border-surface-100 dark:border-surface-800 min-w-0" data-testid="calendar-vaccine-column">
                                 <span class="w-8 h-8 shrink-0 rounded-full grid place-items-center bg-amber-400 text-amber-950" aria-hidden="true"><i class="pi pi-shield !text-sm"></i></span>
-                                <span class="min-w-0">
-                                    <span class="block font-semibold truncate">Aşılar</span>
-                                    <span class="block text-xs text-muted-color truncate"
-                                        ><b class="text-color font-semibold">{{ vaccines()!.waiting }}</b> bekliyor · {{ vaccines()!.applied.length }} uygulandı
+                                <!-- Dar sütunda liste bağlantısı kesilmesin: başlık satırının sağında, sayılar alt satırda. -->
+                                <span class="min-w-0 flex-1">
+                                    <span class="flex items-baseline gap-2 min-w-0">
+                                        <span class="font-semibold truncate">Aşılar</span>
                                         @if (listCount()) {
-                                            ·
-                                            <button type="button" class="text-primary font-semibold cursor-pointer hover:underline" [attr.aria-expanded]="listOpen()" (click)="listOpen.set(!listOpen())" data-testid="calendar-vaccine-list-toggle">
+                                            <button
+                                                type="button"
+                                                class="ml-auto shrink-0 text-xs text-primary font-semibold cursor-pointer hover:underline whitespace-nowrap"
+                                                [attr.aria-expanded]="listOpen()"
+                                                (click)="listOpen.set(!listOpen())"
+                                                data-testid="calendar-vaccine-list-toggle"
+                                            >
                                                 {{ listLabel() }} ▾
                                             </button>
                                         }
                                     </span>
+                                    <span class="block text-xs text-muted-color truncate"
+                                        ><b class="text-color font-semibold">{{ vaccines()!.waiting }}</b> bekliyor · {{ vaccines()!.applied.length }} uygulandı</span
+                                    >
                                 </span>
                                 @if (listOpen()) {
                                     <div class="absolute left-2 right-2 top-full mt-1 z-50 max-h-80 overflow-y-auto rounded-lg border border-surface bg-surface-0 dark:bg-surface-900 shadow-lg p-2 flex flex-col gap-1" data-testid="calendar-vaccine-list">
