@@ -113,7 +113,7 @@
                     @for (row of rows(); track row.id) {
                         @switch (row.kind) {
                             @case ('group') {
-                                <h3 class="m-0 mt-2 text-xs font-bold uppercase tracking-wider text-muted-color" data-testid="today-group-header">
+                                <h3 class="m-0 mt-2 text-[13px] font-semibold text-color" data-testid="today-group-header">
                                     {{ row.group.title }}<ng-container *ngTemplateOutlet="groupCount; context: { $implicit: row.group.items.length }" />
                                 </h3>
                             }
@@ -191,7 +191,7 @@
                             @switch (row.kind) {
                                 @case ('group') {
                                     <tr data-testid="today-group-header">
-                                        <td [attr.colspan]="columns().length" class="h-[30px] px-[10px]! pt-[8px]! pb-[4px]! text-[11.5px]! font-bold uppercase tracking-[0.6px] text-muted-color">
+                                        <td [attr.colspan]="columns().length" class="h-[32px] px-[10px]! pt-[9px]! pb-[5px]! text-[13px]! font-semibold text-color">
                                             {{ row.group.title }}<ng-container *ngTemplateOutlet="groupCount; context: { $implicit: row.group.items.length }" />
                                         </td>
                                     </tr>
@@ -413,7 +413,7 @@
 <!-- Grup ara başlığındaki kayıt sayısı: başlıktan ayrışsın diye liste başlığındaki sayaçla aynı küçük rozet. -->
 <ng-template #groupCount let-count>
     <span
-        class="ml-[7px] inline-block align-[1px] text-[11px] leading-[16px] font-semibold normal-case tracking-normal rounded-full px-[7px] border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-800 text-muted-color"
+        class="ml-[7px] inline-block align-[1px] text-[11px] leading-[16px] font-semibold rounded-full px-[7px] border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-800 text-muted-color"
         [attr.aria-label]="count + ' kayıt'"
         data-testid="today-group-count"
         >{{ count }}</span
