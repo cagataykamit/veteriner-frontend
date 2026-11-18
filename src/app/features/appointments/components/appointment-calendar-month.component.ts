@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import type { CalendarDaySummaryVm } from '@/app/entities/appointment/models/calendar-day-summary.model';
+import { FillViewportDirective } from '@/app/features/appointments/components/fill-viewport.directive';
 
 interface MonthCell {
     dateKey: string;
@@ -26,20 +27,22 @@ const WEEKDAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
 @Component({
     selector: 'app-appointment-calendar-month',
     standalone: true,
+    imports: [FillViewportDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="rounded-border border border-surface overflow-hidden bg-surface-0 dark:bg-surface-900" data-testid="calendar-month">
+        <div class="flex flex-col" appFillViewport>
+        <div class="flex-1 min-h-0 flex flex-col rounded-border border border-surface overflow-hidden bg-surface-0 dark:bg-surface-900" data-testid="calendar-month">
             <div class="grid grid-cols-7 border-b border-surface-100 dark:border-surface-800">
                 @for (w of weekdays; track w) {
                     <div class="px-2.5 py-1.5 text-xs font-semibold text-muted-color">{{ w }}</div>
                 }
             </div>
             @for (week of cells(); track week[0].dateKey) {
-                <div class="grid grid-cols-7 border-b border-surface-100 dark:border-surface-800 last:border-b-0">
+                <div class="flex-1 min-h-0 grid grid-cols-7 border-b border-surface-100 dark:border-surface-800 last:border-b-0">
                     @for (c of week; track c.dateKey) {
                         <button
                             type="button"
-                            class="relative flex flex-col items-center justify-center min-w-0 h-16 md:h-[5.25rem] border-l border-surface-100 dark:border-surface-800 first:border-l-0 cursor-pointer hover:ring-2 hover:ring-inset hover:ring-primary-300 focus-visible:outline-2 focus-visible:outline-primary"
+                            class="relative flex flex-col items-center justify-center min-w-0 min-h-14 h-full border-l border-surface-100 dark:border-surface-800 first:border-l-0 cursor-pointer hover:ring-2 hover:ring-inset hover:ring-primary-300 focus-visible:outline-2 focus-visible:outline-primary"
                             [class.opacity-40]="!c.inMonth"
                             [class.calendar-closed]="c.closed"
                             [class.ring-2]="c.today"
@@ -78,13 +81,14 @@ const WEEKDAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
                 </div>
             }
         </div>
-        <p class="m-0 mt-2 flex items-center justify-end gap-1.5 text-xs text-muted-color" aria-hidden="true">
+        <p class="m-0 mt-1.5 flex items-center justify-end gap-1.5 text-xs text-muted-color" aria-hidden="true">
             az
             @for (l of legend; track l) {
                 <span class="inline-block w-[18px] h-3 rounded-sm border border-surface-100 dark:border-surface-800" [style.background-color]="mix(l)"></span>
             }
             dolu
         </p>
+        </div>
     `,
     styles: `
         .calendar-closed {

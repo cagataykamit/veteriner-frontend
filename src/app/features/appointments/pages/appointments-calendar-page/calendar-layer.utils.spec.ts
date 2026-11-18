@@ -10,7 +10,8 @@ import {
     vaccinationBubble,
     vaccineChipClass,
     vaccinesOn,
-    writeStoredCalendarFilters
+    writeStoredCalendarFilters,
+    waitingLabel
 } from './calendar-layer.utils';
 
 const v = (id: string, state: VaccinationCalendarItemVm['state'], petName = id, extra: Partial<VaccinationCalendarItemVm> = {}): VaccinationCalendarItemVm => ({
@@ -63,6 +64,15 @@ describe('calendar-layer.utils', () => {
 
     it('aşı balonu: saati gerçekse saat yazılır', () => {
         expect(vaccinationBubble(v('a', 'DueToday', 'Pamuk', { timeSpecified: true }), 'Merkez').time).toBe('12:00');
+    });
+
+    it('bekleme süresi: dakika, 60 dk üstü saat ve dakika, 24 saat üstü gün', () => {
+        const now = Date.parse('2026-11-18T12:00:00Z');
+
+        expect(waitingLabel('2026-11-18T11:52:00Z', now)).toBe('Bekliyor 8 dk');
+        expect(waitingLabel('2026-11-18T08:48:00Z', now, ' · ')).toBe('Bekliyor · 3 sa 12 dk');
+        expect(waitingLabel('2026-11-18T10:00:00Z', now)).toBe('Bekliyor 2 sa');
+        expect(waitingLabel('2026-11-09T02:00:00Z', now)).toBe('9 gündür bekliyor');
     });
 
     it('randevu balonu: saat aralığı, tür (neden), müşteri – hasta, klinik – hekim, not ve durum', () => {

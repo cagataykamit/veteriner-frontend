@@ -70,13 +70,6 @@ export function toneBarClass(tone: CalendarTone): string {
     return BAR[tone];
 }
 
-/** Renk açıklaması: dört durum (sözleşme §6.1). */
-export const LEGEND: readonly { label: string; tone: CalendarTone }[] = [
-    { label: 'Gelecek', tone: 'up' },
-    { label: 'Bugün', tone: 'today' },
-    { label: 'Gecikmiş', tone: 'overdue' },
-    { label: 'Tamamlandı', tone: 'done' }
-];
 
 /** Hekim baş harfleri ("Dr. Ece Arslan" → "EA"); nötr rozet (hekim başına renk yok). */
 export function initials(name: string | null | undefined): string {

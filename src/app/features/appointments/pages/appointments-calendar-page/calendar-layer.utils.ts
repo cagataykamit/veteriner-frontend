@@ -205,3 +205,20 @@ export function vaccinesOn(dateKey: string, items: readonly VaccinationCalendarI
 
     return items.filter((v) => v.dateKey === dateKey).sort((a, b) => order[a.state] - order[b.state] || a.petName.localeCompare(b.petName, 'tr'));
 }
+
+/**
+ * Kabulde bekleme süresi: "Bekliyor 8 dk", 60 dakikadan sonra "Bekliyor 3 sa 12 dk", 24 saatten sonra "9 gündür bekliyor" (kapatılmamış
+ * eski kabul). `sep` "Bekliyor" ile süre arasına girer (kartta " · ").
+ */
+export function waitingLabel(sinceIso: string, nowMs = Date.now(), sep = ' '): string {
+    const minutes = Math.max(0, Math.round((nowMs - new Date(sinceIso).getTime()) / 60_000));
+
+    if (minutes >= 24 * 60) {
+        return `${Math.floor(minutes / (24 * 60))} gündür bekliyor`;
+    }
+
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+
+    return `Bekliyor${sep}${h ? `${h} sa${m ? ` ${m} dk` : ''}` : `${m} dk`}`;
+}

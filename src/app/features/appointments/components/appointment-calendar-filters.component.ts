@@ -28,7 +28,7 @@ interface Option {
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="flex flex-wrap items-end gap-3" role="group" aria-label="Takvim filtreleri" data-testid="calendar-filters">
-            @if (vetOptions().length > 2) {
+            @if (showVet() && vetOptions().length > 2) {
                 <app-filter-field label="Hekim" labelId="calFltVet" [active]="!!filters().vet" width="select">
                     <p-select
                         ariaLabelledBy="calFltVet"
@@ -108,6 +108,8 @@ interface Option {
 })
 export class AppointmentCalendarFiltersComponent {
     readonly filters = input.required<CalendarFilters>();
+    /** Gün görünümünde hekim çipleri varken hekim listesi gizlenir. */
+    readonly showVet = input(true);
     readonly vets = input<VeterinarianVm[]>([]);
     /** Hekim renk sırası (ızgarayla aynı). */
     readonly vetOrder = input<readonly string[]>([]);

@@ -2,9 +2,10 @@ import { afterRenderEffect, ChangeDetectionStrategy, Component, computed, Elemen
 import type { VaccinationCalendarItemVm } from '@/app/entities/vaccination/models/vaccination-calendar.model';
 import { appointmentStatusLabel } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { CalendarBubbleDirective, type CalendarBubbleData } from '@/app/features/appointments/components/calendar-bubble';
+import { FillViewportDirective } from '@/app/features/appointments/components/fill-viewport.directive';
 import type { VaccinePick } from '@/app/features/appointments/components/calendar-vaccine-strip.component';
 import { type CalendarBlock, clockLabel, isOpenAt, type WorkingDay } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-grid.utils';
-import { appointmentBubble, vaccinationBubble } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-layer.utils';
+import { appointmentBubble, vaccinationBubble, waitingLabel } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-layer.utils';
 import { appointmentTone, type CalendarTone, type CareMark, initials, toneCardClass, vaccineTone } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-tone.utils';
 import { toIstanbulTimeInputValue } from '@/app/shared/utils/date.utils';
 
@@ -60,10 +61,10 @@ const MANY_COLUMNS = 4;
 @Component({
     selector: 'app-appointment-calendar-grid',
     standalone: true,
-    imports: [CalendarBubbleDirective],
+    imports: [CalendarBubbleDirective, FillViewportDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div #scroller class="relative overflow-auto rounded-border border border-surface bg-surface-0 dark:bg-surface-900" [style.height]="'max(26rem, calc(100vh - 19rem))'" data-testid="calendar-grid">
+        <div #scroller class="relative overflow-auto rounded-border border border-surface bg-surface-0 dark:bg-surface-900" appFillViewport data-testid="calendar-grid">
             <div [style.min-width.px]="minWidth()">
                 <div class="grid sticky top-0 z-30 bg-surface-0 dark:bg-surface-900 border-b border-surface" [style.grid-template-columns]="template()">
                     <div class="sticky left-0 z-40 bg-surface-0 dark:bg-surface-900"></div>
@@ -408,7 +409,7 @@ export class AppointmentCalendarGridComponent {
 
         switch (this.tone(b)) {
             case 'wait':
-                return { text: care?.kind === 'wait' && care.since ? `Bekliyor · ${waitedMinutes(care.since)} dk` : 'Bekliyor', cls: 'bg-amber-500 text-amber-950' };
+                return { text: care?.kind === 'wait' && care.since ? waitingLabel(care.since, Date.now(), ' · ') : 'Bekliyor', cls: 'bg-amber-500 text-amber-950' };
             case 'room':
                 return { text: 'Muayenede', cls: 'bg-white/20' };
             case 'overdue':
@@ -451,6 +452,3 @@ function steps(from: number, to: number, step: number): number[] {
     return out;
 }
 
-function waitedMinutes(sinceIso: string): number {
-    return Math.max(0, Math.round((Date.now() - new Date(sinceIso).getTime()) / 60_000));
-}

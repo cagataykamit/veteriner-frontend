@@ -3,14 +3,13 @@ import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { AppointmentRequestChannel, AppointmentRequestSource, AppointmentRequestStatus } from '@/app/entities/online-booking/models/online-booking.model';
 import { AppointmentRequestsService } from '@/app/entities/online-booking/services/online-booking.service';
-import { AppointmentRequestsCalendarLayerComponent, CALENDAR_REQUEST_LAYER_STORAGE_KEY } from './appointment-requests-calendar-layer.component';
+import { AppointmentRequestsCalendarLayerComponent } from './appointment-requests-calendar-layer.component';
 
 describe('AppointmentRequestsCalendarLayerComponent', () => {
     let fixture: ComponentFixture<AppointmentRequestsCalendarLayerComponent>;
     let list: ReturnType<typeof vi.fn>;
 
     beforeEach(async () => {
-        localStorage.removeItem(CALENDAR_REQUEST_LAYER_STORAGE_KEY);
         list = vi.fn().mockReturnValue(
             of({
                 items: [
@@ -51,25 +50,29 @@ describe('AppointmentRequestsCalendarLayerComponent', () => {
         fixture.detectChanges();
     });
 
-    it('görünen aralıktaki bekleyen talepleri kesik çerçeveli "Talep" kartıyla gösterir', () => {
+    it('bekleyen talep varsa çubukta rozet; tıklanınca kesik çerçeveli "Talep" kartları açılır', () => {
         expect(list).toHaveBeenCalledWith({ status: AppointmentRequestStatus.Pending, fromUtc: '2026-11-01T21:00:00.000Z', toUtc: '2026-11-02T21:00:00.000Z', page: 1, pageSize: 200 });
-        const item = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="calendar-request-item"]');
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(el.querySelector('[data-testid="calendar-request-badge"]')?.textContent).toContain('1 talep');
+        expect(el.querySelector('[data-testid="calendar-request-item"]')).toBeNull();
+        el.querySelector<HTMLButtonElement>('[data-testid="calendar-request-badge"]')!.click();
+        fixture.detectChanges();
+        const item = el.querySelector('[data-testid="calendar-request-item"]');
 
         expect(item?.textContent).toContain('Talep');
         expect(item?.textContent).toContain('10:00');
         expect(item?.className).toContain('border-dashed');
     });
 
-    it('filtreyle gizlenir, tercih saklanır; tıklanınca kuyrukta talep açılır', () => {
-        const cmp = fixture.componentInstance;
+    it('talep yoksa hiçbir şey çizilmez; karta tıklanınca kuyrukta talep açılır', () => {
         const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
-        cmp.open('q1');
+        fixture.componentInstance.openRequest('q1');
         expect(navigate).toHaveBeenCalledWith(['/panel/appointments/requests'], { queryParams: { requestId: 'q1' } });
 
-        cmp.toggle();
+        fixture.componentInstance.items.set([]);
         fixture.detectChanges();
-        expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="calendar-request-item"]')).toBeNull();
-        expect(localStorage.getItem(CALENDAR_REQUEST_LAYER_STORAGE_KEY)).toBe('0');
+        expect((fixture.nativeElement as HTMLElement).innerHTML.trim()).not.toContain('talep');
     });
 });

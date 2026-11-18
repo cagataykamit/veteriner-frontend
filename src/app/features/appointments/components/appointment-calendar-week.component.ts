@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
 import { CalendarBubbleDirective, type CalendarBubbleData } from '@/app/features/appointments/components/calendar-bubble';
+import { FillViewportDirective } from '@/app/features/appointments/components/fill-viewport.directive';
 import { clockLabel, toBlockTimes } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-grid.utils';
 import { appointmentBubble } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-layer.utils';
 import { appointmentTone, type CalendarTone, type CareMark, initials, toneCardClass } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-tone.utils';
@@ -27,12 +28,12 @@ type WeekRow = { kind: 'item'; item: AppointmentCalendarItemVm; minute: number }
 @Component({
     selector: 'app-appointment-calendar-week',
     standalone: true,
-    imports: [CalendarBubbleDirective],
+    imports: [CalendarBubbleDirective, FillViewportDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="grid grid-cols-7 rounded-border border border-surface bg-surface-0 dark:bg-surface-900 overflow-hidden" data-testid="calendar-week">
+        <div class="grid grid-cols-7 grid-rows-[minmax(0,1fr)] rounded-border border border-surface bg-surface-0 dark:bg-surface-900 overflow-hidden" appFillViewport data-testid="calendar-week">
             @for (d of view(); track d.day.dateKey) {
-                <section class="flex flex-col min-w-0 border-l border-surface-100 dark:border-surface-800 first:border-l-0" [class]="d.day.today ? 'bg-primary-50/60 dark:bg-primary-950/40' : d.day.closed ? 'calendar-closed' : ''">
+                <section class="flex flex-col min-w-0 min-h-0 border-l border-surface-100 dark:border-surface-800 first:border-l-0" [class]="d.day.today ? 'bg-primary-50/60 dark:bg-primary-950/40' : d.day.closed ? 'calendar-closed' : ''">
                     <button
                         type="button"
                         class="flex items-baseline gap-1.5 px-2.5 pt-2 pb-1.5 whitespace-nowrap overflow-hidden text-left cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800"
@@ -43,7 +44,7 @@ type WeekRow = { kind: 'item'; item: AppointmentCalendarItemVm; minute: number }
                         <span class="text-[13px] font-semibold text-muted-color truncate">{{ d.day.weekday }}</span>
                         <span class="ml-auto text-xs text-muted-color">{{ d.count }} rnd</span>
                     </button>
-                    <div class="flex flex-col gap-1.5 px-1.5 pb-2">
+                    <div class="flex-1 min-h-0 overflow-y-auto flex flex-col gap-1.5 px-1.5 pb-2">
                         @if (d.day.vaccines; as v) {
                             <button
                                 type="button"

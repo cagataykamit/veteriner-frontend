@@ -210,7 +210,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
         expect(cmp.dayColumns().map((c) => c.title)).toEqual(['Dr. Ayşe']);
         expect(cmp.hiddenIdleCount()).toBe(1);
         expect(cmp.conflicts().size).toBe(0);
-        expect(cmp.kpis().find((k) => k.label === 'Aşı bekliyor')).toEqual(expect.objectContaining({ value: '2', sub: '0 uygulandı · 1 saatsiz' }));
+        expect(cmp.summary().find((k) => k.key === 'vax')).toEqual(expect.objectContaining({ value: '2', label: 'aşı bekliyor', title: '0 uygulandı · 1 saatsiz' }));
         expect(el.querySelector('[data-testid="agenda-vaccines"]')?.textContent).toContain('Aşılı-x');
     });
 
@@ -249,7 +249,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
         expect(el.querySelector('[data-testid="calendar-in-clinic"]')?.textContent).toContain('2 hasta');
         expect(el.querySelector('[data-testid="calendar-block-a"]')?.textContent).toContain('Bekliyor · 8 dk');
         expect(el.querySelector('[data-testid="calendar-block-b"]')?.textContent).toContain('Muayenede');
-        expect(cmp.kpis().find((k) => k.label === 'Klinikte')?.sub).toBe('1 bekliyor · 1 muayenede');
+        expect(cmp.summary().find((k) => k.key === 'clinic')?.title).toBe('1 bekliyor · 1 muayenede');
     });
 
     it('filtreler adres çubuğundan sunucuya gider: tür ve durum; "Planlı aşılar" seçili değilse aşı istenmez', () => {
@@ -285,6 +285,8 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
     it('filtre değişimi adres çubuğuna yazılır ve hatırlanır; adres boşsa son seçim geri yüklenir', () => {
         const { cmp } = create([]);
 
+        expect(cmp.activeFilterCount()).toBe(0);
+
         cmp.applyFilters({ vet: null, types: ['1'], states: ['Overdue'] });
         expect(navigate).toHaveBeenLastCalledWith(['/panel/appointments/calendar'], { queryParams: expect.objectContaining({ types: '1', states: 'Overdue', vet: undefined }) });
         expect(localStorage.getItem('vetinity.calendar.filters')).toContain('types=1');
@@ -303,8 +305,10 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
             { id: 'c1', name: 'Merkez' },
             { id: 'c2', name: 'Şube 2' }
         ];
-        const { el, cmp } = create([]);
+        const { fixture, el, cmp } = create([]);
 
+        cmp.filtersOpen.set(true);
+        fixture.detectChanges();
         expect(el.textContent).toContain('Şube');
         cmp.switchClinic({ id: 'c2', name: 'Şube 2' });
         expect(selectClinic).toHaveBeenCalledWith('c2', 'Şube 2');
