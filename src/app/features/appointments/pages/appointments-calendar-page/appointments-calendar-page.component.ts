@@ -308,13 +308,12 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                         }
                     </div>
                     <div class="relative hidden lg:grid gap-3 items-start" [class]="railShown() ? 'lg:grid-cols-[minmax(0,1fr)_290px]' : ''">
-                        <!-- Sağ paneli açıp kapatan küçük dil: açıkken panelin sol çizgisinden "Klinikte" hizasında dışarı çıkar (›),
-                             kapalıyken takvimin sağ çizgisinden (‹). Seçim tarayıcıda hatırlanır; kapalıyken takvim tüm genişliği alır. -->
+                        <!-- Sağ paneli açıp kapatan küçük dil: hep aynı yerde, sağ çizgiden "Klinikte" hizasında dışarı çıkar; açıkken ›, kapalıyken ‹.
+                             Seçim tarayıcıda hatırlanır; kapalıyken takvim tüm genişliği alır. -->
                         @if (showRail()) {
                             <button
                                 type="button"
-                                class="absolute top-3 z-40 grid place-items-center w-4 h-10 border border-surface bg-surface-0 dark:bg-surface-900 text-muted-color shadow-sm cursor-pointer hover:text-primary hover:border-primary"
-                                [class]="railOpen() ? 'right-[289px] rounded-l-md border-r-0' : '-right-4 rounded-r-md border-l-0'"
+                                class="absolute top-3 -right-4 z-40 grid place-items-center w-4 h-10 rounded-r-md border border-l-0 border-surface bg-surface-0 dark:bg-surface-900 text-muted-color shadow-sm cursor-pointer hover:text-primary hover:border-primary"
                                 [attr.aria-label]="railOpen() ? 'Sağ paneli kapat' : 'Sağ paneli aç'"
                                 [attr.title]="railOpen() ? 'Sağ paneli kapat' : 'Sağ paneli aç'"
                                 [attr.aria-expanded]="railOpen()"
