@@ -1187,7 +1187,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     }
 
     segClass(mode: CalendarViewMode): string {
-        return this.viewMode() === mode ? 'bg-surface-0 dark:bg-surface-900 font-semibold shadow-sm' : 'text-muted-color';
+        return this.viewMode() === mode ? 'bg-primary text-primary-contrast font-semibold shadow-sm' : 'text-muted-color hover:text-color';
     }
 
     toggleRail(): void {
