@@ -158,22 +158,8 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                         <span class="text-xs text-red-600 dark:text-red-400" role="alert">{{ ve }}</span>
                     }
                     <span class="flex-1"></span>
-                    <!-- Gün görünümünde sağ panel (Klinikte, Boş saat bul) kapatılınca takvim tüm genişliği alır; seçim tarayıcıda hatırlanır.
-                         Görünüm düğmelerinin solunda durur: Gün/Hafta/Ay'ın yeri hiç değişmez (sağındaki öğelerin genişliği sabit). -->
-                    @if (viewMode() === 'day' && !activePreset() && showRail()) {
-                        <button
-                            type="button"
-                            class="hidden lg:inline-grid place-items-center w-[2.125rem] h-[2.125rem] rounded-lg border border-surface text-muted-color cursor-pointer hover:text-color"
-                            [attr.aria-label]="railOpen() ? 'Sağ paneli kapat' : 'Sağ paneli aç'"
-                            [attr.title]="railOpen() ? 'Sağ paneli kapat' : 'Sağ paneli aç'"
-                            [attr.aria-pressed]="!railOpen()"
-                            (click)="toggleRail()"
-                            data-testid="calendar-rail-toggle"
-                        >
-                            <i class="pi !text-sm" [class]="railOpen() ? 'pi-sign-out' : 'pi-sign-in'" aria-hidden="true"></i>
-                        </button>
-                    }
-                    <!-- Telefonda Gün (ajanda) ve Ay; Hafta geniş ekranda. Düğme genişlikleri sabit (seçili olanın kalın yazısı yeri kaydırmasın). -->
+                    <!-- Telefonda Gün (ajanda) ve Ay; Hafta geniş ekranda. Düğme genişlikleri sabit (seçili olanın kalın yazısı yeri kaydırmasın);
+                         sağındaki öğelerin genişliği de sabit, Gün/Hafta/Ay'ın yeri hiç değişmez. -->
                     <div class="inline-flex rounded-lg border border-surface bg-surface-50 dark:bg-surface-800 p-0.5" role="group" aria-label="Görünüm">
                         <button type="button" class="w-[4.75rem] py-1.5 rounded-md text-[15px] text-center cursor-pointer" [class]="segClass('day')" [attr.aria-pressed]="viewMode() === 'day'" (click)="changeViewMode('day')">Gün</button>
                         <button type="button" class="hidden lg:block w-[4.75rem] py-1.5 rounded-md text-[15px] text-center cursor-pointer" [class]="segClass('week')" [attr.aria-pressed]="viewMode() === 'week'" (click)="changeViewMode('week')">Hafta</button>
@@ -321,7 +307,23 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                             </div>
                         }
                     </div>
-                    <div class="hidden lg:grid gap-3 items-start" [class]="railShown() ? 'lg:grid-cols-[minmax(0,1fr)_290px]' : ''">
+                    <div class="relative hidden lg:grid gap-3 items-start" [class]="railShown() ? 'lg:grid-cols-[minmax(0,1fr)_290px]' : ''">
+                        <!-- Sağ paneli açıp kapatan küçük dil: açıkken panelin sol çizgisinden "Klinikte" hizasında dışarı çıkar (›),
+                             kapalıyken takvimin sağ çizgisinden (‹). Seçim tarayıcıda hatırlanır; kapalıyken takvim tüm genişliği alır. -->
+                        @if (showRail()) {
+                            <button
+                                type="button"
+                                class="absolute top-3 z-40 grid place-items-center w-4 h-10 border border-surface bg-surface-0 dark:bg-surface-900 text-muted-color shadow-sm cursor-pointer hover:text-primary hover:border-primary"
+                                [class]="railOpen() ? 'right-[289px] rounded-l-md border-r-0' : '-right-4 rounded-r-md border-l-0'"
+                                [attr.aria-label]="railOpen() ? 'Sağ paneli kapat' : 'Sağ paneli aç'"
+                                [attr.title]="railOpen() ? 'Sağ paneli kapat' : 'Sağ paneli aç'"
+                                [attr.aria-expanded]="railOpen()"
+                                (click)="toggleRail()"
+                                data-testid="calendar-rail-toggle"
+                            >
+                                <i class="pi !text-[10px]" [class]="railOpen() ? 'pi-chevron-right' : 'pi-chevron-left'" aria-hidden="true"></i>
+                            </button>
+                        }
                         <app-appointment-calendar-grid
                             class="min-w-0"
                             [dateKey]="selectedDate()"
