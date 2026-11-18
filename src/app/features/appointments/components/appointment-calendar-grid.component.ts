@@ -1,8 +1,7 @@
-import { afterRenderEffect, ChangeDetectionStrategy, Component, computed, ElementRef, input, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import type { VaccinationCalendarItemVm } from '@/app/entities/vaccination/models/vaccination-calendar.model';
 import { appointmentStatusLabel } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { CalendarBubbleDirective, type CalendarBubbleData } from '@/app/features/appointments/components/calendar-bubble';
-import { FillViewportDirective } from '@/app/features/appointments/components/fill-viewport.directive';
 import type { VaccinePick } from '@/app/features/appointments/components/calendar-vaccine-strip.component';
 import { type CalendarBlock, clockLabel, isOpenAt, type WorkingDay } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-grid.utils';
 import { appointmentBubble, vaccinationBubble, waitingLabel } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-layer.utils';
@@ -55,19 +54,20 @@ const MANY_COLUMNS = 4;
 /**
  * Gün görünümü, klinik panosu (ux/takvim-yeniden-tasarim.md, kullanıcı seçimi 2026-11-18): solda saat, hekim başına sütun ve ayrı bir
  * "Aşılar" sütunu. Aşı randevu slotu doldurmaz: sütununda saatiyle tek satır durur; saatsiz, mesai dışı ve uygulanan aşılar sütun
- * başlığında sayıdır, tıklanınca açılır. Çok hekimde sütun en az 220 px, takvim yana kayar; saat sütunu ve başlıklar sabit kalır.
+ * başlığında sayıdır, tıklanınca açılır. Takvim günün tamamı boyunca uzar, dikeyde sayfa kayar (iç kaydırma yok); başlık üst çubuğun altında sabit kalır. Çok hekimde sütun en az 220 px, takvim yana kayar; saat sütunu sabit kalır.
  * Kart: saat küçük üstte, hasta adı büyük; durum sol şeritte (renk dili `calendar-tone.utils`).
  */
 @Component({
     selector: 'app-appointment-calendar-grid',
     standalone: true,
-    imports: [CalendarBubbleDirective, FillViewportDirective],
+    imports: [CalendarBubbleDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div #scroller class="relative overflow-auto rounded-border border border-surface bg-surface-0 dark:bg-surface-900" appFillViewport data-testid="calendar-grid">
-            <div [style.min-width.px]="minWidth()">
-                <div class="grid sticky top-0 z-30 bg-surface-0 dark:bg-surface-900 border-b border-surface" [style.grid-template-columns]="template()">
-                    <div class="sticky left-0 z-40 bg-surface-0 dark:bg-surface-900"></div>
+        <div class="relative overflow-clip rounded-border border border-surface bg-surface-0 dark:bg-surface-900" data-testid="calendar-grid">
+            <!-- Başlık sayfa kayarken üst çubuğun altında kalır; yatay kaydırmayı gövdeden alır (yalnız yatayda kırpılır, aşı listesi aşağı açılabilsin). -->
+            <div class="sticky top-16 z-30 bg-surface-0 dark:bg-surface-900 border-b border-surface [overflow-x:clip]" data-grid-head>
+                <div class="grid" [style.min-width.px]="minWidth()" [style.grid-template-columns]="template()" [style.transform]="'translateX(' + -scrollX() + 'px)'">
+                    <div class="relative z-40 bg-surface-0 dark:bg-surface-900" [style.transform]="'translateX(' + scrollX() + 'px)'"></div>
                     @for (c of boardColumns(); track $index) {
                         @if (c.kind === 'vaccines') {
                             <div class="relative flex items-center gap-2.5 px-3 py-2 border-l border-surface-100 dark:border-surface-800 min-w-0" data-testid="calendar-vaccine-column">
@@ -132,8 +132,10 @@ const MANY_COLUMNS = 4;
                         }
                     }
                 </div>
+            </div>
 
-                <div class="grid" [style.grid-template-columns]="template()" data-grid-body>
+            <div #scroller class="overflow-x-auto" (scroll)="scrollX.set(scroller.scrollLeft)">
+                <div class="grid" [style.min-width.px]="minWidth()" [style.grid-template-columns]="template()" data-grid-body>
                     <div class="sticky left-0 z-20 bg-surface-0 dark:bg-surface-900 border-r border-surface-100 dark:border-surface-800" [style.height.px]="height()">
                         <div class="relative h-full">
                             @for (m of hourMarks(); track m) {
@@ -268,35 +270,16 @@ export class AppointmentCalendarGridComponent {
     /** Kabul kuyruğu: randevu kimliği → bekliyor / muayenede. */
     readonly care = input<ReadonlyMap<string, CareMark>>(new Map());
     readonly clinicName = input('');
-    /** Açılışta kaydırılacak dakika; `scrollKey` her değiştiğinde bir kez. */
-    readonly scrollToMinute = input<number | null>(null);
-    readonly scrollKey = input<string>('');
 
     readonly slotPick = output<CalendarSlotPick>();
     readonly open = output<string>();
     readonly vaccinePick = output<VaccinePick>();
 
-    private readonly scroller = viewChild<ElementRef<HTMLElement>>('scroller');
-    private lastScrollKey: string | null = null;
-
     protected readonly pxPerMin = PX_PER_MIN;
     protected readonly vaccineRowPx = VACCINE_ROW_PX;
     protected readonly listOpen = signal(false);
-
-    constructor() {
-        afterRenderEffect(() => {
-            const key = this.scrollKey();
-            const minute = this.scrollToMinute();
-            const el = this.scroller()?.nativeElement;
-
-            if (!el || minute === null || key === this.lastScrollKey || el.getClientRects().length === 0) {
-                return;
-            }
-
-            this.lastScrollKey = key;
-            el.scrollTop = Math.max(0, this.y(minute) - el.clientHeight * 0.4);
-        });
-    }
+    /** Gövdenin yatay kaydırması; sabit başlık aynı miktarda kayar. */
+    protected readonly scrollX = signal(0);
 
     private readonly vaccinesFirst = computed(() => this.columns().length >= MANY_COLUMNS);
 

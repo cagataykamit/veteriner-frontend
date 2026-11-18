@@ -20,11 +20,13 @@ import {
     NO_VET,
     parseCalendarFilters,
     readDayVetPrefs,
+    readRailOpen,
     readStoredCalendarFilters,
     vaccineStateLabel,
     vaccinesOn,
     waitingLabel,
     writeDayVetPrefs,
+    writeRailOpen,
     writeStoredCalendarFilters
 } from './calendar-layer.utils';
 import { appointmentTone, type CalendarTone, type CareMark, initials, toneBarClass } from './calendar-tone.utils';
@@ -63,11 +65,10 @@ import { istanbulTodayYmd } from '@/app/features/appointments/utils/appointment-
 import { AppointmentCalendarGridComponent, type CalendarSlotPick, type DayBoardColumn, type DayBoardVaccines } from '@/app/features/appointments/components/appointment-calendar-grid.component';
 import { AppointmentCalendarWeekComponent, type WeekDayColumn } from '@/app/features/appointments/components/appointment-calendar-week.component';
 import { TODAY_ROUTE } from '@/app/core/routing/panel-navigation';
-import { FillViewportDirective } from '@/app/features/appointments/components/fill-viewport.directive';
 import { parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { AppointmentFreeSlotFinderComponent, type FreeSlotPick } from '@/app/features/appointments/components/appointment-free-slot-finder.component';
 import { type AgendaDay, AppointmentDayAgendaComponent } from '@/app/features/appointments/components/appointment-day-agenda.component';
-import { clockLabel, conflictIds, firstFreeVeterinarian, firstScrollMinute, freeGaps, gridBounds, intersectGaps, isCancelled, layoutBlocks, minutesOf, monthGridWeeks, rowStepMinutes, toBlockTimes, weekDateKeys, workingDayFor } from './calendar-grid.utils';
+import { clockLabel, conflictIds, firstFreeVeterinarian, freeGaps, gridBounds, intersectGaps, isCancelled, layoutBlocks, minutesOf, monthGridWeeks, rowStepMinutes, toBlockTimes, weekDateKeys, workingDayFor } from './calendar-grid.utils';
 
 type CalendarViewMode = 'day' | 'week' | 'month';
 type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled';
@@ -119,7 +120,6 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
         AppRowActionButtonComponent,
         AppointmentCalendarGridComponent,
         AppointmentCalendarWeekComponent,
-        FillViewportDirective,
         AppointmentFreeSlotFinderComponent,
         RouterLink,
         AppointmentDayAgendaComponent
@@ -164,6 +164,18 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                         <button type="button" class="hidden lg:block px-3 py-1 rounded-md text-sm cursor-pointer" [class]="segClass('week')" [attr.aria-pressed]="viewMode() === 'week'" (click)="changeViewMode('week')">Hafta</button>
                         <button type="button" class="px-3 py-1 rounded-md text-sm cursor-pointer" [class]="segClass('month')" [attr.aria-pressed]="viewMode() === 'month'" (click)="changeViewMode('month')" data-testid="calendar-view-month">Ay</button>
                     </div>
+                    <!-- Gün görünümünde sağ panel (Klinikte, Boş saat bul) kapatılınca takvim tüm genişliği alır; seçim tarayıcıda hatırlanır. -->
+                    @if (viewMode() === 'day' && !activePreset() && showRail()) {
+                        <button
+                            type="button"
+                            class="hidden lg:inline-flex items-center gap-1.5 h-[2.125rem] px-3 rounded-lg border border-surface text-sm text-muted-color cursor-pointer hover:text-color"
+                            [attr.aria-pressed]="!railOpen()"
+                            (click)="toggleRail()"
+                            data-testid="calendar-rail-toggle"
+                        >
+                            <i class="pi !text-sm" [class]="railOpen() ? 'pi-window-maximize' : 'pi-window-minimize'" aria-hidden="true"></i>{{ railOpen() ? 'Paneli gizle' : 'Paneli göster' }}
+                        </button>
+                    }
                     <!-- Filtreler açılır panelde; düğmede etkin filtre sayısı. Durum çiplerindeki şerit renk açıklamasıdır. -->
                     <div class="relative">
                         <button
@@ -307,7 +319,7 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                             </div>
                         }
                     </div>
-                    <div class="hidden lg:grid gap-3" [class]="showRail() ? 'lg:grid-cols-[minmax(0,1fr)_290px]' : ''">
+                    <div class="hidden lg:grid gap-3 items-start" [class]="railShown() ? 'lg:grid-cols-[minmax(0,1fr)_290px]' : ''">
                         <app-appointment-calendar-grid
                             class="min-w-0"
                             [dateKey]="selectedDate()"
@@ -321,15 +333,13 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                             [canCreate]="canPick()"
                             [nowMinute]="showsToday() ? nowMinute() : null"
                             [care]="care()"
-                            [scrollToMinute]="scrollMinute()"
-                            [scrollKey]="loadCount() + viewMode() + selectedDate()"
                             [clinicName]="clinicName"
                             (slotPick)="onSlotPick($event)"
                             (open)="openDetail($event)"
                             (vaccinePick)="openVaccine($event)"
                         />
-                        @if (showRail()) {
-                            <aside class="flex flex-col gap-3 min-w-0 overflow-y-auto" appFillViewport>
+                        @if (railShown()) {
+                            <aside class="flex flex-col gap-3 min-w-0">
                                 @if (inClinic(); as list) {
                                     <section class="rounded-lg border border-surface bg-surface-0 dark:bg-surface-900 px-3.5 py-3" aria-labelledby="calendar-in-clinic-title" data-testid="calendar-in-clinic">
                                         <h3 id="calendar-in-clinic-title" class="m-0 flex items-center gap-2 text-[15px] font-semibold">
@@ -682,6 +692,8 @@ export class AppointmentsCalendarPageComponent implements OnInit {
             });
     });
     readonly showRail = computed(() => this.showFinder() || this.inClinic() !== null);
+    readonly railOpen = signal(readRailOpen());
+    readonly railShown = computed(() => this.showRail() && this.railOpen());
 
     /** Günün özeti, tek satır: "28 randevu · 24 tamamlandı (%86) · 3 klinikte · sıradaki 15:30 Sansa · 12 aşı bekliyor · 1 gelmedi". */
     readonly summary = computed(() => {
@@ -742,10 +754,6 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     /** Gün görünümündeki randevu blokları; ızgara o günün çalışma saati ile randevularının birleşimine ölçeklenir (aşı genişletmez). */
     private readonly viewBlocks = computed(() => layoutBlocks(this.selectedDayItems()));
     readonly bounds = computed(() => gridBounds([workingDayFor(this.hours(), this.selectedDate())], this.viewBlocks()));
-    /** Açılışta bugün şimdiki saate, başka günde ilk kayda (yoksa açılışa) kaydırılır; her yüklemede bir kez. */
-    readonly scrollMinute = computed(() =>
-        this.selectedDate() === this.today() && this.nowMinute() !== null ? this.nowMinute() : firstScrollMinute(this.viewBlocks(), workingDayFor(this.hours(), this.selectedDate()))
-    );
 
     readonly conflictCount = computed(() => {
         const ids = this.conflicts();
@@ -1172,6 +1180,11 @@ export class AppointmentsCalendarPageComponent implements OnInit {
 
     segClass(mode: CalendarViewMode): string {
         return this.viewMode() === mode ? 'bg-surface-0 dark:bg-surface-900 font-semibold shadow-sm' : 'text-muted-color';
+    }
+
+    toggleRail(): void {
+        this.railOpen.set(!this.railOpen());
+        writeRailOpen(this.railOpen());
     }
 
     /** "Yalnız benim" ve hekim çipleri; seçim kullanıcı başına tarayıcıda hatırlanır. */

@@ -172,11 +172,6 @@ export function gridBounds(days: readonly (WorkingDay | null)[], blocks: readonl
     return { start, end: Math.min(24 * 60, Math.max(start + 60, Math.ceil(end / 60) * 60)) };
 }
 
-/** İlk ekranda gösterilecek dakika: görünümdeki ilk kayıt; kayıt yoksa seçili günün açılışı; o da yoksa kaydırma yok. */
-export function firstScrollMinute(blocks: readonly CalendarBlock[], selectedDay: WorkingDay | null): number | null {
-    return blocks.length ? Math.min(...blocks.map((b) => b.start)) : (selectedDay?.open ?? null);
-}
-
 /** Çalışma saatinde, mola ve verilen randevular dışında kalan aralıklar (iptaller boş sayılır). */
 export function freeGaps(day: WorkingDay | null, items: readonly AppointmentCalendarItemVm[], minLength: number): Gap[] {
     if (!day) {

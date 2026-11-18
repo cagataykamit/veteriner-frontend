@@ -24,6 +24,7 @@ type WeekRow = { kind: 'item'; item: AppointmentCalendarItemVm; minute: number }
  * Hafta görünümü (ux/takvim-yeniden-tasarim.md, seçenek 1, kullanıcı seçimi 2026-11-18): her gün bir sütun, randevular saat sırasıyla
  * küçük kart (saat ve tür üstte küçük, hasta adı büyük, hekim baş harfi sağda). Günün başında aşı sayısı ("13 aşı · 3 gecikmiş"); tıklanınca
  * o günün gün görünümü (aşılar orada saatiyle). Bugün sütununda şimdiki saat ayracı; kapalı gün taralı. Hekim sayısından etkilenmez.
+ * Sütunlar en az pencere altına kadar, gerekirse daha uzun; iç kaydırma yok, sayfa kayar, gün başlıkları üstte sabit kalır.
  */
 @Component({
     selector: 'app-appointment-calendar-week',
@@ -31,12 +32,12 @@ type WeekRow = { kind: 'item'; item: AppointmentCalendarItemVm; minute: number }
     imports: [CalendarBubbleDirective, FillViewportDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="grid grid-cols-7 grid-rows-[minmax(0,1fr)] rounded-border border border-surface bg-surface-0 dark:bg-surface-900 overflow-hidden" appFillViewport data-testid="calendar-week">
+        <div class="grid grid-cols-7 rounded-border border border-surface bg-surface-0 dark:bg-surface-900 overflow-clip" appFillViewport data-testid="calendar-week">
             @for (d of view(); track d.day.dateKey) {
-                <section class="flex flex-col min-w-0 min-h-0 border-l border-surface-100 dark:border-surface-800 first:border-l-0" [class]="d.day.today ? 'bg-primary-50/60 dark:bg-primary-950/40' : d.day.closed ? 'calendar-closed' : ''">
+                <section class="flex flex-col min-w-0 border-l border-surface-100 dark:border-surface-800 first:border-l-0" [class]="d.day.today ? 'bg-primary-50/60 dark:bg-primary-950/40' : d.day.closed ? 'calendar-closed' : ''">
                     <button
                         type="button"
-                        class="flex items-baseline gap-1.5 px-2.5 pt-2 pb-1.5 whitespace-nowrap overflow-hidden text-left cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800"
+                        class="sticky top-16 z-10 flex items-baseline gap-1.5 px-2.5 pt-2 pb-1.5 whitespace-nowrap overflow-hidden text-left cursor-pointer bg-surface-0 dark:bg-surface-900 hover:bg-surface-50 dark:hover:bg-surface-800"
                         (click)="dayOpen.emit(d.day.dateKey)"
                         [attr.data-testid]="'calendar-column-' + d.day.dateKey"
                     >
@@ -44,7 +45,7 @@ type WeekRow = { kind: 'item'; item: AppointmentCalendarItemVm; minute: number }
                         <span class="text-[13px] font-semibold text-muted-color truncate">{{ d.day.weekday }}</span>
                         <span class="ml-auto text-xs text-muted-color">{{ d.count }} rnd</span>
                     </button>
-                    <div class="flex-1 min-h-0 overflow-y-auto flex flex-col gap-1.5 px-1.5 pb-2">
+                    <div class="flex flex-col gap-1.5 px-1.5 pb-2">
                         @if (d.day.vaccines; as v) {
                             <button
                                 type="button"

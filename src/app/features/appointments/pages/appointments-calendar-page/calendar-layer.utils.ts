@@ -11,6 +11,7 @@ import { appointmentTone, stateTone, toneBarClass } from './calendar-tone.utils'
 
 const FILTERS_KEY = 'vetinity.calendar.filters';
 const DAY_VETS_KEY = 'vetinity.calendar.dayVets';
+const RAIL_KEY = 'vetinity.calendar.railOpen';
 
 /** Gün görünümünde hekim seçimi (kullanıcı başına, tarayıcıda): "Yalnız benim" ya da gizlenen hekimler. */
 export interface DayVetPrefs {
@@ -35,6 +36,23 @@ export function writeDayVetPrefs(p: DayVetPrefs): void {
         localStorage.setItem(DAY_VETS_KEY, JSON.stringify(p));
     } catch {
         // Depolama kapalıysa seçim yalnız bu oturumda kalır.
+    }
+}
+
+/** Gün görünümünde sağ panel (Klinikte, Boş saat bul) açık mı; kayıt yoksa açık. Kapatılınca takvim tüm genişliği alır. */
+export function readRailOpen(): boolean {
+    try {
+        return localStorage.getItem(RAIL_KEY) !== 'false';
+    } catch {
+        return true;
+    }
+}
+
+export function writeRailOpen(open: boolean): void {
+    try {
+        localStorage.setItem(RAIL_KEY, String(open));
+    } catch {
+        // Depolama kapalıysa seçim yalnız bu sayfada kalır.
     }
 }
 

@@ -1,6 +1,6 @@
 import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
 import type { ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
-import { conflictIds, durationText, firstFreeVeterinarian, firstScrollMinute, freeGaps, gridBounds, intersectGaps, isOpenAt, layoutBlocks, monthGridWeeks, rowStepMinutes, weekDateKeys, workingDayFor } from './calendar-grid.utils';
+import { conflictIds, durationText, firstFreeVeterinarian, freeGaps, gridBounds, intersectGaps, isOpenAt, layoutBlocks, monthGridWeeks, rowStepMinutes, weekDateKeys, workingDayFor } from './calendar-grid.utils';
 
 /** İstanbul 16.11.2026 (pazartesi) hh:mm başlangıçlı randevu (UTC+3). */
 const item = (id: string, hm: string, duration: number, extra: Partial<AppointmentCalendarItemVm> = {}): AppointmentCalendarItemVm => {
@@ -100,14 +100,6 @@ describe('calendar-grid.utils', () => {
         expect(gridBounds([null, null], layoutBlocks([item('a', '10:15', 30), item('b', '14:00', 30)]))).toEqual({ start: 600, end: 1200 });
         expect(gridBounds([null], [])).toEqual({ start: 480, end: 1200 });
         expect(gridBounds([null], layoutBlocks([item('c', '21:10', 30)]))).toEqual({ start: 1260, end: 1320 });
-    });
-
-    it('ilk ekran: ilk kayda, kayıt yoksa seçili günün açılışına kaydırılır', () => {
-        const day = { open: 540, close: 1080, breakStart: null, breakEnd: null };
-
-        expect(firstScrollMinute(layoutBlocks([item('a', '14:00', 30), item('b', '11:00', 30)]), day)).toBe(660);
-        expect(firstScrollMinute([], day)).toBe(540);
-        expect(firstScrollMinute([], null)).toBeNull();
     });
 
     it('satır adımı slot aralığının 15 dakikadan küçük olmayan katı; hafta pazartesiden başlar', () => {
