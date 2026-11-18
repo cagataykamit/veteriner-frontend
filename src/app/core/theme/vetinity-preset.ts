@@ -127,6 +127,21 @@ export const VetinityPreset = definePreset(Aura, {
                 }
             }
         },
+        /* Seçili sekme (SelectButton) ana renkle dolu: beyaz-gri farkı seçimi belli etmiyordu (kullanıcı kararı 2026-11-18). */
+        togglebutton: {
+            colorScheme: {
+                light: {
+                    root: { checkedColor: '{primary.contrast.color}' },
+                    content: { checkedBackground: '{primary.color}' },
+                    icon: { checkedColor: '{primary.contrast.color}' }
+                },
+                dark: {
+                    root: { checkedColor: '{primary.contrast.color}' },
+                    content: { checkedBackground: '{primary.color}' },
+                    icon: { checkedColor: '{primary.contrast.color}' }
+                }
+            }
+        },
         tag: {
             colorScheme: {
                 light: { warn: { background: '{amber.100}', color: '{amber.700}' } },
