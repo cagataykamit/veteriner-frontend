@@ -7,7 +7,7 @@ import type { AppointmentReasonVm, StaffAvailabilityDayVm } from '@/app/entities
 import { AppointmentReasonsService, OnlineBookingService } from '@/app/entities/online-booking/services/online-booking.service';
 import { addGregorianDaysToYmd, toIstanbulTimeInputValue } from '@/app/shared/utils/date.utils';
 import { istanbulTodayYmd } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
-import { vetDotClass } from '@/app/features/appointments/components/appointment-calendar-grid.component';
+import { readSectionOpen, writeSectionOpen } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-layer.utils';
 
 /** Boş saat önerisi: tarih (İstanbul), saat ve önerilen hekim. */
 export interface FreeSlotPick {
@@ -37,7 +37,13 @@ const DAYS = 7;
     imports: [FormsModule, SelectModule, ButtonModule],
     template: `
         <section class="rounded-border border border-surface p-3 flex flex-col gap-3" aria-labelledby="free-slot-title" data-testid="free-slot-finder">
-            <h3 id="free-slot-title" class="m-0 text-base font-semibold"><i class="pi pi-search mr-2 text-primary" aria-hidden="true"></i>Boş saat bul</h3>
+            <h3 id="free-slot-title" class="m-0 text-base font-semibold">
+                <button type="button" class="w-full flex items-center gap-2 text-left cursor-pointer" [attr.aria-expanded]="open()" (click)="toggleOpen()" data-testid="free-slot-toggle">
+                    <i class="pi pi-search text-primary" aria-hidden="true"></i>Boş saat bul
+                    <i class="pi ml-auto !text-xs text-muted-color" [class]="open() ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i>
+                </button>
+            </h3>
+            @if (open()) {
             @if (reasons().length > 0) {
                 <div>
                     <label for="freeSlotReason" class="block text-xs text-muted-color mb-1">Randevu nedeni (süre)</label>
@@ -57,7 +63,7 @@ const DAYS = 7;
                         >
                             Fark etmez
                         </button>
-                        @for (v of vets(); track v.userId; let i = $index) {
+                        @for (v of vets(); track v.userId) {
                             <button
                                 type="button"
                                 class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-sm cursor-pointer"
@@ -65,7 +71,7 @@ const DAYS = 7;
                                 [attr.aria-pressed]="vetFilter() === v.userId"
                                 (click)="vetFilter.set(v.userId)"
                             >
-                                <span class="w-2 h-2 rounded-full" [class]="dot(i)" aria-hidden="true"></span>{{ v.name }}
+                                <span class="w-2 h-2 rounded-full bg-primary" aria-hidden="true"></span>{{ v.name }}
                             </button>
                         }
                     </div>
@@ -101,6 +107,7 @@ const DAYS = 7;
                     </ul>
                 }
             </div>
+            }
         </section>
     `
 })
@@ -110,6 +117,8 @@ export class AppointmentFreeSlotFinderComponent {
     readonly canCreate = input(false);
     /** Takvim yenilenince (randevu eklendi/iptal) liste de yenilenir. */
     readonly refreshKey = input(0);
+    /** Takvimin sağ panelinde açık başlar; kullanıcı katlarsa seçim saklanır. */
+    readonly open = signal(readSectionOpen('freeSlot'));
     readonly pick = output<FreeSlotPick>();
 
     private readonly reasonsApi = inject(AppointmentReasonsService);
@@ -172,6 +181,11 @@ export class AppointmentFreeSlotFinderComponent {
         });
     }
 
+    protected toggleOpen(): void {
+        this.open.set(!this.open());
+        writeSectionOpen('freeSlot', this.open());
+    }
+
     protected reload(): void {
         this.loading.set(true);
         this.error.set(null);
@@ -188,9 +202,6 @@ export class AppointmentFreeSlotFinderComponent {
         });
     }
 
-    protected dot(index: number): string {
-        return vetDotClass(index);
-    }
 }
 
 const WEEKDAY_SHORT = new Intl.DateTimeFormat('tr-TR', { weekday: 'short', timeZone: 'UTC' });

@@ -242,6 +242,8 @@ export const ApiEndpoints = {
         calendar: () => `/api/v1/appointments/calendar`,
         /** Ay görünümü gün özeti; `calendar` ile aynı parametreler (BE sözleşmesi §7). */
         calendarSummary: () => `/api/v1/appointments/calendar/summary`,
+        /** Ay görünümü doluluğu: günlük kapasite (BE sözleşmesi §8.4). */
+        calendarCapacity: () => `/api/v1/appointments/calendar/capacity`,
         byId: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}`,
         cancel: (id: string) => `/api/v1/appointments/${encodeURIComponent(id)}/cancel`,
         /** İptali kısa süre içinde geri alır ("Geri al"; APPOINTMENT_CANCEL_UNDO_API_CONTRACT.md). */

@@ -34,9 +34,21 @@
 <!-- Bekleme listesi (TIER-018): iptal edilen saat için uygun kişi sayısı; pakette yoksa ya da uyan kimse yoksa çizilmez. -->
 <app-waitlist-today-summary />
 
-<p-selectbutton class="block mb-4" [options]="viewOptions" [ngModel]="view()" (ngModelChange)="setView($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Görünüm" />
+<!-- İki ayrı seçim: liste türü ve hasta kapsamı. Etiket ve ayraçla ayrılır; her grupta seçili olan ana renkle doludur. -->
+<div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+    <span class="inline-flex items-center gap-2">
+        <span class="text-sm text-muted-color">Liste</span>
+        <p-selectbutton [options]="viewOptions" [ngModel]="view()" (ngModelChange)="setView($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Liste" />
+    </span>
+    @if (myUserId()) {
+        <span class="hidden sm:block w-px h-7 bg-surface-300 dark:bg-surface-600" aria-hidden="true"></span>
+        <span class="inline-flex items-center gap-2">
+            <span class="text-sm text-muted-color">Hastalar</span>
+            <p-selectbutton [options]="scopeOptions" [ngModel]="scope()" (ngModelChange)="setScope($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Hasta kapsamı" />
+        </span>
+    }
+</div>
 @if (myUserId()) {
-    <p-selectbutton class="block mb-4" [options]="scopeOptions" [ngModel]="scope()" (ngModelChange)="setScope($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Hasta kapsamı" />
     @if (scope() === 'mine') {
         <p class="text-muted-color text-sm mt-0 mb-4">Yalnızca sorumlu hekimi siz olan kayıtlar gösterilir; planlı randevular bu görünümde yer almaz.</p>
     }

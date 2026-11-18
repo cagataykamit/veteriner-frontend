@@ -1,12 +1,6 @@
-import type {
-    VaccinationCalendarItemDto,
-    VaccinationCalendarItemVm,
-    VaccinationCalendarKind,
-    CalendarItemState
-} from '@/app/entities/vaccination/models/vaccination-calendar.model';
+import { CALENDAR_ITEM_STATES, type VaccinationCalendarItemDto, type VaccinationCalendarItemVm, type VaccinationCalendarKind } from '@/app/entities/vaccination/models/vaccination-calendar.model';
 
 const KINDS: readonly VaccinationCalendarKind[] = ['Planned', 'NextDue', 'Applied'];
-const STATES: readonly CalendarItemState[] = ['DueToday', 'Upcoming', 'Overdue', 'Completed'];
 
 function text(value: string | null | undefined, fallback = '—'): string {
     return value?.trim() ? value.trim() : fallback;
@@ -19,7 +13,7 @@ function id(value: string | null | undefined): string | null {
 /** Bilinmeyen tür/durum ya da tarihi olmayan satır atlanır (`null`). */
 export function mapVaccinationCalendarItemDtoToVm(dto: VaccinationCalendarItemDto): VaccinationCalendarItemVm | null {
     const kind = KINDS.find((k) => k === dto.kind);
-    const state = STATES.find((s) => s === dto.state);
+    const state = CALENDAR_ITEM_STATES.find((s) => s === dto.state);
     const dateKey = dto.date?.trim().slice(0, 10) ?? '';
     const vaccinationId = dto.vaccinationId?.trim() ?? '';
 
@@ -40,7 +34,8 @@ export function mapVaccinationCalendarItemDtoToVm(dto: VaccinationCalendarItemDt
         clientName: text(dto.clientName),
         vaccineDefinitionId: id(dto.vaccineDefinitionId),
         vaccineName: text(dto.vaccineName, 'Aşı'),
-        notes: id(dto.notes)
+        notes: id(dto.notes),
+        timeSpecified: dto.timeSpecified === true
     };
 }
 

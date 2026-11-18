@@ -1,15 +1,70 @@
 import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
-import { parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
-import type { VaccinationCalendarItemVm, CalendarItemState } from '@/app/entities/vaccination/models/vaccination-calendar.model';
+import { CALENDAR_ITEM_STATES, type VaccinationCalendarItemVm, type CalendarItemState } from '@/app/entities/vaccination/models/vaccination-calendar.model';
 import { formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 import type { CalendarBubbleData } from '@/app/features/appointments/components/calendar-bubble';
+import { appointmentTone, stateTone, toneBarClass } from './calendar-tone.utils';
 
 /**
- * Takvim aşı katmanı ve ayrıntı balonu (kullanıcı kararı 2026-11-16). Aşı randevu değildir: ayrı listede tutulur, ızgaranın saat dilimine,
- * çakışmaya ve boş saat hesabına girmez; günün üst şeridinde gösterilir.
+ * Takvim aşı katmanı ve ayrıntı balonu (kullanıcı kararı 2026-11-16; yeniden tasarım 2026-11-18). Aşı randevu değildir: ayrı listede
+ * tutulur, randevu slotu doldurmaz, çakışmaya ve boş saat hesabına girmez; gün görünümünde ayrı "Aşılar" sütununda saatiyle durur.
  */
 
 const FILTERS_KEY = 'vetinity.calendar.filters';
+const DAY_VETS_KEY = 'vetinity.calendar.dayVets';
+
+/** Gün görünümünde hekim seçimi (kullanıcı başına, tarayıcıda): "Yalnız benim" ya da gizlenen hekimler. */
+export interface DayVetPrefs {
+    onlyMine: boolean;
+    hidden: string[];
+}
+
+export const EMPTY_DAY_VET_PREFS: DayVetPrefs = { onlyMine: false, hidden: [] };
+
+export function readDayVetPrefs(): DayVetPrefs {
+    try {
+        const raw = JSON.parse(localStorage.getItem(DAY_VETS_KEY) ?? 'null') as Partial<DayVetPrefs> | null;
+
+        return raw ? { onlyMine: raw.onlyMine === true, hidden: Array.isArray(raw.hidden) ? raw.hidden.filter((x): x is string => typeof x === 'string') : [] } : EMPTY_DAY_VET_PREFS;
+    } catch {
+        return EMPTY_DAY_VET_PREFS;
+    }
+}
+
+export function writeDayVetPrefs(p: DayVetPrefs): void {
+    try {
+        localStorage.setItem(DAY_VETS_KEY, JSON.stringify(p));
+    } catch {
+        // Depolama kapalıysa seçim yalnız bu oturumda kalır.
+    }
+}
+
+/**
+ * Gün görünümünde açılır/kapanır parçalar: sağ panel (kapatılınca takvim tüm genişliği alır), "Klinikte" ve "Boş saat bul" bölümleri.
+ * Kayıt yoksa açık; kullanıcının seçimi tarayıcıda kalır, sayfa değişince ilk haline dönmez (kullanıcı kararı 2026-11-18).
+ */
+export const CALENDAR_SECTION_KEYS = {
+    rail: 'vetinity.calendar.railOpen',
+    inClinic: 'vetinity.calendar.inClinicOpen',
+    freeSlot: 'vetinity.calendar.freeSlotOpen'
+} as const;
+
+export type CalendarSection = keyof typeof CALENDAR_SECTION_KEYS;
+
+export function readSectionOpen(section: CalendarSection): boolean {
+    try {
+        return localStorage.getItem(CALENDAR_SECTION_KEYS[section]) !== 'false';
+    } catch {
+        return true;
+    }
+}
+
+export function writeSectionOpen(section: CalendarSection, open: boolean): void {
+    try {
+        localStorage.setItem(CALENDAR_SECTION_KEYS[section], String(open));
+    } catch {
+        // Depolama kapalıysa seçim yalnız bu sayfada kalır.
+    }
+}
 
 /** Son kullanılan filtreler kullanıcının tarayıcısında (aşı katmanı dahil); okunamazsa boş (tümü). */
 export function readStoredCalendarFilters(): CalendarFilters {
@@ -37,7 +92,7 @@ export const NO_VET = 'none';
 /** Tür filtresinde "Planlı aşılar" seçeneği (randevu türlerinin yanında ayrı seçenek). */
 export const VACCINE_TYPE = 'asi';
 /** Durum filtresi ve renk açıklaması sırası (sözleşme §6.1). */
-export const CALENDAR_STATES: readonly CalendarItemState[] = ['DueToday', 'Upcoming', 'Overdue', 'Completed'];
+export const CALENDAR_STATES: readonly CalendarItemState[] = CALENDAR_ITEM_STATES;
 
 /** Takvim filtreleri (sözleşme §6); adres çubuğunda `vet`, `types`, `states`. Boş değer = tümü. */
 export interface CalendarFilters {
@@ -146,19 +201,21 @@ export function vaccinationBubble(item: VaccinationCalendarItemVm, clinicName: s
     const kindLabel = applied ? 'Uygulanan aşı' : item.kind === 'NextDue' ? 'Sonraki aşı' : 'Planlı aşı';
 
     return {
-        time: applied && item.atUtc ? `${formatUtcIsoAsLocalTimeDisplay(item.atUtc)} · uygulandı` : 'Gün içinde',
+        time: applied && item.atUtc
+            ? `${formatUtcIsoAsLocalTimeDisplay(item.atUtc)} · uygulandı`
+            : item.timeSpecified && item.atUtc
+              ? formatUtcIsoAsLocalTimeDisplay(item.atUtc)
+              : 'Saatsiz (gün içinde)',
         title: `${kindLabel}: ${item.vaccineName}`,
         subject: `${item.clientName} – ${item.petName}`,
         place: `${clinicName || 'Klinik'} – hekim atanmamış`,
         notes: item.notes,
         status: vaccineStateLabel(item.state),
-        tone: vaccineDotClass(item.state)
+        tone: toneBarClass(stateTone(item.state))
     };
 }
 
 export function appointmentBubble(item: AppointmentCalendarItemVm, clinicName: string): CalendarBubbleData {
-    const status = typeof item.status === 'number' ? item.status : parseAppointmentStatusRawToEnum(item.status);
-
     return {
         time: item.timeRangeLabel,
         title: item.reasonName ? `${item.appointmentTypeLabel} (${item.reasonName})` : item.appointmentTypeLabel,
@@ -166,7 +223,7 @@ export function appointmentBubble(item: AppointmentCalendarItemVm, clinicName: s
         place: `${clinicName || 'Klinik'} – ${item.veterinarianUserId ? item.veterinarianName : 'Hekim seçilmedi'}`,
         notes: item.notes,
         status: item.statusLabel,
-        tone: status === 3 ? 'bg-amber-500' : status === 1 || status === 2 ? 'bg-surface-400' : 'bg-primary'
+        tone: toneBarClass(appointmentTone(item))
     };
 }
 
@@ -175,4 +232,21 @@ export function vaccinesOn(dateKey: string, items: readonly VaccinationCalendarI
     const order: Record<CalendarItemState, number> = { Overdue: 0, DueToday: 1, Upcoming: 2, Completed: 3 };
 
     return items.filter((v) => v.dateKey === dateKey).sort((a, b) => order[a.state] - order[b.state] || a.petName.localeCompare(b.petName, 'tr'));
+}
+
+/**
+ * Kabulde bekleme süresi: "Bekliyor 8 dk", 60 dakikadan sonra "Bekliyor 3 sa 12 dk", 24 saatten sonra "9 gündür bekliyor" (kapatılmamış
+ * eski kabul). `sep` "Bekliyor" ile süre arasına girer (kartta " · ").
+ */
+export function waitingLabel(sinceIso: string, nowMs = Date.now(), sep = ' '): string {
+    const minutes = Math.max(0, Math.round((nowMs - new Date(sinceIso).getTime()) / 60_000));
+
+    if (minutes >= 24 * 60) {
+        return `${Math.floor(minutes / (24 * 60))} gündür bekliyor`;
+    }
+
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+
+    return `Bekliyor${sep}${h ? `${h} sa${m ? ` ${m} dk` : ''}` : `${m} dk`}`;
 }

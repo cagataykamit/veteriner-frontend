@@ -32,3 +32,24 @@ export function mapCalendarDaySummaries(items: CalendarDaySummaryDto[] | null | 
 
     return map;
 }
+
+/** Günlük randevu kapasitesi (`GET …/calendar/capacity`; BE sözleşmesi §8.4); kapalı gün 0. */
+export interface CalendarDayCapacityDto {
+    date?: string | null;
+    capacity?: number | null;
+}
+
+/** Gün anahtarına göre kapasite; tarihsiz satır atlanır. */
+export function mapCalendarDayCapacities(items: CalendarDayCapacityDto[] | null | undefined): Map<string, number> {
+    const map = new Map<string, number>();
+
+    for (const d of items ?? []) {
+        const dateKey = d.date?.slice(0, 10) ?? '';
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+            map.set(dateKey, typeof d.capacity === 'number' && d.capacity > 0 ? d.capacity : 0);
+        }
+    }
+
+    return map;
+}

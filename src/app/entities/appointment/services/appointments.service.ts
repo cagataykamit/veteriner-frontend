@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
@@ -25,7 +25,13 @@ import type { CreateAppointmentRequest, UpdateAppointmentRequest } from '@/app/e
 import type { AppointmentsListQuery } from '@/app/entities/appointment/models/appointment-query.model';
 import type { AppointmentDetailVm, AppointmentEditVm, AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
-import { type CalendarDaySummaryDto, type CalendarDaySummaryVm, mapCalendarDaySummaries } from '@/app/entities/appointment/models/calendar-day-summary.model';
+import {
+    type CalendarDayCapacityDto,
+    type CalendarDaySummaryDto,
+    type CalendarDaySummaryVm,
+    mapCalendarDayCapacities,
+    mapCalendarDaySummaries
+} from '@/app/entities/appointment/models/calendar-day-summary.model';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 /** İptal sonucu: `undoWindowSeconds` > 0 ise "Geri al" bu süre gösterilir. */
@@ -86,6 +92,25 @@ export class AppointmentsService {
         return this.api.get<CalendarDaySummaryDto[]>(ApiEndpoints.appointments.calendarSummary(), params).pipe(
             map((res) => mapCalendarDaySummaries(res)),
             catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Takvim özeti yüklenemedi.'))))
+        );
+    }
+
+    /** Ay görünümü doluluğu: aralıktaki her gün için kapasite (kapalı gün 0); hekim verilirse tek hekimin kapasitesi. */
+    getCalendarCapacity(query: { dateFromUtc: string; dateToUtc: string; veterinarianUserId?: string }): Observable<Map<string, number>> {
+        const clinicId = this.auth.getClinicId()?.trim() ?? '';
+        let params = new HttpParams().set('dateFromUtc', query.dateFromUtc).set('dateToUtc', query.dateToUtc);
+
+        if (clinicId) {
+            params = params.set('clinicId', clinicId);
+        }
+
+        if (query.veterinarianUserId) {
+            params = params.set('veterinarianUserId', query.veterinarianUserId);
+        }
+
+        return this.api.get<CalendarDayCapacityDto[]>(ApiEndpoints.appointments.calendarCapacity(), params).pipe(
+            map((res) => mapCalendarDayCapacities(res)),
+            catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Takvim doluluğu yüklenemedi.'))))
         );
     }
 

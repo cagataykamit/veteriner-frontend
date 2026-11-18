@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { of, type Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -11,7 +11,25 @@ import type { VaccinePick } from '@/app/features/appointments/components/calenda
 import { AppointmentDetailPageComponent } from '@/app/features/appointments/pages/appointment-detail-page/appointment-detail-page.component';
 import { AppointmentEditPageComponent } from '@/app/features/appointments/pages/appointment-edit-page/appointment-edit-page.component';
 import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
-import { calendarFiltersToQueryParams, calendarRequestFor, type CalendarFilters, EMPTY_CALENDAR_FILTERS, NO_VET, parseCalendarFilters, readStoredCalendarFilters, vaccineStateLabel, vaccinesOn, writeStoredCalendarFilters } from './calendar-layer.utils';
+import {
+    calendarFiltersToQueryParams,
+    calendarRequestFor,
+    type CalendarFilters,
+    type DayVetPrefs,
+    EMPTY_CALENDAR_FILTERS,
+    NO_VET,
+    parseCalendarFilters,
+    readDayVetPrefs,
+    readSectionOpen,
+    readStoredCalendarFilters,
+    vaccineStateLabel,
+    vaccinesOn,
+    waitingLabel,
+    writeDayVetPrefs,
+    writeSectionOpen,
+    writeStoredCalendarFilters
+} from './calendar-layer.utils';
+import { appointmentTone, type CalendarTone, type CareMark, initials, toneBarClass } from './calendar-tone.utils';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AppointmentCalendarFiltersComponent } from '@/app/features/appointments/components/appointment-calendar-filters.component';
 import { AppointmentCalendarMonthComponent } from '@/app/features/appointments/components/appointment-calendar-month.component';
@@ -22,7 +40,7 @@ import { groupCalendarItemsByDay } from '@/app/entities/appointment/data/appoint
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import type { ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
-import type { VeterinarianVm } from '@/app/entities/visit/models/visit-vm.model';
+import type { TodayItemVm, VeterinarianVm } from '@/app/entities/visit/models/visit-vm.model';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -38,15 +56,19 @@ import {
     APPOINTMENTS_RESCHEDULE_CLAIM,
     VACCINATIONS_CREATE_CLAIM,
     VACCINATIONS_READ_CLAIM,
-    VACCINATIONS_UPDATE_CLAIM
+    VACCINATIONS_UPDATE_CLAIM,
+    VISITS_READ_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import { AppointmentRequestsCalendarLayerComponent } from '@/app/entities/online-booking/components/appointment-requests-calendar-layer.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { istanbulTodayYmd } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
-import { type CalendarAllDayCell, AppointmentCalendarGridComponent, type CalendarGridColumn, type CalendarSlotPick, vetDotClass } from '@/app/features/appointments/components/appointment-calendar-grid.component';
+import { AppointmentCalendarGridComponent, type CalendarSlotPick, type DayBoardColumn, type DayBoardVaccines } from '@/app/features/appointments/components/appointment-calendar-grid.component';
+import { AppointmentCalendarWeekComponent, type WeekDayColumn } from '@/app/features/appointments/components/appointment-calendar-week.component';
+import { TODAY_ROUTE } from '@/app/core/routing/panel-navigation';
+import { parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { AppointmentFreeSlotFinderComponent, type FreeSlotPick } from '@/app/features/appointments/components/appointment-free-slot-finder.component';
 import { type AgendaDay, AppointmentDayAgendaComponent } from '@/app/features/appointments/components/appointment-day-agenda.component';
-import { clockLabel, conflictIds, durationText, firstFreeVeterinarian, firstScrollMinute, freeGaps, gridBounds, intersectGaps, isCancelled, layoutBlocks, minutesOf, monthGridWeeks, rowStepMinutes, toBlockTimes, weekDateKeys, workingDayFor } from './calendar-grid.utils';
+import { clockLabel, conflictIds, firstFreeVeterinarian, freeGaps, gridBounds, intersectGaps, isCancelled, layoutBlocks, minutesOf, monthGridWeeks, rowStepMinutes, toBlockTimes, weekDateKeys, workingDayFor } from './calendar-grid.utils';
 
 type CalendarViewMode = 'day' | 'week' | 'month';
 type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled';
@@ -97,84 +119,96 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
         AppStatusTagComponent,
         AppRowActionButtonComponent,
         AppointmentCalendarGridComponent,
+        AppointmentCalendarWeekComponent,
         AppointmentFreeSlotFinderComponent,
+        RouterLink,
         AppointmentDayAgendaComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="card">
-            <app-list-header class="mb-4" [title]="pageTitle()">
-                @if (canCreateAppointment && !ro.mutationBlocked()) {
-                    <button actions pButton type="button" class="p-button-primary" (click)="createAppointment()"><i class="pi pi-plus"></i>Yeni randevu</button>
-                } @else if (canCreateAppointment && ro.mutationBlocked()) {
-                    <button actions pButton type="button" class="p-button-secondary" [disabled]="true"><i class="pi pi-lock"></i>Yeni randevu (salt okunur)</button>
-                }
-            </app-list-header>
+        <div class="card !p-3 md:!p-4 !mb-0">
+            @if (activePreset()) {
+                <app-list-header class="mb-4" [title]="pageTitle()" />
+            } @else {
+                <h1 class="sr-only">Randevu takvimi</h1>
+            }
 
             @if (!isPresetDateGroupedMode()) {
-                <div class="flex flex-wrap items-center gap-2 mb-3">
-                    <!-- Telefonda Gün (ajanda) ve Ay; Hafta geniş ekranda. -->
-                    <div class="inline-flex rounded-border border border-surface overflow-hidden" role="group" aria-label="Görünüm">
-                        <button type="button" class="px-3 py-1.5 text-sm cursor-pointer" [class]="viewMode() === 'day' ? 'bg-primary text-primary-contrast' : ''" [attr.aria-pressed]="viewMode() === 'day'" (click)="changeViewMode('day')">Gün</button>
-                        <button
-                            type="button"
-                            class="hidden lg:block px-3 py-1.5 text-sm cursor-pointer border-l border-surface"
-                            [class]="viewMode() === 'week' ? 'bg-primary text-primary-contrast' : ''"
-                            [attr.aria-pressed]="viewMode() === 'week'"
-                            (click)="changeViewMode('week')"
-                        >
-                            Hafta
-                        </button>
-                        <button
-                            type="button"
-                            class="px-3 py-1.5 text-sm cursor-pointer border-l border-surface"
-                            [class]="viewMode() === 'month' ? 'bg-primary text-primary-contrast' : ''"
-                            [attr.aria-pressed]="viewMode() === 'month'"
-                            (click)="changeViewMode('month')"
-                            data-testid="calendar-view-month"
-                        >
-                            Ay
-                        </button>
-                    </div>
+                <!-- Takvim çubuğu, tek satır: ‹ › · Bugün · tarih · talep rozeti · Gün/Hafta/Ay · Filtre · Yeni randevu. -->
+                <div class="flex flex-wrap items-center gap-2 mb-2" data-testid="calendar-bar">
                     <div class="inline-flex items-center gap-1">
-                        <button pButton type="button" size="small" severity="secondary" [text]="true" aria-label="Önceki" (click)="previous()"><i class="p-button-icon pi pi-angle-left"></i></button>
-                        <button pButton type="button" size="small" severity="secondary" [outlined]="true" (click)="goToday()">Bugün</button>
-                        <button pButton type="button" size="small" severity="secondary" [text]="true" aria-label="Sonraki" (click)="next()"><i class="p-button-icon pi pi-angle-right"></i></button>
+                        <button pButton type="button" size="small" severity="secondary" [outlined]="true" aria-label="Önceki" (click)="previous()"><i class="p-button-icon pi pi-angle-left"></i></button>
+                        <button pButton type="button" size="small" severity="secondary" [outlined]="true" aria-label="Sonraki" (click)="next()"><i class="p-button-icon pi pi-angle-right"></i></button>
                     </div>
-                    <h2 class="m-0 text-lg font-semibold" data-testid="calendar-range-title">{{ rangeTitle() }}</h2>
-                    @if (vaccinesInView() > 0) {
-                        <span class="inline-flex items-center gap-1 text-sm text-muted-color" data-testid="calendar-vaccine-count"><i class="pi pi-shield !text-xs" aria-hidden="true"></i>{{ vaccinesInView() }} aşı</span>
+                    @if (showsToday()) {
+                        <span class="rounded-md bg-primary-50 dark:bg-primary-950 text-primary text-xs font-semibold px-2 py-0.5">Bugün</span>
+                    } @else {
+                        <button type="button" class="rounded-md border border-surface text-primary text-xs font-semibold px-2 py-0.5 cursor-pointer hover:bg-primary-50 dark:hover:bg-primary-950" (click)="goToday()">Bugüne dön</button>
+                    }
+                    <h2 class="m-0 text-lg font-bold" data-testid="calendar-range-title">{{ rangeTitle() }}</h2>
+                    @if (canManageRequests) {
+                        <app-appointment-requests-calendar-layer [fromUtc]="requestLayerRange().fromUtc" [toUtc]="requestLayerRange().toUtc" />
+                    }
+                    @if (conflictCount()) {
+                        <span class="inline-flex items-center gap-1 rounded-full bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 px-2 py-0.5 text-xs font-semibold"
+                            ><i class="pi pi-exclamation-triangle !text-[11px]" aria-hidden="true"></i>{{ conflictCount() }} çakışma</span
+                        >
                     }
                     @if (vaccineError(); as ve) {
                         <span class="text-xs text-red-600 dark:text-red-400" role="alert">{{ ve }}</span>
                     }
-                    @if (conflictCount()) {
-                        <span class="inline-flex items-center gap-1 rounded-border bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 px-2 py-1 text-sm"
-                            ><i class="pi pi-exclamation-triangle" aria-hidden="true"></i>{{ conflictCount() }} çakışma</span
+                    <span class="flex-1"></span>
+                    <!-- Telefonda Gün (ajanda) ve Ay; Hafta geniş ekranda. Düğme genişlikleri sabit (seçili olanın kalın yazısı yeri kaydırmasın);
+                         sağındaki öğelerin genişliği de sabit, Gün/Hafta/Ay'ın yeri hiç değişmez. -->
+                    <div class="inline-flex rounded-lg border border-surface bg-surface-50 dark:bg-surface-800 p-0.5" role="group" aria-label="Görünüm">
+                        <button type="button" class="w-[4.75rem] py-1.5 rounded-md text-[15px] text-center cursor-pointer" [class]="segClass('day')" [attr.aria-pressed]="viewMode() === 'day'" (click)="changeViewMode('day')">Gün</button>
+                        <button type="button" class="hidden lg:block w-[4.75rem] py-1.5 rounded-md text-[15px] text-center cursor-pointer" [class]="segClass('week')" [attr.aria-pressed]="viewMode() === 'week'" (click)="changeViewMode('week')">Hafta</button>
+                        <button type="button" class="w-[4.75rem] py-1.5 rounded-md text-[15px] text-center cursor-pointer" [class]="segClass('month')" [attr.aria-pressed]="viewMode() === 'month'" (click)="changeViewMode('month')" data-testid="calendar-view-month">Ay</button>
+                    </div>
+                    <!-- Filtreler açılır panelde; düğmede etkin filtre sayısı. Durum çiplerindeki şerit renk açıklamasıdır. -->
+                    <div class="relative">
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1.5 h-[2.125rem] px-3 rounded-lg border text-sm cursor-pointer"
+                            [class]="activeFilterCount() ? 'border-primary text-primary font-semibold' : 'border-surface text-muted-color'"
+                            [attr.aria-expanded]="filtersOpen()"
+                            (click)="filtersOpen.set(!filtersOpen())"
+                            data-testid="calendar-filter-toggle"
                         >
+                            <i class="pi pi-filter !text-xs" aria-hidden="true"></i>Filtre
+                            <!-- Rozetin yeri hep ayrılır; filtre açılıp kapanınca düğme genişliği değişmez. -->
+                            <span class="min-w-[1.25rem] rounded-full bg-primary text-primary-contrast text-[11px] leading-4 px-1.5 text-center" [class.invisible]="!activeFilterCount()" [attr.aria-hidden]="!activeFilterCount()">{{ activeFilterCount() || 0 }}</span>
+                        </button>
+                        @if (filtersOpen()) {
+                            <div class="absolute right-0 top-full mt-1 z-50 w-[min(46rem,calc(100vw-2rem))] rounded-lg border border-surface bg-surface-0 dark:bg-surface-900 shadow-lg p-3" data-testid="calendar-filter-panel">
+                                <app-appointment-calendar-filters
+                                    [filters]="filters()"
+                                    [vets]="vets()"
+                                    [vetOrder]="vetOrder()"
+                                    [showVet]="!(viewMode() === 'day' && vetBarShown())"
+                                    [canSeeVaccines]="canReadVaccinations"
+                                    [clinics]="myClinics()"
+                                    [activeClinicId]="clinicId"
+                                    (filtersChange)="applyFilters($event)"
+                                    (clinicChange)="switchClinic($event)"
+                                />
+                                @if (narrowed()) {
+                                    <p class="m-0 mt-1 text-xs text-muted-color">Tür ya da durum filtresi açıkken boş saatler gösterilmez; "Boş saat bul" tüm randevulara bakar.</p>
+                                }
+                                <div class="flex justify-end mt-2">
+                                    <button type="button" class="text-sm text-primary font-medium cursor-pointer hover:underline" (click)="filtersOpen.set(false)">Kapat</button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    @if (canCreateAppointment && !ro.mutationBlocked()) {
+                        <button pButton type="button" size="small" (click)="createAppointment()" data-testid="calendar-new-appointment"><i class="pi pi-plus"></i>Yeni randevu</button>
+                    } @else if (canCreateAppointment && ro.mutationBlocked()) {
+                        <button pButton type="button" size="small" severity="secondary" [disabled]="true"><i class="pi pi-lock"></i>Yeni randevu (salt okunur)</button>
                     }
                 </div>
-                <!-- Filtre şeridi: seçim anında sunucuda uygulanır, adres çubuğunda durur; durum çipleri renk açıklamasıdır. -->
-                <div class="mb-3">
-                    <app-appointment-calendar-filters
-                        [filters]="filters()"
-                        [vets]="vets()"
-                        [vetOrder]="vetOrder()"
-                        [canSeeVaccines]="canReadVaccinations"
-                        [clinics]="myClinics()"
-                        [activeClinicId]="clinicId"
-                        (filtersChange)="applyFilters($event)"
-                        (clinicChange)="switchClinic($event)"
-                    />
-                    @if (narrowed()) {
-                        <p class="m-0 mt-1 text-xs text-muted-color">Tür ya da durum filtresi açıkken boş saatler gösterilmez; "Boş saat bul" tüm randevulara bakar.</p>
-                    }
-                    @if (clinicSwitchError(); as ce) {
-                        <p class="m-0 mt-1 text-xs text-red-600 dark:text-red-400" role="alert">{{ ce }}</p>
-                    }
-                </div>
-                @if (canManageRequests) {
-                    <app-appointment-requests-calendar-layer [fromUtc]="requestLayerRange().fromUtc" [toUtc]="requestLayerRange().toUtc" />
+                @if (clinicSwitchError(); as ce) {
+                    <p class="m-0 mb-2 text-xs text-red-600 dark:text-red-400" role="alert">{{ ce }}</p>
                 }
             }
             @if (activePreset(); as preset) {
@@ -195,6 +229,7 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                     [today]="today()"
                     [appointmentSummary]="appointmentSummary()"
                     [vaccineSummary]="vaccineSummary()"
+                    [capacity]="capacity()"
                     (dayOpen)="openDay($event)"
                 />
             } @else if (isPresetDateGroupedMode()) {
@@ -224,32 +259,125 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                     </div>
                 }
             } @else {
-                <div class="hidden lg:grid gap-4" [class]="showFinder() ? 'lg:grid-cols-[minmax(0,1fr)_272px]' : ''">
-                    <app-appointment-calendar-grid
-                        class="min-w-0"
-                        [columns]="gridColumns()"
-                        [start]="bounds().start"
-                        [end]="bounds().end"
-                        [rowMinutes]="rowStep()"
-                        [conflicts]="conflicts()"
-                        [byVet]="viewMode() === 'week'"
-                        [vetOrder]="vetOrder()"
-                        [canCreate]="canPick()"
-                        [nowMinute]="nowMinute()"
-                        [scrollToMinute]="scrollMinute()"
-                        [scrollKey]="loadCount() + viewMode() + selectedDate()"
-                        [minColumnPx]="viewMode() === 'week' ? 120 : 180"
-                        [allDay]="allDayCells()"
-                        [clinicName]="clinicName"
-                        (slotPick)="onSlotPick($event)"
-                        (open)="openDetail($event)"
-                        (dayOpen)="openDay($event)"
-                        (vaccinePick)="openVaccine($event)"
-                    />
-                    @if (showFinder()) {
-                        <app-appointment-free-slot-finder [clinicId]="clinicId!" [vets]="vets()" [canCreate]="canPick()" [refreshKey]="loadCount()" (pick)="onFreeSlotPick($event)" />
-                    }
-                </div>
+                @if (viewMode() === 'week') {
+                    <app-appointment-calendar-week class="hidden lg:block" [days]="weekDays()" [nowMinute]="nowMinute()" [care]="care()" [clinicName]="clinicName" (open)="openDetail($event)" (dayOpen)="openDay($event)" />
+                } @else {
+                    <!-- Günün özeti tek satır; hekim seçici ("Yalnız benim", çipler; boş hekim gizli) aynı satırın sağında. Seçim kullanıcı başına hatırlanır. -->
+                    <div class="hidden lg:flex flex-wrap items-center gap-x-4 gap-y-1 mb-2 min-h-8 text-[13px]" data-testid="calendar-kpis">
+                        <p class="m-0 flex flex-wrap items-center gap-x-1.5 text-muted-color">
+                            @for (k of summary(); track k.key; let last = $last) {
+                                <span [attr.title]="k.title"
+                                    ><b class="tabular-nums" [class]="k.cls || 'text-color'">{{ k.value }}</b> {{ k.label }}</span
+                                >
+                                @if (!last) {
+                                    <span aria-hidden="true">·</span>
+                                }
+                            }
+                        </p>
+                        @if (vetBarShown()) {
+                            <div class="ml-auto flex items-center gap-1.5 overflow-x-auto text-[12.5px]" data-testid="calendar-vet-bar">
+                                @if (canOnlyMine()) {
+                                    <button
+                                        type="button"
+                                        class="h-7 px-2.5 rounded-full border whitespace-nowrap font-semibold cursor-pointer"
+                                        [class]="vetPrefs().onlyMine ? 'border-primary bg-primary text-primary-contrast' : 'border-primary text-primary'"
+                                        [attr.aria-pressed]="vetPrefs().onlyMine"
+                                        (click)="toggleOnlyMine()"
+                                    >
+                                        Yalnız benim
+                                    </button>
+                                }
+                                @for (v of vetChips(); track v.id) {
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center gap-1.5 h-7 pl-0.5 pr-2.5 rounded-full border border-surface bg-surface-0 dark:bg-surface-900 whitespace-nowrap cursor-pointer"
+                                        [class]="v.on ? 'font-semibold' : 'opacity-50'"
+                                        [attr.aria-pressed]="v.on"
+                                        (click)="toggleVet(v.id)"
+                                        [attr.data-testid]="'calendar-vet-chip-' + v.id"
+                                    >
+                                        <span class="w-[22px] h-[22px] rounded-full grid place-items-center text-[10px] font-bold bg-primary text-primary-contrast" aria-hidden="true">{{ v.initials }}</span>{{ v.name }}
+                                    </button>
+                                }
+                                @if (hiddenIdleCount()) {
+                                    <button type="button" class="text-primary font-semibold whitespace-nowrap cursor-pointer hover:underline" (click)="showIdleVets.set(true)" data-testid="calendar-vet-idle">
+                                        +{{ hiddenIdleCount() }} hekimin bu gün randevusu yok
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                    <div class="relative hidden lg:grid gap-3 items-start" [class]="railShown() ? 'lg:grid-cols-[minmax(0,1fr)_290px]' : ''">
+                        <!-- Sağ paneli açıp kapatan küçük dil: hep aynı yerde, sağ çizgiden "Klinikte" hizasında dışarı çıkar; açıkken ›, kapalıyken ‹.
+                             Seçim tarayıcıda hatırlanır; kapalıyken takvim tüm genişliği alır. -->
+                        @if (showRail()) {
+                            <button
+                                type="button"
+                                class="absolute top-3 -right-4 z-40 grid place-items-center w-4 h-10 rounded-r-md border border-l-0 border-surface bg-surface-0 dark:bg-surface-900 text-muted-color shadow-sm cursor-pointer hover:text-primary hover:border-primary"
+                                [attr.aria-label]="railOpen() ? 'Sağ paneli kapat' : 'Sağ paneli aç'"
+                                [attr.title]="railOpen() ? 'Sağ paneli kapat' : 'Sağ paneli aç'"
+                                [attr.aria-expanded]="railOpen()"
+                                (click)="toggleRail()"
+                                data-testid="calendar-rail-toggle"
+                            >
+                                <i class="pi !text-[10px]" [class]="railOpen() ? 'pi-chevron-right' : 'pi-chevron-left'" aria-hidden="true"></i>
+                            </button>
+                        }
+                        <app-appointment-calendar-grid
+                            class="min-w-0"
+                            [dateKey]="selectedDate()"
+                            [columns]="dayColumns()"
+                            [vaccines]="dayVaccines()"
+                            [start]="bounds().start"
+                            [end]="bounds().end"
+                            [working]="selectedWorking()"
+                            [rowMinutes]="rowStep()"
+                            [conflicts]="conflicts()"
+                            [canCreate]="canPick()"
+                            [nowMinute]="showsToday() ? nowMinute() : null"
+                            [care]="care()"
+                            [clinicName]="clinicName"
+                            (slotPick)="onSlotPick($event)"
+                            (open)="openDetail($event)"
+                            (vaccinePick)="openVaccine($event)"
+                        />
+                        @if (railShown()) {
+                            <aside class="flex flex-col gap-3 min-w-0">
+                                @if (inClinic(); as list) {
+                                    <section class="rounded-lg border border-surface bg-surface-0 dark:bg-surface-900 px-3.5 py-3" aria-labelledby="calendar-in-clinic-title" data-testid="calendar-in-clinic">
+                                        <h3 id="calendar-in-clinic-title" class="m-0 text-[15px] font-semibold">
+                                            <button type="button" class="w-full flex items-center gap-2 text-left cursor-pointer" [attr.aria-expanded]="inClinicOpen()" (click)="toggleInClinic()" data-testid="calendar-in-clinic-toggle">
+                                                Klinikte <span class="ml-auto text-xs font-semibold text-amber-600 dark:text-amber-400">{{ list.length }} hasta</span>
+                                                <i class="pi !text-xs text-muted-color" [class]="inClinicOpen() ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i>
+                                            </button>
+                                        </h3>
+                                        @if (inClinicOpen()) {
+                                            <p class="m-0 mt-0.5 mb-2 text-xs text-muted-color">Kabulden · {{ clockText(nowMinute() ?? 0) }}</p>
+                                            @for (p of list; track p.key) {
+                                                <div class="flex items-center gap-2.5 py-1.5 border-t border-surface-100 dark:border-surface-800">
+                                                    <span class="w-[34px] h-[34px] shrink-0 rounded-full grid place-items-center text-[13px] font-bold" [class]="p.waiting ? 'bg-amber-400 text-amber-950' : 'bg-primary text-primary-contrast'" aria-hidden="true">{{ p.initials }}</span>
+                                                    <span class="min-w-0">
+                                                        <b class="block text-sm truncate">{{ p.petName }} · {{ p.clientName }}</b>
+                                                        <span class="block text-xs font-semibold truncate" [class]="p.waiting ? 'text-amber-600 dark:text-amber-400' : 'text-primary'">{{ p.status }}</span>
+                                                        @if (p.detail) {
+                                                            <span class="block text-xs text-muted-color truncate">{{ p.detail }}</span>
+                                                        }
+                                                    </span>
+                                                </div>
+                                            } @empty {
+                                                <p class="m-0 text-sm text-muted-color">Şu an klinikte bekleyen hasta yok.</p>
+                                            }
+                                            <a pButton [routerLink]="todayRoute" size="small" class="w-full mt-2">Bugün sayfasında aç</a>
+                                        }
+                                    </section>
+                                }
+                                @if (showFinder()) {
+                                    <app-appointment-free-slot-finder [clinicId]="clinicId!" [vets]="vets()" [canCreate]="canPick()" [refreshKey]="loadCount()" (pick)="onFreeSlotPick($event)" />
+                                }
+                            </aside>
+                        }
+                    </div>
+                }
                 <div class="lg:hidden">
                     <app-appointment-day-agenda
                         [days]="agendaDays()"
@@ -328,6 +456,8 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     readonly canCreateAppointment = this.auth.hasOperationClaim(APPOINTMENTS_CREATE_CLAIM);
     readonly canRescheduleAppointment = this.auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM);
     readonly canReadVaccinations = this.auth.hasOperationClaim(VACCINATIONS_READ_CLAIM);
+    /** "Klinikte" paneli ve kart rozetleri kabul kuyruğundan (Bugün sayfasıyla aynı kaynak). */
+    readonly canReadVisits = this.auth.hasOperationClaim(VISITS_READ_CLAIM);
     private readonly canCreateVaccination = this.auth.hasOperationClaim(VACCINATIONS_CREATE_CLAIM);
     private readonly canUpdateVaccination = this.auth.hasOperationClaim(VACCINATIONS_UPDATE_CLAIM);
     readonly clinicId = this.auth.getClinicId()?.trim() || null;
@@ -399,41 +529,240 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     readonly selectedDayItems = computed(() => this.itemsOn(this.selectedDate(), this.visibleItems()));
     readonly selectedWorking = computed(() => workingDayFor(this.gridHours(), this.selectedDate()));
 
-    readonly gridColumns = computed<CalendarGridColumn[]>(() => (this.viewMode() === 'week' ? this.weekColumns() : this.dayColumns()));
+    readonly selectedDayVaccines = computed(() => vaccinesOn(this.selectedDate(), this.vaccines()));
+    /** Aşı katmanı bu görünümde istendi mi (filtre "Planlı aşılar"ı içeriyor, hekim seçili değil, yetki var). */
+    readonly vaccineLayer = computed(() => this.canReadVaccinations && !this.activePreset() && calendarRequestFor(this.filters()).vaccines);
 
-    readonly shownVaccines = computed(() => this.vaccines());
-    readonly selectedDayVaccines = computed(() => vaccinesOn(this.selectedDate(), this.shownVaccines()));
-    readonly vaccinesInView = computed(() =>
-        this.viewMode() === 'month'
-            ? [...this.vaccineSummary().values()].reduce((s, d) => s + d.total, 0)
-            : this.viewMode() === 'week'
-              ? this.shownVaccines().length
-              : this.selectedDayVaccines().length
-    );
+    /** Gösterilen gün bugün mü (gün görünümü) ya da bugünü içeriyor mu (hafta, ay). */
+    readonly showsToday = computed(() => {
+        const today = this.today();
 
-    /** Üst şerit: hafta görünümünde gün başına hücre, gün görünümünde tüm sütunlara yayılan tek hücre; görünürde aşı yoksa şerit yok. */
-    readonly allDayCells = computed<CalendarAllDayCell[] | null>(() => {
-        if (this.vaccinesInView() === 0) {
+        switch (this.viewMode()) {
+            case 'week':
+                return this.weekKeys().includes(today);
+            case 'month':
+                return this.selectedDate().slice(0, 7) === today.slice(0, 7);
+            default:
+                return this.selectedDate() === today;
+        }
+    });
+
+    /** Gün görünümünde hekim seçimi (kullanıcı başına hatırlanır); "+N hekim" yalnız bu sayfada açılır. */
+    readonly vetPrefs = signal<DayVetPrefs>(readDayVetPrefs());
+    readonly showIdleVets = signal(false);
+    private readonly myUserId = this.auth.getUserId();
+    /** Seçili günde randevusu olan hekimler. */
+    private readonly busyVetIds = computed(() => new Set(this.selectedDayItems().flatMap((i) => (i.veterinarianUserId ? [i.veterinarianUserId] : []))));
+    /** Çipte gösterilen hekimler: randevusu olanlar ("+N" açıldıysa hepsi); hiçbirinin randevusu yoksa hepsi (boş hücreden randevu verilebilsin). */
+    private readonly chipVetIds = computed(() => {
+        const all = this.activeVetIds();
+        const busy = all.filter((id) => this.busyVetIds().has(id));
+
+        return this.showIdleVets() || busy.length === 0 ? all : busy;
+    });
+    readonly hiddenIdleCount = computed(() => this.activeVetIds().length - this.chipVetIds().length);
+    readonly canOnlyMine = computed(() => !!this.myUserId && this.activeVetIds().includes(this.myUserId));
+    readonly vetChips = computed(() => {
+        const names = new Map(this.vets().map((v) => [v.userId, v.name]));
+        const shown = new Set(this.shownVetIds());
+
+        return this.chipVetIds().map((id) => {
+            const name = names.get(id) || this.selectedDayItems().find((i) => i.veterinarianUserId === id)?.veterinarianName || 'Hekim';
+
+            return { id, name: name.replace(/^Dr\.\s*/i, ''), initials: initials(name), on: shown.has(id) };
+        });
+    });
+    /** Sütunu açık hekimler: "Yalnız benim" ya da çipte gizlenmemiş olanlar. */
+    private readonly shownVetIds = computed(() => {
+        const prefs = this.vetPrefs();
+
+        if (prefs.onlyMine && this.canOnlyMine()) {
+            return [this.myUserId!];
+        }
+
+        const shown = this.chipVetIds().filter((id) => !prefs.hidden.includes(id));
+
+        return shown.length ? shown : this.chipVetIds();
+    });
+
+    /** Gün panosu sütunları: açık hekimler, varsa "Hekim seçilmedi"; hekimsiz klinikte tek sütun. */
+    readonly dayColumns = computed<DayBoardColumn[]>(() => {
+        const items = this.selectedDayItems();
+        const ids = this.conflicts();
+        const names = new Map(this.vets().map((v) => [v.userId, v.name]));
+        const unassigned = items.filter((i) => !i.veterinarianUserId);
+        const column = (key: string, vetId: string | null, title: string, own: AppointmentCalendarItemVm[]): DayBoardColumn => ({
+            key,
+            vetId,
+            title,
+            blocks: layoutBlocks(own),
+            count: own.filter((i) => appointmentTone(i) !== 'off').length,
+            left: own.filter((i) => i.state === 'DueToday' || i.state === 'Upcoming').length,
+            conflictCount: own.filter((i) => ids.has(i.id)).length
+        });
+
+        if (this.filters().vet === NO_VET) {
+            return [column(UNASSIGNED, null, 'Hekim seçilmedi', unassigned)];
+        }
+
+        if (this.activeVetIds().length === 0) {
+            return [column('all', null, 'Randevular', items)];
+        }
+
+        const columns = this.shownVetIds().map((id) => {
+            const own = items.filter((i) => i.veterinarianUserId === id);
+
+            return column(id, id, names.get(id) || own[0]?.veterinarianName || 'Hekim', own);
+        });
+        const mineOnly = this.vetPrefs().onlyMine && this.canOnlyMine();
+
+        return unassigned.length && !mineOnly ? [...columns, column(UNASSIGNED, null, 'Hekim seçilmedi', unassigned)] : columns;
+    });
+
+    /** "Aşılar" sütunu: saatli olanlar saatinde; saatsiz, mesai dışı ve uygulananlar başlıkta (sözleşme §8.2). */
+    readonly dayVaccines = computed<DayBoardVaccines | null>(() => {
+        if (!this.vaccineLayer()) {
             return null;
         }
 
-        if (this.viewMode() === 'week') {
-            return this.weekKeys().map((dateKey) => ({ key: dateKey, span: 1, items: vaccinesOn(dateKey, this.shownVaccines()), limit: 3, stacked: true }));
-        }
+        const { start, end } = this.bounds();
+        const all = this.selectedDayVaccines();
+        const due = all.filter((v) => v.kind !== 'Applied');
+        const timed = due
+            .filter((v) => v.timeSpecified)
+            .map((item) => ({ item, minute: minutesOf(toIstanbulTimeInputValue(item.atUtc ?? '')) ?? 0 }))
+            .sort((a, b) => a.minute - b.minute || a.item.petName.localeCompare(b.item.petName, 'tr'));
 
-        return [{ key: 'day', span: this.gridColumns().length, items: this.selectedDayVaccines(), limit: 12, stacked: false }];
+        return {
+            timed: timed.filter((t) => t.minute >= start && t.minute < end),
+            afterHours: timed.filter((t) => t.minute < start || t.minute >= end).map((t) => t.item),
+            untimed: due.filter((v) => !v.timeSpecified),
+            applied: all.filter((v) => v.kind === 'Applied'),
+            waiting: due.length
+        };
     });
 
-    /** Görünümdeki randevu blokları ve gösterilen günlerin girilmiş çalışma saati (yedek hafta değil; girilmemişse ilk kayıt ya da 08:00). */
-    private readonly viewBlocks = computed(() => layoutBlocks(this.viewMode() === 'week' ? this.visibleItems() : this.selectedDayItems()));
-    readonly bounds = computed(() =>
-        gridBounds(
-            (this.viewMode() === 'week' ? this.weekKeys() : [this.selectedDate()]).map((d) => workingDayFor(this.hours(), d)),
-            this.viewBlocks()
-        )
+    /** Hafta: gün başına randevular ve aşı sayısı (aşılar gün görünümünde saatiyle). */
+    readonly weekDays = computed<WeekDayColumn[]>(() =>
+        this.weekKeys().map((dateKey) => {
+            const vaccines = this.vaccineLayer() ? vaccinesOn(dateKey, this.vaccines()) : null;
+
+            return {
+                dateKey,
+                dayNumber: String(Number(dateKey.slice(8))),
+                weekday: WEEKDAY_LONG.format(new Date(`${dateKey}T12:00:00Z`)),
+                today: dateKey === this.today(),
+                closed: !workingDayFor(this.gridHours(), dateKey),
+                items: this.itemsOn(dateKey, this.visibleItems()),
+                vaccines: vaccines ? { total: vaccines.length, overdue: vaccines.filter((v) => v.state === 'Overdue').length } : null
+            };
+        })
     );
-    /** İlk ekranda ilk kayda (yoksa seçili günün açılışına) kaydırılır; her yüklemede bir kez. */
-    readonly scrollMinute = computed(() => firstScrollMinute(this.viewBlocks(), workingDayFor(this.hours(), this.selectedDate())));
+
+    /** Kabul kuyruğu (Bugün sayfasıyla aynı kaynak): randevu kimliği → bekliyor / muayenede. Yalnız bugünü gösterirken. */
+    readonly todayVisits = signal<TodayItemVm[]>([]);
+    readonly care = computed<ReadonlyMap<string, CareMark>>(() => {
+        const map = new Map<string, CareMark>();
+
+        for (const v of this.todayVisits()) {
+            if (v.appointmentId && v.careStatus === 'Waiting') {
+                map.set(v.appointmentId, { kind: 'wait', since: v.arrivedAtUtc });
+            } else if (v.appointmentId && v.careStatus === 'InProgress') {
+                map.set(v.appointmentId, { kind: 'room' });
+            }
+        }
+
+        return map;
+    });
+    /** "Klinikte" paneli: bekleyenler (geliş saatiyle) ve muayenedekiler; `null`: gösterilmez (bugün değil ya da yetki yok). */
+    readonly inClinic = computed(() => {
+        if (!this.canReadVisits || this.selectedDate() !== this.today()) {
+            return null;
+        }
+
+        return this.todayVisits()
+            .filter((v) => v.careStatus === 'Waiting' || v.careStatus === 'InProgress')
+            .sort((a, b) => Number(b.careStatus === 'InProgress') - Number(a.careStatus === 'InProgress') || (a.arrivedAtUtc ?? '').localeCompare(b.arrivedAtUtc ?? ''))
+            .map((v) => {
+                const waiting = v.careStatus === 'Waiting';
+                const vet = v.responsibleVeterinarianName ? ` · ${v.responsibleVeterinarianName}` : '';
+                const arrived = v.arrivedAtUtc ? toIstanbulTimeInputValue(v.arrivedAtUtc) : '';
+
+                return {
+                    key: v.key,
+                    petName: v.petName,
+                    clientName: v.clientName,
+                    initials: initials(v.petName + ' ' + v.clientName),
+                    waiting,
+                    status: (waiting ? (v.arrivedAtUtc ? waitingLabel(v.arrivedAtUtc) : 'Bekliyor') : 'Muayenede') + vet,
+                    detail: [arrived ? `${arrived}'de geldi` : '', v.appointmentReasonName ?? ''].filter((x) => !!x).join(' · ')
+                };
+            });
+    });
+    readonly showRail = computed(() => this.showFinder() || this.inClinic() !== null);
+    readonly railOpen = signal(readSectionOpen('rail'));
+    readonly inClinicOpen = signal(readSectionOpen('inClinic'));
+    readonly railShown = computed(() => this.showRail() && this.railOpen());
+
+    /** Günün özeti, tek satır: "28 randevu · 24 tamamlandı (%86) · 3 klinikte · sıradaki 15:30 Sansa · 12 aşı bekliyor · 1 gelmedi". */
+    readonly summary = computed(() => {
+        const items = this.selectedDayItems();
+        const live = items.filter((i) => appointmentTone(i) !== 'off');
+        const done = items.filter((i) => i.state === 'Completed').length;
+        const noShow = items.filter((i) => (typeof i.status === 'number' ? i.status : parseAppointmentStatusRawToEnum(i.status)) === 3).length;
+        const now = this.selectedDate() === this.today() ? (this.nowMinute() ?? 0) : -1;
+        const next = live
+            .filter((i) => i.state !== 'Completed')
+            .map((i) => ({ i, start: toBlockTimes(i)?.start ?? 0 }))
+            .filter((x) => x.start >= now)
+            .sort((a, b) => a.start - b.start)[0];
+        const out: { key: string; value: string; label: string; title?: string; cls?: string }[] = [
+            { key: 'total', value: String(live.length), label: 'randevu' },
+            { key: 'done', value: String(done), label: live.length ? `tamamlandı (%${Math.round((done / live.length) * 100)})` : 'tamamlandı' }
+        ];
+        const clinic = this.inClinic();
+
+        if (clinic) {
+            const waiting = clinic.filter((p) => p.waiting).length;
+
+            out.push({ key: 'clinic', value: String(clinic.length), label: 'klinikte', title: `${waiting} bekliyor · ${clinic.length - waiting} muayenede` });
+        }
+
+        if (next) {
+            out.push({
+                key: 'next',
+                value: clockLabel(next.start),
+                label: `sıradaki ${next.i.petName}`,
+                title: next.i.veterinarianName || undefined
+            });
+        }
+
+        const vax = this.dayVaccines();
+
+        if (vax) {
+            out.push({ key: 'vax', value: String(vax.waiting), label: 'aşı bekliyor', title: `${vax.applied.length} uygulandı · ${vax.untimed.length} saatsiz` });
+        }
+
+        if (noShow) {
+            out.push({ key: 'noshow', value: String(noShow), label: 'gelmedi', cls: 'text-red-600 dark:text-red-400' });
+        }
+
+        return out;
+    });
+
+    /** Filtre paneli (takvim çubuğundaki "Filtre" düğmesi); düğmede etkin filtre sayısı. */
+    readonly filtersOpen = signal(false);
+    readonly activeFilterCount = computed(() => {
+        const f = this.filters();
+
+        return (f.vet ? 1 : 0) + (f.types.length ? 1 : 0) + (f.states.length ? 1 : 0);
+    });
+    /** Gün görünümünde hekim çipleri varken filtre panelindeki Hekim listesi gizlenir (aynı seçim iki yerde olmasın). */
+    readonly vetBarShown = computed(() => this.vetChips().length > 1 || this.hiddenIdleCount() > 0);
+
+    /** Gün görünümündeki randevu blokları; ızgara o günün çalışma saati ile randevularının birleşimine ölçeklenir (aşı genişletmez). */
+    private readonly viewBlocks = computed(() => layoutBlocks(this.selectedDayItems()));
+    readonly bounds = computed(() => gridBounds([workingDayFor(this.hours(), this.selectedDate())], this.viewBlocks()));
 
     readonly conflictCount = computed(() => {
         const ids = this.conflicts();
@@ -446,6 +775,10 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     readonly monthWeeks = computed(() => monthGridWeeks(this.selectedDate()));
     readonly appointmentSummary = signal<ReadonlyMap<string, CalendarDaySummaryVm>>(new Map());
     readonly vaccineSummary = signal<ReadonlyMap<string, CalendarDaySummaryVm>>(new Map());
+    /** Gün başına kapasite (doluluk rengi; sözleşme §8.4); alınamazsa boş (renk yok). */
+    readonly capacity = signal<ReadonlyMap<string, number>>(new Map());
+    private capacityRequest: Subscription | null = null;
+    private visitsRequest: Subscription | null = null;
 
     readonly rangeTitle = computed(() => {
         const date = this.selectedDate();
@@ -626,6 +959,13 @@ export class AppointmentsCalendarPageComponent implements OnInit {
             }
         });
 
+        // Doluluk rengi: kapasite backend'de (çalışma saati ve randevu süresinden, sözleşme §8.4); alınamazsa renk yok.
+        this.capacityRequest?.unsubscribe();
+        this.capacityRequest = this.appointments.getCalendarCapacity({ dateFromUtc: from, dateToUtc: to, veterinarianUserId: req.veterinarianUserId }).subscribe({
+            next: (c) => this.capacity.set(c),
+            error: () => this.capacity.set(new Map())
+        });
+
         if (!req.vaccines || !this.canReadVaccinations) {
             this.vaccineSummary.set(empty);
 
@@ -685,6 +1025,23 @@ export class AppointmentsCalendarPageComponent implements OnInit {
             }
         });
         this.loadVaccines(preset || !req.vaccines ? null : { dateFromUtc: from, dateToUtc: to, states: req.states });
+        this.loadTodayVisits(!preset && keys.includes(this.today()));
+    }
+
+    /** Kabul kuyruğu: "Klinikte" paneli ve kart rozetleri (bekliyor / muayenede); yalnız bugünü içeren görünümde ve okuma izniyle. */
+    private loadTodayVisits(includesToday: boolean): void {
+        this.visitsRequest?.unsubscribe();
+
+        if (!includesToday || !this.canReadVisits) {
+            this.todayVisits.set([]);
+
+            return;
+        }
+
+        this.visitsRequest = this.visits.getToday().subscribe({
+            next: (t) => this.todayVisits.set(t.items),
+            error: () => this.todayVisits.set([])
+        });
     }
 
     openVaccine(pick: VaccinePick): void {
@@ -785,9 +1142,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     }
 
     onSlotPick(pick: CalendarSlotPick): void {
-        const vet = pick.column.veterinarianUserId ?? (this.viewMode() === 'week' ? this.freeVetAt(pick.column.dateKey, pick.minute) : null);
-
-        this.createAppointment({ date: pick.column.dateKey, time: clockLabel(pick.minute), vet });
+        this.createAppointment({ date: pick.dateKey, time: clockLabel(pick.minute), vet: pick.vetId });
     }
 
     onAgendaGapPick(minute: number): void {
@@ -822,8 +1177,51 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         });
     }
 
-    dot(index: number): string {
-        return vetDotClass(index);
+    protected readonly todayRoute = TODAY_ROUTE;
+
+    bar(tone: CalendarTone): string {
+        return toneBarClass(tone);
+    }
+
+    clockText(minute: number): string {
+        return clockLabel(minute);
+    }
+
+    segClass(mode: CalendarViewMode): string {
+        return this.viewMode() === mode ? 'bg-primary text-primary-contrast font-semibold shadow-sm' : 'text-muted-color hover:text-color';
+    }
+
+    toggleRail(): void {
+        this.railOpen.set(!this.railOpen());
+        writeSectionOpen('rail', this.railOpen());
+    }
+
+    toggleInClinic(): void {
+        this.inClinicOpen.set(!this.inClinicOpen());
+        writeSectionOpen('inClinic', this.inClinicOpen());
+    }
+
+    /** "Yalnız benim" ve hekim çipleri; seçim kullanıcı başına tarayıcıda hatırlanır. */
+    toggleOnlyMine(): void {
+        this.saveVetPrefs({ ...this.vetPrefs(), onlyMine: !this.vetPrefs().onlyMine });
+    }
+
+    /** Çip sütunu açar ya da kapar; "Yalnız benim" açıkken bir çipe basmak onu kapatır ve yalnız o hekimi ekler. */
+    toggleVet(id: string): void {
+        const prefs = this.vetPrefs();
+
+        if (prefs.onlyMine) {
+            this.saveVetPrefs({ onlyMine: false, hidden: this.chipVetIds().filter((x) => x !== id && x !== this.myUserId) });
+
+            return;
+        }
+
+        this.saveVetPrefs({ onlyMine: false, hidden: prefs.hidden.includes(id) ? prefs.hidden.filter((x) => x !== id) : [...prefs.hidden, id] });
+    }
+
+    private saveVetPrefs(p: DayVetPrefs): void {
+        writeDayVetPrefs(p);
+        this.vetPrefs.set(p);
     }
 
     pageTitle(): string {
@@ -859,75 +1257,6 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         const preset = this.activePreset();
 
         return preset === 'overdue-appointments' || preset === 'upcoming-24h';
-    }
-
-    private dayColumns(): CalendarGridColumn[] {
-        const dateKey = this.selectedDate();
-        const working = workingDayFor(this.gridHours(), dateKey);
-        const items = this.selectedDayItems();
-        const ids = this.conflicts();
-        const names = new Map(this.vets().map((v) => [v.userId, v.name]));
-        const vetIds = this.activeVetIds();
-        const unassigned = items.filter((i) => !i.veterinarianUserId);
-
-        const column = (key: string, vetId: string | null, title: string, own: AppointmentCalendarItemVm[]): CalendarGridColumn => {
-            const live = own.filter((i) => !isCancelled(i)).length;
-            // Tür/durum filtresinde sütun günün tüm randevularını göstermez; boş süre yazılmaz.
-            const free = vetId && working && !this.narrowed() ? freeGaps(working, own, this.rowStep()).reduce((s, g) => s + g.end - g.start, 0) : null;
-
-            return {
-                key,
-                dateKey,
-                veterinarianUserId: vetId,
-                title,
-                subtitle: `${live} randevu` + (free !== null ? ` · ${durationText(free)} boş` : ''),
-                dayNumber: null,
-                today: false,
-                working,
-                blocks: layoutBlocks(own),
-                conflictCount: own.filter((i) => ids.has(i.id)).length,
-                opensDay: false
-            };
-        };
-
-        if (this.filters().vet === NO_VET) {
-            return [column(UNASSIGNED, null, 'Hekim seçilmedi', unassigned)];
-        }
-
-        if (vetIds.length === 0) {
-            return [column('all', null, 'Randevular', items)];
-        }
-
-        const columns = vetIds.map((id) => {
-            const own = items.filter((i) => i.veterinarianUserId === id);
-
-            return column(id, id, names.get(id) || own[0]?.veterinarianName || 'Hekim', own);
-        });
-
-        return unassigned.length ? [...columns, column(UNASSIGNED, null, 'Hekim seçilmedi', unassigned)] : columns;
-    }
-
-    private weekColumns(): CalendarGridColumn[] {
-        const ids = this.conflicts();
-
-        return this.weekKeys().map((dateKey) => {
-            const own = this.itemsOn(dateKey, this.visibleItems());
-            const working = workingDayFor(this.gridHours(), dateKey);
-
-            return {
-                key: dateKey,
-                dateKey,
-                veterinarianUserId: null,
-                title: WEEKDAY_LONG.format(new Date(`${dateKey}T12:00:00Z`)),
-                subtitle: working ? `${own.filter((i) => !isCancelled(i)).length} randevu` : 'Kapalı',
-                dayNumber: String(Number(dateKey.slice(8))),
-                today: dateKey === this.today(),
-                working,
-                blocks: layoutBlocks(own),
-                conflictCount: own.filter((i) => ids.has(i.id)).length,
-                opensDay: true
-            };
-        });
     }
 
     private itemsOn(dateKey: string, items: readonly AppointmentCalendarItemVm[]): AppointmentCalendarItemVm[] {
@@ -1047,3 +1376,4 @@ function shiftMonth(dateKey: string, step: number): string {
 
     return `${year}-${String(month + 1).padStart(2, '0')}-01`;
 }
+
