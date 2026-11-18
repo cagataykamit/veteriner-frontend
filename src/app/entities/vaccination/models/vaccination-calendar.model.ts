@@ -5,6 +5,7 @@
 export type VaccinationCalendarKind = 'Planned' | 'NextDue' | 'Applied';
 /** Ortak takvim durumu (sözleşme §6.1): randevu ve aşı aynı dili kullanır. */
 export type CalendarItemState = 'DueToday' | 'Upcoming' | 'Overdue' | 'Completed';
+export const CALENDAR_ITEM_STATES: readonly CalendarItemState[] = ['DueToday', 'Upcoming', 'Overdue', 'Completed'];
 
 export interface VaccinationCalendarItemDto {
     vaccinationId: string;
@@ -21,6 +22,8 @@ export interface VaccinationCalendarItemDto {
     vaccineDefinitionId?: string | null;
     vaccineName?: string | null;
     notes?: string | null;
+    /** Saat gerçek mi (sözleşme §8.2); değilse satır "Saatsiz" grubunda. */
+    timeSpecified?: boolean | null;
 }
 
 export interface VaccinationCalendarItemVm {
@@ -38,4 +41,6 @@ export interface VaccinationCalendarItemVm {
     vaccineDefinitionId: string | null;
     vaccineName: string;
     notes: string | null;
+    /** `atUtc` saati gerçek mi (sözleşme §8.2): gün ızgarasında "Aşılar" sütununda saatiyle durur; değilse "Saatsiz". */
+    timeSpecified: boolean;
 }

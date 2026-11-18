@@ -17,6 +17,8 @@ export interface AppointmentCalendarItemDto {
     /** Randevu nedeninin adı (ayrıntı balonu); nedensiz randevuda boş. */
     reasonName?: string | null;
     notes?: string | null;
+    /** Takvim durumu (sözleşme §8.3); iptal ve gelmedi randevuda boş. */
+    state?: string | null;
 }
 
 export interface AppointmentCalendarQuery {

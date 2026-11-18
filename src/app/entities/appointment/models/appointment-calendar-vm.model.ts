@@ -1,4 +1,5 @@
 import type { StatusTagSeverity } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import type { CalendarItemState } from '@/app/entities/vaccination/models/vaccination-calendar.model';
 
 export interface AppointmentCalendarItemVm {
     id: string;
@@ -26,6 +27,8 @@ export interface AppointmentCalendarItemVm {
     /** Randevu nedeni; yoksa `null` (balonda tür yazılır). */
     reasonName: string | null;
     notes: string | null;
+    /** Takvim durumu (sözleşme §6.1, §8.3): renk bu alandan; iptal ve gelmedi randevuda `null`. */
+    state: CalendarItemState | null;
 }
 
 export interface AppointmentCalendarDayGroupVm {

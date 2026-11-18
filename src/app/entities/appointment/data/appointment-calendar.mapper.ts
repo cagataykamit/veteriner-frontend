@@ -13,6 +13,7 @@ import type {
     AppointmentCalendarItemVm
 } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/entities/appointment/utils/appointment-status.utils';
+import { CALENDAR_ITEM_STATES } from '@/app/entities/vaccination/models/vaccination-calendar.model';
 import { appointmentTypeLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay, formatWeekdayDateDisplay, parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 
@@ -104,7 +105,8 @@ export function mapAppointmentCalendarItemDtoToVm(dto: AppointmentCalendarItemDt
         veterinarianUserId: dto.veterinarianUserId?.trim() ? dto.veterinarianUserId.trim() : null,
         veterinarianName: toText(dto.veterinarianName),
         reasonName: dto.reasonName?.trim() ? dto.reasonName.trim() : null,
-        notes: dto.notes?.trim() ? dto.notes.trim() : null
+        notes: dto.notes?.trim() ? dto.notes.trim() : null,
+        state: CALENDAR_ITEM_STATES.find((s) => s === dto.state) ?? null
     };
 }
 
