@@ -5,7 +5,6 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppTopbar } from './app.topbar';
 import { AppSidebar } from './app.sidebar';
-import { AppFooter } from './app.footer';
 import { AppReadOnlyBannerComponent } from './app-read-only-banner.component';
 import { AppSectionTabsComponent } from './app-section-tabs.component';
 import { LayoutService } from '@/app/layout/service/layout.service';
@@ -16,7 +15,7 @@ import { UnsavedChangesService } from '@/app/shared/ui/unsaved-changes/unsaved-c
 @Component({
     selector: 'app-layout',
     standalone: true,
-    imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter, AppReadOnlyBannerComponent, AppSectionTabsComponent, LegalAcceptanceGateComponent, UnsavedChangesDialogComponent],
+    imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppReadOnlyBannerComponent, AppSectionTabsComponent, LegalAcceptanceGateComponent, UnsavedChangesDialogComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `<div class="layout-wrapper" [ngClass]="containerClass()">
         <a class="layout-skip-link" href="#panel-main" (click)="skipToMain($event)">İçeriğe geç</a>
@@ -30,7 +29,6 @@ import { UnsavedChangesService } from '@/app/shared/ui/unsaved-changes/unsaved-c
                 <!-- Açık sayfa, sekme kapatma uyarısı için izlenir (O2). -->
                 <router-outlet (activate)="unsavedChanges.setActivePage($event)" (deactivate)="unsavedChanges.clearActivePage($event)"></router-outlet>
             </main>
-            <app-footer></app-footer>
         </div>
         <div class="layout-mask"></div>
         <app-unsaved-changes-dialog />
