@@ -59,7 +59,7 @@ describe('TodayOpenVisitsChipComponent', () => {
     it('açık geliş satırı durumunu gösterir; her açılış yeniden yükler', async () => {
         const { c } = await render('Incomplete', { kind: 'Incomplete', totalCount: 1, items: [row()] });
 
-        expect(c.detail(row({ careStatus: 'Waiting', responsibleVeterinarianName: null }))).toBe('08.10.2026 10:30 · Bekliyor');
+        expect(c.detail(row({ careStatus: 'Waiting', responsibleVeterinarianName: null }))).toBe('08.10.2026 10:30 · Sırada');
         c.onShow();
         expect(getOpenItemVisits).toHaveBeenCalledTimes(2);
     });

@@ -145,7 +145,7 @@ describe('pet timeline yardımcıları', () => {
     });
 
     it('durum etiketi Türkçe; bilinmeyen durum etiketsiz; bilinmeyen tür genel simge', () => {
-        expect(petTimelineStatusLabel(base[0])).toBe('Devam ediyor');
+        expect(petTimelineStatusLabel(base[0])).toBe('Muayenede');
         expect(petTimelineStatusLabel(base[3])).toBeNull();
         expect(petTimelineTypeIcon('Appointment')).toBe('pi-circle');
         expect(petTimelineTypeIcon('Vaccination')).toBe('pi-shield');

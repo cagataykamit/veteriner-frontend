@@ -4,8 +4,8 @@ import { canMarkAppointmentNoShow, canRevertAppointmentNoShow } from '@/app/enti
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay, parseUtcApiInstantIsoString, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 
 const CARE_STATUS_LABEL: Record<VisitCareStatus, string> = {
-    Waiting: 'Bekliyor',
-    InProgress: 'Devam ediyor',
+    Waiting: 'Sırada',
+    InProgress: 'Muayenede',
     Completed: 'Tamamlandı'
 };
 

@@ -1053,7 +1053,7 @@ describe('TodayPageComponent', () => {
             expect(root.querySelector('table')).toBeNull();
             const t = cards[0].textContent ?? '';
 
-            for (const part of ['Geliş', 'Pamuk', 'Kedi', 'Ali Veli', 'Dr. Ayşe', 'Bekliyor', 'Kısmi ödeme', 'Başlat', 'Muayene aç']) {
+            for (const part of ['Geliş', 'Pamuk', 'Kedi', 'Ali Veli', 'Dr. Ayşe', 'Sırada', 'Kısmi ödeme', 'Başlat', 'Muayene aç']) {
                 expect(t).toContain(part);
             }
 
