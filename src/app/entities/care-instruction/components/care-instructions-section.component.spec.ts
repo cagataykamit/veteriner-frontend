@@ -7,6 +7,11 @@ import { CareInstructionsSectionComponent } from '@/app/entities/care-instructio
 import type { CareInstructionVm } from '@/app/entities/care-instruction/models/care-instruction-vm.model';
 import { CareInstructionsService } from '@/app/entities/care-instruction/services/care-instructions.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { signal } from '@angular/core';
+import type { AiEntryState } from '@/app/entities/ai/models/ai-vm.model';
+import { AiService } from '@/app/entities/ai/services/ai.service';
+import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
+import { AiStatusService } from '@/app/entities/ai/services/ai-status.service';
 
 const row: CareInstructionVm = { id: 'ci1', text: 'Günde iki kez yemek', createdAtUtc: '2026-10-13T08:00:00Z', updatedAtUtc: null, rowVersion: 'v1' };
 
@@ -15,6 +20,8 @@ describe('CareInstructionsSectionComponent', () => {
     let service: MockedObject<CareInstructionsService>;
     let claims: Set<string>;
     let mutationBlocked: boolean;
+    let aiEntry: ReturnType<typeof signal<AiEntryState>>;
+    let ai: MockedObject<AiService>;
 
     const setup = async () => {
         await TestBed.configureTestingModule({
@@ -22,7 +29,9 @@ describe('CareInstructionsSectionComponent', () => {
             providers: [
                 { provide: CareInstructionsService, useValue: service },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } }
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } },
+                { provide: AiService, useValue: ai },
+                { provide: AiStatusService, useValue: { entry: aiEntry, ensureLoaded: vi.fn(), refresh: vi.fn(), usageWarning: signal(null) } }
             ]
         }).compileComponents();
         fixture = TestBed.createComponent(CareInstructionsSectionComponent);
@@ -52,6 +61,13 @@ describe('CareInstructionsSectionComponent', () => {
         service.getCareInstructions.mockReturnValue(of([row]));
         claims = new Set(['CareInstructions.Read']);
         mutationBlocked = false;
+        aiEntry = signal<AiEntryState>({ kind: 'hidden' });
+        ai = {
+            draftCareInstruction: vi.fn(),
+            getPendingDrafts: vi.fn().mockReturnValue(of([])),
+            acceptDraft: vi.fn(),
+            discardDraft: vi.fn()
+        } as unknown as MockedObject<AiService>;
     });
 
     it('okuma izni yoksa hiçbir şey çizmez ve istek atmaz', async () => {
@@ -142,5 +158,64 @@ describe('CareInstructionsSectionComponent', () => {
         pending.complete();
         fixture.detectChanges();
         expect(root().textContent).toContain('Günde iki kez yemek');
+    });
+
+    describe('Taslak hazırla (AI-004)', () => {
+        const aiDraft = {
+            id: 'd1',
+            feature: 'DischargeInstructions',
+            status: 'Draft',
+            targetType: 'Hospitalization',
+            targetId: 'h1',
+            sources: [],
+            content: { text: 'İlaçlar:\n- Damla' },
+            createdAtUtc: '',
+            expiresAtUtc: '',
+            decidedByUserId: null,
+            decidedAtUtc: null,
+            appliedRecordId: null
+        };
+
+        it('ekleme izni ve kullanılabilir AI ile görünür; AI kapalıysa ya da salt okunurda görünmez', async () => {
+            claims.add('CareInstructions.Create');
+            aiEntry.set({ kind: 'available' });
+            await setup();
+            expect(has('ai-entry-button')).toBe(true);
+
+            aiEntry.set({ kind: 'hidden' });
+            fixture.detectChanges();
+            expect(has('ai-entry-button')).toBe(false);
+        });
+
+        it('basınca yan panelde açılır, yatıştan üretir; kabulde talimat oluşur ve liste yenilenir', async () => {
+            claims.add('CareInstructions.Create');
+            aiEntry.set({ kind: 'available' });
+            ai.draftCareInstruction.mockReturnValue(of(aiDraft));
+            ai.acceptDraft.mockReturnValue(of({ ...aiDraft, status: 'Accepted', content: null, appliedRecordId: 'ci9' }));
+            await setup();
+
+            (root().querySelector('[data-testid="ai-entry-button"]') as HTMLButtonElement).click();
+            const panel = TestBed.inject(AiPanelService);
+
+            expect(panel.content()).toEqual(expect.objectContaining({ kind: 'custom', title: 'Taburcu talimatı', owner: fixture.componentInstance }));
+            expect(ai.getPendingDrafts).toHaveBeenCalledWith('Hospitalization', 'h1');
+
+            const flow = fixture.componentInstance.aiFlow;
+
+            flow.note.set('Yara bakımı');
+            flow.generate();
+            expect(ai.draftCareInstruction).toHaveBeenCalledWith({ hospitalizationId: 'h1' }, 'Yara bakımı');
+
+            fixture.componentInstance.acceptAiDraft();
+            expect(ai.acceptDraft).toHaveBeenCalledWith('d1', undefined);
+            expect(panel.content()).toBeNull();
+            expect(service.getCareInstructions).toHaveBeenCalledTimes(2);
+        });
+
+        it('AI taslağından gelen talimatta iz çipi görünür', async () => {
+            service.getCareInstructions.mockReturnValue(of([{ ...row, aiProvenance: [{ draftId: 'd1', feature: 'DischargeInstructions', edited: true, acceptedByName: 'Dr. Ayşe Kaya', acceptedAtUtc: '2026-11-19T14:36:00Z' }] }]));
+            await setup();
+            expect(root().querySelector('[data-testid="ai-provenance-chip"]')?.textContent).toContain('AI taslağından · düzenlendi');
+        });
     });
 });

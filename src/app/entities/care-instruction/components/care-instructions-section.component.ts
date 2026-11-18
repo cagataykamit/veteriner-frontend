@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, inject, input, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, input, signal, type TemplateRef, untracked, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -20,17 +20,26 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
+import { AiDraftFlowComponent } from '@/app/entities/ai/components/ai-draft-flow.component';
+import { AiDraftTextComponent } from '@/app/entities/ai/components/ai-draft-text.component';
+import { AiEntryButtonComponent } from '@/app/entities/ai/components/ai-entry-button.component';
+import { AiProvenanceChipComponent } from '@/app/entities/ai/components/ai-provenance-chip.component';
+import { AI_FEATURE_DISCHARGE_INSTRUCTIONS } from '@/app/entities/ai/models/ai-vm.model';
+import { AiService } from '@/app/entities/ai/services/ai.service';
+import { injectAiDraftFlow } from '@/app/entities/ai/services/ai-draft-flow';
+import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
 
 const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
 
 /**
  * Yatışa bağlı hasta sahibi bakım talimatları: liste, ekleme ve metin düzenleme.
  * Okuma izni yoksa hiçbir şey çizilmez; ekle/düzenle düğmeleri izne ve salt okunur kiracı durumuna göre gizlenir.
+ * "Taslak hazırla" (AI-004, `AI_DRAFTS_API_CONTRACT.md` §7.3): yatıştan taburcu / evde bakım talimatı taslağı yan panelde; kabulde talimat oluşur.
  */
 @Component({
     selector: 'app-care-instructions-section',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent, TrDateTimePipe, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent, TrDateTimePipe, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective, AiDraftFlowComponent, AiDraftTextComponent, AiEntryButtonComponent, AiProvenanceChipComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (canRead) {
@@ -38,7 +47,10 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                     <h5 class="mt-0 mb-0">Bakım talimatları</h5>
                     @if (canAdd()) {
-                        <button pButton type="button" size="small" data-testid="care-instruction-add" (click)="openCreate()"><i class="p-button-icon pi pi-plus"></i>Talimat ekle</button>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <app-ai-entry-button label="Taslak hazırla" [active]="aiPanelOpen()" (pressed)="openAiPanel()" />
+                            <button pButton type="button" size="small" data-testid="care-instruction-add" (click)="openCreate()"><i class="p-button-icon pi pi-plus"></i>Talimat ekle</button>
+                        </div>
                     }
                 </div>
                 <p class="text-sm text-muted-color mt-0 mb-3">Hasta sahibine verilecek taburcu / evde bakım talimatları; yatış notundan ayrıdır.</p>
@@ -59,6 +71,9 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
                                         {{ row.createdAtUtc | trDateTime }}
                                         @if (row.updatedAtUtc) {
                                             · güncellendi {{ row.updatedAtUtc | trDateTime }}
+                                        }
+                                        @for (p of row.aiProvenance ?? []; track p.draftId) {
+                                            <app-ai-provenance-chip [edited]="p.edited" [acceptedByName]="p.acceptedByName" [acceptedAtUtc]="p.acceptedAtUtc" />
                                         }
                                     </span>
                                     @if (canEdit()) {
@@ -102,6 +117,23 @@ const CONCURRENCY_CONFLICT_CODE = 'CareInstructions.ConcurrencyConflict';
                     </div>
                 </form>
             </p-dialog>
+
+            <ng-template #aiTpl>
+                <app-ai-draft-flow
+                    [flow]="aiFlow"
+                    hint="Yatış kaydından (neden, notlar, taburcu notu ve bağlı muayenenin reçeteleri) hasta sahibine verilecek bir taburcu / evde bakım talimatı taslağı hazırlanır. İsterseniz eklenmesini istediklerinizi yazın."
+                    noteLabel="Eklenecekler (isteğe bağlı)"
+                    [noteMax]="2000"
+                    [noteRows]="4"
+                    loadingText="Talimat hazırlanıyor…"
+                    noticeText="Yatış ve muayene kayıtlarına dayanır; kayıtta olmayan ilaç, doz ya da tanı eklemez. Hasta sahibine vermeden önce okuyun."
+                    (accept)="acceptAiDraft()"
+                >
+                    @if (aiFlow.draft()) {
+                        <app-ai-draft-text label="Talimat" [text]="aiDraftText()" [maxLength]="textMax" />
+                    }
+                </app-ai-draft-flow>
+            </ng-template>
         }
     `
 })
@@ -136,6 +168,27 @@ export class CareInstructionsSectionComponent {
         text: ['', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(CARE_INSTRUCTION_TEXT_MAX)]]
     });
 
+    private readonly ai = inject(AiService);
+    private readonly aiPanel = inject(AiPanelService);
+    /** AI-004 taslağı: yatıştan üretilir, kabulde talimat yatışa bağlanır. */
+    readonly aiFlow = injectAiDraftFlow({
+        feature: AI_FEATURE_DISCHARGE_INSTRUCTIONS,
+        target: () => ({ type: 'Hospitalization', id: this.hospitalizationId() }),
+        generate: (note) => this.ai.draftCareInstruction({ hospitalizationId: this.hospitalizationId() }, note)
+    });
+    private readonly aiTemplate = viewChild<TemplateRef<unknown>>('aiTpl');
+    private readonly aiDraftEditor = viewChild(AiDraftTextComponent);
+    protected readonly aiDraftText = computed(() => {
+        const text = this.aiFlow.draft()?.content?.['text'];
+
+        return typeof text === 'string' ? text : '';
+    });
+    protected readonly aiPanelOpen = computed(() => {
+        const c = this.aiPanel.content();
+
+        return c?.kind === 'custom' && c.owner === this;
+    });
+
     constructor() {
         effect(() => {
             this.hospitalizationId();
@@ -143,6 +196,27 @@ export class CareInstructionsSectionComponent {
             if (this.canRead) {
                 untracked(() => this.reload());
             }
+        });
+        inject(DestroyRef).onDestroy(() => this.aiPanel.closeFor(this));
+    }
+
+    openAiPanel(): void {
+        const template = this.aiTemplate();
+
+        if (template) {
+            this.aiPanel.openCustom({ title: 'Taburcu talimatı', template, owner: this });
+            this.aiFlow.resumePending();
+        }
+    }
+
+    /** Kabul: bakım talimatı oluşur (düzenlendiyse düzenlenmiş metinle); sonra mevcut "Düzenle" ile düzeltilebilir, iz kalır. */
+    acceptAiDraft(): void {
+        const edited = this.aiDraftEditor()?.editedText() ?? null;
+
+        this.aiFlow.accept(edited !== null ? { text: edited } : undefined, () => {
+            this.aiPanel.closeFor(this);
+            this.aiPanel.notify('Bakım talimatı kaydedildi.');
+            this.reload();
         });
     }
 
