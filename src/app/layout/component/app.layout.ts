@@ -11,11 +11,13 @@ import { LayoutService } from '@/app/layout/service/layout.service';
 import { LegalAcceptanceGateComponent } from '@/app/features/legal-acceptance/components/legal-acceptance-gate.component';
 import { UnsavedChangesDialogComponent } from '@/app/shared/ui/unsaved-changes/unsaved-changes-dialog.component';
 import { UnsavedChangesService } from '@/app/shared/ui/unsaved-changes/unsaved-changes.service';
+import { AiPanelComponent } from '@/app/entities/ai/components/ai-panel.component';
+import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
 
 @Component({
     selector: 'app-layout',
     standalone: true,
-    imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppReadOnlyBannerComponent, AppSectionTabsComponent, LegalAcceptanceGateComponent, UnsavedChangesDialogComponent],
+    imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppReadOnlyBannerComponent, AppSectionTabsComponent, LegalAcceptanceGateComponent, UnsavedChangesDialogComponent, AiPanelComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `<div class="layout-wrapper" [ngClass]="containerClass()">
         <a class="layout-skip-link" href="#panel-main" (click)="skipToMain($event)">İçeriğe geç</a>
@@ -30,6 +32,8 @@ import { UnsavedChangesService } from '@/app/shared/ui/unsaved-changes/unsaved-c
                 <router-outlet (activate)="unsavedChanges.setActivePage($event)" (deactivate)="unsavedChanges.clearActivePage($event)"></router-outlet>
             </main>
         </div>
+        <!-- Yapay zekâ yan paneli (ADR-008, tasarım A): açıkken içerik sağdan panel genişliği kadar boşluk alır. -->
+        <app-ai-panel />
         <div class="layout-mask"></div>
         <app-unsaved-changes-dialog />
         <!-- Bekleyen hukuki kabul penceresi (ADR-029); ilk paketi büyütmemek için ayrı parça. Durum rota çözülürken okunur, parça hemen yüklenir (H18). -->
@@ -43,6 +47,7 @@ export class AppLayout {
     private readonly auth = inject(AuthService);
     protected readonly unsavedChanges = inject(UnsavedChangesService);
     private readonly tenantReadOnlyContext = inject(TenantReadOnlyContextService);
+    private readonly aiPanel = inject(AiPanelService);
     private readonly destroyRef = inject(DestroyRef);
     private readonly primePanelOverlayHostEl = viewChild<ElementRef<HTMLElement>>('primePanelOverlayHost');
     private readonly mainEl = viewChild<ElementRef<HTMLElement>>('main');
@@ -81,7 +86,8 @@ export class AppLayout {
             'layout-static': config.menuMode === 'static',
             'layout-static-inactive': state.staticMenuDesktopInactive && config.menuMode === 'static',
             'layout-overlay-active': state.overlayMenuActive,
-            'layout-mobile-active': state.mobileMenuActive
+            'layout-mobile-active': state.mobileMenuActive,
+            'layout-ai-panel-open': this.aiPanel.content() !== null
         };
     });
 

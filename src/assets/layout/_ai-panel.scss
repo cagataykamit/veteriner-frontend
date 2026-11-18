@@ -1,0 +1,44 @@
+@use 'mixins' as *;
+
+/*
+ * Yapay zekâ yan paneli (ADR-008, tasarım A: ux/ai-arayuz-tasarim.md): üst çubuğun altında sağdan 440 px.
+ * Geniş ekranda sayfayı örtmez, içerik panel genişliği kadar sola kayar; daha dar ekranda panel sayfanın üstüne biner
+ * (aksi halde içerik okunmayacak kadar daralır), telefonda tam genişliktir. Genişlik `AI_PANEL_WIDTH_PX` ile aynı.
+ */
+$ai-panel-width: 440px;
+
+.p-drawer.ai-panel {
+    top: 4rem;
+    height: calc(100% - 4rem);
+    width: $ai-panel-width;
+    border-left: 1px solid var(--surface-border);
+    border-top: 0;
+    border-radius: 0;
+    box-shadow: -4px 0 16px color-mix(in srgb, var(--p-surface-900), transparent 92%);
+
+    .p-drawer-header {
+        padding: 1rem 1rem 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .p-drawer-content {
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+    }
+}
+
+// Sol menü (17rem) + panel + boşluklarla içerik en az ~540 px kalsın diye yalnız geniş ekranda kaydırılır (Tailwind `xl`).
+@media (min-width: 1200px) {
+    .layout-wrapper.layout-ai-panel-open .layout-main-container {
+        padding-right: calc(#{$ai-panel-width} + 2rem);
+    }
+}
+
+@include phone {
+    .p-drawer.ai-panel {
+        width: 100%;
+    }
+}
