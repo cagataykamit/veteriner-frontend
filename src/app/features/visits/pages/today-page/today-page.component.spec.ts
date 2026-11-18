@@ -204,7 +204,7 @@ describe('TodayPageComponent', () => {
         const strip = (f.nativeElement as HTMLElement).querySelector('app-today-open-items') as HTMLElement;
 
         expect(strip.classList).toContain('ml-auto');
-        expect(strip.parentElement?.querySelector(':scope > p-selectbutton')).not.toBeNull();
+        expect(strip.parentElement?.querySelector('p-selectbutton')).not.toBeNull();
         expect(strip.parentElement?.className).toContain('flex');
     });
 
