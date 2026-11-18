@@ -1100,7 +1100,7 @@ describe('TodayPageComponent', () => {
             expect(open.querySelector('[data-testid="today-pet-link"]')?.className).toContain('text-primary');
         });
 
-        it('taslak ölçüleri: px sütun genişlikleri, küçük soluk başlıklar, küçük sıkı ara başlık; müşteri adı düz metin renginde', async () => {
+        it('taslak ölçüleri: px sütun genişlikleri, küçük soluk başlıklar, düz yazılı ara başlık; müşteri adı düz metin renginde', async () => {
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'w', clientPhone: '905439580091' })] });
             const root = f.nativeElement as HTMLElement;
             const cols = Array.from(root.querySelectorAll('colgroup col')).map((c) => Array.from(c.classList).find((k) => k.startsWith('w-')));
@@ -1111,8 +1111,8 @@ describe('TodayPageComponent', () => {
             expect(cols).toEqual(['w-[80px]', 'w-[220px]', 'w-[230px]', 'w-[160px]', 'w-[180px]', 'w-auto', 'w-[230px]']);
             expect(wrapper.className).toContain('[&_th]:text-[12px]!');
             expect(wrapper.className).toContain('[&_th]:text-muted-color!');
-            expect(groupCell.className).toContain('text-[11.5px]!');
-            expect(groupCell.className).toContain('tracking-[0.6px]');
+            expect(groupCell.className).toContain('text-[13px]!');
+            expect(groupCell.className).toContain('font-semibold');
             expect(client.className).toContain('text-color');
             expect(client.className).not.toContain('text-primary');
             expect(client.closest('td')?.textContent).toContain('+90 543 958 00 91');
