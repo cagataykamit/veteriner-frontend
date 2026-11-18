@@ -9,11 +9,12 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { CLINICAL_TERMS_CREATE_CLAIM, CLINICAL_TERMS_DEACTIVATE_CLAIM, CLINICAL_TERMS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { CLINICAL_TERM_NAME_MAX, type ClinicalTermDto, type ClinicalTermKind } from '@/app/entities/clinical-term/models/clinical-term.model';
 import { ClinicalTermError, ClinicalTermsService } from '@/app/entities/clinical-term/services/clinical-terms.service';
-import { appendClinicalTermToText, clinicalTermNameKey } from '@/app/entities/clinical-term/utils/clinical-term-text.utils';
+import { appendClinicalTermToText, clinicalTermNameKey, clinicalTermSearchStem } from '@/app/entities/clinical-term/utils/clinical-term-text.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 const PAGE_SIZE = 20;
+const SIMILAR_MAX = 5;
 
 const PLACEHOLDERS: Record<ClinicalTermKind, string> = {
     Complaint: 'Şikâyet sözlüğünde ara ve ekle…',
@@ -22,7 +23,8 @@ const PLACEHOLDERS: Record<ClinicalTermKind, string> = {
 
 /**
  * Serbest metin alanının yanında sözlükten arayarak ekleme (ADR-020 S3). Arama yalnız aktif terimleri getirir; seçilen
- * terimin adı `control` metnine eklenir, alan serbest metin olarak kalır. `ClinicalTerms.Read` yoksa veya alan kilitliyse
+ * terimin adı `control` metnine eklenir, alan serbest metin olarak kalır. Arama boşsa kökten benzer terimler gösterilir ve
+ * ekleme "Yine de … ekle" olur ("topallama" yazana "Topallık"). `ClinicalTerms.Read` yoksa veya alan kilitliyse
  * (ör. kesinleşmiş muayene) hiçbir şey çizilmez. Bulunamayan terimi `ClinicalTerms.Create` izni olan, salt okunur olmayan
  * kiracıdaki kullanıcı sözlüğe ekleyip alana yazabilir. Ad pasif bir kayıtla çakışırsa (`409 DuplicateName`) o kayıt
  * gösterilir; `ClinicalTerms.Deactivate` izni olan kullanıcı "Etkinleştir" ile etkinleştirip adı alana yazar.
@@ -60,6 +62,14 @@ const PLACEHOLDERS: Record<ClinicalTermKind, string> = {
                                 <span class="text-danger" role="alert">{{ searchError() }}</span>
                             } @else {
                                 <span>Sözlükte bulunamadı.</span>
+                                @if (similar().length > 0) {
+                                    <div class="mt-1" data-testid="clinical-term-similar">
+                                        <span class="text-muted-color">Benzer terim:</span>
+                                        @for (t of similar(); track t.id) {
+                                            <button pButton type="button" [text]="true" size="small" class="p-0 ml-2" (click)="write(t.name)">{{ t.name }}</button>
+                                        }
+                                    </div>
+                                }
                                 @if (canAdd()) {
                                     <div>
                                         <button
@@ -71,7 +81,7 @@ const PLACEHOLDERS: Record<ClinicalTermKind, string> = {
                                             [disabled]="adding()"
                                             data-testid="clinical-term-add"
                                             (click)="addLastQuery()"
-                                        ><i class="p-button-icon" [class]="adding() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>{{ '‘' + lastQuery().trim() + '’ sözlüğe ekle' }}</button>
+                                        ><i class="p-button-icon" [class]="adding() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>{{ (similar().length > 0 ? 'Yine de ‘' : '‘') + lastQuery().trim() + '’ sözlüğe ekle' }}</button>
                                     </div>
                                 }
                             }
@@ -112,6 +122,8 @@ export class ClinicalTermPickerComponent {
     readonly query = signal<ClinicalTermDto | string | null>(null);
     readonly lastQuery = signal('');
     readonly suggestions = signal<ClinicalTermDto[]>([]);
+    /** Arama boş dönünce kökten bulunan benzer terimler ("topallama" yazana "Topallık"); mükerrer eklemeyi önler. */
+    readonly similar = signal<ClinicalTermDto[]>([]);
     readonly searchError = signal<string | null>(null);
     readonly actionError = signal<string | null>(null);
     readonly adding = signal(false);
@@ -149,6 +161,7 @@ export class ClinicalTermPickerComponent {
         const term = event.query ?? '';
 
         this.lastQuery.set(term);
+        this.similar.set([]);
         this.searchError.set(null);
         this.actionError.set(null);
         this.inactiveNamesake.set(null);
@@ -235,7 +248,7 @@ export class ClinicalTermPickerComponent {
     }
 
     /** Adı alana ekler; arama kutusu bir sonraki seçim için boşalır. */
-    private write(name: string): void {
+    write(name: string): void {
         const control = this.control();
         const next = appendClinicalTermToText(control.value, name);
 
@@ -247,12 +260,30 @@ export class ClinicalTermPickerComponent {
         this.query.set(null);
         this.lastQuery.set('');
         this.suggestions.set([]);
+        this.similar.set([]);
         this.inactiveNamesake.set(null);
     }
 
+    /** Sonuç boşsa kökle ikinci arama yapılır; bulunanlar öneri değil "Benzer terim" olarak eklemenin önünde gösterilir. */
     private load(term: string) {
         return this.terms.list({ kind: this.kind(), search: term, page: 1, pageSize: PAGE_SIZE }).pipe(
             map((r) => r.items),
+            switchMap((items) => {
+                const stem = items.length === 0 ? clinicalTermSearchStem(term) : null;
+
+                if (!stem) {
+                    return of(items);
+                }
+
+                return this.terms.list({ kind: this.kind(), search: stem, page: 1, pageSize: SIMILAR_MAX }).pipe(
+                    map((r) => {
+                        this.similar.set(r.items.slice(0, SIMILAR_MAX));
+
+                        return items;
+                    }),
+                    catchError(() => of(items))
+                );
+            }),
             catchError((e: unknown) => {
                 this.searchError.set(panelHttpFailureMessage(e, 'Sözlük yüklenemedi.'));
 

@@ -11,6 +11,20 @@ export function clinicalTermNameKey(name: string): string {
 }
 
 /**
+ * Arama boş dönünce benzer terimleri bulmak için kök: Türkçe küçük harf, son üç harf atılır, en az dört harf kalır
+ * ("topallama" → "topall", "Topallık"ı bulur). Beş harften kısa aramada kök aranmaz (çok geniş sonuç verir).
+ */
+export function clinicalTermSearchStem(query: string): string | null {
+    const term = query.trim().toLocaleLowerCase('tr');
+
+    if (term.length < 5) {
+        return null;
+    }
+
+    return term.slice(0, Math.max(4, term.length - 3));
+}
+
+/**
  * Sözlükten seçilen adı serbest metin alanına ekler (muayene şeması değişmez; sözleşme: seçilen `name` alana yazılır).
  * Boş alana adın kendisi yazılır; doluysa sona `", "` ile eklenir. Ad metinde zaten ayrı bir parça olarak varsa
  * (virgül, noktalı virgül veya satır sonuyla ayrılmış; Türkçe büyük/küçük harf duyarsız) metin değişmez.

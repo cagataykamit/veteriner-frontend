@@ -127,6 +127,28 @@ describe('ClinicalTermPickerComponent', () => {
         expect(host.control.value).toBe('Kusma, Kulak akıntısı');
     });
 
+    it('arama boşsa kökten benzer terim gösterilir, seçilince alana yazılır; ekleme "Yine de" olur', async () => {
+        terms.list.mockImplementation((q: { search?: string }) => (q.search === 'topall' ? paged([term('Topallık')]) : paged([])));
+        await create();
+        picker().onComplete({ query: 'topallama', originalEvent: new Event('x') });
+        await wait(0);
+        expect(vi.mocked(terms.list).mock.calls.map((c) => c[0].search)).toEqual(['topallama', 'topall']);
+        expect(picker().suggestions()).toEqual([]);
+        expect(picker().similar().map((t) => t.name)).toEqual(['Topallık']);
+        picker().write('Topallık');
+        expect(host.control.value).toBe('Kusma, Topallık');
+        expect(picker().similar()).toEqual([]);
+    });
+
+    it('kısa aramada kökle ikinci arama yapılmaz', async () => {
+        terms.list.mockReturnValue(paged([]));
+        await create();
+        picker().onComplete({ query: 'kaşı', originalEvent: new Event('x') });
+        await wait(0);
+        expect(terms.list).toHaveBeenCalledTimes(1);
+        expect(picker().similar()).toEqual([]);
+    });
+
     it('ekleme hatası gösterilir, alan değişmez', async () => {
         terms.create.mockReturnValue(throwError(() => new ClinicalTermError('Bu ad sözlükte zaten var.', false)));
         await create();
@@ -146,9 +168,12 @@ describe('ClinicalTermPickerComponent', () => {
             terms.setActive.mockReturnValue(of(undefined));
         });
 
-        /** Arama aktif sonuç döndürmez; "Sözlüğe ekle" 409 alır, ada özel pasif dahil arama çakışan kaydı getirir. */
+        /** Arama ve kökle benzer arama aktif sonuç döndürmez; "Sözlüğe ekle" 409 alır, ada özel pasif dahil arama çakışan kaydı getirir. */
         async function addConflicting(query = 'KULAK  akintisi'): Promise<void> {
-            terms.list.mockReturnValueOnce(paged([])).mockReturnValueOnce(paged([term('Kulak akıntısı tedavisi', { isActive: false }), passive]));
+            terms.list
+                .mockReturnValueOnce(paged([]))
+                .mockReturnValueOnce(paged([]))
+                .mockReturnValueOnce(paged([term('Kulak akıntısı tedavisi', { isActive: false }), passive]));
             await create();
             picker().onComplete({ query, originalEvent: new Event('x') });
             await wait(0);
@@ -160,7 +185,7 @@ describe('ClinicalTermPickerComponent', () => {
 
         it('mükerrer hatası yerine pasif kayıt mesajı gösterilir; bakış yalnız bu ada özel ve pasifler dahildir', async () => {
             await addConflicting();
-            expect(terms.list).toHaveBeenCalledTimes(2);
+            expect(terms.list).toHaveBeenCalledTimes(3);
             expect(vi.mocked(terms.list).mock.lastCall![0]).toEqual(expect.objectContaining({ kind: 'Complaint', search: 'KULAK  akintisi', includeInactive: true }));
             expect(picker().inactiveNamesake()).toBe(passive);
             expect(picker().actionError()).toBeNull();
