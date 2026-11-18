@@ -80,6 +80,7 @@ import { formatTimeDisplay, formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalT
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-only-reason.directive';
+import { readTodayScope, readTodayView, writeTodayScope, writeTodayView, type TodayScope, type TodayView } from '@/app/features/visits/pages/today-page/today-view-preference';
 
 /** Resepsiyon ve hekimin aynı kuyruğu güncel görmesi için otomatik yenileme aralığı. */
 const REFRESH_INTERVAL_MS = 30_000;
@@ -87,8 +88,6 @@ const REFRESH_INTERVAL_MS = 30_000;
 const COMPACT_MEDIA_QUERY = '(max-width: 40rem)';
 
 type RefreshMode = 'initial' | 'silent';
-type TodayView = 'today' | 'voided';
-type TodayScope = 'mine' | 'all';
 
 /** Tek tablonun satırları: grup ara başlığı, kayıt ya da katlanmış tamamlananları açan/kapatan satır. */
 type TodayListRow = { kind: 'group'; id: string; group: TodayGroup } | { kind: 'item'; id: string; item: TodayItemVm; groupKey: TodayGroupKey; done: boolean } | { kind: 'toggle'; id: string; hiddenCount: number; expanded: boolean };
@@ -255,7 +254,7 @@ export class TodayPageComponent implements OnInit {
         { label: 'Günlük liste', value: 'today' },
         { label: 'Yanlış işaretlenenler', value: 'voided' }
     ];
-    readonly view = signal<TodayView>('today');
+    readonly view = signal<TodayView>(readTodayView());
     readonly scopeOptions: Array<{ label: string; value: TodayScope }> = [
         { label: 'Benim hastalarım', value: 'mine' },
         { label: 'Tümü', value: 'all' }
@@ -462,10 +461,11 @@ export class TodayPageComponent implements OnInit {
 
     setScope(scope: TodayScope): void {
         this.scope.set(scope);
+        writeTodayScope(scope);
         this.refresh('initial');
     }
 
-    /** Hekimse varsayılan "Benim hastalarım"; ilk yükleme kapsam belli olunca yapılır (çift istek / yanıp sönme yok). */
+    /** Hekimse kayıtlı kapsam, yoksa "Benim hastalarım"; ilk yükleme kapsam belli olunca yapılır (çift istek / yanıp sönme yok). */
     private startWithScope(): void {
         if (!this.canCreateVisit) {
             this.refresh('initial');
@@ -478,7 +478,7 @@ export class TodayPageComponent implements OnInit {
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe((userId) => {
                 this.myUserId.set(userId);
-                this.scope.set(userId ? 'mine' : 'all');
+                this.scope.set(userId ? (readTodayScope() ?? 'mine') : 'all');
                 this.refresh('initial');
             });
     }
@@ -491,6 +491,7 @@ export class TodayPageComponent implements OnInit {
 
     setView(view: TodayView): void {
         this.view.set(view);
+        writeTodayView(view);
         this.refresh('initial');
     }
 

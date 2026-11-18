@@ -1400,6 +1400,9 @@ describe('TodayPageComponent', () => {
 });
 
 describe('TodayPageComponent — Benim hastalarım', () => {
+    // Liste ve kapsam seçimi tarayıcıda saklanır; testler birbirinin seçimini görmesin.
+    beforeEach(() => localStorage.clear());
+
     const today: TodayVm = { date: 'd', activeHospitalizations: [], items: [] };
     let visits: MockedObject<VisitsService>;
 
@@ -1484,6 +1487,8 @@ describe('TodayPageComponent — Benim hastalarım', () => {
 });
 
 describe('TodayPageComponent — Benim hastalarım boş liste', () => {
+    beforeEach(() => localStorage.clear());
+
     it('hekimin listesi boşken Size atanmış hasta yok mesajı ve Tümü’ne geç bağlantısı çıkar', async () => {
         const visits = {
             getToday: vi.fn().mockName('VisitsService.getToday'),
