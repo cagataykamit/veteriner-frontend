@@ -14,7 +14,8 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
     selector: 'app-today-money',
     standalone: true,
     imports: [TagModule, MoneyPipe],
-    host: { class: 'flex flex-wrap items-center gap-1 min-w-0' },
+    // Çip metni kendi içinde kırılmaz ("Ödeme / bekliyor" iki satır olmasın); sığmazsa çip bütün olarak alta iner.
+    host: { class: 'flex flex-wrap items-center gap-1 min-w-0 [&_.p-tag]:whitespace-nowrap' },
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @for (chip of chips(); track chip.key) {
