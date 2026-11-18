@@ -71,6 +71,15 @@ describe('groupTodayItems', () => {
         expect(groups.map((g) => g.elapsedLabel)).toEqual(['Bekleme', 'Süre', null, null]);
     });
 
+    it('Visit siz tamamlanmış randevu Planlı değil Tamamlandı grubundadır', () => {
+        const groups = groupTodayItems([item({ key: 'ac', visitId: null, careStatus: null, appointmentId: 'a1', appointmentStatus: 'Completed' }), item({ key: 'p', visitId: null, careStatus: null, appointmentId: 'a2', appointmentStatus: 'Scheduled' })]);
+
+        expect(groups.map((g) => [g.key, g.items.map((i) => i.key)])).toEqual([
+            ['planned', ['p']],
+            ['completed', ['ac']]
+        ]);
+    });
+
     it('liste boşsa grup yok', () => {
         expect(groupTodayItems([])).toEqual([]);
     });

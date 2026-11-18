@@ -128,6 +128,11 @@ function groupKeyOf(item: TodayItemVm): TodayGroupKey {
         return 'noShow';
     }
 
+    // Gelişi açılmadan (ör. doğrudan muayeneyle) tamamlanan randevu bitmiş iştir; "Planlı" altında görünmez.
+    if (!item.visitId && item.appointmentStatus === 'Completed') {
+        return 'completed';
+    }
+
     switch (item.careStatus) {
         case 'Waiting':
             return 'waiting';
@@ -140,7 +145,7 @@ function groupKeyOf(item: TodayItemVm): TodayGroupKey {
     }
 }
 
-/** Sözleşme: `careStatus` dolu satır o gruba, `null` satır "Planlı"ya gider. Grup içi sıra sunucudan gelir. Boş gruplar atılır. */
+/** Sözleşme: `careStatus` dolu satır o gruba, `null` satır "Planlı"ya gider (Visit'siz tamamlanmış randevu "Tamamlandı"ya). Grup içi sıra sunucudan gelir. Boş gruplar atılır. */
 export function groupTodayItems(items: readonly TodayItemVm[]): TodayGroup[] {
     return GROUP_ORDER.map((g) => ({ ...g, items: items.filter((i) => groupKeyOf(i) === g.key) })).filter((g) => g.items.length > 0);
 }
