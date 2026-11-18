@@ -8,6 +8,25 @@ import { AppointmentReasonsService, OnlineBookingService } from '@/app/entities/
 import { addGregorianDaysToYmd, toIstanbulTimeInputValue } from '@/app/shared/utils/date.utils';
 import { istanbulTodayYmd } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
 
+const OPEN_KEY = 'vetinity.calendar.freeSlotOpen';
+
+/** Kullanıcının açık/kapalı seçimi tarayıcıda kalır; kayıt yoksa açık başlar (kullanıcı kararı 2026-11-18). */
+function readFinderOpen(): boolean {
+    try {
+        return localStorage.getItem(OPEN_KEY) !== 'false';
+    } catch {
+        return true;
+    }
+}
+
+function writeFinderOpen(open: boolean): void {
+    try {
+        localStorage.setItem(OPEN_KEY, String(open));
+    } catch {
+        // Depolama kapalıysa seçim yalnız bu sayfada kalır.
+    }
+}
+
 /** Boş saat önerisi: tarih (İstanbul), saat ve önerilen hekim. */
 export interface FreeSlotPick {
     date: string;
@@ -37,7 +56,7 @@ const DAYS = 7;
     template: `
         <section class="rounded-border border border-surface p-3 flex flex-col gap-3" aria-labelledby="free-slot-title" data-testid="free-slot-finder">
             <h3 id="free-slot-title" class="m-0 text-base font-semibold">
-                <button type="button" class="w-full flex items-center gap-2 text-left cursor-pointer" [attr.aria-expanded]="open()" (click)="open.set(!open())" data-testid="free-slot-toggle">
+                <button type="button" class="w-full flex items-center gap-2 text-left cursor-pointer" [attr.aria-expanded]="open()" (click)="toggleOpen()" data-testid="free-slot-toggle">
                     <i class="pi pi-search text-primary" aria-hidden="true"></i>Boş saat bul
                     <i class="pi ml-auto !text-xs text-muted-color" [class]="open() ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i>
                 </button>
@@ -116,8 +135,8 @@ export class AppointmentFreeSlotFinderComponent {
     readonly canCreate = input(false);
     /** Takvim yenilenince (randevu eklendi/iptal) liste de yenilenir. */
     readonly refreshKey = input(0);
-    /** Takvimin sağ panelinde katlanmış başlar ("Klinikte" üstte kalsın); başlığa tıklanınca açılır. */
-    readonly open = signal(false);
+    /** Takvimin sağ panelinde açık başlar; kullanıcı katlarsa seçim saklanır. */
+    readonly open = signal(readFinderOpen());
     readonly pick = output<FreeSlotPick>();
 
     private readonly reasonsApi = inject(AppointmentReasonsService);
@@ -178,6 +197,11 @@ export class AppointmentFreeSlotFinderComponent {
             this.refreshKey();
             untracked(() => this.reload());
         });
+    }
+
+    protected toggleOpen(): void {
+        this.open.set(!this.open());
+        writeFinderOpen(this.open());
     }
 
     protected reload(): void {
