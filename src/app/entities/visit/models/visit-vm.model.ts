@@ -106,6 +106,32 @@ export interface TodayOpenItemsVm {
     hbsNotEnteredVaccinationCount?: number | null;
 }
 
+/** Listesi açılabilen özet sayısı (`OPEN_ITEMS_API_CONTRACT.md` §10). */
+export type OpenItemVisitKind = 'Uncharged' | 'Incomplete';
+
+/** Açık iş listesinde bir ziyaret; satırdan ücret eklemeye veya gelişi kapatmaya gidilir. */
+export interface OpenItemVisitVm {
+    visitId: string;
+    arrivedAtUtc: string;
+    careStatus: VisitCareStatus;
+    petId: string;
+    petName: string;
+    clientId: string;
+    clientName: string;
+    responsibleVeterinarianName: string | null;
+    /** Ziyaretin en son muayenesi; ücret bu muayeneye bağlanır. */
+    latestExaminationId: string | null;
+    /** Yalnız ücret yok listesinde; diğerinde `null`. */
+    chargeableWorkCount: number | null;
+}
+
+export interface OpenItemVisitsVm {
+    kind: OpenItemVisitKind;
+    /** Özetteki sayı; `items` en çok 200 satırdır. */
+    totalCount: number;
+    items: OpenItemVisitVm[];
+}
+
 export interface TodayVm {
     date: string;
     items: TodayItemVm[];

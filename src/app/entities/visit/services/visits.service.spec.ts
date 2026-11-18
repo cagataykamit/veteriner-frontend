@@ -33,6 +33,23 @@ describe('VisitsService', () => {
             req.flush({ date: '2026-10-10', clinicId: 'c1', generatedAtUtc: 'g', items: [{ petId: 'p1', clientId: 'cl1', isCarriedOver: false, appointmentId: 'a1' }] });
         }));
 
+    it('açık iş listesi: tür yolda küçük harfle, aktif klinik clinicId olarak gider', () =>
+        new Promise<void>((done) => {
+            service.getOpenItemVisits('Incomplete').subscribe((vm) => {
+                expect(vm.totalCount).toBe(1);
+                expect(vm.items[0].visitId).toBe('v9');
+                done();
+            });
+            const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/visits/open-items/incomplete');
+
+            expect(req.request.params.get('clinicId')).toBe('c1');
+            req.flush({
+                kind: 'Incomplete',
+                totalCount: 1,
+                items: [{ visitId: 'v9', arrivedAtUtc: '2026-10-08T07:00:00Z', careStatus: 'Waiting', petId: 'p1', petName: 'Pamuk', clientId: 'cl1', clientName: 'Ali' }]
+            });
+        }));
+
     it('geliş 201 (yeni) yanıtında created:true döner', () =>
         new Promise<void>((done) => {
             service.createVisit({ appointmentId: 'a1' }).subscribe((r) => {

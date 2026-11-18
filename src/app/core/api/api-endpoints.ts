@@ -64,6 +64,8 @@ export const ApiEndpoints = {
         create: () => `/api/v1/visits`,
         /** Query: `clinicId`, `localDate` (İstanbul günü, `yyyy-MM-dd`), `voided`. */
         today: () => `/api/v1/visits/today`,
+        /** Bugün açık iş sayısının arkasındaki ziyaretler (`OPEN_ITEMS_API_CONTRACT.md` §10). Query: `clinicId`. */
+        openItems: (kind: 'uncharged' | 'incomplete') => `/api/v1/visits/open-items/${kind}`,
         byId: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}`,
         start: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/start`,
         complete: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/complete`,

@@ -103,6 +103,28 @@ export interface TodayOpenItemsDto {
     hbsNotEnteredVaccinationCount?: number | null;
 }
 
+/** `GET /visits/open-items/{kind}` (`OPEN_ITEMS_API_CONTRACT.md` §10). */
+export interface OpenItemVisitDto {
+    visitId: string;
+    arrivedAtUtc: string;
+    careStatus: VisitCareStatusDto;
+    petId: string;
+    petName: string;
+    speciesName?: string | null;
+    clientId: string;
+    clientName: string;
+    responsibleVeterinarianUserId?: string | null;
+    responsibleVeterinarianName?: string | null;
+    latestExaminationId?: string | null;
+    chargeableWorkCount?: number | null;
+}
+
+export interface OpenItemVisitsDto {
+    kind: 'Uncharged' | 'Incomplete';
+    totalCount: number;
+    items?: OpenItemVisitDto[] | null;
+}
+
 export interface TodayDto {
     date: string;
     clinicId: string;

@@ -1,3 +1,4 @@
+import { HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, of } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
@@ -7,6 +8,7 @@ import {
     mapCorrectVisitToApiBody,
     findVeterinarianUserId,
     mapCreateVisitToApiBody,
+    mapOpenItemVisitsDtoToVm,
     mapPreparationToApiBody,
     mapRestoreVisitToApiBody,
     mapUrgencyToApiBody,
@@ -17,6 +19,7 @@ import {
     todayQueryToHttpParams
 } from '@/app/entities/visit/data/visit.mapper';
 import type {
+    OpenItemVisitsDto,
     TodayDto,
     VeterinarianDto,
     VisitCreateResultDto,
@@ -25,6 +28,8 @@ import type {
 import type {
     CorrectVisitRequest,
     CreateVisitRequest,
+    OpenItemVisitKind,
+    OpenItemVisitsVm,
     TodayQuery,
     TodayVm,
     VeterinarianVm,
@@ -47,6 +52,17 @@ export class VisitsService {
         return this.api.get<TodayDto>(ApiEndpoints.visits.today(), params).pipe(
             map(mapTodayDtoToVm),
             toUserError('Bugün listesi yüklenemedi.')
+        );
+    }
+
+    /** Aktif kliniğin "Ücret yok" ya da "Önceki günden açık geliş" ziyaretleri (Bugün özetiyle aynı kural). */
+    getOpenItemVisits(kind: OpenItemVisitKind): Observable<OpenItemVisitsVm> {
+        const clinicId = this.auth.getClinicId()?.trim();
+        const params = clinicId ? new HttpParams().set('clinicId', clinicId) : undefined;
+
+        return this.api.get<OpenItemVisitsDto>(ApiEndpoints.visits.openItems(kind === 'Uncharged' ? 'uncharged' : 'incomplete'), params).pipe(
+            map(mapOpenItemVisitsDtoToVm),
+            toUserError('Açık iş listesi yüklenemedi.')
         );
     }
 
