@@ -1,3 +1,4 @@
+import type { AiProvenanceVm } from '@/app/entities/ai/models/ai-vm.model';
 import type { LabResultStatus } from '@/app/entities/lab-result/models/lab-result-vm.model';
 /**
  * Muayene — UI view modelleri.
@@ -52,6 +53,8 @@ export interface ExaminationDetailVm {
     rowVersion: string | null;
     createdAtUtc: string | null;
     updatedAtUtc: string | null;
+    /** Kayıttaki "AI taslağından" izi (AI-001 kabulleri); yoksa boş. */
+    aiProvenance?: AiProvenanceVm[];
 }
 
 /** GET /examinations/{id}/related-summary */

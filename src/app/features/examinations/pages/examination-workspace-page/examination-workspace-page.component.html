@@ -11,9 +11,13 @@
         [title]="isEdit ? 'Muayene' : 'Yeni Muayene'"
         [description]="isEdit ? 'Klinik notları ve vital değerleri güncelleyin.' : 'Muayene kaydı oluşturun.'"
     >
-        <div actions class="flex flex-wrap gap-2">
+        <div actions class="flex flex-wrap items-center gap-2">
             @if (isEdit) {
                 <a [routerLink]="['/panel/examinations', examinationId]" class="text-primary font-medium no-underline text-sm touch:touch-hit">Muayene özeti →</a>
+            }
+            <!-- AI-001: taslağın hedefi kaydedilmiş muayene; görünürlüğü AI durumu belirler. -->
+            @if (canDraftNote()) {
+                <app-ai-entry-button label="Notu alanlara ayır" [active]="notePanelOpen()" (pressed)="openNotePanel()" />
             }
         </div>
     </app-page-header>
@@ -38,6 +42,17 @@
             </p>
             <button pButton type="button" size="small" (click)="resumeDraft()" data-testid="examination-draft-resume">Sürdür</button>
             <button pButton type="button" size="small" severity="secondary" [outlined]="true" (click)="discardDraft()" data-testid="examination-draft-discard">Taslağı sil</button>
+        </div>
+    }
+
+    @if (aiAccepted(); as acc) {
+        <div class="flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-ai-border bg-ai-surface px-3 py-2.5 mb-4 text-sm" role="status" data-testid="exam-ai-accepted">
+            <i class="pi pi-sparkles text-ai" aria-hidden="true"></i>
+            <p class="m-0 flex-1 min-w-60">
+                <b>{{ acc.summary }}</b>
+                <span class="text-muted-color"> Kontrol edin; değiştirmek isterseniz düzenleyip kaydedin. Muayenede "AI taslağından" izi kalır.</span>
+            </p>
+            <button pButton type="button" size="small" class="p-button-text p-button-secondary" (click)="aiAccepted.set(null)" data-testid="exam-ai-accepted-close">Kapat</button>
         </div>
     }
 
@@ -116,10 +131,16 @@
                     <h5 class="mt-0 mb-4">Şikâyet ve anamnez</h5>
                     <div class="grid grid-cols-12 gap-4">
                         <app-form-field class="col-span-12" label="Ziyaret sebebi / şikâyet" fieldId="visitReason" [error]="apiFieldErrors().visitReason ? apiFieldErrors().visitReason : form.controls.visitReason.invalid && form.controls.visitReason.touched ? 'Ziyaret sebebi zorunludur.' : null" [required]="true">
+                            @if (aiFieldEdited('visitReason') !== null) {
+                                <app-ai-provenance-chip fieldLabelExtra [edited]="!!aiFieldEdited('visitReason')" />
+                            }
                             <textarea id="visitReason" rows="3" class="w-full p-inputtext p-component" formControlName="visitReason"></textarea>
                             <app-clinical-term-picker kind="Complaint" inputId="visitReasonTerm" [control]="form.controls.visitReason" />
                         </app-form-field>
                         <app-form-field class="col-span-12" label="Anamnez" fieldId="anamnesis" [error]="apiFieldErrors().anamnesis ? apiFieldErrors().anamnesis : null">
+                            @if (aiFieldEdited('anamnesis') !== null) {
+                                <app-ai-provenance-chip fieldLabelExtra [edited]="!!aiFieldEdited('anamnesis')" />
+                            }
                             <textarea id="anamnesis" rows="6" class="w-full p-inputtext p-component" formControlName="anamnesis" appClinicalSnippetTrigger></textarea>
                         </app-form-field>
                     </div>
@@ -127,8 +148,14 @@
 
                 <div class="card mb-4">
                     <h5 class="mt-0 mb-4">Klinik bulgular ve vital değerler</h5>
+                    @if (aiFieldEdited('vitals') !== null) {
+                        <p class="m-0 -mt-2 mb-3 text-sm text-muted-color" data-testid="exam-ai-vitals-mark">Vital değerler <app-ai-provenance-chip [edited]="!!aiFieldEdited('vitals')" /></p>
+                    }
                     <div class="grid grid-cols-12 gap-4">
                         <app-form-field class="col-span-12" label="Klinik bulgular" fieldId="findings" [error]="apiFieldErrors().findings ? apiFieldErrors().findings : null">
+                            @if (aiFieldEdited('findings') !== null) {
+                                <app-ai-provenance-chip fieldLabelExtra [edited]="!!aiFieldEdited('findings')" />
+                            }
                             <textarea id="findings" rows="6" class="w-full p-inputtext p-component" formControlName="findings" appClinicalSnippetTrigger></textarea>
                         </app-form-field>
                         <!-- Dört vital tek satırda, etiketler tek satıra sığacak kadar kısa: alanlar aynı hizada durur. -->
@@ -176,7 +203,12 @@
 
                 <div class="card mb-4">
                     <h5 class="mt-0 mb-4">Değerlendirme / tanı</h5>
-                    <label for="assessment" class="block text-sm font-medium text-muted-color mb-2">Değerlendirme / tanı</label>
+                    <label for="assessment" class="block text-sm font-medium text-muted-color mb-2"
+                        >Değerlendirme / tanı
+                        @if (aiFieldEdited('assessment') !== null) {
+                            <app-ai-provenance-chip [edited]="!!aiFieldEdited('assessment')" />
+                        }
+                    </label>
                     <textarea id="assessment" rows="5" class="w-full p-inputtext p-component" formControlName="assessment" appClinicalSnippetTrigger></textarea>
                     <app-clinical-term-picker kind="Diagnosis" inputId="assessmentTerm" [control]="form.controls.assessment" />
                     @if (apiFieldErrors().assessment) {
@@ -191,9 +223,15 @@
                     </div>
                     <div class="grid grid-cols-12 gap-4">
                         <app-form-field class="col-span-12" label="Plan / tedavi planı" fieldId="plan" [error]="apiFieldErrors().plan ? apiFieldErrors().plan : null">
+                            @if (aiFieldEdited('plan') !== null) {
+                                <app-ai-provenance-chip fieldLabelExtra [edited]="!!aiFieldEdited('plan')" />
+                            }
                             <textarea id="plan" rows="5" class="w-full p-inputtext p-component" formControlName="plan" appClinicalSnippetTrigger></textarea>
                         </app-form-field>
                         <app-form-field class="col-span-12" label="Ek notlar" fieldId="notes" [error]="apiFieldErrors().notes ? apiFieldErrors().notes : null">
+                            @if (aiFieldEdited('notes') !== null) {
+                                <app-ai-provenance-chip fieldLabelExtra [edited]="!!aiFieldEdited('notes')" />
+                            }
                             <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes" appClinicalSnippetTrigger></textarea>
                         </app-form-field>
                     </div>
@@ -219,3 +257,25 @@
 
     @if (!isEdit) {}
 }
+
+<!-- AI-001 yan panel içeriği (tasarım A). Sayfa yüklenirken de yaşasın diye koşulların dışında; panel sayfanın bağlamında çizer. -->
+<ng-template #aiNoteTpl>
+    <app-ai-draft-flow
+        [flow]="noteFlow"
+        hint="Muayene notunu tek parça yazın ya da yapıştırın. Şikâyet, anamnez, bulgu, vital, değerlendirme ve plan alanlarına ayrılmış bir taslak hazırlanır; muayeneye siz aktarırsınız."
+        noteLabel="Serbest not"
+        [noteRequired]="true"
+        [noteMax]="8000"
+        [noteRows]="12"
+        generateLabel="Alanlara ayır"
+        loadingText="Not alanlara ayrılıyor…"
+        footerNote="Not kaydedilmez; yalnız aktardığınız alanlar."
+        noticeText="Yalnız notunuzda yazanı alanlara taşır; bilgi eklemez, tanı ya da doz önermez. Muayenedeki metniniz siz seçmeden silinmez."
+        acceptLabel="Kabul et ve forma aktar"
+        (accept)="acceptNote()"
+    >
+        @if (noteFlow.draft()) {
+            <app-exam-note-draft [content]="noteDraftContent()" [formValues]="noteFormValues()" [sourceNote]="noteFlow.note() || null" />
+        }
+    </app-ai-draft-flow>
+</ng-template>

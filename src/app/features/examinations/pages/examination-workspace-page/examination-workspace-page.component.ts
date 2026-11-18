@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/entities/client/components/client-s
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy, type TemplateRef, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -43,6 +43,15 @@ import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 import { FormFieldComponent } from '@/app/shared/forms/form-field/form-field.component';
+import { AiDraftFlowComponent } from '@/app/entities/ai/components/ai-draft-flow.component';
+import { AiEntryButtonComponent } from '@/app/entities/ai/components/ai-entry-button.component';
+import { AiProvenanceChipComponent } from '@/app/entities/ai/components/ai-provenance-chip.component';
+import { ExamNoteDraftComponent } from '@/app/entities/ai/components/exam-note-draft.component';
+import { AI_FEATURE_EXAM_NOTE } from '@/app/entities/ai/models/ai-vm.model';
+import { AiService } from '@/app/entities/ai/services/ai.service';
+import { injectAiDraftFlow } from '@/app/entities/ai/services/ai-draft-flow';
+import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
+import { examNoteAcceptSummary, type ExamNoteFieldKey, type ExamNoteFormValues, parseExamNoteDraftContent } from '@/app/entities/ai/utils/exam-note-draft.utils';
 
 /** Tarayıcı taslağı (B3): muayene formu, serbest oluşturmada hasta seçimi ve düzenlemede taslağın alındığı kayıt sürümü. */
 interface ExaminationDraftData {
@@ -106,7 +115,11 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
         ClinicalSnippetTriggerDirective,
         DoseCalculatorComponent,
         FormFieldComponent, FormSubmitDirective,
-        FormErrorSummaryComponent
+        FormErrorSummaryComponent,
+        AiEntryButtonComponent,
+        AiDraftFlowComponent,
+        ExamNoteDraftComponent,
+        AiProvenanceChipComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './examination-workspace-page.component.html'
@@ -126,6 +139,37 @@ export class ExaminationWorkspacePageComponent implements OnInit, HasUnsavedChan
     private readonly destroyRef = inject(DestroyRef);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
+    private readonly ai = inject(AiService);
+    private readonly aiPanel = inject(AiPanelService);
+
+    /**
+     * AI-001 "Notu alanlara ayır" (yan panel, `AI_DRAFTS_API_CONTRACT.md` §7.1): taslağın hedefi kaydedilmiş muayenedir; kabul
+     * muayeneyi backend'de yazar (sona ekle / yerine yaz), sonra form yeniden okunur.
+     */
+    readonly noteFlow = injectAiDraftFlow({
+        feature: AI_FEATURE_EXAM_NOTE,
+        target: () => (this.isEdit && this.examinationId ? { type: 'Examination', id: this.examinationId } : null),
+        generate: (note) => this.ai.draftExamNote(this.examinationId, note)
+    });
+    private readonly aiNoteTemplate = viewChild.required<TemplateRef<unknown>>('aiNoteTpl');
+    private readonly examNoteDraft = viewChild(ExamNoteDraftComponent);
+    protected readonly noteDraftContent = computed(() => parseExamNoteDraftContent(this.noteFlow.draft()?.content));
+    /** Taslak açıldığı andaki muayene metinleri: dolu alanda "Sona ekle / Yerine yaz" seçimi sunulur. */
+    protected readonly noteFormValues = computed<ExamNoteFormValues>(() => {
+        this.noteFlow.draft();
+        const v = this.form.getRawValue();
+
+        return { visitReason: v.visitReason, anamnesis: v.anamnesis, findings: v.findings, assessment: v.assessment, plan: v.plan, notes: v.notes, weightKg: v.weightKg, temperatureC: v.temperatureC, heartRateBpm: v.heartRateBpm, respiratoryRatePerMin: v.respiratoryRatePerMin };
+    });
+    protected readonly notePanelOpen = computed(() => {
+        const c = this.aiPanel.content();
+
+        return c?.kind === 'custom' && c.owner === this;
+    });
+    /** Kabulden sonra formun üstündeki şerit ve alan çipleri; sayfa yenilenene kadar. */
+    readonly aiAccepted = signal<{ summary: string; fields: ReadonlyMap<ExamNoteFieldKey, boolean> } | null>(null);
+    /** Formda kaydedilmemiş değişiklik (sinyal): kabul kaydedilmiş muayeneye yazar, form önce kaydedilmeli. */
+    readonly formDirty = signal(false);
 
     /** `:id/edit` rotası → düzenleme; `new` → oluşturma. */
     examinationId = '';
@@ -226,6 +270,59 @@ export class ExaminationWorkspacePageComponent implements OnInit, HasUnsavedChan
         merge(this.form.valueChanges, this.selectionForm.valueChanges)
             .pipe(debounceTime(DRAFT_SAVE_DEBOUNCE_MS), takeUntilDestroyed(this.destroyRef))
             .subscribe(() => this.saveDraft());
+
+        this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.formDirty.set(this.form.dirty));
+        // Panelde bu sayfanın taslak içeriği açıksa sayfayla kapanır (bekleyen taslak sunucuda kalır, dönünce açılır).
+        this.destroyRef.onDestroy(() => this.aiPanel.closeFor(this));
+    }
+
+    /** AI-001 girişi: yalnız kaydedilmiş, kesinleşmemiş muayenede ve yazılabilir kiracıda (taslağın hedefi muayene kimliği). */
+    canDraftNote(): boolean {
+        return this.isEdit && !this.loading() && !this.loadError() && !this.finalized() && !this.ro.mutationBlocked();
+    }
+
+    openNotePanel(): void {
+        this.aiPanel.openCustom({ title: 'Notu alanlara ayır', template: this.aiNoteTemplate(), owner: this });
+        this.noteFlow.resumePending();
+    }
+
+    /** Kabulden sonra alanın çipi: `null` → bu alan AI taslağından gelmedi; `true` → kabulden önce düzenlendi. */
+    aiFieldEdited(key: ExamNoteFieldKey): boolean | null {
+        return this.aiAccepted()?.fields.get(key) ?? null;
+    }
+
+    /**
+     * "Kabul et ve forma aktar": taslak kaydedilmiş muayeneye yazılır (muayenenin kendi kuralları geçerli), sonra form yeniden
+     * okunur. Formda kaydedilmemiş değişiklik varsa önce kaydedilmeli; aksi halde ya o değişiklikler ya taslak kaybolurdu.
+     */
+    acceptNote(): void {
+        if (this.formDirty()) {
+            this.noteFlow.block({
+                code: null,
+                title: 'Önce formu kaydedin',
+                message: 'Formda kaydedilmemiş değişiklik var. Kaydedin ya da değişiklikleri bırakın; taslak kaydedilmiş muayeneye eklenir.',
+                retryable: false,
+                retryAfterSeconds: null,
+                refreshStatus: false
+            });
+
+            return;
+        }
+
+        const accept = this.examNoteDraft()?.acceptContent();
+
+        if (!accept?.fields.length) {
+            this.noteFlow.block({ code: null, title: 'Aktarılacak alan yok', message: 'Taslaktaki alanların hepsi boş; taslağı atabilir ya da yeniden hazırlayabilirsiniz.', retryable: false, retryAfterSeconds: null, refreshStatus: false });
+
+            return;
+        }
+
+        this.noteFlow.accept(accept.content, () => {
+            this.aiPanel.closeFor(this);
+            this.aiAccepted.set({ summary: examNoteAcceptSummary(accept.fields.length), fields: new Map(accept.fields.map((f) => [f.key, f.edited])) });
+            this.aiPanel.notify('Taslak muayeneye eklendi.');
+            this.reload();
+        });
     }
 
     ngOnInit(): void {
@@ -271,6 +368,7 @@ export class ExaminationWorkspacePageComponent implements OnInit, HasUnsavedChan
         this.timeOptions.set(examinationTimeSelectOptionsWithLegacy(data.form.examinationTime));
         this.form.patchValue(data.form);
         this.form.markAsDirty();
+        this.formDirty.set(true);
     }
 
     /** Taslağı siler; form sunucudaki (ya da boş) hâliyle kalır. */
@@ -347,6 +445,7 @@ export class ExaminationWorkspacePageComponent implements OnInit, HasUnsavedChan
                 }
 
                 this.apiFieldErrors.set({});
+                this.formDirty.set(false);
                 this.submitError.set(null);
                 this.conflict.set(false);
                 this.loading.set(false);

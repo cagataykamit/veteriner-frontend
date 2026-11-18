@@ -29,6 +29,8 @@ let nextFieldId = 0;
                 @if (isRequired()) {
                     <span aria-hidden="true">*</span>
                 }
+                <!-- Etiketin yanındaki işaret (ör. "AI taslağından" çipi). -->
+                <ng-content select="[fieldLabelExtra]" />
             </label>
         }
         <ng-content />

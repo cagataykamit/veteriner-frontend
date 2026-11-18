@@ -2,6 +2,7 @@
  * Backend Veteriner API — muayene DTO’ları.
  * Şema farklıysa bu dosya ve mapper ince ayarlanır.
  */
+import type { AiProvenanceDto } from '@/app/entities/ai/models/ai-api.model';
 
 /** `status` JSON'da string enum (`docs/EXAMINATION_FINALIZE_API_CONTRACT.md`). */
 export type ExaminationStatusDto = 'Draft' | 'Finalized';
@@ -189,6 +190,8 @@ export interface ExaminationDetailDto {
     finalizedByName?: string | null;
     /** Base64 (SQL rowversion); PUT'ta zorunlu. */
     rowVersion?: string | null;
+    /** Kabul edilmiş AI-001 taslaklarının izi (`AI_DRAFTS_API_CONTRACT.md` §8); eskiden yeniye. Eski yanıtta yok. */
+    aiProvenance?: AiProvenanceDto[] | null;
     /** Audit — API eksik döndürebilir; mapper null kabul eder. */
     createdAtUtc?: string | null;
     updatedAtUtc?: string | null;
