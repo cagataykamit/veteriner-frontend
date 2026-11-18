@@ -4,7 +4,7 @@ import { map, Observable } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { mapAiDraftDtoToVm, mapAiStatusDtoToVm, mapPetHistorySummaryDtoToVm } from '@/app/entities/ai/data/ai.mapper';
-import type { AiDraftAcceptRequestDto, AiDraftDto, AiStatusDto, PetHistorySummaryDto } from '@/app/entities/ai/models/ai-api.model';
+import type { AiDraftAcceptRequestDto, AiDraftDto, AiNoteDraftRequestDto, AiStatusDto, PetHistorySummaryDto } from '@/app/entities/ai/models/ai-api.model';
 import type { AiDraftVm, AiStatusVm, PetHistorySummaryVm } from '@/app/entities/ai/models/ai-vm.model';
 
 /**
@@ -22,6 +22,23 @@ export class AiService {
     /** Kaydedilmeyen taslak özet; kayıt yoksa model çağrılmaz (`hasRecords: false`, kota harcanmaz). */
     summarizePetHistory(petId: string): Observable<PetHistorySummaryVm> {
         return this.api.post<PetHistorySummaryDto>(ApiEndpoints.ai.petHistorySummary(petId), null).pipe(map(mapPetHistorySummaryDtoToVm));
+    }
+
+    /** AI-001: serbest notu muayene alanlarına ayıran taslak; yalnız kaydedilmiş, kesinleşmemiş muayenede. */
+    draftExamNote(examinationId: string, note: string): Observable<AiDraftVm> {
+        return this.postDraft(ApiEndpoints.ai.examNoteDraft(examinationId), note);
+    }
+
+    /** AI-003: muayeneden hasta sahibine sade açıklama taslağı; `emphasis` hekimin vurgulamak istedikleri (isteğe bağlı). */
+    draftOwnerExplanation(examinationId: string, emphasis: string): Observable<AiDraftVm> {
+        return this.postDraft(ApiEndpoints.ai.ownerExplanationDraft(examinationId), emphasis);
+    }
+
+    /** AI-004: taburcu / evde bakım talimatı taslağı; kabulde talimat kaynağa (muayene ya da yatış) bağlanır. */
+    draftCareInstruction(source: { examinationId: string } | { hospitalizationId: string }, emphasis: string): Observable<AiDraftVm> {
+        const path = 'examinationId' in source ? ApiEndpoints.ai.examinationCareInstructionDraft(source.examinationId) : ApiEndpoints.ai.hospitalizationCareInstructionDraft(source.hospitalizationId);
+
+        return this.postDraft(path, emphasis);
     }
 
     getDraft(id: string): Observable<AiDraftVm> {
@@ -45,5 +62,13 @@ export class AiService {
     /** Hiçbir kayda yazılmaz; içerik sunucuda silinir. */
     discardDraft(id: string): Observable<AiDraftVm> {
         return this.api.post<AiDraftDto>(ApiEndpoints.ai.draftDiscard(id), null).pipe(map(mapAiDraftDtoToVm));
+    }
+
+    /** Boş not gövdesiz gider (isteğe bağlı notlu uçlar); not saklanmaz. */
+    private postDraft(path: string, note: string): Observable<AiDraftVm> {
+        const text = note.trim();
+        const body: AiNoteDraftRequestDto = text ? { text } : {};
+
+        return this.api.post<AiDraftDto>(path, body).pipe(map(mapAiDraftDtoToVm));
     }
 }

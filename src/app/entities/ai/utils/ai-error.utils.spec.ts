@@ -76,6 +76,13 @@ describe('ai-error.utils', () => {
             expect(aiProblemFromError(httpError(409, 'AiDrafts.NotPending'), 'draft').title).toBe('Bu taslağa zaten karar verilmiş');
         });
 
+        it('karar kaydın kuralına takılırsa (kesinleşmiş, çakışma): tekrar dene yok, taslağın beklediği yazılır', () => {
+            const p = aiProblemFromError(new HttpErrorResponse({ status: 409, error: { detail: 'Muayene kesinleşmiş.', extensions: { code: 'Examinations.Finalized' } } }), 'decision');
+
+            expect(p).toEqual(expect.objectContaining({ title: 'Taslak kayda geçirilemedi', retryable: false }));
+            expect(p.message).toContain('Taslak bekliyor; hiçbir şey kaydedilmedi.');
+        });
+
         it('kodsuz ya da HTTP olmayan hata: tekrar denenebilir genel metin, kırmızı/hata sözcüğü yok', () => {
             const net = aiProblemFromError(new HttpErrorResponse({ status: 0 }), 'summary');
             const other = aiProblemFromError(new Error('x'), 'summary');

@@ -78,11 +78,14 @@ export interface AiProblem {
     refreshStatus: boolean;
 }
 
-/** Hangi işin sorunu: başlıklar "Özet şu an hazırlanamadı" / "Taslak şu an hazırlanamadı". */
-export type AiSubject = 'summary' | 'draft';
+/**
+ * Hangi işin sorunu: üretimde "Özet / Taslak şu an hazırlanamadı"; kararda (kabul, at) kayıt kendi kurallarına takılabilir
+ * (kesinleşmiş muayene, sürüm çakışması, uzunluk) ve bu tekrar denenerek düzelmez.
+ */
+export type AiSubject = 'summary' | 'draft' | 'decision';
 
-const SUBJECT_NOUN: Record<AiSubject, string> = { summary: 'Özet', draft: 'Taslak' };
-const REFUSED_TITLE: Record<AiSubject, string> = { summary: 'Bu kayıtlar için özet üretilemedi', draft: 'Bu içerik için taslak üretilemedi' };
+const SUBJECT_NOUN: Record<AiSubject, string> = { summary: 'Özet', draft: 'Taslak', decision: 'Taslak' };
+const REFUSED_TITLE: Record<AiSubject, string> = { summary: 'Bu kayıtlar için özet üretilemedi', draft: 'Bu içerik için taslak üretilemedi', decision: 'Bu içerik için taslak üretilemedi' };
 
 export function aiProblemFromError(err: unknown, subject: AiSubject, now: Date = new Date()): AiProblem {
     const http = err instanceof HttpErrorResponse ? err : null;
@@ -122,6 +125,10 @@ export function aiProblemFromError(err: unknown, subject: AiSubject, now: Date =
         case 'AiDrafts.FeatureNotSupported':
             return problem('Bu taslak türü henüz desteklenmiyor', 'Hiçbir şey kaydedilmedi.', false);
         default:
+            if (subject === 'decision') {
+                return problem('Taslak kayda geçirilemedi', `${http ? messageFromHttpError(http, 'Kayıt güncellenemedi.') : 'Kayıt güncellenemedi.'} Taslak bekliyor; hiçbir şey kaydedilmedi.`, false);
+            }
+
             return problem(`${noun} şu an hazırlanamadı`, http ? `${messageFromHttpError(http, 'Yapay zekâ isteği tamamlanamadı.')} ${UNTOUCHED}.` : `${UNTOUCHED}; birazdan yeniden deneyebilirsiniz.`, true);
     }
 }

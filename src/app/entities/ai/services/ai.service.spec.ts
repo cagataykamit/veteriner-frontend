@@ -96,4 +96,30 @@ describe('AiService', () => {
         http.expectOne({ method: 'GET', url: 'http://api.test/api/v1/ai/drafts/d1' }).flush(draft);
         expect((await got).content).toEqual({ text: 'Dinlendirin' });
     });
+
+    it('üretim uçları: AI-001 not zorunlu, AI-003/004 boş vurgu gövdesiz; talimat kaynağa göre uç seçer', async () => {
+        const note = firstValueFrom(service.draftExamNote('e1', '  Sahip kusma diyor  '));
+        const r1 = http.expectOne({ method: 'POST', url: 'http://api.test/api/v1/examinations/e1/ai/note-draft' });
+
+        expect(r1.request.body).toEqual({ text: 'Sahip kusma diyor' });
+        r1.flush({ ...draft, feature: 'ExamNoteStructure' });
+        expect((await note).feature).toBe('ExamNoteStructure');
+
+        const owner = firstValueFrom(service.draftOwnerExplanation('e1', '   '));
+        const r2 = http.expectOne('http://api.test/api/v1/examinations/e1/ai/owner-explanation-draft');
+
+        expect(r2.request.body).toEqual({});
+        r2.flush(draft);
+        await owner;
+
+        const fromHosp = firstValueFrom(service.draftCareInstruction({ hospitalizationId: 'h1' }, 'Yara bakımı'));
+
+        http.expectOne('http://api.test/api/v1/hospitalizations/h1/ai/care-instruction-draft').flush(draft);
+        await fromHosp;
+
+        const fromExam = firstValueFrom(service.draftCareInstruction({ examinationId: 'e1' }, ''));
+
+        http.expectOne('http://api.test/api/v1/examinations/e1/ai/care-instruction-draft').flush(draft);
+        await fromExam;
+    });
 });

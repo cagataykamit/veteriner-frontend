@@ -269,7 +269,9 @@ export const ApiEndpoints = {
         finalize: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/finalize`,
         addenda: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/addenda`,
         /** POST `{ templateId, rowVersion }` (muayenenin sürümü). */
-        applyTemplate: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/apply-template`
+        applyTemplate: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/apply-template`,
+        /** GET `Examinations.Read`: muayeneye bağlı hasta sahibine açıklamalar (AI-003, yeniden eskiye; `AI_DRAFTS_API_CONTRACT.md` §7.2). */
+        ownerExplanations: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/owner-explanations`
     },
     vaccinations: {
         /** Query: `Page`, `PageSize`, `Search`, `Status`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `OnlyOverdue`, `Sort` (`dueAtUtc` | `appliedAtUtc`), `Order` (+ `clinicId`, `PetId`, `ClientId`). */
@@ -589,7 +591,15 @@ export const ApiEndpoints = {
         /** POST `{ editedContent? }`: hedef kayda özelliğin uygulayıcısıyla yazar. */
         draftAccept: (id: string) => `/api/v1/ai/drafts/${encodeURIComponent(id)}/accept`,
         /** POST, gövde yok: hiçbir kayda yazılmaz. */
-        draftDiscard: (id: string) => `/api/v1/ai/drafts/${encodeURIComponent(id)}/discard`
+        draftDiscard: (id: string) => `/api/v1/ai/drafts/${encodeURIComponent(id)}/discard`,
+        /** AI-001 POST `{ text }` (zorunlu, ≤8000; `Examinations.Update`): serbest notu muayene alanlarına ayıran taslak (`AI_DRAFTS_API_CONTRACT.md` §7.1). */
+        examNoteDraft: (examinationId: string) => `/api/v1/examinations/${encodeURIComponent(examinationId)}/ai/note-draft`,
+        /** AI-003 POST `{ text? }` (≤2000; `Examinations.Read` + `Examinations.Update`): hasta sahibine sade açıklama taslağı (§7.2). */
+        ownerExplanationDraft: (examinationId: string) => `/api/v1/examinations/${encodeURIComponent(examinationId)}/ai/owner-explanation-draft`,
+        /** AI-004 POST `{ text? }` (`Examinations.Read` + `CareInstructions.Create`): muayeneden bakım talimatı taslağı (§7.3). */
+        examinationCareInstructionDraft: (examinationId: string) => `/api/v1/examinations/${encodeURIComponent(examinationId)}/ai/care-instruction-draft`,
+        /** AI-004 POST `{ text? }` (`Hospitalizations.Read` + `CareInstructions.Create`; iptal yatış 409): yatıştan bakım talimatı taslağı (§7.3). */
+        hospitalizationCareInstructionDraft: (hospitalizationId: string) => `/api/v1/hospitalizations/${encodeURIComponent(hospitalizationId)}/ai/care-instruction-draft`
     },
     examinationTemplates: {
         /** GET (Query: `search`, `includeInactive`, `page`, `pageSize`) ve POST. */

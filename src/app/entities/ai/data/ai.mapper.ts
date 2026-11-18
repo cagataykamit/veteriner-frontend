@@ -1,7 +1,8 @@
-import type { AiDraftDto, AiSourceRefDto, AiStatusDto, PetHistorySummaryDto } from '@/app/entities/ai/models/ai-api.model';
-import type { AiDraftVm, AiSourceVm, AiStatusVm, PetHistorySummaryVm } from '@/app/entities/ai/models/ai-vm.model';
+import type { AiDraftDto, AiProvenanceDto, AiSourceRefDto, AiStatusDto, PetHistorySummaryDto } from '@/app/entities/ai/models/ai-api.model';
+import type { AiDraftVm, AiProvenanceVm, AiSourceVm, AiStatusVm, PetHistorySummaryVm } from '@/app/entities/ai/models/ai-vm.model';
 import { AI_SUMMARY_ALERT_SECTION, aiDayMonthLabel, aiRecordCountsLabel, aiSummarySectionTitle, aiTypeListLabel } from '@/app/entities/ai/utils/ai-labels';
 import { petTimelineTypeDefinition } from '@/app/entities/pet/utils/pet-timeline-types';
+import { parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 
 const PET_SOURCE_TYPE = 'Pet';
 
@@ -61,6 +62,30 @@ export function mapPetHistorySummaryDtoToVm(dto: PetHistorySummaryDto): PetHisto
             .filter((s) => s.items.length > 0),
         droppedItemCount: dto.droppedItemCount > 0 ? dto.droppedItemCount : 0
     };
+}
+
+/**
+ * Kayıttaki iz. `recordUpdatedAtUtc` kabulden sonraysa kayıt elle değişmiştir: sözleşme bu ayrımı tutmaz (§8), istemci
+ * çıkarır ve çip yine "düzenlendi" der. Bozuk satır (taslak kimliği yok) atlanır.
+ */
+export function mapAiProvenanceDtosToVm(dtos: readonly AiProvenanceDto[] | null | undefined, recordUpdatedAtUtc?: string | null): AiProvenanceVm[] {
+    const updated = parseUtcApiInstantIsoString(recordUpdatedAtUtc ?? null)?.getTime() ?? null;
+
+    return (dtos ?? [])
+        .filter((p) => !!p?.draftId)
+        .map((p) => {
+            const accepted = parseUtcApiInstantIsoString(p.acceptedAtUtc ?? null)?.getTime() ?? null;
+            // Kabul aynı istekte kaydı yazar; saniyenin altındaki fark "sonradan düzenlendi" sayılmaz.
+            const changedAfter = updated !== null && accepted !== null && updated - accepted > 1000;
+
+            return {
+                draftId: p.draftId,
+                feature: p.feature,
+                edited: p.edited === true || changedAfter,
+                acceptedByName: p.acceptedByName?.trim() || null,
+                acceptedAtUtc: p.acceptedAtUtc ?? null
+            };
+        });
 }
 
 export function mapAiDraftDtoToVm(dto: AiDraftDto): AiDraftVm {

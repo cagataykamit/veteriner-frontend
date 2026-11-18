@@ -1,4 +1,4 @@
-import { mapAiDraftDtoToVm, mapAiSourceToVm, mapAiStatusDtoToVm, mapPetHistorySummaryDtoToVm, petHistorySummaryToPlainText } from '@/app/entities/ai/data/ai.mapper';
+import { mapAiDraftDtoToVm, mapAiProvenanceDtosToVm, mapAiSourceToVm, mapAiStatusDtoToVm, mapPetHistorySummaryDtoToVm, petHistorySummaryToPlainText } from '@/app/entities/ai/data/ai.mapper';
 import type { PetHistorySummaryDto } from '@/app/entities/ai/models/ai-api.model';
 import { aiRecordCountsLabel, aiTypeListLabel } from '@/app/entities/ai/utils/ai-labels';
 
@@ -132,5 +132,16 @@ describe('ai.mapper', () => {
         expect(vm.sources).toEqual([{ type: 'Examination', id: 'e1', label: 'Muayene', icon: 'pi-file-edit', link: ['/panel/examinations', 'e1'] }]);
         expect(vm.content).toEqual({ fields: { plan: 'Kontrol' } });
         expect([vm.decidedByUserId, vm.decidedAtUtc, vm.appliedRecordId]).toEqual([null, null, null]);
+    });
+
+    it('iz: ad kırpılır, taslak kimliksiz satır atlanır; kayıt kabulden sonra değiştiyse "düzenlendi"', () => {
+        const dto = { draftId: 'd1', feature: 'DischargeInstructions', edited: false, acceptedByUserId: 'u1', acceptedByName: ' Dr. Ayşe Kaya ', acceptedAtUtc: '2026-11-19T14:36:00Z' };
+
+        expect(mapAiProvenanceDtosToVm([dto, { ...dto, draftId: '' }])).toEqual([{ draftId: 'd1', feature: 'DischargeInstructions', edited: false, acceptedByName: 'Dr. Ayşe Kaya', acceptedAtUtc: '2026-11-19T14:36:00Z' }]);
+        // Kabul kaydı aynı istekte yazar: saniyenin altı sayılmaz; sonradan düzeltme "düzenlendi".
+        expect(mapAiProvenanceDtosToVm([dto], '2026-11-19T14:36:00.400Z')[0].edited).toBe(false);
+        expect(mapAiProvenanceDtosToVm([dto], '2026-11-19T15:10:00Z')[0].edited).toBe(true);
+        expect(mapAiProvenanceDtosToVm([{ ...dto, edited: true }])[0].edited).toBe(true);
+        expect(mapAiProvenanceDtosToVm(null)).toEqual([]);
     });
 });

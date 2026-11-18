@@ -25,13 +25,15 @@ export class AiStatusService {
 
     /** İzni olan kullanıcı için durumu (aktif klinik değiştiyse yeniden) sorar; izin yoksa hiç istek atmaz. */
     ensureLoaded(): void {
-        const clinicId = this.auth.getClinicId()?.trim() || null;
-
-        if (!this.canUse() || this.loadedClinicId === clinicId) {
+        if (!this.canUse()) {
             return;
         }
 
-        this.load(clinicId);
+        const clinicId = this.auth.getClinicId()?.trim() || null;
+
+        if (this.loadedClinicId !== clinicId) {
+            this.load(clinicId);
+        }
     }
 
     /** Kota, bütçe ya da klinik engeli istek anında geldiyse düğmenin durumu tazelenir. */

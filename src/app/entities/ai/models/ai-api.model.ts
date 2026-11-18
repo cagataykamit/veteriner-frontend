@@ -77,3 +77,19 @@ export interface AiDraftDto {
 export interface AiDraftAcceptRequestDto {
     editedContent?: Record<string, unknown>;
 }
+
+/** Kayıttaki "AI taslağından" izi (`AI_DRAFTS_API_CONTRACT.md` §8); muayene, bakım talimatı ve sahibe açıklamada. Klinik metin içermez. */
+export interface AiProvenanceDto {
+    draftId: string;
+    feature: string;
+    /** Kabulden önce düzenlendi mi (`AcceptedWithEdits`). */
+    edited: boolean;
+    acceptedByUserId?: string | null;
+    acceptedByName?: string | null;
+    acceptedAtUtc?: string | null;
+}
+
+/** Taslak üretim uçlarının gövdesi (`AiNoteDraftBody`): AI-001'de serbest not, AI-003/004'te isteğe bağlı vurgu. Not saklanmaz. */
+export interface AiNoteDraftRequestDto {
+    text?: string;
+}

@@ -68,8 +68,16 @@ export interface AiDraftVm {
 
 /** Kabul edilmiş içeriğin kayıttaki izi ("AI taslağından · düzenlendi"). */
 export interface AiProvenanceVm {
+    draftId: string;
+    feature: string;
+    /** Kabulden önce düzenlendi ya da kabulden sonra kayıt değişti ("AI taslağından · düzenlendi"). */
     edited: boolean;
     /** İpucu: "Dr. Ayşe Kaya 19 Kas 14:36'da kabul etti."; bilinmiyorsa `null`. */
     acceptedByName: string | null;
     acceptedAtUtc: string | null;
 }
+
+/** Taslak üreten klinik özellikler (`AiDraftDto.feature`). */
+export const AI_FEATURE_EXAM_NOTE = 'ExamNoteStructure';
+export const AI_FEATURE_OWNER_EXPLANATION = 'OwnerExplanation';
+export const AI_FEATURE_DISCHARGE_INSTRUCTIONS = 'DischargeInstructions';

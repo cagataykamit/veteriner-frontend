@@ -44,6 +44,8 @@ export class AiPanelService {
 
     readonly content = signal<AiPanelContent | null>(null);
     readonly history = signal<AiHistoryState | null>(null);
+    /** Panelin kısa bildirimi ("Taslak atıldı; hiçbir şey kaydedilmedi."); panel bileşeni toast olarak gösterir. */
+    readonly notice = signal<{ severity: 'success' | 'info' | 'warn'; text: string } | null>(null);
 
     private historySub: Subscription | null = null;
 
@@ -78,6 +80,11 @@ export class AiPanelService {
 
     openCustom(content: Omit<AiPanelCustomContent, 'kind'>): void {
         this.content.set({ kind: 'custom', ...content });
+    }
+
+    /** Sayfanın AI işi için kısa bildirim (ör. "Taslak atıldı; hiçbir şey kaydedilmedi."). */
+    notify(text: string, severity: 'success' | 'info' | 'warn' = 'success'): void {
+        this.notice.set({ severity, text });
     }
 
     /** Sayfa kapanınca onun içeriği kapanır; geçmiş özeti etkilenmez. */
