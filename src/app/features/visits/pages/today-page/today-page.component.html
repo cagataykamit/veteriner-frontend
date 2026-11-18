@@ -114,7 +114,7 @@
                         @switch (row.kind) {
                             @case ('group') {
                                 <h3 class="m-0 mt-2 text-xs font-bold uppercase tracking-wider text-muted-color" data-testid="today-group-header">
-                                    {{ row.group.title }}<span class="ml-1.5 font-semibold normal-case tracking-normal">{{ row.group.items.length }}</span>
+                                    {{ row.group.title }}<ng-container *ngTemplateOutlet="groupCount; context: { $implicit: row.group.items.length }" />
                                 </h3>
                             }
                             @case ('item') {
@@ -192,7 +192,7 @@
                                 @case ('group') {
                                     <tr data-testid="today-group-header">
                                         <td [attr.colspan]="columns().length" class="h-[30px] px-[10px]! pt-[8px]! pb-[4px]! text-[11.5px]! font-bold uppercase tracking-[0.6px] text-muted-color">
-                                            {{ row.group.title }}<span class="ml-[6px] font-semibold tracking-normal">{{ row.group.items.length }}</span>
+                                            {{ row.group.title }}<ng-container *ngTemplateOutlet="groupCount; context: { $implicit: row.group.items.length }" />
                                         </td>
                                     </tr>
                                 }
@@ -410,9 +410,19 @@
     }
 </ng-template>
 
-<!-- Hasta: ad, tür, uyarı rozetleri ve Acil yan yana (dar sütunda rozetler alt satıra sarar); uyarı notu tek satır, tam metin ipucunda. -->
+<!-- Grup ara başlığındaki kayıt sayısı: başlıktan ayrışsın diye liste başlığındaki sayaçla aynı küçük rozet. -->
+<ng-template #groupCount let-count>
+    <span
+        class="ml-[7px] inline-block align-[1px] text-[11px] leading-[16px] font-semibold normal-case tracking-normal rounded-full px-[7px] border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-800 text-muted-color"
+        [attr.aria-label]="count + ' kayıt'"
+        data-testid="today-group-count"
+        >{{ count }}</span
+    >
+</ng-template>
+
+<!-- Hasta: ad, tür, uyarı rozetleri ve Acil aynı yazı çizgisinde yan yana (dar sütunda rozetler alt satıra sarar); uyarı notu tek satır, tam metin ipucunda. -->
 <ng-template #petCell let-item let-done="done">
-    <div class="flex flex-wrap items-center gap-x-[6px] gap-y-1 min-w-0">
+    <div class="flex flex-wrap items-baseline gap-x-[6px] gap-y-1 min-w-0">
         <a
             [routerLink]="['/panel/pets', item.petId]"
             class="touch:touch-hit line-clamp-2 break-words min-w-0 no-underline"
