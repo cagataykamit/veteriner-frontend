@@ -1,5 +1,5 @@
 <p-toast position="top-right" />
-<app-page-header title="Bugün">
+<app-page-header title="Bugün" [titleNote]="headerNote()">
     <div actions class="flex flex-wrap gap-2">
         <button pButton type="button" severity="secondary" (click)="refresh('silent')"><i class="p-button-icon pi pi-refresh"></i>{{ copy.buttonRefresh }}</button>
         @if (canCreateVisit) {
@@ -34,7 +34,7 @@
 <!-- Bekleme listesi (TIER-018): iptal edilen saat için uygun kişi sayısı; pakette yoksa ya da uyan kimse yoksa çizilmez. -->
 <app-waitlist-today-summary />
 
-<!-- İki ayrı seçim: liste türü ve hasta kapsamı. Etiket ve ayraçla ayrılır; her grupta seçili olan ana renkle doludur. -->
+<!-- İki ayrı seçim (liste türü, hasta kapsamı) etiket ve ayraçla ayrılır; seçili olan ana renkle doludur. Açık işler aynı satırda sağa yaslı (dar ekranda alta sarar). -->
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
     <span class="inline-flex items-center gap-2">
         <span class="text-sm text-muted-color">Liste</span>
@@ -47,25 +47,31 @@
             <p-selectbutton [options]="scopeOptions" [ngModel]="scope()" (ngModelChange)="setScope($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Hasta kapsamı" />
         </span>
     }
-</div>
-@if (myUserId()) {
-    @if (scope() === 'mine') {
-        <p class="text-muted-color text-sm mt-0 mb-4">Yalnızca sorumlu hekimi siz olan kayıtlar gösterilir; planlı randevular bu görünümde yer almaz.</p>
+    <!-- Talep çipi listenin yüklenmesinden ve açık iş özetinden bağımsız: bekleyen talep varsa satır yine çizilir. -->
+    @if (showPendingChip() || today()?.openItems) {
+        <app-today-open-items
+            class="ml-auto"
+            [summary]="today()?.openItems ?? null"
+            [hasLeadingItem]="showPendingChip()"
+            [canAddCharge]="canCreateCharge && !ro.mutationBlocked()"
+            [canCompleteVisit]="canUpdateVisit && !ro.mutationBlocked()"
+            [canCorrectVisit]="canCorrect && !ro.mutationBlocked()"
+            (completeVisit)="completeOpenVisit($event)"
+            (correctVisit)="openCorrection($event)"
+        >
+            @if (showPendingChip()) {
+                <app-pending-appointment-requests-chip
+                    [rows]="pendingRequests.rows()"
+                    [total]="pendingRequests.total()"
+                    (showTiles)="pendingRequests.setView('tiles')"
+                    (openRequest)="pendingRequests.open($event)"
+                />
+            }
+        </app-today-open-items>
     }
-}
-
-<!-- Talep çipi listenin yüklenmesinden ve açık iş özetinden bağımsız: bekleyen talep varsa satır yine çizilir. -->
-@if (showPendingChip() || today()?.openItems) {
-    <app-today-open-items [summary]="today()?.openItems ?? null" [hasLeadingItem]="showPendingChip()">
-        @if (showPendingChip()) {
-            <app-pending-appointment-requests-chip
-                [rows]="pendingRequests.rows()"
-                [total]="pendingRequests.total()"
-                (showTiles)="pendingRequests.setView('tiles')"
-                (openRequest)="pendingRequests.open($event)"
-            />
-        }
-    </app-today-open-items>
+</div>
+@if (myUserId() && scope() === 'mine') {
+    <p class="text-muted-color text-sm mt-0 mb-4">Yalnızca sorumlu hekimi siz olan kayıtlar gösterilir; planlı randevular bu görünümde yer almaz.</p>
 }
 
 @if (loading()) {
@@ -81,191 +87,205 @@
     @if (ro.mutationBlocked()) {
         <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">İşletme salt okunur moddadır; değişiklik kaydedilemez.</p>
     }
-    @for (group of groups(); track group.key) {
-        <section class="card mb-4" [attr.aria-label]="group.title">
-            <div class="font-medium mb-3 flex items-center gap-2">
-                <span>{{ group.title }}</span>
-                <span class="text-xs rounded-full px-2 py-0.5 bg-surface-100 dark:bg-surface-800 text-muted-color" [attr.aria-label]="group.items.length + ' kayıt'">{{ group.items.length }}</span>
+    @if (groups().length > 0) {
+        @let listTitle = view() === 'voided' ? 'Yanlış işaretlenenler' : 'Günlük liste';
+        <!-- Tek kart, tek liste: açık iş üstte (Klinikte, Sıradaki randevular), bitmiş iş altta ve katlı. -->
+        <section class="card mb-4 p-0! overflow-hidden" [attr.aria-label]="listTitle" data-testid="today-list">
+            <div class="flex flex-wrap items-center gap-x-[10px] gap-y-1 px-[16px] pt-[12px] pb-[10px]">
+                <h2 class="m-0 text-[16px] font-bold">{{ listTitle }}</h2>
+                <span
+                    class="text-[12px] font-semibold rounded-full px-[8px] py-px border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 text-muted-color"
+                    [attr.aria-label]="(today()?.items?.length ?? 0) + ' kayıt'"
+                    >{{ today()?.items?.length ?? 0 }}</span
+                >
+                @if (view() === 'today') {
+                    <div class="flex flex-wrap gap-x-[16px] gap-y-1 sm:ml-auto" data-testid="today-summary">
+                        @for (s of summary(); track s.tone) {
+                            <span class="inline-flex items-center gap-[7px] text-[13px] font-semibold whitespace-nowrap" [class]="statusTextClass[s.tone]">
+                                <span class="w-[9px] h-[9px] rounded-full shrink-0" [class]="statusDotClass[s.tone]" aria-hidden="true"></span>{{ s.text }}
+                            </span>
+                        }
+                    </div>
+                }
             </div>
             @if (compact()) {
-                <div class="flex flex-col gap-3" data-testid="today-cards">
-                    @for (item of group.items; track item.key) {
-                        <article class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-3 min-w-0" data-testid="today-card">
-                            <div class="flex items-start justify-between gap-2 mb-2">
-                                <div class="text-sm font-medium">
-                                    @if (item.arrivedAtUtc) {
-                                        <div>Geliş {{ arrival(item.arrivedAtUtc) }}</div>
-                                        @if (item.scheduledAtUtc) {
-                                            <div class="text-muted-color">Randevu {{ time(item.scheduledAtUtc) }}</div>
-                                        }
-                                    } @else {
-                                        <div>Randevu {{ time(item.scheduledAtUtc) }}</div>
-                                    }
-                                </div>
-                                <div class="min-w-0 flex justify-end">
-                                    <ng-container *ngTemplateOutlet="statusTags; context: { $implicit: item, group: group }" />
-                                </div>
-                            </div>
-                            <div class="font-medium flex flex-wrap items-center gap-2 min-w-0">
-                                <a [routerLink]="['/panel/pets', item.petId]" class="touch:touch-hit break-words min-w-0 text-primary no-underline" data-testid="today-pet-link">{{ item.petName }}</a>
-                                <app-pet-alert-badges class="min-w-0 max-w-full" [alerts]="item.petAlerts" />
-                                @if (item.isUrgent) {
-                                    <app-status-tag class="shrink-0" label="Acil" severity="danger" />
-                                }
-                                <ng-container *ngTemplateOutlet="ownerConfirmed; context: { $implicit: item }" />
-                            </div>
-                            <div class="text-sm text-muted-color">{{ item.speciesName }}</div>
-                            <!-- Dokunmatik ekranda ipucu yok: uyarı notu kartta görünür -->
-                            @if (item.petAlerts.note; as alertNote) {
-                                <p class="m-0 text-sm break-words line-clamp-2" [attr.title]="alertNote" data-testid="today-alert-note">{{ alertNote }}</p>
+                <div class="flex flex-col gap-2 px-3 pb-3" data-testid="today-cards">
+                    @for (row of rows(); track row.id) {
+                        @switch (row.kind) {
+                            @case ('group') {
+                                <h3 class="m-0 mt-2 text-xs font-bold uppercase tracking-wider text-muted-color" data-testid="today-group-header">
+                                    {{ row.group.title }}<span class="ml-1.5 font-semibold normal-case tracking-normal">{{ row.group.items.length }}</span>
+                                </h3>
                             }
-                            <ng-container *ngTemplateOutlet="preparation; context: { $implicit: item }" />
-                            <dl class="m-0 mt-2 grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-1 text-sm">
-                                <dt class="text-muted-color">Müşteri</dt>
-                                <dd class="m-0 min-w-0 break-words">
-                                    <a [routerLink]="['/panel/clients', item.clientId]" class="touch:touch-hit text-primary no-underline" data-testid="today-client-link">{{ item.clientName }}</a>
-                                    @if (item.clientPhone) {
-                                        <span class="text-muted-color whitespace-nowrap"> · {{ phone(item.clientPhone) }}</span>
-                                    }
-                                </dd>
-                                <dt class="text-muted-color">Hekim</dt>
-                                <dd class="m-0 min-w-0 break-words">{{ item.responsibleVeterinarianName ?? 'Atanmadı' }}</dd>
-                                @if (group.key !== 'noShow' || item.hasActiveHospitalization) {
-                                    <dt class="text-muted-color">Ödeme</dt>
-                                    <dd class="m-0 flex flex-wrap gap-1">
-                                        <ng-container *ngTemplateOutlet="moneyTags; context: { $implicit: item, group: group }" />
-                                    </dd>
-                                }
-                                @if (group.elapsedLabel) {
-                                    @let wait = waitAlertOf(item);
-                                    <dt class="text-muted-color">{{ group.elapsedLabel }}</dt>
-                                    <dd class="m-0" [class]="waitAlertClass[wait]" [attr.title]="waitTitle(wait)">
-                                        @if (wait !== 'none') {
-                                            <i class="pi pi-fw" [class]="waitAlertIcon[wait]" aria-hidden="true"></i>
-                                            <span class="sr-only">{{ waitTitle(wait) }}:</span>
+                            @case ('item') {
+                                @let item = row.item;
+                                @let note = timeNote(item, row.done);
+                                <article class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-3 min-w-0" data-testid="today-card" [attr.data-group]="row.groupKey">
+                                    <div class="flex items-start justify-between gap-2 mb-2">
+                                        <div class="tabular-nums leading-tight">
+                                            <div class="font-bold" [class.text-muted-color]="row.done">{{ mainTime(item) }}</div>
+                                            @if (note) {
+                                                <div class="text-xs text-muted-color">{{ note }}</div>
+                                            }
+                                        </div>
+                                        <div class="min-w-0 flex flex-wrap justify-end items-center gap-1">
+                                            <ng-container *ngTemplateOutlet="statusLine; context: { $implicit: item }" />
+                                            <ng-container *ngTemplateOutlet="statusExtras; context: { $implicit: item }" />
+                                        </div>
+                                    </div>
+                                    <ng-container *ngTemplateOutlet="petCell; context: { $implicit: item, done: row.done }" />
+                                    <ng-container *ngTemplateOutlet="reasonTags; context: { $implicit: item }" />
+                                    <ng-container *ngTemplateOutlet="statusNotes; context: { $implicit: item }" />
+                                    <dl class="m-0 mt-2 grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-1 text-sm">
+                                        <dt class="text-muted-color">Müşteri</dt>
+                                        <dd class="m-0 min-w-0 flex flex-wrap items-center gap-x-2 gap-y-1 break-words">
+                                            <a [routerLink]="['/panel/clients', item.clientId]" class="touch:touch-hit text-primary no-underline" data-testid="today-client-link">{{ item.clientName }}</a>
+                                            @if (item.clientPhone) {
+                                                <span class="text-muted-color whitespace-nowrap">{{ phone(item.clientPhone) }}</span>
+                                            }
+                                            <ng-container *ngTemplateOutlet="clientDebt; context: { $implicit: item }" />
+                                        </dd>
+                                        @if (item.responsibleVeterinarianName; as vet) {
+                                            <dt class="text-muted-color">Hekim</dt>
+                                            <dd class="m-0 min-w-0 break-words">{{ vet }}</dd>
                                         }
-                                        {{ elapsed(item) ?? '—' }}
-                                        @if (possiblyForgotten(item)) {
-                                            <div class="text-xs font-normal text-muted-color">Unutulmuş olabilir</div>
+                                        @if (hasOpenWork(item) && statusOf(item).tone !== 'noShow') {
+                                            <dt class="text-muted-color">Açık iş</dt>
+                                            <dd class="m-0 min-w-0">
+                                                <ng-container *ngTemplateOutlet="moneyTags; context: { $implicit: item }" />
+                                            </dd>
                                         }
-                                    </dd>
-                                }
-                            </dl>
-                            <!-- Kartta düğme etiketleri açık kalır (tablodaki dar kip yalnız simge gösterir) -->
-                            <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 [&_.p-button-label]:inline!">
-                                <ng-container *ngTemplateOutlet="actionButtons; context: { $implicit: item }" />
-                            </div>
-                        </article>
+                                    </dl>
+                                    <div class="flex flex-wrap items-center justify-end gap-2 mt-3 pt-3 border-t border-surface-200 dark:border-surface-700">
+                                        <ng-container *ngTemplateOutlet="actionButtons; context: { $implicit: item }" />
+                                    </div>
+                                </article>
+                            }
+                            @case ('toggle') {
+                                <ng-container *ngTemplateOutlet="completedToggle; context: { $implicit: row }" />
+                            }
+                        }
                     }
                 </div>
             } @else {
-                <div class="@container overflow-x-auto">
-                    <p-table [value]="group.items" dataKey="key" size="small" [tableStyle]="{ 'table-layout': 'fixed' }">
+                <!-- Taslak (A) ölçüleri px: başlık 12 px soluk, hücre yatay 10 px (satır sınıflarında), gövde kök yazı boyutu (14 px). PrimeNG tablo stillerini ezmek için `!`. -->
+                <div
+                    class="@container overflow-x-auto [&_th]:px-[10px]! [&_th]:py-[7px]! [&_th]:text-[12px]! [&_th]:font-semibold! [&_th]:text-muted-color! [&_th]:bg-surface-50! dark:[&_th]:bg-surface-800!"
+                >
+                    <p-table [value]="rows()" dataKey="id" size="small" [tableStyle]="{ 'table-layout': 'fixed' }">
                         <ng-template #colgroup>
                             <colgroup>
-                                @for (cls of columnClasses; track $index) {
-                                    <col [class]="cls" />
+                                @for (col of columns(); track col.label) {
+                                    <col [class]="col.className" />
                                 }
                             </colgroup>
                         </ng-template>
                         <ng-template #header>
                             <tr>
-                                <th class="whitespace-nowrap">Saat</th>
-                                <th class="whitespace-nowrap">Hasta</th>
-                                <th class="whitespace-nowrap">Müşteri</th>
-                                <th class="whitespace-nowrap @max-[76rem]:hidden">Hekim</th>
-                                <th class="whitespace-nowrap">Durum</th>
-                                <th class="whitespace-nowrap @max-[76rem]:hidden">Ödeme / yatış</th>
-                                <th class="whitespace-nowrap">{{ group.elapsedLabel }}</th>
-                                <th></th>
+                                @for (col of columns(); track col.label; let last = $last) {
+                                    <th class="whitespace-nowrap" [class]="col.className" [class.text-right]="last">{{ col.label }}</th>
+                                }
                             </tr>
                         </ng-template>
-                        <ng-template #body let-item>
-                            <tr>
-                                <td>
-                                    @if (item.arrivedAtUtc) {
-                                        <div>Geliş {{ arrival(item.arrivedAtUtc) }}</div>
-                                        @if (item.scheduledAtUtc) {
-                                            <div class="text-sm text-muted-color">Randevu {{ time(item.scheduledAtUtc) }}</div>
+                        <ng-template #body let-row>
+                            @switch (row.kind) {
+                                @case ('group') {
+                                    <tr data-testid="today-group-header">
+                                        <td [attr.colspan]="columns().length" class="h-[30px] px-[10px]! pt-[8px]! pb-[4px]! text-[11.5px]! font-bold uppercase tracking-[0.6px] text-muted-color">
+                                            {{ row.group.title }}<span class="ml-[6px] font-semibold tracking-normal">{{ row.group.items.length }}</span>
+                                        </td>
+                                    </tr>
+                                }
+                                @case ('item') {
+                                    @let item = row.item;
+                                    @let note = timeNote(item, row.done);
+                                    <!-- Açık satır 46 px, bitmiş satır 38 px (yükseklik en az değerdir; uzun ad ya da rozet satırı uzatabilir). -->
+                                    <tr [class]="row.done ? '[&>td]:h-[38px] [&>td]:py-0! [&>td]:px-[10px]!' : '[&>td]:h-[46px] [&>td]:py-[3px]! [&>td]:px-[10px]!'" [attr.data-today-row]="row.done ? 'done' : 'open'" [attr.data-group]="row.groupKey">
+                                        <td class="tabular-nums leading-tight" [attr.title]="item.arrivedAtUtc ? 'Geliş ' + arrival(item.arrivedAtUtc) : null">
+                                            <div class="text-[14.5px]" [class]="row.done ? 'font-medium text-muted-color' : 'font-bold'">{{ mainTime(item) }}</div>
+                                            @if (note) {
+                                                <div class="text-[11.5px] text-muted-color">{{ note }}</div>
+                                            }
+                                        </td>
+                                        <td>
+                                            <ng-container *ngTemplateOutlet="petCell; context: { $implicit: item, done: row.done }" />
+                                            @if (item.responsibleVeterinarianName; as vet) {
+                                                <!-- Hekim sütunu yoksa (dar kapsayıcı) ad burada görünür -->
+                                                <div class="text-[12px] text-muted-color truncate @min-[72rem]:hidden" [attr.title]="vet">{{ vet }}</div>
+                                            }
+                                        </td>
+                                        <td class="leading-tight">
+                                            <div class="flex items-center gap-[6px] min-w-0">
+                                                <!-- Müşteri adı düz metin renginde (bağlantı yalnız üzerine gelince belli olur); hasta adı ana renkte kalır -->
+                                                <a
+                                                    [routerLink]="['/panel/clients', item.clientId]"
+                                                    class="touch:touch-hit line-clamp-2 break-words min-w-0 text-color no-underline hover:underline"
+                                                    data-testid="today-client-link"
+                                                    [attr.title]="item.clientName"
+                                                    >{{ item.clientName }}</a
+                                                >
+                                                <ng-container *ngTemplateOutlet="clientDebt; context: { $implicit: item }" />
+                                            </div>
+                                            @if (item.clientPhone && !row.done) {
+                                                <div class="text-[12px] text-muted-color whitespace-nowrap">{{ phone(item.clientPhone) }}</div>
+                                            }
+                                        </td>
+                                        @if (hasVet()) {
+                                            <td class="@max-[72rem]:hidden">
+                                                @if (item.responsibleVeterinarianName; as vet) {
+                                                    <span class="flex items-center gap-[7px] min-w-0 text-[13px]" [attr.title]="vet">
+                                                        <span
+                                                            class="w-[24px] h-[24px] rounded-full grid place-items-center shrink-0 text-[10.5px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-400/20 dark:text-primary-300"
+                                                            aria-hidden="true"
+                                                            >{{ initials(vet) }}</span
+                                                        >
+                                                        <span class="truncate">{{ vet }}</span>
+                                                    </span>
+                                                } @else {
+                                                    <span class="text-muted-color" title="Sorumlu hekim atanmadı" aria-label="Sorumlu hekim atanmadı">—</span>
+                                                }
+                                            </td>
                                         }
-                                    } @else {
-                                        <div>Randevu {{ time(item.scheduledAtUtc) }}</div>
-                                    }
-                                </td>
-                                <td>
-                                    <!-- Dar sütunda birden çok uyarı rozeti alt satıra sarar; hasta adını sıkıştırmaz -->
-                                    <div class="font-medium flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
-                                        <a [routerLink]="['/panel/pets', item.petId]" class="touch:touch-hit line-clamp-2 break-words min-w-0 text-primary no-underline" data-testid="today-pet-link" [attr.title]="item.petName">{{ item.petName }}</a>
-                                        <app-pet-alert-badges class="min-w-0 max-w-full" [alerts]="item.petAlerts" />
-                                        @if (item.isUrgent) {
-                                            <app-status-tag class="shrink-0" label="Acil" severity="danger" />
-                                        }
-                                        <ng-container *ngTemplateOutlet="ownerConfirmed; context: { $implicit: item }" />
-                                    </div>
-                                    <div class="text-sm text-muted-color truncate" [attr.title]="item.speciesName">{{ item.speciesName }}</div>
-                                    @if (item.petAlerts.note; as alertNote) {
-                                        <div class="text-sm truncate" [attr.title]="alertNote" data-testid="today-alert-note">{{ alertNote }}</div>
-                                    }
-                                    <ng-container *ngTemplateOutlet="preparation; context: { $implicit: item }" />
-                                    <!-- Dar kipte Hekim sütunu yok: ad burada görünür -->
-                                    <div class="text-sm text-muted-color truncate @min-[76rem]:hidden" [attr.title]="item.responsibleVeterinarianName ?? 'Atanmadı'">
-                                        {{ item.responsibleVeterinarianName ?? 'Atanmadı' }}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="line-clamp-2 break-words" [attr.title]="item.clientName">
-                                        <a [routerLink]="['/panel/clients', item.clientId]" class="touch:touch-hit text-primary no-underline" data-testid="today-client-link">{{ item.clientName }}</a>
-                                    </div>
-                                    @if (item.clientPhone) {
-                                        <div class="text-sm text-muted-color whitespace-nowrap">{{ phone(item.clientPhone) }}</div>
-                                    }
-                                </td>
-                                <td class="truncate @max-[76rem]:hidden" [attr.title]="item.responsibleVeterinarianName">
-                                    @if (item.responsibleVeterinarianName; as vet) {
-                                        {{ vet }}
-                                    } @else {
-                                        <span class="text-muted-color">Atanmadı</span>
-                                    }
-                                </td>
-                                <!-- Sabit genişlikli sütun: uzun rozet ("Önceki günden açık") yandaki sütuna taşmasın diye satır kırar. -->
-                                <td>
-                                    <ng-container *ngTemplateOutlet="statusTags; context: { $implicit: item, group: group }" />
-                                    <!-- Dar kipte Ödeme / yatış sütunu yok: rozetler burada -->
-                                    <div class="flex flex-wrap gap-1 mt-1 @min-[76rem]:hidden">
-                                        <ng-container *ngTemplateOutlet="moneyTags; context: { $implicit: item, group: group }" />
-                                    </div>
-                                </td>
-                                <td class="whitespace-nowrap @max-[76rem]:hidden">
-                                    <div class="flex flex-wrap gap-1">
-                                        <ng-container *ngTemplateOutlet="moneyTags; context: { $implicit: item, group: group }" />
-                                    </div>
-                                </td>
-                                @let wait = waitAlertOf(item);
-                                <td [class]="waitAlertClass[wait]" [attr.title]="waitTitle(wait)">
-                                    @if (group.elapsedLabel) {
-                                        @if (wait !== 'none') {
-                                            <i class="pi pi-fw" [class]="waitAlertIcon[wait]" aria-hidden="true"></i>
-                                            <span class="sr-only">{{ waitTitle(wait) }}:</span>
-                                        }
-                                        {{ elapsed(item) ?? '—' }}
-                                        @if (possiblyForgotten(item)) {
-                                            <div class="text-xs font-normal text-muted-color">Unutulmuş olabilir</div>
-                                        }
-                                    }
-                                </td>
-                                <td class="whitespace-nowrap">
-                                    <!-- Sabit yuvalar: birincil | ikincil | acil | ⋯ → düğmeler satırlar arasında aynı hizada -->
-                                    <div class="grid grid-cols-[7.5rem_6rem_1.85rem_1.85rem] @max-[50rem]:grid-cols-[2.5rem_2.5rem_1.85rem_1.85rem] items-center gap-2 justify-start">
-                                        <ng-container *ngTemplateOutlet="actionButtons; context: { $implicit: item }" />
-                                    </div>
-                                </td>
-                            </tr>
+                                        <td>
+                                            <div class="flex flex-wrap items-center gap-x-[6px] gap-y-1">
+                                                <ng-container *ngTemplateOutlet="statusLine; context: { $implicit: item }" />
+                                                <ng-container *ngTemplateOutlet="statusExtras; context: { $implicit: item }" />
+                                            </div>
+                                            <ng-container *ngTemplateOutlet="statusNotes; context: { $implicit: item }" />
+                                            @if (hasOpenWork(item)) {
+                                                <!-- Neden / not sütunu yoksa (dar kapsayıcı) açık iş çipleri burada -->
+                                                <div class="mt-1 @min-[64rem]:hidden">
+                                                    <ng-container *ngTemplateOutlet="moneyTags; context: { $implicit: item }" />
+                                                </div>
+                                            }
+                                        </td>
+                                        <td class="@max-[64rem]:hidden">
+                                            <div class="flex flex-wrap items-center gap-x-[6px] gap-y-1 min-w-0">
+                                                <ng-container *ngTemplateOutlet="moneyTags; context: { $implicit: item }" />
+                                                <ng-container *ngTemplateOutlet="reasonIcons; context: { $implicit: item }" />
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="flex items-center justify-end gap-[6px]">
+                                                <ng-container *ngTemplateOutlet="actionButtons; context: { $implicit: item }" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                                @case ('toggle') {
+                                    <tr>
+                                        <td [attr.colspan]="columns().length" class="p-0!">
+                                            <ng-container *ngTemplateOutlet="completedToggle; context: { $implicit: row }" />
+                                        </td>
+                                    </tr>
+                                }
+                            }
                         </ng-template>
                     </p-table>
                 </div>
             }
         </section>
-    } @empty {
+    } @else {
         <div class="card">
             @if (scope() === 'mine') {
                 <app-empty-state [message]="view() === 'voided' ? 'Size atanmış yanlış işaretlenen geliş yok.' : 'Size atanmış hasta yok.'" hint="Tüm sırayı görmek için Tümü’ne geçin." iconClass="pi pi-user" />
@@ -345,134 +365,170 @@
     </section>
 }
 
-<ng-template #statusTags let-item let-group="group">
-    <div class="flex flex-wrap gap-1">
-        @if (item.careStatus; as status) {
-            <app-status-tag [label]="statusLabel(status)" [severity]="statusSeverity(status)" />
-        } @else if (item.appointmentStatus === 'NoShow') {
-            @if (group.key !== 'noShow') {
-                <app-status-tag label="Gelmedi" severity="warn" />
-            }
-        } @else if (item.appointmentStatus === 'Completed') {
-            <app-status-tag label="Randevu tamamlandı" severity="secondary" />
-        } @else {
-            <app-status-tag label="Bekleniyor" severity="secondary" />
-        }
-        @if (item.isVoided) {
-            <app-status-tag label="Yanlış geliş" severity="danger" />
-        }
-        @if (item.isCarriedOver) {
-            <span [attr.title]="carriedOverTitle">
-                <app-status-tag label="Önceki günden açık" severity="secondary" />
+<!-- Durum: nokta + tek satır metin ("Sırada · 12 dk"); 30/60 dakikayı aşan beklemede süre uyarı renginde ve simgeli. -->
+<ng-template #statusLine let-item>
+    @let s = statusOf(item);
+    @let wait = waitAlertOf(item);
+    <span class="inline-flex items-center gap-[7px] text-[13px] font-semibold whitespace-nowrap" [class]="statusTextClass[s.tone]" data-testid="today-status">
+        <span class="w-[9px] h-[9px] rounded-full shrink-0" [class]="statusDotClass[s.tone]" aria-hidden="true"></span>
+        <span>{{ s.label }}</span>
+        @if (s.detail) {
+            <span class="font-normal" [class]="wait === 'none' ? 'text-muted-color' : waitAlertClass[wait]" [attr.title]="waitTitle(wait)">
+                @if (wait !== 'none') {
+                    <i class="pi text-xs" [class]="waitAlertIcon[wait]" aria-hidden="true"></i>
+                    <span class="sr-only">{{ waitTitle(wait) }}:</span>
+                } @else {
+                    ·
+                }
+                {{ s.detail }}
             </span>
         }
-    </div>
+    </span>
+</ng-template>
+
+<!-- Durumun yanındaki ek rozetler (yatış, yanlış geliş, önceki günden açık) ve altındaki notlar. -->
+<ng-template #statusExtras let-item>
+    @if (item.hasActiveHospitalization) {
+        <app-status-tag label="Yatışta" severity="warn" />
+    }
+    @if (item.isVoided) {
+        <app-status-tag label="Yanlış geliş" severity="danger" />
+    }
+    @if (item.isCarriedOver) {
+        <span [attr.title]="carriedOverTitle">
+            <app-status-tag label="Önceki günden açık" severity="secondary" />
+        </span>
+    }
+</ng-template>
+
+<ng-template #statusNotes let-item>
+    @if (possiblyForgotten(item)) {
+        <div class="text-xs text-muted-color">Unutulmuş olabilir</div>
+    }
     @if (item.voidReason; as reason) {
         <div class="text-sm text-muted-color mt-1 whitespace-normal">Gerekçe: {{ reason }}</div>
     }
 </ng-template>
 
-<!-- Geliş hazırlığı: neden (planlı satırda randevu nedeni) ve hazırlanan şablon / paket; tek satır, tam metin ipucunda (satır taşmaz). -->
-<ng-template #preparation let-item>
-    @if (reasonOf(item); as reason) {
-        <div class="text-sm text-muted-color truncate" [attr.title]="reason" data-testid="today-reason">{{ reason }}</div>
-    }
-    @if (item.preparedExaminationTemplateName; as prepared) {
-        <div class="mt-1 min-w-0 flex">
-            <span class="min-w-0 truncate text-xs rounded-full px-2 py-0.5 bg-surface-100 dark:bg-surface-800" [attr.title]="'Gelişte hazırlanan şablon / paket: ' + prepared" data-testid="today-prepared-template"
-                ><i class="pi pi-clone text-xs mr-1" aria-hidden="true"></i>Hazırlık: {{ prepared }}</span
-            >
-        </div>
+<!-- Hasta: ad, tür, uyarı rozetleri ve Acil yan yana (dar sütunda rozetler alt satıra sarar); uyarı notu tek satır, tam metin ipucunda. -->
+<ng-template #petCell let-item let-done="done">
+    <div class="flex flex-wrap items-center gap-x-[6px] gap-y-1 min-w-0">
+        <a
+            [routerLink]="['/panel/pets', item.petId]"
+            class="touch:touch-hit line-clamp-2 break-words min-w-0 no-underline"
+            [class]="done ? 'font-medium text-color' : 'font-semibold text-primary'"
+            data-testid="today-pet-link"
+            [attr.title]="item.petName"
+            >{{ item.petName }}</a
+        >
+        <span class="text-[12.5px] text-muted-color whitespace-nowrap">{{ item.speciesName }}</span>
+        <app-pet-alert-badges class="min-w-0 max-w-full" [alerts]="item.petAlerts" />
+        @if (item.isUrgent) {
+            <app-status-tag class="shrink-0" label="Acil" severity="danger" />
+        }
+    </div>
+    @if (item.petAlerts.note; as alertNote) {
+        <div class="text-sm" [class]="compact() ? 'line-clamp-2 break-words' : 'truncate'" [attr.title]="alertNote" data-testid="today-alert-note">{{ alertNote }}</div>
     }
 </ng-template>
 
-<!-- Sahip hatırlatma bağlantısıyla geleceğini onayladı (TIER-019): yalnız henüz gelmemiş randevu satırında; durum değişmez. -->
-<ng-template #ownerConfirmed let-item>
+<!-- Müşterinin toplam açık borcu müşteriye aittir: adın yanında küçük etiket; ödeme yetkisi varsa ödemeye götürür. -->
+<ng-template #clientDebt let-item>
+    @if ((item.clientOutstandingAmount ?? 0) > 0) {
+        @if (canCollectPayment && !ro.mutationBlocked() && !item.isVoided) {
+            <button
+                type="button"
+                class="shrink-0 inline-flex items-center text-[11.5px] font-semibold px-[7px] py-px rounded-full border-0 cursor-pointer whitespace-nowrap bg-amber-100 text-amber-800 dark:bg-amber-400/15 dark:text-amber-300 touch:touch-hit"
+                data-testid="today-client-debt-pay"
+                title="Müşterinin toplam açık borcu — ödeme al"
+                [attr.aria-label]="'Müşteri borcu ' + (item.clientOutstandingAmount | money) + ', ödeme al'"
+                (click)="openPayment(item)"
+            >
+                Borç {{ item.clientOutstandingAmount | money }}
+            </button>
+        } @else {
+            <span class="shrink-0 inline-flex items-center text-[11.5px] font-semibold px-[7px] py-px rounded-full whitespace-nowrap bg-amber-100 text-amber-800 dark:bg-amber-400/15 dark:text-amber-300" title="Müşterinin toplam açık borcu" data-testid="today-client-debt"
+                >Borç {{ item.clientOutstandingAmount | money }}</span
+            >
+        }
+    }
+</ng-template>
+
+<!-- Ziyaretin açık işi: ödeme / ücret / lab çipleri ve tek "Kalan ₺…" (ayrıntı ipucunda). Gelmedi satırının ziyareti yoktur. -->
+<ng-template #moneyTags let-item>
+    @if (statusOf(item).tone !== 'noShow') {
+        <app-today-money [item]="item" [canPay]="canCollectPayment && !ro.mutationBlocked() && !item.isVoided" (pay)="openPayment(item)" (review)="openPendingCharges(item)" />
+    }
+</ng-template>
+
+<!-- Tablodaki "Neden / not": neden tek satır; müşteri onayı ve hazırlık simge, tam metin ipucunda ve ekran okuyucuda. -->
+<ng-template #reasonIcons let-item>
+    @if (reasonOf(item); as reason) {
+        <span class="text-muted-color truncate min-w-0" [attr.title]="reason" data-testid="today-reason">{{ reason }}</span>
+    }
     @if (item.ownerConfirmedAtUtc && !item.visitId) {
         <span class="shrink-0" [attr.title]="'Hatırlatma e-postasından onaylandı: ' + date(item.ownerConfirmedAtUtc) + ' ' + time(item.ownerConfirmedAtUtc)" data-testid="today-owner-confirmed">
-            <app-status-tag label="Müşteri onayladı" severity="success" />
+            <i class="pi pi-check-circle text-green-600 dark:text-green-400" aria-hidden="true"></i><span class="sr-only">Müşteri onayladı</span>
+        </span>
+    }
+    @if (item.preparedExaminationTemplateName; as prepared) {
+        <span class="shrink-0" [attr.title]="'Gelişte hazırlanan şablon / paket: ' + prepared" data-testid="today-prepared-template">
+            <i class="pi pi-clone text-muted-color" aria-hidden="true"></i><span class="sr-only">Hazırlık: {{ prepared }}</span>
         </span>
     }
 </ng-template>
 
-<ng-template #moneyTags let-item let-group="group">
-    @if (group.key !== 'noShow') {
-        <app-today-money [item]="item" [canPay]="canCollectPayment && !ro.mutationBlocked() && !item.isVoided" (pay)="openPayment(item)" (review)="openPendingCharges(item)" />
+<!-- Kartta yer var: neden, onay ve hazırlık etiketle görünür. -->
+<ng-template #reasonTags let-item>
+    @if (reasonOf(item); as reason) {
+        <div class="text-sm text-muted-color line-clamp-2 break-words" [attr.title]="reason" data-testid="today-reason">{{ reason }}</div>
     }
-    @if (item.hasActiveHospitalization) {
-        <app-status-tag label="Yatışta" severity="warn" />
+    @if (item.ownerConfirmedAtUtc || item.preparedExaminationTemplateName) {
+        <div class="mt-1 min-w-0 flex flex-wrap gap-1">
+            @if (item.ownerConfirmedAtUtc && !item.visitId) {
+                <span class="shrink-0" [attr.title]="'Hatırlatma e-postasından onaylandı: ' + date(item.ownerConfirmedAtUtc) + ' ' + time(item.ownerConfirmedAtUtc)" data-testid="today-owner-confirmed">
+                    <app-status-tag label="Müşteri onayladı" severity="success" />
+                </span>
+            }
+            @if (item.preparedExaminationTemplateName; as prepared) {
+                <span class="min-w-0 truncate text-xs rounded-full px-2 py-0.5 bg-surface-100 dark:bg-surface-800" [attr.title]="'Gelişte hazırlanan şablon / paket: ' + prepared" data-testid="today-prepared-template"
+                    ><i class="pi pi-clone text-xs mr-1" aria-hidden="true"></i>Hazırlık: {{ prepared }}</span
+                >
+            }
+        </div>
     }
 </ng-template>
 
+<!--
+    Satır başına tek birincil adım sağda: Geldi | Başlat | Tamamla | (tamamlanmış ve kalanı varsa) Ödeme al; klinikteki hastada önünde
+    "Muayene aç"; "⋯" hemen yanında. Dar tabloda (<50 rem) yalnız simge (aria-label + ipucu); kartta etiketler açık.
+-->
 <ng-template #actionButtons let-item>
     @let actions = actionsOf(item);
-    @if (canCreateVisit && actions.canMarkArrived) {
-        <button
-            pButton
-            type="button"
-            class="col-start-1 w-full"
-            aria-label="Geldi"
-            [attr.title]="'Geldi'"
-            size="small"
-            [disabled]="ro.mutationBlocked()"
-            (click)="openAppointmentArrival(item)"
-        ><i class="p-button-icon pi pi-sign-in"></i><span class="@max-[50rem]:hidden">Geldi</span></button>
-    }
     @if (canCreateExamination && actions.canOpenExamination) {
-        <button
-            pButton
-            type="button"
-            class="col-start-1 w-full"
-            aria-label="Muayene aç"
-            [attr.title]="'Muayene aç'"
-            size="small"
-            [disabled]="ro.mutationBlocked()"
-            (click)="openExamination(item)"
-        ><i class="p-button-icon pi pi-file-edit"></i><span class="@max-[50rem]:hidden">Muayene aç</span></button>
+        <button pButton type="button" aria-label="Muayene aç" [attr.title]="'Muayene aç'" size="small" severity="secondary" [disabled]="ro.mutationBlocked()" (click)="openExamination(item)">
+            <i class="p-button-icon pi pi-file-edit"></i><span class="@max-[50rem]:hidden">Muayene aç</span>
+        </button>
+    }
+    @if (canCreateVisit && actions.canMarkArrived) {
+        <button pButton type="button" aria-label="Geldi" [attr.title]="'Geldi'" size="small" [disabled]="ro.mutationBlocked()" (click)="openAppointmentArrival(item)">
+            <i class="p-button-icon pi pi-sign-in"></i><span class="@max-[50rem]:hidden">Geldi</span>
+        </button>
     }
     @if (canUpdateVisit && actions.canStartCare) {
-        <button
-            pButton
-            type="button"
-            class="col-start-2 w-full"
-            aria-label="Başlat"
-            [attr.title]="'Başlat'"
-            size="small"
-            severity="secondary"
-            [disabled]="isBusy(item) || ro.mutationBlocked()"
-            (click)="transition(item, 'start')"
-        ><i class="p-button-icon" [class]="isBusy(item) ? 'pi pi-spin pi-spinner' : 'pi pi-play'"></i><span class="@max-[50rem]:hidden">Başlat</span></button>
+        <button pButton type="button" aria-label="Başlat" [attr.title]="'Başlat'" size="small" [disabled]="isBusy(item) || ro.mutationBlocked()" (click)="transition(item, 'start')">
+            <i class="p-button-icon" [class]="isBusy(item) ? 'pi pi-spin pi-spinner' : 'pi pi-play'"></i><span class="@max-[50rem]:hidden">Başlat</span>
+        </button>
     }
     @if (canUpdateVisit && actions.canCompleteCare) {
-        <button
-            pButton
-            type="button"
-            class="col-start-2 w-full"
-            aria-label="Tamamla"
-            [attr.title]="'Tamamla'"
-            size="small"
-            severity="secondary"
-            [disabled]="isBusy(item) || ro.mutationBlocked()"
-            (click)="transition(item, 'complete')"
-        ><i class="p-button-icon" [class]="isBusy(item) ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i><span class="@max-[50rem]:hidden">Tamamla</span></button>
+        <button pButton type="button" aria-label="Tamamla" [attr.title]="'Tamamla'" size="small" [disabled]="isBusy(item) || ro.mutationBlocked()" (click)="transition(item, 'complete')">
+            <i class="p-button-icon" [class]="isBusy(item) ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i><span class="@max-[50rem]:hidden">Tamamla</span>
+        </button>
     }
-    @let urgency = urgencyToggleOf(item, actions);
-    @if (urgency) {
-        <button
-            pButton
-            type="button"
-            iconOnly
-            class="col-start-3"
-            size="small"
-            [severity]="urgency.pressed ? 'danger' : 'secondary'"
-            [text]="!urgency.pressed"
-            [rounded]="true"
-            [attr.aria-label]="urgency.label"
-            [attr.title]="urgency.label"
-            [attr.aria-pressed]="urgency.pressed"
-            [disabled]="isBusy(item) || ro.mutationBlocked()"
-            (click)="toggleUrgency(item)"
-        ><i class="p-button-icon" [class]="isBusy(item) ? 'pi pi-spin pi-spinner' : 'pi pi-exclamation-triangle'"></i></button>
+    @if (canCollectPayment && actions.canCollectRemaining) {
+        <button pButton type="button" aria-label="Ödeme al" [attr.title]="'Ödeme al'" size="small" [outlined]="true" [disabled]="ro.mutationBlocked()" (click)="openPayment(item)" data-testid="today-collect-remaining">
+            <i class="p-button-icon pi pi-wallet"></i><span class="@max-[50rem]:hidden">Ödeme al</span>
+        </button>
     }
     @let more = secondaryActionsOf(item, actions);
     @if (more.length > 0) {
@@ -480,7 +536,6 @@
             pButton
             type="button"
             iconOnly
-            class="col-start-4"
             size="small"
             severity="secondary"
             [text]="true"
@@ -489,8 +544,24 @@
             [attr.title]="'Diğer işlemler'"
             aria-haspopup="menu"
             (click)="openRowMenu($event, item, more)"
-        ><i class="p-button-icon pi pi-ellipsis-h"></i></button>
+        >
+            <i class="p-button-icon pi pi-ellipsis-h"></i>
+        </button>
     }
+</ng-template>
+
+<!-- Katlı "Tamamlandı": işi kalanlar hep görünür; diğerleri bu satırla açılır / kapanır. -->
+<ng-template #completedToggle let-row>
+    <button
+        type="button"
+        class="w-full h-[38px] flex items-center gap-[6px] px-[10px] border-0 bg-transparent text-left text-[13px] font-semibold text-primary cursor-pointer hover:bg-primary-50 dark:hover:bg-primary-400/10 rounded-border"
+        [attr.aria-expanded]="row.expanded"
+        data-testid="today-completed-toggle"
+        (click)="toggleCompleted()"
+    >
+        <i class="pi text-xs" [class]="row.expanded ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i>
+        {{ row.expanded ? 'Tamamlananları gizle' : row.hiddenCount + ' tamamlanan kayıt daha göster' }}
+    </button>
 </ng-template>
 
 <p-menu #rowMenu [popup]="true" [model]="rowMenuItems()" appendTo="body" (onHide)="openPendingNavigation()" />

@@ -3,6 +3,7 @@ import { HttpParams } from '@angular/common/http';
 import type {
     CorrectVisitRequestDto,
     CreateVisitRequestDto,
+    OpenItemVisitsDto,
     RestoreVisitRequestDto,
     UpdateVisitPreparationRequestDto,
     UpdateVisitUrgencyRequestDto,
@@ -17,6 +18,7 @@ import type {
 import type {
     CorrectVisitRequest,
     CreateVisitRequest,
+    OpenItemVisitsVm,
     TodayHospitalizationVm,
     TodayItemVm,
     TodayOpenItemsVm,
@@ -118,6 +120,25 @@ export function mapTodayOpenItemsDtoToVm(dto: TodayOpenItemsDto): TodayOpenItems
         incompleteVisitCount: dto.incompleteVisitCount,
         hbsNotEnteredPrescriptionCount: dto.hbsNotEnteredPrescriptionCount ?? null,
         hbsNotEnteredVaccinationCount: dto.hbsNotEnteredVaccinationCount ?? null
+    };
+}
+
+export function mapOpenItemVisitsDtoToVm(dto: OpenItemVisitsDto): OpenItemVisitsVm {
+    return {
+        kind: dto.kind,
+        totalCount: dto.totalCount,
+        items: (dto.items ?? []).map((i) => ({
+            visitId: i.visitId,
+            arrivedAtUtc: i.arrivedAtUtc,
+            careStatus: i.careStatus,
+            petId: i.petId,
+            petName: trimmedOrNull(i.petName) ?? EM,
+            clientId: i.clientId,
+            clientName: trimmedOrNull(i.clientName) ?? EM,
+            responsibleVeterinarianName: trimmedOrNull(i.responsibleVeterinarianName),
+            latestExaminationId: i.latestExaminationId ?? null,
+            chargeableWorkCount: i.chargeableWorkCount ?? null
+        }))
     };
 }
 

@@ -1,6 +1,7 @@
 import {
     mapCorrectVisitToApiBody,
     mapCreateVisitToApiBody,
+    mapOpenItemVisitsDtoToVm,
     mapPreparationToApiBody,
     mapTodayDtoToVm,
     mapVeterinarianDtoToVm,
@@ -255,5 +256,49 @@ describe('visit mapper — petAlerts', () => {
 
         expect(withAlerts.petAlerts).toEqual({ flags: ['Aggressive'], note: 'Isırır' });
         expect(without.petAlerts).toEqual({ flags: [], note: null });
+    });
+});
+
+describe('visit mapper — açık iş listesi', () => {
+    it('satırları eşler; boş ad tire olur, eksik muayene ve işlem sayısı null kalır (0 ile karışmaz)', () => {
+        const vm = mapOpenItemVisitsDtoToVm({
+            kind: 'Uncharged',
+            totalCount: 4,
+            items: [
+                {
+                    visitId: 'v1',
+                    arrivedAtUtc: '2026-10-08T07:00:00Z',
+                    careStatus: 'InProgress',
+                    petId: 'p1',
+                    petName: ' ',
+                    clientId: 'cl1',
+                    clientName: 'Ali',
+                    responsibleVeterinarianName: '  ',
+                    latestExaminationId: 'ex1',
+                    chargeableWorkCount: 0
+                },
+                { visitId: 'v2', arrivedAtUtc: '2026-10-09T07:00:00Z', careStatus: 'Waiting', petId: 'p2', petName: 'Boncuk', clientId: 'cl2', clientName: 'Ayşe' }
+            ]
+        });
+
+        expect(vm.kind).toBe('Uncharged');
+        expect(vm.totalCount).toBe(4);
+        expect(vm.items[0]).toEqual({
+            visitId: 'v1',
+            arrivedAtUtc: '2026-10-08T07:00:00Z',
+            careStatus: 'InProgress',
+            petId: 'p1',
+            petName: '—',
+            clientId: 'cl1',
+            clientName: 'Ali',
+            responsibleVeterinarianName: null,
+            latestExaminationId: 'ex1',
+            chargeableWorkCount: 0
+        });
+        expect([vm.items[1].latestExaminationId, vm.items[1].chargeableWorkCount, vm.items[1].responsibleVeterinarianName]).toEqual([null, null, null]);
+    });
+
+    it('items yoksa boş liste', () => {
+        expect(mapOpenItemVisitsDtoToVm({ kind: 'Incomplete', totalCount: 0, items: null }).items).toEqual([]);
     });
 });

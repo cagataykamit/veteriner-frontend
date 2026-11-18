@@ -16,6 +16,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
 
+/** Diyaloğun okuduğu alanlar; Bugün satırı ve açık iş listesi satırı ikisi de karşılar. */
+export type VisitCorrectionTarget = Pick<TodayItemVm, 'visitId' | 'petName' | 'clientName' | 'careStatus'>;
+
 /**
  * Geliş düzeltmesi (`Visits.Correct`): durumu geri/ileri al veya yanlış geliş olarak işaretle. Gerekçe zorunlu. `mode="restore"` ile yanlış gelişi geri alır (aynı gerekçe kuralı).
  * Yetki denetimi çağıran bileşende yapılır; bu diyalog yalnızca yetkili kullanıcıya açılır.
@@ -91,8 +94,8 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
 })
 export class VisitCorrectionDialogComponent {
     readonly visible = model(false);
-    /** Düzeltilecek satır (`visitId` dolu olmalı). */
-    readonly item = input<TodayItemVm | null>(null);
+    /** Düzeltilecek geliş (`visitId` dolu olmalı): Bugün satırı ya da açık iş listesi satırı. */
+    readonly item = input<VisitCorrectionTarget | null>(null);
     /** `restore`: yanlış geliş işaretini kaldırır (durum seçimi yok, yalnızca gerekçe). */
     readonly mode = input<'correct' | 'restore'>('correct');
     protected readonly restoring = computed(() => this.mode() === 'restore');

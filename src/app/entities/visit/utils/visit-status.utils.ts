@@ -4,23 +4,100 @@ import { canMarkAppointmentNoShow, canRevertAppointmentNoShow } from '@/app/enti
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay, parseUtcApiInstantIsoString, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 
 const CARE_STATUS_LABEL: Record<VisitCareStatus, string> = {
-    Waiting: 'Bekliyor',
-    InProgress: 'Devam ediyor',
+    Waiting: 'Sırada',
+    InProgress: 'Muayenede',
     Completed: 'Tamamlandı'
-};
-
-const CARE_STATUS_SEVERITY: Record<VisitCareStatus, StatusTagSeverity> = {
-    Waiting: 'warn',
-    InProgress: 'info',
-    Completed: 'success'
 };
 
 export function careStatusLabel(status: VisitCareStatus): string {
     return CARE_STATUS_LABEL[status];
 }
 
-export function careStatusSeverity(status: VisitCareStatus): StatusTagSeverity {
-    return CARE_STATUS_SEVERITY[status];
+/** Bugün satırının durum tonu: bakım durumu ve (Visit yoksa) randevu durumu birleşik. Renk tonu ile metin aynı yerden gelir. */
+export type TodayStatusTone = 'planned' | 'waiting' | 'inProgress' | 'completed' | 'noShow';
+
+const TODAY_STATUS_LABEL: Record<TodayStatusTone, string> = {
+    planned: 'Bekleniyor',
+    waiting: CARE_STATUS_LABEL.Waiting,
+    inProgress: CARE_STATUS_LABEL.InProgress,
+    completed: CARE_STATUS_LABEL.Completed,
+    noShow: 'Gelmedi'
+};
+
+export interface TodayStatus {
+    tone: TodayStatusTone;
+    label: string;
+    /** Kısa ek: bekleniyorsa "10 dk sonra" / "15 dk gecikti", klinikteyse gelişten bu yana süre; yoksa `null`. */
+    detail: string | null;
+}
+
+export function todayStatusLabel(tone: TodayStatusTone): string {
+    return TODAY_STATUS_LABEL[tone];
+}
+
+function todayStatusTone(item: TodayItemVm): TodayStatusTone {
+    switch (item.careStatus) {
+        case 'Waiting':
+            return 'waiting';
+        case 'InProgress':
+            return 'inProgress';
+        case 'Completed':
+            return 'completed';
+    }
+
+    if (item.appointmentStatus === 'NoShow') {
+        return 'noShow';
+    }
+
+    return item.appointmentStatus === 'Completed' ? 'completed' : 'planned';
+}
+
+/** Durum hücresi: tek satır metin; yanlış işaretli satırda süre yazılmaz (iş kapanmıştır). */
+export function todayStatusOf(item: TodayItemVm, now: Date): TodayStatus {
+    const tone = todayStatusTone(item);
+    let detail: string | null = null;
+
+    if (!item.isVoided && (tone === 'waiting' || tone === 'inProgress')) {
+        detail = formatElapsedSince(item.arrivedAtUtc, now);
+    } else if (tone === 'planned') {
+        detail = formatScheduledOffset(item.scheduledAtUtc, now);
+    }
+
+    return { tone, label: TODAY_STATUS_LABEL[tone], detail };
+}
+
+/**
+ * Randevu saatine göre kısa ek: bir saatten azsa dakika ("10 dk sonra", "15 dk gecikti"), fazlası yuvarlanmış tam saat ("9 sa sonra");
+ * saat sütunu kesin zamanı zaten gösterir. Dakika dolmadıysa "şimdi". Saat yoksa/geçersizse `null`.
+ */
+function formatScheduledOffset(scheduledAtUtc: string | null, now: Date): string | null {
+    const scheduled = parseUtcApiInstantIsoString(scheduledAtUtc);
+
+    if (!scheduled) {
+        return null;
+    }
+
+    const minutes = Math.trunc((scheduled.getTime() - now.getTime()) / 60_000);
+
+    if (minutes === 0) {
+        return 'şimdi';
+    }
+
+    const abs = Math.abs(minutes);
+    const amount = abs < 60 ? `${abs} dk` : `${Math.round(abs / 60)} sa`;
+
+    return minutes > 0 ? `${amount} sonra` : `${amount} gecikti`;
+}
+
+/** "12 dk", "1 sa 5 dk", "2 sa" (dakika > 0). */
+function durationText(minutes: number): string {
+    if (minutes < 60) {
+        return `${minutes} dk`;
+    }
+
+    const rest = minutes % 60;
+
+    return rest ? `${Math.floor(minutes / 60)} sa ${rest} dk` : `${Math.floor(minutes / 60)} sa`;
 }
 
 export type TodayOpenChipKey = 'chargePending' | 'chargeMissing' | 'awaitingLab' | 'paymentPending' | 'partiallyPaid';
@@ -100,23 +177,21 @@ export function correctionActionOptions(current: VisitCareStatus): Array<{ label
     return [...statuses, { label: 'Yanlış geliş olarak işaretle', value: 'Mistaken' }];
 }
 
-export type TodayGroupKey = 'waiting' | 'inProgress' | 'planned' | 'completed' | 'voided' | 'noShow';
+export type TodayGroupKey = 'clinic' | 'planned' | 'completed' | 'noShow' | 'voided';
 
 export interface TodayGroup {
     key: TodayGroupKey;
     title: string;
-    /** Süre sütunu başlığı; `null` ise sütun yok (planlı ve tamamlananlarda gösterilecek süre verisi yok). */
-    elapsedLabel: string | null;
     items: TodayItemVm[];
 }
 
-const GROUP_ORDER: ReadonlyArray<{ key: TodayGroupKey; title: string; elapsedLabel: string | null }> = [
-    { key: 'waiting', title: 'Bekliyor', elapsedLabel: 'Bekleme' },
-    { key: 'inProgress', title: 'Devam ediyor', elapsedLabel: 'Süre' },
-    { key: 'planned', title: 'Planlı randevular', elapsedLabel: null },
-    { key: 'completed', title: 'Tamamlandı', elapsedLabel: null },
-    { key: 'voided', title: 'Yanlış işaretlenenler', elapsedLabel: null },
-    { key: 'noShow', title: 'Gelmedi', elapsedLabel: null }
+/** Açık iş önce: klinikteki hasta (sırada / muayenede), sonra gelecek randevular; bitmiş iş en altta. */
+const GROUP_ORDER: ReadonlyArray<{ key: TodayGroupKey; title: string }> = [
+    { key: 'clinic', title: 'Klinikte' },
+    { key: 'planned', title: 'Sıradaki randevular' },
+    { key: 'completed', title: 'Tamamlandı' },
+    { key: 'noShow', title: 'Gelmedi' },
+    { key: 'voided', title: 'Yanlış işaretlenenler' }
 ];
 
 function groupKeyOf(item: TodayItemVm): TodayGroupKey {
@@ -128,11 +203,15 @@ function groupKeyOf(item: TodayItemVm): TodayGroupKey {
         return 'noShow';
     }
 
+    // Gelişi açılmadan (ör. doğrudan muayeneyle) tamamlanan randevu bitmiş iştir; "Planlı" altında görünmez.
+    if (!item.visitId && item.appointmentStatus === 'Completed') {
+        return 'completed';
+    }
+
     switch (item.careStatus) {
         case 'Waiting':
-            return 'waiting';
         case 'InProgress':
-            return 'inProgress';
+            return 'clinic';
         case 'Completed':
             return 'completed';
         default:
@@ -140,9 +219,17 @@ function groupKeyOf(item: TodayItemVm): TodayGroupKey {
     }
 }
 
-/** Sözleşme: `careStatus` dolu satır o gruba, `null` satır "Planlı"ya gider. Grup içi sıra sunucudan gelir. Boş gruplar atılır. */
+/**
+ * Sözleşme: açık Visit (Sırada / Muayenede) "Klinikte", `careStatus` boş satır "Sıradaki randevular"a gider (Visit'siz tamamlanmış randevu
+ * "Tamamlandı"ya). Grup içi sıra sunucudan gelir (saat sırası; klinikte sırada ve muayenede karışık kalır). Boş gruplar atılır.
+ */
 export function groupTodayItems(items: readonly TodayItemVm[]): TodayGroup[] {
     return GROUP_ORDER.map((g) => ({ ...g, items: items.filter((i) => groupKeyOf(i) === g.key) })).filter((g) => g.items.length > 0);
+}
+
+/** Tamamlanmış satırda iş kaldı mı (açık iş çipi ya da ödenmemiş kalan)? Katlanmış "Tamamlandı" bölümünde bu satırlar görünür kalır. */
+export function todayHasOpenWork(item: TodayItemVm): boolean {
+    return (item.outstandingAmount ?? 0) > 0 || todayOpenChips(item).length > 0;
 }
 
 export interface TodayItemActions {
@@ -163,13 +250,27 @@ export interface TodayItemActions {
     canMarkNoShow: boolean;
     /** "Gelmedi" grubundaki Visit'siz randevu satırından geri alma (yetki ayrıca denetlenir). */
     canRevertNoShow: boolean;
+    /** Tamamlanmış ziyaretin kalanı var: satırın birincil adımı "Ödeme al" (yetki ayrıca denetlenir; menüde de kalır). */
+    canCollectRemaining: boolean;
 }
 
 export function todayItemActions(item: TodayItemVm, now: Date = new Date()): TodayItemActions {
     const noShowRow = !item.visitId && !!item.appointmentId;
 
     if (item.isVoided) {
-        return { canMarkArrived: false, canStartCare: false, canOpenExamination: false, canCompleteCare: false, canCorrect: false, canRestore: !!item.visitId, canToggleUrgency: false, canEditPreparation: false, canMarkNoShow: false, canRevertNoShow: false };
+        return {
+            canMarkArrived: false,
+            canStartCare: false,
+            canOpenExamination: false,
+            canCompleteCare: false,
+            canCorrect: false,
+            canRestore: !!item.visitId,
+            canToggleUrgency: false,
+            canEditPreparation: false,
+            canMarkNoShow: false,
+            canRevertNoShow: false,
+            canCollectRemaining: false
+        };
     }
 
     const open = item.careStatus === 'Waiting' || item.careStatus === 'InProgress';
@@ -184,7 +285,8 @@ export function todayItemActions(item: TodayItemVm, now: Date = new Date()): Tod
         canToggleUrgency: open && !!item.visitId,
         canEditPreparation: open && !!item.visitId,
         canMarkNoShow: noShowRow && canMarkAppointmentNoShow(item.appointmentStatus, item.scheduledAtUtc, now),
-        canRevertNoShow: noShowRow && canRevertAppointmentNoShow(item.appointmentStatus)
+        canRevertNoShow: noShowRow && canRevertAppointmentNoShow(item.appointmentStatus),
+        canCollectRemaining: item.careStatus === 'Completed' && (item.outstandingAmount ?? 0) > 0
     };
 }
 
@@ -202,17 +304,7 @@ export function formatElapsedSince(arrivedAtUtc: string | null, now: Date): stri
         return 'Az önce';
     }
 
-    if (minutes < 60) {
-        return `${minutes} dk`;
-    }
-
-    if (minutes >= 24 * 60) {
-        return `${Math.floor(minutes / (24 * 60))} gün`;
-    }
-
-    const rest = minutes % 60;
-
-    return rest ? `${Math.floor(minutes / 60)} sa ${rest} dk` : `${Math.floor(minutes / 60)} sa`;
+    return minutes >= 24 * 60 ? `${Math.floor(minutes / (24 * 60))} gün` : durationText(minutes);
 }
 
 /** Bugün satırındaki geliş zamanı: bugünse yalnız saat, önceki günden açık kalmışsa tarih ve saat (H15). */
@@ -288,7 +380,7 @@ export function todayReasonText(item: Pick<TodayItemVm, 'arrivalReason' | 'appoi
     return item.arrivalReason ?? item.appointmentReasonName;
 }
 
-export type TodaySecondaryActionKey = 'markNoShow' | 'revertNoShow' | 'correct' | 'restore' | 'collectPayment' | 'addCharge' | 'bookAppointment' | 'editPreparation';
+export type TodaySecondaryActionKey = 'markNoShow' | 'revertNoShow' | 'correct' | 'restore' | 'collectPayment' | 'addCharge' | 'bookAppointment' | 'editPreparation' | 'toggleUrgency';
 
 export interface TodaySecondaryAction {
     key: TodaySecondaryActionKey;
@@ -306,8 +398,8 @@ export interface TodayRowPermissions {
 }
 
 /**
- * Satırın seyrek/düzeltme eylemleri ("⋯" menüsü). Satırda görünür kalanlar: Geldi, Muayene aç, Başlat/Tamamla ve acil ikonu
- * (`todayUrgencyToggle`). Görünür/menü ayrımı burada tek yerde belirlenir.
+ * Satırın seyrek/düzeltme eylemleri ("⋯" menüsü). Satırda görünür kalanlar: tek birincil adım (Geldi, Başlat, Tamamla ya da tamamlanmış
+ * satırda kalan için Ödeme al) ve klinikteki hastada Muayene aç. Görünür/menü ayrımı burada tek yerde belirlenir.
  */
 export function todaySecondaryActions(item: TodayItemVm, actions: TodayItemActions, perms: TodayRowPermissions): TodaySecondaryAction[] {
     const out: TodaySecondaryAction[] = [];
@@ -329,6 +421,11 @@ export function todaySecondaryActions(item: TodayItemVm, actions: TodayItemActio
         out.push({ key: 'editPreparation', label: 'Hazırlığı düzenle', icon: 'pi pi-clipboard' });
     }
 
+    // Acil işaretli satır hasta adının yanında kırmızı "Acil" etiketi taşır; aç/kapat menüdedir.
+    if (perms.canUpdateVisit && actions.canToggleUrgency) {
+        out.push({ key: 'toggleUrgency', label: item.isUrgent ? 'Acil işaretini kaldır' : 'Acil olarak işaretle', icon: 'pi pi-exclamation-triangle' });
+    }
+
     if (perms.canNoShow && actions.canMarkNoShow) {
         out.push({ key: 'markNoShow', label: 'Gelmedi olarak işaretle', icon: 'pi pi-user-minus' });
     }
@@ -346,20 +443,4 @@ export function todaySecondaryActions(item: TodayItemVm, actions: TodayItemActio
     }
 
     return out;
-}
-
-export interface TodayUrgencyToggle {
-    /** Düğme ipucu ve erişilebilir ad. */
-    label: string;
-    /** İşaretliyse düğme belirgin (basılı) durumda. */
-    pressed: boolean;
-}
-
-/** Zaman açısından kritik acil aç/kapat eylemi satırda ikon düğmesi olarak görünür; yetki/koşul yoksa `null`. */
-export function todayUrgencyToggle(item: TodayItemVm, actions: TodayItemActions, perms: TodayRowPermissions): TodayUrgencyToggle | null {
-    if (!perms.canUpdateVisit || !actions.canToggleUrgency) {
-        return null;
-    }
-
-    return { label: item.isUrgent ? 'Acili kaldır' : 'Acil işaretle', pressed: item.isUrgent };
 }

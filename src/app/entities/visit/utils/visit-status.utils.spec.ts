@@ -9,7 +9,8 @@ import {
     todayItemActions,
     todayReasonText,
     todaySecondaryActions,
-    todayUrgencyToggle,
+    todayStatusOf,
+    todayHasOpenWork,
     waitAlertLevel,
     todayOpenChips,
     waitAlertTitle
@@ -61,14 +62,29 @@ describe('groupTodayItems', () => {
             item({ key: 'w2', careStatus: 'Waiting' })
         ]);
 
-        expect(groups.map((g) => g.key)).toEqual(['waiting', 'planned', 'completed']);
+        expect(groups.map((g) => g.key)).toEqual(['clinic', 'planned', 'completed']);
         expect(groups[0].items.map((i) => i.key)).toEqual(['w1', 'w2']);
     });
 
-    it('süre sütunu başlığı gruba göre: Bekleme / Süre; planlı ve tamamlananlarda yok', () => {
-        const groups = groupTodayItems([item({ key: 'w', careStatus: 'Waiting' }), item({ key: 'i', careStatus: 'InProgress' }), item({ key: 'p', visitId: null, careStatus: null }), item({ key: 'c', careStatus: 'Completed' })]);
+    it('Klinikte: sırada ve muayenede tek grupta, saat (sunucu) sırası bozulmaz; başlıklar A tasarımındaki gibi', () => {
+        const groups = groupTodayItems([item({ key: 'i1', careStatus: 'InProgress' }), item({ key: 'w', careStatus: 'Waiting' }), item({ key: 'i2', careStatus: 'InProgress' }), item({ key: 'p', visitId: null, careStatus: null })]);
 
-        expect(groups.map((g) => g.elapsedLabel)).toEqual(['Bekleme', 'Süre', null, null]);
+        expect(groups.map((g) => [g.title, g.items.map((i) => i.key)])).toEqual([
+            ['Klinikte', ['i1', 'w', 'i2']],
+            ['Sıradaki randevular', ['p']]
+        ]);
+    });
+
+    it('Visit siz tamamlanmış randevu Planlı değil Tamamlandı grubundadır', () => {
+        const groups = groupTodayItems([
+            item({ key: 'ac', visitId: null, careStatus: null, appointmentId: 'a1', appointmentStatus: 'Completed' }),
+            item({ key: 'p', visitId: null, careStatus: null, appointmentId: 'a2', appointmentStatus: 'Scheduled' })
+        ]);
+
+        expect(groups.map((g) => [g.key, g.items.map((i) => i.key)])).toEqual([
+            ['planned', ['p']],
+            ['completed', ['ac']]
+        ]);
     });
 
     it('liste boşsa grup yok', () => {
@@ -223,8 +239,8 @@ describe('geliş hazırlığı (CHECKIN-001/002)', () => {
         const perms = { canUpdateVisit: true, canNoShow: false, canCorrect: false, canCollectPayment: false, canCreateCharge: false, canCreateAppointment: false };
         const keys = (i: TodayItemVm, p = perms) => todaySecondaryActions(i, todayItemActions(i), p).map((a) => a.key);
 
-        expect(keys(item({ careStatus: 'Waiting' }))).toEqual(['editPreparation']);
-        expect(keys(item({ careStatus: 'InProgress' }))).toEqual(['editPreparation']);
+        expect(keys(item({ careStatus: 'Waiting' }))).toEqual(['editPreparation', 'toggleUrgency']);
+        expect(keys(item({ careStatus: 'InProgress' }))).toEqual(['editPreparation', 'toggleUrgency']);
         expect(keys(item({ careStatus: 'Completed' }))).toEqual([]);
         expect(keys(item({ isVoided: true }))).toEqual([]);
         expect(keys(item({ visitId: null, careStatus: null, appointmentId: 'a1', appointmentStatus: 'Scheduled' }))).toEqual([]);
@@ -269,16 +285,16 @@ describe('satır eylem düzeni (görünür / menü)', () => {
     const all = { canUpdateVisit: true, canNoShow: true, canCorrect: true, canCollectPayment: false, canCreateCharge: false, canCreateAppointment: false };
     const now = new Date('2026-10-10T10:00:00Z');
     const secondary = (i: TodayItemVm, perms = all) => todaySecondaryActions(i, todayItemActions(i, now), perms).map((a) => a.key);
-    const urgency = (i: TodayItemVm, perms = all) => todayUrgencyToggle(i, todayItemActions(i, now), perms);
+    const urgency = (i: TodayItemVm, perms = all) => todaySecondaryActions(i, todayItemActions(i, now), perms).find((a) => a.key === 'toggleUrgency')?.label ?? null;
     const planned = item({ visitId: null, careStatus: null, appointmentId: 'a1', appointmentStatus: 'Scheduled', scheduledAtUtc: '2026-10-10T09:00:00Z' });
 
-    it('acil açık satırda görünür ikon düğmesidir, menüde değildir', () => {
-        expect(urgency(item())).toEqual({ label: 'Acil işaretle', pressed: false });
-        expect(urgency(item({ isUrgent: true }))).toEqual({ label: 'Acili kaldır', pressed: true });
-        expect(secondary(item())).toEqual(['editPreparation', 'correct']);
+    it('acil aç/kapat açık satırda menüdedir (hazırlıktan sonra); metin işarete göre değişir', () => {
+        expect(urgency(item())).toBe('Acil olarak işaretle');
+        expect(urgency(item({ isUrgent: true }))).toBe('Acil işaretini kaldır');
+        expect(secondary(item())).toEqual(['editPreparation', 'toggleUrgency', 'correct']);
     });
 
-    it('acil düğmesi yetkisiz, tamamlanmış, yanlış işaretli ve planlı satırda yok', () => {
+    it('acil eylemi yetkisiz, tamamlanmış, yanlış işaretli ve planlı satırda yok', () => {
         expect(urgency(item(), { ...all, canUpdateVisit: false })).toBeNull();
         expect(urgency(item({ careStatus: 'Completed' }))).toBeNull();
         expect(urgency(item({ isVoided: true }))).toBeNull();
@@ -287,7 +303,8 @@ describe('satır eylem düzeni (görünür / menü)', () => {
 
     it('menüde yalnızca seyrek eylemler; yetkisiz kullanıcıda menü boş', () => {
         expect(secondary(item({ careStatus: 'Completed' }))).toEqual(['correct']);
-        expect(secondary(item(), { ...all, canCorrect: false })).toEqual(['editPreparation']);
+        expect(secondary(item(), { ...all, canCorrect: false })).toEqual(['editPreparation', 'toggleUrgency']);
+        expect(secondary(item(), { ...all, canUpdateVisit: false, canCorrect: false })).toEqual([]);
     });
 
     it('yanlış işaretli satırda Geri al menüdedir; yetkisizde menü boş', () => {
@@ -298,24 +315,24 @@ describe('satır eylem düzeni (görünür / menü)', () => {
     it('Ödeme al: yetki varsa menünün başında; yanlış işaretli satırda ve yetkisizde yok', () => {
         const pay = { ...all, canCollectPayment: true };
 
-        expect(secondary(item(), pay)).toEqual(['collectPayment', 'editPreparation', 'correct']);
-        expect(secondary(item(), all)).toEqual(['editPreparation', 'correct']);
+        expect(secondary(item(), pay)).toEqual(['collectPayment', 'editPreparation', 'toggleUrgency', 'correct']);
+        expect(secondary(item(), all)).toEqual(['editPreparation', 'toggleUrgency', 'correct']);
         expect(secondary(item({ isVoided: true }), pay)).toEqual(['restore']);
     });
 
     it("Ücret ekle: yetki varsa Ödeme al'dan önce; yanlış işaretli satırda ve yetkisizde yok", () => {
         const charge = { ...all, canCreateCharge: true };
 
-        expect(secondary(item(), charge)).toEqual(['addCharge', 'editPreparation', 'correct']);
-        expect(secondary(item(), { ...charge, canCollectPayment: true })).toEqual(['addCharge', 'collectPayment', 'editPreparation', 'correct']);
-        expect(secondary(item(), all)).toEqual(['editPreparation', 'correct']);
+        expect(secondary(item(), charge)).toEqual(['addCharge', 'editPreparation', 'toggleUrgency', 'correct']);
+        expect(secondary(item(), { ...charge, canCollectPayment: true })).toEqual(['addCharge', 'collectPayment', 'editPreparation', 'toggleUrgency', 'correct']);
+        expect(secondary(item(), all)).toEqual(['editPreparation', 'toggleUrgency', 'correct']);
         expect(secondary(item({ isVoided: true }), charge)).toEqual(['restore']);
     });
 
     it("Randevu al: gelişi olan satırda Ödeme al'dan sonra; planlı ve yanlış işaretli satırda yok (O9)", () => {
         const book = { ...all, canCreateAppointment: true, canCollectPayment: true };
 
-        expect(secondary(item(), book)).toEqual(['collectPayment', 'bookAppointment', 'editPreparation', 'correct']);
+        expect(secondary(item(), book)).toEqual(['collectPayment', 'bookAppointment', 'editPreparation', 'toggleUrgency', 'correct']);
         expect(secondary(planned, { ...all, canCreateAppointment: true })).toEqual(['markNoShow']);
         expect(secondary(item({ isVoided: true }), book)).toEqual(['restore']);
     });
@@ -403,5 +420,56 @@ describe('todayOpenChips', () => {
         const all = chips({ chargeIndicator: 'ChargeMissing', awaitingLabCount: 1 }).concat(chips({ chargeIndicator: 'PaymentPending' }));
 
         expect(all.every((c) => c.icon.startsWith('pi '))).toBe(true);
+    });
+});
+
+describe('todayStatusOf (birleşik durum)', () => {
+    const now = new Date('2026-10-10T10:00:00Z');
+    const planned = (scheduledAtUtc: string, over: Partial<TodayItemVm> = {}) => item({ visitId: null, careStatus: null, arrivedAtUtc: null, appointmentId: 'a1', appointmentStatus: 'Scheduled', scheduledAtUtc, ...over });
+
+    it('bekleniyor: randevu saatine göre "sonra" / "gecikti" / "şimdi"', () => {
+        expect(todayStatusOf(planned('2026-10-10T10:10:00Z'), now)).toEqual({ tone: 'planned', label: 'Bekleniyor', detail: '10 dk sonra' });
+        expect(todayStatusOf(planned('2026-10-10T09:45:00Z'), now).detail).toBe('15 dk gecikti');
+        // Bir saati aşınca yalnız yuvarlanmış tam saat (kesin zaman saat sütununda): 65 dk → 1 sa, 9 sa 21 dk → 9 sa, 100 dk gecikme → 2 sa
+        expect(todayStatusOf(planned('2026-10-10T11:05:00Z'), now).detail).toBe('1 sa sonra');
+        expect(todayStatusOf(planned('2026-10-10T19:21:00Z'), now).detail).toBe('9 sa sonra');
+        expect(todayStatusOf(planned('2026-10-10T08:20:00Z'), now).detail).toBe('2 sa gecikti');
+        expect(todayStatusOf(planned('2026-10-10T10:59:00Z'), now).detail).toBe('59 dk sonra');
+        expect(todayStatusOf(planned('2026-10-10T10:00:30Z'), now).detail).toBe('şimdi');
+        expect(todayStatusOf(planned('2026-10-10T10:00:00Z', { scheduledAtUtc: null }), now).detail).toBeNull();
+    });
+
+    it('sırada ve muayenede: gelişten bu yana süre', () => {
+        const arrived = '2026-10-10T09:48:00Z';
+
+        expect(todayStatusOf(item({ careStatus: 'Waiting', arrivedAtUtc: arrived }), now)).toEqual({ tone: 'waiting', label: 'Sırada', detail: '12 dk' });
+        expect(todayStatusOf(item({ careStatus: 'InProgress', arrivedAtUtc: arrived }), now)).toEqual({ tone: 'inProgress', label: 'Muayenede', detail: '12 dk' });
+    });
+
+    it('tamamlanan (Visit li ya da Visit siz randevu) ve gelmedi süresiz; "Randevu tamamlandı" yazılmaz', () => {
+        expect(todayStatusOf(item({ careStatus: 'Completed' }), now)).toEqual({ tone: 'completed', label: 'Tamamlandı', detail: null });
+        expect(todayStatusOf(planned('2026-10-10T08:00:00Z', { appointmentStatus: 'Completed' }), now)).toEqual({ tone: 'completed', label: 'Tamamlandı', detail: null });
+        expect(todayStatusOf(planned('2026-10-10T08:00:00Z', { appointmentStatus: 'NoShow' }), now)).toEqual({ tone: 'noShow', label: 'Gelmedi', detail: null });
+    });
+
+    it('yanlış işaretli açık gelişte süre yazılmaz', () => {
+        expect(todayStatusOf(item({ careStatus: 'Waiting', isVoided: true }), now)).toEqual({ tone: 'waiting', label: 'Sırada', detail: null });
+    });
+});
+
+describe('todayHasOpenWork ve Ödeme al (tamamlanan satır)', () => {
+    it('kalan ya da açık iş çipi varsa iş kalmıştır; ödenmiş ve göstergesiz satırda yoktur', () => {
+        expect(todayHasOpenWork(item({ careStatus: 'Completed', outstandingAmount: 850 }))).toBe(true);
+        expect(todayHasOpenWork(item({ careStatus: 'Completed', chargeIndicator: 'ChargeMissing' }))).toBe(true);
+        expect(todayHasOpenWork(item({ careStatus: 'Completed', awaitingLabCount: 1 }))).toBe(true);
+        expect(todayHasOpenWork(item({ careStatus: 'Completed', chargeIndicator: 'Paid', outstandingAmount: 0 }))).toBe(false);
+        expect(todayHasOpenWork(item({ careStatus: 'Completed' }))).toBe(false);
+    });
+
+    it('Ödeme al birincil adımı yalnız tamamlanmış ve kalanı olan, yanlış işaretli olmayan satırda', () => {
+        expect(todayItemActions(item({ careStatus: 'Completed', outstandingAmount: 850 })).canCollectRemaining).toBe(true);
+        expect(todayItemActions(item({ careStatus: 'Completed', outstandingAmount: 0 })).canCollectRemaining).toBe(false);
+        expect(todayItemActions(item({ careStatus: 'InProgress', outstandingAmount: 850 })).canCollectRemaining).toBe(false);
+        expect(todayItemActions(item({ careStatus: 'Completed', outstandingAmount: 850, isVoided: true })).canCollectRemaining).toBe(false);
     });
 });

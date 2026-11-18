@@ -45,6 +45,13 @@ export function formatWeekdayDateDisplay(value: string | Date | null | undefined
     return date === '—' ? date : `${formatInstantInIstanbul(value, { weekday: 'long' }, locale)}, ${date}`;
 }
 
+/** Gün adı, gün ve ay adı: "Çarşamba, 19 Kasım" (Bugün başlığı; yıl yazılmaz). Değer yoksa "—". */
+export function formatWeekdayDayMonthDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
+    const dayMonth = formatInstantInIstanbul(value, { day: 'numeric', month: 'long' }, locale);
+
+    return dayMonth === '—' ? dayMonth : `${formatInstantInIstanbul(value, { weekday: 'long' }, locale)}, ${dayMonth}`;
+}
+
 export function formatTimeDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
     return formatInstantInIstanbul(value, TIME_OPTIONS, locale);
 }
