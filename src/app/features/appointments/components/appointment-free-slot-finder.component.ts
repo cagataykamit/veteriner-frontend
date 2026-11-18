@@ -7,25 +7,7 @@ import type { AppointmentReasonVm, StaffAvailabilityDayVm } from '@/app/entities
 import { AppointmentReasonsService, OnlineBookingService } from '@/app/entities/online-booking/services/online-booking.service';
 import { addGregorianDaysToYmd, toIstanbulTimeInputValue } from '@/app/shared/utils/date.utils';
 import { istanbulTodayYmd } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
-
-const OPEN_KEY = 'vetinity.calendar.freeSlotOpen';
-
-/** Kullanıcının açık/kapalı seçimi tarayıcıda kalır; kayıt yoksa açık başlar (kullanıcı kararı 2026-11-18). */
-function readFinderOpen(): boolean {
-    try {
-        return localStorage.getItem(OPEN_KEY) !== 'false';
-    } catch {
-        return true;
-    }
-}
-
-function writeFinderOpen(open: boolean): void {
-    try {
-        localStorage.setItem(OPEN_KEY, String(open));
-    } catch {
-        // Depolama kapalıysa seçim yalnız bu sayfada kalır.
-    }
-}
+import { readSectionOpen, writeSectionOpen } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-layer.utils';
 
 /** Boş saat önerisi: tarih (İstanbul), saat ve önerilen hekim. */
 export interface FreeSlotPick {
@@ -136,7 +118,7 @@ export class AppointmentFreeSlotFinderComponent {
     /** Takvim yenilenince (randevu eklendi/iptal) liste de yenilenir. */
     readonly refreshKey = input(0);
     /** Takvimin sağ panelinde açık başlar; kullanıcı katlarsa seçim saklanır. */
-    readonly open = signal(readFinderOpen());
+    readonly open = signal(readSectionOpen('freeSlot'));
     readonly pick = output<FreeSlotPick>();
 
     private readonly reasonsApi = inject(AppointmentReasonsService);
@@ -201,7 +183,7 @@ export class AppointmentFreeSlotFinderComponent {
 
     protected toggleOpen(): void {
         this.open.set(!this.open());
-        writeFinderOpen(this.open());
+        writeSectionOpen('freeSlot', this.open());
     }
 
     protected reload(): void {

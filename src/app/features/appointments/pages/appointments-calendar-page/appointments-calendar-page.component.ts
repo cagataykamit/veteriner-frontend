@@ -20,13 +20,13 @@ import {
     NO_VET,
     parseCalendarFilters,
     readDayVetPrefs,
-    readRailOpen,
+    readSectionOpen,
     readStoredCalendarFilters,
     vaccineStateLabel,
     vaccinesOn,
     waitingLabel,
     writeDayVetPrefs,
-    writeRailOpen,
+    writeSectionOpen,
     writeStoredCalendarFilters
 } from './calendar-layer.utils';
 import { appointmentTone, type CalendarTone, type CareMark, initials, toneBarClass } from './calendar-tone.utils';
@@ -158,24 +158,27 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                         <span class="text-xs text-red-600 dark:text-red-400" role="alert">{{ ve }}</span>
                     }
                     <span class="flex-1"></span>
-                    <!-- Telefonda Gün (ajanda) ve Ay; Hafta geniş ekranda. -->
-                    <div class="inline-flex rounded-lg border border-surface bg-surface-50 dark:bg-surface-800 p-0.5" role="group" aria-label="Görünüm">
-                        <button type="button" class="px-3 py-1 rounded-md text-sm cursor-pointer" [class]="segClass('day')" [attr.aria-pressed]="viewMode() === 'day'" (click)="changeViewMode('day')">Gün</button>
-                        <button type="button" class="hidden lg:block px-3 py-1 rounded-md text-sm cursor-pointer" [class]="segClass('week')" [attr.aria-pressed]="viewMode() === 'week'" (click)="changeViewMode('week')">Hafta</button>
-                        <button type="button" class="px-3 py-1 rounded-md text-sm cursor-pointer" [class]="segClass('month')" [attr.aria-pressed]="viewMode() === 'month'" (click)="changeViewMode('month')" data-testid="calendar-view-month">Ay</button>
-                    </div>
-                    <!-- Gün görünümünde sağ panel (Klinikte, Boş saat bul) kapatılınca takvim tüm genişliği alır; seçim tarayıcıda hatırlanır. -->
+                    <!-- Gün görünümünde sağ panel (Klinikte, Boş saat bul) kapatılınca takvim tüm genişliği alır; seçim tarayıcıda hatırlanır.
+                         Görünüm düğmelerinin solunda durur: Gün/Hafta/Ay'ın yeri hiç değişmez (sağındaki öğelerin genişliği sabit). -->
                     @if (viewMode() === 'day' && !activePreset() && showRail()) {
                         <button
                             type="button"
-                            class="hidden lg:inline-flex items-center gap-1.5 h-[2.125rem] px-3 rounded-lg border border-surface text-sm text-muted-color cursor-pointer hover:text-color"
+                            class="hidden lg:inline-grid place-items-center w-[2.125rem] h-[2.125rem] rounded-lg border border-surface text-muted-color cursor-pointer hover:text-color"
+                            [attr.aria-label]="railOpen() ? 'Sağ paneli kapat' : 'Sağ paneli aç'"
+                            [attr.title]="railOpen() ? 'Sağ paneli kapat' : 'Sağ paneli aç'"
                             [attr.aria-pressed]="!railOpen()"
                             (click)="toggleRail()"
                             data-testid="calendar-rail-toggle"
                         >
-                            <i class="pi !text-sm" [class]="railOpen() ? 'pi-window-maximize' : 'pi-window-minimize'" aria-hidden="true"></i>{{ railOpen() ? 'Paneli gizle' : 'Paneli göster' }}
+                            <i class="pi !text-sm" [class]="railOpen() ? 'pi-sign-out' : 'pi-sign-in'" aria-hidden="true"></i>
                         </button>
                     }
+                    <!-- Telefonda Gün (ajanda) ve Ay; Hafta geniş ekranda. Düğme genişlikleri sabit (seçili olanın kalın yazısı yeri kaydırmasın). -->
+                    <div class="inline-flex rounded-lg border border-surface bg-surface-50 dark:bg-surface-800 p-0.5" role="group" aria-label="Görünüm">
+                        <button type="button" class="w-16 py-1 rounded-md text-sm text-center cursor-pointer" [class]="segClass('day')" [attr.aria-pressed]="viewMode() === 'day'" (click)="changeViewMode('day')">Gün</button>
+                        <button type="button" class="hidden lg:block w-16 py-1 rounded-md text-sm text-center cursor-pointer" [class]="segClass('week')" [attr.aria-pressed]="viewMode() === 'week'" (click)="changeViewMode('week')">Hafta</button>
+                        <button type="button" class="w-16 py-1 rounded-md text-sm text-center cursor-pointer" [class]="segClass('month')" [attr.aria-pressed]="viewMode() === 'month'" (click)="changeViewMode('month')" data-testid="calendar-view-month">Ay</button>
+                    </div>
                     <!-- Filtreler açılır panelde; düğmede etkin filtre sayısı. Durum çiplerindeki şerit renk açıklamasıdır. -->
                     <div class="relative">
                         <button
@@ -187,9 +190,8 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                             data-testid="calendar-filter-toggle"
                         >
                             <i class="pi pi-filter !text-xs" aria-hidden="true"></i>Filtre
-                            @if (activeFilterCount(); as n) {
-                                <span class="rounded-full bg-primary text-primary-contrast text-[11px] leading-4 px-1.5">{{ n }}</span>
-                            }
+                            <!-- Rozetin yeri hep ayrılır; filtre açılıp kapanınca düğme genişliği değişmez. -->
+                            <span class="min-w-[1.25rem] rounded-full bg-primary text-primary-contrast text-[11px] leading-4 px-1.5 text-center" [class.invisible]="!activeFilterCount()" [attr.aria-hidden]="!activeFilterCount()">{{ activeFilterCount() || 0 }}</span>
                         </button>
                         @if (filtersOpen()) {
                             <div class="absolute right-0 top-full mt-1 z-50 w-[min(46rem,calc(100vw-2rem))] rounded-lg border border-surface bg-surface-0 dark:bg-surface-900 shadow-lg p-3" data-testid="calendar-filter-panel">
@@ -342,25 +344,30 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                             <aside class="flex flex-col gap-3 min-w-0">
                                 @if (inClinic(); as list) {
                                     <section class="rounded-lg border border-surface bg-surface-0 dark:bg-surface-900 px-3.5 py-3" aria-labelledby="calendar-in-clinic-title" data-testid="calendar-in-clinic">
-                                        <h3 id="calendar-in-clinic-title" class="m-0 flex items-center gap-2 text-[15px] font-semibold">
-                                            Klinikte <span class="ml-auto text-xs font-semibold text-amber-600 dark:text-amber-400">{{ list.length }} hasta</span>
+                                        <h3 id="calendar-in-clinic-title" class="m-0 text-[15px] font-semibold">
+                                            <button type="button" class="w-full flex items-center gap-2 text-left cursor-pointer" [attr.aria-expanded]="inClinicOpen()" (click)="toggleInClinic()" data-testid="calendar-in-clinic-toggle">
+                                                Klinikte <span class="ml-auto text-xs font-semibold text-amber-600 dark:text-amber-400">{{ list.length }} hasta</span>
+                                                <i class="pi !text-xs text-muted-color" [class]="inClinicOpen() ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i>
+                                            </button>
                                         </h3>
-                                        <p class="m-0 mt-0.5 mb-2 text-xs text-muted-color">Kabulden · {{ clockText(nowMinute() ?? 0) }}</p>
-                                        @for (p of list; track p.key) {
-                                            <div class="flex items-center gap-2.5 py-1.5 border-t border-surface-100 dark:border-surface-800">
-                                                <span class="w-[34px] h-[34px] shrink-0 rounded-full grid place-items-center text-[13px] font-bold" [class]="p.waiting ? 'bg-amber-400 text-amber-950' : 'bg-primary text-primary-contrast'" aria-hidden="true">{{ p.initials }}</span>
-                                                <span class="min-w-0">
-                                                    <b class="block text-sm truncate">{{ p.petName }} · {{ p.clientName }}</b>
-                                                    <span class="block text-xs font-semibold truncate" [class]="p.waiting ? 'text-amber-600 dark:text-amber-400' : 'text-primary'">{{ p.status }}</span>
-                                                    @if (p.detail) {
-                                                        <span class="block text-xs text-muted-color truncate">{{ p.detail }}</span>
-                                                    }
-                                                </span>
-                                            </div>
-                                        } @empty {
-                                            <p class="m-0 text-sm text-muted-color">Şu an klinikte bekleyen hasta yok.</p>
+                                        @if (inClinicOpen()) {
+                                            <p class="m-0 mt-0.5 mb-2 text-xs text-muted-color">Kabulden · {{ clockText(nowMinute() ?? 0) }}</p>
+                                            @for (p of list; track p.key) {
+                                                <div class="flex items-center gap-2.5 py-1.5 border-t border-surface-100 dark:border-surface-800">
+                                                    <span class="w-[34px] h-[34px] shrink-0 rounded-full grid place-items-center text-[13px] font-bold" [class]="p.waiting ? 'bg-amber-400 text-amber-950' : 'bg-primary text-primary-contrast'" aria-hidden="true">{{ p.initials }}</span>
+                                                    <span class="min-w-0">
+                                                        <b class="block text-sm truncate">{{ p.petName }} · {{ p.clientName }}</b>
+                                                        <span class="block text-xs font-semibold truncate" [class]="p.waiting ? 'text-amber-600 dark:text-amber-400' : 'text-primary'">{{ p.status }}</span>
+                                                        @if (p.detail) {
+                                                            <span class="block text-xs text-muted-color truncate">{{ p.detail }}</span>
+                                                        }
+                                                    </span>
+                                                </div>
+                                            } @empty {
+                                                <p class="m-0 text-sm text-muted-color">Şu an klinikte bekleyen hasta yok.</p>
+                                            }
+                                            <a pButton [routerLink]="todayRoute" size="small" class="w-full mt-2">Bugün sayfasında aç</a>
                                         }
-                                        <a pButton [routerLink]="todayRoute" size="small" class="w-full mt-2">Bugün sayfasında aç</a>
                                     </section>
                                 }
                                 @if (showFinder()) {
@@ -692,7 +699,8 @@ export class AppointmentsCalendarPageComponent implements OnInit {
             });
     });
     readonly showRail = computed(() => this.showFinder() || this.inClinic() !== null);
-    readonly railOpen = signal(readRailOpen());
+    readonly railOpen = signal(readSectionOpen('rail'));
+    readonly inClinicOpen = signal(readSectionOpen('inClinic'));
     readonly railShown = computed(() => this.showRail() && this.railOpen());
 
     /** Günün özeti, tek satır: "28 randevu · 24 tamamlandı (%86) · 3 klinikte · sıradaki 15:30 Sansa · 12 aşı bekliyor · 1 gelmedi". */
@@ -1184,7 +1192,12 @@ export class AppointmentsCalendarPageComponent implements OnInit {
 
     toggleRail(): void {
         this.railOpen.set(!this.railOpen());
-        writeRailOpen(this.railOpen());
+        writeSectionOpen('rail', this.railOpen());
+    }
+
+    toggleInClinic(): void {
+        this.inClinicOpen.set(!this.inClinicOpen());
+        writeSectionOpen('inClinic', this.inClinicOpen());
     }
 
     /** "Yalnız benim" ve hekim çipleri; seçim kullanıcı başına tarayıcıda hatırlanır. */

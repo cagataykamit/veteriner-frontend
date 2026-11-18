@@ -11,7 +11,6 @@ import { appointmentTone, stateTone, toneBarClass } from './calendar-tone.utils'
 
 const FILTERS_KEY = 'vetinity.calendar.filters';
 const DAY_VETS_KEY = 'vetinity.calendar.dayVets';
-const RAIL_KEY = 'vetinity.calendar.railOpen';
 
 /** Gün görünümünde hekim seçimi (kullanıcı başına, tarayıcıda): "Yalnız benim" ya da gizlenen hekimler. */
 export interface DayVetPrefs {
@@ -39,18 +38,29 @@ export function writeDayVetPrefs(p: DayVetPrefs): void {
     }
 }
 
-/** Gün görünümünde sağ panel (Klinikte, Boş saat bul) açık mı; kayıt yoksa açık. Kapatılınca takvim tüm genişliği alır. */
-export function readRailOpen(): boolean {
+/**
+ * Gün görünümünde açılır/kapanır parçalar: sağ panel (kapatılınca takvim tüm genişliği alır), "Klinikte" ve "Boş saat bul" bölümleri.
+ * Kayıt yoksa açık; kullanıcının seçimi tarayıcıda kalır, sayfa değişince ilk haline dönmez (kullanıcı kararı 2026-11-18).
+ */
+export const CALENDAR_SECTION_KEYS = {
+    rail: 'vetinity.calendar.railOpen',
+    inClinic: 'vetinity.calendar.inClinicOpen',
+    freeSlot: 'vetinity.calendar.freeSlotOpen'
+} as const;
+
+export type CalendarSection = keyof typeof CALENDAR_SECTION_KEYS;
+
+export function readSectionOpen(section: CalendarSection): boolean {
     try {
-        return localStorage.getItem(RAIL_KEY) !== 'false';
+        return localStorage.getItem(CALENDAR_SECTION_KEYS[section]) !== 'false';
     } catch {
         return true;
     }
 }
 
-export function writeRailOpen(open: boolean): void {
+export function writeSectionOpen(section: CalendarSection, open: boolean): void {
     try {
-        localStorage.setItem(RAIL_KEY, String(open));
+        localStorage.setItem(CALENDAR_SECTION_KEYS[section], String(open));
     } catch {
         // Depolama kapalıysa seçim yalnız bu sayfada kalır.
     }
