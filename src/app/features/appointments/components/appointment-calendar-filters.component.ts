@@ -7,8 +7,8 @@ import { APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/entities/appointment/utils
 import type { CalendarItemState } from '@/app/entities/vaccination/models/vaccination-calendar.model';
 import type { VeterinarianVm } from '@/app/entities/visit/models/visit-vm.model';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
-import { vetDotClass } from '@/app/features/appointments/components/appointment-calendar-grid.component';
-import { CALENDAR_STATES, calendarStateLabel, type CalendarFilters, NO_VET, VACCINE_TYPE, vaccineDotClass } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-layer.utils';
+import { CALENDAR_STATES, calendarStateLabel, type CalendarFilters, NO_VET, VACCINE_TYPE } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-layer.utils';
+import { stateTone, toneBarClass } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-tone.utils';
 
 interface Option {
     label: string;
@@ -79,7 +79,7 @@ interface Option {
                             (click)="toggleState(s)"
                             [attr.data-testid]="'calendar-filter-state-' + s"
                         >
-                            <span class="w-2.5 h-2.5 rounded-full" [class]="dot(s)" aria-hidden="true"></span>{{ stateLabel(s) }}
+                            <span class="w-[3px] h-3 rounded-sm" [class]="dot(s)" aria-hidden="true"></span>{{ stateLabel(s) }}
                         </button>
                     }
                 </div>
@@ -123,8 +123,8 @@ export class AppointmentCalendarFiltersComponent {
 
     protected readonly vetOptions = computed<Option[]>(() => [
         { label: 'Tüm hekimler', value: '' },
-        ...this.vets().map((v) => ({ label: v.name, value: v.userId, dot: vetDotClass(this.vetOrder().indexOf(v.userId)) })),
-        { label: 'Hekim atanmamış', value: NO_VET, dot: vetDotClass(-1) }
+        ...this.vets().map((v) => ({ label: v.name, value: v.userId, dot: 'bg-primary' })),
+        { label: 'Hekim atanmamış', value: NO_VET, dot: 'bg-surface-400' }
     ]);
 
     protected readonly typeOptions = computed<Option[]>(() => [
@@ -143,7 +143,7 @@ export class AppointmentCalendarFiltersComponent {
     }
 
     protected dot(s: CalendarItemState): string {
-        return vaccineDotClass(s);
+        return toneBarClass(stateTone(s));
     }
 
     protected stateLabel(s: CalendarItemState): string {

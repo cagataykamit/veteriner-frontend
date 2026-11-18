@@ -7,7 +7,6 @@ import type { AppointmentReasonVm, StaffAvailabilityDayVm } from '@/app/entities
 import { AppointmentReasonsService, OnlineBookingService } from '@/app/entities/online-booking/services/online-booking.service';
 import { addGregorianDaysToYmd, toIstanbulTimeInputValue } from '@/app/shared/utils/date.utils';
 import { istanbulTodayYmd } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
-import { vetDotClass } from '@/app/features/appointments/components/appointment-calendar-grid.component';
 
 /** Boş saat önerisi: tarih (İstanbul), saat ve önerilen hekim. */
 export interface FreeSlotPick {
@@ -57,7 +56,7 @@ const DAYS = 7;
                         >
                             Fark etmez
                         </button>
-                        @for (v of vets(); track v.userId; let i = $index) {
+                        @for (v of vets(); track v.userId) {
                             <button
                                 type="button"
                                 class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-sm cursor-pointer"
@@ -65,7 +64,7 @@ const DAYS = 7;
                                 [attr.aria-pressed]="vetFilter() === v.userId"
                                 (click)="vetFilter.set(v.userId)"
                             >
-                                <span class="w-2 h-2 rounded-full" [class]="dot(i)" aria-hidden="true"></span>{{ v.name }}
+                                <span class="w-2 h-2 rounded-full bg-primary" aria-hidden="true"></span>{{ v.name }}
                             </button>
                         }
                     </div>
@@ -188,9 +187,6 @@ export class AppointmentFreeSlotFinderComponent {
         });
     }
 
-    protected dot(index: number): string {
-        return vetDotClass(index);
-    }
 }
 
 const WEEKDAY_SHORT = new Intl.DateTimeFormat('tr-TR', { weekday: 'short', timeZone: 'UTC' });

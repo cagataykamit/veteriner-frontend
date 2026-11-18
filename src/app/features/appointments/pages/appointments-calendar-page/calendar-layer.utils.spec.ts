@@ -27,6 +27,7 @@ const v = (id: string, state: VaccinationCalendarItemVm['state'], petName = id, 
     vaccineDefinitionId: null,
     vaccineName: 'Karma',
     notes: null,
+    timeSpecified: false,
     ...extra
 });
 
@@ -50,7 +51,7 @@ describe('calendar-layer.utils', () => {
 
         expect(b).toEqual(
             expect.objectContaining({
-                time: 'Gün içinde',
+                time: 'Saatsiz (gün içinde)',
                 title: 'Sonraki aşı: Karma',
                 subject: 'Ayşe Yılmaz – Pamuk',
                 place: 'Merkez – hekim atanmamış',
@@ -58,6 +59,10 @@ describe('calendar-layer.utils', () => {
                 status: 'Gecikmiş, yapılmadı'
             })
         );
+    });
+
+    it('aşı balonu: saati gerçekse saat yazılır', () => {
+        expect(vaccinationBubble(v('a', 'DueToday', 'Pamuk', { timeSpecified: true }), 'Merkez').time).toBe('12:00');
     });
 
     it('randevu balonu: saat aralığı, tür (neden), müşteri – hasta, klinik – hekim, not ve durum', () => {

@@ -1,15 +1,42 @@
 import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
-import { parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
-import type { VaccinationCalendarItemVm, CalendarItemState } from '@/app/entities/vaccination/models/vaccination-calendar.model';
+import { CALENDAR_ITEM_STATES, type VaccinationCalendarItemVm, type CalendarItemState } from '@/app/entities/vaccination/models/vaccination-calendar.model';
 import { formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 import type { CalendarBubbleData } from '@/app/features/appointments/components/calendar-bubble';
+import { appointmentTone, stateTone, toneBarClass } from './calendar-tone.utils';
 
 /**
- * Takvim aşı katmanı ve ayrıntı balonu (kullanıcı kararı 2026-11-16). Aşı randevu değildir: ayrı listede tutulur, ızgaranın saat dilimine,
- * çakışmaya ve boş saat hesabına girmez; günün üst şeridinde gösterilir.
+ * Takvim aşı katmanı ve ayrıntı balonu (kullanıcı kararı 2026-11-16; yeniden tasarım 2026-11-18). Aşı randevu değildir: ayrı listede
+ * tutulur, randevu slotu doldurmaz, çakışmaya ve boş saat hesabına girmez; gün görünümünde ayrı "Aşılar" sütununda saatiyle durur.
  */
 
 const FILTERS_KEY = 'vetinity.calendar.filters';
+const DAY_VETS_KEY = 'vetinity.calendar.dayVets';
+
+/** Gün görünümünde hekim seçimi (kullanıcı başına, tarayıcıda): "Yalnız benim" ya da gizlenen hekimler. */
+export interface DayVetPrefs {
+    onlyMine: boolean;
+    hidden: string[];
+}
+
+export const EMPTY_DAY_VET_PREFS: DayVetPrefs = { onlyMine: false, hidden: [] };
+
+export function readDayVetPrefs(): DayVetPrefs {
+    try {
+        const raw = JSON.parse(localStorage.getItem(DAY_VETS_KEY) ?? 'null') as Partial<DayVetPrefs> | null;
+
+        return raw ? { onlyMine: raw.onlyMine === true, hidden: Array.isArray(raw.hidden) ? raw.hidden.filter((x): x is string => typeof x === 'string') : [] } : EMPTY_DAY_VET_PREFS;
+    } catch {
+        return EMPTY_DAY_VET_PREFS;
+    }
+}
+
+export function writeDayVetPrefs(p: DayVetPrefs): void {
+    try {
+        localStorage.setItem(DAY_VETS_KEY, JSON.stringify(p));
+    } catch {
+        // Depolama kapalıysa seçim yalnız bu oturumda kalır.
+    }
+}
 
 /** Son kullanılan filtreler kullanıcının tarayıcısında (aşı katmanı dahil); okunamazsa boş (tümü). */
 export function readStoredCalendarFilters(): CalendarFilters {
@@ -37,7 +64,7 @@ export const NO_VET = 'none';
 /** Tür filtresinde "Planlı aşılar" seçeneği (randevu türlerinin yanında ayrı seçenek). */
 export const VACCINE_TYPE = 'asi';
 /** Durum filtresi ve renk açıklaması sırası (sözleşme §6.1). */
-export const CALENDAR_STATES: readonly CalendarItemState[] = ['DueToday', 'Upcoming', 'Overdue', 'Completed'];
+export const CALENDAR_STATES: readonly CalendarItemState[] = CALENDAR_ITEM_STATES;
 
 /** Takvim filtreleri (sözleşme §6); adres çubuğunda `vet`, `types`, `states`. Boş değer = tümü. */
 export interface CalendarFilters {
@@ -146,19 +173,21 @@ export function vaccinationBubble(item: VaccinationCalendarItemVm, clinicName: s
     const kindLabel = applied ? 'Uygulanan aşı' : item.kind === 'NextDue' ? 'Sonraki aşı' : 'Planlı aşı';
 
     return {
-        time: applied && item.atUtc ? `${formatUtcIsoAsLocalTimeDisplay(item.atUtc)} · uygulandı` : 'Gün içinde',
+        time: applied && item.atUtc
+            ? `${formatUtcIsoAsLocalTimeDisplay(item.atUtc)} · uygulandı`
+            : item.timeSpecified && item.atUtc
+              ? formatUtcIsoAsLocalTimeDisplay(item.atUtc)
+              : 'Saatsiz (gün içinde)',
         title: `${kindLabel}: ${item.vaccineName}`,
         subject: `${item.clientName} – ${item.petName}`,
         place: `${clinicName || 'Klinik'} – hekim atanmamış`,
         notes: item.notes,
         status: vaccineStateLabel(item.state),
-        tone: vaccineDotClass(item.state)
+        tone: toneBarClass(stateTone(item.state))
     };
 }
 
 export function appointmentBubble(item: AppointmentCalendarItemVm, clinicName: string): CalendarBubbleData {
-    const status = typeof item.status === 'number' ? item.status : parseAppointmentStatusRawToEnum(item.status);
-
     return {
         time: item.timeRangeLabel,
         title: item.reasonName ? `${item.appointmentTypeLabel} (${item.reasonName})` : item.appointmentTypeLabel,
@@ -166,7 +195,7 @@ export function appointmentBubble(item: AppointmentCalendarItemVm, clinicName: s
         place: `${clinicName || 'Klinik'} – ${item.veterinarianUserId ? item.veterinarianName : 'Hekim seçilmedi'}`,
         notes: item.notes,
         status: item.statusLabel,
-        tone: status === 3 ? 'bg-amber-500' : status === 1 || status === 2 ? 'bg-surface-400' : 'bg-primary'
+        tone: toneBarClass(appointmentTone(item))
     };
 }
 
