@@ -66,7 +66,10 @@ export function todayStatusOf(item: TodayItemVm, now: Date): TodayStatus {
     return { tone, label: TODAY_STATUS_LABEL[tone], detail };
 }
 
-/** Randevu saatine göre: "10 dk sonra", "1 sa 5 dk gecikti", dakika dolmadıysa "şimdi". Saat yoksa/geçersizse `null`. */
+/**
+ * Randevu saatine göre kısa ek: bir saatten azsa dakika ("10 dk sonra", "15 dk gecikti"), fazlası yuvarlanmış tam saat ("9 sa sonra");
+ * saat sütunu kesin zamanı zaten gösterir. Dakika dolmadıysa "şimdi". Saat yoksa/geçersizse `null`.
+ */
 function formatScheduledOffset(scheduledAtUtc: string | null, now: Date): string | null {
     const scheduled = parseUtcApiInstantIsoString(scheduledAtUtc);
 
@@ -80,7 +83,10 @@ function formatScheduledOffset(scheduledAtUtc: string | null, now: Date): string
         return 'şimdi';
     }
 
-    return minutes > 0 ? `${durationText(minutes)} sonra` : `${durationText(-minutes)} gecikti`;
+    const abs = Math.abs(minutes);
+    const amount = abs < 60 ? `${abs} dk` : `${Math.round(abs / 60)} sa`;
+
+    return minutes > 0 ? `${amount} sonra` : `${amount} gecikti`;
 }
 
 /** "12 dk", "1 sa 5 dk", "2 sa" (dakika > 0). */

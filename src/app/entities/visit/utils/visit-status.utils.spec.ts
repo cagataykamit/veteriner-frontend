@@ -430,7 +430,11 @@ describe('todayStatusOf (birleşik durum)', () => {
     it('bekleniyor: randevu saatine göre "sonra" / "gecikti" / "şimdi"', () => {
         expect(todayStatusOf(planned('2026-10-10T10:10:00Z'), now)).toEqual({ tone: 'planned', label: 'Bekleniyor', detail: '10 dk sonra' });
         expect(todayStatusOf(planned('2026-10-10T09:45:00Z'), now).detail).toBe('15 dk gecikti');
-        expect(todayStatusOf(planned('2026-10-10T11:05:00Z'), now).detail).toBe('1 sa 5 dk sonra');
+        // Bir saati aşınca yalnız yuvarlanmış tam saat (kesin zaman saat sütununda): 65 dk → 1 sa, 9 sa 21 dk → 9 sa, 100 dk gecikme → 2 sa
+        expect(todayStatusOf(planned('2026-10-10T11:05:00Z'), now).detail).toBe('1 sa sonra');
+        expect(todayStatusOf(planned('2026-10-10T19:21:00Z'), now).detail).toBe('9 sa sonra');
+        expect(todayStatusOf(planned('2026-10-10T08:20:00Z'), now).detail).toBe('2 sa gecikti');
+        expect(todayStatusOf(planned('2026-10-10T10:59:00Z'), now).detail).toBe('59 dk sonra');
         expect(todayStatusOf(planned('2026-10-10T10:00:30Z'), now).detail).toBe('şimdi');
         expect(todayStatusOf(planned('2026-10-10T10:00:00Z', { scheduledAtUtc: null }), now).detail).toBeNull();
     });
