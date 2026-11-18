@@ -3,16 +3,18 @@ import { TagModule } from 'primeng/tag';
 import type { TodayItemVm } from '@/app/entities/visit/models/visit-vm.model';
 import { todayOpenChips } from '@/app/entities/visit/utils/visit-status.utils';
 import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
+import { formatMoney } from '@/app/shared/utils/money.utils';
 
 /**
- * Bugün satırı: hesaplanan açık iş çipleri (renk + simge + metin), ziyaretin ücret / ödenen / kalan tutarı ve müşterinin toplam borcu.
- * Değerler yoksa (yetkisiz veya planlı satır) hiçbir şey göstermez. Ödemesi açık çip ve müşteri borcu, `canPay` ise ödemeye geçiş düğmesidir; "Ücret bekliyor" çipi Ücretlendir ekranına götürür.
+ * Bugün satırı: hesaplanan açık iş çipleri (renk + simge + metin) ve ziyaretin ödenmemiş kalanı ("Kalan ₺…"; ücret ve ödenen ipucunda).
+ * Değerler yoksa (yetkisiz veya planlı satır) hiçbir şey göstermez. Ödemesi açık çip, `canPay` ise ödemeye geçiş düğmesidir; "Ücret bekliyor"
+ * çipi Ücretlendir ekranına götürür. Müşterinin toplam borcu ziyarete değil müşteriye aittir; Bugün'de müşteri hücresinde gösterilir.
  */
 @Component({
     selector: 'app-today-money',
     standalone: true,
     imports: [TagModule, MoneyPipe],
-    host: { class: 'flex flex-wrap gap-1 min-w-0' },
+    host: { class: 'flex flex-wrap items-center gap-1 min-w-0' },
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @for (chip of chips(); track chip.key) {
@@ -28,27 +30,8 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
                 <span [attr.title]="chip.title"><p-tag [value]="chip.label" [severity]="chip.severity" [icon]="chip.icon" /></span>
             }
         }
-        @if ((item().chargedAmount ?? 0) > 0) {
-            <div class="w-full text-sm text-muted-color mt-1 whitespace-normal">
-                <div>Ücret {{ item().chargedAmount | money }}</div>
-                <div>Ödenen {{ item().allocatedAmount | money }}</div>
-                <div [class.font-medium]="(item().outstandingAmount ?? 0) > 0">Kalan {{ item().outstandingAmount | money }}</div>
-            </div>
-        }
-        @if ((item().clientOutstandingAmount ?? 0) > 0) {
-            @if (canPay()) {
-                <button
-                    type="button"
-                    class="w-full text-left text-sm font-medium text-amber-700 dark:text-amber-300 mt-1 whitespace-normal p-0 border-0 bg-transparent cursor-pointer underline touch:touch-hit"
-                    data-testid="today-client-debt-pay"
-                    [attr.aria-label]="'Müşteri borcu ' + (item().clientOutstandingAmount | money) + ', ödeme al'"
-                    (click)="pay.emit()"
-                >
-                    Müşteri borcu {{ item().clientOutstandingAmount | money }}
-                </button>
-            } @else {
-                <div class="w-full text-sm font-medium text-amber-700 dark:text-amber-300 mt-1 whitespace-normal">Müşteri borcu {{ item().clientOutstandingAmount | money }}</div>
-            }
+        @if ((item().outstandingAmount ?? 0) > 0) {
+            <span class="text-sm font-semibold whitespace-nowrap text-amber-700 dark:text-amber-300" [attr.title]="remainingTitle()" data-testid="today-remaining">Kalan {{ item().outstandingAmount | money }}</span>
         }
     `
 })
@@ -60,4 +43,6 @@ export class TodayMoneyComponent {
     /** Ücret bekleyen kalemleri Ücretlendir ekranında aç. */
     readonly review = output<void>();
     readonly chips = computed(() => todayOpenChips(this.item()));
+    /** Satırda yalnız kalan; ücret ve ödenen ipucunda (ayrıntı ziyaret sayfasında). */
+    readonly remainingTitle = computed(() => `Ücret ${formatMoney(this.item().chargedAmount)} · Ödenen ${formatMoney(this.item().allocatedAmount)}`);
 }
