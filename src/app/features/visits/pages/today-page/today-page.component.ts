@@ -40,9 +40,9 @@ import { FirstWeekGuideCardComponent } from '@/app/entities/first-week-guide/com
 import { TodayMoneyComponent } from '@/app/features/visits/components/today-money.component';
 import { TodayOpenItemsComponent } from '@/app/features/visits/components/today-open-items.component';
 import { VisitArrivalDialogComponent } from '@/app/entities/visit/components/visit-arrival-dialog.component';
-import { VisitCorrectionDialogComponent } from '@/app/features/visits/components/visit-correction-dialog.component';
+import { VisitCorrectionDialogComponent, type VisitCorrectionTarget } from '@/app/features/visits/components/visit-correction-dialog.component';
 import { VisitPreparationDialogComponent } from '@/app/features/visits/components/visit-preparation-dialog.component';
-import type { TodayItemVm, TodayQuery, TodayVm, VisitCreateResultVm } from '@/app/entities/visit/models/visit-vm.model';
+import type { OpenItemVisitVm, TodayItemVm, TodayQuery, TodayVm, VisitCreateResultVm } from '@/app/entities/visit/models/visit-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { countWaitingVisits } from '@/app/entities/visit/utils/visit-today.utils';
 import {
@@ -178,7 +178,7 @@ export class TodayPageComponent implements OnInit {
     readonly arrivalOpen = signal(false);
     readonly arrivalAppointment = signal<TodayItemVm | null>(null);
     readonly correctionOpen = signal(false);
-    readonly correctionItem = signal<TodayItemVm | null>(null);
+    readonly correctionItem = signal<VisitCorrectionTarget | null>(null);
     readonly restoreOpen = signal(false);
     readonly restoreItem = signal<TodayItemVm | null>(null);
     readonly preparationOpen = signal(false);
@@ -457,7 +457,8 @@ export class TodayPageComponent implements OnInit {
         this.refresh('silent');
     }
 
-    openCorrection(item: TodayItemVm): void {
+    /** Bugün satırı ya da "Önceki günden açık geliş" listesindeki hiç başlamamış geliş. */
+    openCorrection(item: VisitCorrectionTarget): void {
         this.correctionItem.set(item);
         this.correctionOpen.set(true);
     }
@@ -538,18 +539,25 @@ export class TodayPageComponent implements OnInit {
 
     /** Satır kilitliyken ikinci istek gitmez; hatada da liste yenilenir (durum başkası tarafından değişmiş olabilir). */
     transition(item: TodayItemVm, kind: 'start' | 'complete'): void {
-        const visitId = item.visitId;
-
-        if (!visitId || this.isBusy(item)) {
-            return;
+        if (item.visitId && !this.isBusy(item)) {
+            this.changeCare(item.visitId, item.key, kind);
         }
+    }
 
-        this.setBusy(item.key, true);
+    /** "Önceki günden açık geliş" listesindeki devam eden gelişi tamamlar; satırın Tamamla'sıyla aynı akış (satır anahtarı = ziyaret kimliği). */
+    completeOpenVisit(row: OpenItemVisitVm): void {
+        if (!this.busyKeys().has(row.visitId)) {
+            this.changeCare(row.visitId, row.visitId, 'complete');
+        }
+    }
+
+    private changeCare(visitId: string, key: string, kind: 'start' | 'complete'): void {
+        this.setBusy(key, true);
         const call$ = kind === 'start' ? this.visitsService.startVisit(visitId) : this.visitsService.completeVisit(visitId);
 
         call$.subscribe({
             next: () => {
-                this.setBusy(item.key, false);
+                this.setBusy(key, false);
                 addTracedToast(this.messages, 'TodayPage', this.router.url, {
                     severity: 'success',
                     summary: kind === 'start' ? 'Bakım başlatıldı.' : 'Bakım tamamlandı.',
@@ -562,7 +570,7 @@ export class TodayPageComponent implements OnInit {
                 }
             },
             error: (e: unknown) => {
-                this.setBusy(item.key, false);
+                this.setBusy(key, false);
                 addTracedToast(this.messages, 'TodayPage', this.router.url, {
                     severity: 'error',
                     summary: 'İşlem yapılamadı.',

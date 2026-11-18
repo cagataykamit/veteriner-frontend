@@ -470,6 +470,45 @@ describe('TodayPageComponent', () => {
             const links = Array.from((f.nativeElement as HTMLElement).querySelectorAll('[data-testid="open-items-strip"] a')).map((a) => a.getAttribute('href'));
 
             expect(links).toEqual(['/panel/reports/outstanding-balances']);
+            // Liste sayfası olmayan iki sayı da tıklanır: ziyaret listesini açan çip (OPEN_ITEMS_API_CONTRACT §10).
+            const strip$ = (f.nativeElement as HTMLElement).querySelector('[data-testid="open-items-strip"]')!;
+
+            expect(strip$.querySelector('button[data-testid="open-items-chip-Uncharged"]')?.textContent).toContain('Ücret yok: 3 ziyaret');
+            expect(strip$.querySelector('button[data-testid="open-items-chip-Incomplete"]')?.textContent).toContain('Önceki günden açık geliş: 1');
+        });
+
+        it('açık geliş listesinden Tamamla, satırın Tamamla akışıyla gelişi kapatır ve listeyi yeniler', async () => {
+            const f = await create(['Visits.Read', 'Visits.Update'], { date: 'd', activeHospitalizations: [], items: [item()], openItems: null });
+
+            visits.completeVisit.mockReturnValue(of(visitVm));
+            visits.getToday.mockClear();
+            f.componentInstance.completeOpenVisit({
+                visitId: 'old1',
+                arrivedAtUtc: '2026-10-08T07:00:00Z',
+                careStatus: 'InProgress',
+                petId: 'p1',
+                petName: 'Pamuk',
+                clientId: 'cl1',
+                clientName: 'Ali',
+                responsibleVeterinarianName: null,
+                latestExaminationId: null,
+                chargeableWorkCount: null
+            });
+            await vi.advanceTimersByTimeAsync(0);
+
+            expect(visits.completeVisit).toHaveBeenCalledWith('old1');
+            expect(toasts).toHaveBeenCalledWith(expect.objectContaining({ severity: 'success', summary: 'Bakım tamamlandı.' }));
+            expect(visits.getToday).toHaveBeenCalled();
+        });
+
+        it('hiç başlamamış açık geliş düzeltme diyaloğunda açılır', async () => {
+            const f = await create(['Visits.Read', 'Visits.Correct'], { date: 'd', activeHospitalizations: [], items: [item()], openItems: null });
+            const row = { visitId: 'old2', petName: 'Boncuk', clientName: 'Ayşe', careStatus: 'Waiting' as const };
+
+            f.componentInstance.openCorrection(row);
+
+            expect(f.componentInstance.correctionItem()).toEqual(row);
+            expect(f.componentInstance.correctionOpen()).toBe(true);
         });
 
         it('tüm sayılar sıfırsa şerit "Açık iş yok" der; Lab bekliyor sayfa bağlantısıdır', async () => {

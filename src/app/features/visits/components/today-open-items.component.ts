@@ -1,18 +1,17 @@
-import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import type { TodayOpenItemsVm } from '@/app/entities/visit/models/visit-vm.model';
+import type { OpenItemVisitKind, OpenItemVisitVm, TodayOpenItemsVm } from '@/app/entities/visit/models/visit-vm.model';
+import { TodayOpenVisitsChipComponent } from '@/app/features/visits/components/today-open-visits-chip.component';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
-interface OpenItemEntry {
+/** Her çip bir yere götürür: mevcut liste sayfasına (`link`) ya da çipten açılan ziyaret listesine (`visits`, `OPEN_ITEMS_API_CONTRACT.md` §10). */
+type OpenItemEntry = {
     key: string;
     icon: string;
     text: string;
     title: string;
-    /** Yalnızca mevcut bir liste sayfası varsa; süzgeçli liste ucu yoktur (`OPEN_ITEMS_API_CONTRACT.md` §7.7). */
-    link: string | null;
-    queryParams?: Record<string, string>;
     tone: string;
-}
+} & ({ link: string; queryParams?: Record<string, string>; visits?: never } | { visits: OpenItemVisitKind; link?: never; queryParams?: never });
 
 const TONE_DANGER = 'text-red-700 dark:text-red-300 border-red-300 dark:border-red-800';
 const TONE_WARN = 'text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800';
@@ -21,25 +20,36 @@ const TONE_MUTED = 'text-muted-color border-surface-300 dark:border-surface-700'
 /**
  * Bugün üstü "Açık işler" şeridi: klinik geneli, tarih ve hekim süzgecinden bağımsız özet.
  * Yalnızca sıfırdan büyük sayılar görünür (ücret yok ve lab öne); `null` alan (yetki yok) hiç gösterilmez.
- * Ücretsiz ziyaret ve tamamlanmamış geliş için liste sayfası yoktur: bağlantısız metin.
+ * Ücretsiz ziyaret ve tamamlanmamış geliş için liste sayfası yoktur: çip, ziyaretleri küçük bir panelde açar.
  * Satır başına dışarıdan bir çip yansıtılabilir (bekleyen online talepler); özet henüz yoksa (`null`) satır yalnız o çiple çizilir.
  */
 @Component({
     selector: 'app-today-open-items',
     standalone: true,
-    imports: [RouterLink],
+    imports: [RouterLink, TodayOpenVisitsChipComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="flex flex-wrap items-center gap-2 mb-4" aria-label="Açık işler" data-testid="open-items-strip">
             <span class="text-sm font-medium">Açık işler</span>
             <ng-content />
             @for (e of entries(); track e.key) {
-                @if (e.link; as link) {
-                    <a [routerLink]="link" [queryParams]="e.queryParams ?? null" [attr.title]="e.title" class="inline-flex items-center gap-1 rounded-border border px-2 py-0.5 text-sm no-underline touch:min-h-(--touch-target)" [class]="e.tone">
+                @if (e.visits; as kind) {
+                    <app-today-open-visits-chip
+                        [kind]="kind"
+                        [text]="e.text"
+                        [title]="e.title"
+                        [icon]="e.icon"
+                        [tone]="e.tone"
+                        [canAddCharge]="canAddCharge()"
+                        [canCompleteVisit]="canCompleteVisit()"
+                        [canCorrectVisit]="canCorrectVisit()"
+                        (complete)="completeVisit.emit($event)"
+                        (correct)="correctVisit.emit($event)"
+                    />
+                } @else {
+                    <a [routerLink]="e.link" [queryParams]="e.queryParams ?? null" [attr.title]="e.title" class="inline-flex items-center gap-1 rounded-border border px-2 py-0.5 text-sm no-underline touch:min-h-(--touch-target)" [class]="e.tone">
                         <i [class]="e.icon" aria-hidden="true"></i>{{ e.text }}
                     </a>
-                } @else {
-                    <span [attr.title]="e.title" class="inline-flex items-center gap-1 rounded-border border px-2 py-0.5 text-sm" [class]="e.tone"> <i [class]="e.icon" aria-hidden="true"></i>{{ e.text }} </span>
                 }
             } @empty {
                 @if (!hasLeadingItem()) {
@@ -53,6 +63,14 @@ export class TodayOpenItemsComponent {
     readonly summary = input<TodayOpenItemsVm | null>(null);
     /** Satır başına çip yansıtılıyor: "Açık iş yok" yazılmaz. */
     readonly hasLeadingItem = input(false);
+    /** Ücret yok listesinde "Ücret ekle" (ücret oluşturma yetkisi, salt okunur değil). */
+    readonly canAddCharge = input(false);
+    /** Açık geliş listesinde Tamamla (`Visits.Update`, salt okunur değil). */
+    readonly canCompleteVisit = input(false);
+    /** Açık geliş listesinde Düzelt (`Visits.Correct`, salt okunur değil). */
+    readonly canCorrectVisit = input(false);
+    readonly completeVisit = output<OpenItemVisitVm>();
+    readonly correctVisit = output<OpenItemVisitVm>();
 
     readonly entries = computed<OpenItemEntry[]>(() => {
         const s = this.summary();
@@ -68,7 +86,7 @@ export class TodayOpenItemsComponent {
                 icon: 'pi pi-exclamation-circle',
                 text: `Ücret yok: ${s.unchargedVisitCount} ziyaret`,
                 title: 'Son 30 günde işlem yapılmış ama ücret kaydı olmayan ziyaret',
-                link: null,
+                visits: 'Uncharged',
                 tone: TONE_DANGER
             });
         }
@@ -128,7 +146,7 @@ export class TodayOpenItemsComponent {
                 icon: 'pi pi-history',
                 text: `Önceki günden açık geliş: ${s.incompleteVisitCount}`,
                 title: 'Önceki günlerden tamamlanmadan kalan geliş',
-                link: null,
+                visits: 'Incomplete',
                 tone: TONE_MUTED
             });
         }

@@ -44,7 +44,15 @@
 
 <!-- Talep çipi listenin yüklenmesinden ve açık iş özetinden bağımsız: bekleyen talep varsa satır yine çizilir. -->
 @if (showPendingChip() || today()?.openItems) {
-    <app-today-open-items [summary]="today()?.openItems ?? null" [hasLeadingItem]="showPendingChip()">
+    <app-today-open-items
+        [summary]="today()?.openItems ?? null"
+        [hasLeadingItem]="showPendingChip()"
+        [canAddCharge]="canCreateCharge && !ro.mutationBlocked()"
+        [canCompleteVisit]="canUpdateVisit && !ro.mutationBlocked()"
+        [canCorrectVisit]="canCorrect && !ro.mutationBlocked()"
+        (completeVisit)="completeOpenVisit($event)"
+        (correctVisit)="openCorrection($event)"
+    >
         @if (showPendingChip()) {
             <app-pending-appointment-requests-chip
                 [rows]="pendingRequests.rows()"
