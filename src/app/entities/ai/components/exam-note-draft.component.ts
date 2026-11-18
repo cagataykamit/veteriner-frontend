@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, input, signal } f
 import { FormsModule } from '@angular/forms';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import {
-    buildExamNoteTransfer,
+    buildExamNoteAccept,
     EXAM_NOTE_TEXT_FIELDS,
     EXAM_NOTE_VITAL_FIELDS,
     EXAM_NOTE_VITALS_LABEL,
@@ -11,7 +11,7 @@ import {
     type ExamNoteFormValues,
     type ExamNoteMergeMode,
     type ExamNoteTextKey,
-    type ExamNoteTransfer,
+    type ExamNoteAccept,
     type ExamNoteVitalKey
 } from '@/app/entities/ai/utils/exam-note-draft.utils';
 
@@ -20,7 +20,8 @@ type Row = { kind: 'text'; key: ExamNoteTextKey; label: string; rows: number } |
 /** Paneldeki sıra formdakiyle aynı: şikâyet, anamnez, bulgular, vitaller, değerlendirme, plan, ek notlar. */
 const ROWS: readonly Row[] = [...EXAM_NOTE_TEXT_FIELDS.slice(0, 3).map((f): Row => ({ kind: 'text', ...f })), { kind: 'vitals' }, ...EXAM_NOTE_TEXT_FIELDS.slice(3).map((f): Row => ({ kind: 'text', ...f }))];
 
-const MERGE_OPTIONS: ReadonlyArray<{ label: string; value: ExamNoteMergeMode }> = [
+// PrimeNG `options` değiştirilebilir dizi bekler.
+const MERGE_OPTIONS: { label: string; value: ExamNoteMergeMode }[] = [
     { label: 'Sona ekle', value: 'append' },
     { label: 'Yerine yaz', value: 'replace' }
 ];
@@ -28,7 +29,7 @@ const MERGE_OPTIONS: ReadonlyArray<{ label: string; value: ExamNoteMergeMode }> 
 /**
  * AI-001 taslağının içerik bileşeni (ortak `app-ai-draft-panel` içine takılır). Alanlar kesik çerçeveli ve düzenlenebilir;
  * düzenlenen alan düz çerçeve alır ve "düzenlendi" yazar. Notta karşılığı olmayan alan "boş kalır" der. Form alanı doluysa
- * metin siz seçmeden silinmez: "Sona ekle" (varsayılan) ya da "Yerine yaz". Aktarımı sayfa `transfer()` ile alır.
+ * metin siz seçmeden silinmez: "Sona ekle" (varsayılan) ya da "Yerine yaz". Kabul içeriğini sayfa `acceptContent()` ile alır.
  */
 @Component({
     selector: 'app-exam-note-draft',
@@ -64,6 +65,7 @@ const MERGE_OPTIONS: ReadonlyArray<{ label: string; value: ExamNoteMergeMode }> 
                                         optionValue="value"
                                         [allowEmpty]="false"
                                         [ngModel]="modes()[row.key] ?? 'append'"
+                                        [ngModelOptions]="{ standalone: true }"
                                         (ngModelChange)="setMode(row.key, $event)"
                                         [ariaLabel]="row.label + ': formdaki metinle birleştirme'"
                                     />
@@ -75,6 +77,7 @@ const MERGE_OPTIONS: ReadonlyArray<{ label: string; value: ExamNoteMergeMode }> 
                                 [id]="'ai-note-' + row.key"
                                 [rows]="row.rows"
                                 [ngModel]="values()[row.key]"
+                                [ngModelOptions]="{ standalone: true }"
                                 (ngModelChange)="setText(row.key, $event)"
                             ></textarea>
                         </div>
@@ -105,6 +108,7 @@ const MERGE_OPTIONS: ReadonlyArray<{ label: string; value: ExamNoteMergeMode }> 
                                             [class.ai-draft-edited]="edited().has('vitals')"
                                             [id]="'ai-note-' + v.key"
                                             [ngModel]="vitals()[v.key]"
+                                            [ngModelOptions]="{ standalone: true }"
                                             (ngModelChange)="setVital(v.key, $event)"
                                         />
                                     </div>
@@ -186,9 +190,9 @@ export class ExamNoteDraftComponent {
         });
     }
 
-    /** Panelde görünen (düzenlenmiş olabilir) taslaktan forma aktarılacak yama ve alan izleri. */
-    transfer(): ExamNoteTransfer {
-        return buildExamNoteTransfer(this.formValues(), { ...this.values(), ...this.vitals() } as ExamNoteDraftContent, this.modes(), this.edited());
+    /** Panelde görünen (düzenlenmiş olabilir) taslaktan kabul içeriği (`editedContent`) ve alan izleri. */
+    acceptContent(): ExamNoteAccept {
+        return buildExamNoteAccept({ ...this.values(), ...this.vitals() } as ExamNoteDraftContent, this.modes(), this.edited());
     }
 
     protected setText(key: ExamNoteTextKey, value: string): void {

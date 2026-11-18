@@ -49,10 +49,12 @@ describe('ExamNoteDraftComponent', () => {
     it('dolu form alanında seçim sunulur, varsayılan "Sona ekle"; boş alanda sunulmaz', () => {
         expect(q('exam-note-existing-visitReason')?.textContent).toContain('Formda yazılı: “Kulak kaşıntısı”');
         expect(q('exam-note-existing-anamnesis')).toBeNull();
-        expect(fixture.componentInstance.transfer().patch.visitReason).toBe('Kulak kaşıntısı\n2 gündür sağ kulakta kaşıntı.');
+        // Varsayılan sona ekle: "yerine yaz" listesi boş, metin olduğu gibi gider (birleştirmeyi backend yapar).
+        expect(fixture.componentInstance.acceptContent().content).toEqual(expect.objectContaining({ replaceFields: [] }));
+        expect(fixture.componentInstance.acceptContent().content.fields['visitReason']).toBe('2 gündür sağ kulakta kaşıntı.');
     });
 
-    it('alan düzenlenince "düzenlendi" yazar ve aktarımda iz olarak taşınır', async () => {
+    it('alan düzenlenince "düzenlendi" yazar; düzenlenmiş metin ve iz kabul içeriğinde', async () => {
         const plan = root().querySelector('#ai-note-plan') as HTMLTextAreaElement;
 
         plan.value = 'Damla, 7 gün.';
@@ -61,19 +63,19 @@ describe('ExamNoteDraftComponent', () => {
 
         expect(q('exam-note-field-plan')?.textContent).toContain('· düzenlendi');
 
-        const t = fixture.componentInstance.transfer();
+        const t = fixture.componentInstance.acceptContent();
 
-        expect(t.patch.plan).toBe('Damla, 7 gün.');
+        expect(t.content.fields['plan']).toBe('Damla, 7 gün.');
         expect(t.fields.find((f) => f.key === 'plan')).toEqual({ key: 'plan', edited: true });
         expect(t.fields.find((f) => f.key === 'anamnesis')).toEqual({ key: 'anamnesis', edited: false });
         expect(t.fields.length).toBe(6);
     });
 
-    it('"Yerine yaz" seçilince formdaki metin değiştirilir', async () => {
+    it('"Yerine yaz" seçilince alan replaceFields ile gider', async () => {
         const replace = Array.from(q('exam-note-existing-visitReason')!.querySelectorAll('[role="radio"], button, .p-togglebutton')).find((el) => el.textContent?.includes('Yerine yaz')) as HTMLElement;
 
         replace.click();
         await render();
-        expect(fixture.componentInstance.transfer().patch.visitReason).toBe('2 gündür sağ kulakta kaşıntı.');
+        expect(fixture.componentInstance.acceptContent().content.replaceFields).toEqual(['visitReason']);
     });
 });

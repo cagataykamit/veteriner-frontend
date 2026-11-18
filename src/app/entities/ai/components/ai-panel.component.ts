@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
@@ -106,6 +106,19 @@ export class AiPanelComponent {
 
         return name ? `Geçmiş özeti · ${name}` : 'Geçmiş özeti';
     });
+
+    constructor() {
+        effect(() => {
+            const notice = this.panel.notice();
+
+            if (notice) {
+                untracked(() => {
+                    this.messages.add({ severity: notice.severity, summary: notice.text });
+                    this.panel.notice.set(null);
+                });
+            }
+        });
+    }
 
     protected async copy(): Promise<void> {
         const result = this.history()?.result;

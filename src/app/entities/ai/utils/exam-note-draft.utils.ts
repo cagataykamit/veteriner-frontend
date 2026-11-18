@@ -1,8 +1,8 @@
 /**
- * AI-001 "Notu alanlara ayır" taslağının kuralları. İçerik şeması tasarım notundaki öneriye göredir
- * (`fields: { visitReason, anamnesis, findings, weightKg, temperatureC, heartRateBpm, respiratoryRatePerMin, assessment, plan, notes }`,
- * notta olmayan alan `null`); backend sözleşmesi gelince doğrulanacak.
- * Kural: taslak notta yazmayanı eklemez; formdaki metin kullanıcı seçmeden silinmez (varsayılan "Sona ekle").
+ * AI-001 "Notu alanlara ayır" taslağının kuralları (`AI_DRAFTS_API_CONTRACT.md` §7.1). İçerik:
+ * `{ fields: { visitReason, anamnesis, findings, assessment, plan, notes, weightKg, temperatureC, heartRateBpm, respiratoryRatePerMin }, replaceFields: [] }`;
+ * notta karşılığı olmayan alan hiç gelmez. Kabul muayeneyi backend'de yazar: metin varsayılan olarak satır satır **sona eklenir**,
+ * `replaceFields`'taki alan **yerine yazılır**; vital verildiyse eskisinin yerine geçer. Taslak notta yazmayanı eklemez.
  */
 
 export type ExamNoteTextKey = 'visitReason' | 'anamnesis' | 'findings' | 'assessment' | 'plan' | 'notes';
@@ -55,51 +55,48 @@ export function parseExamNoteDraftContent(content: Record<string, unknown> | nul
     return out;
 }
 
-/** "Sona ekle": formdaki metnin altına yeni satırla; form boşsa yalnız taslak. "Yerine yaz": yalnız taslak. */
-export function mergeExamNoteText(current: string, draft: string, mode: ExamNoteMergeMode): string {
-    const kept = current.trim();
-
-    return mode === 'append' && kept ? `${current.trimEnd()}\n${draft}` : draft;
-}
-
-/** Forma aktarılacak alanlar ve her birinin izi ("AI taslağından · düzenlendi"). */
-export interface ExamNoteTransfer {
-    patch: Partial<ExamNoteFormValues>;
+/** Kabul edilecek alanlar (`editedContent`) ve her birinin izi ("AI taslağından · düzenlendi"). */
+export interface ExamNoteAccept {
+    content: { fields: Record<string, string | number>; replaceFields: ExamNoteTextKey[] };
     fields: ReadonlyArray<{ readonly key: ExamNoteFieldKey; readonly edited: boolean }>;
 }
 
 /**
- * Kullanıcının panelde gördüğü (düzenlenmiş olabilir) taslaktan form yamasını kurar. Boş bırakılan alan aktarılmaz;
- * dolu form alanı yalnız seçilen biçimle (sona ekle / yerine yaz) değişir. Vitaller dört ayrı sayı alanına gider,
- * formun kendi doğrulaması aynen geçerlidir.
+ * Panelde görünen (düzenlenmiş olabilir) taslaktan kabul içeriğini kurar. Boş bırakılan alan aktarılmaz; "Yerine yaz" yalnız
+ * aktarılan metin alanı için gönderilir (varsayılan "Sona ekle": muayenedeki metin kullanıcı seçmeden silinmez).
  */
-export function buildExamNoteTransfer(form: ExamNoteFormValues, draft: ExamNoteDraftContent, modes: Partial<Record<ExamNoteTextKey, ExamNoteMergeMode>>, editedKeys: ReadonlySet<ExamNoteFieldKey>): ExamNoteTransfer {
-    const patch: Partial<ExamNoteFormValues> = {};
-    const fields: { key: ExamNoteFieldKey; edited: boolean }[] = [];
+export function buildExamNoteAccept(draft: ExamNoteDraftContent, modes: Partial<Record<ExamNoteTextKey, ExamNoteMergeMode>>, editedKeys: ReadonlySet<ExamNoteFieldKey>): ExamNoteAccept {
+    const fields: Record<string, string | number> = {};
+    const replaceFields: ExamNoteTextKey[] = [];
+    const accepted: { key: ExamNoteFieldKey; edited: boolean }[] = [];
 
     for (const f of EXAM_NOTE_TEXT_FIELDS) {
         const text = draft[f.key]?.trim();
 
         if (text) {
-            patch[f.key] = mergeExamNoteText(form[f.key] ?? '', text, modes[f.key] ?? 'append');
-            fields.push({ key: f.key, edited: editedKeys.has(f.key) });
+            fields[f.key] = text;
+            accepted.push({ key: f.key, edited: editedKeys.has(f.key) });
+
+            if (modes[f.key] === 'replace') {
+                replaceFields.push(f.key);
+            }
         }
     }
 
     const vitals = EXAM_NOTE_VITAL_FIELDS.filter((f) => draft[f.key] !== null);
 
     for (const f of vitals) {
-        patch[f.key] = draft[f.key];
+        fields[f.key] = draft[f.key] as number;
     }
 
     if (vitals.length) {
-        fields.push({ key: 'vitals', edited: editedKeys.has('vitals') });
+        accepted.push({ key: 'vitals', edited: editedKeys.has('vitals') });
     }
 
-    return { patch, fields };
+    return { content: { fields, replaceFields }, fields: accepted };
 }
 
-/** "6 alan AI taslağından dolduruldu" şeridi için alan sayısı (vitaller tek alan sayılır). */
-export function examNoteTransferSummary(transfer: ExamNoteTransfer): string {
-    return `${transfer.fields.length} alan AI taslağından dolduruldu.`;
+/** Kabulden sonra formun üstündeki şerit: "6 alan AI taslağından muayeneye eklendi." (vitaller tek alan sayılır). */
+export function examNoteAcceptSummary(fieldCount: number): string {
+    return `${fieldCount} alan AI taslağından muayeneye eklendi.`;
 }
