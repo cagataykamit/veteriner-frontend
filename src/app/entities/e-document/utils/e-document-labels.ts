@@ -1,4 +1,6 @@
-import type { EDocumentOrigin, EDocumentStatus, EDocumentType } from '@/app/entities/e-document/models/e-document.model';
+import { E_DOCUMENT_SETTINGS_ROUTE, TODAY_ROUTE } from '@/app/core/routing/panel-navigation';
+import type { EDocumentOrigin, EDocumentPreviewDto, EDocumentSetupIssueCode, EDocumentStatus, EDocumentType } from '@/app/entities/e-document/models/e-document.model';
+import { CLINIC_TAXPAYER_TYPE_OPTIONS } from '@/app/entities/clinic/models/clinic-taxpayer-type.model';
 
 export type EDocumentTagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
 
@@ -60,4 +62,73 @@ export function eDocumentOriginLabel(origin: EDocumentOrigin | null | undefined)
 /** Sağlayıcı sonucu bekleyen durumlar: kullanıcı "Yenile" ile hemen sorabilir. */
 export function isEDocumentPending(status: EDocumentStatus): boolean {
     return status === 'Sending' || status === 'CancelRequested';
+}
+
+/** Belge kesmeden önceki klinik ayarı: ne eksik, neden gerekli, hangi düğmeyle nereye gidilir (gerçek ayar o sayfada). */
+export interface EDocumentSetupIssueInfo {
+    title: string;
+    reason: string;
+    action: string;
+    /** Ayar sayfası; mükellef bilgileri aktif kliniğin sayfasındadır. */
+    route: (clinicId: string | null) => string[];
+    fragment: string;
+}
+
+/** Mükellef türü ve VKN / TCKN aynı kartta: aktif kliniğin ayrıntı sayfası, "Mükellef bilgileri". */
+const TAXPAYER_CARD: Pick<EDocumentSetupIssueInfo, 'action' | 'route' | 'fragment'> = {
+    action: 'Mükellef bilgilerini aç',
+    route: (clinicId) => (clinicId ? ['/panel/settings/clinics', clinicId] : ['/panel/settings/clinics']),
+    fragment: 'mukellef-bilgileri'
+};
+
+export const E_DOCUMENT_SETUP_ISSUE: Record<EDocumentSetupIssueCode, EDocumentSetupIssueInfo> = {
+    TaxpayerTypeMissing: {
+        title: 'Mükellef türü',
+        reason: 'Belgenin e-SMM mi fatura mı olacağı bu seçimden çıkar.',
+        ...TAXPAYER_CARD
+    },
+    TaxpayerIdentityMissing: {
+        title: 'Kliniğin VKN / TCKN numarası',
+        reason: 'Belgede düzenleyen olarak kliniğin vergi kimliği yazılır.',
+        ...TAXPAYER_CARD
+    },
+    NotConnected: {
+        title: 'e-Belge entegratörü bağlantısı',
+        reason: 'Belge GİB’e entegratör hesabınız üzerinden gönderilir.',
+        action: 'Entegratörü bağla',
+        route: () => [E_DOCUMENT_SETTINGS_ROUTE],
+        fragment: 'entegrator'
+    }
+};
+
+/** Hazırlık listesinin sırası; tamam olanlar da bu sırayla (değeriyle) görünür. */
+export const E_DOCUMENT_SETUP_ORDER: readonly EDocumentSetupIssueCode[] = ['TaxpayerTypeMissing', 'TaxpayerIdentityMissing', 'NotConnected'];
+
+/** Tamam olan ayarın değeri: seçili mükellef türü, maskeli VKN / TCKN ya da bağlı entegratör ve ortamı. */
+export function eDocumentSetupDoneValue(code: EDocumentSetupIssueCode, preview: EDocumentPreviewDto): string {
+    if (code === 'TaxpayerTypeMissing') {
+        return CLINIC_TAXPAYER_TYPE_OPTIONS.find((o) => o.value === preview.taxpayerType)?.label ?? '';
+    }
+
+    if (code === 'TaxpayerIdentityMissing') {
+        const masked = preview.taxpayerIdentityMasked;
+
+        return masked ? `${masked.length === 10 ? 'VKN' : 'TCKN'} ${masked}` : '';
+    }
+
+    const environment = preview.connection.environment === 'Live' ? 'canlı ortam' : preview.connection.environment === 'Test' ? 'test ortamı' : null;
+
+    return ['Bağlı', preview.connection.providerName, environment].filter(Boolean).join(' · ');
+}
+
+const RETURN_TARGETS: readonly { prefix: string; label: string }[] = [
+    { prefix: '/panel/charges', label: 'Ücretlere dön' },
+    { prefix: '/panel/e-documents', label: 'e-Belgelere dön' },
+    { prefix: '/panel/sales', label: 'Satışa dön' },
+    { prefix: TODAY_ROUTE, label: 'Bugün’e dön' }
+];
+
+/** Ayar sayfasından belgenin açıldığı sayfaya dönüş düğmesi. */
+export function eDocumentReturnLabel(returnTo: string): string {
+    return RETURN_TARGETS.find((t) => returnTo === t.prefix || returnTo.startsWith(`${t.prefix}/`) || returnTo.startsWith(`${t.prefix}?`))?.label ?? 'Geri dön';
 }

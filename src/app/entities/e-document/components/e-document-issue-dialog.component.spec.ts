@@ -1,12 +1,13 @@
 import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { EDocumentDto, EDocumentPreviewDto } from '@/app/entities/e-document/models/e-document.model';
 import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
-import { eDocumentStatusLabel, eDocumentTypeLabel, isEDocumentPending } from '@/app/entities/e-document/utils/e-document-labels';
+import { E_DOCUMENT_SETUP_ISSUE, eDocumentReturnLabel, eDocumentSetupDoneValue, eDocumentStatusLabel, eDocumentTypeLabel, isEDocumentPending } from '@/app/entities/e-document/utils/e-document-labels';
+import { clearEDocumentResume, readEDocumentResume } from '@/app/entities/e-document/utils/e-document-resume';
 import { EDocumentIssueDialogComponent, issueErrorMessage } from './e-document-issue-dialog.component';
 
 const preview: EDocumentPreviewDto = {
@@ -19,15 +20,21 @@ const preview: EDocumentPreviewDto = {
         { documentType: 'ESmm', chargeIds: ['c1'], totalAmount: 1200, lineCount: 1 },
         { documentType: 'EArchive', chargeIds: ['c2'], totalAmount: 300, lineCount: 1 }
     ],
-    skipped: []
+    skipped: [],
+    taxpayerType: 'Both',
+    taxpayerIdentityMasked: '100******46',
+    clinicSetupIssues: []
 };
+
+/** Mükellef türü seçilmemiş klinik: gruplar boş, hazırlık listesi. */
+const missingTaxpayer: EDocumentPreviewDto = { ...preview, groups: [], taxpayerType: null, clinicSetupIssues: [{ code: 'TaxpayerTypeMissing' }] };
 
 const issued = { id: 'd1', status: 'Issued', documentType: 'ESmm', documentNumber: 'SMM-1', canDownloadPdf: true, lastError: null } as unknown as EDocumentDto;
 
 describe('EDocumentIssueDialogComponent', () => {
     let service: MockedObject<EDocumentsService>;
 
-    const render = (p: EDocumentPreviewDto = preview, source: object = { chargeIds: ['c1', 'c2'] }) => {
+    const render = (p: EDocumentPreviewDto = preview, source: object = { chargeIds: ['c1', 'c2'] }, canUpdateClinic = true) => {
         service = {
             preview: vi.fn().mockReturnValue(of(p)),
             issue: vi.fn().mockReturnValue(of(issued)),
@@ -36,7 +43,7 @@ describe('EDocumentIssueDialogComponent', () => {
         } as unknown as MockedObject<EDocumentsService>;
         TestBed.configureTestingModule({
             imports: [EDocumentIssueDialogComponent],
-            providers: [provideRouter([]), { provide: EDocumentsService, useValue: service }, { provide: AuthService, useValue: { getClinicId: () => 'k1' } }]
+            providers: [provideRouter([]), { provide: EDocumentsService, useValue: service }, { provide: AuthService, useValue: { getClinicId: () => 'k1', hasOperationClaim: () => canUpdateClinic } }]
         });
         const fixture = TestBed.createComponent(EDocumentIssueDialogComponent);
 
@@ -71,13 +78,101 @@ describe('EDocumentIssueDialogComponent', () => {
         expect(service.issue).toHaveBeenCalledWith({ saleId: 's1' }, cmp.groups()[0].requestId, '');
     });
 
-    it('bağlantı yoksa veya alıcı eksikse kesmeye izin vermez', () => {
-        const fixture = render({ ...preview, buyer: null, missingBuyerFields: ['taxNumber'], connection: { status: 'NotConnected', environment: null, providerName: null } });
-        const cmp = fixture.componentInstance;
-        const text = (fixture.nativeElement as HTMLElement).ownerDocument.body.textContent ?? '';
+    it('klinik ayarı eksikse veya alıcı eksikse kesmeye izin vermez', () => {
+        const notConnected = render({ ...preview, clinicSetupIssues: [{ code: 'NotConnected' }], connection: { status: 'NotConnected', environment: null, providerName: null } }).componentInstance;
 
-        expect(cmp.canIssue(cmp.preview()!)).toBe(false);
-        expect(text).toBeDefined();
+        expect(notConnected.canIssue(notConnected.preview()!)).toBe(false);
+        TestBed.resetTestingModule();
+
+        const noBuyer = render({ ...preview, buyer: null, missingBuyerFields: ['taxNumber'] }).componentInstance;
+
+        expect(noBuyer.canIssue(noBuyer.preview()!)).toBe(false);
+    });
+
+    it('eksik ayar hata değil hazırlık listesidir: eksik numaralı, tamam olan değeriyle, birincil düğme ilk eksiğin', () => {
+        const fixture = render(missingTaxpayer);
+        const cmp = fixture.componentInstance;
+
+        fixture.componentRef.setInput('visible', true);
+        fixture.detectChanges();
+        const body = (fixture.nativeElement as HTMLElement).ownerDocument.body;
+        const text = body.textContent ?? '';
+
+        expect(cmp.loadError()).toBeNull();
+        expect(cmp.setupItems().map((i) => [i.code, i.missingIndex, i.doneValue])).toEqual([
+            ['TaxpayerTypeMissing', 0, ''],
+            ['TaxpayerIdentityMissing', null, 'TCKN 100******46'],
+            ['NotConnected', null, 'Bağlı · Paraşüt · test ortamı']
+        ]);
+        expect(cmp.setupReadyCount()).toBe(2);
+        expect(text).toContain('Belge kesmeden önce bir ayar gerekli');
+        expect(text).toContain('2 / 3 hazır');
+        expect(body.querySelector('[data-testid="e-document-setup-primary"]')?.textContent).toContain('Mükellef bilgilerini aç');
+        expect(body.querySelector('[data-testid="e-document-setup"] .text-danger')).toBeNull();
+        expect(text.toLocaleLowerCase('tr-TR')).not.toContain('hata');
+        expect(body.querySelector('[data-testid="e-document-issue"]')).toBeNull();
+    });
+
+    it('mükellef türü ve VKN / TCKN eksikse sırayla numaralanır, ikisi de mükellef bilgilerine götürür', () => {
+        const cmp = render({ ...missingTaxpayer, taxpayerIdentityMasked: null, clinicSetupIssues: [{ code: 'TaxpayerTypeMissing' }, { code: 'TaxpayerIdentityMissing' }] }).componentInstance;
+
+        expect(cmp.setupItems().map((i) => [i.code, i.missingIndex])).toEqual([
+            ['TaxpayerTypeMissing', 0],
+            ['TaxpayerIdentityMissing', 1],
+            ['NotConnected', null]
+        ]);
+        expect(cmp.setupReadyCount()).toBe(1);
+        expect(E_DOCUMENT_SETUP_ISSUE.TaxpayerIdentityMissing.action).toBe('Mükellef bilgilerini aç');
+        expect(E_DOCUMENT_SETUP_ISSUE.TaxpayerIdentityMissing.fragment).toBe('mukellef-bilgileri');
+    });
+
+    it('ayar düğmesi seçimi saklar ve dönüş adresiyle ayar sayfasına gider', () => {
+        const cmp = render(missingTaxpayer).componentInstance;
+        const router = TestBed.inject(Router);
+        const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+        vi.spyOn(router, 'url', 'get').mockReturnValue('/panel/charges?clientId=x&resumeEDocument=1');
+
+        clearEDocumentResume();
+        cmp.visible.set(true);
+        cmp.openSetup('TaxpayerTypeMissing');
+
+        expect(cmp.visible()).toBe(false);
+        expect(navigate).toHaveBeenCalledWith(['/panel/settings/clinics', 'k1'], { fragment: 'mukellef-bilgileri', queryParams: { returnTo: '/panel/charges?clientId=x' } });
+        expect(readEDocumentResume()?.source).toEqual({ chargeIds: ['c1', 'c2'] });
+
+        cmp.openSetup('NotConnected');
+
+        expect(navigate).toHaveBeenLastCalledWith(['/panel/settings/e-documents'], { fragment: 'entegrator', queryParams: { returnTo: '/panel/charges?clientId=x' } });
+        clearEDocumentResume();
+    });
+
+    it('klinik ayarını düzenleme yetkisi yoksa düğme yerine kilitli not gösterir', () => {
+        const fixture = render({ ...missingTaxpayer, clinicSetupIssues: [{ code: 'TaxpayerTypeMissing' }, { code: 'TaxpayerIdentityMissing' }, { code: 'NotConnected' }] }, { chargeIds: ['c1'] }, false);
+
+        fixture.componentRef.setInput('visible', true);
+        fixture.detectChanges();
+        const body = (fixture.nativeElement as HTMLElement).ownerDocument.body;
+
+        expect(fixture.componentInstance.canFixSetup).toBe(false);
+        expect(body.querySelector('[data-testid="e-document-setup-primary"]')).toBeNull();
+        expect(body.querySelector('[data-testid="e-document-setup"] button')).toBeNull();
+        expect(body.querySelector('[data-testid="e-document-setup-locked"]')?.textContent).toContain('“Mükellef türü, Kliniğin VKN / TCKN numarası, e-Belge entegratörü bağlantısı”');
+        expect(body.textContent).toContain('0 / 3 hazır');
+    });
+
+    it('gerçek sunucu hatası loadError olarak kalır', () => {
+        const fixture = render();
+
+        service.preview.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+        fixture.componentInstance.load();
+
+        expect(fixture.componentInstance.loadError()).toBeTruthy();
+        expect(fixture.componentInstance.setupIssues()).toEqual([]);
+    });
+
+    it('pencere başlığı "e-Belge kes" yazar', () => {
+        expect(render().componentInstance.header()).toBe('e-Belge kes');
     });
 
     it('eksik alıcı alanı hatası eyleme dönük metne çevrilir', () => {
@@ -116,5 +211,16 @@ describe('e-document-labels', () => {
         expect(eDocumentStatusLabel('CancelRejected')).toBe('İptal reddedildi');
         expect(isEDocumentPending('Sending')).toBe(true);
         expect(isEDocumentPending('Issued')).toBe(false);
+    });
+
+    it('tamam olan ayarın değeri ve dönüş düğmesi', () => {
+        expect(eDocumentSetupDoneValue('TaxpayerTypeMissing', { ...preview, taxpayerType: 'SelfEmployed' })).toBe('Serbest meslek');
+        expect(eDocumentSetupDoneValue('TaxpayerIdentityMissing', { ...preview, taxpayerIdentityMasked: '123*****90' })).toBe('VKN 123*****90');
+        expect(eDocumentSetupDoneValue('NotConnected', { ...preview, connection: { status: 'Connected', environment: 'Live', providerName: null } })).toBe('Bağlı · canlı ortam');
+        expect(eDocumentReturnLabel('/panel/charges?clientId=x')).toBe('Ücretlere dön');
+        expect(eDocumentReturnLabel('/panel/e-documents')).toBe('e-Belgelere dön');
+        expect(eDocumentReturnLabel('/panel/sales/s1')).toBe('Satışa dön');
+        expect(eDocumentReturnLabel('/panel/today')).toBe('Bugün’e dön');
+        expect(eDocumentReturnLabel('/panel/chargesx')).toBe('Geri dön');
     });
 });

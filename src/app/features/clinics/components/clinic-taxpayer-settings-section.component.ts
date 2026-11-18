@@ -1,12 +1,12 @@
-import { Component, DestroyRef, OnInit, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { CLINIC_TAXPAYER_MAX, CLINIC_TAXPAYER_TYPE_OPTIONS, mapClinicTaxpayerFormToPutBody, mapClinicTaxpayerSettingsToFormValue } from '@/app/features/clinics/data/clinic-taxpayer-settings.mapper';
-import type { ClinicTaxpayerType } from '@/app/features/clinics/models/clinic-taxpayer-settings.model';
+import { CLINIC_TAXPAYER_MAX, mapClinicTaxpayerFormToPutBody, mapClinicTaxpayerSettingsToFormValue } from '@/app/features/clinics/data/clinic-taxpayer-settings.mapper';
+import { CLINIC_TAXPAYER_TYPE_OPTIONS, type ClinicTaxpayerType } from '@/app/entities/clinic/models/clinic-taxpayer-type.model';
 import { ClinicTaxpayerSettingsService } from '@/app/features/clinics/services/clinic-taxpayer-settings.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -25,7 +25,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
     imports: [ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppLoadingStateComponent, AppErrorStateComponent, ReadOnlyReasonDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="card mb-4" [formGroup]="form" data-testid="clinic-taxpayer-settings">
+        <div class="card mb-4" id="mukellef-bilgileri" [formGroup]="form" data-testid="clinic-taxpayer-settings">
             <h5 class="mt-0 mb-2">Mükellef bilgileri</h5>
             <p class="text-sm text-muted-color mt-0 mb-4">Fatura ve e-belge düzenlenirken kliniğin vergi kimliği, adresi ve varsayılan oranlar olarak kullanılır. Tüm alanlar isteğe bağlıdır; KDV oranı boş bırakılan ücret satırlarına uygulanır.</p>
 
@@ -98,6 +98,8 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
 })
 export class ClinicTaxpayerSettingsSectionComponent implements OnInit {
     readonly clinicId = input.required<string>();
+    /** Kaydedildi (ör. "Belge kes"ten gelindiyse dönüş şeridi yeniden denetler). */
+    readonly saved = output<void>();
 
     private readonly fb = inject(FormBuilder);
     private readonly service = inject(ClinicTaxpayerSettingsService);
@@ -172,6 +174,7 @@ export class ClinicTaxpayerSettingsSectionComponent implements OnInit {
                     this.saving.set(false);
                     this.form.reset(mapClinicTaxpayerSettingsToFormValue(dto));
                     this.messages.add({ severity: 'success', summary: 'Tamam', detail: 'Mükellef bilgileri kaydedildi.' });
+                    this.saved.emit();
                 },
                 error: (e: unknown) => {
                     this.saving.set(false);

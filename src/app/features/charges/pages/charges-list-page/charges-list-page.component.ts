@@ -9,6 +9,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { CHARGES_CORRECT_CLAIM, CHARGES_CREATE_CLAIM, EDOCUMENTS_ISSUE_CLAIM, PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { EDocumentIssueDialogComponent } from '@/app/entities/e-document/components/e-document-issue-dialog.component';
 import type { EDocumentSource } from '@/app/entities/e-document/models/e-document.model';
+import { consumeEDocumentResume } from '@/app/entities/e-document/utils/e-document-resume';
 import { ChargeCorrectionDialogComponent } from '@/app/features/charges/components/charge-correction-dialog.component';
 import type { ChargeVm } from '@/app/entities/charge/models/charge-vm.model';
 import { ChargesService } from '@/app/features/charges/services/charges.service';
@@ -230,6 +231,7 @@ export class ChargesListPageComponent implements OnInit {
             void this.router.navigate([], { relativeTo: this.route, queryParams: { saved: null }, queryParamsHandling: 'merge', replaceUrl: true });
         }
 
+        this.resumeEDocument();
         this.load(1, this.pageSize());
     }
 
@@ -242,6 +244,16 @@ export class ChargesListPageComponent implements OnInit {
     openDocument(row: ChargeVm): void {
         this.documentSource.set({ chargeIds: [row.id] });
         this.documentVisible = true;
+    }
+
+    /** Eksik ayarı tamamlayıp ayar sayfasından dönüldüyse aynı seçimle pencere yeniden açılır. */
+    private resumeEDocument(): void {
+        const source = consumeEDocumentResume(this.route, this.router);
+
+        if (source) {
+            this.documentSource.set(source);
+            this.documentVisible = true;
+        }
     }
 
     openCorrection(row: ChargeVm): void {

@@ -13,6 +13,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { ClinicEDocumentSettingsDto, EDocumentAutoIssueMode } from '@/app/entities/e-document/models/e-document.model';
 import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
+import { EDocumentReturnBannerComponent } from '@/app/entities/e-document/components/e-document-return-banner.component';
 import { EDocumentConnectionCardComponent } from '@/app/features/e-documents/components/e-document-connection-card.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
@@ -47,6 +48,7 @@ const DOCUMENT_LABEL: Record<'ESmm' | 'Invoice', string> = {
         AppLoadingStateComponent,
         AppErrorStateComponent,
         EDocumentConnectionCardComponent,
+        EDocumentReturnBannerComponent,
         ReadOnlyReasonDirective
     ],
     providers: [MessageService],
@@ -57,7 +59,8 @@ const DOCUMENT_LABEL: Record<'ESmm' | 'Invoice', string> = {
         @if (!clinicId) {
             <div class="card"><p class="m-0">Aktif klinik yok; bir kliniğe geçip tekrar deneyin.</p></div>
         } @else {
-            <app-e-document-connection-card [clinicId]="clinicId" />
+            <app-e-document-return-banner #returnBanner />
+            <app-e-document-connection-card [clinicId]="clinicId" (connectionChange)="returnBanner.recheck()" />
 
             @if (loading()) {
                 <div class="card"><app-loading-state message="e-Belge ayarları yükleniyor…" /></div>
