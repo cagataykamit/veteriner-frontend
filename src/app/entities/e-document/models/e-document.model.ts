@@ -3,6 +3,8 @@
  * Kimlik bilgisi (belirteç) hiçbir yanıtta yoktur; alıcı kimliği maskeli gelir.
  */
 
+import type { ClinicTaxpayerType } from '@/app/entities/clinic/models/clinic-taxpayer-type.model';
+
 export type EDocumentType = 'ESmm' | 'EArchive' | 'EInvoice';
 
 export type EDocumentStatus = 'Draft' | 'Sending' | 'Issued' | 'Failed' | 'Discarded' | 'CancelRequested' | 'Cancelled' | 'CancelRejected' | 'RejectedByBuyer';
@@ -120,7 +122,14 @@ export interface EDocumentPreviewDto {
     connection: { status: EDocumentConnectionStatus; environment: EDocumentEnvironment | null; providerName: string | null };
     groups: EDocumentPreviewGroupDto[];
     skipped: { chargeId: string; reason: 'AlreadyDocumented' | 'Voided' }[];
+    /** Klinik mükellef türü; seçilmemişse `null` (o zaman `groups` boş). */
+    taxpayerType: ClinicTaxpayerType | null;
+    /** Belge kesmeden önce klinikte tamamlanması gereken ayarlar; boş değilse kesme reddedilir. */
+    clinicSetupIssues: { code: EDocumentSetupIssueCode }[];
 }
+
+/** Önizlemenin klinik hazırlık listesindeki eksik (backend sözleşmesi §4.1). */
+export type EDocumentSetupIssueCode = 'TaxpayerTypeMissing' | 'NotConnected';
 
 export interface UndocumentedChargeDto {
     chargeId: string;
@@ -182,7 +191,7 @@ export interface ClinicEDocumentSettingsDto {
     endOfDayTime: string;
     issueOnPaymentByDefault: boolean;
     autoIssueEnabledAtUtc: string | null;
-    taxpayerType: 'SelfEmployed' | 'Company' | 'Both' | null;
+    taxpayerType: ClinicTaxpayerType | null;
     /** Hizmet / ürün satırında kesilecek belge: e-SMM ya da fatura (alıcıya göre e-Arşiv / e-Fatura). */
     serviceDocument: 'ESmm' | 'Invoice' | null;
     productDocument: 'ESmm' | 'Invoice' | null;
