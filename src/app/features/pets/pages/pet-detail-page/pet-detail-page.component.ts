@@ -30,6 +30,8 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/patient/services/recently-viewed.service';
+import { AiEntryButtonComponent } from '@/app/entities/ai/components/ai-entry-button.component';
+import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
 
 /**
  * Hasta (hayvan) kartı — okuma öncelikli 360 görünüm (ADR-020 karar 1-3): başlık ve hesap durumu, her zaman görünür eylem çubuğu,
@@ -53,7 +55,8 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
         PetImagingSectionComponent,
         PetImportedRecordsSectionComponent,
         AppLoadingStateComponent,
-        AppErrorStateComponent
+        AppErrorStateComponent,
+        AiEntryButtonComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -71,9 +74,11 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
             <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hasta listesine dön" />
 
             <app-pet-card-header [pet]="p" [summary]="summary()" [balance]="ownerOutstanding()" [nextAppointment]="nextAppointment()">
-                @if (canUpdatePet && !ro.mutationBlocked()) {
-                    <!-- İki eylem tek kökte: denetim akışı bloğunda birden çok kök [editAction] yuvasına yansıtılmaz. -->
-                    <ng-container editAction>
+                <!-- Eylemler tek kökte: denetim akışı bloğunda birden çok kök [editAction] yuvasına yansıtılmaz. -->
+                <ng-container editAction>
+                    <!-- Geçmiş özeti (AI-002) kayıt yazmaz: salt okunur kiracıda da görünür; görünürlüğü AI durumu belirler. -->
+                    <app-ai-entry-button label="Geçmişi özetle" [active]="aiHistoryOpenFor(p.id)" (pressed)="aiPanel.openHistory(p.id, p.name)" />
+                    @if (canUpdatePet && !ro.mutationBlocked()) {
                         <button
                             pButton
                             type="button"
@@ -82,10 +87,10 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
                             (click)="statusDialogOpen.set(true)"
                         ><i [class]="p.status === 'Deceased' ? 'pi pi-undo' : 'pi pi-minus-circle'"></i>{{ p.status === 'Deceased' ? 'Aktife al' : 'Vefat olarak işaretle' }}</button>
                         <a [routerLink]="['/panel/pets', p.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
-                    </ng-container>
-                } @else if (canUpdatePet && ro.mutationBlocked()) {
-                    <button editAction pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
-                }
+                    } @else if (canUpdatePet && ro.mutationBlocked()) {
+                        <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                    }
+                </ng-container>
             </app-pet-card-header>
             @if (canUpdatePet && !ro.mutationBlocked()) {
                 <app-pet-status-dialog [(visible)]="statusDialogOpen" [pet]="p" (changed)="onStatusChanged($event)" (stale)="refreshPet()" (appointmentsCancelled)="reloadOpenItems()" />
@@ -175,6 +180,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     private readonly auth = inject(AuthService);
     private readonly recentlyViewed = inject(RecentlyViewedService);
     readonly ro = inject(TenantReadOnlyContextService);
+    protected readonly aiPanel = inject(AiPanelService);
     readonly canReadImaging = this.auth.hasOperationClaim(IMAGING_READ_CLAIM);
     readonly canReadExaminations = this.auth.hasOperationClaim(EXAMINATIONS_READ_CLAIM);
 
@@ -226,6 +232,8 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     readonly ownerOutstanding = computed(() => ownerOutstandingSection(this.openItems()));
     readonly nextAppointment = computed(() => openItemsSection(this.openItems(), (o) => o.nextAppointment));
     readonly statusDialogOpen = signal(false);
+    /** Yan panelde bu hastanın geçmiş özeti açık mı (giriş düğmesi mor zeminle işaretlenir). */
+    protected readonly aiHistoryOpenFor = (petId: string): boolean => this.aiPanel.content()?.kind === 'history' && this.aiPanel.history()?.petId === petId;
 
     readonly todo = computed(() =>
         buildPetTodo(this.openItems(), {

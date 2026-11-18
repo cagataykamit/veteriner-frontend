@@ -17,6 +17,8 @@ import type { Mock } from 'vitest';
 import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
 import { PetDetailPageComponent } from './pet-detail-page.component';
 import { ImportedHistoryService } from '@/app/entities/imported-history/services/imported-history.service';
+import { AiService } from '@/app/entities/ai/services/ai.service';
+import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
 
 const pet: PetDetailVm = {
     petAlerts: NO_PET_ALERTS,
@@ -95,6 +97,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
     let openItemsSource: () => Observable<PetCardSection<PetOpenItemsVm>>;
     let openItemsCalls: number;
     let recordRecent: Mock;
+    let aiService: { getStatus: Mock; summarizePetHistory: Mock };
 
     const el = () => fixture.nativeElement as HTMLElement;
 
@@ -106,6 +109,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'p1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'k1' } },
                 { provide: RecentlyViewedService, useValue: { record: recordRecent } },
+                { provide: AiService, useValue: aiService },
                 { provide: ImportedHistoryService, useValue: { getPetClinicalRecords: () => of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }) } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: AppointmentsService, useValue: { getAppointments: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } },
@@ -143,6 +147,10 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
         openItemsSource = () => of({ state: 'ok', data: openItems() });
         openItemsCalls = 0;
         recordRecent = vi.fn().mockName('RecentlyViewedService.record');
+        aiService = {
+            getStatus: vi.fn().mockReturnValue(of({ isAvailable: true, unavailableCode: null, clinicMonthUsedPercent: 0 })),
+            summarizePetHistory: vi.fn().mockReturnValue(of({ petId: 'p1', hasRecords: false }))
+        };
     });
 
     it('vefat eden hayvanda soluk rozet ve tarih görünür; yeni bakım eylemleri yok, durum eylemi "Aktife al"', () => {
@@ -290,5 +298,46 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
         fixture.componentInstance.onStatusChanged({ status: 'Deceased', deceasedOn: null, rowVersion: 'new' });
         fixture.componentInstance.reloadOpenItems();
         expect(openItemsCalls).toBe(3);
+    });
+
+    describe('Geçmişi özetle (AI-002)', () => {
+        const aiButton = () => el().querySelector('[data-testid="ai-entry-button"]') as HTMLButtonElement | null;
+
+        it('Ai.Use ve kullanılabilir AI ile başlıkta görünür; basınca yan panelde bu hastanın özeti istenir', () => {
+            claims.add('Ai.Use');
+            create();
+
+            expect(aiButton()?.textContent).toContain('Geçmişi özetle');
+            aiButton()!.click();
+            fixture.detectChanges();
+
+            const panel = TestBed.inject(AiPanelService);
+
+            expect(aiService.summarizePetHistory).toHaveBeenCalledWith('p1');
+            expect(panel.content()).toEqual({ kind: 'history' });
+            expect(panel.history()?.petName).toBe('Pamuk');
+            expect(aiButton()?.getAttribute('aria-pressed')).toBe('true');
+        });
+
+        it('salt okunur kiracıda da görünür (kayıt yazmaz)', () => {
+            claims.add('Ai.Use');
+            TestBed.overrideProvider(TenantReadOnlyContextService, { useValue: { mutationBlocked: () => true } });
+            create();
+
+            expect(aiButton()).not.toBeNull();
+        });
+
+        it('Ai.Use yoksa görünmez ve durum hiç sorulmaz', () => {
+            create();
+            expect(aiButton()).toBeNull();
+            expect(aiService.getStatus).not.toHaveBeenCalled();
+        });
+
+        it('klinikte kapalıysa görünmez', () => {
+            claims.add('Ai.Use');
+            aiService.getStatus.mockReturnValue(of({ isAvailable: false, unavailableCode: 'Ai.ClinicNotEnabled', clinicMonthUsedPercent: 0 }));
+            create();
+            expect(aiButton()).toBeNull();
+        });
     });
 });
