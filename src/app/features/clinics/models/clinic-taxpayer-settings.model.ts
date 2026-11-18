@@ -1,5 +1,4 @@
-/** Kliniğin mükellef türü (ADR-036 AK-3); `null` = belirtilmemiş. */
-export type ClinicTaxpayerType = 'SelfEmployed' | 'Company' | 'Both';
+import type { ClinicTaxpayerType } from '@/app/entities/clinic/models/clinic-taxpayer-type.model';
 
 /** `GET/PUT /clinics/{id}/taxpayer-settings` yanıtı (`INVOICING_IDENTITY_API_CONTRACT.md` §3). */
 export interface ClinicTaxpayerSettingsDto {
