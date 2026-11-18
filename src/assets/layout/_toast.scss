@@ -81,15 +81,22 @@ $toast-severities: (
         padding: 0.75rem 2.25rem 0.75rem 1rem;
     }
 
+    // Yalnız başlıklı bildirimde yazı simgenin ortasına hizalanır (üstte kalıp altta boşluk bırakmasın); açıklama varsa üstten başlar.
     .p-toast-message-text {
         gap: 0.125rem;
         min-width: 0;
+        min-height: 1.75rem;
+        justify-content: center;
     }
 
     .p-toast-summary {
-        font-size: 0.875rem;
+        font-size: 0.9375rem;
         font-weight: 600;
         line-height: 1.35;
+    }
+
+    .p-toast-detail:empty {
+        display: none;
     }
 
     .p-toast-detail {
@@ -110,8 +117,9 @@ $toast-severities: (
         color: #fff;
     }
 
+    // Kapatma düğmesi ilk satırın (simgenin) hizasında.
     .p-toast-close-button {
-        top: 0.5rem;
+        top: 0.875rem;
         right: 0.5rem;
         width: 1.5rem;
         height: 1.5rem;
