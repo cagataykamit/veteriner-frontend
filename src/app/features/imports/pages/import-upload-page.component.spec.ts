@@ -213,7 +213,7 @@ describe('ImportUploadPageComponent', () => {
         expect(menu()).toBe('Menü yolu: Rapor > Genel > Hasta Listesi');
 
         click('import-skip');
-        expect(menu()).toBe('Menü yolu: Rapor > Resmi > Aşı Bilgisi');
+        expect(menu()).toBe('Menü yolu: Rapor > Resmi > Aşı Bilgi');
         expect(guide()).toContain("E-vet'i kullanmaya başladığınız tarihten bugüne");
 
         click('import-skip');
