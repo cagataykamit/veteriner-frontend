@@ -26,7 +26,12 @@ import { categoryForUrl, listLabelForUrl, MENU_GROUPS } from '@/app/core/routing
             @if (title(); as title) {
                 <div class="flex flex-wrap gap-4 items-center justify-between">
                     <div class="min-w-0 break-words">
-                        <div class="text-surface-900 dark:text-surface-0 text-xl font-medium">{{ title }}</div>
+                        <div class="text-surface-900 dark:text-surface-0 text-xl font-medium">
+                            {{ title }}
+                            @if (titleNote(); as note) {
+                                <span class="ml-2 text-base font-normal text-muted-color" data-testid="page-header-title-note">{{ note }}</span>
+                            }
+                        </div>
                         @if (description()) {
                             <p class="text-muted-color mt-2 mb-0">{{ description() }}</p>
                         }
@@ -42,6 +47,8 @@ import { categoryForUrl, listLabelForUrl, MENU_GROUPS } from '@/app/core/routing
 export class AppPageHeaderComponent {
     /** Boş bırakılırsa yalnız kategori satırı çizilir; başlık ve eylemler sayfanın kendi kimlik kartındadır (müşteri kartı). */
     readonly title = input<string>();
+    /** Başlığın yanında soluk, aynı satırda kısa bilgi (ör. Bugün'de tarih ve saat). */
+    readonly titleNote = input<string>();
     readonly description = input<string>();
     /**
      * Başlık üstündeki kategori satırı yalnız bu bağlantı verilince çizilir; bağlantısız düz kategori menüdeki adı
