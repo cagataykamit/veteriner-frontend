@@ -4,6 +4,7 @@ import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 import { ToastModule } from 'primeng/toast';
+import { AiPetSearchComponent } from '@/app/entities/ai/components/ai-pet-search.component';
 import { AiStateComponent } from '@/app/entities/ai/components/ai-state.component';
 import { PetHistorySummaryComponent } from '@/app/entities/ai/components/pet-history-summary.component';
 import { petHistorySummaryToPlainText } from '@/app/entities/ai/data/ai.mapper';
@@ -19,7 +20,7 @@ import { copyTextToClipboard } from '@/app/shared/utils/clipboard.utils';
 @Component({
     selector: 'app-ai-panel',
     standalone: true,
-    imports: [NgTemplateOutlet, ButtonModule, DrawerModule, ToastModule, AiStateComponent, PetHistorySummaryComponent],
+    imports: [NgTemplateOutlet, ButtonModule, DrawerModule, ToastModule, AiStateComponent, AiPetSearchComponent, PetHistorySummaryComponent],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     // Drawer belge düzeyinde Esc dinler; panel sayfayı örtmediği için yalnız panelin içindeki Esc onu kapatır.
@@ -31,7 +32,9 @@ import { copyTextToClipboard } from '@/app/shared/utils/clipboard.utils';
                 <div class="flex items-center gap-2 min-w-0 flex-1">
                     <i class="pi pi-sparkles text-ai" aria-hidden="true"></i>
                     <h2 class="m-0 text-base font-semibold truncate" data-testid="ai-panel-title">{{ title() }}</h2>
-                    <span class="inline-flex items-center gap-1 rounded-full border border-ai-border bg-ai-surface px-2 text-xs font-bold text-ai shrink-0"><i class="pi pi-sparkles text-[0.65rem]" aria-hidden="true"></i>Taslak</span>
+                    @if (content()?.kind !== 'search') {
+                        <span class="inline-flex items-center gap-1 rounded-full border border-ai-border bg-ai-surface px-2 text-xs font-bold text-ai shrink-0"><i class="pi pi-sparkles text-[0.65rem]" aria-hidden="true"></i>Taslak</span>
+                    }
                 </div>
                 <button pButton type="button" class="p-button-text p-button-secondary p-button-rounded" aria-label="Paneli kapat" (click)="panel.close()" data-testid="ai-panel-close"><i class="pi pi-times"></i></button>
             </ng-template>
@@ -39,6 +42,8 @@ import { copyTextToClipboard } from '@/app/shared/utils/clipboard.utils';
             @if (content(); as c) {
                 @if (c.kind === 'custom') {
                     <ng-container *ngTemplateOutlet="c.template" />
+                } @else if (c.kind === 'search') {
+                    <app-ai-pet-search />
                 } @else if (history(); as h) {
                     <div class="flex-1 min-h-0 overflow-y-auto px-4 pb-4" data-testid="ai-history-body">
                         @switch (h.status) {
@@ -99,6 +104,10 @@ export class AiPanelComponent {
 
         if (c?.kind === 'custom') {
             return c.title;
+        }
+
+        if (c?.kind === 'search') {
+            return 'Yapay zekâ ile hasta ara';
         }
 
         // Panel sayfalar arasında açık kalır: hangi hastanın özeti olduğu başlıkta yazar.

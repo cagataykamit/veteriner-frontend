@@ -30,7 +30,8 @@ export interface AiPanelCustomContent {
     onClose?: () => void;
 }
 
-export type AiPanelContent = { kind: 'history' } | AiPanelCustomContent;
+/** `search`: doğal dille hasta araması (AI-006); durumu `AiPetSearchService`'te, sayfalar arasında korunur. */
+export type AiPanelContent = { kind: 'history' } | { kind: 'search' } | AiPanelCustomContent;
 
 /**
  * Yapay zekâ yan paneli (tasarım A) tek yerden yönetilir: düzen bileşeni paneli çizer, sayfalar yalnız ne açılacağını söyler.
@@ -76,6 +77,11 @@ export class AiPanelService {
         this.historySub = null;
         this.history.set(null);
         this.content.set(null);
+    }
+
+    /** Hasta araması paneli; önceki arama ve sonuçları korunur (yeni istek atılmaz). */
+    openSearch(): void {
+        this.content.set({ kind: 'search' });
     }
 
     openCustom(content: Omit<AiPanelCustomContent, 'kind'>): void {
