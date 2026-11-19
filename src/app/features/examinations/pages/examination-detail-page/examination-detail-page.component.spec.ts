@@ -518,6 +518,42 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(vi.mocked(service.getExaminationRelatedSummary).mock.calls.length).toBe(relatedBefore + 1);
     });
 
+    describe('bağlı geliş açıkken Bugün\'e dön / Ziyareti tamamla', () => {
+        const linked = { ...detailVm, visitId: 'visit-1' };
+        const visitsMock = (careStatus: string) => ({
+            getVisitById: vi.fn().mockReturnValue(of({ id: 'visit-1', careStatus, isVoided: false, preparedExaminationTemplateId: null })),
+            completeVisit: vi.fn().mockReturnValue(of({}))
+        });
+
+        it('muayenedeki gelişte iki düğme; Tamamla gelişi kapatıp Bugün\'e döner', async () => {
+            const visits = visitsMock('InProgress');
+            const { fixture, el } = await setup(linked, ['Visits.Read', 'Visits.Update', 'Charges.Create'], undefined, false, [{ provide: VisitsService, useValue: visits }]);
+            const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+            fixture.detectChanges();
+            expect(el.querySelector('[data-testid="exam-back-to-today"]')).not.toBeNull();
+            (el.querySelector('[data-testid="exam-complete-visit"]') as HTMLButtonElement).click();
+            expect(visits.completeVisit).toHaveBeenCalledWith('visit-1');
+            expect(navigate).toHaveBeenCalledWith(['/panel/today']);
+        });
+
+        it('tamamlanmış gelişte ya da geliş okuma izni yoksa düğmeler yok', async () => {
+            const done = visitsMock('Completed');
+            const a = await setup(linked, ['Visits.Read', 'Visits.Update', 'Charges.Create'], undefined, false, [{ provide: VisitsService, useValue: done }]);
+
+            a.fixture.detectChanges();
+            expect(a.el.querySelector('[data-testid="exam-back-to-today"]')).toBeNull();
+            TestBed.resetTestingModule();
+
+            const open = visitsMock('InProgress');
+            const b = await setup(linked, ['Visits.Update', 'Charges.Create'], undefined, false, [{ provide: VisitsService, useValue: open }]);
+
+            b.fixture.detectChanges();
+            expect(open.getVisitById).not.toHaveBeenCalled();
+            expect(b.el.querySelector('[data-testid="exam-complete-visit"]')).toBeNull();
+        });
+    });
+
     describe('gelişte hazırlanan şablon önerisi (CHECKIN-003)', () => {
         const prepared = { id: 't1', name: 'Karma aşı', visitReason: null, findings: null, plan: null, isActive: true, isSystem: false, lines: [], rowVersion: 'T1' };
         const claims = [...TEMPLATE_CLAIMS, 'Visits.Read'];

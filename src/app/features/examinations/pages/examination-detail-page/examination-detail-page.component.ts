@@ -41,7 +41,8 @@ import {
     EXAMINATIONS_FINALIZE_CLAIM,
     EXAMINATIONS_UPDATE_CLAIM,
     PAYMENTS_CREATE_CLAIM,
-    VISITS_READ_CLAIM
+    VISITS_READ_CLAIM,
+    VISITS_UPDATE_CLAIM
 } from '@/app/core/auth/operation-claims.constants';
 import { ExaminationTemplateApplyDialogComponent } from '@/app/entities/examination-template/components/examination-template-apply-dialog.component';
 import type { ExaminationTemplateApplyResultDto, ExaminationTemplateDto } from '@/app/entities/examination-template/models/examination-template.model';
@@ -180,10 +181,19 @@ const RECORD_TEXT_SECTIONS: readonly {
                 </div>
             </app-detail-identity-card>
 
-            <!-- Eylem şeridi: para işlemleri; kesinleştirme sağdaki kontrol listesinde kalır. -->
-            @if (e.clientId?.trim() && e.petId?.trim() && (canCreateCharge || canCreatePayment)) {
+            <!-- Eylem şeridi: para işlemleri ve (geliş açıksa) gelişe dönüş / tamamlama; kesinleştirme sağdaki kontrol listesinde kalır. -->
+            @let visitOpen = openVisit()?.examinationId === e.id ? openVisit() : null;
+            @if (e.clientId?.trim() && e.petId?.trim() && (canCreateCharge || canCreatePayment || visitOpen)) {
                 @let moneyContext = { clientId: e.clientId, petId: e.petId, examinationId: e.id };
                 <app-detail-action-bar ariaLabel="Muayene eylemleri">
+                    @if (visitOpen) {
+                        @if (visitOpen.inProgress && canUpdateVisit && !ro.mutationBlocked()) {
+                            <button pButton type="button" class="p-button-primary" [disabled]="completingVisit()" (click)="completeOpenVisit()" data-testid="exam-complete-visit">
+                                <i class="p-button-icon" [class]="completingVisit() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Ziyareti tamamla
+                            </button>
+                        }
+                        <a [routerLink]="['/panel/today']" pButton type="button" class="p-button-outlined p-button-secondary" data-testid="exam-back-to-today"><i class="pi pi-arrow-left"></i>Bugün'e dön</a>
+                    }
                     @if (canCreateCharge) {
                         @if (!ro.mutationBlocked()) {
                             <a [routerLink]="['/panel/charges/new']" [queryParams]="moneyContext" pButton type="button" class="p-button-primary" data-testid="charge-new-link"><i class="pi pi-plus"></i>Ücret ekle</a>
@@ -389,6 +399,13 @@ export class ExaminationDetailPageComponent implements OnInit, HasUnsavedChanges
         return p && e && p.examinationId === e.id && this.canApplyTemplateNow() && !this.appliedPreparedKeys().has(`${p.examinationId}:${p.id}`) ? p : null;
     });
     private readonly canReadVisit = this.auth.hasOperationClaim(VISITS_READ_CLAIM);
+    readonly canUpdateVisit = this.auth.hasOperationClaim(VISITS_UPDATE_CLAIM);
+    /**
+     * Muayenenin bağlı olduğu geliş hâlâ açıksa (Sırada / Muayenede) kimliği ve durumu: kayıttan sonra "Bugün'e dön" ve muayenedeyse
+     * "Ziyareti tamamla" gösterilir; geliş açık unutulup ertesi gün "Önceki günden açık" olarak dönmesin (2026-11-19).
+     */
+    readonly openVisit = signal<{ examinationId: string; visitId: string; inProgress: boolean } | null>(null);
+    readonly completingVisit = signal(false);
 
     private readonly procedures = viewChild(ExaminationProceduresSectionComponent);
     private readonly administrations = viewChild(AdministrationsSectionComponent);
@@ -609,8 +626,52 @@ export class ExaminationDetailPageComponent implements OnInit, HasUnsavedChanges
             });
     }
 
+    /** Bağlı geliş açıksa eylem şeridinde gelişe dönüş ve tamamlama gösterilir; okunamazsa sessizce atlanır. */
+    private loadOpenVisit(x: ExaminationDetailVm): void {
+        this.openVisit.set(null);
+
+        if (!x.visitId || !this.canReadVisit) {
+            return;
+        }
+
+        const visitId = x.visitId;
+
+        this.visitsService
+            .getVisitById(visitId)
+            .pipe(catchError(() => EMPTY))
+            .subscribe((v) => {
+                if (this.exam()?.id === x.id && !v.isVoided && (v.careStatus === 'Waiting' || v.careStatus === 'InProgress')) {
+                    this.openVisit.set({ examinationId: x.id, visitId, inProgress: v.careStatus === 'InProgress' });
+                }
+            });
+    }
+
+    /** Muayene kaydı olduğu için "muayene ve ücret yok" sorusu gerekmez; tamamlanınca Bugün'e dönülür. */
+    completeOpenVisit(): void {
+        const open = this.openVisit();
+
+        if (!open?.inProgress || this.completingVisit()) {
+            return;
+        }
+
+        this.completingVisit.set(true);
+        this.visitsService.completeVisit(open.visitId).subscribe({
+            next: () => {
+                this.completingVisit.set(false);
+                this.openVisit.set(null);
+                this.messages.add({ severity: 'success', summary: 'Ziyaret tamamlandı.', life: 3000 });
+                void this.router.navigate(['/panel/today']);
+            },
+            error: (e: unknown) => {
+                this.completingVisit.set(false);
+                this.messages.add({ severity: 'error', summary: 'Ziyaret tamamlanamadı.', detail: panelHttpFailureMessage(e, 'Ziyaret tamamlanamadı.'), life: 6000 });
+            }
+        });
+    }
+
     private loadRelatedBlocks(x: ExaminationDetailVm): void {
         this.loadPreparedTemplate(x);
+        this.loadOpenVisit(x);
         this.recentlyViewed.record({ kind: 'examination', id: x.id, title: x.petName, subtitle: recentlyViewedSubtitle(x.visitReason, formatUtcIsoAsLocalDateDisplay(x.examinedAtUtc)) });
         this.loadRelatedSummary(x.id);
 
