@@ -724,6 +724,17 @@ export const ApiEndpoints = {
     trialMetrics: {
         summary: () => `/api/v1/admin/trial-metrics`
     },
+    /** Platform yöneticisi: yapay zekâ kredi, fon ve maliyet (AI-007/008; Veteriner `docs/AI_HISTORY_SUMMARY_API_CONTRACT.md` §3). */
+    aiAdmin: {
+        /** GET `?month=yyyy-MM` (yoksa bu ay): sistem toplamı, bütçe, klinik/özellik/model kırılımı. */
+        usage: () => `/api/v1/admin/ai/usage`,
+        /** GET `?search=` (en az 2 karakter; yoksa AI ayarı olan klinikler). */
+        clinics: () => `/api/v1/admin/ai/clinics`,
+        /** PUT `{ isEnabled }`. */
+        clinic: (clinicId: string) => `/api/v1/admin/ai/clinics/${encodeURIComponent(clinicId)}`,
+        /** GET hareketler (en çok 100), POST `{ credits, note? }` (1–100.000). */
+        fundGrants: (clinicId: string) => `/api/v1/admin/ai/clinics/${encodeURIComponent(clinicId)}/fund-grants`
+    },
     /** Platform yöneticisi: aynı ödeme denemesinde gelen ikinci ödemeler ve iadeleri; en yeni tespit önce, en fazla 200 satır. */
     /** Destek: klinik sitesine ek adres değiştirme hakkı (Veteriner `docs/CLINIC_SITE_API_CONTRACT.md` §4). Yalnız platform yöneticisi. */
     clinicAddressGrants: {
