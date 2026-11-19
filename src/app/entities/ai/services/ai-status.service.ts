@@ -3,7 +3,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { AI_USE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { AiEntryState, AiStatusVm } from '@/app/entities/ai/models/ai-vm.model';
 import { AiService } from '@/app/entities/ai/services/ai.service';
-import { aiEntryState, aiUsageWarning } from '@/app/entities/ai/utils/ai-error.utils';
+import { aiClinicUsage, aiEntryState, aiUsageWarning } from '@/app/entities/ai/utils/ai-error.utils';
 
 /**
  * AI kullanılabilirliği (`GET /api/v1/ai/status`): oturumda klinik başına bir kez sorulur, istek 429/503 gibi bir engelle dönünce
@@ -20,8 +20,10 @@ export class AiStatusService {
     private loadedClinicId: string | null | undefined = undefined;
 
     readonly entry = computed<AiEntryState>(() => aiEntryState(this.status(), this.canUse()));
-    /** %80 ve üstünde sonucun altındaki amber not; yoksa `null`. */
+    /** %80 ve üstünde sonucun altındaki amber not (kalan kredi ve yenilenme günüyle); yoksa `null`. */
     readonly usageWarning = computed(() => aiUsageWarning(this.status()));
+    /** Klinik ayarlarındaki kullanım satırı (yalnız oran ve yenilenme); AI klinikte açık değilse `null`. */
+    readonly clinicUsage = computed(() => aiClinicUsage(this.status()));
 
     /** İzni olan kullanıcı için durumu (aktif klinik değiştiyse yeniden) sorar; izin yoksa hiç istek atmaz. */
     ensureLoaded(): void {

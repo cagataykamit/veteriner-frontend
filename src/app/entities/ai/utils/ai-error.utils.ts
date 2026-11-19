@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import type { AiEntryState, AiStatusVm } from '@/app/entities/ai/models/ai-vm.model';
+import type { AiClinicUsageVm, AiEntryState, AiStatusVm } from '@/app/entities/ai/models/ai-vm.model';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 /**
@@ -13,19 +13,31 @@ const UNTOUCHED = 'Hasta kartı ve kayıtlar etkilenmedi';
 export const AI_SYSTEM_UNAVAILABLE_REASON = 'Yapay zekâ şu an kullanılamıyor';
 export const AI_CLINIC_SELECTION_REASON = 'Önce klinik seçin';
 
-/** "Bu ayın AI kotası doldu · 1 Aralık'ta yenilenir": kota İstanbul takvim ayının ilk günü yenilenir (`status`'ta tarih yok). */
-export function aiQuotaExceededReason(now: Date = new Date()): string {
-    return `Bu ayın AI kotası doldu · ${aiQuotaResetLabel(now)}`;
+/** "Bu ayın AI kredisi bitti · 1 Aralık'ta yenilenir". */
+export function aiQuotaExceededReason(status: AiStatusVm | null, now: Date = new Date()): string {
+    return `Bu ayın AI kredisi bitti · ${aiStatusResetLabel(status, now)}`;
 }
 
 const RESET_DAY_LABELS = ["1 Ocak'ta", "1 Şubat'ta", "1 Mart'ta", "1 Nisan'da", "1 Mayıs'ta", "1 Haziran'da", "1 Temmuz'da", "1 Ağustos'ta", "1 Eylül'de", "1 Ekim'de", "1 Kasım'da", "1 Aralık'ta"];
 
 const ISTANBUL_MONTH = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Istanbul', month: 'numeric' });
 
+/** Sunucu yenilenme anını bildirmediyse: kredi İstanbul takvim ayının ilk günü yenilenir. */
 export function aiQuotaResetLabel(now: Date = new Date()): string {
     const month = Number(ISTANBUL_MONTH.format(now)); // 1–12
 
     return `${RESET_DAY_LABELS[month % 12]} yenilenir`;
+}
+
+/** Yenilenme etiketi: önce durumdaki `quotaResetsAtUtc` (İstanbul ayının 1'i), yoksa istemcinin İstanbul ayı. */
+export function aiStatusResetLabel(status: Pick<AiStatusVm, 'quotaResetsAtUtc'> | null, now: Date = new Date()): string {
+    const resetsAt = status?.quotaResetsAtUtc ? new Date(status.quotaResetsAtUtc) : null;
+
+    if (resetsAt && !Number.isNaN(resetsAt.getTime())) {
+        return `${RESET_DAY_LABELS[Number(ISTANBUL_MONTH.format(resetsAt)) - 1]} yenilenir`;
+    }
+
+    return aiQuotaResetLabel(now);
 }
 
 /**
@@ -46,7 +58,7 @@ export function aiEntryState(status: AiStatusVm | null, canUse: boolean, now: Da
         case 'Ai.ClinicNotEnabled':
             return { kind: 'hidden' };
         case 'Ai.ClinicQuotaExceeded':
-            return { kind: 'disabled', reason: aiQuotaExceededReason(now) };
+            return { kind: 'disabled', reason: aiQuotaExceededReason(status, now) };
         case 'Clinics.ClinicSelectionRequired':
             return { kind: 'disabled', reason: AI_CLINIC_SELECTION_REASON };
         default:
@@ -57,10 +69,47 @@ export function aiEntryState(status: AiStatusVm | null, canUse: boolean, now: Da
 /** Kliniğin aylık kullanımı bu orana gelince sonucun altında uyarı notu çıkar (ADR-044 madde 7). */
 export const AI_USAGE_WARNING_PERCENT = 80;
 
-export function aiUsageWarning(status: AiStatusVm | null): string | null {
+/** "Bu ayki AI kullanımı %84 · 320 kredi kaldı · 1 Aralık'ta yenilenir. …"; %80 altında `null`. */
+export function aiUsageWarning(status: AiStatusVm | null, now: Date = new Date()): string | null {
     const p = status?.clinicMonthUsedPercent ?? 0;
 
-    return p >= AI_USAGE_WARNING_PERCENT ? `Kliniğin bu ayki AI kullanımı %${Math.min(100, Math.round(p))}. Sınır dolunca yalnız AI özellikleri durur; diğer işler etkilenmez.` : null;
+    if (!status || p < AI_USAGE_WARNING_PERCENT) {
+        return null;
+    }
+
+    const parts = [`Bu ayki AI kullanımı %${Math.min(100, Math.round(p))}`];
+
+    if (typeof status.creditsRemaining === 'number') {
+        parts.push(`${status.creditsRemaining.toLocaleString('tr-TR')} kredi kaldı`);
+    }
+
+    parts.push(aiStatusResetLabel(status, now));
+
+    return `${parts.join(' · ')}. Kredi bitince yalnız AI özellikleri durur; diğer işler etkilenmez.`;
+}
+
+/**
+ * Klinik ayarlarındaki kullanım satırı: AI klinikte açık ve yapılandırılmışsa (kullanılabilir ya da kredi/bütçe engeli)
+ * oran ve yenilenme; kapalı, yapılandırılmamış, klinik seçili değil ya da durum okunamadıysa `null` (satır görünmez).
+ */
+export function aiClinicUsage(status: AiStatusVm | null, now: Date = new Date()): AiClinicUsageVm | null {
+    if (!status) {
+        return null;
+    }
+
+    const shown = status.isAvailable || status.unavailableCode === 'Ai.ClinicQuotaExceeded' || status.unavailableCode === 'Ai.SystemBudgetExhausted';
+
+    if (!shown) {
+        return null;
+    }
+
+    const exhausted = status.unavailableCode === 'Ai.ClinicQuotaExceeded';
+
+    return {
+        percent: exhausted ? 100 : Math.max(0, Math.min(100, Math.round(status.clinicMonthUsedPercent))),
+        resetLabel: aiStatusResetLabel(status, now),
+        exhausted
+    };
 }
 
 /** 429 `Ai.RateLimited`: sözleşmede `Retry-After` yok; istemci 60 sn sayar, başlık gelirse ona uyar. */
@@ -97,7 +146,7 @@ export function aiProblemFromError(err: unknown, subject: AiSubject, now: Date =
         case 'Ai.RateLimited':
             return { ...problem('Kısa sürede çok fazla istek gönderildi', `Bir dakika içinde yeniden deneyebilirsiniz. ${UNTOUCHED}.`, true), retryAfterSeconds: retryAfterSeconds(http) };
         case 'Ai.ClinicQuotaExceeded':
-            return problem('Bu ayın AI kotası doldu', `Kota ${aiQuotaResetLabel(now)}. ${UNTOUCHED}.`, false, true);
+            return problem('Bu ayın AI kredisi bitti', `Kredi ${aiQuotaResetLabel(now)}. ${UNTOUCHED}.`, false, true);
         case 'Ai.SystemBudgetExhausted':
         case 'Ai.NotConfigured':
         case 'Ai.ClinicNotEnabled':

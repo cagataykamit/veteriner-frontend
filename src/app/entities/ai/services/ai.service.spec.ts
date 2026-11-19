@@ -37,7 +37,7 @@ describe('AiService', () => {
         const p = firstValueFrom(service.getStatus());
 
         http.expectOne({ method: 'GET', url: 'http://api.test/api/v1/ai/status' }).flush({ isAvailable: true, unavailableCode: null, isConfigured: true, isClinicEnabled: true, clinicMonthUsedPercent: 12 });
-        expect(await p).toEqual({ isAvailable: true, unavailableCode: null, clinicMonthUsedPercent: 12 });
+        expect(await p).toEqual({ isAvailable: true, unavailableCode: null, clinicMonthUsedPercent: 12, creditsRemaining: null, quotaResetsAtUtc: null });
     });
 
     it('geçmiş özeti: gövdesiz POST, yanıt görünüm modeline çevrilir', async () => {

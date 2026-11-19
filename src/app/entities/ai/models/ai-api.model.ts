@@ -10,8 +10,17 @@ export interface AiStatusDto {
     unavailableCode?: string | null;
     isConfigured: boolean;
     isClinicEnabled: boolean;
-    /** 0–100; kliniğin bu ayki (İstanbul takvim ayı) kullanımının sınıra oranı. */
+    /** 0–100; kliniğin bu ayki (İstanbul takvim ayı) kullanım oranı: harcanan / (harcanan + kalan kredi), sigorta daha yüksekse o. */
     clinicMonthUsedPercent: number;
+    /** Kredi alanları (AI-007, sözleşme §1 ve §4a); aktif klinik yoksa `null`. İki ondalıklı. */
+    monthlyCredits?: number | null;
+    creditsUsedThisMonth?: number | null;
+    /** Kalan aylık kota + fon bakiyesi. */
+    creditsRemaining?: number | null;
+    /** Fon bakiyesi (devreder). */
+    fundCredits?: number | null;
+    /** Aylık kotanın yenileneceği an (sonraki İstanbul ayının 1'i 00:00, UTC). */
+    quotaResetsAtUtc?: string | null;
 }
 
 /** Kaynak kayıt: `Pet` ya da zaman çizelgesi türü. `occurredAtUtc` `Pet` için `null`. */

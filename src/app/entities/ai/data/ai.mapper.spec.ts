@@ -30,9 +30,20 @@ describe('ai.mapper', () => {
         expect(mapAiStatusDtoToVm({ isAvailable: false, unavailableCode: ' Ai.ClinicQuotaExceeded ', isConfigured: true, isClinicEnabled: true, clinicMonthUsedPercent: 100 })).toEqual({
             isAvailable: false,
             unavailableCode: 'Ai.ClinicQuotaExceeded',
-            clinicMonthUsedPercent: 100
+            clinicMonthUsedPercent: 100,
+            creditsRemaining: null,
+            quotaResetsAtUtc: null
         });
         expect(mapAiStatusDtoToVm({ isAvailable: true, unavailableCode: null, isConfigured: true, isClinicEnabled: true, clinicMonthUsedPercent: Number.NaN }).clinicMonthUsedPercent).toBe(0);
+    });
+
+    it('durum: kalan kredi aşağı yuvarlanır (eksi değer 0), yenilenme anı taşınır', () => {
+        const base = { isAvailable: true, unavailableCode: null, isConfigured: true, isClinicEnabled: true, clinicMonthUsedPercent: 84 };
+
+        expect(mapAiStatusDtoToVm({ ...base, monthlyCredits: 2000, creditsRemaining: 320.75, fundCredits: 0, quotaResetsAtUtc: '2026-11-30T21:00:00Z' })).toEqual(
+            expect.objectContaining({ creditsRemaining: 320, quotaResetsAtUtc: '2026-11-30T21:00:00Z' })
+        );
+        expect(mapAiStatusDtoToVm({ ...base, creditsRemaining: -2 }).creditsRemaining).toBe(0);
     });
 
     it('kaynak: Pet hasta kartına, zaman çizelgesi türü detay sayfasına gider ve kısa tarih taşır', () => {

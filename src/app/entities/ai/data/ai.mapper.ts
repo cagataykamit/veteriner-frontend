@@ -10,7 +10,9 @@ export function mapAiStatusDtoToVm(dto: AiStatusDto): AiStatusVm {
     return {
         isAvailable: dto.isAvailable === true,
         unavailableCode: dto.unavailableCode?.trim() || null,
-        clinicMonthUsedPercent: Number.isFinite(dto.clinicMonthUsedPercent) ? dto.clinicMonthUsedPercent : 0
+        clinicMonthUsedPercent: Number.isFinite(dto.clinicMonthUsedPercent) ? dto.clinicMonthUsedPercent : 0,
+        creditsRemaining: typeof dto.creditsRemaining === 'number' && Number.isFinite(dto.creditsRemaining) ? Math.max(0, Math.floor(dto.creditsRemaining)) : null,
+        quotaResetsAtUtc: dto.quotaResetsAtUtc?.trim() || null
     };
 }
 

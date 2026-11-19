@@ -3,6 +3,18 @@ export interface AiStatusVm {
     unavailableCode: string | null;
     /** 0–100; %80 ve üstünde sonucun altında uyarı notu çıkar (ADR-044 madde 7). */
     clinicMonthUsedPercent: number;
+    /** Kalan kredi (aylık kota + fon), tam sayıya aşağı yuvarlı; sunucu bildirmediyse `null`. */
+    creditsRemaining?: number | null;
+    /** Aylık kotanın yenileneceği an; sunucu bildirmediyse `null` (istemci İstanbul ayından hesaplar). */
+    quotaResetsAtUtc?: string | null;
+}
+
+/** Klinik ayarlarındaki sade kullanım satırı: yalnız oran ve yenilenme (dolar ve kredi yok). */
+export interface AiClinicUsageVm {
+    percent: number;
+    /** "1 Aralık'ta yenilenir" */
+    resetLabel: string;
+    exhausted: boolean;
 }
 
 /** AI giriş düğmesinin görünümü; kural tek yerde (`aiEntryState`). */

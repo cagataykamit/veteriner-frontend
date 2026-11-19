@@ -1,6 +1,6 @@
 import { HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import type { AiStatusVm } from '@/app/entities/ai/models/ai-vm.model';
-import { aiEntryState, aiProblemFromError, aiQuotaResetLabel, aiUsageWarning } from '@/app/entities/ai/utils/ai-error.utils';
+import { aiClinicUsage, aiEntryState, aiProblemFromError, aiQuotaResetLabel, aiStatusResetLabel, aiUsageWarning } from '@/app/entities/ai/utils/ai-error.utils';
 
 const status = (over: Partial<AiStatusVm> = {}): AiStatusVm => ({ isAvailable: true, unavailableCode: null, clinicMonthUsedPercent: 0, ...over });
 
@@ -23,7 +23,7 @@ describe('ai-error.utils', () => {
         it('kota doldu, sistem bütçesi ve klinik seçimi: soluk, nedeni yazılı', () => {
             expect(aiEntryState(status({ isAvailable: false, unavailableCode: 'Ai.ClinicQuotaExceeded' }), true, NOV_19)).toEqual({
                 kind: 'disabled',
-                reason: "Bu ayın AI kotası doldu · 1 Aralık'ta yenilenir"
+                reason: "Bu ayın AI kredisi bitti · 1 Aralık'ta yenilenir"
             });
             expect(aiEntryState(status({ isAvailable: false, unavailableCode: 'Ai.SystemBudgetExhausted' }), true)).toEqual({ kind: 'disabled', reason: 'Yapay zekâ şu an kullanılamıyor' });
             expect(aiEntryState(status({ isAvailable: false, unavailableCode: 'Clinics.ClinicSelectionRequired' }), true)).toEqual({ kind: 'disabled', reason: 'Önce klinik seçin' });
@@ -41,9 +41,37 @@ describe('ai-error.utils', () => {
         expect(aiQuotaResetLabel(new Date('2026-03-10T10:00:00Z'))).toBe("1 Nisan'da yenilenir");
     });
 
+    it('yenilenme günü önce sunucunun bildirdiği andan (İstanbul ayının 1i), yoksa istemci ayından', () => {
+        expect(aiStatusResetLabel(status({ quotaResetsAtUtc: '2026-11-30T21:00:00Z' }), NOV_19)).toBe("1 Aralık'ta yenilenir");
+        expect(aiStatusResetLabel(status({ quotaResetsAtUtc: '2026-12-31T21:00:00Z' }), NOV_19)).toBe("1 Ocak'ta yenilenir");
+        expect(aiStatusResetLabel(status({ quotaResetsAtUtc: 'bozuk' }), NOV_19)).toBe("1 Aralık'ta yenilenir");
+        expect(aiStatusResetLabel(null, NOV_19)).toBe("1 Aralık'ta yenilenir");
+        expect(aiEntryState(status({ isAvailable: false, unavailableCode: 'Ai.ClinicQuotaExceeded', quotaResetsAtUtc: '2026-12-31T21:00:00Z' }), true, NOV_19)).toEqual({
+            kind: 'disabled',
+            reason: "Bu ayın AI kredisi bitti · 1 Ocak'ta yenilenir"
+        });
+    });
+
+    it('klinik ayarı kullanım satırı: yalnız AI açıkken, oran ve yenilenme', () => {
+        expect(aiClinicUsage(status({ clinicMonthUsedPercent: 12.4 }), NOV_19)).toEqual({ percent: 12, resetLabel: "1 Aralık'ta yenilenir", exhausted: false });
+        expect(aiClinicUsage(status({ isAvailable: false, unavailableCode: 'Ai.ClinicQuotaExceeded', clinicMonthUsedPercent: 100 }), NOV_19)).toEqual(
+            expect.objectContaining({ percent: 100, exhausted: true })
+        );
+        expect(aiClinicUsage(status({ isAvailable: false, unavailableCode: 'Ai.SystemBudgetExhausted', clinicMonthUsedPercent: 40 }), NOV_19)?.percent).toBe(40);
+        expect(aiClinicUsage(status({ isAvailable: false, unavailableCode: 'Ai.ClinicNotEnabled' }))).toBeNull();
+        expect(aiClinicUsage(status({ isAvailable: false, unavailableCode: 'Ai.NotConfigured' }))).toBeNull();
+        expect(aiClinicUsage(status({ isAvailable: false, unavailableCode: 'Clinics.ClinicSelectionRequired' }))).toBeNull();
+        expect(aiClinicUsage(null)).toBeNull();
+    });
+
     it('%80 ve üstünde kullanım notu, altında yok', () => {
         expect(aiUsageWarning(status({ clinicMonthUsedPercent: 79 }))).toBeNull();
-        expect(aiUsageWarning(status({ clinicMonthUsedPercent: 84.4 }))).toBe('Kliniğin bu ayki AI kullanımı %84. Sınır dolunca yalnız AI özellikleri durur; diğer işler etkilenmez.');
+        expect(aiUsageWarning(status({ clinicMonthUsedPercent: 84.4 }), NOV_19)).toBe(
+            "Bu ayki AI kullanımı %84 · 1 Aralık'ta yenilenir. Kredi bitince yalnız AI özellikleri durur; diğer işler etkilenmez."
+        );
+        expect(aiUsageWarning(status({ clinicMonthUsedPercent: 91, creditsRemaining: 1320, quotaResetsAtUtc: '2026-12-31T21:00:00Z' }), NOV_19)).toBe(
+            "Bu ayki AI kullanımı %91 · 1.320 kredi kaldı · 1 Ocak'ta yenilenir. Kredi bitince yalnız AI özellikleri durur; diğer işler etkilenmez."
+        );
         expect(aiUsageWarning(null)).toBeNull();
     });
 
@@ -57,7 +85,7 @@ describe('ai-error.utils', () => {
 
         it('kota ve bütçe: tekrar dene yok, durum yeniden sorulur', () => {
             expect(aiProblemFromError(httpError(429, 'Ai.ClinicQuotaExceeded'), 'summary', NOV_19)).toEqual(
-                expect.objectContaining({ title: 'Bu ayın AI kotası doldu', message: "Kota 1 Aralık'ta yenilenir. Hasta kartı ve kayıtlar etkilenmedi.", retryable: false, refreshStatus: true })
+                expect.objectContaining({ title: 'Bu ayın AI kredisi bitti', message: "Kredi 1 Aralık'ta yenilenir. Hasta kartı ve kayıtlar etkilenmedi.", retryable: false, refreshStatus: true })
             );
             expect(aiProblemFromError(httpError(503, 'Ai.SystemBudgetExhausted'), 'summary')).toEqual(expect.objectContaining({ retryable: false, refreshStatus: true }));
         });
