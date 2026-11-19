@@ -394,7 +394,17 @@ export function todayReasonText(item: Pick<TodayItemVm, 'arrivalReason' | 'appoi
     return item.arrivalReason ?? item.appointmentReasonName;
 }
 
-export type TodaySecondaryActionKey = 'markNoShow' | 'revertNoShow' | 'correct' | 'restore' | 'collectPayment' | 'addCharge' | 'bookAppointment' | 'editPreparation' | 'toggleUrgency';
+export type TodaySecondaryActionKey =
+    | 'markNoShow'
+    | 'revertNoShow'
+    | 'correct'
+    | 'restore'
+    | 'collectPayment'
+    | 'addCharge'
+    | 'markNoCharge'
+    | 'bookAppointment'
+    | 'editPreparation'
+    | 'toggleUrgency';
 
 export interface TodaySecondaryAction {
     key: TodaySecondaryActionKey;
@@ -420,6 +430,11 @@ export function todaySecondaryActions(item: TodayItemVm, actions: TodayItemActio
 
     if (perms.canCreateCharge && !item.isVoided) {
         out.push({ key: 'addCharge', label: 'Ücret ekle', icon: 'pi pi-plus' });
+    }
+
+    // Tamamlanmış ve hiç ücreti olmayan geliş gerçekten ücretsizse "Ücret yok" listesinden bilerek çıkarılır (OPEN_ITEMS madde 1a).
+    if (perms.canUpdateVisit && actions.canAddMissingCharge) {
+        out.push({ key: 'markNoCharge', label: 'Ücretsiz olarak işaretle', icon: 'pi pi-check-circle' });
     }
 
     if (perms.canCollectPayment && !item.isVoided) {

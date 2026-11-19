@@ -97,6 +97,27 @@ describe('TodayOpenVisitsChipComponent', () => {
         expect(link?.getAttribute('href')).toBe('/panel/charges/new?clientId=cl1&petId=p1&visitId=v1&examinationId=ex1');
     });
 
+    it('ücret yok listesinde tamamlanmış gelişe "Ücretsiz" düğmesi; açık gelişte yok', async () => {
+        const { fixture } = await render(
+            'Uncharged',
+            { kind: 'Uncharged', totalCount: 2, items: [row({ visitId: 'done', careStatus: 'Completed' }), row({ visitId: 'open', careStatus: 'InProgress' })] },
+            { canCompleteVisit: true }
+        );
+        const marked: string[] = [];
+
+        fixture.componentInstance.markNoCharge.subscribe((r) => marked.push(r.visitId));
+        (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('[data-testid="open-items-chip-Uncharged"]')!.click();
+        fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        const buttons = document.body.querySelectorAll<HTMLButtonElement>('[data-testid="open-items-panel-Uncharged"] [data-testid="open-items-mark-no-charge"]');
+
+        expect(buttons.length).toBe(1);
+        buttons[0].click();
+        expect(marked).toEqual(['done']);
+    });
+
     it('yükleme hatası mesaj olarak gösterilir', async () => {
         const { c } = await render('Incomplete', { kind: 'Incomplete', totalCount: 0, items: [] });
 

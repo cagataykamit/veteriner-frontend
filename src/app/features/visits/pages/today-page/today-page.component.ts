@@ -91,6 +91,9 @@ const COMPACT_MEDIA_QUERY = '(max-width: 40rem)';
 
 type RefreshMode = 'initial' | 'silent';
 
+/** Tamamlanacak geliş: Bugün satırı ya da "Önceki günden açık geliş" listesindeki satır (satır anahtarı = meşgul kilidi). */
+type CompletionTarget = Pick<TodayItemVm, 'key' | 'visitId' | 'petId' | 'petName' | 'clientId' | 'latestExaminationId'>;
+
 /** Tek tablonun satırları: grup ara başlığı, kayıt ya da katlanmış tamamlananları açan/kapatan satır. */
 type TodayListRow = { kind: 'group'; id: string; group: TodayGroup } | { kind: 'item'; id: string; item: TodayItemVm; groupKey: TodayGroupKey; done: boolean } | { kind: 'toggle'; id: string; hiddenCount: number; expanded: boolean };
 
@@ -243,8 +246,10 @@ export class TodayPageComponent implements OnInit {
     private readonly rowMenu = viewChild<Menu>('rowMenu');
     readonly rowMenuItems = signal<MenuItem[]>([]);
     /** Menü kapanış animasyonu bitmeden sayfa değişirse kaplama gövdede asılı kalır; ödeme/ücret sayfasına menü kapandıktan sonra gidilir. */
-    /** Muayene ve ücret kaydı olmadan "Tamamla"ya basılan satır: Muayene aç / Ücret ekle / Ücretsiz tamamla sorulur. */
-    readonly completePromptItem = signal<TodayItemVm | null>(null);
+    /** Muayene ve ücret kaydı olmadan "Tamamla"ya basılan geliş: Muayene aç / Ücret ekle / Ücretsiz tamamla sorulur. */
+    readonly completePromptItem = signal<CompletionTarget | null>(null);
+    /** "Ücretsiz olarak işaretle" onayı bekleyen tamamlanmış geliş (satır menüsü ya da "Ücret yok" listesi). */
+    readonly noChargeConfirm = signal<{ visitId: string; key: string; petName: string } | null>(null);
     private readonly navigateAfterMenu = signal<{ item: TodayItemVm; target: 'payment' | 'charge' | 'appointment' } | null>(null);
     readonly noShowOpen = signal(false);
     readonly noShowItem = signal<TodayItemVm | null>(null);
@@ -432,7 +437,7 @@ export class TodayPageComponent implements OnInit {
         return waitAlertLevel(item, this.now());
     }
 
-    isBusy(item: TodayItemVm): boolean {
+    isBusy(item: Pick<TodayItemVm, 'key'>): boolean {
         return this.busyKeys().has(item.key);
     }
 
@@ -526,6 +531,7 @@ export class TodayPageComponent implements OnInit {
             toggleUrgency: () => this.toggleUrgency(item),
             collectPayment: () => this.navigateAfterMenu.set({ item, target: 'payment' }),
             addCharge: () => this.navigateAfterMenu.set({ item, target: 'charge' }),
+            markNoCharge: () => item.visitId && this.noChargeConfirm.set({ visitId: item.visitId, key: item.key, petName: item.petName }),
             bookAppointment: () => this.navigateAfterMenu.set({ item, target: 'appointment' })
         };
         const blocked = this.ro.mutationBlocked() || this.isBusy(item);
@@ -610,7 +616,7 @@ export class TodayPageComponent implements OnInit {
      * Gelişin muayenesi varsa o açılır (aynı gelişe ikinci muayene açılmasın); yoksa yeni muayene: hasta tekrar seçilmez, Visit kimliği ve
      * hasta bağlamı muayene çalışma alanına query ile taşınır.
      */
-    openExamination(item: TodayItemVm): void {
+    openExamination(item: Pick<TodayItemVm, 'visitId' | 'clientId' | 'petId' | 'latestExaminationId'>): void {
         if (item.latestExaminationId) {
             void this.router.navigate(['/panel/examinations', item.latestExaminationId]);
 
@@ -653,7 +659,7 @@ export class TodayPageComponent implements OnInit {
     }
 
     /** Müşteri, hasta ve (varsa) geliş bağlamı ücret formuna taşınır; hasta tekrar seçilmez. */
-    openCharge(item: TodayItemVm): void {
+    openCharge(item: Pick<TodayItemVm, 'visitId' | 'clientId' | 'petId'>): void {
         void this.router.navigate(['/panel/charges/new'], { queryParams: { clientId: item.clientId, petId: item.petId, visitId: item.visitId } });
     }
 
@@ -678,18 +684,18 @@ export class TodayPageComponent implements OnInit {
         this.transition(item, 'complete');
     }
 
-    promptOpenExamination(item: TodayItemVm): void {
+    promptOpenExamination(item: CompletionTarget): void {
         this.completePromptItem.set(null);
         this.openExamination(item);
     }
 
-    promptOpenCharge(item: TodayItemVm): void {
+    promptOpenCharge(item: CompletionTarget): void {
         this.completePromptItem.set(null);
         this.openCharge(item);
     }
 
     /** Bilinçli ücretsiz kapatma: ziyaret tamamlanır, Açık işler "Ücret yok"a girmez. */
-    completeWithoutCharge(item: TodayItemVm): void {
+    completeWithoutCharge(item: CompletionTarget): void {
         this.completePromptItem.set(null);
 
         if (item.visitId && !this.isBusy(item)) {
@@ -697,11 +703,56 @@ export class TodayPageComponent implements OnInit {
         }
     }
 
-    /** "Önceki günden açık geliş" listesindeki devam eden gelişi tamamlar; satırın Tamamla'sıyla aynı akış (satır anahtarı = ziyaret kimliği). */
+    /**
+     * "Önceki günden açık geliş" listesindeki devam eden gelişi tamamlar; satırın Tamamla'sıyla aynı akış (satır anahtarı = ziyaret kimliği).
+     * Muayenesi yoksa önce aynı soru sorulur (Muayene aç / Ücret ekle / Ücretsiz tamamla).
+     */
     completeOpenVisit(row: OpenItemVisitVm): void {
-        if (!this.busyKeys().has(row.visitId)) {
-            this.changeCare(row.visitId, row.visitId, 'complete');
+        if (this.busyKeys().has(row.visitId)) {
+            return;
         }
+
+        if (!row.latestExaminationId) {
+            this.completePromptItem.set({ key: row.visitId, visitId: row.visitId, petId: row.petId, petName: row.petName, clientId: row.clientId, latestExaminationId: null });
+
+            return;
+        }
+
+        this.changeCare(row.visitId, row.visitId, 'complete');
+    }
+
+    /** "Ücret yok" listesinden: tamamlanmış gelişi ücretsiz olarak işaretlemek için onay sorulur. */
+    requestMarkNoCharge(row: OpenItemVisitVm): void {
+        this.noChargeConfirm.set({ visitId: row.visitId, key: row.visitId, petName: row.petName });
+    }
+
+    /** Tamamlanmış geliş bilinçli ücretsiz işaretlenir (`complete { withoutCharge }`, idempotent); "Ücret yok"tan düşer. */
+    confirmMarkNoCharge(): void {
+        const target = this.noChargeConfirm();
+
+        this.noChargeConfirm.set(null);
+
+        if (!target || this.busyKeys().has(target.key)) {
+            return;
+        }
+
+        this.setBusy(target.key, true);
+        this.visitsService.completeVisit(target.visitId, { withoutCharge: true }).subscribe({
+            next: () => {
+                this.setBusy(target.key, false);
+                addTracedToast(this.messages, 'TodayPage', this.router.url, { severity: 'success', summary: 'Ücretsiz olarak işaretlendi.', life: 3000 });
+                this.refresh('silent');
+            },
+            error: (e: unknown) => {
+                this.setBusy(target.key, false);
+                addTracedToast(this.messages, 'TodayPage', this.router.url, {
+                    severity: 'error',
+                    summary: 'İşaretlenemedi.',
+                    detail: panelHttpFailureMessage(e, 'İşaretlenemedi.'),
+                    life: 6000
+                });
+            }
+        });
     }
 
     private changeCare(visitId: string, key: string, kind: 'start' | 'complete', options: { withoutCharge?: boolean } = {}, afterSuccess?: () => void): void {

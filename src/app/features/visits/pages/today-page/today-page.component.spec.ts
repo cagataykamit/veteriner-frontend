@@ -547,7 +547,7 @@ describe('TodayPageComponent', () => {
                 clientId: 'cl1',
                 clientName: 'Ali',
                 responsibleVeterinarianName: null,
-                latestExaminationId: null,
+                latestExaminationId: 'e1',
                 chargeableWorkCount: null
             });
             await vi.advanceTimersByTimeAsync(0);
@@ -555,6 +555,45 @@ describe('TodayPageComponent', () => {
             expect(visits.completeVisit).toHaveBeenCalledWith('old1', {});
             expect(toasts).toHaveBeenCalledWith(expect.objectContaining({ severity: 'success', summary: 'Bakım tamamlandı.' }));
             expect(visits.getToday).toHaveBeenCalled();
+        });
+
+        it('açık geliş listesinden muayenesiz gelişi Tamamla önce sorar; Ücretsiz tamamla withoutCharge ile kapatır', async () => {
+            const f = await create(['Visits.Read', 'Visits.Update'], { date: 'd', activeHospitalizations: [], items: [item()], openItems: null });
+
+            visits.completeVisit.mockReturnValue(of(visitVm));
+            f.componentInstance.completeOpenVisit({
+                visitId: 'old2',
+                arrivedAtUtc: '2026-10-08T07:00:00Z',
+                careStatus: 'InProgress',
+                petId: 'p2',
+                petName: 'Tekir',
+                clientId: 'cl2',
+                clientName: 'Ayşe',
+                responsibleVeterinarianName: null,
+                latestExaminationId: null,
+                chargeableWorkCount: null
+            });
+            expect(visits.completeVisit).not.toHaveBeenCalled();
+            const prompt = f.componentInstance.completePromptItem();
+
+            expect(prompt?.visitId).toBe('old2');
+            f.componentInstance.completeWithoutCharge(prompt!);
+            await vi.advanceTimersByTimeAsync(0);
+            expect(visits.completeVisit).toHaveBeenCalledWith('old2', { withoutCharge: true });
+        });
+
+        it('Ücretsiz olarak işaretle: onaydan sonra tamamlanmış gelişi withoutCharge ile işaretler', async () => {
+            const done = item({ key: 'c', visitId: 'v7', careStatus: 'Completed', chargeIndicator: 'ChargeMissing', pendingChargeCount: 0, petName: 'Boncuk' });
+            const f = await create(['Visits.Read', 'Visits.Update'], { date: 'd', activeHospitalizations: [], items: [done] });
+            const keys = f.componentInstance.secondaryActionsOf(done, f.componentInstance.actionsOf(done)).map((a) => a.key);
+
+            expect(keys).toContain('markNoCharge');
+            visits.completeVisit.mockReturnValue(of(visitVm));
+            f.componentInstance.noChargeConfirm.set({ visitId: 'v7', key: 'c', petName: 'Boncuk' });
+            f.componentInstance.confirmMarkNoCharge();
+            await vi.advanceTimersByTimeAsync(0);
+            expect(visits.completeVisit).toHaveBeenCalledWith('v7', { withoutCharge: true });
+            expect(toasts).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Ücretsiz olarak işaretlendi.' }));
         });
 
         it('hiç başlamamış açık geliş düzeltme diyaloğunda açılır', async () => {

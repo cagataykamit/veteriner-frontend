@@ -45,6 +45,7 @@ const TONE_MUTED = 'text-muted-color border-surface-300 dark:border-surface-700'
                         [canCorrectVisit]="canCorrectVisit()"
                         (complete)="completeVisit.emit($event)"
                         (correct)="correctVisit.emit($event)"
+                        (markNoCharge)="markNoCharge.emit($event)"
                     />
                 } @else {
                     <a [routerLink]="e.link" [queryParams]="e.queryParams ?? null" [attr.title]="e.title" class="inline-flex items-center gap-1 rounded-border border px-2 py-0.5 text-sm no-underline touch:min-h-(--touch-target)" [class]="e.tone">
@@ -71,6 +72,8 @@ export class TodayOpenItemsComponent {
     readonly canCorrectVisit = input(false);
     readonly completeVisit = output<OpenItemVisitVm>();
     readonly correctVisit = output<OpenItemVisitVm>();
+    /** "Ücret yok" listesinde tamamlanmış gelişi ücretsiz işaretle. */
+    readonly markNoCharge = output<OpenItemVisitVm>();
 
     readonly entries = computed<OpenItemEntry[]>(() => {
         const s = this.summary();

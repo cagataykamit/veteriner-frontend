@@ -74,6 +74,9 @@ export function chargeLinkParams(row: OpenItemVisitVm): Record<string, string> {
                                         @if (canAddCharge()) {
                                             <a pButton size="small" [text]="true" [routerLink]="chargeRoute" [queryParams]="chargeParams(r)" (click)="panel.hide()" data-testid="open-items-add-charge">Ücret ekle</a>
                                         }
+                                        @if (canCompleteVisit() && r.careStatus === 'Completed') {
+                                            <button pButton type="button" size="small" [text]="true" severity="secondary" title="Gerçekten ücretsiz bir gelişse listeden çıkar" (click)="panel.hide(); markNoCharge.emit(r)" data-testid="open-items-mark-no-charge">Ücretsiz</button>
+                                        }
                                     } @else if (r.careStatus === 'InProgress' && canCompleteVisit()) {
                                         <button pButton type="button" size="small" [text]="true" (click)="panel.hide(); complete.emit(r)" data-testid="open-items-complete">Tamamla</button>
                                     } @else if (r.careStatus !== 'InProgress' && canCorrectVisit()) {
@@ -110,6 +113,8 @@ export class TodayOpenVisitsChipComponent {
     readonly complete = output<OpenItemVisitVm>();
     /** Hiç başlamamış açık gelişi düzeltme diyaloğunda kapat (Tamamlandı ya da yanlış geliş). */
     readonly correct = output<OpenItemVisitVm>();
+    /** "Ücret yok" listesinde tamamlanmış gelişi bilinçli ücretsiz işaretle (onay sayfada sorulur). */
+    readonly markNoCharge = output<OpenItemVisitVm>();
 
     readonly chargeRoute = '/panel/charges/new';
     readonly chargeParams = chargeLinkParams;

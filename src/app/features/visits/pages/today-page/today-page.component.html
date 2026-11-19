@@ -58,6 +58,7 @@
             [canCorrectVisit]="canCorrect && !ro.mutationBlocked()"
             (completeVisit)="completeOpenVisit($event)"
             (correctVisit)="openCorrection($event)"
+            (markNoCharge)="requestMarkNoCharge($event)"
         >
             @if (showPendingChip()) {
                 <app-pending-appointment-requests-chip
@@ -581,6 +582,24 @@
 </ng-template>
 
 <p-menu #rowMenu [popup]="true" [model]="rowMenuItems()" appendTo="body" (onHide)="openPendingNavigation()" />
+<!-- Tamamlanmış ücretsiz geliş: bilerek "ücretsiz" işaretlenir, "Ücret yok" listesinden çıkar (geri alınmaz, onay sorulur). -->
+<p-dialog
+    header="Ücretsiz olarak işaretle"
+    [modal]="true"
+    [visible]="noChargeConfirm() !== null"
+    (visibleChange)="$event ? null : noChargeConfirm.set(null)"
+    [style]="{ width: 'min(28rem, 95vw)' }"
+    [draggable]="false"
+    data-testid="today-no-charge-confirm"
+>
+    @if (noChargeConfirm(); as t) {
+        <p class="mt-0 mb-4 text-sm"><span class="font-semibold">{{ t.petName }}</span> gelişi ücretsiz kabul edilsin mi? "Ücret yok" listesinden çıkar; sonradan ücret yine eklenebilir.</p>
+        <div class="flex flex-wrap justify-end gap-2">
+            <button pButton type="button" severity="secondary" [outlined]="true" (click)="noChargeConfirm.set(null)">Vazgeç</button>
+            <button pButton type="button" (click)="confirmMarkNoCharge()" data-testid="today-no-charge-confirm-ok"><i class="pi pi-check"></i>Ücretsiz olarak işaretle</button>
+        </div>
+    }
+</p-dialog>
 <!-- Muayene ve ücret kaydı olmadan "Tamamla": sessizce kapatılmaz; kullanıcı seçer (OPEN_ITEMS madde 1a). -->
 <p-dialog
     header="Bu gelişte muayene ve ücret kaydı yok"
