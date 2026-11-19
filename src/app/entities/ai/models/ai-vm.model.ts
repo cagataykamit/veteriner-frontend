@@ -93,3 +93,49 @@ export interface AiProvenanceVm {
 export const AI_FEATURE_EXAM_NOTE = 'ExamNoteStructure';
 export const AI_FEATURE_OWNER_EXPLANATION = 'OwnerExplanation';
 export const AI_FEATURE_DISCHARGE_INSTRUCTIONS = 'DischargeInstructions';
+
+/** Doğal dille hasta araması (AI-006): anlaşılan filtre ve uyarılar. Filtre sunucu şemasıyla aynı kalır (`PetSearchFilterDto`). */
+export interface PetSearchInterpretationVm {
+    isEmpty: boolean;
+    /** Modelin filtreye çeviremediği kısımlar ("ad ile arama"). */
+    unsupported: string[];
+    /** Geçersiz olduğu için uygulanmayan değerler. */
+    dropped: string[];
+}
+
+/** Sonuçtaki eşleşen kayıt: kaynak çipi (kaydın sayfasına gider) + kısa metin ("Kusma", "Karma"). */
+export interface PetSearchMatchVm {
+    source: AiSourceVm;
+    text: string;
+    isOverdue: boolean;
+}
+
+export interface PetSearchItemVm {
+    petId: string;
+    name: string;
+    speciesName: string;
+    /** "Dişi · 3 yaş · Tekir" gibi kısa satır; bilgi yoksa boş. */
+    detail: string;
+    isDeceased: boolean;
+    clientId: string | null;
+    clientName: string;
+    matches: PetSearchMatchVm[];
+}
+
+export interface PetSearchResultVm {
+    items: PetSearchItemVm[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    dropped: string[];
+    truncated: boolean;
+    /** "tedavi" gibi; okuma izni olmadığı için aranmayan kayıt türleri. */
+    omittedTypesLabel: string | null;
+}
+
+/** "Şöyle anladım" çipi; `id` kaldırma işleminin anahtarıdır (`removePetSearchChip`). */
+export interface PetSearchChipVm {
+    id: string;
+    label: string;
+    icon: string;
+}

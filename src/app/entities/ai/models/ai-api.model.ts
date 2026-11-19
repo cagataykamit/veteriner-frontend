@@ -102,3 +102,78 @@ export interface AiProvenanceDto {
 export interface AiNoteDraftRequestDto {
     text?: string;
 }
+
+/**
+ * Doğal dille hasta aramasının yapılandırılmış filtresi (AI-006; Veteriner `docs/AI_PATIENT_SEARCH_API_CONTRACT.md` §2). Tüm alanlar
+ * isteğe bağlı; verilenler VE, listedeki terimler VEYA ile birleşir. Sunucu geçersiz değeri atar ve `dropped`'a yazar.
+ */
+export interface PetSearchFilterDto {
+    species?: string[] | null;
+    sex?: 'Male' | 'Female' | null;
+    neutered?: boolean | null;
+    ageMinYears?: number | null;
+    ageMaxYears?: number | null;
+    status?: 'Active' | 'Deceased' | null;
+    /** `YYYY-MM-DD` (İstanbul günü, dahil). */
+    from?: string | null;
+    to?: string | null;
+    clinicalTerms?: string[] | null;
+    vaccineTerms?: string[] | null;
+    vaccineState?: 'Any' | 'Applied' | 'Scheduled' | 'Overdue' | null;
+    medicationTerms?: string[] | null;
+}
+
+/** `POST ai/pet-search/interpret` gövdesi; cümle saklanmaz. */
+export interface PetSearchInterpretRequestDto {
+    query: string;
+}
+
+export interface PetSearchInterpretationDto {
+    filter: PetSearchFilterDto | null;
+    isEmpty: boolean;
+    unsupported?: string[] | null;
+    dropped?: string[] | null;
+    model?: string | null;
+    interpretedAtUtc?: string | null;
+}
+
+/** `POST ai/pet-search/results` gövdesi; AI çağırmaz, kota harcamaz. */
+export interface PetSearchRequestDto {
+    filter: PetSearchFilterDto;
+    page: number;
+    pageSize: number;
+}
+
+export interface PetSearchMatchDto {
+    type: string;
+    id: string;
+    occurredAtUtc?: string | null;
+    text?: string | null;
+    isOverdue?: boolean | null;
+}
+
+export interface PetSearchItemDto {
+    petId: string;
+    name: string;
+    speciesCode?: string | null;
+    speciesName?: string | null;
+    breed?: string | null;
+    sex?: string | null;
+    isNeutered?: boolean | null;
+    ageYears?: number | null;
+    status?: string | null;
+    clientId?: string | null;
+    clientName?: string | null;
+    matches?: PetSearchMatchDto[] | null;
+}
+
+export interface PetSearchResultDto {
+    filter: PetSearchFilterDto | null;
+    dropped?: string[] | null;
+    items?: PetSearchItemDto[] | null;
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    truncated?: boolean | null;
+    omittedTypes?: string[] | null;
+}

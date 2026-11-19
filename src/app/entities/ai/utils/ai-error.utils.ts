@@ -131,10 +131,15 @@ export interface AiProblem {
  * Hangi işin sorunu: üretimde "Özet / Taslak şu an hazırlanamadı"; kararda (kabul, at) kayıt kendi kurallarına takılabilir
  * (kesinleşmiş muayene, sürüm çakışması, uzunluk) ve bu tekrar denenerek düzelmez.
  */
-export type AiSubject = 'summary' | 'draft' | 'decision';
+export type AiSubject = 'summary' | 'draft' | 'decision' | 'search';
 
-const SUBJECT_NOUN: Record<AiSubject, string> = { summary: 'Özet', draft: 'Taslak', decision: 'Taslak' };
-const REFUSED_TITLE: Record<AiSubject, string> = { summary: 'Bu kayıtlar için özet üretilemedi', draft: 'Bu içerik için taslak üretilemedi', decision: 'Bu içerik için taslak üretilemedi' };
+const SUBJECT_NOUN: Record<AiSubject, string> = { summary: 'Özet', draft: 'Taslak', decision: 'Taslak', search: 'Filtre' };
+const REFUSED_TITLE: Record<AiSubject, string> = {
+    summary: 'Bu kayıtlar için özet üretilemedi',
+    draft: 'Bu içerik için taslak üretilemedi',
+    decision: 'Bu içerik için taslak üretilemedi',
+    search: 'Bu cümle için filtre çıkarılamadı'
+};
 
 export function aiProblemFromError(err: unknown, subject: AiSubject, now: Date = new Date()): AiProblem {
     const http = err instanceof HttpErrorResponse ? err : null;
@@ -173,6 +178,10 @@ export function aiProblemFromError(err: unknown, subject: AiSubject, now: Date =
             return problem('Düzenlenen taslak kaydedilemedi', http ? messageFromHttpError(http, 'Metni kısaltıp yeniden deneyin.') : 'Metni kısaltıp yeniden deneyin.', false);
         case 'AiDrafts.FeatureNotSupported':
             return problem('Bu taslak türü henüz desteklenmiyor', 'Hiçbir şey kaydedilmedi.', false);
+        case 'AiSearch.Forbidden':
+            return problem('Bu filtreyle arama yetkiniz yok', `${http ? messageFromHttpError(http, 'Filtredeki bir kayıt türünü görme yetkiniz yok.') : 'Filtredeki bir kayıt türünü görme yetkiniz yok.'} İlgili çipi kaldırıp yeniden arayabilirsiniz.`, false);
+        case 'AiSearch.Validation':
+            return problem('Aranacak bir şey kalmadı', http ? messageFromHttpError(http, 'Aramak istediğinizi yazın.') : 'Aramak istediğinizi yazın.', false);
         default:
             if (subject === 'decision') {
                 return problem('Taslak kayda geçirilemedi', `${http ? messageFromHttpError(http, 'Kayıt güncellenemedi.') : 'Kayıt güncellenemedi.'} Taslak bekliyor; hiçbir şey kaydedilmedi.`, false);

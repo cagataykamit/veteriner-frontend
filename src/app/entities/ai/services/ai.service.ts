@@ -4,8 +4,20 @@ import { map, Observable } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { mapAiDraftDtoToVm, mapAiStatusDtoToVm, mapPetHistorySummaryDtoToVm } from '@/app/entities/ai/data/ai.mapper';
-import type { AiDraftAcceptRequestDto, AiDraftDto, AiNoteDraftRequestDto, AiStatusDto, PetHistorySummaryDto } from '@/app/entities/ai/models/ai-api.model';
-import type { AiDraftVm, AiStatusVm, PetHistorySummaryVm } from '@/app/entities/ai/models/ai-vm.model';
+import { mapPetSearchInterpretationDtoToVm, mapPetSearchResultDtoToVm } from '@/app/entities/ai/data/ai-pet-search.mapper';
+import type {
+    AiDraftAcceptRequestDto,
+    AiDraftDto,
+    AiNoteDraftRequestDto,
+    AiStatusDto,
+    PetHistorySummaryDto,
+    PetSearchFilterDto,
+    PetSearchInterpretationDto,
+    PetSearchInterpretRequestDto,
+    PetSearchRequestDto,
+    PetSearchResultDto
+} from '@/app/entities/ai/models/ai-api.model';
+import type { AiDraftVm, AiStatusVm, PetHistorySummaryVm, PetSearchInterpretationVm, PetSearchResultVm } from '@/app/entities/ai/models/ai-vm.model';
 
 /**
  * Yapay zekâ uçları (`AI_HISTORY_SUMMARY_API_CONTRACT.md`, `AI_DRAFTS_API_CONTRACT.md`). Hatalar ham `HttpErrorResponse` olarak
@@ -62,6 +74,24 @@ export class AiService {
     /** Hiçbir kayda yazılmaz; içerik sunucuda silinir. */
     discardDraft(id: string): Observable<AiDraftVm> {
         return this.api.post<AiDraftDto>(ApiEndpoints.ai.draftDiscard(id), null).pipe(map(mapAiDraftDtoToVm));
+    }
+
+    /** AI-006: cümleyi filtreye çevirir (kota harcar); model kayıt görmez, arama yapmaz. Filtre sunucuda doğrulanmış gelir. */
+    interpretPetSearch(query: string): Observable<{ filter: PetSearchFilterDto; interpretation: PetSearchInterpretationVm }> {
+        const body: PetSearchInterpretRequestDto = { query: query.trim() };
+
+        return this.api
+            .post<PetSearchInterpretationDto>(ApiEndpoints.ai.petSearchInterpret(), body)
+            .pipe(map((dto) => ({ filter: dto.filter ?? {}, interpretation: mapPetSearchInterpretationDtoToVm(dto) })));
+    }
+
+    /** AI-006: filtreyle arama; AI çağırmaz. Yanıttaki `filter` sunucunun uyguladığıdır (geçersiz değerler atılmış). */
+    searchPets(filter: PetSearchFilterDto, page: number, pageSize: number): Observable<{ filter: PetSearchFilterDto; result: PetSearchResultVm }> {
+        const body: PetSearchRequestDto = { filter, page, pageSize };
+
+        return this.api
+            .post<PetSearchResultDto>(ApiEndpoints.ai.petSearchResults(), body)
+            .pipe(map((dto) => ({ filter: dto.filter ?? filter, result: mapPetSearchResultDtoToVm(dto) })));
     }
 
     /** Boş not gövdesiz gider (isteğe bağlı notlu uçlar); not saklanmaz. */

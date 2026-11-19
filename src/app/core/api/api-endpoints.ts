@@ -599,7 +599,11 @@ export const ApiEndpoints = {
         /** AI-004 POST `{ text? }` (`Examinations.Read` + `CareInstructions.Create`): muayeneden bakım talimatı taslağı (§7.3). */
         examinationCareInstructionDraft: (examinationId: string) => `/api/v1/examinations/${encodeURIComponent(examinationId)}/ai/care-instruction-draft`,
         /** AI-004 POST `{ text? }` (`Hospitalizations.Read` + `CareInstructions.Create`; iptal yatış 409): yatıştan bakım talimatı taslağı (§7.3). */
-        hospitalizationCareInstructionDraft: (hospitalizationId: string) => `/api/v1/hospitalizations/${encodeURIComponent(hospitalizationId)}/ai/care-instruction-draft`
+        hospitalizationCareInstructionDraft: (hospitalizationId: string) => `/api/v1/hospitalizations/${encodeURIComponent(hospitalizationId)}/ai/care-instruction-draft`,
+        /** AI-006 POST `{ query }` (≤500; `Pets.Read`): cümleyi yapılandırılmış filtreye çevirir, arama yapmaz; kota harcar (`AI_PATIENT_SEARCH_API_CONTRACT.md` §3). */
+        petSearchInterpret: () => `/api/v1/ai/pet-search/interpret`,
+        /** AI-006 POST `{ filter, page, pageSize }` (`Pets.Read`): filtreyle arar; AI çağırmaz, kota harcamaz (§4). */
+        petSearchResults: () => `/api/v1/ai/pet-search/results`
     },
     examinationTemplates: {
         /** GET (Query: `search`, `includeInactive`, `page`, `pageSize`) ve POST. */
