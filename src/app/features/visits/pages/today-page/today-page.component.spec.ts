@@ -1210,6 +1210,17 @@ describe('TodayPageComponent', () => {
             expect(rows[0].querySelector('td:last-child button span')?.className).toContain('@max-[50rem]:hidden');
         });
 
+        it('Muayene aç: gelişin muayenesi varsa onu açar, yoksa yeni muayene', async () => {
+            const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [] });
+            const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+            f.componentInstance.openExamination(item({ visitId: 'v1', careStatus: 'InProgress', latestExaminationId: 'e9' }));
+            expect(navigate).toHaveBeenCalledWith(['/panel/examinations', 'e9']);
+
+            f.componentInstance.openExamination(item({ visitId: 'v2', clientId: 'cl2', petId: 'p2', careStatus: 'InProgress', latestExaminationId: null }));
+            expect(navigate).toHaveBeenCalledWith(['/panel/examinations/new'], { queryParams: { visitId: 'v2', clientId: 'cl2', petId: 'p2' } });
+        });
+
         it('Muayeneye al: başlatır ve muayene formunu o gelişle açar; muayene izni yoksa yalnız başlatır', async () => {
             const waiting = item({ key: 'w', visitId: 'v1', clientId: 'cl1', petId: 'p1' });
             const f = await create(['Visits.Read', 'Visits.Update', 'Examinations.Create'], { date: 'd', activeHospitalizations: [], items: [waiting] });

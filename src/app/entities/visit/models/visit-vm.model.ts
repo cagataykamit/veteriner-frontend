@@ -81,6 +81,8 @@ export interface TodayItemVm {
     preparedExaminationTemplateName: string | null;
     /** Sahip hatırlatma bağlantısıyla geleceğini onayladı (TIER-019); durum değişmez, satırda rozet. */
     ownerConfirmedAtUtc: string | null;
+    /** Gelişe bağlı en son muayene; "Muayene aç" yeni muayene yerine bunu açar (mükerrer muayene olmasın). */
+    latestExaminationId?: string | null;
 }
 
 /** Bugün'deki aktif yatış satırı; `items` içine karışmaz, sorumlu hekim süzgecinden etkilenmez. */

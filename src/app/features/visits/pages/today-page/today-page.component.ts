@@ -606,8 +606,17 @@ export class TodayPageComponent implements OnInit {
         });
     }
 
-    /** Hasta tekrar seçilmez: Visit kimliği ve hasta bağlamı muayene çalışma alanına query ile taşınır. */
+    /**
+     * Gelişin muayenesi varsa o açılır (aynı gelişe ikinci muayene açılmasın); yoksa yeni muayene: hasta tekrar seçilmez, Visit kimliği ve
+     * hasta bağlamı muayene çalışma alanına query ile taşınır.
+     */
     openExamination(item: TodayItemVm): void {
+        if (item.latestExaminationId) {
+            void this.router.navigate(['/panel/examinations', item.latestExaminationId]);
+
+            return;
+        }
+
         void this.router.navigate(['/panel/examinations/new'], {
             queryParams: { visitId: item.visitId, clientId: item.clientId, petId: item.petId }
         });

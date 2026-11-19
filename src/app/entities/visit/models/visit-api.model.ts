@@ -79,6 +79,8 @@ export interface TodayItemDto {
     preparedExaminationTemplateName?: string | null;
     /** Sahip hatırlatma bağlantısıyla geleceğini onayladı (TIER-019); randevusuz satırda `null`. */
     ownerConfirmedAtUtc?: string | null;
+    /** Gelişe bağlı en son muayene (`Examinations.Read` yoksa `null`). */
+    latestExaminationId?: string | null;
 }
 
 /** `TodayHospitalizationDto`: kliniğin tarihten bağımsız aktif yatışları (`VISITS_API_CONTRACT.md`). */
