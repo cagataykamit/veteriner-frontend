@@ -126,9 +126,12 @@ export class VisitsService {
         );
     }
 
-    /** `InProgress → Completed`; ödeme eksikliği geçişi engellemez. */
-    completeVisit(id: string): Observable<VisitVm> {
-        return this.api.post<VisitDto>(ApiEndpoints.visits.complete(id), {}).pipe(
+    /**
+     * `InProgress → Completed`; ödeme eksikliği geçişi engellemez. `withoutCharge`: muayene ve ücret yokken bilinçli ücretsiz kapatma
+     * (Açık işler "Ücret yok"a girmez; OPEN_ITEMS madde 1a).
+     */
+    completeVisit(id: string, options: { withoutCharge?: boolean } = {}): Observable<VisitVm> {
+        return this.api.post<VisitDto>(ApiEndpoints.visits.complete(id), options.withoutCharge ? { withoutCharge: true } : {}).pipe(
             map(mapVisitDtoToVm),
             toUserError('Bakım tamamlanamadı.')
         );

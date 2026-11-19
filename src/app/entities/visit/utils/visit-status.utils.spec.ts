@@ -7,6 +7,7 @@ import {
     groupTodayItems,
     isPossiblyForgottenVisit,
     todayItemActions,
+    todayNeedsCompletionPrompt,
     todayReasonText,
     todaySecondaryActions,
     todayStatusOf,
@@ -107,16 +108,33 @@ describe('todayItemActions', () => {
         expect(a.canMarkArrived).toBe(false);
     });
 
-    it('Bekliyor: başlat + muayene; Devam ediyor: tamamla + muayene; Tamamlandı: yalnızca düzeltme', () => {
+    it('Sırada: yalnız Muayeneye al (ayrı Muayene aç yok); Muayenede: tamamla + muayene; Tamamlandı: yalnızca düzeltme', () => {
         const waiting = todayItemActions(item({ careStatus: 'Waiting' }));
 
-        expect([waiting.canStartCare, waiting.canOpenExamination, waiting.canCompleteCare]).toEqual([true, true, false]);
+        expect([waiting.canStartCare, waiting.canOpenExamination, waiting.canCompleteCare]).toEqual([true, false, false]);
         const inProgress = todayItemActions(item({ careStatus: 'InProgress' }));
 
         expect([inProgress.canStartCare, inProgress.canOpenExamination, inProgress.canCompleteCare]).toEqual([false, true, true]);
         const done = todayItemActions(item({ careStatus: 'Completed' }));
 
         expect([done.canStartCare, done.canOpenExamination, done.canCompleteCare, done.canCorrect]).toEqual([false, false, false, true]);
+    });
+
+    it('tamamlanmış ve hiç ücreti yoksa birincil adım Ücret ekle; ücret bekleyen kalem varsa ya da ücretsiz kapatıldıysa yok', () => {
+        expect(todayItemActions(item({ careStatus: 'Completed', chargeIndicator: 'ChargeMissing', pendingChargeCount: 0 })).canAddMissingCharge).toBe(true);
+        expect(todayItemActions(item({ careStatus: 'Completed', chargeIndicator: 'ChargeMissing', pendingChargeCount: 2 })).canAddMissingCharge).toBe(false);
+        expect(todayItemActions(item({ careStatus: 'Completed', chargeIndicator: 'NoChargeableWork' })).canAddMissingCharge).toBe(false);
+        expect(todayItemActions(item({ careStatus: 'InProgress', chargeIndicator: 'ChargeMissing' })).canAddMissingCharge).toBe(false);
+    });
+});
+
+describe('todayNeedsCompletionPrompt', () => {
+    it('muayenedeki gelişte ne işlem ne ücret varsa sorulur; işlem, ücret, bekleyen kalem ya da ücret izni yoksa sorulmaz', () => {
+        expect(todayNeedsCompletionPrompt(item({ careStatus: 'InProgress', chargeIndicator: 'NoChargeableWork', pendingChargeCount: 0 }))).toBe(true);
+        expect(todayNeedsCompletionPrompt(item({ careStatus: 'InProgress', chargeIndicator: 'ChargeMissing' }))).toBe(false);
+        expect(todayNeedsCompletionPrompt(item({ careStatus: 'InProgress', chargeIndicator: 'PaymentPending' }))).toBe(false);
+        expect(todayNeedsCompletionPrompt(item({ careStatus: 'InProgress', chargeIndicator: 'NoChargeableWork', pendingChargeCount: 1 }))).toBe(false);
+        expect(todayNeedsCompletionPrompt(item({ careStatus: 'InProgress', chargeIndicator: null }))).toBe(false);
     });
 });
 

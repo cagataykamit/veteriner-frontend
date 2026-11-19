@@ -9,6 +9,7 @@ import { Router, RouterLink } from '@angular/router';
 import { MenuItem, MessageService } from 'primeng/api';
 import { Menu, MenuModule } from 'primeng/menu';
 import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
 import { AppointmentNoShowDialogComponent } from '@/app/entities/appointment/components/appointment-no-show-dialog.component';
 import { SelectButtonModule } from 'primeng/selectbutton';
@@ -51,6 +52,7 @@ import {
     groupTodayItems,
     todayHasOpenWork,
     todayItemActions,
+    todayNeedsCompletionPrompt,
     todayReasonText,
     todaySecondaryActions,
     todayStatusLabel,
@@ -117,6 +119,7 @@ const SUMMARY_ORDER: readonly TodayStatusTone[] = ['planned', 'waiting', 'inProg
         WaitlistTodaySummaryComponent,
         FirstWeekGuideCardComponent,
         ButtonModule,
+        DialogModule,
         FormsModule,
         SelectButtonModule,
         MenuModule,
@@ -240,6 +243,8 @@ export class TodayPageComponent implements OnInit {
     private readonly rowMenu = viewChild<Menu>('rowMenu');
     readonly rowMenuItems = signal<MenuItem[]>([]);
     /** Menü kapanış animasyonu bitmeden sayfa değişirse kaplama gövdede asılı kalır; ödeme/ücret sayfasına menü kapandıktan sonra gidilir. */
+    /** Muayene ve ücret kaydı olmadan "Tamamla"ya basılan satır: Muayene aç / Ücret ekle / Ücretsiz tamamla sorulur. */
+    readonly completePromptItem = signal<TodayItemVm | null>(null);
     private readonly navigateAfterMenu = signal<{ item: TodayItemVm; target: 'payment' | 'charge' | 'appointment' } | null>(null);
     readonly noShowOpen = signal(false);
     readonly noShowItem = signal<TodayItemVm | null>(null);
@@ -643,10 +648,43 @@ export class TodayPageComponent implements OnInit {
         void this.router.navigate(['/panel/charges/new'], { queryParams: { clientId: item.clientId, petId: item.petId, visitId: item.visitId } });
     }
 
-    /** Satır kilitliyken ikinci istek gitmez; hatada da liste yenilenir (durum başkası tarafından değişmiş olabilir). */
+    /**
+     * Satır kilitliyken ikinci istek gitmez; hatada da liste yenilenir (durum başkası tarafından değişmiş olabilir). "Muayeneye al"
+     * (start) başarılıysa ve kullanıcı muayene yazabiliyorsa muayene formu o gelişle açılır.
+     */
     transition(item: TodayItemVm, kind: 'start' | 'complete'): void {
         if (item.visitId && !this.isBusy(item)) {
-            this.changeCare(item.visitId, item.key, kind);
+            this.changeCare(item.visitId, item.key, kind, {}, kind === 'start' && this.canCreateExamination ? () => this.openExamination(item) : undefined);
+        }
+    }
+
+    /** "Tamamla": muayene ve ücret yoksa önce sorulur, varsa doğrudan tamamlanır. */
+    requestComplete(item: TodayItemVm): void {
+        if (todayNeedsCompletionPrompt(item)) {
+            this.completePromptItem.set(item);
+
+            return;
+        }
+
+        this.transition(item, 'complete');
+    }
+
+    promptOpenExamination(item: TodayItemVm): void {
+        this.completePromptItem.set(null);
+        this.openExamination(item);
+    }
+
+    promptOpenCharge(item: TodayItemVm): void {
+        this.completePromptItem.set(null);
+        this.openCharge(item);
+    }
+
+    /** Bilinçli ücretsiz kapatma: ziyaret tamamlanır, Açık işler "Ücret yok"a girmez. */
+    completeWithoutCharge(item: TodayItemVm): void {
+        this.completePromptItem.set(null);
+
+        if (item.visitId && !this.isBusy(item)) {
+            this.changeCare(item.visitId, item.key, 'complete', { withoutCharge: true });
         }
     }
 
@@ -657,21 +695,29 @@ export class TodayPageComponent implements OnInit {
         }
     }
 
-    private changeCare(visitId: string, key: string, kind: 'start' | 'complete'): void {
+    private changeCare(visitId: string, key: string, kind: 'start' | 'complete', options: { withoutCharge?: boolean } = {}, afterSuccess?: () => void): void {
         this.setBusy(key, true);
-        const call$ = kind === 'start' ? this.visitsService.startVisit(visitId) : this.visitsService.completeVisit(visitId);
+        const call$ = kind === 'start' ? this.visitsService.startVisit(visitId) : this.visitsService.completeVisit(visitId, options);
 
         call$.subscribe({
             next: () => {
                 this.setBusy(key, false);
+
+                if (afterSuccess) {
+                    // Muayene formuna geçiliyor; bildirim ve yenileme gereksiz.
+                    afterSuccess();
+
+                    return;
+                }
+
                 addTracedToast(this.messages, 'TodayPage', this.router.url, {
                     severity: 'success',
-                    summary: kind === 'start' ? 'Bakım başlatıldı.' : 'Bakım tamamlandı.',
+                    summary: kind === 'start' ? 'Muayeneye alındı.' : options.withoutCharge ? 'Ücretsiz tamamlandı.' : 'Bakım tamamlandı.',
                     life: 3000
                 });
                 this.refresh('silent');
 
-                if (kind === 'complete') {
+                if (kind === 'complete' && !options.withoutCharge) {
                     this.suggestDocument(visitId);
                 }
             },

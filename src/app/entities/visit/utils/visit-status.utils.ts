@@ -141,7 +141,8 @@ export function todayOpenChips(item: Pick<TodayItemVm, 'chargeIndicator' | 'char
             label: 'Ücret yok',
             severity: 'danger',
             icon: 'pi pi-exclamation-circle',
-            title: n && n > 0 ? `${n} işlem var, ücret kaydı yok` : 'İşlem var, ücret kaydı yok',
+            // İşlemsiz tamamlanmış ziyaret de (ücretsiz işaretlenmediyse) "Ücret yok" sayılır (OPEN_ITEMS madde 1a).
+            title: n && n > 0 ? `${n} işlem var, ücret kaydı yok` : 'Ücret kaydı yok',
             payable: false,
             reviewable: false
         });
@@ -252,6 +253,16 @@ export interface TodayItemActions {
     canRevertNoShow: boolean;
     /** Tamamlanmış ziyaretin kalanı var: satırın birincil adımı "Ödeme al" (yetki ayrıca denetlenir; menüde de kalır). */
     canCollectRemaining: boolean;
+    /** Tamamlanmış ziyaretin hiç ücreti yok ve ücretsiz işaretlenmemiş: satırın birincil adımı "Ücret ekle" (menüde de kalır). */
+    canAddMissingCharge: boolean;
+}
+
+/**
+ * "Tamamla"dan önce sorulsun mu: ziyarette ne muayene/işlem ne ücret var (`NoChargeableWork`; ücret okuma izni yoksa alan null
+ * ve sorulmaz). Kullanıcı Muayene aç / Ücret ekle / Ücretsiz tamamla arasında seçer (kullanıcı kararı 2026-11-19).
+ */
+export function todayNeedsCompletionPrompt(item: TodayItemVm): boolean {
+    return item.careStatus === 'InProgress' && item.chargeIndicator === 'NoChargeableWork' && (item.pendingChargeCount ?? 0) === 0;
 }
 
 export function todayItemActions(item: TodayItemVm, now: Date = new Date()): TodayItemActions {
@@ -269,7 +280,8 @@ export function todayItemActions(item: TodayItemVm, now: Date = new Date()): Tod
             canEditPreparation: false,
             canMarkNoShow: false,
             canRevertNoShow: false,
-            canCollectRemaining: false
+            canCollectRemaining: false,
+            canAddMissingCharge: false
         };
     }
 
@@ -277,8 +289,9 @@ export function todayItemActions(item: TodayItemVm, now: Date = new Date()): Tod
 
     return {
         canMarkArrived: noShowRow && (item.appointmentStatus === 'Scheduled' || item.appointmentStatus === 'NoShow'),
+        // Sırada satırında "Muayeneye al" hem başlatır hem muayeneyi açar; ayrı "Muayene aç" yalnız muayenedeki hastada.
         canStartCare: item.careStatus === 'Waiting',
-        canOpenExamination: open,
+        canOpenExamination: item.careStatus === 'InProgress',
         canCompleteCare: item.careStatus === 'InProgress',
         canCorrect: !!item.visitId,
         canRestore: false,
@@ -286,7 +299,8 @@ export function todayItemActions(item: TodayItemVm, now: Date = new Date()): Tod
         canEditPreparation: open && !!item.visitId,
         canMarkNoShow: noShowRow && canMarkAppointmentNoShow(item.appointmentStatus, item.scheduledAtUtc, now),
         canRevertNoShow: noShowRow && canRevertAppointmentNoShow(item.appointmentStatus),
-        canCollectRemaining: item.careStatus === 'Completed' && (item.outstandingAmount ?? 0) > 0
+        canCollectRemaining: item.careStatus === 'Completed' && (item.outstandingAmount ?? 0) > 0,
+        canAddMissingCharge: item.careStatus === 'Completed' && item.chargeIndicator === 'ChargeMissing' && (item.pendingChargeCount ?? 0) === 0
     };
 }
 
