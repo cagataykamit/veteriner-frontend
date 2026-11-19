@@ -29,9 +29,11 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
 
 const PAGE_SIZE = 50;
 
+type TermSource = 'all' | 'clinic' | 'system';
+
 /**
  * Tanı/şikâyet sözlüğü yönetimi (ADR-020 S3), Tanımlar altında. Pasifler dahil listelenir; sistem terimleri salt okunurdur
- * ve rozetle ayrışır. Ekle / ad düzelt / pasifleştir-etkinleştir düğmeleri izne ve salt okunur kiracı durumuna göre görünür.
+ * ve rozetle ayrışır. Kaynak filtresiyle (Tümü / Kliniğe özel / Sistem) iki türde de yalnız kliniğin eklediği terimler görülebilir. Ekle / ad düzelt / pasifleştir-etkinleştir düğmeleri izne ve salt okunur kiracı durumuna göre görünür.
  */
 @Component({
     selector: 'app-clinical-terms-page',
@@ -76,6 +78,7 @@ const PAGE_SIZE = 50;
         <div class="card">
             <div class="flex flex-col md:flex-row md:items-end gap-3 mb-4">
                 <p-selectbutton [options]="kindOptions" [ngModel]="kind()" (ngModelChange)="onKindChange($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Sözlük türü" />
+                <p-selectbutton [options]="sourceOptions" [ngModel]="source()" (ngModelChange)="onSourceChange($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Kaynak" data-testid="term-source" />
                 <div class="w-full md:max-w-sm">
                     <app-search-input inputId="termSearch" placeholder="Terim adı…" ariaLabel="Terim ara" [(value)]="searchInput" (searchRequested)="applySearch()" />
                 </div>
@@ -90,7 +93,10 @@ const PAGE_SIZE = 50;
             } @else if (error()) {
                 <app-error-state [detail]="error()!" (retry)="reload()" />
             } @else if (rows().length === 0) {
-                <app-empty-state [message]="activeSearch() ? copy.listEmptyMessage : 'Bu türde terim yok.'" [hint]="activeSearch() ? copy.listEmptyHint : ''" />
+                <app-empty-state
+                    [message]="activeSearch() ? copy.listEmptyMessage : source() === 'clinic' ? 'Kliniğinize özel terim yok.' : 'Bu türde terim yok.'"
+                    [hint]="activeSearch() ? copy.listEmptyHint : source() === 'clinic' ? 'Muayenede sözlükte bulunmayan bir terimi eklediğinizde burada görünür.' : ''"
+                />
             } @else {
                 <div class="overflow-x-auto">
                     <p-table
@@ -207,7 +213,15 @@ export class ClinicalTermsPageComponent implements OnInit {
 
     readonly kindOptions = (['Diagnosis', 'Complaint'] as const).map((value) => ({ value, label: CLINICAL_TERM_KIND_LABELS[value] }));
 
+    /** Kaynak filtresi: kliniğin yalnız kendi eklediği terimleri ayrıca görebilmesi için (kullanıcı isteği 2026-11-19). */
+    readonly sourceOptions: Array<{ value: TermSource; label: string }> = [
+        { value: 'all', label: 'Tümü' },
+        { value: 'clinic', label: 'Kliniğe özel' },
+        { value: 'system', label: 'Sistem' }
+    ];
+
     readonly kind = signal<ClinicalTermKind>('Diagnosis');
+    readonly source = signal<TermSource>('all');
     readonly activeSearch = signal('');
     searchInput = '';
 
@@ -237,6 +251,11 @@ export class ClinicalTermsPageComponent implements OnInit {
 
     onKindChange(kind: ClinicalTermKind): void {
         this.kind.set(kind);
+        this.load(1);
+    }
+
+    onSourceChange(source: TermSource): void {
+        this.source.set(source);
         this.load(1);
     }
 
@@ -351,7 +370,10 @@ export class ClinicalTermsPageComponent implements OnInit {
     private load(page: number): void {
         this.loading.set(true);
         this.error.set(null);
-        this.terms.list({ kind: this.kind(), search: this.activeSearch(), includeInactive: true, page, pageSize: PAGE_SIZE }).subscribe({
+        const source = this.source();
+        const isSystem = source === 'all' ? undefined : source === 'system';
+
+        this.terms.list({ kind: this.kind(), search: this.activeSearch(), includeInactive: true, isSystem, page, pageSize: PAGE_SIZE }).subscribe({
             next: (r) => {
                 this.rows.set(r.items);
                 this.totalItems.set(r.totalItems);

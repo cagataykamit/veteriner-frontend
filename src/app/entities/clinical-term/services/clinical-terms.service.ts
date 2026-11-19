@@ -65,6 +65,10 @@ function listQueryToHttpParams(q: ClinicalTermsListQuery): HttpParams {
         p = p.set('includeInactive', 'true');
     }
 
+    if (q.isSystem !== undefined) {
+        p = p.set('isSystem', String(q.isSystem));
+    }
+
     if (q.page) {
         p = p.set('page', String(q.page));
     }

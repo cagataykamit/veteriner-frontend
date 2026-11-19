@@ -80,6 +80,19 @@ describe('ClinicalTermsPageComponent', () => {
         expect(terms.list).toHaveBeenCalledWith(expect.objectContaining({ kind: 'Complaint', search: 'ishal' }));
     });
 
+    it('kaynak filtresi: Kliniğe özel yalnız kliniğin terimlerini, Sistem yalnız sistem terimlerini, Tümü ikisini ister', async () => {
+        await create();
+        expect(vi.mocked(terms.list).mock.lastCall![0].isSystem).toBeUndefined();
+        cmp.onSourceChange('clinic');
+        expect(terms.list).toHaveBeenLastCalledWith(expect.objectContaining({ isSystem: false, page: 1 }));
+        cmp.onKindChange('Complaint');
+        expect(terms.list).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'Complaint', isSystem: false }));
+        cmp.onSourceChange('system');
+        expect(terms.list).toHaveBeenLastCalledWith(expect.objectContaining({ isSystem: true }));
+        cmp.onSourceChange('all');
+        expect(vi.mocked(terms.list).mock.lastCall![0].isSystem).toBeUndefined();
+    });
+
     it('izin yoksa yazma düğmeleri görünmez', async () => {
         claims = new Set(['ClinicalTerms.Read']);
         await create();

@@ -31,6 +31,8 @@ export interface ClinicalTermsListQuery {
     kind?: ClinicalTermKind;
     search?: string;
     includeInactive?: boolean;
+    /** `true` yalnız sistem, `false` yalnız kliniğin eklediği terimler; verilmezse ikisi. */
+    isSystem?: boolean;
     page?: number;
     pageSize?: number;
 }

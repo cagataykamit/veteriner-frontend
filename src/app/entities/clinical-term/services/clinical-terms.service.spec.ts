@@ -19,12 +19,13 @@ describe('ClinicalTermsService', () => {
     afterEach(() => http.verify());
 
     it('liste sorgusu yalnız dolu parametreleri gönderir', () => {
-        service.list({ kind: 'Diagnosis', search: '  otit ', includeInactive: true, page: 2, pageSize: 50 }).subscribe();
+        service.list({ kind: 'Diagnosis', search: '  otit ', includeInactive: true, isSystem: false, page: 2, pageSize: 50 }).subscribe();
         const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/clinical-terms');
 
         expect(req.request.params.get('kind')).toBe('Diagnosis');
         expect(req.request.params.get('search')).toBe('otit');
         expect(req.request.params.get('includeInactive')).toBe('true');
+        expect(req.request.params.get('isSystem')).toBe('false');
         expect(req.request.params.get('page')).toBe('2');
         expect(req.request.params.get('pageSize')).toBe('50');
         req.flush({ items: [], page: 2, pageSize: 50, totalItems: 0, totalPages: 0 });
