@@ -374,6 +374,10 @@ describe('isPossiblyForgottenVisit', () => {
         expect(isPossiblyForgottenVisit(item({ careStatus: 'Waiting', arrivedAtUtc: hoursAgo(11.9) }), now)).toBe(false);
     });
 
+    it('yatıştaki hastanın gelişi taburcuya kadar açık kalır: unutulmuş sayılmaz', () => {
+        expect(isPossiblyForgottenVisit(item({ careStatus: 'InProgress', arrivedAtUtc: hoursAgo(30), hasActiveHospitalization: true }), now)).toBe(false);
+    });
+
     it('tamamlanan, planlı ve gelişi olmayan satır false', () => {
         expect(isPossiblyForgottenVisit(item({ careStatus: 'Completed', arrivedAtUtc: hoursAgo(30) }), now)).toBe(false);
         expect(isPossiblyForgottenVisit(item({ careStatus: null, arrivedAtUtc: null }), now)).toBe(false);

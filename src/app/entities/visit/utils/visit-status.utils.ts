@@ -350,7 +350,8 @@ export const FORGOTTEN_VISIT_HOURS = 12;
 
 /** Açık geliş `FORGOTTEN_VISIT_HOURS` saati aştı mı? Kapalı/planlı satır ve geçersiz geliş için `false`. */
 export function isPossiblyForgottenVisit(item: TodayItemVm, now: Date): boolean {
-    const open = item.careStatus === 'Waiting' || item.careStatus === 'InProgress';
+    // Yatıştaki hastanın gelişi taburcuya kadar bilerek açık kalır (kullanıcı kararı 2026-11-19).
+    const open = (item.careStatus === 'Waiting' || item.careStatus === 'InProgress') && !item.hasActiveHospitalization;
     const arrived = open ? parseUtcApiInstantIsoString(item.arrivedAtUtc) : null;
 
     return !!arrived && now.getTime() - arrived.getTime() >= FORGOTTEN_VISIT_HOURS * 3_600_000;

@@ -1217,7 +1217,8 @@ describe('TodayPageComponent', () => {
             expect(fallback('@min-[72rem]:hidden').some((e) => e.textContent?.includes('Dr. Ayşe'))).toBe(true);
             expect(fallback('@min-[64rem]:hidden').some((e) => e.textContent?.includes('Ödeme bekliyor'))).toBe(true);
             expect(cells[4].textContent).toContain('Yatışta');
-            expect(cells[4].textContent).toContain('Önceki günden açık');
+            // Yatıştaki hastanın gelişi taburcuya kadar bilerek açık kalır: "Önceki günden açık" rozeti çıkmaz.
+            expect(cells[4].textContent).not.toContain('Önceki günden açık');
         });
 
         it('uzun ad 2 satıra sarar ve tam adı ipucuyla (title) gösterilir: Müşteri, Hasta, Hekim', async () => {

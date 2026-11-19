@@ -26,7 +26,9 @@ import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputVal
 import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { HOSPITALIZATIONS_DISCHARGE_CLAIM, HOSPITALIZATIONS_UPDATE_CLAIM, PAYMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { HOSPITALIZATIONS_DISCHARGE_CLAIM, HOSPITALIZATIONS_UPDATE_CLAIM, PAYMENTS_CREATE_CLAIM, VISITS_READ_CLAIM, VISITS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
+import { catchError, EMPTY } from 'rxjs';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
@@ -68,7 +70,18 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
             <p class="mb-4 m-0 text-sm font-medium">{{ message }}</p>
         }
         @if (showDischargedBanner()) {
-            <p class="mb-4 m-0 text-sm font-medium">Taburcu işlemi kaydedildi.</p>
+            <div class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm" role="status">
+                <span class="font-medium">Taburcu işlemi kaydedildi.</span>
+                <!-- Geliş yatış boyunca açık kalır; taburcuda kapatılması önerilir (kullanıcı kararı 2026-11-19). -->
+                @if (dischargeVisitId(); as visitId) {
+                    <span class="text-muted-color">Hastanın gelişi hâlâ açık.</span>
+                    <button pButton type="button" size="small" [disabled]="completingVisit() || ro.mutationBlocked()" (click)="completeDischargedVisit(visitId)" data-testid="discharge-complete-visit">
+                        <i class="p-button-icon" [class]="completingVisit() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Gelişi tamamla
+                    </button>
+                } @else if (visitCompleted()) {
+                    <span class="text-muted-color">Geliş tamamlandı.</span>
+                }
+            </div>
         }
 
         @if (loading()) {
@@ -267,6 +280,13 @@ export class HospitalizationDetailPageComponent implements OnInit {
     readonly row = this.loader.value;
     readonly savedMessage = signal<string | null>(null);
     readonly showDischargedBanner = signal(false);
+    /** Taburcudan sonra hâlâ açık (muayenede) olan bağlı geliş; "Gelişi tamamla" önerilir. */
+    readonly dischargeVisitId = signal<string | null>(null);
+    readonly completingVisit = signal(false);
+    readonly visitCompleted = signal(false);
+    private readonly visitsService = inject(VisitsService);
+    private readonly canReadVisit = this.auth.hasOperationClaim(VISITS_READ_CLAIM);
+    private readonly canUpdateVisit = this.auth.hasOperationClaim(VISITS_UPDATE_CLAIM);
 
     readonly cancelVisible = signal(false);
     protected readonly cancelSummary = computed(() => {
@@ -367,6 +387,7 @@ export class HospitalizationDetailPageComponent implements OnInit {
 
                     this.dischargeDialogVisible.set(false);
                     this.showDischargedBanner.set(true);
+                    this.offerVisitCompletion(this.row()?.visitId ?? null);
                     this.reload();
                 },
                 error: (e: unknown) => {
@@ -391,10 +412,52 @@ export class HospitalizationDetailPageComponent implements OnInit {
         this.loader.reload();
     }
 
+    /** Bağlı geliş hâlâ muayenedeyse tamamlama önerilir; okunamazsa sessizce atlanır. */
+    private offerVisitCompletion(visitId: string | null): void {
+        this.dischargeVisitId.set(null);
+        this.visitCompleted.set(false);
+
+        if (!visitId || !this.canReadVisit || !this.canUpdateVisit) {
+            return;
+        }
+
+        this.visitsService
+            .getVisitById(visitId)
+            .pipe(catchError(() => EMPTY))
+            .subscribe((v) => {
+                if (!v.isVoided && v.careStatus === 'InProgress') {
+                    this.dischargeVisitId.set(visitId);
+                }
+            });
+    }
+
+    /** Yatış işlem olduğu için "muayene ve ücret yok" sorusu gerekmez. */
+    completeDischargedVisit(visitId: string): void {
+        if (this.completingVisit() || this.ro.mutationBlocked()) {
+            return;
+        }
+
+        this.completingVisit.set(true);
+        this.visitsService.completeVisit(visitId).subscribe({
+            next: () => {
+                this.completingVisit.set(false);
+                this.dischargeVisitId.set(null);
+                this.visitCompleted.set(true);
+            },
+            error: (e: unknown) => {
+                this.completingVisit.set(false);
+                this.dischargeSubmitError.set(null);
+                this.savedMessage.set(e instanceof Error ? e.message : 'Geliş tamamlanamadı.');
+            }
+        });
+    }
+
     /** Aynı bileşende başka yatışa geçişte önceki kaydın mesajları ve taburcu diyaloğu kalmaz. */
     private resetForRoute(id: string | null): void {
         this.savedMessage.set(id ? (SAVED_MESSAGES[this.route.snapshot.queryParamMap.get('saved') ?? ''] ?? null) : null);
         this.showDischargedBanner.set(false);
+        this.dischargeVisitId.set(null);
+        this.visitCompleted.set(false);
         this.cancelVisible.set(false);
         this.dischargeDialogVisible.set(false);
         this.onDischargeDialogHide();

@@ -395,7 +395,8 @@
     @if (item.isVoided) {
         <app-status-tag label="Yanlış geliş" severity="danger" />
     }
-    @if (item.isCarriedOver) {
+    <!-- Yatıştaki hastanın gelişi taburcuya kadar bilerek açık kalır: "Önceki günden açık" uyarısı yok (2026-11-19). -->
+    @if (item.isCarriedOver && !item.hasActiveHospitalization) {
         <span [attr.title]="carriedOverTitle">
             <app-status-tag label="Önceki günden açık" severity="secondary" />
         </span>
