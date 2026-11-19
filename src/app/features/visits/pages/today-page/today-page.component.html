@@ -616,8 +616,11 @@
 @if (canNoShow) {
     <app-appointment-no-show-dialog [(visible)]="noShowOpen" [appointmentId]="noShowItem()?.appointmentId ?? null" [mode]="noShowMode()" [subject]="noShowSubject()" (done)="onNoShowDone()" />
 }
-@if (canCorrect) {
+<!-- Ziyaret kapanınca e-Belge önerisi: belge kesme izni yeter (sekreterde Düzelt izni yok). -->
+@if (canIssueDocument) {
     <app-e-document-issue-dialog [(visible)]="documentOpen" [source]="documentSource()" header="Ziyaret kapandı: e-Belge kes" />
+}
+@if (canCorrect) {
     <app-visit-correction-dialog [(visible)]="correctionOpen" [item]="correctionItem()" (corrected)="onCorrected()" />
     <app-visit-correction-dialog mode="restore" [(visible)]="restoreOpen" [item]="restoreItem()" (corrected)="onRestored()" />
 }

@@ -719,6 +719,18 @@ describe('TodayPageComponent', () => {
         expect(text(f)).toContain('Bugün listesi yüklenemedi.');
     });
 
+    it('e-Belge önerisi penceresi belge kesme izniyle çizilir; Düzelt izni gerekmez (sekreter)', async () => {
+        const today: TodayVm = { date: '2026-10-10', activeHospitalizations: [], items: [item()] };
+        const secretary = await create(['Visits.Read', 'Visits.Update', 'EDocuments.Issue'], today);
+
+        expect((secretary.nativeElement as HTMLElement).querySelector('app-e-document-issue-dialog')).not.toBeNull();
+        TestBed.resetTestingModule();
+
+        const withoutIssue = await create(['Visits.Read', 'Visits.Update', 'Visits.Correct'], today);
+
+        expect((withoutIssue.nativeElement as HTMLElement).querySelector('app-e-document-issue-dialog')).toBeNull();
+    });
+
     it('Düzelt yalnızca Visits.Correct yetkisi olana görünür', async () => {
         const today: TodayVm = { date: '2026-10-10', activeHospitalizations: [], items: [item()] };
         const without = await create(['Visits.Read', 'Visits.Update'], today);
