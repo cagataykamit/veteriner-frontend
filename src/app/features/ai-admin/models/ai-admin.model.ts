@@ -73,7 +73,8 @@ const FEATURE_LABELS: Record<string, string> = {
     PetHistorySummary: 'Hasta geçmişi özeti',
     ExamNoteStructure: 'Muayene notunu alanlara ayırma',
     OwnerExplanation: 'Hasta sahibine açıklama',
-    DischargeInstructions: 'Taburcu / bakım talimatı'
+    DischargeInstructions: 'Taburcu / bakım talimatı',
+    PetSearch: 'Doğal dille hasta araması'
 };
 
 export function aiFeatureLabel(feature: string): string {

@@ -9,7 +9,12 @@ import { isRightAfterDetail, rowEditActions } from '@/app/shared/ui/row-action-b
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { SpeciesService } from '@/app/entities/species/services/species.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { AiService } from '@/app/entities/ai/services/ai.service';
+import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
 import { PetsListPageComponent } from './pets-list-page.component';
+
+/** AI klinikte kapalı: "Yapay zekâ ile ara" görünmez; diğer testler AI'dan etkilenmez. */
+const aiClosed = { provide: AiService, useValue: { getStatus: () => of({ isAvailable: false, unavailableCode: 'Ai.ClinicNotEnabled', clinicMonthUsedPercent: 0 }) } };
 
 /** Hayvanlar listesi: sahip araması "Arama" kutusundadır; ayrı müşteri seçicisi yoktur, müşteri kartından gelen süzgeç çip olarak görünür. */
 describe('PetsListPageComponent — süzgeçler', () => {
@@ -28,7 +33,8 @@ describe('PetsListPageComponent — süzgeçler', () => {
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } },
                 { provide: PetsService, useValue: pets },
                 { provide: SpeciesService, useValue: { getSpeciesList: () => of([]) } },
-                { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                aiClosed,
+                { provide: AuthService, useValue: { hasOperationClaim: () => true, getClinicId: () => 'k1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
         });
@@ -83,7 +89,8 @@ describe('PetsListPageComponent — durum süzgeci varsayılanı', () => {
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } },
                 { provide: PetsService, useValue: pets },
                 { provide: SpeciesService, useValue: { getSpeciesList: () => of([]) } },
-                { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                aiClosed,
+                { provide: AuthService, useValue: { hasOperationClaim: () => true, getClinicId: () => 'k1' } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
         });
@@ -162,6 +169,7 @@ describe('PetsListPageComponent — satırda Düzenle', () => {
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } },
                 { provide: PetsService, useValue: { getPets: () => of({ items: [pet], page: 1, pageSize: 10, totalItems: 1, totalPages: 1 }) } },
                 { provide: SpeciesService, useValue: { getSpeciesList: () => of([]) } },
+                aiClosed,
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c) } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } }
             ]
@@ -194,5 +202,48 @@ describe('PetsListPageComponent — satırda Düzenle', () => {
 
         expect(readOnly.length).toBe(2);
         expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBe(true);
+    });
+});
+
+/** AI-006: doğal dille arama girişi listenin başlığında; görünürlüğü AI durumu belirler, basınca yan panelde arama açılır. */
+describe('PetsListPageComponent — Yapay zekâ ile ara', () => {
+    function create(claims: string[], status: { isAvailable: boolean; unavailableCode: string | null }): HTMLElement {
+        sessionStorage.clear();
+        TestBed.configureTestingModule({
+            imports: [PetsListPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } },
+                { provide: PetsService, useValue: { getPets: () => of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }) } },
+                { provide: SpeciesService, useValue: { getSpeciesList: () => of([]) } },
+                { provide: AiService, useValue: { getStatus: () => of({ ...status, clinicMonthUsedPercent: 0 }) } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'k1' } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => true } }
+            ]
+        });
+        const fixture = TestBed.createComponent(PetsListPageComponent);
+
+        fixture.detectChanges();
+
+        return fixture.nativeElement as HTMLElement;
+    }
+
+    const entry = (el: HTMLElement) => el.querySelector('[data-testid="ai-entry-button"]') as HTMLButtonElement | null;
+
+    afterEach(() => sessionStorage.clear());
+
+    it('Ai.Use ve açık AI ile görünür (salt okunurda da); basınca panelde arama açılır', () => {
+        const el = create(['Ai.Use'], { isAvailable: true, unavailableCode: null });
+
+        expect(entry(el)?.textContent).toContain('Yapay zekâ ile ara');
+        entry(el)!.click();
+        expect(TestBed.inject(AiPanelService).content()).toEqual({ kind: 'search' });
+    });
+
+    it('izin yoksa ya da klinikte kapalıysa görünmez', () => {
+        expect(entry(create([], { isAvailable: true, unavailableCode: null }))).toBeNull();
+
+        TestBed.resetTestingModule();
+        expect(entry(create(['Ai.Use'], { isAvailable: false, unavailableCode: 'Ai.ClinicNotEnabled' }))).toBeNull();
     });
 });

@@ -27,6 +27,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PETS_CREATE_CLAIM, PETS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { AiEntryButtonComponent } from '@/app/entities/ai/components/ai-entry-button.component';
+import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
 
 type PetsListState = {
     search: string;
@@ -58,7 +60,8 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         AppContextFilterChipComponent,
         FilterFieldComponent,
         SearchInputComponent,
-        AppRowActionButtonComponent
+        AppRowActionButtonComponent,
+        AiEntryButtonComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -74,6 +77,8 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                             <app-search-input inputId="petSearch" placeholder="Hasta, tür, ırk, mikroçip; sahip adı veya telefonu…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </app-filter-field>
                         <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
+                        <!-- Doğal dille arama (AI-006) kayıt yazmaz: salt okunur kiracıda da görünür; görünürlüğü AI durumu belirler. -->
+                        <app-ai-entry-button actions label="Yapay zekâ ile ara" [active]="aiSearchOpen()" (pressed)="aiPanel.openSearch()" />
                         @if (canCreatePet && !ro.mutationBlocked()) {
                             <a actions routerLink="/panel/pets/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni hasta</a>
                         } @else if (canCreatePet && ro.mutationBlocked()) {
@@ -238,6 +243,8 @@ export class PetsListPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     private readonly speciesService = inject(SpeciesService);
+    protected readonly aiPanel = inject(AiPanelService);
+    protected readonly aiSearchOpen = computed(() => this.aiPanel.content()?.kind === 'search');
 
     readonly list = new ListPageState<PetListItemVm>({
         fetch: (page, pageSize) => {
