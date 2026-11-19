@@ -77,6 +77,7 @@ export function mapTodayItemDtoToVm(dto: TodayItemDto): TodayItemVm {
         arrivedAtUtc: trimmedOrNull(dto.arrivedAtUtc),
         careStatus: dto.careStatus ?? null,
         appointmentStatus: dto.appointmentStatus ?? null,
+        responsibleVeterinarianUserId: trimmedOrNull(dto.responsibleVeterinarianUserId),
         responsibleVeterinarianName: trimmedOrNull(dto.responsibleVeterinarianName),
         isCarriedOver: dto.isCarriedOver,
         chargedAmount: dto.chargedAmount ?? null,

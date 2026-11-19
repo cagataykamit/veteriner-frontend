@@ -183,6 +183,16 @@ describe('VisitArrivalDialogComponent', () => {
             expect(arrived.length).toBe(0);
         });
 
+        it('randevunun hekimi (listede aktifse) önseçili gelir', () => {
+            cmp.visible.set(false);
+            fixture.detectChanges();
+            fixture.componentRef.setInput('appointment', { ...plannedItem, responsibleVeterinarianUserId: 'u1' });
+            cmp.visible.set(true);
+            fixture.detectChanges();
+
+            expect(cmp.form.controls.veterinarianId.value).toBe('u1');
+        });
+
         it('seçilen hekim isteğe eklenir', () => {
             visits.createVisit.mockReturnValue(of(result(true)));
             cmp.form.controls.veterinarianId.setValue('u1');

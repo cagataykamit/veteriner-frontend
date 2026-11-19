@@ -50,6 +50,8 @@ export interface TodayItemVm {
     /** `null`: Visit yok, satır planlı randevu. */
     careStatus: VisitCareStatus | null;
     appointmentStatus: TodayAppointmentStatus | null;
+    /** Gelişin sorumlu hekimi; planlı satırda randevunun hekimi (geliş penceresinde önseçilir). */
+    responsibleVeterinarianUserId?: string | null;
     responsibleVeterinarianName: string | null;
     isCarriedOver: boolean;
     /** Bu ziyaretin ücret / tahsis / kalan tutarı. `null`: `Charges.Read` yok veya ziyaret yok (planlı randevu). */

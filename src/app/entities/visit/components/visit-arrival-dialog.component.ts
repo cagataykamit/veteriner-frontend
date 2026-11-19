@@ -397,11 +397,13 @@ export class VisitArrivalDialogComponent {
         this.visitsService.getVeterinarians(clinicId).subscribe({
             next: (vets) => {
                 this.veterinarianOptions.set(vets.map((v) => ({ label: v.name, value: v.userId })));
-                // Hekim kullanıcı için varsayılan kendisi; kullanıcı yüklenirken başka seçim yaptıysa ezilmez.
-                const self = findVeterinarianUserId(vets, this.auth.getUserId());
+                // Varsayılan: randevunun hekimi (listede aktifse), yoksa hekim kullanıcının kendisi; kullanıcı yüklenirken başka seçim
+                // yaptıysa ezilmez (2026-11-19).
+                const appointmentVet = this.appointment()?.responsibleVeterinarianUserId ?? null;
+                const preferred = appointmentVet && vets.some((v) => v.userId === appointmentVet) ? appointmentVet : findVeterinarianUserId(vets, this.auth.getUserId());
 
-                if (self && !this.form.controls.veterinarianId.value) {
-                    this.form.controls.veterinarianId.setValue(self);
+                if (preferred && !this.form.controls.veterinarianId.value) {
+                    this.form.controls.veterinarianId.setValue(preferred);
                 }
 
                 this.loadingVeterinarians.set(false);
