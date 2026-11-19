@@ -121,7 +121,8 @@ export function mapTodayOpenItemsDtoToVm(dto: TodayOpenItemsDto): TodayOpenItems
         awaitingLabCount: dto.awaitingLabCount ?? null,
         incompleteVisitCount: dto.incompleteVisitCount,
         hbsNotEnteredPrescriptionCount: dto.hbsNotEnteredPrescriptionCount ?? null,
-        hbsNotEnteredVaccinationCount: dto.hbsNotEnteredVaccinationCount ?? null
+        hbsNotEnteredVaccinationCount: dto.hbsNotEnteredVaccinationCount ?? null,
+        pendingChargeItemCount: dto.pendingChargeItemCount ?? null
     };
 }
 

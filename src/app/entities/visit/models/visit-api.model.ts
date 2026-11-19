@@ -103,6 +103,8 @@ export interface TodayOpenItemsDto {
     /** `HBS_ASSISTANT_API_CONTRACT.md` §7: son 30 İstanbul günü; izin yoksa `null`. */
     hbsNotEnteredPrescriptionCount?: number | null;
     hbsNotEnteredVaccinationCount?: number | null;
+    /** `OPEN_ITEMS_API_CONTRACT.md` madde 1b: ücrete çevrilmeyi bekleyen kalem sayısı (30 gün); `Charges.Read` yoksa `null`. */
+    pendingChargeItemCount?: number | null;
 }
 
 /** `GET /visits/open-items/{kind}` (`OPEN_ITEMS_API_CONTRACT.md` §10). */

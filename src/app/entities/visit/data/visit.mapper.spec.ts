@@ -139,7 +139,8 @@ describe('visit mapper — okuma', () => {
             awaitingLabCount: null,
             incompleteVisitCount: 1,
             hbsNotEnteredPrescriptionCount: null,
-            hbsNotEnteredVaccinationCount: 2
+            hbsNotEnteredVaccinationCount: 2,
+            pendingChargeItemCount: null
         });
     });
 

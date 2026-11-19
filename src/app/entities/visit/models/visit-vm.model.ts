@@ -108,6 +108,8 @@ export interface TodayOpenItemsVm {
     hbsNotEnteredPrescriptionCount?: number | null;
     /** "HBS'e girilmedi" aşı sayısı (son 30 gün); `Vaccinations.Read` yoksa veya gün sonunda `null`. */
     hbsNotEnteredVaccinationCount?: number | null;
+    /** Ücrete çevrilmeyi bekleyen kalem sayısı (son 30 gün); `Charges.Read` yoksa `null`. */
+    pendingChargeItemCount?: number | null;
 }
 
 /** Listesi açılabilen özet sayısı (`OPEN_ITEMS_API_CONTRACT.md` §10). */

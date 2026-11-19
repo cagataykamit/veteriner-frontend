@@ -94,6 +94,18 @@ export class TodayOpenItemsComponent {
             });
         }
 
+        // Ziyarette tek ücret olsa da kalan kalemler kaybolmasın (OPEN_ITEMS madde 1b): Ücretlendir ekranına gider.
+        if ((s.pendingChargeItemCount ?? 0) > 0) {
+            out.push({
+                key: 'pendingCharges',
+                icon: 'pi pi-receipt',
+                text: `Ücret bekliyor: ${s.pendingChargeItemCount} kalem`,
+                title: 'Son 30 günde ücrete çevrilmeyi bekleyen kalemler (Ücretlendir ekranı)',
+                link: '/panel/charges/pending',
+                tone: TONE_WARN
+            });
+        }
+
         if ((s.awaitingLabCount ?? 0) > 0) {
             out.push({
                 key: 'lab',

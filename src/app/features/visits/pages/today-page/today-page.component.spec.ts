@@ -472,6 +472,18 @@ describe('TodayPageComponent', () => {
             expect(texts.indexOf('Ücret yok')).toBeLessThan(texts.indexOf('Lab bekliyor (1)'));
         });
 
+        it('Açık işler: ücret bekleyen kalem sayısı Ücretlendir ekranına götüren çiptir', async () => {
+            const f = await create(['Visits.Read'], {
+                date: 'd',
+                activeHospitalizations: [],
+                items: [],
+                openItems: { unchargedVisitCount: 0, outstandingVisitCount: 0, outstandingAmount: 0, awaitingLabCount: 0, incompleteVisitCount: 0, pendingChargeItemCount: 3 }
+            });
+            const link = Array.from((f.nativeElement as HTMLElement).querySelectorAll('a')).find((a) => a.textContent?.includes('Ücret bekliyor: 3 kalem'));
+
+            expect(link?.getAttribute('href')).toBe('/panel/charges/pending');
+        });
+
         it('planlı satırda (null göstergeler) çip yok', async () => {
             const f = await create(['Visits.Read'], {
                 date: 'd',
