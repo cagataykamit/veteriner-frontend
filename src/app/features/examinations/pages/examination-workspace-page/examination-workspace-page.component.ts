@@ -16,6 +16,7 @@ import { isAppointmentCancelledStatus } from '@/app/entities/appointment/utils/a
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ClinicalSnippetTriggerDirective } from '@/app/entities/clinical-snippet/components/clinical-snippet-trigger.directive';
 import { ClinicalTermPickerComponent } from '@/app/entities/clinical-term/components/clinical-term-picker.component';
+import { DictationHintComponent } from '@/app/shared/ui/dictation-hint/dictation-hint.component';
 import { DoseCalculatorComponent } from '@/app/entities/procedure/components/dose-calculator.component';
 import { ExaminationPatientContextComponent } from '@/app/features/examinations/components/examination-patient-context.component';
 import { ExaminationPatientHeaderComponent } from '@/app/features/examinations/components/examination-patient-header.component';
@@ -91,6 +92,7 @@ type VitalKey = 'weightKg' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRateP
         CommonModule,
         ReactiveFormsModule,
         RouterLink,
+        DictationHintComponent,
         ButtonModule,
         InputTextModule,
         SelectModule,
