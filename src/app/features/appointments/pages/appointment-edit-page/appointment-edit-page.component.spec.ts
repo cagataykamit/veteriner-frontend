@@ -42,7 +42,7 @@ describe('AppointmentEditPageComponent - durum salt okunur', () => {
                 { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'a1' }), queryParamMap: convertToParamMap({}) } } },
                 { provide: AuthService, useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez', hasOperationClaim: () => true } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
-                { provide: ClinicsService, useValue: { getWorkingHours: () => of([]), getAppointmentSettings: () => of({ slotIntervalMinutes: 15 }) } },
+                { provide: ClinicsService, useValue: { getWorkingHours: () => of([]), getAppointmentSettings: () => of({ slotIntervalMinutes: 15, enforceWorkingHours: true }) } },
                 { provide: AppointmentsService, useValue: { getAppointmentForEditById: () => of(appt), updateAppointment } }
             ]
         });

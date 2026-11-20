@@ -91,7 +91,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
 
     afterEach(() => vi.useRealTimers());
 
-    const create = (items: AppointmentCalendarItemVm[], query: Record<string, string> = {}, vaccines: VaccinationCalendarItemVm[] = []) => {
+    const create = (items: AppointmentCalendarItemVm[], query: Record<string, string> = {}, vaccines: VaccinationCalendarItemVm[] = [], enforceWorkingHours = true) => {
         vi.useFakeTimers({ toFake: ['Date'] });
         vi.setSystemTime(new Date('2026-11-16T10:40:00+03:00'));
         getCalendarAppointments = vi.fn().mockReturnValue(of(items));
@@ -106,7 +106,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
                 provideRouter([]),
                 { provide: ActivatedRoute, useValue: { queryParamMap: params.asObservable(), snapshot: { queryParamMap: convertToParamMap(query) } } },
                 { provide: AppointmentsService, useValue: { getCalendarAppointments, getCalendarSummary, getCalendarCapacity } },
-                { provide: ClinicsService, useValue: { getWorkingHours: () => of(week), getAppointmentSettings: () => of({ slotIntervalMinutes: 15 }) } },
+                { provide: ClinicsService, useValue: { getWorkingHours: () => of(week), getAppointmentSettings: () => of({ slotIntervalMinutes: 15, enforceWorkingHours }) } },
                 {
                     provide: VisitsService,
                     useValue: {
@@ -181,6 +181,24 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
         expect(week.indexOf('10:40')).toBeLessThan(week.indexOf('Hasta-b'));
         el.querySelector<HTMLButtonElement>('[data-testid="calendar-column-2026-11-18"]')!.click();
         expect(navigate).toHaveBeenCalledWith(['/panel/appointments/calendar'], { queryParams: { view: undefined, date: '2026-11-18' } });
+    });
+
+    it('çalışma saati kısıtı kapalıyken kapalı gün ve mola yok; gün ızgarası 00-24, ilk çizimde 08:00 görünür; telefonda boşluklar 08-20 penceresinde', async () => {
+        const scrollIntoView = vi.fn();
+
+        // jsdom kaydırma yapmaz; çağrı ve hedef saat sayılır.
+        Element.prototype.scrollIntoView = scrollIntoView;
+        const { fixture, cmp } = create([appt('a', '22:00', 'v1')], {}, [], false);
+
+        await fixture.whenStable();
+
+        expect(cmp.bounds()).toEqual({ start: 0, end: 1440 });
+        expect(cmp.selectedWorking()).toEqual({ open: 0, close: 1439, breakStart: null, breakEnd: null });
+        expect(cmp.weekDays().some((d) => d.closed)).toBe(false);
+        expect(cmp.agendaGaps()).toEqual([{ start: 480, end: 1200 }]);
+        expect(scrollIntoView).toHaveBeenCalledTimes(1);
+        expect((scrollIntoView.mock.contexts[0] as HTMLElement).dataset['minute']).toBe('480');
+        delete (Element.prototype as Partial<Element>).scrollIntoView;
     });
 
     it('telefon ajandası: randevular saat sırasıyla, herkesin boş olduğu aralıklar satır olarak', () => {

@@ -38,6 +38,7 @@ import { AppointmentsService } from '@/app/entities/appointment/services/appoint
 import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/models/appointment-calendar-vm.model';
 import { groupCalendarItemsByDay } from '@/app/entities/appointment/data/appointment-calendar.mapper';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
+import { panelBookingHours } from '@/app/entities/clinic/data/clinic-working-hours.mapper';
 import type { ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import type { TodayItemVm, VeterinarianVm } from '@/app/entities/visit/models/visit-vm.model';
@@ -68,7 +69,25 @@ import { TODAY_ROUTE } from '@/app/core/routing/panel-navigation';
 import { parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { AppointmentFreeSlotFinderComponent, type FreeSlotPick } from '@/app/features/appointments/components/appointment-free-slot-finder.component';
 import { type AgendaDay, AppointmentDayAgendaComponent } from '@/app/features/appointments/components/appointment-day-agenda.component';
-import { clockLabel, conflictIds, firstFreeVeterinarian, freeGaps, gridBounds, intersectGaps, isCancelled, layoutBlocks, minutesOf, monthGridWeeks, rowStepMinutes, toBlockTimes, weekDateKeys, workingDayFor } from './calendar-grid.utils';
+import {
+    clockLabel,
+    conflictIds,
+    DEFAULT_GRID_END,
+    DEFAULT_GRID_START,
+    firstFreeVeterinarian,
+    freeGaps,
+    gridBounds,
+    intersectGaps,
+    isCancelled,
+    layoutBlocks,
+    minutesOf,
+    monthGridWeeks,
+    rowStepMinutes,
+    toBlockTimes,
+    weekDateKeys,
+    type WorkingDay,
+    workingDayFor
+} from './calendar-grid.utils';
 
 type CalendarViewMode = 'day' | 'week' | 'month';
 type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled';
@@ -86,6 +105,8 @@ const FALLBACK_WEEK: ClinicWorkingHourVm[] = [1, 2, 3, 4, 5, 6].map((dayOfWeek) 
     breakStartsAt: null,
     breakEndsAt: null
 }));
+/** Çalışma saati kısıtı kapalı klinikte telefondaki boş satırlar bu pencerede aranır (gece saatleri boş diye listelenmez). */
+const UNRESTRICTED_GAP_DAY: WorkingDay = { open: DEFAULT_GRID_START, close: DEFAULT_GRID_END, breakStart: null, breakEnd: null };
 const WEEKDAY_SHORT = new Intl.DateTimeFormat('tr-TR', { weekday: 'short', timeZone: 'UTC' });
 const WEEKDAY_LONG = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', timeZone: 'UTC' });
 const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -331,6 +352,7 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                             [start]="bounds().start"
                             [end]="bounds().end"
                             [working]="selectedWorking()"
+                            [scrollToMinute]="gridScrollMinute()"
                             [rowMinutes]="rowStep()"
                             [conflicts]="conflicts()"
                             [canCreate]="canPick()"
@@ -494,13 +516,17 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     readonly vets = signal<VeterinarianVm[]>([]);
     readonly hours = signal<ClinicWorkingHourVm[]>([]);
     readonly slotInterval = signal(15);
+    /** Klinik çalışma saati kısıtı (randevu ayarı); kapalıysa kapalı gün ve mola gösterilmez, ızgara tüm günü kapsar. */
+    readonly enforceWorkingHours = signal(true);
+    /** Kısıt kapalıyken gün ızgarası ilk açılışta buraya kaydırılır. */
+    readonly gridScrollMinute = computed(() => (this.enforceWorkingHours() ? null : DEFAULT_GRID_START));
     /** Her başarılı yüklemede artar; "Boş saat bul" listesini de yeniler. */
     readonly loadCount = signal(0);
 
     readonly canPick = computed(() => this.canCreateAppointment && !this.ro.mutationBlocked());
     readonly showFinder = computed(() => !!this.clinicId && this.canCreateAppointment);
     readonly rowStep = computed(() => rowStepMinutes(this.slotInterval()));
-    readonly gridHours = computed(() => (this.hours().length ? this.hours() : FALLBACK_WEEK));
+    readonly gridHours = computed(() => panelBookingHours(this.hours().length ? this.hours() : FALLBACK_WEEK, this.enforceWorkingHours()));
     readonly weekKeys = computed(() => weekDateKeys(this.selectedDate()));
     readonly conflicts = computed(() => conflictIds(this.items()));
     readonly presetGroupedByDate = computed(() => groupCalendarItemsByDay(this.items()));
@@ -762,7 +788,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
 
     /** Gün görünümündeki randevu blokları; ızgara o günün çalışma saati ile randevularının birleşimine ölçeklenir (aşı genişletmez). */
     private readonly viewBlocks = computed(() => layoutBlocks(this.selectedDayItems()));
-    readonly bounds = computed(() => gridBounds([workingDayFor(this.hours(), this.selectedDate())], this.viewBlocks()));
+    readonly bounds = computed(() => gridBounds([workingDayFor(panelBookingHours(this.hours(), this.enforceWorkingHours()), this.selectedDate())], this.viewBlocks()));
 
     readonly conflictCount = computed(() => {
         const ids = this.conflicts();
@@ -817,7 +843,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
             return [];
         }
 
-        const working = this.selectedWorking();
+        const working = this.enforceWorkingHours() ? this.selectedWorking() : UNRESTRICTED_GAP_DAY;
         const items = this.selectedDayItems();
         const vetIds = this.activeVetIds().filter((id) => this.vets().some((v) => v.userId === id));
 
@@ -1305,7 +1331,13 @@ export class AppointmentsCalendarPageComponent implements OnInit {
 
         this.visits.getVeterinarians(this.clinicId).subscribe({ next: (v) => this.vets.set(v), error: () => this.vets.set([]) });
         this.clinics.getWorkingHours(this.clinicId).subscribe({ next: (h) => this.hours.set(h), error: () => this.hours.set([]) });
-        this.clinics.getAppointmentSettings(this.clinicId).subscribe({ next: (s) => this.slotInterval.set(s.slotIntervalMinutes || 15), error: () => this.slotInterval.set(15) });
+        this.clinics.getAppointmentSettings(this.clinicId).subscribe({
+            next: (s) => {
+                this.slotInterval.set(s.slotIntervalMinutes || 15);
+                this.enforceWorkingHours.set(s.enforceWorkingHours);
+            },
+            error: () => this.slotInterval.set(15)
+        });
     }
 
     private tick(): void {
