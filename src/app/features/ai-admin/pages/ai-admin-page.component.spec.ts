@@ -59,6 +59,10 @@ const usage = (patch: Partial<AiAdminUsageDto> = {}): AiAdminUsageDto => ({
     clinics: [{ tenantId: 't1', tenantName: 'Pati Klinikleri', clinicId: 'c1', clinicName: 'Merkez', isEnabled: true, usage: totals({ requests: 80, costUsd: 0.027 }) }],
     features: [{ feature: 'PetHistorySummary', usage: totals({ requests: 100 }) }],
     models: [{ model: 'claude-haiku-5-5', usage: totals({ requests: 120 }) }],
+    users: [
+        { userId: 'u1', userName: 'Dr. Ayşe', email: 'ayse@pati.test', tenantId: 't1', tenantName: 'Pati Klinikleri', clinicId: 'c1', clinicName: 'Merkez', usage: totals({ requests: 60, failedRequests: 3, costUsd: 0.02 }) },
+        { userId: 'u2', userName: '', email: 'resepsiyon@pati.test', tenantId: 't1', tenantName: 'Pati Klinikleri', clinicId: 'c1', clinicName: 'Merkez', usage: totals({ requests: 20 }) }
+    ],
     ...patch
 });
 
@@ -128,6 +132,25 @@ describe('Yapay zekâ yönetim sayfası', () => {
         expect(row).toContain('250');
         expect(text('ai-admin-by-feature')).toContain('Hasta geçmişi özeti');
         expect(text('ai-admin-by-model')).toContain('claude-haiku-5-5');
+    });
+
+    it('kullanıcı kırılımı adı (yoksa e-postayı), kliniği ve başarısız isteği gösterir', async () => {
+        await create();
+
+        const users = text('ai-admin-by-user');
+
+        expect(users).toContain('Kullanıcılara göre');
+        expect(users).toContain('Dr. Ayşe');
+        expect(users).toContain('ayse@pati.test · Merkez · Pati Klinikleri');
+        expect(users).toContain('3 başarısız');
+        expect(users).toContain('resepsiyon@pati.test');
+    });
+
+    it('kullanıcı kırılımı boşsa bu ay kullanım yok der', async () => {
+        service.usage.mockReturnValue(of(usage({ users: [] })));
+        await create();
+
+        expect(text('ai-admin-by-user')).toContain('Bu ay kullanım yok.');
     });
 
     it('sağlayıcı anahtarı yoksa bunu söyler', async () => {

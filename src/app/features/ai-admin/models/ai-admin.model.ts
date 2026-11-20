@@ -67,6 +67,20 @@ export interface AiAdminUsageDto {
     clinics: { tenantId: string; tenantName: string; clinicId: string; clinicName: string; isEnabled: boolean; usage: AiAdminTotalsDto }[];
     features: { feature: string; usage: AiAdminTotalsDto }[];
     models: { model: string; usage: AiAdminTotalsDto }[];
+    /** Kötüye kullanım takibi: ayın en çok harcayan 50 kullanıcı–klinik satırı (maliyete göre). */
+    users: AiAdminUserUsageDto[];
+}
+
+export interface AiAdminUserUsageDto {
+    userId: string;
+    /** Görünen ad; yoksa boş. */
+    userName: string;
+    email: string;
+    tenantId: string;
+    tenantName: string;
+    clinicId: string;
+    clinicName: string;
+    usage: AiAdminTotalsDto;
 }
 
 const FEATURE_LABELS: Record<string, string> = {

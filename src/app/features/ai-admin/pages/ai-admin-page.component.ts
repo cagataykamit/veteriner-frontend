@@ -291,9 +291,17 @@ export class AiAdminPageComponent implements OnInit {
         const byClinic: BreakdownRow[] = u.clinics.map((c) => ({ key: c.clinicId, label: c.clinicName, detail: c.tenantName + (c.isEnabled ? '' : ' · kapalı'), usage: c.usage }));
         const byFeature: BreakdownRow[] = u.features.map((f) => ({ key: f.feature, label: aiFeatureLabel(f.feature), detail: null, usage: f.usage }));
         const byModel: BreakdownRow[] = u.models.map((m) => ({ key: m.model, label: m.model, detail: null, usage: m.usage }));
+        // Aynı kullanıcı birden çok klinikte ayrı satırdır; anahtar ikisini birlikte taşır.
+        const byUser: BreakdownRow[] = (u.users ?? []).map((x) => ({
+            key: `${x.userId}:${x.clinicId}`,
+            label: x.userName || x.email,
+            detail: [x.userName ? x.email : null, x.clinicName, x.tenantName].filter(Boolean).join(' · '),
+            usage: x.usage
+        }));
 
         return [
             { testId: 'ai-admin-by-clinic', title: 'Kliniklere göre', column: 'Klinik', rows: byClinic, wide: true },
+            { testId: 'ai-admin-by-user', title: 'Kullanıcılara göre (en çok harcayan 50)', column: 'Kullanıcı', rows: byUser, wide: true },
             { testId: 'ai-admin-by-feature', title: 'Özelliklere göre', column: 'Özellik', rows: byFeature, wide: false },
             { testId: 'ai-admin-by-model', title: 'Modellere göre', column: 'Model', rows: byModel, wide: false }
         ];
