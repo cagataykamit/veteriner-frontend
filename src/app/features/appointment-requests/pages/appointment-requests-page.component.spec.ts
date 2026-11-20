@@ -11,6 +11,7 @@ import { AppointmentRequestChannel, AppointmentRequestSource, AppointmentRequest
 import { AppointmentRequestsService } from '@/app/entities/online-booking/services/online-booking.service';
 import { MenuBadgeFeed } from '@/app/core/routing/menu-badge-feed';
 import { AppointmentRequestChannelSummaryComponent } from '@/app/features/appointment-requests/components/appointment-request-channel-summary.component';
+import { ReportPreferencesService } from '@/app/entities/report-preference/services/report-preferences.service';
 import { AppointmentRequestsPageComponent } from './appointment-requests-page.component';
 
 const row = (id: string, over: Partial<AppointmentRequestListItemVm> = {}): AppointmentRequestListItemVm => ({
@@ -52,11 +53,13 @@ describe('AppointmentRequestsPageComponent', () => {
     let fixture: ComponentFixture<AppointmentRequestsPageComponent>;
     let list: ReturnType<typeof vi.fn>;
     let channelSummary: ReturnType<typeof vi.fn>;
+    let listSavedFilters: ReturnType<typeof vi.fn>;
     let query: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
     async function create(): Promise<void> {
         list = vi.fn().mockReturnValue(of({ items: [row('q1'), row('q2', { source: AppointmentRequestSource.Portal, channel: null, clientName: 'Portal Sahip' })], totalCount: 2, page: 1, pageSize: 20 }));
         channelSummary = vi.fn().mockReturnValue(of(SUMMARY));
+        listSavedFilters = vi.fn().mockReturnValue(of([]));
         query = new BehaviorSubject(convertToParamMap({}));
         await TestBed.configureTestingModule({
             imports: [AppointmentRequestsPageComponent],
@@ -69,6 +72,7 @@ describe('AppointmentRequestsPageComponent', () => {
                 { provide: AppointmentRequestsService, useValue: { list, channelSummary, get: vi.fn().mockReturnValue(of(null)) } },
 
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                { provide: ReportPreferencesService, useValue: { listSavedFilters } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
         }).compileComponents();
@@ -101,6 +105,29 @@ describe('AppointmentRequestsPageComponent', () => {
 
         query.next(convertToParamMap({ requestId: 'q2' }));
         expect(cmp.openId()).toBe('q2');
+    });
+
+    it('kayıtlı filtre (APPT-026): durum adıyla kaydedilir, uygulanınca ilk sayfadan yükler; tanınmayan değer uygulanmaz', async () => {
+        await create();
+        const cmp = fixture.componentInstance;
+        const source = cmp.savedFilterSource;
+
+        expect(listSavedFilters).toHaveBeenCalledWith('screens.appointment-requests');
+        expect(source.savedFilterValues()).toEqual({ status: 'Pending' });
+
+        source.applySavedFilterValues({ status: 'Rejected' });
+        expect(cmp.status()).toBe(AppointmentRequestStatus.Rejected);
+        expect(list).toHaveBeenLastCalledWith({ status: AppointmentRequestStatus.Rejected, page: 1, pageSize: 20 });
+
+        source.applySavedFilterValues({ status: 'All' });
+        expect(cmp.status()).toBeNull();
+        expect(source.savedFilterValues()).toEqual({ status: 'All' });
+
+        list.mockClear();
+        source.applySavedFilterValues({ status: '2' });
+        source.applySavedFilterValues({});
+        expect(cmp.status()).toBeNull();
+        expect(list).not.toHaveBeenCalled();
     });
 
     it('kaynağa göre özet son 30 günü gösterir; eski talepler "Bilinmiyor", dönem değişince yeniden ister (TIER-016)', async () => {

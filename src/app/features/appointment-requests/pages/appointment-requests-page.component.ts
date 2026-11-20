@@ -27,8 +27,28 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { ReportSavedFiltersComponent, type SavedFilterSource } from '@/app/entities/report-preference/components/report-saved-filters.component';
+import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 
 const PAGE_SIZE = 20;
+
+/** Kayıtlı filtrede durum enum adıyla saklanır (`Pending`, `Rejected`…); "Tümü" `All`. */
+const ALL_STATUSES = 'All';
+
+function savedStatusValue(status: AppointmentRequestStatus | null): string {
+    return status === null ? ALL_STATUSES : AppointmentRequestStatus[status];
+}
+
+/** Tanınmayan değer `undefined` (uygulanmaz). */
+function statusFromSavedValue(value: string | undefined): AppointmentRequestStatus | null | undefined {
+    if (value === ALL_STATUSES) {
+        return null;
+    }
+
+    const status = AppointmentRequestStatus[value as keyof typeof AppointmentRequestStatus];
+
+    return typeof status === 'number' ? status : undefined;
+}
 
 /**
  * Online randevu talep kuyruğu (APPT-010; ADR-042 K4), Randevular > Talepler: bekleyenler en yakın saat önce. Satır açılınca
@@ -50,7 +70,8 @@ const PAGE_SIZE = 20;
         AppErrorStateComponent,
         AppStatusTagComponent,
         AppointmentRequestDetailDialogComponent,
-        AppointmentRequestChannelSummaryComponent
+        AppointmentRequestChannelSummaryComponent,
+        ReportSavedFiltersComponent
     ],
     template: `
         <app-page-header title="Randevu talepleri" description="Portaldan, kliniğin sitesinden ve kliniğe özel bağlantıdan gelen talepler. Talep onaylanınca randevu oluşur; sahibe e-posta gider.">
@@ -65,6 +86,12 @@ const PAGE_SIZE = 20;
                     <label for="requestStatus" class="text-sm font-medium text-muted-color">Durum</label>
                     <p-select inputId="requestStatus" [options]="statusOptions" optionLabel="label" optionValue="value" [ngModel]="status()" (ngModelChange)="onStatusChange($event)" class="w-full" data-testid="request-status-filter" />
                 </div>
+                <app-report-saved-filters
+                    [state]="savedFilterSource"
+                    filterKey="screens.appointment-requests"
+                    [namePlaceholder]="copy.appointmentRequestsSavedFilterNamePlaceholder"
+                    [dialogHint]="copy.appointmentRequestsSavedFilterDialogHint"
+                />
             </div>
 
             @if (loading()) {
@@ -122,6 +149,7 @@ export class AppointmentRequestsPageComponent implements OnInit {
     readonly pending = AppointmentRequestStatus.Pending;
     readonly statusOptions = APPOINTMENT_REQUEST_STATUS_FILTER_OPTIONS;
     readonly settingsRoute = ONLINE_BOOKING_SETTINGS_ROUTE;
+    readonly copy = PANEL_COPY;
 
     private readonly service = inject(AppointmentRequestsService);
     private readonly route = inject(ActivatedRoute);
@@ -158,6 +186,18 @@ export class AppointmentRequestsPageComponent implements OnInit {
         this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => this.openId.set(params.get('requestId')));
         this.load();
     }
+
+    /** Kayıtlı filtreler (APPT-026): durum filtresi kaydedilir; uygulanınca liste ilk sayfadan yüklenir. */
+    readonly savedFilterSource: SavedFilterSource = {
+        savedFilterValues: () => ({ status: savedStatusValue(this.status()) }),
+        applySavedFilterValues: (values) => {
+            const status = statusFromSavedValue(values['status']);
+
+            if (status !== undefined) {
+                this.onStatusChange(status);
+            }
+        }
+    };
 
     onStatusChange(status: AppointmentRequestStatus | null): void {
         this.status.set(status);
