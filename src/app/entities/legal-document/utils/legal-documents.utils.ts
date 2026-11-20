@@ -51,7 +51,7 @@ export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
     title: 'Vetinity Gizlilik Politikası',
     shortTitle: 'Gizlilik Politikası',
     subtitle: 'kullanıcı / site ziyaretçisi',
-    statusLine: 'Son güncelleme: 2026-11-09',
+    statusLine: 'Son güncelleme: 2026-11-20',
     description: "Vetinity'nin kendi kullanıcılarına ve site ziyaretçilerine ilişkin kişisel verilerin işlenmesi.",
     intro: [
         [
@@ -73,6 +73,7 @@ export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
                 'Abonelik ve ödeme: paket, fatura bilgileri, ödeme durumu. Kart bilgileri bizde saklanmaz; ödeme altyapısı sağlayıcısı (iyzico) tarafından işlenir.',
                 'Kullanım ve güvenlik: giriş kayıtları, IP adresi, tarayıcı/cihaz bilgisi, işlem (denetim) kayıtları, hata kayıtları.',
                 "Bot koruması: kayıt ve kod isteklerinde Cloudflare Turnstile'ın işlediği IP adresi ve tarayıcı/cihaz bilgisi gibi teknik sinyaller.",
+                'Yapay zekâ kullanımı: yapay zekâ özelliği açık kliniklerde hangi kullanıcının hangi özelliği ne zaman kullandığı, token sayısı, tahmini maliyet ve sonuç. Gönderilen ve üretilen metin bu kayıtta tutulmaz.',
                 'İletişim: destek talepleri ve yazışmalar.',
                 'Çerezler: oturum için zorunlu çerezler; zorunlu olmayan çerez/analitik kullanılırsa açık rıza alınır [çerez politikası eklenecek].'
             ]
@@ -80,13 +81,13 @@ export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
         {
             heading: '3. Amaçlar ve hukuki sebepler',
             paragraphs: [
-                'Hesabın açılması, hizmetin sunulması ve güvenliği (sözleşmenin ifası); faturalandırma ve yasal kayıtlar (hukuki yükümlülük); hizmet duyuruları ve destek (sözleşmenin ifası, meşru menfaat); suistimal ve güvenlik olaylarının önlenmesi (meşru menfaat); hakların korunması (hakkın tesisi); açık rıza gerektiren iletişimler yalnız rıza ile. Deneme hesabı, e-postaya gönderilen tek kullanımlık kodla doğrulanır; bir e-posta adresi ya da bir vergi/TC kimlik numarasıyla birden fazla ücretsiz deneme açılması önlenir (sözleşmenin kurulması; deneme hakkının kötüye kullanılmasının önlenmesinde meşru menfaat). Vergi numarası ücretli plana geçişte faturalandırmada da kullanılır (hukuki yükümlülük). Kayıt ve kod isteklerinde otomatik (bot) kötüye kullanımı önlemek için Cloudflare Turnstile ile güvenlik doğrulaması yapılır (meşru menfaat).'
+                'Hesabın açılması, hizmetin sunulması ve güvenliği (sözleşmenin ifası); faturalandırma ve yasal kayıtlar (hukuki yükümlülük); hizmet duyuruları ve destek (sözleşmenin ifası, meşru menfaat); suistimal ve güvenlik olaylarının önlenmesi (meşru menfaat); hakların korunması (hakkın tesisi); açık rıza gerektiren iletişimler yalnız rıza ile. Deneme hesabı, e-postaya gönderilen tek kullanımlık kodla doğrulanır; bir e-posta adresi ya da bir vergi/TC kimlik numarasıyla birden fazla ücretsiz deneme açılması önlenir (sözleşmenin kurulması; deneme hakkının kötüye kullanılmasının önlenmesinde meşru menfaat). Vergi numarası ücretli plana geçişte faturalandırmada da kullanılır (hukuki yükümlülük). Kayıt ve kod isteklerinde otomatik (bot) kötüye kullanımı önlemek için Cloudflare Turnstile ile güvenlik doğrulaması yapılır (meşru menfaat). Yapay zekâ kullanım kaydı, özelliğin sunulması ve kullanım sınırlarının uygulanması (sözleşmenin ifası) ile kötüye kullanımın tespiti ve önlenmesi (meşru menfaat) için tutulur; Vetinity platform yöneticisi kullanımı kullanıcı bazında görebilir.'
             ]
         },
         {
             heading: '4. Aktarım',
             paragraphs: [
-                'Barındırma ve altyapı, ödeme (iyzico), e-posta/SMS gönderimi, güvenlik doğrulaması (Cloudflare Turnstile; Cloudflare, Inc., ABD), destek ve muhasebe/hukuk danışmanlığı sağlayıcılarına; mevzuatın zorunlu kıldığı hallerde yetkili kurumlara. [Yurt dışına aktarım varsa: sağlayıcı, ülke ve Kanun m.9 mekanizması buraya yazılır.] Verileriniz satılmaz.'
+                'Barındırma ve altyapı, ödeme (iyzico), e-posta/SMS gönderimi, güvenlik doğrulaması (Cloudflare Turnstile; Cloudflare, Inc., ABD), destek ve muhasebe/hukuk danışmanlığı sağlayıcılarına; mevzuatın zorunlu kıldığı hallerde yetkili kurumlara. Yurt dışına aktarım: güvenlik doğrulaması için Cloudflare, Inc. (ABD); klinikte açıldığında yapay zekâ özellikleri için Anthropic PBC (ABD). Yapay zekâ isteklerine hesap bilgileriniz (ad, e-posta) eklenmez; klinik kayıtlarına elle yazılmış metinde adınız geçiyorsa gönderilen metinde yer alabilir. Yurt dışına aktarım Kanun m.9\'a uygun olmadıkça yapılmaz. Verileriniz satılmaz.'
             ]
         },
         {
@@ -208,7 +209,7 @@ export const DATA_PROCESSING_AGREEMENT_DOCUMENT: LegalDocumentDef = {
     title: 'Vetinity Veri İşleme Sözleşmesi',
     shortTitle: 'Veri İşleme Sözleşmesi',
     subtitle: 'Klinik = veri sorumlusu, Vetinity = veri işleyen',
-    statusLine: 'Son güncelleme: 2026-11-09',
+    statusLine: 'Son güncelleme: 2026-11-20',
     description: "Klinik adına Vetinity'de işlenen müşteri ve hasta verilerine ilişkin veri işleme sözleşmesi.",
     sections: [
         {
@@ -220,7 +221,7 @@ export const DATA_PROCESSING_AGREEMENT_DOCUMENT: LegalDocumentDef = {
         {
             heading: '2. İşlemenin niteliği',
             paragraphs: [
-                "Süre: abonelik süresi ve dışa aktarma süresi. Amaç: kliniğin kayıt, randevu, muayene, aşı, stok ve ödeme yönetimini barındırmak. Veri kategorileri ve ilgili kişi grupları: Klinik müşterileri ve çalışanları. Özel nitelikli veri bilinçli olarak toplanmaz; Klinik bu tür veriyi serbest metin alanlarına girmemeyi taahhüt eder."
+                "Süre: abonelik süresi ve dışa aktarma süresi. Amaç: kliniğin kayıt, randevu, muayene, aşı, stok ve ödeme yönetimini barındırmak; Klinik için açıldığında yapay zekâ destekli özellikleri (hasta geçmişi özeti, muayene notu, hasta sahibine açıklama ve taburcu talimatı taslakları, doğal dille hasta araması) sunmak. Veri kategorileri ve ilgili kişi grupları: Klinik müşterileri ve çalışanları. Özel nitelikli veri bilinçli olarak toplanmaz; Klinik bu tür veriyi serbest metin alanlarına girmemeyi taahhüt eder."
             ]
         },
         {
@@ -229,10 +230,11 @@ export const DATA_PROCESSING_AGREEMENT_DOCUMENT: LegalDocumentDef = {
                 "a) Verileri yalnız Klinik'in yazılı (Hizmet kullanımıyla verilen) talimatları doğrultusunda işler.",
                 'b) Verilere erişen personelin gizlilik yükümlülüğü altında olmasını sağlar.',
                 'c) Kanun m.12 uyarınca uygun teknik ve idari tedbirleri alır (rol/izin kontrolü, iletişimde şifreleme, denetim kaydı, yedekleme, erişim kısıtı).',
-                'd) Alt işleyenleri (barındırma, ödeme, bildirim sağlayıcıları) [liste ve güncelleme usulü] hakkında Kliniği bilgilendirir ve alt işleyenlere aynı seviyede yükümlülük getirir.',
+                'd) Alt işleyenleri (barındırma, ödeme, bildirim sağlayıcıları; yapay zekâ özellikleri için Anthropic PBC, ABD) [liste ve güncelleme usulü] hakkında Kliniği bilgilendirir ve alt işleyenlere aynı seviyede yükümlülük getirir.',
                 'e) Veri ihlalini öğrendiğinde gecikmeksizin [48 saat içinde] Kliniğe bildirir.',
                 'f) İlgili kişi taleplerinde Kliniğe makul yardımda bulunur; doğrudan gelen talepleri Kliniğe yönlendirir.',
-                "g) Kanun'a uyumun kanıtlanması için gerekli bilgiyi sağlar ve makul denetime katlanır."
+                "g) Kanun'a uyumun kanıtlanması için gerekli bilgiyi sağlar ve makul denetime katlanır.",
+                "h) Yapay zekâ özellikleri her klinikte kapalı başlar; Klinik'in talebiyle Vetinity açar. Açıkken yalnız istenen işlem için gereken klinik kayıtlar (hayvanın geçmişi, muayene, tanı, tedavi ve aşı kayıtları, kullanıcının yazdığı metin) yapay zekâ sağlayıcısına gönderilir. Göndermeden önce hasta sahibinin adı, e-posta adresi, telefon, kimlik ve mikroçip gibi uzun numaralar ve hayvanın adı metinden çıkarılır; müşteri kaydı gönderilmez. Bu temizleme serbest metindeki her kişisel veriyi yakalamayabilir; Klinik serbest metin alanlarına gereksiz kişisel veri yazmamayı taahhüt eder. Gönderilen metin Vetinity'de saklanmaz; yalnız kullanım kaydı (kullanıcı, özellik, zaman, token, tahmini maliyet, sonuç) tutulur. Yapay zekâ çıktısı taslaktır; kullanıcı kontrol edip onaylamadan kayda geçmez."
             ]
         },
         {
@@ -243,7 +245,9 @@ export const DATA_PROCESSING_AGREEMENT_DOCUMENT: LegalDocumentDef = {
         },
         {
             heading: '5. Yurt dışı aktarım',
-            paragraphs: ["Veriler Türkiye'de [barındırma yeri] tutulur. Yurt dışına aktarım Kanun m.9'a uygun olmadıkça yapılmaz."]
+            paragraphs: [
+                "Veriler Türkiye'de [barındırma yeri] tutulur. Yurt dışına aktarım Kanun m.9'a uygun olmadıkça yapılmaz. Klinik için yapay zekâ özellikleri açıldığında madde 3(h)'deki veriler, işlemin yapılması için Anthropic PBC'ye (Amerika Birleşik Devletleri) aktarılır; özellik kapalı klinikte bu aktarım olmaz."
+            ]
         },
         {
             heading: '6. Süre sonu',
