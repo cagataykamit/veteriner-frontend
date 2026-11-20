@@ -335,6 +335,24 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(el.querySelector('[data-testid="exam-workspace"]')).not.toBeNull();
     });
 
+    it('Hesabı kapat yalnız kesinleşmiş, gelişe bağlı muayenede ve ön büro yetkisiyle görünür; paneli o gelişle açar (CHECKOUT-001)', async () => {
+        const linkedFinal = { ...finalizedVm, visitId: 'visit-1' };
+        const hekim = await setup(linkedFinal, ['Examinations.Update']);
+
+        expect(has(hekim.el, 'exam-checkout')).toBe(false);
+        TestBed.resetTestingModule();
+
+        const taslak = await setup({ ...detailVm, visitId: 'visit-1' }, ['Payments.Create']);
+
+        expect(has(taslak.el, 'exam-checkout')).toBe(false);
+        TestBed.resetTestingModule();
+
+        const resepsiyon = await setup(linkedFinal, ['Payments.Create']);
+
+        (resepsiyon.el.querySelector('[data-testid="exam-checkout"]') as HTMLButtonElement).click();
+        expect(resepsiyon.fixture.componentInstance.checkoutVisitId()).toBe('visit-1');
+    });
+
     it('Ödeme al yalnız Payments.Create izniyle görünür (Update tek başına yetmez)', async () => {
         const hekim = await setup(detailVm, ['Examinations.Update']);
 

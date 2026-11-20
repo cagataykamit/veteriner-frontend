@@ -1,6 +1,6 @@
 import { HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, type Observable } from 'rxjs';
+import { catchError, map, of, type Observable } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -39,6 +39,17 @@ export class EDocumentsService {
 
     preview(source: EDocumentSource): Observable<EDocumentPreviewDto> {
         return this.api.post<EDocumentPreviewDto>(ApiEndpoints.eDocuments.preview(), { clinicId: this.clinicId(), ...source });
+    }
+
+    /**
+     * Ziyaret kapanışındaki e-Belge önerisi (Bugün'de "Tamamla" ve "Hesabı kapat" aynı kuralı kullanır): entegratör bağlıysa ve ziyaretin
+     * belgesiz ücreti varsa kaynak döner, aksi hâlde (hata dahil) `null`. İzin (`EDocuments.Issue`) çağıran tarafta denetlenir.
+     */
+    visitCloseSuggestion(visitId: string): Observable<EDocumentSource | null> {
+        return this.preview({ visitId }).pipe(
+            map((p) => (p.connection.status === 'Connected' && p.groups.length > 0 ? { visitId } : null)),
+            catchError(() => of(null))
+        );
     }
 
     /** `requestId` çağıran tarafından bir kez üretilir; tekrar denemede aynı değer gider (çift belge oluşmaz). */

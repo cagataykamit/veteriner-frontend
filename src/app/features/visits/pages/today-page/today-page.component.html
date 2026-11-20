@@ -551,7 +551,12 @@
             <i class="p-button-icon" [class]="isBusy(item) ? 'pi pi-spin pi-spinner' : 'pi pi-play'"></i><span class="@max-[50rem]:hidden">Muayeneye al</span>
         </button>
     }
-    @if (canUpdateVisit && actions.canCompleteCare) {
+    @if (canCheckout && actions.canCheckout) {
+        <button pButton type="button" aria-label="Hesabı kapat" [attr.title]="'Hesabı kapat'" size="small" [disabled]="ro.mutationBlocked()" (click)="openCheckout(item)" data-testid="today-checkout">
+            <i class="p-button-icon pi pi-receipt"></i><span class="@max-[50rem]:hidden">Hesabı kapat</span>
+        </button>
+    }
+    @if (canUpdateVisit && actions.canCompleteCare && !(canCheckout && actions.canCheckout)) {
         <button pButton type="button" aria-label="Tamamla" [attr.title]="'Tamamla'" size="small" [disabled]="isBusy(item) || ro.mutationBlocked()" (click)="requestComplete(item)">
             <i class="p-button-icon" [class]="isBusy(item) ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i><span class="@max-[50rem]:hidden">Tamamla</span>
         </button>
@@ -561,7 +566,7 @@
             <i class="p-button-icon pi pi-plus"></i><span class="@max-[50rem]:hidden">Ücret ekle</span>
         </button>
     }
-    @if (canCollectPayment && actions.canCollectRemaining) {
+    @if (canCollectPayment && actions.canCollectRemaining && !(canCheckout && actions.canCheckout)) {
         <button pButton type="button" aria-label="Ödeme al" [attr.title]="'Ödeme al'" size="small" [outlined]="true" [disabled]="ro.mutationBlocked()" (click)="openPayment(item)" data-testid="today-collect-remaining">
             <i class="p-button-icon pi pi-wallet"></i><span class="@max-[50rem]:hidden">Ödeme al</span>
         </button>
@@ -657,6 +662,21 @@
 <!-- Ziyaret kapanınca e-Belge önerisi: belge kesme izni yeter (sekreterde Düzelt izni yok). -->
 @if (canIssueDocument) {
     <app-e-document-issue-dialog [(visible)]="documentOpen" [source]="documentSource()" header="Ziyaret kapandı: e-Belge kes" />
+}
+@if (canCheckout) {
+    <p-drawer
+        [visible]="checkoutVisitId() !== null"
+        (visibleChange)="$event ? null : closeCheckout()"
+        position="right"
+        header="Hesabı kapat"
+        [style]="{ width: 'min(36rem, 100vw)' }"
+        [closeOnEscape]="false"
+        data-testid="today-checkout-drawer"
+    >
+        @if (checkoutVisitId(); as visitId) {
+            <app-visit-checkout-panel [visitId]="visitId" (closed)="closeCheckout()" (finished)="onCheckoutFinished()" />
+        }
+    </p-drawer>
 }
 @if (canCorrect) {
     <app-visit-correction-dialog [(visible)]="correctionOpen" [item]="correctionItem()" (corrected)="onCorrected()" />

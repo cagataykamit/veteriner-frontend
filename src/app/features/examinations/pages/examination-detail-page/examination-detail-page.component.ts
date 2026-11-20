@@ -3,7 +3,9 @@ import { Component, computed, inject, OnInit, signal, viewChild, ChangeDetection
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { DrawerModule } from 'primeng/drawer';
 import { ToastModule } from 'primeng/toast';
+import { VisitCheckoutPanelComponent } from '@/app/entities/visit-checkout/components/visit-checkout-panel.component';
 import { AiProvenanceNoteComponent } from '@/app/entities/ai/components/ai-provenance-note.component';
 import { OwnerExplanationsSectionComponent } from '@/app/entities/owner-explanation/components/owner-explanations-section.component';
 import { catchError, EMPTY, switchMap } from 'rxjs';
@@ -97,6 +99,8 @@ const RECORD_TEXT_SECTIONS: readonly {
         ExaminationPatientHeaderComponent,
         ExaminationProceduresSectionComponent,
         ExaminationTemplateApplyDialogComponent,
+        DrawerModule,
+        VisitCheckoutPanelComponent,
         ToastModule,
         TrDateTimePipe,
         AiProvenanceNoteComponent,
@@ -190,6 +194,11 @@ const RECORD_TEXT_SECTIONS: readonly {
             @if (e.clientId?.trim() && e.petId?.trim() && (canCreateCharge || canCreatePayment || visitOpen)) {
                 @let moneyContext = { clientId: e.clientId, petId: e.petId, examinationId: e.id };
                 <app-detail-action-bar ariaLabel="Muayene eylemleri">
+                    @if (canCheckout && e.status === 'Finalized' && e.visitId && !ro.mutationBlocked()) {
+                        <button pButton type="button" class="p-button-primary" (click)="checkoutVisitId.set(e.visitId)" data-testid="exam-checkout">
+                            <i class="p-button-icon pi pi-receipt"></i>Hesabı kapat
+                        </button>
+                    }
                     @if (visitOpen) {
                         @if (visitOpen.inProgress && canUpdateVisit && !ro.mutationBlocked()) {
                             <button pButton type="button" class="p-button-primary" [disabled]="completingVisit()" (click)="completeOpenVisit()" data-testid="exam-complete-visit">
@@ -213,6 +222,22 @@ const RECORD_TEXT_SECTIONS: readonly {
                         }
                     }
                 </app-detail-action-bar>
+            }
+
+            @if (canCheckout) {
+                <p-drawer
+                    [visible]="checkoutVisitId() !== null"
+                    (visibleChange)="$event ? null : closeCheckout()"
+                    position="right"
+                    header="Hesabı kapat"
+                    [style]="{ width: 'min(36rem, 100vw)' }"
+                    [closeOnEscape]="false"
+                    data-testid="exam-checkout-drawer"
+                >
+                    @if (checkoutVisitId(); as visitId) {
+                        <app-visit-checkout-panel [visitId]="visitId" (closed)="closeCheckout()" (finished)="checkoutChanged = true" />
+                    }
+                </p-drawer>
             }
 
             <!-- Gelişte hazırlanan şablon (CHECKIN-003): tek tıkla ön izlemede açılır. -->
@@ -388,6 +413,10 @@ export class ExaminationDetailPageComponent implements OnInit, HasUnsavedChanges
     /** Ücret ekle / Ödeme al: muayene düzenleme izninden bağımsız, yalnız ilgili finans izniyle (resepsiyon akışı). */
     readonly canCreateCharge = this.auth.hasOperationClaim(CHARGES_CREATE_CLAIM);
     readonly canAddendumExamination = this.auth.hasOperationClaim(EXAMINATIONS_ADDENDUM_CLAIM);
+    /** "Hesabı kapat" (CHECKOUT-001) kesinleşmiş muayeneden de açılır; ön büro işidir (ücrete çevirme ya da tahsilat). */
+    readonly canCheckout = this.canCreateCharge || this.canCreatePayment;
+    readonly checkoutVisitId = signal<string | null>(null);
+    checkoutChanged = false;
     readonly statusLabel = examinationStatusLabel;
     readonly statusSeverity = examinationStatusSeverity;
     readonly finalizeDialogVisible = signal(false);
@@ -532,6 +561,16 @@ export class ExaminationDetailPageComponent implements OnInit, HasUnsavedChanges
             detail: 'Muayene kesinleştirildi.'
         });
         this.examinationsService.getExaminationById(result.id).subscribe({ next: (x) => this.exam.set(x), error: () => undefined });
+    }
+
+    /** Panel kapanınca, kayıt yapıldıysa muayene ve geliş durumu sessizce yenilenir. */
+    closeCheckout(): void {
+        this.checkoutVisitId.set(null);
+
+        if (this.checkoutChanged) {
+            this.checkoutChanged = false;
+            this.loader.reload();
+        }
     }
 
     /** İşlem yan panelindeki form kirliyse sayfadan çıkışta sorulur (O2). */

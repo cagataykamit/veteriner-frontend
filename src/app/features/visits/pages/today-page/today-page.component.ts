@@ -10,6 +10,8 @@ import { MenuItem, MessageService } from 'primeng/api';
 import { Menu, MenuModule } from 'primeng/menu';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DrawerModule } from 'primeng/drawer';
+import { VisitCheckoutPanelComponent } from '@/app/entities/visit-checkout/components/visit-checkout-panel.component';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
 import { AppointmentNoShowDialogComponent } from '@/app/entities/appointment/components/appointment-no-show-dialog.component';
 import { SelectButtonModule } from 'primeng/selectbutton';
@@ -145,6 +147,8 @@ const SUMMARY_ORDER: readonly TodayStatusTone[] = ['planned', 'waiting', 'inProg
         PendingAppointmentRequestsTilesComponent,
         AppointmentRequestDetailDialogComponent,
         EDocumentIssueDialogComponent,
+        DrawerModule,
+        VisitCheckoutPanelComponent,
         ReadOnlyReasonDirective,
         MoneyPipe
     ],
@@ -182,6 +186,11 @@ export class TodayPageComponent implements OnInit {
     /** Ziyaret kapanışında belgesiz ücret varsa e-belge önerisi (ADR-036 AK-4 c). */
     documentOpen = false;
     readonly documentSource = signal<EDocumentSource | null>(null);
+    /** "Hesabı kapat" (CHECKOUT-001) ön büro işidir: ücrete çevirme ya da tahsilat yetkisi gerekir. */
+    readonly canCheckout = this.canCollectPayment || this.canCreateCharge;
+    /** Açık "Hesabı kapat" panelinin ziyareti; kapalıyken `null`. */
+    readonly checkoutVisitId = signal<string | null>(null);
+    private checkoutChanged = false;
 
     readonly loading = signal(true);
     /** Bekleyen online talepler; Bugün her yenilendiğinde birlikte yenilenir. */
@@ -650,6 +659,25 @@ export class TodayPageComponent implements OnInit {
         void this.router.navigate(['/panel/charges/pending'], { queryParams: { visitId: item.visitId } });
     }
 
+    openCheckout(item: TodayItemVm): void {
+        this.checkoutChanged = false;
+        this.checkoutVisitId.set(item.visitId);
+    }
+
+    /** Panel kapanınca, kayıt yapıldıysa liste sessizce yenilenir (rozet ve kalan güncel olsun). */
+    closeCheckout(): void {
+        this.checkoutVisitId.set(null);
+
+        if (this.checkoutChanged) {
+            this.checkoutChanged = false;
+            this.refresh('silent');
+        }
+    }
+
+    onCheckoutFinished(): void {
+        this.checkoutChanged = true;
+    }
+
     /** Müşteri ve (varsa) geliş bağlamı ödeme formuna taşınır; o gelişin açık ücretleri dolu gelir. */
     openPayment(item: TodayItemVm): void {
         void this.router.navigate(['/panel/payments/new'], { queryParams: { clientId: item.clientId, visitId: item.visitId } });
@@ -802,15 +830,12 @@ export class TodayPageComponent implements OnInit {
             return;
         }
 
-        this.eDocuments.preview({ visitId }).subscribe({
-            next: (p) => {
-                if (p.connection.status === 'Connected' && p.groups.length > 0) {
-                    this.documentSource.set({ visitId });
-                    this.documentOpen = true;
-                    this.cdr.markForCheck();
-                }
-            },
-            error: () => undefined
+        this.eDocuments.visitCloseSuggestion(visitId).subscribe((source) => {
+            if (source) {
+                this.documentSource.set(source);
+                this.documentOpen = true;
+                this.cdr.markForCheck();
+            }
         });
     }
 

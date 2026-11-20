@@ -255,6 +255,11 @@ export interface TodayItemActions {
     canCollectRemaining: boolean;
     /** Tamamlanmış ziyaretin hiç ücreti yok ve ücretsiz işaretlenmemiş: satırın birincil adımı "Ücret ekle" (menüde de kalır). */
     canAddMissingCharge: boolean;
+    /**
+     * "Hesabı kapat" (CHECKOUT-001): muayenedeki hasta (işi ya da ücreti varsa) ya da tamamlanmış ama kalanı / ücret bekleyen kalemi olan
+     * ziyaret (yetki ayrıca denetlenir: ücrete çevirme ya da tahsilat). Görünürken satırın birincil adımıdır; "Tamamla" ve "Ödeme al"ın yerini alır.
+     */
+    canCheckout: boolean;
 }
 
 /**
@@ -281,7 +286,8 @@ export function todayItemActions(item: TodayItemVm, now: Date = new Date()): Tod
             canMarkNoShow: false,
             canRevertNoShow: false,
             canCollectRemaining: false,
-            canAddMissingCharge: false
+            canAddMissingCharge: false,
+            canCheckout: false
         };
     }
 
@@ -300,7 +306,11 @@ export function todayItemActions(item: TodayItemVm, now: Date = new Date()): Tod
         canMarkNoShow: noShowRow && canMarkAppointmentNoShow(item.appointmentStatus, item.scheduledAtUtc, now),
         canRevertNoShow: noShowRow && canRevertAppointmentNoShow(item.appointmentStatus),
         canCollectRemaining: item.careStatus === 'Completed' && (item.outstandingAmount ?? 0) > 0,
-        canAddMissingCharge: item.careStatus === 'Completed' && item.chargeIndicator === 'ChargeMissing' && (item.pendingChargeCount ?? 0) === 0
+        canAddMissingCharge: item.careStatus === 'Completed' && item.chargeIndicator === 'ChargeMissing' && (item.pendingChargeCount ?? 0) === 0,
+        // İşi ve ücreti olmayan muayenedeki hastada "Tamamla" kalır (önce sorar, kullanıcı kararı 2026-11-19); kapatılacak hesap yoktur.
+        canCheckout:
+            !!item.visitId &&
+            ((item.careStatus === 'InProgress' && !todayNeedsCompletionPrompt(item)) || (item.careStatus === 'Completed' && ((item.outstandingAmount ?? 0) > 0 || (item.pendingChargeCount ?? 0) > 0)))
     };
 }
 
