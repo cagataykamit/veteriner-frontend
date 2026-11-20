@@ -146,7 +146,7 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
             }
         };
 
-        // Capture: PrimeNG Enter'da paneli kapatır, seçim yapmaz; boş saat alanında paneldeki saat seçilmiş sayılır.
+        // Capture: PrimeNG Enter'da paneli kapatır, seçim yapmaz; boş saatli alanda paneldeki saat seçilmiş sayılır.
         const onKeydown = (event: KeyboardEvent): void => {
             if (event.key === 'Enter') {
                 this.commitShownTime(event.target);
@@ -194,13 +194,13 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
     }
 
     /**
-     * Saat alanı boş ve panel açıkken Enter: panelde görünen saat (varsayılan ya da oklarla ayarlanan) alana yazılır. Oklar zaten
-     * her tıklamada yazar; yazılmış bir metin varsa (geçerli ya da değil) ona dokunulmaz.
+     * Saatli alan (saat ya da tarih-saat, ör. aşı formu) boş ve panel açıkken Enter: panelde görünen saat (tarih-saatte bugünün tarihiyle)
+     * alana yazılır. Oklar zaten her tıklamada yazar; yazılmış bir metin varsa (geçerli ya da değil) ona dokunulmaz.
      */
     private commitShownTime(target: EventTarget | null): void {
         const picker = this.picker() as unknown as (PickerInternals & { updateTime(): void }) | undefined;
 
-        if (this.type() !== 'time' || !picker?.overlayVisible() || this.view() !== null || (target instanceof HTMLInputElement && target.value.trim() !== '')) {
+        if (this.type() === 'date' || !picker?.overlayVisible() || this.view() !== null || (target instanceof HTMLInputElement && target.value.trim() !== '')) {
             return;
         }
 
