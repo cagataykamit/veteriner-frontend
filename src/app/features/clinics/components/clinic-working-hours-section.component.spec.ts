@@ -23,7 +23,15 @@ describe('ClinicWorkingHoursSectionComponent — saat alanları', () => {
                 provideRouter([]),
                 providePrimeNG({ translation: PRIMENG_TR }),
                 MessageService,
-                { provide: ClinicsService, useValue: { getWorkingHours: vi.fn().mockReturnValue(of([monday])), updateWorkingHours: vi.fn() } },
+                {
+                    provide: ClinicsService,
+                    useValue: {
+                        getWorkingHours: vi.fn().mockReturnValue(of([monday])),
+                        // Kart açılışta "Çalışma saati kısıtı"nı randevu ayarından okur.
+                        getAppointmentSettings: vi.fn().mockReturnValue(of({ enforceWorkingHours: true })),
+                        updateWorkingHours: vi.fn()
+                    }
+                },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
