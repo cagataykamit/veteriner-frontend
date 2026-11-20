@@ -6,7 +6,6 @@ const TITLE_SUFFIX = 'Vetinity';
 
 /** Panel yolu (`/panel/…`) → sayfa adı; en uzun önek kazanır. Rota `title` verirse o önceliklidir. */
 const PANEL_PAGE_TITLES: ReadonlyArray<readonly [string, string]> = [
-    ['dashboard', 'Özet'],
     ['today', 'Bugün'],
     ['patients', 'Hastalar'],
     ['clients', 'Müşteriler'],

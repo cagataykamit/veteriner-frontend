@@ -3,7 +3,8 @@ import { subscriptionAccessGuard } from '@/app/core/auth/subscription-access.gua
 import { tenantManagementGuard } from '@/app/core/auth/tenant-management.guard';
 
 export default [
-    { path: 'dashboard', loadChildren: () => import('../dashboard/dashboard.routes') },
+    // Özet kaldırıldı (ADR-052); eski adres ve yer imleri Raporlar'a açılır (ADR-017: rota silinmez, yönlenir).
+    { path: 'dashboard', redirectTo: 'reports' },
     { path: 'today', loadChildren: () => import('../visits/routes/visits.routes') },
     { path: 'patients', loadChildren: () => import('../patients/routes/patients.routes') },
     { path: 'clients', loadChildren: () => import('../clients/routes/clients.routes') },

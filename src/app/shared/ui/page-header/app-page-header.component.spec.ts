@@ -31,7 +31,7 @@ describe('AppPageHeaderComponent', () => {
     const firstLine = (el: HTMLElement) => el.querySelector('app-page-header > div')!.firstElementChild!.textContent?.trim();
 
     it('categoryLink yoksa menüdeki kategori (Panel, Ayarlar) düz yazı olarak çizilmez; ilk satır başlıktır', async () => {
-        for (const url of ['/panel/today', '/panel/dashboard', '/panel/settings/clinics', '/panel/appointments', '/panel/yok']) {
+        for (const url of ['/panel/today', '/panel/reports', '/panel/settings/clinics', '/panel/appointments', '/panel/yok']) {
             const el = await create(url);
 
             expect(categoryLink(el), url).toBeNull();

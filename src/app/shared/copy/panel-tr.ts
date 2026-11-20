@@ -28,12 +28,6 @@ export const PANEL_COPY = {
     labelPet: 'Hasta',
     /** Ara sekmesi ve global arama — müşteri ve hastayı birlikte açan kayıt */
     newClientPetRegistration: 'Yeni kayıt: müşteri ve hasta',
-    /** Dashboard — klinik bağlamı yokken */
-    dashboardNeedClinicMessage: 'Önce bir klinik seçmelisiniz.',
-    dashboardNeedClinicHint:
-        'Özet, randevu, finans ve listeler seçili klinik üzerinden yüklenir. Devam etmek için bir klinik seçin.',
-    dashboardQuickActionsTitle: 'Hızlı işlemler',
-    dashboardContextFootnote: 'Veriler seçili klinik bağlamındadır; bugünkü randevular yerel güne göredir.',
     cancelledAppointmentExamCreateBlocked: 'İptal edilmiş randevu için muayene oluşturulamaz.',
     noShowAppointmentExamCreateBlocked: 'Gelmedi işaretli randevu için muayene oluşturulamaz. Hasta geldiyse önce geliş kaydı açın veya gelmedi işaretini geri alın.',
     cancelledAppointmentExamCreateHint: 'Bu işlem sadece aktif randevu akışlarında kullanılabilir.',

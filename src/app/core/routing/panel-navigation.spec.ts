@@ -52,7 +52,7 @@ describe('panel-navigation', () => {
             ['Müşteri ve hasta', ['Müşteri ve Hasta']],
             ['Klinik', ['Kayıtlar']],
             ['Para ve stok', ['Para', 'Stok']],
-            ['Yönetim', ['Raporlar', 'Özet', 'Ayarlar']]
+            ['Yönetim', ['Raporlar', 'Ayarlar']]
         ]);
         expect(groups.every((g) => g.label === undefined)).toBe(true);
         const last = groups[groups.length - 1];
@@ -137,7 +137,6 @@ describe('panel-navigation', () => {
         expect(labels(clinic)).not.toContain('Yapay zekâ');
         expect(platform.find((g) => g.heading === 'Yönetim')!.entries.map((e) => e.label)).toEqual([
             'Raporlar',
-            'Özet',
             'Satış ortakları',
             'Deneme ölçümleri',
             'Çift ödemeler',
@@ -161,9 +160,9 @@ describe('panel-navigation', () => {
         expect(listLabelForUrl('/panel/settings/custom-development')).toBe('Size özel geliştirmeler');
     });
 
-    it('izin yoksa yalnız Ayarlar kalır; Özet ve İşletme performansı (Raporlar) yalnız yönetici düzeyi izniyle görünür', () => {
+    it('izin yoksa yalnız Ayarlar kalır; İşletme performansı (Raporlar) yönetici düzeyi izniyle görünür, Özet menüde yok (ADR-052)', () => {
         expect(labels(visibleGroups(MENU_GROUPS, () => false))).toEqual(['Ayarlar']);
-        expect(labels(visibleGroups(MENU_GROUPS, only(MANAGER_LEVEL_CLAIM)))).toEqual(['Raporlar', 'Özet', 'Ayarlar']);
+        expect(labels(visibleGroups(MENU_GROUPS, only(MANAGER_LEVEL_CLAIM)))).toEqual(['Raporlar', 'Ayarlar']);
     });
 
     it('Bugün yalnız Visits.Read ile görünür; birleşik öğe en az bir sekmesi yetkiliyse görünür', () => {
@@ -244,7 +243,7 @@ describe('panel-navigation', () => {
         expect(firstAccessibleRoute(MENU_GROUPS, () => true)).toBe('/panel/today');
         expect(firstAccessibleRoute(MENU_GROUPS, only('Clients.Read', 'Pets.Read'))).toBe('/panel/patients');
         expect(firstAccessibleRoute(MENU_GROUPS, only(MANAGER_LEVEL_CLAIM, 'Pets.Read'))).toBe('/panel/patients');
-        // Yönetici yine Özet'te açılır (panelHomeRoute); bu yalnız menü sırasıdır.
+        // Bugün izni olmayan yönetici de Raporlar'da açılır (panelHomeRoute, ADR-052); bu yalnız menü sırasıdır.
         expect(firstAccessibleRoute(MENU_GROUPS, only(MANAGER_LEVEL_CLAIM))).toBe('/panel/reports');
         expect(firstAccessibleRoute(MENU_GROUPS, () => false)).toBe('/panel/settings');
     });
@@ -292,7 +291,6 @@ describe('panel-navigation', () => {
         expect(category('/panel/reports')).toBe('Raporlar');
         expect(category('/panel/products/abc')).toBe('Stok');
         expect(category('/panel/today')).toBe('Panel');
-        expect(category('/panel/dashboard')).toBe('Panel');
         expect(category('/panel/settings/clinics')).toBe('Ayarlar');
         expect(category('/panel/yok')).toBeUndefined();
     });

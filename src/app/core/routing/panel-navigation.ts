@@ -121,7 +121,6 @@ export interface CardSection {
 }
 
 export const TODAY_ROUTE = '/panel/today';
-export const DASHBOARD_ROUTE = '/panel/dashboard';
 export const SETTINGS_ROUTE = '/panel/settings';
 /** Klinik kaydı sayfası (telefon, adres, çalışma saati); klinik kimliği sona eklenir. */
 export const CLINIC_DETAIL_ROUTE = '/panel/settings/clinics';
@@ -171,7 +170,7 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
                 label: 'İşletme performansı',
                 icon: 'pi pi-fw pi-chart-line',
                 route: `${REPORTS_ROUTE}/performance`,
-                // Yönetici düzeyi, Özet ile aynı koşul (MANAGER_LEVEL_CLAIM); sabit aşağıda tanımlı olduğu için izin doğrudan yazılır.
+                // Yönetici düzeyi (MANAGER_LEVEL_CLAIM); sabit aşağıda tanımlı olduğu için izin doğrudan yazılır.
                 claims: [VISITS_CORRECT_CLAIM],
                 description: 'Dönemin cirosu, tahsilatı ve iş hacmi; önceki dönemle karşılaştırma.'
             },
@@ -321,7 +320,7 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
     }
 ];
 
-/** "Yönetici düzeyi": Admin, Owner ve ClinicAdmin'in birlikte sahip olduğu düzeltme izni; Özet ve yöneticinin Özet açılışı bu izne bağlıdır (ADR-030). */
+/** "Yönetici düzeyi": Admin, Owner ve ClinicAdmin'in birlikte sahip olduğu düzeltme izni; İşletme performansı ve Şubeler özeti bu izne bağlıdır (Özet ADR-052 ile kaldırıldı). */
 export const MANAGER_LEVEL_CLAIM = VISITS_CORRECT_CLAIM;
 
 /** Birleşik menü öğesi: yol ilk sekmeye açılır, izin sekme izinlerinin birleşimidir, sayfa başlığı kategorisi öğenin adıdır. */
@@ -428,7 +427,6 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
                 route: REPORTS_ROUTE,
                 claims: REPORT_SECTIONS.flatMap((section) => section.entries.flatMap((e) => e.claims ?? []))
             },
-            { label: 'Özet', category: 'Panel', icon: 'fa-solid fa-fw fa-gauge', route: DASHBOARD_ROUTE, claims: [MANAGER_LEVEL_CLAIM] },
             // Yalnız Vetinity platform yöneticisi (ADR-037); klinik kullanıcılarında hiç görünmez.
             { label: 'Satış ortakları', icon: 'fa-solid fa-fw fa-handshake', route: SALES_PARTNERS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },
             { label: 'Deneme ölçümleri', icon: 'fa-solid fa-fw fa-chart-simple', route: TRIAL_METRICS_ROUTE, claims: [PLATFORM_ADMIN_CLAIM] },

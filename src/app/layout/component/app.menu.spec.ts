@@ -56,13 +56,13 @@ describe('AppMenu', () => {
     it('menü ADR-023 bölüm başlıklarıyla gruplanır; başlıklar açılıp kapanmaz, Yönetim bölümü alta sabittir', () => {
         const fixture = create();
 
-        expect(outline(fixture)).toEqual(['# Günlük iş', 'Bugün', 'Randevular', '# Müşteri ve hasta', 'Müşteri ve Hasta', '# Klinik', 'Kayıtlar', '# Para ve stok', 'Para', 'Stok', '# Yönetim', 'Raporlar', 'Özet', 'Ayarlar', 'WhatsApp destek']);
+        expect(outline(fixture)).toEqual(['# Günlük iş', 'Bugün', 'Randevular', '# Müşteri ve hasta', 'Müşteri ve Hasta', '# Klinik', 'Kayıtlar', '# Para ve stok', 'Para', 'Stok', '# Yönetim', 'Raporlar', 'Ayarlar', 'WhatsApp destek']);
         expect(root(fixture).querySelector('.layout-menu-group-toggle')).toBeNull();
         expect(root(fixture).querySelector('.layout-menu-divider')).toBeNull();
         const pinned = root(fixture).querySelector('.layout-menu-pinned')!;
 
         expect(pinned.querySelector('.layout-menu-heading')?.textContent?.trim()).toBe('Yönetim');
-        expect(Array.from(pinned.querySelectorAll('.layout-menuitem-text')).map((el) => el.textContent?.trim())).toEqual(['Raporlar', 'Özet', 'Ayarlar', 'WhatsApp destek']);
+        expect(Array.from(pinned.querySelectorAll('.layout-menuitem-text')).map((el) => el.textContent?.trim())).toEqual(['Raporlar', 'Ayarlar', 'WhatsApp destek']);
     });
 
     it('tüm girişleri izinle gizlenen bölümün başlığı da görünmez', () => {
@@ -74,7 +74,7 @@ describe('AppMenu', () => {
         const fixture = create();
 
         expect(root(fixture).querySelector('.layout-menu-heading')).toBeNull();
-        expect(outline(fixture)).toEqual(['—', 'Bugün', 'Randevular', '—', 'Müşteri ve Hasta', '—', 'Kayıtlar', '—', 'Para', 'Stok', '—', 'Raporlar', 'Özet', 'Ayarlar', 'WhatsApp destek']);
+        expect(outline(fixture)).toEqual(['—', 'Bugün', 'Randevular', '—', 'Müşteri ve Hasta', '—', 'Kayıtlar', '—', 'Para', 'Stok', '—', 'Raporlar', 'Ayarlar', 'WhatsApp destek']);
     });
 
     it('simge şeridinde aynı öğeler görünür ve her biri tek bağlantıdır; simge ve ad aynı tıklanabilir satırın içindedir', () => {
@@ -84,7 +84,7 @@ describe('AppMenu', () => {
         expect(labels(fixture)).toContain('Kayıtlar');
         const items = Array.from(root(fixture).querySelectorAll('li[appMenuitem]'));
 
-        expect(items.length).toBe(10);
+        expect(items.length).toBe(9);
 
         for (const li of items) {
             const links = li.querySelectorAll('a');
@@ -187,7 +187,7 @@ describe('AppMenu', () => {
         it('açık menüde ok ve açılır işaret yalnız sekmeli satırlardadır; sekmesiz satırda panel açılmaz', () => {
             const fixture = create();
 
-            for (const label of ['Bugün', ...tabbed, 'Raporlar', 'Özet', 'Ayarlar']) {
+            for (const label of ['Bugün', ...tabbed, 'Raporlar', 'Ayarlar']) {
                 const hasFlyout = tabbed.includes(label);
 
                 expect(link(fixture, label).querySelector('.layout-menuitem-flyout-toggler') !== null, label).toBe(hasFlyout);
@@ -465,9 +465,9 @@ describe('AppMenu', () => {
             rail.set(true);
             const fixture = create();
 
-            hover(fixture, 'Özet');
+            hover(fixture, 'Ayarlar');
             expect(panels()).toEqual([]);
-            expect(link(fixture, 'Özet').getAttribute('aria-haspopup')).toBeNull();
+            expect(link(fixture, 'Ayarlar').getAttribute('aria-haspopup')).toBeNull();
 
             hover(fixture, 'Müşteri ve Hasta');
             expect(panel().textContent).not.toContain('Müşteri ve Hasta');

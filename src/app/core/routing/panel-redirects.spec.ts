@@ -33,14 +33,19 @@ describe('panel yönlendirmeleri', () => {
         expect(await go('/panel')).toBe('/panel/today');
     });
 
-    it('yönetici düzeyi (Visits.Correct) de /panel açınca Bugün sayfasına gider; Bugün yetkisi yoksa Özet', async () => {
+    it('Özet kaldırıldı (ADR-052): eski /panel/dashboard adresi ve yer imleri Raporlar açar', async () => {
+        claims.add('payments.read');
+        expect(await go('/panel/dashboard')).toBe('/panel/reports');
+    });
+
+    it('yönetici düzeyi (Visits.Correct) de /panel açınca Bugün sayfasına gider; Bugün yetkisi yoksa Raporlar (ADR-052)', async () => {
         claims.add('visits.correct');
         expect(await go('/panel')).toBe('/panel/today');
         claims.delete('visits.read');
-        expect(await go('/panel')).toBe('/panel/dashboard');
+        expect(await go('/panel')).toBe('/panel/reports');
     });
 
-    it('Bugün ve Özet yetkisi yoksa /panel menüdeki ilk erişilebilir öğeye, o da yoksa Ayarlar’a gider', async () => {
+    it('Bugün ve rapor yetkisi yoksa /panel menüdeki ilk erişilebilir öğeye, o da yoksa Ayarlar’a gider', async () => {
         claims.delete('visits.read');
         expect(await go('/panel')).toBe('/panel/settings');
         claims.add('clients.read');
