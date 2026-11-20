@@ -195,3 +195,94 @@ export const PANEL_COPY = {
     vaccinationLegacyVaccineDefinitionHint:
         'Bu eski kayıt katalogla eşleşmemiş olabilir. Güncellemek için aşı seçiniz.'
 } as const;
+
+/**
+ * Rapor Merkezi ana ekranı (ADR-052, tasarım B · Sorular): soru başlıkları, sıklık etiketleri, kart ve "Bakmanız gerekenler" metinleri.
+ * Soru ve sıklık metinleri ürün sahibinin onayladığı taslaktaki gibidir (`design/raporlar/B.html`).
+ */
+export const REPORT_HUB_COPY = {
+    pageDescription: 'Ne öğrenmek istiyorsunuz? Soruyu bulun; cevabı veren rapor ve özet sayısı yanında.',
+    periodGroupLabel: 'Dönem',
+    periods: { today: 'Bugün', week: 'Bu hafta', month: 'Bu ay' },
+    /** Kart sayısının yanında dönemin adı (küçük harf). */
+    periodWhen: { today: 'bugün', week: 'bu hafta', month: 'bu ay' },
+    now: 'şu an',
+    compareWith: { today: 'dün aynı saate göre', week: 'geçen haftaya göre', month: 'geçen aya göre' },
+    searchPlaceholder: 'Rapor adıyla bul',
+    favoritesLabel: 'Favoriler:',
+    favoritesEmpty: 'Bir raporu ☆ ile işaretleyin; burada kısayol olarak durur.',
+    loadError: 'Özet sayılar yüklenemedi; raporlar yine açılabilir.',
+    questions: {
+        cash: { title: 'Bugünün kasası tuttu mu?', cadence: 'Her akşam' },
+        period: { title: 'Bu dönem nasıl geçti?', cadence: 'Ay sonu' },
+        collections: { title: 'Para hangi yolla geldi?', cadence: 'Haftalık' },
+        outstanding: { title: 'Kimin bize borcu var?', cadence: 'Haftalık' },
+        appointments: { title: 'Randevular boşa gidiyor mu?', cadence: 'Haftalık' },
+        clinical: { title: 'Klinikte ne kadar iş yaptık?', cadence: 'Haftalık' },
+        hbs: { title: "HBS'e girilmemiş kayıt kaldı mı?", cadence: 'Haftalık' },
+        registers: { title: 'Denetim gelse defterler hazır mı?', cadence: 'Denetimde' }
+    },
+    units: {
+        collected: 'tahsilat',
+        turnover: 'ciro',
+        outstanding: 'açık alacak',
+        appointments: 'randevu',
+        examinations: 'muayene',
+        vaccinesApplied: 'aşı uygulandı',
+        hbsPending: 'kayıt bekliyor',
+        registers: 'yasal defter'
+    },
+    figures: {
+        unchargedWork: (n: number) => `${n} iş`,
+        unchargedWorkTail: ' ücreti kapanmadı',
+        mainRegister: (amount: string) => `Ana kasa ${amount}`,
+        payments: (n: number) => `${n} ödeme`,
+        clients: (n: number) => `${n} müşteri`,
+        highest: (amount: string) => `en yüksek ${amount}`,
+        noShow: (n: number) => `${n} Gelmedi`,
+        share: (percent: number) => `(%${percent})`,
+        vaccinesApplied: (n: number) => `${n} aşı uygulandı`,
+        vaccinesPlanned: (n: number) => `${n} planlı`,
+        hbsSplit: (prescriptions: number, vaccinations: number) => `${prescriptions} reçete · ${vaccinations} aşı`,
+        registersHint: 'Tarih aralığı seçip yazdırın ya da Excel/PDF alın',
+        trend: 'Eğilim',
+        split: 'Ödeme yollarına göre dağılım'
+    },
+    paymentMethods: { Card: 'Kart', Cash: 'Nakit', Transfer: 'Havale' },
+    attention: {
+        title: 'Bakmanız gerekenler',
+        openList: 'Listeyi aç',
+        hbsPrescriptions: (n: number) => `${n} reçete HBS'e (e-Reçete) girilmemiş`,
+        hbsPrescriptionsSource: 'HBS takibi — reçeteler',
+        hbsVaccinations: (n: number) => `${n} aşı HBS'e (ATS) girilmemiş`,
+        hbsVaccinationsSource: 'HBS takibi — aşılar',
+        oldest: (days: number) => (days === 0 ? 'En eskisi bugün' : `En eskisi ${days} gün önce`),
+        endOfDay: (n: number) => `${n} işin ücreti bugün kapanmadı`,
+        endOfDayHint: 'Gün kapanmadan bakın · Gün sonu',
+        endOfDayAction: 'Gün sonunu aç',
+        overdueVaccinations: (n: number) => `${n} aşının zamanı geçti`,
+        overdueVaccinationsHint: 'Sahiplerine hatırlatın · Aşılar',
+        lowStock: (n: number) => `${n} üründe stok asgari seviyenin altında`,
+        lowStockHint: 'Sipariş zamanı · Stok durumu'
+    },
+    /** Rapor adıyla aramada ad ve açıklamaya ek anahtar kelimeler (rapor anahtarına göre). */
+    keywords: {
+        performance: 'ciro gelir kâr hacim karşılaştırma yönetici',
+        'clinics-overview': 'şube karşılaştırma zincir',
+        appointments: 'gelmedi iptal doluluk randevu',
+        examinations: 'muayene hekim veteriner tanı',
+        vaccinations: 'aşı karma kuduz hatırlatma planlanan geciken',
+        'end-of-day': 'kapanış kasa sayım günlük tahsilat',
+        'cash-registers': 'kasa nakit aktarım giriş çıkış',
+        payments: 'tahsilat pos kart nakit havale mutabakat',
+        'outstanding-balances': 'borç alacak veresiye açık hesap',
+        'registers.examinations': 'defter yasal denetim yazdır',
+        'registers.prescriptions': 'reçete defter yasal denetim',
+        'registers.vaccines': 'aşı stok seri son kullanma fatura firma',
+        'registers.medications': 'ilaç stok fatura firma seri',
+        'registers.controlled-substances': 'narkotik psikotropik ketamin sarf yeşil reçete',
+        'registers.vaccine-info': 'aşı seri hasta ürün tutar',
+        'registers.hbs-prescriptions': 'hbs e-reçete erecete bakanlık girilmemiş',
+        'registers.hbs-vaccinations': 'hbs ats aşı belge seri bakanlık girilmemiş'
+    } as Readonly<Record<string, string>>
+} as const;
